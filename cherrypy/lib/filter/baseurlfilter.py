@@ -27,10 +27,12 @@ class BaseUrlFilter(BaseInputFilter):
 
     def afterRequestHeader(self):
         if self.useXForwardedHost:
-            newBaseUrl = 'http://' + cpg.request.headerMap.get(
-                "X-Forwarded-Host", self.baseUrl)
+            newBaseUrl = cpg.request.headerMap.get("X-Forwarded-Host", self.baseUrl)
         else:
             newBaseUrl = self.baseUrl
+	if newBaseUrl.find("://") == -1:
+	    # add http:// or https:// if needed	
+	    newBaseUrl = cpg.request.base[:cpg.request.base.find("://")] + "://" + newBaseUrl
 
         cpg.request.browserUrl = cpg.request.browserUrl.replace(
             cpg.request.base, newBaseUrl)
