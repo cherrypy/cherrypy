@@ -328,9 +328,10 @@ def handleRequest(wfile):
                     return
 
             cpg.response.headerMap['Last-Modified'] = strModifTime
-            f=open(fname, 'rb')
-            cpg.response.body = f.read()
-            f.close()
+            # Set Content-Length and use an iterable (file object)
+            #   this way CP won't load the whole file in memory
+            cpg.response.headerMap['Content-Length'] = stat[6]
+            cpg.response.body = open(fname, 'rb')
             # Set content-type based on filename extension
             i = path.rfind('.')
             if i != -1: ext = path[i:]
