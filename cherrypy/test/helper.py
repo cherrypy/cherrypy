@@ -10,12 +10,12 @@ Redistribution and use in source and binary forms, with or without modification,
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import os,urllib,time,sys,signal,socket,httplib
+import os,urllib,time,sys,signal,socket,httplib,os.path 
 
 def startServer(infoMap):
     # Start the server in another thread
     if not hasattr(os, "fork"): # win32 mostly
-        pid=os.spawnl(os.P_NOWAIT,infoMap['path'] , os.getcwd(), 'testsite.py')
+        pid=os.spawnl(os.P_NOWAIT,infoMap['path'],infoMap['path'], '"'+os.path.join(os.getcwd(),'testsite.py')+'"')
     else:
         pid=os.fork()
         if not pid:
@@ -130,7 +130,7 @@ cpg.root._cpLogMessage = f
 '''
     includePathsToSysPath = """
 import sys,os,os.path
-sys.path.insert(0,os.path.join(os.getcwd(),'../..'))
+sys.path.insert(0,os.path.normpath(os.path.join(os.getcwd(),'../../')))
 """
     f.write(includePathsToSysPath+code.replace('cpg.server.start', beforeStart + 'cpg.server.start'))
     f.close()
