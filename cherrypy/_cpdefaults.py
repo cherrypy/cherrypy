@@ -60,7 +60,7 @@ def _cpOnError():
     import traceback, StringIO
     bodyFile = StringIO.StringIO()
     traceback.print_exc(file = bodyFile)
-    cpg.response.body = bodyFile.getvalue()
+    cpg.response.body = [bodyFile.getvalue()]
     cpg.response.headerMap['Content-Type'] = 'text/plain'
 
 def _cpSaveSessionData(sessionId, sessionData, expirationTime,

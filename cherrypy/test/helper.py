@@ -121,6 +121,7 @@ def prepareCode(code):
 class Shutdown:
     def all(self):
         cpg.server.stop()
+        return ""
     all.exposed = True
 cpg.root.shutdown = Shutdown()
 def f(*a, **kw): return ""

@@ -213,9 +213,7 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
         # TODO: in some cases exceptions and filters are conflicting; 
         # error reporting seems to be broken in some cases. This code is 
         # a helper to check it
-        print "%"*80
         traceback.print_exc()
-        print "%"*80
         err = ""
         exc_info_1 = sys.exc_info()[1]
         if hasattr(exc_info_1, 'args') and len(exc_info_1.args) >= 1:
@@ -249,12 +247,6 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
             for line in cpg.response.body:
                 wfile.write(line)
         except:
-            # TODO: in some cases exceptions and filters are conflicting; 
-            # error reporting seems to be broken in some cases. This code is 
-            # a helper to check it
-            #print "%"*80
-            #traceback.print_exc()
-            #print "%"*80
             bodyFile = StringIO.StringIO()
             traceback.print_exc(file = bodyFile)
             body = bodyFile.getvalue()
@@ -407,7 +399,7 @@ def handleRequest(wfile):
     # Remove "root" from objectPathList and join it to get objectPath
     cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
     body = func(*(virtualPathList + cpg.request.paramList), **(cpg.request.paramMap))
-    
+
     # builds a uniform return type
     if not isinstance(body, types.GeneratorType):
         cpg.response.body = [body]
