@@ -1,13 +1,20 @@
+"""
+Copyright (c) 2004, CherryPy Team (team@cherrypy.org)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+    * Neither the name of the CherryPy Team nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
 ##########################################################################
-## 
-## xmlrpcfilter is as open as it can be. Do whatever you like,
-## but understand that i take no responsibility for the code itself,
-## nor for wat it does and especially any derivatives and when you use
-## it, keep a copyright somewhere of me, or make notice of CherryPy
-##
 ## Remco Boerma
 ##
 ## History:
+## 1.0.0   : 2004-12-29 Released with CP2
 ## 0.0.9   : 2004-12-23 made it CP2 #59 compatible (returns an iterable)
 ##           Please note: as the xmlrpc doesn't know what you would want to return
 ##           (and for the logic of marshalling) it will return Generator objects, as
@@ -52,9 +59,9 @@
 ## 
 ## EXAMPLE CODE FOR THE SERVER:
 ##    from cherrypy import cpg
-##    import xmlrpcfilter
+##    import cherrypy.lib.xmlrpcfilter as xmlrpcfilter
 ##    class Root:
-##        _cpFilterList = [xmlrpcfilter.XmlRpcFilter(mimeTypeList = ['text/xml'])] 
+##        _cpFilterList = [xmlrpcfilter.XmlRpcFilter()] 
 ##
 ##        def test(self):
 ##            return `"I'm here"`
@@ -82,18 +89,6 @@ class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
 
     PLEASE NOTE:
 
-
-    --  IN CASE TICKET #28 IS NOT RESOLVED
-        ANY XMLRPC FUNCTION NEEDS TO RETURN A PYTHON SOURCE STRING
-            use
-              return `result`
-            insted of
-              return result
-            . 
-
-    --  AS ALL REQUESTS MUST RETURN A STRING (UNTIL THE FIX IS THERE)
-        ALL METHODS ARE CALLABLE USING A REGULAR WEBBROWSER AS WELL!!
-
     afterRequestHeader:
         Unmarshalls the posted data to a methodname and parameters.
             - These are stored in cpg.request.rpcMethod and cpg.request.rpcParams
@@ -116,27 +111,16 @@ class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
         
     def afterRequestHeader(self):
         """ Called after the request header has been read/parsed"""
-##        try:
-##            x = cpg.request.isRPC # should fail!
-##            print "error: afterRequestHeader is called twice!"
-##            return 
-##        except:
-##            pass
         cpg.request.isRPC = self.testValidityOfRequest()
         if not cpg.request.isRPC: 
-            print 'not a valid xmlrpc call'
+            # used for debugging or more info
+            # print 'not a valid xmlrpc call'
             return # break this if it's not for this filter!!
-        print "xmlrpcmethod...",
+        # used for debugging, or more info:
+        # print "xmlrpcmethod...",
         cpg.request.parsePostData = 0
         dataLength = int(cpg.request.headerMap.get('Content-Length',0))
-        # ought to be true:
-        # if cpg.request.method == 'POST':
-        # if not, it's probabely a webbrowser requesting the url
         data = cpg.request.rfile.read(dataLength)
-        #else:
-        #    data = None
-
-        # for testing: an exception may be raised as well. . an xmlrpc 'Fault' would be better though.
         try:
             params, method = xmlrpclib.loads(data)
         except Exception,e: 
@@ -152,14 +136,16 @@ class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
             cpg.request.path=cpg.request.path[5:] ## strip the irst /rpc2
         cpg.request.path+=str(method).replace('.','/')
         cpg.request.paramList = list(params)
-        print "XMLRPC Filter: calling '%s' with args: '%s' " % (cpg.request.path,params)
+        # used for debugging and more info
+        # print "XMLRPC Filter: calling '%s' with args: '%s' " % (cpg.request.path,params)
 
     def beforeResponse(self):
         """ Called before starting to write response """
         if not cpg.request.isRPC: 
             return # it's not an RPC call, so just let it go with the normal flow
         try:
-            print 'beforeResponse: cpg.response.body ==',`cpg.response.body` 
+            # use this for debugging and more info:
+            # print 'beforeResponse: cpg.response.body ==',`cpg.response.body` 
             cpg.response.body = xmlrpclib.dumps((cpg.response.body[0],), methodresponse=1,allow_none=1)
         except xmlrpclib.Fault,fault:
             cpg.response.body = xmlrpclib.dumps(fault,allow_none=1)
