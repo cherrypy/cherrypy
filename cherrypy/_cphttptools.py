@@ -330,10 +330,7 @@ def handleRequest(wfile):
                 stat = os.stat(fname)
             except OSError:
                 raise cperror.NotFound
-            if type(stat) == type(()): # Python2.1
-                modifTime = stat[9]
-            else:
-                modifTime = stat.st_mtime
+            modifTime = stat.st_mtime
 
             strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(modifTime))
 
