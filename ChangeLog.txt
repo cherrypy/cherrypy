@@ -1,3 +1,4 @@
+    * Improved testing framework (Remco)
     * Check that response is a string *after* filters have been applied (ticket #28) (Remi)
     * Removed all XML-RPC references from the core: it is now a filter (ticket #30) (Remi)
     * Removed Generator processing for the core: it is now a filter (Remi)
