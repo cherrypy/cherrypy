@@ -58,6 +58,8 @@ def start(configFile = None, parsedConfigFile = None, configDict = {}, initOnly 
     #   throughout the entire life of the webserver)
     cpg.request = _cputil.ThreadAwareClass()
     cpg.response = _cputil.ThreadAwareClass()
+    # Create threadData object as a thread-specific all-purpose storage
+    cpg.threadData = _cputil.ThreadAwareClass()
 
     # Initialize a few global variables
     cpg._lastCacheFlushTime = time.time()
