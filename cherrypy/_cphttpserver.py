@@ -212,7 +212,7 @@ class ServerThread(threading.Thread):
     def run(self):
         # Call the functions from cpg.server.onStartThreadList
         for func in cpg.server.onStartThreadList:
-            func()
+            func(self._threadIndex)
         while 1:
             request, client_address = self._requestQueue.get()
             if (request, client_address) == _SHUTDOWNREQUEST:
