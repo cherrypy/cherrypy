@@ -93,7 +93,8 @@ def wsgiApp(environ, start_response):
     cpg.request.parsePostData = True
     cpg.request.rfile = environ["wsgi.input"]
     cpg.request.objectPath = None 
-    cpg.request.simpleCookie.load(cpg.request.headerMap['Cookie'])
+    if 'Cookie' in cpg.request.headerMap:
+        cpg.request.simpleCookie.load(cpg.request.headerMap['Cookie'])
 
     cpg.response.simpleCookie = Cookie.SimpleCookie()
     cpg.response.sendResponse = 1

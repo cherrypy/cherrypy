@@ -470,6 +470,9 @@ def mapPathToObject(path = None):
     if path.startswith('/'): path = path[1:] # Remove leading slash
     if path.endswith('/'): path = path[:-1] # Remove trailing slash
 
+    # So that requests like robots.txt can be handled by a method called  robots_txt
+    path = path.replace('.', '_')
+
     if not path:
         objectPathList = []
     else:

@@ -49,9 +49,11 @@ class Page(Aspect):
         # Same as above, except _after gets called after the actually
         # requested method was executed. Its results are appended to
         # the output string.
-        if methodName not in ['header', 'footer']:
+        if getattr(method, 'exposed', False) and methodName not in ['header', 'footer']:
             return CONTINUE, self.footer()
         else:
+            # If the method is not exposed or if it's the header and footer itself, 
+            # don't do anything
             return CONTINUE, ''
 
 

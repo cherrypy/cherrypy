@@ -1,5 +1,7 @@
-	* Added DecodingFilter
-	* Added form module (port from CP1 Form.cpy)
+    * Dots in requests path are now replaced by underscores  - ticket #87 (Remi)
+    * Improved WSGI support and added example (seems to work OK) (Peter, Remi)
+	* Added DecodingFilter (Remi)
+	* Added form module (port from CP1 Form.cpy) (Remi)
 
 2004/12-29:
     * CherryPY-2.0-beta released
