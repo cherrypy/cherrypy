@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## Remco Boerma
 ##
 ## History:
+## 1.0.2   : 2005-01-26 changed infile dox based on ticket #97
 ## 1.0.1   : 2005-01-26 Speedup due to generator usage in CP2.
 ##           The result is now converted to a list with length 1. So the complete
 ##           xmlrpc result is written at once, and not per character. Thanks to
@@ -77,29 +78,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##---------------------------------------------------------------------
 ## 
 ## EXAMPLE CODE FOR THE SERVER:
+##    from cherrypy.lib.filter.xmlrpcfilter import XmlRpcFilter
 ##    from cherrypy import cpg
-##    import cherrypy.lib.xmlrpcfilter as xmlrpcfilter
-##    class Root:
-##        _cpFilterList = [xmlrpcfilter.XmlRpcFilter()] 
 ##
-##        def test(self):
-##            return `"I'm here"`
-##        test.exposed = True
-##    cpg.root = Root()
-##    cpg.server.start()
+##    class Root:
+##        _cpFilterList = [XmlRpcFilter()]
 ##        
+##        def longString(self,s,times):
+##            return s*times
+##        longString.exposed = True
+##
+##    cpg.root = Root()
+##    if __name__=='__main__':
+##        cpg.server.start(configMap = {'socketPort': 9001,
+##                                      'threadPool':0,
+##                                      'socketQueueSize':10 })
 ## EXAMPLE CODE FOR THE CLIENT:
-##    import xmlrpclib
-##    server = xmlrpclib.ServerProxy('http://localhost:8080')
-##    print server.test()
-##    # results in: "I'm here"
-## 
+## >>> import xmlrpclib
+## >>> server = xmlrpclib.ServerProxy('http://localhost:9001')
+## >>> assert server.longString('abc',3) == 'abcabcabc'
+## >>>
 ######################################################################
 
 from basefilter import BaseInputFilter, BaseOutputFilter
 from cherrypy import cpg
 import xmlrpclib
-
 
 class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
     """
