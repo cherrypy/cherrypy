@@ -32,20 +32,25 @@ Just a few convenient functions
 
 from cherrypy import cpg
 
-def redirect(newUrl):
-    """ Sends a redirect to the browser """
-    
-    if not newUrl.startswith('http://') and not newUrl.startswith('https://'):
-        # If newUrl is not canonical, we must make it canonical
-        if newUrl.startswith('/'):
-            # newUrl was absolute:
-            # we just add request.base in front of it
-            newUrl = cpg.request.base + newUrl
+def canonicalizeUrl(url):
+    """ Canonicalize a URL. The URL might be relative, absolute or canonical """
+    if not url.startswith('http://') and not url.startswith('https://'):
+        # If url is not canonical, we must make it canonical
+        if url[0] == '/':
+            # URL was absolute: we just add the request.base in front of it
+            url = cpg.request.base + url
         else:
-            # newUrl was relative:
-            # we remove the last bit from browserUrl and add newUrl to it
-            i = cpg.request.browserUrl.rfind('/')
-            newUrl = cpg.request.browserUrl[:i+1] + newUrl
+            # URL was relative
+            if cpg.request.browserUrl == cpg.request.base:
+                # browserUrl is request.base
+                url = cpg.request.base + '/' + url
+            else:
+                i = cpg.request.browserUrl.rfind('/')
+                url = cpg.request.browserUrl[:i+1] + url
+    return url
+
+def redirect(url):
+    """ Sends a redirect to the browser (after canonicalizing the URL) """
     cpg.response.headerMap['Status'] = 302
-    cpg.response.headerMap['Location'] = newUrl
+    cpg.response.headerMap['Location'] = canonicalizeUrl(url)
     return ""

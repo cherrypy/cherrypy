@@ -520,19 +520,20 @@ def mapPathToObject(path = None):
             raise IndexRedirect(newUrl)
 
     return candidate, objectPathList, virtualPathList
-    
-def canonicalizeUrl(newUrl):
-    if not newUrl.startswith('http://') and not newUrl.startswith('https://'):
-        # If newUrl is not canonical, we must make it canonical
-        if newUrl[0] == '/':
+ 
+def canonicalizeUrl(url):
+    """ Canonicalize a URL. The URL might be relative, absolute or canonical """
+    if not url.startswith('http://') and not url.startswith('https://'):
+        # If url is not canonical, we must make it canonical
+        if url[0] == '/':
             # URL was absolute: we just add the request.base in front of it
-            newUrl = cpg.request.base + newUrl
+            url = cpg.request.base + url
         else:
             # URL was relative
             if cpg.request.browserUrl == cpg.request.base:
                 # browserUrl is request.base
-                newUrl = cpg.request.base + '/' + newUrl
+                url = cpg.request.base + '/' + url
             else:
                 i = cpg.request.browserUrl.rfind('/')
-                newUrl = cpg.request.browserUrl[:i+1] + newUrl
-    return newUrl
+                url = cpg.request.browserUrl[:i+1] + url
+    return url
