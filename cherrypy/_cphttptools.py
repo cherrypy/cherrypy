@@ -26,6 +26,8 @@ monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'
 
 def parseFirstLine(data):
     cpg.request.path = data.split()[1]
+    if  cpg.request.path[0] == '/':
+        cpg.request.path = cpg.request.path[1:]
     cpg.request.browserUrl = cpg.request.path
     cpg.request.paramMap = {}
     cpg.request.filenameMap = {}
