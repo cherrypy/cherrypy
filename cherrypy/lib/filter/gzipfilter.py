@@ -11,7 +11,9 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import gzip, StringIO
+import zlib
+import struct
+import time
 from basefilter import BaseOutputFilter
 from cherrypy import cpg
 
@@ -20,9 +22,10 @@ class GzipFilter(BaseOutputFilter):
     Filter that gzips the response.
     """
 
-    def __init__(self, mimeTypeList = ['text/html']):
+    def __init__(self, mimeTypeList = ['text/html'], compresslevel=9):
         # List of mime-types to compress
         self.mimeTypeList = mimeTypeList
+        self.compresslevel = compresslevel
 
     def beforeResponse(self):
         if not cpg.response.body:
@@ -33,11 +36,35 @@ class GzipFilter(BaseOutputFilter):
         if (ct in self.mimeTypeList) and ('gzip' in ae):
             # Set header
             cpg.response.headerMap['Content-Encoding'] = 'gzip'
-            # Compress page
-            zbuf = StringIO.StringIO()
-            zfile = gzip.GzipFile(mode='wb', fileobj = zbuf, compresslevel = 9)
-            zfile.write(cpg.response.body)
-            zfile.close()
-            cpg.response.body = zbuf.getvalue()
+            # Return a generator that compresses the page
+            cpg.response.body = self.zip_body(cpg.response.body)
 
+    def write_gzip_header(self):
+        """
+        Adapted from the gzip.py standard module code
+        """
+        header = '\037\213'      # magic header
+        header += '\010'         # compression method
+        header += '\0'
+        header += struct.pack("<L", long(time.time()))
+        header += '\002'
+        header += '\377'
+        return header
+            
+    def write_gzip_trailer(self, crc, size):
+        footer = struct.pack("<l", crc)
+        footer += struct.pack("<L", size & 0xFFFFFFFFL)
+        return footer
 
+    def zip_body(self, body):
+        # Compress page
+        yield self.write_gzip_header()
+        crc = zlib.crc32("")
+        size = 0
+        zobj = zlib.compressobj(self.compresslevel, zlib.DEFLATED, -zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, 0)
+        for line in body:
+            size += len(line)
+            crc = zlib.crc32(line, crc)
+            yield zobj.compress(line)
+        yield zobj.flush()
+        yield self.write_gzip_trailer(crc, size)

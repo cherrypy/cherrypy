@@ -20,15 +20,20 @@ class EncodingFilter(BaseOutputFilter):
     Filter that automatically encodes the response.
     """
 
-    def __init__(self, encoding = 'utf-8'):
+    def __init__(self, encoding = 'utf-8', mimeTypeList = ['text/html']):
         self.encoding = encoding
+        self.mimeTypeList = mimeTypeList
 
     def beforeResponse(self):
-        if isinstance(cpg.response.body, unicode):
-            # Encode the response
-            cpg.response.body = cpg.response.body.encode(self.encoding)
+        ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
+        if (ct in self.mimeTypeList):
             # Add "charset=..." to response Content-Type header
             contentType = cpg.response.headerMap.get("Content-Type")
             if contentType and 'charset' not in contentType:
-                cpg.response.headerMap["Content-Type"] += "; charset=%s" % self.encoding
+                cpg.response.headerMap["Content-Type"] += ";charset=%s" % self.encoding
+            # Return a generator that encodes the sequence
+            cpg.response.body = self.encode_body(cpg.response.body)
 
+    def encode_body(self, body):
+        for line in body:
+            yield line.encode(self.encoding)

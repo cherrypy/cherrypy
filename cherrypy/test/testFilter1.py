@@ -14,15 +14,13 @@ import helper, gzip, StringIO
 
 code = r"""
 from cherrypy import cpg
-import cherrypy.lib.filter.gzipfilter as gzipfilter
-import cherrypy.lib.filter.encodingfilter as encodingfilter
-import cherrypy.lib.filter.generatorfilter as generatorfilter
+from cherrypy.lib.filter.gzipfilter import GzipFilter
+from cherrypy.lib.filter.encodingfilter import EncodingFilter
 europoundUnicode = u'\x80\xa3'
 class Root:
     _cpFilterList = [
-        generatorfilter.GeneratorFilter(),
-        encodingfilter.EncodingFilter(),
-        gzipfilter.GzipFilter()
+        EncodingFilter(),
+        GzipFilter()
     ]
     def index(self):
         yield u"Hello,"
@@ -48,4 +46,4 @@ def test(infoMap, failedList, skippedList):
     print "    Testing Filters (1) ...",
     # Gzip compression doesn't always return the same exact result !
     # So we just check that the first few bytes are the same
-    helper.checkPageResult('Object mapping', infoMap, code, testList, failedList, extraRequestHeader = [("Accept-Encoding", "gzip")])
+    helper.checkPageResult('Filters', infoMap, code, testList, failedList, extraRequestHeader = [("Accept-Encoding", "gzip")])

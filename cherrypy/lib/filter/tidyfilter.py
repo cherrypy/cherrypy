@@ -30,13 +30,17 @@ class TidyFilter(BaseOutputFilter):
         self.errorsToIgnore = errorsToIgnore
 
     def beforeResponse(self):
+        # the tidy filter, by its very nature it's not generator friendly, 
+        # so we just collect the body and work with it.
+        originalBody = ''.join(cpg.response.body)
+        
         ct = cpg.response.headerMap.get('Content-Type')
         if ct == 'text/html':
             pageFile = os.path.join(self.tmpDir, 'page.html')
             outFile = os.path.join(self.tmpDir, 'tidy.out')
             errFile = os.path.join(self.tmpDir, 'tidy.err')
             f = open(pageFile, 'wb')
-            f.write(cpg.response.body)
+            f.write(originalBody)
             f.close()
             encoding = cpg.response.headerMap.get('Content-Encoding', '')
             if encoding:
@@ -59,12 +63,11 @@ class TidyFilter(BaseOutputFilter):
                     if not ignore: newErrList.append(err)
 
             if newErrList:
-                oldHtml = cpg.response.body
-                cpg.response.body = "Wrong HTML:<br>" + cgi.escape('\n'.join(newErrList)).replace('\n','<br>')
-                cpg.response.body += '<br><br>'
+                newBody = "Wrong HTML:<br>" + cgi.escape('\n'.join(newErrList)).replace('\n','<br>')
+                newBody += '<br><br>'
                 i=0
                 for line in oldHtml.splitlines():
                     i += 1
-                    cpg.response.body += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
+                    newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
 
-                cpg.response.headerMap['Content-Length'] = len(cpg.response.body)
+                cpg.response.body = [newBody]

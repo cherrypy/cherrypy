@@ -234,8 +234,20 @@ def sendResponse(wfile):
         _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
 
     # Set the content-length
-    if cpg.response.headerMap.has_key('Content-Length') and cpg.response.headerMap['Content-Length']==0:
-        cpg.response.headerMap['Content-Length'] = len(cpg.response.body)
+    if (cpg.response.headerMap.has_key('Content-Length') and
+        cpg.response.headerMap['Content-Length']==0):
+        #body = "" 
+        #body = ''.join(list(cpg.response.body))  # a local var is more efficient here
+        #body = u''.join(cpg.response.body)  # a local var is more efficient here
+        #body = ''
+        #for line in cpg.response.body:
+        #    print body
+        #    body += line
+        buf = StringIO.StringIO()
+        [buf.write(x) for x in cpg.response.body]
+        buf.seek(0)
+        cpg.response.body = [buf.read()]
+        cpg.response.headerMap['Content-Length'] = len(cpg.response.body[0])
 
     wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
     for key, valueList in cpg.response.headerMap.items():
@@ -250,15 +262,11 @@ def sendResponse(wfile):
         wfile.write(cookie+'\r\n')
     wfile.write('\r\n')
 
-    applyFilterList('afterResponseHeader')
-
-    applyFilterList('beforeResponseFullBody')
-
-    # Check that the response body is a string
-    if type(cpg.response.body) != types.StringType:
-        raise cperror.WrongResponseType
-
-    wfile.write(cpg.response.body)
+    for line in cpg.response.body:
+        wfile.write(line)
+    
+    # finalization hook for filter cleanup & logging purposes
+    applyFilterList('afterResponse')
 
 def handleRequest(wfile):
     # Clean up expired sessions if needed:
@@ -362,7 +370,13 @@ def handleRequest(wfile):
          
     # Remove "root" from objectPathList and join it to get objectPath
     cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
-    cpg.response.body = func(*(virtualPathList + cpg.request.paramList), **(cpg.request.paramMap))
+    body = func(*(virtualPathList + cpg.request.paramList), **(cpg.request.paramMap))
+    
+    # builds a uniform return type
+    if not isinstance(body, types.GeneratorType):
+        cpg.response.body = [body]
+    else:
+        cpg.response.body = body
 
     if cpg.response.sendResponse:
         sendResponse(wfile)

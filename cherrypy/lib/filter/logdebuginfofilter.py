@@ -14,6 +14,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 import time, StringIO, pickle
 from basefilter import BaseInputFilter, BaseOutputFilter
 from cherrypy import cpg
+from itertools import chain
 
 class LogDebugInfoStartFilter(BaseInputFilter, BaseOutputFilter):
     """
@@ -37,10 +38,11 @@ class LogDebugInfoStartFilter(BaseInputFilter, BaseOutputFilter):
     def beforeResponse(self):
         ct = cpg.response.headerMap.get('Content-Type')
         if (ct in self.mimeTypeList):
+            debuginfo = '\n'
             if self.logAsComment:
-                cpg.response.body += '<!-- '
+                debuginfo += '<!-- '
             else:
-                cpg.response.body += self.preTag
+                debuginfo += self.preTag
             logList = []
             if self.logBuildTime:
                 logList.append("Build time: %.03fs" % (
@@ -57,10 +59,8 @@ class LogDebugInfoStartFilter(BaseInputFilter, BaseOutputFilter):
                 logList.append("Session data size: %.02fKB" % (
                     len(dumpStr)/float(1024)))
 
-            cpg.response.body += ', '.join(logList)
+            debuginfo += ', '.join(logList)
             if self.logAsComment:
-                cpg.response.body += '-->'
+                debuginfo += '-->'
 
-            if 'Content-Length' in cpg.response.headerMap:
-                cpg.response.headerMap['Content-Length'] = len(cpg.response.body)
-
+            cpg.response.body = chain(cpg.response.body, [debuginfo])

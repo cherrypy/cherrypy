@@ -35,17 +35,7 @@ class BaseOutputFilter(object):
         """ Called before starting to write response """
         pass
 
-    def afterResponseHeader(self):
-        """ Called after writing the response header """
-        pass
-
-    def beforeResponseFullBody(self):
-        """ Called before writing the full response body """
-        pass
-
-    def beforeResponseOnTheFlyBody(self):
-        """ Called before writing a bit of the reponse (only used
-            when using "on-the-fly" response.
-        """
+    def afterResponse(self):
+        """ Called after writing the response (header & body included) """
         pass
 
