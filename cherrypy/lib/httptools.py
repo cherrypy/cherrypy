@@ -48,4 +48,4 @@ def redirect(newUrl):
             newUrl = cpg.request.browserUrl[:i+1] + newUrl
     cpg.response.headerMap['Status'] = 302
     cpg.response.headerMap['Location'] = newUrl
-    return []
+    return ""
