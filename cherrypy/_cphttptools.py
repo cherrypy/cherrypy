@@ -65,7 +65,7 @@ def parseFirstLine(data):
         cpg.request.queryString = cpg.request.path[i+1:]
         cpg.request.path = cpg.request.path[:i]
 
-def cookHeaders(headers, requestLine):
+def cookHeaders(clientAddress, remoteHost, headers, requestLine):
     """Process the headers into the request.headerMap"""
     cpg.request.headerMap = {}
     cpg.request.simpleCookie = Cookie.SimpleCookie()
@@ -81,17 +81,14 @@ def cookHeaders(headers, requestLine):
     for cookie in cookieList:
         cpg.request.simpleCookie.load(cookie)
 
-    if not cpg.request.headerMap.has_key('Remote-Addr'):
-        try:
-            cpg.request.headerMap['Remote-Addr'] = self.client_address[0]
-            cpg.request.headerMap['Remote-Host'] = self.address_string()
-        except: pass
+    cpg.request.remoteAddr = clientAddress
+    cpg.request.remoteHost = remoteHost
 
     # Set peer_certificate (in SSL mode) so the web app can examinate the client certificate
     try: cpg.request.peerCertificate = self.request.get_peer_certificate()
     except: pass
 
-    _cputil.getSpecialFunction('_cpLogMessage')("%s - %s" % (cpg.request.headerMap.get('Remote-Addr', ''), requestLine[:-2]), "HTTP")
+    _cputil.getSpecialFunction('_cpLogMessage')("%s - %s" % (cpg.request.remoteAddr, requestLine[:-2]), "HTTP")
 
 
 def parsePostData(rfile):
@@ -138,9 +135,9 @@ def insertIntoHeaderMap(key,value):
     normalizedKey = '-'.join([s.capitalize() for s in key.split('-')])
     cpg.request.headerMap[normalizedKey] = value
 
-def initRequest(requestLine, headers, rfile, wfile):
+def initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     parseFirstLine(requestLine)
-    cookHeaders(headers, requestLine)
+    cookHeaders(clientAddress, remoteHost, headers, requestLine)
 
     cpg.request.base = "http://" + cpg.request.headerMap['Host']
     cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
@@ -155,8 +152,8 @@ def initRequest(requestLine, headers, rfile, wfile):
 
     applyFilterList('afterRequestBody')
 
-def doRequest(requestLine, headers, rfile, wfile):
-    initRequest(requestLine, headers, rfile, wfile)
+def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
+    initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile)
 
     # Prepare response variables
     now = time.time()
@@ -187,10 +184,10 @@ def doRequest(requestLine, headers, rfile, wfile):
             _cputil.getSpecialFunction('_cpOnError')()
 
             # Save session data
-            if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
-                sessionId = cpg.response.simpleCookie[cpg.configOption.sessionCookieName].value
-                expirationTime = time.time() + cpg.configOption.sessionTimeout * 60
-                _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
+            # if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
+            #     sessionId = cpg.response.simpleCookie[cpg.configOption.sessionCookieName].value
+            #     expirationTime = time.time() + cpg.configOption.sessionTimeout * 60
+            #     _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
 
             wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
             if cpg.response.headerMap.has_key('Content-Length') and cpg.response.headerMap['Content-Length'] == 0:

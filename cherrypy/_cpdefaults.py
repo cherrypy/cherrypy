@@ -29,9 +29,14 @@ def _cpLogMessage(msg, context = '', severity = 0):
     try:
         logToScreen = int(cpg.parsedConfigFile.get('server', 'logToScreen'))
     except:
-        logToScreen = 1
+        logToScreen = True
+    s = nowStr + ' ' + context + ' ' + level + msg
     if logToScreen:
-        print nowStr, context, level, msg
+        print s
+    if cpg.configOption.logFile:
+        f = open(cpg.configOption.logFile, 'ab')
+        f.write(s + '\n')
+        f.close()
 
 def _cpOnError():
     """ Default _cpOnError method """

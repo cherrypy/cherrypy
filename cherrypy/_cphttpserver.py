@@ -107,23 +107,46 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def address_string(self):
         """ Try to do a reverse DNS based on [server]reverseDNS in the config file """
-        if _reverseDNS: return BaseHTTPServer.BaseHTTPRequestHandler.address_string(self)
-        else: return self.client_address[0]
+        if cpg.configOption.reverseDNS:
+            return BaseHTTPServer.BaseHTTPRequestHandler.address_string(self)
+        else:
+            return self.client_address[0]
 
     def do_GET(self):
         """Serve a GET request."""
         cpg.request.method = 'GET'
-        _cphttptools.doRequest(self.raw_requestline, self.headers, self.rfile, self.wfile)
+        _cphttptools.doRequest(
+            self.client_address[0],
+            self.address_string(),
+            self.raw_requestline,
+            self.headers,
+            self.rfile,
+            self.wfile
+        )
 
     def do_HEAD(self): # Head is not implemented
         """Serve a HEAD request."""
         cpg.request.method = 'HEAD'
-        _cphttptools.doRequest(self.raw_requestline, self.headers, self.rfile, self.wfile)
+        _cphttptools.doRequest(
+            self.client_address[0],
+            self.address_string(),
+            self.raw_requestline,
+            self.headers,
+            self.rfile,
+            self.wfile
+        )
 
     def do_POST(self):
         """Serve a POST request."""
         cpg.request.method = 'POST'
-        _cphttptools.doRequest(self.raw_requestline, self.headers, self.rfile, self.wfile)
+        _cphttptools.doRequest(
+            self.client_address[0],
+            self.address_string(),
+            self.raw_requestline,
+            self.headers,
+            self.rfile,
+            self.wfile
+        )
 
     def setup(self):
         """ We have to override this to handle SSL

@@ -20,11 +20,18 @@ class BaseUrlFilter(BaseInputFilter):
     Useful when running a CP server behind Apache.
     """
 
-    def __init__(self, baseUrl = 'http://localhost'):
+    def __init__(self, baseUrl = 'http://localhost', useXForwardedHost = True):
         # New baseUrl
         self.baseUrl = baseUrl
+        self.useXForwardedHost = useXForwardedHost
 
     def afterRequestHeader(self):
+        if self.useXForwardedHost:
+            newBaseUrl = cpg.request.headerMap.get(
+                "X-Forwarded-Host", self.baseUrl)
+        else:
+            newBaseUrl = self.baseUrl
+
         cpg.request.browserUrl = cpg.request.browserUrl.replace(
-            cpg.request.base, self.baseUrl)
-        cpg.request.base = self.baseUrl
+            cpg.request.base, newBaseUrl)
+        cpg.request.base = newBaseUrl

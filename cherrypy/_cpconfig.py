@@ -68,7 +68,7 @@ def setDefaultConfigOption():
     cpg.configOption.staticContentList = []
 
     # Variable used for session handling
-    cpg.configOption.sessionStorageType = ""
+    cpg.configOption.sessionStorageType = "ram"
     cpg.configOption.sessionTimeout = 60 # In minutes
     cpg.configOption.sessionCleanUpDelay = 60 # In minutes
     cpg.configOption.sessionCookieName = "CherryPySession"

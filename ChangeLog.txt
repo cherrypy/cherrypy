@@ -1,3 +1,8 @@
+    * Default session storageType is now ram (Remi)
+    * logFile config option is now honored - ticket #51 (Remi)
+    * Added cpg.request.remoteAddr and cpg.request.remoteHost - ticket #34 (Eurleif) 
+    * Improved baseurlfilter to handle x-forwarded-host - ticket #49 (Kender)
+    * Made object mapping algorithm iterative instead of recursive - ticket #48 (Jesir Vargas)
     * Improved testing framework (Remco)
     * Check that response is a string *after* filters have been applied (ticket #28) (Remi)
     * Removed all XML-RPC references from the core: it is now a filter (ticket #30) (Remi)

@@ -25,6 +25,9 @@ class GzipFilter(BaseOutputFilter):
         self.mimeTypeList = mimeTypeList
 
     def beforeResponse(self):
+        if not cpg.response.body:
+            # Response body is empty (might be a 304 for instance)
+            return
         ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
         ae = cpg.request.headerMap.get('Accept-Encoding', '')
         if (ct in self.mimeTypeList) and ('gzip' in ae):
