@@ -526,5 +526,6 @@ def canonicalizeUrl(newUrl):
                 # browserUrl is request.base
                 newUrl = cpg.request.base + '/' + newUrl
             else:
+                i = cpg.request.browserUrl.rfind('/')
                 newUrl = cpg.request.browserUrl[:i+1] + newUrl
     return newUrl
