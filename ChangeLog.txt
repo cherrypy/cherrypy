@@ -1,0 +1,14 @@
+    * Check that response is a string *after* filters have been applied (ticket #28) (Remi)
+    * Removed all XML-RPC references from the core: it is now a filter (ticket #30) (Remi)
+    * Removed Generator processing for the core: it is now a filter (Remi)
+    * Removed "response encoding" from the core: it is now in a filter (ticket #31) (Remi)
+    * Implemented filters and a couple of sample filters (Remi)
+	* Fixed "cleanUpOldSessions" bug (ticket #12) (Remi)
+	* "file" storage type for sessions now works fine (Remi)
+    * Ticket #6: If a response is unicode, it gets encoded automatically. Encoding is specified in the config file unser [server].encoding (the default is UTF-8). (Remi)
+    * Added more unittest (Remi)
+    * Fixed file upload bug (Remi)
+
+2004/10/13:
+    * First alpha release of CherryPy-2 (Remi)
+

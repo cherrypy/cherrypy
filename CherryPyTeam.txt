@@ -1,0 +1,1 @@
+See http://trac.cherrypy.org/cgi-bin/trac.cgi/wiki/CherryPyTeam

@@ -1,0 +1,382 @@
+"""
+Copyright (c) 2004, CherryPy Team (team@cherrypy.org)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+    * Neither the name of the CherryPy Team nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+import cpg, urllib, sys, time, traceback, types, StringIO, cgi, os
+import mimetypes, sha, random, string, _cputil, cperror
+
+"""
+Common Service Code for CherryPy
+"""
+
+mimetypes.types_map['.dwg']='image/x-dwg'
+mimetypes.types_map['.ico']='image/x-icon'
+
+weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+def parseFirstLine(data):
+    cpg.request.path = data.split()[1]
+    cpg.request.browserUrl = cpg.request.path
+    cpg.request.paramMap = {}
+    cpg.request.filenameMap = {}
+    cpg.request.fileTypeMap = {}
+    cpg.request.paramTuple = ()
+    i = cpg.request.path.find('?')
+    if i != -1:
+        # Parse parameters from URL
+        if cpg.request.path[i+1:]:
+            k = cpg.request.path[i+1:].find('?')
+            if k != -1:
+                j = cpg.request.path[:k].rfind('=')
+                if j != -1:
+                    cpg.request.path = cpg.request.path[:j+1] + \
+                        urllib.quote_plus(cpg.request.path[j+1:])
+            for paramStr in cpg.request.path[i+1:].split('&'):
+                sp = paramStr.split('=')
+                if len(sp) > 2:
+                    j = paramStr.find('=')
+                    sp = (paramStr[:j], paramStr[j+1:])
+                if len(sp) == 2:
+                    key, value = sp
+                    value = urllib.unquote_plus(value)
+                    if cpg.request.paramMap.has_key(key):
+                        # Already has a value: make a list out of it
+                        if type(cpg.request.paramMap[key]) == type([]):
+                            # Already is a list: append the new value to it
+                            cpg.request.paramMap[key].append(value)
+                        else:
+                            # Only had one value so far: start a list
+                            cpg.request.paramMap[key] = [cpg.request.paramMap[key], value]
+                    else:
+                        cpg.request.paramMap[key] = value
+        cpg.request.path = cpg.request.path[:i]
+
+    if cpg.request.path and cpg.request.path[-1] == '/':
+        cpg.request.path = cpg.request.path[:-1] # Remove trailing '/' if any
+
+def parsePostData(rfile):
+    # Read request body and put it in data
+    len = int(cpg.request.headerMap.get("Content-Length","0"))
+    if len: data = rfile.read(len)
+    else: data=""
+
+    # Put data in a StringIO so FieldStorage can read it
+    newRfile = StringIO.StringIO(data)
+    # Create a copy of headerMap with lowercase keys because
+    #   FieldStorage doesn't work otherwise
+    lowerHeaderMap = {}
+    for key, value in cpg.request.headerMap.items():
+        lowerHeaderMap[key.lower()] = value
+    forms = cgi.FieldStorage(fp = newRfile, headers = lowerHeaderMap, environ = {'REQUEST_METHOD':'POST'}, keep_blank_values = 1)
+    for key in forms.keys():
+        # Check if it's a list or not
+        valueList = forms[key]
+        if type(valueList) == type([]):
+            # It's a list of values
+            cpg.request.paramMap[key] = []
+            cpg.request.filenameMap[key] = []
+            cpg.request.fileTypeMap[key] = []
+            for item in valueList:
+                cpg.request.paramMap[key].append(item.value)
+                cpg.request.filenameMap[key].append(item.filename)
+                cpg.request.fileTypeMap[key].append(item.type)
+        else:
+            # It's a single value
+            # In case it's a file being uploaded, we save the filename in a map (user might need it)
+            cpg.request.paramMap[key] = valueList.value
+            cpg.request.filenameMap[key] = valueList.filename
+            cpg.request.fileTypeMap[key] = valueList.type
+
+def applyFilterList(methodName):
+    filterList = _cputil.getSpecialFunction('_cpFilterList')
+    for filter in filterList:
+        method = getattr(filter, methodName)
+        method()
+
+def insertIntoHeaderMap(key,value):
+    normalizedKey = '-'.join([s.capitalize() for s in key.split('-')])
+    cpg.request.headerMap[normalizedKey] = value
+
+def doRequest(wfile):
+    try:
+        handleRequest(wfile)
+    except:
+        err = ""
+        exc_info_1 = sys.exc_info()[1]
+        if hasattr(exc_info_1, 'args') and len(exc_info_1.args) >= 1:
+            err = exc_info_1.args[0]
+
+        try:
+            _cputil.getSpecialFunction('_cpOnError')()
+
+            # Save session data
+            if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
+                sessionId = cpg.response.simpleCookie[cpg.configOption.sessionCookieName].value
+                expirationTime = time.time() + cpg.configOption.sessionTimeout * 60
+                _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
+
+            wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
+            if cpg.response.headerMap.has_key('Content-Length') and cpg.response.headerMap['Content-Length'] == 0:
+                cpg.response.headerMap['Content-Length'] = len(cpg.response.body)
+            for key, valueList in cpg.response.headerMap.items():
+                if key not in ('Status', 'protocolVersion'):
+                    if type(valueList) != type([]): valueList = [valueList]
+                    for value in valueList:
+                        wfile.write('%s: %s\r\n'%(key, value))
+            wfile.write('\r\n')
+            wfile.write(cpg.response.body)
+        except:
+            bodyFile = StringIO.StringIO()
+            traceback.print_exc(file = bodyFile)
+            body = bodyFile.getvalue()
+            wfile.write('%s 200 OK\r\n' % cpg.configOption.protocolVersion)
+            wfile.write('Content-Type: text/plain\r\n')
+            wfile.write('Content-Length: %s\r\n' % len(body))
+            wfile.write('\r\n')
+            wfile.write(body)
+
+def sendResponse(wfile):
+    applyFilterList('beforeResponse')
+
+    # Save session data
+    if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
+        sessionId = cpg.response.simpleCookie[cpg.configOption.sessionCookieName].value
+        expirationTime = time.time() + cpg.configOption.sessionTimeout * 60
+        _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
+
+    # Set the content-length
+    if cpg.response.headerMap.has_key('Content-Length') and cpg.response.headerMap['Content-Length']==0:
+        cpg.response.headerMap['Content-Length'] = len(cpg.response.body)
+
+    wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
+    for key, valueList in cpg.response.headerMap.items():
+        if key not in ('Status', 'protocolVersion'):
+            if type(valueList) != type([]): valueList = [valueList]
+            for value in valueList:
+                wfile.write('%s: %s\r\n'%(key, value))
+
+    # Send response cookies
+    cookie = cpg.response.simpleCookie.output()
+    if cookie:
+        wfile.write(cookie+'\r\n')
+    wfile.write('\r\n')
+
+    applyFilterList('afterResponseHeader')
+
+    applyFilterList('beforeResponseFullBody')
+
+    # Check that the response body is a string
+    if type(cpg.response.body) != types.StringType:
+        raise cperror.WrongResponseType
+
+    wfile.write(cpg.response.body)
+
+def handleRequest(wfile):
+    now = time.time()
+    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
+    date = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (weekdayname[wd], day, monthname[month], year, hh, mm, ss)
+    cpg.response.headerMap={"Status": "200 OK", "protocolVersion": cpg.configOption.protocolVersion, "Content-Type": "text/html", "Server": "CherryPy/" + cpg.__version__, "Date": date, "Set-Cookie": [], "Content-Length": 0}
+
+    # Two variables used for streaming
+    cpg.response.wfile = wfile
+    cpg.response.sendResponse = 1
+
+    if cpg.configOption.sslKeyFile:
+        cpg.request.base = "https://" + cpg.request.headerMap['Host']
+    else:
+        cpg.request.base = "http://" + cpg.request.headerMap['Host']
+    cpg.request.browserUrl = cpg.request.base + '/' + cpg.request.browserUrl
+    cpg.request.isStatic = 0
+
+    # Clean up expired sessions if needed:
+    if cpg.configOption.sessionStorageType and cpg.configOption.sessionCleanUpDelay and cpg._lastSessionCleanUpTime + cpg.configOption.sessionCleanUpDelay * 60 <= now:
+        cpg._lastSessionCleanUpTime = now
+        _cputil.getSpecialFunction('_cpCleanUpOldSessions')()
+
+    # Save original values (in case they get modified by filters)
+    cpg.request.originalPath = cpg.request.path
+    cpg.request.originalParamMap = cpg.request.paramMap
+    cpg.request.originalParamTuple = cpg.request.paramTuple
+
+    path = cpg.request.path
+
+    # Handle static directories
+    for urlDir, fsDir in cpg.configOption.staticContentList:
+        if path == urlDir or path[:len(urlDir)+1]==urlDir+'/':
+
+            cpg.request.isStatic = 1
+
+            fname = fsDir + path[len(urlDir):]
+            try:
+                stat = os.stat(fname)
+            except OSError:
+                raise cperror.NotFound
+            if type(stat) == type(()): # Python2.1
+                modifTime = stat[9]
+            else:
+                modifTime = stat.st_mtime
+
+            strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(modifTime))
+
+            # Check if browser sent "if-modified-since" in request header
+            if cpg.request.headerMap.has_key('If-Modified-Since'):
+                # Check if if-modified-since date is the same as strModifTime
+                if cpg.request.headerMap['If-Modified-Since'] == strModifTime:
+                    cpg.response.headerMap = {'Status': 304, 'protocolVersion': cpg.configOption.protocolVersion, 'Date': date}
+                    cpg.response.body = ''
+                    sendResponse(wfile)
+                    return
+
+            cpg.response.headerMap['Last-Modified'] = strModifTime
+            f=open(fname, 'rb')
+            cpg.response.body = f.read()
+            f.close()
+            # Set content-type based on filename extension
+            i = path.rfind('.')
+            if i != -1: ext = path[i:]
+            else: ext = ""
+            contentType = mimetypes.types_map.get(ext, "text/plain")
+            cpg.response.headerMap['Content-Type'] = contentType
+            sendResponse(wfile)
+            return
+
+    # Get session data
+    if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
+        now = time.time()
+        # First, get sessionId from cookie
+        try: sessionId = cpg.request.simpleCookie[cpg.configOption.sessionCookieName].value
+        except: sessionId=None
+        if sessionId:
+            # Load session data from wherever it was stored
+            sessionData = _cputil.getSpecialFunction('_cpLoadSessionData')(sessionId)
+            if sessionData == None:
+                sessionId = None
+            else:
+                cpg.request.sessionMap, expirationTime = sessionData
+                # Check that is hasn't expired
+                if now > expirationTime:
+                    # Session expired
+                    sessionId = None
+
+        # Create a new sessionId if needed
+        if not sessionId:
+            cpg.request.sessionMap = {}
+            sessionId = generateSessionId()
+            cpg.request.sessionMap['_sessionId'] = sessionId
+
+        cpg.response.simpleCookie[cpg.configOption.sessionCookieName] = sessionId
+        cpg.response.simpleCookie[cpg.configOption.sessionCookieName]['path'] = '/'
+        cpg.response.simpleCookie[cpg.configOption.sessionCookieName]['version'] = 1
+
+    path = cpg.request.path
+
+    # Traverse path:
+    # for /a/b?arg=val, we'll try:
+    #   root.a.b.index(arg='val')
+    #   root.a.b(arg='val')
+    #   root.a.b.default(arg='val')
+    #   root.a.default('b', arg='val')
+    #   root.default('a', 'b', arg='val')
+
+    # Also, we ignore trailing slashes
+
+    # Also, a method has to have ".exposed = True" in order to be exposed
+
+    if not path:
+        pathList = []
+    else:
+        pathList = path.split('/')
+
+    pathList = ['root'] + pathList
+
+    # try root.a.b, then root.a, then root
+    func = None
+
+    obj = cpg
+    previousObj = None
+    objList = []
+    searchedPathList = []
+    myPath = ''
+    bestKnownDefaultMethod = None
+    # Successively get objects from the path: 'root', then 'a' then 'b'
+    for pathItem in pathList:
+        previousObj = obj
+        try:
+            # find contained object
+            obj = getattr(obj, pathItem)
+
+            # add object
+            objList.append(obj)
+            searchedPathList.append(pathItem)
+
+            # if found object has a default method, remember it for later
+            default = getattr(obj, 'default', None)
+            if default:
+                # TODO: check if default is callable?
+                bestKnownDefaultMethod = default
+                bestKnownDefaultMethodMyPath = '/'.join(searchedPathList[1:])
+
+        except AttributeError:
+            break
+
+    # TODO: the following code could probably be KISSed somewhat.
+
+    if len(objList) == len(pathList):
+        # root_a_b exists
+        root_a_b = objList[-1]
+
+        # Try root.a.b.index()
+        root_a_b_dot_index = getattr(root_a_b, 'index', None)
+        if root_a_b_dot_index and getattr(root_a_b_dot_index, 'exposed', None):
+            myPath = '/'.join(pathList[1:])
+            func = root_a_b_dot_index
+        else:
+            # Try root.a.b.default()
+            root_a_b_dot_default = getattr(root_a_b, 'default', None)
+            if root_a_b_dot_default and getattr(root_a_b_dot_default, 'exposed', None):
+                # XXX: I don't think this ever gets called?
+                myPath = 'root_a_b_dot_default'
+                func = root_a_b_dot_default
+            elif callable(root_a_b) and getattr(root_a_b, 'exposed', None):
+                # We use root.a.b()
+                myPath = '/'.join(pathList[1:-1])
+                func = root_a_b
+
+    if func == None:
+        # None of these exist: use the default method we found earlier
+        if bestKnownDefaultMethod:
+            func = bestKnownDefaultMethod
+            myPath = bestKnownDefaultMethodMyPath
+
+    if func == None:
+        raise cperror.NotFound
+
+    myPath += '/'
+    if len(myPath) > 1:
+        myPath = '/' + myPath
+
+    cpg.request.objectPath = myPath
+    cpg.request.virtualPath = cpg.request.path[len(myPath)-1:]
+    cpg.response.body = func(**(cpg.request.paramMap))
+
+    if cpg.response.sendResponse:
+        sendResponse(wfile)
+
+def generateSessionId():
+    s = ''
+    for i in range(50):
+        s += random.choice(string.letters+string.digits)
+    s += '%s'%time.time()
+    return sha.sha(s).hexdigest()
+
+
