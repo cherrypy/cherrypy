@@ -52,17 +52,6 @@ def setDefaultConfigOption():
     cpg.configOption.protocolVersion = "HTTP/1.0"
 
     # Parameters used to tell what kind of server we want
-    # Note that numberOfProcesses, threading and forking conflict
-    # wich each other: if one has a non-null value, the other
-    # ones should be null (for numberOfProcesses, null means equal to one)
-    cpg.configOption.processPool = 0 # Used if we want to fork n processes
-                                 # at the beginning. In this case, all
-                                 # processes will listen on the same
-                                 # socket (this only works on unix)
-    cpg.configOption.threading = 0 # Used if we want to create a new
-                               # thread for each request
-    cpg.configOption.forking = 0 # Used if we want to create a new process
-                             # for each request
     cpg.configOption.threadPool = 0 # Used if we want to create a pool
                                 # of threads at the beginning
 
@@ -114,10 +103,7 @@ def parseConfigFile(configFile = None, parsedConfigFile = None):
             ('server', 'socketPort', 'int'),
             ('server', 'socketFile', 'str'),
             ('server', 'reverseDNS', 'int'),
-            ('server', 'processPool', 'int'),
             ('server', 'threadPool', 'int'),
-            ('server', 'threading', 'int'),
-            ('server', 'forking', 'int'),
             ('server', 'sslKeyFile', 'str'),
             ('server', 'sslCertificateFile', 'str'),
             ('server', 'sslClientCertificateVerification', 'int'),
@@ -157,10 +143,7 @@ def outputConfigOptions():
     _cpLogMessage("  socketFile: %s" % cpg.configOption.socketFile, 'CONFIG')
     _cpLogMessage("  reverseDNS: %s" % cpg.configOption.reverseDNS, 'CONFIG')
     _cpLogMessage("  socketQueueSize: %s" % cpg.configOption.socketQueueSize, 'CONFIG')
-    _cpLogMessage("  processPool: %s" % cpg.configOption.processPool, 'CONFIG')
     _cpLogMessage("  threadPool: %s" % cpg.configOption.threadPool, 'CONFIG')
-    _cpLogMessage("  threading: %s" % cpg.configOption.threading, 'CONFIG')
-    _cpLogMessage("  forking: %s" % cpg.configOption.forking, 'CONFIG')
     _cpLogMessage("  sslKeyFile: %s" % cpg.configOption.sslKeyFile, 'CONFIG')
     if cpg.configOption.sslKeyFile:
         _cpLogMessage("  sslCertificateFile: %s" % cpg.configOption.sslCertificateFile, 'CONFIG')
@@ -182,8 +165,6 @@ def dummy():
         raise "CherryError: protocolVersion must be 'HTTP/1.1' or 'HTTP/1.0'"
     if _reverseDNS not in (0,1): raise "CherryError: reverseDNS must be '0' or '1'"
     if _socketFile and not hasattr(socket, 'AF_UNIX'): raise "CherryError: Configuration file has socketFile, but this is only available on Unix machines"
-    if _processPool!=1 and not hasattr(os, 'fork'): raise "CherryError: Configuration file has processPool, but forking is not available on this operating system"
-    if _forking and not hasattr(os, 'fork'): raise "CherryError: Configuration file has forking, but forking is not available on this operating system"
     if _sslKeyFile:
         try:
             global SSL
@@ -191,11 +172,6 @@ def dummy():
         except: raise "CherryError: PyOpenSSL 0.5.1 or later must be installed to use SSL. You can get it from http://pyopenssl.sourceforge.net"
     if _socketPort and _socketFile: raise "CherryError: In configuration file: socketPort and socketFile conflict with each other"
     if not _socketFile and not _socketPort: _socketPort=8000 # Default port
-    if _processPool==1: severalProcs=0
-    else: severalProcs=1
-    if _threadPool==1: severalThreads=0
-    else: severalThreads=1
-    if severalThreads+severalProcs+_threading+_forking>1: raise "CherryError: In configuration file: threadPool, processPool, threading and forking conflict with each other"
     if _sslKeyFile and not _sslCertificateFile: raise "CherryError: Configuration file has sslKeyFile but no sslCertificateFile"
     if _sslCertificateFile and not _sslKeyFile: raise "CherryError: Configuration file has sslCertificateFile but no sslKeyFile"
     try: sys.stdout.flush()
@@ -204,6 +180,4 @@ def dummy():
     if _sessionStorageType not in ('', 'custom', 'ram', 'file', 'cookie'): raise "CherryError: Configuration file an invalid sessionStorageType: '%s'"%_sessionStorageType
     if _sessionStorageType in ('custom', 'ram', 'cookie') and _sessionStorageFileDir!='': raise "CherryError: Configuration file has sessionStorageType set to 'custom, 'ram' or 'cookie' but a sessionStorageFileDir is specified"
     if _sessionStorageType=='file' and _sessionStorageFileDir=='': raise "CherryError: Configuration file has sessionStorageType set to 'file' but no sessionStorageFileDir"
-    if _sessionStorageType=='ram' and (_forking or severalProcs):
-        print "CherryWarning: 'ram' sessions might be buggy when using several processes"
 

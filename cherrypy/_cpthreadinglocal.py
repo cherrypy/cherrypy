@@ -1,3 +1,5 @@
+# This is a backport of Python-2.4's threading.local() implementation
+
 """Thread-local objects
 
 (Note that this module provides a Python version of thread
