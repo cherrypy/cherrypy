@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 WSGI interface for CherryPy
 """
 
-import StringIO, Cookie
+import StringIO, Cookie, time
 from cherrypy import cpg, _cphttptools, _cpserver
 
 def init(*a, **kw):
@@ -52,6 +52,9 @@ def wsgiApp(environ, start_response):
     _cphttptools.parseFirstLine(firstLine)
 
     # Initialize variables
+    now = time.time()
+    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
+    date = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (_cphttptools.weekdayname[wd], day, _cphttptools.monthname[month], year, hh, mm, ss)
     cpg.request.headerMap = {}
     cpg.request.simpleCookie = Cookie.SimpleCookie()
     cpg.response.simpleCookie = Cookie.SimpleCookie()
@@ -74,10 +77,36 @@ def wsgiApp(environ, start_response):
 
     #  TODO: handle POST
 
+    # set up stuff similar to initRequest
+    cpg.response.headerMap = {
+        "protocolVersion": cpg.configOption.protocolVersion,
+        "Status": "200 OK",
+        "Content-Type": "text/html",
+        "Server": "CherryPy/" + cpg.__version__,
+        "Date": date,
+        "Set-Cookie": [],
+        "Content-Length": 0
+    }
+    cpg.request.base = "http://" + cpg.request.headerMap['Host']
+    cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
+    cpg.request.isStatic = False
+    cpg.request.parsePostData = True
+    cpg.request.rfile = environ["wsgi.input"]
+    cpg.request.objectPath = None 
+    cpg.request.simpleCookie.load(cpg.request.headerMap['Cookie'])
+
+    cpg.response.simpleCookie = Cookie.SimpleCookie()
+    cpg.response.sendResponse = 1
+    
+    if cpg.request.method == 'POST' and cpg.request.parsePostData:
+        _cphttptools.parsePostData(cpg.request.rfile)
+
     # Execute request
     wfile = StringIO.StringIO()
-    _cphttptools.doRequest(wfile)
+    cpg.response.wfile = wfile
+    _cphttptools.handleRequest(wfile)
     response = wfile.getvalue()
+
 
     # Extract header from response
     headerLines = []
@@ -108,4 +137,36 @@ def wsgiApp(environ, start_response):
     start_response(status, responseHeaders)
 
     return response
+
+if __name__ == '__main__':
+    from cherrypy import cpg, wsgiapp
+    class Root:
+        def index(self, name = "world"):
+            count = cpg.request.sessionMap.get('count', 0) + 1
+            cpg.request.sessionMap['count'] = count
+            return """
+                <html><body>
+                Hello, %s, count is %s:
+                <form action="/post" method="post">
+                    Post some data: <input name=myData type=text"> <input type=submit>
+                </form>
+            """ % (name, count)
+        index.exposed = True
+        def post(self, myData):
+            return "myData: " + myData
+        post.exposed = True
+    cpg.root = Root()
+    
+    import sys
+    # This uses the WSGI HTTP server from PEAK.wsgiref
+    # sys.path.append(r"C:\Tmp\PEAK\src")
+    from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
+     # Read the CherryPy config file and initialize some variables
+    wsgiapp.init(configDict = {'socketPort': 8000, 'sessionStorageType': 'ram'})
+    server_address = ("", 8000)
+    httpd = WSGIServer(server_address, WSGIRequestHandler)
+    httpd.set_app(wsgiapp.wsgiApp)
+    sa = httpd.socket.getsockname()
+    print "Serving HTTP on", sa[0], "port", sa[1], "..."
+    httpd.serve_forever()
 

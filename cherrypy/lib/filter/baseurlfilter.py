@@ -47,7 +47,7 @@ class BaseUrlFilter(BaseInputFilter):
             newBaseUrl = self.baseUrl
         if newBaseUrl.find("://") == -1:
             # add http:// or https:// if needed	
-            newBaseUrl = cpg.request.base[:cpg.request.base.find("://")] + "://" + newBaseUrl
+            newBaseUrl = cpg.request.base[:cpg.request.base.find("://") + 3] + newBaseUrl
 
         cpg.request.browserUrl = cpg.request.browserUrl.replace(
             cpg.request.base, newBaseUrl)
