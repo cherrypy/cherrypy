@@ -1,4 +1,3 @@
 include CHANGELOG.txt
 include CHERRYPYTEAM.txt
 include *.conf
-include *.py
