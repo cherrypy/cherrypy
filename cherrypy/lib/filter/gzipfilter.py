@@ -12,10 +12,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 """
 
 import gzip, StringIO
-from basefilter import BaseFilter
+from basefilter import BaseOutputFilter
 from cherrypy import cpg
 
-class GzipFilter(BaseFilter):
+class GzipFilter(BaseOutputFilter):
     """
     Filter that gzips the response.
     """

@@ -12,10 +12,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 """
 
 import time, StringIO, pickle
-from basefilter import BaseFilter
+from basefilter import BaseInputFilter, BaseOutputFilter
 from cherrypy import cpg
 
-class LogDebugInfoFilter(BaseFilter):
+class LogDebugInfoStartFilter(BaseInputFilter, BaseOutputFilter):
     """
     Filter that adds debug information to the page
     """

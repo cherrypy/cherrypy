@@ -30,7 +30,7 @@ python2[4]={}    # Infos about python-2.4
 
 # Edit these lines to match your setup
 if sys.platform=="win32":
-    python2[3]['path']="c:\\python\\python.exe"
+    python2[3]['path']="c:\\python23\\python.exe"
     python2[4]['path']="c:\\python24\\python.exe"
 else:
     python2[3]['path']="python2.3"
