@@ -13,7 +13,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 import cpg, urllib, sys, time, traceback, types, StringIO, cgi, os
 import mimetypes, sha, random, string, _cputil, cperror, Cookie
-from lib.filter import basefilter
 
 """
 Common Service Code for CherryPy
@@ -127,19 +126,11 @@ def parsePostData(rfile):
             cpg.request.fileTypeMap[key] = valueList.type
 
 def applyFilterList(methodName):
-    try:
-        filterList = _cputil.getSpecialFunction('_cpFilterList')
-        for filter in filterList:
-            method = getattr(filter, methodName, None)
-            if method:
-                method()
-    except basefilter.InternalRedirect:
-        # If we get an InternalRedirect, we start the filter list
-        #   from scratch. Is cpg.request.path has been modified by
-        #   the hook, then a new filter list will be applied.
-        # We use recursion so if there is an infinite loop, we'll
-        #   get the regular python "recursion limit exceeded" exception.
-        applyFilterList(methodName)
+    filterList = _cputil.getSpecialFunction('_cpFilterList')
+    for filter in filterList:
+        method = getattr(filter, methodName, None)
+        if method:
+            method()
 
 def insertIntoHeaderMap(key,value):
     normalizedKey = '-'.join([s.capitalize() for s in key.split('-')])
@@ -152,7 +143,6 @@ def initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     cpg.request.base = "http://" + cpg.request.headerMap['Host']
     cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
     cpg.request.isStatic = False
-    cpg.request.mustBeExposed = True
     cpg.request.parsePostData = True
     cpg.request.rfile = rfile
 
@@ -427,8 +417,7 @@ def mapPathToObject():
     #   root.default('a', 'b', arg='val')
 
     # Also, we ignore trailing slashes
-    # Also, a method has to have ".exposed == True" in order to be exposed
-    #   unless cpg.request.mustBeExposed == False
+    # Also, a method has to have ".exposed = True" in order to be exposed
 
     path = cpg.request.path
     if path.startswith('/'): path = path[1:] # Remove leading slash
@@ -448,9 +437,7 @@ def mapPathToObject():
     virtualPathList = []
     while objectPathList:
         candidate = getObjFromPath(objectPathList, objCache)
-        if callable(candidate) and (
-                (not cpg.request.mustBeExposed) or
-                getattr(candidate, 'exposed', False)):
+        if callable(candidate) and getattr(candidate, 'exposed', False):
             foundIt = True
             break
         # Couldn't find the object: pop one from the list and try "default"
@@ -459,9 +446,7 @@ def mapPathToObject():
             virtualPathList.insert(0, lastObj)
             objectPathList.append('default')
             candidate = getObjFromPath(objectPathList, objCache)
-            if callable(candidate) and (
-                    (not cpg.request.mustBeExposed) or
-                    getattr(candidate, 'exposed', False)):
+            if callable(candidate) and getattr(candidate, 'exposed', False):
                 foundIt = True
                 isDefault = True
                 break
