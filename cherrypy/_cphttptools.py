@@ -13,6 +13,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 import cpg, urllib, sys, time, traceback, types, StringIO, cgi, os
 import mimetypes, sha, random, string, _cputil, cperror, Cookie
+from lib.filter import basefilter
 
 """
 Common Service Code for CherryPy
@@ -126,11 +127,19 @@ def parsePostData(rfile):
             cpg.request.fileTypeMap[key] = valueList.type
 
 def applyFilterList(methodName):
-    filterList = _cputil.getSpecialFunction('_cpFilterList')
-    for filter in filterList:
-        method = getattr(filter, methodName, None)
-        if method:
-            method()
+    try:
+        filterList = _cputil.getSpecialFunction('_cpFilterList')
+        for filter in filterList:
+            method = getattr(filter, methodName, None)
+            if method:
+                method()
+    except basefilter.InternalRedirect:
+        # If we get an InternalRedirect, we start the filter list
+        #   from scratch. Is cpg.request.path has been modified by
+        #   the hook, then a new filter list will be applied.
+        # We use recursion so if there is an infinite loop, we'll
+        #   get the regular python "recursion limit exceeded" exception.
+        applyFilterList(methodName)
 
 def insertIntoHeaderMap(key,value):
     normalizedKey = '-'.join([s.capitalize() for s in key.split('-')])

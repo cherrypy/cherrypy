@@ -25,7 +25,7 @@ class EmptyClass:
     """ An empty class """
     pass
 
-class ThreadAwareClass:
+class ThreadAwareClass(object):
     """ A thread-safe class for storing/retrieving
         thread-specific variables """
 
@@ -45,8 +45,9 @@ class ThreadAwareClass:
 def getSpecialFunction(name):
     """ Return the special function """
 
-    # First, we look in the right-most object if this special function is implemented.
-    # If not, then we try the previous object and so on until we reach cpg.root
+    # First, we look for the method in the right-most object
+    # If it's not there, we try the previous object and so on until
+    # we reach cpg.root
     # If it's still not there, we use the implementation from the
     # "_cpdefaults.py" module
     
@@ -59,9 +60,9 @@ def getSpecialFunction(name):
         try:
             path = cpg.request.path
         except:
-            path = ''
+            path = '/'
         if path:
-            pathList = path.split('/')
+            pathList = path.split('/')[1:]
 
             obj = cpg.root
             previousObj = None
