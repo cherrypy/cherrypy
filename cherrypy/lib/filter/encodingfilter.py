@@ -40,14 +40,15 @@ class EncodingFilter(BaseOutputFilter):
         self.mimeTypeList = mimeTypeList
 
     def beforeResponse(self):
-        ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
-        if (ct in self.mimeTypeList):
-            # Add "charset=..." to response Content-Type header
-            contentType = cpg.response.headerMap.get("Content-Type")
-            if contentType and 'charset' not in contentType:
-                cpg.response.headerMap["Content-Type"] += ";charset=%s" % self.encoding
-            # Return a generator that encodes the sequence
-            cpg.response.body = self.encode_body(cpg.response.body)
+        contentType = cpg.response.headerMap.get("Content-Type")
+        if contentType:
+            ctlist = contentType.split(';')[0]
+            if (ctlist in self.mimeTypeList):
+                # Add "charset=..." to response Content-Type header
+                if contentType and 'charset' not in contentType:
+                    cpg.response.headerMap["Content-Type"] += ";charset=%s" % self.encoding
+                # Return a generator that encodes the sequence
+                cpg.response.body = self.encode_body(cpg.response.body)
 
     def encode_body(self, body):
         for line in body:

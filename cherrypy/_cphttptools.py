@@ -186,9 +186,11 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     # inits the cpg.responsed.wfile so filters can access it
     cpg.response.wfile = wfile
     cpg.response.sendResponse = 1
-    initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile)
-    # reads back wfile; if may be redirected by a filter
-    wfile = cpg.response.wfile
+    try:
+        initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile)
+    except basefilter.RequestHandled:
+        # cache hit!
+        return
 
     # Prepare response variables
     now = time.time()
@@ -206,8 +208,14 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     cpg.response.simpleCookie = Cookie.SimpleCookie()
 
     try:
-        handleRequest(wfile)
+        handleRequest(cpg.response.wfile)
     except:
+        # TODO: in some cases exceptions and filters are conflicting; 
+        # error reporting seems to be broken in some cases. This code is 
+        # a helper to check it
+        print "%"*80
+        traceback.print_exc()
+        print "%"*80
         err = ""
         exc_info_1 = sys.exc_info()[1]
         if hasattr(exc_info_1, 'args') and len(exc_info_1.args) >= 1:
@@ -241,6 +249,12 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
             for line in cpg.response.body:
                 wfile.write(line)
         except:
+            # TODO: in some cases exceptions and filters are conflicting; 
+            # error reporting seems to be broken in some cases. This code is 
+            # a helper to check it
+            #print "%"*80
+            #traceback.print_exc()
+            #print "%"*80
             bodyFile = StringIO.StringIO()
             traceback.print_exc(file = bodyFile)
             body = bodyFile.getvalue()
@@ -273,7 +287,7 @@ def sendResponse(wfile):
         if key not in ('Status', 'protocolVersion'):
             if type(valueList) != type([]): valueList = [valueList]
             for value in valueList:
-                wfile.write('%s: %s\r\n'%(key, value))
+                wfile.write('%s: %s\r\n' % (key, value))
 
     # Send response cookies
     cookie = cpg.response.simpleCookie.output()
@@ -327,8 +341,11 @@ def handleRequest(wfile):
             if cpg.request.headerMap.has_key('If-Modified-Since'):
                 # Check if if-modified-since date is the same as strModifTime
                 if cpg.request.headerMap['If-Modified-Since'] == strModifTime:
-                    cpg.response.headerMap = {'Status': 304, 'protocolVersion': cpg.configOption.protocolVersion, 'Date': cpg.response.headerMap['Date']}
-                    cpg.response.body = ''
+                    cpg.response.headerMap = {
+                        'Status': 304, 
+                        'protocolVersion': cpg.configOption.protocolVersion, 
+                        'Date': cpg.response.headerMap['Date']}
+                    cpg.response.body = []
                     sendResponse(wfile)
                     return
 

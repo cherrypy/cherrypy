@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 class InternalRedirect(Exception): pass
+class RequestHandled(Exception): pass
 
 class BaseInputFilter(object):
     """
