@@ -70,3 +70,8 @@ def start(configFile = None, parsedConfigFile = None, configDict = {}, initOnly 
 def stop():
     _cphttpserver.stop()
 
+# Set some special attributes for adding hooks
+onStartServerList = []
+onStartThreadList = []
+onStopServerList = []
+onStopThreadList = []

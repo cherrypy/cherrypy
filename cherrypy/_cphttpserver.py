@@ -71,11 +71,16 @@ def run_server(HandlerClass, ServerClass, server_address, socketFile):
     _cpLogMessage("Serving %s on %s" % (servingWhat, onWhat), 'HTTP')
 
     try:
+        # Call the functions from cpg.server.onStartServerList
+        for func in cpg.server.onStartServerList:
+            func()
         myCherryHTTPServer.serve_forever()
     except KeyboardInterrupt:
         _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
         myCherryHTTPServer.shutdown()
-
+    # Call the functions from cpg.server.onStartServerList
+    for func in cpg.server.onStopServerList:
+        func()
 
 class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -202,10 +207,15 @@ class ServerThread(threading.Thread):
         self._threadIndex = threadIndex
         
     def run(self):
-        _cputil.getSpecialFunction('_cpInitThread')(self._threadIndex)
+        # Call the functions from cpg.server.onStartThreadList
+        for func in cpg.server.onStartThreadList:
+            func()
         while 1:
             request, client_address = self._requestQueue.get()
             if (request, client_address) == _SHUTDOWNREQUEST:
+                # Call the functions from cpg.server.onStopThreadList
+                for func in cpg.server.onStopThreadList:
+                    func()
                 return
             if self.verify_request(request, client_address):            
                 try:
