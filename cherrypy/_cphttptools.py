@@ -284,7 +284,7 @@ def handleRequest(wfile):
             if cpg.request.headerMap.has_key('If-Modified-Since'):
                 # Check if if-modified-since date is the same as strModifTime
                 if cpg.request.headerMap['If-Modified-Since'] == strModifTime:
-                    cpg.response.headerMap = {'Status': 304, 'protocolVersion': cpg.configOption.protocolVersion, 'Date': date}
+                    cpg.response.headerMap = {'Status': 304, 'protocolVersion': cpg.configOption.protocolVersion, 'Date': cpg.response.headerMap['Date']}
                     cpg.response.body = ''
                     sendResponse(wfile)
                     return

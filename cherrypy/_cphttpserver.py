@@ -132,8 +132,6 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         )
 
         self.connection = self.request
-        self.rfile = CherrySSLFileObject(self.connection, 'rb', self.rbufsize)
-        self.wfile = CherrySSLFileObject(self.connection, 'wb', self.wbufsize)
 
     def log_message(self, format, *args):
         """ We have to override this to use our own logging mechanism """
