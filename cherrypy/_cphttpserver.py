@@ -13,33 +13,26 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 import cpg, sys, threading, SocketServer, _cphttptools, BaseHTTPServer, socket, Queue, _cputil
 
+def stop():
+    cpg._server.shutdown()
+
 def start():
     """ Prepare the HTTP server and then run it """
 
-    # TODO: SSL
-
     # If sessions are stored in files and we
     # use threading, we need a lock on the file
-    if (cpg.configOption.threadPool > 1 or cpg.configOption.threading) and \
+    if (cpg.configOption.threadPool > 1) and \
             cpg.configOption.sessionStorageType == 'file':
         cpg._sessionFileLock = threading.RLock()
 
 
     if cpg.configOption.socketFile:
         # AF_UNIX socket
-        if cpg.configOption.forking:
-            class MyCherryHTTPServer(SocketServer.ForkingMixIn,CherryHTTPServer): address_family = socket.AF_UNIX
-        elif cpg.configOption.threading:
-            class MyCherryHTTPServer(CherryThreadingMixIn,CherryHTTPServer): address_family = socket.AF_UNIX
-        else:
-            class MyCherryHTTPServer(CherryHTTPServer): address_family = socket.AF_UNIX
+        # TODO: Handle threading here
+        class MyCherryHTTPServer(CherryHTTPServer): address_family = socket.AF_UNIX
     else:
         # AF_INET socket
-        if cpg.configOption.forking:
-            class MyCherryHTTPServer(SocketServer.ForkingMixIn,CherryHTTPServer): pass
-        elif cpg.configOption.threading:
-            class MyCherryHTTPServer(CherryThreadingMixIn,CherryHTTPServer):pass
-        elif cpg.configOption.threadPool > 1:
+        if cpg.configOption.threadPool > 1:
             MyCherryHTTPServer = PooledThreadServer
         else:
             MyCherryHTTPServer = CherryHTTPServer
@@ -64,6 +57,7 @@ def run_server(HandlerClass, ServerClass, server_address, socketFile):
         myCherryHTTPServer = ServerClass(server_address, cpg.configOption.threadPool, HandlerClass)
     else:
         myCherryHTTPServer = ServerClass(server_address, HandlerClass)
+    cpg._server = myCherryHTTPServer
     if cpg.configOption.socketFile:
         try: os.chmod(socketFile, 0777) # So everyone can access the socket
         except: pass
@@ -76,22 +70,11 @@ def run_server(HandlerClass, ServerClass, server_address, socketFile):
     else: onWhat = "socket file: %s" % cpg.configOption.socketFile
     _cpLogMessage("Serving %s on %s" % (servingWhat, onWhat), 'HTTP')
 
-    # If configOption.processPool is more than one, create new processes
-    if cpg.configOption.processPool > 1:
-        for i in range(cpg.configOption.processPool):
-            _cpLogMessage("Forking a kid", "HTTP")
-            if not os.fork():
-                # Kid
-                # initProcess(i)
-                try: myCherryHTTPServer.serve_forever()
-                except KeyboardInterrupt:
-                    _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
-                    myCherryHTTPServer.shutdownCtrlC()
-    else:
-        try: myCherryHTTPServer.serve_forever()
-        except KeyboardInterrupt:
-            _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
-            myCherryHTTPServer.shutdownCtrlC()
+    try:
+        myCherryHTTPServer.serve_forever()
+    except KeyboardInterrupt:
+        _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
+        myCherryHTTPServer.shutdown()
 
 
 class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -148,36 +131,6 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile
         )
 
-    def setup(self):
-        """ We have to override this to handle SSL
-            (socket object from the OpenSSL package don't
-            have the makefile method) """
-
-        if not cpg.configOption.sslKeyFile:
-            BaseHTTPServer.BaseHTTPRequestHandler.setup(self)
-
-        """ SSL sockets from the OpenSSL package don't have the "makefile"
-            method so we have to hack our way around this ... """
-
-        class CherrySSLFileObject(socket._fileobject):
-            """ This is used for implementing the "flush" methods
-                for SSL sockets """
-
-            def flush(self):
-                """ Some sockets have a "sendall" method, some don't """
-                if self._wbuf:
-                    if hasattr(self._sock, "sendall"):
-                        if type(self._wbuf)==type([]): # python2.3
-                            self._sock.sendall("".join(self._wbuf))
-                            self._wbuf=[]
-                        else:
-                            self._sock.sendall(self._wbuf)
-                            self._wbuf=""
-                    else:
-                        while self._wbuf:
-                            _sentChar=self._sock.send(self._wbuf)
-                            self._wbuf=self._wbuf[_sentChar:]
-
         self.connection = self.request
         self.rfile = CherrySSLFileObject(self.connection, 'rb', self.rbufsize)
         self.wfile = CherrySSLFileObject(self.connection, 'wb', self.wbufsize)
@@ -218,8 +171,7 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
         #  the request socket to blocking
 
         request, client_address = self.socket.accept()
-        if hasattr(request,'setblocking'): # Jython doesn't have setblocking
-            request.setblocking(1)
+        request.setblocking(1)
         return request, client_address
 
     def handle_request(self):
@@ -232,10 +184,16 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
             return 1
         except KeyboardInterrupt:
             print "<Ctrl-C> hit: shutting down"
-            sys.exit(0)
+            self.shutdown()
 
-    def shutdownCtrlC(self):
-        self.shutdown()
+    def serve_forever(self):
+        """Override serve_forever to handle shutdown."""
+        self.__running = 1
+        while self.__running:
+            self.handle_request()
+
+    def shutdown(self):
+        self.__running = 0
 
 _SHUTDOWNREQUEST = (0,0)
 
@@ -344,9 +302,6 @@ class PooledThreadServer(SocketServer.TCPServer):
     def shutdown(self):
         """Gracefully shutdown a server that is serve_forever()ing."""
         self.__running = 0
-
-    def shutdownCtrlC(self):
-        self.server_close()
 
     def serve_forever(self):
         """Handle one request at a time until doomsday (or shutdown is called)."""

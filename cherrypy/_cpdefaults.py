@@ -30,7 +30,7 @@ def _cpLogMessage(msg, context = '', severity = 0):
         logToScreen = int(cpg.parsedConfigFile.get('server', 'logToScreen'))
     except:
         logToScreen = True
-    s = nowStr + ' ' + context + ' ' + level + msg
+    s = nowStr + ' ' + context + ' ' + level + ' ' + msg
     if logToScreen:
         print s
     if cpg.configOption.logFile:

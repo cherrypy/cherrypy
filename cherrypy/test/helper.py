@@ -73,20 +73,10 @@ def getPage(url, cookies, extraRequestHeader = []):
     return cpg, cookies
 
 def shutdownServer(pid, mode):
-    if mode=='t':
-        u=urllib.urlopen("http://127.0.0.1:8000/shutdown/thread")
-        try: u=urllib.urlopen("http://127.0.0.1:8000/shutdown/dummy")
-        except IOError: pass
-        except AttributeError: pass # Happens on Mac OS X when run with Python-2.3
-    elif mode=='tp':
-        u=urllib.urlopen("http://127.0.0.1:8000/shutdown/thread")
-        try: u=urllib.urlopen("http://127.0.0.1:8000/shutdown/dummy")
-        except IOError: pass # Happens on Windows
-    else:
-        try:
-            u=urllib.urlopen("http://127.0.0.1:8000/shutdown/regular")
-        except IOError: pass
-        except AttributeError: pass # For Python2.3
+    urllib.urlopen("http://127.0.0.1:8000/shutdown/all")
+    if mode == 'tp':
+        urllib.urlopen("http://127.0.0.1:8000/dummy")
+    return
 
 def checkResult(testName, infoMap, serverMode, cpg, rule, failedList):
     result = False
@@ -112,18 +102,9 @@ def prepareCode(code):
     f = open('testsite.py', 'w')
     beforeStart = '''
 class Shutdown:
-    def dummy(self):
-        return "OK"
-    dummy.exposed = True
-    def regular(self):
-        import os
-        os._exit(0)
-    regular.exposed = True
-    def thread(self):
-        import threading
-        for t in threading.enumerate(): t.setName("NOT RUNNING")
-        return "OK"
-    thread.exposed = True
+    def all(self):
+        cpg.server.stop()
+    all.exposed = True
 cpg.root.shutdown = Shutdown()
 def f(*a, **kw): return ""
 cpg.root._cpLogMessage = f

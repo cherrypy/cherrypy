@@ -68,5 +68,5 @@ def start(configFile = None, parsedConfigFile = None, configDict = {}, initOnly 
         _cphttpserver.start()
 
 def stop():
-    _cphttpserver.shutdown()
+    _cphttpserver.stop()
 
