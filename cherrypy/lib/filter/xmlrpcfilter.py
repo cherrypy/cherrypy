@@ -29,6 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## Remco Boerma
 ##
 ## History:
+## 1.0.3   : 2005-01-28 Bugfix on content-length in 1.0.2 code fixed by
+##           Gian Paolo Ciceri
 ## 1.0.2   : 2005-01-26 changed infile dox based on ticket #97
 ## 1.0.1   : 2005-01-26 Speedup due to generator usage in CP2.
 ##           The result is now converted to a list with length 1. So the complete
@@ -172,5 +174,9 @@ class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
         except Exception,e:
             print 'EXCEPTION: ',e
         cpg.response.headerMap['Content-Type']='text/xml'
-        cpg.response.headerMap['Content-Length']=`len(cpg.response.body)`
+        try:
+            cpg.response.headerMap['Content-Length']=`len(cpg.response.body[0])`
+        except TypeError:
+            # 1.0.3 : in case of an error, cpg.response.body is unscriptable
+            pass 
 
