@@ -31,9 +31,9 @@ def parseFirstLine(data):
     cpg.request.queryString = ""
     cpg.request.browserUrl = cpg.request.path
     cpg.request.paramMap = {}
+    cpg.request.paramList = [] # Only used for Xml-Rpc
     cpg.request.filenameMap = {}
     cpg.request.fileTypeMap = {}
-    cpg.request.paramTuple = ()
     i = cpg.request.path.find('?')
     if i != -1:
         # Parse parameters from URL
@@ -207,7 +207,7 @@ def handleRequest(wfile):
     # Save original values (in case they get modified by filters)
     cpg.request.originalPath = cpg.request.path
     cpg.request.originalParamMap = cpg.request.paramMap
-    cpg.request.originalParamTuple = cpg.request.paramTuple
+    cpg.request.originalParamList = cpg.request.paramList
 
     path = cpg.request.path
     if path.startswith('/'): path = path[1:] # Remove leading slash
@@ -298,7 +298,7 @@ def handleRequest(wfile):
         return
          
     cpg.request.objectPath = '/'.join(objectPathList)
-    cpg.response.body = func(*virtualPathList, **(cpg.request.paramMap))
+    cpg.response.body = func(*(virtualPathList + cpg.request.paramList), **(cpg.request.paramMap))
 
     if cpg.response.sendResponse:
         sendResponse(wfile)
