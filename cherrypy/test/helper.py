@@ -75,7 +75,9 @@ def getPage(url, cookies, extraRequestHeader = []):
 def shutdownServer(pid, mode):
     urllib.urlopen("http://127.0.0.1:8000/shutdown/all")
     if mode == 'tp':
-        urllib.urlopen("http://127.0.0.1:8000/dummy")
+        # In thread-pool mode, it can take up to 1 sec for the server
+        #   to shutdown
+        time.sleep(1)
     return
 
 def checkResult(testName, infoMap, serverMode, cpg, rule, failedList):

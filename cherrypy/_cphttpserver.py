@@ -155,8 +155,7 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
 
     def server_activate(self):
         """Override server_activate to set timeout on our listener socket"""
-        if hasattr(self.socket, 'settimeout'): self.socket.settimeout(2)
-        elif hasattr(self.socket, 'set_timeout'): self.socket.set_timeout(2)
+        self.socket.settimeout(1)
         BaseHTTPServer.HTTPServer.server_activate(self)
 
     def server_bind(self):
@@ -178,7 +177,7 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
         """Override handle_request to trap timeout exception."""
         try:
             BaseHTTPServer.HTTPServer.handle_request(self)
-        except socket.timeout: # TODO: Doesn't exist for older versions of python
+        except socket.timeout:
             # The only reason for the timeout is so we can notice keyboard
             # interrupts on Win32, which don't interrupt accept() by default
             return 1
@@ -203,7 +202,6 @@ class ServerThread(threading.Thread):
         self._RequestHandlerClass = RequestHandlerClass
         self._requestQueue = requestQueue
         self._threadIndex = threadIndex
-        self.setName("RUNNING")
         
     def run(self):
         _cputil.getSpecialFunction('_cpInitThread')(self._threadIndex)
@@ -293,6 +291,7 @@ class PooledThreadServer(SocketServer.TCPServer):
 
     def server_activate(self):
         """Override server_activate to set timeout on our listener socket"""
+        self.socket.settimeout(1)
         SocketServer.TCPServer.server_activate(self)
 
     def server_bind(self):
@@ -318,9 +317,6 @@ class PooledThreadServer(SocketServer.TCPServer):
            them synchronously. Return 1 by default, 0 to shutdown the
            server."""
         try:
-            if 1:
-                for t in threading.enumerate():
-                    if t.getName()=="NOT RUNNING": return 0
             request, client_address = self.get_request()
         except KeyboardInterrupt:
             print "<Ctrl-C> hit: shutting down"
