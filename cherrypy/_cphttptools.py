@@ -183,7 +183,12 @@ def initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     applyFilterList('afterRequestBody')
 
 def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
+    # inits the cpg.responsed.wfile so filters can access it
+    cpg.response.wfile = wfile
+    cpg.response.sendResponse = 1
     initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile)
+    # reads back wfile; if may be redirected by a filter
+    wfile = cpg.response.wfile
 
     # Prepare response variables
     now = time.time()
@@ -199,8 +204,6 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
         "Content-Length": 0
     }
     cpg.response.simpleCookie = Cookie.SimpleCookie()
-    cpg.response.wfile = wfile
-    cpg.response.sendResponse = 1
 
     try:
         handleRequest(wfile)
