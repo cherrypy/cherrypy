@@ -210,6 +210,8 @@ def handleRequest(wfile):
     cpg.request.originalParamTuple = cpg.request.paramTuple
 
     path = cpg.request.path
+    if path.startswith('/'): path = path[1:] # Remove leading slash
+    if path.endswith('/'): path = path[:-1] # Remove trailing slash
 
     # Handle static directories
     for urlDir, fsDir in cpg.configOption.staticContentList:
@@ -319,6 +321,7 @@ def getObjFromPath(objPathList, objCache):
     previousObj = getObjFromPath(objPathList[:-1], objCache)
     obj = getattr(previousObj, objPathList[-1], None)
     objCache[cacheKey] = obj
+    # print "*** GETTING:", objPathList, repr(obj)
     return obj
 
 def mapPathToObject():
