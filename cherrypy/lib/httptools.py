@@ -22,16 +22,15 @@ def redirect(newUrl):
     
     if not newUrl.startswith('http://') and not newUrl.startswith('https://'):
         # If newUrl is not canonical, we must make it canonical
-        if newUrl[0] == '/':
-            # URL was absolute: we just add the request.base in front of it
+        if newUrl.startswith('/'):
+            # newUrl was absolute:
+            # we just add request.base in front of it
             newUrl = cpg.request.base + newUrl
         else:
-            # URL was relative
-            if cpg.request.browserUrl == cpg.request.base:
-                # browserUrl is request.base
-                newUrl = cpg.request.base + '/' + newUrl
-            else:
-                newUrl = cpg.request.browserUrl[:i+1] + newUrl
+            # newUrl was relative:
+            # we remove the last bit from browserUrl and add newUrl to it
+            i = cpg.request.browserUrl.rfind('/')
+            newUrl = cpg.request.browserUrl[:i+1] + newUrl
     cpg.response.headerMap['Status'] = 302
     cpg.response.headerMap['Location'] = newUrl
     return ""
