@@ -26,9 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-# TODO: Have a real object mapping test once the object mapping -> URI
-#   algorithm is finalized
-
 import helper
 
 code = """
@@ -43,6 +40,9 @@ class Root:
     def other(self):
         return "other"
     other.exposed = True
+    def extra(self, *p):
+        return repr(p)
+    extra.exposed = True
     def notExposed(self):
         return "not exposed"
 class Dir1:
@@ -80,6 +80,7 @@ testList = [
     ("/", "cpg.response.body == 'world'"),
     ("/dir1/myMethod", '''cpg.response.body == "myMethod from dir1, object Path is:'/dir1/myMethod'"'''),
     ("/this/method/does/not/exist", '''cpg.response.body == "default:('this', 'method', 'does', 'not', 'exist')"'''),
+    ("/extra/too/much", '''cpg.response.body == "default:('extra', 'too', 'much')"'''),
     ("/other", "cpg.response.body == 'other'"),
     ("/notExposed", '''cpg.response.body == "default:('notExposed',)"'''),
     ("/dir1/dir2/", "cpg.response.body == 'index for dir2, path is:/dir1/dir2/'"),

@@ -478,14 +478,17 @@ def mapPathToObject(path = None):
     # Try successive objects... (and also keep the remaining object list)
     objCache = {}
     isFirst = True
+    isSecond = False
     isDefault = False
     foundIt = False
     virtualPathList = []
     while objectPathList:
-        candidate = getObjFromPath(objectPathList, objCache)
-        if callable(candidate) and getattr(candidate, 'exposed', False):
-            foundIt = True
-            break
+        if isFirst or isSecond:
+            # Only try this for a.b.index() or a.b()
+            candidate = getObjFromPath(objectPathList, objCache)
+            if callable(candidate) and getattr(candidate, 'exposed', False):
+                foundIt = True
+                break
         # Couldn't find the object: pop one from the list and try "default"
         lastObj = objectPathList.pop()
         if not isFirst:
@@ -497,7 +500,11 @@ def mapPathToObject(path = None):
                 isDefault = True
                 break
             objectPathList.pop() # Remove "default"
-        isFirst = False
+        if isSecond:
+            isSecond = False
+        if isFirst:
+            isFirst = False
+            isSecond = True
 
     # Check results of traversal
     if not foundIt:
