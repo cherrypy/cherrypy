@@ -1,3 +1,6 @@
+	* Added DecodingFilter
+	* Added form module (port from CP1 Form.cpy)
+
 2004/12-29:
     * CherryPY-2.0-beta released
     * xmlrpcfilter added (Remco)
