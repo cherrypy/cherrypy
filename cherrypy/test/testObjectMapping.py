@@ -63,7 +63,7 @@ cpg.server.start(configFile = 'testsite.cfg')
 
 testList = [
     ("/", "cpg.response.body == 'world'"),
-    ("/dir1/myMethod", '''cpg.response.body == "myMethod from dir1, object Path is:'/root/dir1/myMethod'"'''),
+    ("/dir1/myMethod", '''cpg.response.body == "myMethod from dir1, object Path is:'/dir1/myMethod'"'''),
     ("/this/method/does/not/exist", '''cpg.response.body == "default:('this', 'method', 'does', 'not', 'exist')"'''),
     ("/other", "cpg.response.body == 'other'"),
     ("/notExposed", '''cpg.response.body == "default:('notExposed',)"'''),

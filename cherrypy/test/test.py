@@ -88,6 +88,7 @@ tutorialTestList = [
 testList = [
     'testObjectMapping',
     'testFilter1',
+    'testVirtualHostFilter',
 ]
 
 if len(sys.argv) > 1:

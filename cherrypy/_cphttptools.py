@@ -13,6 +13,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 import cpg, urllib, sys, time, traceback, types, StringIO, cgi, os
 import mimetypes, sha, random, string, _cputil, cperror, Cookie
+from lib.filter import basefilter
 
 """
 Common Service Code for CherryPy
@@ -126,11 +127,21 @@ def parsePostData(rfile):
             cpg.request.fileTypeMap[key] = valueList.type
 
 def applyFilterList(methodName):
-    filterList = _cputil.getSpecialFunction('_cpFilterList')
-    for filter in filterList:
-        method = getattr(filter, methodName, None)
-        if method:
-            method()
+    try:
+        filterList = _cputil.getSpecialFunction('_cpFilterList')
+        for filter in filterList:
+            method = getattr(filter, methodName, None)
+            if method:
+                method()
+    except basefilter.InternalRedirect:
+        # If we get an InternalRedirect, we start the filter list  
+        #   from scratch. Is cpg.request.path or cpg.request.objectPath
+        #   has been modified by the hook, then a new filter list
+        #   will be applied.  
+        # We use recursion so if there is an infinite loop, we'll  
+        #   get the regular python "recursion limit exceeded" exception.  
+        applyFilterList(methodName) 
+
 
 def insertIntoHeaderMap(key,value):
     normalizedKey = '-'.join([s.capitalize() for s in key.split('-')])
@@ -145,6 +156,9 @@ def initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     cpg.request.isStatic = False
     cpg.request.parsePostData = True
     cpg.request.rfile = rfile
+
+    # Change objectPath in filters to change the object that will get rendered
+    cpg.request.objectPath = None 
 
     applyFilterList('afterRequestHeader')
 
@@ -346,7 +360,8 @@ def handleRequest(wfile):
         wfile.write('\r\n')
         return
          
-    cpg.request.objectPath = '/' + '/'.join(objectPathList)
+    # Remove "root" from objectPathList and join it to get objectPath
+    cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
     cpg.response.body = func(*(virtualPathList + cpg.request.paramList), **(cpg.request.paramMap))
 
     if cpg.response.sendResponse:
@@ -407,7 +422,7 @@ def getObjFromPath(objPathList, objCache):
     # Return the last cached object (even if its None)
     return objCache[cacheKey]
 
-def mapPathToObject():
+def mapPathToObject(path = None):
     # Traverse path:
     # for /a/b?arg=val, we'll try:
     #   root.a.b.index -> redirect to /a/b/?arg=val
@@ -419,7 +434,8 @@ def mapPathToObject():
     # Also, we ignore trailing slashes
     # Also, a method has to have ".exposed = True" in order to be exposed
 
-    path = cpg.request.path
+    if path is None:
+        path = cpg.request.objectPath or cpg.request.path
     if path.startswith('/'): path = path[1:] # Remove leading slash
     if path.endswith('/'): path = path[:-1] # Remove trailing slash
 

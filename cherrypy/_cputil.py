@@ -57,7 +57,7 @@ def getSpecialFunction(name):
         moduleList.append(root)
         # Try object path
         try:
-            path = cpg.request.path
+            path = cpg.request.objectPath or cpg.request.path
         except:
             path = '/'
         if path:
