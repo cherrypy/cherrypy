@@ -205,15 +205,23 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
                 _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
 
             wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
-            if cpg.response.headerMap.has_key('Content-Length') and cpg.response.headerMap['Content-Length'] == 0:
-                cpg.response.headerMap['Content-Length'] = len(cpg.response.body)
+
+            if (cpg.response.headerMap.has_key('Content-Length') and
+                    cpg.response.headerMap['Content-Length']==0):
+  	 	        buf = StringIO.StringIO()
+  	 	        [buf.write(x) for x in cpg.response.body]
+  	 	        buf.seek(0)
+  	 	        cpg.response.body = [buf.read()]
+  	 	        cpg.response.headerMap['Content-Length'] = len(cpg.response.body[0])
+
             for key, valueList in cpg.response.headerMap.items():
                 if key not in ('Status', 'protocolVersion'):
                     if type(valueList) != type([]): valueList = [valueList]
                     for value in valueList:
                         wfile.write('%s: %s\r\n'%(key, value))
             wfile.write('\r\n')
-            wfile.write(cpg.response.body)
+            for line in cpg.response.body:
+                wfile.write(line)
         except:
             bodyFile = StringIO.StringIO()
             traceback.print_exc(file = bodyFile)
@@ -235,14 +243,7 @@ def sendResponse(wfile):
 
     # Set the content-length
     if (cpg.response.headerMap.has_key('Content-Length') and
-        cpg.response.headerMap['Content-Length']==0):
-        #body = "" 
-        #body = ''.join(list(cpg.response.body))  # a local var is more efficient here
-        #body = u''.join(cpg.response.body)  # a local var is more efficient here
-        #body = ''
-        #for line in cpg.response.body:
-        #    print body
-        #    body += line
+            cpg.response.headerMap['Content-Length']==0):
         buf = StringIO.StringIO()
         [buf.write(x) for x in cpg.response.body]
         buf.seek(0)

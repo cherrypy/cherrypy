@@ -1,3 +1,6 @@
+2004/12-29:
+	* CherryPY-2.0-beta released
+	* cpg.response.body is now always an iterable type - ticket #59 (Carlos)
 	* Allowed default session functions to be accessed by other modules -
 	ticket #56 (Remi)
     * Added cpg.threadData - ticket #53 (Remi)

@@ -33,8 +33,9 @@ class TidyFilter(BaseOutputFilter):
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
         originalBody = ''.join(cpg.response.body)
+        cpg.response.body = [originalBody]
         
-        ct = cpg.response.headerMap.get('Content-Type')
+        ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
         if ct == 'text/html':
             pageFile = os.path.join(self.tmpDir, 'page.html')
             outFile = os.path.join(self.tmpDir, 'tidy.out')
@@ -66,7 +67,7 @@ class TidyFilter(BaseOutputFilter):
                 newBody = "Wrong HTML:<br>" + cgi.escape('\n'.join(newErrList)).replace('\n','<br>')
                 newBody += '<br><br>'
                 i=0
-                for line in oldHtml.splitlines():
+                for line in originalBody.splitlines():
                     i += 1
                     newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
 
