@@ -1,1 +1,2 @@
-include *.TXT
+include CHANGELOG.txt
+include CHERRYPYTEAM.txt
