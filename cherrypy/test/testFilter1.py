@@ -35,13 +35,17 @@ cpg.server.start(configFile = 'testsite.cfg')
 config = ""
 europoundUnicode = u'\x80\xa3'
 expectedResult = (u"Hello," + u"world" + europoundUnicode).encode('utf-8')
+zbuf = StringIO.StringIO()
+zfile = gzip.GzipFile(mode='wb', fileobj = zbuf, compresslevel = 9)
+zfile.write(expectedResult)
+zfile.close()
+
+testList = [
+    ('/', '%s in cpg.response.body' % repr(zbuf.getvalue()[:3])),
+]
 
 def test(infoMap, failedList, skippedList):
     print "    Testing Filters (1) ...",
-    zbuf = StringIO.StringIO()
-    zfile = gzip.GzipFile(mode='wb', fileobj = zbuf, compresslevel = 9)
-    zfile.write(expectedResult)
-    zfile.close()
     # Gzip compression doesn't always return the same exact result !
     # So we just check that the first few bytes are the same
-    helper.checkPageResult('Object mapping', infoMap, code, config, [""], [zbuf.getvalue()[:3]], failedList, exactResult = False, extraRequestHeader = [("Accept-Encoding", "gzip")])
+    helper.checkPageResult('Object mapping', infoMap, code, testList, failedList, extraRequestHeader = [("Accept-Encoding", "gzip")])

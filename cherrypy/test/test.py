@@ -67,15 +67,16 @@ failedList=[]
 skippedList=[]
 
 tutorialTestList = [
-    ('01', ['/'], ['Hello world!']),
-    ('02', ['/showMessage'], ['Hello world!']),
-    ('03', ['/greetUser?name=Bob'], ["Hey Bob, what's up?"]),
-    ('04', ['/links/extra/'], ['\n            <p>Here are some extra useful links:</p>\n\n            <ul>\n                <li><a href="http://del.icio.us">del.icio.us</a></li>\n                <li><a href="http://www.mornography.de">Hendrik\'s weblog</a></li>\n            </ul>\n\n            <p>[<a href="../">Return to links page</a>]</p>\n        ']),
-    ('05', ['/another/'], ['\n            <html>\n            <head>\n                <title>Another Page</title>\n            <head>\n            <body>\n            <h2>Another Page</h2>\n        \n            <p>\n            And this is the amazing second page!\n            </p>\n        \n            </body>\n            </html>\n        ']),
-    ('06', ['/'], ['\n            <html>\n            <head>\n                <title>Tutorial 6 -- Aspect Powered!</title>\n            <head>\n            <body>\n            <h2>Tutorial 6 -- Aspect Powered!</h2>\n        \n            <p>\n            Isn\'t this exciting? There\'s\n            <a href="./another/">another page</a>, too!\n            </p>\n        \n            </body>\n            </html>\n        ']), 
-    ('07', ['/hendrik'], ['Hendrik Mans, CherryPy co-developer & crazy German (<a href="./">back</a>)']), 
-    ('08', ['/', '/'], ["\n            During your current session, you've viewed this\n            page 1 times! Your life is a patio of fun!\n        ", "\n            During your current session, you've viewed this\n            page 2 times! Your life is a patio of fun!\n        "]), 
-    ('09', ['/'], ['<html><body><h2>Generators rule!</h2><h3>List of users:</h3>Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/></body></html>']), 
+    ('01', [('/', "cpg.response.body == 'Hello world!'")]),
+    ('02', [('/showMessage', "cpg.response.body == 'Hello world!'")]),
+    ('03', [('/greetUser?name=Bob',
+            '''cpg.response.body == "Hey Bob, what's up?"''')]),
+    ('04', [('/links/extra/', r"""cpg.response.body == '\n            <p>Here are some extra useful links:</p>\n\n            <ul>\n                <li><a href="http://del.icio.us">del.icio.us</a></li>\n                <li><a href="http://www.mornography.de">Hendrik\'s weblog</a></li>\n            </ul>\n\n            <p>[<a href="../">Return to links page</a>]</p>\n        '""")]),
+    ('05', [('/another/', r"""cpg.response.body == '\n            <html>\n            <head>\n                <title>Another Page</title>\n            <head>\n            <body>\n            <h2>Another Page</h2>\n        \n            <p>\n            And this is the amazing second page!\n            </p>\n        \n            </body>\n            </html>\n        '""")]),
+    ('06', [('/', r"""cpg.response.body == '\n            <html>\n            <head>\n                <title>Tutorial 6 -- Aspect Powered!</title>\n            <head>\n            <body>\n            <h2>Tutorial 6 -- Aspect Powered!</h2>\n        \n            <p>\n            Isn\'t this exciting? There\'s\n            <a href="./another/">another page</a>, too!\n            </p>\n        \n            </body>\n            </html>\n        '""")]),
+    ('07', [('/hendrik', r"""cpg.response.body == 'Hendrik Mans, CherryPy co-developer & crazy German (<a href="./">back</a>)'""")]),
+    ('08', [('/', r'''cpg.response.body == "\n            During your current session, you've viewed this\n            page 1 times! Your life is a patio of fun!\n        "'''), ('/', r'''cpg.response.body == "\n            During your current session, you've viewed this\n            page 2 times! Your life is a patio of fun!\n        "''')]), 
+    ('09', [('/', r"""cpg.response.body == '<html><body><h2>Generators rule!</h2><h3>List of users:</h3>Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/></body></html>'""")]),
 ]
 
 testList = [
@@ -88,9 +89,9 @@ if len(sys.argv) > 1:
     # Limit the tests to these ones
     newTutorialTestList = []
     newTestList = []
-    for number, urlList, resultList in tutorialTestList:
+    for number, myTestList in tutorialTestList:
         if "tutorial%s" % number in sys.argv[1:]:
-            newTutorialTestList.append([number, urlList, resultList])
+            newTutorialTestList.append((number, myTestList))
     for t in testList:
         if t in sys.argv[1:]:
             newTestList.append(t)
@@ -104,7 +105,7 @@ for version, infoMap in python2.items():
     print "Running tests for python %s..."%infoMap['exactVersionShort']
 
     # Run tests based on tutorials
-    for number, urlList, resultList in tutorialTestList:
+    for number, myTestList in tutorialTestList:
         code = open('../tutorial/tutorial%s.py' % number, 'r').read()
         code = code.replace('tutorial.conf', 'testsite.cfg')
         print "    Testing tutorial %s..." % number,
@@ -114,7 +115,7 @@ for version, infoMap in python2.items():
         #    skippedList.append("Tutorial %s for python2.%s" % (number, version))
         #    continue
            
-        helper.checkPageResult('Tutorial %s' % number, infoMap, code, "", urlList, resultList, failedList)
+        helper.checkPageResult('Tutorial %s' % number, infoMap, code, myTestList, failedList)
 
     # Running actual unittests
     for test in testList:

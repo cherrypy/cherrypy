@@ -22,19 +22,14 @@ def startServer(infoMap):
             os.execlp(infoMap['path'],infoMap['path'],'testsite.py')
     return pid
 
-def getPage(url, cookies, isSSL=0, extraRequestHeader = []):
+def getPage(url, cookies, extraRequestHeader = []):
     data=""
     i=0
     response = None
     while i<10:
         try:
-            if isSSL:
-                conn=httplib.HTTPSConnection('127.0.0.1:8000')
-            else:
-                conn=httplib.HTTPConnection('127.0.0.1:8000')
-
+            conn=httplib.HTTPConnection('127.0.0.1:8000')
             conn.putrequest("GET", url)
-
             conn.putheader("Host", "127.0.0.1")
             if cookies:
                 cookieList = []
@@ -54,65 +49,54 @@ def getPage(url, cookies, isSSL=0, extraRequestHeader = []):
 
             cookies=response.msg.getallmatchingheaders("Set-Cookie")
 
-            data=response.read()
+            class EmptyClass: pass
+            cpg = EmptyClass()
+            cpg.response = EmptyClass()
+            cpg.response.headerMap = {'Status': response.status}
+            for line in response.msg.headers:
+                line = line.strip()
+                i = line.find(':')
+                key, value = line[:i], line[i+1:].strip()
+                cpg.response.headerMap[key] = value
+
+            cpg.response.body = response.read()
 
             conn.close()
             break
         except socket.error:
             time.sleep(0.5)
         i+=1
-    return data, cookies, response
+    return cpg, cookies
 
-def getXmlrpc(url, func, isSSL=0):
-    import xmlrpclib
-    http="http"
-    if isSSL: http+="s"
-    if url: url='/'+url
-    data=""
-    i=0
-    try:
-        while i<10:
-            try:
-                testsvr=xmlrpclib.Server(http+"://127.0.0.1:8000"+url)
-                data=eval("testsvr.%s"%func)
-                break
-            except socket.error:
-                time.sleep(0.5)
-            i+=1
-    except xmlrpclib.Fault, msg:
-        return msg
-    return data
-
-
-def shutdownServer(pid, mode, isSSL=0):
-    if isSSL: h="https"
-    else: h="http"
+def shutdownServer(pid, mode):
     if mode=='t':
-        u=urllib.urlopen(h+"://127.0.0.1:8000/shutdown/thread")
-        if hasattr(socket, 'sslerror'): sslError = socket.sslerror
-        else: sslError = 'dummy'
-        try: u=urllib.urlopen(h+"://127.0.0.1:8000/shutdown/dummy")
+        u=urllib.urlopen("http://127.0.0.1:8000/shutdown/thread")
+        try: u=urllib.urlopen("http://127.0.0.1:8000/shutdown/dummy")
         except IOError: pass
-        except sslError: pass
         except AttributeError: pass # Happens on Mac OS X when run with Python-2.3
     elif mode=='tp':
-        try: sslError = socket.sslerror
-        except: sslError = 'dummy'
-        u=urllib.urlopen(h+"://127.0.0.1:8000/shutdown/thread")
-        try: u=urllib.urlopen(h+"://127.0.0.1:8000/shutdown/dummy")
+        u=urllib.urlopen("http://127.0.0.1:8000/shutdown/thread")
+        try: u=urllib.urlopen("http://127.0.0.1:8000/shutdown/dummy")
         except IOError: pass # Happens on Windows
-        except sslError: pass # Happens on Windows for https requests
     else:
         try:
-            u=urllib.urlopen(h+"://127.0.0.1:8000/shutdown/regular")
+            u=urllib.urlopen("http://127.0.0.1:8000/shutdown/regular")
         except IOError: pass
         except AttributeError: pass # For Python2.3
 
-def checkResult(testName, infoMap, serverMode, result, expectedResult, failedList, exactResult):
-    if result == expectedResult or ((not exactResult) and expectedResult in result):
+def checkResult(testName, infoMap, serverMode, cpg, rule, failedList):
+    if eval(rule):
         return True
     else:
-        failedList.append(testName+" for python%s"%infoMap['exactVersionShort']+" in "+serverMode+" mode failed: expected result was:\n%s, actual result was:\n%s"%(repr(expectedResult), repr(result)))
+        failedList.append(testName +
+            " for python%s" % infoMap['exactVersionShort'] + 
+            " in " + serverMode + " mode failed." + """
+* Rule:
+%s
+* cpg.response.headerMap:
+%s
+* cpg.response.body:
+%s""" % (rule, repr(cpg.response.headerMap), repr(cpg.response.body)))
         return False
 
 def prepareCode(code):
@@ -138,42 +122,33 @@ cpg.root._cpLogMessage = f
     f.write(code.replace('cpg.server.start', beforeStart + 'cpg.server.start'))
     f.close()
 
-def checkPageResult(testName, infoMap, code, config, urlList, expectedResultList, failedList, exactResult=True, isSSL=0, extraRequestHeader=[], expectedHeaderList=[]):
+def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig = '', extraRequestHeader = []):
     response = None
     prepareCode(code)
-    # Try it in all 3 modes (regular, threading, threadPooling) (we're missing forking and process pooling)
+    # Try it in all 2 modes (regular, threadPooling)
     modeList=[('r',''), ('tp', 'threadPool=3')]
-    # modeList=[('r','')] # TODO
     for mode,modeConfig in modeList:
         f=open("testsite.cfg", "w")
-        f.write(config)
+        f.write(extraConfig)
         f.write('''
 [session]
 storageType=ram
 [server]
 socketPort = 8000
 ''')
-        f.write(config+"\n"+modeConfig)
+        f.write(modeConfig)
         f.close()
 
         pid = startServer(infoMap)
         passed=True
         cookies=None
-        for i in range(len(urlList)):
-            url=urlList[i]
-            expectedResult=expectedResultList[i]
-            result, cookies, response=getPage(url, cookies, isSSL, extraRequestHeader)
-            if expectedHeaderList:
-                if response.status != expectedHeaderList[0]:
-                    failedList.append(testName+" for python%s"%infoMap['exactVersionShort']+" in "+mode+" mode failed: expected result status was %s, result status was %s"%(expectedHeaderList[0], response.status))
-                    passed=0
-                    print "*** FAILED ***"
-                    break
-            if not checkResult(testName, infoMap, mode, result, expectedResult, failedList, exactResult):
+        for url, rule in testList:
+            cpg, cookies = getPage(url, cookies, extraRequestHeader)
+            if not checkResult(testName, infoMap, mode, cpg, rule, failedList):
                 passed=0
                 print "*** FAILED ***"
                 break
-        shutdownServer(pid, mode, isSSL)
+        shutdownServer(pid, mode)
         if passed:
             print mode+"...",
             sys.stdout.flush()

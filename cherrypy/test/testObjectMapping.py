@@ -49,17 +49,17 @@ cpg.root.dir1 = Dir1()
 cpg.root.dir1.dir2 = Dir2()
 cpg.server.start(configFile = 'testsite.cfg')
 """
-config = ""
+
 testList = [
-    ("", "world"),
-    ("/this/method/does/not/exist", "default:('this', 'method', 'does', 'not', 'exist')"),
-    ("/other", "other"),
-    ("/notExposed", "default:('notExposed',)"),
-    ("/dir1/dir2/", "index for dir2, path is:/dir1/dir2/"),
+    ("/", "cpg.response.body == 'world'"),
+    ("/this/method/does/not/exist", '''cpg.response.body == "default:('this', 'method', 'does', 'not', 'exist')"'''),
+    ("/other", "cpg.response.body == 'other'"),
+    ("/notExposed", '''cpg.response.body == "default:('notExposed',)"'''),
+    ("/dir1/dir2/", "cpg.response.body == 'index for dir2, path is:/dir1/dir2/'"),
+    ("/dir1/dir2", "cpg.response.headerMap['Status'] == 302" +
+        " and cpg.response.headerMap['Location'] == 'http://127.0.0.1/dir1/dir2/'"),
 ]
-urlList = [test[0] for test in testList]
-expectedResultList = [test[1] for test in testList]
 
 def test(infoMap, failedList, skippedList):
     print "    Testing object mapping...",
-    helper.checkPageResult('Object mapping', infoMap, code, config, urlList, expectedResultList, failedList)
+    helper.checkPageResult('Object mapping', infoMap, code, testList, failedList)
