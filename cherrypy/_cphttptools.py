@@ -68,6 +68,7 @@ def parseFirstLine(data):
 def cookHeaders(clientAddress, remoteHost, headers, requestLine):
     """Process the headers into the request.headerMap"""
     cpg.request.headerMap = {}
+    cpg.request.requestLine = requestLine
     cpg.request.simpleCookie = Cookie.SimpleCookie()
 
     # Build headerMap

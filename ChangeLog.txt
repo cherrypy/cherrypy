@@ -1,3 +1,4 @@
+    * Added request.requestLine - ticket #52 (Remi)
     * Default session storageType is now ram (Remi)
     * logFile config option is now honored - ticket #51 (Remi)
     * Added cpg.request.remoteAddr and cpg.request.remoteHost - ticket #34 (Eurleif) 
