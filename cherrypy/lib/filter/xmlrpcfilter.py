@@ -29,6 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## Remco Boerma
 ##
 ## History:
+## 1.0.1   : 2005-01-26 Speedup due to generator usage in CP2.
+##           The result is now converted to a list with length 1. So the complete
+##           xmlrpc result is written at once, and not per character. Thanks to
+##           Gian Paolo Ciceri for reporting the slowdown.
 ## 1.0.0   : 2004-12-29 Released with CP2
 ## 0.0.9   : 2004-12-23 made it CP2 #59 compatible (returns an iterable)
 ##           Please note: as the xmlrpc doesn't know what you would want to return
@@ -159,9 +163,7 @@ class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
         if not cpg.request.isRPC: 
             return # it's not an RPC call, so just let it go with the normal flow
         try:
-            # use this for debugging and more info:
-            # print 'beforeResponse: cpg.response.body ==',`cpg.response.body` 
-            cpg.response.body = xmlrpclib.dumps((cpg.response.body[0],), methodresponse=1,allow_none=1)
+            cpg.response.body = [xmlrpclib.dumps((cpg.response.body[0],), methodresponse=1,allow_none=1)]
         except xmlrpclib.Fault,fault:
             cpg.response.body = xmlrpclib.dumps(fault,allow_none=1)
         except Exception,e:
