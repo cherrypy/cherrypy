@@ -412,9 +412,12 @@ def getObjFromPath(objPathList, objCache):
     """
     # Let cpg be the first valid object.
     validObjects = ["cpg"]
-     
+    
     # Scan the objPathList in order from left to right
     for index, obj in enumerate(objPathList):
+        # maps virtual filenames to Python identifiers (substitutes '.' for '_')
+        obj = obj.replace('.', '_')
+
         # currentObjStr holds something like 'cpg.root.something.else'
         currentObjStr = ".".join(validObjects)
 
@@ -469,9 +472,6 @@ def mapPathToObject(path = None):
         path = cpg.request.objectPath or cpg.request.path
     if path.startswith('/'): path = path[1:] # Remove leading slash
     if path.endswith('/'): path = path[:-1] # Remove trailing slash
-
-    # So that requests like robots.txt can be handled by a method called  robots_txt
-    path = path.replace('.', '_')
 
     if not path:
         objectPathList = []
