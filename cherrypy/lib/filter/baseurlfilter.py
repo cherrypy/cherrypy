@@ -27,7 +27,7 @@ class BaseUrlFilter(BaseInputFilter):
 
     def afterRequestHeader(self):
         if self.useXForwardedHost:
-            newBaseUrl = cpg.request.headerMap.get(
+            newBaseUrl = 'http://' + cpg.request.headerMap.get(
                 "X-Forwarded-Host", self.baseUrl)
         else:
             newBaseUrl = self.baseUrl
