@@ -152,6 +152,7 @@ def initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     cpg.request.base = "http://" + cpg.request.headerMap['Host']
     cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
     cpg.request.isStatic = False
+    cpg.request.mustBeExposed = True
     cpg.request.parsePostData = True
     cpg.request.rfile = rfile
 
@@ -426,7 +427,8 @@ def mapPathToObject():
     #   root.default('a', 'b', arg='val')
 
     # Also, we ignore trailing slashes
-    # Also, a method has to have ".exposed = True" in order to be exposed
+    # Also, a method has to have ".exposed == True" in order to be exposed
+    #   unless cpg.request.mustBeExposed == False
 
     path = cpg.request.path
     if path.startswith('/'): path = path[1:] # Remove leading slash
@@ -446,7 +448,9 @@ def mapPathToObject():
     virtualPathList = []
     while objectPathList:
         candidate = getObjFromPath(objectPathList, objCache)
-        if callable(candidate) and getattr(candidate, 'exposed', False):
+        if callable(candidate) and (
+                (not cpg.request.mustBeExposed) or
+                getattr(candidate, 'exposed', False)):
             foundIt = True
             break
         # Couldn't find the object: pop one from the list and try "default"
@@ -455,7 +459,9 @@ def mapPathToObject():
             virtualPathList.insert(0, lastObj)
             objectPathList.append('default')
             candidate = getObjFromPath(objectPathList, objCache)
-            if callable(candidate) and getattr(candidate, 'exposed', False):
+            if callable(candidate) and (
+                    (not cpg.request.mustBeExposed) or
+                    getattr(candidate, 'exposed', False)):
                 foundIt = True
                 isDefault = True
                 break

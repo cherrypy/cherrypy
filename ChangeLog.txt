@@ -1,3 +1,4 @@
+	* Added cpg.request.mustBeExposed to allow filters to disable the .exposed check
 	* Allowed default session functions to be accessed by other modules -
 	ticket #56 (Remi)
     * Added cpg.threadData - ticket #53 (Remi)
