@@ -183,13 +183,13 @@ def initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     applyFilterList('afterRequestBody')
 
 def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
-    # inits the cpg.responsed.wfile so filters can access it
+    # creates some attributes on cpg.response so filters can use them
     cpg.response.wfile = wfile
     cpg.response.sendResponse = 1
     try:
         initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile)
     except basefilter.RequestHandled:
-        # cache hit!
+        # request was already fully handled; it may be a cache hit
         return
 
     # Prepare response variables

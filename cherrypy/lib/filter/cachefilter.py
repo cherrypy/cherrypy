@@ -90,50 +90,53 @@ class MemoryCache:
         self.totGets = 0
         self.totHits = 0
         self.totExpires = 0
+        self.totNonModified = 0
 
     def expireCache(self):
         while True:
-            expirationTime, itemKey = self.expirationQueue.get(block=True, timeout=None)
+            expirationTime, objSize, objKey = self.expirationQueue.get(block=True, timeout=None)
             while (time.time() < expirationTime):
                 time.sleep(0.1)
             try:
-                del self.cache[itemKey]
+                del self.cache[objKey]
                 self.totExpires += 1
+                self.cursize -= objSize
             except KeyError:
                 # the key may have been deleted elsewhere
                 pass
 
     def get(self):
         """
-        If the content is in the cache, returns a string; returns None if the
-        content is not there.
+        If the content is in the cache, returns a tuple containing the 
+        expiration time, the lastModified response header and the object 
+        (rendered as a string); returns None if the key is not found.
         """
         self.totGets += 1
         cacheItem = self.cache.get(self.key(), None)
         if cacheItem:
             self.totHits += 1
-            expirationTime, obj = cacheItem
-            return obj
+            return cacheItem
         else:
             return None
         
-    def put(self, obj):
-        objsize = len(obj)
-        totalsize = self.cursize + objsize
+    def put(self, lastModified, obj):
+        objSize = len(obj)
+        totalSize = self.cursize + objSize
         # checks if there's space for the object
-        if ((objsize < self.maxobjsize) and 
-            (totalsize < self.maxsize) and 
+        if ((objSize < self.maxobjsize) and 
+            (totalSize < self.maxsize) and 
             (len(self.cache) < self.maxobjects)):
             # add to the expirationQueue & cache
             try:
                 expirationTime = time.time() + self.delay
-                itemKey = self.key()
-                self.expirationQueue.put((expirationTime, itemKey))
+                objKey = self.key()
+                self.expirationQueue.put((expirationTime, objSize, objKey))
                 self.totPuts += 1
+                self.cursize += objSize
             except Queue.Full:
                 # can't add because the queue is full
                 return
-            self.cache[itemKey] = (expirationTime, obj)
+            self.cache[objKey] = (expirationTime, lastModified, obj)
 
 class CacheInputFilter(BaseInputFilter):
     """
@@ -158,9 +161,24 @@ class CacheInputFilter(BaseInputFilter):
         """ Checks if the page is already in the cache """
         cacheData = cpg._cache.get()
         if cacheData:
-            # found a hit! serve it & get out from the request
-            cpg.response.wfile.write(cacheData)
-            raise RequestHandled
+            expirationTime, lastModified, obj = cacheData
+            # found a hit! check the if-modified-since request header
+            modifiedSince = cpg.request.headerMap.get('If-Modified-Since', None)
+            print "Cache hit: If-Modified-Since=%s, lastModified=%s" % (modifiedSince, lastModified)
+            if modifiedSince == lastModified:
+                cpg._cache.totNonModified += 1
+                # the code below was borrowed from the sendResponse function
+                # it should be refactored & put into a function to allow reuse
+                cpg.response.wfile.write('%s %s\r\n' % (cpg.configOption.protocolVersion, 304))
+                # the code below doesn't work because the data isn't available at this point...
+                #cpg.response.wfile.write('%s: %s\r\n' % ('Date', cpg.request.headerMap['Date']))
+                # should the cache record & replay cookies it too?
+                cpg.response.wfile.write('\r\n')
+                raise RequestHandled
+            else:
+                # serve it & get out from the request
+                cpg.response.wfile.write(obj)
+                raise RequestHandled
         else:
             # sets a wrapper to cache the contents
             cpg.response.wfile = Tee(cpg.response.wfile, cpg._cache.maxobjsize)
@@ -195,8 +213,9 @@ class CacheOutputFilter(object):
             wrapper = cpg.response.wfile
             if wrapper.caching:
                 if cpg.response.headerMap.get('Pragma', None) != 'no-cache':
+                    lastModified = cpg.response.headerMap.get('Last-Modified', None)
                     # saves the cache data
-                    cpg._cache.put(wrapper.cache.getvalue())
+                    cpg._cache.put(lastModified, wrapper.cache.getvalue())
                 # closes the wrapper
                 wrapper.stopCaching()
                 cpg.response.wfile = wrapper.wfile
@@ -233,7 +252,9 @@ class CacheStats:
         yield "Approximated expiration queue size: %d\n" % cache.expirationQueue.qsize()
         yield "Number of cache entries: %d\n" % len(cache.cache)
         yield "Total cache writes: %d\n" % cache.totPuts
-        yield "Total cache reads: %d\n" % cache.totGets
+        yield "Total cache read attempts: %d\n" % cache.totGets
         yield "Total hits: %d (%1.2f%%)\n" % (cache.totHits, percentual(cache.totHits, cache.totGets))
+        yield "Total misses: %d (%1.2f%%)\n" % (cache.totGets-cache.totHits, percentual(cache.totGets-cache.totHits, cache.totGets))
         yield "Total expires: %d\n" % cache.totExpires
+        yield "Total non-modified content: %d\n" % cache.totNonModified
     index.exposed = True
