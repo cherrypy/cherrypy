@@ -22,7 +22,7 @@ setup(name="CherryPy",
       author_email="team@cherrypy.org",
       url="http://www.cherrypy.org",
       license="BSD",
-      packages=["cherrypy", "cherrypy.lib", "cherrypy.lib.filter", "cherrypy.tutorial", "cherrypy.unittest"],
+      packages=["cherrypy", "cherrypy.lib", "cherrypy.lib.filter", "cherrypy.tutorial", "cherrypy.test"],
       download_url="http://trac.cherrypy.org/cgi-bin/trac.cgi/wiki/CherryPyDownload"
 )
 
