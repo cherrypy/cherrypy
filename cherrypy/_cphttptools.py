@@ -196,7 +196,7 @@ def handleRequest(wfile):
         cpg.request.base = "https://" + cpg.request.headerMap['Host']
     else:
         cpg.request.base = "http://" + cpg.request.headerMap['Host']
-    cpg.request.browserUrl = cpg.request.base + '/' + cpg.request.browserUrl
+    cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
     cpg.request.isStatic = 0
 
     # Clean up expired sessions if needed:
