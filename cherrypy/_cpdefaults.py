@@ -31,7 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 A module containing a few utility classes/functions used by CherryPy
 """
 
-import time, thread, os, pickle, cpg
+import time, thread, os, cpg
+import cPickle as pickle
 
 def _cpLogMessage(msg, context = '', severity = 0):
     """ Default method for logging messages """
