@@ -32,7 +32,7 @@ Main CherryPy module:
     - Creates the HTTP server
 """
 
-import cpg, thread, _cputil, _cpconfig, _cphttpserver, time
+import cpg, thread, _cputil, _cpconfig, _cphttpserver, time, _cpthreadinglocal
 
 def start(configFile = None, parsedConfigFile = None, configMap = {}, initOnly = 0):
     """
@@ -71,10 +71,10 @@ def start(configFile = None, parsedConfigFile = None, configMap = {}, initOnly =
 
     # Create request and response object (the same objects will be used
     #   throughout the entire life of the webserver)
-    cpg.request = _cputil.ThreadAwareClass()
-    cpg.response = _cputil.ThreadAwareClass()
+    cpg.request = _cpthreadinglocal.local()
+    cpg.response = _cpthreadinglocal.local()
     # Create threadData object as a thread-specific all-purpose storage
-    cpg.threadData = _cputil.ThreadAwareClass()
+    cpg.threadData = _cpthreadinglocal.local()
 
     # Initialize a few global variables
     cpg._lastCacheFlushTime = time.time()

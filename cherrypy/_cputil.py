@@ -40,23 +40,6 @@ class EmptyClass:
     """ An empty class """
     pass
 
-class ThreadAwareClass:
-    """ A thread-safe class for storing/retrieving
-        thread-specific variables """
-
-    def __init__(self):
-        self.__dict__['threadMap'] = {} # Used to store variables
-
-    def __setattr__(self, name, value):
-        id = thread.get_ident()
-        if not self.__dict__['threadMap'].has_key(id):
-            self.__dict__['threadMap'][id] = {}
-        self.threadMap[id][name] = value
-
-    def __getattr__(self, name):
-        id = thread.get_ident()
-        return self.__dict__['threadMap'][id][name]
-
 def getSpecialFunction(name):
     """ Return the special function """
 
