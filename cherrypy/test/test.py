@@ -73,16 +73,16 @@ failedList=[]
 skippedList=[]
 
 tutorialTestList = [
-    ('01', [('/', "cpg.response.body == 'Hello world!'")]),
-    ('02', [('/showMessage', "cpg.response.body == 'Hello world!'")]),
-    ('03', [('/greetUser?name=Bob',
+    ('01_helloworld.py', [('/', "cpg.response.body == 'Hello world!'")]),
+    ('02_expose_methods.py', [('/showMessage', "cpg.response.body == 'Hello world!'")]),
+    ('03_get_and_post.py', [('/greetUser?name=Bob',
             '''cpg.response.body == "Hey Bob, what's up?"''')]),
-    ('04', [('/links/extra/', r"""cpg.response.body == '\n            <p>Here are some extra useful links:</p>\n\n            <ul>\n                <li><a href="http://del.icio.us">del.icio.us</a></li>\n                <li><a href="http://www.mornography.de">Hendrik\'s weblog</a></li>\n            </ul>\n\n            <p>[<a href="../">Return to links page</a>]</p>\n        '""")]),
-    ('05', [('/another/', r"""cpg.response.body == '\n            <html>\n            <head>\n                <title>Another Page</title>\n            <head>\n            <body>\n            <h2>Another Page</h2>\n        \n            <p>\n            And this is the amazing second page!\n            </p>\n        \n            </body>\n            </html>\n        '""")]),
-    ('06', [('/', r"""cpg.response.body == '\n            <html>\n            <head>\n                <title>Tutorial 6 -- Aspect Powered!</title>\n            <head>\n            <body>\n            <h2>Tutorial 6 -- Aspect Powered!</h2>\n        \n            <p>\n            Isn\'t this exciting? There\'s\n            <a href="./another/">another page</a>, too!\n            </p>\n        \n            </body>\n            </html>\n        '""")]),
-    ('07', [('/hendrik', r"""cpg.response.body == 'Hendrik Mans, CherryPy co-developer & crazy German (<a href="./">back</a>)'""")]),
-    ('08', [('/', r'''cpg.response.body == "\n            During your current session, you've viewed this\n            page 1 times! Your life is a patio of fun!\n        "'''), ('/', r'''cpg.response.body == "\n            During your current session, you've viewed this\n            page 2 times! Your life is a patio of fun!\n        "''')]), 
-    ('09', [('/', r"""cpg.response.body == '<html><body><h2>Generators rule!</h2><h3>List of users:</h3>Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/></body></html>'""")]),
+    ('04_complex_site.py', [('/links/extra/', r"""cpg.response.body == '\n            <p>Here are some extra useful links:</p>\n\n            <ul>\n                <li><a href="http://del.icio.us">del.icio.us</a></li>\n                <li><a href="http://www.mornography.de">Hendrik\'s weblog</a></li>\n            </ul>\n\n            <p>[<a href="../">Return to links page</a>]</p>\n        '""")]),
+    ('05_derived_objects.py', [('/another/', r"""cpg.response.body == '\n            <html>\n            <head>\n                <title>Another Page</title>\n            <head>\n            <body>\n            <h2>Another Page</h2>\n        \n            <p>\n            And this is the amazing second page!\n            </p>\n        \n            </body>\n            </html>\n        '""")]),
+    ('06_aspects.py', [('/', r"""cpg.response.body == '\n            <html>\n            <head>\n                <title>Tutorial 6 -- Aspect Powered!</title>\n            <head>\n            <body>\n            <h2>Tutorial 6 -- Aspect Powered!</h2>\n        \n            <p>\n            Isn\'t this exciting? There\'s\n            <a href="./another/">another page</a>, too!\n            </p>\n        \n            </body>\n            </html>\n        '""")]),
+    ('07_default_method.py', [('/hendrik', r"""cpg.response.body == 'Hendrik Mans, CherryPy co-developer & crazy German (<a href="./">back</a>)'""")]),
+    ('08_sessions.py', [('/', r'''cpg.response.body == "\n            During your current session, you've viewed this\n            page 1 times! Your life is a patio of fun!\n        "'''), ('/', r'''cpg.response.body == "\n            During your current session, you've viewed this\n            page 2 times! Your life is a patio of fun!\n        "''')]), 
+    ('09_generators_and_yield.py', [('/', r"""cpg.response.body == '<html><body><h2>Generators rule!</h2><h3>List of users:</h3>Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/></body></html>'""")]),
 ]
 
 testList = [
@@ -112,17 +112,17 @@ for version, infoMap in python2.items():
     print "Running tests for python %s..."%infoMap['exactVersionShort']
 
     # Run tests based on tutorials
-    for number, myTestList in tutorialTestList:
-        code = open('../tutorial/tutorial%s.py' % number, 'r').read()
+    for filename, myTestList in tutorialTestList:
+        code = open('../tutorial/%s' % filename, 'r').read()
         code = code.replace('tutorial.conf', 'testsite.cfg')
-        print "    Testing tutorial %s..." % number,
+        print "    Testing tutorial %s..." % filename,
         #if ((version == 1 and number in ('06', '09')) or
         #        (version == 2 and number in ('09'))):
         #    print "skipped"
         #    skippedList.append("Tutorial %s for python2.%s" % (number, version))
         #    continue
            
-        helper.checkPageResult('Tutorial %s' % number, infoMap, code, myTestList, failedList)
+        helper.checkPageResult('Tutorial %s' % filename, infoMap, code, myTestList, failedList)
 
     # Running actual unittests
     for test in testList:
