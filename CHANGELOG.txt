@@ -2,8 +2,7 @@
     * CherryPY-2.0-beta released
     * xmlrpcfilter added (Remco)
     * cpg.response.body is now always an iterable type - ticket #59 (Carlos)
-    * Allowed default session functions to be accessed by other modules -
-    ticket #56 (Remi)
+    * Allowed default session functions to be accessed by other modules - ticket #56 (Remi)
     * Added cpg.threadData - ticket #53 (Remi)
     * Added request.requestLine - ticket #52 (Remi)
     * logFile config option is now honored - ticket #51 (Remi)
