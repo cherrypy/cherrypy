@@ -35,7 +35,7 @@ class Dir1:
         return "index for dir1"
     index.exposed = True
     def default(self, *params):
-        return repr(params)
+        return "default for dir1, param is:" + repr(params)
     default.exposed = True
 class Dir2:
     def index(self):
@@ -44,9 +44,17 @@ class Dir2:
     def method(self):
         return "method for dir2"
     method.exposed = True
+class Dir3:
+    def default(self):
+        return "default for dir3, not exposed"
+class Dir4:
+    def index(self):
+        return "index for dir4, not exposed"
 cpg.root = Root()
 cpg.root.dir1 = Dir1()
 cpg.root.dir1.dir2 = Dir2()
+cpg.root.dir1.dir2.dir3 = Dir3()
+cpg.root.dir1.dir2.dir3.dir4 = Dir4()
 cpg.server.start(configFile = 'testsite.cfg')
 """
 
@@ -58,6 +66,7 @@ testList = [
     ("/dir1/dir2/", "cpg.response.body == 'index for dir2, path is:/dir1/dir2/'"),
     ("/dir1/dir2", "cpg.response.headerMap['Status'] == 302" +
         " and cpg.response.headerMap['Location'] == 'http://127.0.0.1/dir1/dir2/'"),
+    ("/dir1/dir2/dir3/dir4/index", '''cpg.response.body == "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')"'''),
 ]
 
 def test(infoMap, failedList, skippedList):
