@@ -32,16 +32,16 @@ class UsersPage:
     index.exposed = True
 
 
-    def default(self):
+    def default(self, user):
         # Here we react depending on the virtualPath -- the part of the
         # path that could not be mapped to an object method. In a real
         # application, we would probably do some database lookups here
         # instead of the silly if/elif/else construct.
-        if cpg.request.virtualPath == 'remi':
+        if user == 'remi':
             out = "Remi Delon, CherryPy lead developer"
-        elif cpg.request.virtualPath == 'hendrik':
+        elif user == 'hendrik':
             out = "Hendrik Mans, CherryPy co-developer & crazy German"
-        elif cpg.request.virtualPath == 'lorenzo':
+        elif user == 'lorenzo':
             out = "Lorenzo Lamas, famous actor and singer!"
         else:
             out = "Unknown user. :-("

@@ -24,10 +24,11 @@ mimetypes.types_map['.ico']='image/x-icon'
 weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+class IndexRedirect(Exception): pass
+
 def parseFirstLine(data):
     cpg.request.path = data.split()[1]
-    if  cpg.request.path[0] == '/':
-        cpg.request.path = cpg.request.path[1:]
+    cpg.request.queryString = ""
     cpg.request.browserUrl = cpg.request.path
     cpg.request.paramMap = {}
     cpg.request.filenameMap = {}
@@ -61,10 +62,8 @@ def parseFirstLine(data):
                             cpg.request.paramMap[key] = [cpg.request.paramMap[key], value]
                     else:
                         cpg.request.paramMap[key] = value
+        cpg.request.queryString = cpg.request.path[i+1:]
         cpg.request.path = cpg.request.path[:i]
-
-    if cpg.request.path and cpg.request.path[-1] == '/':
-        cpg.request.path = cpg.request.path[:-1] # Remove trailing '/' if any
 
 def parsePostData(rfile):
     # Read request body and put it in data
@@ -280,96 +279,24 @@ def handleRequest(wfile):
         cpg.response.simpleCookie[cpg.configOption.sessionCookieName]['path'] = '/'
         cpg.response.simpleCookie[cpg.configOption.sessionCookieName]['version'] = 1
 
-    path = cpg.request.path
-
-    # Traverse path:
-    # for /a/b?arg=val, we'll try:
-    #   root.a.b.index(arg='val')
-    #   root.a.b(arg='val')
-    #   root.a.b.default(arg='val')
-    #   root.a.default('b', arg='val')
-    #   root.default('a', 'b', arg='val')
-
-    # Also, we ignore trailing slashes
-
-    # Also, a method has to have ".exposed = True" in order to be exposed
-
-    if not path:
-        pathList = []
-    else:
-        pathList = path.split('/')
-
-    pathList = ['root'] + pathList
-
-    # try root.a.b, then root.a, then root
-    func = None
-
-    obj = cpg
-    previousObj = None
-    objList = []
-    searchedPathList = []
-    myPath = ''
-    bestKnownDefaultMethod = None
-    # Successively get objects from the path: 'root', then 'a' then 'b'
-    for pathItem in pathList:
-        previousObj = obj
-        try:
-            # find contained object
-            obj = getattr(obj, pathItem)
-
-            # add object
-            objList.append(obj)
-            searchedPathList.append(pathItem)
-
-            # if found object has a default method, remember it for later
-            default = getattr(obj, 'default', None)
-            if default:
-                # TODO: check if default is callable?
-                bestKnownDefaultMethod = default
-                bestKnownDefaultMethodMyPath = '/'.join(searchedPathList[1:])
-
-        except AttributeError:
-            break
-
-    # TODO: the following code could probably be KISSed somewhat.
-
-    if len(objList) == len(pathList):
-        # root_a_b exists
-        root_a_b = objList[-1]
-
-        # Try root.a.b.index()
-        root_a_b_dot_index = getattr(root_a_b, 'index', None)
-        if root_a_b_dot_index and getattr(root_a_b_dot_index, 'exposed', None):
-            myPath = '/'.join(pathList[1:])
-            func = root_a_b_dot_index
-        else:
-            # Try root.a.b.default()
-            root_a_b_dot_default = getattr(root_a_b, 'default', None)
-            if root_a_b_dot_default and getattr(root_a_b_dot_default, 'exposed', None):
-                # XXX: I don't think this ever gets called?
-                myPath = 'root_a_b_dot_default'
-                func = root_a_b_dot_default
-            elif callable(root_a_b) and getattr(root_a_b, 'exposed', None):
-                # We use root.a.b()
-                myPath = '/'.join(pathList[1:-1])
-                func = root_a_b
-
-    if func == None:
-        # None of these exist: use the default method we found earlier
-        if bestKnownDefaultMethod:
-            func = bestKnownDefaultMethod
-            myPath = bestKnownDefaultMethodMyPath
-
-    if func == None:
-        raise cperror.NotFound
-
-    myPath += '/'
-    if len(myPath) > 1:
-        myPath = '/' + myPath
-
-    cpg.request.objectPath = myPath
-    cpg.request.virtualPath = cpg.request.path[len(myPath)-1:]
-    cpg.response.body = func(**(cpg.request.paramMap))
+    try:
+        func, objectPathList, virtualPathList = mapPathToObject()
+    except IndexRedirect, inst:
+        # For an IndexRedirect, we don't go through the regular
+        #   mechanism: we return the redirect immediately
+        newUrl = canonicalizeUrl(inst.args[0])
+        wfile.write('%s 302\r\n' % (cpg.response.headerMap['protocolVersion']))
+        cpg.response.headerMap['Location'] = newUrl
+        for key, valueList in cpg.response.headerMap.items():
+            if key not in ('Status', 'protocolVersion'):
+                if type(valueList) != type([]): valueList = [valueList]
+                for value in valueList:
+                    wfile.write('%s: %s\r\n'%(key, value))
+        wfile.write('\r\n')
+        return
+         
+    cpg.request.objectPath = '/'.join(objectPathList)
+    cpg.response.body = func(*virtualPathList, **(cpg.request.paramMap))
 
     if cpg.response.sendResponse:
         sendResponse(wfile)
@@ -381,4 +308,91 @@ def generateSessionId():
     s += '%s'%time.time()
     return sha.sha(s).hexdigest()
 
+def getObjFromPath(objPathList, objCache):
+    """ For a given objectPathList (like ['root', 'a', 'b', 'index']),
+        return the object (or None if it doesn't exist).
+        Also keep a cache for maximum efficiency
+    """
+    if not objPathList: return cpg
+    cacheKey = tuple(objPathList)
+    if cacheKey in objCache: return objCache[cacheKey]
+    previousObj = getObjFromPath(objPathList[:-1], objCache)
+    obj = getattr(previousObj, objPathList[-1], None)
+    objCache[cacheKey] = obj
+    return obj
 
+def mapPathToObject():
+    # Traverse path:
+    # for /a/b?arg=val, we'll try:
+    #   root.a.b.index -> redirect to /a/b/?arg=val
+    #   root.a.b.default(arg='val') -> redirect to /a/b/?arg=val
+    #   root.a.b(arg='val')
+    #   root.a.default('b', arg='val')
+    #   root.default('a', 'b', arg='val')
+
+    # Also, we ignore trailing slashes
+    # Also, a method has to have ".exposed = True" in order to be exposed
+
+    path = cpg.request.path
+    if path.startswith('/'): path = path[1:] # Remove leading slash
+    if path.endswith('/'): path = path[:-1] # Remove trailing slash
+
+    if not path:
+        objectPathList = []
+    else:
+        objectPathList = path.split('/')
+    objectPathList = ['root'] + objectPathList + ['index']
+
+    # Try successive objects... (and also keep the remaining object list)
+    objCache = {}
+    isFirst = True
+    isDefault = False
+    foundIt = False
+    virtualPathList = []
+    while objectPathList:
+        candidate = getObjFromPath(objectPathList, objCache)
+        if callable(candidate) and getattr(candidate, 'exposed', False):
+            foundIt = True
+            break
+        # Couldn't find the object: pop one from the list and try "default"
+        lastObj = objectPathList.pop()
+        if not isFirst:
+            virtualPathList.insert(0, lastObj)
+            objectPathList.append('default')
+            candidate = getObjFromPath(objectPathList, objCache)
+            if callable(candidate) and getattr(candidate, 'exposed', False):
+                foundIt = True
+                isDefault = True
+                break
+            objectPathList.pop() # Remove "default"
+        isFirst = False
+
+    # Check results of traversal
+    if not foundIt:
+        raise cperror.NotFound # We didn't find anything
+
+    if isFirst:
+        # We found the extra ".index"
+        # Check if the original path had a trailing slash (otherwise, do
+        #   a redirect)
+        if cpg.request.path[-1] != '/':
+            newUrl = cpg.request.path + '/'
+            if cpg.request.queryString: newUrl += cpg.request.queryString
+            raise IndexRedirect(newUrl)
+
+    return candidate, objectPathList, virtualPathList
+    
+def canonicalizeUrl(newUrl):
+    if not newUrl.startswith('http://') and not newUrl.startswith('https://'):
+        # If newUrl is not canonical, we must make it canonical
+        if newUrl[0] == '/':
+            # URL was absolute: we just add the request.base in front of it
+            newUrl = cpg.request.base + newUrl
+        else:
+            # URL was relative
+            if cpg.request.browserUrl == cpg.request.base:
+                # browserUrl is request.base
+                newUrl = cpg.request.base + '/' + newUrl
+            else:
+                newUrl = cpg.request.browserUrl[:i+1] + newUrl
+    return newUrl

@@ -22,12 +22,44 @@ class Root:
     def index(self, name="world"):
         return name
     index.exposed = True
+    def default(self, *params):
+        return "default:"+repr(params)
+    default.exposed = True
+    def other(self):
+        return "other"
+    other.exposed = True
+    def notExposed(self):
+        return "not exposed"
+class Dir1:
+    def index(self):
+        return "index for dir1"
+    index.exposed = True
+    def default(self, *params):
+        return repr(params)
+    default.exposed = True
+class Dir2:
+    def index(self):
+        return "index for dir2, path is:" + cpg.request.path
+    index.exposed = True
+    def method(self):
+        return "method for dir2"
+    method.exposed = True
 cpg.root = Root()
+cpg.root.dir1 = Dir1()
+cpg.root.dir1.dir2 = Dir2()
 cpg.server.start(configFile = 'testsite.cfg')
 """
 config = ""
-expectedResult = ""
+testList = [
+    ("", "world"),
+    ("/this/method/does/not/exist", "default:('this', 'method', 'does', 'not', 'exist')"),
+    ("/other", "other"),
+    ("/notExposed", "default:('notExposed',)"),
+    ("/dir1/dir2/", "index for dir2, path is:/dir1/dir2/"),
+]
+urlList = [test[0] for test in testList]
+expectedResultList = [test[1] for test in testList]
 
 def test(infoMap, failedList, skippedList):
     print "    Testing object mapping...",
-    helper.checkPageResult('Object mapping', infoMap, code, config, [""], ["world"], failedList)
+    helper.checkPageResult('Object mapping', infoMap, code, config, urlList, expectedResultList, failedList)
