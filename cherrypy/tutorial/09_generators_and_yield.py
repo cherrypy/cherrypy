@@ -8,10 +8,8 @@ would be overkill, and messy string concatenation too uncool. ;-)
 """
 
 from cherrypy import cpg
-from cherrypy.lib.filter import generatorfilter
 
 class GeneratorDemo:
-    _cpFilterList = [generatorfilter.GeneratorFilter()]
     def header(self):
         return "<html><body><h2>Generators rule!</h2>"
     
