@@ -12,7 +12,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 """
 
 import cpg, urllib, sys, time, traceback, types, StringIO, cgi, os
-import mimetypes, sha, random, string, _cputil, cperror
+import mimetypes, sha, random, string, _cputil, cperror, Cookie
 
 """
 Common Service Code for CherryPy
@@ -65,6 +65,35 @@ def parseFirstLine(data):
         cpg.request.queryString = cpg.request.path[i+1:]
         cpg.request.path = cpg.request.path[:i]
 
+def cookHeaders(headers, requestLine):
+    """Process the headers into the request.headerMap"""
+    cpg.request.headerMap = {}
+    cpg.request.simpleCookie = Cookie.SimpleCookie()
+
+    # Build headerMap
+    for item in headers.items():
+        # Warning: if there is more than one header entry for cookies (AFAIK, only Konqueror does that)
+        # only the last one will remain in headerMap (but they will be correctly stored in request.simpleCookie)
+        insertIntoHeaderMap(item[0],item[1])
+
+    # Handle cookies differently because on Konqueror, multiple cookies come on different lines with the same key
+    cookieList = headers.getallmatchingheaders('cookie')
+    for cookie in cookieList:
+        cpg.request.simpleCookie.load(cookie)
+
+    if not cpg.request.headerMap.has_key('Remote-Addr'):
+        try:
+            cpg.request.headerMap['Remote-Addr'] = self.client_address[0]
+            cpg.request.headerMap['Remote-Host'] = self.address_string()
+        except: pass
+
+    # Set peer_certificate (in SSL mode) so the web app can examinate the client certificate
+    try: cpg.request.peerCertificate = self.request.get_peer_certificate()
+    except: pass
+
+    _cputil.getSpecialFunction('_cpLogMessage')("%s - %s" % (cpg.request.headerMap.get('Remote-Addr', ''), requestLine[:-2]), "HTTP")
+
+
 def parsePostData(rfile):
     # Read request body and put it in data
     len = int(cpg.request.headerMap.get("Content-Length","0"))
@@ -109,7 +138,43 @@ def insertIntoHeaderMap(key,value):
     normalizedKey = '-'.join([s.capitalize() for s in key.split('-')])
     cpg.request.headerMap[normalizedKey] = value
 
-def doRequest(wfile):
+def initRequest(requestLine, headers, rfile, wfile):
+    parseFirstLine(requestLine)
+    cookHeaders(headers, requestLine)
+
+    cpg.request.base = "http://" + cpg.request.headerMap['Host']
+    cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
+    cpg.request.isStatic = False
+    cpg.request.parsePostData = True
+    cpg.request.rfile = rfile
+
+    applyFilterList('afterRequestHeader')
+
+    if cpg.request.method == 'POST' and cpg.request.parsePostData:
+        parsePostData(rfile)
+
+    applyFilterList('afterRequestBody')
+
+def doRequest(requestLine, headers, rfile, wfile):
+    initRequest(requestLine, headers, rfile, wfile)
+
+    # Prepare response variables
+    now = time.time()
+    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
+    date = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (weekdayname[wd], day, monthname[month], year, hh, mm, ss)
+    cpg.response.headerMap = {
+        "protocolVersion": cpg.configOption.protocolVersion,
+        "Status": "200 OK",
+        "Content-Type": "text/html",
+        "Server": "CherryPy/" + cpg.__version__,
+        "Date": date,
+        "Set-Cookie": [],
+        "Content-Length": 0
+    }
+    cpg.response.simpleCookie = Cookie.SimpleCookie()
+    cpg.response.wfile = wfile
+    cpg.response.sendResponse = 1
+
     try:
         handleRequest(wfile)
     except:
@@ -184,28 +249,8 @@ def sendResponse(wfile):
     wfile.write(cpg.response.body)
 
 def handleRequest(wfile):
-    now = time.time()
-    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
-    date = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (weekdayname[wd], day, monthname[month], year, hh, mm, ss)
-    cpg.response.headerMap={"Status": "200 OK", "protocolVersion": cpg.configOption.protocolVersion, "Content-Type": "text/html", "Server": "CherryPy/" + cpg.__version__, "Date": date, "Set-Cookie": [], "Content-Length": 0}
-
-    # Two variables used for streaming
-    cpg.response.wfile = wfile
-    cpg.response.sendResponse = 1
-
-    if cpg.configOption.sslKeyFile:
-        cpg.request.base = "https://" + cpg.request.headerMap['Host']
-    else:
-        cpg.request.base = "http://" + cpg.request.headerMap['Host']
-    cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
-    cpg.request.isStatic = 0
-
-    # TODO: Temp hack ... These filters shouldn't be here and remi
-    # needs to rewrite this code ...
-    applyFilterList('afterRequestHeader')
-    applyFilterList('afterRequestBody')
-
     # Clean up expired sessions if needed:
+    now = time.time()
     if cpg.configOption.sessionStorageType and cpg.configOption.sessionCleanUpDelay and cpg._lastSessionCleanUpTime + cpg.configOption.sessionCleanUpDelay * 60 <= now:
         cpg._lastSessionCleanUpTime = now
         _cputil.getSpecialFunction('_cpCleanUpOldSessions')()
@@ -303,7 +348,7 @@ def handleRequest(wfile):
         wfile.write('\r\n')
         return
          
-    cpg.request.objectPath = '/'.join(objectPathList)
+    cpg.request.objectPath = '/' + '/'.join(objectPathList)
     cpg.response.body = func(*(virtualPathList + cpg.request.paramList), **(cpg.request.paramMap))
 
     if cpg.response.sendResponse:

@@ -11,7 +11,7 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import cpg, sys, threading, SocketServer, _cphttptools, BaseHTTPServer, socket, Cookie, Queue, _cputil
+import cpg, sys, threading, SocketServer, _cphttptools, BaseHTTPServer, socket, Queue, _cputil
 
 def start():
     """ Prepare the HTTP server and then run it """
@@ -110,63 +110,20 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if _reverseDNS: return BaseHTTPServer.BaseHTTPRequestHandler.address_string(self)
         else: return self.client_address[0]
 
-    def cook_headers(self):
-        """Process the headers in self.headers into the request.headerMap"""
-        cpg.request.headerMap = {}
-        cpg.request.simpleCookie = Cookie.SimpleCookie()
-        cpg.response.simpleCookie = Cookie.SimpleCookie()
-
-        # Build headerMap
-        for item in self.headers.items():
-            # Warning: if there is more than one header entry for cookies (AFAIK, only Konqueror does that)
-            # only the last one will remain in headerMap (but they will be correctly stored in request.simpleCookie)
-            _cphttptools.insertIntoHeaderMap(item[0],item[1])
-
-        # Handle cookies differently because on Konqueror, multiple cookies come on different lines with the same key
-        cookieList = self.headers.getallmatchingheaders('cookie')
-        for cookie in cookieList:
-            cpg.request.simpleCookie.load(cookie)
-
-        if not cpg.request.headerMap.has_key('Remote-Addr'):
-            try:
-                cpg.request.headerMap['Remote-Addr'] = self.client_address[0]
-                cpg.request.headerMap['Remote-Host'] = self.address_string()
-            except: pass
-
-        # Set peer_certificate (in SSL mode) so the web app can examinate the client certificate
-        try: cpg.request.peerCertificate = self.request.get_peer_certificate()
-        except: pass
-
-        _cputil.getSpecialFunction('_cpLogMessage')("%s - %s" % (cpg.request.headerMap.get('Remote-Addr', ''), self.raw_requestline[:-2]), "HTTP")
-
     def do_GET(self):
         """Serve a GET request."""
         cpg.request.method = 'GET'
-        _cphttptools.parseFirstLine(self.raw_requestline)
-        self.cook_headers()
-        # TODO _cphttptools.applyFilterList('afterRequestHeader')
-        # TODO _cphttptools.applyFilterList('afterRequestBody')
-        _cphttptools.doRequest(self.wfile)
+        _cphttptools.doRequest(self.raw_requestline, self.headers, self.rfile, self.wfile)
 
     def do_HEAD(self): # Head is not implemented
         """Serve a HEAD request."""
         cpg.request.method = 'HEAD'
-        _cphttptools.parseFirstLine(self.raw_requestline)
-        self.cook_headers()
-        _cphttptools.doRequest(self.wfile)
+        _cphttptools.doRequest(self.raw_requestline, self.headers, self.rfile, self.wfile)
 
     def do_POST(self):
         """Serve a POST request."""
         cpg.request.method = 'POST'
-        _cphttptools.parseFirstLine(self.raw_requestline)
-        self.cook_headers()
-        cpg.request.parsePostData = 1
-        cpg.request.rfile = self.rfile
-        # TODO _cphttptools.applyFilterList('afterRequestHeader')
-        if cpg.request.parsePostData:
-            _cphttptools.parsePostData(self.rfile)
-        # TODO _cphttptools.applyFilterList('afterRequestBody')
-        _cphttptools.doRequest(self.wfile)
+        _cphttptools.doRequest(self.raw_requestline, self.headers, self.rfile, self.wfile)
 
     def setup(self):
         """ We have to override this to handle SSL

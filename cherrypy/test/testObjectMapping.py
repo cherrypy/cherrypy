@@ -34,6 +34,9 @@ class Dir1:
     def index(self):
         return "index for dir1"
     index.exposed = True
+    def myMethod(self):
+        return "myMethod from dir1, object Path is:" + repr(cpg.request.objectPath)
+    myMethod.exposed = True
     def default(self, *params):
         return "default for dir1, param is:" + repr(params)
     default.exposed = True
@@ -60,6 +63,7 @@ cpg.server.start(configFile = 'testsite.cfg')
 
 testList = [
     ("/", "cpg.response.body == 'world'"),
+    ("/dir1/myMethod", '''cpg.response.body == "myMethod from dir1, object Path is:'/root/dir1/myMethod'"'''),
     ("/this/method/does/not/exist", '''cpg.response.body == "default:('this', 'method', 'does', 'not', 'exist')"'''),
     ("/other", "cpg.response.body == 'other'"),
     ("/notExposed", '''cpg.response.body == "default:('notExposed',)"'''),
