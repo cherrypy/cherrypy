@@ -46,7 +46,7 @@ def wsgiApp(environ, start_response):
         pathInfo += '?' + qString
     firstLine = '%s %s %s' % (
         environ['REQUEST_METHOD'],
-        pathInfo,
+        pathInfo or '/',
         environ['SERVER_PROTOCOL']
     )
     _cphttptools.parseFirstLine(firstLine)
