@@ -309,10 +309,6 @@ def handleRequest(wfile):
             fname = fsDir + path[len(urlDir):]
             start_url_var = cpg.request.browserUrl.find('?')
             if start_url_var != -1: fname = fname + cpg.request.browserUrl[start_url_var:]  
-            print "cpg.request.browserUrl", cpg.request.browserUrl
-            print "cpg.request.path", cpg.request.path
-            print "file name", fname
-
             try:
                 stat = os.stat(fname)
             except OSError:
