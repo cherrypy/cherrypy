@@ -23,6 +23,9 @@ setup(name="CherryPy",
       url="http://www.cherrypy.org",
       license="BSD",
       packages=["cherrypy", "cherrypy.lib", "cherrypy.lib.filter", "cherrypy.tutorial", "cherrypy.test"],
-      download_url="http://trac.cherrypy.org/cgi-bin/trac.cgi/wiki/CherryPyDownload"
+      download_url="http://trac.cherrypy.org/cgi-bin/trac.cgi/wiki/CherryPyDownload",
+      data_files=[('lib/site-packages/cherrypy/tutorial', ['cherrypy/tutorial/Readme.txt',
+                                         'cherrypy/tutorial/tutorial.conf'])]
+
 )
 
