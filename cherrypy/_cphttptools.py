@@ -213,7 +213,6 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
         # TODO: in some cases exceptions and filters are conflicting; 
         # error reporting seems to be broken in some cases. This code is 
         # a helper to check it
-        traceback.print_exc()
         err = ""
         exc_info_1 = sys.exc_info()[1]
         if hasattr(exc_info_1, 'args') and len(exc_info_1.args) >= 1:
@@ -259,12 +258,6 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
 def sendResponse(wfile):
     applyFilterList('beforeResponse')
 
-    # Save session data
-    if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
-        sessionId = cpg.response.simpleCookie[cpg.configOption.sessionCookieName].value
-        expirationTime = time.time() + cpg.configOption.sessionTimeout * 60
-        _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
-
     # Set the content-length
     if (cpg.response.headerMap.has_key('Content-Length') and
             cpg.response.headerMap['Content-Length']==0):
@@ -273,6 +266,12 @@ def sendResponse(wfile):
         buf.seek(0)
         cpg.response.body = [buf.read()]
         cpg.response.headerMap['Content-Length'] = len(cpg.response.body[0])
+
+    # Save session data
+    if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
+        sessionId = cpg.response.simpleCookie[cpg.configOption.sessionCookieName].value
+        expirationTime = time.time() + cpg.configOption.sessionTimeout * 60
+        _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
 
     wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
     for key, valueList in cpg.response.headerMap.items():
