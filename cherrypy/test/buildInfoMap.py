@@ -11,15 +11,20 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os, sys
+import os, sys,os
 
 def buildInfoMap(python2):
     print "Checking which python versions are installed..."
     for version, infoMap in python2.items():
         # Check if this version of python is installed:
-        path=infoMap.get('path', "python2.%s" % version)
+        path=infoMap.get('path', sys.executable )
         if path:
-            exactVersion=os.popen('%s -c "import sys; import cherrypy; print sys.version; print cherrypy.__version__"'%path).read().strip()
+            exactVersion=os.popen(
+                '%s -c "import sys,os,os.path;' % path+
+                """sys.path.insert(0,os.path.normpath(os.path.join(os.getcwd(),\'../../\')));"""+
+                'import cherrypy;'+
+                'print sys.version;'+
+                'print cherrypy.__version__"').read().strip()
         if path and exactVersion and exactVersion.find('Traceback') == -1:
             exactVersionShort=exactVersion.split()[0]
             print "    Found python version %s with CherryPy version %s " % (exactVersionShort, exactVersion.split()[-1])
@@ -34,7 +39,7 @@ def buildInfoMap(python2):
                 print "If your setup is different, please edit this script and change the path for the python binary"
                 sys.exit(-1)
         else:
-            print "    Version 2.%s not found (or CherryPy not installed for this version)"%version
+            print "    Version 2.%s not found with cherrypy module, two directories up"%version
             del python2[version]
 
     if not python2:

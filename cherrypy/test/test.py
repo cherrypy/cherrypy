@@ -13,9 +13,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 # Regression test suite for CherryPy
 
-import sys
+import sys,os,os.path
+sys.path.insert(0,os.path.normpath(os.path.join(os.getcwd(),'../../')))
+if not os.path.exists(os.path.join(os.curdir,'buildInfoMap.py')):
+    print "Run the test form the test directory (cherrypy/test)from the cherrypy you wish to test."
+    print "In no python executables are found, change this file (test.py) near line 31"
+    sys.exit(1)
 if len(sys.argv) == 2 and sys.argv[1] in ('-h', '--help'):
     print "Usage: unittest.py [testName+]"
+    print "Run from the test directory from within cherrypy"
     sys.exit(0)
 
 python2={}
@@ -24,8 +30,8 @@ python2[4]={}    # Infos about python-2.4
 
 # Edit these lines to match your setup
 if sys.platform=="win32":
-    python2[3]['path']="c:\\python23\\python"
-    python2[4]['path']="c:\\python24\\python"
+    python2[3]['path']="c:\\python\\python.exe"
+    python2[4]['path']="c:\\python24\\python.exe"
 else:
     python2[3]['path']="python2.3"
     python2[4]['path']="python2.4"
@@ -164,3 +170,4 @@ else:
 #    - test hidden classes
 #    ...
 
+raw_input('hit enter')

@@ -15,7 +15,7 @@ import os,urllib,time,sys,signal,socket,httplib
 def startServer(infoMap):
     # Start the server in another thread
     if not hasattr(os, "fork"): # win32 mostly
-        pid=os.spawnl(os.P_NOWAIT, infoMap['path'], infoMap['path'], 'testsite.py')
+        pid=os.spawnl(os.P_NOWAIT,infoMap['path'] , os.getcwd(), 'testsite.py')
     else:
         pid=os.fork()
         if not pid:
@@ -26,6 +26,11 @@ def getPage(url, cookies, extraRequestHeader = []):
     data=""
     i=0
     response = None
+    class EmptyClass: pass
+    cpg = EmptyClass()
+    cpg.response = EmptyClass()
+    cpg.response.body = None
+    cpg.response.headerMap = {}
     while i<10:
         try:
             conn=httplib.HTTPConnection('127.0.0.1:8000')
@@ -49,8 +54,7 @@ def getPage(url, cookies, extraRequestHeader = []):
 
             cookies=response.msg.getallmatchingheaders("Set-Cookie")
 
-            class EmptyClass: pass
-            cpg = EmptyClass()
+            cpg=EmptyClass()
             cpg.response = EmptyClass()
             cpg.response.headerMap = {'Status': response.status}
             for line in response.msg.headers:
@@ -85,9 +89,14 @@ def shutdownServer(pid, mode):
         except AttributeError: pass # For Python2.3
 
 def checkResult(testName, infoMap, serverMode, cpg, rule, failedList):
-    if eval(rule):
-        return True
-    else:
+    result = False
+    try:
+        result = eval(rule)
+        if result:
+            return result 
+    except:
+        pass 
+    if not result:
         failedList.append(testName +
             " for python%s" % infoMap['exactVersionShort'] + 
             " in " + serverMode + " mode failed." + """
@@ -119,7 +128,11 @@ cpg.root.shutdown = Shutdown()
 def f(*a, **kw): return ""
 cpg.root._cpLogMessage = f
 '''
-    f.write(code.replace('cpg.server.start', beforeStart + 'cpg.server.start'))
+    includePathsToSysPath = """
+import sys,os,os.path
+sys.path.insert(0,os.path.join(os.getcwd(),'../..'))
+"""
+    f.write(includePathsToSysPath+code.replace('cpg.server.start', beforeStart + 'cpg.server.start'))
     f.close()
 
 def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig = '', extraRequestHeader = []):
