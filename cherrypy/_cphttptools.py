@@ -307,6 +307,10 @@ def handleRequest(wfile):
             cpg.request.isStatic = 1
 
             fname = fsDir + path[len(urlDir):]
+            #dfp: in order to get wget to work I need to append url vars to static filenames...
+            start_url_var = cpg.request.path.find('?')
+            if start_url_var != -1: fname = fname + cpg.request.path[start_url_var:]  
+            print fname
             try:
                 stat = os.stat(fname)
             except OSError:
