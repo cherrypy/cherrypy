@@ -11,7 +11,8 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import cpg, sys, threading, SocketServer, _cphttptools, BaseHTTPServer, socket, Queue, _cputil
+import cpg, sys, threading, SocketServer, _cphttptools
+import BaseHTTPServer, socket, Queue, _cputil
 
 def stop():
     cpg._server.shutdown()
@@ -64,8 +65,7 @@ def run_server(HandlerClass, ServerClass, server_address, socketFile):
 
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
 
-    if cpg.configOption.sslKeyFile: servingWhat = "HTTPS"
-    else: servingWhat = "HTTP"
+    servingWhat = "HTTP"
     if cpg.configOption.socketPort: onWhat = "socket: ('%s', %s)" % (cpg.configOption.socketHost, cpg.configOption.socketPort)
     else: onWhat = "socket file: %s" % cpg.configOption.socketFile
     _cpLogMessage("Serving %s on %s" % (servingWhat, onWhat), 'HTTP')
@@ -77,7 +77,7 @@ def run_server(HandlerClass, ServerClass, server_address, socketFile):
         myCherryHTTPServer.serve_forever()
     except KeyboardInterrupt:
         _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
-        myCherryHTTPServer.shutdown()
+        myCherryHTTPServer.server_close()
     # Call the functions from cpg.server.onStartServerList
     for func in cpg.server.onStopServerList:
         func()
@@ -144,18 +144,6 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
 class CherryHTTPServer(BaseHTTPServer.HTTPServer):
-    def __init__(self, server_address, RequestHandlerClass):
-        if not cpg.configOption.sslKeyFile:
-            return BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass)
-
-        # I know it says "do not override", but I have to in order to implement SSL support !
-        SocketServer.BaseServer.__init__(self, server_address, RequestHandlerClass)
-        if cpg.sslKeyFile:
-            self.socket = SSL.Connection(_sslCtx, socket.socket(self.address_family, self.socket_type))
-        self.server_bind()
-        self.server_activate()
-        initAfterBind()
-
     def server_activate(self):
         """Override server_activate to set timeout on our listener socket"""
         self.socket.settimeout(1)
@@ -185,7 +173,7 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
             # interrupts on Win32, which don't interrupt accept() by default
             return 1
         except KeyboardInterrupt:
-            print "<Ctrl-C> hit: shutting down"
+            _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
             self.shutdown()
 
     def serve_forever(self):
@@ -327,7 +315,7 @@ class PooledThreadServer(SocketServer.TCPServer):
         try:
             request, client_address = self.get_request()
         except KeyboardInterrupt:
-            print "<Ctrl-C> hit: shutting down"
+            _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
             return 0
         except socket.error, e:
             return 1
