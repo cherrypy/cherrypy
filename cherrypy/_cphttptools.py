@@ -318,17 +318,51 @@ def generateSessionId():
 
 def getObjFromPath(objPathList, objCache):
     """ For a given objectPathList (like ['root', 'a', 'b', 'index']),
-        return the object (or None if it doesn't exist).
-        Also keep a cache for maximum efficiency
+         return the object (or None if it doesn't exist).
+         Also keep a cache for maximum efficiency
     """
-    if not objPathList: return cpg
-    cacheKey = tuple(objPathList)
-    if cacheKey in objCache: return objCache[cacheKey]
-    previousObj = getObjFromPath(objPathList[:-1], objCache)
-    obj = getattr(previousObj, objPathList[-1], None)
-    objCache[cacheKey] = obj
-    # print "*** GETTING:", objPathList, repr(obj)
-    return obj
+    # Let cpg be the first valid object.
+    validObjects = ["cpg"]
+     
+    # Scan the objPathList in order from left to right
+    for index, obj in enumerate(objPathList):
+        # currentObjStr holds something like 'cpg.root.something.else'
+        currentObjStr = ".".join(validObjects)
+
+        #---------------
+        #   Cache check
+        #---------------
+        # Generate a cacheKey from the first 'index' elements of objPathList
+        cacheKey = tuple(objPathList[:index+1])
+        # Is this cacheKey in the objCache?
+        if cacheKey in objCache: 
+            # And is its value not None?
+            if objCache[cacheKey]:
+                # Yes, then add it to the list of validObjects
+                validObjects.append(obj)
+                # OK, go to the next iteration
+                continue
+            # Its value is None, so we stop
+            # (This means it is not a valid object)
+            break
+        
+        #-----------------
+        # Attribute check
+        #-----------------
+        if getattr(eval(currentObjStr), obj, None):
+            #  obj is a valid attribute of the current object
+            validObjects.append(obj)
+            #  Store it in the cache
+            objCache[cacheKey] = eval(".".join(validObjects))
+        else:
+            # obj is not a valid attribute
+            # Store None in the cache
+            objCache[cacheKey] = None
+            # Stop, we won't process the remaining objPathList
+            break
+
+    # Return the last cached object (even if its None)
+    return objCache[cacheKey]
 
 def mapPathToObject():
     # Traverse path:
