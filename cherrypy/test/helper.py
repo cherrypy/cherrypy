@@ -92,7 +92,7 @@ def shutdownServer(pid, mode):
     if mode == 'tp':
         # In thread-pool mode, it can take up to 1 sec for the server
         #   to shutdown
-        time.sleep(1)
+        time.sleep(1.1)
     return
 
 def checkResult(testName, infoMap, serverMode, cpg, rule, failedList):
