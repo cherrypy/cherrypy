@@ -22,7 +22,10 @@ def main():
         if '\0' in data:
             print filename, "Binary!"
             continue
-        newdata = data.replace('\r\n','\n')
+        if os.path.splitext(filename)[1].lower() == '.txt':
+            newdata = data.replace('\n','\r\n')
+        else:
+            newdata = data.replace('\r\n','\n')
         if newdata != data:
             print filename
             f = open(filename, "wb")
