@@ -47,28 +47,35 @@ def _cpOnError():
     cpg.response.body = bodyFile.getvalue()
     cpg.response.headerMap['Content-Type'] = 'text/plain'
 
-def _cpInitThread(numThread): pass
-
-def _cpSaveSessionData(sessionId, sessionData, expirationTime):
+def _cpSaveSessionData(sessionId, sessionData, expirationTime,
+        threadPool = None, sessionStorageType = None,
+        sessionStorageFileDir = None):
     """ Save session data if needed """
 
+    if threadPool is None:
+        threadPool = cpg.configOption.threadPool
+    if sessionStorageType is None:
+        sessionStorageType =  cpg.configOption.sessionStorageType
+    if sessionStorageFileDir is None:
+        sessionStorageFileDir = cpg.configOption.sessionStorageFileDir
+
     t = time.localtime(expirationTime)
-    if cpg.configOption.sessionStorageType == 'file':
-        fname=os.path.join(cpg.configOption.sessionStorageFileDir,sessionId)
-        if cpg.configOption.threadPool > 1 or cpg.configOption.threading:
+    if sessionStorageType == 'file':
+        fname=os.path.join(sessionStorageFileDir,sessionId)
+        if threadPool > 1:
             cpg._sessionFileLock.acquire()
         f = open(fname,"wb")
         pickle.dump((sessionData, expirationTime), f)
         f.close()
-        if cpg.configOption.threadPool > 1 or cpg.configOption.threading:
+        if threadPool > 1:
             cpg._sessionFileLock.release()
 
-    elif cpg.configOption.sessionStorageType=="ram":
+    elif sessionStorageType=="ram":
         # Update expiration time
         cpg._sessionMap[sessionId] = (sessionData, expirationTime)
 
     """ TODO: implement cookie storage type
-    elif cpg.configOption.sessionStorageType == "cookie":
+    elif sessionStorageType == "cookie":
         
          TODO: set siteKey in _cpConfig
             # Get site key from config file or compute it
@@ -92,24 +99,33 @@ def _cpSaveSessionData(sessionId, sessionData, expirationTime):
         cpg.response.simpleCookie['CSession-sig']['max-age'] = sessionTimeout * 60
     """
 
-def _cpLoadSessionData(sessionId):
+def _cpLoadSessionData(sessionId, threadPool = None, sessionStorageType = None,
+        sessionStorageFileDir = None):
     """ Return the session data for a given sessionId.
         The _expirationTime will be checked by the caller of this function
     """
-    if cpg.configOption.sessionStorageType == "ram":
+
+    if threadPool is None:
+        threadPool = cpg.configOption.threadPool
+    if sessionStorageType is None:
+        sessionStorageType =  cpg.configOption.sessionStorageType
+    if sessionStorageFileDir is None:
+        sessionStorageFileDir = cpg.configOption.sessionStorageFileDir
+
+    if sessionStorageType == "ram":
         if cpg._sessionMap.has_key(sessionId):
             return cpg._sessionMap[sessionId]
         else: return None
 
-    elif cpg.configOption.sessionStorageType == "file":
-        fname = os.path.join(cpg.configOption.sessionStorageFileDir, sessionId)
+    elif sessionStorageType == "file":
+        fname = os.path.join(sessionStorageFileDir, sessionId)
         if os.path.exists(fname):
-            if cpg.configOption.threadPool > 1 or cpg.configOption.threading:
+            if threadPool > 1:
                 cpg._sessionFileLock.acquire()
             f = open(fname, "rb")
             sessionData = pickle.load(f)
             f.close()
-            if cpg.configOption.threadPool > 1 or cpg.configOption.threading:
+            if threadPool > 1:
                 cpg._sessionFileLock.release()
             return sessionData
         else: return None
@@ -130,12 +146,20 @@ def _cpLoadSessionData(sessionId):
         return None
     """
 
-def _cpCleanUpOldSessions():
+def _cpCleanUpOldSessions(threadPool = None, sessionStorageType = None,
+        sessionStorageFileDir = None):
     """ Clean up old sessions """
+
+    if threadPool is None:
+        threadPool = cpg.configOption.threadPool
+    if sessionStorageType is None:
+        sessionStorageType =  cpg.configOption.sessionStorageType
+    if sessionStorageFileDir is None:
+        sessionStorageFileDir = cpg.configOption.sessionStorageFileDir
 
     # Clean up old session data
     now = time.time()
-    if cpg.configOption.sessionStorageType == "ram":
+    if sessionStorageType == "ram":
         sessionIdToDeleteList = []
         for sessionId, (dummy, expirationTime) in cpg._sessionMap.items():
             if expirationTime < now:
@@ -143,26 +167,20 @@ def _cpCleanUpOldSessions():
         for sessionId in sessionIdToDeleteList:
             del cpg._sessionMap[sessionId]
 
-    elif cpg.configOption.sessionStorageType=="file":
+    elif sessionStorageType=="file":
         # This process is very expensive because we go through all files, parse them and then delete them if the session is expired
         # One optimization would be to just store a list of (sessionId, expirationTime) in *one* file
-        sessionFileList = os.listdir(cpg.configOption.sessionStorageFileDir)
+        sessionFileList = os.listdir(sessionStorageFileDir)
         for sessionId in sessionFileList:
             try:
                 dummy, expirationTime = _cpLoadSessionData(sessionId)
                 if expirationTime < now:
-                    os.remove(os.path.join(cpg.configOption.sessionStorageFileDir, sessionId))
+                    os.remove(os.path.join(sessionStorageFileDir, sessionId))
             except:
                 pass
 
-    elif cpg.configOption.sessionStorageType == "cookie":
+    elif sessionStorageType == "cookie":
         # Nothing to do in this case: the session data is stored on the client
         pass
-
-    """ TODO
-    else:
-        # custom
-        cleanUpOldSessions()
-    """
 
 _cpFilterList = []

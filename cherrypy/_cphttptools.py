@@ -184,11 +184,11 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
         try:
             _cputil.getSpecialFunction('_cpOnError')()
 
-            # Save session data
-            # if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
-            #     sessionId = cpg.response.simpleCookie[cpg.configOption.sessionCookieName].value
-            #     expirationTime = time.time() + cpg.configOption.sessionTimeout * 60
-            #     _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
+            # Still save session data
+            if cpg.configOption.sessionStorageType and not cpg.request.isStatic:
+                sessionId = cpg.response.simpleCookie[cpg.configOption.sessionCookieName].value
+                expirationTime = time.time() + cpg.configOption.sessionTimeout * 60
+                _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
 
             wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
             if cpg.response.headerMap.has_key('Content-Length') and cpg.response.headerMap['Content-Length'] == 0:

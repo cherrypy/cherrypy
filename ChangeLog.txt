@@ -1,3 +1,5 @@
+	* Allowed default session functions to be accessed by other modules -
+	ticket #56 (Remi)
     * Added cpg.threadData - ticket #53 (Remi)
     * Added request.requestLine - ticket #52 (Remi)
     * logFile config option is now honored - ticket #51 (Remi)
