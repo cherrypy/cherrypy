@@ -62,7 +62,7 @@ def run_server(HandlerClass, ServerClass, server_address, socketFile):
     if cpg.configOption.socketFile:
         try: os.chmod(socketFile, 0777) # So everyone can access the socket
         except: pass
-
+    global _cpLogMessage
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
 
     servingWhat = "HTTP"
