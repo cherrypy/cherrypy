@@ -1,3 +1,4 @@
+    * renamed "configDict" into "configMap" for consistency - ticket  #82 (Remi)
     * Dots in requests path are now replaced by underscores  - ticket #87 (Remi)
     * Improved WSGI support and added example (seems to work OK) (Peter, Remi)
 	* Added DecodingFilter (Remi)

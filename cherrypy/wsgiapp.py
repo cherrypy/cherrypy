@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # sys.path.append(r"C:\Tmp\PEAK\src")
     from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
      # Read the CherryPy config file and initialize some variables
-    wsgiapp.init(configDict = {'socketPort': 8000, 'sessionStorageType': 'ram'})
+    wsgiapp.init(configMap = {'socketPort': 8000, 'sessionStorageType': 'ram'})
     server_address = ("", 8000)
     httpd = WSGIServer(server_address, WSGIRequestHandler)
     httpd.set_app(wsgiapp.wsgiApp)
