@@ -12,10 +12,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 """
 
 import os, cgi
-from basefilter import BaseFilter
+from basefilter import BaseOutputFilter
 from cherrypy import cpg
 
-class TidyFilter(BaseFilter):
+class TidyFilter(BaseOutputFilter):
     """
     Filter that runs the response through Tidy.
     Note that we use the standalone Tidy tool rather than the python

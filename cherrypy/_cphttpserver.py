@@ -144,8 +144,8 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         cpg.request.method = 'GET'
         _cphttptools.parseFirstLine(self.raw_requestline)
         self.cook_headers()
-        _cphttptools.applyFilterList('afterRequestHeader')
-        _cphttptools.applyFilterList('afterRequestBody')
+        # TODO _cphttptools.applyFilterList('afterRequestHeader')
+        # TODO _cphttptools.applyFilterList('afterRequestBody')
         _cphttptools.doRequest(self.wfile)
 
     def do_HEAD(self): # Head is not implemented
@@ -162,10 +162,10 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.cook_headers()
         cpg.request.parsePostData = 1
         cpg.request.rfile = self.rfile
-        _cphttptools.applyFilterList('afterRequestHeader')
+        # TODO _cphttptools.applyFilterList('afterRequestHeader')
         if cpg.request.parsePostData:
             _cphttptools.parsePostData(self.rfile)
-        _cphttptools.applyFilterList('afterRequestBody')
+        # TODO _cphttptools.applyFilterList('afterRequestBody')
         _cphttptools.doRequest(self.wfile)
 
     def setup(self):

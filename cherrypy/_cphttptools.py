@@ -101,8 +101,9 @@ def parsePostData(rfile):
 def applyFilterList(methodName):
     filterList = _cputil.getSpecialFunction('_cpFilterList')
     for filter in filterList:
-        method = getattr(filter, methodName)
-        method()
+        method = getattr(filter, methodName, None)
+        if method:
+            method()
 
 def insertIntoHeaderMap(key,value):
     normalizedKey = '-'.join([s.capitalize() for s in key.split('-')])
@@ -198,6 +199,11 @@ def handleRequest(wfile):
         cpg.request.base = "http://" + cpg.request.headerMap['Host']
     cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
     cpg.request.isStatic = 0
+
+    # TODO: Temp hack ... These filters shouldn't be here and remi
+    # needs to rewrite this code ...
+    applyFilterList('afterRequestHeader')
+    applyFilterList('afterRequestBody')
 
     # Clean up expired sessions if needed:
     if cpg.configOption.sessionStorageType and cpg.configOption.sessionCleanUpDelay and cpg._lastSessionCleanUpTime + cpg.configOption.sessionCleanUpDelay * 60 <= now:

@@ -11,39 +11,20 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-class BaseInputFilter(object):
+from basefilter import BaseInputFilter
+from cherrypy import cpg
+
+class BaseUrlFilter(BaseInputFilter):
     """
-    Base class for input filters. Derive new filter classes from this, then
-    override some of the methods to add some side-effects.
+    Filter that changes the base URL.
+    Useful when running a CP server behind Apache.
     """
+
+    def __init__(self, baseUrl = 'http://localhost'):
+        # New baseUrl
+        self.baseUrl = baseUrl
+
     def afterRequestHeader(self):
-        """ Called after the request header has been read/parsed"""
-        pass
-
-    def afterRequestBody(self):
-        """ Called after the request body has been read/parsed"""
-        pass
-
-class BaseOutputFilter(object):
-    """
-    Base class for output filters. Derive new filter classes from this, then
-    override some of the methods to add some side-effects.
-    """
-    def beforeResponse(self):
-        """ Called before starting to write response """
-        pass
-
-    def afterResponseHeader(self):
-        """ Called after writing the response header """
-        pass
-
-    def beforeResponseFullBody(self):
-        """ Called before writing the full response body """
-        pass
-
-    def beforeResponseOnTheFlyBody(self):
-        """ Called before writing a bit of the reponse (only used
-            when using "on-the-fly" response.
-        """
-        pass
-
+        cpg.request.browserUrl = cpg.request.browserUrl.replace(
+            cpg.request.base, self.baseUrl)
+        cpg.request.base = self.baseUrl
