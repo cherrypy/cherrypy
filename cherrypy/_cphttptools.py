@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import cpg, urllib, sys, time, traceback, types, StringIO, cgi, os
-import mimetypes, sha, random, string, _cputil, cperror, Cookie
+import mimetypes, sha, random, string, _cputil, cperror, Cookie, urlparse
 from lib.filter import basefilter
 
 """
@@ -384,7 +384,7 @@ def handleRequest(wfile):
     except IndexRedirect, inst:
         # For an IndexRedirect, we don't go through the regular
         #   mechanism: we return the redirect immediately
-        newUrl = canonicalizeUrl(inst.args[0])
+        newUrl = urlparse.urljoin(cpg.request.base, inst.args[0])
         wfile.write('%s 302\r\n' % (cpg.response.headerMap['protocolVersion']))
         cpg.response.headerMap['Location'] = newUrl
         for key, valueList in cpg.response.headerMap.items():
@@ -534,20 +534,3 @@ def mapPathToObject(path = None):
             raise IndexRedirect(newUrl)
 
     return candidate, objectPathList, virtualPathList
- 
-def canonicalizeUrl(url):
-    """ Canonicalize a URL. The URL might be relative, absolute or canonical """
-    if not url.startswith('http://') and not url.startswith('https://'):
-        # If url is not canonical, we must make it canonical
-        if url[0] == '/':
-            # URL was absolute: we just add the request.base in front of it
-            url = cpg.request.base + url
-        else:
-            # URL was relative
-            if cpg.request.browserUrl == cpg.request.base:
-                # browserUrl is request.base
-                url = cpg.request.base + '/' + url
-            else:
-                i = cpg.request.browserUrl.rfind('/')
-                url = cpg.request.browserUrl[:i+1] + url
-    return url

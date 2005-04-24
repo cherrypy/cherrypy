@@ -166,7 +166,7 @@ if failedList:
 
     print "**** THE ABOVE TESTS FAILED"
     print
-    print "**** Some errors occured: please add a ticket in our Trac system (http://trac.cherrypy.org/cgi-bin/trac.cgi/newticket) with the output of this test script"
+    print "**** Some errors occured: please add a ticket in our Trac system (http://trac.cherrypy.org/newticket) with the output of this test script"
 
 else:
     print

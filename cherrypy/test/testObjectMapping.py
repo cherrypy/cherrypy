@@ -30,6 +30,7 @@ import helper
 
 code = """
 from cherrypy import cpg
+from cherrypy.lib import httptools
 class Root:
     def index(self, name="world"):
         return name
@@ -43,6 +44,9 @@ class Root:
     def extra(self, *p):
         return repr(p)
     extra.exposed = True
+    def redirect(self):
+        return httptools.redirect('dir1/')
+    redirect.exposed = True
     def notExposed(self):
         return "not exposed"
 class Dir1:
@@ -87,6 +91,8 @@ testList = [
     ("/dir1/dir2", "cpg.response.headerMap['Status'] == 302" +
         " and cpg.response.headerMap['Location'] == 'http://127.0.0.1/dir1/dir2/'"),
     ("/dir1/dir2/dir3/dir4/index", '''cpg.response.body == "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')"'''),
+    ("/redirect", "cpg.response.headerMap['Status'] == 302" +
+        " and cpg.response.headerMap['Location'] == 'http://127.0.0.1/dir1/'"),
 ]
 
 def test(infoMap, failedList, skippedList):

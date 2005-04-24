@@ -31,23 +31,11 @@ Just a few convenient functions
 """
 
 from cherrypy import cpg
+import urlparse
 
 def canonicalizeUrl(url):
     """ Canonicalize a URL. The URL might be relative, absolute or canonical """
-    if not url.startswith('http://') and not url.startswith('https://'):
-        # If url is not canonical, we must make it canonical
-        if url[0] == '/':
-            # URL was absolute: we just add the request.base in front of it
-            url = cpg.request.base + url
-        else:
-            # URL was relative
-            if cpg.request.browserUrl == cpg.request.base:
-                # browserUrl is request.base
-                url = cpg.request.base + '/' + url
-            else:
-                i = cpg.request.browserUrl.rfind('/')
-                url = cpg.request.browserUrl[:i+1] + url
-    return url
+    return urlparse.urljoin(cpg.request.base, url)
 
 def redirect(url):
     """ Sends a redirect to the browser (after canonicalizing the URL) """

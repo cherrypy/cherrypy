@@ -5,6 +5,7 @@
     * Improved WSGI support and added example (seems to work OK) (Peter, Remi)
     * Added DecodingFilter (Remi)
     * Added form module (port from CP1 Form.cpy) (Remi)
+    * Improved the way static files are being served (Remi)
 
 2004/12-29:
     * CherryPY-2.0-beta released
