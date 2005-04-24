@@ -39,11 +39,16 @@ def _cpLogMessage(msg, context = '', severity = 0):
 
     nowTuple = time.localtime(time.time())
     nowStr = '%04d/%02d/%02d %02d:%02d:%02d' % (nowTuple[:6])
-    if severity == 0: level = "INFO"
-    elif severity == 1: level = "WARNING"
-    elif severity == 2: level = "ERROR"
+    if severity == 0:
+        level = "INFO"
+    elif severity == 1:
+        level = "WARNING"
+    elif severity == 2:
+        level = "ERROR"
+    else:
+        lebel = "UNKNOWN"
     try:
-        logToScreen = int(cpg.parsedConfigFile.get('server', 'logToScreen'))
+        logToScreen = int(cpg.configOption.logToScreen)
     except:
         logToScreen = True
     s = nowStr + ' ' + context + ' ' + level + ' ' + msg
