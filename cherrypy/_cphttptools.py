@@ -485,8 +485,10 @@ def mapPathToObject(path = None):
 
     if path is None:
         path = cpg.request.objectPath or cpg.request.path
-    if path.startswith('/'): path = path[1:] # Remove leading slash
-    if path.endswith('/'): path = path[:-1] # Remove trailing slash
+    if path.startswith('/'):
+        path = path[1:] # Remove leading slash
+    if path.endswith('/'):
+        path = path[:-1] # Remove trailing slash
 
     if not path:
         objectPathList = []
@@ -510,7 +512,7 @@ def mapPathToObject(path = None):
                 break
         # Couldn't find the object: pop one from the list and try "default"
         lastObj = objectPathList.pop()
-        if not isFirst:
+        if (not isFirst) or (not path):
             virtualPathList.insert(0, lastObj)
             objectPathList.append('default')
             candidate = getObjFromPath(objectPathList, objCache)
