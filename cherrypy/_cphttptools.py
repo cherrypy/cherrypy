@@ -305,8 +305,13 @@ def handleRequest(wfile):
     cpg.request.originalParamList = cpg.request.paramList
 
     path = cpg.request.path
-    if path.startswith('/'): path = path[1:] # Remove leading slash
-    if path.endswith('/'): path = path[:-1] # Remove trailing slash
+    if path.startswith('/'):
+        # Remove leading slash
+        path = path[1:]
+    if path.endswith('/'):
+        # Remove trailing slash
+        path = path[:-1]
+    path = urllib.unquote(path) # Replace quoted chars (eg %20) from url
 
     # Handle static directories
     for urlDir, fsDir in cpg.configOption.staticContentList:

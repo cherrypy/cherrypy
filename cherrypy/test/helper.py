@@ -140,7 +140,7 @@ def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig =
     # Try it in all 2 modes (regular, threadPooling)
     modeList=[('r',''), ('tp', 'threadPool=3')]
     for mode,modeConfig in modeList:
-        f=open("testsite.cfg", "w")
+        f = open("testsite.cfg", "w")
         f.write(extraConfig)
         f.write('''
 [session]
