@@ -1,3 +1,5 @@
+2005-04-25:
+    * CherryPY-2.0-final released
     * Added tests about static content and httptools.redirect (Remi)
     * Handle %20 (and others) in static content - ticket #104 (Remi)
     * If y is a static dir make y/a?b try and serve a file named a?b (Dan)
@@ -9,7 +11,7 @@
     * Added form module (port from CP1 Form.cpy) (Remi)
     * Improved the way static files are being served (Remi)
 
-2004/12-29:
+2004-12-29:
     * CherryPY-2.0-beta released
     * xmlrpcfilter added (Remco)
     * cpg.response.body is now always an iterable type - ticket #59 (Carlos)
@@ -31,6 +33,6 @@
     * Added more unittest (Remi)
     * Fixed file upload bug (Remi)
 
-2004/10/13:
+2004-10-13:
     * First alpha release of CherryPy-2 (Remi)
 

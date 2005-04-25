@@ -1,3 +1,6 @@
 include CHANGELOG.txt
 include CHERRYPYTEAM.txt
 include *.conf
+include cherrypy/tutorial/README.txt
+include cherrypy/test/style.css
+include cherrypy/test/static/index.html
