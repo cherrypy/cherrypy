@@ -8,7 +8,7 @@ if sys.version < '2.2.3':
     DistributionMetadata.download_url = None
 
 setup(name="CherryPy",
-      version="2.0.0b",
+      version="2.0.0",
       description="Object-Oriented web development framework",
       long_description="""CherryPy is a pythonic, object-oriented web development framework.""",
       classifiers=["Development Status :: Alpha",
