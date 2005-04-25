@@ -50,7 +50,8 @@ class TidyFilter(BaseOutputFilter):
         originalBody = ''.join(cpg.response.body)
         cpg.response.body = [originalBody]
         
-        ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
+        fct = cpg.response.headerMap.get('Content-Type', '')
+        ct = fct.split(';')[0]
         if ct == 'text/html':
             pageFile = os.path.join(self.tmpDir, 'page.html')
             outFile = os.path.join(self.tmpDir, 'tidy.out')
@@ -58,9 +59,13 @@ class TidyFilter(BaseOutputFilter):
             f = open(pageFile, 'wb')
             f.write(originalBody)
             f.close()
-            encoding = cpg.response.headerMap.get('Content-Encoding', '')
+            encoding = ''
+            i = fct.find('charset=')
+            if i != -1:
+                encoding = fct[i+8:]
+            encoding = encoding.replace('utf-8', 'utf8')
             if encoding:
-                encoding = '-u' + encoding
+                encoding = '-' + encoding
             os.system('"%s" %s -f %s -o %s %s' % (
                 self.tidyPath, encoding, errFile, outFile, pageFile))
             f = open(errFile, 'rb')
