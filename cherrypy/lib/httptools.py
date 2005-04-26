@@ -35,7 +35,7 @@ import urlparse
 
 def canonicalizeUrl(url):
     """ Canonicalize a URL. The URL might be relative, absolute or canonical """
-    return urlparse.urljoin(cpg.request.base, url)
+    return urlparse.urljoin(cpg.request.browserUrl, url)
 
 def redirect(url):
     """ Sends a redirect to the browser (after canonicalizing the URL) """
