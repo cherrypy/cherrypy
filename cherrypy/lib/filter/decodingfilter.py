@@ -49,6 +49,5 @@ class DecodingFilter(BaseInputFilter):
             else:
                 # value is a regular string: decode it
                 newValue = value.decode(self.encoding)
-            print "Decoded:", repr(key), repr(newValue)
             cpg.request.paramMap[key] = newValue
 
