@@ -40,7 +40,7 @@ class DecodingFilter(BaseInputFilter):
 
     def afterRequestBody(self):
         for key, value in cpg.request.paramMap.items():
-            if key in cpg.request.filenameMap:
+            if cpg.request.filenameMap.get(key):
                 # This is a file being uploaded: skip it
                 continue
             if isinstance(value, list):
@@ -49,5 +49,6 @@ class DecodingFilter(BaseInputFilter):
             else:
                 # value is a regular string: decode it
                 newValue = value.decode(self.encoding)
+            print "Decoded:", repr(key), repr(newValue)
             cpg.request.paramMap[key] = newValue
 
