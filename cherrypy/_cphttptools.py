@@ -408,10 +408,19 @@ def handleRequest(wfile):
     if not isinstance(body, types.GeneratorType):
         cpg.response.body = [body]
     else:
-        cpg.response.body = body
+        cpg.response.body = flattener(body)
 
     if cpg.response.sendResponse:
         sendResponse(wfile)
+
+def flattener(input):
+    for x in input:
+        if not isinstance(x, types.GeneratorType):
+            yield x
+        else:
+            for y in flattener(x):
+                yield y 
+
 
 def generateSessionId():
     s = ''

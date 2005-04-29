@@ -1,3 +1,6 @@
+    * Fixed small bug in httptools.redirect
+    * Allow methods to return recursive generators
+
 2005-04-25:
     * CherryPY-2.0-final released
     * Added tests about static content and httptools.redirect (Remi)
