@@ -325,7 +325,7 @@ def handleRequest(wfile):
             try:
                 stat = os.stat(fname)
             except OSError:
-                raise cperror.NotFound
+                raise cperror.NotFound(path)
             modifTime = stat.st_mtime
 
             strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(modifTime))
@@ -502,7 +502,7 @@ def mapPathToObject(path = None):
 
     # Check results of traversal
     if not foundIt:
-        raise cperror.NotFound # We didn't find anything
+        raise cperror.NotFound (path)# We didn't find anything
 
     if isFirst:
         # We found the extra ".index"
