@@ -26,12 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-"""
-Main CherryPy module:
-    - Parses config file
-    - Creates the HTTP server
-"""
-
 class Error(Exception):
     pass
 
