@@ -39,9 +39,10 @@ class TidyFilter(BaseOutputFilter):
     server would also crash)
     """
 
-    def __init__(self, tidyPath, tmpDir, errorsToIgnore = []):
+    def __init__(self, tidyPath, tmpDir, strictXml = False, errorsToIgnore = []):
         self.tidyPath = tidyPath
         self.tmpDir = tmpDir
+        self.strictXml = strictXml
         self.errorsToIgnore = errorsToIgnore
 
     def beforeResponse(self):
@@ -66,8 +67,11 @@ class TidyFilter(BaseOutputFilter):
             encoding = encoding.replace('utf-8', 'utf8')
             if encoding:
                 encoding = '-' + encoding
-            os.system('"%s" %s -f %s -o %s %s' % (
-                self.tidyPath, encoding, errFile, outFile, pageFile))
+            strictXml = ""
+            if self.strictXml:
+                strictXml = ' -xml'
+            os.system('"%s" %s%s -f %s -o %s %s' % (
+                self.tidyPath, encoding, strictXml, errFile, outFile, pageFile))
             f = open(errFile, 'rb')
             err = f.read()
             f.close()
