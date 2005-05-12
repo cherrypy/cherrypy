@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import time, whrandom
+import time, random
 from cherrypy import cpg
 
 from aspect import Aspect, STOP, CONTINUE
@@ -39,6 +39,9 @@ class CSAuthenticate(Aspect):
     sessionIdCookieName = "CherrySessionId"
     timeout = 60 # in minutes
 
+    def notLoggedIn(self, message):
+        return STOP, self.loginScreen(message, cpg.request.browserUrl)
+
     def _before(self, methodName, method):
         # If the method is not exposed, don't do anything
         if not getattr(method, 'exposed', None):
@@ -46,21 +49,23 @@ class CSAuthenticate(Aspect):
 
         cpg.request.login = ''
         # If the method is one of these 4, do not try to find out who is logged in
-        if methodName in ["loginScreen", "logoutScreen", "doLogin", "doLogout"]:
+        if methodName in ["loginScreen", "logoutScreen", "doLogin", "doLogout", "notLoggedIn"]:
             return CONTINUE, None
 
         # Check if a user is logged in:
         #   - If they are, set request.login with the right value
         #   - If not, return the login screen
         if not cpg.request.simpleCookie.has_key(self.sessionIdCookieName):
-            return STOP, self.loginScreen(self.noCookieMessage, cpg.request.browserUrl)
+            # return STOP, self.loginScreen(self.noCookieMessage, cpg.request.browserUrl)
+            return self.notLoggedIn(self.noCookieMessage)
         sessionId = cpg.request.simpleCookie[self.sessionIdCookieName].value
         now=time.time()
 
         # Check that session exists and hasn't timed out
         timeout=0
         if not cpg.request.sessionMap.has_key(sessionId):
-            return STOP, self.loginScreen(self.noCookieMessage, cpg.request.browserUrl)
+            # return STOP, self.loginScreen(self.noCookieMessage, cpg.request.browserUrl)
+            return self.notLoggedIn(self.noCookieMessage)
         else:
             login, expire = cpg.request.sessionMap[sessionId]
             if expire < now: timeout=1
@@ -69,7 +74,8 @@ class CSAuthenticate(Aspect):
                 cpg.request.sessionMap[sessionId] = login, expire
 
         if timeout:
-            return STOP, self.loginScreen(self.timeoutMessage, cpg.request.browserUrl)
+            # return STOP, self.loginScreen(self.timeoutMessage, cpg.request.browserUrl)
+            return self.notLoggedIn(self.timeoutMessage)
 
         cpg.request.login = login
         return CONTINUE, None
@@ -82,7 +88,7 @@ class CSAuthenticate(Aspect):
         choice="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
         while 1:
             sessionId=""
-            for dummy in range(20): sessionId += whrandom.choice(choice)
+            for dummy in range(20): sessionId += random.choice(choice)
             if sessionId not in sessionIdList: return sessionId
 
     def doLogin(self, login, password, fromPage):
@@ -117,7 +123,7 @@ class CSAuthenticate(Aspect):
         cpg.response.simpleCookie[self.sessionIdCookieName]['version'] = 1
         cpg.request.login = ''
         cpg.response.headerMap['Status'] = 302
-        cpg.response.headerMap['Location'] = 'logoutScreen' # TBCTBC: may not be the right URL
+        cpg.response.headerMap['Location'] = 'logoutScreen'
         return ""
     doLogout.exposed = True
 
@@ -130,10 +136,10 @@ class CSAuthenticate(Aspect):
         <html><body>
             Message: %s
             <form method="post" action="doLogin">
-                Login: <input type=text name=login value="%s" size=10><br>
-                Password: <input type=password name=password size=10><br>
-                <input type=hidden name=fromPage value="%s"><br>
-                <input type=submit>
+                Login: <input type=text name=login value="%s" size=10/><br/>
+                Password: <input type=password name=password size=10/><br/>
+                <input type=hidden name=fromPage value="%s"/><br/>
+                <input type=submit/>
             </form>
         </body></html>
         """ % (message, login, fromPage)
