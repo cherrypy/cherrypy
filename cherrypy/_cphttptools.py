@@ -405,13 +405,23 @@ def handleRequest(wfile):
     body = func(*(virtualPathList + cpg.request.paramList), **(cpg.request.paramMap))
 
     # builds a uniform return type
-    if not isinstance(body, types.GeneratorType):
+    if isinstance(body, types.FileType):
+        cpg.response.body = fileGenerator(body)
+    elif not isinstance(body, types.GeneratorType):
         cpg.response.body = [body]
     else:
         cpg.response.body = flattener(body)
 
     if cpg.response.sendResponse:
         sendResponse(wfile)
+
+def fileGenerator(file, chunkSize = 65536): # 65536 = 64kb
+   """ make file objects iterable generators """
+   input = file.read(chunkSize)
+   while input:
+      yield input
+      input = file.read(chunkSize) 
+
 
 def flattener(input):
     for x in input:
