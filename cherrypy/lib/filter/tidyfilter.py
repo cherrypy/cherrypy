@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os, cgi
 from basefilter import BaseOutputFilter
 from cherrypy import cpg
-import HTMLParser
 
 class TidyFilter(BaseOutputFilter):
     """
@@ -51,7 +50,6 @@ class TidyFilter(BaseOutputFilter):
         # so we just collect the body and work with it.
         originalBody = ''.join(cpg.response.body)
         cpg.response.body = [originalBody]
-        p = HTMLParser.HTMLParser()
         p.feed(originalBody)
         
         fct = cpg.response.headerMap.get('Content-Type', '')
