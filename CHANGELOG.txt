@@ -1,5 +1,6 @@
     * Fixed small bug in httptools.redirect
     * Allow methods to return recursive generators
+    * Methods can now return file objects which are red in 64kb chunks. (Mike)
 
 2005-04-25:
     * CherryPY-2.0-final released
