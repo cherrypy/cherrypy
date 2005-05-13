@@ -50,7 +50,6 @@ class TidyFilter(BaseOutputFilter):
         # so we just collect the body and work with it.
         originalBody = ''.join(cpg.response.body)
         cpg.response.body = [originalBody]
-        p.feed(originalBody)
         
         fct = cpg.response.headerMap.get('Content-Type', '')
         ct = fct.split(';')[0]
