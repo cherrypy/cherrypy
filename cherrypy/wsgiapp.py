@@ -137,7 +137,7 @@ def wsgiApp(environ, start_response):
 
     start_response(status, responseHeaders)
 
-    return response
+    return [response]
 
 if __name__ == '__main__':
     from cherrypy import cpg, wsgiapp
