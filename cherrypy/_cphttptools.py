@@ -166,7 +166,7 @@ def initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     parseFirstLine(requestLine)
     cookHeaders(clientAddress, remoteHost, headers, requestLine)
 
-    cpg.request.base = "http://" + cpg.request.headerMap['Host']
+    cpg.request.base = "http://" + cpg.request.headerMap.get('Host', '')
     cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
     cpg.request.isStatic = False
     cpg.request.parsePostData = True
@@ -186,12 +186,6 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     # creates some attributes on cpg.response so filters can use them
     cpg.response.wfile = wfile
     cpg.response.sendResponse = 1
-    try:
-        initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile)
-    except basefilter.RequestHandled:
-        # request was already fully handled; it may be a cache hit
-        return
-
     # Prepare response variables
     now = time.time()
     year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
@@ -206,8 +200,17 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
         "Content-Length": 0
     }
     cpg.response.simpleCookie = Cookie.SimpleCookie()
-
     try:
+        try:
+            initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile)
+        except basefilter.RequestHandled:
+            # request was already fully handled; it may be a cache hit
+            return
+        except:
+            # exception raised in a filter.
+            # we don't have a response body yet, so create an empty one
+            cpg.response.body = []
+            raise
         handleRequest(cpg.response.wfile)
     except:
         # TODO: in some cases exceptions and filters are conflicting; 
