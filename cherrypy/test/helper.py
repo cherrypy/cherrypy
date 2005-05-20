@@ -131,7 +131,7 @@ cpg.root._cpLogMessage = f
 import sys,os,os.path
 sys.path.insert(0,os.path.normpath(os.path.join(os.getcwd(),'../../')))
 """
-    f.write(includePathsToSysPath+code.replace('cpg.server.start', beforeStart + 'cpg.server.start'))
+    f.write(includePathsToSysPath+code.replace('cpg.config.loadConfigFile', beforeStart + 'cpg.config.loadConfigFile'))
     f.close()
 
 def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig = '', extraRequestHeader = []):

@@ -89,4 +89,5 @@ cpg.root.links = LinksPage()
 # no reason why you shouldn't let your root object take care of
 # creating all contained request handler objects.
 
-cpg.server.start(configFile = 'tutorial.conf')
+cpg.config.loadConfigFile('tutorial.conf')
+cpg.server.start()

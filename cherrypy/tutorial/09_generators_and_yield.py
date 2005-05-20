@@ -32,4 +32,5 @@ class GeneratorDemo:
     index.exposed = True
 
 cpg.root = GeneratorDemo()
-cpg.server.start(configFile = 'tutorial.conf')
+cpg.config.loadConfigFile('tutorial.conf')
+cpg.server.start()

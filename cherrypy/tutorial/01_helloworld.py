@@ -27,5 +27,6 @@ class HelloWorld:
 cpg.root = HelloWorld()
 
 # Start the CherryPy server using the configuration file tutorial.conf.
-cpg.server.start(configFile = 'tutorial.conf')
+cpg.config.loadConfigFile('tutorial.conf')
+cpg.server.start()
 

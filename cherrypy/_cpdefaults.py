@@ -54,8 +54,8 @@ def _cpLogMessage(msg, context = '', severity = 0):
     s = nowStr + ' ' + context + ' ' + level + ' ' + msg
     if logToScreen:
         print s
-    if cpg.configOption.logFile:
-        f = open(cpg.configOption.logFile, 'ab')
+    if cpg.getConfig('server', 'logFile'):
+        f = open(cpg.getConfig('server','logFile'), 'ab')
         f.write(s + '\n')
         f.close()
 
@@ -74,11 +74,11 @@ def _cpSaveSessionData(sessionId, sessionData, expirationTime,
     """ Save session data if needed """
 
     if threadPool is None:
-        threadPool = cpg.configOption.threadPool
+        threadPool = cpg.getConfig('server', 'threadPool')
     if sessionStorageType is None:
-        sessionStorageType =  cpg.configOption.sessionStorageType
+        sessionStorageType = cpg.getConfig('session', 'storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.configOption.sessionStorageFileDir
+        sessionStorageFileDir = cpg.getConfig('session', 'storageFileDir')
 
     t = time.localtime(expirationTime)
     if sessionStorageType == 'file':
@@ -95,31 +95,6 @@ def _cpSaveSessionData(sessionId, sessionData, expirationTime,
         # Update expiration time
         cpg._sessionMap[sessionId] = (sessionData, expirationTime)
 
-    """ TODO: implement cookie storage type
-    elif sessionStorageType == "cookie":
-        
-         TODO: set siteKey in _cpConfig
-            # Get site key from config file or compute it
-            try: cpg._SITE_KEY_ = configFile.get('server','siteKey')
-            except:
-                _SITE_KEY_ = ''
-                for i in range(30):
-                    _SITE_KEY_ += random.choice(string.letters)
-
-        # Update expiration time
-        sessionData = (sessionData, expirationTime)
-        dumpStr = pickle.dumps(_sessionData)
-        try: dumpStr = zlib.compress(dumpStr)
-        except: pass # zlib is not available in all python distros
-        dumpStr = binascii.hexlify(dumpStr) # Need to hexlify it because it will be stored in a cookie
-        cpg.response.simpleCookie['CSession'] = dumpStr
-        cpg.response.simpleCookie['CSession-sig'] = md5.md5(dumpStr + cpg.configOption.siteKey).hexdigest()
-        cpg.response.simpleCookie['CSession']['path'] = '/'
-        cpg.response.simpleCookie['CSession']['max-age'] = sessionTimeout * 60
-        cpg.response.simpleCookie['CSession-sig']['path'] = '/'
-        cpg.response.simpleCookie['CSession-sig']['max-age'] = sessionTimeout * 60
-    """
-
 def _cpLoadSessionData(sessionId, threadPool = None, sessionStorageType = None,
         sessionStorageFileDir = None):
     """ Return the session data for a given sessionId.
@@ -127,11 +102,11 @@ def _cpLoadSessionData(sessionId, threadPool = None, sessionStorageType = None,
     """
 
     if threadPool is None:
-        threadPool = cpg.configOption.threadPool
+        threadPool = cpg.getConfig('server', 'threadPool')
     if sessionStorageType is None:
-        sessionStorageType =  cpg.configOption.sessionStorageType
+        sessionStorageType = cpg.getConfig('session', 'storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.configOption.sessionStorageFileDir
+        sessionStorageFileDir = cpg.getConfig('session', 'storageFileDir')
 
     if sessionStorageType == "ram":
         if cpg._sessionMap.has_key(sessionId):
@@ -151,32 +126,16 @@ def _cpLoadSessionData(sessionId, threadPool = None, sessionStorageType = None,
             return sessionData
         else: return None
 
-    """ TODO: implement cookie storage type
-    elif _sessionStorageType == "cookie":
-        if request.simpleCookie.has_key('CSession') and request.simpleCookie.has_key('CSession-sig'):
-            data = request.simpleCookie['CSession'].value
-            sig  = request.simpleCookie['CSession-sig'].value
-            if md5.md5(data + cpg.configOption.siteKey).hexdigest() == sig:
-                try:
-                    dumpStr = binascii.unhexlify(data)
-                    try: dumpStr = zlib.decompress(dumpStr)
-                    except: pass # zlib is not available in all python distros
-                    dumpStr = pickle.loads(dumpStr)
-                    return dumpStr
-                except: pass
-        return None
-    """
-
 def _cpCleanUpOldSessions(threadPool = None, sessionStorageType = None,
         sessionStorageFileDir = None):
     """ Clean up old sessions """
 
     if threadPool is None:
-        threadPool = cpg.configOption.threadPool
+        threadPool = cpg.getConfig('server', 'threadPool')
     if sessionStorageType is None:
-        sessionStorageType =  cpg.configOption.sessionStorageType
+        sessionStorageType = cpg.getConfig('session', 'storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.configOption.sessionStorageFileDir
+        sessionStorageFileDir = cpg.getConfig('session', 'storageFileDir')
 
     # Clean up old session data
     now = time.time()

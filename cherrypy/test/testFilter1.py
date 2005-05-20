@@ -43,7 +43,8 @@ class Root:
         yield europoundUnicode
     index.exposed = True
 cpg.root = Root()
-cpg.server.start(configFile = 'testsite.cfg')
+cpg.config.loadConfigFile('testsite.cfg')
+cpg.server.start()
 """
 config = ""
 europoundUnicode = u'\x80\xa3'

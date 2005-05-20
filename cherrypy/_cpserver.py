@@ -32,38 +32,19 @@ Main CherryPy module:
     - Creates the HTTP server
 """
 
-import cpg, thread, _cputil, _cpconfig, _cphttpserver, time, _cpthreadinglocal
+import cpg, thread, _cputil, _cphttpserver, time, _cpthreadinglocal
 
-def start(configFile = None, parsedConfigFile = None, configMap = {}, initOnly = 0):
+def start(initOnly = False):
     """
         Main function. All it does is this:
-            - read/parse config file if any
+            - output config options
             - create response and request objects
             - creates HTTP server based on configFile and configMap
             - start HTTP server
-
-        Input: There are 2 ways to pass config options:
-            - Let CherryPy parse a config file (configFile)
-            - Pass the options as a dictionary (configMap)
     """
 
-    # cpg.configOption contains an EmptyClass instance with all the configuration option
-    _cpconfig.setDefaultConfigOption()
-
-    # cpg.parsedConfigFile contains the ConfigParser instance with the parse config file
-    cpg.parsedConfigFile = None
-
-    if configFile:
-        _cpconfig.parseConfigFile(configFile = configFile)
-    elif parsedConfigFile:
-        _cpconfig.parseConfigFile(parsedConfigFile = parsedConfigFile)
-
-    if configMap:
-        for key, value in configMap.items():
-            setattr(cpg.configOption, key, value)
-
     # Output config options
-    _cpconfig.outputConfigOptions()
+    cpg.config.outputConfigMap()
 
     # Check the config options
     # TODO

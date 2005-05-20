@@ -32,7 +32,8 @@ code = """
 from cherrypy import cpg
 class Root: pass
 cpg.root = Root()
-cpg.server.start(configFile = 'testsite.cfg')
+cpg.config.loadConfigFile('testsite.cfg')
+cpg.server.start()
 """
 
 testList = [

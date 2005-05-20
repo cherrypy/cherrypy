@@ -166,4 +166,4 @@ class ContactManager:
 print "If you're running this application for the first time, please go to http://localhost:8080/reset once in order to create the database!"
 
 cpg.root = ContactManager()
-cpg.server.start(configFile = 'tutorial.conf')
+cpg.server.start()

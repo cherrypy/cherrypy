@@ -28,136 +28,67 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import _cputil, ConfigParser, cpg
 
+class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
+    """ Sub-class of ConfigParser that keeps the case of options """
+    def optionxform(self, optionstr):
+        return optionstr
+
+# Known options to cast:
+cast = {
+    'server': {
+        'logToScreen': 'getboolean',
+        'socketPort': 'getint',
+        'reverseDNS': 'getboolean',
+        'socketQueueSize': 'getint',
+        'threadPool': 'getint'},
+    'session': {
+        'sessionTimeout': 'getint',
+        'cleanUpDelay': 'getint',
+    }
+}
         
-def setDefaultConfigOption():
-    """ Return an EmptyClass instance with the default config options """
-
-    cpg.configOption = _cputil.EmptyClass()
-
-    # Set default values for all options
-
-    # Parameters used for logging
-    cpg.configOption.logToScreen = 1
-    cpg.configOption.logFile = ''
-
-    # Parameters used to tell which socket the server should listen on
-    # Note that socketPort and socketFile conflict wich each
-    # other: if one has a non-null value, the other one should be null
-    cpg.configOption.socketHost = ''
-    cpg.configOption.socketPort = 8080
-    cpg.configOption.socketFile = '' # Used if server should listen on
-                                 # AF_UNIX socket
-    cpg.configOption.reverseDNS = 0
-    cpg.configOption.socketQueueSize = 5 # Size of the socket queue
-    cpg.configOption.protocolVersion = "HTTP/1.0"
-
-    # Parameters used to tell what kind of server we want
-    cpg.configOption.threadPool = 0 # Used if we want to create a pool
-                                # of threads at the beginning
-
-    # Variables used to tell if this is an SSL server
-    cpg.configOption.sslKeyFile = ""
-    cpg.configOption.sslCertificateFile = ""
-    cpg.configOption.sslClientCertificateVerification = 0
-    cpg.configOption.sslCACertificateFile = ""
-    cpg.configOption.sslVerifyDepth = 1
-
-    # Variable used to flush cache
-    cpg.configOption.flushCacheDelay=0
-
-    # Variable used for enabling debugging
-    cpg.configOption.debugMode=0
-
-    # Variable used to serve static content
-    cpg.configOption.staticContentList = []
-
-    # Variable used for session handling
-    cpg.configOption.sessionStorageType = ""
-    cpg.configOption.sessionTimeout = 60 # In minutes
-    cpg.configOption.sessionCleanUpDelay = 60 # In minutes
-    cpg.configOption.sessionCookieName = "CherryPySession"
-    cpg.configOption.sessionStorageFileDir = ""
-
-def parseConfigFile(configFile = None, parsedConfigFile = None):
-    """
-        Parse the config file and set values in cpg.configOption
-    """
+def loadConfigFile(configFile = None):
+    """ Convert an INI file to a dictionary """
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
-    if configFile:
-        cpg.parsedConfigFile = ConfigParser.ConfigParser()
-        if hasattr(configFile, 'read'):
-            _cpLogMessage("Reading infos from configFile stream", 'CONFIG')
-            cpg.parsedConfigFile.readfp(configFile)
-        else:
-            _cpLogMessage("Reading infos from configFile: %s" % configFile, 'CONFIG')
-            cpg.parsedConfigFile.read(configFile)
+
+    # Parse config file
+    configParser = CaseSensitiveConfigParser()
+    if hasattr(configFile, 'read'):
+        _cpLogMessage("Reading infos from configFile stream", 'CONFIG')
+        configParser.readfp(configFile)
     else:
-        cpg.parsedConfigFile = parsedConfigFile
+        _cpLogMessage("Reading infos from configFile: %s" % configFile, 'CONFIG')
+        configParser.read(configFile)
 
-    # Read parameters from configFile
-    for sectionName, optionName, valueType in [
-            ('server', 'logToScreen', 'int'),
-            ('server', 'logFile', 'str'),
-            ('server', 'socketHost', 'str'),
-            ('server', 'protocolVersion', 'str'),
-            ('server', 'socketPort', 'int'),
-            ('server', 'socketFile', 'str'),
-            ('server', 'reverseDNS', 'int'),
-            ('server', 'threadPool', 'int'),
-            ('server', 'sslKeyFile', 'str'),
-            ('server', 'sslCertificateFile', 'str'),
-            ('server', 'sslClientCertificateVerification', 'int'),
-            ('server', 'sslCACertificateFile', 'str'),
-            ('server', 'sslVerifyDepth', 'int'),
-            ('session', 'storageType', 'str'),
-            ('session', 'timeout', 'float'),
-            ('session', 'cleanUpDelay', 'float'),
-            ('session', 'cookieName', 'str'),
-            ('session', 'storageFileDir', 'str')
-            ]:
-        try:
-            value = cpg.parsedConfigFile.get(sectionName, optionName)
-            if valueType == 'int': value = int(value)
-            elif valueType == 'float': value = float(value)
-            if sectionName == 'session':
-                optionName = 'session' + optionName[0].upper() + optionName[1:]
-            setattr(cpg.configOption, optionName, value)
-        except:
-            pass
+    # Load INI file into cpg.configMap
+    for section in configParser.sections():
+        if section not in cpg.configMap:
+            cpg.configMap[section] = {}
+        for option in configParser.options(section):
+            # Check if we need to cast options
+            funcName = cast.get(section, {}).get(option, 'get')
+            value = getattr(configParser, funcName)(section, option)
+            cpg.configMap[section][option] = value
 
-    try:
-        staticDirList = cpg.parsedConfigFile.options('staticContent')
-        for staticDir in staticDirList:
-            staticDirTarget = cpg.parsedConfigFile.get('staticContent', staticDir)
-            cpg.configOption.staticContentList.append((staticDir, staticDirTarget))
-    except: pass
-
-def outputConfigOptions():
+def outputConfigMap():
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
     _cpLogMessage("Server parameters:", 'CONFIG')
-    _cpLogMessage("  logToScreen: %s" % cpg.configOption.logToScreen, 'CONFIG')
-    _cpLogMessage("  logFile: %s" % cpg.configOption.logFile, 'CONFIG')
-    _cpLogMessage("  protocolVersion: %s" % cpg.configOption.protocolVersion, 'CONFIG')
-    _cpLogMessage("  socketHost: %s" % cpg.configOption.socketHost, 'CONFIG')
-    _cpLogMessage("  socketPort: %s" % cpg.configOption.socketPort, 'CONFIG')
-    _cpLogMessage("  socketFile: %s" % cpg.configOption.socketFile, 'CONFIG')
-    _cpLogMessage("  reverseDNS: %s" % cpg.configOption.reverseDNS, 'CONFIG')
-    _cpLogMessage("  socketQueueSize: %s" % cpg.configOption.socketQueueSize, 'CONFIG')
-    _cpLogMessage("  threadPool: %s" % cpg.configOption.threadPool, 'CONFIG')
-    _cpLogMessage("  sslKeyFile: %s" % cpg.configOption.sslKeyFile, 'CONFIG')
-    if cpg.configOption.sslKeyFile:
-        _cpLogMessage("  sslCertificateFile: %s" % cpg.configOption.sslCertificateFile, 'CONFIG')
-        _cpLogMessage("  sslClientCertificateVerification: %s" % cpg.configOption.sslClientCertificateVerification, 'CONFIG')
-        _cpLogMessage("  sslCACertificateFile: %s" % cpg.configOption.sslCACertificateFile, 'CONFIG')
-        _cpLogMessage("  sslVerifyDepth: %s" % cpg.configOption.sslVerifyDepth, 'CONFIG')
-        _cpLogMessage("  flushCacheDelay: %s min" % cpg.configOption.flushCacheDelay, 'CONFIG')
-    _cpLogMessage("  sessionStorageType: %s" % cpg.configOption.sessionStorageType, 'CONFIG')
-    if cpg.configOption.sessionStorageType:
-        _cpLogMessage("  sessionTimeout: %s min" % cpg.configOption.sessionTimeout, 'CONFIG')
-        _cpLogMessage("  cleanUpDelay: %s min" % cpg.configOption.sessionCleanUpDelay, 'CONFIG')
-        _cpLogMessage("  sessionCookieName: %s" % cpg.configOption.sessionCookieName, 'CONFIG')
-        _cpLogMessage("  sessionStorageFileDir: %s" % cpg.configOption.sessionStorageFileDir, 'CONFIG')
-    _cpLogMessage("  staticContent: %s" % cpg.configOption.staticContentList, 'CONFIG')
+    _cpLogMessage("  server.logToScreen: %s" % cpg.getConfig('server', 'logToScreen'), 'CONFIG')
+    _cpLogMessage("  server.logFile: %s" % cpg.getConfig('server', 'logFile'), 'CONFIG')
+    _cpLogMessage("  server.protocolVersion: %s" % cpg.getConfig('server', 'protocolVersion'), 'CONFIG')
+    _cpLogMessage("  server.socketHost: %s" % cpg.getConfig('server', 'socketHost'), 'CONFIG')
+    _cpLogMessage("  server.socketPort: %s" % cpg.getConfig('server', 'socketPort'), 'CONFIG')
+    _cpLogMessage("  server.socketFile: %s" % cpg.getConfig('server', 'socketFile'), 'CONFIG')
+    _cpLogMessage("  server.reverseDNS: %s" % cpg.getConfig('server', 'reverseDNS'), 'CONFIG')
+    _cpLogMessage("  server.socketQueueSize: %s" % cpg.getConfig('server', 'socketQueueSize'), 'CONFIG')
+    _cpLogMessage("  server.threadPool: %s" % cpg.getConfig('server', 'threadPool'), 'CONFIG')
+    _cpLogMessage("  session.storageType: %s" % cpg.getConfig('session', 'storageType'), 'CONFIG')
+    if cpg.getConfig('session', 'storageType'):
+        _cpLogMessage("  session.timeout: %s min" % cpg.getConfig('session', 'timeout'), 'CONFIG')
+        _cpLogMessage("  session.cleanUpDelay: %s min" % cpg.getConfig('session', 'cleanUpDelay'), 'CONFIG')
+        _cpLogMessage("  session.cookieName: %s" % cpg.getConfig('session', 'cookieName'), 'CONFIG')
+        _cpLogMessage("  session.storageFileDir: %s" % cpg.getConfig('session', 'storageFileDir'), 'CONFIG')
+    _cpLogMessage("  staticContent: %s" % cpg.getConfig('staticContent'), 'CONFIG')
 
 def dummy():
     # Check that parameters are correct and that they don't conflict with each other

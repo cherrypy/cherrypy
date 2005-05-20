@@ -1,9 +1,10 @@
-    * Fixed small bug in httptools.redirect
-    * Allow methods to return recursive generators
+    * BACKWARD INCOMPATIBILITY: New config system, see http://www.cherrypy.org/wiki/ConfigSystem21 (Remi)
+    * Fixed small bug in httptools.redirect (Remi)
+    * Allow methods to return recursive generators (Remi)
     * Methods can now return file objects which are red in 64kb chunks. (Mike)
 
 2005-04-25:
-    * CherryPY-2.0-final released
+    * CherryPy-2.0-final released
     * Added tests about static content and httptools.redirect (Remi)
     * Handle %20 (and others) in static content - ticket #104 (Remi)
     * If y is a static dir make y/a?b try and serve a file named a?b (Dan)
