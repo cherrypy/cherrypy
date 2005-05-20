@@ -41,5 +41,5 @@ class WelcomePage:
 
 
 cpg.root = WelcomePage()
-cpg.config.loadConfigFile('tutorial.conf')
+cpg.config.update(file = 'tutorial.conf')
 cpg.server.start()

@@ -30,5 +30,5 @@ class HitCounter:
 
 cpg.root = HitCounter()
 
-cpg.config.loadConfigFile('tutorial.conf')
+cpg.config.update(file = 'tutorial.conf')
 cpg.server.start()

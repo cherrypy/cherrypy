@@ -94,5 +94,5 @@ class AnotherPage(Page):
 
 cpg.root = HomePage()
 
-cpg.config.loadConfigFile('tutorial.conf')
+cpg.config.update(file = 'tutorial.conf')
 cpg.server.start()

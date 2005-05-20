@@ -6,7 +6,6 @@ http://www.cherrypy.org/wiki/FastMagicAttributeLookup
 """
 
 import cpg
-import _cpconfig
 
 # binds the config to internal names. this is required to allow unit
 # testing; we simply put test values here instead of the defaults.
@@ -256,7 +255,7 @@ def test():
     # set default test values
     import StringIO
     testConfigFile = StringIO.StringIO(testConfigText)
-    configMap = _cpconfig.loadConfigFile(testConfigFile)
+    configMap = {}
     defaultConfigMap = testDefaultConfigMap
     cpgTree = testCpgTree
     reservedAttrNames = ['configMap','defaultConfigMap']

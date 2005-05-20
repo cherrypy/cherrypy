@@ -53,5 +53,5 @@ class UsersPage:
 
 cpg.root = UsersPage()
 
-cpg.config.loadConfigFile('tutorial.conf')
+cpg.config.update(file = 'tutorial.conf')
 cpg.server.start()

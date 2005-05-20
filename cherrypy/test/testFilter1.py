@@ -43,7 +43,7 @@ class Root:
         yield europoundUnicode
     index.exposed = True
 cpg.root = Root()
-cpg.config.loadConfigFile('testsite.cfg')
+cpg.config.update(file = 'testsite.cfg')
 cpg.server.start()
 """
 config = ""

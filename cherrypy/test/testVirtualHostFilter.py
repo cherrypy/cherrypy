@@ -60,7 +60,7 @@ class Site2:
 cpg.root = Root()
 cpg.root.site1 = Site1()
 cpg.root.site2 = Site2()
-cpg.config.loadConfigFile('testsite.cfg')
+cpg.config.update(file = 'testsite.cfg')
 cpg.server.start()
 """
 

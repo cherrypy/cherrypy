@@ -28,10 +28,67 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import _cputil, ConfigParser, cpg
 
+# Default config options
+configMap = {
+        'server': {
+            'protocolVersion': 'HTTP/1.0',
+            'logToScreen': True,
+            'logFile': '',
+            'socketHost': '',
+            'socketPort': 8080,
+            'socketFile': '',
+            'reverseDNS': False,
+            'socketQueueSize': 5,
+            'protocolVersion': 'HTTP/1.0',
+            'threadPool': 0,
+            'environment': 'dev'},
+        'session': {
+            'storageType': 'ram',
+            'timeout': 60,
+            'cleanUpDelay': 60,
+            'cookieName': 'CherryPySession',
+            'storageFileDir': '',
+        },
+        'staticContent': {}
+    }
+
+def update(updateMap = None, file = None):
+    if updateMap is not None:
+        for section, valueMap in updateMap.items():
+            if section not in configMap:
+                configMap[section] = valueMap
+            else:
+                for key, value in valueMap.items():
+                    configMap[section][key] = value
+    if file is not None:
+        _load(file)
+
+def get(section, attrName = None, defaultValue = None):
+    if attrName:
+        return configMap.get(section, {}).get(attrName, defaultValue)
+    else:
+        return configMap.get(section, defaultValue)
+
+def getForPath(attrNam, defaultValue = None):
+    raise "TODO"
+
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
-    """ Sub-class of ConfigParser that keeps the case of options """
+    """ Sub-class of ConfigParser that keeps the case of options and
+        that raises an exception if the file cannot be read
+    """
     def optionxform(self, optionstr):
         return optionstr
+    def read(self, filenames):
+        if isinstance(filenames, basestring):
+            filenames = [filenames]
+        for filename in filenames:
+            # try:
+            #     fp = open(filename)
+            # except IOError:
+            #     continue
+            fp = open(filename)
+            self._read(fp, filename)
+            fp.close()
 
 # Known options to cast:
 cast = {
@@ -47,7 +104,7 @@ cast = {
     }
 }
         
-def loadConfigFile(configFile = None):
+def _load(configFile = None):
     """ Convert an INI file to a dictionary """
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
 
@@ -62,33 +119,33 @@ def loadConfigFile(configFile = None):
 
     # Load INI file into cpg.configMap
     for section in configParser.sections():
-        if section not in cpg.configMap:
-            cpg.configMap[section] = {}
+        if section not in configMap:
+            configMap[section] = {}
         for option in configParser.options(section):
             # Check if we need to cast options
             funcName = cast.get(section, {}).get(option, 'get')
             value = getattr(configParser, funcName)(section, option)
-            cpg.configMap[section][option] = value
+            configMap[section][option] = value
 
 def outputConfigMap():
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
     _cpLogMessage("Server parameters:", 'CONFIG')
-    _cpLogMessage("  server.logToScreen: %s" % cpg.getConfig('server', 'logToScreen'), 'CONFIG')
-    _cpLogMessage("  server.logFile: %s" % cpg.getConfig('server', 'logFile'), 'CONFIG')
-    _cpLogMessage("  server.protocolVersion: %s" % cpg.getConfig('server', 'protocolVersion'), 'CONFIG')
-    _cpLogMessage("  server.socketHost: %s" % cpg.getConfig('server', 'socketHost'), 'CONFIG')
-    _cpLogMessage("  server.socketPort: %s" % cpg.getConfig('server', 'socketPort'), 'CONFIG')
-    _cpLogMessage("  server.socketFile: %s" % cpg.getConfig('server', 'socketFile'), 'CONFIG')
-    _cpLogMessage("  server.reverseDNS: %s" % cpg.getConfig('server', 'reverseDNS'), 'CONFIG')
-    _cpLogMessage("  server.socketQueueSize: %s" % cpg.getConfig('server', 'socketQueueSize'), 'CONFIG')
-    _cpLogMessage("  server.threadPool: %s" % cpg.getConfig('server', 'threadPool'), 'CONFIG')
-    _cpLogMessage("  session.storageType: %s" % cpg.getConfig('session', 'storageType'), 'CONFIG')
-    if cpg.getConfig('session', 'storageType'):
-        _cpLogMessage("  session.timeout: %s min" % cpg.getConfig('session', 'timeout'), 'CONFIG')
-        _cpLogMessage("  session.cleanUpDelay: %s min" % cpg.getConfig('session', 'cleanUpDelay'), 'CONFIG')
-        _cpLogMessage("  session.cookieName: %s" % cpg.getConfig('session', 'cookieName'), 'CONFIG')
-        _cpLogMessage("  session.storageFileDir: %s" % cpg.getConfig('session', 'storageFileDir'), 'CONFIG')
-    _cpLogMessage("  staticContent: %s" % cpg.getConfig('staticContent'), 'CONFIG')
+    _cpLogMessage("  server.logToScreen: %s" % cpg.config.get('server', 'logToScreen'), 'CONFIG')
+    _cpLogMessage("  server.logFile: %s" % cpg.config.get('server', 'logFile'), 'CONFIG')
+    _cpLogMessage("  server.protocolVersion: %s" % cpg.config.get('server', 'protocolVersion'), 'CONFIG')
+    _cpLogMessage("  server.socketHost: %s" % cpg.config.get('server', 'socketHost'), 'CONFIG')
+    _cpLogMessage("  server.socketPort: %s" % cpg.config.get('server', 'socketPort'), 'CONFIG')
+    _cpLogMessage("  server.socketFile: %s" % cpg.config.get('server', 'socketFile'), 'CONFIG')
+    _cpLogMessage("  server.reverseDNS: %s" % cpg.config.get('server', 'reverseDNS'), 'CONFIG')
+    _cpLogMessage("  server.socketQueueSize: %s" % cpg.config.get('server', 'socketQueueSize'), 'CONFIG')
+    _cpLogMessage("  server.threadPool: %s" % cpg.config.get('server', 'threadPool'), 'CONFIG')
+    _cpLogMessage("  session.storageType: %s" % cpg.config.get('session', 'storageType'), 'CONFIG')
+    if cpg.config.get('session', 'storageType'):
+        _cpLogMessage("  session.timeout: %s min" % cpg.config.get('session', 'timeout'), 'CONFIG')
+        _cpLogMessage("  session.cleanUpDelay: %s min" % cpg.config.get('session', 'cleanUpDelay'), 'CONFIG')
+        _cpLogMessage("  session.cookieName: %s" % cpg.config.get('session', 'cookieName'), 'CONFIG')
+        _cpLogMessage("  session.storageFileDir: %s" % cpg.config.get('session', 'storageFileDir'), 'CONFIG')
+    _cpLogMessage("  staticContent: %s" % cpg.config.get('staticContent'), 'CONFIG')
 
 def dummy():
     # Check that parameters are correct and that they don't conflict with each other

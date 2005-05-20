@@ -54,8 +54,8 @@ def _cpLogMessage(msg, context = '', severity = 0):
     s = nowStr + ' ' + context + ' ' + level + ' ' + msg
     if logToScreen:
         print s
-    if cpg.getConfig('server', 'logFile'):
-        f = open(cpg.getConfig('server','logFile'), 'ab')
+    if cpg.config.get('server', 'logFile'):
+        f = open(cpg.config.get('server','logFile'), 'ab')
         f.write(s + '\n')
         f.close()
 
@@ -74,11 +74,11 @@ def _cpSaveSessionData(sessionId, sessionData, expirationTime,
     """ Save session data if needed """
 
     if threadPool is None:
-        threadPool = cpg.getConfig('server', 'threadPool')
+        threadPool = cpg.config.get('server', 'threadPool')
     if sessionStorageType is None:
-        sessionStorageType = cpg.getConfig('session', 'storageType')
+        sessionStorageType = cpg.config.get('session', 'storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.getConfig('session', 'storageFileDir')
+        sessionStorageFileDir = cpg.config.get('session', 'storageFileDir')
 
     t = time.localtime(expirationTime)
     if sessionStorageType == 'file':
@@ -102,11 +102,11 @@ def _cpLoadSessionData(sessionId, threadPool = None, sessionStorageType = None,
     """
 
     if threadPool is None:
-        threadPool = cpg.getConfig('server', 'threadPool')
+        threadPool = cpg.config.get('server', 'threadPool')
     if sessionStorageType is None:
-        sessionStorageType = cpg.getConfig('session', 'storageType')
+        sessionStorageType = cpg.config.get('session', 'storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.getConfig('session', 'storageFileDir')
+        sessionStorageFileDir = cpg.config.get('session', 'storageFileDir')
 
     if sessionStorageType == "ram":
         if cpg._sessionMap.has_key(sessionId):
@@ -131,11 +131,11 @@ def _cpCleanUpOldSessions(threadPool = None, sessionStorageType = None,
     """ Clean up old sessions """
 
     if threadPool is None:
-        threadPool = cpg.getConfig('server', 'threadPool')
+        threadPool = cpg.config.get('server', 'threadPool')
     if sessionStorageType is None:
-        sessionStorageType = cpg.getConfig('session', 'storageType')
+        sessionStorageType = cpg.config.get('session', 'storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.getConfig('session', 'storageFileDir')
+        sessionStorageFileDir = cpg.config.get('session', 'storageFileDir')
 
     # Clean up old session data
     now = time.time()

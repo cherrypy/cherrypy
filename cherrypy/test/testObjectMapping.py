@@ -77,7 +77,7 @@ cpg.root.dir1 = Dir1()
 cpg.root.dir1.dir2 = Dir2()
 cpg.root.dir1.dir2.dir3 = Dir3()
 cpg.root.dir1.dir2.dir3.dir4 = Dir4()
-cpg.config.loadConfigFile('testsite.cfg')
+cpg.config.update(file = 'testsite.cfg')
 cpg.server.start()
 """
 

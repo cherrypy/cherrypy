@@ -41,30 +41,6 @@ def expose(func):
     func.exposed = True
     return func
 
-# Default config options
-defaultConfigMap = {
-        'server': {
-            'protocolVersion': 'HTTP/1.0',
-            'logToScreen': True,
-            'logFile': '',
-            'socketHost': '',
-            'socketPort': 8080,
-            'socketFile': '',
-            'reverseDNS': False,
-            'socketQueueSize': 5,
-            'protocolVersion': 'HTTP/1.0',
-            'threadPool': 0,
-            'environment': 'dev'},
-        'session': {
-            'storageType': 'ram',
-            'timeout': 60,
-            'cleanUpDelay': 60,
-            'cookieName': 'CherryPySession',
-            'storageFileDir': '',
-        },
-        'staticContent': {}
-    }
 
-configMap = {}
 
-import _cpmagicattr
+

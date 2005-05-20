@@ -37,54 +37,54 @@ def start():
 
     # If sessions are stored in files and we
     # use threading, we need a lock on the file
-    if (cpg.getConfig('server', 'threadPool') > 1) and \
-            cpg.getConfig('session', 'storageType') == 'file':
+    if (cpg.config.get('server', 'threadPool') > 1) and \
+            cpg.config.get('session', 'storageType') == 'file':
         cpg._sessionFileLock = threading.RLock()
 
 
-    if cpg.getConfig('server', 'socketFile'):
+    if cpg.config.get('server', 'socketFile'):
         # AF_UNIX socket
         # TODO: Handle threading here
         class MyCherryHTTPServer(CherryHTTPServer): address_family = socket.AF_UNIX
     else:
         # AF_INET socket
-        if cpg.getConfig('server', 'threadPool') > 1:
+        if cpg.config.get('server', 'threadPool') > 1:
             MyCherryHTTPServer = PooledThreadServer
         else:
             MyCherryHTTPServer = CherryHTTPServer
 
-    MyCherryHTTPServer.request_queue_size = cpg.getConfig('server', 'socketQueueSize')
+    MyCherryHTTPServer.request_queue_size = cpg.config.get('server', 'socketQueueSize')
 
     # Set protocol_version
-    CherryHTTPRequestHandler.protocol_version = cpg.getConfig('server', 'protocolVersion')
+    CherryHTTPRequestHandler.protocol_version = cpg.config.get('server', 'protocolVersion')
 
     run_server(CherryHTTPRequestHandler, MyCherryHTTPServer, \
-        (cpg.getConfig('server', 'socketHost'), cpg.getConfig('server', 'socketPort')), \
-        cpg.getConfig('server', 'socketFile'))
+        (cpg.config.get('server', 'socketHost'), cpg.config.get('server', 'socketPort')), \
+        cpg.config.get('server', 'socketFile'))
 
 def run_server(HandlerClass, ServerClass, server_address, socketFile):
     """Run the HTTP request handler class."""
 
-    if cpg.getConfig('server', 'socketFile'):
-        try: os.unlink(cpg.getConfig('server', 'socketFile')) # So we can reuse the socket
+    if cpg.config.get('server', 'socketFile'):
+        try: os.unlink(cpg.config.get('server', 'socketFile')) # So we can reuse the socket
         except: pass
-        server_address = cpg.getConfig('server', 'socketFile')
-    if cpg.getConfig('server', 'threadPool') > 1:
-        myCherryHTTPServer = ServerClass(server_address, cpg.getConfig('server', 'threadPool'), HandlerClass)
+        server_address = cpg.config.get('server', 'socketFile')
+    if cpg.config.get('server', 'threadPool') > 1:
+        myCherryHTTPServer = ServerClass(server_address, cpg.config.get('server', 'threadPool'), HandlerClass)
     else:
         myCherryHTTPServer = ServerClass(server_address, HandlerClass)
     cpg._server = myCherryHTTPServer
-    if cpg.getConfig('server', 'socketFile'):
+    if cpg.config.get('server', 'socketFile'):
         try: os.chmod(socketFile, 0777) # So everyone can access the socket
         except: pass
     global _cpLogMessage
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
 
     servingWhat = "HTTP"
-    if cpg.getConfig('server', 'socketPort'): 
+    if cpg.config.get('server', 'socketPort'): 
         onWhat = ("socket: ('%s', %s)" % 
-                 (cpg.getConfig('server', 'socketHost'), cpg.getConfig('server', 'socketPort')))
-    else: onWhat = "socket file: %s" % cpg.getConfig('server', 'socketFile')
+                 (cpg.config.get('server', 'socketHost'), cpg.config.get('server', 'socketPort')))
+    else: onWhat = "socket file: %s" % cpg.config.get('server', 'socketFile')
     _cpLogMessage("Serving %s on %s" % (servingWhat, onWhat), 'HTTP')
 
     try:
@@ -112,7 +112,7 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def address_string(self):
         """ Try to do a reverse DNS based on [server]reverseDNS in the config file """
-        if cpg.getConfig('server', 'reverseDNS'):
+        if cpg.config.get('server', 'reverseDNS'):
             return BaseHTTPServer.BaseHTTPRequestHandler.address_string(self)
         else:
             return self.client_address[0]

@@ -192,7 +192,7 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
     year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
     date = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (weekdayname[wd], day, monthname[month], year, hh, mm, ss)
     cpg.response.headerMap = {
-        "protocolVersion": cpg.getConfig('server', 'protocolVersion'),
+        "protocolVersion": cpg.config.get('server', 'protocolVersion'),
         "Status": "200 OK",
         "Content-Type": "text/html",
         "Server": "CherryPy/" + cpg.__version__,
@@ -227,9 +227,9 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
             _cputil.getSpecialFunction('_cpOnError')()
 
             # Still save session data
-            if cpg.getConfig('session', 'storageType') and not cpg.request.isStatic:
-                sessionId = cpg.response.simpleCookie[cpg.getConfig('session', 'cookieName')].value
-                expirationTime = time.time() + cpg.getConfig('session', 'timeout') * 60
+            if cpg.config.get('session', 'storageType') and not cpg.request.isStatic:
+                sessionId = cpg.response.simpleCookie[cpg.config.get('session', 'cookieName')].value
+                expirationTime = time.time() + cpg.config.get('session', 'timeout') * 60
                 _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
 
             wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
@@ -254,7 +254,7 @@ def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
             bodyFile = StringIO.StringIO()
             traceback.print_exc(file = bodyFile)
             body = bodyFile.getvalue()
-            wfile.write('%s 200 OK\r\n' % cpg.getConfig('server', 'protocolVersion'))
+            wfile.write('%s 200 OK\r\n' % cpg.config.get('server', 'protocolVersion'))
             wfile.write('Content-Type: text/plain\r\n')
             wfile.write('Content-Length: %s\r\n' % len(body))
             wfile.write('\r\n')
@@ -273,9 +273,9 @@ def sendResponse(wfile):
         cpg.response.headerMap['Content-Length'] = len(cpg.response.body[0])
 
     # Save session data
-    if cpg.getConfig('session', 'storageType') and not cpg.request.isStatic:
-        sessionId = cpg.response.simpleCookie[cpg.getConfig('session', 'cookieName')].value
-        expirationTime = time.time() + cpg.getConfig('session', 'timeout') * 60
+    if cpg.config.get('session', 'storageType') and not cpg.request.isStatic:
+        sessionId = cpg.response.simpleCookie[cpg.config.get('session', 'cookieName')].value
+        expirationTime = time.time() + cpg.config.get('session', 'timeout') * 60
         _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
 
     wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
@@ -300,9 +300,9 @@ def sendResponse(wfile):
 def handleRequest(wfile):
     # Clean up expired sessions if needed:
     now = time.time()
-    if (cpg.getConfig('session', 'storageType') and 
-        cpg.getConfig('session', 'cleanUpDelay') and 
-        (cpg._lastSessionCleanUpTime + cpg.getConfig('session', 'cleanUpDelay') * 60) <= now):
+    if (cpg.config.get('session', 'storageType') and 
+        cpg.config.get('session', 'cleanUpDelay') and 
+        (cpg._lastSessionCleanUpTime + cpg.config.get('session', 'cleanUpDelay') * 60) <= now):
         cpg._lastSessionCleanUpTime = now
         _cputil.getSpecialFunction('_cpCleanUpOldSessions')()
 
@@ -321,7 +321,7 @@ def handleRequest(wfile):
     path = urllib.unquote(path) # Replace quoted chars (eg %20) from url
 
     # Handle static directories
-    for urlDir, fsDir in cpg.getConfig('staticContent').items():
+    for urlDir, fsDir in cpg.config.get('staticContent').items():
         if path == urlDir or path[:len(urlDir)+1]==urlDir+'/':
 
             cpg.request.isStatic = 1
@@ -343,7 +343,7 @@ def handleRequest(wfile):
                 if cpg.request.headerMap['If-Modified-Since'] == strModifTime:
                     cpg.response.headerMap = {
                         'Status': 304, 
-                        'protocolVersion': cpg.getConfig('server', 'protocolVersion'),
+                        'protocolVersion': cpg.config.get('server', 'protocolVersion'),
                         'Date': cpg.response.headerMap['Date']}
                     cpg.response.body = []
                     sendResponse(wfile)
@@ -364,10 +364,10 @@ def handleRequest(wfile):
             return
 
     # Get session data
-    if cpg.getConfig('session', 'storageType') and not cpg.request.isStatic:
+    if cpg.config.get('session', 'storageType') and not cpg.request.isStatic:
         now = time.time()
         # First, get sessionId from cookie
-        try: sessionId = cpg.request.simpleCookie[cpg.getConfig('session', 'cookieName')].value
+        try: sessionId = cpg.request.simpleCookie[cpg.config.get('session', 'cookieName')].value
         except: sessionId=None
         if sessionId:
             # Load session data from wherever it was stored
@@ -387,9 +387,9 @@ def handleRequest(wfile):
             sessionId = generateSessionId()
             cpg.request.sessionMap['_sessionId'] = sessionId
 
-        cpg.response.simpleCookie[cpg.getConfig('session', 'cookieName')] = sessionId
-        cpg.response.simpleCookie[cpg.getConfig('session', 'cookieName')]['path'] = '/'
-        cpg.response.simpleCookie[cpg.getConfig('session', 'cookieName')]['version'] = 1
+        cpg.response.simpleCookie[cpg.config.get('session', 'cookieName')] = sessionId
+        cpg.response.simpleCookie[cpg.config.get('session', 'cookieName')]['path'] = '/'
+        cpg.response.simpleCookie[cpg.config.get('session', 'cookieName')]['version'] = 1
 
     try:
         func, objectPathList, virtualPathList = mapPathToObject()

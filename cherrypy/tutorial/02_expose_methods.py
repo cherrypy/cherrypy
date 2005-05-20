@@ -23,5 +23,5 @@ class HelloWorld:
     showMessage.exposed = True
 
 cpg.root = HelloWorld()
-cpg.config.loadConfigFile('tutorial.conf')
+cpg.config.update(file = 'tutorial.conf')
 cpg.server.start()
