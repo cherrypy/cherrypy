@@ -31,8 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 A module containing a few utility classes/functions used by CherryPy
 """
 
-import time, thread, os, cpg
+import time, thread, os
 import cPickle as pickle
+import cpg
 
 def _cpLogMessage(msg, context = '', severity = 0):
     """ Default method for logging messages """
@@ -48,14 +49,14 @@ def _cpLogMessage(msg, context = '', severity = 0):
     else:
         lebel = "UNKNOWN"
     try:
-        logToScreen = int(cpg.configOption.logToScreen)
+        logToScreen = int(cpg.config.get('server.logToScreen', cast='bool'))
     except:
         logToScreen = True
     s = nowStr + ' ' + context + ' ' + level + ' ' + msg
     if logToScreen:
         print s
-    if cpg.config.get('server', 'logFile'):
-        f = open(cpg.config.get('server','logFile'), 'ab')
+    if cpg.config.get('server.logFile'):
+        f = open(cpg.config.get('server.logFile'), 'ab')
         f.write(s + '\n')
         f.close()
 
@@ -74,11 +75,11 @@ def _cpSaveSessionData(sessionId, sessionData, expirationTime,
     """ Save session data if needed """
 
     if threadPool is None:
-        threadPool = cpg.config.get('server', 'threadPool')
+        threadPool = cpg.config.get('server.threadPool', cast='int')
     if sessionStorageType is None:
-        sessionStorageType = cpg.config.get('session', 'storageType')
+        sessionStorageType = cpg.config.get('session.storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.config.get('session', 'storageFileDir')
+        sessionStorageFileDir = cpg.config.get('session.storageFileDir')
 
     t = time.localtime(expirationTime)
     if sessionStorageType == 'file':
@@ -102,11 +103,11 @@ def _cpLoadSessionData(sessionId, threadPool = None, sessionStorageType = None,
     """
 
     if threadPool is None:
-        threadPool = cpg.config.get('server', 'threadPool')
+        threadPool = cpg.config.get('server.threadPool', cast='int')
     if sessionStorageType is None:
-        sessionStorageType = cpg.config.get('session', 'storageType')
+        sessionStorageType = cpg.config.get('session.storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.config.get('session', 'storageFileDir')
+        sessionStorageFileDir = cpg.config.get('session.storageFileDir')
 
     if sessionStorageType == "ram":
         if cpg._sessionMap.has_key(sessionId):
@@ -131,11 +132,11 @@ def _cpCleanUpOldSessions(threadPool = None, sessionStorageType = None,
     """ Clean up old sessions """
 
     if threadPool is None:
-        threadPool = cpg.config.get('server', 'threadPool')
+        threadPool = cpg.config.get('server.threadPool', cast='int')
     if sessionStorageType is None:
-        sessionStorageType = cpg.config.get('session', 'storageType')
+        sessionStorageType = cpg.config.get('session.storageType')
     if sessionStorageFileDir is None:
-        sessionStorageFileDir = cpg.config.get('session', 'storageFileDir')
+        sessionStorageFileDir = cpg.config.get('session.storageFileDir')
 
     # Clean up old session data
     now = time.time()
@@ -164,3 +165,26 @@ def _cpCleanUpOldSessions(threadPool = None, sessionStorageType = None,
         pass
 
 _cpFilterList = []
+
+# Filters that are always included
+from cherrypy.lib.filter import baseurlfilter, cachefilter, \
+    decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
+    staticfilter, tidyfilter, virtualhostfilter, xmlrpcfilter
+_cpDefaultInputFilterList = [
+    cachefilter.CacheInputFilter(),
+    logdebuginfofilter.LogDebugInfoInputFilter(),
+    virtualhostfilter.VirtualHostFilter(),
+    baseurlfilter.BaseUrlFilter(),
+    decodingfilter.DecodingFilter(),
+    staticfilter.StaticFilter(),
+    xmlrpcfilter.XmlRpcInputFilter(),
+]
+_cpDefaultOutputFilterList = [
+    xmlrpcfilter.XmlRpcOutputFilter(),
+    encodingfilter.EncodingFilter(),
+    tidyfilter.TidyFilter(),
+    logdebuginfofilter.LogDebugInfoOutputFilter(),
+    gzipfilter.GzipFilter(),
+    cachefilter.CacheOutputFilter(),
+]
+

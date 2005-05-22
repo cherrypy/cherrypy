@@ -30,25 +30,29 @@ import zlib
 import struct
 import time
 from basefilter import BaseOutputFilter
-from cherrypy import cpg
 
 class GzipFilter(BaseOutputFilter):
     """
     Filter that gzips the response.
     """
-
-    def __init__(self, mimeTypeList = ['text/html'], compresslevel=9):
-        # List of mime-types to compress
-        self.mimeTypeList = mimeTypeList
-        self.compresslevel = compresslevel
+    def setConfig(self):
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.gzipFilterOn = cpg.config.get('gzipFilter', False, cast='bool')
+        cpg.threadData.gzipFilterMimeTypeList = cpg.config.get('gzipFilter.mimeTypeList', ['text/html'], cast='list')
+        cpg.threadData.gzipFilterCompressLevel = cpg.config.get('gzipFilter.compresslevel', 9, cast='int')
 
     def beforeResponse(self):
+        if not cpg.threadData.gzipFilterOn:
+            return
         if not cpg.response.body:
             # Response body is empty (might be a 304 for instance)
             return
         ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
         ae = cpg.request.headerMap.get('Accept-Encoding', '')
-        if (ct in self.mimeTypeList) and ('gzip' in ae):
+        if (ct in cpg.threadData.gzipFilterMimeTypeList) and ('gzip' in ae):
             # Set header
             cpg.response.headerMap['Content-Encoding'] = 'gzip'
             # Return a generator that compresses the page
@@ -76,7 +80,7 @@ class GzipFilter(BaseOutputFilter):
         yield self.write_gzip_header()
         crc = zlib.crc32("")
         size = 0
-        zobj = zlib.compressobj(self.compresslevel, zlib.DEFLATED, -zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, 0)
+        zobj = zlib.compressobj(cpg.threadData.gzipFilterCompressLevel, zlib.DEFLATED, -zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, 0)
         for line in body:
             size += len(line)
             crc = zlib.crc32(line, crc)

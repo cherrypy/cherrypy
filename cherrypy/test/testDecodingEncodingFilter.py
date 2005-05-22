@@ -25,37 +25,34 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+import helper
 
-import basefilter
+code = r"""
+from cherrypy import cpg
+europoundUnicode = u'\x80\xa3'
+class Root:
+    def index(self, param):
+        assert param == europoundUnicode
+        yield europoundUnicode
+    index.exposed = True
+cpg.root = Root()
+cpg.config.update({
+    '/': {
+        'server.socketPort': 8000,
+        'encodingFilter': True,
+        'decodingFilter': True
+    }
+})
+cpg.server.start()
+"""
+config = ""
+europoundUtf8 = u'\x80\xa3'.encode('utf-8')
 
-class VirtualHostFilter(basefilter.BaseInputFilter):
-    """
-    Filter that changes the ObjectPath based on the Host.
-    Useful when running multiple sites within one CP server.
-    See CherryPy recipes for the documentation.
-    """
+testList = [
+    ('/?param=%s' % europoundUtf8, 
+        'cpg.response.body == "%s"' % europoundUtf8)
+]
 
-    #def __init__(self, siteMap, useXForwardedHost = True):
-    #    self.siteMap = siteMap
-    #    self.useXForwardedHost = useXForwardedHost
-    def setConfig(self):
-        # We have to dynamically import cpg because Python can't handle
-        #   circular module imports :-(
-        global cpg, _cphttptools
-        from cherrypy import cpg, _cphttptools
-        cpg.threadData.virtualFilterOn = cpg.config.get('virtualHostFilter', False, cast='bool')
-        cpg.threadData.virtualFilterPrefix = cpg.config.get('virtualHostFilter.prefix', '/')
-
-    def afterRequestHeader(self):
-        if not cpg.threadData.virtualFilterOn:
-            return
-        domain = cpg.request.base.split('//')[1]
-        # Re-use "mapPathToObject" function to find the actual
-        #   objectPath
-        candidate, objectPathList, virtualPathList = \
-                _cphttptools.mapPathToObject(
-                    cpg.threadData.virtualFilterPrefix + cpg.request.path
-                )
-        cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
-        #raise basefilter.InternalRedirect
-        
+def test(infoMap, failedList, skippedList):
+    print "    Testing decodingFilter and encodingFilter ...",
+    helper.checkPageResult('decodingFilter and encodingFilter', infoMap, code, testList, failedList)

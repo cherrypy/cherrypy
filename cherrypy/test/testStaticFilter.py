@@ -26,36 +26,33 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import basefilter
+import helper
 
-class VirtualHostFilter(basefilter.BaseInputFilter):
-    """
-    Filter that changes the ObjectPath based on the Host.
-    Useful when running multiple sites within one CP server.
-    See CherryPy recipes for the documentation.
-    """
+code = """
+from cherrypy import cpg
+class Root: pass
+cpg.root = Root()
+cpg.config.update({
+    '/': {
+        'server.socketPort': 8000,
+    },
+    '/static': {
+        'staticFilter': True,
+        'staticFilter.dir': 'static',
+    },
+    '/style.css': {
+        'staticFilter': True,
+        'staticFilter.file': 'style.css',
+    }
+})
+cpg.server.start()
+"""
 
-    #def __init__(self, siteMap, useXForwardedHost = True):
-    #    self.siteMap = siteMap
-    #    self.useXForwardedHost = useXForwardedHost
-    def setConfig(self):
-        # We have to dynamically import cpg because Python can't handle
-        #   circular module imports :-(
-        global cpg, _cphttptools
-        from cherrypy import cpg, _cphttptools
-        cpg.threadData.virtualFilterOn = cpg.config.get('virtualHostFilter', False, cast='bool')
-        cpg.threadData.virtualFilterPrefix = cpg.config.get('virtualHostFilter.prefix', '/')
+testList = [
+    ("/static/index.html", "cpg.response.headerMap['Content-Type'] == 'text/html' and cpg.response.body == 'Hello, world\\r\\n'"),
+    ("/style.css", "cpg.response.headerMap['Content-Type'] == 'text/css' and cpg.response.body == 'Dummy stylesheet\\n'"),
+]
 
-    def afterRequestHeader(self):
-        if not cpg.threadData.virtualFilterOn:
-            return
-        domain = cpg.request.base.split('//')[1]
-        # Re-use "mapPathToObject" function to find the actual
-        #   objectPath
-        candidate, objectPathList, virtualPathList = \
-                _cphttptools.mapPathToObject(
-                    cpg.threadData.virtualFilterPrefix + cpg.request.path
-                )
-        cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
-        #raise basefilter.InternalRedirect
-        
+def test(infoMap, failedList, skippedList):
+    print "    Testing staticFilter ...",
+    helper.checkPageResult('staticFilter', infoMap, code, testList, failedList)

@@ -27,27 +27,35 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from basefilter import BaseInputFilter
-from cherrypy import cpg
-import types
 
 class DecodingFilter(BaseInputFilter):
     """
     Filter that automatically decodes the request parameters (except files being uploaded).
     """
 
-    def __init__(self, encoding = 'utf-8'):
-        self.encoding = encoding
+    # def __init__(self, encoding = 'utf-8'):
+    #     self.encoding = encoding
+
+    def setConfig(self):
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.decodingFilterOn = cpg.config.get('decodingFilter', False, cast='bool')
+        cpg.threadData.decodingFilterEncoding = cpg.config.get('decodingFilter.encoding', 'utf-8')
 
     def afterRequestBody(self):
+        if not cpg.threadData.decodingFilterOn:
+            return
         for key, value in cpg.request.paramMap.items():
             if cpg.request.filenameMap.get(key):
                 # This is a file being uploaded: skip it
                 continue
             if isinstance(value, list):
                 # value is a list: decode each element
-                newValue = [v.decode(self.encoding) for v in value]
+                newValue = [v.decode(cpg.threadData.decodingFilterEncoding) for v in value]
             else:
                 # value is a regular string: decode it
-                newValue = value.decode(self.encoding)
+                newValue = value.decode(cpg.threadData.decodingFilterEncoding)
             cpg.request.paramMap[key] = newValue
 

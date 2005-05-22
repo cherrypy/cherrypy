@@ -103,10 +103,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ######################################################################
 
 from basefilter import BaseInputFilter, BaseOutputFilter
-from cherrypy import cpg
 import xmlrpclib
 
-class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
+class SetConfig:
+    def setConfig(self):
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.xmlRpcFilterOn = cpg.config.get('xmlRpcFilter', False, cast='bool')
+
+class XmlRpcInputFilter(BaseInputFilter, SetConfig):
     """
     Derivative of basefilter.
     Test to convert XMLRPC to CherryPy2 object system and reverse
@@ -135,6 +142,8 @@ class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
         
     def afterRequestHeader(self):
         """ Called after the request header has been read/parsed"""
+        if not cpg.threadData.xmlRpcFilterOn:
+            return
         cpg.request.isRPC = self.testValidityOfRequest()
         if not cpg.request.isRPC: 
             # used for debugging or more info
@@ -163,20 +172,22 @@ class XmlRpcFilter(BaseInputFilter,BaseOutputFilter):
         # used for debugging and more info
         # print "XMLRPC Filter: calling '%s' with args: '%s' " % (cpg.request.path,params)
 
+class XmlRpcOutputFilter(BaseOutputFilter, SetConfig):
     def beforeResponse(self):
         """ Called before starting to write response """
+        if not cpg.threadData.xmlRpcFilterOn:
+            return
         if not cpg.request.isRPC: 
             return # it's not an RPC call, so just let it go with the normal flow
-        try:
-            cpg.response.body = [xmlrpclib.dumps((cpg.response.body[0],), methodresponse=1,allow_none=1)]
-        except xmlrpclib.Fault,fault:
-            cpg.response.body = xmlrpclib.dumps(fault,allow_none=1)
-        except Exception,e:
-            print 'EXCEPTION: ',e
+        cpg.response.body = [xmlrpclib.dumps((cpg.response.body[0],), methodresponse=1,allow_none=1)]
         cpg.response.headerMap['Content-Type']='text/xml'
-        try:
-            cpg.response.headerMap['Content-Length']=`len(cpg.response.body[0])`
-        except TypeError:
-            # 1.0.3 : in case of an error, cpg.response.body is unscriptable
-            pass 
+        cpg.response.headerMap['Content-Length']=`len(cpg.response.body[0])`
 
+    def beforeErrorResponse(self):
+        try:
+            if not cpg.threadData.xmlRpcFilterOn:
+                return
+            cpg.response.body = [xmlrpclib.dumps(
+                xmlrpclib.Fault(1, ''.join(cpg.response.body)))]
+        except:
+            pass

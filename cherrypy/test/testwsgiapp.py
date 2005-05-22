@@ -81,7 +81,11 @@ if __name__ == '__main__':
     
     # Read the CherryPy config file and initialize some variables
     port = 8000
-    wsgiapp.init(configMap = {'socketPort': port, 'sessionStorageType': 'ram'})
+    wsgiapp.init(configMap = {
+        '/': {
+            'server.socketPort': port,
+        }
+    })
     httpd = WSGIServer(("", port), WSGIRequestHandler)
     httpd.set_app(wsgiapp.wsgiApp)
     sa = httpd.socket.getsockname()

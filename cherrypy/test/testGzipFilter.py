@@ -29,37 +29,28 @@ import helper, gzip, StringIO
 
 code = r"""
 from cherrypy import cpg
-from cherrypy.lib.filter.gzipfilter import GzipFilter
-from cherrypy.lib.filter.encodingfilter import EncodingFilter
-europoundUnicode = u'\x80\xa3'
 class Root:
-    _cpFilterList = [
-        EncodingFilter(),
-        GzipFilter()
-    ]
     def index(self):
-        yield u"Hello,"
-        yield u"world"
-        yield europoundUnicode
+        yield "Hello, world"
     index.exposed = True
 cpg.root = Root()
-cpg.config.update(file = 'testsite.cfg')
+cpg.config.update({
+    '/': {
+        'server.socketPort': 8000,
+        'gzipFilter': True,
+    }
+})
 cpg.server.start()
 """
 config = ""
-europoundUnicode = u'\x80\xa3'
-expectedResult = (u"Hello," + u"world" + europoundUnicode).encode('utf-8')
 zbuf = StringIO.StringIO()
 zfile = gzip.GzipFile(mode='wb', fileobj = zbuf, compresslevel = 9)
-zfile.write(expectedResult)
+zfile.write("Hello, world")
 zfile.close()
 
-testList = [
-    ('/', '%s in cpg.response.body' % repr(zbuf.getvalue()[:3])),
-]
+testList = [('/', '%s in cpg.response.body' % repr(zbuf.getvalue()[:3]))]
 
 def test(infoMap, failedList, skippedList):
-    print "    Testing Filters (1) ...",
-    # Gzip compression doesn't always return the same exact result !
-    # So we just check that the first few bytes are the same
-    helper.checkPageResult('Filters', infoMap, code, testList, failedList, extraRequestHeader = [("Accept-Encoding", "gzip")])
+    print "    Testing gzipFilter ...",
+    helper.checkPageResult('gzipFilter', infoMap, code, testList, failedList, extraRequestHeader = [("Accept-Encoding", "gzip")])
+

@@ -101,10 +101,15 @@ tutorialTestList = [
 ]
 
 testList = [
-    'testStaticContent',
     'testObjectMapping',
-    'testFilter1',
+    'testStaticFilter',
+    'testDecodingEncodingFilter',
+    'testBaseUrlFilter',
+    'testCacheFilter',
+    'testGzipFilter',
+    'testLogDebugInfoFilter',
     'testVirtualHostFilter',
+    'testCombinedFilters',
 ]
 
 if len(sys.argv) > 1:

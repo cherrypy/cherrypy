@@ -25,56 +25,35 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import helper, gzip, StringIO
+import helper
 
 code = r"""
 from cherrypy import cpg
-from cherrypy.lib.filter import basefilter, virtualhostfilter
-
-siteMap = {
-    'site1': '/site1',
-    'site2': '/site2'
-}
-
-class Site1Filter(basefilter.BaseOutputFilter):
-    def beforeResponse(self):
-        cpg.response.body += 'Site1Filter'
-class Site2Filter(basefilter.BaseOutputFilter):
-    def beforeResponse(self):
-        cpg.response.body += 'Site2Filter'
-
 class Root:
-    _cpFilterList = [virtualhostfilter.VirtualHostFilter(siteMap)]
-
-class Site1:
-    _cpFilterList = [Site1Filter()]
-    def index(self):
-        return "SITE1"
-    index.exposed = True
-class Site2:
-    _cpFilterList = [Site2Filter()]
-    def index(self):
-        return "SITE2"
-    index.exposed = True
-
+    def index2(self):
+        yield "Hello, world"
+    index2.exposed = True
 cpg.root = Root()
-cpg.root.site1 = Site1()
-cpg.root.site2 = Site2()
-cpg.config.update(file = 'testsite.cfg')
+cpg.config.update({
+    '/': {
+        'server.socketPort': 8000,
+        'virtualHostFilter': True,
+        'virtualHostFilter.prefix': '/index2',
+    },
+    '/shutdown': {
+        'virtualHostFilter': False,
+    }
+})
 cpg.server.start()
 """
+config = ""
 
-test1List = [
-    ('/', "cpg.response.body == 'SITE1Site1Filter'"),
-]
-test2List = [
-    ('/', "cpg.response.body == 'SITE2Site2Filter'"),
+testList = [
+    ('/', "cpg.response.body == 'Hello, world'"),
 ]
 
 def test(infoMap, failedList, skippedList):
-    print "    Testing VirtualHostFilter (1) ...",
-    helper.checkPageResult('VirtualHostFilter', infoMap, code, test1List,
-        failedList, extraRequestHeader = [("X-Forwarded-Host", "site1")])
-    print "    Testing VirtualHostFilter (2) ...",
-    helper.checkPageResult('VirtualHostFilter', infoMap, code, test2List,
-        failedList, extraRequestHeader = [("X-Forwarded-Host", "site2")])
+    print "    Testing virtualHostFilter ...",
+    helper.checkPageResult('virtualHostFilter', infoMap, code, testList, failedList)
+
+

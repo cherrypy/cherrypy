@@ -25,28 +25,32 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
 import helper
 
-code = """
+code = r"""
 from cherrypy import cpg
-class Root: pass
+class Root:
+    def index(self):
+        yield "Hello, world"
+    index.exposed = True
 cpg.root = Root()
-cpg.config.update(file = 'testsite.cfg')
+cpg.config.update({
+    '/': {
+        'server.socketPort': 8000,
+        'server.environment': 'dev',
+    }
+})
 cpg.server.start()
 """
+config = ""
 
 testList = [
-    ("/static/index.html", "cpg.response.headerMap['Content-Type'] == 'text/html' and cpg.response.body == 'Hello, world\\r\\n'"),
-    ("/style.css", "cpg.response.headerMap['Content-Type'] == 'text/css' and cpg.response.body == 'Dummy stylesheet\\n'"),
-]
-
-extraConfig = """
-[staticContent]
-static = static
-style.css = style.css
-"""
+    ('/', "'Build time' in cpg.response.body and "
+        "'Page size' in cpg.response.body and "
+        "'Session data size' in cpg.response.body"
+)]
 
 def test(infoMap, failedList, skippedList):
-    print "    Testing static content...",
-    helper.checkPageResult('Object mapping', infoMap, code, testList, failedList, extraConfig = extraConfig)
+    print "    Testing logDebugInfoFilter ...",
+    helper.checkPageResult('logDebugInfoFilter', infoMap, code, testList, failedList)
+

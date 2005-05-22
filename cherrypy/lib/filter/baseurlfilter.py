@@ -27,7 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from basefilter import BaseInputFilter
-from cherrypy import cpg
 
 class BaseUrlFilter(BaseInputFilter):
     """
@@ -35,16 +34,27 @@ class BaseUrlFilter(BaseInputFilter):
     Useful when running a CP server behind Apache.
     """
 
-    def __init__(self, baseUrl = 'http://localhost', useXForwardedHost = True):
-        # New baseUrl
-        self.baseUrl = baseUrl
-        self.useXForwardedHost = useXForwardedHost
+    # def __init__(self, baseUrl = 'http://localhost', useXForwardedHost = True):
+    #     # New baseUrl
+    #     self.baseUrl = baseUrl
+    #     self.useXForwardedHost = useXForwardedHost
+
+    def setConfig(self):
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.baseUrlFilterOn = cpg.config.get('baseUrlFilter', False, cast='bool')
+        cpg.threadData.baseUrlFilterBaseUrl = cpg.config.get('baseUrlFilter.baseUrl', 'http://localhost')
+        cpg.threadData.baseUrlFilterUseXForwardedHost = cpg.config.get('baseUrlFilter.useXForwardedHost', True, cast='bool')
 
     def afterRequestHeader(self):
-        if self.useXForwardedHost:
-            newBaseUrl = cpg.request.headerMap.get("X-Forwarded-Host", self.baseUrl)
+        if not cpg.threadData.baseUrlFilterOn:
+            return
+        if cpg.threadData.baseUrlFilterUseXForwardedHost:
+            newBaseUrl = cpg.request.headerMap.get("X-Forwarded-Host", cpg.threadData.baseUrlFilterBaseUrl)
         else:
-            newBaseUrl = self.baseUrl
+            newBaseUrl = cpg.threadData.baseUrlFilterBaseUrl
         if newBaseUrl.find("://") == -1:
             # add http:// or https:// if needed	
             newBaseUrl = cpg.request.base[:cpg.request.base.find("://") + 3] + newBaseUrl

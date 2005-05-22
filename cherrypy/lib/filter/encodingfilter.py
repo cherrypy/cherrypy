@@ -27,29 +27,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from basefilter import BaseOutputFilter
-from cherrypy import cpg
 import types
 
 class EncodingFilter(BaseOutputFilter):
     """
     Filter that automatically encodes the response.
     """
-
-    def __init__(self, encoding = 'utf-8', mimeTypeList = ['text/html']):
-        self.encoding = encoding
-        self.mimeTypeList = mimeTypeList
+    def setConfig(self):
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.encodingFilterOn = cpg.config.get('encodingFilter', False, cast='bool')
+        cpg.threadData.encodingFilterEncoding = cpg.config.get('encodingFilter.encoding', 'utf-8')
+        cpg.threadData.encodingFilterMimeTypeList = cpg.config.get('encodingFilter.mimeTypeList', ['text/html'], cast='list')
 
     def beforeResponse(self):
+        if not cpg.threadData.encodingFilterOn:
+            return
         contentType = cpg.response.headerMap.get("Content-Type")
         if contentType:
             ctlist = contentType.split(';')[0]
-            if (ctlist in self.mimeTypeList):
+            if (ctlist in cpg.threadData.encodingFilterMimeTypeList):
                 # Add "charset=..." to response Content-Type header
                 if contentType and 'charset' not in contentType:
-                    cpg.response.headerMap["Content-Type"] += ";charset=%s" % self.encoding
+                    cpg.response.headerMap["Content-Type"] += ";charset=%s" % cpg.threadData.encodingFilterEncoding
                 # Return a generator that encodes the sequence
                 cpg.response.body = self.encode_body(cpg.response.body)
 
     def encode_body(self, body):
         for line in body:
-            yield line.encode(self.encoding)
+            yield line.encode(cpg.threadData.encodingFilterEncoding)

@@ -31,8 +31,7 @@ import Queue
 import time
 import cStringIO
 
-from basefilter import BaseInputFilter, RequestHandled
-from cherrypy import cpg
+from basefilter import BaseInputFilter, BaseOutputFilter, RequestHandled
 
 def defaultCacheKey():
     return cpg.request.browserUrl
@@ -138,7 +137,19 @@ class MemoryCache:
                 return
             self.cache[objKey] = (expirationTime, lastModified, obj)
 
-class CacheInputFilter(BaseInputFilter):
+class SetConfig:
+    def setConfig(self):
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.cacheFilterOn = cpg.config.get('cacheFilter', False, cast='bool')
+        if cpg.threadData.cacheFilterOn and not hasattr(cpg, '_cache'):
+            cpg._cache = self.CacheClass(self.key, self.delay,
+                self.maxobjsize, self.maxsize, self.maxobjects)
+
+
+class CacheInputFilter(BaseInputFilter, SetConfig):
     """
     Works on the input chain. If the page is already stored in the cache
     serves the contents. If the page is not in the cache, it wraps the 
@@ -155,21 +166,29 @@ class CacheInputFilter(BaseInputFilter):
             maxsize=10000000,  # 10 MB
             maxobjects=1000    # 1000 objects
             ):
-        cpg._cache = CacheClass(key, delay, maxobjsize, maxsize, maxobjects)
+        self.CacheClass = CacheClass
+        self.key = key
+        self.delay = delay
+        self.maxobjsize = maxobjsize
+        self.maxsize = maxsize
+        self.maxobjects = maxobjects
     
     def afterRequestBody(self):
         """ Checks if the page is already in the cache """
+        if not cpg.threadData.cacheFilterOn:
+            return
         cacheData = cpg._cache.get()
         if cacheData:
             expirationTime, lastModified, obj = cacheData
             # found a hit! check the if-modified-since request header
             modifiedSince = cpg.request.headerMap.get('If-Modified-Since', None)
-            print "Cache hit: If-Modified-Since=%s, lastModified=%s" % (modifiedSince, lastModified)
-            if modifiedSince == lastModified:
+            # print "Cache hit: If-Modified-Since=%s, lastModified=%s" % (modifiedSince, lastModified)
+            if (modifiedSince is not None) and \
+                    (modifiedSince == lastModified):
                 cpg._cache.totNonModified += 1
                 # the code below was borrowed from the sendResponse function
                 # it should be refactored & put into a function to allow reuse
-                cpg.response.wfile.write('%s %s\r\n' % (cpg.configOption.protocolVersion, 304))
+                cpg.response.wfile.write('%s %s\r\n' % (cpg.config.get('server.protocolVersion'), 304))
                 # the code below doesn't work because the data isn't available at this point...
                 #cpg.response.wfile.write('%s: %s\r\n' % ('Date', cpg.request.headerMap['Date']))
                 # should the cache record & replay cookies it too?
@@ -184,7 +203,7 @@ class CacheInputFilter(BaseInputFilter):
             cpg.response.wfile = Tee(cpg.response.wfile, cpg._cache.maxobjsize)
             cpg.threadData.cacheable = True
 
-class CacheOutputFilter(object):
+class CacheOutputFilter(BaseOutputFilter, SetConfig):
     """
     Works on the output chain. Stores the content of the page in the cache.
     """
@@ -197,6 +216,8 @@ class CacheOutputFilter(object):
         this method is probably the last one called before the response
         is written.
         """
+        if not cpg.threadData.cacheFilterOn:
+            return
         if isinstance(cpg.response.wfile, Tee):
             if cpg.threadData.cacheable:
                 return
@@ -209,6 +230,8 @@ class CacheOutputFilter(object):
         """
         Close & fix the cache entry after content was fully written
         """
+        if not cpg.threadData.cacheFilterOn:
+            return
         if isinstance(cpg.response.wfile, Tee):
             wrapper = cpg.response.wfile
             if wrapper.caching:

@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-class InternalRedirect(Exception): pass
 class RequestHandled(Exception): pass
 
 class BaseInputFilter(object):
@@ -53,5 +52,17 @@ class BaseOutputFilter(object):
 
     def afterResponse(self):
         """ Called after writing the response (header & body included) """
+        pass
+
+    def beforeErrorResponse(self):
+        """ Called before starting to write response, after _cpOnError has
+            been called
+        """
+        pass
+
+    def afterErrorResponse(self):
+        """ Called after writing the response, after _cpOnError has
+            been called
+        """
         pass
 

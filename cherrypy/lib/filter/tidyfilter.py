@@ -26,9 +26,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os, cgi
+import os, cgi, StringIO, traceback
 from basefilter import BaseOutputFilter
-from cherrypy import cpg
 
 class TidyFilter(BaseOutputFilter):
     """
@@ -39,39 +38,51 @@ class TidyFilter(BaseOutputFilter):
     server would also crash)
     """
 
-    def __init__(self, tidyPath, tmpDir, strictXml = False, errorsToIgnore = []):
-        self.tidyPath = tidyPath
-        self.tmpDir = tmpDir
-        self.strictXml = strictXml
-        self.errorsToIgnore = errorsToIgnore
+    #def __init__(self, tidyPath, tmpDir, strictXml = False, errorsToIgnore = []):
+    #    self.tidyPath = tidyPath
+    #    self.tmpDir = tmpDir
+    #    self.strictXml = strictXml
+    #    self.errorsToIgnore = errorsToIgnore
+
+    def setConfig(self):
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.tidyFilterOn = cpg.config.get('tidyFilter', False, cast='bool')
+        cpg.threadData.tifyFilterTidyPath = cpg.config.get('tidyFilter.tidyPath')
+        cpg.threadData.tifyFilterTmpDir = cpg.config.get('tidyFilter.tmpDir')
+        cpg.threadData.tidyFilterStrictXml = cpg.config.get('tidyFilter.strictXml', False, cast='bool')
+        cpg.threadData.tidyFilterErrorsToIgnore = cpg.config.get('encodingFilter.errorsToIgnore', [], cast='list')
 
     def beforeResponse(self):
+        if not cpg.threadData.tidyFilterOn:
+            return
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
         originalBody = ''.join(cpg.response.body)
         cpg.response.body = [originalBody]
         
-        fct = cpg.response.headerMap.get('Content-Type', '')
-        ct = fct.split(';')[0]
+        ct = cpg.response.headerMap.get('Content-Type', '').split(';')[0]
         if ct == 'text/html':
-            pageFile = os.path.join(self.tmpDir, 'page.html')
-            outFile = os.path.join(self.tmpDir, 'tidy.out')
-            errFile = os.path.join(self.tmpDir, 'tidy.err')
+            pageFile = os.path.join(cpg.threadData.tifyFilterTmpDir, 'page.html')
+            outFile = os.path.join(cpg.threadData.tifyFilterTmpDir, 'tidy.out')
+            errFile = os.path.join(cpg.threadData.tifyFilterTmpDir, 'tidy.err')
             f = open(pageFile, 'wb')
             f.write(originalBody)
             f.close()
             encoding = ''
-            i = fct.find('charset=')
+            i = ct.find('charset=')
             if i != -1:
                 encoding = fct[i+8:]
             encoding = encoding.replace('utf-8', 'utf8')
             if encoding:
                 encoding = '-' + encoding
             strictXml = ""
-            if self.strictXml:
+            if cpg.threadData.tidyFilterStrictXml:
                 strictXml = ' -xml'
             os.system('"%s" %s%s -f %s -o %s %s' % (
-                self.tidyPath, encoding, strictXml, errFile, outFile, pageFile))
+                cpg.threadData.tifyFilterTidyPath, encoding, strictXml, errFile, outFile, pageFile))
             f = open(errFile, 'rb')
             err = f.read()
             f.close()
@@ -81,7 +92,7 @@ class TidyFilter(BaseOutputFilter):
             for err in errList:
                 if (err.find('Warning') != -1 or err.find('Error') != -1):
                     ignore = 0
-                    for errIgn in self.errorsToIgnore:
+                    for errIgn in cpg.threadData.tidyFilterErrorsToIgnore:
                         if err.find(errIgn) != -1:
                             ignore = 1
                             break
@@ -96,3 +107,26 @@ class TidyFilter(BaseOutputFilter):
                     newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
 
                 cpg.response.body = [newBody]
+
+            elif cpg.threadData.tidyFilterStrictXml:
+                # The HTML is OK, but is it valid XML
+                # Use elementtree to parse XML
+                from elementtree.ElementTree import parse
+                f = StringIO.StringIO(originalBody)
+                try:
+                    tree = parse(f)
+                except:
+                    # Wrong XML
+                    bodyFile = StringIO.StringIO()
+                    traceback.print_exc(file = bodyFile)
+                    cpg.response.body = [bodyFile.getvalue()]
+
+                    newBody = "Wrong XML:<br>" + cgi.escape(bodyFile.getvalue().replace('\n','<br>'))
+                    newBody += '<br><br>'
+                    i=0
+                    for line in originalBody.splitlines():
+                        i += 1
+                        newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
+
+                    cpg.response.body = [newBody]
+                

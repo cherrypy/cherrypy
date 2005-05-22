@@ -30,26 +30,28 @@ import _cputil, ConfigParser, cpg
 
 # Default config options
 configMap = {
-        'server': {
-            'protocolVersion': 'HTTP/1.0',
-            'logToScreen': True,
-            'logFile': '',
-            'socketHost': '',
-            'socketPort': 8080,
-            'socketFile': '',
-            'reverseDNS': False,
-            'socketQueueSize': 5,
-            'protocolVersion': 'HTTP/1.0',
-            'threadPool': 0,
-            'environment': 'dev'},
-        'session': {
-            'storageType': 'ram',
-            'timeout': 60,
-            'cleanUpDelay': 60,
-            'cookieName': 'CherryPySession',
-            'storageFileDir': '',
+        '/': {
+            'server.socketPort': 8080,
+            'server.socketHost': '',
+            'server.socketFile': '',
+            'server.socketQueueSize': 5,
+
+            'server.env': 'dev',
+            'server.protocolVersion': 'HTTP/1.0',
+            'server.logToScreen': True,
+            'server.logFile': '',
+            'server.reverseDNS': False,
+            'server.threadPool': 0,
+            'server.environment': 'prod',
+
+            'session.storageType': 'ram',
+            'session.timeout': 60,
+            'session.cleanUpDelay': 60,
+            'session.cookieName': 'CherryPySession',
+            'session.storageFileDir': '',
+
+            'staticContent': {}
         },
-        'staticContent': {}
     }
 
 def update(updateMap = None, file = None):
@@ -63,14 +65,78 @@ def update(updateMap = None, file = None):
     if file is not None:
         _load(file)
 
-def get(section, attrName = None, defaultValue = None):
-    if attrName:
-        return configMap.get(section, {}).get(attrName, defaultValue)
-    else:
-        return configMap.get(section, defaultValue)
+def _getSlashSections():
+    """ Return all config sections from configMap
+        that start with a slash and return them sorted by length
+        (longest first)
+    """
+    # TODO: the result could be cached and recomputed when
+    #   config.update() is called
+    sectionList = [section for section in configMap.keys()
+        if (section[0] == '/' or section.startswith('http://') or
+            section.startswith('https://'))]
+    sectionList.sort(_sortOnLength)
+    return sectionList
 
-def getForPath(attrNam, defaultValue = None):
-    raise "TODO"
+def _sortOnLength(a, b):
+    l1, l2 = len(a), len(b)
+    if l1 == l2:
+        return 0
+    elif l1 < l2:
+        return 1
+    else:
+        return -1
+
+def _getFor(path, key, defaultValue = None, returnSection = False):
+    for section in _getSlashSections():
+        if path.startswith(section):
+            res = configMap[section].get(key, '#NULL#')
+            if res != '#NULL#':
+                if returnSection:
+                    return section
+                return res
+    return defaultValue
+
+def _cast(type, value):
+    if type is None:
+        return value
+    if type == 'int':
+        return int(value)
+    elif type == 'float':
+        return float(value)
+    elif type == 'bool':
+        if isinstance(value, basestring):
+            value = value.lower()
+        if (not value) or (value in ('false', 'off', '0')):
+            return False
+        return True
+    elif type == 'list':
+        if isinstance(value, list):
+            return value
+        assert (not value) or (
+            value[0] in ('(', '[') and value[-1] in (')', ']'))
+        return eval(value) # Convert value to list
+
+def get(key, defaultValue = None, cast = None, returnSection = False):
+    # First try the whole browserUrl
+    try:
+        path = cpg.request.browserUrl
+    except:
+        # At startup, we don't have a path yet
+        path = '/'
+    res = _getFor(path, key, '#NULL#', returnSection)
+    if res != '#NULL#':
+        return _cast(cast, res)
+    # Then try just path
+    try:
+        path = cpg.request.path
+    except:
+        # At startup, we don't have a path yet
+        path = '/'
+    res = _getFor(path, key, '#NULL#', returnSection)
+    if res != '#NULL#':
+        return _cast(cast, res)
+    return _cast(cast, defaultValue)
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and
@@ -90,20 +156,6 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
             self._read(fp, filename)
             fp.close()
 
-# Known options to cast:
-cast = {
-    'server': {
-        'logToScreen': 'getboolean',
-        'socketPort': 'getint',
-        'reverseDNS': 'getboolean',
-        'socketQueueSize': 'getint',
-        'threadPool': 'getint'},
-    'session': {
-        'sessionTimeout': 'getint',
-        'cleanUpDelay': 'getint',
-    }
-}
-        
 def _load(configFile = None):
     """ Convert an INI file to a dictionary """
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
@@ -122,29 +174,28 @@ def _load(configFile = None):
         if section not in configMap:
             configMap[section] = {}
         for option in configParser.options(section):
-            # Check if we need to cast options
-            funcName = cast.get(section, {}).get(option, 'get')
-            value = getattr(configParser, funcName)(section, option)
+            value = configParser.get(section, option)
             configMap[section][option] = value
 
 def outputConfigMap():
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
     _cpLogMessage("Server parameters:", 'CONFIG')
-    _cpLogMessage("  server.logToScreen: %s" % cpg.config.get('server', 'logToScreen'), 'CONFIG')
-    _cpLogMessage("  server.logFile: %s" % cpg.config.get('server', 'logFile'), 'CONFIG')
-    _cpLogMessage("  server.protocolVersion: %s" % cpg.config.get('server', 'protocolVersion'), 'CONFIG')
-    _cpLogMessage("  server.socketHost: %s" % cpg.config.get('server', 'socketHost'), 'CONFIG')
-    _cpLogMessage("  server.socketPort: %s" % cpg.config.get('server', 'socketPort'), 'CONFIG')
-    _cpLogMessage("  server.socketFile: %s" % cpg.config.get('server', 'socketFile'), 'CONFIG')
-    _cpLogMessage("  server.reverseDNS: %s" % cpg.config.get('server', 'reverseDNS'), 'CONFIG')
-    _cpLogMessage("  server.socketQueueSize: %s" % cpg.config.get('server', 'socketQueueSize'), 'CONFIG')
-    _cpLogMessage("  server.threadPool: %s" % cpg.config.get('server', 'threadPool'), 'CONFIG')
-    _cpLogMessage("  session.storageType: %s" % cpg.config.get('session', 'storageType'), 'CONFIG')
-    if cpg.config.get('session', 'storageType'):
-        _cpLogMessage("  session.timeout: %s min" % cpg.config.get('session', 'timeout'), 'CONFIG')
-        _cpLogMessage("  session.cleanUpDelay: %s min" % cpg.config.get('session', 'cleanUpDelay'), 'CONFIG')
-        _cpLogMessage("  session.cookieName: %s" % cpg.config.get('session', 'cookieName'), 'CONFIG')
-        _cpLogMessage("  session.storageFileDir: %s" % cpg.config.get('session', 'storageFileDir'), 'CONFIG')
+    _cpLogMessage("  server.env: %s" % cpg.config.get('server.env'), 'CONFIG')
+    _cpLogMessage("  server.logToScreen: %s" % cpg.config.get('server.logToScreen', cast='bool'), 'CONFIG')
+    _cpLogMessage("  server.logFile: %s" % cpg.config.get('server.logFile'), 'CONFIG')
+    _cpLogMessage("  server.protocolVersion: %s" % cpg.config.get('server.protocolVersion'), 'CONFIG')
+    _cpLogMessage("  server.socketHost: %s" % cpg.config.get('server.socketHost'), 'CONFIG')
+    _cpLogMessage("  server.socketPort: %s" % cpg.config.get('server.socketPort', cast='int'), 'CONFIG')
+    _cpLogMessage("  server.socketFile: %s" % cpg.config.get('server.socketFile'), 'CONFIG')
+    _cpLogMessage("  server.reverseDNS: %s" % cpg.config.get('server.reverseDNS', cast='bool'), 'CONFIG')
+    _cpLogMessage("  server.socketQueueSize: %s" % cpg.config.get('server.socketQueueSize', cast='int'), 'CONFIG')
+    _cpLogMessage("  server.threadPool: %s" % cpg.config.get('server.threadPool', cast='int'), 'CONFIG')
+    _cpLogMessage("  session.storageType: %s" % cpg.config.get('session.storageType'), 'CONFIG')
+    if cpg.config.get('session.storageType'):
+        _cpLogMessage("  session.timeout: %s min" % cpg.config.get('session.timeout', cast='float'), 'CONFIG')
+        _cpLogMessage("  session.cleanUpDelay: %s min" % cpg.config.get('session.cleanUpDelay', cast='float'), 'CONFIG')
+        _cpLogMessage("  session.cookieName: %s" % cpg.config.get('session.cookieName'), 'CONFIG')
+        _cpLogMessage("  session.storageFileDir: %s" % cpg.config.get('session.storageFileDir'), 'CONFIG')
     _cpLogMessage("  staticContent: %s" % cpg.config.get('staticContent'), 'CONFIG')
 
 def dummy():
