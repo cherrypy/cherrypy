@@ -51,36 +51,18 @@ def parseFirstLine(data):
     cpg.request.paramList = [] # Only used for Xml-Rpc
     cpg.request.filenameMap = {}
     cpg.request.fileTypeMap = {}
-    i = cpg.request.path.find('?')
-    if i != -1:
-        # Parse parameters from URL
-        if cpg.request.path[i+1:]:
-            k = cpg.request.path[i+1:].find('?')
-            if k != -1:
-                j = cpg.request.path[:k].rfind('=')
-                if j != -1:
-                    cpg.request.path = cpg.request.path[:j+1] + \
-                        urllib.quote_plus(cpg.request.path[j+1:])
-            for paramStr in cpg.request.path[i+1:].split('&'):
-                sp = paramStr.split('=')
-                if len(sp) > 2:
-                    j = paramStr.find('=')
-                    sp = (paramStr[:j], paramStr[j+1:])
-                if len(sp) == 2:
-                    key, value = sp
-                    value = urllib.unquote_plus(value)
-                    if cpg.request.paramMap.has_key(key):
-                        # Already has a value: make a list out of it
-                        if type(cpg.request.paramMap[key]) == type([]):
-                            # Already is a list: append the new value to it
-                            cpg.request.paramMap[key].append(value)
-                        else:
-                            # Only had one value so far: start a list
-                            cpg.request.paramMap[key] = [cpg.request.paramMap[key], value]
-                    else:
-                        cpg.request.paramMap[key] = value
-        cpg.request.queryString = cpg.request.path[i+1:]
-        cpg.request.path = cpg.request.path[:i]
+    # From http://www.cherrypy.org/ticket/141/
+    # find the queryString, or set it to "" if not found
+    if "?" in cpg.request.path:
+        cpg.request.path, cpg.request.queryString = cpg.request.path.split("?",1)
+    else:
+        cpg.request.path, cpg.request.queryString = cpg.request.path, ""
+    
+    # build a paramMap dictionary from queryString
+    pm = cpg.request.paramMap = cgi.parse_qs(cpg.request.queryString, True)
+    for key, val in pm.items():
+        if len(val) == 1:
+            pm[key] = val[0]
 
 def cookHeaders(clientAddress, remoteHost, headers, requestLine):
     """Process the headers into the request.headerMap"""

@@ -28,11 +28,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import cpg, sys, threading, SocketServer, _cphttptools
 import BaseHTTPServer, socket, Queue, _cputil
+from lib import autoreload
 
 def stop():
     cpg._server.shutdown()
 
 def start():
+    if cpg.config.get("server.env") == "dev":
+        autoreload.main(_start)
+    else:
+        _start()
+
+def _start():
     """ Prepare the HTTP server and then run it """
 
     # If sessions are stored in files and we
