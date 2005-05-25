@@ -152,7 +152,7 @@ def _load(configFile = None):
         if section not in configMap:
             configMap[section] = {}
         for option in configParser.options(section):
-            value = _cputil.unrepr(configParser.get(section, option))
+            value = _cputil.unreprWrapper(configParser.get(section, option))
             configMap[section][option] = value
 
 def outputConfigMap():

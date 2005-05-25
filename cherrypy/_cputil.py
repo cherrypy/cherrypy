@@ -137,3 +137,15 @@ class Builder:
 def unrepr(s):
       return Builder().build(getObj(s))
 
+def unreprWrapper(someString):
+      """unrepr raises an exception if the string is not a recognized type this function returns the
+         source string in that case
+     
+         '123abc' would cause unrepr to raise an exception
+      """
+      if not someString:
+            return someString
+      try:
+          return unrepr(someString)
+      except:
+          retur
