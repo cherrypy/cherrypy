@@ -41,7 +41,8 @@ cpg.root = Root()
 cpg.config.update({
     '/': {
         'server.socketPort': 8000,
-        'cacheFilter': True,
+        'server.environment': 'production',
+        'cacheFilter.on': True,
     }
 })
 cpg.server.start()

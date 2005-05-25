@@ -37,11 +37,12 @@ cpg.root = Root()
 cpg.config.update({
     '/': {
         'server.socketPort': 8000,
-        'virtualHostFilter': True,
+        'server.environment': 'production',
+        'virtualHostFilter.on': True,
         'virtualHostFilter.prefix': '/index2',
     },
     '/shutdown': {
-        'virtualHostFilter': False,
+        'virtualHostFilter.on': False,
     }
 })
 cpg.server.start()

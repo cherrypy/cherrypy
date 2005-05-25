@@ -35,18 +35,18 @@ class SetConfig:
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        if cpg.config.get('server.environment') == 'dev':
-            # In "dev" environment, log everything by default
+        if cpg.config.get('server.environment') == 'development':
+            # In "development" environment, log everything by default
             defaultOn = True
         else:
             defaultOn = False
 
-        cpg.threadData.logDebugInfoFilterOn = cpg.config.get('logDebugInfoFilter', defaultOn, cast='bool')
+        cpg.threadData.logDebugInfoFilterOn = cpg.config.get('logDebugInfoFilter.on', defaultOn)
         cpg.threadData.logDebugInfoFilterMimeTypeList = cpg.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])
-        cpg.threadData.logDebugInfoFilterLogBuildTime = cpg.config.get('logDebugInfoFilter.logBuildTime', True, cast='bool')
-        cpg.threadData.logDebugInfoFilterLogPageSize = cpg.config.get('logDebugInfoFilter.logPageSize', True, cast='bool')
-        cpg.threadData.logDebugInfoFilterLogSessionSize = cpg.config.get('logDebugInfoFilter.logSessionSize', True, cast='bool')
-        cpg.threadData.logDebugInfoFilterLogAsComment = cpg.config.get('logDebugInfoFilter.logAsComment', False, cast='bool')
+        cpg.threadData.logDebugInfoFilterLogBuildTime = cpg.config.get('logDebugInfoFilter.logBuildTime', True)
+        cpg.threadData.logDebugInfoFilterLogPageSize = cpg.config.get('logDebugInfoFilter.logPageSize', True)
+        cpg.threadData.logDebugInfoFilterLogSessionSize = cpg.config.get('logDebugInfoFilter.logSessionSize', True)
+        cpg.threadData.logDebugInfoFilterLogAsComment = cpg.config.get('logDebugInfoFilter.logAsComment', False)
 
 class LogDebugInfoInputFilter(BaseInputFilter, SetConfig):
     """

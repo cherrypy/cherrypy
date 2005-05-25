@@ -38,9 +38,9 @@ class EncodingFilter(BaseOutputFilter):
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.encodingFilterOn = cpg.config.get('encodingFilter', False, cast='bool')
+        cpg.threadData.encodingFilterOn = cpg.config.get('encodingFilter.on', False)
         cpg.threadData.encodingFilterEncoding = cpg.config.get('encodingFilter.encoding', 'utf-8')
-        cpg.threadData.encodingFilterMimeTypeList = cpg.config.get('encodingFilter.mimeTypeList', ['text/html'], cast='list')
+        cpg.threadData.encodingFilterMimeTypeList = cpg.config.get('encodingFilter.mimeTypeList', ['text/html'])
 
     def beforeResponse(self):
         if not cpg.threadData.encodingFilterOn:

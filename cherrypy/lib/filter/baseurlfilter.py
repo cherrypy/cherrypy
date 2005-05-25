@@ -44,9 +44,9 @@ class BaseUrlFilter(BaseInputFilter):
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.baseUrlFilterOn = cpg.config.get('baseUrlFilter', False, cast='bool')
+        cpg.threadData.baseUrlFilterOn = cpg.config.get('baseUrlFilter.on', False)
         cpg.threadData.baseUrlFilterBaseUrl = cpg.config.get('baseUrlFilter.baseUrl', 'http://localhost')
-        cpg.threadData.baseUrlFilterUseXForwardedHost = cpg.config.get('baseUrlFilter.useXForwardedHost', True, cast='bool')
+        cpg.threadData.baseUrlFilterUseXForwardedHost = cpg.config.get('baseUrlFilter.useXForwardedHost', True)
 
     def afterRequestHeader(self):
         if not cpg.threadData.baseUrlFilterOn:

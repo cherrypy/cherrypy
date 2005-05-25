@@ -143,7 +143,7 @@ class SetConfig:
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.cacheFilterOn = cpg.config.get('cacheFilter', False, cast='bool')
+        cpg.threadData.cacheFilterOn = cpg.config.get('cacheFilter.on', False)
         if cpg.threadData.cacheFilterOn and not hasattr(cpg, '_cache'):
             cpg._cache = self.CacheClass(self.key, self.delay,
                 self.maxobjsize, self.maxsize, self.maxobjects)

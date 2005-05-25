@@ -40,9 +40,9 @@ class GzipFilter(BaseOutputFilter):
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.gzipFilterOn = cpg.config.get('gzipFilter', False, cast='bool')
-        cpg.threadData.gzipFilterMimeTypeList = cpg.config.get('gzipFilter.mimeTypeList', ['text/html'], cast='list')
-        cpg.threadData.gzipFilterCompressLevel = cpg.config.get('gzipFilter.compresslevel', 9, cast='int')
+        cpg.threadData.gzipFilterOn = cpg.config.get('gzipFilter.on', False)
+        cpg.threadData.gzipFilterMimeTypeList = cpg.config.get('gzipFilter.mimeTypeList', ['text/html'])
+        cpg.threadData.gzipFilterCompressLevel = cpg.config.get('gzipFilter.compresslevel', 9)
 
     def beforeResponse(self):
         if not cpg.threadData.gzipFilterOn:

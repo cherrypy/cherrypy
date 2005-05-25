@@ -111,7 +111,7 @@ class SetConfig:
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.xmlRpcFilterOn = cpg.config.get('xmlRpcFilter', False, cast='bool')
+        cpg.threadData.xmlRpcFilterOn = cpg.config.get('xmlRpcFilter.on', False)
 
 class XmlRpcInputFilter(BaseInputFilter, SetConfig):
     """

@@ -34,7 +34,7 @@ def stop():
     cpg._server.shutdown()
 
 def start():
-    if cpg.config.get("server.env") == "dev":
+    if cpg.config.get("server.environment") == "development":
         autoreload.main(_start)
     else:
         _start()
@@ -44,7 +44,7 @@ def _start():
 
     # If sessions are stored in files and we
     # use threading, we need a lock on the file
-    if (cpg.config.get('server.threadPool', cast='int') > 1) and \
+    if (cpg.config.get('server.threadPool') > 1) and \
             cpg.config.get('session.storageType') == 'file':
         cpg._sessionFileLock = threading.RLock()
 
@@ -55,18 +55,18 @@ def _start():
         class MyCherryHTTPServer(CherryHTTPServer): address_family = socket.AF_UNIX
     else:
         # AF_INET socket
-        if cpg.config.get('server.threadPool', cast='int') > 1:
+        if cpg.config.get('server.threadPool') > 1:
             MyCherryHTTPServer = PooledThreadServer
         else:
             MyCherryHTTPServer = CherryHTTPServer
 
-    MyCherryHTTPServer.request_queue_size = cpg.config.get('server.socketQueueSize', cast='int')
+    MyCherryHTTPServer.request_queue_size = cpg.config.get('server.socketQueueSize')
 
     # Set protocol_version
     CherryHTTPRequestHandler.protocol_version = cpg.config.get('server.protocolVersion')
 
     run_server(CherryHTTPRequestHandler, MyCherryHTTPServer, \
-        (cpg.config.get('server.socketHost'), cpg.config.get('server.socketPort', cast='int')), \
+        (cpg.config.get('server.socketHost'), cpg.config.get('server.socketPort')), \
         cpg.config.get('server.socketFile'))
 
 def run_server(HandlerClass, ServerClass, server_address, socketFile):
@@ -76,8 +76,8 @@ def run_server(HandlerClass, ServerClass, server_address, socketFile):
         try: os.unlink(cpg.config.get('server.socketFile')) # So we can reuse the socket
         except: pass
         server_address = cpg.config.get('server.socketFile')
-    if cpg.config.get('server.threadPool', cast='int') > 1:
-        myCherryHTTPServer = ServerClass(server_address, cpg.config.get('server.threadPool', cast='int'), HandlerClass)
+    if cpg.config.get('server.threadPool') > 1:
+        myCherryHTTPServer = ServerClass(server_address, cpg.config.get('server.threadPool'), HandlerClass)
     else:
         myCherryHTTPServer = ServerClass(server_address, HandlerClass)
     cpg._server = myCherryHTTPServer
@@ -88,9 +88,9 @@ def run_server(HandlerClass, ServerClass, server_address, socketFile):
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
 
     servingWhat = "HTTP"
-    if cpg.config.get('server.socketPort', cast='int'): 
+    if cpg.config.get('server.socketPort'): 
         onWhat = ("socket: ('%s', %s)" % 
-                 (cpg.config.get('server.socketHost'), cpg.config.get('server.socketPort', cast='int')))
+                 (cpg.config.get('server.socketHost'), cpg.config.get('server.socketPort')))
     else: onWhat = "socket file: %s" % cpg.config.get('server.socketFile')
     _cpLogMessage("Serving %s on %s" % (servingWhat, onWhat), 'HTTP')
 
@@ -119,7 +119,7 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def address_string(self):
         """ Try to do a reverse DNS based on [server]reverseDNS in the config file """
-        if cpg.config.get('server.reverseDNS', cast='bool'):
+        if cpg.config.get('server.reverseDNS'):
             return BaseHTTPServer.BaseHTTPRequestHandler.address_string(self)
         else:
             return self.client_address[0]

@@ -37,7 +37,8 @@ cpg.root = Root()
 cpg.config.update({
     '/': {
         'server.socketPort': 8000,
-        'gzipFilter': True,
+        'server.environment': 'production',
+        'gzipFilter.on': True,
     }
 })
 cpg.server.start()

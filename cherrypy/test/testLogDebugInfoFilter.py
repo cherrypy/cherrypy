@@ -37,7 +37,8 @@ cpg.root = Root()
 cpg.config.update({
     '/': {
         'server.socketPort': 8000,
-        'server.environment': 'dev',
+        'server.environment': 'production',
+        'logDebugInfoFilter.on': True,
     }
 })
 cpg.server.start()

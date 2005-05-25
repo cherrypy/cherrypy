@@ -35,13 +35,14 @@ cpg.root = Root()
 cpg.config.update({
     '/': {
         'server.socketPort': 8000,
+        'server.environment': 'production',
     },
     '/static': {
-        'staticFilter': True,
+        'staticFilter.on': True,
         'staticFilter.dir': 'static',
     },
     '/style.css': {
-        'staticFilter': True,
+        'staticFilter.on': True,
         'staticFilter.file': 'style.css',
     }
 })

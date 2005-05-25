@@ -39,8 +39,9 @@ cpg.root = Root()
 cpg.config.update({
     '/': {
         'server.socketPort': 8000,
-        'encodingFilter': True,
-        'decodingFilter': True
+        'server.environment': 'production',
+        'encodingFilter.on': True,
+        'decodingFilter.on': True,
     }
 })
 cpg.server.start()

@@ -144,8 +144,9 @@ def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig =
         f.write(extraConfig)
         f.write('''
 [/]
-session.storageType = ram
+session.storageType = "ram"
 server.socketPort = 8000
+server.environment = "production"
 ''')
         f.write(modeConfig)
         f.close()

@@ -254,7 +254,7 @@ def sendResponse(wfile):
     # Save session data
     if cpg.config.get('session.storageType') and not cpg.request.isStatic:
         sessionId = cpg.response.simpleCookie[cpg.config.get('session.cookieName')].value
-        expirationTime = time.time() + cpg.config.get('session.timeout', cast='float') * 60
+        expirationTime = time.time() + cpg.config.get('session.timeout') * 60
         _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
 
     wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
@@ -280,8 +280,8 @@ def handleRequest(wfile):
     # Clean up expired sessions if needed:
     now = time.time()
     if (cpg.config.get('session.storageType') and 
-        cpg.config.get('session.cleanUpDelay', cast='float') and 
-        (cpg._lastSessionCleanUpTime + cpg.config.get('session.cleanUpDelay', cast='float') * 60) <= now):
+        cpg.config.get('session.cleanUpDelay') and 
+        (cpg._lastSessionCleanUpTime + cpg.config.get('session.cleanUpDelay') * 60) <= now):
         cpg._lastSessionCleanUpTime = now
         _cputil.getSpecialFunction('_cpCleanUpOldSessions')()
 

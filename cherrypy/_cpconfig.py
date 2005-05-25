@@ -36,7 +36,7 @@ configMap = {
             'server.socketFile': '',
             'server.socketQueueSize': 5,
 
-            'server.env': 'dev',
+            'server.environment': 'development',
             'server.protocolVersion': 'HTTP/1.0',
             'server.logToScreen': True,
             'server.logFile': '',
@@ -49,8 +49,6 @@ configMap = {
             'session.cleanUpDelay': 60,
             'session.cookieName': 'CherryPySession',
             'session.storageFileDir': '',
-
-            'staticContent': {}
         },
     }
 
@@ -97,27 +95,7 @@ def _getFor(path, key, defaultValue = None, returnSection = False):
                 return res
     return defaultValue
 
-def _cast(type, value):
-    if type is None:
-        return value
-    if type == 'int':
-        return int(value)
-    elif type == 'float':
-        return float(value)
-    elif type == 'bool':
-        if isinstance(value, basestring):
-            value = value.lower()
-        if (not value) or (value in ('false', 'off', '0')):
-            return False
-        return True
-    elif type == 'list':
-        if isinstance(value, list):
-            return value
-        assert (not value) or (
-            value[0] in ('(', '[') and value[-1] in (')', ']'))
-        return eval(value) # Convert value to list
-
-def get(key, defaultValue = None, cast = None, returnSection = False):
+def get(key, defaultValue = None, returnSection = False):
     # First try the whole browserUrl
     try:
         path = cpg.request.browserUrl
@@ -126,7 +104,7 @@ def get(key, defaultValue = None, cast = None, returnSection = False):
         path = '/'
     res = _getFor(path, key, '#NULL#', returnSection)
     if res != '#NULL#':
-        return _cast(cast, res)
+        return res
     # Then try just path
     try:
         path = cpg.request.path
@@ -135,8 +113,8 @@ def get(key, defaultValue = None, cast = None, returnSection = False):
         path = '/'
     res = _getFor(path, key, '#NULL#', returnSection)
     if res != '#NULL#':
-        return _cast(cast, res)
-    return _cast(cast, defaultValue)
+        return res
+    return defaultValue
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and
@@ -174,26 +152,26 @@ def _load(configFile = None):
         if section not in configMap:
             configMap[section] = {}
         for option in configParser.options(section):
-            value = configParser.get(section, option)
+            value = _cputil.unrepr(configParser.get(section, option))
             configMap[section][option] = value
 
 def outputConfigMap():
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
     _cpLogMessage("Server parameters:", 'CONFIG')
-    _cpLogMessage("  server.env: %s" % cpg.config.get('server.env'), 'CONFIG')
-    _cpLogMessage("  server.logToScreen: %s" % cpg.config.get('server.logToScreen', cast='bool'), 'CONFIG')
+    _cpLogMessage("  server.environment: %s" % cpg.config.get('server.environment'), 'CONFIG')
+    _cpLogMessage("  server.logToScreen: %s" % cpg.config.get('server.logToScreen'), 'CONFIG')
     _cpLogMessage("  server.logFile: %s" % cpg.config.get('server.logFile'), 'CONFIG')
     _cpLogMessage("  server.protocolVersion: %s" % cpg.config.get('server.protocolVersion'), 'CONFIG')
     _cpLogMessage("  server.socketHost: %s" % cpg.config.get('server.socketHost'), 'CONFIG')
-    _cpLogMessage("  server.socketPort: %s" % cpg.config.get('server.socketPort', cast='int'), 'CONFIG')
+    _cpLogMessage("  server.socketPort: %s" % cpg.config.get('server.socketPort'), 'CONFIG')
     _cpLogMessage("  server.socketFile: %s" % cpg.config.get('server.socketFile'), 'CONFIG')
-    _cpLogMessage("  server.reverseDNS: %s" % cpg.config.get('server.reverseDNS', cast='bool'), 'CONFIG')
-    _cpLogMessage("  server.socketQueueSize: %s" % cpg.config.get('server.socketQueueSize', cast='int'), 'CONFIG')
-    _cpLogMessage("  server.threadPool: %s" % cpg.config.get('server.threadPool', cast='int'), 'CONFIG')
+    _cpLogMessage("  server.reverseDNS: %s" % cpg.config.get('server.reverseDNS'), 'CONFIG')
+    _cpLogMessage("  server.socketQueueSize: %s" % cpg.config.get('server.socketQueueSize'), 'CONFIG')
+    _cpLogMessage("  server.threadPool: %s" % cpg.config.get('server.threadPool'), 'CONFIG')
     _cpLogMessage("  session.storageType: %s" % cpg.config.get('session.storageType'), 'CONFIG')
     if cpg.config.get('session.storageType'):
-        _cpLogMessage("  session.timeout: %s min" % cpg.config.get('session.timeout', cast='float'), 'CONFIG')
-        _cpLogMessage("  session.cleanUpDelay: %s min" % cpg.config.get('session.cleanUpDelay', cast='float'), 'CONFIG')
+        _cpLogMessage("  session.timeout: %s min" % cpg.config.get('session.timeout'), 'CONFIG')
+        _cpLogMessage("  session.cleanUpDelay: %s min" % cpg.config.get('session.cleanUpDelay'), 'CONFIG')
         _cpLogMessage("  session.cookieName: %s" % cpg.config.get('session.cookieName'), 'CONFIG')
         _cpLogMessage("  session.storageFileDir: %s" % cpg.config.get('session.storageFileDir'), 'CONFIG')
     _cpLogMessage("  staticContent: %s" % cpg.config.get('staticContent'), 'CONFIG')

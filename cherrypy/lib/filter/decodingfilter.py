@@ -41,7 +41,7 @@ class DecodingFilter(BaseInputFilter):
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.decodingFilterOn = cpg.config.get('decodingFilter', False, cast='bool')
+        cpg.threadData.decodingFilterOn = cpg.config.get('decodingFilter.on', False)
         cpg.threadData.decodingFilterEncoding = cpg.config.get('decodingFilter.encoding', 'utf-8')
 
     def afterRequestBody(self):

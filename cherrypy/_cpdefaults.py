@@ -49,7 +49,7 @@ def _cpLogMessage(msg, context = '', severity = 0):
     else:
         lebel = "UNKNOWN"
     try:
-        logToScreen = int(cpg.config.get('server.logToScreen', cast='bool'))
+        logToScreen = int(cpg.config.get('server.logToScreen'))
     except:
         logToScreen = True
     s = nowStr + ' ' + context + ' ' + level + ' ' + msg
@@ -75,7 +75,7 @@ def _cpSaveSessionData(sessionId, sessionData, expirationTime,
     """ Save session data if needed """
 
     if threadPool is None:
-        threadPool = cpg.config.get('server.threadPool', cast='int')
+        threadPool = cpg.config.get('server.threadPool')
     if sessionStorageType is None:
         sessionStorageType = cpg.config.get('session.storageType')
     if sessionStorageFileDir is None:
@@ -103,7 +103,7 @@ def _cpLoadSessionData(sessionId, threadPool = None, sessionStorageType = None,
     """
 
     if threadPool is None:
-        threadPool = cpg.config.get('server.threadPool', cast='int')
+        threadPool = cpg.config.get('server.threadPool')
     if sessionStorageType is None:
         sessionStorageType = cpg.config.get('session.storageType')
     if sessionStorageFileDir is None:
@@ -132,7 +132,7 @@ def _cpCleanUpOldSessions(threadPool = None, sessionStorageType = None,
     """ Clean up old sessions """
 
     if threadPool is None:
-        threadPool = cpg.config.get('server.threadPool', cast='int')
+        threadPool = cpg.config.get('server.threadPool')
     if sessionStorageType is None:
         sessionStorageType = cpg.config.get('session.storageType')
     if sessionStorageFileDir is None:

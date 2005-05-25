@@ -49,11 +49,11 @@ class TidyFilter(BaseOutputFilter):
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.tidyFilterOn = cpg.config.get('tidyFilter', False, cast='bool')
+        cpg.threadData.tidyFilterOn = cpg.config.get('tidyFilter.on', False)
         cpg.threadData.tifyFilterTidyPath = cpg.config.get('tidyFilter.tidyPath')
         cpg.threadData.tifyFilterTmpDir = cpg.config.get('tidyFilter.tmpDir')
-        cpg.threadData.tidyFilterStrictXml = cpg.config.get('tidyFilter.strictXml', False, cast='bool')
-        cpg.threadData.tidyFilterErrorsToIgnore = cpg.config.get('encodingFilter.errorsToIgnore', [], cast='list')
+        cpg.threadData.tidyFilterStrictXml = cpg.config.get('tidyFilter.strictXml', False)
+        cpg.threadData.tidyFilterErrorsToIgnore = cpg.config.get('encodingFilter.errorsToIgnore', [])
 
     def beforeResponse(self):
         if not cpg.threadData.tidyFilterOn:

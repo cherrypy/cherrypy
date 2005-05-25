@@ -43,7 +43,7 @@ class VirtualHostFilter(basefilter.BaseInputFilter):
         #   circular module imports :-(
         global cpg, _cphttptools
         from cherrypy import cpg, _cphttptools
-        cpg.threadData.virtualFilterOn = cpg.config.get('virtualHostFilter', False, cast='bool')
+        cpg.threadData.virtualFilterOn = cpg.config.get('virtualHostFilter.on', False)
         cpg.threadData.virtualFilterPrefix = cpg.config.get('virtualHostFilter.prefix', '/')
 
     def afterRequestHeader(self):

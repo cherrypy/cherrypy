@@ -38,7 +38,8 @@ cpg.root = Root()
 cpg.config.update({
     '/': {
         'server.socketPort': 8000,
-        'baseUrlFilter': True,
+        'server.environment': 'production',
+        'baseUrlFilter.on': True,
         'baseUrlFilter.baseUrl': 'http://www.mydomain.com'
     }
 })

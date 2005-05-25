@@ -42,7 +42,7 @@ class StaticFilter(BaseInputFilter):
         #   circular module imports :-(
         global cpg, _cphttptools, cperror
         from cherrypy import cpg, _cphttptools, cperror
-        cpg.threadData.staticFilterOn = cpg.config.get('staticFilter', False, cast='bool')
+        cpg.threadData.staticFilterOn = cpg.config.get('staticFilter.on', False)
         cpg.threadData.staticFilterFile = cpg.config.get('staticFilter.file')
         cpg.threadData.staticFilterDir = cpg.config.get('staticFilter.dir')
         if cpg.threadData.staticFilterDir:
