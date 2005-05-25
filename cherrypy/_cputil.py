@@ -148,4 +148,4 @@ def unreprWrapper(someString):
       try:
           return unrepr(someString)
       except:
-          retur
+          return someString
