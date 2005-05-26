@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import _cputil, ConfigParser, cpg
+import _cputil, ConfigParser, cpg, cperror
 
 # Default config options
 configMap = {
@@ -152,7 +152,12 @@ def _load(configFile = None):
         if section not in configMap:
             configMap[section] = {}
         for option in configParser.options(section):
-            value = _cputil.unreprWrapper(configParser.get(section, option))
+            value = configParser.get(section, option)
+            try:
+                value = _cputil.unrepr(value)
+            except cperror.WrongUnreprValue, s:
+                raise cperror.WrongConfigValue, "section: %s, option: %s, value: %s" % (
+                    repr(section), repr(option), repr(value))
             configMap[section][option] = value
 
 def outputConfigMap():

@@ -40,3 +40,11 @@ class NotFound(Error):
 class WrongResponseType(Error):
     """ Happens when the cpg.response.body is not a string """
     pass
+
+class WrongUnreprValue(Error):
+    """ Happens when unrepr can't parse a value """
+    pass
+
+class WrongConfigValue(Error):
+    """ Happens when unrepr can't parse a config value """
+    pass
