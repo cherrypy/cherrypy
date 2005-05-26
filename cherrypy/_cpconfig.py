@@ -42,7 +42,6 @@ configMap = {
             'server.logFile': '',
             'server.reverseDNS': False,
             'server.threadPool': 0,
-            'server.environment': 'prod',
 
             'session.storageType': 'ram',
             'session.timeout': 60,

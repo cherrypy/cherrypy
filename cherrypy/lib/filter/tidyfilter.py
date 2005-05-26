@@ -112,7 +112,7 @@ class TidyFilter(BaseOutputFilter):
                 # The HTML is OK, but is it valid XML
                 # Use elementtree to parse XML
                 from elementtree.ElementTree import parse
-                f = StringIO.StringIO(originalBody)
+                f = StringIO.StringIO(originalBody.replace('&nbsp;', 'NBSP'))
                 try:
                     tree = parse(f)
                 except:

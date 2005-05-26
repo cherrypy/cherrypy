@@ -92,12 +92,15 @@ class LogDebugInfoOutputFilter(BaseOutputFilter, SetConfig):
             if cpg.threadData.logDebugInfoFilterLogSessionSize and \
                     cpg.config.get('session.storageType'):
                 # Pickle session data to get its size
-                f = StringIO.StringIO()
-                pickle.dump(cpg.request.sessionMap, f, 1)
-                dumpStr = f.getvalue()
-                f.close()
-                logList.append("Session data size: %.02fKB" % (
-                    len(dumpStr)/float(1024)))
+                try:
+                    f = StringIO.StringIO()
+                    pickle.dump(cpg.request.sessionMap, f, 1)
+                    dumpStr = f.getvalue()
+                    f.close()
+                    logList.append("Session data size: %.02fKB" % (
+                        len(dumpStr)/float(1024)))
+                except:
+                    logList.append("Session data size: Unable to pickle session")
 
             debuginfo += ', '.join(logList)
             if cpg.threadData.logDebugInfoFilterLogAsComment:
