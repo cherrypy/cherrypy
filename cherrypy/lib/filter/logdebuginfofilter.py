@@ -27,53 +27,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import time, StringIO, pickle
-from basefilter import BaseInputFilter, BaseOutputFilter
+from basefilter import BaseFilter
 
-class SetConfig:
-    def setConfig(self):
+class LogDebugInfoFilter(BaseFilter):
+    """Filter that adds debug information to the page"""
+    
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        if cpg.config.get('server.environment') == 'development':
-            # In "development" environment, log everything by default
+        if cpg.config.get('server.environment') == 'dev':
+            # In "dev" environment, log everything by default
             defaultOn = True
         else:
             defaultOn = False
-
+        
         cpg.threadData.logDebugInfoFilterOn = cpg.config.get('logDebugInfoFilter.on', defaultOn)
         cpg.threadData.logDebugInfoFilterMimeTypeList = cpg.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])
         cpg.threadData.logDebugInfoFilterLogBuildTime = cpg.config.get('logDebugInfoFilter.logBuildTime', True)
         cpg.threadData.logDebugInfoFilterLogPageSize = cpg.config.get('logDebugInfoFilter.logPageSize', True)
         cpg.threadData.logDebugInfoFilterLogSessionSize = cpg.config.get('logDebugInfoFilter.logSessionSize', True)
         cpg.threadData.logDebugInfoFilterLogAsComment = cpg.config.get('logDebugInfoFilter.logAsComment', False)
-
-class LogDebugInfoInputFilter(BaseInputFilter, SetConfig):
-    """
-    Filter that adds debug information to the page
-    """
-
-    #def __init__(self, mimeTypeList = ['text/html'], preTag = '<br><br>',
-    #        logBuildTime = True, logPageSize = True,
-    #        logSessionSize = True, logAsComment = False):
-    #    # List of mime-types to which this applies
-    #    self.mimeTypeList = mimeTypeList
-    #    self.preTag = preTag
-    #    self.logBuildTime = logBuildTime
-    #    self.logPageSize = logPageSize
-    #    self.logSessionSize = logSessionSize
-    #    self.logAsComment = logAsComment
-
-
-    def afterRequestBody(self):
+    
+    def beforeMain(self):
         if not cpg.threadData.logDebugInfoFilterOn:
             return
+        
         cpg.request.startBuilTime = time.time()
-
-class LogDebugInfoOutputFilter(BaseOutputFilter, SetConfig):
-    def beforeResponse(self):
+    
+    def beforeFinalize(self):
         if not cpg.threadData.logDebugInfoFilterOn:
             return
+        
         ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
         if ct in cpg.threadData.logDebugInfoFilterMimeTypeList:
             body = ''.join(cpg.response.body)
@@ -97,13 +83,13 @@ class LogDebugInfoOutputFilter(BaseOutputFilter, SetConfig):
                     pickle.dump(cpg.request.sessionMap, f, 1)
                     dumpStr = f.getvalue()
                     f.close()
-                    logList.append("Session data size: %.02fKB" % (
-                        len(dumpStr)/float(1024)))
+                    logList.append("Session data size: %.02fKB" %
+                                   (len(dumpStr) / float(1024)))
                 except:
                     logList.append("Session data size: Unable to pickle session")
-
+            
             debuginfo += ', '.join(logList)
             if cpg.threadData.logDebugInfoFilterLogAsComment:
                 debuginfo += '-->'
-
+            
             cpg.response.body = [body, debuginfo]

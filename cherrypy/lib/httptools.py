@@ -39,6 +39,6 @@ def canonicalizeUrl(url):
 
 def redirect(url):
     """ Sends a redirect to the browser (after canonicalizing the URL) """
-    cpg.response.headerMap['Status'] = 302
+    cpg.response.status = "302 Found"
     cpg.response.headerMap['Location'] = canonicalizeUrl(url)
     return ""

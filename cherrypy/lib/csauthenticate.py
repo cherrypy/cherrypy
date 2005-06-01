@@ -106,7 +106,7 @@ class CSAuthenticate(Aspect):
         cpg.response.simpleCookie[self.sessionIdCookieName]['path'] = '/'
         cpg.response.simpleCookie[self.sessionIdCookieName]['max-age'] = 31536000
         cpg.response.simpleCookie[self.sessionIdCookieName]['version'] = 1
-        cpg.response.headerMap['Status'] = 302
+        cpg.response.status = "302 Found"
         cpg.response.headerMap['Location'] = fromPage
         return ""
     doLogin.exposed = True
@@ -122,7 +122,7 @@ class CSAuthenticate(Aspect):
         cpg.response.simpleCookie[self.sessionIdCookieName]['max-age'] = 0
         cpg.response.simpleCookie[self.sessionIdCookieName]['version'] = 1
         cpg.request.login = ''
-        cpg.response.headerMap['Status'] = 302
+        cpg.response.status = "302 Found"
         cpg.response.headerMap['Location'] = 'logoutScreen'
         return ""
     doLogout.exposed = True

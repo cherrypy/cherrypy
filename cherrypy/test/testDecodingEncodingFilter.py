@@ -41,7 +41,7 @@ cpg.config.update({
         'server.socketPort': 8000,
         'server.environment': 'production',
         'encodingFilter.on': True,
-        'decodingFilter.on': True,
+        'decodingFilter.on': True
     }
 })
 cpg.server.start()

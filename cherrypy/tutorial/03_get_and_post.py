@@ -34,8 +34,11 @@ class WelcomePage:
             # Greet the user!
             return "Hey %s, what's up?" % name
         else:
-            # No name was specified
-            return 'Please enter your name <a href="./">here</a>.'
+            if name is None:
+                # No name was specified
+                return 'Please enter your name <a href="./">here</a>.'
+            else:
+                return 'No, really, enter your name <a href="./">here</a>.'
 
     greetUser.exposed = True
 

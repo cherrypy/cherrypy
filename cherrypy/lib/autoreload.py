@@ -34,12 +34,16 @@ def restart_with_reloader():
                                args, new_environ)
         if exit_code != 3:
             return exit_code
-        
-def main(main_func):
+
+def main(main_func, args=None, kwargs=None):
     if os.environ.get("RUN_MAIN") == "true":
         
-        thread.start_new_thread(main_func, ())
-
+        if args is None:
+            args = ()
+        if kwargs is None:
+            kwargs = {}
+        thread.start_new_thread(main_func, args, kwargs)
+        
         try:
             reloader_thread()
         except KeyboardInterrupt:
@@ -49,4 +53,3 @@ def main(main_func):
             sys.exit(restart_with_reloader())
         except KeyboardInterrupt:
             _cputil.getSpecialFunction('_cpLogMessage')("<Ctrl-C> hit: shutting down", "HTTP")
-            

@@ -34,6 +34,7 @@ class Root: pass
 cpg.root = Root()
 cpg.config.update({
     '/': {
+        'staticFilter.on': False,
         'server.socketPort': 8000,
         'server.environment': 'production',
     },

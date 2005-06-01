@@ -29,13 +29,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import zlib
 import struct
 import time
-from basefilter import BaseOutputFilter
+from basefilter import BaseFilter
 
-class GzipFilter(BaseOutputFilter):
-    """
-    Filter that gzips the response.
-    """
-    def setConfig(self):
+class GzipFilter(BaseFilter):
+    """Filter that gzips the response."""
+    
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
@@ -43,25 +42,25 @@ class GzipFilter(BaseOutputFilter):
         cpg.threadData.gzipFilterOn = cpg.config.get('gzipFilter.on', False)
         cpg.threadData.gzipFilterMimeTypeList = cpg.config.get('gzipFilter.mimeTypeList', ['text/html'])
         cpg.threadData.gzipFilterCompressLevel = cpg.config.get('gzipFilter.compresslevel', 9)
-
-    def beforeResponse(self):
+    
+    def beforeFinalize(self):
         if not cpg.threadData.gzipFilterOn:
             return
+        
         if not cpg.response.body:
             # Response body is empty (might be a 304 for instance)
             return
+        
         ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
         ae = cpg.request.headerMap.get('Accept-Encoding', '')
         if (ct in cpg.threadData.gzipFilterMimeTypeList) and ('gzip' in ae):
-            # Set header
             cpg.response.headerMap['Content-Encoding'] = 'gzip'
             # Return a generator that compresses the page
             cpg.response.body = self.zip_body(cpg.response.body)
 
     def write_gzip_header(self):
-        """
-        Adapted from the gzip.py standard module code
-        """
+        """Adapted from the gzip.py standard module code"""
+        
         header = '\037\213'      # magic header
         header += '\010'         # compression method
         header += '\0'
@@ -80,7 +79,9 @@ class GzipFilter(BaseOutputFilter):
         yield self.write_gzip_header()
         crc = zlib.crc32("")
         size = 0
-        zobj = zlib.compressobj(cpg.threadData.gzipFilterCompressLevel, zlib.DEFLATED, -zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, 0)
+        zobj = zlib.compressobj(cpg.threadData.gzipFilterCompressLevel,
+                                zlib.DEFLATED, -zlib.MAX_WBITS,
+                                zlib.DEF_MEM_LEVEL, 0)
         for line in body:
             size += len(line)
             crc = zlib.crc32(line, crc)

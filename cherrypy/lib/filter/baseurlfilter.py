@@ -26,20 +26,15 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from basefilter import BaseInputFilter
+from basefilter import BaseFilter
 
-class BaseUrlFilter(BaseInputFilter):
-    """
-    Filter that changes the base URL.
+class BaseUrlFilter(BaseFilter):
+    """Filter that changes the base URL.
+    
     Useful when running a CP server behind Apache.
     """
-
-    # def __init__(self, baseUrl = 'http://localhost', useXForwardedHost = True):
-    #     # New baseUrl
-    #     self.baseUrl = baseUrl
-    #     self.useXForwardedHost = useXForwardedHost
-
-    def setConfig(self):
+    
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
@@ -47,18 +42,19 @@ class BaseUrlFilter(BaseInputFilter):
         cpg.threadData.baseUrlFilterOn = cpg.config.get('baseUrlFilter.on', False)
         cpg.threadData.baseUrlFilterBaseUrl = cpg.config.get('baseUrlFilter.baseUrl', 'http://localhost')
         cpg.threadData.baseUrlFilterUseXForwardedHost = cpg.config.get('baseUrlFilter.useXForwardedHost', True)
-
-    def afterRequestHeader(self):
+    
+    def beforeRequestBody(self):
         if not cpg.threadData.baseUrlFilterOn:
             return
+        
+        newBaseUrl = cpg.threadData.baseUrlFilterBaseUrl
         if cpg.threadData.baseUrlFilterUseXForwardedHost:
-            newBaseUrl = cpg.request.headerMap.get("X-Forwarded-Host", cpg.threadData.baseUrlFilterBaseUrl)
-        else:
-            newBaseUrl = cpg.threadData.baseUrlFilterBaseUrl
+            newBaseUrl = cpg.request.headerMap.get("X-Forwarded-Host", newBaseUrl)
+        
         if newBaseUrl.find("://") == -1:
             # add http:// or https:// if needed	
             newBaseUrl = cpg.request.base[:cpg.request.base.find("://") + 3] + newBaseUrl
-
+        
         cpg.request.browserUrl = cpg.request.browserUrl.replace(
             cpg.request.base, newBaseUrl)
         cpg.request.base = newBaseUrl

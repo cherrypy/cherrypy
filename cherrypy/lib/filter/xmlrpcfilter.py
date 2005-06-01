@@ -102,48 +102,47 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## >>>
 ######################################################################
 
-from basefilter import BaseInputFilter, BaseOutputFilter
+from basefilter import BaseFilter
 import xmlrpclib
 
-class SetConfig:
-    def setConfig(self):
+class XmlRpcFilter(BaseFilter):
+    """Converts XMLRPC to CherryPy2 object system and vice-versa.
+    
+    PLEASE NOTE:
+    
+    beforeRequestBody:
+        Unmarshalls the posted data to a methodname and parameters.
+        - These are stored in cpg.request.rpcMethod and .rpcParams
+        - The method is also stored in cpg.request.path, so CP2 will find
+          the right method to call for you, based on the root's position.
+    beforeFinalize:
+        Marshalls cpg.response.body to xmlrpc.
+        - Until resolved: cpg.response.body must be a python source string;
+          this string is 'eval'ed to return the results. This will be
+          resolved in the future.
+        - Content-Type and Content-Length are set according to the new
+          (marshalled) data.
+    """
+    
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
         cpg.threadData.xmlRpcFilterOn = cpg.config.get('xmlRpcFilter.on', False)
-
-class XmlRpcInputFilter(BaseInputFilter, SetConfig):
-    """
-    Derivative of basefilter.
-    Test to convert XMLRPC to CherryPy2 object system and reverse
-
-    PLEASE NOTE:
-
-    afterRequestHeader:
-        Unmarshalls the posted data to a methodname and parameters.
-            - These are stored in cpg.request.rpcMethod and cpg.request.rpcParams
-            - The method is also stored in cpg.request.path, so CP2 will find the right
-              method to call for you. Based on the root's position
-    beforeResponse:
-        Marshalls the result of the excecuted function (in cpg.response.body) to xmlrpc.
-            - Until resolved: the result must be a python souce string with the results,
-              this string is 'eval'ed to return the results. This will be resolved in the
-              future.
-            - the Content-Type and -Length are set according to the new (marshalled) data. 
-              
-
-    """
+    
     def testValidityOfRequest(self):
         # test if the content-length was sent
         result = int(cpg.request.headerMap.get('Content-Length',0)) > 0
-        result = result and cpg.request.headerMap.get('Content-Type','text/xml').lower() in ['text/xml']
+        ct = cpg.request.headerMap.get('Content-Type', 'text/xml').lower()
+        result = result and ct in ['text/xml']
         return result
-        
-    def afterRequestHeader(self):
+    
+    def beforeRequestBody(self):
         """ Called after the request header has been read/parsed"""
         if not cpg.threadData.xmlRpcFilterOn:
-            return
+            return True
+        
         cpg.request.isRPC = self.testValidityOfRequest()
         if not cpg.request.isRPC: 
             # used for debugging or more info
@@ -151,38 +150,37 @@ class XmlRpcInputFilter(BaseInputFilter, SetConfig):
             return # break this if it's not for this filter!!
         # used for debugging, or more info:
         # print "xmlrpcmethod...",
-        cpg.request.parsePostData = 0
-        dataLength = int(cpg.request.headerMap.get('Content-Length',0))
+        cpg.request.processRequestBody = False
+        dataLength = int(cpg.request.headerMap.get('Content-Length', 0))
         data = cpg.request.rfile.read(dataLength)
         try:
             params, method = xmlrpclib.loads(data)
-        except Exception,e: 
-            params, method =  ('ERROR PARAMS',),'ERRORMETHOD'
-        cpg.request.rpcMethod, cpg.request.rpcParams = method,params
-        # patch the path. .there are only a few options:
+        except Exception:
+            params, method = ('ERROR PARAMS', ), 'ERRORMETHOD'
+        cpg.request.rpcMethod, cpg.request.rpcParams = method, params
+        # patch the path. there are only a few options:
         # - 'RPC2' + method >> method
         # - 'someurl' + method >> someurl.method
         # - 'someurl/someother' + method >> someurl.someother.method
         if not cpg.request.path.endswith('/'):
-            cpg.request.path+='/'
+            cpg.request.path += '/'
         if cpg.request.path.startswith('/RPC2/'):
-            cpg.request.path=cpg.request.path[5:] ## strip the irst /rpc2
-        cpg.request.path+=str(method).replace('.','/')
+            cpg.request.path=cpg.request.path[5:] ## strip the first /rpc2
+        cpg.request.path += str(method).replace('.', '/')
         cpg.request.paramList = list(params)
         # used for debugging and more info
         # print "XMLRPC Filter: calling '%s' with args: '%s' " % (cpg.request.path,params)
-
-class XmlRpcOutputFilter(BaseOutputFilter, SetConfig):
-    def beforeResponse(self):
-        """ Called before starting to write response """
-        if not cpg.threadData.xmlRpcFilterOn:
+    
+    def beforeFinalize(self):
+        """ Called before finalizing output """
+        if (not cpg.threadData.xmlRpcFilterOn) or (not cpg.request.isRPC):
             return
-        if not cpg.request.isRPC: 
-            return # it's not an RPC call, so just let it go with the normal flow
-        cpg.response.body = [xmlrpclib.dumps((cpg.response.body[0],), methodresponse=1,allow_none=1)]
-        cpg.response.headerMap['Content-Type']='text/xml'
-        cpg.response.headerMap['Content-Length']=`len(cpg.response.body[0])`
-
+        
+        cpg.response.body = [xmlrpclib.dumps(
+            (cpg.response.body[0],), methodresponse=1, allow_none=1)]
+        cpg.response.headerMap['Content-Type'] = 'text/xml'
+        cpg.response.headerMap['Content-Length'] = `len(cpg.response.body[0])`
+    
     def beforeErrorResponse(self):
         try:
             if not cpg.threadData.xmlRpcFilterOn:

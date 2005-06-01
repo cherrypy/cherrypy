@@ -75,20 +75,10 @@ class Root(object):
 cpg.root = Root()
 
 if __name__ == '__main__':
-    # This uses the WSGI HTTP server from PEAK.wsgiref
-    from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
-    from cherrypy import wsgiapp
-    
-    # Read the CherryPy config file and initialize some variables
-    port = 8000
-    wsgiapp.init(configMap = {
+    cpg.config.update({
         '/': {
-            'server.socketPort': port,
+            'server.socketPort': 8000,
         }
     })
-    httpd = WSGIServer(("", port), WSGIRequestHandler)
-    httpd.set_app(wsgiapp.wsgiApp)
-    sa = httpd.socket.getsockname()
-    print "Serving HTTP on", sa[0], "port", sa[1], "..."
-    httpd.serve_forever()
-    
+    cpg.server.start()
+

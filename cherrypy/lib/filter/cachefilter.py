@@ -29,47 +29,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import threading
 import Queue
 import time
-import cStringIO
 
-from basefilter import BaseInputFilter, BaseOutputFilter, RequestHandled
+import basefilter
 
 def defaultCacheKey():
     return cpg.request.browserUrl
-    
-class Tee:
-    """
-    Wraps a stream object; chains the content that is written and keep a 
-    copy in a StringIO for caching purposes.
-    """
-    
-    def __init__(self, wfile, maxobjsize):
-        self.wfile = wfile
-        self.cache = cStringIO.StringIO()
-        self.maxobjsize = maxobjsize
-        self.caching = True
-        self.size = 0
-        
-    def write(self, s):
-        self.wfile.write(s)
-        if self.caching:
-            self.size += len(s)
-            if self.size < self.maxobjsize:
-                self.cache.write(s)
-            else:
-                # exceeded the limit, aborts caching
-                self.stopCaching()
-        
-    def flush(self):
-        self.wfile.flush()
-            
-    def close(self):
-        self.wfile.close()
-        if self.caching:
-            self.stopCaching()
 
-    def stopCaching(self):
-        self.caching = False
-        self.cache.close()
 
 class MemoryCache:
 
@@ -119,7 +84,8 @@ class MemoryCache:
             return None
         
     def put(self, lastModified, obj):
-        objSize = len(obj)
+        # Size check no longer includes header length
+        objSize = len(obj[2])
         totalSize = self.cursize + objSize
         # checks if there's space for the object
         if ((objSize < self.maxobjsize) and 
@@ -137,26 +103,12 @@ class MemoryCache:
                 return
             self.cache[objKey] = (expirationTime, lastModified, obj)
 
-class SetConfig:
-    def setConfig(self):
-        # We have to dynamically import cpg because Python can't handle
-        #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
-        cpg.threadData.cacheFilterOn = cpg.config.get('cacheFilter.on', False)
-        if cpg.threadData.cacheFilterOn and not hasattr(cpg, '_cache'):
-            cpg._cache = self.CacheClass(self.key, self.delay,
-                self.maxobjsize, self.maxsize, self.maxobjects)
 
-
-class CacheInputFilter(BaseInputFilter, SetConfig):
+class CacheFilter(basefilter.BaseFilter):
+    """If the page is already stored in the cache, serves the contents.
+    If the page is not in the cache, caches the output.
     """
-    Works on the input chain. If the page is already stored in the cache
-    serves the contents. If the page is not in the cache, it wraps the 
-    cpg.response.wfile object; in this way, everything that is written is 
-    recorded, independent if it was sent directly or not.
-    """
-
+    
     def __init__(
             self, 
             CacheClass=MemoryCache,
@@ -173,75 +125,57 @@ class CacheInputFilter(BaseInputFilter, SetConfig):
         self.maxsize = maxsize
         self.maxobjects = maxobjects
     
-    def afterRequestBody(self):
-        """ Checks if the page is already in the cache """
+    def onStartResource(self):
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.cacheFilterOn = cpg.config.get('cacheFilter.on', False)
+        if cpg.threadData.cacheFilterOn and not hasattr(cpg, '_cache'):
+            cpg._cache = self.CacheClass(self.key, self.delay,
+                self.maxobjsize, self.maxsize, self.maxobjects)
+    
+    def beforeMain(self):
+        """Checks if the page is already in the cache"""
         if not cpg.threadData.cacheFilterOn:
             return
+        
         cacheData = cpg._cache.get()
         if cacheData:
             expirationTime, lastModified, obj = cacheData
             # found a hit! check the if-modified-since request header
             modifiedSince = cpg.request.headerMap.get('If-Modified-Since', None)
-            # print "Cache hit: If-Modified-Since=%s, lastModified=%s" % (modifiedSince, lastModified)
-            if (modifiedSince is not None) and \
-                    (modifiedSince == lastModified):
+            # print ("Cache hit: If-Modified-Since=%s, lastModified=%s" %
+            #        (modifiedSince, lastModified))
+            if modifiedSince is not None and modifiedSince == lastModified:
                 cpg._cache.totNonModified += 1
-                # the code below was borrowed from the sendResponse function
-                # it should be refactored & put into a function to allow reuse
-                cpg.response.wfile.write('%s %s\r\n' % (cpg.config.get('server.protocolVersion'), 304))
-                # the code below doesn't work because the data isn't available at this point...
-                #cpg.response.wfile.write('%s: %s\r\n' % ('Date', cpg.request.headerMap['Date']))
-                # should the cache record & replay cookies it too?
-                cpg.response.wfile.write('\r\n')
-                raise RequestHandled
+                cpg.response.status = "304 Not Modified"
+                cpg.response.body = []
             else:
                 # serve it & get out from the request
-                cpg.response.wfile.write(obj)
-                raise RequestHandled
+                cpg.response.status, cpg.response.headers, body = obj
+                cpg.response.body = body
+            raise basefilter.RequestHandled
         else:
-            # sets a wrapper to cache the contents
-            cpg.response.wfile = Tee(cpg.response.wfile, cpg._cache.maxobjsize)
             cpg.threadData.cacheable = True
-
-class CacheOutputFilter(BaseOutputFilter, SetConfig):
-    """
-    Works on the output chain. Stores the content of the page in the cache.
-    """
     
-    def beforeResponse(self):
-        """
-        Checks if the page is cacheable; if not so disables the cache. 
-        Uses a flag that may be reset by intermediate filters. Note that 
-        the output filter is usually the last filter in the chain, so
-        this method is probably the last one called before the response
-        is written.
-        """
+    def onEndResource(self):
+        """Close & fix the cache entry after content was fully written"""
         if not cpg.threadData.cacheFilterOn:
             return
-        if isinstance(cpg.response.wfile, Tee):
-            if cpg.threadData.cacheable:
-                return
-            # cancel caching
-            wrapper = cpg.response.wfile
-            wrapper.stopCaching()
-            cpg.response.wfile = wrapper.wfile
+        
+        if cpg.threadData.cacheable:
+            status = cpg.response.status
+            headers = cpg.response.headers
+            
+            # Consume the body iterable. Only do this once!
+            body = cpg.response.body = [chunk for chunk in cpg.response.body]
+            
+            if cpg.response.headerMap.get('Pragma', None) != 'no-cache':
+                lastModified = cpg.response.headerMap.get('Last-Modified', None)
+                # saves the cache data
+                cpg._cache.put(lastModified, (status, headers, body))
 
-    def afterResponse(self):
-        """
-        Close & fix the cache entry after content was fully written
-        """
-        if not cpg.threadData.cacheFilterOn:
-            return
-        if isinstance(cpg.response.wfile, Tee):
-            wrapper = cpg.response.wfile
-            if wrapper.caching:
-                if cpg.response.headerMap.get('Pragma', None) != 'no-cache':
-                    lastModified = cpg.response.headerMap.get('Last-Modified', None)
-                    # saves the cache data
-                    cpg._cache.put(lastModified, wrapper.cache.getvalue())
-                # closes the wrapper
-                wrapper.stopCaching()
-                cpg.response.wfile = wrapper.wfile
 
 def percentual(n,d):
     """calculates the percentual, dealing with div by zeros"""
@@ -260,9 +194,10 @@ def formatSize(n):
         return "%4d MB" % (n / (1024*1024))
     else:
         return "%4d GB" % (n / (1024*1024*1024))
-        
-class CacheStats:
 
+
+class CacheStats:
+    
     def index(self):
         cpg.response.headerMap['Content-Type'] = 'text/plain'
         cpg.response.headerMap['Pragma'] = 'no-cache'

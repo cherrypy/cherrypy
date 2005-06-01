@@ -26,43 +26,42 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-class RequestHandled(Exception): pass
+class RequestHandled(Exception):
+    """Exception raised when no further request handling should occur."""
+    pass
 
-class BaseInputFilter(object):
+
+class BaseFilter(object):
     """
-    Base class for input filters. Derive new filter classes from this, then
+    Base class for filters. Derive new filter classes from this, then
     override some of the methods to add some side-effects.
     """
-    def afterRequestHeader(self):
-        """ Called after the request header has been read/parsed"""
+    
+    def onStartResource(self):
+        """Called before any request processing has been done"""
         pass
-
-    def afterRequestBody(self):
+    
+    def beforeRequestBody(self):
+        """Called after the request header has been read/parsed"""
+        pass
+    
+    def beforeMain(self):
         """ Called after the request body has been read/parsed"""
         pass
-
-class BaseOutputFilter(object):
-    """
-    Base class for output filters. Derive new filter classes from this, then
-    override some of the methods to add some side-effects.
-    """
-    def beforeResponse(self):
-        """ Called before starting to write response """
+    
+    def beforeFinalize(self):
+        """Called before final output processing"""
         pass
-
-    def afterResponse(self):
-        """ Called after writing the response (header & body included) """
-        pass
-
+    
     def beforeErrorResponse(self):
-        """ Called before starting to write response, after _cpOnError has
-            been called
-        """
+        """Called before _cpOnError and/or finalizing output"""
         pass
-
+    
     def afterErrorResponse(self):
-        """ Called after writing the response, after _cpOnError has
-            been called
-        """
+        """Called after _cpOnError and finalize"""
+        pass
+    
+    def onEndResource(self):
+        """Called after finalizing the output (status, header, and body)"""
         pass
 

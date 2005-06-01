@@ -27,63 +27,64 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os, time, mimetypes
-from basefilter import BaseInputFilter
+from basefilter import BaseFilter
 
-class StaticFilter(BaseInputFilter):
-    """
-    Filter that handles static content.
-    """
 
-    # def __init__(self, encoding = 'utf-8'):
-    #     self.encoding = encoding
-
-    def setConfig(self):
+class StaticFilter(BaseFilter):
+    """Filter that handles static content."""
+    
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg, _cphttptools, cperror
         from cherrypy import cpg, _cphttptools, cperror
-        cpg.threadData.staticFilterOn = cpg.config.get('staticFilter.on', False)
+        cpg.threadData.staticFilterOn = p = cpg.config.get('staticFilter.on', False)
         cpg.threadData.staticFilterFile = cpg.config.get('staticFilter.file')
         cpg.threadData.staticFilterDir = cpg.config.get('staticFilter.dir')
         if cpg.threadData.staticFilterDir:
             cpg.threadData.staticFilterConfigSection = \
                 cpg.config.get('staticFilter.dir', returnSection = True)
-
-    def afterRequestBody(self):
+    
+    def beforeMain(self):
         if not cpg.threadData.staticFilterOn:
             return
-
+        
         if cpg.threadData.staticFilterFile:
             filename = cpg.threadData.staticFilterFile
         else:
-            l = len(cpg.threadData.staticFilterConfigSection)
-            extraPath = cpg.request.path[l+1:]
+            section = cpg.threadData.staticFilterConfigSection
+            extraPath = cpg.request.path[len(section) + 1:]
             filename = os.path.join(cpg.threadData.staticFilterDir,
                 extraPath)
+        
         # Serve filename
         try:
             stat = os.stat(filename)
         except OSError:
-            raise cperror.NotFound(cpg.request.path)        
+            raise cperror.NotFound(cpg.request.path)
+        
         modifTime = stat.st_mtime
-        strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(modifTime))
+        strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
+                                     time.gmtime(modifTime))
         if cpg.request.headerMap.has_key('If-Modified-Since'):
             # Check if if-modified-since date is the same as strModifTime
             if cpg.request.headerMap['If-Modified-Since'] == strModifTime:
-                cpg.response.headerMap['Status'] = 304
+                cpg.response.status = "304 Not Modified"
                 cpg.response.body = []
                 return
-                
         cpg.response.headerMap['Last-Modified'] = strModifTime
+        
         # Set Content-Length and use an iterable (file object)
         #   this way CP won't load the whole file in memory
         cpg.response.headerMap['Content-Length'] = stat[6]
         cpg.response.body = open(filename, 'rb')
+        
         # Set content-type based on filename extension
         i = filename.rfind('.')
-        if i != -1: ext = filename[i:]
-        else: ext = ""
+        if i != -1:
+            ext = filename[i:]
+        else:
+            ext = ""
         contentType = mimetypes.types_map.get(ext, "text/plain")
         cpg.response.headerMap['Content-Type'] = contentType
-
 

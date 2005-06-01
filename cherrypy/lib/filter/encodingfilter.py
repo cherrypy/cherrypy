@@ -26,14 +26,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from basefilter import BaseOutputFilter
-import types
+from basefilter import BaseFilter
 
-class EncodingFilter(BaseOutputFilter):
-    """
-    Filter that automatically encodes the response.
-    """
-    def setConfig(self):
+class EncodingFilter(BaseFilter):
+    """Filter that automatically encodes the response."""
+    
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
@@ -41,20 +39,23 @@ class EncodingFilter(BaseOutputFilter):
         cpg.threadData.encodingFilterOn = cpg.config.get('encodingFilter.on', False)
         cpg.threadData.encodingFilterEncoding = cpg.config.get('encodingFilter.encoding', 'utf-8')
         cpg.threadData.encodingFilterMimeTypeList = cpg.config.get('encodingFilter.mimeTypeList', ['text/html'])
-
-    def beforeResponse(self):
+    
+    def beforeFinalize(self):
         if not cpg.threadData.encodingFilterOn:
             return
+        
         contentType = cpg.response.headerMap.get("Content-Type")
         if contentType:
             ctlist = contentType.split(';')[0]
             if (ctlist in cpg.threadData.encodingFilterMimeTypeList):
+                enc = cpg.threadData.encodingFilterEncoding
+                
                 # Add "charset=..." to response Content-Type header
                 if contentType and 'charset' not in contentType:
-                    cpg.response.headerMap["Content-Type"] += ";charset=%s" % cpg.threadData.encodingFilterEncoding
+                    cpg.response.headerMap["Content-Type"] += ";charset=%s" % enc
+                
                 # Return a generator that encodes the sequence
-                cpg.response.body = self.encode_body(cpg.response.body)
-
-    def encode_body(self, body):
-        for line in body:
-            yield line.encode(cpg.threadData.encodingFilterEncoding)
+                def encode_body(body):
+                    for line in body:
+                        yield line.encode(enc)
+                cpg.response.body = encode_body(cpg.response.body)

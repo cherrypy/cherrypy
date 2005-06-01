@@ -30,66 +30,59 @@ import os,urllib,time,sys,signal,socket,httplib,os.path
 def startServer(infoMap):
     # Start the server in another thread
     if not hasattr(os, "fork"): # win32 mostly
-        pid=os.spawnl(os.P_NOWAIT,infoMap['path'],infoMap['path'], '"'+os.path.join(os.getcwd(),'testsite.py')+'"')
+        pid = os.spawnl(os.P_NOWAIT, infoMap['path'], infoMap['path'],
+                        '"' + os.path.join(os.getcwd(), 'testsite.py') + '"')
     else:
-        pid=os.fork()
+        pid = os.fork()
         if not pid:
-            os.execlp(infoMap['path'],infoMap['path'],'testsite.py')
+            os.execlp(infoMap['path'], infoMap['path'], 'testsite.py')
     return pid
 
-def getPage(url, cookies, extraRequestHeader = []):
-    data=""
-    i=0
-    response = None
-    class EmptyClass: pass
-    cpg = EmptyClass()
-    cpg.response = EmptyClass()
-    cpg.response.body = None
-    cpg.response.headerMap = {}
-    while i<10:
-        try:
-            conn=httplib.HTTPConnection('127.0.0.1:8000')
-            conn.putrequest("GET", url)
-            conn.putheader("Host", "127.0.0.1")
-            if cookies:
-                cookieList = []
-                for cookie in cookies:
-                    i = cookie.find(' ')
-                    j = cookie.find(';')
-                    cookieList.append(cookie[i+1:j])
-                cookieStr = '; '.join(cookieList)
-                conn.putheader("Cookie", cookies[:j])
+class EmptyClass:
+    pass
 
+def getPage(url, cookies, extraRequestHeader = []):
+    # The trying 10 times is simply in case of socket errors.
+    # Normal case--it should run once.
+    for trial in xrange(10):
+        try:
+            conn = httplib.HTTPConnection('127.0.0.1:8000')
+            conn.putrequest("GET", url)
+##            conn.putheader("Host", "127.0.0.1")
+            
+            if cookies:
+                for cookie in cookies:
+                    name, value = cookie.split(":", 1)
+                    conn.putheader("Cookie", value.strip())
+            
             for key, value in extraRequestHeader:
                 conn.putheader(key, value)
-
+            
             conn.endheaders()
-
-            response=conn.getresponse()
-
-            cookies=response.msg.getallmatchingheaders("Set-Cookie")
-
-            cpg=EmptyClass()
+            
+            response = conn.getresponse()
+            
+            cookies = response.msg.getallmatchingheaders("Set-Cookie")
+            
+            cpg = EmptyClass()
             cpg.response = EmptyClass()
-            cpg.response.headerMap = {'Status': response.status}
+            cpg.response.headerMap = {}
+            cpg.response.status = "%s %s" % (response.status, response.reason)
             for line in response.msg.headers:
-                line = line.strip()
-                i = line.find(':')
-                key, value = line[:i], line[i+1:].strip()
-                cpg.response.headerMap[key] = value
-
+                key, value = line.split(":", 1)
+                cpg.response.headerMap[key.strip()] = value.strip()
+            
             cpg.response.body = response.read()
-
+            
             conn.close()
             break
         except socket.error:
             time.sleep(0.5)
-        i+=1
     return cpg, cookies
 
 def shutdownServer(pid, mode):
     urllib.urlopen("http://127.0.0.1:8000/shutdown/all")
-    if mode == 'tp':
+    if mode.startswith('tp'):
         # In thread-pool mode, it can take up to 1 sec for the server
         #   to shutdown
         time.sleep(1.1)
@@ -109,37 +102,53 @@ def checkResult(testName, infoMap, serverMode, cpg, rule, failedList):
             " in " + serverMode + " mode failed." + """
 * Rule:
 %s
+* cpg.response.status:
+%s
 * cpg.response.headerMap:
 %s
 * cpg.response.body:
-%s""" % (rule, repr(cpg.response.headerMap), repr(cpg.response.body)))
+%s""" % (rule, repr(cpg.response.status),
+         repr(cpg.response.headerMap), repr(cpg.response.body)))
         return False
 
 def prepareCode(code):
     f = open('testsite.py', 'w')
+    
+    includePathsToSysPath = """
+import sys,os,os.path
+sys.path.insert(0,os.path.normpath(os.path.join(os.getcwd(),'../../')))
+"""
+    f.write(includePathsToSysPath)
+    
     beforeStart = '''
 class Shutdown:
     def all(self):
         cpg.server.stop()
-        return ""
+        return "Shut down"
     all.exposed = True
 cpg.root.shutdown = Shutdown()
 def f(*a, **kw): return ""
 cpg.root._cpLogMessage = f
 '''
-    includePathsToSysPath = """
-import sys,os,os.path
-sys.path.insert(0,os.path.normpath(os.path.join(os.getcwd(),'../../')))
-"""
-    f.write(includePathsToSysPath+code.replace('cpg.config.update', beforeStart + 'cpg.config.update'))
+    newcode = code.replace('cpg.config.update', beforeStart + 'cpg.config.update')
+    newcode = newcode.replace('cpg.server.start(',
+                              'cpg.config.configMap["/"]["server.logToScreen"] = False\n'
+                              'cpg.server.start(')
+    f.write(newcode)
+    
     f.close()
 
 def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig = '', extraRequestHeader = []):
     response = None
     prepareCode(code)
-    # Try it in all 2 modes (regular, threadPooling)
-    modeList=[('r',''), ('tp', 'threadPool=3')]
-    for mode,modeConfig in modeList:
+    
+    # Try it in all 4 modes (regular, threadPooling x normal, WSGI)
+    native = 'server.class = "cherrypy._cphttpserver.embedded_server"'
+    modeList = [('r', native),
+                ('tp', native + '\nserver.threadPool = 3'),
+                ('r_wsgi', ""),
+                ('tp_wsgi', 'server.threadPool = 3')]
+    for mode, modeConfig in modeList:
         f = open("testsite.cfg", "w")
         f.write(extraConfig)
         f.write('''
@@ -147,6 +156,7 @@ def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig =
 session.storageType = "ram"
 server.socketPort = 8000
 server.environment = "production"
+server.logToScreen = False
 ''')
         f.write(modeConfig)
         f.close()
@@ -157,15 +167,17 @@ server.environment = "production"
         for url, rule in testList:
             cpg, cookies = getPage(url, cookies, extraRequestHeader)
             if not checkResult(testName, infoMap, mode, cpg, rule, failedList):
-                passed=0
+                passed = 0
                 print "*** FAILED ***"
                 break
         shutdownServer(pid, mode)
         if passed:
-            print mode+"...",
+            print mode + "...",
             sys.stdout.flush()
-        else: break
-    if passed: print "passed"
+        else:
+            break
+    if passed:
+        print "passed"
     sys.stdout.flush()
     return response
 

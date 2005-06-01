@@ -28,34 +28,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import basefilter
 
-class VirtualHostFilter(basefilter.BaseInputFilter):
-    """
-    Filter that changes the ObjectPath based on the Host.
+class VirtualHostFilter(basefilter.BaseFilter):
+    """Filter that changes the ObjectPath based on the Host.
+    
     Useful when running multiple sites within one CP server.
     See CherryPy recipes for the documentation.
     """
-
-    #def __init__(self, siteMap, useXForwardedHost = True):
-    #    self.siteMap = siteMap
-    #    self.useXForwardedHost = useXForwardedHost
-    def setConfig(self):
+    
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg, _cphttptools
         from cherrypy import cpg, _cphttptools
         cpg.threadData.virtualFilterOn = cpg.config.get('virtualHostFilter.on', False)
         cpg.threadData.virtualFilterPrefix = cpg.config.get('virtualHostFilter.prefix', '/')
-
-    def afterRequestHeader(self):
+    
+    def beforeRequestBody(self):
         if not cpg.threadData.virtualFilterOn:
             return
+        
         domain = cpg.request.base.split('//')[1]
-        # Re-use "mapPathToObject" function to find the actual
-        #   objectPath
-        candidate, objectPathList, virtualPathList = \
-                _cphttptools.mapPathToObject(
-                    cpg.threadData.virtualFilterPrefix + cpg.request.path
-                )
+        # Re-use "mapPathToObject" function to find the actual objectPath
+        virtualPath = cpg.threadData.virtualFilterPrefix + cpg.request.path
+        c, objectPathList, v = _cphttptools.mapPathToObject(virtualPath)
         cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
         #raise basefilter.InternalRedirect
-        

@@ -28,48 +28,164 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 Main CherryPy module:
-    - Parses config file
-    - Creates the HTTP server
+    - Creates a server
 """
 
-import cpg, thread, _cputil, _cphttpserver, time, _cpthreadinglocal
+import threading
+import time
+import sys
+import cpg, _cputil, _cphttptools, _cpthreadinglocal
+from lib import autoreload
 
-def start(initOnly = False):
-    """
-        Main function. All it does is this:
-            - output config options
-            - create response and request objects
-            - creates HTTP server based on configFile and configMap
-            - start HTTP server
-    """
-
-    # Output config options
-    cpg.config.outputConfigMap()
-
-    # Check the config options
-    # TODO
-    # _cpconfig.checkConfigOptions()
-
-    # Create request and response object (the same objects will be used
-    #   throughout the entire life of the webserver)
-    cpg.request = _cpthreadinglocal.local()
-    cpg.response = _cpthreadinglocal.local()
-    # Create threadData object as a thread-specific all-purpose storage
-    cpg.threadData = _cpthreadinglocal.local()
-
-    # Initialize a few global variables
-    cpg._lastCacheFlushTime = time.time()
-    cpg._lastSessionCleanUpTime = time.time()
-    cpg._sessionMap = {} # Map of "cookie" -> ("session object", "expiration time")
-
-    if not initOnly:
-        _cphttpserver.start()
-
-def stop():
-    _cphttpserver.stop()
 
 # Set some special attributes for adding hooks
 onStartServerList = []
 onStartThreadList = []
 onStopServerList = []
 onStopThreadList = []
+
+def start(initOnly=False, serverClass=None):
+    if cpg.config.get("server.environment") == "development":
+        # Check initOnly. If True, we're probably not starting
+        # our own webserver, and therefore could do Very Bad Things
+        # when autoreload calls sys.exit.
+        if not initOnly:
+            autoreload.main(_start, (initOnly, serverClass))
+            return
+    
+    _start(initOnly, serverClass)
+
+def start(initOnly=False, serverClass=None):
+    """
+        Main function. All it does is this:
+            - output config options
+            - create response and request objects
+            - starts a server
+    """
+    
+    # Create request and response object (the same objects will be used
+    #   throughout the entire life of the webserver)
+    cpg.request = _cpthreadinglocal.local()
+    cpg.response = _cpthreadinglocal.local()
+    
+    # Create threadData object as a thread-specific all-purpose storage
+    cpg.threadData = _cpthreadinglocal.local()
+    
+    # Output config options (if cpg.config.get('server.logToScreen'))
+    cpg.config.outputConfigMap()
+    
+    # Check the config options
+    # TODO
+    # _cpconfig.checkConfigOptions()
+    
+    # Initialize a few global variables
+    cpg._lastCacheFlushTime = time.time()
+    cpg._lastSessionCleanUpTime = time.time()
+    cpg._sessionMap = {} # Map of "cookie" -> ("session object", "expiration time")
+    
+    # If sessions are stored in files and we
+    # use threading, we need a lock on the file
+    if (cpg.config.get('server.threadPool') > 1
+        and cpg.config.get('session.storageType') == 'file'):
+        cpg._sessionFileLock = threading.RLock()
+    
+    # Call the functions from cpg.server.onStartServerList
+    for func in cpg.server.onStartServerList:
+        func()
+    
+    if not initOnly:
+        run_server(serverClass)
+
+def run_server(serverClass=None):
+    """Prepare the requested server and then run it."""
+    
+    # Instantiate the server.
+    if serverClass is None:
+        confclass = cpg.config.get("server.class")
+        if confclass:
+            serverClass = attributes(confclass)
+        else:
+            import _cpwsgi
+            serverClass = _cpwsgi.WSGIServer
+    
+    cpg._httpserver = serverClass()
+    
+    _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
+    
+    servingWhat = "HTTP"
+    if cpg.config.get('server', 'socketPort'):
+        onWhat = "socket: ('%s', %s)" % (cpg.config.get('server.socketHost'),
+                                         cpg.config.get('server.socketPort'))
+    else:
+        onWhat = "socket file: %s" % cpg.config.get('server.socketFile')
+    _cpLogMessage("Serving %s on %s" % (servingWhat, onWhat), 'HTTP')
+    
+    # Start the http server.
+    try:
+        cpg._httpserver.start()
+    except (KeyboardInterrupt, SystemExit):
+        _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
+        stop()
+
+def modules(modulePath):
+    """Load a module and retrieve a reference to that module."""
+    try:
+        aMod = sys.modules[modulePath]
+        if aMod is None:
+            raise KeyError
+    except KeyError:
+        # The last [''] is important.
+        aMod = __import__(modulePath, globals(), locals(), [''])
+    return aMod
+
+def attributes(fullAttributeName):
+    """Load a module and retrieve an attribute of that module."""
+    
+    # Parse out the path, module, and attribute
+    lastDot = fullAttributeName.rfind(u".")
+    attrName = fullAttributeName[lastDot + 1:]
+    modPath = fullAttributeName[:lastDot]
+    
+    aMod = modules(modPath)
+    # Let an AttributeError propagate outward.
+    try:
+        anAttr = getattr(aMod, attrName)
+    except AttributeError:
+        raise AttributeError("'%s' object has no attribute '%s'"
+                             % (modPath, attrName))
+    
+    # Return a reference to the attribute.
+    return anAttr
+
+
+seen_threads = {}
+
+def request(clientAddress, remoteHost, requestLine, headers, rfile):
+    threadID = threading._get_ident()
+    if threadID not in seen_threads:
+        i = len(seen_threads) + 1
+        seen_threads[threadID] = i
+        # Call the functions from cpg.server.onStartThreadList
+        for func in cpg.server.onStartThreadList:
+            func(i)
+    return _cphttptools.Request(clientAddress, remoteHost,
+                                requestLine, headers, rfile)
+
+def stop():
+    """Shutdown CherryPy (and any HTTP servers it started)."""
+    try:
+        httpstop = cpg._httpserver.stop
+    except AttributeError:
+        pass
+    else:
+        httpstop()
+    
+    # Call the functions from cpg.server.onStopThreadList
+    for thread_ident, i in seen_threads.iteritems():
+        for func in cpg.server.onStopThreadList:
+            func(i)
+    seen_threads.clear()
+    
+    # Call the functions from cpg.server.onStopServerList
+    for func in cpg.server.onStopServerList:
+        func()

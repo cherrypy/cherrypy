@@ -85,8 +85,9 @@ def getSpecialFunction(name):
 import compiler
 
 def getObj(s):
-    s="a="+s
-    return compiler.parse(s).getChildren()[1].getChildren()[0].getChildren()[1]
+    s = "a=" + s
+    p = compiler.parse(s)
+    return p.getChildren()[1].getChildren()[0].getChildren()[1]
 
 class UnknownType(Exception):
     pass
@@ -141,4 +142,3 @@ def unrepr(s):
         return Builder().build(getObj(s))
     except:
         raise cperror.WrongUnreprValue, repr(s)
-

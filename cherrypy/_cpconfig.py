@@ -155,14 +155,15 @@ def _load(configFile = None):
             try:
                 value = _cputil.unrepr(value)
             except cperror.WrongUnreprValue, s:
-                raise cperror.WrongConfigValue, "section: %s, option: %s, value: %s" % (
-                    repr(section), repr(option), repr(value))
+                msg = ("section: %s, option: %s, value: %s" %
+                       (repr(section), repr(option), repr(value)))
+                raise cperror.WrongConfigValue, msg
             configMap[section][option] = value
 
 def outputConfigMap():
     _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
     _cpLogMessage("Server parameters:", 'CONFIG')
-    _cpLogMessage("  server.environment: %s" % cpg.config.get('server.environment'), 'CONFIG')
+    _cpLogMessage("  server.environment: %s" % cpg.config.get('server.env'), 'CONFIG')
     _cpLogMessage("  server.logToScreen: %s" % cpg.config.get('server.logToScreen'), 'CONFIG')
     _cpLogMessage("  server.logFile: %s" % cpg.config.get('server.logFile'), 'CONFIG')
     _cpLogMessage("  server.protocolVersion: %s" % cpg.config.get('server.protocolVersion'), 'CONFIG')

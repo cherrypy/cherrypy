@@ -47,9 +47,9 @@ def _cpLogMessage(msg, context = '', severity = 0):
     elif severity == 2:
         level = "ERROR"
     else:
-        lebel = "UNKNOWN"
+        level = "UNKNOWN"
     try:
-        logToScreen = int(cpg.config.get('server.logToScreen'))
+        logToScreen = cpg.config.get('server.logToScreen')
     except:
         logToScreen = True
     s = nowStr + ' ' + context + ' ' + level + ' ' + msg
@@ -169,22 +169,27 @@ _cpFilterList = []
 # Filters that are always included
 from cherrypy.lib.filter import baseurlfilter, cachefilter, \
     decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
-    staticfilter, tidyfilter, virtualhostfilter, xmlrpcfilter
+    sessionfilter, staticfilter, tidyfilter, virtualhostfilter, \
+    xmlrpcfilter
+
+# These are in order for a reason!
 _cpDefaultInputFilterList = [
-    cachefilter.CacheInputFilter(),
-    logdebuginfofilter.LogDebugInfoInputFilter(),
+    cachefilter.CacheFilter(),
+    logdebuginfofilter.LogDebugInfoFilter(),
     virtualhostfilter.VirtualHostFilter(),
     baseurlfilter.BaseUrlFilter(),
     decodingfilter.DecodingFilter(),
+    sessionfilter.SessionFilter(),
     staticfilter.StaticFilter(),
-    xmlrpcfilter.XmlRpcInputFilter(),
+    tidyfilter.TidyFilter(),
+    xmlrpcfilter.XmlRpcFilter(),
 ]
 _cpDefaultOutputFilterList = [
-    xmlrpcfilter.XmlRpcOutputFilter(),
+    xmlrpcfilter.XmlRpcFilter(),
     encodingfilter.EncodingFilter(),
     tidyfilter.TidyFilter(),
-    logdebuginfofilter.LogDebugInfoOutputFilter(),
+    logdebuginfofilter.LogDebugInfoFilter(),
     gzipfilter.GzipFilter(),
-    cachefilter.CacheOutputFilter(),
+    sessionfilter.SessionFilter(),
+    cachefilter.CacheFilter(),
 ]
-

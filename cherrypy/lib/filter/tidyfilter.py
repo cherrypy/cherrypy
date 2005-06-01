@@ -27,24 +27,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os, cgi, StringIO, traceback
-from basefilter import BaseOutputFilter
+from basefilter import BaseFilter
 
-class TidyFilter(BaseOutputFilter):
-    """
-    Filter that runs the response through Tidy.
+class TidyFilter(BaseFilter):
+    """Filter that runs the response through Tidy.
+    
     Note that we use the standalone Tidy tool rather than the python
     mxTidy module. This is because this module doesn't seem to be
     stable and it crashes on some HTML pages (which means that the
     server would also crash)
     """
-
-    #def __init__(self, tidyPath, tmpDir, strictXml = False, errorsToIgnore = []):
-    #    self.tidyPath = tidyPath
-    #    self.tmpDir = tmpDir
-    #    self.strictXml = strictXml
-    #    self.errorsToIgnore = errorsToIgnore
-
-    def setConfig(self):
+    
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
@@ -54,10 +48,11 @@ class TidyFilter(BaseOutputFilter):
         cpg.threadData.tifyFilterTmpDir = cpg.config.get('tidyFilter.tmpDir')
         cpg.threadData.tidyFilterStrictXml = cpg.config.get('tidyFilter.strictXml', False)
         cpg.threadData.tidyFilterErrorsToIgnore = cpg.config.get('encodingFilter.errorsToIgnore', [])
-
-    def beforeResponse(self):
+    
+    def beforeFinalize(self):
         if not cpg.threadData.tidyFilterOn:
             return
+        
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
         originalBody = ''.join(cpg.response.body)
@@ -65,9 +60,10 @@ class TidyFilter(BaseOutputFilter):
         
         ct = cpg.response.headerMap.get('Content-Type', '').split(';')[0]
         if ct == 'text/html':
-            pageFile = os.path.join(cpg.threadData.tifyFilterTmpDir, 'page.html')
-            outFile = os.path.join(cpg.threadData.tifyFilterTmpDir, 'tidy.out')
-            errFile = os.path.join(cpg.threadData.tifyFilterTmpDir, 'tidy.err')
+            tmpdir = cpg.threadData.tifyFilterTmpDir
+            pageFile = os.path.join(tmpdir, 'page.html')
+            outFile = os.path.join(tmpdir, 'tidy.out')
+            errFile = os.path.join(tmpdir, 'tidy.err')
             f = open(pageFile, 'wb')
             f.write(originalBody)
             f.close()
@@ -81,12 +77,13 @@ class TidyFilter(BaseOutputFilter):
             strictXml = ""
             if cpg.threadData.tidyFilterStrictXml:
                 strictXml = ' -xml'
-            os.system('"%s" %s%s -f %s -o %s %s' % (
-                cpg.threadData.tifyFilterTidyPath, encoding, strictXml, errFile, outFile, pageFile))
+            os.system('"%s" %s%s -f %s -o %s %s' %
+                      (cpg.threadData.tifyFilterTidyPath, encoding,
+                       strictXml, errFile, outFile, pageFile))
             f = open(errFile, 'rb')
             err = f.read()
             f.close()
-
+            
             errList = err.splitlines()
             newErrList = []
             for err in errList:
@@ -97,7 +94,7 @@ class TidyFilter(BaseOutputFilter):
                             ignore = 1
                             break
                     if not ignore: newErrList.append(err)
-
+            
             if newErrList:
                 newBody = "Wrong HTML:<br>" + cgi.escape('\n'.join(newErrList)).replace('\n','<br>')
                 newBody += '<br><br>'
@@ -105,7 +102,7 @@ class TidyFilter(BaseOutputFilter):
                 for line in originalBody.splitlines():
                     i += 1
                     newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
-
+                
                 cpg.response.body = [newBody]
 
             elif cpg.threadData.tidyFilterStrictXml:
@@ -120,13 +117,13 @@ class TidyFilter(BaseOutputFilter):
                     bodyFile = StringIO.StringIO()
                     traceback.print_exc(file = bodyFile)
                     cpg.response.body = [bodyFile.getvalue()]
-
+                    
                     newBody = "Wrong XML:<br>" + cgi.escape(bodyFile.getvalue().replace('\n','<br>'))
                     newBody += '<br><br>'
                     i=0
                     for line in originalBody.splitlines():
                         i += 1
                         newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
-
+                    
                     cpg.response.body = [newBody]
-                
+

@@ -26,14 +26,17 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import cpg, urllib, sys, time, traceback, types, StringIO, cgi, os
-import mimetypes, sha, random, string, _cputil, cperror, Cookie, urlparse
-from lib.filter import basefilter
-import _cpdefaults
-
 """
 Common Service Code for CherryPy
 """
+
+import urllib, sys, time, traceback, types, StringIO, cgi
+import mimetypes, Cookie, urlparse
+import cpg, _cputil, cperror, _cpdefaults
+from lib.filter import basefilter
+
+from BaseHTTPServer import BaseHTTPRequestHandler
+responseCodes = BaseHTTPRequestHandler.responses
 
 mimetypes.types_map['.dwg']='image/x-dwg'
 mimetypes.types_map['.ico']='image/x-icon'
@@ -41,333 +44,352 @@ mimetypes.types_map['.ico']='image/x-icon'
 weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-class IndexRedirect(Exception): pass
 
-def parseFirstLine(data):
-    cpg.request.path = data.split()[1]
-    cpg.request.queryString = ""
-    cpg.request.browserUrl = cpg.request.path
-    cpg.request.paramMap = {}
-    cpg.request.paramList = [] # Only used for Xml-Rpc
-    cpg.request.filenameMap = {}
-    cpg.request.fileTypeMap = {}
-    # From http://www.cherrypy.org/ticket/141/
-    # find the queryString, or set it to "" if not found
-    if "?" in cpg.request.path:
-        cpg.request.path, cpg.request.queryString = cpg.request.path.split("?",1)
-    else:
-        cpg.request.path, cpg.request.queryString = cpg.request.path, ""
+class Request(object):
+    """Process a request and yield a series of response chunks.
     
-    # build a paramMap dictionary from queryString
-    pm = cpg.request.paramMap = cgi.parse_qs(cpg.request.queryString, True)
-    for key, val in pm.items():
-        if len(val) == 1:
-            pm[key] = val[0]
-
-def cookHeaders(clientAddress, remoteHost, headers, requestLine):
-    """Process the headers into the request.headerMap"""
-    cpg.request.headerMap = {}
-    cpg.request.requestLine = requestLine
-    cpg.request.simpleCookie = Cookie.SimpleCookie()
-
-    # Build headerMap
-    for item in headers.items():
-        # Warning: if there is more than one header entry for cookies (AFAIK, only Konqueror does that)
-        # only the last one will remain in headerMap (but they will be correctly stored in request.simpleCookie)
-        insertIntoHeaderMap(item[0],item[1])
-
-    # Handle cookies differently because on Konqueror, multiple cookies come on different lines with the same key
-    cookieList = headers.getallmatchingheaders('cookie')
-    for cookie in cookieList:
-        cpg.request.simpleCookie.load(cookie)
-
-    cpg.request.remoteAddr = clientAddress
-    cpg.request.remoteHost = remoteHost
-
-    # Set peer_certificate (in SSL mode) so the web app can examinate the client certificate
-    try: cpg.request.peerCertificate = self.request.get_peer_certificate()
-    except: pass
-
-    _cputil.getSpecialFunction('_cpLogMessage')("%s - %s" % (cpg.request.remoteAddr, requestLine[:-2]), "HTTP")
-
-
-def parsePostData(rfile):
-    # Read request body and put it in data
-    len = int(cpg.request.headerMap.get("Content-Length","0"))
-    if len: data = rfile.read(len)
-    else: data=""
-
-    # Put data in a StringIO so FieldStorage can read it
-    newRfile = StringIO.StringIO(data)
-    # Create a copy of headerMap with lowercase keys because
-    #   FieldStorage doesn't work otherwise
-    lowerHeaderMap = {}
-    for key, value in cpg.request.headerMap.items():
-        lowerHeaderMap[key.lower()] = value
-    forms = cgi.FieldStorage(fp = newRfile, headers = lowerHeaderMap, environ = {'REQUEST_METHOD':'POST'}, keep_blank_values = 1)
-    for key in forms.keys():
-        # Check if it's a list or not
-        valueList = forms[key]
-        if type(valueList) == type([]):
-            # It's a list of values
-            cpg.request.paramMap[key] = []
-            cpg.request.filenameMap[key] = []
-            cpg.request.fileTypeMap[key] = []
-            for item in valueList:
-                cpg.request.paramMap[key].append(item.value)
-                cpg.request.filenameMap[key].append(item.filename)
-                cpg.request.fileTypeMap[key].append(item.type)
+    headers should be a list of (name, value) tuples.
+    """
+    
+    def __init__(self, clientAddress, remoteHost, requestLine, headers, rfile):
+        # When __init__ is finished, cpg.response should have three attributes:
+        #   status, e.g. "200 OK"
+        #   headers, a list of (name, value) tuples
+        #   body, an iterable yielding strings
+        # Consumer code should then access these three attributes
+        # to build the outbound stream.
+        
+        self.requestLine = requestLine
+        self.requestHeaders = headers
+        self.rfile = rfile
+        
+        # Prepare cpg.request variables
+        cpg.request.remoteAddr = clientAddress
+        cpg.request.remoteHost = remoteHost
+        cpg.request.paramList = [] # Only used for Xml-Rpc
+        cpg.request.filenameMap = {}
+        cpg.request.fileTypeMap = {}
+        cpg.request.headerMap = {}
+        cpg.request.requestLine = requestLine
+        cpg.request.simpleCookie = Cookie.SimpleCookie()
+        cpg.request.isStatic = False
+        cpg.request.processRequestBody = cpg.request.method in ("POST",)
+        cpg.request.rfile = self.rfile
+        
+        # Prepare cpg.response variables
+        cpg.response.status = None
+        cpg.response.headers = None
+        cpg.response.body = None
+        
+        year, month, day, hh, mm, ss, wd, y, z = time.gmtime(time.time())
+        date = ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
+                (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
+        cpg.response.headerMap = {
+            "Content-Type": "text/html",
+            "Server": "CherryPy/" + cpg.__version__,
+            "Date": date,
+            "Set-Cookie": [],
+            "Content-Length": 0
+        }
+        cpg.response.simpleCookie = Cookie.SimpleCookie()
+        
+        self.run()
+    
+    def run(self):
+        try:
+            self.processRequestHeaders()
+            
+            try:
+                # onStart has to be after processRequestHeaders
+                # so that "path", for example, gets set.
+                applyFilters('onStartResource')
+                
+                applyFilters('beforeRequestBody')
+                if cpg.request.processRequestBody:
+                    self.processRequestBody()
+                
+                applyFilters('beforeMain')
+                if cpg.response.body is None:
+                    main()
+                
+                applyFilters('beforeFinalize')
+                finalize()
+            finally:
+                applyFilters('onEndResource')
+        except basefilter.RequestHandled:
+            pass
+        except:
+            handleError(sys.exc_info())
+    
+    def processRequestHeaders(self):
+        # Parse first line
+        path = self.requestLine.split()[1]
+        
+        # find the queryString, or set it to "" if not found
+        if "?" in path:
+            cpg.request.path, cpg.request.queryString = path.split("?", 1)
         else:
-            # It's a single value
-            # In case it's a file being uploaded, we save the filename in a map (user might need it)
-            cpg.request.paramMap[key] = valueList.value
-            cpg.request.filenameMap[key] = valueList.filename
-            cpg.request.fileTypeMap[key] = valueList.type
+            cpg.request.path, cpg.request.queryString = path, ""
+        
+        # build a paramMap dictionary from queryString
+        pm = cgi.parse_qs(cpg.request.queryString, keep_blank_values=True)
+        for key, val in pm.items():
+            if len(val) == 1:
+                pm[key] = val[0]
+        cpg.request.paramMap = pm
+        
+        # Process the headers into request.headerMap
+        for name, value in self.requestHeaders:
+            name = name.title()
+            value = value.strip()
+            # Warning: if there is more than one header entry for cookies (AFAIK,
+            # only Konqueror does that), only the last one will remain in headerMap
+            # (but they will be correctly stored in request.simpleCookie).
+            cpg.request.headerMap[name] = value
+            
+            # Handle cookies differently because on Konqueror, multiple cookies
+            # come on different lines with the same key
+            if name == 'Cookie':
+                cpg.request.simpleCookie.load(value)
+        
+        # Set peer_certificate (in SSL mode) so the
+        # web app can examine the client certificate
+        try:
+            cpg.request.peerCertificate = self.request.get_peer_certificate()
+        except:
+            pass
+        msg = "%s - %s" % (cpg.request.remoteAddr, self.requestLine[:-2])
+        _cputil.getSpecialFunction('_cpLogMessage')(msg, "HTTP")
+        
+        cpg.request.base = "http://" + cpg.request.headerMap.get('Host', '')
+        cpg.request.browserUrl = cpg.request.base + path
+        
+        # Change objectPath in filters to change
+        # the object that will get rendered
+        cpg.request.objectPath = None
+        
+        # Save original values (in case they get modified by filters)
+        cpg.request.originalPath = cpg.request.path
+        cpg.request.originalParamMap = cpg.request.paramMap
+        cpg.request.originalParamList = cpg.request.paramList
+    
+    def processRequestBody(self):
+        # Read request body and put it in data
+        data = ""
+        length = int(cpg.request.headerMap.get("Content-Length", "0"))
+        if length:
+            data = self.rfile.read(length)
+        
+        # Put data in a StringIO so FieldStorage can read it
+        newRfile = StringIO.StringIO(data)
+        # Create a copy of headerMap with lowercase keys because
+        # FieldStorage doesn't work otherwise
+        lowerHeaderMap = {}
+        for key, value in cpg.request.headerMap.items():
+            lowerHeaderMap[key.lower()] = value
+        forms = cgi.FieldStorage(fp = newRfile, headers = lowerHeaderMap,
+                                 environ = {'REQUEST_METHOD': 'POST'},
+                                 keep_blank_values = 1)
+        
+        # In case of files being uploaded, save filenames/types in maps.
+        for key in forms.keys():
+            valueList = forms[key]
+            if isinstance(valueList, list):
+                cpg.request.paramMap[key] = []
+                cpg.request.filenameMap[key] = []
+                cpg.request.fileTypeMap[key] = []
+                for item in valueList:
+                    cpg.request.paramMap[key].append(item.value)
+                    cpg.request.filenameMap[key].append(item.filename)
+                    cpg.request.fileTypeMap[key].append(item.type)
+            else:
+                cpg.request.paramMap[key] = valueList.value
+                cpg.request.filenameMap[key] = valueList.filename
+                cpg.request.fileTypeMap[key] = valueList.type
 
-def applyFilterList(methodName):
-    filterList = _cpdefaults._cpDefaultInputFilterList + \
-        _cputil.getSpecialFunction('_cpFilterList') + \
-        _cpdefaults._cpDefaultOutputFilterList
+
+# Error handling
+
+dbltrace = """
+=====First Error=====
+
+%s
+
+=====Second Error=====
+
+%s
+
+"""
+
+def handleError(exc):
+    """Set status, headers, and body when an error occurs."""
+    try:
+        applyFilters('beforeErrorResponse')
+        
+        # _cpOnError will probably change cpg.response.body.
+        # It may also change the headerMap, etc.
+        _cputil.getSpecialFunction('_cpOnError')()
+        
+        finalize()
+        
+        applyFilters('afterErrorResponse')
+    except:
+        # Failure in _cpOnError, error filter, or finalize.
+        # Bypass them all.
+        body = dbltrace % (formatExc(exc), formatExc())
+        cpg.response.status, cpg.response.headers, body = bareError(body)
+        cpg.response.body = [body]
+
+def formatExc(exc=None):
+    """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
+    if exc is None:
+        exc = sys.exc_info()
+    return "".join(traceback.format_exception(*exc))
+
+def bareError(extrabody=None):
+    """bareError(extrabody=None) -> status, headers, body.
+    
+    Returns a triple without calling any other questionable functions,
+    so it should be as error-free as possible. Call it from an HTTP server
+    if you get errors after Request() is done.
+    
+    If extrabody is None, a friendly but rather unhelpful error message
+    is set in the body. If extrabody is a string, it will be appended
+    as-is to the body.
+    """
+    
+    body = "Unrecoverable error in the server."
+    if extrabody is not None:
+        body += "\n" + extrabody
+    return ("500 Internal Server Error",
+            [('Content-Type', 'text/plain'),
+             ('Content-Length', str(len(body)))],
+            body)
+
+
+
+# Response functions
+
+def main():
+    """Obtain and set cpg.response.body."""
+    path = cpg.request.path
+    # Remove leading and trailing slash
+    path = path.strip("/")
+    # Replace quoted chars (eg %20) from url
+    path = urllib.unquote(path)
+    
+    try:
+        func, objectPathList, virtualPathList = mapPathToObject()
+    except IndexRedirect, inst:
+        # For an IndexRedirect, we don't go through the regular
+        # mechanism: we return the redirect immediately
+        newUrl = urlparse.urljoin(cpg.request.base, inst.args[0])
+        cpg.response.status = '302 Found'
+        cpg.response.headerMap['Location'] = newUrl
+        cpg.response.body = []
+        return
+     
+    # Remove "root" from objectPathList and join it to get objectPath
+    cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
+    body = func(*(virtualPathList + cpg.request.paramList),
+                **(cpg.request.paramMap))
+    
+    # build a uniform return type (iterable)
+    if isinstance(body, types.FileType):
+        body = fileGenerator(body)
+    elif isinstance(body, types.GeneratorType):
+        body = flattener(body)
+    elif isinstance(body, basestring):
+        body = [body]
+    elif body is None:
+        body = [""]
+    cpg.response.body = body
+    return body
+
+def checkStatus():
+    """Test/set cpg.response.status. Provide Reason-phrase if missing."""
+    if not cpg.response.status:
+        cpg.response.status = "200 OK"
+    else:
+        status = str(cpg.response.status)
+        parts = status.split(" ", 1)
+        if len(parts) == 1:
+            # No reason supplied.
+            code, = parts
+            reason = None
+        else:
+            code, reason = parts
+            reason = reason.strip()
+        
+        try:
+            code = int(code)
+            assert code >= 100 and code < 600
+        except (ValueError, AssertionError):
+            code = 500
+            reason = None
+        
+        if reason is None:
+            try:
+                reason = responseCodes[code][0]
+            except (KeyError, IndexError):
+                reason = ""
+        
+        cpg.response.status = "%s %s" % (code, reason)
+    return cpg.response.status
+
+def finalize():
+    """Transform headerMap + cookies into cpg.response.headers."""
+    
+    checkStatus()
+    
+    if (cpg.config.get("server.protocolVersion") != "HTTP/1.1"
+        and cpg.response.headerMap.get('Content-Length') == 0):
+        buf = StringIO.StringIO()
+        for chunk in cpg.response.body:
+            buf.write(chunk)
+        buf.seek(0)
+        content = buf.read()
+        cpg.response.body = [content]
+        cpg.response.headerMap['Content-Length'] = len(content)
+    
+    # Headers
+    cpg.response.headers = []
+    for key, valueList in cpg.response.headerMap.items():
+        if not isinstance(valueList, list):
+            valueList = [valueList]
+        for value in valueList:
+            cpg.response.headers.append((key, str(value)))
+    
+    cookie = cpg.response.simpleCookie.output()
+    if cookie:
+        name, value = cookie.split(": ", 1)
+        cpg.response.headers.append((name, value))
+    return cpg.response.headers
+
+def applyFilters(methodName):
+    if methodName in ('beforeRequestBody', 'beforeMain'):
+        filterList = (_cpdefaults._cpDefaultInputFilterList +
+                      _cputil.getSpecialFunction('_cpFilterList'))
+    elif methodName in ('beforeFinalize',):
+        filterList = (_cputil.getSpecialFunction('_cpFilterList') +
+                      _cpdefaults._cpDefaultOutputFilterList)
+    else:
+        # 'onStartResource', 'onEndResource'
+        # 'beforeErrorResponse', 'afterErrorResponse'
+        filterList = (_cpdefaults._cpDefaultInputFilterList +
+                      _cputil.getSpecialFunction('_cpFilterList') +
+                      _cpdefaults._cpDefaultOutputFilterList)
     for filter in filterList:
         method = getattr(filter, methodName, None)
         if method:
             method()
 
-def insertIntoHeaderMap(key,value):
-    normalizedKey = '-'.join([s.capitalize() for s in key.split('-')])
-    cpg.request.headerMap[normalizedKey] = value
-
-def initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
-    parseFirstLine(requestLine)
-    cookHeaders(clientAddress, remoteHost, headers, requestLine)
-
-    cpg.request.base = "http://" + cpg.request.headerMap.get('Host', '')
-    cpg.request.browserUrl = cpg.request.base + cpg.request.browserUrl
-    cpg.request.isStatic = False
-    cpg.request.parsePostData = True
-    cpg.request.rfile = rfile
-
-    # Change objectPath in filters to change the object that will get rendered
-    cpg.request.objectPath = None 
-
-    applyFilterList('setConfig')
-    applyFilterList('afterRequestHeader')
-
-    if cpg.request.method == 'POST' and cpg.request.parsePostData:
-        parsePostData(rfile)
-
-    applyFilterList('afterRequestBody')
-
-def doRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile):
-    # creates some attributes on cpg.response so filters can use them
-    cpg.response.wfile = wfile
-    cpg.response.sendResponse = True
-    cpg.response.body = None
-
-    # Prepare response variables
-    now = time.time()
-    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
-    date = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (weekdayname[wd], day, monthname[month], year, hh, mm, ss)
-    cpg.response.headerMap = {
-        "protocolVersion": cpg.config.get('server.protocolVersion'),
-        "Status": "200 OK",
-        "Content-Type": "text/html",
-        "Server": "CherryPy/" + cpg.__version__,
-        "Date": date,
-        "Set-Cookie": [],
-        "Content-Length": 0
-    }
-    cpg.response.simpleCookie = Cookie.SimpleCookie()
-
-    try:
-        try:
-            initRequest(clientAddress, remoteHost, requestLine, headers, rfile, wfile)
-        except basefilter.RequestHandled:
-            # request was already fully handled; it may be a cache hit
-            return
-        except:
-            # exception raised in a filter.
-            # we don't have a response body yet, so create an empty one
-            cpg.response.body = []
-            raise
-        handleRequest(cpg.response.wfile)
-    except:
-        # TODO: in some cases exceptions and filters are conflicting; 
-        # error reporting seems to be broken in some cases. This code is 
-        # a helper to check it
-        err = ""
-        exc_info_1 = sys.exc_info()[1]
-        if hasattr(exc_info_1, 'args') and len(exc_info_1.args) >= 1:
-            err = exc_info_1.args[0]
-
-        try:
-            _cputil.getSpecialFunction('_cpOnError')()
-
-            # Still save session data
-            if cpg.config.get('session.storageType') and not cpg.request.isStatic:
-                sessionId = cpg.response.simpleCookie[cpg.config.get('session.cookieName')].value
-                expirationTime = time.time() + cpg.config.get('session.timeout') * 60
-                _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
-
-            applyFilterList('beforeErrorResponse')
-            wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
-
-            if (cpg.response.headerMap.has_key('Content-Length') and
-                    cpg.response.headerMap['Content-Length']==0):
-                buf = StringIO.StringIO()
-                [buf.write(x) for x in cpg.response.body]
-                buf.seek(0)
-                cpg.response.body = [buf.read()]
-                cpg.response.headerMap['Content-Length'] = len(cpg.response.body[0])
-
-            for key, valueList in cpg.response.headerMap.items():
-                if key not in ('Status', 'protocolVersion'):
-                    if type(valueList) != type([]): valueList = [valueList]
-                    for value in valueList:
-                        wfile.write('%s: %s\r\n'%(key, value))
-            wfile.write('\r\n')
-            for line in cpg.response.body:
-                wfile.write(line)
-            applyFilterList('afterErrorResponse')
-        except:
-            bodyFile = StringIO.StringIO()
-            traceback.print_exc(file = bodyFile)
-            body = bodyFile.getvalue()
-            wfile.write('%s 200 OK\r\n' % cpg.config.get('server.protocolVersion'))
-            wfile.write('Content-Type: text/plain\r\n')
-            wfile.write('Content-Length: %s\r\n' % len(body))
-            wfile.write('\r\n')
-            wfile.write(body)
-
-def sendResponse(wfile):
-    applyFilterList('beforeResponse')
-
-    # Set the content-length
-    if (cpg.response.headerMap.has_key('Content-Length') and
-            cpg.response.headerMap['Content-Length']==0):
-        buf = StringIO.StringIO()
-        [buf.write(x) for x in cpg.response.body]
-        buf.seek(0)
-        cpg.response.body = [buf.read()]
-        cpg.response.headerMap['Content-Length'] = len(cpg.response.body[0])
-
-    # Save session data
-    if cpg.config.get('session.storageType') and not cpg.request.isStatic:
-        sessionId = cpg.response.simpleCookie[cpg.config.get('session.cookieName')].value
-        expirationTime = time.time() + cpg.config.get('session.timeout') * 60
-        _cputil.getSpecialFunction('_cpSaveSessionData')(sessionId, cpg.request.sessionMap, expirationTime)
-
-    wfile.write('%s %s\r\n' % (cpg.response.headerMap['protocolVersion'], cpg.response.headerMap['Status']))
-    for key, valueList in cpg.response.headerMap.items():
-        if key not in ('Status', 'protocolVersion'):
-            if type(valueList) != type([]): valueList = [valueList]
-            for value in valueList:
-                wfile.write('%s: %s\r\n' % (key, value))
-
-    # Send response cookies
-    cookie = cpg.response.simpleCookie.output()
-    if cookie:
-        wfile.write(cookie+'\r\n')
-    wfile.write('\r\n')
-
-    for line in cpg.response.body:
-        wfile.write(line)
-    
-    # finalization hook for filter cleanup & logging purposes
-    applyFilterList('afterResponse')
-
-def handleRequest(wfile):
-    # Clean up expired sessions if needed:
-    now = time.time()
-    if (cpg.config.get('session.storageType') and 
-        cpg.config.get('session.cleanUpDelay') and 
-        (cpg._lastSessionCleanUpTime + cpg.config.get('session.cleanUpDelay') * 60) <= now):
-        cpg._lastSessionCleanUpTime = now
-        _cputil.getSpecialFunction('_cpCleanUpOldSessions')()
-
-    # Save original values (in case they get modified by filters)
-    cpg.request.originalPath = cpg.request.path
-    cpg.request.originalParamMap = cpg.request.paramMap
-    cpg.request.originalParamList = cpg.request.paramList
-
-    path = cpg.request.path
-    if path.startswith('/'):
-        # Remove leading slash
-        path = path[1:]
-    if path.endswith('/'):
-        # Remove trailing slash
-        path = path[:-1]
-    path = urllib.unquote(path) # Replace quoted chars (eg %20) from url
-
-    # Get session data
-    if cpg.config.get('session.storageType') and not cpg.request.isStatic:
-        now = time.time()
-        # First, get sessionId from cookie
-        try: sessionId = cpg.request.simpleCookie[cpg.config.get('session.cookieName')].value
-        except: sessionId=None
-        if sessionId:
-            # Load session data from wherever it was stored
-            sessionData = _cputil.getSpecialFunction('_cpLoadSessionData')(sessionId)
-            if sessionData == None:
-                sessionId = None
-            else:
-                cpg.request.sessionMap, expirationTime = sessionData
-                # Check that is hasn't expired
-                if now > expirationTime:
-                    # Session expired
-                    sessionId = None
-
-        # Create a new sessionId if needed
-        if not sessionId:
-            cpg.request.sessionMap = {}
-            sessionId = generateSessionId()
-            cpg.request.sessionMap['_sessionId'] = sessionId
-
-        cpg.response.simpleCookie[cpg.config.get('session.cookieName')] = sessionId
-        cpg.response.simpleCookie[cpg.config.get('session.cookieName')]['path'] = '/'
-        cpg.response.simpleCookie[cpg.config.get('session.cookieName')]['version'] = 1
-
-    if cpg.response.body is None:
-        try:
-            func, objectPathList, virtualPathList = mapPathToObject()
-        except IndexRedirect, inst:
-            # For an IndexRedirect, we don't go through the regular
-            #   mechanism: we return the redirect immediately
-            newUrl = urlparse.urljoin(cpg.request.base, inst.args[0])
-            wfile.write('%s 302\r\n' % (cpg.response.headerMap['protocolVersion']))
-            cpg.response.headerMap['Location'] = newUrl
-            for key, valueList in cpg.response.headerMap.items():
-                if key not in ('Status', 'protocolVersion'):
-                    if type(valueList) != type([]): valueList = [valueList]
-                    for value in valueList:
-                        wfile.write('%s: %s\r\n'%(key, value))
-            wfile.write('\r\n')
-            return
-             
-        # Remove "root" from objectPathList and join it to get objectPath
-        cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
-        body = func(*(virtualPathList + cpg.request.paramList), **(cpg.request.paramMap))
-    else:
-        body = cpg.response.body
-
-    # builds a uniform return type
-    if isinstance(body, types.FileType):
-        cpg.response.body = fileGenerator(body)
-    elif not isinstance(body, types.GeneratorType):
-        cpg.response.body = [body]
-    else:
-        cpg.response.body = flattener(body)
-
-    if cpg.response.sendResponse:
-        sendResponse(wfile)
-
-def fileGenerator(file, chunkSize = 65536): # 65536 = 64kb
-   """ make file objects iterable generators """
-   input = file.read(chunkSize)
-   while input:
-      yield input
-      input = file.read(chunkSize) 
-
+def fileGenerator(input, chunkSize=65536):
+    # Iterate over the file in 64k chunks
+    chunk = input.read(chunkSize)
+    while chunk:
+        yield chunk
+        chunk = input.read(chunkSize)
 
 def flattener(input):
     for x in input:
@@ -378,12 +400,10 @@ def flattener(input):
                 yield y 
 
 
-def generateSessionId():
-    s = ''
-    for i in range(50):
-        s += random.choice(string.letters+string.digits)
-    s += '%s'%time.time()
-    return sha.sha(s).hexdigest()
+# Object lookup
+
+class IndexRedirect(Exception): pass
+
 
 def getObjFromPath(objPathList):
     """ For a given objectPathList (like ['root', 'a', 'b', 'index']),
@@ -393,14 +413,14 @@ def getObjFromPath(objPathList):
     for objname in objPathList:
         # maps virtual filenames to Python identifiers (substitutes '.' for '_')
         objname = objname.replace('.', '_')
+        if getattr(cpg, "debug", None):
+            print "Attempting to call method: %s.%s" % (root, objname)
         root = getattr(root, objname, None)
         if root is None:
             return None
-
     return root
 
-
-def mapPathToObject(path = None):
+def mapPathToObject(path=None):
     # Traverse path:
     # for /a/b?arg=val, we'll try:
     #   root.a.b.index -> redirect to /a/b/?arg=val
@@ -408,23 +428,27 @@ def mapPathToObject(path = None):
     #   root.a.b(arg='val')
     #   root.a.default('b', arg='val')
     #   root.default('a', 'b', arg='val')
-
+    
     # Also, we ignore trailing slashes
     # Also, a method has to have ".exposed = True" in order to be exposed
-
+    
     if path is None:
         path = cpg.request.objectPath or cpg.request.path
-    if path.startswith('/'):
-        path = path[1:] # Remove leading slash
-    if path.endswith('/'):
-        path = path[:-1] # Remove trailing slash
-
+    # Remove leading and trailing slash
+    path = path.strip("/")
+    # Replace quoted chars (eg %20) from url
+    path = urllib.unquote(path)
+    
     if not path:
         objectPathList = []
     else:
         objectPathList = path.split('/')
     objectPathList = ['root'] + objectPathList + ['index']
-
+    
+    if getattr(cpg, "debug", None):
+        print "Attempting to map path: %s" % path
+        print "    objectPathList: %s" % objectPathList
+    
     # Try successive objects... (and also keep the remaining object list)
     objCache = {}
     isFirst = True
@@ -455,18 +479,21 @@ def mapPathToObject(path = None):
         if isFirst:
             isFirst = False
             isSecond = True
-
+    
     # Check results of traversal
     if not foundIt:
-        raise cperror.NotFound (path)# We didn't find anything
-
+        # We didn't find anything
+        raise cperror.NotFound(path)
+    
     if isFirst:
         # We found the extra ".index"
         # Check if the original path had a trailing slash (otherwise, do
         #   a redirect)
         if cpg.request.path[-1] != '/':
             newUrl = cpg.request.path + '/'
-            if cpg.request.queryString: newUrl += cpg.request.queryString
+            if cpg.request.queryString:
+                newUrl += cpg.request.queryString
             raise IndexRedirect(newUrl)
-
+    
     return candidate, objectPathList, virtualPathList
+

@@ -77,7 +77,11 @@ cpg.root.dir1 = Dir1()
 cpg.root.dir1.dir2 = Dir2()
 cpg.root.dir1.dir2.dir3 = Dir3()
 cpg.root.dir1.dir2.dir3.dir4 = Dir4()
-cpg.config.update(file = 'testsite.cfg')
+cpg.config.update({
+    '/': {
+        'server.socketPort': 8000,
+    }
+})
 cpg.server.start()
 """
 
@@ -89,11 +93,11 @@ testList = [
     ("/other", "cpg.response.body == 'other'"),
     ("/notExposed", '''cpg.response.body == "default:('notExposed',)"'''),
     ("/dir1/dir2/", "cpg.response.body == 'index for dir2, path is:/dir1/dir2/'"),
-    ("/dir1/dir2", "cpg.response.headerMap['Status'] == 302" +
-        " and cpg.response.headerMap['Location'] == 'http://127.0.0.1/dir1/dir2/'"),
+    ("/dir1/dir2", "cpg.response.status == '302 Found'" +
+        " and cpg.response.headerMap['Location'] == 'http://127.0.0.1:8000/dir1/dir2/'"),
     ("/dir1/dir2/dir3/dir4/index", '''cpg.response.body == "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')"'''),
-    ("/redirect", "cpg.response.headerMap['Status'] == 302" +
-        " and cpg.response.headerMap['Location'] == 'http://127.0.0.1/dir1/'"),
+    ("/redirect", "cpg.response.status == '302 Found'" +
+        " and cpg.response.headerMap['Location'] == 'http://127.0.0.1:8000/dir1/'"),
 ]
 
 def test(infoMap, failedList, skippedList):
