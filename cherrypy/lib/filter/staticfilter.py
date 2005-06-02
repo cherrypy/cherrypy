@@ -33,29 +33,21 @@ from basefilter import BaseFilter
 class StaticFilter(BaseFilter):
     """Filter that handles static content."""
     
-    def onStartResource(self):
+    def beforeMain(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg, _cphttptools, cperror
         from cherrypy import cpg, _cphttptools, cperror
-        cpg.threadData.staticFilterOn = p = cpg.config.get('staticFilter.on', False)
-        cpg.threadData.staticFilterFile = cpg.config.get('staticFilter.file')
-        cpg.threadData.staticFilterDir = cpg.config.get('staticFilter.dir')
-        if cpg.threadData.staticFilterDir:
-            cpg.threadData.staticFilterConfigSection = \
-                cpg.config.get('staticFilter.dir', returnSection = True)
-    
-    def beforeMain(self):
-        if not cpg.threadData.staticFilterOn:
+        
+        if not cpg.config.get('staticFilter.on', False):
             return
         
-        if cpg.threadData.staticFilterFile:
-            filename = cpg.threadData.staticFilterFile
-        else:
-            section = cpg.threadData.staticFilterConfigSection
+        filename = cpg.config.get('staticFilter.file')
+        if not filename:
+            staticDir = cpg.config.get('staticFilter.dir')
+            section = cpg.config.get('staticFilter.dir', returnSection=True)
             extraPath = cpg.request.path[len(section) + 1:]
-            filename = os.path.join(cpg.threadData.staticFilterDir,
-                extraPath)
+            filename = os.path.join(staticDir, extraPath)
         
         # Serve filename
         try:

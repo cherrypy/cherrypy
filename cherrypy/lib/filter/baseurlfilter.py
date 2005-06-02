@@ -34,21 +34,17 @@ class BaseUrlFilter(BaseFilter):
     Useful when running a CP server behind Apache.
     """
     
-    def onStartResource(self):
+    def beforeRequestBody(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.baseUrlFilterOn = cpg.config.get('baseUrlFilter.on', False)
-        cpg.threadData.baseUrlFilterBaseUrl = cpg.config.get('baseUrlFilter.baseUrl', 'http://localhost')
-        cpg.threadData.baseUrlFilterUseXForwardedHost = cpg.config.get('baseUrlFilter.useXForwardedHost', True)
-    
-    def beforeRequestBody(self):
-        if not cpg.threadData.baseUrlFilterOn:
+        
+        if not cpg.config.get('baseUrlFilter.on', False):
             return
         
-        newBaseUrl = cpg.threadData.baseUrlFilterBaseUrl
-        if cpg.threadData.baseUrlFilterUseXForwardedHost:
+        newBaseUrl = cpg.config.get('baseUrlFilter.baseUrl', 'http://localhost')
+        if cpg.config.get('baseUrlFilter.useXForwardedHost', True):
             newBaseUrl = cpg.request.headerMap.get("X-Forwarded-Host", newBaseUrl)
         
         if newBaseUrl.find("://") == -1:

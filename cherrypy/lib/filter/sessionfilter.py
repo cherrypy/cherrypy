@@ -28,18 +28,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from basefilter import BaseFilter
 import random, sha, string, time
+alphanum = string.letters + string.digits
 
 
 class SessionFilter(BaseFilter):
     
-    def onStartResource(self):
+    def beforeMain(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg, _cputil
         from cherrypy import cpg, _cputil
         cpg.threadData.sessionFilterOn = bool(cpg.config.get('session.storageType'))
-    
-    def beforeMain(self):
+        
         if cpg.threadData.sessionFilterOn:
             cleanupSessionData()
             if not cpg.request.isStatic:
@@ -86,9 +86,7 @@ def getSessionData():
     cpg.response.simpleCookie[cookieName]['version'] = 1
 
 def generateSessionId():
-    s = ''
-    for i in xrange(50):
-        s += random.choice(string.letters + string.digits)
+    s = ''.join([random.choice(alphanum) for i in xrange(50)])
     s += '%s' % time.time()
     return sha.sha(s).hexdigest()
 

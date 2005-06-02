@@ -31,24 +31,20 @@ from basefilter import BaseFilter
 class EncodingFilter(BaseFilter):
     """Filter that automatically encodes the response."""
     
-    def onStartResource(self):
+    def beforeFinalize(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.encodingFilterOn = cpg.config.get('encodingFilter.on', False)
-        cpg.threadData.encodingFilterEncoding = cpg.config.get('encodingFilter.encoding', 'utf-8')
-        cpg.threadData.encodingFilterMimeTypeList = cpg.config.get('encodingFilter.mimeTypeList', ['text/html'])
-    
-    def beforeFinalize(self):
-        if not cpg.threadData.encodingFilterOn:
+        
+        if not cpg.config.get('encodingFilter.on', False):
             return
         
         contentType = cpg.response.headerMap.get("Content-Type")
         if contentType:
             ctlist = contentType.split(';')[0]
-            if (ctlist in cpg.threadData.encodingFilterMimeTypeList):
-                enc = cpg.threadData.encodingFilterEncoding
+            if (ctlist in cpg.config.get('encodingFilter.mimeTypeList', ['text/html'])):
+                enc = cpg.config.get('encodingFilter.encoding', 'utf-8')
                 
                 # Add "charset=..." to response Content-Type header
                 if contentType and 'charset' not in contentType:

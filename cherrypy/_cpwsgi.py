@@ -206,6 +206,17 @@ class WSGIRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.headers_sent = True
         self.wfile.write(data)
     
+    def send_response(self, code, message=None):
+        self.log_request(code)
+        if message is None:
+            if code in self.responses:
+                message = self.responses[code][0]
+            else:
+                message = ''
+        if self.request_version != 'HTTP/0.9':
+            self.wfile.write("%s %d %s\r\n" %
+                             (self.protocol_version, code, message))
+    
     def handleError(self, exc):
         self.close_connection = 1
         msg = _cphttptools.formatExc(exc)

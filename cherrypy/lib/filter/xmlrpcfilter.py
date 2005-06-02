@@ -124,13 +124,6 @@ class XmlRpcFilter(BaseFilter):
           (marshalled) data.
     """
     
-    def onStartResource(self):
-        # We have to dynamically import cpg because Python can't handle
-        #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
-        cpg.threadData.xmlRpcFilterOn = cpg.config.get('xmlRpcFilter.on', False)
-    
     def testValidityOfRequest(self):
         # test if the content-length was sent
         result = int(cpg.request.headerMap.get('Content-Length',0)) > 0
@@ -140,6 +133,12 @@ class XmlRpcFilter(BaseFilter):
     
     def beforeRequestBody(self):
         """ Called after the request header has been read/parsed"""
+        # We have to dynamically import cpg because Python can't handle
+        #   circular module imports :-(
+        global cpg
+        from cherrypy import cpg
+        cpg.threadData.xmlRpcFilterOn = cpg.config.get('xmlRpcFilter.on', False)
+        
         if not cpg.threadData.xmlRpcFilterOn:
             return True
         

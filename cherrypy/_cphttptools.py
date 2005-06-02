@@ -97,27 +97,26 @@ class Request(object):
     
     def run(self):
         try:
-            self.processRequestHeaders()
-            
             try:
-                # onStart has to be after processRequestHeaders
-                # so that "path", for example, gets set.
                 applyFilters('onStartResource')
                 
-                applyFilters('beforeRequestBody')
-                if cpg.request.processRequestBody:
-                    self.processRequestBody()
-                
-                applyFilters('beforeMain')
-                if cpg.response.body is None:
-                    main()
-                
-                applyFilters('beforeFinalize')
-                finalize()
+                try:
+                    self.processRequestHeaders()
+                    
+                    applyFilters('beforeRequestBody')
+                    if cpg.request.processRequestBody:
+                        self.processRequestBody()
+                    
+                    applyFilters('beforeMain')
+                    if cpg.response.body is None:
+                        main()
+                    
+                    applyFilters('beforeFinalize')
+                    finalize()
+                except basefilter.RequestHandled:
+                    pass
             finally:
                 applyFilters('onEndResource')
-        except basefilter.RequestHandled:
-            pass
         except:
             handleError(sys.exc_info())
     

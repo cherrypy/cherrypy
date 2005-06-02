@@ -125,20 +125,17 @@ class CacheFilter(basefilter.BaseFilter):
         self.maxsize = maxsize
         self.maxobjects = maxobjects
     
-    def onStartResource(self):
+    def beforeMain(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
-        cpg.threadData.cacheFilterOn = cpg.config.get('cacheFilter.on', False)
-        if cpg.threadData.cacheFilterOn and not hasattr(cpg, '_cache'):
+        if not cpg.config.get('cacheFilter.on', False):
+            return
+        
+        if not hasattr(cpg, '_cache'):
             cpg._cache = self.CacheClass(self.key, self.delay,
                 self.maxobjsize, self.maxsize, self.maxobjects)
-    
-    def beforeMain(self):
-        """Checks if the page is already in the cache"""
-        if not cpg.threadData.cacheFilterOn:
-            return
         
         cacheData = cpg._cache.get()
         if cacheData:
@@ -161,7 +158,7 @@ class CacheFilter(basefilter.BaseFilter):
     
     def onEndResource(self):
         """Close & fix the cache entry after content was fully written"""
-        if not cpg.threadData.cacheFilterOn:
+        if not cpg.config.get('cacheFilter.on', False):
             return
         
         if cpg.threadData.cacheable:

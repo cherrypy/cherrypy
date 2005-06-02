@@ -32,51 +32,46 @@ from basefilter import BaseFilter
 class LogDebugInfoFilter(BaseFilter):
     """Filter that adds debug information to the page"""
     
-    def onStartResource(self):
+    def beforeMain(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
+        cpg.request.startBuilTime = time.time()
+    
+    def beforeFinalize(self):
         if cpg.config.get('server.environment') == 'dev':
             # In "dev" environment, log everything by default
             defaultOn = True
         else:
             defaultOn = False
         
-        cpg.threadData.logDebugInfoFilterOn = cpg.config.get('logDebugInfoFilter.on', defaultOn)
-        cpg.threadData.logDebugInfoFilterMimeTypeList = cpg.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])
-        cpg.threadData.logDebugInfoFilterLogBuildTime = cpg.config.get('logDebugInfoFilter.logBuildTime', True)
-        cpg.threadData.logDebugInfoFilterLogPageSize = cpg.config.get('logDebugInfoFilter.logPageSize', True)
-        cpg.threadData.logDebugInfoFilterLogSessionSize = cpg.config.get('logDebugInfoFilter.logSessionSize', True)
-        cpg.threadData.logDebugInfoFilterLogAsComment = cpg.config.get('logDebugInfoFilter.logAsComment', False)
-    
-    def beforeMain(self):
-        if not cpg.threadData.logDebugInfoFilterOn:
+        if not cpg.config.get('logDebugInfoFilter.on', defaultOn):
             return
         
-        cpg.request.startBuilTime = time.time()
-    
-    def beforeFinalize(self):
-        if not cpg.threadData.logDebugInfoFilterOn:
-            return
-        
+        mimelist = cpg.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])
         ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
-        if ct in cpg.threadData.logDebugInfoFilterMimeTypeList:
+        if ct in mimelist:
             body = ''.join(cpg.response.body)
             debuginfo = '\n'
-            if cpg.threadData.logDebugInfoFilterLogAsComment:
+            
+            logAsComment = cpg.config.get('logDebugInfoFilter.logAsComment', False)
+            if logAsComment:
                 debuginfo += '<!-- '
             else:
                 debuginfo += "<br/><br/>"
             logList = []
-            if cpg.threadData.logDebugInfoFilterLogBuildTime:
+            
+            if cpg.config.get('logDebugInfoFilter.logBuildTime', True):
                 logList.append("Build time: %.03fs" % (
                     time.time() - cpg.request.startBuilTime))
-            if cpg.threadData.logDebugInfoFilterLogPageSize:
+            
+            if cpg.config.get('logDebugInfoFilter.logPageSize', True):
                 logList.append("Page size: %.02fKB" % (
                     len(body)/float(1024)))
-            if cpg.threadData.logDebugInfoFilterLogSessionSize and \
-                    cpg.config.get('session.storageType'):
+            
+            if (cpg.config.get('logDebugInfoFilter.logSessionSize', True)
+                and cpg.config.get('session.storageType')):
                 # Pickle session data to get its size
                 try:
                     f = StringIO.StringIO()
@@ -89,7 +84,7 @@ class LogDebugInfoFilter(BaseFilter):
                     logList.append("Session data size: Unable to pickle session")
             
             debuginfo += ', '.join(logList)
-            if cpg.threadData.logDebugInfoFilterLogAsComment:
+            if logAsComment:
                 debuginfo += '-->'
             
             cpg.response.body = [body, debuginfo]

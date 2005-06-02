@@ -111,10 +111,11 @@ class Error(Test):
         raise ValueError
     
     def page_http_1_1(self):
-        cpg.response.headerMap["Content-Length"] = 5
+        cpg.response.headerMap["Content-Length"] = 39
         def inner():
             yield "hello"
             raise ValueError
+            yield "oops"
         return inner()
 
 cpg.config.update({
