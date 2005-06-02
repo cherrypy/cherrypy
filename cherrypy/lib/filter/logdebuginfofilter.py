@@ -32,11 +32,13 @@ from basefilter import BaseFilter
 class LogDebugInfoFilter(BaseFilter):
     """Filter that adds debug information to the page"""
     
-    def beforeMain(self):
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
+    
+    def beforeMain(self):
         cpg.request.startBuilTime = time.time()
     
     def beforeFinalize(self):

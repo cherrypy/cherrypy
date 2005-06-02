@@ -125,11 +125,13 @@ class CacheFilter(basefilter.BaseFilter):
         self.maxsize = maxsize
         self.maxobjects = maxobjects
     
-    def beforeMain(self):
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
+    
+    def beforeMain(self):
         if not cpg.config.get('cacheFilter.on', False):
             return
         

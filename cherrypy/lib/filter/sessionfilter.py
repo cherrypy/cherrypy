@@ -33,13 +33,15 @@ alphanum = string.letters + string.digits
 
 class SessionFilter(BaseFilter):
     
-    def beforeMain(self):
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg, _cputil
         from cherrypy import cpg, _cputil
+        cpg.threadData.sessionFilterOn = False
+    
+    def beforeMain(self):
         cpg.threadData.sessionFilterOn = bool(cpg.config.get('session.storageType'))
-        
         if cpg.threadData.sessionFilterOn:
             cleanupSessionData()
             if not cpg.request.isStatic:

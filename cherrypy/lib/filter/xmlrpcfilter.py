@@ -131,14 +131,15 @@ class XmlRpcFilter(BaseFilter):
         result = result and ct in ['text/xml']
         return result
     
-    def beforeRequestBody(self):
-        """ Called after the request header has been read/parsed"""
+    def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
+    
+    def beforeRequestBody(self):
+        """ Called after the request header has been read/parsed"""
         cpg.threadData.xmlRpcFilterOn = cpg.config.get('xmlRpcFilter.on', False)
-        
         if not cpg.threadData.xmlRpcFilterOn:
             return True
         
