@@ -101,12 +101,12 @@ def run_server(serverClass=None):
     
     # Instantiate the server.
     if serverClass is None:
-        confclass = cpg.config.get("server.class")
-        if confclass:
-            serverClass = attributes(confclass)
-        else:
-            import _cpwsgi
-            serverClass = _cpwsgi.WSGIServer
+        serverClass = cpg.config.get("server.class", None)
+    if serverClass and isinstance(serverClass, basestring):
+        serverClass = attributes(serverClass)
+    if serverClass is None:
+        import _cpwsgi
+        serverClass = _cpwsgi.WSGIServer
     
     cpg._httpserver = serverClass()
     

@@ -111,7 +111,7 @@ def checkResult(testName, infoMap, serverMode, cpg, rule, failedList):
          repr(cpg.response.headerMap), repr(cpg.response.body)))
         return False
 
-def prepareCode(code):
+def prepareCode(code, serverClass):
     f = open('testsite.py', 'w')
     
     includePathsToSysPath = """
@@ -131,51 +131,55 @@ def f(*a, **kw): return ""
 cpg.root._cpLogMessage = f
 '''
     newcode = code.replace('cpg.config.update', beforeStart + 'cpg.config.update')
+    if serverClass:
+        serverClass = "serverClass='%s'" % serverClass
     newcode = newcode.replace('cpg.server.start(',
                               'cpg.config.configMap["/"]["server.logToScreen"] = False\n'
-                              'cpg.server.start(')
+                              'cpg.server.start(' + serverClass)
     f.write(newcode)
     
     f.close()
 
 def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig = '', extraRequestHeader = []):
     response = None
-    prepareCode(code)
     
     # Try it in all 4 modes (regular, threadPooling x normal, WSGI)
-    native = 'server.class = "cherrypy._cphttpserver.embedded_server"'
-    modeList = [('r', native),
-                ('tp', native + '\nserver.threadPool = 3'),
-                ('r_wsgi', ""),
-                ('tp_wsgi', 'server.threadPool = 3')]
-    for mode, modeConfig in modeList:
-        f = open("testsite.cfg", "w")
-        f.write(extraConfig)
-        f.write('''
+    for name, serverClass in [("native", "cherrypy._cphttpserver.embedded_server"),
+                              ("wsgi", "")]:
+        sys.stdout.write(name + ": ")
+        prepareCode(code, serverClass)
+        for mode, modeConfig in [('r', ""), ('tp', 'server.threadPool = 3')]:
+            sys.stdout.write(mode)
+            sys.stdout.flush()
+            f = open("testsite.cfg", "w")
+            f.write(extraConfig)
+            f.write('''
 [/]
 session.storageType = "ram"
 server.socketPort = 8000
 server.environment = "production"
 server.logToScreen = False
 ''')
-        f.write(modeConfig)
-        f.close()
+            f.write(modeConfig + "\n")
+            f.close()
 
-        pid = startServer(infoMap)
-        passed=True
-        cookies=None
-        for url, rule in testList:
-            cpg, cookies = getPage(url, cookies, extraRequestHeader)
-            if not checkResult(testName, infoMap, mode, cpg, rule, failedList):
-                passed = 0
-                print "*** FAILED ***"
+            pid = startServer(infoMap)
+            passed=True
+            cookies=None
+            for url, rule in testList:
+                sys.stdout.write(".")
+                sys.stdout.flush()
+                cpg, cookies = getPage(url, cookies, extraRequestHeader)
+                if not checkResult(testName, infoMap, mode, cpg, rule, failedList):
+                    passed = 0
+                    print "*** FAILED ***"
+                    break
+            if passed:
+                sys.stdout.write("ok ")
+                sys.stdout.flush()
+            shutdownServer(pid, mode)
+            if not passed:
                 break
-        shutdownServer(pid, mode)
-        if passed:
-            print mode + "...",
-            sys.stdout.flush()
-        else:
-            break
     if passed:
         print "passed"
     sys.stdout.flush()

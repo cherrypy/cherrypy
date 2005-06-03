@@ -31,7 +31,7 @@ A high-speed, production ready, thread pooled, generic WSGI server.
 """
 
 import socket
-import thread
+import threading
 import Queue
 import mimetools # todo: use email
 import sys
@@ -125,37 +125,50 @@ class HTTPRequest(object):
         self.wfile.close()
         self.socket.close()
 
-def worker_thread(server):
-    while True:
-        try:
-            request = server.requests.get()
-            request.parse_request()
-            response = server.wsgi_app(request.environ, request.start_response)
-            for line in response: # write the response into the buffer
-                request.write(line)
-            request.terminate()
-        except:
-            server.handle_exception()
+
+class WorkerThread(threading.Thread):
+    
+    def __init__(self, server):
+        self.server = server
+        threading.Thread.__init__(self)
+    
+    def run(self):
+        while self.server._running:
+            try:
+                request = self.server.requests.get(block=False, timeout=1)
+                request.parse_request()
+                response = self.server.wsgi_app(request.environ, request.start_response)
+                for line in response: # write the response into the buffer
+                    request.write(line)
+                request.terminate()
+            except Queue.Empty:
+                pass
+            except (KeyboardInterrupt, SystemExit):
+                self.server.stop(callingThread=self)
+                raise
+            except:
+                self.server.handle_exception()
+
 
 class CherryPyWSGIServer(object):
-    version = "CherryPyWSGIServer/1.0" # none of this 0.1 uncertainty business
-    def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None, stderr=sys.stderr, bufsize=-1, max=-1):
+    version = "CherryPyWSGIServer/1.01" # none of this 0.1 uncertainty business
+    def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
+                 stderr=sys.stderr, bufsize=-1, max=-1):
         '''
         be careful w/ max
         '''
         self.requests = Queue.Queue(max)
         self.wsgi_app = wsgi_app
         self.bind_addr = bind_addr
-        self.numthreads = numthreads
+        self.numthreads = numthreads or 1
         if server_name:
             self.server_name = server_name
         else:
             self.server_name = socket.gethostname()
         self.stderr = stderr
         self.bufsize = bufsize
-    def create_thread_pool(self):
-        for i in xrange(0, self.numthreads):
-            thread.start_new_thread(worker_thread, (self,))
+        self._workerThreads = []
+    
     def start(self):
         '''
         run the server forever
@@ -163,15 +176,40 @@ class CherryPyWSGIServer(object):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         self.socket.bind(self.bind_addr)
         self.socket.listen(5)
-        self.create_thread_pool()
-        while True:
-            self.tick()
+        
+        self._running = True
+        
+        # Create worker threads
+        for i in xrange(self.numthreads):
+            self._workerThreads.append(WorkerThread(self))
+        for worker in self._workerThreads:
+            worker.start()
+        
+        try:
+            while self._running:
+                self.tick()
+        except (KeyboardInterrupt, SystemExit):
+            self.stop()
+            raise
+    
+    def stop(self, callingThread=None):
+        """Gracefully shutdown a server that is serving forever."""
+        self._running = False
+        
+        # Must shut down threads here so the code that calls
+        # this method can know when all threads are stopped.
+        for worker in self._workerThreads:
+            if worker is not callingThread:
+                worker.join()
+        self._workerThreads = []
+    
     def tick(self):
         s, addr = self.socket.accept()
         request = HTTPRequest(s, addr, self)
         self.requests.put(request)
         # optimized version follows
         #self.requests.put(HTTPRequest(*self.socket.accept()))
+    
     def handle_exception(self):
         traceback.print_exc()
         
