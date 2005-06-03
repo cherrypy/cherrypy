@@ -50,10 +50,11 @@ class HTTPRequest(object):
         self.status = None
         self.outheaders = None
         self.outheaderkeys = None
-        self.buffer = StringIO.StringIO()
         self.rfile = self.socket.makefile("r", self.server.bufsize)
         self.wfile = self.socket.makefile("w", self.server.bufsize)
+        self.sent_headers = False
     def parse_request(self):
+        self.sent_headers = False
         self.environ = {}
         self.environ["wsgi.version"] = (1,0)
         self.environ["wsgi.url_scheme"] = "http"
@@ -88,7 +89,6 @@ class HTTPRequest(object):
             self.environ[envname] = v
         self.ready = True
     def start_response(self, status, headers, exc_info = None):
-        # TODO: defaults
         if self.started_response:
             if not exc_info:
                 assert False, "Already started response"
@@ -101,10 +101,16 @@ class HTTPRequest(object):
         self.status = status
         self.outheaders = headers
         self.outheaderkeys = [key.lower() for (key,value) in self.outheaders]
-        return self.buffer.write
-    def do_output(self):
+        return self.write
+    def write(self, d):
+        if not self.sent_headers:
+            self.sent_headers = True
+            self.send_headers()
+        self.wfile.write(d)
+        self.wfile.flush()
+    def send_headers(self):
         if "content-length" not in self.outheaderkeys:
-            self.outheaders.append(("Content-length", str(self.buffer.tell())))
+            self.close_at_end = True
         if "date" not in self.outheaderkeys:
             self.outheaders.append(("Date", time.ctime()))
         if "server" not in self.outheaderkeys:
@@ -112,7 +118,7 @@ class HTTPRequest(object):
         self.wfile.write(self.environ["SERVER_PROTOCOL"] + " " + self.status + "\r\n")
         for (k,v) in self.outheaders:
             self.wfile.write(k + ": " + v + "\r\n")
-        self.wfile.write("\r\n" + self.buffer.getvalue())
+        self.wfile.write("\r\n")
         self.wfile.flush()
     def terminate(self):
         self.rfile.close()
@@ -124,14 +130,12 @@ def worker_thread(server):
         try:
             request = server.requests.get()
             request.parse_request()
-            # todo: handle exceptions in the next block
             response = server.wsgi_app(request.environ, request.start_response)
             for line in response: # write the response into the buffer
-                request.buffer.write(line)
-            request.do_output()
+                request.write(line)
             request.terminate()
         except:
-            self.server.handle_exception()
+            server.handle_exception()
 
 class CherryPyWSGIServer(object):
     version = "CherryPyWSGIServer/1.0" # none of this 0.1 uncertainty business
