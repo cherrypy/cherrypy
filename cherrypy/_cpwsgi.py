@@ -33,7 +33,7 @@ A WSGI application and server (see PEP 333).
 import threading
 import os, socket, sys, traceback, urllib
 import SocketServer, BaseHTTPServer
-import cpg, _cpserver, _cputil, _cphttptools
+import cpg, _cpserver, _cputil, _cphttptools, _cpwsgiserver
 
 
 def requestLine(environ):
@@ -225,6 +225,11 @@ class WSGIRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.write(body)
 
 
-def WSGIServer():
-    import _cphttpserver
-    return _cphttpserver.embedded_server(WSGIRequestHandler)
+class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
+    def __init__(self):
+        _cpwsgiserver.CherryPyWSGIServer.__init__(self,
+                                                  (cpg.config.get("server.socketHost"),
+                                                   cpg.config.get("server.socketPort")),
+                                                  wsgiApp,
+                                                  cpg.config.get("server.threadPool"),
+                                                  cpg.config.get("server.socketHost"))
