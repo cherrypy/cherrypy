@@ -134,17 +134,14 @@ class WorkerThread(threading.Thread):
     
     def run(self):
         while self.server._running:
-            try:
-                request = self.server.requests.get(block=False, timeout=1)
-            except Queue.Empty:
+            request = self.server.requests.get() #(block=False, timeout=1)
+            if request is None:
                 continue
-            
             try:
                 try:
                     request.parse_request()
                     response = self.server.wsgi_app(request.environ,
                                                     request.start_response)
-                    # write the response into the buffer
                     for line in response:
                         request.write(line)
                 except (KeyboardInterrupt, SystemExit):
@@ -201,11 +198,15 @@ class CherryPyWSGIServer(object):
     def stop(self, callingThread=None):
         """Gracefully shutdown a server that is serving forever."""
         self._running = False
-        
+
+        # insert a bunch of None requests that signal
+        # the threads to shut down
+        for i in range(0, len(self._workerThreads)):
+            self.requests.put(None)
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
         for worker in self._workerThreads:
-            if worker is not callingThread:
+            if worker is not callingThread and worker is not threading.currentThread():
                 worker.join()
         self._workerThreads = []
     
