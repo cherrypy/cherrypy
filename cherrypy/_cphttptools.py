@@ -237,7 +237,7 @@ def handleError(exc):
         # Bypass them all.
         body = dbltrace % (formatExc(exc), formatExc())
         cpg.response.status, cpg.response.headers, body = bareError(body)
-        cpg.response.body = [body]
+        cpg.response.body = body
 
 def formatExc(exc=None):
     """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
@@ -263,7 +263,7 @@ def bareError(extrabody=None):
     return ("500 Internal Server Error",
             [('Content-Type', 'text/plain'),
              ('Content-Length', str(len(body)))],
-            body)
+            [body])
 
 
 

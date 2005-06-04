@@ -39,6 +39,8 @@ import cpg, _cpserver, _cputil, _cphttptools, _cpwsgiserver
 def requestLine(environ):
     # Rebuild first line of the request
     resource = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
+    if not resource.startswith("/"):
+        resource = "/" + resource
     qString = environ.get('QUERY_STRING')
     if qString:
         resource += '?' + qString
@@ -81,12 +83,12 @@ def wsgiApp(environ, start_response):
         cpg.request.method = environ['REQUEST_METHOD']
         cpg.request.multithread = environ['wsgi.multithread']
         cpg.request.multiprocess = environ['wsgi.multiprocess']
-        r = _cpserver.request(environ['REMOTE_ADDR'],
-                              environ['REMOTE_ADDR'],
-                              requestLine(environ),
-                              translate_headers(environ),
-                              environ['wsgi.input'],
-                              )
+        _cpserver.request(environ['REMOTE_ADDR'],
+                          environ['REMOTE_ADDR'],
+                          requestLine(environ),
+                          translate_headers(environ),
+                          environ['wsgi.input'],
+                          )
         start_response(cpg.response.status, cpg.response.headers)
         for chunk in cpg.response.body:
             # WSGI requires all data to be of type "str". This coercion should
@@ -97,7 +99,10 @@ def wsgiApp(environ, start_response):
         tb = _cphttptools.formatExc()
         _cputil.getSpecialFunction('_cpLogMessage')(tb)
         s, h, b = _cphttptools.bareError(tb)
-        start_response(s, h, sys.exc_info())
+        # CherryPy test suite expects bareError body to be output,
+        # so don't call start_response (which, according to PEP 333,
+        # may raise its own error at that point).
+##        start_response(s, h, sys.exc_info())
         for chunk in b:
             yield str(chunk)
 

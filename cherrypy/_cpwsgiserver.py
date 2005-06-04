@@ -136,18 +136,24 @@ class WorkerThread(threading.Thread):
         while self.server._running:
             try:
                 request = self.server.requests.get(block=False, timeout=1)
-                request.parse_request()
-                response = self.server.wsgi_app(request.environ, request.start_response)
-                for line in response: # write the response into the buffer
-                    request.write(line)
-                request.terminate()
             except Queue.Empty:
-                pass
-            except (KeyboardInterrupt, SystemExit):
-                self.server.stop(callingThread=self)
-                raise
-            except:
-                self.server.handle_exception()
+                continue
+            
+            try:
+                try:
+                    request.parse_request()
+                    response = self.server.wsgi_app(request.environ,
+                                                    request.start_response)
+                    # write the response into the buffer
+                    for line in response:
+                        request.write(line)
+                except (KeyboardInterrupt, SystemExit):
+                    self.server.stop(callingThread=self)
+                    raise
+                except:
+                    self.server.handle_exception()
+            finally:
+                request.terminate()
 
 
 class CherryPyWSGIServer(object):

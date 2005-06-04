@@ -72,11 +72,11 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def doMethod(self):
         cpg.request.multithread = cpg.config.get("server.threadPool") > 1
         cpg.request.multiprocess = False
-        r = _cpserver.request(self.client_address[0],
-                              self.address_string(),
-                              self.raw_requestline,
-                              self._headerlist(),
-                              self.rfile)
+        _cpserver.request(self.client_address[0],
+                          self.address_string(),
+                          self.raw_requestline,
+                          self._headerlist(),
+                          self.rfile)
         wfile = self.wfile
         wfile.write("%s %s\r\n" % (self.protocol_version, cpg.response.status))
         
@@ -88,7 +88,9 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             for chunk in cpg.response.body:
                 wfile.write(chunk)
         except:
-            wfile.write(">> Error in HTTP server")
+            s, h, b = _cphttptools.bareError()
+            for chunk in b:
+                wfile.write(chunk)
     
     def do_GET(self):
         """Serve a GET request."""

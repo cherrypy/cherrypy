@@ -145,7 +145,8 @@ def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig =
     
     # Try it in all 4 modes (regular, threadPooling x normal, WSGI)
     for name, serverClass in [("native", "cherrypy._cphttpserver.embedded_server"),
-                              ("wsgi", "")]:
+                              ("wsgi", ""),
+                              ]:
         sys.stdout.write(name + ": ")
         prepareCode(code, serverClass)
         for mode, modeConfig in [('r', ""), ('tp', 'server.threadPool = 3')]:
