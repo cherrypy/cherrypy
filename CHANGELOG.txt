@@ -1,3 +1,6 @@
+2005-06-02:
+    * New WSGI server. (Peter)
+
 2005-06-01:
     * Core (_cphttptools) was completely rewritten to use iterators throughout. (fumanchu)
     * HTTP server has been decoupled from _cpserver. (fumanchu)
