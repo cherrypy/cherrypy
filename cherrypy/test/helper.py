@@ -44,9 +44,11 @@ class EmptyClass:
 def getPage(url, cookies, extraRequestHeader = []):
     # The trying 10 times is simply in case of socket errors.
     # Normal case--it should run once.
-    for trial in xrange(10):
+    trial = 0
+    while trial < 10:
         try:
             conn = httplib.HTTPConnection('127.0.0.1:%s' % PORT)
+##            conn.set_debuglevel(1)
             conn.putrequest("GET", url)
 ##            conn.putheader("Host", "127.0.0.1")
             
@@ -75,10 +77,13 @@ def getPage(url, cookies, extraRequestHeader = []):
             cpg.response.body = response.read()
             
             conn.close()
-            break
+            return cpg, cookies
         except socket.error:
-            time.sleep(0.5)
-    return cpg, cookies
+            trial += 1
+            if trial == 10:
+                raise
+            else:
+                time.sleep(0.5)
 
 def shutdownServer(mode):
     urllib.urlopen("http://127.0.0.1:%s/shutdown/all" % PORT)
@@ -129,6 +134,7 @@ class Shutdown:
 cpg.root.shutdown = Shutdown()
 def f(*a, **kw): return ""
 cpg.root._cpLogMessage = f
+cpg.config.update(file = 'testsite.cfg')
 '''
     newcode = code.replace('cpg.config.update', beforeStart + 'cpg.config.update')
     if serverClass:
@@ -187,7 +193,7 @@ server.logToScreen = False
                 cpg, cookies = getPage(url, cookies, extraRequestHeader)
                 if not checkResult(testName, infoMap, mode, cpg, rule, failedList):
                     passed = 0
-                    print "*** FAILED ***"
+                    print "*** FAILED ***",
                     break
             shutdownServer(mode)
             if passed:

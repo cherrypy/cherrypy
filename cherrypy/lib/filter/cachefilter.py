@@ -130,6 +130,7 @@ class CacheFilter(basefilter.BaseFilter):
         #   circular module imports :-(
         global cpg
         from cherrypy import cpg
+        cpg.threadData.cacheable = True
     
     def beforeMain(self):
         if not cpg.config.get('cacheFilter.on', False):
@@ -140,6 +141,7 @@ class CacheFilter(basefilter.BaseFilter):
                 self.maxobjsize, self.maxsize, self.maxobjects)
         
         cacheData = cpg._cache.get()
+        cpg.threadData.cacheable = not cacheData
         if cacheData:
             expirationTime, lastModified, obj = cacheData
             # found a hit! check the if-modified-since request header
@@ -155,8 +157,6 @@ class CacheFilter(basefilter.BaseFilter):
                 cpg.response.status, cpg.response.headers, body = obj
                 cpg.response.body = body
             raise basefilter.RequestHandled
-        else:
-            cpg.threadData.cacheable = True
     
     def onEndResource(self):
         """Close & fix the cache entry after content was fully written"""
