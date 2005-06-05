@@ -42,7 +42,7 @@ class LogDebugInfoFilter(BaseFilter):
         cpg.request.startBuilTime = time.time()
     
     def beforeFinalize(self):
-        if cpg.config.get('server.environment') == 'dev':
+        if cpg.config.get('server.environment') == 'development':
             # In "dev" environment, log everything by default
             defaultOn = True
         else:

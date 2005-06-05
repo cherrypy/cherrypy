@@ -52,7 +52,8 @@ class TidyFilter(BaseFilter):
         originalBody = ''.join(cpg.response.body)
         cpg.response.body = [originalBody]
         
-        ct = cpg.response.headerMap.get('Content-Type', '').split(';')[0]
+        fct = cpg.response.headerMap.get('Content-Type', '')
+        ct = fct.split(';')[0]
         if ct == 'text/html':
             tmpdir = cpg.config.get('tidyFilter.tmpDir')
             pageFile = os.path.join(tmpdir, 'page.html')
@@ -62,10 +63,10 @@ class TidyFilter(BaseFilter):
             f.write(originalBody)
             f.close()
             encoding = ''
-            i = ct.find('charset=')
+            i = fct.find('charset=')
             if i != -1:
                 encoding = fct[i+8:]
-            encoding = encoding.replace('utf-8', 'utf8')
+            encoding = encoding.replace('-', '')
             if encoding:
                 encoding = '-' + encoding
             
@@ -92,12 +93,12 @@ class TidyFilter(BaseFilter):
                         newErrList.append(err)
             
             if newErrList:
-                newBody = "Wrong HTML:<br>" + cgi.escape('\n'.join(newErrList)).replace('\n','<br>')
-                newBody += '<br><br>'
+                newBody = "Wrong HTML:<br />" + cgi.escape('\n'.join(newErrList)).replace('\n','<br />')
+                newBody += '<br /><br />'
                 i = 0
                 for line in originalBody.splitlines():
                     i += 1
-                    newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
+                    newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                 
                 cpg.response.body = [newBody]
 
@@ -105,7 +106,14 @@ class TidyFilter(BaseFilter):
                 # The HTML is OK, but is it valid XML
                 # Use elementtree to parse XML
                 from elementtree.ElementTree import parse
-                f = StringIO.StringIO(originalBody.replace('&nbsp;', 'NBSP'))
+                tagList = ['nbsp', 'quot']
+                for tag in tagList:
+                    originalBody = originalBody.replace(
+                        '&' + tag + ';', tag.upper())
+
+                if encoding:
+                    originalBody = """<?xml version="1.0" encoding="%s"?>""" % encoding[1:] + originalBody
+                f = StringIO.StringIO(originalBody)
                 try:
                     tree = parse(f)
                 except:
@@ -114,12 +122,12 @@ class TidyFilter(BaseFilter):
                     traceback.print_exc(file = bodyFile)
                     cpg.response.body = [bodyFile.getvalue()]
                     
-                    newBody = "Wrong XML:<br>" + cgi.escape(bodyFile.getvalue().replace('\n','<br>'))
-                    newBody += '<br><br>'
+                    newBody = "Wrong XML:<br />" + cgi.escape(bodyFile.getvalue().replace('\n','<br />'))
+                    newBody += '<br /><br />'
                     i = 0
                     for line in originalBody.splitlines():
                         i += 1
-                        newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br>'
+                        newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                     
                     cpg.response.body = [newBody]
 
