@@ -121,6 +121,7 @@ class Error(Test):
 cpg.config.update({
     '/': {
         'server.socketPort': 8000,
+        'server.environment': 'production',
     }
 })
 cpg.server.start()

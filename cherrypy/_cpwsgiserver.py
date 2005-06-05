@@ -35,7 +35,6 @@ import threading
 import Queue
 import mimetools # todo: use email
 import sys
-import StringIO
 import time
 import traceback
 
@@ -126,6 +125,8 @@ class HTTPRequest(object):
         self.socket.close()
 
 
+_SHUTDOWNREQUEST = None
+
 class WorkerThread(threading.Thread):
     
     def __init__(self, server):
@@ -134,9 +135,10 @@ class WorkerThread(threading.Thread):
     
     def run(self):
         while self.server._running:
-            request = self.server.requests.get() #(block=False, timeout=1)
-            if request is None:
-                continue
+            request = self.server.requests.get()
+            if request == _SHUTDOWNREQUEST:
+                return
+            
             try:
                 try:
                     request.parse_request()
@@ -144,11 +146,8 @@ class WorkerThread(threading.Thread):
                                                     request.start_response)
                     for line in response:
                         request.write(line)
-                except (KeyboardInterrupt, SystemExit):
-                    self.server.stop(callingThread=self)
-                    raise
                 except:
-                    self.server.handle_exception()
+                    traceback.print_exc()
             finally:
                 request.terminate()
 
@@ -176,8 +175,11 @@ class CherryPyWSGIServer(object):
         '''
         run the server forever
         '''
+        # We don't have to trap KeyboardInterrupt or SystemExit here,
+        # because _cpserver already does so, calling self.stop() for us.
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         self.socket.bind(self.bind_addr)
+        self.socket.settimeout(1)
         self.socket.listen(5)
         
         self._running = True
@@ -188,35 +190,35 @@ class CherryPyWSGIServer(object):
         for worker in self._workerThreads:
             worker.start()
         
-        try:
-            while self._running:
-                self.tick()
-        except (KeyboardInterrupt, SystemExit):
-            self.stop()
-            raise
+        while self._running:
+            self.tick()
     
-    def stop(self, callingThread=None):
+    def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         self._running = False
-
-        # insert a bunch of None requests that signal
-        # the threads to shut down
-        for i in range(0, len(self._workerThreads)):
-            self.requests.put(None)
+        
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
         for worker in self._workerThreads:
-            if worker is not callingThread and worker is not threading.currentThread():
+            self.requests.put(_SHUTDOWNREQUEST)
+        
+        current = threading.currentThread()
+        for worker in self._workerThreads:
+            if worker is not current:
                 worker.join()
         self._workerThreads = []
     
     def tick(self):
-        s, addr = self.socket.accept()
-        request = HTTPRequest(s, addr, self)
-        self.requests.put(request)
-        # optimized version follows
-        #self.requests.put(HTTPRequest(*self.socket.accept()))
-    
-    def handle_exception(self):
-        traceback.print_exc()
-        
+        try:
+            s, addr = self.socket.accept()
+            if hasattr(s, 'setblocking'):
+                s.setblocking(1)
+            request = HTTPRequest(s, addr, self)
+            self.requests.put(request)
+            # optimized version follows
+            #self.requests.put(HTTPRequest(*self.socket.accept()))
+        except socket.timeout:
+            # The only reason for the timeout in start() is so we can
+            # notice keyboard interrupts on Win32, which don't interrupt
+            # accept() by default
+            return

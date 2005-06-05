@@ -55,7 +55,7 @@ def start(initOnly=False, serverClass=None):
     
     _start(initOnly, serverClass)
 
-def start(initOnly=False, serverClass=None):
+def _start(initOnly=False, serverClass=None):
     """
         Main function. All it does is this:
             - output config options

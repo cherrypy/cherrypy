@@ -31,8 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import sys,os,os.path
 sys.path.insert(0,os.path.normpath(os.path.join(os.getcwd(),'../../')))
 if not os.path.exists(os.path.join(os.curdir,'buildInfoMap.py')):
-    print "Run the test form the test directory (cherrypy/test)from the cherrypy you wish to test."
-    print "In no python executables are found, change this file (test.py) near line 31"
+    print "Run the test from the test directory (cherrypy/test) from the cherrypy you wish to test."
+    print "If no python executables are found, change this file (test.py) near line 31"
     sys.exit(1)
 if len(sys.argv) == 2 and sys.argv[1] in ('-h', '--help'):
     print "Usage: unittest.py [testName+]"
@@ -50,17 +50,6 @@ if sys.platform=="win32":
 else:
     python2[3]['path']="python2.3"
     python2[4]['path']="python2.4"
-
-print "Checking that port 8000 is free...",
-try:
-    import socket
-    s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('127.0.0.1', 8000))
-    s.close()
-    print "\n### Error: port 8000 is busy. This port must be free to run this test script"
-    sys.exit(-1)
-except socket.error:
-    print "OK"
 
 print
 

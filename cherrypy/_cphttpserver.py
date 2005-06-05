@@ -145,7 +145,7 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
             # interrupts on Win32, which don't interrupt accept() by default
             return 1
         except (KeyboardInterrupt, SystemExit):
-            _cputil.getSpecialFunction('_cpLogMessage')("<Ctrl-C> hit: shutting down", "HTTP")
+            _cputil.getSpecialFunction('_cpLogMessage')("<Ctrl-C> hit: shutting down http server", "HTTP")
             self.shutdown()
     
     def serve_forever(self):
@@ -249,8 +249,10 @@ class PooledThreadServer(SocketServer.TCPServer):
         # this method can know when all threads are stopped.
         for worker in self._workerThreads:
             self._requestQueue.put(_SHUTDOWNREQUEST)
+        current = threading.currentThread()
         for worker in self._workerThreads:
-            worker.join()
+            if worker is not current:
+                worker.join()
         self._workerThreads = []
     stop = shutdown
     

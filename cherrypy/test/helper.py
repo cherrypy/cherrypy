@@ -46,7 +46,7 @@ def getPage(url, cookies, extraRequestHeader = []):
     # Normal case--it should run once.
     for trial in xrange(10):
         try:
-            conn = httplib.HTTPConnection('127.0.0.1:8000')
+            conn = httplib.HTTPConnection('127.0.0.1:%s' % PORT)
             conn.putrequest("GET", url)
 ##            conn.putheader("Host", "127.0.0.1")
             
@@ -80,8 +80,8 @@ def getPage(url, cookies, extraRequestHeader = []):
             time.sleep(0.5)
     return cpg, cookies
 
-def shutdownServer(pid, mode):
-    urllib.urlopen("http://127.0.0.1:8000/shutdown/all")
+def shutdownServer(mode):
+    urllib.urlopen("http://127.0.0.1:%s/shutdown/all" % PORT)
     if mode.startswith('tp'):
         # In thread-pool mode, it can take up to 1 sec for the server
         #   to shutdown
@@ -140,8 +140,22 @@ cpg.root._cpLogMessage = f
     
     f.close()
 
+PORT = 8000
+def port_is_free():
+    try:
+        s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', PORT))
+        s.close()
+        return False
+    except socket.error:
+        return True
+
 def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig = '', extraRequestHeader = []):
     response = None
+    
+    if not port_is_free():
+        print "\n### Error: port", PORT, "is busy. The previous server did not shut down properly."
+        sys.exit(-1)
     
     # Try it in all 4 modes (regular, threadPooling x normal, WSGI)
     for name, serverClass in [("native", "cherrypy._cphttpserver.embedded_server"),
@@ -157,13 +171,13 @@ def checkPageResult(testName, infoMap, code, testList, failedList, extraConfig =
             f.write('''
 [/]
 session.storageType = "ram"
-server.socketPort = 8000
+server.socketPort = %s
 server.environment = "production"
 server.logToScreen = False
-''')
+''' % PORT)
             f.write(modeConfig + "\n")
             f.close()
-
+            
             pid = startServer(infoMap)
             passed=True
             cookies=None
@@ -175,10 +189,10 @@ server.logToScreen = False
                     passed = 0
                     print "*** FAILED ***"
                     break
+            shutdownServer(mode)
             if passed:
                 sys.stdout.write("ok ")
                 sys.stdout.flush()
-            shutdownServer(pid, mode)
             if not passed:
                 break
     if passed:
