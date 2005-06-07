@@ -73,7 +73,6 @@ class Request(object):
         cpg.request.requestLine = requestLine
         cpg.request.simpleCookie = Cookie.SimpleCookie()
         cpg.request.isStatic = False
-        cpg.request.processRequestBody = cpg.request.method in ("POST",)
         cpg.request.rfile = self.rfile
         
         # Prepare cpg.response variables
@@ -122,7 +121,8 @@ class Request(object):
     
     def processRequestHeaders(self):
         # Parse first line
-        path = self.requestLine.split()[1]
+        cpg.request.method, path, protocol = self.requestLine.split()
+        cpg.request.processRequestBody = cpg.request.method in ("POST",)
         
         # find the queryString, or set it to "" if not found
         if "?" in path:

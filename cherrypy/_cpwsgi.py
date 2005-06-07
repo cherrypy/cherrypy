@@ -86,7 +86,6 @@ def wsgiApp(environ, start_response):
         # Both IIS and Apache set REMOTE_USER, when possible.
         cpg.request.login = (environ.get('LOGON_USER')
                              or environ.get('REMOTE_USER') or None)
-        cpg.request.method = environ['REQUEST_METHOD']
         cpg.request.multithread = environ['wsgi.multithread']
         cpg.request.multiprocess = environ['wsgi.multiprocess']
         _cpserver.request(environ.get('REMOTE_ADDR', ''),

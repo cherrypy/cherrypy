@@ -92,19 +92,11 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             for chunk in b:
                 wfile.write(chunk)
     
-    def do_GET(self):
-        """Serve a GET request."""
-        cpg.request.method = 'GET'
-        self.doMethod()
-    
-    def do_HEAD(self): # Head is not implemented
-        """Serve a HEAD request."""
-        cpg.request.method = 'HEAD'
-        self.doMethod()
+    do_GET = doMethod
+    do_HEAD = doMethod
     
     def do_POST(self):
         """Serve a POST request."""
-        cpg.request.method = 'POST'
         self.doMethod()
         # What does this line do?
         self.connection = self.request
