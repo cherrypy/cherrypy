@@ -67,6 +67,7 @@ def translate_headers(environ):
             translatedHeader = cgiName[5:].replace("_", "-")
             yield translatedHeader, environ[cgiName]
 
+
 class NullWriter(object):
     
     def write(self, data):
@@ -80,6 +81,11 @@ def wsgiApp(environ, start_response):
         sys.stderr = NullWriter()
     
     try:
+        # LOGON_USER is served by IIS, and is the name of the
+        # user after having been mapped to a local account.
+        # Both IIS and Apache set REMOTE_USER, when possible.
+        cpg.request.login = (environ.get('LOGON_USER')
+                             or environ.get('REMOTE_USER') or None)
         cpg.request.method = environ['REQUEST_METHOD']
         cpg.request.multithread = environ['wsgi.multithread']
         cpg.request.multiprocess = environ['wsgi.multiprocess']

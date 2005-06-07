@@ -177,7 +177,10 @@ class CherryPyWSGIServer(object):
         '''
         # We don't have to trap KeyboardInterrupt or SystemExit here,
         # because _cpserver already does so, calling self.stop() for us.
+        # If you're using this server with another framework, you should
+        # trap those exceptions in whatever code block calls start().
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.bind_addr)
         self.socket.settimeout(1)
         self.socket.listen(5)

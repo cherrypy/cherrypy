@@ -293,6 +293,10 @@ def main():
     body = func(*(virtualPathList + cpg.request.paramList),
                 **(cpg.request.paramMap))
     
+    cpg.response.body = body = iterable(body)
+    return body
+
+def iterable(body):
     # build a uniform return type (iterable)
     if isinstance(body, types.FileType):
         body = fileGenerator(body)
@@ -302,7 +306,6 @@ def main():
         body = [body]
     elif body is None:
         body = [""]
-    cpg.response.body = body
     return body
 
 def checkStatus():

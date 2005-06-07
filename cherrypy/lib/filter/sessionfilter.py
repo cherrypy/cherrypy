@@ -82,10 +82,10 @@ def getSessionData():
     if not sessionId:
         sessionId = generateSessionId()
         cpg.request.sessionMap = {'_sessionId': sessionId}
-    
-    cpg.response.simpleCookie[cookieName] = sessionId
-    cpg.response.simpleCookie[cookieName]['path'] = '/'
-    cpg.response.simpleCookie[cookieName]['version'] = 1
+        
+        cpg.response.simpleCookie[cookieName] = sessionId
+        cpg.response.simpleCookie[cookieName]['path'] = '/'
+        cpg.response.simpleCookie[cookieName]['version'] = 1
 
 def generateSessionId():
     s = ''.join([random.choice(alphanum) for i in xrange(50)])
@@ -101,8 +101,7 @@ def cleanupSessionData():
         _cputil.getSpecialFunction('_cpCleanUpOldSessions')()
 
 def saveSessionData():
-    cookieName = cpg.config.get('session.cookieName')
-    sessionId = cpg.response.simpleCookie[cookieName].value
+    sessionId = cpg.request.sessionMap['_sessionId']
     timeout = cpg.config.get('session.timeout')
     expire = (time.time() + (timeout * 60))
     savefunc = _cputil.getSpecialFunction('_cpSaveSessionData')
