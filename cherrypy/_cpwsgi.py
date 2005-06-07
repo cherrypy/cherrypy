@@ -89,8 +89,8 @@ def wsgiApp(environ, start_response):
         cpg.request.method = environ['REQUEST_METHOD']
         cpg.request.multithread = environ['wsgi.multithread']
         cpg.request.multiprocess = environ['wsgi.multiprocess']
-        _cpserver.request(environ['REMOTE_ADDR'],
-                          environ['REMOTE_ADDR'],
+        _cpserver.request(environ.get('REMOTE_ADDR', ''),
+                          environ.get('REMOTE_ADDR', ''),
                           requestLine(environ),
                           translate_headers(environ),
                           environ['wsgi.input'],
