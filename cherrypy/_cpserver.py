@@ -34,7 +34,14 @@ Main CherryPy module:
 import threading
 import time
 import sys
-import cpg, _cputil, _cphttptools, _cpthreadinglocal
+import cpg, _cputil, _cphttptools
+
+try:
+    from threading import local
+except ImportError:
+    from _cpthreadinglocal import local
+
+
 from lib import autoreload
 
 
@@ -65,11 +72,11 @@ def _start(initOnly=False, serverClass=None):
     
     # Create request and response object (the same objects will be used
     #   throughout the entire life of the webserver)
-    cpg.request = _cpthreadinglocal.local()
-    cpg.response = _cpthreadinglocal.local()
+    cpg.request = local()
+    cpg.response = local()
     
     # Create threadData object as a thread-specific all-purpose storage
-    cpg.threadData = _cpthreadinglocal.local()
+    cpg.threadData = local()
     
     # Output config options (if cpg.config.get('server.logToScreen'))
     cpg.config.outputConfigMap()
