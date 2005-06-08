@@ -54,6 +54,10 @@ class TidyFilter(BaseFilter):
         
         fct = cpg.response.headerMap.get('Content-Type', '')
         ct = fct.split(';')[0]
+        encoding = ''
+        i = fct.find('charset=')
+        if i != -1:
+            encoding = fct[i+8:]
         if ct == 'text/html':
             tmpdir = cpg.config.get('tidyFilter.tmpDir')
             pageFile = os.path.join(tmpdir, 'page.html')
@@ -62,19 +66,15 @@ class TidyFilter(BaseFilter):
             f = open(pageFile, 'wb')
             f.write(originalBody)
             f.close()
-            encoding = ''
-            i = fct.find('charset=')
-            if i != -1:
-                encoding = fct[i+8:]
-            encoding = encoding.replace('-', '')
-            if encoding:
-                encoding = '-' + encoding
+            tidyEncoding = encoding.replace('-', '')
+            if tidyEncoding:
+                tidyEncoding = '-' + tidyEncoding
             
             strictXml = ""
             if cpg.config.get('tidyFilter.strictXml', False):
                 strictXml = ' -xml'
             os.system('"%s" %s%s -f %s -o %s %s' %
-                      (cpg.config.get('tidyFilter.tidyPath'), encoding,
+                      (cpg.config.get('tidyFilter.tidyPath'), tidyEncoding,
                        strictXml, errFile, outFile, pageFile))
             f = open(errFile, 'rb')
             err = f.read()
@@ -112,7 +112,7 @@ class TidyFilter(BaseFilter):
                         '&' + tag + ';', tag.upper())
 
                 if encoding:
-                    originalBody = """<?xml version="1.0" encoding="%s"?>""" % encoding[1:] + originalBody
+                    originalBody = """<?xml version="1.0" encoding="%s"?>""" % encoding + originalBody
                 f = StringIO.StringIO(originalBody)
                 try:
                     tree = parse(f)
