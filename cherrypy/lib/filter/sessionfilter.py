@@ -88,8 +88,7 @@ def getSessionData():
         cpg.response.simpleCookie[cookieName]['version'] = 1
 
 def generateSessionId():
-    s = ''.join([random.choice(alphanum) for i in xrange(50)])
-    s += '%s' % time.time()
+    s = "%s%s" % (random.random(), time.time())
     return sha.sha(s).hexdigest()
 
 def cleanupSessionData():
