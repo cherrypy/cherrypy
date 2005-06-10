@@ -39,29 +39,38 @@ def update(updateMap=None, file=None):
             autoreload.reloadFiles.append(file)
         _load(file)
 
-def get(key, defaultValue = None):
+def get(key, defaultValue=None, returnSection=False):
+    # Look, ma, no Python function calls! Uber-fast.
     global cpg
     if not cpg:
         import cpg
+    
     try:
         path = cpg.request.path
     except AttributeError:
         path = "/"
-    return _getFor(path, key, defaultValue)
-
-def _getFor(path, key, defaultValue):
-    if path == "":
-        path = "/"
-    try:
-        return configMap[path][key]
-    except KeyError:
-        if path != "/":
-            i = path.rfind("/")
-            if i < 0:
-                return defaultValue
-            return _getFor(path[:i], key, defaultValue)
-        else:
-            return defaultValue
+    
+    while True:
+        if path == "":
+            path = "/"
+        try:
+            result = configMap[path][key]
+        except KeyError:
+            if path != "/":
+                i = path.rfind("/")
+                if i < 0:
+                    result = defaultValue
+                else:
+                    path = path[:i]
+                    continue
+            else:
+                result = defaultValue
+        break
+    
+    if returnSection:
+        return path
+    else:
+        return result
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and
