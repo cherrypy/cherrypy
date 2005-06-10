@@ -26,52 +26,67 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import helper
-
-code = """
 from cherrypy import cpg
 from cherrypy.lib import httptools
+
 class Root:
     def index(self, name="world"):
         return name
     index.exposed = True
+    
     def default(self, *params):
         return "default:"+repr(params)
     default.exposed = True
+    
     def other(self):
         return "other"
     other.exposed = True
+    
     def extra(self, *p):
         return repr(p)
     extra.exposed = True
+    
     def redirect(self):
         return httptools.redirect('dir1/')
     redirect.exposed = True
+    
     def notExposed(self):
         return "not exposed"
+
+
 class Dir1:
     def index(self):
         return "index for dir1"
     index.exposed = True
+    
     def myMethod(self):
         return "myMethod from dir1, object Path is:" + repr(cpg.request.objectPath)
     myMethod.exposed = True
+    
     def default(self, *params):
         return "default for dir1, param is:" + repr(params)
     default.exposed = True
+
+
 class Dir2:
     def index(self):
         return "index for dir2, path is:" + cpg.request.path
     index.exposed = True
+    
     def method(self):
         return "method for dir2"
     method.exposed = True
+
+
 class Dir3:
     def default(self):
         return "default for dir3, not exposed"
+
+
 class Dir4:
     def index(self):
         return "index for dir4, not exposed"
+
 cpg.root = Root()
 cpg.root.dir1 = Dir1()
 cpg.root.dir1.dir2 = Dir2()
@@ -79,27 +94,53 @@ cpg.root.dir1.dir2.dir3 = Dir3()
 cpg.root.dir1.dir2.dir3.dir4 = Dir4()
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
+        'server.logToScreen': False,
     }
 })
-cpg.server.start()
-"""
+cpg.server.start(initOnly=True)
 
-testList = [
-    ("/", "cpg.response.body == 'world'"),
-    ("/dir1/myMethod", '''cpg.response.body == "myMethod from dir1, object Path is:'/dir1/myMethod'"'''),
-    ("/this/method/does/not/exist", '''cpg.response.body == "default:('this', 'method', 'does', 'not', 'exist')"'''),
-    ("/extra/too/much", '''cpg.response.body == "default:('extra', 'too', 'much')"'''),
-    ("/other", "cpg.response.body == 'other'"),
-    ("/notExposed", '''cpg.response.body == "default:('notExposed',)"'''),
-    ("/dir1/dir2/", "cpg.response.body == 'index for dir2, path is:/dir1/dir2/'"),
-    ("/dir1/dir2", "cpg.response.status == '302 Found'" +
-        " and cpg.response.headerMap['Location'] == 'http://127.0.0.1:8000/dir1/dir2/'"),
-    ("/dir1/dir2/dir3/dir4/index", '''cpg.response.body == "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')"'''),
-    ("/redirect", "cpg.response.status == '302 Found'" +
-        " and cpg.response.headerMap['Location'] == 'http://127.0.0.1:8000/dir1/'"),
-]
+import unittest
+import helper
 
-def test(infoMap, failedList, skippedList):
-    print "    Testing object mapping...",
-    helper.checkPageResult('Object mapping', infoMap, code, testList, failedList)
+class ObjectMappingTest(unittest.TestCase):
+    
+    def testObjectMapping(self):
+        helper.request('/')
+        self.assertEqual(cpg.response.body, 'world')
+        
+        helper.request("/dir1/myMethod")
+        self.assertEqual(cpg.response.body, "myMethod from dir1, object Path is:'/dir1/myMethod'")
+        
+        helper.request("/this/method/does/not/exist")
+        self.assertEqual(cpg.response.body, "default:('this', 'method', 'does', 'not', 'exist')")
+        
+        helper.request("/extra/too/much")
+        self.assertEqual(cpg.response.body, "default:('extra', 'too', 'much')")
+        
+        helper.request("/other")
+        self.assertEqual(cpg.response.body, 'other')
+        
+        helper.request("/notExposed")
+        self.assertEqual(cpg.response.body, "default:('notExposed',)")
+        
+        helper.request("/dir1/dir2/")
+        self.assertEqual(cpg.response.body, 'index for dir2, path is:/dir1/dir2/')
+        
+        helper.request("/dir1/dir2")
+        self.assertEqual(cpg.response.status, '302 Found')
+        self.assertEqual(cpg.response.headerMap['Location'],
+                         'http://%s:%s/dir1/dir2/' % (helper.HOST, helper.PORT))
+        
+        helper.request("/dir1/dir2/dir3/dir4/index")
+        self.assertEqual(cpg.response.body,
+                         "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
+        
+        helper.request("/redirect")
+        self.assertEqual(cpg.response.status, '302 Found')
+        self.assertEqual(cpg.response.headerMap['Location'],
+                         'http://%s:%s/dir1/' % (helper.HOST, helper.PORT))
+
+
+if __name__ == "__main__":
+    unittest.main()
+

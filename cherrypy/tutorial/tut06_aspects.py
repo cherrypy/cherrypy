@@ -16,7 +16,7 @@ from cherrypy.lib.aspect import Aspect, STOP, CONTINUE
 
 class Page(Aspect):
     title = 'Untitled Page'
-
+    
     def header(self):
         # this is the same as in tutorial05.py
         return '''
@@ -27,14 +27,14 @@ class Page(Aspect):
             <body>
             <h2>%s</h2>
         ''' % (self.title, self.title)
-
+    
     def footer(self):
         # this is the same as in tutorial05.py
         return '''
             </body>
             </html>
         '''
-
+    
     def _before(self, methodName, method):
         # The _before aspect method gets executed whenever *any*
         # other method is called, including header and footer -- which
@@ -44,7 +44,7 @@ class Page(Aspect):
             return CONTINUE, self.header()
         else:
             return CONTINUE, ''
-
+    
     def _after(self, methodName, method):
         # Same as above, except _after gets called after the actually
         # requested method was executed. Its results are appended to
@@ -57,13 +57,12 @@ class Page(Aspect):
             return CONTINUE, ''
 
 
-
 class HomePage(Page):
     title = 'Tutorial 6 -- Aspect Powered!'
-
+    
     def __init__(self):
         self.another = AnotherPage()
-
+    
     def index(self):
         # Note that we don't call the header and footer methods
         # anymore! The aspect methods inherited from the Page class
@@ -74,13 +73,12 @@ class HomePage(Page):
             <a href="./another/">another page</a>, too!
             </p>
         '''
-
     index.exposed = True
 
 
 class AnotherPage(Page):
     title = 'Another Page'
-
+    
     def index(self):
         # See above. No header or footer methods called!
         return '''
@@ -88,11 +86,13 @@ class AnotherPage(Page):
             And this is the amazing second page!
             </p>
         '''
-
     index.exposed = True
 
 
 cpg.root = HomePage()
 
-cpg.config.update(file = 'tutorial.conf')
-cpg.server.start()
+
+if __name__ == '__main__':
+    cpg.config.update(file = 'tutorial.conf')
+    cpg.server.start()
+

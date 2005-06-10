@@ -25,36 +25,40 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import helper
 
-code = r"""
 from cherrypy import cpg
+import time
+
 class Root:
-    def index2(self):
-        yield "Hello, world"
-    index2.exposed = True
+    def __init__(self):
+        cpg.counter = 0
+    
+    def index(self):
+        counter = cpg.counter + 1
+        cpg.counter = counter
+        return "visit #%s" % counter
+    index.exposed = True
+
 cpg.root = Root()
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
+        'server.logToScreen': False,
         'server.environment': 'production',
-        'virtualHostFilter.on': True,
-        'virtualHostFilter.prefix': '/index2',
-    },
-    '/shutdown': {
-        'virtualHostFilter.on': False,
+        'cacheFilter.on': True,
     }
 })
-cpg.server.start()
-"""
-config = ""
-
-testList = [
-    ('/', "cpg.response.body == 'Hello, world'"),
-]
-
-def test(infoMap, failedList, skippedList):
-    print "    Testing virtualHostFilter ...",
-    helper.checkPageResult('virtualHostFilter', infoMap, code, testList, failedList)
 
 
+import unittest
+import helper
+
+class CacheFilterTest(unittest.TestCase):
+    
+    def testCaching(self):
+        for trial in xrange(2):
+            helper.request("/")
+            self.assertEqual(cpg.response.body, 'visit #1')
+
+if __name__ == '__main__':
+    cpg.server.start(initOnly=True)
+    unittest.main()

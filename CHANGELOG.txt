@@ -1,3 +1,7 @@
+2005-06-10:
+    * New test suite (no forks, no exec). (fumanchu)
+    * New lib/profiler module. (fumanchu)
+
 2005-06-09:
     * New sessionauthenticatefilter. This replace CSAuthenticate implementation (based on aspect). (Remi)
     * New nsgmlsfilter. Provides XHTML validation (you need NSGMLS installed). (Remi)

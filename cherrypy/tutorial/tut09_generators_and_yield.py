@@ -10,6 +10,7 @@ would be overkill, and messy string concatenation too uncool. ;-)
 from cherrypy import cpg
 
 class GeneratorDemo:
+    
     def header(self):
         return "<html><body><h2>Generators rule!</h2>"
     
@@ -19,7 +20,7 @@ class GeneratorDemo:
     def index(self):
         # Let's make up a list of users for presentation purposes
         users = ['Remi', 'Carlos', 'Hendrik', 'Lorenzo Lamas']
-
+        
         # Every yield line adds one part to the total result body.
         yield self.header()
         yield "<h3>List of users:</h3>"
@@ -28,9 +29,12 @@ class GeneratorDemo:
             yield "%s<br/>" % user
             
         yield self.footer()
-
     index.exposed = True
 
 cpg.root = GeneratorDemo()
-cpg.config.update(file = 'tutorial.conf')
-cpg.server.start()
+
+
+if __name__ == '__main__':
+    cpg.config.update(file = 'tutorial.conf')
+    cpg.server.start()
+

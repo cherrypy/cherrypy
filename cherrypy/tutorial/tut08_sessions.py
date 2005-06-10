@@ -15,20 +15,22 @@ class HitCounter:
     def index(self):
         # Increase the silly hit counter
         count = cpg.request.sessionMap.get('count', 0) + 1
-
+        
         # Store the new value in the session dictionary
         cpg.request.sessionMap['count'] = count
-
+        
         # And display a silly hit count message!
         return '''
             During your current session, you've viewed this
             page %s times! Your life is a patio of fun!
         ''' % count
-
     index.exposed = True
 
 
 cpg.root = HitCounter()
 
-cpg.config.update(file = 'tutorial.conf')
-cpg.server.start()
+
+if __name__ == '__main__':
+    cpg.config.update(file = 'tutorial.conf')
+    cpg.server.start()
+

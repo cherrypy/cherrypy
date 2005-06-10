@@ -25,33 +25,45 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import helper, gzip, StringIO
 
-code = r"""
+import gzip, StringIO
 from cherrypy import cpg
+
+europoundUnicode = u'\x80\xa3'
+
 class Root:
     def index(self):
-        yield "Hello, world"
+        yield u"Hello,"
+        yield u"world"
+        yield europoundUnicode
     index.exposed = True
+
 cpg.root = Root()
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
+        'server.logToScreen': False,
         'server.environment': 'production',
         'gzipFilter.on': True,
+        'encodingFilter.on': True,
     }
 })
-cpg.server.start()
-"""
-config = ""
-zbuf = StringIO.StringIO()
-zfile = gzip.GzipFile(mode='wb', fileobj = zbuf, compresslevel = 9)
-zfile.write("Hello, world")
-zfile.close()
+cpg.server.start(initOnly=True)
 
-testList = [('/', '%s in cpg.response.body' % repr(zbuf.getvalue()[:3]))]
+import unittest
+import helper
 
-def test(infoMap, failedList, skippedList):
-    print "    Testing gzipFilter ...",
-    helper.checkPageResult('gzipFilter', infoMap, code, testList, failedList, extraRequestHeader = [("Accept-Encoding", "gzip")])
+class CombinedFiltersTest(unittest.TestCase):
+    
+    def testCombinedFilters(self):
+        expectedResult = (u"Hello,world" + europoundUnicode).encode('utf-8')
+        zbuf = StringIO.StringIO()
+        zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
+        zfile.write(expectedResult)
+        zfile.close()
+        
+        helper.request("/", headers=[("Accept-Encoding", "gzip")])
+        self.assertEqual(zbuf.getvalue()[:3] in cpg.response.body, True)
 
+
+if __name__ == '__main__':
+    unittest.main()

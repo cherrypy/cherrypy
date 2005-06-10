@@ -25,36 +25,44 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import helper, time
 
-code = r"""
+import gzip, StringIO
 from cherrypy import cpg
-import time
+
 class Root:
     def index(self):
-        counter = getattr(cpg, 'counter', 0)
-        counter += 1
-        cpg.counter = counter
-        return str(counter)
+        yield "Hello, world"
     index.exposed = True
+
 cpg.root = Root()
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
+        'server.logToScreen': False,
         'server.environment': 'production',
-        'cacheFilter.on': True,
+        'gzipFilter.on': True,
     }
 })
-cpg.server.start()
-"""
-config = ""
+
+cpg.server.start(initOnly=True)
 
 
-def test(infoMap, failedList, skippedList):
-    print "    Testing cacheFilter ...",
-    testList = [
-        ('/', "cpg.response.body == '1'"),
-        ('/', "cpg.response.body == '1'"),
-    ]
-    helper.checkPageResult('cacheFilter', infoMap, code, testList, failedList)
+import unittest
+import helper
+
+europoundUtf8 = u'\x80\xa3'.encode('utf-8')
+
+class GzipFilterTest(unittest.TestCase):
+    
+    def testGzipFilter(self):
+        zbuf = StringIO.StringIO()
+        zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
+        zfile.write("Hello, world")
+        zfile.close()
+        
+        helper.request('/', headers=[("Accept-Encoding", "gzip")])
+        self.assert_(zbuf.getvalue()[:3] in cpg.response.body)
+
+
+if __name__ == "__main__":
+    unittest.main()
 

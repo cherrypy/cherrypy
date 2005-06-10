@@ -25,33 +25,35 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import helper
 
-code = r"""
 from cherrypy import cpg
-from cherrypy.lib import httptools
+
 class Root:
-    def index(self):
-        return httptools.redirect('dummy')
-    index.exposed = True
+    def index2(self):
+        yield "Hello, world"
+    index2.exposed = True
+
 cpg.root = Root()
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
+        'server.logToScreen': False,
         'server.environment': 'production',
-        'baseUrlFilter.on': True,
-        'baseUrlFilter.baseUrl': 'http://www.mydomain.com'
-    }
+        'virtualHostFilter.on': True,
+        'virtualHostFilter.prefix': '/index2',
+    },
 })
-cpg.server.start()
-"""
-config = ""
+cpg.server.start(initOnly=True)
 
-testList = [
-    ('/', "cpg.response.headerMap['Location'] == "
-            "'http://www.mydomain.com/dummy'")
-]
 
-def test(infoMap, failedList, skippedList):
-    print "    Testing baseUrlFilter ...",
-    helper.checkPageResult('baseUrlFilter', infoMap, code, testList, failedList)
+import unittest
+import helper
+
+class VirtualHostFilterTest(unittest.TestCase):
+    
+    def testVirtualHostFilter(self):
+        helper.request("/")
+        self.assertEqual(cpg.response.body, 'Hello, world')
+
+
+if __name__ == "__main__":
+    unittest.main()

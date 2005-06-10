@@ -26,180 +26,164 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-# Regression test suite for CherryPy
-
-import sys,os,os.path
-sys.path.insert(0,os.path.normpath(os.path.join(os.getcwd(),'../../')))
-if not os.path.exists(os.path.join(os.curdir,'buildInfoMap.py')):
-    print "Run the test from the test directory (cherrypy/test) from the cherrypy you wish to test."
-    print "If no python executables are found, change this file (test.py) near line 31"
-    sys.exit(1)
-if len(sys.argv) == 2 and sys.argv[1] in ('-h', '--help'):
-    print "Usage: unittest.py [testName+]"
-    print "Run from the test directory from within cherrypy"
-    sys.exit(0)
-
-python2={}
-python2[3]={}    # Infos about python-2.3
-python2[4]={}    # Infos about python-2.4
-
-# Edit these lines to match your setup
-if sys.platform=="win32":
-    python2[3]['path']="c:\\python23\\python.exe"
-    python2[4]['path']="c:\\python24\\python.exe"
-else:
-    python2[3]['path']="python2.3"
-    python2[4]['path']="python2.4"
-
-print
-
-print "Examining your system..."
-print
-print "Python version used to run this test script:", sys.version.split()[0]
-print
-import buildInfoMap
-python2 = buildInfoMap.buildInfoMap(python2)
-
-print
-print "Checking CherryPy version..."
-import os
-try:
-    import cherrypy
-except ImportError:
-    print "Error: couln't find CherryPy !"
-    os._exit(-1)
-
-print "    Found version " + cherrypy.__version__
-print
-
-print "Testing CherryPy..."
-failedList=[]
-skippedList=[]
-
-tutorialTestList = [
-    ('01_helloworld.py',
-     [('/', "cpg.response.body == 'Hello world!'")]),
-    ('02_expose_methods.py',
-     [('/showMessage', "cpg.response.body == 'Hello world!'")]),
-    ('03_get_and_post.py',
-     [('/greetUser?name=Bob', '''cpg.response.body == "Hey Bob, what's up?"''')]),
-    ('03_get_and_post.py',
-     [('/greetUser', """cpg.response.body == 'Please enter your name <a href="./">here</a>.'""")]),
-    ('03_get_and_post.py',
-     [('/greetUser?name=', """cpg.response.body == 'No, really, enter your name <a href="./">here</a>.'""")]),
-    ('04_complex_site.py',
-     [('/links/extra/', r"""cpg.response.body == '\n            <p>Here are some extra useful links:</p>\n\n            <ul>\n                <li><a href="http://del.icio.us">del.icio.us</a></li>\n                <li><a href="http://www.mornography.de">Hendrik\'s weblog</a></li>\n            </ul>\n\n            <p>[<a href="../">Return to links page</a>]</p>\n        '""")]),
-    ('05_derived_objects.py',
-     [('/another/', r"""cpg.response.body == '\n            <html>\n            <head>\n                <title>Another Page</title>\n            <head>\n            <body>\n            <h2>Another Page</h2>\n        \n            <p>\n            And this is the amazing second page!\n            </p>\n        \n            </body>\n            </html>\n        '""")]),
-    ('06_aspects.py',
-     [('/', r"""cpg.response.body == '\n            <html>\n            <head>\n                <title>Tutorial 6 -- Aspect Powered!</title>\n            <head>\n            <body>\n            <h2>Tutorial 6 -- Aspect Powered!</h2>\n        \n            <p>\n            Isn\'t this exciting? There\'s\n            <a href="./another/">another page</a>, too!\n            </p>\n        \n            </body>\n            </html>\n        '""")]),
-    ('07_default_method.py',
-     [('/hendrik', r"""cpg.response.body == 'Hendrik Mans, CherryPy co-developer & crazy German (<a href="./">back</a>)'""")]),
-    ('08_sessions.py',
-     [('/', r'''cpg.response.body == "\n            During your current session, you've viewed this\n            page 1 times! Your life is a patio of fun!\n        "'''), ('/', r'''cpg.response.body == "\n            During your current session, you've viewed this\n            page 2 times! Your life is a patio of fun!\n        "''')]), 
-    ('09_generators_and_yield.py',
-     [('/', r"""cpg.response.body == '<html><body><h2>Generators rule!</h2><h3>List of users:</h3>Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/></body></html>'""")]),
-]
-
-testList = [
-    'testBaseUrlFilter',
-    'testCacheFilter',
-    'testCombinedFilters',
-    'testCore',
-    'testDecodingEncodingFilter',
-    'testGzipFilter',
-    'testLogDebugInfoFilter',
-    'testObjectMapping',
-    'testStaticFilter',
-    'testVirtualHostFilter',
-]
-
-if len(sys.argv) > 1:
-    # Some specific tests were specified on the command line
-    # Limit the tests to these ones
-    newTutorialTestList = []
-    newTestList = []
-    for number, myTestList in tutorialTestList:
-        if "tutorial%s" % number in sys.argv[1:]:
-            newTutorialTestList.append((number, myTestList))
-    for t in testList:
-        if t in sys.argv[1:]:
-            newTestList.append(t)
-    tutorialTestList = newTutorialTestList
-    testList = newTestList
-
-import helper
 import time
-starttime = time.time()
+import sys
+import os, os.path
+import unittest
 
-for version, infoMap in python2.items():
-    print
-    print "Running tests for python %s..." % infoMap['exactVersionShort']
+
+class CPTestResult(unittest._TextTestResult):
+    def printErrors(self):
+        # Overridden to avoid unnecessary empty line
+        if self.errors or self.failures:
+            if self.dots or self.showAll:
+                self.stream.writeln()
+            self.printErrorList('ERROR', self.errors)
+            self.printErrorList('FAIL', self.failures)
+
+
+class CPTestRunner(unittest.TextTestRunner):
+    """A test runner class that displays results in textual form."""
     
-    count = 0
-    # Run tests based on tutorials
-    for filename, myTestList in tutorialTestList:
-        count += 1
-        code = open('../tutorial/%s' % filename, 'r').read()
-        code = code.replace('tutorial.conf', 'testsite.cfg')
-        print "    Testing tutorial %s..." % filename,
-        #if ((version == 1 and number in ('06', '09')) or
-        #        (version == 2 and number in ('09'))):
-        #    print "skipped"
-        #    skippedList.append("Tutorial %s for python2.%s" % (number, version))
-        #    continue
+    def _makeResult(self):
+        return CPTestResult(self.stream, self.descriptions, self.verbosity)
+    
+    def run(self, test):
+        "Run the given test case or test suite."
+        # Overridden to remove unnecessary empty lines and separators
+        result = self._makeResult()
+        startTime = time.time()
+        test(result)
+        timeTaken = float(time.time() - startTime)
+        result.printErrors()
+        if not result.wasSuccessful():
+            self.stream.write("FAILED (")
+            failed, errored = map(len, (result.failures, result.errors))
+            if failed:
+                self.stream.write("failures=%d" % failed)
+            if errored:
+                if failed: self.stream.write(", ")
+                self.stream.write("errors=%d" % errored)
+            self.stream.writeln(")")
+        return result
+
+
+class ReloadingTestLoader(unittest.TestLoader):
+    
+    def loadTestsFromName(self, name, module=None):
+        """Return a suite of all tests cases given a string specifier.
+
+        The name may resolve either to a module, a test case class, a
+        test method within a test case class, or a callable object which
+        returns a TestCase or TestSuite instance.
+
+        The method optionally resolves the names relative to a given module.
+        """
+        parts = name.split('.')
+        if module is None:
+            if not parts:
+                raise ValueError, "incomplete test name: %s" % name
+            else:
+                parts_copy = parts[:]
+                while parts_copy:
+                    target = ".".join(parts_copy)
+                    if target in sys.modules:
+                        module = reload(sys.modules[target])
+                        break
+                    else:
+                        try:
+                            module = __import__(target)
+                            break
+                        except ImportError:
+                            del parts_copy[-1]
+                            if not parts_copy: raise
+                parts = parts[1:]
+        obj = module
+        for part in parts:
+            obj = getattr(obj, part)
         
-        helper.checkPageResult('Tutorial %s' % filename, infoMap, code, myTestList, failedList)
+        import unittest
+        import types
+        if type(obj) == types.ModuleType:
+            return self.loadTestsFromModule(obj)
+        elif (isinstance(obj, (type, types.ClassType)) and
+              issubclass(obj, unittest.TestCase)):
+            return self.loadTestsFromTestCase(obj)
+        elif type(obj) == types.UnboundMethodType:
+            return obj.im_class(obj.__name__)
+        elif callable(obj):
+            test = obj()
+            if not isinstance(test, unittest.TestCase) and \
+               not isinstance(test, unittest.TestSuite):
+                raise ValueError, \
+                      "calling %s returned %s, not a test" % (obj,test)
+            return test
+        else:
+            raise ValueError, "don't know how to make test from: %s" % obj
+
+CPTestLoader = ReloadingTestLoader()
+
+
+def main():
+    # Place our current directory's parent (cherrypy/) at the beginning
+    # of sys.path, so that all imports are from our current directory.
+    localDir = os.path.dirname(__file__)
+    curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
+    sys.path.insert(0, os.path.normpath(os.path.join(curpath, '../../')))
     
-    # Running actual unittests
-    for test in testList:
-        count += 1
-        exec("import " + test)
-        eval(test + ".test(infoMap, failedList, skippedList)")
-
-print
-print
-print "#####################################"
-print "#####################################"
-print "###          TEST RESULT          ###"
-print "#####################################"
-print "#####################################"
-print
-print "%d tests run in %f seconds" % (count, time.time() - starttime)
-
-if skippedList:
+    print "Python version used to run this test script:", sys.version.split()[0]
+    try:
+        import cherrypy
+    except ImportError:
+        print "Error: couln't find CherryPy !"
+        os._exit(-1)
+    print "CherryPy version", cherrypy.__version__
     print
-    print "*** THE FOLLOWING TESTS WERE SKIPPED:"
-    for skipped in skippedList: print skipped
+    
+    testList = [
+        'test_baseurl_filter',
+        'test_cache_filter',
+        'test_combinedfilters',
+        'test_core',
+        'test_decodingencoding_filter',
+        'test_gzip_filter',
+        'test_logdebuginfo_filter',
+        'test_objectmapping',
+        'test_static_filter',
+        'test_tutorials',
+        'test_virtualhost_filter',
+    ]
+    
+    from cherrypy import cpg
+    import helper
+    
+    server_conf = {'server.socketHost': helper.HOST,
+                   'server.socketPort': helper.PORT,
+                   'server.threadPool': 10,
+                   'server.socketQueueSize': 5,
+                   'server.logToScreen': False,
+##                   'profiling.on': True,
+                   }
+    
+    for name, server in [("Serverless", None),
+                         ("Native HTTP Server", "cherrypy._cphttpserver.embedded_server"),
+                         ("Native WSGI Server", "cherrypy._cpwsgi.WSGIServer"),
+                         ]:
+        print
+        print "Running tests:", name
+        
+        cpg.config.update({'/': server_conf.copy()})
+        helper.startServer(server)
+        for testmod in testList:
+            # Must run each module in a separate suite,
+            # because each module uses/overwrites cpg globals.
+            cpg.config.configMap.clear()
+            cpg.config.update({'/': server_conf.copy()})
+            suite = CPTestLoader.loadTestsFromName(testmod)
+            CPTestRunner(verbosity=2).run(suite)
+        helper.stopServer()
+    
+    raw_input('hit enter')
 
-    print "**** THE ABOVE TESTS WERE SKIPPED"
-    print
-
-if failedList:
-    print
-    print "*** THE FOLLOWING TESTS FAILED:"
-    for failed in failedList: print failed
-
-    print "**** THE ABOVE TESTS FAILED"
-    print
-    print "**** Some errors occured: please add a ticket in our Trac system (http://www.cherrypy.org/newticket) with the output of this test script"
-
-else:
-    print
-    print "**** NO TEST FAILED: EVERYTHING LOOKS OK ****"
-
-############"
-# Ideas for future tests:
-#    - test if tabs and whitespaces are handled correctly in source file (option -W)
-#    - test if absolute pathnames work fine on windows
-#    - test sessions
-#    - test threading server
-#    - test forking server
-#    - test process pooling server
-#    - test SSL
-#    - test compilator errors
-#    - test abstract classes
-#    - test hidden classes
-#    ...
-
-raw_input('hit enter')
+if __name__ == '__main__':
+    main()

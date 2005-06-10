@@ -25,33 +25,45 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import helper
 
-code = r"""
 from cherrypy import cpg
-class Root:
-    def index(self):
-        yield "Hello, world"
-    index.exposed = True
+
+
+class Root: pass
+
 cpg.root = Root()
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
+        'staticFilter.on': False,
+        'server.logToScreen': False,
         'server.environment': 'production',
-        'logDebugInfoFilter.on': True,
+    },
+    '/static': {
+        'staticFilter.on': True,
+        'staticFilter.dir': 'static',
+    },
+    '/style.css': {
+        'staticFilter.on': True,
+        'staticFilter.file': 'style.css',
     }
 })
-cpg.server.start()
-"""
-config = ""
+cpg.server.start(initOnly=True)
 
-testList = [
-    ('/', "'Build time' in cpg.response.body and "
-        "'Page size' in cpg.response.body and "
-        "'Session data size' in cpg.response.body"
-)]
 
-def test(infoMap, failedList, skippedList):
-    print "    Testing logDebugInfoFilter ...",
-    helper.checkPageResult('logDebugInfoFilter', infoMap, code, testList, failedList)
+import unittest
+import helper
 
+class StaticFilterTest(unittest.TestCase):
+    
+    def testStaticFilter(self):
+        helper.request("/static/index.html")
+        self.assertEqual(cpg.response.headerMap['Content-Type'], 'text/html')
+        self.assertEqual(cpg.response.body, 'Hello, world\r\n')
+        
+        helper.request("/style.css")
+        self.assertEqual(cpg.response.headerMap['Content-Type'], 'text/css')
+        self.assertEqual(cpg.response.body, 'Dummy stylesheet\n')
+
+
+if __name__ == "__main__":
+    unittest.main()

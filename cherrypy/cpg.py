@@ -32,6 +32,8 @@ Global module that all modules developing with CherryPy should import.
 
 from __init__ import __version__
 
+_httpserver = None
+
 # import server module
 import _cpserver as server
 import _cpconfig as config

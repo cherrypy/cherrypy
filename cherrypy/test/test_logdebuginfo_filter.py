@@ -25,35 +25,42 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import helper
 
-code = r"""
 from cherrypy import cpg
-europoundUnicode = u'\x80\xa3'
+
 class Root:
-    def index(self, param):
-        assert param == europoundUnicode
-        yield europoundUnicode
+    def index(self):
+        yield "Hello, world"
     index.exposed = True
+
 cpg.root = Root()
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
+        'session.storageType': 'ram',
+        'session.timeout': 60,
+        'session.cleanUpDelay': 60,
+        'session.cookieName': 'CherryPySession',
+        'session.storageFileDir': '',
+        
+        'server.logToScreen': False,
         'server.environment': 'production',
-        'encodingFilter.on': True,
-        'decodingFilter.on': True
+        'logDebugInfoFilter.on': True,
     }
 })
-cpg.server.start()
-"""
-config = ""
-europoundUtf8 = u'\x80\xa3'.encode('utf-8')
+cpg.server.start(initOnly=True)
 
-testList = [
-    ('/?param=%s' % europoundUtf8, 
-        'cpg.response.body == "%s"' % europoundUtf8)
-]
 
-def test(infoMap, failedList, skippedList):
-    print "    Testing decodingFilter and encodingFilter ...",
-    helper.checkPageResult('decodingFilter and encodingFilter', infoMap, code, testList, failedList)
+import unittest
+import helper
+
+class LogDebugInfoFilterTest(unittest.TestCase):
+    
+    def testLogDebugInfoFilter(self):
+        helper.request('/')
+        self.assert_('Build time' in cpg.response.body)
+        self.assert_('Page size' in cpg.response.body)
+        self.assert_('Session data size' in cpg.response.body)
+
+
+if __name__ == "__main__":
+    unittest.main()

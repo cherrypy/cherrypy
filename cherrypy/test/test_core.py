@@ -28,19 +28,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Basic tests for the CherryPy core: request handling."""
 
-import helper
-
-code = """
 from cherrypy import cpg
+import types
 
 class Root:
     def index(self):
         return "hello"
     index.exposed = True
+
 cpg.root = Root()
 
 
-import types
 class TestType(type):
     def __init__(cls, name, bases, dct):
         type.__init__(name, bases, dct)
@@ -78,10 +76,12 @@ class Status(Test):
         cpg.response.status = "error"
         return "hello"
 
+
 class Redirect(Test):
     
     def index(self):
         return "child"
+
 
 class Flatten(Test):
     
@@ -101,6 +101,7 @@ class Flatten(Test):
         for chunk in self.as_yield():
             yield chunk
 
+
 class Error(Test):
     
     def page_method(self):
@@ -118,36 +119,102 @@ class Error(Test):
             yield "oops"
         return inner()
 
+
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
+        'server.logToScreen': False,
         'server.environment': 'production',
-    }
+        'foo': 'this',
+        'bar': 'that',
+    },
+    '/foo': {
+        'foo': 'this2',
+        'baz': 'that2',
+    },
+    '/foo/bar': {
+        'foo': 'this3',
+        'bax': 'this4',
+    },
 })
-cpg.server.start()
-"""
+cpg.server.start(initOnly=True)
 
-testList = [
-    ("/status/", "cpg.response.body == 'normal' and cpg.response.status == '200 OK'"),
-    ("/status/blank", "cpg.response.body == '' and cpg.response.status == '200 OK'"),
-    ("/status/illegal", "cpg.response.body == 'oops' and cpg.response.status == '500 Internal error'"),
-    ("/status/unknown", "cpg.response.body == 'funky' and cpg.response.status == '431 My custom error'"),
-    ("/status/bad", "cpg.response.body == 'hello' and cpg.response.status == '500 Internal error'"),
+import unittest
+import helper
 
-    ("/redirect/", "cpg.response.body == 'child' and cpg.response.status == '200 OK'"),
-    ("/redirect", "cpg.response.body == '' and cpg.response.status == '302 Found'"),
+class CoreRequestHandlingTest(unittest.TestCase):
+    
+    def testConfig(self):
+        from cherrypy import _cpconfig
+        tests = [
+            ('/',        'nex', None   ),
+            ('/',        'foo', 'this' ),
+            ('/',        'bar', 'that' ),
+            ('/xyz',     'foo', 'this' ),
+            ('/foo',     'foo', 'this2'),
+            ('/foo',     'bar', 'that' ),
+            ('/foo',     'bax', None   ),
+            ('/foo/bar', 'baz', 'that2'),
+            ('/foo/nex', 'baz', 'that2'),
+        ]
+        for path, key, expected in tests:
+            cpg.request.path = path
+            result = _cpconfig.get(key, None)
+            self.assertEqual(result, expected)
+    
+    def testStatus(self):
+        helper.request("/status/")
+        self.assertEqual(cpg.response.body, 'normal')
+        self.assertEqual(cpg.response.status, '200 OK')
+        
+        helper.request("/status/blank")
+        self.assertEqual(cpg.response.body, '')
+        self.assertEqual(cpg.response.status, '200 OK')
+        
+        helper.request("/status/illegal")
+        self.assertEqual(cpg.response.body, 'oops')
+        self.assertEqual(cpg.response.status, '500 Internal error')
+        
+        helper.request("/status/unknown")
+        self.assertEqual(cpg.response.body, 'funky')
+        self.assertEqual(cpg.response.status, '431 My custom error')
+        
+        helper.request("/status/bad")
+        self.assertEqual(cpg.response.body, 'hello')
+        self.assertEqual(cpg.response.status, '500 Internal error')
+    
+    def testRedirect(self):
+        helper.request("/redirect/")
+        self.assertEqual(cpg.response.body, 'child')
+        self.assertEqual(cpg.response.status, '200 OK')
+        
+        helper.request("/redirect")
+        self.assertEqual(cpg.response.body, '')
+        self.assertEqual(cpg.response.status, '302 Found')
+    
+    def testFlatten(self):
+        for url in ["/flatten/as_string", "/flatten/as_list",
+                    "/flatten/as_yield", "/flatten/as_dblyield",
+                    "/flatten/as_refyield"]:
+            helper.request(url)
+            self.assertEqual(cpg.response.body, 'content')
+    
+    def testErrorHandling(self):
+        valerr = '\n    raise ValueError\nValueError\n'
+        helper.request("/error/page_method")
+        self.assert_(cpg.response.body.endswith(valerr))
+        
+        helper.request("/error/page_yield")
+        self.assert_(cpg.response.body.endswith(valerr))
+        
+        if cpg._httpserver is None:
+            self.assertRaises(ValueError, helper.request, "/error/page_http_1_1")
+        else:
+            helper.request("/error/page_http_1_1")
+            # Because this error is raised after the response body has
+            # started, the status should not change to an error status.
+            self.assertEqual(cpg.response.status, "200 OK")
+            self.assertEqual(cpg.response.body, "helloUnrecoverable error in the server.")
 
-    ("/flatten/as_string", "cpg.response.body == 'content'"),
-    ("/flatten/as_list", "cpg.response.body == 'content'"),
-    ("/flatten/as_yield", "cpg.response.body == 'content'"),
-    ("/flatten/as_dblyield", "cpg.response.body == 'content'"),
-    ("/flatten/as_refyield", "cpg.response.body == 'content'"),
 
-    ("/error/page_method", r"cpg.response.body.endswith(' in page_method\n    raise ValueError\nValueError\n')"),
-    ("/error/page_yield", r"cpg.response.body.endswith(' in page_yield\n    raise ValueError\nValueError\n')"),
-    ("/error/page_http_1_1", r"cpg.response.body == 'helloUnrecoverable error in the server.'"),
-]
-
-def test(infoMap, failedList, skippedList):
-    print "    Testing core request handling...",
-    helper.checkPageResult('Request handling', infoMap, code, testList, failedList)
+if __name__ == '__main__':
+    unittest.main()

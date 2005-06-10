@@ -15,12 +15,9 @@ class WelcomePage:
             What is your name?
             <input type="text" name="name" />
             <input type="submit" />
-            </form>
-        '''
-
+            </form>'''
     index.exposed = True
-
-
+    
     def greetUser(self, name = None):
         # CherryPy passes all GET and POST variables as method parameters.
         # It doesn't make a difference where the variables come from, how
@@ -29,7 +26,7 @@ class WelcomePage:
         # You can define default parameter values as usual. In this
         # example, the "name" parameter defaults to None so we can check
         # if a name was actually specified.
-
+        
         if name:
             # Greet the user!
             return "Hey %s, what's up?" % name
@@ -39,10 +36,12 @@ class WelcomePage:
                 return 'Please enter your name <a href="./">here</a>.'
             else:
                 return 'No, really, enter your name <a href="./">here</a>.'
-
     greetUser.exposed = True
 
 
 cpg.root = WelcomePage()
-cpg.config.update(file = 'tutorial.conf')
-cpg.server.start()
+
+
+if __name__ == '__main__':
+    cpg.config.update(file = 'tutorial.conf')
+    cpg.server.start()

@@ -42,7 +42,7 @@ except ImportError:
     from _cpthreadinglocal import local
 
 
-from lib import autoreload
+from lib import autoreload, profiler
 
 
 # Set some special attributes for adding hooks
@@ -99,6 +99,13 @@ def _start(initOnly=False, serverClass=None):
     # Call the functions from cpg.server.onStartServerList
     for func in cpg.server.onStartServerList:
         func()
+    
+    # Set up the profiler if requested.
+    if cpg.config.get("profiling.on", False):
+        ppath = cpg.config.get("profiling.path", "")
+        cpg.profiler = profiler.Profiler(ppath)
+    else:
+        cpg.profiler = None
     
     if not initOnly:
         run_server(serverClass)
@@ -175,8 +182,13 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile):
         # Call the functions from cpg.server.onStartThreadList
         for func in cpg.server.onStartThreadList:
             func(i)
-    return _cphttptools.Request(clientAddress, remoteHost,
-                                requestLine, headers, rfile)
+    
+    if cpg.profiler:
+        cpg.profiler.run(_cphttptools.Request, clientAddress, remoteHost,
+                                               requestLine, headers, rfile)
+    else:
+        _cphttptools.Request(clientAddress, remoteHost,
+                             requestLine, headers, rfile)
 
 def stop():
     """Shutdown CherryPy (and any HTTP servers it started)."""

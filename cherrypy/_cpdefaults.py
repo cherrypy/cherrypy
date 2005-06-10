@@ -172,26 +172,34 @@ from cherrypy.lib.filter import baseurlfilter, cachefilter, \
     sessionfilter, staticfilter, nsgmlsfilter, tidyfilter, \
     virtualhostfilter, xmlrpcfilter
 
+_cachefilter = cachefilter.CacheFilter()
+_logdebuginfofilter = logdebuginfofilter.LogDebugInfoFilter()
+_nsgmlsfilter = nsgmlsfilter.NsgmlsFilter()
+_sessionfilter = sessionfilter.SessionFilter()
+_tidyfilter = tidyfilter.TidyFilter()
+_xmlfilter = xmlrpcfilter.XmlRpcFilter()
+
 # These are in order for a reason!
+
 _cpDefaultInputFilterList = [
-    cachefilter.CacheFilter(),
-    logdebuginfofilter.LogDebugInfoFilter(),
+    _cachefilter,
+    _logdebuginfofilter,
     virtualhostfilter.VirtualHostFilter(),
     baseurlfilter.BaseUrlFilter(),
     decodingfilter.DecodingFilter(),
-    sessionfilter.SessionFilter(),
+    _sessionfilter,
     staticfilter.StaticFilter(),
-    nsgmlsfilter.NsgmlsFilter(),
-    tidyfilter.TidyFilter(),
-    xmlrpcfilter.XmlRpcFilter(),
+    _nsgmlsfilter,
+    _tidyfilter,
+    _xmlfilter,
 ]
 _cpDefaultOutputFilterList = [
-    xmlrpcfilter.XmlRpcFilter(),
+    _xmlfilter,
     encodingfilter.EncodingFilter(),
-    tidyfilter.TidyFilter(),
-    nsgmlsfilter.NsgmlsFilter(),
-    logdebuginfofilter.LogDebugInfoFilter(),
+    _tidyfilter,
+    _nsgmlsfilter,
+    _logdebuginfofilter,
     gzipfilter.GzipFilter(),
-    sessionfilter.SessionFilter(),
-    cachefilter.CacheFilter(),
+    _sessionfilter,
+    _cachefilter,
 ]

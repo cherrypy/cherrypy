@@ -26,7 +26,9 @@ class HelloWorld:
 # to '/' will be mapped to cpg.root.index().
 cpg.root = HelloWorld()
 
-# Start the CherryPy server using the configuration file tutorial.conf.
-cpg.config.update(file = 'tutorial.conf')
-cpg.server.start()
+if __name__ == '__main__':
+    # Use the configuration file tutorial.conf.
+    cpg.config.update(file = 'tutorial.conf')
+    # Start the CherryPy server.
+    cpg.server.start()
 

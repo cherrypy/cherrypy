@@ -12,7 +12,7 @@ from cherrypy import cpg
 class Page:
     # Store the page title in a class attribute
     title = 'Untitled Page'
-
+    
     def header(self):
         return '''
             <html>
@@ -22,13 +22,13 @@ class Page:
             <body>
             <h2>%s</h2>
         ''' % (self.title, self.title)
-
+    
     def footer(self):
         return '''
             </body>
             </html>
         '''
-
+    
     # Note that header and footer don't get their exposed attributes
     # set to True. This isn't necessary since the user isn't supposed
     # to call header or footer directly; instead, we'll call them from
@@ -39,11 +39,11 @@ class Page:
 class HomePage(Page):
     # Different title for this page
     title = 'Tutorial 5'
-
+    
     def __init__(self):
         # create a subpage
         self.another = AnotherPage()
-
+    
     def index(self):
         # Note that we call the header and footer methods inherited
         # from the Page class!
@@ -53,24 +53,25 @@ class HomePage(Page):
             <a href="./another/">another page</a>, too!
             </p>
         ''' + self.footer()
-
     index.exposed = True
 
 
 class AnotherPage(Page):
     title = 'Another Page'
-
+    
     def index(self):
         return self.header() + '''
             <p>
             And this is the amazing second page!
             </p>
         ''' + self.footer()
-
     index.exposed = True
 
 
 cpg.root = HomePage()
 
-cpg.config.update(file = 'tutorial.conf')
-cpg.server.start()
+
+if __name__ == '__main__':
+    cpg.config.update(file = 'tutorial.conf')
+    cpg.server.start()
+

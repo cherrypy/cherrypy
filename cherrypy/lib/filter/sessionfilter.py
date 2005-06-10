@@ -27,8 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from basefilter import BaseFilter
-import random, sha, string, time
-alphanum = string.letters + string.digits
+import random, sha, time
 
 
 class SessionFilter(BaseFilter):

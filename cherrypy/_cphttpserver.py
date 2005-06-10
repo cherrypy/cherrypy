@@ -292,7 +292,10 @@ def embedded_server(handler=None):
     """Selects and instantiates the appropriate server."""
     
     # Set protocol_version
-    CherryHTTPRequestHandler.protocol_version = cpg.config.get('server.protocolVersion')
+    proto = cpg.config.get('server.protocolVersion')
+    if not proto:
+        proto = "HTTP/1.0"
+    CherryHTTPRequestHandler.protocol_version = proto
     
     # Select the appropriate server based on config options
     sockFile = cpg.config.get('server.socketFile')

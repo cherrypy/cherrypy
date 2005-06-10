@@ -19,6 +19,7 @@ there are no matching methods), it is handled by the default method.
 from cherrypy import cpg
 
 class UsersPage:
+    
     def index(self):
         # Since this is just a stupid little example, we'll simply
         # display a list of links to random, made-up users. In a real
@@ -28,10 +29,8 @@ class UsersPage:
             <a href="./hendrik">Hendrik Mans</a><br/>
             <a href="./lorenzo">Lorenzo Lamas</a><br/>
         '''
-
     index.exposed = True
-
-
+    
     def default(self, user):
         # Here we react depending on the virtualPath -- the part of the
         # path that could not be mapped to an object method. In a real
@@ -45,13 +44,15 @@ class UsersPage:
             out = "Lorenzo Lamas, famous actor and singer!"
         else:
             out = "Unknown user. :-("
-
+        
         return '%s (<a href="./">back</a>)' % out
-
     default.exposed = True
 
 
 cpg.root = UsersPage()
 
-cpg.config.update(file = 'tutorial.conf')
-cpg.server.start()
+
+if __name__ == '__main__':
+    cpg.config.update(file = 'tutorial.conf')
+    cpg.server.start()
+

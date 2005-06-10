@@ -8,20 +8,20 @@ handler.
 from cherrypy import cpg
 
 class HelloWorld:
-
+    
     def index(self):
         # Let's link to another method here.
         return 'We have an <a href="showMessage">important message</a> for you!'
-
     index.exposed = True
-
-
+    
     def showMessage(self):
         # Here's the important message!
         return "Hello world!"
-
     showMessage.exposed = True
 
 cpg.root = HelloWorld()
-cpg.config.update(file = 'tutorial.conf')
-cpg.server.start()
+
+if __name__ == '__main__':
+    cpg.config.update(file = 'tutorial.conf')
+    cpg.server.start()
+

@@ -25,42 +25,36 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import helper, gzip, StringIO
 
-code = r"""
 from cherrypy import cpg
-europoundUnicode = u'\x80\xa3'
+from cherrypy.lib import httptools
+
 class Root:
     def index(self):
-        yield u"Hello,"
-        yield u"world"
-        yield europoundUnicode
+        return httptools.redirect('dummy')
     index.exposed = True
+
 cpg.root = Root()
 cpg.config.update({
     '/': {
-        'server.socketPort': 8000,
         'server.environment': 'production',
-        'gzipFilter.on': True,
-        'encodingFilter.on': True,
+        'baseUrlFilter.on': True,
+        'baseUrlFilter.baseUrl': 'http://www.mydomain.com'
     }
 })
-cpg.server.start()
-"""
-config = ""
-europoundUnicode = u'\x80\xa3'
-expectedResult = (u"Hello," + u"world" + europoundUnicode).encode('utf-8')
-zbuf = StringIO.StringIO()
-zfile = gzip.GzipFile(mode='wb', fileobj = zbuf, compresslevel = 9)
-zfile.write(expectedResult)
-zfile.close()
 
-testList = [
-    ('/', '%s in cpg.response.body' % repr(zbuf.getvalue()[:3])),
-]
+import unittest
+import helper
 
-def test(infoMap, failedList, skippedList):
-    print "    Testing combined filters ...",
-    # Gzip compression doesn't always return the same exact result !
-    # So we just check that the first few bytes are the same
-    helper.checkPageResult('combined filters', infoMap, code, testList, failedList, extraRequestHeader = [("Accept-Encoding", "gzip")])
+class BaseUrlFilterTest(unittest.TestCase):
+    
+    def testBaseUrlFilter(self):
+        helper.request("/")
+        self.assertEqual(cpg.response.headerMap['Location'],
+                         "http://www.mydomain.com/dummy")
+
+
+if __name__ == '__main__':
+    cpg.server.start(initOnly=True)
+    unittest.main()
+
