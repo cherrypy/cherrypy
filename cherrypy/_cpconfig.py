@@ -87,7 +87,7 @@ def get(key, defaultValue=None, returnSection=False, startPath = None):
         
 import os.path
 
-def getAll(key, asList = False):
+def getAll(key):
     """
     getAll will lookup the key in the current node and all of its parent nodes,
     it will return a dictionary paths of each node containing the key and its value
@@ -107,10 +107,7 @@ def getAll(key, asList = False):
     if path == '/' and value != None:
         result[path] = value
     
-    if asList:
-        return [(path, result[path]) for path in result]
-    else:
-        return result
+    return result
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and

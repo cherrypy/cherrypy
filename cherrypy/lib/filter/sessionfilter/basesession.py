@@ -31,7 +31,7 @@ import cherrypy.cpg
 import cherrypy._cputil, cherrypy.cperror
 import random, time, sha, string
 
-from sessiondict import SimpleSessionDict
+from simplesessiondict import SimpleSessionDict
 
 import sessionconfig
 

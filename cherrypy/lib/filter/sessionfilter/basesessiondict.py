@@ -26,6 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import cherrypy.cpg
 import time
 
 from sessionerrors import SessionImmutableError
@@ -40,65 +41,60 @@ def locker(function):
 
 import threading 
 
-from sessiondictbase import SessionDictBase
+# this is a dictionary like class that will be exposed to the application
+# this class is used by 
+class BaseSessionDict(object):
+    """
+    cpg.request.sessionMap is a SessionDict instance.
 
-class SimpleSessionDict(SessionDictBase):
-
-    def __init__(self, sessionData = {}):
-        self._lock = threading.RLock()
-        self.threadCount = 0
-        
-        self.__sessionData = sessionData.copy()
-        self.__sessionAttributes = {}
-        
-        # move the attributes into a seperate dictionary
-        for attr in ['timestamp', 'timeout', 'lastAccess', 'key']:
-            self.__sessionAttributes[attr] = self.__sessionData.pop(attr)
-
-    def get(self, key, default = None):
-        return self.__sessionData.get(key, default)
-    get=locker(get)
+    SessionDict isntances alwasy contain the following attributes.
     
+    'sessionKey' : A unique session identifier
+    
+    'timeout'    : The number of seconds of inactivity allowed before destroying the session
+
+    'timestamp'  : The time the session was created (seconds since the Epoch or time.time() )
+    'lastAccess' : The time the last session was accessed (seconds since the Epoch or time.time() )
+
+    sessionKey and createdAt are immutable and a SessionImmutableError will be raised if you
+    try to set one
+    """
+
+
+    def __init__(self):
+        pass
+    
+    def __eq__(self, sessionDict):
+        pass 
+        
+    def get(self, key, default = None):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
+        
     def __getitem__(self, key):
-        return self.__sessionData[key]
-    __getitem__=locker(__getitem__)
+        pass 
      
     def __setitem__(self, key, value):
-        self.__sessionData[key] = value
-    __setitem__=locker(__setitem__)
-        
-    def __getattr__(self, attr):
-        try:
-          return self.__sessionAttributes[attr]
-        except KeyError:
-            return object.__getattribute__(self, attr)
-    __getattr__=locker(__getattr__)
-    
-    # this function we lock the hard way
-    # so we don't try to lock the lock
-    def __setattr__(self, attr, value):
-        if attr == '_lock':
-            object.__setattr__(self, attr, value)
-            return
+        pass 
 
-        self._lock.acquire()
-        if attr in ['key', 'timestamp']:
-            raise SessionImmutableError(attr)
-        elif attr in ['timeout', 'lastAccess']:
-            self.__sessionData[attr] = value
-        else:
-            object.__setattr__(self, attr, value)
-        self._lock.release()
+    def __getattr__(self, attr):
+        pass 
     
+    def __setattr__(self, attr, value):
+        pass 
+    
+    def expired(self):
+        now = time.time()
+        return (now - self.lastAccess) < self.timeout
+    
+    # additional functions
+    '''
     def __getstate__(self):
-        """ remove the lock so we can pickle """
-        stateDict = self.__dict__.copy()
-        stateDict['threadCount'] = 0
-        stateDict.pop('_lock')
-        return stateDict
+        pass
 
     def __setstate__(self, stateDict):
-        """ create a new lock object """
-        self.__dict__['_lock'] = threading.RLock()
-        self.__dict__.update(stateDict)
+        pass
+    '''
 
