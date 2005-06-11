@@ -4,27 +4,26 @@ from lib import autoreload
 
 cpg = None # delayed import
 
-configMap = {
-        '/': {
-            'server.socketPort': 8080,
-            'server.socketHost': '',
-            'server.socketFile': '',
-            'server.socketQueueSize': 5,
+defaultGlobal = {
+    'server.socketPort': 8080,
+    'server.socketHost': '',
+    'server.socketFile': '',
+    'server.socketQueueSize': 5,
 
-            'server.environment': 'development',
-            'server.protocolVersion': 'HTTP/1.0',
-            'server.logToScreen': True,
-            'server.logFile': '',
-            'server.reverseDNS': False,
-            'server.threadPool': 0,
+    'server.environment': 'development',
+    'server.protocolVersion': 'HTTP/1.0',
+    'server.logToScreen': True,
+    'server.logFile': '',
+    'server.reverseDNS': False,
+    'server.threadPool': 0,
 
-            'session.storageType': 'ram',
-            'session.timeout': 60,
-            'session.cleanUpDelay': 60,
-            'session.cookieName': 'CherryPySession',
-            'session.storageFileDir': '',
-        },
+    'session.storageType': 'ram',
+    'session.timeout': 60,
+    'session.cleanUpDelay': 60,
+    'session.cookieName': 'CherryPySession',
+    'session.storageFileDir': '',
     }
+configMap = {"/": defaultGlobal.copy()}
 
 def update(updateMap=None, file=None):
     if updateMap:

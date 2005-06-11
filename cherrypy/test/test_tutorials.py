@@ -27,37 +27,47 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import unittest
-import helper
 import sys
 from cherrypy import cpg
+from cherrypy.test import helper
 
+server_conf = {'server.socketHost': helper.HOST,
+               'server.socketPort': helper.PORT,
+               'server.threadPool': 10,
+               'server.logToScreen': False,
+               'server.environment': "production",
+##               'profiling.on': True,
+               }
 
 def load_tut_module(tutorialName):
     """Import or reload tutorial module as needed."""
+    cpg.config.configMap.clear()
+    cpg.config.configMap["/"] = cpg.config.defaultGlobal.copy()
+    cpg.config.update({'/': server_conf.copy()})
+    
     target = "cherrypy.tutorial." + tutorialName
     if target in sys.modules:
         module = reload(sys.modules[target])
     else:
         module = __import__(target)
+    
+    cpg.server.start(initOnly=True)
 
 
 class TutorialTest(unittest.TestCase):
     
     def test01HelloWorld(self):
         load_tut_module("tut01_helloworld")
-        cpg.server.start(initOnly=True)
         helper.request("/")
         self.assertEqual(cpg.response.body, 'Hello world!')
     
     def test02ExposeMethods(self):
         load_tut_module("tut02_expose_methods")
-        cpg.server.start(initOnly=True)
         helper.request("/showMessage")
         self.assertEqual(cpg.response.body, 'Hello world!')
     
     def test03GetAndPost(self):
         load_tut_module("tut03_get_and_post")
-        cpg.server.start(initOnly=True)
         
         helper.request("/greetUser?name=Bob")
         self.assertEqual(cpg.response.body, "Hey Bob, what's up?")
@@ -72,7 +82,6 @@ class TutorialTest(unittest.TestCase):
     
     def test04ComplexSite(self):
         load_tut_module("tut04_complex_site")
-        cpg.server.start(initOnly=True)
         msg = '''
             <p>Here are some extra useful links:</p>
             
@@ -87,7 +96,6 @@ class TutorialTest(unittest.TestCase):
     
     def test05DerivedObjects(self):
         load_tut_module("tut05_derived_objects")
-        cpg.server.start(initOnly=True)
         msg = '''
             <html>
             <head>
@@ -108,7 +116,6 @@ class TutorialTest(unittest.TestCase):
     
     def test06Aspects(self):
         load_tut_module("tut06_aspects")
-        cpg.server.start(initOnly=True)
         msg = '''
             <html>
             <head>
@@ -130,7 +137,6 @@ class TutorialTest(unittest.TestCase):
     
     def test07DefaultMethod(self):
         load_tut_module("tut07_default_method")
-        cpg.server.start(initOnly=True)
         helper.request('/hendrik')
         self.assertEqual(cpg.response.body,
                          'Hendrik Mans, CherryPy co-developer & crazy German '
@@ -138,14 +144,6 @@ class TutorialTest(unittest.TestCase):
     
     def test08Sessions(self):
         load_tut_module("tut08_sessions")
-        cpg.server.start(initOnly=True)
-        
-        cpg.config.configMap["/"] = {'session.storageType': 'ram',
-                                     'session.cookieName': 'CherryPySession',
-                                     'session.timeout': 60,
-                                     'session.cleanUpDelay': 60,
-                                     'session.storageFileDir': '',
-                                     }
         
         helper.request('/')
         self.assertEqual(cpg.response.body,
@@ -161,7 +159,6 @@ class TutorialTest(unittest.TestCase):
     
     def test09GeneratorsAndYield(self):
         load_tut_module("tut09_generators_and_yield")
-        cpg.server.start(initOnly=True)
         helper.request('/')
         self.assertEqual(cpg.response.body,
                          '<html><body><h2>Generators rule!</h2>'

@@ -160,8 +160,8 @@ def main():
     server_conf = {'server.socketHost': helper.HOST,
                    'server.socketPort': helper.PORT,
                    'server.threadPool': 10,
-                   'server.socketQueueSize': 5,
                    'server.logToScreen': False,
+                   'server.environment': "production",
 ##                   'profiling.on': True,
                    }
     
@@ -178,6 +178,7 @@ def main():
             # Must run each module in a separate suite,
             # because each module uses/overwrites cpg globals.
             cpg.config.configMap.clear()
+            cpg.config.configMap["/"] = cpg.config.defaultGlobal.copy()
             cpg.config.update({'/': server_conf.copy()})
             suite = CPTestLoader.loadTestsFromName(testmod)
             CPTestRunner(verbosity=2).run(suite)
