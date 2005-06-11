@@ -96,10 +96,7 @@ class BaseSession(object):
         if sessionKeyFunc:
             newKey = cherrypy._cputil.getSpecialAttribute(sessionKeyFunc)()
         else:
-            s = ''
-            for i in range(50):
-                s += random.choice(string.letters+string.digits)
-            s += '%s'%time.time()
+            s = [random.choice(string.letters+string.digits) for i in xrange(50)]
             newKey = sha.sha(s).hexdigest()
         
         return newKey
