@@ -165,6 +165,15 @@ class TutorialTest(unittest.TestCase):
                          '<h3>List of users:</h3>'
                          'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
                          '</body></html>')
+    
+    def test10SessionFilter(self):
+        load_tut_module("tut10_sessionfilter")
+        
+        helper.request('/')
+        self.assert_("viewed this page 1 times" in cpg.response.body)
+        
+        helper.request('/', [('Cookie', dict(cpg.response.headers)['Set-Cookie'])])
+        self.assert_("viewed this page 2 times" in cpg.response.body)
 
 
 if __name__ == "__main__":

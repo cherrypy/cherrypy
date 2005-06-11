@@ -69,5 +69,7 @@ class HitCounter:
 
 cpg.root = HitCounter()
 
-cpg.config.update(file = 'tut10_sessionfilter.conf')
-cpg.server.start()
+if __name__ == '__main__':
+    cpg.config.update(file = 'tut10_sessionfilter.conf')
+    cpg.server.start()
+
