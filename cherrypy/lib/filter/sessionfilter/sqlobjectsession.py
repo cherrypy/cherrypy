@@ -48,6 +48,8 @@ class SQLObjectSessionDict(BaseSessionDict):
     def __getattr__(self, attr):
         if attr in ['timestamp', 'timeout', 'lastAccess', 'key']:
             return getattr(self.__sqlObject, self.__attrSub(attr))
+        else:
+            return object.__getattr__(self, attr)
 
     def __setattr__(self, attr, value):
         if attr == 'key' or attr == 'timestamp':
@@ -111,16 +113,4 @@ class SQLObjectSession(BaseSession):
     
     def cleanUpOldSessions(self):
         # running a single query would be a huge performace boost
-        for sessionKey in __data:
-            session = sessionData[sessionKey]
-            if session.expired():
-                self.delSession(sessionKey)
-
-'''
-Session.createTable()
-p = Session(session_key = 'abcd', timestamp = 330, count = 123)
-Session.delete(Session.q.session_key=='abcd')
-
-smanage = SQLObjectSession('test')
-print smanage.getSession('abcd')
-'''
+        pass

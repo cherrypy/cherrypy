@@ -71,7 +71,8 @@ class LogDebugInfoFilter(BaseFilter):
             if cpg.config.get('logDebugInfoFilter.logPageSize', True):
                 logList.append("Page size: %.02fKB" % (
                     len(body)/float(1024)))
-            
+            ''' 
+            # this is not compatible with the session filter
             if (cpg.config.get('logDebugInfoFilter.logSessionSize', True)
                 and cpg.config.get('session.storageType')):
                 # Pickle session data to get its size
@@ -84,6 +85,7 @@ class LogDebugInfoFilter(BaseFilter):
                                    (len(dumpStr) / float(1024)))
                 except:
                     logList.append("Session data size: Unable to pickle session")
+            '''
             
             debuginfo += ', '.join(logList)
             if logAsComment:
