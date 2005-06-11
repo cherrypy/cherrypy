@@ -127,7 +127,7 @@ def run_server(serverClass=None):
     
     cpg._httpserver = serverClass()
     
-    _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
+    _cpLogMessage = _cputil.getSpecialAttribute('_cpLogMessage')
     
     servingWhat = "HTTP"
     if cpg.config.get('server', 'socketPort'):

@@ -102,7 +102,7 @@ def wsgiApp(environ, start_response):
             yield str(chunk)
     except:
         tb = _cphttptools.formatExc()
-        _cputil.getSpecialFunction('_cpLogMessage')(tb)
+        _cputil.getSpecialAttribute('_cpLogMessage')(tb)
         s, h, b = _cphttptools.bareError(tb)
         # CherryPy test suite expects bareError body to be output,
         # so don't call start_response (which, according to PEP 333,
@@ -230,7 +230,7 @@ class WSGIRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def handleError(self, exc):
         self.close_connection = 1
         msg = _cphttptools.formatExc(exc)
-        _cputil.getSpecialFunction('_cpLogMessage')(msg, "HTTP")
+        _cputil.getSpecialAttribute('_cpLogMessage')(msg, "HTTP")
         self.status, self.headers, body = _cphttptools.bareError()
         self.write(body)
 

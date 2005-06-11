@@ -129,7 +129,7 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
 
 def _load(configFile = None):
     """ Convert an INI file to a dictionary """
-    _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
+    _cpLogMessage = _cputil.getSpecialAttribute('_cpLogMessage')
 
     # Parse config file
     configParser = CaseSensitiveConfigParser()
@@ -155,7 +155,7 @@ def _load(configFile = None):
             configMap[section][option] = value
 
 def outputConfigMap():
-    _cpLogMessage = _cputil.getSpecialFunction('_cpLogMessage')
+    _cpLogMessage = _cputil.getSpecialAttribute('_cpLogMessage')
     _cpLogMessage("Server parameters:", 'CONFIG')
     _cpLogMessage("  server.environment: %s" % get('server.environment'), 'CONFIG')
     _cpLogMessage("  server.logToScreen: %s" % get('server.logToScreen'), 'CONFIG')

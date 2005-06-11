@@ -158,7 +158,7 @@ class Request(object):
         except:
             pass
         msg = "%s - %s" % (cpg.request.remoteAddr, self.requestLine[:-2])
-        _cputil.getSpecialFunction('_cpLogMessage')(msg, "HTTP")
+        _cputil.getSpecialAttribute('_cpLogMessage')(msg, "HTTP")
         
         cpg.request.base = "http://" + cpg.request.headerMap.get('Host', '')
         cpg.request.browserUrl = cpg.request.base + path
@@ -227,7 +227,7 @@ def handleError(exc):
         
         # _cpOnError will probably change cpg.response.body.
         # It may also change the headerMap, etc.
-        _cputil.getSpecialFunction('_cpOnError')()
+        _cputil.getSpecialAttribute('_cpOnError')()
         
         finalize()
         
@@ -368,15 +368,15 @@ def finalize():
 def applyFilters(methodName):
     if methodName in ('beforeRequestBody', 'beforeMain'):
         filterList = (_cpdefaults._cpDefaultInputFilterList +
-                      _cputil.getSpecialFunction('_cpFilterList'))
+                      _cputil.getSpecialAttribute('_cpFilterList'))
     elif methodName in ('beforeFinalize',):
-        filterList = (_cputil.getSpecialFunction('_cpFilterList') +
+        filterList = (_cputil.getSpecialAttribute('_cpFilterList') +
                       _cpdefaults._cpDefaultOutputFilterList)
     else:
         # 'onStartResource', 'onEndResource'
         # 'beforeErrorResponse', 'afterErrorResponse'
         filterList = (_cpdefaults._cpDefaultInputFilterList +
-                      _cputil.getSpecialFunction('_cpFilterList') +
+                      _cputil.getSpecialAttribute('_cpFilterList') +
                       _cpdefaults._cpDefaultOutputFilterList)
     for filter in filterList:
         method = getattr(filter, methodName, None)

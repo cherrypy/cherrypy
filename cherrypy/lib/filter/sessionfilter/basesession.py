@@ -93,7 +93,7 @@ class BaseSession(object):
         sessionKeyFunc = cpg.config.get('%s.keyMaker' % self.sessionName, None)
         
         if sessionKeyFunc:
-            newKey = cherrypy._cputil.getSpecialFunction(sessionKeyFunc)()
+            newKey = cherrypy._cputil.getSpecialAttribute(sessionKeyFunc)()
         else:
             s = ''
             for i in range(50):

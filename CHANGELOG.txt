@@ -1,3 +1,6 @@
+2005-06-11:
+    * getSpecialFunction renamed getSpecialAttribute (mikerobi)
+
 2005-06-10:
     * New test suite (no forks, no exec). (fumanchu)
     * New lib/profiler module. (fumanchu)

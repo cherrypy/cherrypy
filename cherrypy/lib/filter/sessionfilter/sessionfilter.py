@@ -47,7 +47,7 @@ def _getSessions():
                 storageType = cpg.config.get('%s.customStorageClass' % sessionName)
                 if storageType:
                     try:
-                        cherrypy._cputil.getSpecialFunction(storageType)
+                        cherrypy._cputil.getSpecialAttribute(storageType)
                     except cherrypy.cperror.InternalError:
                         raise SessionBadStorageTypeError(storageType)
                 raise

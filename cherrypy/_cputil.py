@@ -40,7 +40,7 @@ class EmptyClass:
     """ An empty class """
     pass
 
-def getSpecialFunction(name):
+def getSpecialAttribute(name):
     """ Return the special function """
 
     # First, we look in the right-most object if this special function is implemented.

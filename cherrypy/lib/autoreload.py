@@ -52,4 +52,4 @@ def main(main_func, args=None, kwargs=None):
         try:
             sys.exit(restart_with_reloader())
         except KeyboardInterrupt:
-            _cputil.getSpecialFunction('_cpLogMessage')("<Ctrl-C> hit: shutting down autoreloader", "HTTP")
+            _cputil.getSpecialAttribute('_cpLogMessage')("<Ctrl-C> hit: shutting down autoreloader", "HTTP")
