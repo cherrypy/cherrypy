@@ -22,6 +22,15 @@ defaultGlobal = {
     'session.cleanUpDelay': 60,
     'session.cookieName': 'CherryPySession',
     'session.storageFileDir': '',
+    
+    'sessionFilter.on': True,
+    'sessionFilter.timeout': 60,
+    'sessionFilter.cleanUpDelay': 60,
+    'sessionFilter.storageType' : 'ram',
+    'sessionFilter.cookieName': 'CherryPySession',
+    'sessionFilter.storageFileDir': '.sessionFiles',
+    
+    'sessionFilter.new': 'sessionMap', # legacy setting
     }
 configMap = {"/": defaultGlobal.copy()}
 
@@ -38,16 +47,21 @@ def update(updateMap=None, file=None):
             autoreload.reloadFiles.append(file)
         _load(file)
 
-def get(key, defaultValue=None, returnSection=False):
+def get(key, defaultValue=None, returnSection=False, startPath = None):
     # Look, ma, no Python function calls! Uber-fast.
+    # start path lest you overload the starting search path (needed by getAll)
+    
     global cpg
     if not cpg:
         import cpg
     
-    try:
-        path = cpg.request.path
-    except AttributeError:
-        path = "/"
+    if startPath:
+        path = startPath
+    else:
+        try:
+            path = cpg.request.path
+        except AttributeError:
+            path = "/"
     
     while True:
         if path == "":
@@ -70,6 +84,30 @@ def get(key, defaultValue=None, returnSection=False):
         return path
     else:
         return result
+        
+import os.path
+
+def getAll(key):
+    """
+    getAll will lookup the key in the current node and all of its parent nodes,
+    it will return a dictionary paths of each node containing the key and its value
+
+    This function is required by the session filter
+    """
+    path = get(key, None, returnSection = True)
+    value = get(key)
+    
+    result = {}
+    while value != None and path != '/':
+        result[path]= value
+        path = os.path.split(path)[0]
+        value = get(key, None, returnSection = False, startPath = path)
+        path  = get(key, None, returnSection = True, startPath = path)
+    
+    if path == '/' and value != None:
+        result[path] = value
+    
+    return result
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and

@@ -389,6 +389,7 @@ def fileGenerator(input, chunkSize=65536):
     while chunk:
         yield chunk
         chunk = input.read(chunkSize)
+    input.close()
 
 def flattener(input):
     for x in input:

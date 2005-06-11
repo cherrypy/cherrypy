@@ -74,6 +74,9 @@ def _start(initOnly=False, serverClass=None):
     #   throughout the entire life of the webserver)
     cpg.request = local()
     cpg.response = local()
+
+    # Create as sessions object for accessing session data
+    cpg.sessions = local()
     
     # Create threadData object as a thread-specific all-purpose storage
     cpg.threadData = local()

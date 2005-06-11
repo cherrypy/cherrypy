@@ -169,8 +169,10 @@ _cpFilterList = []
 # Filters that are always included
 from cherrypy.lib.filter import baseurlfilter, cachefilter, \
     decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
-    sessionfilter, staticfilter, nsgmlsfilter, tidyfilter, \
+    staticfilter, nsgmlsfilter, tidyfilter, \
     virtualhostfilter, xmlrpcfilter
+
+from cherrypy.lib.filter.sessionfilter import sessionfilter
 
 _cachefilter = cachefilter.CacheFilter()
 _logdebuginfofilter = logdebuginfofilter.LogDebugInfoFilter()
