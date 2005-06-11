@@ -1,6 +1,8 @@
 2005-06-10:
     * New test suite (no forks, no exec). (fumanchu)
     * New lib/profiler module. (fumanchu)
+    * New session filter (mikerobi)
+    * New config.getAll function (mikerobi)
 
 2005-06-09:
     * New sessionauthenticatefilter. This replace CSAuthenticate implementation (based on aspect). (Remi)
