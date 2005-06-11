@@ -1,11 +1,5 @@
 """
-Tutorial 08 - Sessions
-
-Storing session data in CherryPy applications is very easy: cpg.request
-provides a dictionary called sessionMap that represents the session
-data for the current user. If you use RAM based sessions, you can store
-any kind of object into that dictionary; otherwise, you are limited to
-objects that can be pickled.
+Tutorial 10 - Advanced sessionFilter usage see tut10_sessionfilter.conf
 """
 
 from cherrypy import cpg
@@ -22,7 +16,7 @@ class HitCounter:
         yield sessionKey
         yield '\n</body></html>'
 
-    samplePages = ['admin', 'index', 'forum', 'sqlobject']
+    samplePages = ['admin', 'index', 'forum']
 
     def admin(self):
         adminCount = cpg.sessions.adminSession.get('adminCount', 0) + 1
@@ -46,6 +40,7 @@ class HitCounter:
         count = cpg.sessions.sessionMap.get('count', 0) + 1
 
         # Store the new value in the session dictionary
+        # cpg.sessions.sessionMap is available by default
         cpg.sessions.sessionMap['count'] = count
 
         # And display a silly hit count message!
@@ -53,6 +48,24 @@ class HitCounter:
         return self.__examplePage('ram', count, self.samplePages, key)
 
     index.exposed = True
+
+    # these functions do the same as the index but with a different session dictionary
+    def admin(self):
+        adminCount = cpg.sessions.adminSession.get('adminCount', 0) + 1
+        cpg.sessions.adminSession['adminCount'] = adminCount
+        
+        key = cpg.sessions.adminSession.key
+        return self.__examplePage('ram', adminCount, self.samplePages, key)
+
+    admin.exposed = True
+    
+    def forum(self):
+        forumCount = cpg.sessions.forumSession.get('forumCount', 0) + 1
+        cpg.sessions.forumSession['forumCount'] = forumCount
+        
+        key = cpg.sessions.forumSession.key
+        return self.__examplePage('ram', forumCount, self.samplePages, key)
+    forum.exposed=True
 
 cpg.root = HitCounter()
 
