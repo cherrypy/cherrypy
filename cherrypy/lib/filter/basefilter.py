@@ -26,11 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-class RequestHandled(Exception):
-    """Exception raised when no further request handling should occur."""
-    pass
-
-
 class BaseFilter(object):
     """
     Base class for filters. Derive new filter classes from this, then

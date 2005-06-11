@@ -48,3 +48,7 @@ class WrongUnreprValue(Error):
 class WrongConfigValue(Error):
     """ Happens when unrepr can't parse a config value """
     pass
+
+class RequestHandled(Exception):
+    """Exception raised when no further request handling should occur."""
+    pass

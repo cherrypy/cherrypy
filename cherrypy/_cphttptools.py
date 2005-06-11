@@ -112,7 +112,7 @@ class Request(object):
                     
                     applyFilters('beforeFinalize')
                     finalize()
-                except basefilter.RequestHandled:
+                except cperror.RequestHandled:
                     pass
             finally:
                 applyFilters('onEndResource')

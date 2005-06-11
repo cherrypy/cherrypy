@@ -128,8 +128,8 @@ class CacheFilter(basefilter.BaseFilter):
     def onStartResource(self):
         # We have to dynamically import cpg because Python can't handle
         #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
+        global cpg, cperror
+        from cherrypy import cpg, cperror
         cpg.threadData.cacheable = True
     
     def beforeMain(self):
@@ -156,7 +156,7 @@ class CacheFilter(basefilter.BaseFilter):
                 # serve it & get out from the request
                 cpg.response.status, cpg.response.headers, body = obj
                 cpg.response.body = body
-            raise basefilter.RequestHandled
+            raise cperror.RequestHandled
     
     def onEndResource(self):
         """Close & fix the cache entry after content was fully written"""

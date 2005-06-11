@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os, time, mimetypes
+import os, sys, time, mimetypes
 from basefilter import BaseFilter
 
 
@@ -48,6 +48,11 @@ class StaticFilter(BaseFilter):
             section = cpg.config.get('staticFilter.dir', returnSection=True)
             extraPath = cpg.request.path[len(section) + 1:]
             filename = os.path.join(staticDir, extraPath)
+        
+        # If filename is relative, make absolute using cpg.root's module.
+        if not os.path.isabs(filename):
+            root = os.path.dirname(sys.modules[cpg.root.__module__].__file__)
+            filename = os.path.join(root, filename)
         
         # Serve filename
         try:
