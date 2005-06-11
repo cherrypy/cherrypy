@@ -33,6 +33,8 @@ import random, time, sha, string
 
 from sessiondict import SimpleSessionDict
 
+import sessionconfig
+
 class BaseSession(object):
     """
     This is the class from which all session storage types are derived.
@@ -75,9 +77,9 @@ class BaseSession(object):
     def getDefaultAttributes(self):
       return { 
                'timestamp'  : int(time.time()),
-               'timeout'    : cherrypy.cpg.config.get('sessionFilter.timeout') * 60,
+               'timeout'    : sessionconfig.get('timeout', self.sessionName) * 60,
                'lastAccess' : int(time.time()),
-               'key' : self.generateSessionId()
+               'key' : self.generateSessionKey()
              }
        
     def newSession(self):
@@ -87,10 +89,9 @@ class BaseSession(object):
         newData.update(self.defaultValues)
         return SimpleSessionDict(newData)
 
-    def generateSessionId(self):
+    def generateSessionKey(self):
         """ Function to return a new sessioId """
-        cpg = cherrypy.cpg
-        sessionKeyFunc = cpg.config.get('%s.keyMaker' % self.sessionName, None)
+        sessionKeyFunc = sessionconfig.get('keyGenerator', self.sessionName, None)
         
         if sessionKeyFunc:
             newKey = cherrypy._cputil.getSpecialAttribute(sessionKeyFunc)()
@@ -128,13 +129,14 @@ class BaseSession(object):
         return session.key
 
     def commitCache(self, sessionKey): 
-        cpg = cherrypy.cpg 
         
         session = self.__sessionCache[sessionKey]
         session.threadCount = 0
         self.setSession(session)
         
-        cacheTimeout = cpg.config.get('sessionFilter.cacheTimeout', None)
+        cacheTimeout = sessionconfig.get('%s.cacheTimeout' % self.sessionName, None)
+        if not cacheTimeout:
+            cacheTimeout = sessionconfig.get('sessionFilter.cacheTimeout', None)
         
         if session.threadCount == 0 and not cacheTimeout:
             del self.__sessionCache[sessionKey]
@@ -143,7 +145,7 @@ class BaseSession(object):
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
-        cacheTimeout = cpg.config.get('sessionFilter.cacheTimeout', None)
+        cacheTimeout = sessionconfig.get('%s.cacheTimeout' % self.sessionName, None)
         
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout:
@@ -156,15 +158,6 @@ class BaseSession(object):
     def dropSession(self, sessionKey):
         self.delSession()
         """ delete a session from storage """
-
-    def register(cls):
-        """
-        This method will place the configName and session object so
-        the configuration system will know that "BaseSession" maps to
-        the BaseSession class
-        """
-        cherrypy.cpg.session.registerSession(cls.configName, cls)
-    register=classmethod(register)
 
     def cleanUpOldSessions(self):
         """This function cleans up expired sessions"""

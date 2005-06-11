@@ -41,8 +41,8 @@ class DBMSession(BaseSession):
 
         BaseSession.__init__(self, sessionName)
         
-        sessionName=cpg.config.get('session.new', None)
-        sessionFile=cpg.config.get('%s.dbFile' % sessionName, 'shelfSession.db')
+        sessionName=cpg.config.get('sessionFilter.new', None)
+        sessionFile=cpg.config.get('%s.dbFile' % sessionName, '%s.db' % sessionName)
         self.__data = shelve.open(sessionFile, 'c')
 
     def getSession(self, sessionKey):

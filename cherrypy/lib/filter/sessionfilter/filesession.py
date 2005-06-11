@@ -33,6 +33,7 @@ import cPickle as pickle
 import os.path
 
 from sessionerrors import *
+import sessionconfig
 
 import threading
 
@@ -44,9 +45,7 @@ class FileSession(BaseSession):
 
     def __storageDir(self):
         cpg = cherrypy.cpg
-        storageDir = cpg.config.get('%s.storageFileDir' % self.sessionName)
-        if not storageDir:
-            storageDir = cpg.config.get('sessionFilter.storageFileDir', '.sessionFiles')
+        storageDir = sessionconfig.get('storageFileDir', self.sessionName, '.sessionFiles')
         return storageDir
     
     # all session writes are blocked 

@@ -6,23 +6,7 @@ import os.path, time, re
 
 from sessionerrors import SessionNotFoundError 
 
-from ramsession  import RamSession 
-from filesession import FileSession
-from dbmsession  import DBMSession
-
-_sessionTypes = {
-                  'ram'       : RamSession,
-                  'file'      : FileSession,
-                  'anydb'     : DBMSession
-                }
-
-try:
-    # the user might not have sqlobject instaled
-    from sqlobjectsession  import SQLObjectSession
-    _sessionTypes['sqlobject']  = SQLObjectSession
-except ImportError:
-    pass
-    
+import sessionconfig 
 
 def _getSessions():
     """ checks the config file for the sessions """
@@ -38,16 +22,16 @@ def _getSessions():
         sessionName = sessionNames[sessionPath]
         sessionManager = cpg.config.get('%s.sessionManager' % sessionName, None)
         if not sessionManager:
-            storageType = cpg.config.get('%s.storageType' % sessionName, 'ram')
+            storageType = sessionconfig.get('storageType', sessionName)
             
-            #sessionManager = _sessionTypes[storageType](sessionName)
             try:
-                sessionManager = _sessionTypes[storageType](sessionName)
+                sessionManager = sessionconfig._sessionTypes[storageType](sessionName)
             except KeyError:
                 storageType = cpg.config.get('%s.customStorageClass' % sessionName)
                 if storageType:
                     try:
-                        cherrypy._cputil.getSpecialAttribute(storageType)
+                        storageClass = cherrypy._cputil.getSpecialAttribute(storageType)
+                        sessionManager = storageClass(sessionName)
                     except cherrypy.cperror.InternalError:
                         raise SessionBadStorageTypeError(storageType)
                 raise
@@ -62,7 +46,7 @@ def _getSessions():
                               }
                              )
         else: # try and clean up
-            cleanUpDelay = cpg.config.get('session.cleanUpDelay')
+            cleanUpDelay = sessionconfig.get('cleanUpDelay', sessionName)
             now = time.time()
             lastCleanUp = sessionManager.lastCleanUp
             if lastCleanUp + cleanUpDelay * 60 <= now:
@@ -106,7 +90,7 @@ class SessionFilter(BaseFilter):
             sessionName = sessions[sessionPath]
             cookieName = cpg.config.get('%s.cookieName' % sessionName, None)
             if not cookieName:
-                cookieName = cpg.config.get('session.cookieName') + '|' + re.sub('/','_', sessionPath) + '|' + sessionName
+                cookieName = cpg.config.get('sessionFilter.cookieName') + '|' + sessionName + '|' + re.sub('/','_', sessionPath)
                 cpg.config.update({
                                     sessionPath : {'%s.cookieName' % sessionName : cookieName}
                                   })
