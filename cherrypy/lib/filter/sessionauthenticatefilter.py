@@ -72,7 +72,7 @@ class SessionAuthenticateFilter(BaseFilter):
             password = cpg.request.paramMap['password']
             errorMsg = self.checkLoginAndPassword(login, password)
             if errorMsg:
-                cpg.response.body = loginScreen(fromPage, login = login, errorMsg = errorMsg)
+                cpg.response.body = self.loginScreen(fromPage, login = login, errorMsg = errorMsg)
             else:
                 cpg.request.sessionMap['username'] = login
                 cpg.response.body = httptools.redirect(fromPage)
@@ -82,7 +82,7 @@ class SessionAuthenticateFilter(BaseFilter):
         if (not cpg.request.sessionMap.get('username')) and self.notLoggedIn:
             self.notLoggedIn()
         if not cpg.request.sessionMap.get('username'):
-            cpg.response.body = loginScreen(cpg.request.browserUrl)
+            cpg.response.body = self.loginScreen(cpg.request.browserUrl)
             return
 
         # Everything is OK: user is logged in
