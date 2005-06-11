@@ -52,3 +52,12 @@ class WrongConfigValue(Error):
 class RequestHandled(Exception):
     """Exception raised when no further request handling should occur."""
     pass
+
+class IndexRedirect(Exception):
+    """Exception raised when the request should be redirected.
+    
+    The new URL must be passed as the first argument to the Exception, e.g.,
+        cperror.IndexRedirect(newUrl)
+    """
+    pass
+

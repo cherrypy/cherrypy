@@ -279,22 +279,19 @@ def main():
     
     try:
         func, objectPathList, virtualPathList = mapPathToObject()
-    except IndexRedirect, inst:
+        
+        # Remove "root" from objectPathList and join it to get objectPath
+        cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
+        body = func(*(virtualPathList + cpg.request.paramList),
+                    **(cpg.request.paramMap))
+        cpg.response.body = iterable(body)
+    except cperror.IndexRedirect, inst:
         # For an IndexRedirect, we don't go through the regular
         # mechanism: we return the redirect immediately
         newUrl = urlparse.urljoin(cpg.request.base, inst.args[0])
         cpg.response.status = '302 Found'
         cpg.response.headerMap['Location'] = newUrl
         cpg.response.body = []
-        return
-     
-    # Remove "root" from objectPathList and join it to get objectPath
-    cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
-    body = func(*(virtualPathList + cpg.request.paramList),
-                **(cpg.request.paramMap))
-    
-    cpg.response.body = body = iterable(body)
-    return body
 
 def iterable(body):
     # build a uniform return type (iterable)
@@ -404,9 +401,6 @@ def flattener(input):
 
 # Object lookup
 
-class IndexRedirect(Exception): pass
-
-
 def getObjFromPath(objPathList):
     """ For a given objectPathList (like ['root', 'a', 'b', 'index']),
          return the object (or None if it doesn't exist).
@@ -495,7 +489,7 @@ def mapPathToObject(path=None):
             newUrl = cpg.request.path + '/'
             if cpg.request.queryString:
                 newUrl += cpg.request.queryString
-            raise IndexRedirect(newUrl)
+            raise cperror.IndexRedirect(newUrl)
     
     return candidate, objectPathList, virtualPathList
 
