@@ -22,7 +22,7 @@ def _getSessions():
         sessionName = sessionNames[sessionPath]
         sessionManager = cpg.config.get('%s.sessionManager' % sessionName, None)
         if not sessionManager:
-            storageType = sessionconfig.get('storageType', sessionName)
+            storageType = sessionconfig.retrieve('storageType', sessionName)
             
             try:
                 sessionManager = sessionconfig._sessionTypes[storageType](sessionName)
@@ -46,7 +46,7 @@ def _getSessions():
                               }
                              )
         else: # try and clean up
-            cleanUpDelay = sessionconfig.get('cleanUpDelay', sessionName)
+            cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionName)
             now = time.time()
             lastCleanUp = sessionManager.lastCleanUp
             if lastCleanUp + cleanUpDelay * 60 <= now:

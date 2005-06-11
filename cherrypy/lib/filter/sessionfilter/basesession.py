@@ -77,7 +77,7 @@ class BaseSession(object):
     def getDefaultAttributes(self):
       return { 
                'timestamp'  : int(time.time()),
-               'timeout'    : sessionconfig.get('timeout', self.sessionName) * 60,
+               'timeout'    : sessionconfig.retrieve('timeout', self.sessionName) * 60,
                'lastAccess' : int(time.time()),
                'key' : self.generateSessionKey()
              }
@@ -91,7 +91,7 @@ class BaseSession(object):
 
     def generateSessionKey(self):
         """ Function to return a new sessioId """
-        sessionKeyFunc = sessionconfig.get('keyGenerator', self.sessionName, None)
+        sessionKeyFunc = sessionconfig.retrieve('keyGenerator', self.sessionName, None)
         
         if sessionKeyFunc:
             newKey = cherrypy._cputil.getSpecialAttribute(sessionKeyFunc)()
@@ -134,9 +134,9 @@ class BaseSession(object):
         session.threadCount = 0
         self.setSession(session)
         
-        cacheTimeout = sessionconfig.get('%s.cacheTimeout' % self.sessionName, None)
+        cacheTimeout = sessionconfig.retrieve('%s.cacheTimeout' % self.sessionName, None)
         if not cacheTimeout:
-            cacheTimeout = sessionconfig.get('sessionFilter.cacheTimeout', None)
+            cacheTimeout = sessionconfig.retrieve('sessionFilter.cacheTimeout', None)
         
         if session.threadCount == 0 and not cacheTimeout:
             del self.__sessionCache[sessionKey]
@@ -145,7 +145,7 @@ class BaseSession(object):
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
-        cacheTimeout = sessionconfig.get('%s.cacheTimeout' % self.sessionName, None)
+        cacheTimeout = sessionconfig.retrieve('%s.cacheTimeout' % self.sessionName, None)
         
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout:

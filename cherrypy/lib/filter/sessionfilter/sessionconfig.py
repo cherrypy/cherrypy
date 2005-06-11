@@ -46,7 +46,7 @@ except ImportError:
  
 import cherrypy.cpg
 
-def get(keyName, sessionName, default = None):
+def retrieve(keyName, sessionName, default = None):
     cpg = cherrypy.cpg
     value = cpg.config.get('%s.%s' % (sessionName, keyName), None)
     if value == None:
