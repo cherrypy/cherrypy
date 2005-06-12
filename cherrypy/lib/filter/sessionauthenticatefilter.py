@@ -65,7 +65,10 @@ class SessionAuthenticateFilter(BaseFilter):
         elif cpg.request.path.endswith('doLogout'):
             cpg.request.sessionMap['username'] = None
             cpg.threadData.user = None
-            cpg.response.body = httptools.redirect('/')
+            fromPage = cpg.request.paramMap.get('fromPage')
+            if fromPage is None:
+                fromPage = '/'
+            cpg.response.body = httptools.redirect(fromPage)
         elif cpg.request.path.endswith('doLogin'):
             fromPage = cpg.request.paramMap['fromPage']
             login = cpg.request.paramMap['login']
@@ -75,6 +78,8 @@ class SessionAuthenticateFilter(BaseFilter):
                 cpg.response.body = self.loginScreen(fromPage, login = login, errorMsg = errorMsg)
             else:
                 cpg.request.sessionMap['username'] = login
+                if not fromPage:
+                    fromPage = '/'
                 cpg.response.body = httptools.redirect(fromPage)
             return
 

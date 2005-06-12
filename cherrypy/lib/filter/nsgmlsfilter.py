@@ -66,17 +66,13 @@ class NsgmlsFilter(BaseFilter):
             command = '%s -c%s -f%s -s -E10 %s' % (
                 nsgmlsPath, catalogPath, errFile, pageFile)
             command = command.replace('\\', '/')
-            #command = '"%s" -f%s -s -E10 %s' % (
-            #    nsgmlsPath, errFile, pageFile)
-            print "** comand:", command
             os.system(command)
             f = open(errFile, 'rb')
             err = f.read()
             f.close()
-            
             errList = err.splitlines()
             newErrList = []
-            for err in newErrList:
+            for err in errList:
                 if err.find('characters in the document character set with numbers exceeding 65535 not supported') != -1:
                     continue
                 newErrList.append(err)
