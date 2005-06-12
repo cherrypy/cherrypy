@@ -38,41 +38,50 @@ import sessionconfig
 class BaseSession(object):
     """
     This is the class from which all session storage types are derived.
+    The functions which need to be redefined are at the end of the file
     """
 
-    # configname is the string storageType value used by the 
-    # configuration file
-    configName = 'BaseSession'
-    
-    """
-    autoKeys is used to tell the server if the session storage class
-    can automaticly determine all of the key names.  This would be 
-    true if you are using a relational database and false if you are 
-    using python dictionaries.
+    # these are the  functions that need to rewritten 
+    def delSession(self, sessionKey):
+        """ delete a session from storage """
 
-    If autoKeys is false the key names must be provided at runtime.
-    If it is true any key names provied at runtime are ignored.
-    """
-    autoKeys   = True
+    def getSession(self, sessionKey):
+        """ function to lookup the session """
     
+    def setSession(self, sessionData):
+        """ function to save sesion data """
+
+    def cleanUpOldSessions(self):
+        """This function cleans up expired sessions"""
+
+    def newSession(self):
+        """ Return a new sessiondict instance """
+
+    # it might be usefull to redefine this function
+    def generateSessionKey(self):
+        """ Function to return a new sessioId """
+        sessionKeyFunc = sessionconfig.retrieve('keyGenerator', self.sessionName, None)
+        
+        if sessionKeyFunc:
+            newKey = cherrypy._cputil.getSpecialAttribute(sessionKeyFunc)()
+        else:
+            newKey = sha.new('%s%s' % (time.time(), random.random())).hexdigest()
+        
+        return newKey
 
     def __init__(self, sessionName):
-        self.__sessionCache = {}
-        self.defaultValues = {}
-        self.sessionName = sessionName
         """
-        This is where the you initialize your session storage class.
-        sessionOptions is a direct mapping of the configuration
-        options.
+        Create the session caceh and set the session name.  Make if you write
+        a custom __init__ function make sure you make a call to 
+        BaseSession.__init__(sessioName)
+        """
         
-        The keys 'host', 'user', 'password', and 'database',
-        must be used by classes that need to connect to remote
-        databases.  'tableName' will contain the table name (duh!).
-
-        The keyw 'dataKeys' will map to a list of the variable names you wish
-        to store in your session object.  If autoKeys is true you will use it
-        to set to create sessionMap instances.
-        """
+        self.__sessionCache = {}
+        self.sessionName = sessionName
+  
+   
+    # there should never be a reason to modify the remaining functions, they used 
+    # internally by the sessionFilter
     
     def getDefaultAttributes(self):
       return { 
@@ -82,26 +91,6 @@ class BaseSession(object):
                'key' : self.generateSessionKey()
              }
        
-    def newSession(self):
-        """ Return a new sessionMap instance """
-        # this needs to check the config file for default values
-        newData = self.getDefaultAttributes()
-        newData.update(self.defaultValues)
-        return SimpleSessionDict(newData)
-
-    def generateSessionKey(self):
-        """ Function to return a new sessioId """
-        sessionKeyFunc = sessionconfig.retrieve('keyGenerator', self.sessionName, None)
-        
-        if sessionKeyFunc:
-            newKey = cherrypy._cputil.getSpecialAttribute(sessionKeyFunc)()
-        else:
-            s = [random.choice(string.letters+string.digits) for i in xrange(50)]
-            s.append('%s'%time.time())
-            newKey = sha.sha(''.join(s)).hexdigest()
-        
-        return newKey
-
     def loadSession(self, sessionKey, autoCreate = True):
         cpg = cherrypy.cpg
         
@@ -153,10 +142,3 @@ class BaseSession(object):
                 if session.threadCount == 0 and expired:
                     del self.__sessionCache[session.key]
     
-    def dropSession(self, sessionKey):
-        self.delSession()
-        """ delete a session from storage """
-
-    def cleanUpOldSessions(self):
-        """This function cleans up expired sessions"""
-

@@ -36,6 +36,7 @@ from sessionerrors import *
 import sessionconfig
 
 import threading
+from simplesessiondict import SimpleSessionDict
 
 class FileSession(BaseSession):
   
@@ -48,6 +49,11 @@ class FileSession(BaseSession):
         storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName, '.sessionFiles')
         return storageDir
     
+    def newSession(self):
+        """ Return a new sessiondict instance """
+        newData = self.getDefaultAttributes()
+        return SimpleSessionDict(newData)
+   
     # all session writes are blocked 
     def getSession(self, sessionKey):
         sessionStorageFileDir = self.__storageDir()

@@ -32,8 +32,7 @@ import cherrypy.cpg
 import shelve
 
 from sessionerrors import *
-
-import cPickle as pickle
+from simplesessiondict import SimpleSessionDict
 
 class DBMSession(BaseSession):
     def __init__(self, sessionName):
@@ -44,6 +43,11 @@ class DBMSession(BaseSession):
         sessionName=cpg.config.get('sessionFilter.new', None)
         sessionFile=cpg.config.get('%s.dbFile' % sessionName, '%s.db' % sessionName)
         self.__data = shelve.open(sessionFile, 'c')
+    
+    def newSession(self):
+        """ Return a new sessiondict instance """
+        newData = self.getDefaultAttributes()
+        return SimpleSessionDict(newData)
 
     def getSession(self, sessionKey):
         try:

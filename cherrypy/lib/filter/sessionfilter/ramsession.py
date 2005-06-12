@@ -30,12 +30,18 @@ from basesession import BaseSession
 import cherrypy.cpg
 
 from sessionerrors import *
+from simplesessiondict import SimpleSessionDict
 
 class RamSession(BaseSession):
     def __init__(self, sessionName):
         BaseSession.__init__(self, sessionName)
         self.__data = {}
-
+    
+    def newSession(self):
+        """ Return a new sessiondict instance """
+        newData = self.getDefaultAttributes()
+        return SimpleSessionDict(newData)
+        
     def getSession(self, sessionKey):
         try:
             return self.__data[sessionKey]
@@ -43,7 +49,7 @@ class RamSession(BaseSession):
             raise SessionNotFoundError
     
     def setSession(self, sessionData):
-        # since everything in in rame the 
+        # since everything in in ram the 
         # session we don't need to update the data
         # unless int is a new session
         if not self.__data.has_key(sessionData.key):

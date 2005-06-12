@@ -5,6 +5,8 @@ Tutorial 10 - Advanced sessionFilter usage see tut10_sessionfilter.conf
 from cherrypy import cpg
 
 class HitCounter:
+  
+    # this is just a primative template function
     def __examplePage(self, poweredBy, count, links, sessionKey):
         yield '<html><head><title>sessionFilter exampe</title><body>\n'
         yield 'This page uses %s based session storage.<br/>\n' % poweredBy
@@ -16,26 +18,14 @@ class HitCounter:
         yield sessionKey
         yield '\n</body></html>'
 
+    # a list of the pages used in the example so we add pages
+    # without changing any code
     samplePages = ['admin', 'index', 'forum']
-
-    def admin(self):
-        adminCount = cpg.sessions.adminSession.get('adminCount', 0) + 1
-        cpg.sessions.adminSession['adminCount'] = adminCount
-        
-        key = cpg.sessions.adminSession.key
-        return self.__examplePage('ram', adminCount, self.samplePages, key)
-
-    admin.exposed = True
     
-    def forum(self):
-        forumCount = cpg.sessions.forumSession.get('forumCount', 0) + 1
-        cpg.sessions.forumSession['forumCount'] = forumCount
-        
-        key = cpg.sessions.forumSession.key
-        return self.__examplePage('ram', forumCount, self.samplePages, key)
-    forum.exposed=True
-
     def index(self):
+        # this function uses the sessionMap which is turned on by defualt
+        # it may not be the defualt in future versions
+        
         # Increase the silly hit counter
         count = cpg.sessions.sessionMap.get('count', 0) + 1
 
@@ -49,17 +39,23 @@ class HitCounter:
 
     index.exposed = True
 
-    # these functions do the same as the index but with a different session dictionary
     def admin(self):
+        # this function uses the adminSession which is defined in
+        # the config file "tut10_sessionFilter.conf", otherwise
+        # it mirrors the session function
+
         adminCount = cpg.sessions.adminSession.get('adminCount', 0) + 1
         cpg.sessions.adminSession['adminCount'] = adminCount
         
         key = cpg.sessions.adminSession.key
         return self.__examplePage('ram', adminCount, self.samplePages, key)
-
     admin.exposed = True
     
     def forum(self):
+        # this function uses the forumSession which is defined in
+        # the config file "tut10_sessionFilter.conf", otherwise
+        # it mirrors the session function
+        
         forumCount = cpg.sessions.forumSession.get('forumCount', 0) + 1
         cpg.sessions.forumSession['forumCount'] = forumCount
         

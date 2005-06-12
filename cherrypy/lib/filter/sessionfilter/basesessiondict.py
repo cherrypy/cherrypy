@@ -39,8 +39,6 @@ def locker(function):
         return result
     return _inner
 
-import threading 
-
 # this is a dictionary like class that will be exposed to the application
 # this class is used by 
 class BaseSessionDict(object):
