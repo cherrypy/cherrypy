@@ -49,3 +49,28 @@ class ExposeItems:
         self.items = items
     def __getattr__(self, key):
         return self.items[key]
+
+class PositionalParametersAware(object):
+    """
+    Utility class that restores positional parameters functionality that
+    was found in 2.0.0-beta.
+
+    Use case:
+
+    from cherrypy.lib import cptools
+    from cherrypy import cpg
+    class Root(cptools.PositionalParametersAware):
+        def something(self, name):
+            return "hello, " + name
+        something.exposed
+    cpg.root = Root()
+    cpg.server.start()
+
+    Now, fetch http://localhost:8080/something/name_is_here
+    """
+    def default( self, *args, **kwargs ):
+        # remap parameters to fix positional parameters
+        if hasattr( self, args[ 0 ] ):
+            return getattr( self, args[ 0 ] )( *args[ 1: ], **kwargs )
+    default.exposed = True
+    
