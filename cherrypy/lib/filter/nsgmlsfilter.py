@@ -73,9 +73,13 @@ class NsgmlsFilter(BaseFilter):
             errList = err.splitlines()
             newErrList = []
             for err in errList:
-                if err.find('characters in the document character set with numbers exceeding 65535 not supported') != -1:
-                    continue
-                newErrList.append(err)
+                ignore = False
+                for errIgn in cpg.config.get('nsgmlsFilter.errorsToIgnore', []):
+                    if err.find(errIgn) != -1:
+                        ignore = True
+                        break
+                if not ignore:
+                    newErrList.append(err)
             if newErrList:
                 newBody = "Wrong HTML:<br />" + cgi.escape('\n'.join(newErrList)).replace('\n','<br />')
                 newBody += '<br /><br />'
