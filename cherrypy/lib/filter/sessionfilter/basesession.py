@@ -121,9 +121,7 @@ class BaseSession(object):
         session.threadCount = 0
         self.setSession(session)
         
-        cacheTimeout = sessionconfig.retrieve('%s.cacheTimeout' % self.sessionName, None)
-        if not cacheTimeout:
-            cacheTimeout = sessionconfig.retrieve('sessionFilter.cacheTimeout', None)
+        cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.sessionName, None)
         
         if session.threadCount == 0 and not cacheTimeout:
             del self.__sessionCache[sessionKey]
@@ -132,7 +130,7 @@ class BaseSession(object):
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
-        cacheTimeout = sessionconfig.retrieve('%s.cacheTimeout' % self.sessionName, None)
+        cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.sessionName, None)
         
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout:

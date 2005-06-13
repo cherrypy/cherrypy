@@ -57,7 +57,6 @@ class FileSession(BaseSession):
     # all session writes are blocked 
     def getSession(self, sessionKey):
         sessionStorageFileDir = self.__storageDir()
-        print sessionStorageFileDir, sessionKey
         fname = os.path.join(sessionStorageFileDir, sessionKey)
         if os.path.exists(fname):
             f = open(fname, "rb")
