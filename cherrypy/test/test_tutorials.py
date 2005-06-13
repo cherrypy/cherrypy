@@ -144,6 +144,7 @@ class TutorialTest(unittest.TestCase):
     
     def test08Sessions(self):
         load_tut_module("tut08_sessions")
+        cpg.config.update({"/": {"sessionFilter.on": True}})
         
         helper.request('/')
         self.assertEqual(cpg.response.body,
@@ -168,6 +169,7 @@ class TutorialTest(unittest.TestCase):
     
     def test10SessionFilter(self):
         load_tut_module("tut10_sessionfilter")
+        cpg.config.update({"/": {"sessionFilter.on": True}})
         
         helper.request('/')
         self.assert_("viewed this page 1 times" in cpg.response.body)

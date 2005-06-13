@@ -23,7 +23,7 @@ defaultGlobal = {
     'session.cookieName': 'CherryPySession',
     'session.storageFileDir': '',
     
-    'sessionFilter.on': True,
+    'sessionFilter.on': False,
     'sessionFilter.timeout': 60,
     'sessionFilter.cleanUpDelay': 60,
     'sessionFilter.storageType' : 'ram',

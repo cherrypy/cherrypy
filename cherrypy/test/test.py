@@ -162,7 +162,7 @@ def main():
                    'server.threadPool': 10,
                    'server.logToScreen': False,
                    'server.environment': "production",
-##                   'profiling.on': True,
+                   'profiling.on': True,
                    }
     
     for name, server in [("Serverless", None),
