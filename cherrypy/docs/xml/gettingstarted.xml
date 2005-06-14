@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<chapter xmlns:db="http://docbook.org/docbook-ng"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+         xml:id="gettingstarted">
+  <title>Getting started</title>
+  <section>
+    <sectioninfo>
+      <abstract>
+	<para></para>
+      </abstract>
+    </sectioninfo>
+    <title>Getting CherryPy</title>
+  </section>
+  <section>
+    <sectioninfo>
+      <abstract>
+	<para></para>
+      </abstract>
+    </sectioninfo>
+    <title>Installing CherryPy</title>
+  </section>
+  <section>
+    <sectioninfo>
+      <abstract>
+	<para></para>
+      </abstract>
+    </sectioninfo>
+    <title>Running the test</title>
+  </section>
+  <section>
+    <sectioninfo>
+      <abstract>
+	<para></para>
+      </abstract>
+    </sectioninfo>
+    <title>Hello world!</title>
+  </section>
+  <xi:include href="buildingblog.xml" />
+  <section>
+    <sectioninfo>
+      <abstract>
+	<para></para>
+      </abstract>
+    </sectioninfo>
+    <title>Summary</title>
+  </section>
+</chapter>

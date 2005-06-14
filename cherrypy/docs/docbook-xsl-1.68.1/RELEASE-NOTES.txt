@@ -1,0 +1,826 @@
+DocBook XSL Stylesheet Release Notes
+
+DocBook Open Repository Team
+
+$Id: RELEASE-NOTES.xml,v 1.35 2005/02/14 08:06:28 xmldoc Exp $
+
+01 December 2004
+
+-------------------------------------------------------------------------------
+
+Table of Contents
+
+Release 1.68.1
+Release 1.68.0
+Release 1.67.2
+Release 1.67.1
+Release 1.67.0
+Release 1.66.1
+Release 1.65.0
+Release 1.64.1
+Release 1.61.0
+Release 1.60.1
+Release 1.59.2
+Release 1.59.1
+Release 1.58.0
+Release 1.57.0
+Release 1.56.0
+Older releases
+
+These are the release notes for the DocBook XSL Stylesheets. At a minimum, this
+file attempts to document changes to the public APIs. What, exactly, counts as
+a public API is still somewhat in question, but it includes at least the global
+parameters. This file also provides a high-level overview of the features added
+in each release.
+
+Bug fixes are (mostly) not documented here. For a complete list of changes,
+including descriptions of bug fixes, see the WhatsNew file, which is
+auto-generated from the checkin descriptions for changes in the project CVS
+repository.
+
+Release 1.68.1
+
+The release adds localization support for Farsi (thanks to Sina Heshmati) and
+improved support for the XLink-based DocBook NG db:link element. Other than
+that, it is a minor bug-fix update to the 1.68.0 release. The main thing it
+fixes is a build error that caused the XSLT Java extensions to be jarred up
+with the wrong package structure. Thanks to Jens Stavnstrup for quickly
+reporting the problem, and to Mauritz Jeanson for investigating and finding the
+cause.
+
+Release 1.68.0
+
+This release includes some features changes, particularly for FO/PDF output,
+and a number of bug fixes.
+
+FO
+
+  * Moved footnote properties to attribute-sets.
+
+  * Added support for side floats, margin notes, and custom floats.
+
+  * Added new parameters body.start.indent and body.end.indent to the
+    set.flow.properties template.
+
+  * Added support for xml:id
+
+  * Added support for refdescriptor.
+
+  * Added support for multiple refnamedivs.
+
+  * Added index.entry.properties attribute-set to support customization of
+    index entries.
+
+  * Added set.flow.properties template call to each fo:flow to support
+    customizations entry point.
+
+  * Add support for @floatstyle in figure
+
+  * Moved hardcoded properties for index division titles to the
+    index.div.title.properties attribute-set.
+
+  * Added support for table-layout="auto" for XEP.
+
+  * Added index.div.title.properties attribute-set.
+
+  * $verbose parameter is now passed to most elements.
+
+  * Added refentry to toc in part, as it is permitted by the DocBook schema/
+    DTD.
+
+  * Added backmatter elements and article to toc in part, since they are
+    permitted by the DocBook schema/DTD.
+
+  * Added mode="toc" for simplesect, since it is now permitted in the toc if
+    simplesect.in.toc is set.
+
+  * Moved hard-coded properties to nongraphical.admonintion.properties and
+    graphical.admonition.properties attribute sets.
+
+  * Added support for sidebar-width and float-type processing instructions in
+    sidebar.
+
+  * For tables with HTML markup elements, added support for dbfo bgcolor PI,
+    the attribute-sets named table.properties, informaltable.properties,
+    table.table.properties, and table.cell.padding. Also added support for the
+    templates named table.cell.properties and table.cell.block.properties so
+    that tabstyles can be implemented. Also added support for tables containing
+    only tr instead of tbody with tr.
+
+  * Added new paramater hyphenate.verbatim.characters which can specify
+    characters after which a line break can occur in verbatim environments.
+    This parameter can be used to extend the initial set of characters which
+    contain only space and non-breakable space.
+
+  * Added itemizedlist.label.markup to enable selection of different bullet
+    symbol. Also added several potential bullet characters, commented out by
+    default.
+
+  * Enabled all id's in XEP output for external olinking.
+
+HTML
+
+  * Added support for refdescriptor.
+
+  * Added support for multiple refnamedivs.
+
+  * Added support for xml:id
+
+  * refsynopsisdiv as a section for counting section levels
+
+Images
+
+  * Added new SVG admonition graphics and navigation images.
+
+Release 1.67.2
+
+This release fixes a table bug introduced in the 1.67.1 release.
+
+Release 1.67.1
+
+This release includes a number of bug fixes; for details, see the WhatsNew
+file.
+
+The following lists provide details about API and feature changes.
+
+FO
+
+  * Tables: Inherited cell properties are now passed to the
+    table.cell.properties template so they can be overridden by a
+    customization.
+
+  * Tables: Added support for bgcolor PI on table row element.
+
+  * TOCs: Added new parameter simplesect.in.toc; default value of 0 causes
+    simplesect to be omitted from TOCs; to cause simplesect to be included in
+    TOCs, you must set the value of simplesect.in.toc to 1.Comment from Norm:
+
+        Simplesect elements aren't supposed to appear in the ToC at all... The
+        use case for simplesect is when, for example, every chapter in a book
+        ends with "Exercises" or "For More Information" sections and you don't
+        want those to appear in the ToC.
+
+  * Sections: Reverted change that caused a variable reference to be used in a
+    template match and rewrote code to preserve intended semantics.
+
+  * Lists: Added workaround to prevent "* 0.60 + 1em" garbage in list output
+    from PassiveTeX
+
+  * Moved the literal attributes from component.title to the
+    component.title.properties attribute-set so they can be customized.
+
+  * Lists: Added glossdef's first para to special handling in
+    fo:list-item-body.
+
+HTML
+
+  * TOCs: Added new parameter simplesect.in.toc; for details, see the list of
+    FO changes for this release.
+
+  * Indexing: Added new parameter index.prefer.titleabbrev; when set to 1,
+    index references will use titleabbrev instead of title when available.
+
+HTML Help
+
+  * Added support for generating windows-1252-encoded output using Saxon; for
+    more details, see the list of XSL Java extensions changes for this release.
+
+man pages
+
+  * Replaced named/numeric character-entity references for non-breaking space
+    with groff equivalent (backslash-tilde).
+
+XSL Java extensions
+
+  * Saxon extensions: Added the Windows1252 class. It extends Saxon 6.5.x with
+    the windows-1252 character set, which is particularly useful when
+    generating HTML Help for Western European Languages (code from Pontus
+    Haglund and contributed to the DocBook community by Sectra AB, Sweden).
+
+    To use:
+
+     1. Make sure that the Saxon 6.5.x jar file and the jar file for the
+        DocBook XSL Java extensions are in your CLASSPATH
+
+     2. Create a DocBook XSL customization layer -- a file named
+        mystylesheet.xsl or whatever -- that, at a minimum, contains the
+        following:
+
+          <xsl:stylesheet
+            xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+            version='1.0'>
+            <xsl:import href="http://docbook.sourceforge.net/release/xsl/current/htmlhelp/htmlhelp.xsl"/>
+            <xsl:output method="html" encoding="WINDOWS-1252" indent="no"/>
+            <xsl:param name="htmlhelp.encoding" select="'WINDOWS-1252'"></xsl:param>
+            <xsl:param name="chunker.output.encoding" select="'WINDOWS-1252'"></xsl:param>
+            <xsl:param name="saxon.character.representation" select="'native'"></xsl:param>
+          </xsl:stylesheet>
+
+        Invoke Saxon with the encoding.windows-1252 Java system property set to
+        com.nwalsh.saxon.Windows1252; for example
+
+          java \
+            -Dencoding.windows-1252=com.nwalsh.saxon.Windows1252 \
+          com.icl.saxon.StyleSheet \
+          mydoc.xml mystylesheet.xsl
+
+        Or, for a more complete "real world" case showing other options you'll
+        typically want to use:
+
+          java \
+            -Dencoding.windows-1252=com.nwalsh.saxon.Windows1252 \
+            -Djavax.xml.parsers.DocumentBuilderFactory=org.apache.xerces.jaxp.DocumentBuilderFactoryImpl \
+            -Djavax.xml.parsers.SAXParserFactory=org.apache.xerces.jaxp.SAXParserFactoryImpl \
+            -Djavax.xml.transform.TransformerFactory=com.icl.saxon.TransformerFactoryImpl \
+          com.icl.saxon.StyleSheet \
+            -x org.apache.xml.resolver.tools.ResolvingXMLReader \
+            -y org.apache.xml.resolver.tools.ResolvingXMLReader \
+            -r org.apache.xml.resolver.tools.CatalogResolver \
+          mydoc.xml mystylesheet.xsl
+
+        In both cases, the "mystylesheet.xsl" file should be a DocBook
+        customization layer containing the parameters show in step 2.
+
+  * Saxon extensions: Removed Saxon 8 extensions from release package
+
+Release 1.67.0
+
+  * A number of important bug fixes, documented in WhatsNew.
+
+  * Added Saxon8 extensions
+
+  * Enabled dbfo table-width on entrytbl in FO output
+
+  * Added support for role=strong on emphasis in FO output
+
+  * Added new FO parameter hyphenate.verbatim that can be used to turn on
+    "intelligent" wrapping of verbatim environments.
+
+  * Replaced all <tt></tt> output with <code></code>
+
+  * Changed admon.graphic.width template to a mode so that different
+    admonitions can have different graphical widths.
+
+  * Deprecated the HTML shade.verbatim parameter (use CSS instead)
+
+  * Wrapped ToC refentrytitle/refname and refpurpose in span with class values.
+    This makes it possible to style them using a CSS stylesheet.
+
+  * Use strong/em instead of b/i in HTML output
+
+  * Added support for converting Emphasis to groff italic and Emphasis role=
+    'bold' to bold. Controlled by emphasis.propagates.style param, but not
+    documented yet using litprog system. Will do that next (planning to add
+    some other parameter-controllable options for hyphenation and handling of
+    line spacing).
+
+  * callout.graphics.number.limit.xml param: Changed the default from 10 to 15.
+
+  * verbatim.properties: Added hyphenate=false
+
+  * Saxon and Xalan Text.java extensions: Added support for URIResolver() on
+    insertfile href's
+
+  * Added generated RELEASE-NOTES.txt file.
+
+  * Added INSTALL file (executable file for generating catalog.xml)
+
+  * Removed obsolete tools directory from package
+
+Release 1.66.1
+
+  * A number of important bug fixes, documented in WhatsNew.
+
+  * Now xml:base attributes that are generated by an XInclude processor are
+    resolved for image files.
+
+  * Rewrote olink templates to support several new features.
+
+      o Extended full olink support to FO output.
+
+      o Add support for xrefstyle attribute in olinks.
+
+      o New parameters to support new olink features: insert.olink.page.number,
+        insert.olink.pdf.frag, olink.debug, olink.lang.fallback.sequence,
+        olink.properties, prefer.internal.olink. See the reference page for
+        each parameter for more information.
+
+  * Added index.on.type parameter for new type attribute introduced in DocBook
+    4.3 for indexterms and index. This allows you to create multiple indices
+    containing different categories of entries. For users of 4.2 and earlier,
+    you can use the new parameter index.on.role instead.
+
+  * Added new section.autolabel.max.depth parameter to turn off section
+    numbering below a certain depth. This permits you to number major section
+    levels and leave minor section levels unnumbered.
+
+  * Added footnote.sep.leader.properties attribute set to format the line
+    separating footnotes in printed output.
+
+  * Added parameter img.src.path as a prefix to HTML img src attributes. The
+    prefix is added to whatever path is already generated by the stylesheet for
+    each image file.
+
+  * Added new attribute-sets informalequation.properties,
+    informalexample.properties, informalfigure.properties, and
+    informaltable.properties, so each such element type can be formatted
+    individually if needed.
+
+  * Add component.label.includes.part.label parameter to add any part number to
+    chapter, appendix and other component labels when the label.from.part
+    parameter is nonzero. This permits you to distinguish multiple chapters
+    with the same chapter number in cross references and the TOC.
+
+  * Added chunk.separate.lots parameter for HTML output. This parameter lets
+    you generate separate chunk files for each LOT (list of tables, list of
+    figures, etc.).
+
+  * Added several table features:
+
+      o Added table.table.properties attribute set to add properties to the
+        fo:table element.
+
+      o Added placeholder templates named table.cell.properties and
+        table.cell.block.properties to enable adding properties to any
+        fo:table-cell or the cell's fo:block, respectively. These templates are
+        a start for implementing table styles.
+
+  * Added new attribute set component.title.properties for easy modifications
+    of component's title formatting in FO output.
+
+  * Added Saxon support for an encoding attribute on the textdata element.
+    Added new parameter textdata.default.encoding which specifies encoding when
+    encoding attribute on textdata is missing.
+
+  * Template label.this.section now controls whole section label, not only
+    sub-label which corresponds to particular label. Former behaviour was IMHO
+    bug as it was not usable.
+
+  * Formatting in titleabbrev for TOC and headers is preserved when there are
+    no hotlink elements in the title. Formerly the title showed only the text
+    of the title, no font changes or other markup.
+
+  * Added intial.page.number template to set the initial-page-number property
+    for page sequences in print output. Customizing this template lets you
+    change when page numbering restarts. This is similar to the
+    format.page.number template that lets you change how the page number
+    formatting changes in the output.
+
+  * Added force.page.count template to set the force-page-count property for
+    page sequences in print output. This is similar to the format.page.number
+    template.
+
+  * Sort language for localized index sorting in autoidx-ng.xsl is now taken
+    from document lang, not from system environment.
+
+  * Numbering and formatting of normal and ulink footnotes (if turned on) has
+    been unified. Now ulink footnotes are mixed in with any other footnotes.
+
+  * Added support for renderas attribute in section and sect1 et al. This
+    permits you to render a given section title as if it were a different
+    level.
+
+  * Added support for label attribute in footnote to manually supply the
+    footnote mark.
+
+  * Added support for DocBook 4.3 corpcredit element.
+
+  * Added support for a dbfo keep-together PI for formal objects (table,
+    figure, example, equation, programlisting). That permits a formal object to
+    be kept together if it is not already, or to be broken if it is very long
+    and the default keep-together is not appropriate.
+
+  * For graphics files, made file extension matching case insensitive, and
+    updated the list of graphics extensions.
+
+  * Allow calloutlist to have block content before the first callout
+
+  * Added dbfo-need processing instruction to provide soft page breaks.
+
+  * Added implementation of existing but unused default.image.width parameter
+    for graphics.
+
+  * Support DocBook NG tag inline element.
+
+  * It appears that XEP now supports Unicode characters in bookmarks. There is
+    no further need to strip accents from characters.
+
+  * Make segmentedlist HTML markup more semantic and available to CSS styles.
+
+  * Added user.preroot placeholder template to permit xsl-stylesheet and other
+    PIs and comments to be output before the HTML root element.
+
+  * Non-chunked legalnotice now gets an <a name="id"> element in HTML output so
+    it can be referenced with xref or link.
+
+  * In chunked HTML output, changed link rel="home" to rel="start", and link
+    rel="previous" to rel="prev", per W3C HTML 4.01 spec.
+
+  * Added several patches to htmlhelp from W. Borgert
+
+  * Added Bosnian locale file as common/bs.xml.
+
+Release 1.65.0
+
+  * A number of important bug fixes, documented in WhatsNew.
+
+  * Added a workaround to allow these stylesheets to process DocBook NG
+    documents. (It?s a hack that pre-processes the document to strip off the
+    namespace and then uses exsl:node-set to process the result.)
+
+  * Added alternative indexing mechanism which has better internationalization
+    support. New indexing method allows grouping of accented letters like e, ?,
+    ? into the same group under letter "e". It can also treat special letters
+    (e.g. "ch") as one character and place them in the correct position (e.g.
+    between "h" and "i" in Czech language).
+
+    In order to use this mechanism you must create customization layer which
+    imports some base stylesheet (like fo/docbook.xsl, html/chunk.xsl) and then
+    includes appropriate stylesheet with new indexing code (fo/autoidx-ng.xsl
+    or html/autoidx-ng.xsl). For example:
+
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                    version="1.0">
+
+    <xsl:import href="http://docbook.sourceforge.net/release/xsl/current/fo/docbook.xsl"/>
+    <xsl:include href="http://docbook.sourceforge.net/release/xsl/current/fo/autoidx-ng.xsl"/>
+
+    </xsl:stylesheet>
+
+    New method is known to work with Saxon and it should also work with
+    xsltproc 1.1.1 and later. Currently supported languages are English, Czech,
+    German, French, Spanish and Danish.
+
+Release 1.64.1
+
+General bug fixes and improvements. Sorry about the failure to produce an
+updated release notes file for 1.62.0?1.63.2
+
+  * In the course of fixing bug #849787, wrapping Unicode callouts with an
+    appropriate font change in the Xalan extensions, I discovered that the
+    Xalan APIs have changed a bit. So xalan2.jar will work with older Xalan 2
+    implementations, xalan25.jar works with Xalan 2.5.
+
+Release 1.61.0
+
+Lots of bug fixes and improvements.
+
+  * Initial support for timestamp PI. From now you can use <?dbtimestamp format
+    ="Y-m-d H:M:S"?> to get current datetime in your document. Added
+    localization support for datetime PI
+
+  * Added level 6 to test for section depth in section.level template so that
+    section.title.level6.properties will be used for sections that are 6 deep
+    or deeper. This should also cause a h6 to be created in html output.
+
+  * Don't use SVG graphics if use.svg=0
+
+  * Now uses number-and-title-template for sections only if section.autolabel
+    is not zero.
+
+  * Added missing 'english-language-name' attribute to the l10n element, and
+    the missing 'style' attribute to the template element so the current
+    gentext documents will validate.
+
+  * Corrected several references to parameter qanda.defaultlabel that were
+    missing the "$".
+
+  * Now accepts admon.textlabel parameter to turn off Note, Warning, etc.
+    label.
+
+  * FeatReq #684561: support more XEP metadata
+
+  * Added hyphenation support. Added support for coref. Added beginpage
+    support. (does nothing; see TDG).
+
+  * Added support for hyphenation-character, hyphenation-push-character-count,
+    and hyphenation-remain-character-count
+
+  * Added root.properties, ebnf.assignment, and ebnf.statement.terminator
+
+  * Support bgcolor PI in table cells; make sure rowsep and colsep don't have
+    any effect on the last row or column
+
+  * Handle othercredit on titlepage a little better
+
+  * Applied fix from Jeff Beal that fixed the bug that put secondary page
+    numbers on primary entries. Same with tertiary page numbers on secondary
+    entries.
+
+  * Added definition of missing variable collection.
+
+  * Make footnote formatting 'normal' even when it occurs in a context that has
+    special formatting
+
+  * Added warning when glossary.collection is not blank, but it cannot open the
+    specified file.
+
+  * Pick up the frame attribute on table and informaltable.
+
+  * indexdiv/title in non-autogenerated indexes are now picked up.
+
+  * Removed (unused) component.title.properties
+
+  * Move IDs from page-sequences down to titlepage blocks
+
+  * Use proportional-column-width(1) on more tables.
+
+    Use proportional-column-width() for header/footer tables; suppress
+    relative-align when when using FOP
+
+  * Check for glossterm.auto.link when linking firstterms; don't output gl.
+    prefix on glossterm links
+
+  * Generate Part ToCs
+
+  * Support glossary, bibliography, and index in component ToCs.
+
+  * Refactored chunking code so that customization of chunk algorithm and chunk
+    elements is more practical
+
+  * Support textobject/phrase on inlinemediaobject.
+
+  * Support 'start' PI on ordered lists
+
+  * Fixed test of $toc PI to turn on qandaset TOC.
+
+  * Added process.chunk.footnotes to sect2 through 5 to fix bug of missing
+    footnotes when chunk level greater than 1.
+
+  * Added paramater toc.max.depth which controls maximal depth of ToC as
+    requested by PHP-DOC group.
+
+  * Exempted titleabbrev from preamble processing in lists, and fixed
+    variablelist preamble code to use the same syntax as the other lists.
+
+  * Added support for elements between variablelist and first varlistentry
+    since DocBook 4.2 supports that now.
+
+Release 1.60.1
+
+Lots of bug fixes.
+
+  * The format of the titlepage.templates.xml files and the stylesheet that
+    transforms them have been significantly changed. All of the attributes used
+    to control the templates are now namespace qualified. So what used to be:
+
+    <t:titlepage element="article" wrapper="fo:block">
+
+    is now:
+
+    <t:titlepage t:element="article" t:wrapper="fo:block">
+
+    Attributes from other namespaces (including those that are unqualified) are
+    now copied directly through. In practice, this means that the names that
+    used to be ?fo:? qualified:
+
+    <title named-template="component.title"
+           param:node="ancestor-or-self::article[1]"
+           fo:text-align="center"
+           fo:keep-with-next="always"
+           fo:font-size="&hsize5;"
+           fo:font-weight="bold"
+           fo:font-family="{$title.font.family}"/>
+
+    are now unqualified:
+
+    <title t:named-template="component.title"
+           param:node="ancestor-or-self::article[1]"
+           text-align="center"
+           keep-with-next="always"
+           font-size="&hsize5;"
+           font-weight="bold"
+           font-family="{$title.font.family}"/>
+
+    The t:titlepage and t:titlepage-content elements both generate wrappers
+    now. And unqualified attributes on those elements are passed through. This
+    means that you can now make the title font apply to ane entire titlepage
+    and make the entire ?recto? titlepage centered by specifying the font and
+    alignment on the those elements:
+
+    <t:titlepage t:element="article" t:wrapper="fo:block"
+                 font-family="{$title.font.family}">
+
+      <t:titlepage-content t:side="recto"
+                 text-align="center">
+
+  * Support use of titleabbrev in running headers and footers.
+
+  * Added (experimental) xref.with.number.and.title parameter to enable number/
+    title cross references even when the default would be just the number.
+
+  * Generate part ToCs if they're requested.
+
+  * Use proportional-column-width() in header/footer tables.
+
+  * Handle alignment correctly when screenshot wraps a graphic in a figure.
+
+  * Format chapter and appendix cross references consistently.
+
+  * Attempt to support tables with multiple tgroups in FO.
+
+  * Output fo:table-columns in simplelist tables.
+
+  * Use titlepage.templates.xml for indexdiv and glossdiv formatting.
+
+  * Improve support for new bibliography elements.
+
+  * Added footnote.number.format, table.footnote.number.format,
+    footnote.number.symbols, and table.footnote.number.symbols for better
+    control of footnote markers.
+
+  * Added glossentry.show.acronyms.
+
+  * Suppress the draft-mode page masters when draft-mode is ?no?.
+
+  * Make blank pages verso not recto. D'Oh!
+
+  * Improved formatting of ulink footnotes.
+
+  * Fixed bugs in graphic width/height calculations.
+
+  * Added class attributes to inline elements.
+
+  * Don't add ?.html? to the filenames identified with the ?dbhtml? PI.
+
+  * Don't force a ToC when sections contain refentrys.
+
+  * Make section title sizes a function of the body.master.size.
+
+Release 1.59.2
+
+The 1.59.2 fixes an FO bug in the page masters that causes FOP to fail.
+
+  * Removed the region-name from the region-body of blank pages. There's no
+    reason to give the body of blank pages a unique name and doing so causes a
+    mismatch that FOP detects.
+
+  * Output IDs for the first paragraphs in listitems.
+
+  * Fixed some small bugs in the handling of page numbers in double-sided mode.
+
+  * Attempt to prevent duplicated IDs from being produced when endterm on xref
+    points to something with nested structure.
+
+  * Fix aligment problems in equations.
+
+  * Output the type attribute on unordered lists (UL) in HTML only if the
+    css.decoration parameter is true.
+
+  * Calculate the font size in formal.title.properties so that it's 1.2 times
+    the base font size, not a fixed "12pt".
+
+Release 1.59.1
+
+The 1.59.1 fixes a few bugs.
+
+  * Added Bulgarian localization.
+
+  * Indexing improvements; localize book indexes to books but allow setindex to
+    index an entire set.
+
+  * The default value for rowsep and colsep is now "1" as per CALS.
+
+  * Added support for titleabbrev (use them for cross references).
+
+  * Improvements to mediaobject for selecting print vs. online images.
+
+  * Added seperate property sets for figures, examples, equations, tabless, and
+    procedures.
+
+  * Make lineannotations italic.
+
+  * Support xrefstyle attribute.
+
+  * Make endterm on xref higher priority than xreflabel target.
+
+  * Glossary formatting improvements.
+
+Release 1.58.0
+
+The 1.58.0 adds some initial support for extensions in xsltproc, adds a few
+features, and fixes bugs.
+
+  * This release contains the first attempt at extension support for xsltproc.
+    The only extension available to date is the one that adjusts table column
+    widths. Run extensions/xsltproc/python/xslt.py.
+
+  * Fixed bugs in calculation of adjusted column widths to correct for rounding
+    errors.
+
+  * Support nested refsection elements correctly.
+
+  * Reworked gentext.template to take context into consideration. The name of
+    elements in localization files is now an xpath-like context list, not just
+    a simple name.
+
+  * Made some improvements to bibliography formatting.
+
+  * Improved graphical formatting of admonitions.
+
+  * Added support for entrytbl.
+
+  * Support spanning index terms.
+
+  * Support bibliosource.
+
+Release 1.57.0
+
+  * The 1.57.0 release wasn't documented here. Oops.
+
+Release 1.56.0
+
+The 1.56.0 release fixes bugs.
+
+  * Reworked chunking. This will break all existing customizations layers that
+    change the chunking algorithm. If you're customizing chunking, look at the
+    new ?content? parameter that's passed to process-chunk-element and friends.
+
+  * Support continued and inherited numeration in orderedlist formatting for
+    FOs.
+
+  * Added Thai localization.
+
+  * Tweaked stylesheet documentation stylesheets to link to TDG and the
+    parameter references.
+
+  * Allow title on tables of contents ("Table of Contents") to be optional.
+    Added new keyword to generate.toc. Support tables of contents on sections.
+
+  * Made separate parameters for table borders and table cell borders:
+    table.frame.border.color, table.frame.border.style,
+    table.frame.border.thickness, table.cell.border.color,
+    table.cell.border.style, and table.cell.border.thickness.
+
+  * Suppress formatting of ?endofrange? indexterms. This is only half-right.
+    They should generate a range, but I haven't figured out how to do that yet.
+
+  * Support revdescription. (Bug #582192)
+
+  * Added default.float.class and fixed figure floats. (Bug #497603)
+
+  * Fixed formatting of sbr in FOs.
+
+  * Added context to the ?missing template? error message.
+
+  * Process arg correctly in a group. (Bug #605150)
+
+  * Removed 'keep-with-next' from formal.title.properties attribute set now
+    that the stylesheets support the option of putting such titles below the
+    object. Now the $placement value determines if 'keep-with-next' or
+    'keep-with-previous' is used in the title block.
+
+  * Wrap ?url()? around external-destinations when appropriate.
+
+  * Fixed typo in compact list spacing. (Bug #615464)
+
+  * Removed spurious hash in anchor name. (Bug #617717)
+
+  * Address is now displayed verbatim on title pages. (Bug #618600)
+
+  * The bridgehead.in.toc parameter is now properly supported.
+
+  * Improved effectiveness of HTML cleanup by increasing the number of places
+    where it is used. Improve use of HTML cleanup in XHTML stylesheets.
+
+  * Support table of contents for appendix in article. (Bug #596599)
+
+  * Don't duplicate footnotes in bibliographys and glossarys. (Bug #583282)
+
+  * Added default.image.width. (Bug #516859)
+
+  * Totally reworked funcsynopsis code; it now supports a 'tabular'
+    presentation style for 'wide' prototypes; see
+    funcsynopsis.tabular.threshold. (HTML only right now, I think, FO support,
+    uh, real soon now.)
+
+  * Reworked support for difference marking; toned down the colors a bit and
+    added a ?system.head.content? template so that the diff CSS wasn't
+    overriding ?user.head.content?. (Bug #610660)
+
+  * Added call to the ?*.head.content? elements when writing out long
+    description chunks.
+
+  * Make sure legalnotice link is correct even when chunking to a different
+    base.dir.
+
+  * Use CSS to set viewport characteristics if css.decoration is non-zero, use
+    div instead of p for making graphic a block element; make figure titles the
+    default alt text for images in a figure.
+
+  * Added space-after to list.block.spacing.
+
+  * Reworked section.level template to give ?correct? answer instead of being
+    off by one.
+
+  * When processing tables, use the tabstyle attribute as the division class.
+
+  * Fixed bug in html2xhtml.xsl that was causing the XHTML chunker to output
+    HTML instead of XHTML.
+
+Older releases
+
+To view the release notes for older releases, see http://cvs.sourceforge.net/
+viewcvs.py/docbook/xsl/RELEASE-NOTES.xml. Be aware that there were no release
+notes for releases prior to the 1.50.0 release.
+

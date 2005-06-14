@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<chapter xmlns:db="http://docbook.org/docbook-ng"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+         xml:id="developers">
+  <title>Developers Reference</title>
+  
+  <xi:include href="api.xml"/>  
+  <xi:include href="extending.xml"/>
+  <xi:include href="writingfilters.xml"/>
+  <xi:include href="codingstandards.xml"/>
+</chapter>
