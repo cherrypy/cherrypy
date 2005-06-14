@@ -28,7 +28,7 @@ class HitCounter:
 
 
 cpg.root = HitCounter()
-cpg.config.update({'/': {'sessionFilter.on': True}})
+cpg.config.update({'global': {'sessionFilter.on': True}})
 
 if __name__ == '__main__':
     cpg.config.update(file = 'tutorial.conf')

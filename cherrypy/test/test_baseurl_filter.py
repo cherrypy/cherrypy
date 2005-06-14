@@ -36,7 +36,7 @@ class Root:
 
 cpg.root = Root()
 cpg.config.update({
-    '/': {
+    'global': {
         'server.environment': 'production',
         'baseUrlFilter.on': True,
         'baseUrlFilter.baseUrl': 'http://www.mydomain.com'

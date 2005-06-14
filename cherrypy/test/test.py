@@ -172,14 +172,14 @@ def main():
         print
         print "Running tests:", name
         
-        cpg.config.update({'/': server_conf.copy()})
+        cpg.config.update({'global': server_conf.copy()})
         helper.startServer(server)
         for testmod in testList:
             # Must run each module in a separate suite,
             # because each module uses/overwrites cpg globals.
             cpg.config.configMap.clear()
-            cpg.config.configMap["/"] = cpg.config.defaultGlobal.copy()
-            cpg.config.update({'/': server_conf.copy()})
+            cpg.config.configMap["global"] = cpg.config.defaultGlobal.copy()
+            cpg.config.update({'global': server_conf.copy()})
             suite = CPTestLoader.loadTestsFromName(testmod)
             CPTestRunner(verbosity=2).run(suite)
         helper.stopServer()

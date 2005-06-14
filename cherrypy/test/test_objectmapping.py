@@ -93,7 +93,7 @@ cpg.root.dir1.dir2 = Dir2()
 cpg.root.dir1.dir2.dir3 = Dir3()
 cpg.root.dir1.dir2.dir3.dir4 = Dir4()
 cpg.config.update({
-    '/': {
+    'global': {
         'server.logToScreen': False,
     }
 })

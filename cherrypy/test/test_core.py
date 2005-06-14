@@ -121,7 +121,7 @@ class Error(Test):
 
 
 cpg.config.update({
-    '/': {
+    'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
         'foo': 'this',

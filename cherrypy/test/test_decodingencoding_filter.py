@@ -37,7 +37,7 @@ class Root:
 
 cpg.root = Root()
 cpg.config.update({
-    '/': {
+    'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
         'encodingFilter.on': True,

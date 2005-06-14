@@ -139,7 +139,7 @@ class Profiler(object):
 def serve(path=None, port=8080):
     from cherrypy import cpg
     cpg.root = Profiler(path)
-    cpg.config.update({'/': {'server.serverPort': port,
+    cpg.config.update({'global': {'server.serverPort': port,
                              'server.threadPool': 10,
                              'server.environment': "production",
                              'session.storageType': "ram",

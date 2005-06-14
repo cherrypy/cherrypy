@@ -33,7 +33,7 @@ class Root: pass
 
 cpg.root = Root()
 cpg.config.update({
-    '/': {
+    'global': {
         'staticFilter.on': False,
         'server.logToScreen': False,
         'server.environment': 'production',

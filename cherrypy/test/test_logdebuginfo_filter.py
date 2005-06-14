@@ -35,7 +35,7 @@ class Root:
 
 cpg.root = Root()
 cpg.config.update({
-    '/': {
+    'global': {
         'session.storageType': 'ram',
         'session.timeout': 60,
         'session.cleanUpDelay': 60,

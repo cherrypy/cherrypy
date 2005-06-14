@@ -32,11 +32,16 @@ defaultGlobal = {
     
     'sessionFilter.new': 'sessionMap', # legacy setting
     }
-configMap = {"/": defaultGlobal.copy()}
+configMap = {"global": defaultGlobal.copy()}
 
 def update(updateMap=None, file=None):
     if updateMap:
         for section, valueMap in updateMap.items():
+            if not isinstance(valueMap, dict):
+                # Shortcut syntax
+                #   ex: update({'server.socketPort': 80})
+                valueMap = {section: valueMap}
+                section = 'global'
             s = configMap.get(section)
             if not s:
                 configMap[section] = valueMap
@@ -50,7 +55,6 @@ def update(updateMap=None, file=None):
 def get(key, defaultValue=None, returnSection=False, startPath = None):
     # Look, ma, no Python function calls! Uber-fast.
     # start path lest you overload the starting search path (needed by getAll)
-    
     global cpg
     if not cpg:
         import cpg
@@ -69,18 +73,23 @@ def get(key, defaultValue=None, returnSection=False, startPath = None):
         try:
             result = configMap[path][key]
         except KeyError:
-            if path != "/":
+            if path not in ("/", "global"):
                 i = path.rfind("/")
                 if i < 0:
                     result = defaultValue
                 else:
                     path = path[:i]
                     continue
+            elif path != "global":
+                path = "global"
+                continue
             else:
                 result = defaultValue
         break
     
     if returnSection:
+        if path == 'global':
+            return '/'
         return path
     else:
         return result

@@ -42,8 +42,8 @@ server_conf = {'server.socketHost': helper.HOST,
 def load_tut_module(tutorialName):
     """Import or reload tutorial module as needed."""
     cpg.config.configMap.clear()
-    cpg.config.configMap["/"] = cpg.config.defaultGlobal.copy()
-    cpg.config.update({'/': server_conf.copy()})
+    cpg.config.configMap["global"] = cpg.config.defaultGlobal.copy()
+    cpg.config.update({'global': server_conf.copy()})
     
     target = "cherrypy.tutorial." + tutorialName
     if target in sys.modules:
@@ -144,7 +144,7 @@ class TutorialTest(unittest.TestCase):
     
     def test08Sessions(self):
         load_tut_module("tut08_sessions")
-        cpg.config.update({"/": {"sessionFilter.on": True}})
+        cpg.config.update({"global": {"sessionFilter.on": True}})
         
         helper.request('/')
         self.assertEqual(cpg.response.body,
@@ -169,7 +169,7 @@ class TutorialTest(unittest.TestCase):
     
     def test10SessionFilter(self):
         load_tut_module("tut10_sessionfilter")
-        cpg.config.update({"/": {"sessionFilter.on": True}})
+        cpg.config.update({"global": {"sessionFilter.on": True}})
         
         helper.request('/')
         self.assert_("viewed this page 1 times" in cpg.response.body)
