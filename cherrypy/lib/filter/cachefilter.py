@@ -59,7 +59,11 @@ class MemoryCache:
     def expireCache(self):
         while True:
             expirationTime, objSize, objKey = self.expirationQueue.get(block=True, timeout=None)
-            while (time.time() < expirationTime):
+            # expireCache runs in a separate thread which the servers are
+            # not aware of. It's possible that "time" will be set to None
+            # arbitrarily, so we check "while time" to avoid exceptions.
+            # See tickets #99 and #180 for more information.
+            while time and (time.time() < expirationTime):
                 time.sleep(0.1)
             try:
                 del self.cache[objKey]
