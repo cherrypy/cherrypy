@@ -127,18 +127,21 @@ class SessionFilter(BaseFilter):
     
     def beforeMain(self):
         cpg = cherrypy.cpg
-        if cpg.config.get('sessionFilter.on', False) and not cpg.request.isStatic:
+        if (cpg.config.get('sessionFilter.on', False)
+            and not cpg.config.get('staticFilter.on', False)):
            self.__initSessions()
 
     def beforeFinalize(self):
         cpg = cherrypy.cpg
-        if cpg.config.get('sessionFilter.on', False) and not cpg.request.isStatic:
+        if (cpg.config.get('sessionFilter.on', False)
+            and not cpg.config.get('staticFilter.on', False)):
             self.__saveSessions()
 
     '''
     #this breaks a test case
     def beforeErrorResponse(self):
         # Still save session data
-        if cpg.config.get('sessionFilter.on', False) and not cpg.request.isStatic:
+        if (cpg.config.get('sessionFilter.on', False)
+            and not cpg.config.get('staticFilter.on', False)):
             self.__saveSessions()
     '''

@@ -76,7 +76,6 @@ class Request(object):
         cpg.request.headerMap = {}
         cpg.request.requestLine = requestLine
         cpg.request.simpleCookie = Cookie.SimpleCookie()
-        cpg.request.isStatic = False
         cpg.request.rfile = self.rfile
         
         # Prepare cpg.response variables
