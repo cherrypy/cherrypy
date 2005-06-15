@@ -1,8 +1,24 @@
-import _cputil, cperror
+
 import ConfigParser
+
+import _cputil, cperror
 from lib import autoreload
 
 cpg = None # delayed import
+def init():
+    global cpg
+    if not cpg:
+        import cpg
+    reset()
+
+def reset(useDefaults=True):
+    configMap.clear()
+    if useDefaults:
+        configMap["global"] = defaultGlobal.copy()
+
+# This configMap dict holds the settings metadata for all cpg objects.
+# Keys are URL paths, and values are dicts.
+configMap = {}
 
 defaultGlobal = {
     'server.socketPort': 8080,
@@ -32,7 +48,6 @@ defaultGlobal = {
     
     'sessionFilter.new': 'sessionMap', # legacy setting
     }
-configMap = {"global": defaultGlobal.copy()}
 
 def update(updateMap=None, file=None):
     if updateMap:
@@ -55,10 +70,6 @@ def update(updateMap=None, file=None):
 def get(key, defaultValue=None, returnSection=False, startPath = None):
     # Look, ma, no Python function calls! Uber-fast.
     # start path lest you overload the starting search path (needed by getAll)
-    global cpg
-    if not cpg:
-        import cpg
-    
     if startPath:
         path = startPath
     else:

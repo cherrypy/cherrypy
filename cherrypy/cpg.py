@@ -37,6 +37,7 @@ _httpserver = None
 # import server module
 import _cpserver as server
 import _cpconfig as config
+config.init()
 
 # decorator function for exposing methods
 def expose(func):

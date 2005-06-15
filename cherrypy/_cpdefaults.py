@@ -62,11 +62,9 @@ def _cpLogMessage(msg, context = '', severity = 0):
 
 def _cpOnError():
     """ Default _cpOnError method """
-
-    import traceback, StringIO
-    bodyFile = StringIO.StringIO()
-    traceback.print_exc(file = bodyFile)
-    cpg.response.body = [bodyFile.getvalue()]
+    import sys, traceback
+    content = "".join(traceback.format_exception(*sys.exc_info()))
+    cpg.response.body = [content]
     cpg.response.headerMap['Content-Type'] = 'text/plain'
 
 def _cpSaveSessionData(sessionId, sessionData, expirationTime,

@@ -62,7 +62,7 @@ class CombinedFiltersTest(unittest.TestCase):
         zfile.close()
         
         helper.request("/", headers=[("Accept-Encoding", "gzip")])
-        self.assertEqual(zbuf.getvalue()[:3] in cpg.response.body, True)
+        self.assert_(zbuf.getvalue()[:3] in cpg.response.body)
 
 
 if __name__ == '__main__':

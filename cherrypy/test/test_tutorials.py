@@ -41,8 +41,7 @@ server_conf = {'server.socketHost': helper.HOST,
 
 def load_tut_module(tutorialName):
     """Import or reload tutorial module as needed."""
-    cpg.config.configMap.clear()
-    cpg.config.configMap["global"] = cpg.config.defaultGlobal.copy()
+    cpg.config.reset()
     cpg.config.update({'global': server_conf.copy()})
     
     target = "cherrypy.tutorial." + tutorialName

@@ -2,7 +2,7 @@
 from cherrypy.lib.filter.basefilter import BaseFilter
 import cherrypy.cpg
 
-import os.path, time, re
+import time, re
 
 from sessionerrors import SessionNotFoundError 
 
@@ -13,9 +13,6 @@ def _getSessions():
     cpg = cherrypy.cpg
     
     sessions = {}
-    
-    path = cpg.config.get('sessionFilter.new', returnSection = True )
-    paths=os.path.split(path)
     
     sessionNames = cpg.config.getAll('sessionFilter.new')
     for sessionPath in sessionNames:
@@ -90,7 +87,9 @@ class SessionFilter(BaseFilter):
             sessionName = sessions[sessionPath]
             cookieName = cpg.config.get('%s.cookieName' % sessionName, None)
             if not cookieName:
-                cookieName = cpg.config.get('sessionFilter.cookieName') + '|' + sessionName + '|' + re.sub('/','_', sessionPath)
+                cookieName = (cpg.config.get('sessionFilter.cookieName') +
+                              '|' + sessionName +
+                              '|' + re.sub('/','_', sessionPath))
                 cpg.config.update({
                                     sessionPath : {'%s.cookieName' % sessionName : cookieName}
                                   })

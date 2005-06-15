@@ -30,10 +30,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Common Service Code for CherryPy
 """
 
-import urllib, sys, time, traceback, types, StringIO, cgi
+import urllib, sys, time, traceback, types, cgi
 import mimetypes, Cookie, urlparse
-import cpg, _cputil, cperror, _cpdefaults
 from lib.filter import basefilter
+import cpg, _cputil, cperror, _cpdefaults
+
+# Can't use cStringIO; doesn't support unicode strings  
+# See http://www.python.org/sf/216388  
+import StringIO
 
 from BaseHTTPServer import BaseHTTPRequestHandler
 responseCodes = BaseHTTPRequestHandler.responses
@@ -80,7 +84,7 @@ class Request(object):
         cpg.response.headers = None
         cpg.response.body = None
         
-        year, month, day, hh, mm, ss, wd, y, z = time.gmtime(time.time())
+        year, month, day, hh, mm, ss, wd, y, z = time.gmtime()
         date = ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
                 (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
         cpg.response.headerMap = {
@@ -151,12 +155,6 @@ class Request(object):
             if name == 'Cookie':
                 cpg.request.simpleCookie.load(value)
         
-        # Set peer_certificate (in SSL mode) so the
-        # web app can examine the client certificate
-        try:
-            cpg.request.peerCertificate = self.request.get_peer_certificate()
-        except:
-            pass
         msg = "%s - %s" % (cpg.request.remoteAddr, self.requestLine[:-2])
         _cputil.getSpecialAttribute('_cpLogMessage')(msg, "HTTP")
         
@@ -271,12 +269,6 @@ def bareError(extrabody=None):
 
 def main():
     """Obtain and set cpg.response.body."""
-    path = cpg.request.path
-    # Remove leading and trailing slash
-    path = path.strip("/")
-    # Replace quoted chars (eg %20) from url
-    path = urllib.unquote(path)
-    
     try:
         func, objectPathList, virtualPathList = mapPathToObject()
         
@@ -343,11 +335,7 @@ def finalize():
     
     if (cpg.config.get("server.protocolVersion") != "HTTP/1.1"
         and cpg.response.headerMap.get('Content-Length') == 0):
-        buf = StringIO.StringIO()
-        for chunk in cpg.response.body:
-            buf.write(chunk)
-        buf.seek(0)
-        content = buf.read()
+        content = ''.join(cpg.response.body)
         cpg.response.body = [content]
         cpg.response.headerMap['Content-Length'] = len(content)
     
@@ -447,10 +435,8 @@ def mapPathToObject(path=None):
         print "    objectPathList: %s" % objectPathList
     
     # Try successive objects... (and also keep the remaining object list)
-    objCache = {}
     isFirst = True
     isSecond = False
-    isDefault = False
     foundIt = False
     virtualPathList = []
     while objectPathList:
@@ -468,7 +454,6 @@ def mapPathToObject(path=None):
             candidate = getObjFromPath(objectPathList)
             if callable(candidate) and getattr(candidate, 'exposed', False):
                 foundIt = True
-                isDefault = True
                 break
             objectPathList.pop() # Remove "default"
         if isSecond:

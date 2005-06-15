@@ -26,7 +26,13 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import time, StringIO, pickle
+import time
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 from basefilter import BaseFilter
 
 class LogDebugInfoFilter(BaseFilter):
@@ -77,10 +83,7 @@ class LogDebugInfoFilter(BaseFilter):
                 and cpg.config.get('session.storageType')):
                 # Pickle session data to get its size
                 try:
-                    f = StringIO.StringIO()
-                    pickle.dump(cpg.request.sessionMap, f, 1)
-                    dumpStr = f.getvalue()
-                    f.close()
+                    dumpStr = pickle.dumps(cpg.request.sessionMap, 1)
                     logList.append("Session data size: %.02fKB" %
                                    (len(dumpStr) / float(1024)))
                 except:

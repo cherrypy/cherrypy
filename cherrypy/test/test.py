@@ -177,8 +177,7 @@ def main():
         for testmod in testList:
             # Must run each module in a separate suite,
             # because each module uses/overwrites cpg globals.
-            cpg.config.configMap.clear()
-            cpg.config.configMap["global"] = cpg.config.defaultGlobal.copy()
+            cpg.config.reset()
             cpg.config.update({'global': server_conf.copy()})
             suite = CPTestLoader.loadTestsFromName(testmod)
             CPTestRunner(verbosity=2).run(suite)

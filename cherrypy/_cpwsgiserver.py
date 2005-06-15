@@ -120,6 +120,9 @@ class HTTPRequest(object):
         self.wfile.write("\r\n")
         self.wfile.flush()
     def terminate(self):
+        if not self.sent_headers:
+            self.sent_headers = True
+            self.send_headers()
         self.rfile.close()
         self.wfile.close()
         self.socket.close()

@@ -83,7 +83,16 @@ def getPage(url, headers=None, method="GET"):
             conn.endheaders()
             
             # Handle response
-            response = conn.getresponse()
+            try:
+                response = conn.getresponse()
+            except httplib.BadStatusLine:
+                # Improper response from server.
+                print
+                print "Server did not return a response."
+                print "status>", repr(cpg.response.status)
+                print "headers>", repr(cpg.response.headers)
+                print "body>", repr(cpg.response.body)
+                raise
             
             cpg.response.status = "%s %s" % (response.status, response.reason)
             

@@ -43,7 +43,7 @@ class TestType(type):
     def __init__(cls, name, bases, dct):
         type.__init__(name, bases, dct)
         for value in dct.itervalues():
-            if type(value) == types.FunctionType:
+            if isinstance(value, types.FunctionType):
                 value.exposed = True
         setattr(cpg.root, name.lower(), cls())
 class Test(object):
