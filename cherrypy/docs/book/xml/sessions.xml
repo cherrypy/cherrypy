@@ -102,12 +102,33 @@
   </section>
 
   <section id="sessionstoragetypes">
-    <itemizedlist>
-      <listitem>ram</listitem>
-      <listitem>file</listitem>
-      <listitem>anydb</listitem>
-      <listitem>sqlobject</listitem>
-    </itemizedlist>
+    <title>Session Storage Types</title>
+    <para>The folowing storage drivers are built in: ram, file, ayndb, sqlobject</para>
+    <section>
+      <title>ram storage</title>
+      <para>
+          The ram driver stores all sessiondata in memory.
+          It is the only storage driver capable of holding any python object.
+          All session data is lost when the server shuts down (included autoreloads.)
+      </para>
+    </section> <!-- end ram storage section -->
+    
+    <section>
+      <title>file storage</title>
+      <para>
+        The file storage driver pickles the data for each session and stores it in a seperate file.  
+        Cleaning up expired sessions is a slow operation (this should change soon.)
+      </para>
+    </section> <!-- end file storage section -->
+
+    <section>
+      <title>anydb storage</title>
+      <para>
+          The anydb storage driver stores session data with the shelve module, which in turn
+          uses the anydb module.  The andyb driver can only be used to store picklable objects.
+      </para>
+    </section> <!-- end anydb storage section -->
+    
   </section>
 
   <section id="customsessionstorage">
