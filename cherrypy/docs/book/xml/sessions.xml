@@ -53,7 +53,7 @@
       </para>
     </section> <!-- end SessionDict section -->
 
-    <section>
+    <section> <!-- cpg.sessions section -->
       <title>cpg.sessions</title>
       <para>
         cpg.sessions is the single point of access for all session data.
@@ -81,7 +81,6 @@
         </programlisting>
       </example>
 
-
       <section>
         <title>The default session</title>
         <para>
@@ -92,13 +91,34 @@
         <para>
           Unless there is a clear advantage to having more that one named sessions, 
           the default session should be used to store all session data.
-          The default session may (in the future) optomized to provide better performance
+          The default session may (in the future) be optomized to provide better performance
           than can be achived with named sessions.
         </para>
-      </section>
-
+      </section> <!-- end default session section -->
+    </section> <!-- end of cpg.sessions section -->
     
-    </section>
+    <section> <!-- _cpSessionList section -->
+      <title>_cpSessionsList</title>
+      <para>
+        Named sessions are created by placing an entry into the _cpSessionsList.
+        _cpSessionsList is a class attribute containing a list sessions defined for that class.
+      </para>
+      <example>
+        <title>_cpSessionList example</title>
+        <para>
+        </para>
+        <programlisting>
+          class myBBS:
+              # create a session named 'admin' using the SessionStorageClass
+              _cpSessionList = [SessionStorageClass(sessionName = 'admin')]
+
+              def admin(self):
+                  if cpg.session.admin['user'] != root:
+                      return "you are not root"
+        </programlisting>
+      </example>
+    </section> <!-- end _cpSessionList section -->
+      
   </section>
 
   <section id="sessionstoragetypes">
@@ -129,10 +149,69 @@
       </para>
     </section> <!-- end anydb storage section -->
     
-  </section>
+    <section>
+      <title>Relational Storage</title>
+      <para>
+        With relation database drivers, all data is stored in a relational database table.  Due to the nature of
+        relational databases, there are several restrictions on how data can be stored.  Each session
+        is stored as a single row in the session table.  The session table must be created with a column
+        for each variable needed by the application.  This makes it impossible to store arbitrary key/value pairs, 
+        as can be done using several of the other storage drivers.  Relational database also place
+        restrictions on the type of data that can be stored in each column.  Attempting to store the wrong
+        type of data in a table will result in an error.
+      </para>
+      
+      <para>
+        Despite this restrictions, storing session data in relational database has many advantages.
+        Many web applications already use of relational databases, this approach allows session data
+        to be integrated into a prexisting database.  This approach allows a level of scalability not possible
+        with other storage drivers.  With a network database, session data can be easily shared between a cluster 
+        of web servers.
+      </para>
+
+      <section>
+        <title>sqlobject storage</title>
+        <para>
+          The sqlobject driver can be used with any database supported by sqlobject.
+        </para>
+      </section> <!-- end sqlobject storage section -->
+
+      <section>
+        <title>pydo storage</title>
+        <para>
+          A PyDO2 driver will be included in the future.
+        </para>
+      </section>
+      
+    </section> <!-- end relational storage section -->
+    
+  </section> <!-- end sessionstoragetyps section -->
 
   <section id="customsessionstorage">
     <title>Writing Custom Session Storage Drivers</title>
+    
+    <section>
+      <title>BaseSessionDict</title>
+      <para>
+        BaseSessionDict is the base class for the dictionary like class used to access session data.
+        SessionDicts impliment the most frequently used features of python dictionaries.
+        It is important not to add new features to a custom SessionDict class, because it could break
+        compatibility with other storage drivers.
+
+        It may not be necessary to write a custom SessionDict class.  The sessoinFilter includes a 
+        SimpleSessionDict.  The SimpleSessionDict is used by several storage drivers and may be 
+        adequate for a custom storage driver.
+      </para>
+    </section>
+
+    <section> 
+      <title>BaseSession</title>
+      <para>
+        BaseSession os the base class for all session storage drivers.  There are a number of methods that must be
+        implimented by every storage driver.
+      </para>
+    </section>
+    
   </section>
 
 </section>
