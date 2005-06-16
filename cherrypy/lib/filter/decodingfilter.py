@@ -42,7 +42,7 @@ class DecodingFilter(BaseFilter):
         
         enc = cpg.config.get('decodingFilter.encoding', 'utf-8')
         for key, value in cpg.request.paramMap.items():
-            if cpg.request.filenameMap.get(key):
+            if hasattr(value, 'file'):
                 # This is a file being uploaded: skip it
                 continue
             if isinstance(value, list):

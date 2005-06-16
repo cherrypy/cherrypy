@@ -119,8 +119,6 @@ class Request(object):
         cpg.request.remoteAddr = clientAddress
         cpg.request.remoteHost = remoteHost
         cpg.request.paramList = [] # Only used for Xml-Rpc
-        cpg.request.filenameMap = {}
-        cpg.request.fileTypeMap = {}
         cpg.request.headerMap = {}
         cpg.request.requestLine = requestLine
         cpg.request.simpleCookie = Cookie.SimpleCookie()
@@ -241,16 +239,10 @@ class Request(object):
             valueList = forms[key]
             if isinstance(valueList, list):
                 cpg.request.paramMap[key] = []
-                cpg.request.filenameMap[key] = []
-                cpg.request.fileTypeMap[key] = []
                 for item in valueList:
-                    cpg.request.paramMap[key].append(item.value)
-                    cpg.request.filenameMap[key].append(item.filename)
-                    cpg.request.fileTypeMap[key].append(item.type)
+                    cpg.request.paramMap[key].append(item)
             else:
-                cpg.request.paramMap[key] = valueList.value
-                cpg.request.filenameMap[key] = valueList.filename
-                cpg.request.fileTypeMap[key] = valueList.type
+                cpg.request.paramMap[key] = valueList
 
 
 # Error handling

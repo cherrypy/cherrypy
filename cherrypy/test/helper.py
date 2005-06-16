@@ -55,7 +55,7 @@ def startServer(serverClass=None):
     else:
         if not port_is_free():
             raise IOError("Port %s is in use; perhaps the previous server "
-                          "did not shut down properly." % port)
+                          "did not shut down properly." % PORT)
         t = threading.Thread(target=cpg.server.start, args=(False, serverClass))
         t.start()
         time.sleep(1)

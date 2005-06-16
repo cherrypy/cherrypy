@@ -22,9 +22,9 @@ class FileUploadDemo(object):
             myFile filename: %s<br />
             myFile mime-type: %s
         </body></html>
-        """ % (len(myFile),
-               cpg.request.filenameMap['myFile'],
-               cpg.request.fileTypeMap['myFile'])
+        """ % (len(myFile.value),
+               myFile.filename,
+               myFile.type)
     upload.exposed = True
 
 
