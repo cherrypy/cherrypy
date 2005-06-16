@@ -1,3 +1,6 @@
+2005-06-16:
+    * First check-in of the documentation project (lawouach)
+
 2005-06-11:
     * getSpecialFunction renamed getSpecialAttribute (mikerobi)
 
