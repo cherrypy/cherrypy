@@ -68,6 +68,7 @@ class TutorialTest(unittest.TestCase):
     def test03GetAndPost(self):
         load_tut_module("tut03_get_and_post")
         
+        # Try different GET queries
         helper.request("/greetUser?name=Bob")
         self.assertEqual(cpg.response.body, "Hey Bob, what's up?")
         
@@ -76,6 +77,18 @@ class TutorialTest(unittest.TestCase):
                          'Please enter your name <a href="./">here</a>.')
         
         helper.request("/greetUser?name=")
+        self.assertEqual(cpg.response.body,
+                         'No, really, enter your name <a href="./">here</a>.')
+        
+        # Try the same with POST
+        h = [("Content-type", "application/x-www-form-urlencoded"),
+             ("Content-Length", "8")]
+        helper.request("/greetUser", h, "POST", "name=Bob")
+        self.assertEqual(cpg.response.body, "Hey Bob, what's up?")
+        
+        h = [("Content-type", "application/x-www-form-urlencoded"),
+             ("Content-Length", "5")]
+        helper.request("/greetUser", h, "POST", "name=")
         self.assertEqual(cpg.response.body,
                          'No, really, enter your name <a href="./">here</a>.')
     
