@@ -33,7 +33,7 @@ Common Service Code for CherryPy
 import urllib, sys, time, traceback, types, cgi
 import mimetypes, Cookie, urlparse
 from lib.filter import basefilter
-import cpg, _cputil, cperror, _cpdefaults
+import cpg, _cputil, cperror, _cpdefaults, _cpcgifs
 
 # Can't use cStringIO; doesn't support unicode strings  
 # See http://www.python.org/sf/216388  
@@ -232,9 +232,9 @@ class Request(object):
         lowerHeaderMap = {}
         for key, value in cpg.request.headerMap.items():
             lowerHeaderMap[key.lower()] = value
-        forms = cgi.FieldStorage(fp = newRfile, headers = lowerHeaderMap,
-                                 environ = {'REQUEST_METHOD': 'POST'},
-                                 keep_blank_values = 1)
+        forms = _cpcgifs.FieldStorage(fp = newRfile, headers = lowerHeaderMap,
+                                      environ = {'REQUEST_METHOD': 'POST'},
+                                      keep_blank_values = 1)
         
         # In case of files being uploaded, save filenames/types in maps.
         for key in forms.keys():
