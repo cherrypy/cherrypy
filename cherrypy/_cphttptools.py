@@ -234,15 +234,22 @@ class Request(object):
                                       environ = {'REQUEST_METHOD': 'POST'},
                                       keep_blank_values = 1)
         
-        # In case of files being uploaded, save filenames/types in maps.
         for key in forms.keys():
             valueList = forms[key]
             if isinstance(valueList, list):
                 cpg.request.paramMap[key] = []
                 for item in valueList:
-                    cpg.request.paramMap[key].append(item)
+                    if item.file is not None:
+                        value = item # It's a file upload
+                    else:
+                        value = item.value # It's a regular field
+                    cpg.request.paramMap[key].append(value)
             else:
-                cpg.request.paramMap[key] = valueList
+                if valueList.file is not None:
+                    value = valueList # It's a file upload
+                else:
+                    value = valueList.value # It's a regular field
+                cpg.request.paramMap[key] = value
 
 
 # Error handling
