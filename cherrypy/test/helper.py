@@ -104,7 +104,8 @@ def getPage(url, headers=None, method="GET", body=None):
             for line in response.msg.headers:
                 key, value = line.split(":", 1)
                 cpg.response.headerMap[key.strip()] = value.strip()
-            cpg.response.headers = cpg.response.headerMap
+            cpg.response.headers = [(k, v) for k, v
+                                    in cpg.response.headerMap.iteritems()]
             
             cpg.response.body = response.read()
             

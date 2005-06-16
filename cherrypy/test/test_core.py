@@ -120,6 +120,26 @@ class Error(Test):
         return inner()
 
 
+class Headers(Test):
+    
+    def index(self):
+        # From http://www.cherrypy.org/ticket/165:
+        # "header field names should not be case sensitive sayes the rfc.
+        # if i set a headerfield in complete lowercase i end up with two
+        # header fields, one in lowercase, the other in mixed-case."
+        
+        # Set the most common headers
+        cpg.response.headerMap['content-type'] = "text/html"
+        cpg.response.headerMap['content-length'] = 18
+        cpg.response.headerMap['server'] = 'CherryPy headertest'
+        cpg.response.headerMap['location'] = 'http://127.0.0.1:8000/headers/'
+        
+        # Set a rare header for fun
+        cpg.response.headerMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
+        
+        return "double header test"
+
+
 cpg.config.update({
     'global': {
         'server.logToScreen': False,
@@ -214,6 +234,14 @@ class CoreRequestHandlingTest(unittest.TestCase):
             # started, the status should not change to an error status.
             self.assertEqual(cpg.response.status, "200 OK")
             self.assertEqual(cpg.response.body, "helloUnrecoverable error in the server.")
+    
+    def testHeaderCaseSensitivity(self):
+        helper.request("/headers/")
+        hnames = [name.title() for name, val in cpg.response.headers]
+        hnames.sort()
+        self.assertEqual(hnames, ['Content-Length', 'Content-Type', 'Date', 'Expires',
+                                  'Location', 'Server'])
+        self.assertEqual(cpg.response.body, "double header test")
 
 
 if __name__ == '__main__':

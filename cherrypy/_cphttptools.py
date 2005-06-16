@@ -49,6 +49,54 @@ weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 
+class KeyTitlingDict(dict):
+    """dict subclass which changes each key to str(key).title()
+    
+    This should allow response headers to be case-insensitive and
+    avoid duplicates.
+    """
+    
+    def __getitem__(self, key):
+        return dict.__getitem__(self, str(key).title())
+    
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, str(key).title(), value)
+    
+    def __delitem__(self, key, value):
+        dict.__delitem__(self, str(key).title(), value)
+    
+    def __contains__(self, item):
+        return dict.__contains__(self, str(item).title())
+    
+    def get(self, key, default=None):
+        return dict.get(self, str(key).title(), default)
+    
+    def has_key(self, key):
+        return dict.has_key(self, str(key).title())
+    
+    def update(self, E):
+        for k in E.keys():
+            self[str(k).title()] = E[k]
+    
+    def fromkeys(cls, seq, value=None):
+        newdict = cls()
+        for k in seq:
+            newdict[str(k).title()] = value
+        return newdict
+    fromkeys = classmethod(fromkeys)
+    
+    def setdefault(key, x=None):
+        key = str(key).title()
+        try:
+            return self[key]
+        except KeyError:
+            self[key] = x
+            return x
+    
+    def pop(self, key, default):
+        return dict.pop(self, str(key).title(), default)
+
+
 class Request(object):
     """Process a request and yield a series of response chunks.
     
@@ -86,13 +134,14 @@ class Request(object):
         year, month, day, hh, mm, ss, wd, y, z = time.gmtime()
         date = ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
                 (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
-        cpg.response.headerMap = {
+        cpg.response.headerMap = KeyTitlingDict()
+        cpg.response.headerMap.update({
             "Content-Type": "text/html",
             "Server": "CherryPy/" + cpg.__version__,
             "Date": date,
             "Set-Cookie": [],
             "Content-Length": 0
-        }
+        })
         cpg.response.simpleCookie = Cookie.SimpleCookie()
         
         self.run()
