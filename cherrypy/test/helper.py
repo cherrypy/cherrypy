@@ -30,6 +30,7 @@ import os, os.path
 import time
 import sys
 import socket
+import StringIO
 import httplib
 import threading
 from cherrypy import cpg
@@ -67,7 +68,7 @@ def stopServer():
         time.sleep(1.1)
 
 
-def getPage(url, headers=None, method="GET"):
+def getPage(url, headers=None, method="GET", body=None):
     
     # The trying 10 times is simply in case of socket errors.
     # Normal case--it should run once.
@@ -81,6 +82,9 @@ def getPage(url, headers=None, method="GET"):
             for key, value in headers:
                 conn.putheader(key, value)
             conn.endheaders()
+            
+            if body is not None:
+                conn.send(body)
             
             # Handle response
             try:
@@ -102,8 +106,7 @@ def getPage(url, headers=None, method="GET"):
                 cpg.response.headerMap[key.strip()] = value.strip()
             cpg.response.headers = cpg.response.headerMap
             
-            b = cpg.response.body = response.read()
-##            print "body:", repr(b)
+            cpg.response.body = response.read()
             
             conn.close()
             return
@@ -115,7 +118,7 @@ def getPage(url, headers=None, method="GET"):
                 time.sleep(0.5)
 
 
-def request(url, headers=None, method="GET"):
+def request(url, headers=None, method="GET", body=None):
     if headers is None:
         headers = []
     
@@ -128,8 +131,10 @@ def request(url, headers=None, method="GET"):
                 break
         if not found:
             headers.append(("Host", "%s:%s" % (HOST, PORT)))
-        cpg.server.request(HOST, HOST, requestLine, headers, None)
+        if body is not None:
+            body = StringIO.StringIO(body)
+        cpg.server.request(HOST, HOST, requestLine, headers, body)
         cpg.response.body = "".join(cpg.response.body)
     else:
-        getPage(url, headers, method)
+        getPage(url, headers, method, body)
 

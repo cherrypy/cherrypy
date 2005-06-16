@@ -175,7 +175,27 @@ class TutorialTest(unittest.TestCase):
         
         helper.request('/', [('Cookie', dict(cpg.response.headers)['Set-Cookie'])])
         self.assert_("viewed this page 2 times" in cpg.response.body)
+    
+    def test11FileUpload(self):
+        load_tut_module("tut11_file_upload")
+        
+        h = [("Content-type", "multipart/form-data; boundary=x"),
+             ("Content-Length", "110")]
+        b = """--x
+Content-Disposition: form-data; name="myFile"; filename="hello.txt"
+Content-Type: text/plain
 
+hello
+--x--
+"""
+        helper.request('/upload', h, "POST", b)
+        self.assertEqual(cpg.response.body, '''
+        <html><body>
+            myFile length: 5<br />
+            myFile filename: hello.txt<br />
+            myFile mime-type: text/plain
+        </body></html>
+        ''')
 
 if __name__ == "__main__":
     unittest.main()
