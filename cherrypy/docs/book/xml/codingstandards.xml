@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+         xml:id="codingstandards">
+  <title>Coding standards</title>
+  <formalpara>
+    <title>Guidelines for CherryPy Developers</title>
+
+    CherryPy is an open source project. It means that all developers can contribute, but also, that everyone is 
+    responsible for the coding standards. To keep the source code in a consistent state, and to make sure that all tools 
+    work nicely, some guidelines must be adhered to:
+    
+    <itemizedlist>
+      <listitem>Source code must be indented with 4 spaces, no tabs.</listitem>
+      <listitem>
+        Source files must use Unix-style LF line termination. This is required to avoid problems when using 
+        tools such as Subversion, which wrongly think that the entire file has changed if the line ends change.
+        </listitem> 
+      <listitem>
+        Source code must be kept less than 79 columns wide, whenever possible. Common sense should apply; sometimes it's 
+        acceptable to have a slightly longer, but more readable, line. Although not specifically required, PEP-8 
+        compliance is desired.
+      </listitem>
+    </itemizedlist>
+  </formalpara>  
+</section>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+         xml:id="apireference">
+  <title>API reference</title>
+  <section id="cpgobject">
+    <title>cpg object</title>
+  </section>
+  <section id="cpgrequest">
+    <title>cpg.request</title>
+  </section>
+  <section id="cpgresponse">
+    <title>cpg.response</title>
+  </section>
+  <section id="specialfunctions">
+    <title>Special functions</title>
+  </section>
+</section>

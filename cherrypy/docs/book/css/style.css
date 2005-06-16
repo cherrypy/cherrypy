@@ -1,0 +1,186 @@
+body { 
+  background: rgb(255, 255, 255) none repeat scroll 0%;
+  font-family: verdana,arial,helvetica;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  line-height: normal;
+  font-size-adjust: none;
+  font-stretch: normal;
+  color: rgb(0, 0, 0);
+  -moz-background-clip: initial;
+  -moz-background-origin: initial;
+  -moz-background-inline-policy: initial;
+  font-size: 11px;
+}
+
+body.book, p { 
+  text-align: justify;
+}
+
+a:link { 
+  color: rgb(0, 51, 153);
+  text-decoration: none;
+}
+
+a:visited { 
+  color: rgb(102, 153, 204);
+  text-decoration: none;
+}
+
+a:hover { 
+  text-decoration: underline;
+}
+
+h1 { 
+  margin-top: 0px;
+  font-size: 18px;
+}
+
+h2 { font-weight: bold;
+  font-size: 16px;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+div.chapter h2.title { 
+  font-size: 16px;
+  font-weight: bold;
+}
+
+div.sect1 h2.title { 
+  font-size: 14px;
+}
+
+h3 { 
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+div.note_c2 h3 { 
+  color: rgb(0, 0, 139);
+}
+
+h4, h5, h6 { 
+  font-family: verdana,arial,helvetica;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: bold;
+  font-size: 100%;
+  line-height: normal;
+  font-size-adjust: none;
+  font-stretch: normal;
+  margin-bottom: 0.5em;
+}
+
+pre, code { 
+  background: rgb(238, 238, 238) none repeat scroll 0%;
+  -moz-background-clip: initial;
+  -moz-background-origin: initial;
+  -moz-background-inline-policy: initial;
+  font-weight: inherit;
+}
+
+table.C20 { 
+  margin-top: 1em;
+  margin-bottom: 1em;
+  color: red;
+}
+
+code.funcdef { 
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+pre.clsCCCode { 
+  background: transparent none repeat scroll 0%;
+  font-size: 11px;
+  font-family: 'courier new',courier,serif;
+  -moz-background-clip: initial;
+  -moz-background-origin: initial;
+  -moz-background-inline-policy: initial;
+}
+
+pre.clsSyntax { 
+  font-family: verdana,arial,helvetica,sans-serif;
+}
+
+body.book h1.title, body.set h1.title { 
+  text-align: center;
+  font-size: 200%;
+  font-family: sans-serif;
+  color: rgb(2, 1, 103);
+}
+
+div.example { 
+  border-style: solid;
+  border-color: black;
+  border-width: 0px 0px 0px 2px;
+  margin: 0.5ex;
+  padding-left: 15px;
+  background-color: rgb(238, 238, 238);
+}
+
+th { 
+  color: white;
+  background-color: black;
+}
+
+pre.clsCode, code.clsText { 
+  font-family: 'courier new',courier,serif;
+}
+
+tr.question { 
+  color: rgb(0, 0, 139);
+  font-weight: bold;
+}
+
+.set .toc dl dt, .book .toc dl dt { 
+  padding-top: 1.5ex;
+  padding-bottom: 1.5ex;
+}
+
+.set .toc dl dl dt, .book .toc dl dl dt { 
+  padding-top: 0ex;
+  padding-bottom: 0ex;
+}
+
+div.informaltable { 
+  margin: 10px;
+}
+
+tr.answer { 
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+div.note_c2 { 
+  background: rgb(238, 238, 238) none repeat scroll 0%;
+  -moz-background-clip: initial;
+  -moz-background-origin: initial;
+  -moz-background-inline-policy: initial;
+}
+
+tr.qandadiv { 
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+div.refsect1 span.term {  }
+
+div.refsect1 { 
+  margin-left: 20px;
+}
+
+div.refsect1 h2 { 
+  margin-left: -20px;
+  font-size: small;
+}
+
+.comment { 
+  color: red;
+  font-weight: bolder;
+}
+
