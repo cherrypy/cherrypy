@@ -1,0 +1,38 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>prefer.internal.olink</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="FO Parameter Reference"><link rel="up" href="rn11.html" title="Linking"><link rel="prev" href="olink.properties.html" title="olink.properties"><link rel="next" href="target.database.document.html" title="target.database.document"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">prefer.internal.olink</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="olink.properties.html">Prev</a>&nbsp;</td><th width="60%" align="center">Linking</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="target.database.document.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="prefer.internal.olink"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>prefer.internal.olink &#8212; Prefer a local olink reference to an external reference</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="prefer.internal.olink.frag"></a><pre class="programlisting">
+&lt;xsl:param name="prefer.internal.olink" select="0"&gt;&lt;/xsl:param&gt;
+</pre></div><div class="refsect1" lang="en"><a name="d0e2616"></a><h2>Description</h2><p>If you are re-using XML content modules in multiple documents,
+you may want to redirect some of your olinks.  This parameter
+permits you to redirect an olink to the current document.
+</p><p>For example: you are writing documentation for a  product, 
+which includes 3 manuals: a little installation
+booklet (booklet.xml), a user 
+guide (user.xml), and a reference manual (reference.xml).
+All 3 documents begin with the same introduction section (intro.xml) that 
+contains a reference to the customization section (custom.xml) which is 
+included in both user.xml and reference.xml documents.
+</p><p>How do you write the link to custom.xml in intro.xml
+so that it is interpreted correctly in all 3 documents?</p><div class="itemizedlist"><ul type="disc"><li><p>If you use xref, it will fail in user.xml.</p></li><li><p>If you use olink (pointing to reference.xml),
+the reference in user.xml  
+will point to the customization section of the reference manual, while it is 
+actually available in user.xml.</p></li></ul></div><p>If you set the <a href="prefer.internal.olink.html"><em class="parameter"><code>prefer.internal.olink</code></em></a>
+parameter to a non-zero value, then the processor will
+first look in the olink database
+for the olink's <a href="http://docbook.org/tdg/en/html/targetptr.html"><code class="sgmltag-element">targetptr</code></a> attribute value
+in document matching the <a href="current.docid.html"><em class="parameter"><code>current.docid</code></em></a>
+parameter value.  If it isn't found there, then
+it tries the document in the database
+with the <a href="http://docbook.org/tdg/en/html/targetdoc.html"><code class="sgmltag-element">targetdoc</code></a>
+value that matches the olink's <a href="http://docbook.org/tdg/en/html/targetdoc.html"><code class="sgmltag-element">targetdoc</code></a>
+attribute.
+</p><p>This feature permits an olink reference to resolve to
+the current document if there is an element
+with an id matching the olink's <a href="http://docbook.org/tdg/en/html/targetptr.html"><code class="sgmltag-element">targetptr</code></a>
+value.  The current document's olink data must be
+included in the target database for this to work.</p><div class="caution" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Caution</h3><p>There is a potential for incorrect links if
+the same <a href="http://docbook.org/tdg/en/html/id.html"><code class="sgmltag-element">id</code></a> attribute value is used for different
+content in different documents.
+Some of your olinks may be redirected to the current document
+when they shouldn't be.  It is not possible to control
+individual olink instances.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="olink.properties.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn11.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="target.database.document.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">olink.properties&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;target.database.document</td></tr></table></div></body></html>

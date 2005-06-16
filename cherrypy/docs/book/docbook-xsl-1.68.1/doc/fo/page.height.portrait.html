@@ -1,0 +1,47 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>page.height.portrait</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="FO Parameter Reference"><link rel="up" href="rn17.html" title="Pagination and General Styles"><link rel="prev" href="page.height.html" title="page.height"><link rel="next" href="page.margin.bottom.html" title="page.margin.bottom"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">page.height.portrait</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="page.height.html">Prev</a>&nbsp;</td><th width="60%" align="center">Pagination and General Styles</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="page.margin.bottom.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="page.height.portrait"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>page.height.portrait &#8212; Specify the physical size of the long edge of the page</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="page.height.portrait.frag"></a><pre class="programlisting">&lt;xsl:param name="page.height.portrait"&gt;
+  &lt;xsl:choose&gt;
+    &lt;xsl:when test="$paper.type = 'A4landscape'"&gt;210mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'USletter'"&gt;11in&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'USlandscape'"&gt;8.5in&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = '4A0'"&gt;2378mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = '2A0'"&gt;1682mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A0'"&gt;1189mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A1'"&gt;841mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A2'"&gt;594mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A3'"&gt;420mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A4'"&gt;297mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A5'"&gt;210mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A6'"&gt;148mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A7'"&gt;105mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A8'"&gt;74mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A9'"&gt;52mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'A10'"&gt;37mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B0'"&gt;1414mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B1'"&gt;1000mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B2'"&gt;707mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B3'"&gt;500mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B4'"&gt;353mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B5'"&gt;250mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B6'"&gt;176mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B7'"&gt;125mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B8'"&gt;88mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B9'"&gt;62mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'B10'"&gt;44mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C0'"&gt;1297mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C1'"&gt;917mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C2'"&gt;648mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C3'"&gt;458mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C4'"&gt;324mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C5'"&gt;229mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C6'"&gt;162mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C7'"&gt;114mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C8'"&gt;81mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C9'"&gt;57mm&lt;/xsl:when&gt;
+    &lt;xsl:when test="$paper.type = 'C10'"&gt;40mm&lt;/xsl:when&gt;
+    &lt;xsl:otherwise&gt;11in&lt;/xsl:otherwise&gt;
+  &lt;/xsl:choose&gt;
+&lt;/xsl:param&gt;</pre></div><div class="refsect1" lang="en"><a name="d0e4413"></a><h2>Description</h2><p>The portrait page height is the length of the long
+edge of the physical page.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="page.height.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn17.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="page.margin.bottom.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">page.height&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;page.margin.bottom</td></tr></table></div></body></html>

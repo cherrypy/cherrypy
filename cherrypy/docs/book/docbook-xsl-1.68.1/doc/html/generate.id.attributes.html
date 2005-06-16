@@ -1,0 +1,21 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>generate.id.attributes</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="HTML Parameter Reference"><link rel="up" href="rn07.html" title="HTML"><link rel="prev" href="draft.watermark.image.html" title="draft.watermark.image"><link rel="next" href="generate.meta.abstract.html" title="generate.meta.abstract"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">generate.id.attributes</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="draft.watermark.image.html">Prev</a>&nbsp;</td><th width="60%" align="center">HTML</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="generate.meta.abstract.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="generate.id.attributes"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>generate.id.attributes &#8212; </p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="generate.id.attributes.frag"></a><pre class="programlisting">
+&lt;xsl:param name="generate.id.attributes" select="0"&gt;&lt;/xsl:param&gt;
+</pre></div><div class="refsect1" lang="en"><a name="d0e1923"></a><h2>Description</h2><p>If non-zero, the HTML stylesheet will generate ID attributes on
+containers. For example, the markup:</p><pre class="screen">&lt;section id="foo"&gt;&lt;title&gt;Some Title&lt;/title&gt;
+&lt;para&gt;Some para.&lt;/para&gt;
+&lt;/section&gt;</pre><p>might produce:</p><pre class="screen">&lt;div class="section" id="foo"&gt;
+&lt;h2&gt;Some Title&lt;/h2&gt;
+&lt;p&gt;Some para.&lt;/p&gt;
+&lt;/div&gt;</pre><p>The alternative is to generate anchors:</p><pre class="screen">&lt;div class="section"&gt;
+&lt;h2&gt;&lt;a name="foo"&gt;&lt;/a&gt;Some Title&lt;/h2&gt;
+&lt;p&gt;Some para.&lt;/p&gt;
+&lt;/div&gt;</pre><p>Because the <code class="sgmltag-attribute">name</code> attribute of
+the <a href="http://docbook.org/tdg/en/html/a.html"><code class="sgmltag-element">a</code></a> element and the <code class="sgmltag-attribute">id</code>
+attribute of other tags are both of type &#8220;<span class="quote">ID</span>&#8221;, producing both
+generates invalid documents.</p><p>As of version 1.50, you can use this switch to control which type of
+identifier is generated. For backwards-compatibility, generating
+<a href="http://docbook.org/tdg/en/html/a.html"><code class="sgmltag-element">a</code></a> anchors is preferred.</p><p>Note: at present, this switch is incompletely implemented.
+Disabling ID attributes will suppress them, but enabling ID attributes
+will not suppress the anchors.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="draft.watermark.image.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn07.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="generate.meta.abstract.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">draft.watermark.image&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;generate.meta.abstract</td></tr></table></div></body></html>

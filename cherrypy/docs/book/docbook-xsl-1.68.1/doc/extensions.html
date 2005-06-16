@@ -1,0 +1,85 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;2.&nbsp;Extensions</title><link rel="stylesheet" href="reference.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="up" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="prev" href="ch01s03.html" title="XSL processing model"><link rel="next" href="ch03.html" title="Chapter&nbsp;3.&nbsp;Tools documentation"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter&nbsp;2.&nbsp;Extensions</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ch01s03.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="ch03.html">Next</a></td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="d0e742"></a>Chapter&nbsp;2.&nbsp;Extensions</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="extensions.html#d0e807">Using the Extensions</a></span></dt></dl></div><p>The DocBook XSL Stylesheets distribution includes a set of
+    DocBook-specific XSLT extensions (currently implemented in Java)
+    for performing a variety of functions that would be impractical to
+    implement with standard XSLT only:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>embed callouts in verbatim environments (program
+          listings, for example)</p></li><li><p>add line numbers to verbatim environments (program
+          listings, for example)</p></li><li><p>adjust the width of table columns in HTML output to
+          match specs in the CALS table source</p></li><li><p>directly include contents of a text file in rendered
+          output</p></li><li><p>determine the intrinsic size of an image</p></li></ul></div><p>
+  </p><p>The line numbers and callouts in the following example are
+  made possible through the use of the DocBook XSLT extension
+  functions.
+    </p><div class="example"><a name="d0e767"></a><p class="title"><b>Example&nbsp;2.1.&nbsp;A program listing with line numbering and callouts</b></p><div class="programlistingco"><pre class="programlisting">&nbsp;&nbsp;1 @rem = '--*-Perl-*--                                       <span class="co"><img src="images/callouts/1.png" alt="(1)"></span>
+&nbsp;&nbsp;&nbsp; @echo off
+&nbsp;&nbsp;&nbsp; perl.exe %_batchname %$
+&nbsp;&nbsp;&nbsp; goto endofperl                                             <span class="co"><img src="images/callouts/2.png" alt="(2)"></span>
+&nbsp;&nbsp;5 @rem ';
+&nbsp;&nbsp;&nbsp; 
+&nbsp;&nbsp;&nbsp; # Compress mail...
+&nbsp;&nbsp;&nbsp; 
+&nbsp;&nbsp;&nbsp; require 'n:/home/nwalsh/lib/cygnus.pl';                    <span class="co"><img src="images/callouts/3.png" alt="(3)"></span>
+&nbsp;10 require 'timelocal.pl';                                    <span class="co"><img src="images/callouts/3.png" alt="(3)"></span>
+&nbsp;&nbsp;&nbsp; use Cwd;   <span class="co"><img src="images/callouts/4.png" alt="(4)"></span>
+&nbsp;&nbsp;&nbsp; 
+&nbsp;&nbsp;&nbsp; select (STDERR); $| = 1;
+&nbsp;&nbsp;&nbsp; select (STDOUT); $| = 1;
+&nbsp;15 
+&nbsp;&nbsp;&nbsp; @DIRS = ("/home/nwalsh/Mail");
+&nbsp;&nbsp;&nbsp; while (@DIRS) {
+&nbsp;&nbsp;&nbsp;     $dir = shift @DIRS;
+&nbsp;&nbsp;&nbsp;     opendir (DIR, $dir);
+&nbsp;20     while ($fname = readdir(DIR)) {
+&nbsp;&nbsp;&nbsp;         $file = "$dir/$fname";
+&nbsp;&nbsp;&nbsp;         next if ! -d $file;
+&nbsp;&nbsp;&nbsp;         next if $fname =~ /^\.\.?$/;
+&nbsp;&nbsp;&nbsp; 
+&nbsp;25         print "$file\n";
+&nbsp;&nbsp;&nbsp;         push (@DIRS, $file);
+&nbsp;&nbsp;&nbsp;         &amp;compress ($file);                                 <span class="co"><img src="images/callouts/5.png" alt="(5)"></span>
+&nbsp;&nbsp;&nbsp;     }
+&nbsp;&nbsp;&nbsp; }
+&nbsp;30 
+&nbsp;&nbsp;&nbsp; exit;</pre><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><img src="images/callouts/1.png" alt="1" border="0"></td><td valign="top" align="left"><p>The prologue handles embedding a Perl script in a DOS batch file.</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/2.png" alt="2" border="0"></td><td valign="top" align="left"><p>The <code class="literal">goto</code> statement, interpreted by the DOS batch
+file interpreter, skips over the body of the Perl script.</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/3.png" alt="3" border="0"></td><td valign="top" align="left"><p>The <code class="literal">require</code> statement sources in external program
+fragments.</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/4.png" alt="4" border="0"></td><td valign="top" align="left"><p>The <code class="literal">use</code> statement is similar, but has additional
+utility.  It is a Perl5 function.  (Note that this callout area specifies
+both a line and a column.)</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/5.png" alt="5" border="0"></td><td valign="top" align="left"><p>This is a user subroutine call.</p></td></tr></table></div></div></div><p>
+</p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e807"></a>Using the Extensions</h2></div></div></div><p>The extensions are included in the DocBook XSL Stylesheets
+      distribution in the <code class="filename">extensions</code> directory.
+      </p><div class="procedure"><p>To use the extensions, you need to:</p><ol type="1"><li><p>Determine which extension jar file (in the <code class="filename">extensions</code> directory) corresponds most
+          closely to the Java XSLT engine you use.</p></li><li><p>Include the name of that jar file in your Java
+          <code class="envar">CLASSPATH</code>.</p></li><li><p>Set the correct <a href="html/" target="_top">XSLT extension
+            parameters</a> to enable the behavior you need. (For
+          compatibility with other processors, the extensions are
+          disabled by default.)</p></li></ol></div><p>
+      For example, if you're using Saxon 6.4.4, include the
+      <code class="filename">extensions/saxon644.jar</code> file in your Java
+      classpath. If you're using Xalan-Java 2, include the
+      <code class="filename">extensions/xalan2.jar</code> file in your
+      classpath.
+
+      </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>The DocBook XSLT extensions are not supported for
+          Xalan-Java 1 or for versions of Saxon prior to 6.4.3. And
+          because the only current implementation of the extensions is
+          written in Java, you can't yet use them with xsltproc (which
+          is a written in C) or with Xalan-C++.
+        </p></div><p>
+
+      At a minimum, you'll also need to set the value of the <a href="html/use.extensions.html" target="_top">use.extensions</a>
+      parameter to <code class="literal">1</code> (instead of the default
+      <code class="literal">0</code>).</p><div class="example"><a name="d0e857"></a><p class="title"><b>Example&nbsp;2.2.&nbsp;Enabling the extensions from the command line</b></p><p>To enable the extensions from the command line, you need to
+        pass the <em class="parameter"><code>use.extensions</code></em> parameter
+      to your XSLT engine. Here's an example of how to do that with Saxon:
+        </p><pre class="screen">
+  java com.icl.saxon.StyleSheet  <em class="replaceable"><code>filename.xml</code></em> <em class="replaceable"><code>docbook/html/docbook.xsl \
+</code></em>    use.extensions=1 &gt; <em class="replaceable"><code>output.html</code></em>
+</pre><p>
+      and here's an example of how to do it with Xalan:
+        </p><pre class="screen">
+  java org.apache.xalan.xslt.Process -IN <em class="replaceable"><code>filename.xml</code></em> -XSL <em class="replaceable"><code>docbook/html/docbook.xsl</code></em> \
+    -PARAM use.extensions 1 -OUT <em class="replaceable"><code>output.html</code></em>  
+</pre><p>
+      </p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ch01s03.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="ch03.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">XSL processing model&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;Chapter&nbsp;3.&nbsp;Tools documentation</td></tr></table></div></body></html>

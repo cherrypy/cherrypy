@@ -1,0 +1,30 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>margin.note.float.type</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="FO Parameter Reference"><link rel="up" href="rn21.html" title="Property Sets"><link rel="prev" href="margin.note.title.Properties.html" title="margin.note.title.properties"><link rel="next" href="margin.note.width.html" title="margin.note.width"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">margin.note.float.type</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="margin.note.title.Properties.html">Prev</a>&nbsp;</td><th width="60%" align="center">Property Sets</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="margin.note.width.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="margin.note.float.type"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>margin.note.float.type &#8212; Select type of float for margin note customizations</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="margin.note.float.type.frag"></a><pre class="programlisting">
+&lt;xsl:param name="margin.note.float.type" select="'none'"&gt;&lt;/xsl:param&gt;
+</pre></div><div class="refsect1" lang="en"><a name="d0e6092"></a><h2>Description</h2><p>Selects the type of float for margin notes.
+DocBook does not define a margin note element, so this
+feature must be implemented as a customization of the stylesheet.
+See <a href="margin.note.properties.html"><em class="parameter"><code>margin.note.properties</code></em></a> for
+an example.
+</p><div class="itemizedlist"><ul type="disc"><li><p>If <a href="margin.note.float.type.html"><em class="parameter"><code>margin.note.float.type</code></em></a> is
+&#8220;<span class="quote"><code class="literal">none</code></span>&#8221;, then 
+no float is used.
+</p></li><li><p>If <a href="margin.note.float.type.html"><em class="parameter"><code>margin.note.float.type</code></em></a> is
+&#8220;<span class="quote"><code class="literal">before</code></span>&#8221;, then 
+the float appears at the top of the page.  On some processors,
+that may be the next page rather than the current page.
+</p></li><li><p>If <a href="margin.note.float.type.html"><em class="parameter"><code>margin.note.float.type</code></em></a> is
+&#8220;<span class="quote"><code class="literal">left</code></span>&#8221; or
+&#8220;<span class="quote"><code class="literal">start</code></span>&#8221;, then 
+a left side float is used.
+</p></li><li><p>If <a href="margin.note.float.type.html"><em class="parameter"><code>margin.note.float.type</code></em></a> is
+&#8220;<span class="quote"><code class="literal">right</code></span>&#8221; or
+&#8220;<span class="quote"><code class="literal">end</code></span>&#8221;, then 
+a right side float is used.
+</p></li><li><p>If your XSL-FO processor supports floats positioned on the
+&#8220;<span class="quote"><code class="literal">inside</code></span>&#8221; or
+&#8220;<span class="quote"><code class="literal">outside</code></span>&#8221;
+of double-sided pages, then you have those two 
+options for side floats as well.
+</p></li></ul></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="margin.note.title.Properties.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn21.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="margin.note.width.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">margin.note.title.properties&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;margin.note.width</td></tr></table></div></body></html>

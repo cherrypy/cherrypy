@@ -1,0 +1,45 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>olink.lang.fallback.sequence</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="FO Parameter Reference"><link rel="up" href="rn11.html" title="Linking"><link rel="prev" href="olink.doctitle.html" title="olink.doctitle"><link rel="next" href="olink.properties.html" title="olink.properties"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">olink.lang.fallback.sequence</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="olink.doctitle.html">Prev</a>&nbsp;</td><th width="60%" align="center">Linking</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="olink.properties.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="olink.lang.fallback.sequence"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>olink.lang.fallback.sequence &#8212; look up translated documents if olink not found?</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="olink.lang.fallback.sequence.frag"></a><pre class="programlisting">
+&lt;xsl:param name="olink.lang.fallback.sequence" select="''"&gt;&lt;/xsl:param&gt; </pre></div><div class="refsect1" lang="en"><a name="d0e2529"></a><h2>Description</h2><p>This parameter defines a list of lang values
+to search among to resolve olinks.
+</p><p>Normally an olink tries to resolve to a document in the same
+language as the olink itself.  The language of an olink
+is determined by its nearest ancestor element with a
+<code class="sgmltag-attribute">lang</code> attribute, otherwise the
+value of the <a href="l10n.gentext.default.lang.html"><em class="parameter"><code>l10n.gentext.default.lang</code></em></a>
+parameter.
+</p><p>An olink database can contain target data for the same
+document in multiple languages.  Each set of data has the
+same value for the <a href="http://docbook.org/tdg/en/html/targetdoc.html"><code class="sgmltag-element">targetdoc</code></a> attribute in
+the <a href="http://docbook.org/tdg/en/html/document.html"><code class="sgmltag-element">document</code></a> element in the database, but with a 
+different <a href="http://docbook.org/tdg/en/html/lang.html"><code class="sgmltag-element">lang</code></a> attribute value.
+</p><p>When an olink is being resolved, the target is first
+sought in the document with the same language as the olink.
+If no match is found there, then this parameter is consulted
+for additional languages to try.</p><p>The <a href="olink.lang.fallback.sequence.html"><em class="parameter"><code>olink.lang.fallback.sequence</code></em></a>
+must be a whitespace separated list of lang values to
+try.  The first one with a match in the olink database is used.
+The default value is empty.</p><p>For example, a document might be written in German
+and contain an olink with
+<code class="literal">targetdoc="adminguide"</code>.
+When the document is processed, the processor
+first looks for a target dataset in the
+olink database starting with:</p><div class="literallayout"><p><code class="literal">&lt;document&nbsp;targetdoc="adminguide"&nbsp;lang="de"&gt;</code>.<br>
+</p></div><p>If there is no such element, then the
+<a href="olink.lang.fallback.sequence.html"><em class="parameter"><code>olink.lang.fallback.sequence</code></em></a> 
+parameter is consulted.
+If its value is, for example, &#8220;<span class="quote">fr en</span>&#8221;, then the processor next
+looks for <code class="literal">targetdoc="adminguide" lang="fr"</code>, and
+then for <code class="literal">targetdoc="adminguide" lang="en"</code>.
+If there is still no match, it looks for
+<code class="literal">targetdoc="adminguide"</code> with no
+lang attribute.
+</p><p>This parameter is useful when a set of documents is only
+partially translated, or is in the process of being translated.  
+If a target of an olink has not yet been translated, then this
+parameter permits the processor to look for the document in
+other languages.  This assumes the reader would rather have
+a link to a document in a different language than to have
+a broken link.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="olink.doctitle.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn11.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="olink.properties.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">olink.doctitle&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;olink.properties</td></tr></table></div></body></html>

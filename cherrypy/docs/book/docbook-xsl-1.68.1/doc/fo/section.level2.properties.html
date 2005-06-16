@@ -1,0 +1,16 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>section.level2.properties</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="FO Parameter Reference"><link rel="up" href="rn21.html" title="Property Sets"><link rel="prev" href="section.level1.properties.html" title="section.level1.properties"><link rel="next" href="section.level3.properties.html" title="section.level3.properties"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">section.level2.properties</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="section.level1.properties.html">Prev</a>&nbsp;</td><th width="60%" align="center">Property Sets</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="section.level3.properties.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="section.level2.properties"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>section.level2.properties &#8212; Properties for level-2 sections</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="section.level2.properties.frag"></a><pre class="programlisting">
+&lt;xsl:attribute-set name="section.level2.properties" use-attribute-sets="section.properties"&gt;
+&lt;/xsl:attribute-set&gt;
+</pre></div><div class="refsect1" lang="en"><a name="d0e6412"></a><h2>Description</h2><p>The properties that apply to the containing
+block of a level-2 section, and therefore apply to
+the whole section.  This includes <a href="http://docbook.org/tdg/en/html/sect2.html"><code class="sgmltag-element">sect2</code></a>
+elements and <a href="http://docbook.org/tdg/en/html/section.html"><code class="sgmltag-element">section</code></a> elements at level 2.
+</p><p>For example, you could start each level-2 section on
+a new page by using:</p><pre class="programlisting">&lt;xsl:attribute-set name="section.level2.properties"&gt;
+  &lt;xsl:attribute name="break-before"&gt;page&lt;/xsl:attribute&gt;
+&lt;/xsl:attribute-set&gt;
+</pre><p>This attribute set inherits attributes from the
+general <a href="http://docbook.org/tdg/en/html/section.properties.html"><code class="sgmltag-element">section.properties</code></a> attribute set.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="section.level1.properties.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn21.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="section.level3.properties.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">section.level1.properties&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;section.level3.properties</td></tr></table></div></body></html>

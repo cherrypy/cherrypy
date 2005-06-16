@@ -1,0 +1,15 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>qanda.title.properties</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="FO Parameter Reference"><link rel="up" href="rn21.html" title="Property Sets"><link rel="prev" href="root.properties.html" title="root.properties"><link rel="next" href="qanda.title.level1.properties.html" title="qanda.title.level1.properties"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">qanda.title.properties</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="root.properties.html">Prev</a>&nbsp;</td><th width="60%" align="center">Property Sets</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="qanda.title.level1.properties.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="qanda.title.properties"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>qanda.title.properties &#8212; Properties for qanda set titles</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="qanda.title.properties.frag"></a><pre class="programlisting">
+&lt;xsl:attribute-set name="qanda.title.properties"&gt;
+  &lt;xsl:attribute name="font-family"&gt;
+    &lt;xsl:value-of select="$title.font.family"&gt;&lt;/xsl:value-of&gt;
+  &lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="font-weight"&gt;bold&lt;/xsl:attribute&gt;
+  &lt;!-- font size is calculated dynamically by qanda.heading template --&gt;
+  &lt;xsl:attribute name="keep-with-next.within-column"&gt;always&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-before.minimum"&gt;0.8em&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-before.optimum"&gt;1.0em&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-before.maximum"&gt;1.2em&lt;/xsl:attribute&gt;
+&lt;/xsl:attribute-set&gt;
+</pre></div><div class="refsect1" lang="en"><a name="d0e6743"></a><h2>Description</h2><p>The properties common to all qanda set titles.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="root.properties.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn21.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="qanda.title.level1.properties.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">root.properties&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;qanda.title.level1.properties</td></tr></table></div></body></html>

@@ -1,0 +1,32 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;6.&nbsp;Using the XSL stylesheets to generate HTML Help</title><link rel="stylesheet" href="reference.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="up" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="prev" href="ch05.html" title="Chapter&nbsp;5.&nbsp;The Template System"><link rel="next" href="ch06s02.html" title="Customizing generated files"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter&nbsp;6.&nbsp;Using the XSL stylesheets to generate HTML Help</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ch05.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="ch06s02.html">Next</a></td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="d0e1020"></a>Chapter&nbsp;6.&nbsp;Using the XSL stylesheets to generate HTML Help</h2></div><div><div class="author"><h3 class="author"><span class="firstname">Jirka</span> <span class="surname">Kosek</span></h3></div></div><div><p class="releaseinfo">$Id: htmlhelp.xml,v 1.2 2003/10/29 11:48:18 kosek Exp $</p></div><div><p class="copyright">Copyright &copy; 2001-2003 Ji&#345;&iacute; Kosek</p></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="htmlhelp.html#d0e1046">How to generate your first HTML Help file from DocBook sources</a></span></dt><dt><span class="section"><a href="ch06s02.html">Customizing generated files</a></span></dt><dt><span class="section"><a href="ch06s03.html">Feedback</a></span></dt></dl></div><p>HTML Help (HH) is a help format used in newer versions of Microsoft
+Windows and applications written for that platform. The HTML Help format allows
+you to pack several HTML files together with images, a table of contents, and
+an index into a single file. Windows contains a browser for this file format
+and full-text search is also supported on HH files. If you want to know
+more about HH and its capabilities, visit the Microsoft <a href="http://msdn.microsoft.com/library/tools/htmlhelp/chm/HH1Start.htm" target="_top">HTML
+Help Start Page</a>.</p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1046"></a>How to generate your first HTML Help file from DocBook sources</h2></div></div></div><p>Working with the HH stylesheets is the same as with other XSL DocBook
+stylesheets. Simply run your favorite XSLT processor on your document
+with the HH stylesheet:</p><pre class="screen">saxon <em class="replaceable"><code>yourfile</code></em> <em class="replaceable"><code>/path/to/stylesheets/</code></em>htmlhelp/htmlhelp.xsl</pre><p>The stylesheet imports the standard chunking stylesheet, so a set of
+HTML files is created in the usual way. Other files are also created
+&#8211; <code class="filename">htmlhelp.hhp</code> is the project file for the HTML
+Help Compiler and <code class="filename">toc.hhc</code> holds the structure of your
+document.</p><p>The language identifier for the overall HH file is taken from the top-most
+element with a <code class="sgmltag-attribute">lang</code> attribute in
+your DocBook source. This is perfectly legal for documents in only one
+language. If a language is not specified in the document, US English is
+used. There is one problem &#8211; MS language codes are country-sensitive,
+and this information is not available in the DocBook source. If
+the stylesheet selects a bad code for you, edit
+<code class="filename">langcodes.xml</code>, and remove all entries which have
+your language code, but are located in an inappropriate country.</p><p>The title for the overall HH file is taken from the first title element in your
+document. Full-text searching is automatically on. If your document
+contains index terms, they are automatically converted to HH ActiveX
+objects, which are recognized by the HTML Help compiler.</p><p>The stylesheet creates couple other files which are then used as an
+input for the HTML Help Compiler (HHC), which is part of <a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp" target="_top">HTML Help Workshop</a>. If you have HHC in your path, you can
+start conversion to the HH format by running this command:</p><pre class="screen">hhc htmlhelp.hhp</pre><p>If you cannot stand to work without using your mouse, there is alternative
+way. Just double-click on the <code class="filename">htmlhelp.hhp</code> file. HH Workshop will be
+launched automatically. Generation of the HH file can be started by selecting
+<span class="guimenu">File</span>-&gt;<span class="guimenuitem">Compile</span> from the application's
+menu.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ch05.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="ch06s02.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter&nbsp;5.&nbsp;The Template System&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;Customizing generated files</td></tr></table></div></body></html>

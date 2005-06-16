@@ -1,0 +1,26 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>refentry.title.properties</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="FO Parameter Reference"><link rel="up" href="rn09.html" title="Reference Pages"><link rel="prev" href="refentry.pagebreak.html" title="refentry.pagebreak"><link rel="next" href="refentry.xref.manvolnum.html" title="refentry.xref.manvolnum"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">refentry.title.properties</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="refentry.pagebreak.html">Prev</a>&nbsp;</td><th width="60%" align="center">Reference Pages</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="refentry.xref.manvolnum.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="refentry.title.properties"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>refentry.title.properties &#8212; Title properties for a refentry title</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="refentry.title.properties.frag"></a><pre class="programlisting">
+&lt;xsl:attribute-set name="refentry.title.properties"&gt;
+  &lt;xsl:attribute name="font-family"&gt;
+    &lt;xsl:value-of select="$title.font.family"&gt;&lt;/xsl:value-of&gt;
+  &lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="font-size"&gt;18pt&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="font-weight"&gt;bold&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-after"&gt;1em&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="hyphenate"&gt;false&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="keep-with-next.within-column"&gt;always&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-before.minimum"&gt;0.8em&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-before.optimum"&gt;1.0em&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-before.maximum"&gt;1.2em&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-after.optimum"&gt;0.5em&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-after.minimum"&gt;0.4em&lt;/xsl:attribute&gt;
+  &lt;xsl:attribute name="space-after.maximum"&gt;0.6em&lt;/xsl:attribute&gt;
+&lt;/xsl:attribute-set&gt;
+</pre></div><div class="refsect1" lang="en"><a name="d0e1870"></a><h2>Description</h2><p>Formatting properties applied to refentry titles,
+including refnamediv, refsect1 through 3, and refsection.
+The font size is supplied by the appropriate 
+<a href="section.levelX.title.properties.html"><em class="parameter"><code>section.level<em class="replaceable"><code>X</code></em>.title.properties</code></em></a>
+attribute-set,
+computed from its location in the section hierarchy.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="refentry.pagebreak.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn09.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="refentry.xref.manvolnum.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">refentry.pagebreak&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;refentry.xref.manvolnum</td></tr></table></div></body></html>

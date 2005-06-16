@@ -1,0 +1,38 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>insert.olink.page.number</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="FO Parameter Reference"><link rel="up" href="rn11.html" title="Linking"><link rel="prev" href="collect.xref.targets.html" title="collect.xref.targets"><link rel="next" href="insert.olink.pdf.frag.html" title="insert.olink.pdf.frag"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">insert.olink.page.number</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="collect.xref.targets.html">Prev</a>&nbsp;</td><th width="60%" align="center">Linking</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="insert.olink.pdf.frag.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="insert.olink.page.number"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>insert.olink.page.number &#8212; Turns page numbers in olinks on and off</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="insert.olink.page.number.frag"></a><pre class="programlisting">
+&lt;xsl:param name="insert.olink.page.number"&gt;no&lt;/xsl:param&gt;
+</pre></div><div class="refsect1" lang="en"><a name="d0e2185"></a><h2>Description</h2><p>The value of this parameter determines if
+cross references made between documents with
+<a href="http://docbook.org/tdg/en/html/olink.html"><code class="sgmltag-element">olink</code></a> will 
+include page number citations.
+In most cases this is only applicable to references in printed output.
+</p><p>The parameter has three possible values.
+</p><div class="variablelist"><dl><dt><span class="term">no</span></dt><dd><p>No page number references will be generated for olinks.
+</p></dd><dt><span class="term">yes</span></dt><dd><p>Page number references will be generated
+for all <a href="http://docbook.org/tdg/en/html/olink.html"><code class="sgmltag-element">olink</code></a> references.
+The style of page reference may be changed
+if an <code class="sgmltag-attribute">xrefstyle</code>
+attribute is used.
+</p></dd><dt><span class="term">maybe</span></dt><dd><p>Page number references will not be generated
+for an <a href="http://docbook.org/tdg/en/html/olink.html"><code class="sgmltag-element">olink</code></a> element unless 
+it has an
+<code class="sgmltag-attribute">xrefstyle</code>
+attribute whose value specifies a page reference.
+</p></dd></dl></div><p>Olinks that point to targets within the same document
+are treated as <a href="http://docbook.org/tdg/en/html/xref.html"><code class="sgmltag-element">xref</code></a>s, and controlled by
+the <a href="insert.xref.page.number.html"><em class="parameter"><code>insert.xref.page.number</code></em></a> parameter.
+</p><p>Page number references for olinks to
+external documents can only be inserted if the 
+information exists in the olink database. 
+This means each olink target element 
+(<a href="http://docbook.org/tdg/en/html/div.html"><code class="sgmltag-element">div</code></a> or <a href="http://docbook.org/tdg/en/html/obj.html"><code class="sgmltag-element">obj</code></a>)
+must have a <code class="sgmltag-attribute">page</code> attribute
+whose value is its page number in the target document.
+The XSL stylesheets are not able to extract that information
+during processing because pages have not yet been created in
+XSLT transformation.  Only the XSL-FO processor knows what
+page each element is placed on.
+Therefore some postprocessing must take place to populate
+page numbers in the olink database.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="collect.xref.targets.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn11.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="insert.olink.pdf.frag.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">collect.xref.targets&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;insert.olink.pdf.frag</td></tr></table></div></body></html>

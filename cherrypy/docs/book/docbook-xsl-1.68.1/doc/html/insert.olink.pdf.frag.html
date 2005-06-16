@@ -1,0 +1,41 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>insert.olink.pdf.frag</title><link rel="stylesheet" href="../ref.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.0"><link rel="start" href="index.html" title="HTML Parameter Reference"><link rel="up" href="rn13.html" title="Linking"><link rel="prev" href="insert.olink.page.number.html" title="insert.olink.page.number"><link rel="next" href="prefer.internal.olink.html" title="prefer.internal.olink"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">insert.olink.pdf.frag</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="insert.olink.page.number.html">Prev</a>&nbsp;</td><th width="60%" align="center">Linking</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="prefer.internal.olink.html">Next</a></td></tr></table><hr></div><div class="refentry" lang="en"><a name="insert.olink.pdf.frag"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>insert.olink.pdf.frag &#8212; Add fragment identifiers for links into PDF files</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><a name="insert.olink.pdf.frag.frag"></a><pre class="programlisting">
+&lt;xsl:param name="insert.olink.pdf.frag" select="0"&gt;&lt;/xsl:param&gt;
+</pre></div><div class="refsect1" lang="en"><a name="d0e3248"></a><h2>Description</h2><p>The value of this parameter determines whether
+the cross reference URIs to PDF documents made with
+<a href="http://docbook.org/tdg/en/html/olink.html"><code class="sgmltag-element">olink</code></a> will 
+include fragment identifiers.
+</p><p>When forming a URI to link to a PDF document,
+a fragment identifier (typically a '#' followed by an
+id value) appended to the PDF filename can be used by
+the PDF viewer to open
+the PDF file to a location within the document instead of
+the first page.
+However, not all PDF files have id
+values embedded in them, and not all PDF viewers can
+handle fragment identifiers. 
+</p><p>If <a href="insert.olink.pdf.frag.html"><em class="parameter"><code>insert.olink.pdf.frag</code></em></a> is set
+to a non-zero value, then any olink targeting a
+PDF file will have the fragment identifier appended to the URI.
+The URI is formed by concatenating the value of the
+<a href="olink.base.uri.html"><em class="parameter"><code>olink.base.uri</code></em></a> parameter, the
+value of the <code class="sgmltag-attribute">baseuri</code>
+attribute from the <a href="http://docbook.org/tdg/en/html/document.html"><code class="sgmltag-element">document</code></a>
+element in the olink database with the matching
+<code class="sgmltag-attribute">targetdoc</code> value,
+and the value of the <code class="sgmltag-attribute">href</code>
+attribute for the targeted element in the olink database.
+The <code class="sgmltag-attribute">href</code> attribute
+contains the fragment identifier.
+</p><p>If <a href="insert.olink.pdf.frag.html"><em class="parameter"><code>insert.olink.pdf.frag</code></em></a> is set
+to zero (the default value), then 
+the <code class="sgmltag-attribute">href</code> attribute
+from the olink database
+is not appended to PDF olinks, so the fragment identifier is left off.
+A PDF olink is any olink for which the
+<code class="sgmltag-attribute">baseuri</code> attribute
+from the matching <a href="http://docbook.org/tdg/en/html/document.html"><code class="sgmltag-element">document</code></a>
+element in the olink database ends with '.pdf'.
+Any other olinks will still have the fragment identifier added.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="insert.olink.page.number.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="rn13.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="prefer.internal.olink.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">insert.olink.page.number&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;prefer.internal.olink</td></tr></table></div></body></html>
