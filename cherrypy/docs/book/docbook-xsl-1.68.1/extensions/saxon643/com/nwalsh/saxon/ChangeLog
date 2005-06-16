@@ -1,0 +1,104 @@
+2004-12-06  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* Windows1252.java: parameter values in how-to steps, properly (doubly) quoted
+
+2004-11-30  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* Windows1252.java: Updated/corrected embedded doc
+
+2004-11-17  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* Windows1252.java: New file.
+
+2004-10-29  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Text.java: Support URIResolver() on insertfile href's
+
+2004-09-05  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* ImageIntrinsics.java: Bug #1022519 - graphics.xsl fails with error about no X11 server
+	
+	Problem
+	  Current stylesheets fail when trying to generate output under
+	  the following conditions:
+	
+	    - Linux/Unix environment
+	    - no X server running
+	    - document contains graphics
+	    - use.extensions enabled
+	
+	  This makes it impossible to try to do extensions-enabled
+	  automated transformations (e.g., nightly doc builds) in a server
+	  environment.
+	
+	Cause
+	  Certain methods in the DocBook "ImageIntrisics" extensions class
+	  rely on the Java AWT library, which by default expects a running
+	  X server.
+	
+	Fix
+	  Both the Saxon and Xalan2 versions of the extensions now set the
+	  "java.awt.headless" Java 1.4 system property to true. That
+	  property tells Java to continue processing AWT-based code even
+	  if no running X server is found.
+	
+	  The property is set at the beginning of the constructor for the
+	  ImageIntrinsics class.
+	
+	Affects
+	  This change only affects transformations using Saxon or Xalan2
+	  under the conditions:
+	
+	    - Linux/Unix environment
+	    - no X server running
+	    - document contains graphics
+	    - use.extensions enabled
+
+2004-03-24  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* Text.java: Added Saxon support for encoding attribute on textdata. Added new parameter textdata.default.encoding which specifies encoding when encoding attribute on textdata is missing.
+
+2004-03-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* ImageIntrinsics.java: Added warning messages when images can't be loaded
+
+2004-03-01  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* Text.java: Normalize DOS and Mac line breaks to LF in included files.
+
+2003-08-27  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* NumberLinesEmitter.java, Verbatim.java: Support startinglinenumber and continuation on verbatim environments
+
+2002-11-15  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* ColumnScanEmitter.java: Make sure the width[] array returned is always exactly the right length
+
+	* Table.java: Correct rounding errors in column percentage width calculation
+
+2002-06-26  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* UnwrapLinks.java, UnwrapLinksEmitter.java: New file.
+
+2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* ImageIntrinsics.java: New file.
+
+2002-03-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* CalloutEmitter.java, NumberLinesEmitter.java: Fix nesting bug in XHTML
+
+2001-08-05  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* FormatDingbatCallout.java, FormatUnicodeCallout.java, Verbatim.java: 
+	Removed the FormatDingbatCallout classes, they were the same as the FormatUnicodeCallout classes but with a font wrapper. Added a callout.unicode.font parameter to wrap Unicode callouts
+
+2001-07-31  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* FormatCallout.java: Fix attribute test
+
+2001-07-16  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* CVS.java, Callout.java, CalloutEmitter.java, ColumnScanEmitter.java, ColumnUpdateEmitter.java, CopyEmitter.java, FormatCallout.java, FormatDingbatCallout.java, FormatGraphicCallout.java, FormatTextCallout.java, FormatUnicodeCallout.java, LineCountEmitter.java, NumberLinesEmitter.java, Table.java, Text.java, TextFactory.java, Verbatim.java, package.html: 
+	New file.
+

@@ -1,0 +1,610 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>DocBook XSL Stylesheet Release Notes</title><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="article" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="d0e1"></a>DocBook XSL Stylesheet Release Notes</h1></div><div><h3 class="corpauthor">DocBook Open Repository Team</h3></div><div><p class="releaseinfo">$Id: RELEASE-NOTES.xml,v 1.35 2005/02/14 08:06:28 xmldoc Exp $</p></div><div><p class="pubdate">01 December 2004</p></div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#d0e22">Release 1.68.1</a></span></dt><dt><span class="section"><a href="#d0e31">Release 1.68.0</a></span></dt><dt><span class="section"><a href="#d0e269">Release 1.67.2</a></span></dt><dt><span class="section"><a href="#d0e274">Release 1.67.1</a></span></dt><dt><span class="section"><a href="#d0e441">Release 1.67.0</a></span></dt><dt><span class="section"><a href="#d0e572">Release 1.66.1</a></span></dt><dt><span class="section"><a href="#d0e859">Release 1.65.0</a></span></dt><dt><span class="section"><a href="#d0e895">Release 1.64.1</a></span></dt><dt><span class="section"><a href="#d0e910">Release 1.61.0</a></span></dt><dt><span class="section"><a href="#d0e1100">Release 1.60.1</a></span></dt><dt><span class="section"><a href="#d0e1277">Release 1.59.2</a></span></dt><dt><span class="section"><a href="#d0e1313">Release 1.59.1</a></span></dt><dt><span class="section"><a href="#d0e1385">Release 1.58.0</a></span></dt><dt><span class="section"><a href="#d0e1433">Release 1.57.0</a></span></dt><dt><span class="section"><a href="#d0e1440">Release 1.56.0</a></span></dt><dt><span class="section"><a href="#d0e1662">Older releases</a></span></dt></dl></div><p>These are the release notes for the DocBook XSL Stylesheets.
+  At a minimum, this file attempts to document changes to the public
+  APIs. What, exactly, counts as a public API is still somewhat in
+  question, but it includes at least the global parameters. This file
+  also provides a high-level overview of the features added in each
+  release.</p><p>Bug fixes are (mostly) not documented here. For a complete
+  list of changes, including descriptions of bug fixes, see the <a href="WhatsNew" target="_top">WhatsNew</a> file, which is auto-generated from the checkin
+  descriptions for changes in the project CVS repository.</p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e22"></a>Release 1.68.1</h2></div></div></div><p>The release adds localization support for Farsi (thanks to
+    Sina Heshmati) and improved support for the XLink-based DocBook NG
+    <code class="sgmltag-element">db:link</code> element. Other than that, it is a minor
+    bug-fix update to the 1.68.0 release. The main thing it fixes is a
+    build error that caused the XSLT Java extensions to be jarred up
+    with the wrong package structure. Thanks to Jens Stavnstrup for
+    quickly reporting the problem, and to Mauritz Jeanson for
+    investigating and finding the cause.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e31"></a>Release 1.68.0</h2></div></div></div><p>This release includes some features changes, particularly
+    for FO/PDF output, and a number of bug fixes.
+      </p><div class="itemizedlist"><a name="V1680_FO"></a><p class="title"><b>FO</b></p><ul type="disc"><li><p>Moved footnote properties to attribute-sets.</p></li><li><p>Added support for side floats, margin notes, and
+   	  custom floats.</p></li><li><p>Added new parameters
+          <a href="http://docbook.sourceforge.net/release/xsl/current/doc/fo/body.start.indent.html"><em class="parameter"><code>body.start.indent</code></em></a> and
+          <a href="http://docbook.sourceforge.net/release/xsl/current/doc/fo/body.end.indent.html"><em class="parameter"><code>body.end.indent</code></em></a> to the
+          <em class="parameter"><code>set.flow.properties template</code></em>.</p></li><li><p>Added support for <code class="sgmltag-attribute">xml:id</code></p></li><li><p>Added support for
+          <a href="http://www.docbook.org/tdg/en/html/refdescriptor.html"><code class="sgmltag-element">refdescriptor</code></a>.</p></li><li><p>Added support for multiple <a href="http://www.docbook.org/tdg/en/html/refnamediv.html"><code class="sgmltag-element">refnamediv</code></a>s.</p></li><li><p>Added <em class="parameter"><code>index.entry.properties</code></em>
+          attribute-set to support customization of index
+          entries.</p></li><li><p>Added <em class="parameter"><code>set.flow.properties
+          template</code></em> call to each <code class="sgmltag-element">fo:flow</code>
+          to support customizations entry point.</p></li><li><p>Add support for <code class="literal">@floatstyle</code> in
+          <a href="http://www.docbook.org/tdg/en/html/figure.html"><code class="sgmltag-element">figure</code></a></p></li><li><p>Moved hardcoded properties for index division titles
+          to the <em class="parameter"><code>index.div.title.properties</code></em>
+          attribute-set.</p></li><li><p>Added support for
+          <code class="sgmltag-element">table-layout</code>="<code class="sgmltag-attvalue">auto</code>" for XEP.</p></li><li><p>Added <em class="parameter"><code>index.div.title.properties</code></em>
+   	  attribute-set.</p></li><li><p><em class="parameter"><code>$verbose</code></em> parameter is now
+          passed to most elements.</p></li><li><p>Added <a href="http://www.docbook.org/tdg/en/html/refentry.html"><code class="sgmltag-element">refentry</code></a> to
+          <a href="http://www.docbook.org/tdg/en/html/toc.html"><code class="sgmltag-element">toc</code></a> in <a href="http://www.docbook.org/tdg/en/html/part.html"><code class="sgmltag-element">part</code></a>, as it is
+          permitted by the DocBook schema/DTD.</p></li><li><p>Added backmatter elements and
+          <a href="http://www.docbook.org/tdg/en/html/article.html"><code class="sgmltag-element">article</code></a> to <a href="http://www.docbook.org/tdg/en/html/toc.html"><code class="sgmltag-element">toc</code></a> in
+          <a href="http://www.docbook.org/tdg/en/html/part.html"><code class="sgmltag-element">part</code></a>, since they are permitted by the
+          DocBook schema/DTD.</p></li><li><p>Added <code class="sgmltag-attribute">mode</code>="<code class="sgmltag-attvalue">toc</code>" for
+          <a href="http://www.docbook.org/tdg/en/html/simplesect.html"><code class="sgmltag-element">simplesect</code></a>, since it is now permitted in
+          the <a href="http://www.docbook.org/tdg/en/html/toc.html"><code class="sgmltag-element">toc</code></a> if
+          <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/simplesect.in.toc.html"><em class="parameter"><code>simplesect.in.toc</code></em></a> is set.</p></li><li><p>Moved hard-coded properties to
+          <em class="parameter"><code>nongraphical.admonintion.properties</code></em>
+          and <em class="parameter"><code>graphical.admonition.properties</code></em>
+          attribute sets.</p></li><li><p>Added support for <code class="literal">sidebar-width</code> and
+          <code class="literal">float-type</code> processing instructions in
+          <a href="http://www.docbook.org/tdg/en/html/sidebar.html"><code class="sgmltag-element">sidebar</code></a>.</p></li><li><p>For tables with HTML markup elements, added support
+          for <code class="literal">dbfo bgcolor</code> PI, the attribute-sets
+          named <em class="parameter"><code>table.properties</code></em>,
+          <em class="parameter"><code>informaltable.properties</code></em>,
+          <em class="parameter"><code>table.table.properties</code></em>, and
+          <em class="parameter"><code>table.cell.padding</code></em>. Also added
+          support for the templates named
+          <em class="parameter"><code>table.cell.properties</code></em> and
+          <em class="parameter"><code>table.cell.block.properties</code></em> so that
+          tabstyles can be implemented. Also added support for tables
+          containing only <code class="sgmltag-element">tr</code> instead of
+          <a href="http://www.docbook.org/tdg/en/html/tbody.html"><code class="sgmltag-element">tbody</code></a> with <code class="sgmltag-element">tr</code>.</p></li><li><p>Added new paramater
+          <a href="http://docbook.sourceforge.net/release/xsl/current/doc/fo/hyphenate.verbatim.characters.html"><em class="parameter"><code>hyphenate.verbatim.characters</code></em></a> which
+          can specify characters after which a line break can occur in
+          verbatim environments.  This parameter can be used to extend
+          the initial set of characters which contain only space and
+          non-breakable space.</p></li><li><p>Added <em class="parameter"><code>itemizedlist.label.markup</code></em> to enable
+ 	  selection of different bullet symbol. Also added several
+   	  potential bullet characters, commented out by default.</p></li><li><p>Enabled all id's in XEP output for external olinking.</p></li></ul></div><p>
+
+      </p><div class="itemizedlist"><a name="V1680_HTML"></a><p class="title"><b>HTML</b></p><ul type="disc"><li><p>Added support for
+          <a href="http://www.docbook.org/tdg/en/html/refdescriptor.html"><code class="sgmltag-element">refdescriptor</code></a>.</p></li><li><p>Added support for multiple <a href="http://www.docbook.org/tdg/en/html/refnamediv.html"><code class="sgmltag-element">refnamediv</code></a>s.</p></li><li><p>Added support for <code class="sgmltag-attribute">xml:id</code></p></li><li><p><a href="http://www.docbook.org/tdg/en/html/refsynopsisdiv.html"><code class="sgmltag-element">refsynopsisdiv</code></a> as a section for
+          counting section levels</p></li></ul></div><p>
+      </p><div class="itemizedlist"><a name="V1680_images"></a><p class="title"><b>Images</b></p><ul type="disc"><li><p>Added new SVG admonition graphics and navigation images.</p></li></ul></div><p>
+    </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e269"></a>Release 1.67.2</h2></div></div></div><p>This release fixes a table bug introduced in the 1.67.1
+    release.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e274"></a>Release 1.67.1</h2></div></div></div><p>This release includes a number of bug fixes; for details,
+    see the <a href="WhatsNew" target="_top">WhatsNew</a> file.</p><p>The following lists provide details about API and feature changes.
+      </p><div class="itemizedlist"><a name="V1671_FO"></a><p class="title"><b>FO</b></p><ul type="disc"><li><p>Tables: Inherited cell properties are now passed to the
+          <code class="literal">table.cell.properties</code> template so they can
+          be overridden by a customization.</p></li><li><p>Tables: Added support for bgcolor PI on table row
+          element.</p></li><li><p>TOCs: Added new parameter
+          <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/simplesect.in.toc.html"><em class="parameter"><code>simplesect.in.toc</code></em></a>; default value of
+          <code class="literal">0</code> causes simplesect to be omitted from TOCs; to
+          cause <a href="http://www.docbook.org/tdg/en/html/simplesect.html"><code class="sgmltag-element">simplesect</code></a> to be included in TOCs, you
+          must set the value of <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/simplesect.in.toc.html"><em class="parameter"><code>simplesect.in.toc</code></em></a> to
+          <code class="literal">1</code>.Comment from Norm:
+
+            </p><div class="blockquote"><blockquote class="blockquote"><p><span class="emphasis"><em>Simplesect elements aren't supposed to
+              appear in the ToC at all... The use case for simplesect
+              is when, for example, every chapter in a book ends with
+              "Exercises" or "For More Information" sections and you
+              don't want those to appear in the ToC.</em></span></p></blockquote></div><p>
+            </p></li><li><p>Sections: Reverted change that caused a variable reference
+          to be used in a template match and rewrote code to preserve
+          intended semantics.</p></li><li><p>Lists: Added workaround to prevent "* 0.60 + 1em" garbage in
+          list output from PassiveTeX</p></li><li><p>Moved the literal attributes from
+          <em class="parameter"><code>component.title</code></em> to the
+          <em class="parameter"><code>component.title.properties</code></em> attribute-set so
+          they can be customized.</p></li><li><p>Lists: Added <a href="http://www.docbook.org/tdg/en/html/glossdef.html"><code class="sgmltag-element">glossdef</code></a>'s first
+          <a href="http://www.docbook.org/tdg/en/html/para.html"><code class="sgmltag-element">para</code></a> to special handling in
+          <code class="literal">fo:list-item-body</code>.</p></li></ul></div><p>
+
+      </p><div class="itemizedlist"><a name="V1671_HTML"></a><p class="title"><b>HTML</b></p><ul type="disc"><li><p>TOCs: Added new parameter
+          <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/simplesect.in.toc.html"><em class="parameter"><code>simplesect.in.toc</code></em></a>; for details, see
+          the list of <a href="#V1671_FO" title="FO">FO</a> changes for this
+          release.</p></li><li><p>Indexing: Added new parameter
+          <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/index.prefer.titleabbrev.html"><em class="parameter"><code>index.prefer.titleabbrev</code></em></a>; when set to
+          <code class="literal">1</code>, index references will use
+          <a href="http://www.docbook.org/tdg/en/html/titleabbrev.html"><code class="sgmltag-element">titleabbrev</code></a> instead of
+          <a href="http://www.docbook.org/tdg/en/html/title.html"><code class="sgmltag-element">title</code></a> when available.</p></li></ul></div><p>
+      </p><div class="itemizedlist"><p class="title"><b>HTML Help</b></p><ul type="disc"><li><p>Added support for generating windows-1252-encoded
+          output using Saxon; for more details, see the list of <a href="#V1671_EXT" title="XSL Java extensions">XSL Java extensions</a> changes for this release.</p></li></ul></div><p>
+      </p><div class="itemizedlist"><a name="V1671_MAN"></a><p class="title"><b>man pages</b></p><ul type="disc"><li><p>Replaced named/numeric character-entity references for
+          non-breaking space with groff equivalent (backslash-tilde).</p></li></ul></div><p>
+      </p><div class="itemizedlist"><a name="V1671_EXT"></a><p class="title"><b>XSL Java extensions</b></p><ul type="disc"><li><p>Saxon extensions: Added the
+          <code class="classname">Windows1252</code> class.  It extends Saxon
+          6.5.x with the windows-1252 character set, which is
+          particularly useful when generating HTML Help for Western
+          European Languages (code from
+          <span class="firstname">Pontus</span> <span class="surname">Haglund</span> and contributed to the
+          DocBook community by Sectra AB, Sweden).</p><p>To use:
+          </p><div class="orderedlist"><ol type="1"><li><p>Make sure that the Saxon 6.5.x jar file and the jar file for
+              the DocBook XSL Java extensions are in your <code class="envar">CLASSPATH</code></p></li><li><p>Create a DocBook XSL customization layer -- a file named
+              <code class="filename">mystylesheet.xsl</code> or whatever -- that, at a
+              minimum, contains the following:
+              </p><pre class="screen">  &lt;xsl:stylesheet
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    version='1.0'&gt;
+    &lt;xsl:import href="http://docbook.sourceforge.net/release/xsl/current/htmlhelp/htmlhelp.xsl"/&gt;
+    &lt;xsl:output method="html" encoding="WINDOWS-1252" indent="no"/&gt;
+    &lt;xsl:param name="htmlhelp.encoding" select="'WINDOWS-1252'"&gt;&lt;/xsl:param&gt;
+    &lt;xsl:param name="chunker.output.encoding" select="'WINDOWS-1252'"&gt;&lt;/xsl:param&gt;
+    &lt;xsl:param name="saxon.character.representation" select="'native'"&gt;&lt;/xsl:param&gt;
+  &lt;/xsl:stylesheet&gt;</pre><p>
+              </p><p>Invoke Saxon with the
+              <code class="literal">encoding.windows-1252</code> Java system property set
+              to <code class="literal">com.nwalsh.saxon.Windows1252</code>; for example
+              </p><pre class="screen">  java \
+    -Dencoding.windows-1252=com.nwalsh.saxon.Windows1252 \
+  com.icl.saxon.StyleSheet \
+  mydoc.xml mystylesheet.xsl</pre><p>
+
+              Or, for a more complete "real world" case showing other
+              options you'll typically want to use:
+              </p><pre class="screen">  java \
+    -Dencoding.windows-1252=com.nwalsh.saxon.Windows1252 \
+    -Djavax.xml.parsers.DocumentBuilderFactory=org.apache.xerces.jaxp.DocumentBuilderFactoryImpl \
+    -Djavax.xml.parsers.SAXParserFactory=org.apache.xerces.jaxp.SAXParserFactoryImpl \
+    -Djavax.xml.transform.TransformerFactory=com.icl.saxon.TransformerFactoryImpl \
+  com.icl.saxon.StyleSheet \
+    -x org.apache.xml.resolver.tools.ResolvingXMLReader \
+    -y org.apache.xml.resolver.tools.ResolvingXMLReader \
+    -r org.apache.xml.resolver.tools.CatalogResolver \
+  mydoc.xml mystylesheet.xsl</pre><p>
+
+              In both cases, the "mystylesheet.xsl" file should be a
+              DocBook customization layer containing the parameters
+              show in step 2.</p></li></ol></div><p>
+          </p></li><li><p>Saxon extensions: Removed Saxon 8 extensions from release package</p></li></ul></div><p>
+    </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e441"></a>Release 1.67.0</h2></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>A number of important bug fixes, documented in <a href="WhatsNew" target="_top">WhatsNew</a>.</p></li><li><p>Added Saxon8 extensions</p></li><li><p>Enabled <code class="literal">dbfo table-width</code> on
+    <a href="http://www.docbook.org/tdg/en/html/entrytbl.html"><code class="sgmltag-element">entrytbl</code></a> in FO output</p></li><li><p>Added support for <code class="literal">role=strong</code> on
+    <a href="http://www.docbook.org/tdg/en/html/emphasis.html"><code class="sgmltag-element">emphasis</code></a> in FO output</p></li><li><p>Added new FO parameter
+    <a href="http://docbook.sourceforge.net/release/xsl/current/doc/fo/hyphenate.verbatim.html"><em class="parameter"><code>hyphenate.verbatim</code></em></a> that can be used to turn
+    on "intelligent" wrapping of verbatim environments.</p></li><li><p>Replaced all <code class="literal">&lt;tt&gt;&lt;/tt&gt;</code> output with
+    <code class="literal">&lt;code&gt;&lt;/code&gt;</code></p></li><li><p>Changed <code class="literal">admon.graphic.width</code> template to a
+    mode so that different admonitions can have different graphical
+    widths.</p></li><li><p>Deprecated the HTML <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/shade.verbatim.html"><em class="parameter"><code>shade.verbatim</code></em></a>
+    parameter (use CSS instead)</p></li><li><p>Wrapped ToC
+    <a href="http://www.docbook.org/tdg/en/html/refentrytitle.html"><code class="sgmltag-element">refentrytitle</code></a>/<a href="http://www.docbook.org/tdg/en/html/refname.html"><code class="sgmltag-element">refname</code></a> and
+    <a href="http://www.docbook.org/tdg/en/html/refpurpose.html"><code class="sgmltag-element">refpurpose</code></a> in span with class values. This
+    makes it possible to style them using a CSS stylesheet.</p></li><li><p>Use <code class="literal">strong/em</code> instead of
+    <code class="literal">b/i</code> in HTML output</p></li><li><p>Added support for converting <a href="http://www.docbook.org/tdg/en/html/Emphasis.html"><code class="sgmltag-element">Emphasis</code></a> to
+    groff italic and <a href="http://www.docbook.org/tdg/en/html/Emphasis role='bold'.html"><code class="sgmltag-element">Emphasis role='bold'</code></a> to
+    bold. Controlled by
+    <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/emphasis.propagates.style.html"><em class="parameter"><code>emphasis.propagates.style</code></em></a> param, but not
+    documented yet using litprog system. Will do that next (planning
+    to add some other parameter-controllable options for hyphenation
+    and handling of line spacing).</p></li><li><p><em class="parameter"><code>callout.graphics.number.limit.xml</code></em>
+    param: Changed the default from <code class="literal">10</code> to
+    <code class="literal">15</code>.</p></li><li><p><em class="parameter"><code>verbatim.properties</code></em>: Added
+    <code class="literal">hyphenate=false</code></p></li><li><p>Saxon and Xalan Text.java extensions: Added support for
+    <code class="methodname">URIResolver()</code> on insertfile href's</p></li><li><p>Added generated <code class="filename">RELEASE-NOTES.txt</code>
+    file.</p></li><li><p>Added <code class="filename">INSTALL</code> file (executable file for
+    generating catalog.xml)</p></li><li><p>Removed obsolete <code class="filename">tools</code> directory from
+    package</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e572"></a>Release 1.66.1</h2></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>A number of important bug fixes, documented in <a href="WhatsNew" target="_top">WhatsNew</a>.
+</p></li><li><p>
+Now <code class="literal">xml:base</code> attributes that are generated by an
+XInclude processor are resolved for image files.
+</p></li><li><p>
+Rewrote olink templates to support several new features.
+</p><div class="itemizedlist"><ul type="circle"><li><p>
+Extended full olink support to FO output.
+</p></li><li><p>
+Add support for <code class="literal">xrefstyle</code> attribute in olinks.
+</p></li><li><p>
+New parameters to support new olink features:
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/insert.olink.page.number.html"><em class="parameter"><code>insert.olink.page.number</code></em></a>, <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/insert.olink.pdf.frag.html"><em class="parameter"><code>insert.olink.pdf.frag</code></em></a>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/olink.debug.html"><em class="parameter"><code>olink.debug</code></em></a>, <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/olink.lang.fallback.sequence.html"><em class="parameter"><code>olink.lang.fallback.sequence</code></em></a>, <em class="parameter"><code>olink.properties</code></em>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/prefer.internal.olink.html"><em class="parameter"><code>prefer.internal.olink</code></em></a>.
+See the reference page for each parameter for more
+information.</p></li></ul></div></li><li><p>
+Added  <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/index.on.type.html"><em class="parameter"><code>index.on.type</code></em></a> parameter for new <code class="sgmltag-attribute">type</code>
+attribute introduced in DocBook 4.3 for indexterms and index.
+This allows you to create multiple indices containing
+different categories of entries.
+For users of 4.2 and earlier, you can use the new parameter <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/index.on.role.html"><em class="parameter"><code>index.on.role</code></em></a>
+instead.
+</p></li><li><p>
+Added new
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/section.autolabel.max.depth.html"><em class="parameter"><code>section.autolabel.max.depth</code></em></a> parameter to turn off section numbering
+below a certain depth.
+This permits you to number major section levels and leave minor
+section levels unnumbered.</p></li><li><p>
+Added <em class="parameter"><code>footnote.sep.leader.properties</code></em> attribute set to format
+the line separating footnotes in printed output.
+</p></li><li><p>
+Added parameter <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/img.src.path.html"><em class="parameter"><code>img.src.path</code></em></a> as a prefix to HTML img src
+attributes.
+The prefix is added to whatever path is already generated by the
+stylesheet for each image file.</p></li><li><p>
+Added new attribute-sets
+<em class="parameter"><code>informalequation.properties</code></em>,
+<em class="parameter"><code>informalexample.properties</code></em>,
+<em class="parameter"><code>informalfigure.properties</code></em>, and <em class="parameter"><code>informaltable.properties</code></em>,
+so each such element type can be formatted
+individually if needed.
+</p></li><li><p>
+Add <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/component.label.includes.part.label.html"><em class="parameter"><code>component.label.includes.part.label</code></em></a>
+parameter to add any  part number to chapter, appendix
+and other component labels when
+the <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/label.from.part.html"><em class="parameter"><code>label.from.part</code></em></a> parameter  is nonzero.
+This permits you to distinguish multiple chapters with the same
+chapter number in cross references and the TOC.</p></li><li><p>
+Added <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/chunk.separate.lots.html"><em class="parameter"><code>chunk.separate.lots</code></em></a> parameter for HTML output.
+This parameter lets you generate separate chunk files for each LOT
+(list of tables, list of figures, etc.).</p></li><li><p>Added several table features:</p><div class="itemizedlist"><ul type="circle"><li><p>
+Added <em class="parameter"><code>table.table.properties</code></em> attribute set to add
+properties to the fo:table element.
+</p></li><li><p>
+Added placeholder templates named <code class="literal">table.cell.properties</code>
+and <code class="literal">table.cell.block.properties</code> to enable adding properties
+to any <code class="sgmltag-element">fo:table-cell</code> or the cell's <code class="sgmltag-element">fo:block</code>, respectively.
+ These templates are a start for implementing table styles.</p></li></ul></div></li><li><p>
+Added new attribute
+set <em class="parameter"><code>component.title.properties</code></em> for easy modifications of
+component's title formatting in FO output.
+</p></li><li><p>
+Added Saxon support for an <code class="sgmltag-attribute">encoding</code> attribute on the <a href="http://www.docbook.org/tdg/en/html/textdata.html"><code class="sgmltag-element">textdata</code></a> element. Added new parameter
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/textdata.default.encoding.html"><em class="parameter"><code>textdata.default.encoding</code></em></a> which specifies encoding when
+<code class="sgmltag-attribute">encoding</code> attribute on
+<a href="http://www.docbook.org/tdg/en/html/textdata.html"><code class="sgmltag-element">textdata</code></a> is missing.
+</p></li><li><p>
+Template <code class="literal">label.this.section</code> now controls whole
+section label, not only sub-label which corresponds to
+particular label. Former behaviour was IMHO bug as it was
+not usable.
+</p></li><li><p>
+Formatting in titleabbrev for TOC and headers
+is preserved when there are no hotlink elements in the title. Formerly the title showed only the text of the title, no font changes or other markup.
+</p></li><li><p>
+Added <code class="literal">intial.page.number</code> template to set the <code class="literal">initial-page-number
+property</code> for page sequences in print output.
+Customizing this template lets you change when page numbering restarts. This is similar to the <code class="literal">format.page.number</code> template that lets you change how the page number formatting changes in the output.
+</p></li><li><p>
+Added <code class="literal">force.page.count</code> template to set the force-page-count
+property for page sequences in print output.
+This is similar to the <code class="literal">format.page.number</code> template.
+</p></li><li><p>
+Sort language for localized index sorting in <code class="filename">autoidx-ng.xsl</code> is now taken from document 
+lang, not from system environment.
+</p></li><li><p>
+Numbering and formatting of normal
+and ulink footnotes (if turned on) has been unified.
+Now ulink footnotes are mixed in with any other footnotes.</p></li><li><p>
+Added support for <code class="sgmltag-element">renderas</code> attribute in section and
+sect1 et al.
+This permits you to render a given section title as if it were a different level.</p></li><li><p>
+Added support for <a href="http://www.docbook.org/tdg/en/html/label.html"><code class="sgmltag-element">label</code></a> attribute in footnote to manually
+supply the footnote mark.
+</p></li><li><p>
+Added support for DocBook 4.3 <code class="sgmltag-element">corpcredit</code> element.
+</p></li><li><p>
+Added support for a <code class="literal">dbfo keep-together</code> PI for
+formal objects (table, figure, example, equation, programlisting).  That permits a formal object to be kept together if it is not already, or to be broken if it
+is very long and the
+default keep-together is not appropriate.
+</p></li><li><p>
+For graphics files, made file extension matching case
+insensitive, and updated the list of graphics extensions.
+</p></li><li><p>
+Allow <a href="http://www.docbook.org/tdg/en/html/calloutlist.html"><code class="sgmltag-element">calloutlist</code></a> to have block content before
+the first callout
+</p></li><li><p>
+Added <code class="literal">dbfo-need</code> processing instruction to provide
+soft page breaks.
+</p></li><li><p>
+Added implementation of existing but unused
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/default.image.width.html"><em class="parameter"><code>default.image.width</code></em></a> parameter for graphics.
+</p></li><li><p>
+Support DocBook NG <code class="sgmltag-element">tag</code> inline element.
+</p></li><li><p>
+It appears that XEP now supports Unicode characters in
+bookmarks. There is no further need to strip accents from
+characters.
+</p></li><li><p>
+Make <a href="http://www.docbook.org/tdg/en/html/segmentedlist.html"><code class="sgmltag-element">segmentedlist</code></a> HTML markup
+more semantic and available to CSS styles.
+</p></li><li><p>
+Added <code class="literal">user.preroot</code> placeholder template to
+permit xsl-stylesheet and other PIs and comments to be
+output before the HTML root element.
+</p></li><li><p>
+Non-chunked legalnotice now gets an &lt;a
+name="id"&gt; element in HTML output
+so it can be referenced with xref or link.
+</p></li><li><p>
+In chunked HTML output, changed <code class="literal">link rel="home"</code> to <code class="literal">rel="start"</code>,
+and <code class="literal">link rel="previous"</code> to <code class="literal">rel="prev"</code>, per W3C HTML 4.01
+spec.
+</p></li><li><p>
+Added several patches to htmlhelp from W. Borgert
+</p></li><li><p>
+Added Bosnian locale file as common/bs.xml.
+</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e859"></a>Release 1.65.0</h2></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>A number of important bug fixes, documented in <a href="WhatsNew" target="_top">WhatsNew</a>.
+</p></li><li><p>Added a workaround to allow these stylesheets to process DocBook NG
+documents. (It&#8217;s a hack that pre-processes the document to strip off the
+namespace and then uses <code class="function">exsl:node-set</code> to process
+the result.)
+</p></li><li><p>Added alternative indexing mechanism which has better
+internationalization support. New indexing method allows grouping of
+accented letters like e, &eacute;, &euml; into the same group under letter "e". It
+can also treat special letters (e.g. "ch") as one character and place
+them in the correct position (e.g. between "h" and "i" in Czech
+language).</p><p>In order to use this mechanism you must create customization
+layer which imports some base stylesheet (like
+<code class="filename">fo/docbook.xsl</code>,
+<code class="filename">html/chunk.xsl</code>) and then includes appropriate
+stylesheet with new indexing code
+(<code class="filename">fo/autoidx-ng.xsl</code> or
+<code class="filename">html/autoidx-ng.xsl</code>). For example:</p><pre class="programlisting">&lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                version="1.0"&gt;
+
+&lt;xsl:import href="http://docbook.sourceforge.net/release/xsl/current/fo/docbook.xsl"/&gt;
+&lt;xsl:include href="http://docbook.sourceforge.net/release/xsl/current/fo/autoidx-ng.xsl"/&gt;
+
+&lt;/xsl:stylesheet&gt;</pre><p>New method is known to work with Saxon and it should also work
+with xsltproc 1.1.1 and later. Currently supported languages are
+English, Czech, German, French, Spanish and Danish.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e895"></a>Release 1.64.1</h2></div></div></div><div class="itemizedlist"><p>General bug fixes and improvements. Sorry about the failure to produce
+an updated release notes file for 1.62.0&#8212;1.63.2</p><ul type="disc"><li><p>In the course of fixing bug #849787, wrapping Unicode callouts
+with an appropriate font change in the Xalan extensions, I discovered
+that the Xalan APIs have changed a bit. So <code class="filename">xalan2.jar</code>
+will work with older Xalan 2 implementations, <code class="filename">xalan25.jar</code>
+works with Xalan 2.5.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e910"></a>Release 1.61.0</h2></div></div></div><div class="itemizedlist"><p>Lots of bug fixes and improvements.</p><ul type="disc"><li><p>Initial support for timestamp PI. From now you
+  can use &lt;?dbtimestamp format="Y-m-d H:M:S"?&gt; to get current
+  datetime in your document. Added localization support for datetime PI
+</p></li><li><p>Added level 6 to test for <a href="http://www.docbook.org/tdg/en/html/section.html"><code class="sgmltag-element">section</code></a> depth in
+section.level template so that
+section.title.level6.properties will be used for sections
+that are 6 deep or deeper. This should also cause a h6 to be
+created in html output.
+</p></li><li><p>Don't use SVG graphics if <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/use.svg.html"><em class="parameter"><code>use.svg</code></em></a>=0
+</p></li><li><p>Now uses number-and-title-template for sections
+  only if <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/section.autolabel.html"><em class="parameter"><code>section.autolabel</code></em></a> is not zero.
+</p></li><li><p>Added missing 'english-language-name' attribute to
+the l10n element, and the missing 'style' attribute to the
+template element so the current gentext documents will
+validate.
+</p></li><li><p>Corrected several references to parameter
+  <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/qanda.defaultlabel.html"><em class="parameter"><code>qanda.defaultlabel</code></em></a> that were missing the "$".
+</p></li><li><p>Now accepts <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/admon.textlabel.html"><em class="parameter"><code>admon.textlabel</code></em></a> parameter to turn off
+  Note, Warning, etc. label.
+</p></li><li><p>FeatReq #684561: support more XEP metadata
+</p></li><li><p>Added hyphenation support. Added support for <a href="http://www.docbook.org/tdg/en/html/coref.html"><code class="sgmltag-element">coref</code></a>.
+Added <a href="http://www.docbook.org/tdg/en/html/beginpage.html"><code class="sgmltag-element">beginpage</code></a> support. (does nothing; see TDG).
+</p></li><li><p>Added support for
+hyphenation-character, hyphenation-push-character-count, and
+hyphenation-remain-character-count
+</p></li><li><p>Added <em class="parameter"><code>root.properties</code></em>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/ebnf.assignment.html"><em class="parameter"><code>ebnf.assignment</code></em></a>,
+and <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/ebnf.statement.terminator.html"><em class="parameter"><code>ebnf.statement.terminator</code></em></a>
+</p></li><li><p>Support bgcolor PI in table cells; make sure
+rowsep and colsep don't have any effect on the last row or
+column
+</p></li><li><p>Handle <a href="http://www.docbook.org/tdg/en/html/othercredit.html"><code class="sgmltag-element">othercredit</code></a> on titlepage a little
+better
+</p></li><li><p>Applied fix from Jeff Beal that fixed the bug
+that put secondary page numbers on primary entries. Same
+with tertiary page numbers on secondary entries.
+</p></li><li><p>Added definition of missing variable
+<em class="parameter"><code>collection</code></em>.
+</p></li><li><p>Make <a href="http://www.docbook.org/tdg/en/html/footnote.html"><code class="sgmltag-element">footnote</code></a> formatting 'normal' even when it
+occurs in a context that has special formatting
+</p></li><li><p>Added warning when <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/glossary.collection.html"><em class="parameter"><code>glossary.collection</code></em></a> is not
+blank, but it cannot open the specified file.
+</p></li><li><p>Pick up the frame attribute on <a href="http://www.docbook.org/tdg/en/html/table.html"><code class="sgmltag-element">table</code></a> and
+<a href="http://www.docbook.org/tdg/en/html/informaltable.html"><code class="sgmltag-element">informaltable</code></a>.
+</p></li><li><p><a href="http://www.docbook.org/tdg/en/html/indexdiv.html"><code class="sgmltag-element">indexdiv</code></a>/<a href="http://www.docbook.org/tdg/en/html/title.html"><code class="sgmltag-element">title</code></a>
+in non-autogenerated indexes are
+now picked up.
+</p></li><li><p>Removed (unused)
+component.title.properties
+</p></li><li><p>Move IDs from
+page-sequences down to titlepage blocks
+</p></li><li><p>Use
+proportional-column-width(1) on more <a href="http://www.docbook.org/tdg/en/html/table.html"><code class="sgmltag-element">table</code></a>s.
+</p><p>Use proportional-column-width() for
+header/footer tables; suppress relative-align when when
+using FOP
+</p></li><li><p>Check for <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/glossterm.auto.link.html"><em class="parameter"><code>glossterm.auto.link</code></em></a> when linking
+firstterms; don't output gl. prefix on glossterm links
+</p></li><li><p>Generate Part ToCs
+</p></li><li><p>Support <a href="http://www.docbook.org/tdg/en/html/glossary.html"><code class="sgmltag-element">glossary</code></a>, <a href="http://www.docbook.org/tdg/en/html/bibliography.html"><code class="sgmltag-element">bibliography</code></a>,
+and <a href="http://www.docbook.org/tdg/en/html/index.html"><code class="sgmltag-element">index</code></a> in component ToCs.
+</p></li><li><p>Refactored chunking code so that
+customization of chunk algorithm and chunk elements is more
+practical
+</p></li><li><p>Support <a href="http://www.docbook.org/tdg/en/html/textobject.html"><code class="sgmltag-element">textobject</code></a>/<a href="http://www.docbook.org/tdg/en/html/phrase.html"><code class="sgmltag-element">phrase</code></a>
+on <a href="http://www.docbook.org/tdg/en/html/inlinemediaobject.html"><code class="sgmltag-element">inlinemediaobject</code></a>.
+</p></li><li><p>Support 'start' PI on ordered lists
+</p></li><li><p>Fixed test of $toc PI to turn on qandaset TOC.
+</p></li><li><p>Added process.chunk.footnotes to sect2 through
+5 to fix bug of missing footnotes when chunk level greater
+than 1.
+</p></li><li><p>Added
+paramater <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/toc.max.depth.html"><em class="parameter"><code>toc.max.depth</code></em></a> which controls maximal depth of ToC
+as requested by PHP-DOC group.
+</p></li><li><p>Exempted <a href="http://www.docbook.org/tdg/en/html/titleabbrev.html"><code class="sgmltag-element">titleabbrev</code></a> from preamble processing in
+lists, and fixed variablelist preamble code to use the same
+syntax as the other lists.
+</p></li><li><p>Added support for elements between variablelist
+and first varlistentry since DocBook 4.2 supports that now.
+</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1100"></a>Release 1.60.1</h2></div></div></div><div class="itemizedlist"><p>Lots of bug fixes.</p><ul type="disc"><li><p>The format of the <code class="filename">titlepage.templates.xml</code> files and
+the stylesheet that transforms them have been significantly changed. All of the
+attributes used to control the templates are now namespace qualified. So what
+used to be:</p><pre class="programlisting">&lt;t:titlepage element="article" wrapper="fo:block"&gt;</pre><p>is now:</p><pre class="programlisting">&lt;t:titlepage t:element="article" t:wrapper="fo:block"&gt;</pre><p>Attributes from other namespaces (including those that are unqualified) are
+now copied directly through. In practice, this means that the names that used
+to be &#8220;<span class="quote">fo:</span>&#8221; qualified:</p><pre class="programlisting">&lt;title named-template="component.title"
+       param:node="ancestor-or-self::article[1]"
+       fo:text-align="center"
+       fo:keep-with-next="always"
+       fo:font-size="&amp;hsize5;"
+       fo:font-weight="bold"
+       fo:font-family="{$title.font.family}"/&gt;</pre><p>are now unqualified:</p><pre class="programlisting">&lt;title t:named-template="component.title"
+       param:node="ancestor-or-self::article[1]"
+       text-align="center"
+       keep-with-next="always"
+       font-size="&amp;hsize5;"
+       font-weight="bold"
+       font-family="{$title.font.family}"/&gt;</pre><p>The <code class="sgmltag-element">t:titlepage</code> and <code class="sgmltag-element">t:titlepage-content</code>
+elements both generate wrappers now. And unqualified attributes on those elements
+are passed through. This means that you can now make the title font apply to
+ane entire titlepage and make the entire &#8220;<span class="quote">recto</span>&#8221;
+titlepage centered by specifying the font and alignment on the those elements:</p><pre class="programlisting">&lt;t:titlepage t:element="article" t:wrapper="fo:block"
+             font-family="{$title.font.family}"&gt;
+
+  &lt;t:titlepage-content t:side="recto"
+             text-align="center"&gt;</pre></li><li><p>Support use of <a href="http://www.docbook.org/tdg/en/html/titleabbrev.html"><code class="sgmltag-element">titleabbrev</code></a> in running
+headers and footers.
+</p></li><li><p>Added (experimental) <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/xref.with.number.and.title.html"><em class="parameter"><code>xref.with.number.and.title</code></em></a>
+parameter to enable number/title cross references even when the
+default would
+be just the number.
+</p></li><li><p>Generate <a href="http://www.docbook.org/tdg/en/html/part.html"><code class="sgmltag-element">part</code></a> ToCs if they're requested.
+</p></li><li><p>Use proportional-column-width() in header/footer tables.
+</p></li><li><p>Handle alignment correctly when <a href="http://www.docbook.org/tdg/en/html/screenshot.html"><code class="sgmltag-element">screenshot</code></a>
+wraps a graphic in a <a href="http://www.docbook.org/tdg/en/html/figure.html"><code class="sgmltag-element">figure</code></a>.
+</p></li><li><p>Format <a href="http://www.docbook.org/tdg/en/html/chapter.html"><code class="sgmltag-element">chapter</code></a> and <a href="http://www.docbook.org/tdg/en/html/appendix.html"><code class="sgmltag-element">appendix</code></a>
+cross references consistently.
+</p></li><li><p>Attempt to support tables with multiple <a href="http://www.docbook.org/tdg/en/html/tgroup.html"><code class="sgmltag-element">tgroup</code></a>s
+in FO.
+</p></li><li><p>Output <code class="sgmltag-element">fo:table-columns</code> in
+<a href="http://www.docbook.org/tdg/en/html/simplelist.html"><code class="sgmltag-element">simplelist</code></a> tables.
+</p></li><li><p>Use <code class="filename">titlepage.templates.xml</code> for
+<a href="http://www.docbook.org/tdg/en/html/indexdiv.html"><code class="sgmltag-element">indexdiv</code></a> and <a href="http://www.docbook.org/tdg/en/html/glossdiv.html"><code class="sgmltag-element">glossdiv</code></a> formatting.
+</p></li><li><p>Improve support for new bibliography elements.
+</p></li><li><p>Added
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/footnote.number.format.html"><em class="parameter"><code>footnote.number.format</code></em></a>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/table.footnote.number.format.html"><em class="parameter"><code>table.footnote.number.format</code></em></a>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/footnote.number.symbols.html"><em class="parameter"><code>footnote.number.symbols</code></em></a>, and
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/table.footnote.number.symbols.html"><em class="parameter"><code>table.footnote.number.symbols</code></em></a> for better control of
+footnote markers.
+</p></li><li><p>Added <code class="sgmltag-element">glossentry.show.acronyms</code>.
+</p></li><li><p>Suppress the draft-mode page masters when
+<em class="parameter"><code>draft-mode</code></em> is &#8220;<span class="quote">no</span>&#8221;.
+</p></li><li><p>Make blank pages verso not recto. D'Oh!
+</p></li><li><p>Improved formatting of <a href="http://www.docbook.org/tdg/en/html/ulink.html"><code class="sgmltag-element">ulink</code></a> footnotes.
+</p></li><li><p>Fixed bugs in graphic width/height calculations.
+</p></li><li><p>Added class attributes to inline elements.
+</p></li><li><p>Don't add &#8220;<span class="quote">.html</span>&#8221; to the filenames identified
+with the &#8220;<span class="quote">dbhtml</span>&#8221; PI.
+</p></li><li><p>Don't force a ToC when sections contain <a href="http://www.docbook.org/tdg/en/html/refentry.html"><code class="sgmltag-element">refentry</code></a>s.
+</p></li><li><p>Make section title sizes a function of the
+<em class="parameter"><code>body.master.size</code></em>.
+</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1277"></a>Release 1.59.2</h2></div></div></div><div class="itemizedlist"><p>The 1.59.2 fixes an FO bug in the page masters that causes FOP to fail.
+</p><ul type="disc"><li><p>Removed the region-name from the region-body of blank pages. There's
+no reason to give the body of blank pages a unique name and doing so causes
+a mismatch that FOP detects.
+</p></li><li><p>Output IDs for the first paragraphs in listitems.
+</p></li><li><p>Fixed some small bugs in the handling of page numbers in double-sided mode.
+</p></li><li><p>Attempt to prevent duplicated IDs from being produced when
+<code class="sgmltag-attribute">endterm</code> on <a href="http://www.docbook.org/tdg/en/html/xref.html"><code class="sgmltag-element">xref</code></a> points
+to something with nested structure.
+</p></li><li><p>Fix aligment problems in <a href="http://www.docbook.org/tdg/en/html/equation.html"><code class="sgmltag-element">equation</code></a>s.
+</p></li><li><p>Output the type attribute on unordered lists (UL) in HTML only if
+the css.decoration parameter is true.
+</p></li><li><p>Calculate the font size in formal.title.properties so that it's 1.2 times
+the base font size, not a fixed "12pt".
+</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1313"></a>Release 1.59.1</h2></div></div></div><div class="itemizedlist"><p>The 1.59.1 fixes a few bugs.
+</p><ul type="disc"><li><p>Added Bulgarian localization.
+</p></li><li><p>Indexing improvements; localize book indexes to books but allow setindex
+to index an entire set.
+</p></li><li><p>The default value for rowsep and colsep is now "1" as per CALS.
+</p></li><li><p>Added support for <a href="http://www.docbook.org/tdg/en/html/titleabbrev.html"><code class="sgmltag-element">titleabbrev</code></a> (use them for cross
+references).
+</p></li><li><p>Improvements to <a href="http://www.docbook.org/tdg/en/html/mediaobject.html"><code class="sgmltag-element">mediaobject</code></a> for selecting print vs. online
+images.
+</p></li><li><p>Added seperate property sets for <a href="http://www.docbook.org/tdg/en/html/figure.html"><code class="sgmltag-element">figure</code></a>s,
+<a href="http://www.docbook.org/tdg/en/html/example.html"><code class="sgmltag-element">example</code></a>s, <a href="http://www.docbook.org/tdg/en/html/equation.html"><code class="sgmltag-element">equation</code></a>s, <code class="sgmltag-element">tables</code>s,
+and <a href="http://www.docbook.org/tdg/en/html/procedure.html"><code class="sgmltag-element">procedure</code></a>s.
+</p></li><li><p>Make <a href="http://www.docbook.org/tdg/en/html/lineannotation.html"><code class="sgmltag-element">lineannotation</code></a>s italic.
+</p></li><li><p>Support <code class="sgmltag-attribute">xrefstyle</code> attribute.
+</p></li><li><p>Make <code class="sgmltag-attribute">endterm</code> on
+<a href="http://www.docbook.org/tdg/en/html/xref.html"><code class="sgmltag-element">xref</code></a> higher priority than
+<code class="sgmltag-attribute">xreflabel</code> target.
+</p></li><li><p>Glossary formatting improvements.
+</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1385"></a>Release 1.58.0</h2></div></div></div><div class="itemizedlist"><p>The 1.58.0 adds some initial support for extensions in xsltproc, adds
+a few features, and fixes bugs.
+</p><ul type="disc"><li><p>This release contains the first attempt at extension support for xsltproc.
+The only extension available to date is the one that adjusts table column widths.
+Run <code class="filename">extensions/xsltproc/python/xslt.py</code>.
+</p></li><li><p>Fixed bugs in calculation of adjusted column widths to correct for rounding
+errors.
+</p></li><li><p>Support nested <a href="http://www.docbook.org/tdg/en/html/refsection.html"><code class="sgmltag-element">refsection</code></a> elements correctly.
+</p></li><li><p>Reworked <code class="literal">gentext.template</code> to take context into consideration.
+The name of elements in localization files is now an xpath-like context list, not
+just a simple name.
+</p></li><li><p>Made some improvements to bibliography formatting.
+</p></li><li><p>Improved graphical formatting of admonitions.
+</p></li><li><p>Added support for <a href="http://www.docbook.org/tdg/en/html/entrytbl.html"><code class="sgmltag-element">entrytbl</code></a>.
+</p></li><li><p>Support spanning index terms.
+</p></li><li><p>Support <a href="http://www.docbook.org/tdg/en/html/bibliosource.html"><code class="sgmltag-element">bibliosource</code></a>.
+</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1433"></a>Release 1.57.0</h2></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>The 1.57.0 release wasn't documented here. Oops.
+</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1440"></a>Release 1.56.0</h2></div></div></div><div class="itemizedlist"><p>The 1.56.0 release fixes bugs.
+</p><ul type="disc"><li><p>Reworked chunking. <span class="emphasis"><em>This will break all existing customizations
+layers that change the chunking algorithm.</em></span> If you're customizing chunking,
+look at the new &#8220;<span class="quote">content</span>&#8221; parameter that's passed to
+<code class="literal">process-chunk-element</code> and friends.
+</p></li><li><p>Support continued and inherited numeration in <a href="http://www.docbook.org/tdg/en/html/orderedlist.html"><code class="sgmltag-element">orderedlist</code></a>
+formatting for FOs.
+</p></li><li><p>Added Thai localization.
+</p></li><li><p>Tweaked stylesheet documentation stylesheets to link to TDG and
+the parameter references.
+</p></li><li><p>Allow title on tables of contents ("Table of Contents") to be optional.
+Added new keyword to <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/generate.toc.html"><em class="parameter"><code>generate.toc</code></em></a>.
+Support tables of contents on sections.
+</p></li><li><p>Made separate parameters for table borders and table cell borders:
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/table.frame.border.color.html"><em class="parameter"><code>table.frame.border.color</code></em></a>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/table.frame.border.style.html"><em class="parameter"><code>table.frame.border.style</code></em></a>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/table.frame.border.thickness.html"><em class="parameter"><code>table.frame.border.thickness</code></em></a>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/table.cell.border.color.html"><em class="parameter"><code>table.cell.border.color</code></em></a>,
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/table.cell.border.style.html"><em class="parameter"><code>table.cell.border.style</code></em></a>, and
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/table.cell.border.thickness.html"><em class="parameter"><code>table.cell.border.thickness</code></em></a>.
+</p></li><li><p>Suppress formatting of &#8220;<span class="quote">endofrange</span>&#8221; <a href="http://www.docbook.org/tdg/en/html/indexterm.html"><code class="sgmltag-element">indexterm</code></a>s.
+This is only half-right. They should generate a range, but I haven't figured out how
+to do that yet.
+</p></li><li><p>Support <a href="http://www.docbook.org/tdg/en/html/revdescription.html"><code class="sgmltag-element">revdescription</code></a>. (Bug #582192)
+</p></li><li><p>Added <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/default.float.class.html"><em class="parameter"><code>default.float.class</code></em></a> and fixed figure
+floats. (Bug #497603)
+</p></li><li><p>Fixed formatting of <a href="http://www.docbook.org/tdg/en/html/sbr.html"><code class="sgmltag-element">sbr</code></a> in FOs.
+</p></li><li><p>Added context to the &#8220;<span class="quote">missing template</span>&#8221; error message.
+</p></li><li><p>Process <a href="http://www.docbook.org/tdg/en/html/arg.html"><code class="sgmltag-element">arg</code></a> correctly in a <a href="http://www.docbook.org/tdg/en/html/group.html"><code class="sgmltag-element">group</code></a>.
+(Bug #605150)
+</p></li><li><p>Removed 'keep-with-next' from <em class="parameter"><code>formal.title.properties</code></em>
+attribute set now that the stylesheets support the option of putting
+such titles below the object. Now the $placement value determines if
+'keep-with-next' or 'keep-with-previous' is used in the title block.
+</p></li><li><p>Wrap &#8220;<span class="quote">url()</span>&#8221; around external-destinations when appropriate.
+</p></li><li><p>Fixed typo in compact list spacing. (Bug #615464)
+</p></li><li><p>Removed spurious hash in anchor name. (Bug #617717)
+</p></li><li><p>Address is now displayed verbatim on title pages. (Bug #618600)
+</p></li><li><p>The <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/bridgehead.in.toc.html"><em class="parameter"><code>bridgehead.in.toc</code></em></a> parameter is now properly
+supported.
+</p></li><li><p>Improved effectiveness of HTML cleanup by increasing the number
+of places where it is used. Improve use of HTML cleanup in XHTML stylesheets.
+</p></li><li><p>Support table of contents for <a href="http://www.docbook.org/tdg/en/html/appendix.html"><code class="sgmltag-element">appendix</code></a> in
+<a href="http://www.docbook.org/tdg/en/html/article.html"><code class="sgmltag-element">article</code></a>. (Bug #596599)
+</p></li><li><p>Don't duplicate footnotes in <a href="http://www.docbook.org/tdg/en/html/bibliography.html"><code class="sgmltag-element">bibliography</code></a>s and
+<a href="http://www.docbook.org/tdg/en/html/glossary.html"><code class="sgmltag-element">glossary</code></a>s. (Bug #583282)
+</p></li><li><p>Added <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/default.image.width.html"><em class="parameter"><code>default.image.width</code></em></a>. (Bug #516859)
+</p></li><li><p>Totally reworked <a href="http://www.docbook.org/tdg/en/html/funcsynopsis.html"><code class="sgmltag-element">funcsynopsis</code></a> code; it now
+supports a 'tabular' presentation style for 'wide' prototypes; see
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/funcsynopsis.tabular.threshold.html"><em class="parameter"><code>funcsynopsis.tabular.threshold</code></em></a>. (HTML only
+right now, I think, FO support, uh, real soon now.)
+</p></li><li><p>Reworked support for difference marking; toned down the colors a bit
+and added a &#8220;<span class="quote">system.head.content</span>&#8221; template so that the diff CSS
+wasn't overriding &#8220;<span class="quote">user.head.content</span>&#8221;. (Bug #610660)
+</p></li><li><p>Added call to the &#8220;<span class="quote">*.head.content</span>&#8221; elements when writing
+out long description chunks.
+</p></li><li><p>Make sure <a href="http://www.docbook.org/tdg/en/html/legalnotice.html"><code class="sgmltag-element">legalnotice</code></a> link is correct even when
+chunking to a different <a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/base.dir.html"><em class="parameter"><code>base.dir</code></em></a>.
+</p></li><li><p>Use CSS to set viewport characteristics if
+<a href="http://docbook.sourceforge.net/release/xsl/current/doc/html/css.decoration.html"><em class="parameter"><code>css.decoration</code></em></a> is non-zero, use div instead of p for making
+graphic a block element; make figure <a href="http://www.docbook.org/tdg/en/html/title.html"><code class="sgmltag-element">title</code></a>s the
+default alt
+text for images in a <a href="http://www.docbook.org/tdg/en/html/figure.html"><code class="sgmltag-element">figure</code></a>.</p></li><li><p>Added space-after to <em class="parameter"><code>list.block.spacing</code></em>.
+</p></li><li><p>Reworked section.level template to give &#8220;<span class="quote">correct</span>&#8221; answer
+instead of being off by one.
+</p></li><li><p>When processing tables, use the <code class="sgmltag-attribute">tabstyle</code>
+attribute as the division class.
+</p></li><li><p>Fixed bug in <code class="filename">html2xhtml.xsl</code> that was causing the
+XHTML chunker to output HTML instead of XHTML.
+</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1662"></a>Older releases</h2></div></div></div><p>To view the release notes for older releases, see <a href="http://cvs.sourceforge.net/viewcvs.py/docbook/xsl/RELEASE-NOTES.xml" target="_top">http://cvs.sourceforge.net/viewcvs.py/docbook/xsl/RELEASE-NOTES.xml</a>. Be
+  aware that there were no release notes for releases prior to the
+  1.50.0 release.</p></div></div></body></html>

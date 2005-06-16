@@ -1,0 +1,132 @@
+2005-02-10  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* synop.xsl: Fixed sbr template to output .br.
+
+2004-11-22  <twaugh@users.sourceforge.net>
+
+	* docbook.xsl: Use ASCII escape sequence for '&nbsp;'.
+
+2004-10-21  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* docbook.xsl: Bug #1049155 (support Emphasis tag in man/groff output)
+	
+	Added support for converting <emphasis>foo</emphasis> to groff italic
+	and <emphasis role='bold'>foo</emphasis> to bold.
+	
+	Controlled by emphasis.propagates.style param, but not documented
+	yet using litprog system. Will do that next (planning to add some
+	other parameter-controllable options for hyphenation and
+	handling of line spacing).
+
+2004-02-04  <twaugh@users.sourceforge.net>
+
+	* docbook.xsl, lists.xsl: Place-holder implementation for simplelist.
+
+2004-01-30  <twaugh@users.sourceforge.net>
+
+	* docbook.xsl: Add replacement dingbat characters.
+
+2003-12-24  <twaugh@users.sourceforge.net>
+
+	* lists.xsl: .RS/.RE doesn't nest precisely.  Use .IP to fix up the environment.  Part of
+	bug #852714.
+
+	* lists.xsl: Handle comments inside lists (part of bug #852714).
+
+2003-12-15  <twaugh@users.sourceforge.net>
+
+	* lists.xsl: Fix nested lists properly.
+
+2003-12-13  <twaugh@users.sourceforge.net>
+
+	* docbook.xsl: Use .nf environment for literallayout.
+
+	* docbook.xsl: Prevent duplicate .nf environments inside informalexample or screen.  All
+	fiftenn allowed contained element in these elements will provide its own.
+
+2003-12-12  <twaugh@users.sourceforge.net>
+
+	* docbook.xsl: Last commit reverted a previous change -- redo it.
+
+2003-12-11  <twaugh@users.sourceforge.net>
+
+	* docbook.xsl: Remove unused rule.
+
+	* docbook.xsl: Fix literallayout inside para.
+
+	* lists.xsl: Fix singly-nested lists.
+
+2003-12-10  <twaugh@users.sourceforge.net>
+
+	* docbook.xsl: Don't mess up roff markup in tables.
+
+2003-11-06  <twaugh@users.sourceforge.net>
+
+	* lists.xsl, synop.xsl: 2003-11-06  Tim Waugh  <twaugh@redhat.com>
+	
+	        * lists.xsl: Normalize space in itemizedlist/listitem.
+	        * synop.xsl: Likewise.
+
+2003-05-23  <twaugh@users.sourceforge.net>
+
+	* synop.xsl: Only escape option spaces once when args are nested.
+
+2003-05-15  <twaugh@users.sourceforge.net>
+
+	* docbook.xsl: Handle refsection as well as refsect1|refsect2 in the manpages stylesheet.
+
+2003-05-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* synop.xsl, synop.xsl: Patch from Tim Waugh
+
+2003-04-12  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* docbook.xsl, synop.xsl: Patches from Tim Waugh
+
+2003-03-15  <jorton@users.sourceforge.net>
+
+	* docbook.xsl: If the refmeta contains no manvolnum, then:
+	- if the refentry contains a funcsynopsis, default to section 3
+	- otherwise, default to section 1
+
+	* docbook.xsl: Don't try and generate man pages with spaces in the filename; replace
+	spaces with underscores.
+
+2003-01-05  <jorton@users.sourceforge.net>
+
+	* docbook.xsl: Second half of fix for #628888: add template for <optional>.
+
+	* docbook.xsl: Add replacement ulink template from xmlto, fixing bug #619500.
+	Written by Tim Waugh.
+
+	* docbook.xsl: First part of fix for #628888:
+	- don't use generic italic/bold templates for things like <replaceable>,
+	since <replaceable> can contain other elements, but the templates discard
+	any non-PCDATA content.
+
+	* docbook.xsl: Prevent a line beginning with a '.' character being interpreted as a
+	troff macro by inserting \& (a zero-width space) before every '.' in text.
+
+	* xref.xsl: Make xref work again, though I'm not sure why it stopped working.
+
+2002-09-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* synop.xsl: Joe Orton: Use replace-string from lib.xsl
+
+2002-09-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* db2man.xsl, docbook.xsl: Renamed
+
+	* docbook.xsl: Joe Orton: patch to get rid of extra whitespace in author names
+
+2002-09-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* db2man.xsl: Another patch from Joe Orton
+
+	* db2man.xsl, synop.xsl: Patch from Joe Orton
+
+2002-07-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* README, db2man.xsl, lists.xsl, sect23.xsl, synop.xsl, xref.xsl: 
+	New file.
+

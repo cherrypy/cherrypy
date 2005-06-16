@@ -1,0 +1,448 @@
+2005-02-14  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: late updates for the 1.68.1; checked in after the release was already
+	tagged. sorry. not the first time, and probably not the last
+
+	* RELEASE-NOTES.xml: Update for 1.68.1 release.
+
+	* VERSION: Version 1.68.1 released.
+
+2005-02-09  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* Makefile: classpath check added (in "build" branch only)
+
+	* RELEASE-NOTES.xml: Added HTML and image/ changes for 1.68.0 release.
+
+	* RELEASE-NOTES.xml: Added doc for FO changes.
+
+	* VERSION: Version 1.68.0 released
+
+2004-12-06  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* Makefile: docbook.sf.net/release/xsl -- automated upload to
+
+	* RELEASE-NOTES.xml: parameter values in WINDOWS-1252 example, properly (doubly) quoted
+
+2004-12-03  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* Makefile: "upload" target added (uploads to SF FTP incoming directory)
+
+2004-12-02  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* .cvsignore: ignore RELEASENOTES.txt
+
+	* INSTALL: New file.
+
+	* MANIFEST.build: branches:  1.1.2;
+	list of files to go into build branch
+
+	* MANIFEST.build: New file.
+
+	* MANIFEST.build: removing from HEAD
+
+	* Makefile: Don't package prj.el files
+
+	* Makefile: New file.
+
+	* Makefile: MANIFEST.build file, don't package
+
+	* Makefile: Saxon 8 extensions, don't package in snapshot (build branch)
+
+	* RELEASE-NOTES.xml: Updated for the 1.67.2 release.
+
+	* VERSION: Version 1.67.2 released.
+
+	* VERSION: Version 1.67.1 released.
+
+2004-12-01  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Final cleanup for 1.67.1 release
+
+2004-11-30  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Update for 1.67.1 release
+
+2004-11-09  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* BUGS, README, TODO: update various readme's to direct users to SF for bugs * todo's,
+	and update mantifest to include info about all current subdirs and files
+
+	* README: typo fixed
+
+	* RELEASE-NOTES.xml: Added markup and fixed typos.
+
+	* RELEASE-NOTES.xml: Updated for 1.67.0
+
+	* VERSION: Version 1.67.0 released.
+
+2004-10-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Capitalization tweaks necessary for the latest freshmeat script
+
+2004-09-20  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* VERSION: Version 1.66.1 released.
+
+2004-09-19  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated for 1.66.1.
+
+	* VERSION: Move to 1.66.1.
+
+2004-09-11  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Fixed broken CVS keyword.
+
+	* RELEASE-NOTES.xml: Updated release notes for version 1.66.0
+
+	* VERSION: Updated version to 1.66.0
+
+2004-09-02  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated for release 1.66.
+
+2004-03-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.65.1 released
+
+2004-02-27  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated
+
+	* VERSION: Version 1.65.0 released.
+
+	* VERSION: No really, version 1.65.0 released.
+
+2004-02-24  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* .cvsignore: Don't ignore debian anymore, it's gone
+
+2004-01-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: branches:  1.21.2;
+	Tweaks for freshmeat-submit
+
+	* VERSION: Tweaks for freshmeat-submit
+
+2003-12-31  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Info about new indexing method
+
+2003-12-19  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Check for DIFFVER and make sure tags happen
+
+	* RELEASE-NOTES.xml: Not terribly interesting RELEASE NOTES file for 1.64.1
+
+2003-12-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile, VERSION: Prepare to support freshmeat-submit for next release
+
+2003-12-15  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.64.0 released.
+
+	* VERSION: Version 1.63.0 released.
+
+2003-09-29  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.62.4 released.
+
+2003-09-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.62.2 released.
+
+	* VERSION: Version 1.62.3 released.
+
+2003-09-27  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.62.1 released.
+
+2003-08-31  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.62.0 released.
+
+2003-06-22  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.61.3 released.
+
+2003-05-22  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.61.2 released.
+
+2003-05-19  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Post 1.61.1 updates
+
+2003-05-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.61.1 released.
+
+	* VERSION: Version 1.60.1 released.
+
+2003-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated
+
+	* VERSION: Post 1.61.0 hacking
+
+	* VERSION: Version 1.61.0 released.
+
+2003-01-24  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated
+
+	* VERSION: Version 1.60.1 released.
+
+2003-01-23  Adam Di Carlo <adicarlo@users.sourceforge.net>
+
+	* Makefile: make use of stuff set in Makefile.incl
+
+2003-01-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Test RELEASE-NOTES.xml for validity before formatting it
+
+	* VERSION: Version 1.60.0 released.
+
+2003-01-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Explain changes to titlepage template code
+
+2003-01-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated for 1.59.2 release
+
+	* VERSION: Version 1.59.2 released.
+
+2003-01-12  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated release notes for 1.59.1
+
+	* VERSION: Version 1.59.1 released.
+
+2003-01-01  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.59.0 released.
+
+2002-11-29  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Exclude the debian directory from the distribution archive
+
+	* VERSION: Version 1.58.1 released.
+
+2002-11-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* .cvsignore: Ignore the debian directory
+
+	* Makefile: Don't include pyc files in distribution
+
+	* README: Copyright this year too, huh?
+
+	* RELEASE-NOTES.xml: Release notes
+
+	* VERSION: Version 1.58.0 released.
+
+2002-10-22  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.57.0 released.
+
+2002-10-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Added release note about the change to html2xhtml to fix XHTML chunking
+
+	* VERSION: Version 1.56.0 released.
+
+	* VERSION: Version 1.56.1 released.
+
+2002-10-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Fixed pubdate
+
+	* RELEASE-NOTES.xml: Updated for 1.56.0 release
+
+2002-09-19  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Use the new doc-link-docbook stylesheet for the Release Notes
+
+2002-09-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated for 1.55.0
+
+	* VERSION: Version 1.55.0 released.
+
+2002-09-03  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated for 1.54.0 release
+
+	* RELEASE-NOTES.xml: Updated for 1.54.1
+
+	* VERSION: Version 1.54.1 released.
+
+	* VERSION: Version 1.54.0 released.
+
+2002-07-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Updated for 1.53.0 release
+
+	* VERSION: Version 1.53.0 released.
+
+2002-07-10  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.52.2 released.
+
+2002-07-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Exclude .#* from zip as well
+
+	* VERSION: Keep CVS and real releases distinct
+
+	* VERSION: Version 1.52.1 released.
+
+2002-07-07  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Added RELEASE-NOTES.pdf target
+
+	* RELEASE-NOTES.xml: Updated for 1.52.0
+
+	* VERSION: Version 1.52.0 released.
+
+2002-06-03  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.51.1 released.
+
+2002-06-02  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* RELEASE-NOTES.xml: Added release notes for 1.51.0
+
+	* VERSION: Version 1.51.0 released.
+
+2002-05-16  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.50.1-EXP2 released.
+
+	* VERSION: Oops again.
+
+	* VERSION: Oops.
+
+2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Updated xhtml generation
+
+	* VERSION: Version 1.50.1-EXP released.
+
+2002-03-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Allow next version to be specified on call to make
+
+	* RELEASE-NOTES.xml: Added note about three-part versions
+
+	* RELEASE-NOTES.xml: Tweaked intro; changed date
+
+	* VERSION: Version 1.50.0 released.
+
+2002-03-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* .cvsignore, Makefile: Added RELEASE-NOTES.html
+
+	* RELEASE-NOTES.xml: New file.
+
+2002-03-14  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Keep CVS versions distinct from real releases
+
+2002-03-01  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* Makefile: First portion of new profiling code. New stylesheet parameters will come later.
+
+2002-02-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Make sure xhtml directory gets built properly
+
+2002-02-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.49 released.
+
+2002-01-06  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Clean docsrc
+
+	* Makefile: Remove .*~ from the ZIP file
+
+	* VERSION: Version 1.48 released.
+
+2001-11-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* README: Updated Use section
+
+	* VERSION: Keep CVS versions distinct from real releases
+
+	* VERSION: Version 1.47 released.
+
+2001-10-13  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.46 released.
+
+2001-09-29  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.45 released.
+
+	* VERSION: Keep CVS versions distinct from real releases
+
+2001-08-14  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.44 released.
+
+2001-08-13  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Keep CVS versions distinct from real releases
+
+	* VERSION: Version 1.43 released.
+
+2001-08-06  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Keep CVS versions distinct from real releases
+
+	* VERSION: Version 1.42 released.
+
+2001-08-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Make VERSION a parameter so that it isn't an error some stylesheets override it
+
+2001-07-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.41 released.
+
+2001-06-14  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.40 released.
+
+2001-05-24  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.39 released.
+
+2001-05-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.38 released.
+
+2001-04-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.37 released.
+
+2001-04-15  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile, README: Make distribution hacks
+
+2001-04-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* VERSION: Version 1.36 released.
+
+2001-04-03  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* .cvsignore, Makefile: Misc. cleanup in preparation for making a distrib
+
+2001-04-02  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* BUGS, Makefile, README.CVS, TODO, VERSION: Initial checkin
+
+	* Makefile: Make common files
+
