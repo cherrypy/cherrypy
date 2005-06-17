@@ -33,6 +33,13 @@ class Root:
     def index(self):
         yield "Hello, world"
     index.exposed = True
+    
+    def noshow(self):
+        # Test for ticket #147, where yield showed no exceptions (content-
+        # encoding was still gzip even though traceback wasn't zipped).
+        raise IndexError
+        yield "Here be dragons"
+    noshow.exposed = True
 
 cpg.root = Root()
 cpg.config.update({
@@ -61,6 +68,11 @@ class GzipFilterTest(unittest.TestCase):
         
         helper.request('/', headers=[("Accept-Encoding", "gzip")])
         self.assert_(zbuf.getvalue()[:3] in cpg.response.body)
+        
+        # Test for ticket #147
+        helper.request('/noshow', headers=[("Accept-Encoding", "gzip")])
+        self.assert_('Content-Encoding' not in cpg.response.headerMap)
+        self.assert_(cpg.response.body.endswith("IndexError\n"))
 
 
 if __name__ == "__main__":

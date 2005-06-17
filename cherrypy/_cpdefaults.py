@@ -66,6 +66,9 @@ def _cpOnError():
     content = "".join(traceback.format_exception(*sys.exc_info()))
     cpg.response.body = [content]
     cpg.response.headerMap['Content-Type'] = 'text/plain'
+    if cpg.response.headerMap.has_key('Content-Encoding'):
+        del cpg.response.headerMap['Content-Encoding']
+
 
 def _cpSaveSessionData(sessionId, sessionData, expirationTime,
         threadPool = None, sessionStorageType = None,

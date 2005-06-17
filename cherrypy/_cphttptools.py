@@ -62,8 +62,8 @@ class KeyTitlingDict(dict):
     def __setitem__(self, key, value):
         dict.__setitem__(self, str(key).title(), value)
     
-    def __delitem__(self, key, value):
-        dict.__delitem__(self, str(key).title(), value)
+    def __delitem__(self, key):
+        dict.__delitem__(self, str(key).title())
     
     def __contains__(self, item):
         return dict.__contains__(self, str(item).title())
@@ -388,7 +388,7 @@ def finalize():
     
     # Headers
     cpg.response.headers = []
-    for key, valueList in cpg.response.headerMap.items():
+    for key, valueList in cpg.response.headerMap.iteritems():
         if not isinstance(valueList, list):
             valueList = [valueList]
         for value in valueList:
