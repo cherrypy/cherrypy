@@ -217,20 +217,12 @@ class Request(object):
         cpg.request.originalParamList = cpg.request.paramList
     
     def processRequestBody(self):
-        # Read request body and put it in data
-        data = ""
-        length = int(cpg.request.headerMap.get("Content-Length", "0"))
-        if length:
-            data = self.rfile.read(length)
-        
-        # Put data in a StringIO so FieldStorage can read it
-        newRfile = StringIO.StringIO(data)
         # Create a copy of headerMap with lowercase keys because
         # FieldStorage doesn't work otherwise
         lowerHeaderMap = {}
         for key, value in cpg.request.headerMap.items():
             lowerHeaderMap[key.lower()] = value
-        forms = _cpcgifs.FieldStorage(fp = newRfile, headers = lowerHeaderMap,
+        forms = _cpcgifs.FieldStorage(fp = self.rfile, headers = lowerHeaderMap,
                                       environ = {'REQUEST_METHOD': 'POST'},
                                       keep_blank_values = 1)
         

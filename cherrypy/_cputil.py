@@ -33,9 +33,6 @@ A module containing a few utility classes/functions used by CherryPy
 
 import time, thread, cpg, _cpdefaults, cperror
 
-try: import zlib
-except ImportError: pass
-
 class EmptyClass:
     """ An empty class """
     pass
