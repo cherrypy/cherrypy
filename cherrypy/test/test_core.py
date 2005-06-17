@@ -140,6 +140,21 @@ class Headers(Test):
         return "double header test"
 
 
+defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
+                        "TRACE", "CONNECT")
+class Method(Test):
+    
+    def index(self):
+        m = cpg.request.method
+        if m in defined_http_methods:
+            return m
+        
+        if m == "LINK":
+            cpg.response.status = 405
+        else:
+            cpg.response.status = 501
+
+
 cpg.config.update({
     'global': {
         'server.logToScreen': False,
@@ -242,6 +257,29 @@ class CoreRequestHandlingTest(unittest.TestCase):
         self.assertEqual(hnames, ['Content-Length', 'Content-Type', 'Date', 'Expires',
                                   'Location', 'Server'])
         self.assertEqual(cpg.response.body, "double header test")
+    
+    def testMethods(self):
+        # Test that all defined HTTP methods work.
+        for m in defined_http_methods:
+            h = []
+            if m == 'POST':
+                h = [("Content-type", "application/x-www-form-urlencoded"),
+                     ("Content-Length", "0")]
+            helper.request("/method/", h, method=m, body='')
+            
+            # HEAD requests should not return any body.
+            if m == "HEAD":
+                m = ""
+            
+            self.assertEqual(cpg.response.body, m)
+        
+        # Request a disallowed method
+        helper.request("/method/", method="LINK")
+        self.assertEqual(cpg.response.status, "405 Method Not Allowed")
+        
+        # Request an unknown method
+        helper.request("/method/", method="SEARCH")
+        self.assertEqual(cpg.response.status, "501 Not Implemented")
 
 
 if __name__ == '__main__':

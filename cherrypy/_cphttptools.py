@@ -113,7 +113,6 @@ class Request(object):
         
         self.requestLine = requestLine
         self.requestHeaders = headers
-        self.rfile = rfile
         
         # Prepare cpg.request variables
         cpg.request.remoteAddr = clientAddress
@@ -122,7 +121,7 @@ class Request(object):
         cpg.request.headerMap = {}
         cpg.request.requestLine = requestLine
         cpg.request.simpleCookie = Cookie.SimpleCookie()
-        cpg.request.rfile = self.rfile
+        cpg.request.rfile = rfile
         
         # Prepare cpg.response variables
         cpg.response.status = None
@@ -143,6 +142,10 @@ class Request(object):
         cpg.response.simpleCookie = Cookie.SimpleCookie()
         
         self.run()
+        
+        if cpg.request.method == "HEAD":
+            # HEAD requests MUST NOT return a message-body in the response.
+            cpg.response.body = []
     
     def run(self):
         try:
@@ -222,7 +225,7 @@ class Request(object):
         lowerHeaderMap = {}
         for key, value in cpg.request.headerMap.items():
             lowerHeaderMap[key.lower()] = value
-        forms = _cpcgifs.FieldStorage(fp = self.rfile, headers = lowerHeaderMap,
+        forms = _cpcgifs.FieldStorage(fp=cpg.request.rfile, headers=lowerHeaderMap,
                                       environ = {'REQUEST_METHOD': 'POST'},
                                       keep_blank_values = 1)
         

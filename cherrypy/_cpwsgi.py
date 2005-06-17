@@ -99,7 +99,8 @@ def wsgiApp(environ, start_response):
             # WSGI requires all data to be of type "str". This coercion should
             # not take any time at all if chunk is already of type "str".
             # If it's unicode, it could be a big performance hit (x ~500).
-            yield str(chunk)
+            chunk = str(chunk)
+            yield chunk
     except:
         tb = _cphttptools.formatExc()
         _cputil.getSpecialAttribute('_cpLogMessage')(tb)
@@ -114,126 +115,6 @@ def wsgiApp(environ, start_response):
 
 
 # Server components
-
-class WSGIRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    
-    server_version = "CherryPyWSGI/2.1"
-    os_environ = dict(os.environ.items())
-    
-    def handle_one_request(self):
-        """Handle a single HTTP request. Overridden to handle all verbs."""
-        response = None
-        self.headers_sent = False
-        self.responseHeaders = []
-        try:
-            try:
-                self.raw_requestline = self.rfile.readline()
-                if not self.raw_requestline:
-                    self.close_connection = 1
-                    return
-                
-                if not self.parse_request():
-                    return
-                
-                response = wsgiApp(self.environ(), self.start_response)
-                for chunk in response:
-                    self.write(chunk)
-            except:
-                self.handleError(sys.exc_info())
-        finally:
-            if hasattr(response, 'close'):
-                response.close()
-    
-    def environ(self):
-        env = {'wsgi.version': (1, 0),
-               'wsgi.input': self.rfile,
-               'wsgi.errors': sys.stderr,
-               'wsgi.multithread': (cpg.config.get("server.threadPool") > 1),
-               'wsgi.multiprocess': False,
-               'wsgi.run_once': False,
-               'SERVER_PROTOCOL': self.request_version,
-               'GATEWAY_INTERFACE': 'CGI/1.1',
-               'CONTENT_TYPE': self.headers.get('Content-Type', ''),
-               'CONTENT_LENGTH': self.headers.get('Content-Length', ''),
-               # SCRIPT_NAME doesn't really apply to CherryPy
-               'SCRIPT_NAME': '',
-               }
-        
-        env['SERVER_NAME'] = cpg.config.get('server.socketHost')
-        env['SERVER_PORT'] = cpg.config.get('server.socketPort')
-        
-        if self.os_environ.get("HTTPS") in ('yes', 'on', '1'):
-            env['wsgi.url_scheme'] = 'https'
-        else:
-            env['wsgi.url_scheme'] = 'http'
-        
-        host, port = self.client_address[:2]
-        env['REMOTE_ADDR'] = host
-        
-        fullhost = socket.getfqdn(host)
-        if fullhost == host:
-            env['REMOTE_HOST'] = ''
-        else:
-            env['REMOTE_HOST'] = fullhost
-        
-        # Update env with results of parse_request
-        env['REQUEST_METHOD'] = self.command
-        env['SERVER_PROTOCOL'] = self.request_version
-        
-        if '?' in self.path:
-            path, query = self.path.split('?', 1)
-        else:
-            path, query = self.path, ''
-        env['PATH_INFO'] = urllib.unquote(path)
-        env['QUERY_STRING'] = query
-        
-        # Update env with additional request headers
-        for name, value in self.headers.items():
-            env['HTTP_%s' % name.replace ('-', '_').upper()] = value
-        return env
-    
-    def start_response(self, status, headers, exc_info=None):
-        if exc_info:
-            try:
-                if self.headers_sent:
-                    raise exc_info[0], exc_info[1], exc_info[2]
-            finally:
-                # avoid dangling circular ref
-                exc_info = None
-        elif self.responseHeaders:
-            raise AssertionError("Headers already set!")
-        self.status = status
-        self.responseHeaders = headers[:]
-        return self.write
-    
-    def write(self, data):
-        if not self.headers_sent:
-            code, reason = self.status.split(" ", 1)
-            self.send_response(int(code), reason)
-            for name, value in self.responseHeaders:
-                self.send_header(name, value)
-            self.end_headers()
-            self.headers_sent = True
-        self.wfile.write(data)
-    
-    def send_response(self, code, message=None):
-        self.log_request(code)
-        if message is None:
-            if code in self.responses:
-                message = self.responses[code][0]
-            else:
-                message = ''
-        if self.request_version != 'HTTP/0.9':
-            self.wfile.write("%s %d %s\r\n" %
-                             (self.protocol_version, code, message))
-    
-    def handleError(self, exc):
-        self.close_connection = 1
-        msg = _cphttptools.formatExc(exc)
-        _cputil.getSpecialAttribute('_cpLogMessage')(msg, "HTTP")
-        self.status, self.headers, body = _cphttptools.bareError()
-        self.write(body)
-
 
 class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     def __init__(self):

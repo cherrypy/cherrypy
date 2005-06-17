@@ -69,7 +69,16 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     list.append((name.strip(), value.strip()))
         return list
     
-    def doMethod(self):
+    def handle_one_request(self):
+        """Handle a single HTTP request."""
+        
+        self.raw_requestline = self.rfile.readline()
+        if not self.raw_requestline:
+            self.close_connection = 1
+            return
+        if not self.parse_request(): # An error code has been sent, just exit
+            return
+        
         cpg.request.multithread = cpg.config.get("server.threadPool") > 1
         cpg.request.multiprocess = False
         _cpserver.request(self.client_address[0],
@@ -91,15 +100,9 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s, h, b = _cphttptools.bareError()
             for chunk in b:
                 wfile.write(chunk)
-    
-    do_GET = doMethod
-    do_HEAD = doMethod
-    
-    def do_POST(self):
-        """Serve a POST request."""
-        self.doMethod()
-        # What does this line do?
-        self.connection = self.request
+        
+        if self.command == "POST":
+            self.connection = self.request
     
     def log_message(self, format, *args):
         """ We have to override this to use our own logging mechanism """
