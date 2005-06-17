@@ -33,7 +33,7 @@ Common Service Code for CherryPy
 import urllib, sys, time, traceback, types, cgi
 import mimetypes, Cookie, urlparse
 from lib.filter import basefilter
-import cpg, _cputil, cperror, _cpdefaults, _cpcgifs
+import cpg, _cputil, cperror, _cpcgifs
 
 # Can't use cStringIO; doesn't support unicode strings  
 # See http://www.python.org/sf/216388  
@@ -394,17 +394,17 @@ def finalize():
 
 def applyFilters(methodName):
     if methodName in ('beforeRequestBody', 'beforeMain'):
-        filterList = (_cpdefaults._cpDefaultInputFilterList +
+        filterList = (_cputil._cpDefaultInputFilterList +
                       _cputil.getSpecialAttribute('_cpFilterList'))
     elif methodName in ('beforeFinalize',):
         filterList = (_cputil.getSpecialAttribute('_cpFilterList') +
-                      _cpdefaults._cpDefaultOutputFilterList)
+                      _cputil._cpDefaultOutputFilterList)
     else:
         # 'onStartResource', 'onEndResource'
         # 'beforeErrorResponse', 'afterErrorResponse'
-        filterList = (_cpdefaults._cpDefaultInputFilterList +
+        filterList = (_cputil._cpDefaultInputFilterList +
                       _cputil.getSpecialAttribute('_cpFilterList') +
-                      _cpdefaults._cpDefaultOutputFilterList)
+                      _cputil._cpDefaultOutputFilterList)
     for filter in filterList:
         method = getattr(filter, methodName, None)
         if method:
