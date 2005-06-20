@@ -30,6 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 STOP = 0
 CONTINUE = 1
 
+import warnings
+warnings.warn("The Aspect module is deprecated. You can use filters instead",
+      DeprecationWarning)
+
 class Aspect(object):
     """
     Base class for aspects. Derive new aspect classes from this, then
