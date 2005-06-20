@@ -75,7 +75,7 @@ class FileSession(BaseSession):
         f = open(fname,"wb")
         self.__fileLock.acquire()
         pickle.dump(sessionData, f)
-        self.__fileLock.acquire()
+        self.__fileLock.release()
         f.close()
 
     def delSession(self, sessionKey):
