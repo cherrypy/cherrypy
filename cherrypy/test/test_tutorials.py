@@ -126,36 +126,15 @@ class TutorialTest(unittest.TestCase):
         helper.request("/another/")
         self.assertEqual(cpg.response.body, msg)
     
-    def test06Aspects(self):
-        load_tut_module("tut06_aspects")
-        msg = '''
-            <html>
-            <head>
-                <title>Tutorial 6 -- Aspect Powered!</title>
-            <head>
-            <body>
-            <h2>Tutorial 6 -- Aspect Powered!</h2>
-        
-            <p>
-            Isn't this exciting? There's
-            <a href="./another/">another page</a>, too!
-            </p>
-        
-            </body>
-            </html>
-        '''
-        helper.request("/")
-        self.assertEqual(cpg.response.body, msg)
-    
-    def test07DefaultMethod(self):
-        load_tut_module("tut07_default_method")
+    def test06DefaultMethod(self):
+        load_tut_module("tut06_default_method")
         helper.request('/hendrik')
         self.assertEqual(cpg.response.body,
                          'Hendrik Mans, CherryPy co-developer & crazy German '
                          '(<a href="./">back</a>)')
     
-    def test08Sessions(self):
-        load_tut_module("tut08_sessions")
+    def test07Sessions(self):
+        load_tut_module("tut07_sessions")
         cpg.config.update({"global": {"sessionFilter.on": True}})
         
         helper.request('/')
@@ -170,8 +149,8 @@ class TutorialTest(unittest.TestCase):
                          "\n            page 2 times! Your life is a patio of fun!"
                          "\n        ")
     
-    def test09GeneratorsAndYield(self):
-        load_tut_module("tut09_generators_and_yield")
+    def test08GeneratorsAndYield(self):
+        load_tut_module("tut08_generators_and_yield")
         helper.request('/')
         self.assertEqual(cpg.response.body,
                          '<html><body><h2>Generators rule!</h2>'
@@ -179,8 +158,8 @@ class TutorialTest(unittest.TestCase):
                          'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
                          '</body></html>')
     
-    def test10SessionFilter(self):
-        load_tut_module("tut10_sessionfilter")
+    def test09SessionFilter(self):
+        load_tut_module("tut09_sessionfilter")
         cpg.config.update({"global": {"sessionFilter.on": True}})
         
         helper.request('/')
@@ -189,8 +168,8 @@ class TutorialTest(unittest.TestCase):
         helper.request('/', [('Cookie', dict(cpg.response.headers)['Set-Cookie'])])
         self.assert_("viewed this page 2 times" in cpg.response.body)
     
-    def test11FileUpload(self):
-        load_tut_module("tut11_file_upload")
+    def test10FileUpload(self):
+        load_tut_module("tut10_file_upload")
         
         h = [("Content-type", "multipart/form-data; boundary=x"),
              ("Content-Length", "110")]
