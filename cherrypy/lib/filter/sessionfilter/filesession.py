@@ -58,7 +58,7 @@ class FileSession(BaseSession):
     def getSession(self, sessionKey):
         sessionStorageFileDir = self.__storageDir()
         fname = os.path.join(sessionStorageFileDir, sessionKey)
-        if os.path.exists(fname):
+        if os.path.exists(fname) and sessionKey:
             f = open(fname, "rb")
             self.__fileLock.acquire()
             sessionData = pickle.load(f)
