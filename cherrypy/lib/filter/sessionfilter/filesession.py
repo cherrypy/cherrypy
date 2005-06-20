@@ -57,8 +57,10 @@ class FileSession(BaseSession):
     # all session writes are blocked 
     def getSession(self, sessionKey):
         sessionStorageFileDir = self.__storageDir()
+        if not sessionKey:
+            raise SessionNotFoundError
         fname = os.path.join(sessionStorageFileDir, sessionKey)
-        if os.path.exists(fname) and sessionKey:
+        if os.path.exists(fname):
             f = open(fname, "rb")
             self.__fileLock.acquire()
             sessionData = pickle.load(f)

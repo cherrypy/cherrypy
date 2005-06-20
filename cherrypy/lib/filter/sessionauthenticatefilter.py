@@ -54,6 +54,7 @@ class SessionAuthenticateFilter(BaseFilter):
     def beforeMain(self):
         global cpg
         from cherrypy import cpg
+        from cherrypy.lib import httptools
         if not cpg.config.get('sessionAuthenticateFilter.on', False):
             return
         checkLoginAndPassword = cpg.config.get('sessionAuthenticateFilter.checkLoginAndPassword', defaultCheckLoginAndPassword)
