@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5b1//EN" "../docbook-4.5b1/docbookx.dtd">
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5b1//EN" "../../../../tools/docbook/docbook4.5/docbookx.dtd">
 <book xmlns:db="http://docbook.org/docbook-ng"
       xmlns:xi="http://www.w3.org/2001/XInclude"
       xmlns:xsl="http://www.w3.org/1999/XSL/Transform"

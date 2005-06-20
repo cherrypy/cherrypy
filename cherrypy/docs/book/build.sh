@@ -31,6 +31,29 @@
 # Thanks to Antonio Cavedoni (aka verbosus) 
 # for this building script
 # 
+# Version 0.2 : Got rid of the docbook directories, made them tarballs.
+#               Added untarDocbook() function
+# Version 0.1 : First release 
+#
+
+DOCBOOK_BASE_PATH=../../../tools/docbook/
+DOCBOOK_DTD_DIRECTORY=docbook4.5
+DOCBOOK_XSL_DIRECTORY=docbook-xsl-1.68.1
+
+untarDocbook() {
+    current=`pwd`
+    cd $DOCBOOK_BASE_PATH
+    if [ ! -d $DOCBOOK_DTD_DIRECTORY ]
+	then
+	tar zxf docbook-4.5b1.tgz
+    fi
+    
+    if [ ! -d $DOCBOOK_XSL_DIRECTORY ]
+	then
+	tar zxf docbook-xsl-1.68.1.tar.gz
+    fi
+    cd $current
+}
 
 #
 # Let's build the doc in one big file
@@ -39,13 +62,12 @@ rm -rf ./html
 mkdir html
 mkdir html/css
 cp css/*.css html/css/
-#mkdir html/images
-#cp -R docbook/xsl/images html/
+untarDocbook
 xsltproc \
     --timing \
     --xinclude \
     --output html/index.html \
-    docbook-xsl-1.68.1/html/docbook.xsl \
+    $DOCBOOK_BASE_PATH$DOCBOOK_XSL_DIRECTORY/html/docbook.xsl \
     xsl/html.xsl \
     xml/cherrypy.xml 
  
@@ -56,13 +78,12 @@ rm -rf ./chunk
 mkdir chunk
 mkdir chunk/css
 cp css/*.css chunk/css/
-#mkdir chunk/images
-#cp -R docbook/xsl/images chunk/
+untarDocbook
 xsltproc \
     --timing \
     --xinclude \
     --output chunk/index.html \
-    docbook-xsl-1.68.1/html/chunk.xsl \
+    $DOCBOOK_BASE_PATH$DOCBOOK_XSL_DIRECTORY/html/chunk.xsl \
     xsl/chunked.xsl \
     xml/cherrypy.xml 
 
