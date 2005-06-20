@@ -31,6 +31,10 @@ from cherrypy import cpg
 
 from aspect import Aspect, STOP, CONTINUE
 
+import warnings
+warnings.warn("The CSAuthenticate module is deprecated. You can use the sessionauthenticate filter instead",
+      DeprecationWarning)
+
 class CSAuthenticate(Aspect):
     timeoutMessage = "Session timed out"
     wrongLoginPasswordMessage = "Wrong login/password"

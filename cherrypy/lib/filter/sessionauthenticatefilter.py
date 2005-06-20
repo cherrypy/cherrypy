@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from basefilter import BaseFilter
 
-def loginScreen(fromPage, login = '', errorMsg = ''):
+def defaultLoginScreen(fromPage, login = '', errorMsg = ''):
     return """
     <html><body>
         Message: %s
@@ -41,29 +41,33 @@ def loginScreen(fromPage, login = '', errorMsg = ''):
     </body></html>
     """ % (errorMsg, login, fromPage)
 
+def defaultCheckLoginAndPassword(login, password):
+    # Dummy checkLoginAndPassword function
+    if login != 'login' or password != 'password':
+        return u'Wrong login/password'
 
 class SessionAuthenticateFilter(BaseFilter):
     """
     Filter that adds debug information to the page
     """
 
-    def __init__(self, checkLoginAndPassword, loginScreen = loginScreen,
-            notLoggedIn = None, loadUserByUsername = None):
-        global cpg, httptools
-        # We have to dynamically import cpg because Python can't handle
-        #   circular module imports :-(
-        from cherrypy import cpg
-        from cherrypy.lib import httptools
-        self.checkLoginAndPassword = checkLoginAndPassword
-        self.loginScreen = loginScreen
-        self.notLoggedIn = notLoggedIn
-        self.loadUserByUsername = loadUserByUsername
-
     def beforeMain(self):
+        global cpg
+        from cherrypy import cpg
+        if not cpg.config.get('sessionAuthenticateFilter.on', False):
+            return
+        checkLoginAndPassword = cpg.config.get('sessionAuthenticateFilter.checkLoginAndPassword', defaultCheckLoginAndPassword)
+        loginScreen = cpg.config.get('sessionAuthenticateFilter.loginScreen', defaultLoginScreen)
+        notLoggedIn = cpg.config.get('sessionAuthenticateFilter.notLoggedIn')
+        loadUserByUsername = cpg.config.get('sessionAuthenticateFilter.loadUserByUsername')
+        sessionName = cpg.config.get('sessionAuthenticateFilter.sessionName', 'sessionMap')
+        sessionKey = cpg.config.get('sessionAuthenticateFilter.sessionKey', 'username')
+        sessionMap = getattr(cpg.sessions, sessionName)
+
         if cpg.request.path.endswith('loginScreen'):
             return
         elif cpg.request.path.endswith('doLogout'):
-            cpg.request.sessionMap['username'] = None
+            sessionMap[sessionKey] = None
             cpg.threadData.user = None
             fromPage = cpg.request.paramMap.get('fromPage')
             if fromPage is None:
@@ -73,25 +77,27 @@ class SessionAuthenticateFilter(BaseFilter):
             fromPage = cpg.request.paramMap['fromPage']
             login = cpg.request.paramMap['login']
             password = cpg.request.paramMap['password']
-            errorMsg = self.checkLoginAndPassword(login, password)
+            errorMsg = checkLoginAndPassword(login, password)
             if errorMsg:
-                cpg.response.body = self.loginScreen(fromPage, login = login, errorMsg = errorMsg)
+                cpg.response.body = loginScreen(fromPage, login = login, errorMsg = errorMsg)
             else:
-                cpg.request.sessionMap['username'] = login
+                sessionMap[sessionKey] = login
                 if not fromPage:
                     fromPage = '/'
                 cpg.response.body = httptools.redirect(fromPage)
             return
 
         # Check if user is logged in
-        if (not cpg.request.sessionMap.get('username')) and self.notLoggedIn:
-            self.notLoggedIn()
-        if not cpg.request.sessionMap.get('username'):
-            cpg.response.body = self.loginScreen(cpg.request.browserUrl)
+        if (not sessionMap.get(sessionKey)) and notLoggedIn:
+            # Call notLoggedIn so that applications where anynymous user
+            #   is OK can handle it
+            notLoggedIn()
+        if not sessionMap.get(sessionKey):
+            cpg.response.body = loginScreen(cpg.request.browserUrl)
             return
 
         # Everything is OK: user is logged in
-        if self.loadUserByUsername:
-            username = cpg.request.sessionMap['username']
-            cpg.threadData.user = self.loadUserByUsername(username)
+        if loadUserByUsername:
+            username = sessionMap[sessionKey]
+            cpg.threadData.user = loadUserByUsername(username)
         
