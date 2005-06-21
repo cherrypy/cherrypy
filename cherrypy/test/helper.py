@@ -69,7 +69,6 @@ def stopServer():
 
 
 def getPage(url, headers=None, method="GET", body=None):
-    
     # The trying 10 times is simply in case of socket errors.
     # Normal case--it should run once.
     trial = 0
@@ -98,22 +97,20 @@ def getPage(url, headers=None, method="GET", body=None):
                 print "body>", repr(cpg.response.body)
                 raise
             
-            cpg.response.status = "%s %s" % (response.status, response.reason)
+            status = "%s %s" % (response.status, response.reason)
             
-            cpg.response.headerMap = {}
+            headerMap = {}
             for line in response.msg.headers:
                 key, value = line.split(":", 1)
-                cpg.response.headerMap[key.strip()] = value.strip()
-            cpg.response.headers = [(k, v) for k, v
-                                    in cpg.response.headerMap.iteritems()]
+                headerMap[key.strip()] = value.strip()
             
-            cpg.response.body = response.read()
+            body = response.read()
             
             conn.close()
-            return
+            return status, headerMap, body
         except socket.error:
             trial += 1
-            if trial == 10:
+            if trial >= 10:
                 raise
             else:
                 time.sleep(0.5)
@@ -137,5 +134,9 @@ def request(url, headers=None, method="GET", body=None):
         cpg.server.request(HOST, HOST, requestLine, headers, body)
         cpg.response.body = "".join(cpg.response.body)
     else:
-        getPage(url, headers, method, body)
+        result = getPage(url, headers, method, body)
+        cpg.response.status, cpg.response.headerMap, cpg.response.body = result
+        cpg.response.headers = [(k, v) for k, v in
+                                cpg.response.headerMap.iteritems()]
+
 

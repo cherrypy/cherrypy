@@ -223,8 +223,8 @@ class CoreRequestHandlingTest(unittest.TestCase):
         self.assertEqual(cpg.response.status, '200 OK')
         
         helper.request("/redirect")
-        self.assertEqual(cpg.response.body, '')
         self.assertEqual(cpg.response.status, '302 Found')
+        self.assertEqual(cpg.response.body, "This resource has moved to <a href='http://127.0.0.1:8000/redirect/'>http://127.0.0.1:8000/redirect/</a>.")
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
