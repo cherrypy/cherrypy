@@ -3,7 +3,7 @@
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xml:id="sessions">
-  <title>Sessions Management</title>
+  <title>Session Management</title>
   <abstract>
     <para>
       CherryPY2.1 Includes a powerfull new sessionFilter.
@@ -18,19 +18,19 @@
       <listitem>Multiple Storage Types</listitem>
       <listitem>Thread Safety</listitem>
       <listitem>Easy to extend</listitem>
-      <listitem>Session Caching<listitem>
+      <listitem>Session Caching</listitem>
       <listitem>Multiple Named Sessions</listitem>
     </itemizedlist>
   </section>
   
   <section id="sessionconfig">
-    <title>Session Configuration</tile>
+    <title>Session Configuration</title>
   </section>
 
   <section id="usingsessions">
     <title>Using Sessions</title>
     <section>
-      <title>SessionDicts<title>
+      <title>SessionDicts</title>
       <para>
         All session data is accessed through an instance of a SessionDict class.
         SesssionDicts provide a dictionary like interface.
@@ -68,7 +68,7 @@
       </para>
 
       <example>
-        <title>cpg.session example</title>
+        <title>cpg.session</title>
         <para>
           This code iterates over a list of items in a shopping cart, and computes 
           The total cost of all items.
@@ -104,7 +104,7 @@
         _cpSessionsList is a class attribute containing a list sessions defined for that class.
       </para>
       <example>
-        <title>_cpSessionList example</title>
+        <title>_cpSessionList</title>
         <para>
         </para>
         <programlisting>
@@ -123,7 +123,7 @@
 
   <section id="sessionstoragetypes">
     <title>Session Storage Types</title>
-    <para>The folowing storage drivers are built in: ram, file, ayndb, sqlobject</para>
+    <para>The following storage drivers are built in: ram, file, ayndb, sqlobject</para>
     <section>
       <title>ram storage</title>
       <para>

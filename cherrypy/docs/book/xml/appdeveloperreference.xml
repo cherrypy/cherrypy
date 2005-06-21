@@ -7,6 +7,6 @@
   
   <xi:include href="globaloverviewcherrypy.xml"/>
   <xi:include href="configsystemoverview.xml"/>
-  <xi:include href="sessionsystem.xml"/>
+  <xi:include href="sessions.xml"/>
   <xi:include href="templateindependant.xml"/>
 </section>
