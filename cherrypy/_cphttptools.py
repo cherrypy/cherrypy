@@ -174,7 +174,7 @@ class Request(object):
     
     def processRequestHeaders(self):
         # Parse first line
-        cpg.request.method, path, protocol = self.requestLine.split()
+        cpg.request.method, path, cpg.request.protocol = self.requestLine.split()
         cpg.request.processRequestBody = cpg.request.method in ("POST",)
         
         # find the queryString, or set it to "" if not found
@@ -319,25 +319,10 @@ def main():
         body = func(*(virtualPathList + cpg.request.paramList),
                     **(cpg.request.paramMap))
         cpg.response.body = iterable(body)
-    except cperror.IndexRedirect, inst:
-        # For an IndexRedirect, we don't go through the regular
+    except cperror.HTTPRedirect, inst:
+        # For an HTTPRedirect, we don't go through the regular
         # mechanism: we return the redirect immediately
-        newUrl = urlparse.urljoin(cpg.request.base, inst.args[0])
-        
-        # RFC 2616 indicates a 301 response code fits our goal; however,
-        # browser support for 301 is quite messy. Do 302 instead.
-        # http://ppewww.ph.gla.ac.uk/~flavell/www/post-redirect.html
-        cpg.response.status = 302
-        
-        # "The temporary URI SHOULD be given by the Location field
-        # in the response."
-        cpg.response.headerMap['Location'] = newUrl
-        
-        # "Unless the request method was HEAD, the entity of the response
-        # SHOULD contain a short hypertext note with a hyperlink to the
-        # new URI(s)."
-        cpg.response.body = ["This resource has moved to <a href='%s'>%s</a>."
-                             % (newUrl, newUrl)]
+        inst.set_response()
 
 def iterable(body):
     # build a uniform return type (iterable)
@@ -529,7 +514,7 @@ def mapPathToObject(path=None):
             newUrl = cpg.request.path + '/'
             if cpg.request.queryString:
                 newUrl += cpg.request.queryString
-            raise cperror.IndexRedirect(newUrl)
+            raise cperror.HTTPRedirect(newUrl)
     
     return candidate, objectPathList, virtualPathList
 

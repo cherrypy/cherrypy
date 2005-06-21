@@ -95,6 +95,7 @@ cpg.root.dir1.dir2.dir3.dir4 = Dir4()
 cpg.config.update({
     'global': {
         'server.logToScreen': False,
+        'server.environment': "production",
     }
 })
 cpg.server.start(initOnly=True)
@@ -127,7 +128,7 @@ class ObjectMappingTest(unittest.TestCase):
         self.assertEqual(cpg.response.body, 'index for dir2, path is:/dir1/dir2/')
         
         helper.request("/dir1/dir2")
-        self.assertEqual(cpg.response.status, '302 Found')
+        self.assert_(cpg.response.status in ('302 Found', '303 See Other'))
         self.assertEqual(cpg.response.headerMap['Location'],
                          'http://%s:%s/dir1/dir2/' % (helper.HOST, helper.PORT))
         

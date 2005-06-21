@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Basic tests for the CherryPy core: request handling."""
 
-from cherrypy import cpg
+from cherrypy import cpg, cperror
 import types
 
 class Root:
@@ -81,6 +81,15 @@ class Redirect(Test):
     
     def index(self):
         return "child"
+    
+    def by_code(self, code):
+        raise cperror.HTTPRedirect("somewhere else", code)
+    
+    def nomodify(self):
+        raise cperror.HTTPRedirect("", 304)
+    
+    def proxy(self):
+        raise cperror.HTTPRedirect("proxy", 305)
 
 
 class Flatten(Test):
@@ -223,8 +232,38 @@ class CoreRequestHandlingTest(unittest.TestCase):
         self.assertEqual(cpg.response.status, '200 OK')
         
         helper.request("/redirect")
+        self.assert_(cpg.response.status in ('302 Found', '303 See Other'))
+        self.assert_(cpg.response.body in
+                     ("This resource resides temporarily at <a href='http://127.0.0.1:8000/redirect/'>http://127.0.0.1:8000/redirect/</a>.",
+                      "This resource can be found at <a href='http://127.0.0.1:8000/redirect/'>http://127.0.0.1:8000/redirect/</a>."))
+        
+        helper.request("/redirect/by_code?code=300")
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
+        self.assertEqual(cpg.response.status, '300 Multiple Choices')
+        
+        helper.request("/redirect/by_code?code=301")
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
+        self.assertEqual(cpg.response.status, '301 Moved Permanently')
+        
+        helper.request("/redirect/by_code?code=302")
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
         self.assertEqual(cpg.response.status, '302 Found')
-        self.assertEqual(cpg.response.body, "This resource has moved to <a href='http://127.0.0.1:8000/redirect/'>http://127.0.0.1:8000/redirect/</a>.")
+        
+        helper.request("/redirect/by_code?code=303")
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
+        self.assertEqual(cpg.response.status, '303 See Other')
+        
+        helper.request("/redirect/by_code?code=307")
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
+        self.assertEqual(cpg.response.status, '307 Temporary Redirect')
+        
+        helper.request("/redirect/nomodify")
+        self.assertEqual(cpg.response.body, '')
+        self.assertEqual(cpg.response.status, '304 Not modified')
+        
+        helper.request("/redirect/proxy")
+        self.assertEqual(cpg.response.body, '')
+        self.assertEqual(cpg.response.status, '305 Use Proxy')
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
