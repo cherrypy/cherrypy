@@ -1,3 +1,9 @@
+2005-06-21:
+    * New generic HTTPRedirect exception for 3xx responses (fumanchu)
+
+2005-06-17:
+    * Handle all HTTP methods (fumanchu)
+
 2005-06-16:
     * First check-in of the documentation project (lawouach)
 

@@ -167,6 +167,11 @@ class Request(object):
                     finalize()
                 except cperror.RequestHandled:
                     pass
+                except cperror.HTTPRedirect, inst:
+                    # For an HTTPRedirect, we don't go through the regular
+                    # mechanism: we return the redirect immediately
+                    inst.set_response()
+                    finalize()
             finally:
                 applyFilters('onEndResource')
         except:
@@ -311,18 +316,13 @@ def bareError(extrabody=None):
 
 def main():
     """Obtain and set cpg.response.body."""
-    try:
-        func, objectPathList, virtualPathList = mapPathToObject()
-        
-        # Remove "root" from objectPathList and join it to get objectPath
-        cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
-        body = func(*(virtualPathList + cpg.request.paramList),
-                    **(cpg.request.paramMap))
-        cpg.response.body = iterable(body)
-    except cperror.HTTPRedirect, inst:
-        # For an HTTPRedirect, we don't go through the regular
-        # mechanism: we return the redirect immediately
-        inst.set_response()
+    func, objectPathList, virtualPathList = mapPathToObject()
+    
+    # Remove "root" from objectPathList and join it to get objectPath
+    cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
+    body = func(*(virtualPathList + cpg.request.paramList),
+                **(cpg.request.paramMap))
+    cpg.response.body = iterable(body)
 
 def iterable(body):
     # build a uniform return type (iterable)
