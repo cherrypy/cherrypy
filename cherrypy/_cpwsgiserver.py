@@ -38,6 +38,7 @@ import sys
 import time
 import traceback
 
+
 class HTTPRequest(object):
     def __init__(self, socket, addr, server):
         self.socket = socket
@@ -63,6 +64,9 @@ class HTTPRequest(object):
         self.environ["wsgi.multiprocess"] = False
         self.environ["wsgi.run_once"] = False
         request_line = self.rfile.readline()
+        if not request_line:
+            self.ready = False
+            return
         method,path,version = request_line.strip().split(" ", 2)
         if "?" in path:
             path, qs = path.split("?", 1)
@@ -120,7 +124,7 @@ class HTTPRequest(object):
         self.wfile.write("\r\n")
         self.wfile.flush()
     def terminate(self):
-        if not self.sent_headers:
+        if self.ready and not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
         self.rfile.close()
@@ -139,16 +143,17 @@ class WorkerThread(threading.Thread):
     def run(self):
         while self.server._running:
             request = self.server.requests.get()
-            if request == _SHUTDOWNREQUEST:
+            if request is _SHUTDOWNREQUEST:
                 return
             
             try:
                 try:
                     request.parse_request()
-                    response = self.server.wsgi_app(request.environ,
-                                                    request.start_response)
-                    for line in response:
-                        request.write(line)
+                    if request.ready:
+		        response = self.server.wsgi_app(request.environ,
+                                                        request.start_response)
+                        for line in response:
+                            request.write(line)
                 except:
                     traceback.print_exc()
             finally:
