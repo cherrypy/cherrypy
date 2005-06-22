@@ -300,10 +300,7 @@ class CoreRequestHandlingTest(unittest.TestCase):
         # Test that all defined HTTP methods work.
         for m in defined_http_methods:
             h = []
-            if m == 'POST':
-                h = [("Content-type", "application/x-www-form-urlencoded"),
-                     ("Content-Length", "0")]
-            helper.request("/method/", h, method=m, body='')
+            helper.request("/method/", method=m)
             
             # HEAD requests should not return any body.
             if m == "HEAD":

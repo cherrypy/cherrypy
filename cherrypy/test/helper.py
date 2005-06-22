@@ -120,6 +120,17 @@ def request(url, headers=None, method="GET", body=None):
     if headers is None:
         headers = []
     
+    if method == "POST":
+        # Stick in default type and length headers if not present
+        found = False
+        for k, v in headers:
+            if k.lower() == 'content-type':
+                found = True
+                break
+        if not found:
+            headers.append(("Content-type", "application/x-www-form-urlencoded"))
+            headers.append(("Content-Length", str(len(body or ""))))
+    
     if cpg._httpserver is None:
         requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
         found = False

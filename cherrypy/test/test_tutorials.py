@@ -81,14 +81,10 @@ class TutorialTest(unittest.TestCase):
                          'No, really, enter your name <a href="./">here</a>.')
         
         # Try the same with POST
-        h = [("Content-type", "application/x-www-form-urlencoded"),
-             ("Content-Length", "8")]
-        helper.request("/greetUser", h, "POST", "name=Bob")
+        helper.request("/greetUser", method="POST", body="name=Bob")
         self.assertEqual(cpg.response.body, "Hey Bob, what's up?")
         
-        h = [("Content-type", "application/x-www-form-urlencoded"),
-             ("Content-Length", "5")]
-        helper.request("/greetUser", h, "POST", "name=")
+        helper.request("/greetUser", method="POST", body="name=")
         self.assertEqual(cpg.response.body,
                          'No, really, enter your name <a href="./">here</a>.')
     

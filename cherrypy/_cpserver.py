@@ -81,8 +81,9 @@ def _start(initOnly=False, serverClass=None):
     # Create threadData object as a thread-specific all-purpose storage
     cpg.threadData = local()
     
-    # Output config options (if cpg.config.get('server.logToScreen'))
-    cpg.config.outputConfigMap()
+    # Output config options to log
+    if cpg.config.get("server.logConfigOptions", True):
+        cpg.config.outputConfigMap()
     
     # Check the config options
     # TODO
