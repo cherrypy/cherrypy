@@ -40,12 +40,16 @@
         The following dictionary methods are provided:
         <itemizedlist>
           <listitem>__setitem__(key, value)</listitem>
-          <listitem>__getitem__</listitem>
+          <listitem>__getitem__(key)</listitem>
           <listitem>get(key, default)</listitem>
         </itemizedlist>
         SessionDicts also contain the following attributes:
         <itemizedlist>
-          <listitem>sessionKey (read only)</listitem>
+          <listitem>sessionKey (read only)
+            <para>
+              sessionKey description
+            </para>
+          </listitem>
           <listitem>lastAccess (read only)</listitem>
           <listitem>createdAt  (read only)</listitem>
           <listitem>timeout   </listitem>

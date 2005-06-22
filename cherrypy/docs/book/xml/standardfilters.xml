@@ -4,4 +4,9 @@
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xml:id="standardfilters">
   <title>Standard filters</title>
+    <listitem>CacheFilter</listitem>
+    <listitem>LogDebugInfoFilter</listitem>
+    <listitem>NsgmlsFilter</listitem>
+    <listitem>TidyFilter</listitem>
+    <listitem>XmlRpcFilter</listitem>
 </section>

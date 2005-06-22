@@ -119,8 +119,11 @@
   <section>
     <title>Hello world!</title>
     <para>Your first step with CherryPy will be the traditional Hello World!
-    Open your favourite text editor and paste the following snippet.</para>
-    <code language="python">
+      Open your favourite text editor and paste the following snippet.</para>
+    <example>
+      <title>Hello World</title>
+      <programlisting>
+        <code language="python">
 from cherrypy import cpg
 class HelloWorld:
     def index(self):
@@ -129,8 +132,10 @@ class HelloWorld:
 
 cpg.root = HelloWorld()
 cpg.server.start()
-    </code>
-    <para>Save the coe under a file named helloworld.py.
+        </code>
+      </programlisting>
+    </example>
+    <para>Save the code under a file named helloworld.py.
     Then to start up the application, type the following command:</para>
     <cmdsynopsis>
       <command>python</command>
