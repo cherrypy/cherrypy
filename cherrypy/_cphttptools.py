@@ -30,9 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Common Service Code for CherryPy
 """
 
-import urllib, sys, time, traceback, types, cgi
+import urllib, os, sys, time, traceback, types, cgi
 import mimetypes, Cookie, urlparse
 from lib.filter import basefilter
+
 import cpg, _cputil, cperror, _cpcgifs
 
 # Can't use cStringIO; doesn't support unicode strings  
@@ -454,6 +455,44 @@ def flattener(input):
                 yield y 
 
 
+def serve_file(filename):
+    # If filename is relative, make absolute using cpg.root's module.
+    if not os.path.isabs(filename):
+        root = os.path.dirname(sys.modules[cpg.root.__module__].__file__)
+        filename = os.path.join(root, filename)
+    
+    # Serve filename
+    try:
+        stat = os.stat(filename)
+    except OSError:
+        raise cperror.NotFound(cpg.request.path)
+    
+    modifTime = stat.st_mtime
+    strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
+                                 time.gmtime(modifTime))
+    if cpg.request.headerMap.has_key('If-Modified-Since'):
+        # Check if if-modified-since date is the same as strModifTime
+        if cpg.request.headerMap['If-Modified-Since'] == strModifTime:
+            cpg.response.status = "304 Not Modified"
+            cpg.response.body = []
+            return
+    cpg.response.headerMap['Last-Modified'] = strModifTime
+    
+    # Set Content-Length and use an iterable (file object)
+    #   this way CP won't load the whole file in memory
+    cpg.response.headerMap['Content-Length'] = stat[6]
+    cpg.response.body = open(filename, 'rb')
+    
+    # Set content-type based on filename extension
+    i = filename.rfind('.')
+    if i != -1:
+        ext = filename[i:]
+    else:
+        ext = ""
+    contentType = mimetypes.types_map.get(ext, "text/plain")
+    cpg.response.headerMap['Content-Type'] = contentType
+
+
 # Object lookup
 
 def getObjFromPath(objPathList):
@@ -530,8 +569,17 @@ def mapPathToObject(path=None):
     
     # Check results of traversal
     if not foundIt:
-        # We didn't find anything
-        raise cperror.NotFound(path)
+        if path.endswith("favicon.ico"):
+            # Use CherryPy's default favicon.ico. If developers really,
+            # really want no favicon, they can make a dummy method
+            # that raises NotFound.
+            icofile = os.path.join(os.path.dirname(__file__), "favicon.ico")
+            serve_file(icofile)
+            finalize()
+            raise cperror.RequestHandled
+        else:
+            # We didn't find anything
+            raise cperror.NotFound(path)
     
     if isFirst:
         # We found the extra ".index"

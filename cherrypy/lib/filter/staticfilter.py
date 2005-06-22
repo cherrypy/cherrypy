@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os, sys, time, mimetypes
+import os
 from basefilter import BaseFilter
 
 
@@ -34,10 +34,7 @@ class StaticFilter(BaseFilter):
     """Filter that handles static content."""
     
     def beforeMain(self):
-        # We have to dynamically import cpg because Python can't handle
-        #   circular module imports :-(
-        global cpg, _cphttptools, cperror
-        from cherrypy import cpg, _cphttptools, cperror
+        from cherrypy import cpg, _cphttptools
         
         if not cpg.config.get('staticFilter.on', False):
             return
@@ -48,40 +45,5 @@ class StaticFilter(BaseFilter):
             section = cpg.config.get('staticFilter.dir', returnSection=True)
             extraPath = cpg.request.path[len(section) + 1:]
             filename = os.path.join(staticDir, extraPath)
-        
-        # If filename is relative, make absolute using cpg.root's module.
-        if not os.path.isabs(filename):
-            root = os.path.dirname(sys.modules[cpg.root.__module__].__file__)
-            filename = os.path.join(root, filename)
-        
-        # Serve filename
-        try:
-            stat = os.stat(filename)
-        except OSError:
-            raise cperror.NotFound(cpg.request.path)
-        
-        modifTime = stat.st_mtime
-        strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
-                                     time.gmtime(modifTime))
-        if cpg.request.headerMap.has_key('If-Modified-Since'):
-            # Check if if-modified-since date is the same as strModifTime
-            if cpg.request.headerMap['If-Modified-Since'] == strModifTime:
-                cpg.response.status = "304 Not Modified"
-                cpg.response.body = []
-                return
-        cpg.response.headerMap['Last-Modified'] = strModifTime
-        
-        # Set Content-Length and use an iterable (file object)
-        #   this way CP won't load the whole file in memory
-        cpg.response.headerMap['Content-Length'] = stat[6]
-        cpg.response.body = open(filename, 'rb')
-        
-        # Set content-type based on filename extension
-        i = filename.rfind('.')
-        if i != -1:
-            ext = filename[i:]
-        else:
-            ext = ""
-        contentType = mimetypes.types_map.get(ext, "text/plain")
-        cpg.response.headerMap['Content-Type'] = contentType
+        _cphttptools.serve_file(filename)
 

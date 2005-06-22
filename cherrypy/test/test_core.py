@@ -184,6 +184,7 @@ cpg.server.start(initOnly=True)
 
 import unittest
 import helper
+import os
 
 class CoreRequestHandlingTest(unittest.TestCase):
     
@@ -317,6 +318,20 @@ class CoreRequestHandlingTest(unittest.TestCase):
         # Request an unknown method
         helper.request("/method/", method="SEARCH")
         self.assertEqual(cpg.response.status, "501 Not Implemented")
+    
+    def testFavicon(self):
+        # Calls to favicon.ico are special-cased in _cphttptools.
+        localDir = os.path.dirname(__file__)
+        icofilename = os.path.join(localDir, "../favicon.ico")
+        icofile = open(icofilename, "rb")
+        data = icofile.read()
+        icofile.close()
+        
+        helper.request("/favicon.ico")
+        self.assertEqual(cpg.response.body, data)
+        
+        helper.request("/redirect/favicon.ico")
+        self.assertEqual(cpg.response.body, data)
 
 
 if __name__ == '__main__':
