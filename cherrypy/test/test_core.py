@@ -231,11 +231,9 @@ class CoreRequestHandlingTest(unittest.TestCase):
         self.assertEqual(cpg.response.body, 'child')
         self.assertEqual(cpg.response.status, '200 OK')
         
-        helper.request("/redirect")
+        helper.request("/redirect?id=3")
         self.assert_(cpg.response.status in ('302 Found', '303 See Other'))
-        self.assert_(cpg.response.body in
-                     ("This resource resides temporarily at <a href='http://127.0.0.1:8000/redirect/'>http://127.0.0.1:8000/redirect/</a>.",
-                      "This resource can be found at <a href='http://127.0.0.1:8000/redirect/'>http://127.0.0.1:8000/redirect/</a>."))
+        self.assert_("<a href='http://127.0.0.1:8000/redirect/?id=3'>http://127.0.0.1:8000/redirect/?id=3</a>" in cpg.response.body)
         
         helper.request("/redirect/by_code?code=300")
         self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)

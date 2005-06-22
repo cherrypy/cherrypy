@@ -513,7 +513,7 @@ def mapPathToObject(path=None):
         if cpg.request.path[-1] != '/':
             newUrl = cpg.request.path + '/'
             if cpg.request.queryString:
-                newUrl += cpg.request.queryString
+                newUrl += "?" + cpg.request.queryString
             raise cperror.HTTPRedirect(newUrl)
     
     return candidate, objectPathList, virtualPathList
