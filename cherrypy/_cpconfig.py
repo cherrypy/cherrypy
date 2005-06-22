@@ -149,15 +149,14 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
 
 def _load(configFile = None):
     """ Convert an INI file to a dictionary """
-    _cpLogMessage = _cputil.getSpecialAttribute('_cpLogMessage')
-
+    
     # Parse config file
     configParser = CaseSensitiveConfigParser()
     if hasattr(configFile, 'read'):
-        _cpLogMessage("Reading infos from configFile stream", 'CONFIG')
+        cpg.log("Reading infos from configFile stream", 'CONFIG')
         configParser.readfp(configFile)
     else:
-        _cpLogMessage("Reading infos from configFile: %s" % configFile, 'CONFIG')
+        cpg.log("Reading infos from configFile: %s" % configFile, 'CONFIG')
         configParser.read(configFile)
 
     # Load INI file into cpg.configMap
@@ -175,22 +174,21 @@ def _load(configFile = None):
             configMap[section][option] = value
 
 def outputConfigMap():
-    _cpLogMessage = _cputil.getSpecialAttribute('_cpLogMessage')
-    _cpLogMessage("Server parameters:", 'CONFIG')
-    _cpLogMessage("  server.environment: %s" % get('server.environment'), 'CONFIG')
-    _cpLogMessage("  server.logToScreen: %s" % get('server.logToScreen'), 'CONFIG')
-    _cpLogMessage("  server.logFile: %s" % get('server.logFile'), 'CONFIG')
-    _cpLogMessage("  server.protocolVersion: %s" % get('server.protocolVersion'), 'CONFIG')
-    _cpLogMessage("  server.socketHost: %s" % get('server.socketHost'), 'CONFIG')
-    _cpLogMessage("  server.socketPort: %s" % get('server.socketPort'), 'CONFIG')
-    _cpLogMessage("  server.socketFile: %s" % get('server.socketFile'), 'CONFIG')
-    _cpLogMessage("  server.reverseDNS: %s" % get('server.reverseDNS'), 'CONFIG')
-    _cpLogMessage("  server.socketQueueSize: %s" % get('server.socketQueueSize'), 'CONFIG')
-    _cpLogMessage("  server.threadPool: %s" % get('server.threadPool'), 'CONFIG')
-    _cpLogMessage("  session.storageType: %s" % get('session.storageType'), 'CONFIG')
+    cpg.log("Server parameters:", 'CONFIG')
+    cpg.log("  server.environment: %s" % get('server.environment'), 'CONFIG')
+    cpg.log("  server.logToScreen: %s" % get('server.logToScreen'), 'CONFIG')
+    cpg.log("  server.logFile: %s" % get('server.logFile'), 'CONFIG')
+    cpg.log("  server.protocolVersion: %s" % get('server.protocolVersion'), 'CONFIG')
+    cpg.log("  server.socketHost: %s" % get('server.socketHost'), 'CONFIG')
+    cpg.log("  server.socketPort: %s" % get('server.socketPort'), 'CONFIG')
+    cpg.log("  server.socketFile: %s" % get('server.socketFile'), 'CONFIG')
+    cpg.log("  server.reverseDNS: %s" % get('server.reverseDNS'), 'CONFIG')
+    cpg.log("  server.socketQueueSize: %s" % get('server.socketQueueSize'), 'CONFIG')
+    cpg.log("  server.threadPool: %s" % get('server.threadPool'), 'CONFIG')
+    cpg.log("  session.storageType: %s" % get('session.storageType'), 'CONFIG')
     if get('session.storageType'):
-        _cpLogMessage("  session.timeout: %s min" % get('session.timeout'), 'CONFIG')
-        _cpLogMessage("  session.cleanUpDelay: %s min" % get('session.cleanUpDelay'), 'CONFIG')
-        _cpLogMessage("  session.cookieName: %s" % get('session.cookieName'), 'CONFIG')
-        _cpLogMessage("  session.storageFileDir: %s" % get('session.storageFileDir'), 'CONFIG')
-    _cpLogMessage("  staticContent: %s" % get('staticContent'), 'CONFIG')
+        cpg.log("  session.timeout: %s min" % get('session.timeout'), 'CONFIG')
+        cpg.log("  session.cleanUpDelay: %s min" % get('session.cleanUpDelay'), 'CONFIG')
+        cpg.log("  session.cookieName: %s" % get('session.cookieName'), 'CONFIG')
+        cpg.log("  session.storageFileDir: %s" % get('session.storageFileDir'), 'CONFIG')
+    cpg.log("  staticContent: %s" % get('staticContent'), 'CONFIG')

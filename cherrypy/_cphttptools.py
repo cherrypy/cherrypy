@@ -210,7 +210,7 @@ class Request(object):
                 cpg.request.simpleCookie.load(value)
         
         msg = "%s - %s" % (cpg.request.remoteAddr, self.requestLine[:-2])
-        _cputil.getSpecialAttribute('_cpLogMessage')(msg, "HTTP")
+        cpg.log(msg, "HTTP")
         
         cpg.request.base = "http://" + cpg.request.headerMap.get('Host', '')
         cpg.request.browserUrl = cpg.request.base + path

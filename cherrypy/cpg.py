@@ -44,6 +44,9 @@ def expose(func):
     func.exposed = True
     return func
 
-
-
+def log(msg, context='', severity=0):
+    """Syntactic sugar for writing to the log."""
+    import _cputil
+    logfunc = _cputil.getSpecialAttribute('_cpLogMessage')
+    logfunc(msg, context, severity)
 

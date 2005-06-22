@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import threading, SocketServer, BaseHTTPServer, socket, Queue
-import cpg, _cpserver, _cputil, _cphttptools
+import cpg, _cpserver, _cphttptools
 
 try:
     import cStringIO as StringIO
@@ -106,7 +106,7 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def log_message(self, format, *args):
         """ We have to override this to use our own logging mechanism """
-        _cputil.getSpecialAttribute('_cpLogMessage')(format % args, "HTTP")
+        cpg.log(format % args, "HTTP")
 
 
 class CherryHTTPServer(BaseHTTPServer.HTTPServer):
@@ -140,7 +140,7 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
             # interrupts on Win32, which don't interrupt accept() by default
             return 1
         except (KeyboardInterrupt, SystemExit):
-            _cputil.getSpecialAttribute('_cpLogMessage')("<Ctrl-C> hit: shutting down http server", "HTTP")
+            cpg.log("<Ctrl-C> hit: shutting down http server", "HTTP")
             self.shutdown()
     
     def serve_forever(self):
@@ -194,7 +194,7 @@ class ServerThread(threading.Thread):
     def handle_error(self, request, client_address):
         """Handle an error gracefully.  May be overridden."""
         errorBody = _cphttptools.formatExc()
-        _cputil.getSpecialAttribute('_cpLogMessage')(errorBody)
+        cpg.log(errorBody)
 
 
 class PooledThreadServer(SocketServer.TCPServer):
@@ -272,7 +272,7 @@ class PooledThreadServer(SocketServer.TCPServer):
         try:
             request, client_address = self.get_request()
         except (KeyboardInterrupt, SystemExit):
-            _cputil.getSpecialAttribute('_cpLogMessage')("<Ctrl-C> hit: shutting down", "HTTP")
+            cpg.log("<Ctrl-C> hit: shutting down", "HTTP")
             return 0
         except socket.error, e:
             return 1

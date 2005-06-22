@@ -33,7 +33,7 @@ A WSGI application and server (see PEP 333).
 import threading
 import os, socket, sys, traceback, urllib
 import SocketServer, BaseHTTPServer
-import cpg, _cpserver, _cputil, _cphttptools, _cpwsgiserver
+import cpg, _cpserver, _cphttptools, _cpwsgiserver
 
 
 def requestLine(environ):
@@ -103,7 +103,7 @@ def wsgiApp(environ, start_response):
             yield chunk
     except:
         tb = _cphttptools.formatExc()
-        _cputil.getSpecialAttribute('_cpLogMessage')(tb)
+        cpg.log(tb)
         s, h, b = _cphttptools.bareError(tb)
         # CherryPy test suite expects bareError body to be output,
         # so don't call start_response (which, according to PEP 333,

@@ -34,7 +34,7 @@ Main CherryPy module:
 import threading
 import time
 import sys
-import cpg, _cputil, _cphttptools
+import cpg, _cphttptools
 
 try:
     from threading import local
@@ -127,21 +127,18 @@ def run_server(serverClass=None):
     
     cpg._httpserver = serverClass()
     
-    _cpLogMessage = _cputil.getSpecialAttribute('_cpLogMessage')
-    
-    servingWhat = "HTTP"
     if cpg.config.get('server', 'socketPort'):
         onWhat = "socket: ('%s', %s)" % (cpg.config.get('server.socketHost'),
                                          cpg.config.get('server.socketPort'))
     else:
         onWhat = "socket file: %s" % cpg.config.get('server.socketFile')
-    _cpLogMessage("Serving %s on %s" % (servingWhat, onWhat), 'HTTP')
+    cpg.log("Serving HTTP on %s" % onWhat, 'HTTP')
     
     # Start the http server.
     try:
         cpg._httpserver.start()
     except (KeyboardInterrupt, SystemExit):
-        _cpLogMessage("<Ctrl-C> hit: shutting down", "HTTP")
+        cpg.log("<Ctrl-C> hit: shutting down", "HTTP")
         stop()
 
 def modules(modulePath):
