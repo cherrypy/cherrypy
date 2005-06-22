@@ -367,6 +367,27 @@ def checkStatus():
         cpg.response.status = "%s %s" % (code, reason)
     return cpg.response.status
 
+
+general_header_fields = ["Cache-Control", "Connection", "Date", "Pragma",
+                         "Trailer", "Transfer-Encoding", "Upgrade", "Via",
+                         "Warning"]
+response_header_fields = ["Accept-Ranges", "Age", "ETag", "Location",
+                          "Proxy-Authenticate", "Retry-After", "Server",
+                          "Vary", "WWW-Authenticate"]
+entity_header_fields = ["Allow", "Content-Encoding", "Content-Language",
+                        "Content-Length", "Content-Location", "Content-MD5",
+                        "Content-Range", "Content-Type", "Expires",
+                        "Last-Modified"]
+
+_header_order_map = {}
+for _ in general_header_fields:
+    _header_order_map[_] = 0
+for _ in response_header_fields:
+    _header_order_map[_] = 1
+for _ in entity_header_fields:
+    _header_order_map[_] = 2
+
+
 def finalize():
     """Transform headerMap + cookies into cpg.response.headers."""
     
@@ -379,12 +400,18 @@ def finalize():
         cpg.response.headerMap['Content-Length'] = len(content)
     
     # Headers
-    cpg.response.headers = []
+    headers = []
     for key, valueList in cpg.response.headerMap.iteritems():
+        order = _header_order_map.get(key, 3)
         if not isinstance(valueList, list):
             valueList = [valueList]
         for value in valueList:
-            cpg.response.headers.append((key, str(value)))
+            headers.append((order, (key, str(value))))
+    # RFC 2616: '... it is "good practice" to send general-header fields
+    # first, followed by request-header or response-header fields, and
+    # ending with the entity-header fields.'
+    headers.sort()
+    cpg.response.headers = [item[1] for item in headers]
     
     cookie = cpg.response.simpleCookie.output()
     if cookie:
