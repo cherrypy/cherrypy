@@ -5,36 +5,141 @@
          xml:id="gettingstarted">
   <title>Getting started</title>
   <section>
-    <sectioninfo>
-      <abstract>
-	<para></para>
-      </abstract>
-    </sectioninfo>
+    <abstract>
+      <para></para>
+    </abstract>
     <title>Getting CherryPy</title>
+    <itemizedlist>
+      <listitem>From a release package</listitem>
+      <listitem>From the CherryPy subversion repository</listitem>
+    </itemizedlist>
+      
+    <section>
+      <title>Release package</title>
+      <para>A release package is an official stable release of CherryPy. 
+      It means that the main features and issues that were decide to be 
+      integrated and fixed for a particular milestone have been.</para>
+      <para>The latest package is available from 
+      <ulink url="http://sourceforge.net/project/showfiles.php?group_id=56099">
+	the sourceforge repository</ulink> of the CherryPy project.
+	You need to pick up the latest version of the package.
+      </para>
+    </section>
+    <section>
+      <title>Subversion repository</title>
+      <para>The CherryPy project uses subversion to control access to 
+      its source code. Getting CherryPy from the latest changeset is 
+      sometimes required because a bug or a feature is only available
+      from it. Keep in mind that subversion code is subject to change
+      on a regular basis, therefore only use it if you know what you 
+      do.</para>
+      <para>To get the latest source code from the subversion repository, 
+      you first need to install a SVN client. On Microsoft Windows, 
+      <ulink href="http://tortoisesvn.tigris.org/">TortoiseSVN</ulink>
+      is a good choice. Under Linux, you can either use the 
+      <ulink href="http://subversion.tigris.org/">svn</ulink> command 
+      line tools or use a graphical user interface such as 
+      <ulink href="http://esvn.umputun.com/">eSVN</ulink>.</para>
+      <para>Once you have installed a svn client, you need to type the
+      following command :</para>
+      <cmdsynopsis>
+	<command>svn</command>
+	<arg choice="req">co</arg>
+	<arg choice="req">http://svn.cherrypy.org</arg>
+      </cmdsynopsis>
+      <para>This will lead to having the complete source code downloaded
+      on to your computer.</para>
+    </section>
   </section>
   <section>
-    <sectioninfo>
-      <abstract>
-	<para></para>
-      </abstract>
-    </sectioninfo>
     <title>Installing CherryPy</title>
+    <abstract>
+      <itemizedlist>
+	<listitem>From a release package</listitem>
+	<listitem>From the CherryPy subversion repository</listitem>
+      </itemizedlist>
+    </abstract>
+    <section>
+      <title>Release package</title>
+      <para>Installing CherryPy from a release package will take
+      three steps only. Type the following commands :
+      </para>
+      <cmdsynopsis>
+	<command>tar</command>
+	<arg choice="req">zxvf</arg>
+	<arg choice="req">CherryPy-2.0.0.tar.gz</arg>
+      </cmdsynopsis>
+      <para>Which will create the CherryPy-2.0.0 directory.</para>
+      <cmdsynopsis>
+	<command>cd</command>
+	<arg choice="req">CherryPy-2.0.0</arg>
+      </cmdsynopsis>
+      <para>Then if you are under Unix or Linux, you should be root
+      and issue the following command:</para>
+      <cmdsynopsis>
+	<command>python</command>
+	<arg choice="req">setup.py</arg>
+	<arg choice="req">install</arg>
+      </cmdsynopsis>
+    </section>
+    <section>
+      <title>Subversion repository</title>
+      <para>If you have downloaded the source code from the CherryPy subversion
+      respository, then you should have a directory called svn.cherrypy.org.
+      Then type the following commands:</para>
+      <cmdsynopsis>
+	<command>cd</command>
+	<arg choice="req">svn.cherrypy.org/trunk</arg>
+      </cmdsynopsis>
+      <para>Then if you are under Unix or Linux, you should be root
+      and issue the following command (as root if you are under Unix/Linux:</para>
+      <cmdsynopsis>
+	<command>python</command>
+	<arg choice="req">setup.py</arg>
+	<arg choice="req">install</arg>
+      </cmdsynopsis>
+    </section>
   </section>
   <section>
-    <sectioninfo>
-      <abstract>
-	<para></para>
-      </abstract>
-    </sectioninfo>
     <title>Running the test</title>
+    <para>If you have installed CherryPy from the source code downloaded from
+    the subversion respository, you can run the test suite to check if everything 
+    is fine on your system. Type the following commands:</para>
+    <cmdsynopsis>
+      <command>cd</command>
+      <arg choice="req">svn.cherrypy.org/trunk/cherrypy/test</arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>python</command>
+      <arg choice="req">test.py</arg>
+    </cmdsynopsis>
+    <para>If all tests pass, then they will be flagged as <code>ok</code>. 
+    If an error occurs, please visit the main CherryPy website to report the issue.</para>
   </section>
   <section>
-    <sectioninfo>
-      <abstract>
-	<para></para>
-      </abstract>
-    </sectioninfo>
     <title>Hello world!</title>
+    <para>Your first step with CherryPy will be the traditional Hello World!
+    Open your favourite text editor and paste the following snippet.</para>
+    <code language="python">
+from cherrypy import cpg
+class HelloWorld:
+    def index(self):
+        return "Hello World!"
+    index.exposed = True
+
+cpg.root = HelloWorld()
+cpg.server.start()
+    </code>
+    <para>Save the coe under a file named helloworld.py.
+    Then to start up the application, type the following command:</para>
+    <cmdsynopsis>
+      <command>python</command>
+      <arg choice="req">helloworld.py</arg>
+    </cmdsynopsis>
+    <para>You will see some information on your terminal window which
+    are the log of the web server.</para>
+    <para>Then simply point your browser to http://localhost:8080 and 
+    say Bravo!</para>
   </section>
   <xi:include href="buildingblog.xml" />
   <section>
