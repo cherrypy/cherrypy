@@ -6,5 +6,5 @@
   <title>Appendix</title>
   <xi:include href="history.xml"/>
   <xi:include href="codingstyle.xml"/>
-  <xi:include href="licenses.xml"/>
+  <xi:include href="license.xml"/>
 </appendix>

@@ -4,9 +4,59 @@
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xml:id="standardfilters">
   <title>Standard filters</title>
-    <listitem>CacheFilter</listitem>
-    <listitem>LogDebugInfoFilter</listitem>
-    <listitem>NsgmlsFilter</listitem>
-    <listitem>TidyFilter</listitem>
-    <listitem>XmlRpcFilter</listitem>
+  
+    <section>
+      <title>baseurlfilter</title>
+    </section>
+    
+    <section>
+      <title>cachefilter</title>
+    </section>
+    
+    <section>
+      <title>decodingfilter</title>
+    </section>
+    
+    <section>
+      <title>encodingfilter</title>
+    </section>
+    
+    <section>
+      <title>gzipfilter</title>
+    </section>
+    
+    <section>
+      <title>logdebuginfofilter</title>
+    </section>
+    
+    <section>
+      <title>staticfilter</title>
+    </section>
+    
+    <section>
+      <title>nsgmlsfilter</title>
+    </section>
+    
+    <section>
+      <title>tidyfilter</title>
+    </section>
+    
+    <section>
+      <title>virtualhostfilter</title>
+    </section>
+    
+    <section>
+      <title>xmlrpcfilter</title>
+    </section>
+    
+    <section>
+      <title>sessionauthenticatefilter</title>
+    </section>
+    
+    <section>
+      <title>sessionfilter</title>
+      <link endterm="standardfilters">The Session Filter has its own section</link>
+    </section>
+
+    
 </section>
