@@ -116,5 +116,4 @@
     <para>If all tests pass, then they will be flagged as <code>ok</code>. 
     If an error occurs, please visit the main CherryPy website to report the issue.</para>
   </section>
-  <xi:include href="buildingblog.xml" />
 </chapter>

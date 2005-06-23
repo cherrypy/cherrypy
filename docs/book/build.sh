@@ -36,7 +36,7 @@
 # Version 0.1 : First release 
 #
 
-DOCBOOK_BASE_PATH=../../../tools/docbook/
+DOCBOOK_BASE_PATH=../../tools/docbook/
 DOCBOOK_DTD_DIRECTORY=docbook4.5
 DOCBOOK_XSL_DIRECTORY=docbook-xsl-1.68.1
 

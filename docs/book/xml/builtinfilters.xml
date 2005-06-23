@@ -2,8 +2,8 @@
 <section xmlns:db="http://docbook.org/docbook-ng"
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-         xml:id="standardfilters">
-  <title>Standard filters</title>
+         xml:id="builtinfilters">
+  <title>Builtin Filters</title>
   
     <section>
       <title>baseurlfilter</title>

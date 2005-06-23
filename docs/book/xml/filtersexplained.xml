@@ -5,6 +5,6 @@
          xml:id="filtersexplained">
   <title>Filters explained</title>
   <xi:include href="filtersarchitecture.xml"/>
-  <xi:include href="standardfilters.xml"/>
+  <xi:include href="builtinfilters.xml"/>
   <xi:include href="writingfilters.xml"/>
 </section>

@@ -21,7 +21,7 @@
       <title>Hello World</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut01_helloworld.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut01_helloworld.py" />
         </code>
       </programlisting>
     </example>
@@ -33,7 +33,7 @@
       <title>Exposed Methods</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut02_expose_methods.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut02_expose_methods.py" />
         </code>
       </programlisting>
     </example>
@@ -45,7 +45,7 @@
       <title>Get and Post</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut03_get_and_post.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut03_get_and_post.py" />
         </code>
       </programlisting>
     </example>
@@ -57,7 +57,7 @@
       <title>Complex Site</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut04_complex_site.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut04_complex_site.py" />
         </code>
       </programlisting>
     </example>
@@ -69,7 +69,7 @@
       <title>Derived Objects</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut05_derived_objects.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut05_derived_objects.py" />
         </code>
       </programlisting>
     </example>
@@ -81,7 +81,7 @@
       <title>Default Method</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut06_default_method.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut06_default_method.py" />
         </code>
       </programlisting>
     </example>
@@ -93,7 +93,7 @@
       <title>Sessions</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut07_sessions.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut07_sessions.py" />
         </code>
       </programlisting>
     </example>
@@ -105,7 +105,7 @@
       <title>Generator</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut08_generators_and_yield.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut08_generators_and_yield.py" />
         </code>
       </programlisting>
     </example>
@@ -117,7 +117,7 @@
       <title>Session Filter</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut09_sessionfilter.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut09_sessionfilter.py" />
         </code>
       </programlisting>
     </example>
@@ -129,7 +129,7 @@
       <title>File Upload</title>
       <programlisting>
         <code language="python">
-          <xi:include parse="text" href="../../../tutorial/tut10_file_upload.py" />
+          <xi:include parse="text" href="../../../cherrypy/tutorial/tut10_file_upload.py" />
         </code>
       </programlisting>
     </example>
