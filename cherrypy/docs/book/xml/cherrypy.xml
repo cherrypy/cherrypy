@@ -20,6 +20,7 @@
 
   <xi:include href="preface.xml"/>
   <xi:include href="gettingstarted.xml"/>
+  <xi:include href="byexample.xml"/>
   <xi:include href="reference.xml"/>
   <xi:include href="appendix.xml"/>
 </book>

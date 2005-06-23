@@ -35,11 +35,11 @@
       do.</para>
       <para>To get the latest source code from the subversion repository, 
       you first need to install a SVN client. On Microsoft Windows, 
-      <ulink href="http://tortoisesvn.tigris.org/">TortoiseSVN</ulink>
+      <ulink url="http://tortoisesvn.tigris.org/">TortoiseSVN</ulink>
       is a good choice. Under Linux, you can either use the 
-      <ulink href="http://subversion.tigris.org/">svn</ulink> command 
+      <ulink url="http://subversion.tigris.org/">svn</ulink> command 
       line tools or use a graphical user interface such as 
-      <ulink href="http://esvn.umputun.com/">eSVN</ulink>.</para>
+      <ulink url="http://esvn.umputun.com/">eSVN</ulink>.</para>
       <para>Once you have installed a svn client, you need to type the
       following command :</para>
       <cmdsynopsis>
@@ -101,7 +101,7 @@
     </section>
   </section>
   <section>
-    <title>Running the test</title>
+    <title>Running the test programs</title>
     <para>If you have installed CherryPy from the source code downloaded from
     the subversion respository, you can run the test suite to check if everything 
     is fine on your system. Type the following commands:</para>
@@ -116,43 +116,5 @@
     <para>If all tests pass, then they will be flagged as <code>ok</code>. 
     If an error occurs, please visit the main CherryPy website to report the issue.</para>
   </section>
-  <section>
-    <title>Hello world!</title>
-    <para>Your first step with CherryPy will be the traditional Hello World!
-      Open your favourite text editor and paste the following snippet.</para>
-    <example>
-      <title>Hello World</title>
-      <programlisting>
-        <code language="python">
-from cherrypy import cpg
-class HelloWorld:
-    def index(self):
-        return "Hello World!"
-    index.exposed = True
-
-cpg.root = HelloWorld()
-cpg.server.start()
-        </code>
-      </programlisting>
-    </example>
-    <para>Save the code under a file named helloworld.py.
-    Then to start up the application, type the following command:</para>
-    <cmdsynopsis>
-      <command>python</command>
-      <arg choice="req">helloworld.py</arg>
-    </cmdsynopsis>
-    <para>You will see some information on your terminal window which
-    are the log of the web server.</para>
-    <para>Then simply point your browser to http://localhost:8080 and 
-    say Bravo!</para>
-  </section>
   <xi:include href="buildingblog.xml" />
-  <section>
-    <sectioninfo>
-      <abstract>
-	<para></para>
-      </abstract>
-    </sectioninfo>
-    <title>Summary</title>
-  </section>
 </chapter>
