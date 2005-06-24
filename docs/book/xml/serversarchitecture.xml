@@ -9,6 +9,30 @@
   </section>
   <section id="wsgiserver">
     <title>WSGI server</title>
+    <para>
+      CherryPy 2.1 supports arbitrary WSGI servers, and includes
+      its own WSGI server (the default). This means that you should be
+      able to deploy your CherryPy application using Apache or IIS 
+      (among others) without any changes to your application--only 
+      the deployment scripts will change.
+    </para>
+    
+    <section>
+      <title>mod_python</title>
+    </section>
+    
+    <section>
+      <title>IIS/ASP</title>
+    </section>
+    
+    <section>
+      <title>FastCGI</title>
+    </section>
+    
+    <section>
+      <title>SCGI</title>
+    </section>
+    
   </section>
   <section id="httpserver">
     <title>HTTP server</title>

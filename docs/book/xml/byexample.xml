@@ -4,7 +4,9 @@
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xml:id="byexample">
   <title>CherryPy By Example</title>
-
+  <para>
+    The best way to learn CherryPy is to look at example programs.
+  </para>
   <section>
     <title>Hello World</title>
     <para>Save the code under a file named helloworld.py.
@@ -44,6 +46,8 @@
     </example>
   </section>
 
+  <!-- lets save this for later 
+  
   <section>
     <title>Get and Post</title>
     <para>
@@ -144,5 +148,6 @@
     </example>
   </section>
 
+  -->
   <xi:include href="buildingblog.xml" />
 </chapter>
