@@ -6,9 +6,9 @@
   <title>Session Management</title>
   <abstract>
     <para>
-      CherryPY2.1 Includes a powerfull new sessionFilter.
-      The old session system was difficult to extend and was not thread safe.  
-      The new system adresses these issues and includes several powerfull new features.
+      CherryPy 2.1 includes a powerful sessions system provided via a new "sessionFilter".
+      The old sessions system was difficult to extend and was not thread safe, while the
+      new system addresses these issues and includes several powerful new features.
     </para>
   </abstract>
   
@@ -43,7 +43,7 @@
           <listitem>__getitem__(key)       </listitem>
           <listitem>get(key, default)      </listitem>
         </itemizedlist>
-        SessionDicts also contain the following attributes:
+        SessionDicts also provide the following attributes:
         <itemizedlist>
           <listitem>sessionKey (read only)</listitem>
           <listitem>lastAccess (read only)</listitem>
@@ -57,14 +57,15 @@
       <title>cpg.sessions</title>
       <para>
         cpg.sessions is the single point of access for all session data.
-        When each request is proccessed the sessionFilter looks for any sessions defined 
-        for requested portion of the site.  For each named session, a SessionDict is created and 
-        attached to cpg.sessions, as an attribute bearing the session name.
+        At the beginning of each request, the sessionFilter checks for any sessions that may
+        have been defined for the requested portion of the site.
+        For each defined session, a SessionDict is created and is added as an attribute of
+        cpg.sessions.
       </para>
       
       <para>
-      Given a session named "checkoutSession", all session data will be accessed through:
-      <blockqoute>cpg.sessions.checkoutSession</blockqoute>
+      For example, given a session named "checkoutSession", all data for this session will
+      be accessible through: <blockqoute>cpg.sessions.checkoutSession</blockqoute>
       </para>
 
       <example>
@@ -84,15 +85,15 @@
       <section>
         <title>The default session</title>
         <para>
-          By defualt the session filter provide a session named "default", 
+          By default, the sessionFilter provides a session named "default", 
           which is accessed through "cpg.sessions.default".
         </para>
 
         <para>
-          Unless there is a clear advantage to having more that one named sessions, 
+          Unless there is a clear advantage to having more that one named session, 
           the default session should be used to store all session data.
-          The default session may (in the future) be optomized to provide better performance
-          than can be achived with named sessions.
+          The default session may (in the future) be optimized to provide superior
+          performance than that of custom named sessions.
         </para>
       </section> <!-- end default session section -->
     </section> <!-- end of cpg.sessions section -->
@@ -100,20 +101,21 @@
     <section> <!-- _cpSessionList section -->
       <title>_cpSessionsList</title>
       <para>
-        Named sessions are created by placing an entry into the _cpSessionsList.
-        _cpSessionsList is a class attribute containing a list sessions defined for that class.
+        Named sessions are created by placing an entry into _cpSessionsList.
+        _cpSessionsList is a special class attribute containing a list of
+        sessions defined for that particular class.
       </para>
       <example>
         <title>_cpSessionList</title>
         <para>
         </para>
         <programlisting>
-          class myBBS:
+          class MyBBS:
               # create a session named 'admin' using the SessionStorageClass
               _cpSessionList = [SessionStorageClass(sessionName = 'admin')]
 
               def admin(self):
-                  if cpg.session.admin['user'] != root:
+                  if cpg.session.admin['user'] != "root":
                       return "you are not root"
         </programlisting>
       </example>
@@ -123,20 +125,22 @@
 
   <section id="sessionstoragetypes">
     <title>Session Storage Types</title>
-    <para>The following storage drivers are built in: ram, file, ayndb, sqlobject</para>
+    <para>CherryPy includes several session storage backends: ram, file, anydb, sqlobject</para>
     <section>
       <title>ram storage</title>
       <para>
-          The ram driver stores all sessiondata in memory.
-          It is the only storage driver capable of holding any python object.
-          All session data is lost when the server shuts down (included autoreloads.)
+          The ram driver stores all session data in memory.
+          It is the only storage driver capable of holding any Python object, including those
+          that are not-picklable, such as file handles, sockets, and running generators.
+          When using ream sessions, keep in mind that all session data is lost when the server
+          shuts down, even during auto-reloads.
       </para>
     </section> <!-- end ram storage section -->
     
     <section>
       <title>file storage</title>
       <para>
-        The file storage driver pickles the data for each session and stores it in a seperate file.  
+        The file storage driver pickles the data for each session and stores it in separate files.  
         Cleaning up expired sessions is a slow operation (this should change soon.)
       </para>
     </section> <!-- end file storage section -->
@@ -144,7 +148,7 @@
     <section>
       <title>anydb storage</title>
       <para>
-          The anydb storage driver stores session data with the shelve module, which in turn
+          The anydb storage driver stores session data using the shelve module, which in turn
           uses the anydb module.  The andyb driver can only be used to store picklable objects.
       </para>
     </section> <!-- end anydb storage section -->
@@ -152,21 +156,21 @@
     <section>
       <title>Relational Storage</title>
       <para>
-        With relation database drivers, all data is stored in a relational database table.  Due to the nature of
+        With relational database drivers, all data is stored in a relational database table.  Due to the nature of
         relational databases, there are several restrictions on how data can be stored.  Each session
         is stored as a single row in the session table.  The session table must be created with a column
         for each variable needed by the application.  This makes it impossible to store arbitrary key/value pairs, 
-        as can be done using several of the other storage drivers.  Relational database also place
+        as can be done using several of the other storage drivers.  In addition, relational databases also place
         restrictions on the type of data that can be stored in each column.  Attempting to store the wrong
-        type of data in a table will result in an error.
+        type of data in a session variable will result in an error.
       </para>
       
       <para>
-        Despite this restrictions, storing session data in relational database has many advantages.
-        Many web applications already use of relational databases, this approach allows session data
-        to be integrated into a prexisting database.  This approach allows a level of scalability not possible
-        with other storage drivers.  With a network database, session data can be easily shared between a cluster 
-        of web servers.
+        Despite these restrictions, storing session data in relational database has many advantages.
+        This approach allows session data to be integrated into an existing relational database, which
+        dynamic web applications often use anyway.  This approach allows for a level of scalability not possible
+        with other storage drivers.  In addition, by using a networked database server, session data can be easily
+        shared between a cluster of web servers.
       </para>
 
       <section>
@@ -193,12 +197,12 @@
     <section>
       <title>BaseSessionDict</title>
       <para>
-        BaseSessionDict is the base class for the dictionary like class used to access session data.
-        SessionDicts impliment the most frequently used features of python dictionaries.
-        It is important not to add new features to a custom SessionDict class, because it could break
+        BaseSessionDict is the base class for the dictionary-like class used to access session data.
+        SessionDicts implement the most frequently used features of Python dictionaries.
+        DO NOT add new features to a custom SessionDict class, as it could break
         compatibility with other storage drivers.
 
-        It may not be necessary to write a custom SessionDict class.  The sessoinFilter includes a 
+        Sometimes it is not necessary to write a custom SessionDict class because the sessionFilter includes a 
         SimpleSessionDict.  The SimpleSessionDict is used by several storage drivers and may be 
         adequate for a custom storage driver.
       </para>
@@ -207,8 +211,8 @@
     <section> 
       <title>BaseSession</title>
       <para>
-        BaseSession os the base class for all session storage drivers.  There are a number of methods that must be
-        implimented by every storage driver.
+        BaseSession is the base class for all session storage drivers.  There are a number of methods that must be
+        implemented by every storage driver.
       </para>
     </section>
     

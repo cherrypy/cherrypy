@@ -29,6 +29,11 @@
 
   <section>
     <title>Exposed Methods</title>
+    <para>
+    For security reasons, CherryPy requires developers to explicitly specify which methods may
+    be accessed via the web. The 'exposed' attribute, when set totrue, indicates that a given
+    method is published to the web.
+    </para>
     <example>
       <title>Exposed Methods</title>
       <programlisting>
@@ -41,6 +46,10 @@
 
   <section>
     <title>Get and Post</title>
+    <para>
+    The majority of web applications need to deal with HTML forms and consequently HTTP GET and POST.
+    GET and POST variables are automatically decoded and passed to exposed methods as named arguments.
+    </para>
     <example>
       <title>Get and Post</title>
       <programlisting>

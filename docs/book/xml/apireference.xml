@@ -9,11 +9,187 @@
   </section>
   <section id="cpgrequest">
     <title>cpg.request</title>
+    <section>
+      <title>cpg.request.remoteAddr</title>
+      <para>This attribute is a string containing the IP address of the client.</para>
+    </section>
+    <section>
+      <title>cpg.request.remoteHost</title>
+      <para>This attribute is a string containing the remote hostname of the client.</para>
+    </section>
+    <section>
+      <title>cpg.request.headerMap</title>
+      <para>This attribute is dictionary containing the received HTTP headers.</para>
+    </section>
+    <section>
+      <title>cpg.request.requestLine</title>
+      <para>This attribute is a string containing the first line of the raw HTTP request.</para>
+    </section>
+    <section>
+      <title>cpg.request.simpleCookie</title>
+      <para>This attribute is a SimpleCookie instance from the standard library's Cookie module
+      which contains the incoming cookie values from the client.</para>
+    </section>
+    <section>
+      <title>cpg.request.remoteAddr</title>
+      <para>This attribute is a string containing the IP address of the client.</para>
+    </section>
+    <section>
+      <title>cpg.request.rfile</title>
+      <para>This attribute is the input stream to the client. See cpg.request.processRequestBody
+      for more information.</para>
+    </section>
+    <section>
+      <title>cpg.request.processRequestBody</title>
+      <para>This attribute should be accessed during the beforeRequestBody stage of the request
+      (if you don't know what this means, read the section on filters). This specifies whether
+      or not the request's POST data will be parsed into the cpg.request.paramMap.
+      It defaults to true for POST requests, but when false, cpg.request.rfile will be readable by
+      the exposed method. Otherwise, rfile is completely read before control is handled to the
+      exposed method.</para>
+    </section>
+    <section>
+      <title>cpg.request.method</title>
+      <para>This attribute is a string containing the HTTP request method, such as GET or POST.</para>
+    </section>
+    <section>
+      <title>cpg.request.protocol</title>
+      <para>This attribute is a string containing the HTTP protocol of the request in the form of
+      HTTP/x.x</para>
+    </section>
+    <section>
+      <title>cpg.request.queryString</title>
+      <para>This attribute is a string containing the query string of the request (the part
+      of the URL following '?').</para>
+    </section>
+    <section>
+      <title>cpg.request.path</title>
+      <para>This attribute is a string containing the path of the resource the client requested.</para>
+    </section>
+    <section>
+      <title>cpg.request.paramMap</title>
+      <para>This attribute is a dictionary containing the query string and POST arguments
+      of this request.</para>
+    </section>
+    <section>
+      <title>cpg.request.base</title>
+      <para>This attribute is a string containing the root URL of the server.</para>
+    </section>
+    <section>
+      <title>cpg.request.browserUrl</title>
+      <para>This attribute is a string containing the URL the client requested.</para>
+    </section>
+    <section>
+      <title>cpg.request.objectPath</title>
+      <para>This attribute is a string containing the path of the exposed method that will
+      be called to handle this request. This is usually the same as cpg.request.path, but
+      can be changed in a filter to change which method is actually called.</para>
+    </section>
+    <section>
+      <title>cpg.request.originalPath</title>
+      <para>This attribute is a string containing the original value of cpg.request.path,
+      in case it is modified by a filter during the request.</para>
+    </section>
+    <section>
+      <title>cpg.request.originalParamMap</title>
+      <para>This attribute is a string containing the original value of cpg.request.paramMap,
+      in case it is modified by a filter during the request.</para>
+    </section>
   </section>
   <section id="cpgresponse">
     <title>cpg.response</title>
+    <section>
+      <title>cpg.response.headerMap</title>
+      <para>This attribute is a dictionary with automatically titled keys. It holds all outgoing
+      HTTP headers to the client.</para>
+    </section>
+    <section>
+      <title>cpg.response.simpleCookie</title>
+      <para>This attribute is a SimpleCookie instance from the standard library's Cookie module. It
+      contains the outgoing cookie values.</para>
+    </section>
+    <section>
+      <title>cpg.response.body</title>
+      <para>This attribute is originally just the return value of the exposed method, but by the end of the
+      request it must be an iterable (usually a list or generator of strings) which will be the
+      content of the HTTP response.</para>
+    </section>
+    <section>
+      <title>cpg.response.status</title>
+      <para>This attribute is a string containing the HTTP response code in the form "### Reason Phrase",
+      i.e. "200 OK"</para>
+    </section>
+  </section>
+  <section id="cpgserver">
+    <title>cpg.server</title>
+    <section>
+      <title>cpg.server.start()</title>
+    </section>
+    <section>
+      <title>cpg.server.stop()</title>
+    </section>
+    <section>
+      <title>cpg.server.onStartServerList</title>
+    </section>
+    <section>
+      <title>cpg.server.onStopServerList</title>
+    </section>
+    <section>
+      <title>cpg.server.onStartThreadList</title>
+    </section>
+    <section>
+      <title>cpg.server.onStopThreadList</title>
+    </section>
+  </section>
+  <section id="cpgconfig">
+    <title>cpg.config</title>
+  </section>
+  <section id="cperror">
+    <title>cherrypy.cperror</title>
+  </section>
+  <section id="lib">
+    <title>CherryPy included library functions</title>
+    <section>
+      <title>cherrypy.lib.cptools</title>
+      <section>
+        <title>ExposeItems</title>
+      </section>
+      <section>
+        <title>PositionalParametersAware</title>
+      </section>
+    </section>
   </section>
   <section id="specialfunctions">
-    <title>Special functions</title>
+    <title>Special functions and attributes</title>
+    <section>
+      <title>_cpOnError</title>
+    </section>
+    <section>
+      <title>_cpFilterList</title>
+    </section>
+  </section>
+  <section id="filters">
+    <title>Filter API</title>
+    <section>
+      <title>onStartResource</title>
+    </section>
+    <section>
+      <title>beforeRequestBody</title>
+    </section>
+    <section>
+      <title>beforeMain</title>
+    </section>
+    <section>
+      <title>beforeFinalize</title>
+    </section>
+    <section>
+      <title>onEndResource</title>
+    </section>
+    <section>
+      <title>beforeErrorResponse</title>
+    </section>
+    <section>
+      <title>afterErrorResponse</title>
+    </section>
   </section>
 </section>
