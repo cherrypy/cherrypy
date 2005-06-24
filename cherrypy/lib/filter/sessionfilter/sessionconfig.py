@@ -36,6 +36,17 @@ _sessionTypes = {
                   'anydb'     : DBMSession
                 }
 
+_sessionDefaults = {
+    'sessionFilter.on' : False,
+    'sessionFilter.SessionsList' : ['default'],
+    'sessionFilter.default.on': True,
+    'sessionFilter.default.timeout': 60,
+    'sessionFilter.default.cleanUpDelay': 60,
+    'sessionFilter.default.storageType' : 'ram',
+    'sessionFilter.default.cookiePrefix': 'CherryPySession',
+    'sessionFilter.default.storageFileDir': '.sessionFiles'
+    }
+
 try:
     # the user might not have sqlobject instaled
     from sqlobjectsession  import SQLObjectSession

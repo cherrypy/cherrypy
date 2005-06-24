@@ -34,12 +34,12 @@ defaultGlobal = {
     'server.threadPool': 0,
 
     'sessionFilter.on' : False,
-    
+    'sessionFilter.sessionsList' : ['default'],
     'sessionFilter.default.on': True,
     'sessionFilter.default.timeout': 60,
     'sessionFilter.default.cleanUpDelay': 60,
     'sessionFilter.default.storageType' : 'ram',
-    'sessionFilter.default.cookieName': 'CherryPySession',
+    'sessionFilter.default.cookiePrefix': 'CherryPySession',
     'sessionFilter.default.storageFileDir': '.sessionFiles'
     }
 

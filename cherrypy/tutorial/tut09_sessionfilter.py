@@ -10,11 +10,16 @@ from cherrypy import cpg
 from cherrypy.lib.filter.sessionfilter.ramsession import RamSession
  
 class HitCounter:
-    _cpSessionList=[]
-    # this list will contain site wide sessions
-    # in almost all cases this will be defined on a class by class basis,
-    # but for this simple example we use a seperate session list for each method
-    # for simplicity
+
+    def __init__(self):
+        # turn on the sessionfilter and create sessions for the admin
+        # and forum sections of the site
+        cpg.config.update(
+                {
+                'global' : {'sessionFilter.on': True},
+                '/admin' : {'sessionFilter.sessionsList' : ['admin'] },
+                '/forum' : {'sessionFilter.sessionsList' : ['forum'] }
+                })
 
     # this is just a primative template function
     def __examplePage(self, poweredBy, count, links, sessionKey):
@@ -61,7 +66,6 @@ class HitCounter:
         return self.__examplePage('ram', adminCount, self.samplePages, key)
     
     admin.exposed = True
-    admin._cpSessionList=['admin']
     
     def forum(self):
         # this function uses its own forum session which is defined in
@@ -76,12 +80,10 @@ class HitCounter:
         return self.__examplePage('ram', forumCount, self.samplePages, key)
     
     forum.exposed=True
-    forum._cpSessionList=['forum']
 
 cpg.root = HitCounter()
 
 if __name__ == '__main__':
     cpg.config.update(file = "tutorial.conf")
-    cpg.config.update(file = 'tut10_sessionfilter.conf')
     cpg.server.start()
 

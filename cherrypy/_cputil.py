@@ -43,7 +43,7 @@ def getObjectTrail():
     """ Return all objects from the currenct object to cpg """
     root = getattr(cpg, 'root', None)
     if root:
-        objectTrail = [cpg, root]
+        objectTrail = [root]
         # Try object path
         try:
             path = cpg.request.objectPath or cpg.request.path
@@ -82,7 +82,7 @@ def getSpecialAttribute(name):
     try:
         return globals()[name]
     except KeyError:
-        raise cperror.InternalError("Special function %s could not be found"
+        raise cperror.InternalError("Special attribute %s could not be found"
                                     % repr(name))
 
 
