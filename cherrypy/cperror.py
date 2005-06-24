@@ -54,6 +54,10 @@ class RequestHandled(Exception):
     """Exception raised when no further request handling should occur."""
     pass
 
+class InternalRedirect(Exception):
+    """Exception raised when processing should be handled by a different path."""
+    pass
+
 class HTTPRedirect(Exception):
     """Exception raised when the request should be redirected.
     

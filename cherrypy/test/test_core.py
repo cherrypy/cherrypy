@@ -90,6 +90,9 @@ class Redirect(Test):
     
     def proxy(self):
         raise cperror.HTTPRedirect("proxy", 305)
+    
+    def internal(self):
+        raise cperror.InternalRedirect("/")
 
 
 class Flatten(Test):
@@ -263,6 +266,11 @@ class CoreRequestHandlingTest(unittest.TestCase):
         helper.request("/redirect/proxy")
         self.assertEqual(cpg.response.body, '')
         self.assertEqual(cpg.response.status, '305 Use Proxy')
+        
+        # InternalRedirect
+        helper.request("/redirect/internal")
+        self.assertEqual(cpg.response.body, 'hello')
+        self.assertEqual(cpg.response.status, '200 OK')
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",

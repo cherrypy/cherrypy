@@ -315,15 +315,25 @@ def bareError(extrabody=None):
 
 # Response functions
 
-def main():
+def main(path=None):
     """Obtain and set cpg.response.body."""
-    func, objectPathList, virtualPathList = mapPathToObject()
+    if path is None:
+        path = cpg.request.objectPath or cpg.request.path
     
-    # Remove "root" from objectPathList and join it to get objectPath
-    cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
-    body = func(*(virtualPathList + cpg.request.paramList),
-                **(cpg.request.paramMap))
-    cpg.response.body = iterable(body)
+    while True:
+        try:
+            func, objectPathList, virtualPathList = mapPathToObject(path)
+            
+            # Remove "root" from objectPathList and join it to get objectPath
+            cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
+            body = func(*(virtualPathList + cpg.request.paramList),
+                        **(cpg.request.paramMap))
+            cpg.response.body = iterable(body)
+            return
+        except cperror.InternalRedirect, x:
+            # Set the path to the new one (provided in the exception)
+            # and try again.
+            path = x.args[0]
 
 def iterable(body):
     # build a uniform return type (iterable)
@@ -510,7 +520,7 @@ def getObjFromPath(objPathList):
             return None
     return root
 
-def mapPathToObject(path=None):
+def mapPathToObject(path):
     # Traverse path:
     # for /a/b?arg=val, we'll try:
     #   root.a.b.index -> redirect to /a/b/?arg=val
@@ -521,22 +531,19 @@ def mapPathToObject(path=None):
     
     # Also, we ignore trailing slashes
     # Also, a method has to have ".exposed = True" in order to be exposed
-    
-    if path is None:
-        path = cpg.request.objectPath or cpg.request.path
     # Remove leading and trailing slash
-    path = path.strip("/")
+    tpath = path.strip("/")
     # Replace quoted chars (eg %20) from url
-    path = urllib.unquote(path)
+    tpath = urllib.unquote(tpath)
     
-    if not path:
+    if not tpath:
         objectPathList = []
     else:
-        objectPathList = path.split('/')
+        objectPathList = tpath.split('/')
     objectPathList = ['root'] + objectPathList + ['index']
     
     if getattr(cpg, "debug", None):
-        print "Attempting to map path: %s" % path
+        print "Attempting to map path: %s" % tpath
         print "    objectPathList: %s" % objectPathList
     
     # Try successive objects... (and also keep the remaining object list)
@@ -553,7 +560,7 @@ def mapPathToObject(path=None):
                 break
         # Couldn't find the object: pop one from the list and try "default"
         lastObj = objectPathList.pop()
-        if (not isFirst) or (not path):
+        if (not isFirst) or (not tpath):
             virtualPathList.insert(0, lastObj)
             objectPathList.append('default')
             candidate = getObjFromPath(objectPathList)
@@ -569,7 +576,7 @@ def mapPathToObject(path=None):
     
     # Check results of traversal
     if not foundIt:
-        if path.endswith("favicon.ico"):
+        if tpath.endswith("favicon.ico"):
             # Use CherryPy's default favicon.ico. If developers really,
             # really want no favicon, they can make a dummy method
             # that raises NotFound.
@@ -585,8 +592,8 @@ def mapPathToObject(path=None):
         # We found the extra ".index"
         # Check if the original path had a trailing slash (otherwise, do
         #   a redirect)
-        if cpg.request.path[-1] != '/':
-            newUrl = cpg.request.path + '/'
+        if path[-1] != '/':
+            newUrl = path + '/'
             if cpg.request.queryString:
                 newUrl += "?" + cpg.request.queryString
             raise cperror.HTTPRedirect(newUrl)
