@@ -46,7 +46,8 @@ class FileSession(BaseSession):
 
     def __storageDir(self):
         cpg = cherrypy.cpg
-        storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName, '.sessionFiles')
+        
+	storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
         return storageDir
     
     def newSession(self):

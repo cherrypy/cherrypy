@@ -48,8 +48,8 @@ import cherrypy.cpg
 
 def retrieve(keyName, sessionName, default = None):
     cpg = cherrypy.cpg
-    value = cpg.config.get('%s.%s' % (sessionName, keyName), None)
-    if value == None:
-        value = cpg.config.get('sessionFilter.%s' % keyName, None)
-
+    missing = object()
+    value = cpg.config.get('sessionFilter.%s.%s' % (sessionName, keyName), missing)
+    if value is missing:
+        value = cpg.config.get('sessionFilter.default.%s' % keyName, default)
     return value

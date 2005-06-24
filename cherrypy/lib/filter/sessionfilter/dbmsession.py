@@ -34,14 +34,20 @@ import shelve
 from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
 
+import os.path
+
 class DBMSession(BaseSession):
     def __init__(self, sessionName):
         cpg = cherrypy.cpg
 
         BaseSession.__init__(self, sessionName)
         
-        sessionName=cpg.config.get('sessionFilter.new', None)
-        sessionFile=cpg.config.get('%s.dbFile' % sessionName, '%s.db' % sessionName)
+	# we must make sure the db file is unique
+	defaultFile = '%s-%i.db' % (sessionName, hash(self))
+        dbFilePrefix=cpg.config.get('sessionFilter.%s.dbFilePrefix' % sessionName, '')
+
+	sessionFile = os.path.join(dbFilePrefix, defaultFile)
+	
         self.__data = shelve.open(sessionFile, 'c')
     
     def newSession(self):

@@ -37,6 +37,9 @@ class SessionExpiredError(SessionError):
 class SessionNotFoundError(SessionError):
     """ Possibly raised a browser sends a none with a session idwhen the sessions Expire """
 
+class SessionIncompatibleError(SessionError):
+    """ raised if the configured storage type is not compatible with the application """
+
 class SessionImmutableError(SessionError):
     """ immutable exception """
     def __init__(self, keyName):

@@ -33,20 +33,14 @@ defaultGlobal = {
     'server.reverseDNS': False,
     'server.threadPool': 0,
 
-    'session.storageType': 'ram',
-    'session.timeout': 60,
-    'session.cleanUpDelay': 60,
-    'session.cookieName': 'CherryPySession',
-    'session.storageFileDir': '',
+    'sessionFilter.on' : False,
     
-    'sessionFilter.on': False,
-    'sessionFilter.timeout': 60,
-    'sessionFilter.cleanUpDelay': 60,
-    'sessionFilter.storageType' : 'ram',
-    'sessionFilter.cookieName': 'CherryPySession',
-    'sessionFilter.storageFileDir': '.sessionFiles',
-    
-    'sessionFilter.new': 'sessionMap', # legacy setting
+    'sessionFilter.default.on': True,
+    'sessionFilter.default.timeout': 60,
+    'sessionFilter.default.cleanUpDelay': 60,
+    'sessionFilter.default.storageType' : 'ram',
+    'sessionFilter.default.cookieName': 'CherryPySession',
+    'sessionFilter.default.storageFileDir': '.sessionFiles'
     }
 
 def update(updateMap=None, file=None):

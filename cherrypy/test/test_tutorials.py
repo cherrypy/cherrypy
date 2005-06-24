@@ -128,7 +128,6 @@ class TutorialTest(unittest.TestCase):
         self.assertEqual(cpg.response.body,
                          'Hendrik Mans, CherryPy co-developer & crazy German '
                          '(<a href="./">back</a>)')
-    
     def test07Sessions(self):
         load_tut_module("tut07_sessions")
         cpg.config.update({"global": {"sessionFilter.on": True}})
@@ -153,7 +152,6 @@ class TutorialTest(unittest.TestCase):
                          '<h3>List of users:</h3>'
                          'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
                          '</body></html>')
-    
     def test09SessionFilter(self):
         load_tut_module("tut09_sessionfilter")
         cpg.config.update({"global": {"sessionFilter.on": True}})

@@ -1,66 +1,91 @@
 
-from cherrypy.lib.filter.basefilter import BaseFilter
 import cherrypy.cpg
 
-import time, re
+import time
 
-from sessionerrors import SessionNotFoundError 
+from sessionerrors import SessionNotFoundError, SessionIncompatibleError
 
 import sessionconfig 
+from cherrypy._cputil import getObjectTrail
 
-def _getSessions():
-    """ checks the config file for the sessions """
-    cpg = cherrypy.cpg
-    
+def _getSessions2():
+    cpg =cherrypy.cpg
     sessions = {}
+
+    objectTrail = getObjectTrail()
     
-    sessionNames = cpg.config.getAll('sessionFilter.new')
-    for sessionPath in sessionNames:
-        sessionName = sessionNames[sessionPath]
-        sessionManager = cpg.config.get('%s.sessionManager' % sessionName, None)
-        if not sessionManager:
-            storageType = sessionconfig.retrieve('storageType', sessionName)
+    for n in xrange(len(objectTrail)):
+        obj = objectTrail[n]
+        objPath = '/'.join(cpg.request.path.split('/')[0:n+1])
+        if not objPath:
+            objPath = '/'
+
+        try:
+            sessionList = obj._cpSessionList
+        except AttributeError:
             
-            try:
-                sessionManager = sessionconfig._sessionTypes[storageType](sessionName)
-            except KeyError:
-                storageType = cpg.config.get('%s.customStorageClass' % sessionName)
-                if storageType:
-                    try:
-                        storageClass = cherrypy._cputil.getSpecialAttribute(storageType)
-                        sessionManager = storageClass(sessionName)
-                    except cherrypy.cperror.InternalError:
-                        raise SessionBadStorageTypeError(storageType)
-                raise
+            if obj == cpg:
+                obj._cpSessionList = [{'sessionName':'default'}]
+                sessionList = obj._cpSessionList
+            else:
+                sessionList = []
             
-            sessionManager.path = sessionPath
-            sessionManager.name = sessionName
-            sessionManager.lastCleanUp = time.time()
+        for sessionIndex in xrange(len(sessionList)):
+            sessionManager = sessionList[sessionIndex]
             
-            cpg.config.update(
-                              {
-                                sessionPath : {'%s.sessionManager' % sessionName : sessionManager}
-                              }
-                             )
-        else: # try and clean up
-            cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionName)
-            now = time.time()
-            lastCleanUp = sessionManager.lastCleanUp
-            if lastCleanUp + cleanUpDelay * 60 <= now:
-                sessionManager.cleanUpOldSessions()
-          
-        sessions[sessionName] = sessionManager
+
+            if isinstance(sessionManager, dict):
+                # must be initilized
+                sessionName   = sessionManager['sessionName']
+                compatible    = sessionManager.get('compatible',  [])
+                incompatible  = sessionManager.get('icompatible', [])
+               
+                # unless it is off initilize
+                if cpg.config.get('sessionFilter.%s.on' % sessionName, True):
+                    
+                    storageType = sessionconfig.retrieve('storageType', sessionName)
+    
+                    if compatible and not storageType in compatible or \
+                       incompatible and not storageType in incompatible:
+                        raise SessionIncompatibleError
+                    
+                    sessionManager = sessionconfig._sessionTypes[storageType](sessionName)
+                    sessionManager.lastCleanUp = time.time()
+                    sessionManager.path = objPath
+    
+                    obj._cpSessionList[sessionIndex] = sessionManager
+
+            elif isinstance(sessionManager, str):
+                # unless it is off initilize
+                if cpg.config.get('sessionFilter.%s.on' % sessionManager, True):
+                    storageType = sessionconfig.retrieve('storageType', sessionManager)
+                    sessionManager = sessionconfig._sessionTypes[storageType](sessionManager)
+                    sessionManager.lastCleanUp = time.time()
+                    
+                    sessionManager.path = objPath
+                    obj._cpSessionList[sessionIndex] = sessionManager
+                
+            
+            else: # try and clean up
+                cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionManager.sessionName)
+                now = time.time()
+                lastCleanUp = sessionManager.lastCleanUp
+                if lastCleanUp + cleanUpDelay * 60 <= now:
+                    sessionManager.cleanUpOldSessions()
+            
+            sessions[sessionManager.sessionName] = sessionManager
     
     return sessions
 
-class SessionFilter(BaseFilter):
+class SessionFilter:
     """
     Input filter - get the sessionId (or generate a new one) and load up the session data
     """
-        
+ 
     def __initSessions(self):
         cpg = cherrypy.cpg
-        sessions = _getSessions()
+        sessions = _getSessions2()
+#        sessions = _getSessions()
         sessionKeys = self.getSessionKeys()
         
         for sessionName in sessions:
@@ -72,7 +97,7 @@ class SessionFilter(BaseFilter):
                newKey = sessionManager.createSession()
                sessionManager.loadSession(newKey)
                
-               self.setSessionKey(newKey, sessionManager.name) 
+               self.setSessionKey(newKey, sessionManager) 
                 
     def getSessionKeys(self):
         """ 
@@ -81,25 +106,22 @@ class SessionFilter(BaseFilter):
         cpg = cherrypy.cpg
         
         sessionKeys= {}
-        
-        sessions = cpg.config.getAll('sessionFilter.new')
-        for sessionPath in sessions:
-            sessionName = sessions[sessionPath]
-            cookieName = cpg.config.get('%s.cookieName' % sessionName, None)
-            if not cookieName:
-                cookieName = (cpg.config.get('sessionFilter.cookieName') +
-                              '|' + sessionName +
-                              '|' + re.sub('/','_', sessionPath))
-                cpg.config.update({
-                                    sessionPath : {'%s.cookieName' % sessionName : cookieName}
-                                  })
+        sessions = _getSessions2()
+        for sessionName in sessions:
+            sessionManager = sessions[sessionName]
+
+            cookiePrefix = sessionconfig.retrieve('cookieName', sessionName, None)
+            
+            cookieName = '%s_%s_%i' % (cookiePrefix, sessionName, hash(sessionManager))
+            
             try:
                 sessionKeys[sessionName] = cpg.request.simpleCookie[cookieName].value
             except:
                 sessionKeys[sessionName] = None
         return sessionKeys
+      
 
-    def setSessionKey(self, sessionKey, sessionName):
+    def setSessionKey(self, sessionKey, sessionManager):
         """ 
         Sets the session key in a cookie.  Aplications should not call this function,
         but it might be usefull to redefine it.
@@ -107,18 +129,22 @@ class SessionFilter(BaseFilter):
 
         cpg = cherrypy.cpg
         
-        cookieName = cpg.config.get('%s.cookieName' % sessionName, None)
+        sessionName = sessionManager.sessionName
+        
+        cookiePrefix = sessionconfig.retrieve('cookieName', sessionName, None)
+        
+        cookieName = '%s_%s_%i' % (cookiePrefix, sessionName, hash(sessionManager))
 
         cpg.response.simpleCookie[cookieName] = sessionKey
         cpg.response.simpleCookie[cookieName]['version'] = 1
-
-        path = cpg.config.get('%s.sessionManager' % sessionName, returnSection = True)
-        cpg.response.simpleCookie[cookieName]['path'] = path
+        
+        cpg.response.simpleCookie[cookieName]['path'] = sessionManager.path
 
     
     def __saveSessions(self):
         cpg = cherrypy.cpg
-        sessions = _getSessions()
+        #sessions = _getSessions()
+        sessions = _getSessions2()
         
         for sessionName in sessions:
             sessionManager = sessions[sessionName]
@@ -127,21 +153,21 @@ class SessionFilter(BaseFilter):
     
     def beforeMain(self):
         cpg = cherrypy.cpg
-        if (cpg.config.get('sessionFilter.on', False)
-            and not cpg.config.get('staticFilter.on', False)):
+        if not cpg.config.get('staticFilter.on', False) and \
+            cpg.config.get('sessionFilter.on'):
            self.__initSessions()
 
     def beforeFinalize(self):
         cpg = cherrypy.cpg
-        if (cpg.config.get('sessionFilter.on', False)
-            and not cpg.config.get('staticFilter.on', False)):
+        if not cpg.config.get('staticFilter.on', False) and \
+            cpg.config.get('sessionFilter.on'):
             self.__saveSessions()
 
     '''
     #this breaks a test case
     def beforeErrorResponse(self):
+        cpg = cherrypy.cpg
         # Still save session data
-        if (cpg.config.get('sessionFilter.on', False)
-            and not cpg.config.get('staticFilter.on', False)):
-            self.__saveSessions()
+        if not cpg.config.get('staticFilter.on', False) and \
+            cpg.config.get('sessionFilter.on'):
     '''

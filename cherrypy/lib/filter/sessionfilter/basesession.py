@@ -104,9 +104,6 @@ class BaseSession(object):
             session.threadCount += 1
             self.__sessionCache[sessionKey] = session
         
-        if self.sessionName == 'sessionMap':
-            # raise a warning perhaps
-            setattr(cpg.request, self.sessionName, session)
         setattr(cpg.sessions, self.sessionName, session)
 
     def createSession(self):

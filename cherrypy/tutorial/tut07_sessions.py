@@ -14,10 +14,10 @@ from cherrypy import cpg
 class HitCounter:
     def index(self):
         # Increase the silly hit counter
-        count = cpg.request.sessionMap.get('count', 0) + 1
+        count = cpg.sessions.default.get('count', 0) + 1
         
         # Store the new value in the session dictionary
-        cpg.request.sessionMap['count'] = count
+        cpg.sessions.default['count'] = count
         
         # And display a silly hit count message!
         return '''

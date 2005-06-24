@@ -39,16 +39,11 @@ class EmptyClass:
     pass
 
 
-def getSpecialAttribute(name):
-    """ Return the special function """
-    
-    # First, we look in the right-most object if this special function is implemented.
-    # If not, then we try the previous object and so on until we reach cpg.root
-    # If it's still not there, we use the implementation from this module.
-    
+def getObjectTrail():
+    """ Return all objects from the currenct object to cpg """
     root = getattr(cpg, 'root', None)
     if root:
-        moduleList = [root]
+        objectTrail = [cpg, root]
         # Try object path
         try:
             path = cpg.request.objectPath or cpg.request.path
@@ -61,15 +56,28 @@ def getSpecialAttribute(name):
             for newObj in pathList:
                 try:
                     root = getattr(root, newObj)
-                    moduleList.append(root)
+                    objectTrail.append(root)
                 except AttributeError:
                     break
         
-        moduleList.reverse()
-        for module in moduleList:
-            func = getattr(module, name, None)
-            if func != None:
-                return func
+        return objectTrail
+    return None
+
+def getSpecialAttribute(name):
+    """ Return the special attribute """
+    
+    # First, we look in the right-most object if this special attribute is implemented.
+    # If not, then we try the previous object and so on until we reach cpg.root
+    # If it's still not there, we use the implementation from this module.
+    
+    objectList = getObjectTrail()
+    if objectList:
+        
+        objectList.reverse()
+        for obj in objectList:
+            attr = getattr(obj, name, None)
+            if attr != None:
+                return attr
     
     try:
         return globals()[name]
