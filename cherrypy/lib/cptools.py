@@ -70,6 +70,8 @@ class PositionalParametersAware(object):
     """
     def default( self, *args, **kwargs ):
         # remap parameters to fix positional parameters
+        if len(args) == 0:
+            args = ("index",)
         if hasattr( self, args[ 0 ] ):
             return getattr( self, args[ 0 ] )( *args[ 1: ], **kwargs )
     default.exposed = True
