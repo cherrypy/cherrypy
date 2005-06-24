@@ -331,9 +331,8 @@ def main(path=None):
             cpg.response.body = iterable(body)
             return
         except cperror.InternalRedirect, x:
-            # Set the path to the new one (provided in the exception)
-            # and try again.
-            path = x.args[0]
+            # Try again with the new path
+            path = x.path
 
 def iterable(body):
     # build a uniform return type (iterable)

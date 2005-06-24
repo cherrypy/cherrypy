@@ -55,8 +55,31 @@ class RequestHandled(Exception):
     pass
 
 class InternalRedirect(Exception):
-    """Exception raised when processing should be handled by a different path."""
-    pass
+    """Exception raised when processing should be handled by a different path.
+    
+    If you supply a queryString, it will be used to re-populate paramMap.
+    
+    If you omit queryString, the paramMap from the original request will
+    remain in effect, including any POST parameters.
+    """
+    
+    def __init__(self, path, queryString=None):
+        from cherrypy import cpg
+        import cgi
+        
+        self.path = path
+        if queryString is not None:
+            cpg.request.queryString = queryString
+            
+            pm = cgi.parse_qs(cpg.request.queryString, keep_blank_values=True)
+            for key, val in pm.items():
+                if len(val) == 1:
+                    pm[key] = val[0]
+            cpg.request.paramMap = pm
+        
+        cpg.request.browserUrl = cpg.request.base + path
+
+
 
 class HTTPRedirect(Exception):
     """Exception raised when the request should be redirected.

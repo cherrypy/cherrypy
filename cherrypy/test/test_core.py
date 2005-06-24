@@ -93,6 +93,20 @@ class Redirect(Test):
     
     def internal(self):
         raise cperror.InternalRedirect("/")
+    
+    def internal2(self, user_id):
+        if user_id == "parrot":
+            # Trade it for a slug when redirecting
+            raise cperror.InternalRedirect('/image/getImagesByUser',
+                                           "user_id=slug")
+        else:
+            raise cperror.InternalRedirect('/image/getImagesByUser')
+
+
+class Image(Test):
+    
+    def getImagesByUser(self, user_id):
+        return "0 images for %s" % user_id
 
 
 class Flatten(Test):
@@ -270,6 +284,14 @@ class CoreRequestHandlingTest(unittest.TestCase):
         # InternalRedirect
         helper.request("/redirect/internal")
         self.assertEqual(cpg.response.body, 'hello')
+        self.assertEqual(cpg.response.status, '200 OK')
+        
+        helper.request("/redirect/internal2?user_id=Sir-not-appearing-in-this-film")
+        self.assertEqual(cpg.response.body, '0 images for Sir-not-appearing-in-this-film')
+        self.assertEqual(cpg.response.status, '200 OK')
+        
+        helper.request("/redirect/internal2?user_id=parrot")
+        self.assertEqual(cpg.response.body, '0 images for slug')
         self.assertEqual(cpg.response.status, '200 OK')
     
     def testFlatten(self):
