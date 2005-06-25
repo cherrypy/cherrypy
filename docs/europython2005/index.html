@@ -71,6 +71,15 @@
 </div>
 
 <div class="slide">
+<h1>Configuring CherryPy</h1>
+<ul>
+    <li>Through config file</li>
+    <li>Programmatically</li>
+</ul>
+</div>
+
+
+<div class="slide">
 <h1>Url -> object mapping</h1>
 <ul>
     <li>Using multiple methods</li>
@@ -90,12 +99,40 @@
 <div class="slide">
 <h1>Handling file uploads</h1>
 <ul>
-    <li>TODO</li>
+    <li>File is stored on disk as a temp file</li>
+    <li>CherryPy returns a cgi.FieldStorage instance</li>
+    <li>Available attributes: file, filename, type, ...</li>
 </ul>
 </div>
 
 <div class="slide">
 <h1>Manipulating cpg.request and cpg.response</h1>
+<ul>
+    <li>Ex: Reading the Host header from the request</li>
+    <li>Ex: Setting the responseCOntent-Type</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>Using generators</h1>
+<ul>
+    <li>Returning a generator instead of a string</li>
+    <li>Returning a file object</li>
+    <li>Set Content-Length manually to stream data to the browser "on-the-fly"</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>Using filters</h1>
+<ul>
+    <li>Ex: gzipFilter</li>
+    <li>Ex: encodingFilter, decodingFilter</li>
+    <li>Ex: staticContentFilter</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>Using sessions</h1>
 <ul>
     <li>TODO</li>
 </ul>
@@ -107,6 +144,17 @@
     <li>Built-in HTTP server: OK, but no HTTP/1.1 or SSL (yet)</li>
     <li>WSGI interface allows us to use a variety of setups: mod_python, FastCGI, IIS, ...</li>
     <li>Another option: behind Apache with mod_rewrite or mod_proxy (use Apache to serve static data directly)</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>What's not included in CherryPy</h1>
+<ul>
+    <li>A form handling module</li>
+    <li>A templating system</li>
+    <li>An authentication system</li>
+    <li>... CherryPy is deliberately staying low-level</li>
+    <li>... If you need a higher-level framework, consider Subway or CherryObject (coming soon)</li>
 </ul>
 </div>
 
