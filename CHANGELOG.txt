@@ -1,3 +1,6 @@
+2005-06-25:
+    * BACKWARD INCOMPATIBILITY: Removed cpg module, renamed _cpserver to server, _cpconfig to config, cperror to _cperror. See http://www.cherrypy.org/wiki/PackageLayout21 (fumanchu)
+
 2005-06-21:
     * New generic HTTPRedirect exception for 3xx responses (fumanchu)
 
@@ -30,7 +33,7 @@
     * Moved session handling into a filter. (fumanchu)
     * New testCore.py for testing basic request and error handling. (fumanchu)
     * autoreload disabled if cpg.server.start is called with initOnly=True. (fumanchu)
-    * BACKWARD INCOMPATIBILITY: filters changed, see http://www.cherrypy.org/wiki/WhatsNewIn21#filter_methods. (fumanchu)
+    * BACKWARD INCOMPATIBILITY: filters changed, see http://www.cherrypy.org/wiki/Filters21. (fumanchu)
 
 2005-05-20:
     * BACKWARD INCOMPATIBILITY: New config system, see http://www.cherrypy.org/wiki/ConfigSystem21 (Remi)
