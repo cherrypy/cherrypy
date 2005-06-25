@@ -36,18 +36,15 @@ class VirtualHostFilter(basefilter.BaseFilter):
     """
     
     def beforeRequestBody(self):
-        # We have to dynamically import cpg because Python can't handle
-        #   circular module imports :-(
-        global cpg, _cphttptools
-        from cherrypy import cpg, _cphttptools
+        import cherrypy
+        from cherrypy import _cphttptools
     
-        if not cpg.config.get('virtualHostFilter.on', False):
+        if not cherrypy.config.get('virtualHostFilter.on', False):
             return
         
-        domain = cpg.request.base.split('//')[1]
+        domain = cherrypy.request.base.split('//')[1]
         # Re-use "mapPathToObject" function to find the actual objectPath
-        prefix = cpg.config.get('virtualHostFilter.prefix', '/')
-        virtualPath = prefix + cpg.request.path
+        prefix = cherrypy.config.get('virtualHostFilter.prefix', '/')
+        virtualPath = prefix + cherrypy.request.path
         c, objectPathList, v = _cphttptools.mapPathToObject(virtualPath)
-        cpg.request.objectPath = '/' + '/'.join(objectPathList[1:])
-        #raise basefilter.InternalRedirect
+        cherrypy.request.objectPath = '/' + '/'.join(objectPathList[1:])

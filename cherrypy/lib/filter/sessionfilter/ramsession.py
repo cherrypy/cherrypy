@@ -27,10 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from basesession import BaseSession
-import cherrypy.cpg
-
 from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
+
 
 class RamSession(BaseSession):
 

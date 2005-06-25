@@ -34,15 +34,15 @@ Main CherryPy module:
 import threading
 import time
 import sys
-import cpg, _cphttptools
+
+import cherrypy
+from cherrypy import _cphttptools
+from cherrypy.lib import autoreload, profiler
 
 try:
     from threading import local
 except ImportError:
-    from _cpthreadinglocal import local
-
-
-from lib import autoreload, profiler
+    from cherrypy._cpthreadinglocal import local
 
 
 # Set some special attributes for adding hooks
@@ -52,7 +52,7 @@ onStopServerList = []
 onStopThreadList = []
 
 def start(initOnly=False, serverClass=None):
-    if cpg.config.get("server.environment") == "development":
+    if cherrypy.config.get("server.environment") == "development":
         # Check initOnly. If True, we're probably not starting
         # our own webserver, and therefore could do Very Bad Things
         # when autoreload calls sys.exit.
@@ -72,44 +72,44 @@ def _start(initOnly=False, serverClass=None):
     
     # Create request and response object (the same objects will be used
     #   throughout the entire life of the webserver)
-    cpg.request = local()
-    cpg.response = local()
+    cherrypy.request = local()
+    cherrypy.response = local()
 
     # Create as sessions object for accessing session data
-    cpg.sessions = local()
+    cherrypy.sessions = local()
     
     # Create threadData object as a thread-specific all-purpose storage
-    cpg.threadData = local()
+    cherrypy.threadData = local()
     
     # Output config options to log
-    if cpg.config.get("server.logConfigOptions", True):
-        cpg.config.outputConfigMap()
+    if cherrypy.config.get("server.logConfigOptions", True):
+        cherrypy.config.outputConfigMap()
     
     # Check the config options
     # TODO
-    # _cpconfig.checkConfigOptions()
+    # config.checkConfigOptions()
     
     # Initialize a few global variables
-    cpg._lastCacheFlushTime = time.time()
-    cpg._lastSessionCleanUpTime = time.time()
-    cpg._sessionMap = {} # Map of "cookie" -> ("session object", "expiration time")
+    cherrypy._lastCacheFlushTime = time.time()
+    cherrypy._lastSessionCleanUpTime = time.time()
+    cherrypy._sessionMap = {} # Map of "cookie" -> ("session object", "expiration time")
     
     # If sessions are stored in files and we
     # use threading, we need a lock on the file
-    if (cpg.config.get('server.threadPool') > 1
-        and cpg.config.get('session.storageType') == 'file'):
-        cpg._sessionFileLock = threading.RLock()
+    if (cherrypy.config.get('server.threadPool') > 1
+        and cherrypy.config.get('session.storageType') == 'file'):
+        cherrypy._sessionFileLock = threading.RLock()
     
-    # Call the functions from cpg.server.onStartServerList
-    for func in cpg.server.onStartServerList:
+    # Call the functions from cherrypy.server.onStartServerList
+    for func in cherrypy.server.onStartServerList:
         func()
     
     # Set up the profiler if requested.
-    if cpg.config.get("profiling.on", False):
-        ppath = cpg.config.get("profiling.path", "")
-        cpg.profiler = profiler.Profiler(ppath)
+    if cherrypy.config.get("profiling.on", False):
+        ppath = cherrypy.config.get("profiling.path", "")
+        cherrypy.profiler = profiler.Profiler(ppath)
     else:
-        cpg.profiler = None
+        cherrypy.profiler = None
     
     if not initOnly:
         run_server(serverClass)
@@ -119,27 +119,27 @@ def run_server(serverClass=None):
     
     # Instantiate the server.
     if serverClass is None:
-        serverClass = cpg.config.get("server.class", None)
+        serverClass = cherrypy.config.get("server.class", None)
     if serverClass and isinstance(serverClass, basestring):
         serverClass = attributes(serverClass)
     if serverClass is None:
         import _cpwsgi
         serverClass = _cpwsgi.WSGIServer
     
-    cpg._httpserver = serverClass()
+    cherrypy._httpserver = serverClass()
     
-    if cpg.config.get('server', 'socketPort'):
-        onWhat = "socket: ('%s', %s)" % (cpg.config.get('server.socketHost'),
-                                         cpg.config.get('server.socketPort'))
+    if cherrypy.config.get('server', 'socketPort'):
+        onWhat = "socket: ('%s', %s)" % (cherrypy.config.get('server.socketHost'),
+                                         cherrypy.config.get('server.socketPort'))
     else:
-        onWhat = "socket file: %s" % cpg.config.get('server.socketFile')
-    cpg.log("Serving HTTP on %s" % onWhat, 'HTTP')
+        onWhat = "socket file: %s" % cherrypy.config.get('server.socketFile')
+    cherrypy.log("Serving HTTP on %s" % onWhat, 'HTTP')
     
     # Start the http server.
     try:
-        cpg._httpserver.start()
+        cherrypy._httpserver.start()
     except (KeyboardInterrupt, SystemExit):
-        cpg.log("<Ctrl-C> hit: shutting down", "HTTP")
+        cherrypy.log("<Ctrl-C> hit: shutting down", "HTTP")
         stop()
 
 def modules(modulePath):
@@ -180,12 +180,12 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile):
     if threadID not in seen_threads:
         i = len(seen_threads) + 1
         seen_threads[threadID] = i
-        # Call the functions from cpg.server.onStartThreadList
-        for func in cpg.server.onStartThreadList:
+        # Call the functions from cherrypy.server.onStartThreadList
+        for func in cherrypy.server.onStartThreadList:
             func(i)
     
-    if cpg.profiler:
-        cpg.profiler.run(_cphttptools.Request, clientAddress, remoteHost,
+    if cherrypy.profiler:
+        cherrypy.profiler.run(_cphttptools.Request, clientAddress, remoteHost,
                                                requestLine, headers, rfile)
     else:
         _cphttptools.Request(clientAddress, remoteHost,
@@ -194,18 +194,18 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile):
 def stop():
     """Shutdown CherryPy (and any HTTP servers it started)."""
     try:
-        httpstop = cpg._httpserver.stop
+        httpstop = cherrypy._httpserver.stop
     except AttributeError:
         pass
     else:
         httpstop()
     
-    # Call the functions from cpg.server.onStopThreadList
+    # Call the functions from cherrypy.server.onStopThreadList
     for thread_ident, i in seen_threads.iteritems():
-        for func in cpg.server.onStopThreadList:
+        for func in cherrypy.server.onStopThreadList:
             func(i)
     seen_threads.clear()
     
-    # Call the functions from cpg.server.onStopServerList
-    for func in cpg.server.onStopServerList:
+    # Call the functions from cherrypy.server.onStopServerList
+    for func in cherrypy.server.onStopServerList:
         func()

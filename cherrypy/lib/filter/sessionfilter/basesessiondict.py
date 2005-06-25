@@ -26,10 +26,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import cherrypy.cpg
 import time
+from cherrypy.lib.filter.sessionfilter.sessionerrors import SessionImmutableError
 
-from sessionerrors import SessionImmutableError
 
 def locker(function):
     def _inner(self, *args, **kwds):
@@ -43,7 +42,7 @@ def locker(function):
 # this class is used by 
 class BaseSessionDict(object):
     """
-    cpg.request.sessionMap is a SessionDict instance.
+    cherrypy.request.sessionMap is a SessionDict instance.
 
     SessionDict isntances alwasy contain the following attributes.
     

@@ -26,12 +26,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-
 """
 A module containing a few utility classes/functions used by CherryPy
 """
 
-import time, cpg, cperror
+import time
+import cherrypy
 
 
 class EmptyClass:
@@ -40,13 +40,13 @@ class EmptyClass:
 
 
 def getObjectTrail():
-    """ Return all objects from the currenct object to cpg """
-    root = getattr(cpg, 'root', None)
+    """ Return all objects from the currenct object to cherrypy """
+    root = getattr(cherrypy, 'root', None)
     if root:
         objectTrail = [root]
         # Try object path
         try:
-            path = cpg.request.objectPath or cpg.request.path
+            path = cherrypy.request.objectPath or cherrypy.request.path
         except AttributeError:
             path = '/'
         if path:
@@ -64,12 +64,12 @@ def getObjectTrail():
     return None
 
 def getSpecialAttribute(name):
-    """ Return the special attribute. A special attribute is
-    one that applies to all of the children from where it is
-    defined, such as _cpFilterList."""
+    """Return the special attribute. A special attribute is one that
+    applies to all of the children from where it is defined, such as
+    _cpFilterList."""
     
     # First, we look in the right-most object if this special attribute is implemented.
-    # If not, then we try the previous object and so on until we reach cpg.root
+    # If not, then we try the previous object and so on until we reach cherrypy.root
     # If it's still not there, we use the implementation from this module.
     
     objectList = getObjectTrail()
@@ -84,19 +84,20 @@ def getSpecialAttribute(name):
     try:
         return globals()[name]
     except KeyError:
-        raise cperror.InternalError("Special attribute %s could not be found"
-                                    % repr(name))
+        raise cherrypy.InternalError("Special attribute %s could not be found"
+                                     % repr(name))
 
 def getSpecialAttributePath(name):
     """ Return the path to the special attribute """
     objectList = getObjectTrail()
     if objectList:
-        pathList = (cpg.request.objectPath or cpg.request.path).split("/")[1:]
+        pathList = cherrypy.request.objectPath or cherrypy.request.path
+        pathList = pathList.split("/")[1:]
         for i in xrange(len(objectList) - 1, -1, -1):
             if hasattr(objectList[i], name):
                 return "/" + "/".join(pathList[:i] + [name])
-    raise cperror.InternalError("Special attribute %s could not be found"
-                                    % repr(name))
+    raise cherrypy.InternalError("Special attribute %s could not be found"
+                                 % repr(name))
 
 def _cpLogMessage(msg, context = '', severity = 0):
     """ Default method for logging messages """
@@ -112,14 +113,14 @@ def _cpLogMessage(msg, context = '', severity = 0):
     else:
         level = "UNKNOWN"
     try:
-        logToScreen = cpg.config.get('server.logToScreen')
+        logToScreen = cherrypy.config.get('server.logToScreen')
     except:
         logToScreen = True
     s = nowStr + ' ' + context + ' ' + level + ' ' + msg
     if logToScreen:
         print s
-    if cpg.config.get('server.logFile'):
-        f = open(cpg.config.get('server.logFile'), 'ab')
+    if cherrypy.config.get('server.logFile'):
+        f = open(cherrypy.config.get('server.logFile'), 'ab')
         f.write(s + '\n')
         f.close()
 
@@ -127,10 +128,10 @@ def _cpOnError():
     """ Default _cpOnError method """
     import sys, traceback
     content = "".join(traceback.format_exception(*sys.exc_info()))
-    cpg.response.body = [content]
-    cpg.response.headerMap['Content-Type'] = 'text/plain'
-    if cpg.response.headerMap.has_key('Content-Encoding'):
-        del cpg.response.headerMap['Content-Encoding']
+    cherrypy.response.body = [content]
+    cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+    if cherrypy.response.headerMap.has_key('Content-Encoding'):
+        del cherrypy.response.headerMap['Content-Encoding']
 
 _cpFilterList = []
 
@@ -140,7 +141,7 @@ from cherrypy.lib.filter import baseurlfilter, cachefilter, \
     staticfilter, nsgmlsfilter, tidyfilter, \
     virtualhostfilter, xmlrpcfilter, sessionauthenticatefilter
 
-from cherrypy.lib.filter.sessionfilter import sessionfilter
+from cherrypy.lib.filter import sessionfilter
 
 _cachefilter = cachefilter.CacheFilter()
 _logdebuginfofilter = logdebuginfofilter.LogDebugInfoFilter()
@@ -235,4 +236,4 @@ def unrepr(s):
     try:
         return Builder().build(getObj(s))
     except:
-        raise cperror.WrongUnreprValue, repr(s)
+        raise cherrypy.WrongUnreprValue, repr(s)

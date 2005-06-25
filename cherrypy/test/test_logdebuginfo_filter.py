@@ -26,15 +26,15 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from cherrypy import cpg
+import cherrypy
 
 class Root:
     def index(self):
         yield "Hello, world"
     index.exposed = True
 
-cpg.root = Root()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.config.update({
     'global': {
         'session.storageType': 'ram',
         'session.timeout': 60,
@@ -47,7 +47,7 @@ cpg.config.update({
         'logDebugInfoFilter.on': True,
     }
 })
-cpg.server.start(initOnly=True)
+cherrypy.server.start(initOnly=True)
 
 
 import unittest
@@ -57,10 +57,10 @@ class LogDebugInfoFilterTest(unittest.TestCase):
     
     def testLogDebugInfoFilter(self):
         helper.request('/')
-        self.assert_('Build time' in cpg.response.body)
-        self.assert_('Page size' in cpg.response.body)
+        self.assert_('Build time' in cherrypy.response.body)
+        self.assert_('Page size' in cherrypy.response.body)
         # not compatible with the sessionFilter
-        #self.assert_('Session data size' in cpg.response.body)
+        #self.assert_('Session data size' in cherrypy.response.body)
 
 
 if __name__ == "__main__":

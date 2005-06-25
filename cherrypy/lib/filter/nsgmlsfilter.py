@@ -29,40 +29,41 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os, cgi
 from basefilter import BaseFilter
 
+
 class NsgmlsFilter(BaseFilter):
     """Filter that runs the response through Nsgmls.
     """
     
     def beforeFinalize(self):
-        # We have to dynamically import cpg because Python can't handle
+        # We have to dynamically import cherrypy because Python can't handle
         #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
+        global cherrypy
+        import cherrypy
         
-        if not cpg.config.get('nsgmlsFilter.on', False):
+        if not cherrypy.config.get('nsgmlsFilter.on', False):
             return
         
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
-        originalBody = ''.join(cpg.response.body)
-        cpg.response.body = [originalBody]
+        originalBody = ''.join(cherrypy.response.body)
+        cherrypy.response.body = [originalBody]
         
-        fct = cpg.response.headerMap.get('Content-Type', '')
+        fct = cherrypy.response.headerMap.get('Content-Type', '')
         ct = fct.split(';')[0]
         encoding = ''
         i = fct.find('charset=')
         if i != -1:
             encoding = fct[i+8:]
         if ct == 'text/html':
-            tmpdir = cpg.config.get('nsgmlsFilter.tmpDir')
+            tmpdir = cherrypy.config.get('nsgmlsFilter.tmpDir')
             pageFile = os.path.join(tmpdir, 'page.html')
             errFile = os.path.join(tmpdir, 'nsgmls.err')
             f = open(pageFile, 'wb')
             f.write(originalBody)
             f.close()
             nsgmlsEncoding = encoding.replace('-', '')
-            nsgmlsPath = cpg.config.get('nsgmlsFilter.nsgmlsPath')
-            catalogPath = cpg.config.get('nsgmlsFilter.catalogPath')
+            nsgmlsPath = cherrypy.config.get('nsgmlsFilter.nsgmlsPath')
+            catalogPath = cherrypy.config.get('nsgmlsFilter.catalogPath')
             command = '%s -c%s -f%s -s -E10 %s' % (
                 nsgmlsPath, catalogPath, errFile, pageFile)
             command = command.replace('\\', '/')
@@ -74,7 +75,7 @@ class NsgmlsFilter(BaseFilter):
             newErrList = []
             for err in errList:
                 ignore = False
-                for errIgn in cpg.config.get('nsgmlsFilter.errorsToIgnore', []):
+                for errIgn in cherrypy.config.get('nsgmlsFilter.errorsToIgnore', []):
                     if err.find(errIgn) != -1:
                         ignore = True
                         break
@@ -88,6 +89,6 @@ class NsgmlsFilter(BaseFilter):
                     i += 1
                     newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                 
-                cpg.response.body = [newBody]
+                cherrypy.response.body = [newBody]
 
 

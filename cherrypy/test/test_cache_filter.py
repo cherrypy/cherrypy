@@ -26,21 +26,22 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from cherrypy import cpg
+import cherrypy
 import time
+
 
 class Root:
     def __init__(self):
-        cpg.counter = 0
+        cherrypy.counter = 0
     
     def index(self):
-        counter = cpg.counter + 1
-        cpg.counter = counter
+        counter = cherrypy.counter + 1
+        cherrypy.counter = counter
         return "visit #%s" % counter
     index.exposed = True
 
-cpg.root = Root()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.config.update({
     'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
@@ -57,8 +58,8 @@ class CacheFilterTest(unittest.TestCase):
     def testCaching(self):
         for trial in xrange(2):
             helper.request("/")
-            self.assertEqual(cpg.response.body, 'visit #1')
+            self.assertEqual(cherrypy.response.body, 'visit #1')
 
 if __name__ == '__main__':
-    cpg.server.start(initOnly=True)
+    cherrypy.server.start(initOnly=True)
     unittest.main()

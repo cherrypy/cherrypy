@@ -7,7 +7,8 @@ want to create a central base class used for all your pages, which takes
 care of things like printing a common page header and footer.
 """
 
-from cherrypy import cpg
+import cherrypy
+
 
 class Page:
     # Store the page title in a class attribute
@@ -68,10 +69,10 @@ class AnotherPage(Page):
     index.exposed = True
 
 
-cpg.root = HomePage()
+cherrypy.root = HomePage()
 
 
 if __name__ == '__main__':
-    cpg.config.update(file = 'tutorial.conf')
-    cpg.server.start()
+    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.server.start()
 

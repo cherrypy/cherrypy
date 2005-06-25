@@ -33,7 +33,8 @@ import socket
 import StringIO
 import httplib
 import threading
-from cherrypy import cpg
+
+import cherrypy
 
 
 HOST = "127.0.0.1"
@@ -51,19 +52,19 @@ def port_is_free():
 
 def startServer(serverClass=None):
     if serverClass is None:
-        cpg.server.start(initOnly=True)
+        cherrypy.server.start(initOnly=True)
     else:
         if not port_is_free():
             raise IOError("Port %s is in use; perhaps the previous server "
                           "did not shut down properly." % PORT)
-        t = threading.Thread(target=cpg.server.start, args=(False, serverClass))
+        t = threading.Thread(target=cherrypy.server.start, args=(False, serverClass))
         t.start()
         time.sleep(1)
 
 
 def stopServer():
-    cpg.server.stop()
-    if cpg.config.get('server.threadPool') > 1:
+    cherrypy.server.stop()
+    if cherrypy.config.get('server.threadPool') > 1:
         # With thread-pools, it can take up to 1 sec for the server to stop
         time.sleep(1.1)
 
@@ -92,9 +93,9 @@ def getPage(url, headers=None, method="GET", body=None):
                 # Improper response from server.
                 print
                 print "Server did not return a response."
-                print "status>", repr(cpg.response.status)
-                print "headers>", repr(cpg.response.headers)
-                print "body>", repr(cpg.response.body)
+                print "status>", repr(cherrypy.response.status)
+                print "headers>", repr(cherrypy.response.headers)
+                print "body>", repr(cherrypy.response.body)
                 raise
             
             status = "%s %s" % (response.status, response.reason)
@@ -131,7 +132,8 @@ def request(url, headers=None, method="GET", body=None):
             headers.append(("Content-type", "application/x-www-form-urlencoded"))
             headers.append(("Content-Length", str(len(body or ""))))
     
-    if cpg._httpserver is None:
+    resp = cherrypy.response
+    if cherrypy._httpserver is None:
         requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
         found = False
         for k, v in headers:
@@ -142,12 +144,10 @@ def request(url, headers=None, method="GET", body=None):
             headers.append(("Host", "%s:%s" % (HOST, PORT)))
         if body is not None:
             body = StringIO.StringIO(body)
-        cpg.server.request(HOST, HOST, requestLine, headers, body)
-        cpg.response.body = "".join(cpg.response.body)
+        cherrypy.server.request(HOST, HOST, requestLine, headers, body)
+        resp.body = "".join(resp.body)
     else:
         result = getPage(url, headers, method, body)
-        cpg.response.status, cpg.response.headerMap, cpg.response.body = result
-        cpg.response.headers = [(k, v) for k, v in
-                                cpg.response.headerMap.iteritems()]
-
+        resp.status, resp.headerMap, resp.body = result
+        resp.headers = [(k, v) for k, v in resp.headerMap.iteritems()]
 

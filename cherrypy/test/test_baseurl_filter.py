@@ -26,16 +26,17 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from cherrypy import cpg
+import cherrypy
 from cherrypy.lib import httptools
+
 
 class Root:
     def index(self):
         return httptools.redirect('dummy')
     index.exposed = True
 
-cpg.root = Root()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.config.update({
     'global': {
         'server.environment': 'production',
         'baseUrlFilter.on': True,
@@ -50,11 +51,11 @@ class BaseUrlFilterTest(unittest.TestCase):
     
     def testBaseUrlFilter(self):
         helper.request("/")
-        self.assertEqual(cpg.response.headerMap['Location'],
+        self.assertEqual(cherrypy.response.headerMap['Location'],
                          "http://www.mydomain.com/dummy")
 
 
 if __name__ == '__main__':
-    cpg.server.start(initOnly=True)
+    cherrypy.server.start(initOnly=True)
     unittest.main()
 

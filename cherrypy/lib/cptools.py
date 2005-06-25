@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 """
-Just a few convenient functions and classes.
+Just a few convenient functions and classes
 """
 
 import inspect
@@ -57,6 +57,7 @@ def decorateAll(obj, decorator):
             setattr(obj, k, decorate(v, decorator))
         decorateAll(v, decorator)
 
+
 class ExposeItems:
     """
     Utility class that exposes a getitem-aware object. It does not provide
@@ -68,8 +69,8 @@ class ExposeItems:
     
     from cherrypy.lib.cptools import ExposeItems
     ...
-    cpg.root.foo = ExposeItems(mylist)
-    cpg.root.bar = ExposeItems(mydict)
+    cherrypy.root.foo = ExposeItems(mylist)
+    cherrypy.root.bar = ExposeItems(mydict)
     """
     exposed = True
     def __init__(self, items):
@@ -85,13 +86,13 @@ class PositionalParametersAware(object):
     Use case:
 
     from cherrypy.lib import cptools
-    from cherrypy import cpg
+    import cherrypy
     class Root(cptools.PositionalParametersAware):
         def something(self, name):
             return "hello, " + name
         something.exposed
-    cpg.root = Root()
-    cpg.server.start()
+    cherrypy.root = Root()
+    cherrypy.server.start()
 
     Now, fetch http://localhost:8080/something/name_is_here
     """

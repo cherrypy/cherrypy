@@ -5,7 +5,7 @@ The most basic (working) CherryPy application possible.
 """
 
 # Import CherryPy global namespace
-from cherrypy import cpg
+import cherrypy
 
 class HelloWorld:
     """ Sample request handler class. """
@@ -21,14 +21,14 @@ class HelloWorld:
     # publish methods that don't have the exposed attribute set to True.
     index.exposed = True
 
-# CherryPy always starts with cpg.root when trying to map request URIs
+# CherryPy always starts with cherrypy.root when trying to map request URIs
 # to objects, so we need to mount a request handler object here. A request
-# to '/' will be mapped to cpg.root.index().
-cpg.root = HelloWorld()
+# to '/' will be mapped to cherrypy.root.index().
+cherrypy.root = HelloWorld()
 
 if __name__ == '__main__':
     # Use the configuration file tutorial.conf.
-    cpg.config.update(file = 'tutorial.conf')
+    cherrypy.config.update(file = 'tutorial.conf')
     # Start the CherryPy server.
-    cpg.server.start()
+    cherrypy.server.start()
 

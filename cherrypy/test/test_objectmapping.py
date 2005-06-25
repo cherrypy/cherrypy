@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from cherrypy import cpg
+import cherrypy
 from cherrypy.lib import httptools
 
 class Root:
@@ -60,7 +60,7 @@ class Dir1:
     index.exposed = True
     
     def myMethod(self):
-        return "myMethod from dir1, object Path is:" + repr(cpg.request.objectPath)
+        return "myMethod from dir1, object Path is:" + repr(cherrypy.request.objectPath)
     myMethod.exposed = True
     
     def default(self, *params):
@@ -70,7 +70,7 @@ class Dir1:
 
 class Dir2:
     def index(self):
-        return "index for dir2, path is:" + cpg.request.path
+        return "index for dir2, path is:" + cherrypy.request.path
     index.exposed = True
     
     def method(self):
@@ -87,18 +87,18 @@ class Dir4:
     def index(self):
         return "index for dir4, not exposed"
 
-cpg.root = Root()
-cpg.root.dir1 = Dir1()
-cpg.root.dir1.dir2 = Dir2()
-cpg.root.dir1.dir2.dir3 = Dir3()
-cpg.root.dir1.dir2.dir3.dir4 = Dir4()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.root.dir1 = Dir1()
+cherrypy.root.dir1.dir2 = Dir2()
+cherrypy.root.dir1.dir2.dir3 = Dir3()
+cherrypy.root.dir1.dir2.dir3.dir4 = Dir4()
+cherrypy.config.update({
     'global': {
         'server.logToScreen': False,
         'server.environment': "production",
     }
 })
-cpg.server.start(initOnly=True)
+cherrypy.server.start(initOnly=True)
 
 import unittest
 import helper
@@ -107,38 +107,38 @@ class ObjectMappingTest(unittest.TestCase):
     
     def testObjectMapping(self):
         helper.request('/')
-        self.assertEqual(cpg.response.body, 'world')
+        self.assertEqual(cherrypy.response.body, 'world')
         
         helper.request("/dir1/myMethod")
-        self.assertEqual(cpg.response.body, "myMethod from dir1, object Path is:'/dir1/myMethod'")
+        self.assertEqual(cherrypy.response.body, "myMethod from dir1, object Path is:'/dir1/myMethod'")
         
         helper.request("/this/method/does/not/exist")
-        self.assertEqual(cpg.response.body, "default:('this', 'method', 'does', 'not', 'exist')")
+        self.assertEqual(cherrypy.response.body, "default:('this', 'method', 'does', 'not', 'exist')")
         
         helper.request("/extra/too/much")
-        self.assertEqual(cpg.response.body, "default:('extra', 'too', 'much')")
+        self.assertEqual(cherrypy.response.body, "default:('extra', 'too', 'much')")
         
         helper.request("/other")
-        self.assertEqual(cpg.response.body, 'other')
+        self.assertEqual(cherrypy.response.body, 'other')
         
         helper.request("/notExposed")
-        self.assertEqual(cpg.response.body, "default:('notExposed',)")
+        self.assertEqual(cherrypy.response.body, "default:('notExposed',)")
         
         helper.request("/dir1/dir2/")
-        self.assertEqual(cpg.response.body, 'index for dir2, path is:/dir1/dir2/')
+        self.assertEqual(cherrypy.response.body, 'index for dir2, path is:/dir1/dir2/')
         
         helper.request("/dir1/dir2")
-        self.assert_(cpg.response.status in ('302 Found', '303 See Other'))
-        self.assertEqual(cpg.response.headerMap['Location'],
+        self.assert_(cherrypy.response.status in ('302 Found', '303 See Other'))
+        self.assertEqual(cherrypy.response.headerMap['Location'],
                          'http://%s:%s/dir1/dir2/' % (helper.HOST, helper.PORT))
         
         helper.request("/dir1/dir2/dir3/dir4/index")
-        self.assertEqual(cpg.response.body,
+        self.assertEqual(cherrypy.response.body,
                          "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
         
         helper.request("/redirect")
-        self.assertEqual(cpg.response.status, '302 Found')
-        self.assertEqual(cpg.response.headerMap['Location'],
+        self.assertEqual(cherrypy.response.status, '302 Found')
+        self.assertEqual(cherrypy.response.headerMap['Location'],
                          'http://%s:%s/dir1/' % (helper.HOST, helper.PORT))
 
 

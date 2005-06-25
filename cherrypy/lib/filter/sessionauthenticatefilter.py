@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from basefilter import BaseFilter
 
+
 def defaultLoginScreen(fromPage, login = '', errorMsg = ''):
     return """
     <html><body>
@@ -52,40 +53,40 @@ class SessionAuthenticateFilter(BaseFilter):
     """
 
     def beforeMain(self):
-        global cpg
-        from cherrypy import cpg
+        import cherrypy
         from cherrypy.lib import httptools
-        if not cpg.config.get('sessionAuthenticateFilter.on', False):
+        
+        if not cherrypy.config.get('sessionAuthenticateFilter.on', False):
             return
-        checkLoginAndPassword = cpg.config.get('sessionAuthenticateFilter.checkLoginAndPassword', defaultCheckLoginAndPassword)
-        loginScreen = cpg.config.get('sessionAuthenticateFilter.loginScreen', defaultLoginScreen)
-        notLoggedIn = cpg.config.get('sessionAuthenticateFilter.notLoggedIn')
-        loadUserByUsername = cpg.config.get('sessionAuthenticateFilter.loadUserByUsername')
-        sessionName = cpg.config.get('sessionAuthenticateFilter.sessionName', 'sessionMap')
-        sessionKey = cpg.config.get('sessionAuthenticateFilter.sessionKey', 'username')
-        sessionMap = getattr(cpg.sessions, sessionName)
+        checkLoginAndPassword = cherrypy.config.get('sessionAuthenticateFilter.checkLoginAndPassword', defaultCheckLoginAndPassword)
+        loginScreen = cherrypy.config.get('sessionAuthenticateFilter.loginScreen', defaultLoginScreen)
+        notLoggedIn = cherrypy.config.get('sessionAuthenticateFilter.notLoggedIn')
+        loadUserByUsername = cherrypy.config.get('sessionAuthenticateFilter.loadUserByUsername')
+        sessionName = cherrypy.config.get('sessionAuthenticateFilter.sessionName', 'sessionMap')
+        sessionKey = cherrypy.config.get('sessionAuthenticateFilter.sessionKey', 'username')
+        sessionMap = getattr(cherrypy.sessions, sessionName)
 
-        if cpg.request.path.endswith('loginScreen'):
+        if cherrypy.request.path.endswith('loginScreen'):
             return
-        elif cpg.request.path.endswith('doLogout'):
+        elif cherrypy.request.path.endswith('doLogout'):
             sessionMap[sessionKey] = None
-            cpg.threadData.user = None
-            fromPage = cpg.request.paramMap.get('fromPage')
+            cherrypy.threadData.user = None
+            fromPage = cherrypy.request.paramMap.get('fromPage')
             if fromPage is None:
                 fromPage = '/'
-            cpg.response.body = httptools.redirect(fromPage)
-        elif cpg.request.path.endswith('doLogin'):
-            fromPage = cpg.request.paramMap['fromPage']
-            login = cpg.request.paramMap['login']
-            password = cpg.request.paramMap['password']
+            cherrypy.response.body = httptools.redirect(fromPage)
+        elif cherrypy.request.path.endswith('doLogin'):
+            fromPage = cherrypy.request.paramMap['fromPage']
+            login = cherrypy.request.paramMap['login']
+            password = cherrypy.request.paramMap['password']
             errorMsg = checkLoginAndPassword(login, password)
             if errorMsg:
-                cpg.response.body = loginScreen(fromPage, login = login, errorMsg = errorMsg)
+                cherrypy.response.body = loginScreen(fromPage, login = login, errorMsg = errorMsg)
             else:
                 sessionMap[sessionKey] = login
                 if not fromPage:
                     fromPage = '/'
-                cpg.response.body = httptools.redirect(fromPage)
+                cherrypy.response.body = httptools.redirect(fromPage)
             return
 
         # Check if user is logged in
@@ -94,11 +95,10 @@ class SessionAuthenticateFilter(BaseFilter):
             #   is OK can handle it
             notLoggedIn()
         if not sessionMap.get(sessionKey):
-            cpg.response.body = loginScreen(cpg.request.browserUrl)
+            cherrypy.response.body = loginScreen(cherrypy.request.browserUrl)
             return
 
         # Everything is OK: user is logged in
         if loadUserByUsername:
             username = sessionMap[sessionKey]
-            cpg.threadData.user = loadUserByUsername(username)
-        
+            cherrypy.threadData.user = loadUserByUsername(username)

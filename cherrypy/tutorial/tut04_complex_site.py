@@ -5,7 +5,8 @@ This tutorial shows you how to create a site structure through multiple
 possibly nested request handler objects.
 """
 
-from cherrypy import cpg
+import cherrypy
+
 
 class HomePage:
     def index(self):
@@ -73,9 +74,9 @@ class ExtraLinksPage:
 
 
 # Of course we can also mount request handler objects right here!
-cpg.root = HomePage()
-cpg.root.joke = JokePage()
-cpg.root.links = LinksPage()
+cherrypy.root = HomePage()
+cherrypy.root.joke = JokePage()
+cherrypy.root.links = LinksPage()
 
 # Remember, we don't need to mount ExtraLinksPage here, because
 # LinksPage does that itself on initialization. In fact, there is
@@ -84,6 +85,6 @@ cpg.root.links = LinksPage()
 
 
 if __name__ == '__main__':
-    cpg.config.update(file = 'tutorial.conf')
-    cpg.server.start()
+    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.server.start()
 

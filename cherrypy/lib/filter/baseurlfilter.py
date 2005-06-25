@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from basefilter import BaseFilter
 
+
 class BaseUrlFilter(BaseFilter):
     """Filter that changes the base URL.
     
@@ -35,22 +36,19 @@ class BaseUrlFilter(BaseFilter):
     """
     
     def beforeRequestBody(self):
-        # We have to dynamically import cpg because Python can't handle
-        #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
+        import cherrypy
         
-        if not cpg.config.get('baseUrlFilter.on', False):
+        if not cherrypy.config.get('baseUrlFilter.on', False):
             return
         
-        newBaseUrl = cpg.config.get('baseUrlFilter.baseUrl', 'http://localhost')
-        if cpg.config.get('baseUrlFilter.useXForwardedHost', True):
-            newBaseUrl = cpg.request.headerMap.get("X-Forwarded-Host", newBaseUrl)
+        req = cherrypy.request
+        newBaseUrl = cherrypy.config.get('baseUrlFilter.baseUrl', 'http://localhost')
+        if cherrypy.config.get('baseUrlFilter.useXForwardedHost', True):
+            newBaseUrl = req.headerMap.get("X-Forwarded-Host", newBaseUrl)
         
         if newBaseUrl.find("://") == -1:
-            # add http:// or https:// if needed	
-            newBaseUrl = cpg.request.base[:cpg.request.base.find("://") + 3] + newBaseUrl
+            # add http:// or https:// if needed
+            newBaseUrl = req.base[:req.base.find("://") + 3] + newBaseUrl
         
-        cpg.request.browserUrl = cpg.request.browserUrl.replace(
-            cpg.request.base, newBaseUrl)
-        cpg.request.base = newBaseUrl
+        req.browserUrl = req.browserUrl.replace(req.base, newBaseUrl)
+        req.base = newBaseUrl

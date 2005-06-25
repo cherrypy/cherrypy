@@ -45,7 +45,7 @@ You can profile any of your pages as follows:
         def _index(self):
             return "Hello, world!"
     
-    cpg.root = Root()
+    cherrypy.root = Root()
 
 
 CherryPy developers
@@ -130,22 +130,22 @@ class Profiler(object):
     menu.exposed = True
     
     def report(self, filename):
-        from cherrypy import cpg
-        cpg.response.headerMap['Content-Type'] = 'text/plain'
+        import cherrypy
+        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
         return self.stats(filename)
     report.exposed = True
 
 
 def serve(path=None, port=8080):
-    from cherrypy import cpg
-    cpg.root = Profiler(path)
-    cpg.config.update({'global': {'server.serverPort': port,
-                             'server.threadPool': 10,
-                             'server.environment': "production",
-                             'session.storageType': "ram",
-                             }
-                       })
-    cpg.server.start()
+    import cherrypy
+    cherrypy.root = Profiler(path)
+    cherrypy.config.update({'global': {'server.serverPort': port,
+                                       'server.threadPool': 10,
+                                       'server.environment': "production",
+                                       'session.storageType': "ram",
+                                       }
+                            })
+    cherrypy.server.start()
 
 
 if __name__ == "__main__":

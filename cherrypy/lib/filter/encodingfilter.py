@@ -32,26 +32,27 @@ class EncodingFilter(BaseFilter):
     """Filter that automatically encodes the response."""
     
     def beforeFinalize(self):
-        # We have to dynamically import cpg because Python can't handle
+        # We have to dynamically import cherrypy because Python can't handle
         #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
+        global cherrypy
+        import cherrypy
         
-        if not cpg.config.get('encodingFilter.on', False):
+        conf = cherrypy.config.get
+        if not conf('encodingFilter.on', False):
             return
         
-        contentType = cpg.response.headerMap.get("Content-Type")
+        contentType = cherrypy.response.headerMap.get("Content-Type")
         if contentType:
             ctlist = contentType.split(';')[0]
-            if (ctlist in cpg.config.get('encodingFilter.mimeTypeList', ['text/html'])):
-                enc = cpg.config.get('encodingFilter.encoding', 'utf-8')
+            if (ctlist in conf('encodingFilter.mimeTypeList', ['text/html'])):
+                enc = conf('encodingFilter.encoding', 'utf-8')
                 
                 # Add "charset=..." to response Content-Type header
                 if contentType and 'charset' not in contentType:
-                    cpg.response.headerMap["Content-Type"] += ";charset=%s" % enc
+                    cherrypy.response.headerMap["Content-Type"] += ";charset=%s" % enc
                 
                 # Return a generator that encodes the sequence
                 def encode_body(body):
                     for line in body:
                         yield line.encode(enc)
-                cpg.response.body = encode_body(cpg.response.body)
+                cherrypy.response.body = encode_body(cherrypy.response.body)

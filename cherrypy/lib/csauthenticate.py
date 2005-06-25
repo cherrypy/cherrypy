@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import time, random
-from cherrypy import cpg
+import cherrypy
 
 from aspect import Aspect, STOP, CONTINUE
 
@@ -44,14 +44,14 @@ class CSAuthenticate(Aspect):
     timeout = 60 # in minutes
 
     def notLoggedIn(self, message):
-        return STOP, self.loginScreen(message, cpg.request.browserUrl)
+        return STOP, self.loginScreen(message, cherrypy.request.browserUrl)
 
     def _before(self, methodName, method):
         # If the method is not exposed, don't do anything
         if not getattr(method, 'exposed', None):
             return CONTINUE, None
 
-        cpg.request.login = ''
+        cherrypy.request.login = ''
         # If the method is one of these 4, do not try to find out who is logged in
         if methodName in ["loginScreen", "logoutScreen", "doLogin", "doLogout", "notLoggedIn"]:
             return CONTINUE, None
@@ -59,29 +59,29 @@ class CSAuthenticate(Aspect):
         # Check if a user is logged in:
         #   - If they are, set request.login with the right value
         #   - If not, return the login screen
-        if not cpg.request.simpleCookie.has_key(self.sessionIdCookieName):
-            # return STOP, self.loginScreen(self.noCookieMessage, cpg.request.browserUrl)
+        if not cherrypy.request.simpleCookie.has_key(self.sessionIdCookieName):
+            # return STOP, self.loginScreen(self.noCookieMessage, cherrypy.request.browserUrl)
             return self.notLoggedIn(self.noCookieMessage)
-        sessionId = cpg.request.simpleCookie[self.sessionIdCookieName].value
+        sessionId = cherrypy.request.simpleCookie[self.sessionIdCookieName].value
         now=time.time()
 
         # Check that session exists and hasn't timed out
         timeout=0
-        if not cpg.request.sessionMap.has_key(sessionId):
-            # return STOP, self.loginScreen(self.noCookieMessage, cpg.request.browserUrl)
+        if not cherrypy.request.sessionMap.has_key(sessionId):
+            # return STOP, self.loginScreen(self.noCookieMessage, cherrypy.request.browserUrl)
             return self.notLoggedIn(self.noCookieMessage)
         else:
-            login, expire = cpg.request.sessionMap[sessionId]
+            login, expire = cherrypy.request.sessionMap[sessionId]
             if expire < now: timeout=1
             else:
                 expire = now + self.timeout*60
-                cpg.request.sessionMap[sessionId] = login, expire
+                cherrypy.request.sessionMap[sessionId] = login, expire
 
         if timeout:
-            # return STOP, self.loginScreen(self.timeoutMessage, cpg.request.browserUrl)
+            # return STOP, self.loginScreen(self.timeoutMessage, cherrypy.request.browserUrl)
             return self.notLoggedIn(self.timeoutMessage)
 
-        cpg.request.login = login
+        cherrypy.request.login = login
         return CONTINUE, None
 
     def checkLoginAndPassword(self, login, password):
@@ -99,19 +99,19 @@ class CSAuthenticate(Aspect):
         # Check that login/password match
         errorMsg = self.checkLoginAndPassword(login, password)
         if errorMsg:
-            cpg.request.login = ''
+            cherrypy.request.login = ''
             return self.loginScreen(errorMsg, fromPage, login)
-        cpg.request.login = login
+        cherrypy.request.login = login
         # Set session
-        newSessionId = self.generateSessionId(cpg.request.sessionMap.keys())
-        cpg.request.sessionMap[newSessionId] = login, time.time()+self.timeout*60
+        newSessionId = self.generateSessionId(cherrypy.request.sessionMap.keys())
+        cherrypy.request.sessionMap[newSessionId] = login, time.time()+self.timeout*60
         
-        cpg.response.simpleCookie[self.sessionIdCookieName] = newSessionId
-        cpg.response.simpleCookie[self.sessionIdCookieName]['path'] = '/'
-        cpg.response.simpleCookie[self.sessionIdCookieName]['max-age'] = 31536000
-        cpg.response.simpleCookie[self.sessionIdCookieName]['version'] = 1
-        cpg.response.status = "302 Found"
-        cpg.response.headerMap['Location'] = fromPage
+        cherrypy.response.simpleCookie[self.sessionIdCookieName] = newSessionId
+        cherrypy.response.simpleCookie[self.sessionIdCookieName]['path'] = '/'
+        cherrypy.response.simpleCookie[self.sessionIdCookieName]['max-age'] = 31536000
+        cherrypy.response.simpleCookie[self.sessionIdCookieName]['version'] = 1
+        cherrypy.response.status = "302 Found"
+        cherrypy.response.headerMap['Location'] = fromPage
         return ""
     doLogin.exposed = True
 
@@ -121,13 +121,13 @@ class CSAuthenticate(Aspect):
             del request.sessionMap[sessionId]
         except: pass
         
-        cpg.response.simpleCookie[self.sessionIdCookieName] = ""
-        cpg.response.simpleCookie[self.sessionIdCookieName]['path'] = '/'
-        cpg.response.simpleCookie[self.sessionIdCookieName]['max-age'] = 0
-        cpg.response.simpleCookie[self.sessionIdCookieName]['version'] = 1
-        cpg.request.login = ''
-        cpg.response.status = "302 Found"
-        cpg.response.headerMap['Location'] = 'logoutScreen'
+        cherrypy.response.simpleCookie[self.sessionIdCookieName] = ""
+        cherrypy.response.simpleCookie[self.sessionIdCookieName]['path'] = '/'
+        cherrypy.response.simpleCookie[self.sessionIdCookieName]['max-age'] = 0
+        cherrypy.response.simpleCookie[self.sessionIdCookieName]['version'] = 1
+        cherrypy.request.login = ''
+        cherrypy.response.status = "302 Found"
+        cherrypy.response.headerMap['Location'] = 'logoutScreen'
         return ""
     doLogout.exposed = True
 

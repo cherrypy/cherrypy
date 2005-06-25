@@ -1,4 +1,4 @@
-from cherrypy import cpg
+import cherrypy
 
 class HelloWorld:
     def index(self):
@@ -6,10 +6,10 @@ class HelloWorld:
     index.exposed = True
     wsgi_asp = index
 
-cpg.root = HelloWorld()
-cpg.root.test = HelloWorld()
+cherrypy.root = HelloWorld()
+cherrypy.root.test = HelloWorld()
 
-cpg.config.update({"global": {"server.environment": "production",
+cherrypy.config.update({"global": {"server.environment": "production",
                               "session.storageType": "ram"}})
-cpg.server.start(initOnly = True)
+cherrypy.server.start(initOnly = True)
 

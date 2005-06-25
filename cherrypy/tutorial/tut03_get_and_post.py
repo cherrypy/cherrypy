@@ -4,7 +4,8 @@ Tutorial 03 - Passing variables
 This tutorial shows you how to pass GET/POST variables to methods.
 """
 
-from cherrypy import cpg
+import cherrypy
+
 
 class WelcomePage:
 
@@ -39,9 +40,9 @@ class WelcomePage:
     greetUser.exposed = True
 
 
-cpg.root = WelcomePage()
+cherrypy.root = WelcomePage()
 
 
 if __name__ == '__main__':
-    cpg.config.update(file = 'tutorial.conf')
-    cpg.server.start()
+    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.server.start()

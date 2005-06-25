@@ -135,7 +135,7 @@ def main():
     try:
         import cherrypy
     except ImportError:
-        print "Error: couln't find CherryPy !"
+        print "Error: couldn't find CherryPy !"
         os._exit(-1)
     print "CherryPy version", cherrypy.__version__
     print
@@ -154,8 +154,8 @@ def main():
         'test_virtualhost_filter',
     ]
     
-    from cherrypy import cpg
-    import helper
+    import cherrypy
+    from cherrypy.test import helper
     
     server_conf = {'server.socketHost': helper.HOST,
                    'server.socketPort': helper.PORT,
@@ -172,13 +172,13 @@ def main():
         print
         print "Running tests:", name
         
-        cpg.config.update({'global': server_conf.copy()})
+        cherrypy.config.update({'global': server_conf.copy()})
         helper.startServer(server)
         for testmod in testList:
             # Must run each module in a separate suite,
-            # because each module uses/overwrites cpg globals.
-            cpg.config.reset()
-            cpg.config.update({'global': server_conf.copy()})
+            # because each module uses/overwrites cherrypy globals.
+            cherrypy.config.reset()
+            cherrypy.config.update({'global': server_conf.copy()})
             suite = CPTestLoader.loadTestsFromName(testmod)
             CPTestRunner(verbosity=2).run(suite)
         helper.stopServer()

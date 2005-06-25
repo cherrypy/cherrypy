@@ -26,32 +26,30 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from basesession import BaseSession
-import cherrypy.cpg
-
 import shelve
 
+import cherrypy
+from basesession import BaseSession
 from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
 
 import os.path
 
+
 class DBMSession(BaseSession):
    
-    # it is ok to cache the sessoin data
+    # it is ok to cache the session data
     noCache = False
     
     def __init__(self, sessionName):
-        cpg = cherrypy.cpg
-
         BaseSession.__init__(self, sessionName)
         
-	# we must make sure the db file is unique
-	defaultFile = '%s-%i.db' % (sessionName, hash(self))
-        dbFilePrefix=cpg.config.get('sessionFilter.%s.dbFilePrefix' % sessionName, '')
-
-	sessionFile = os.path.join(dbFilePrefix, defaultFile)
-	
+        # we must make sure the db file is unique
+        defaultFile = '%s-%i.db' % (sessionName, hash(self))
+        dbFilePrefix = cherrypy.config.get('sessionFilter.%s.dbFilePrefix'
+                                           % sessionName, '')
+        
+        sessionFile = os.path.join(dbFilePrefix, defaultFile)
         self.__data = shelve.open(sessionFile, 'c')
     
     def newSession(self):

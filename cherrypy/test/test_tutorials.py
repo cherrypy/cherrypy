@@ -28,7 +28,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
 import sys
-from cherrypy import cpg
+
+import cherrypy
 from cherrypy.test import helper
 
 server_conf = {'server.socketHost': helper.HOST,
@@ -41,8 +42,8 @@ server_conf = {'server.socketHost': helper.HOST,
 
 def load_tut_module(tutorialName):
     """Import or reload tutorial module as needed."""
-    cpg.config.reset()
-    cpg.config.update({'global': server_conf.copy()})
+    cherrypy.config.reset()
+    cherrypy.config.update({'global': server_conf.copy()})
     
     target = "cherrypy.tutorial." + tutorialName
     if target in sys.modules:
@@ -50,7 +51,7 @@ def load_tut_module(tutorialName):
     else:
         module = __import__(target)
     
-    cpg.server.start(initOnly=True)
+    cherrypy.server.start(initOnly=True)
 
 
 class TutorialTest(unittest.TestCase):
@@ -58,34 +59,34 @@ class TutorialTest(unittest.TestCase):
     def test01HelloWorld(self):
         load_tut_module("tut01_helloworld")
         helper.request("/")
-        self.assertEqual(cpg.response.body, 'Hello world!')
+        self.assertEqual(cherrypy.response.body, 'Hello world!')
     
     def test02ExposeMethods(self):
         load_tut_module("tut02_expose_methods")
         helper.request("/showMessage")
-        self.assertEqual(cpg.response.body, 'Hello world!')
+        self.assertEqual(cherrypy.response.body, 'Hello world!')
     
     def test03GetAndPost(self):
         load_tut_module("tut03_get_and_post")
         
         # Try different GET queries
         helper.request("/greetUser?name=Bob")
-        self.assertEqual(cpg.response.body, "Hey Bob, what's up?")
+        self.assertEqual(cherrypy.response.body, "Hey Bob, what's up?")
         
         helper.request("/greetUser")
-        self.assertEqual(cpg.response.body,
+        self.assertEqual(cherrypy.response.body,
                          'Please enter your name <a href="./">here</a>.')
         
         helper.request("/greetUser?name=")
-        self.assertEqual(cpg.response.body,
+        self.assertEqual(cherrypy.response.body,
                          'No, really, enter your name <a href="./">here</a>.')
         
         # Try the same with POST
         helper.request("/greetUser", method="POST", body="name=Bob")
-        self.assertEqual(cpg.response.body, "Hey Bob, what's up?")
+        self.assertEqual(cherrypy.response.body, "Hey Bob, what's up?")
         
         helper.request("/greetUser", method="POST", body="name=")
-        self.assertEqual(cpg.response.body,
+        self.assertEqual(cherrypy.response.body,
                          'No, really, enter your name <a href="./">here</a>.')
     
     def test04ComplexSite(self):
@@ -100,7 +101,7 @@ class TutorialTest(unittest.TestCase):
             
             <p>[<a href="../">Return to links page</a>]</p>'''
         helper.request("/links/extra/")
-        self.assertEqual(cpg.response.body, msg)
+        self.assertEqual(cherrypy.response.body, msg)
     
     def test05DerivedObjects(self):
         load_tut_module("tut05_derived_objects")
@@ -120,26 +121,26 @@ class TutorialTest(unittest.TestCase):
             </html>
         '''
         helper.request("/another/")
-        self.assertEqual(cpg.response.body, msg)
+        self.assertEqual(cherrypy.response.body, msg)
     
     def test06DefaultMethod(self):
         load_tut_module("tut06_default_method")
         helper.request('/hendrik')
-        self.assertEqual(cpg.response.body,
+        self.assertEqual(cherrypy.response.body,
                          'Hendrik Mans, CherryPy co-developer & crazy German '
                          '(<a href="./">back</a>)')
     def test07Sessions(self):
         load_tut_module("tut07_sessions")
-        cpg.config.update({"global": {"sessionFilter.on": True}})
+        cherrypy.config.update({"global": {"sessionFilter.on": True}})
         
         helper.request('/')
-        self.assertEqual(cpg.response.body,
+        self.assertEqual(cherrypy.response.body,
                          "\n            During your current session, you've viewed this"
                          "\n            page 1 times! Your life is a patio of fun!"
                          "\n        ")
         
-        helper.request('/', [('Cookie', dict(cpg.response.headers)['Set-Cookie'])])
-        self.assertEqual(cpg.response.body,
+        helper.request('/', [('Cookie', dict(cherrypy.response.headers)['Set-Cookie'])])
+        self.assertEqual(cherrypy.response.body,
                          "\n            During your current session, you've viewed this"
                          "\n            page 2 times! Your life is a patio of fun!"
                          "\n        ")
@@ -147,20 +148,20 @@ class TutorialTest(unittest.TestCase):
     def test08GeneratorsAndYield(self):
         load_tut_module("tut08_generators_and_yield")
         helper.request('/')
-        self.assertEqual(cpg.response.body,
+        self.assertEqual(cherrypy.response.body,
                          '<html><body><h2>Generators rule!</h2>'
                          '<h3>List of users:</h3>'
                          'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
                          '</body></html>')
     def test09SessionFilter(self):
         load_tut_module("tut09_sessionfilter")
-        cpg.config.update({"global": {"sessionFilter.on": True}})
+        cherrypy.config.update({"global": {"sessionFilter.on": True}})
         
         helper.request('/')
-        self.assert_("viewed this page 1 times" in cpg.response.body)
+        self.assert_("viewed this page 1 times" in cherrypy.response.body)
         
-        helper.request('/', [('Cookie', dict(cpg.response.headers)['Set-Cookie'])])
-        self.assert_("viewed this page 2 times" in cpg.response.body)
+        helper.request('/', [('Cookie', dict(cherrypy.response.headers)['Set-Cookie'])])
+        self.assert_("viewed this page 2 times" in cherrypy.response.body)
     
     def test10FileUpload(self):
         load_tut_module("tut10_file_upload")
@@ -175,7 +176,7 @@ hello
 --x--
 """
         helper.request('/upload', h, "POST", b)
-        self.assertEqual(cpg.response.body, '''
+        self.assertEqual(cherrypy.response.body, '''
         <html><body>
             myFile length: 5<br />
             myFile filename: hello.txt<br />

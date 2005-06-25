@@ -26,15 +26,15 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from cherrypy import cpg
+import cherrypy
 
 class Root:
     def index2(self):
         yield "Hello, world"
     index2.exposed = True
 
-cpg.root = Root()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.config.update({
     'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
@@ -42,7 +42,7 @@ cpg.config.update({
         'virtualHostFilter.prefix': '/index2',
     },
 })
-cpg.server.start(initOnly=True)
+cherrypy.server.start(initOnly=True)
 
 
 import unittest
@@ -52,7 +52,7 @@ class VirtualHostFilterTest(unittest.TestCase):
     
     def testVirtualHostFilter(self):
         helper.request("/")
-        self.assertEqual(cpg.response.body, 'Hello, world')
+        self.assertEqual(cherrypy.response.body, 'Hello, world')
 
 
 if __name__ == "__main__":

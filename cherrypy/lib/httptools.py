@@ -30,15 +30,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Just a few convenient functions
 """
 
-from cherrypy import cpg
+import cherrypy
 import urlparse
 
 def canonicalizeUrl(url):
     """ Canonicalize a URL. The URL might be relative, absolute or canonical """
-    return urlparse.urljoin(cpg.request.browserUrl, url)
+    return urlparse.urljoin(cherrypy.request.browserUrl, url)
 
 def redirect(url):
     """ Sends a redirect to the browser (after canonicalizing the URL) """
-    cpg.response.status = "302 Found"
-    cpg.response.headerMap['Location'] = canonicalizeUrl(url)
+    cherrypy.response.status = "302 Found"
+    cherrypy.response.headerMap['Location'] = canonicalizeUrl(url)
     return ""

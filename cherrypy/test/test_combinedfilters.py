@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import gzip, StringIO
-from cherrypy import cpg
+import cherrypy
 
 europoundUnicode = u'\x80\xa3'
 
@@ -38,8 +38,8 @@ class Root:
         yield europoundUnicode
     index.exposed = True
 
-cpg.root = Root()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.config.update({
     'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
@@ -47,7 +47,7 @@ cpg.config.update({
         'encodingFilter.on': True,
     }
 })
-cpg.server.start(initOnly=True)
+cherrypy.server.start(initOnly=True)
 
 import unittest
 import helper
@@ -62,7 +62,7 @@ class CombinedFiltersTest(unittest.TestCase):
         zfile.close()
         
         helper.request("/", headers=[("Accept-Encoding", "gzip")])
-        self.assert_(zbuf.getvalue()[:3] in cpg.response.body)
+        self.assert_(zbuf.getvalue()[:3] in cherrypy.response.body)
 
 
 if __name__ == '__main__':

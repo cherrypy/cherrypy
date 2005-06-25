@@ -30,7 +30,7 @@ to be very GOOD. Play around with it some, browse the source code, smile.
 -- Hendrik Mans <hendrik@mans.de>
 '''
 
-from cherrypy import cpg
+import cherrypy
 from Cheetah.Template import Template
 from sqlobject import *
 
@@ -165,5 +165,5 @@ class ContactManager:
 
 print "If you're running this application for the first time, please go to http://localhost:8080/reset once in order to create the database!"
 
-cpg.root = ContactManager()
-cpg.server.start()
+cherrypy.root = ContactManager()
+cherrypy.server.start()

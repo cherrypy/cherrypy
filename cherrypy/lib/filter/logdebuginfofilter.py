@@ -35,55 +35,56 @@ except ImportError:
 
 from basefilter import BaseFilter
 
+
 class LogDebugInfoFilter(BaseFilter):
     """Filter that adds debug information to the page"""
     
     def onStartResource(self):
-        # We have to dynamically import cpg because Python can't handle
+        # We have to dynamically import cherrypy because Python can't handle
         #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
+        global cherrypy
+        import cherrypy
     
     def beforeMain(self):
-        cpg.request.startBuilTime = time.time()
+        cherrypy.request.startBuilTime = time.time()
     
     def beforeFinalize(self):
-        if cpg.config.get('server.environment') == 'development':
+        if cherrypy.config.get('server.environment') == 'development':
             # In "dev" environment, log everything by default
             defaultOn = True
         else:
             defaultOn = False
         
-        if not cpg.config.get('logDebugInfoFilter.on', defaultOn):
+        if not cherrypy.config.get('logDebugInfoFilter.on', defaultOn):
             return
         
-        mimelist = cpg.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])
-        ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
+        mimelist = cherrypy.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])
+        ct = cherrypy.response.headerMap.get('Content-Type').split(';')[0]
         if ct in mimelist:
-            body = ''.join(cpg.response.body)
+            body = ''.join(cherrypy.response.body)
             debuginfo = '\n'
             
-            logAsComment = cpg.config.get('logDebugInfoFilter.logAsComment', False)
+            logAsComment = cherrypy.config.get('logDebugInfoFilter.logAsComment', False)
             if logAsComment:
                 debuginfo += '<!-- '
             else:
                 debuginfo += "<br/><br/>"
             logList = []
             
-            if cpg.config.get('logDebugInfoFilter.logBuildTime', True):
+            if cherrypy.config.get('logDebugInfoFilter.logBuildTime', True):
                 logList.append("Build time: %.03fs" % (
-                    time.time() - cpg.request.startBuilTime))
+                    time.time() - cherrypy.request.startBuilTime))
             
-            if cpg.config.get('logDebugInfoFilter.logPageSize', True):
+            if cherrypy.config.get('logDebugInfoFilter.logPageSize', True):
                 logList.append("Page size: %.02fKB" % (
                     len(body)/float(1024)))
             ''' 
             # this is not compatible with the session filter
-            if (cpg.config.get('logDebugInfoFilter.logSessionSize', True)
-                and cpg.config.get('session.storageType')):
+            if (cherrypy.config.get('logDebugInfoFilter.logSessionSize', True)
+                and cherrypy.config.get('session.storageType')):
                 # Pickle session data to get its size
                 try:
-                    dumpStr = pickle.dumps(cpg.request.sessionMap, 1)
+                    dumpStr = pickle.dumps(cherrypy.request.sessionMap, 1)
                     logList.append("Session data size: %.02fKB" %
                                    (len(dumpStr) / float(1024)))
                 except:
@@ -94,4 +95,4 @@ class LogDebugInfoFilter(BaseFilter):
             if logAsComment:
                 debuginfo += '-->'
             
-            cpg.response.body = [body, debuginfo]
+            cherrypy.response.body = [body, debuginfo]

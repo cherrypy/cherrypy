@@ -33,7 +33,8 @@ A WSGI application and server (see PEP 333).
 import threading
 import os, socket, sys, traceback, urllib
 import SocketServer, BaseHTTPServer
-import cpg, _cpserver, _cphttptools, _cpwsgiserver
+import cherrypy
+from cherrypy import _cphttptools, _cpwsgiserver
 
 
 def requestLine(environ):
@@ -77,25 +78,25 @@ class NullWriter(object):
 def wsgiApp(environ, start_response):
     
     # Trap screen output from BaseHTTPRequestHandler.log_message()
-    if not cpg.config.get('server.logToScreen'):
+    if not cherrypy.config.get('server.logToScreen'):
         sys.stderr = NullWriter()
     
     try:
         # LOGON_USER is served by IIS, and is the name of the
         # user after having been mapped to a local account.
         # Both IIS and Apache set REMOTE_USER, when possible.
-        cpg.request.login = (environ.get('LOGON_USER')
+        cherrypy.request.login = (environ.get('LOGON_USER')
                              or environ.get('REMOTE_USER') or None)
-        cpg.request.multithread = environ['wsgi.multithread']
-        cpg.request.multiprocess = environ['wsgi.multiprocess']
-        _cpserver.request(environ.get('REMOTE_ADDR', ''),
-                          environ.get('REMOTE_ADDR', ''),
-                          requestLine(environ),
-                          translate_headers(environ),
-                          environ['wsgi.input'],
-                          )
-        start_response(cpg.response.status, cpg.response.headers)
-        for chunk in cpg.response.body:
+        cherrypy.request.multithread = environ['wsgi.multithread']
+        cherrypy.request.multiprocess = environ['wsgi.multiprocess']
+        cherrypy.server.request(environ.get('REMOTE_ADDR', ''),
+                                environ.get('REMOTE_ADDR', ''),
+                                requestLine(environ),
+                                translate_headers(environ),
+                                environ['wsgi.input'],
+                                )
+        start_response(cherrypy.response.status, cherrypy.response.headers)
+        for chunk in cherrypy.response.body:
             # WSGI requires all data to be of type "str". This coercion should
             # not take any time at all if chunk is already of type "str".
             # If it's unicode, it could be a big performance hit (x ~500).
@@ -103,7 +104,7 @@ def wsgiApp(environ, start_response):
             yield chunk
     except:
         tb = _cphttptools.formatExc()
-        cpg.log(tb)
+        cherrypy.log(tb)
         s, h, b = _cphttptools.bareError(tb)
         # CherryPy test suite expects bareError body to be output,
         # so don't call start_response (which, according to PEP 333,
@@ -114,13 +115,16 @@ def wsgiApp(environ, start_response):
 
 
 
-# Server components
+# Server components.
+# _cpwsgiserver should not reference CherryPy in any way, so that it can
+# be used in other frameworks and applications. Therefore, we wrap it here.
 
 class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     def __init__(self):
+        conf = cherrypy.config.get
         _cpwsgiserver.CherryPyWSGIServer.__init__(self,
-                                                  (cpg.config.get("server.socketHost"),
-                                                   cpg.config.get("server.socketPort")),
+                                                  (conf("server.socketHost"),
+                                                   conf("server.socketPort")),
                                                   wsgiApp,
-                                                  cpg.config.get("server.threadPool"),
-                                                  cpg.config.get("server.socketHost"))
+                                                  conf("server.threadPool"),
+                                                  conf("server.socketHost"))

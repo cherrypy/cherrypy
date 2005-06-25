@@ -7,7 +7,8 @@ in situations where using a template package like CherryPy or Cheetah
 would be overkill, and messy string concatenation too uncool. ;-)
 """
 
-from cherrypy import cpg
+import cherrypy
+
 
 class GeneratorDemo:
     
@@ -31,10 +32,10 @@ class GeneratorDemo:
         yield self.footer()
     index.exposed = True
 
-cpg.root = GeneratorDemo()
+cherrypy.root = GeneratorDemo()
 
 
 if __name__ == '__main__':
-    cpg.config.update(file = 'tutorial.conf')
-    cpg.server.start()
+    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.server.start()
 

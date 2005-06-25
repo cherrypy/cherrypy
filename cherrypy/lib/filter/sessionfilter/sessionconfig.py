@@ -26,30 +26,14 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from ramsession  import RamSession 
-from filesession import FileSession
-from dbmsession  import DBMSession
-   
-_sessionTypes = {
-                  'ram'       : RamSession,
-                  'file'      : FileSession,
-                  'anydb'     : DBMSession
-                }
+import cherrypy
 
-try:
-    # the user might not have sqlobject instaled
-    from sqlobjectsession  import SQLObjectSession
-    _sessionTypes['sqlobject']  = SQLObjectSession
-except ImportError:
-    pass
- 
- 
-import cherrypy.cpg
 
 def retrieve(keyName, sessionName, default = None):
-    cpg = cherrypy.cpg
     missing = object()
-    value = cpg.config.get('sessionFilter.%s.%s' % (sessionName, keyName), missing)
+    value = cherrypy.config.get('sessionFilter.%s.%s'
+                                % (sessionName, keyName), missing)
     if value is missing:
-        value = cpg.config.get('sessionFilter.default.%s' % keyName, default)
+        value = cherrypy.config.get('sessionFilter.default.%s'
+                                    % keyName, default)
     return value

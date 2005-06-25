@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##           NOTE: __don't try to return a Generator object to the caller__
 ##           You could of course handle the generator usage internally, before sending
 ##           the result. This breaks from the general cherrypy way of handling generators...
-## 0.0.8   : 2004-12-23 cpg.request.paramList should now be a filter. 
+## 0.0.8   : 2004-12-23 cherrypy.request.paramList should now be a filter. 
 ## 0.0.7   : 2004-12-07 inserted in the experimental branch (all remco boerma till here)
 ## 0.0.6   : 2004-12-02 Converted basefilter to baseinputfileter,baseoutputfilter
 ## 0.0.5   : 2004-11-22 "RPC2/" now changed to "/RPC2/" with the new mapping function
@@ -81,7 +81,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## 
 ## EXAMPLE CODE FOR THE SERVER:
 ##    from cherrypy.lib.filter.xmlrpcfilter import XmlRpcFilter
-##    from cherrypy import cpg
+##    from cherrypy import cherrypy
 ##
 ##    class Root:
 ##        _cpFilterList = [XmlRpcFilter()]
@@ -90,9 +90,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##            return s*times
 ##        longString.exposed = True
 ##
-##    cpg.root = Root()
+##    cherrypy.root = Root()
 ##    if __name__=='__main__':
-##        cpg.server.start(configMap = {'socketPort': 9001,
+##        cherrypy.server.start(configMap = {'socketPort': 9001,
 ##                                      'threadPool':0,
 ##                                      'socketQueueSize':10 })
 ## EXAMPLE CODE FOR THE CLIENT:
@@ -105,6 +105,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from basefilter import BaseFilter
 import xmlrpclib
 
+
 class XmlRpcFilter(BaseFilter):
     """Converts XMLRPC to CherryPy2 object system and vice-versa.
     
@@ -112,12 +113,12 @@ class XmlRpcFilter(BaseFilter):
     
     beforeRequestBody:
         Unmarshalls the posted data to a methodname and parameters.
-        - These are stored in cpg.request.rpcMethod and .rpcParams
-        - The method is also stored in cpg.request.path, so CP2 will find
+        - These are stored in cherrypy.request.rpcMethod and .rpcParams
+        - The method is also stored in cherrypy.request.path, so CP2 will find
           the right method to call for you, based on the root's position.
     beforeFinalize:
-        Marshalls cpg.response.body to xmlrpc.
-        - Until resolved: cpg.response.body must be a python source string;
+        Marshalls cherrypy.response.body to xmlrpc.
+        - Until resolved: cherrypy.response.body must be a python source string;
           this string is 'eval'ed to return the results. This will be
           resolved in the future.
         - Content-Type and Content-Length are set according to the new
@@ -126,66 +127,67 @@ class XmlRpcFilter(BaseFilter):
     
     def testValidityOfRequest(self):
         # test if the content-length was sent
-        result = int(cpg.request.headerMap.get('Content-Length',0)) > 0
-        ct = cpg.request.headerMap.get('Content-Type', 'text/xml').lower()
+        result = int(cherrypy.request.headerMap.get('Content-Length',0)) > 0
+        ct = cherrypy.request.headerMap.get('Content-Type', 'text/xml').lower()
         result = result and ct in ['text/xml']
         return result
     
     def onStartResource(self):
-        # We have to dynamically import cpg because Python can't handle
+        # We have to dynamically import cherrypy because Python can't handle
         #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
+        global cherrypy
+        import cherrypy
     
     def beforeRequestBody(self):
         """ Called after the request header has been read/parsed"""
-        cpg.threadData.xmlRpcFilterOn = cpg.config.get('xmlRpcFilter.on', False)
-        if not cpg.threadData.xmlRpcFilterOn:
+        cherrypy.threadData.xmlRpcFilterOn = cherrypy.config.get('xmlRpcFilter.on', False)
+        if not cherrypy.threadData.xmlRpcFilterOn:
             return True
         
-        cpg.request.isRPC = self.testValidityOfRequest()
-        if not cpg.request.isRPC: 
+        cherrypy.request.isRPC = self.testValidityOfRequest()
+        if not cherrypy.request.isRPC: 
             # used for debugging or more info
             # print 'not a valid xmlrpc call'
             return # break this if it's not for this filter!!
         # used for debugging, or more info:
         # print "xmlrpcmethod...",
-        cpg.request.processRequestBody = False
-        dataLength = int(cpg.request.headerMap.get('Content-Length', 0))
-        data = cpg.request.rfile.read(dataLength)
+        cherrypy.request.processRequestBody = False
+        dataLength = int(cherrypy.request.headerMap.get('Content-Length', 0))
+        data = cherrypy.request.rfile.read(dataLength)
         try:
             params, method = xmlrpclib.loads(data)
         except Exception:
             params, method = ('ERROR PARAMS', ), 'ERRORMETHOD'
-        cpg.request.rpcMethod, cpg.request.rpcParams = method, params
+        cherrypy.request.rpcMethod, cherrypy.request.rpcParams = method, params
         # patch the path. there are only a few options:
         # - 'RPC2' + method >> method
         # - 'someurl' + method >> someurl.method
         # - 'someurl/someother' + method >> someurl.someother.method
-        if not cpg.request.path.endswith('/'):
-            cpg.request.path += '/'
-        if cpg.request.path.startswith('/RPC2/'):
-            cpg.request.path=cpg.request.path[5:] ## strip the first /rpc2
-        cpg.request.path += str(method).replace('.', '/')
-        cpg.request.paramList = list(params)
+        if not cherrypy.request.path.endswith('/'):
+            cherrypy.request.path += '/'
+        if cherrypy.request.path.startswith('/RPC2/'):
+            cherrypy.request.path=cherrypy.request.path[5:] ## strip the first /rpc2
+        cherrypy.request.path += str(method).replace('.', '/')
+        cherrypy.request.paramList = list(params)
         # used for debugging and more info
-        # print "XMLRPC Filter: calling '%s' with args: '%s' " % (cpg.request.path,params)
+        # print "XMLRPC Filter: calling '%s' with args: '%s' " % (cherrypy.request.path,params)
     
     def beforeFinalize(self):
         """ Called before finalizing output """
-        if (not cpg.threadData.xmlRpcFilterOn) or (not cpg.request.isRPC):
+        if (not cherrypy.threadData.xmlRpcFilterOn
+            or not cherrypy.request.isRPC):
             return
         
-        cpg.response.body = [xmlrpclib.dumps(
-            (cpg.response.body[0],), methodresponse=1, allow_none=1)]
-        cpg.response.headerMap['Content-Type'] = 'text/xml'
-        cpg.response.headerMap['Content-Length'] = `len(cpg.response.body[0])`
+        cherrypy.response.body = [xmlrpclib.dumps(
+            (cherrypy.response.body[0],), methodresponse=1, allow_none=1)]
+        cherrypy.response.headerMap['Content-Type'] = 'text/xml'
+        cherrypy.response.headerMap['Content-Length'] = `len(cherrypy.response.body[0])`
     
     def beforeErrorResponse(self):
         try:
-            if not cpg.threadData.xmlRpcFilterOn:
+            if not cherrypy.threadData.xmlRpcFilterOn:
                 return
-            cpg.response.body = [xmlrpclib.dumps(
-                xmlrpclib.Fault(1, ''.join(cpg.response.body)))]
+            cherrypy.response.body = [xmlrpclib.dumps(
+                xmlrpclib.Fault(1, ''.join(cherrypy.response.body)))]
         except:
             pass

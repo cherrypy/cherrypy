@@ -1,6 +1,7 @@
 """Tutorial: File upload"""
 
-from cherrypy import cpg
+import cherrypy
+
 
 class FileUploadDemo(object):
     
@@ -28,10 +29,10 @@ class FileUploadDemo(object):
     upload.exposed = True
 
 
-cpg.root = FileUploadDemo()
+cherrypy.root = FileUploadDemo()
 
 if __name__ == '__main__':
     # Use the configuration file tutorial.conf.
-    cpg.config.update(file = 'tutorial.conf')
+    cherrypy.config.update(file = 'tutorial.conf')
     # Start the CherryPy server.
-    cpg.server.start()
+    cherrypy.server.start()

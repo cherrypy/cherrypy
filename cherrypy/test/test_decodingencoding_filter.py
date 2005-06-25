@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from cherrypy import cpg
+import cherrypy
 europoundUnicode = u'\x80\xa3'
 
 class Root:
@@ -35,8 +35,8 @@ class Root:
         yield europoundUnicode
     index.exposed = True
 
-cpg.root = Root()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.config.update({
     'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
@@ -44,7 +44,7 @@ cpg.config.update({
         'decodingFilter.on': True
     }
 })
-cpg.server.start(initOnly=True)
+cherrypy.server.start(initOnly=True)
 
 
 import unittest
@@ -56,7 +56,7 @@ class DecodingEncodingFilterTest(unittest.TestCase):
     
     def testDecodingEncodingFilter(self):
         helper.request('/?param=%s' % europoundUtf8)
-        self.assertEqual(cpg.response.body, europoundUtf8)
+        self.assertEqual(cherrypy.response.body, europoundUtf8)
 
 
 if __name__ == "__main__":

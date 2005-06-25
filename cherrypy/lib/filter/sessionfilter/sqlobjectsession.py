@@ -25,13 +25,15 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from basesession import BaseSession
-import cherrypy.cpg
 
+import cherrypy
+from cherrypy import _cputil
+from basesession import BaseSession
 from sessionerrors import *
 
 from sqlobject import *
 from basesessiondict import BaseSessionDict
+
 
 class SQLObjectSessionDict(BaseSessionDict):
     
@@ -69,7 +71,7 @@ class SQLObjectSessionDict(BaseSessionDict):
             return getattr(self.__sqlObject, key)
         except AttributeError:
             raise KeyError
-
+    
     def __setitem__(self, key, value):
         # make shure it is not an attribute
         if key in ['timestamp', 'timeout', 'lastAccess', 'key']:
@@ -78,24 +80,23 @@ class SQLObjectSessionDict(BaseSessionDict):
             return setattr(self.__sqlObject, key, value)
         except AttributeError:
             return KeyError
-
+    
     def __str__(self):
         return str(self.__sqlObject)
-      
+
+
 class SQLObjectSession(BaseSession):
     
     def __init__(self, sessionName):
         BaseSession.__init__(self, sessionName)
         
-        dbClassName = cherrypy.cpg.config.get('%s.dbClassName' % sessionName)
-        self.Session = cherrypy._cputil.getSpecialAttribute(dbClassName)
+        dbClassName = cherrypy.config.get('%s.dbClassName' % sessionName)
+        self.Session = _cputil.getSpecialAttribute(dbClassName)
     
     def newSession(self):
         """ Return a new sessionMap instance """
-        
         newSession = self.Session(session_key = self.generateSessionKey())
         return SQLObjectSessionDict(newSession)
-        
         
     def getSession(self, sessionKey):
         resultList = list(self.Session.select(self.Session.q.session_key == sessionKey))

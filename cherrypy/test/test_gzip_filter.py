@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import gzip, StringIO
-from cherrypy import cpg
+import cherrypy
 
 class Root:
     def index(self):
@@ -41,8 +41,8 @@ class Root:
         yield "Here be dragons"
     noshow.exposed = True
 
-cpg.root = Root()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.config.update({
     'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
@@ -50,7 +50,7 @@ cpg.config.update({
     }
 })
 
-cpg.server.start(initOnly=True)
+cherrypy.server.start(initOnly=True)
 
 
 import unittest
@@ -67,12 +67,12 @@ class GzipFilterTest(unittest.TestCase):
         zfile.close()
         
         helper.request('/', headers=[("Accept-Encoding", "gzip")])
-        self.assert_(zbuf.getvalue()[:3] in cpg.response.body)
+        self.assert_(zbuf.getvalue()[:3] in cherrypy.response.body)
         
         # Test for ticket #147
         helper.request('/noshow', headers=[("Accept-Encoding", "gzip")])
-        self.assert_('Content-Encoding' not in cpg.response.headerMap)
-        self.assert_(cpg.response.body.endswith("IndexError\n"))
+        self.assert_('Content-Encoding' not in cherrypy.response.headerMap)
+        self.assert_(cherrypy.response.body.endswith("IndexError\n"))
 
 
 if __name__ == "__main__":

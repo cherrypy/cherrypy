@@ -26,13 +26,13 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from cherrypy import cpg
+import cherrypy
 
 
 class Root: pass
 
-cpg.root = Root()
-cpg.config.update({
+cherrypy.root = Root()
+cherrypy.config.update({
     'global': {
         'staticFilter.on': False,
         'server.logToScreen': False,
@@ -47,7 +47,7 @@ cpg.config.update({
         'staticFilter.file': 'style.css',
     }
 })
-cpg.server.start(initOnly=True)
+cherrypy.server.start(initOnly=True)
 
 
 import unittest
@@ -57,12 +57,12 @@ class StaticFilterTest(unittest.TestCase):
     
     def testStaticFilter(self):
         helper.request("/static/index.html")
-        self.assertEqual(cpg.response.headerMap['Content-Type'], 'text/html')
-        self.assertEqual(cpg.response.body, 'Hello, world\r\n')
+        self.assertEqual(cherrypy.response.headerMap['Content-Type'], 'text/html')
+        self.assertEqual(cherrypy.response.body, 'Hello, world\r\n')
         
         helper.request("/style.css")
-        self.assertEqual(cpg.response.headerMap['Content-Type'], 'text/css')
-        self.assertEqual(cpg.response.body, 'Dummy stylesheet\n')
+        self.assertEqual(cherrypy.response.headerMap['Content-Type'], 'text/css')
+        self.assertEqual(cherrypy.response.body, 'Dummy stylesheet\n')
 
 
 if __name__ == "__main__":

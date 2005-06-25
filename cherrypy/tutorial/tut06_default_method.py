@@ -9,14 +9,15 @@ located deepest on the URI path.
 
 Using this mechanism you can easily simulate virtual URI structures
 by parsing the extra URI string, which you can access through
-cpg.request.virtualPath.
+cherrypy.request.virtualPath.
 
 The application in this tutorial simulates an URI structure looking
 like /users/<username>. Since the <username> bit will not be found (as
 there are no matching methods), it is handled by the default method.
 """
 
-from cherrypy import cpg
+import cherrypy
+
 
 class UsersPage:
     
@@ -49,10 +50,10 @@ class UsersPage:
     default.exposed = True
 
 
-cpg.root = UsersPage()
+cherrypy.root = UsersPage()
 
 
 if __name__ == '__main__':
-    cpg.config.update(file = 'tutorial.conf')
-    cpg.server.start()
+    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.server.start()
 

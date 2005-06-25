@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Basic tests for the CherryPy core: request handling."""
 
-from cherrypy import cpg, cperror
+import cherrypy
 import types
 
 class Root:
@@ -36,7 +36,7 @@ class Root:
         return "hello"
     index.exposed = True
 
-cpg.root = Root()
+cherrypy.root = Root()
 
 
 class TestType(type):
@@ -45,7 +45,7 @@ class TestType(type):
         for value in dct.itervalues():
             if isinstance(value, types.FunctionType):
                 value.exposed = True
-        setattr(cpg.root, name.lower(), cls())
+        setattr(cherrypy.root, name.lower(), cls())
 class Test(object):
     __metaclass__ = TestType
 
@@ -56,24 +56,24 @@ class Status(Test):
         return "normal"
     
     def blank(self):
-        cpg.response.status = ""
+        cherrypy.response.status = ""
     
     # According to RFC 2616, new status codes are OK as long as they
     # are between 100 and 599.
     
     # Here is an illegal code...
     def illegal(self):
-        cpg.response.status = 781
+        cherrypy.response.status = 781
         return "oops"
     
     # ...and here is an unknown but legal code.
     def unknown(self):
-        cpg.response.status = "431 My custom error"
+        cherrypy.response.status = "431 My custom error"
         return "funky"
     
     # Non-numeric code
     def bad(self):
-        cpg.response.status = "error"
+        cherrypy.response.status = "error"
         return "hello"
 
 
@@ -83,24 +83,24 @@ class Redirect(Test):
         return "child"
     
     def by_code(self, code):
-        raise cperror.HTTPRedirect("somewhere else", code)
+        raise cherrypy.HTTPRedirect("somewhere else", code)
     
     def nomodify(self):
-        raise cperror.HTTPRedirect("", 304)
+        raise cherrypy.HTTPRedirect("", 304)
     
     def proxy(self):
-        raise cperror.HTTPRedirect("proxy", 305)
+        raise cherrypy.HTTPRedirect("proxy", 305)
     
     def internal(self):
-        raise cperror.InternalRedirect("/")
+        raise cherrypy.InternalRedirect("/")
     
     def internal2(self, user_id):
         if user_id == "parrot":
             # Trade it for a slug when redirecting
-            raise cperror.InternalRedirect('/image/getImagesByUser',
+            raise cherrypy.InternalRedirect('/image/getImagesByUser',
                                            "user_id=slug")
         else:
-            raise cperror.InternalRedirect('/image/getImagesByUser')
+            raise cherrypy.InternalRedirect('/image/getImagesByUser')
 
 
 class Image(Test):
@@ -138,7 +138,7 @@ class Error(Test):
         raise ValueError
     
     def page_http_1_1(self):
-        cpg.response.headerMap["Content-Length"] = 39
+        cherrypy.response.headerMap["Content-Length"] = 39
         def inner():
             yield "hello"
             raise ValueError
@@ -155,13 +155,13 @@ class Headers(Test):
         # header fields, one in lowercase, the other in mixed-case."
         
         # Set the most common headers
-        cpg.response.headerMap['content-type'] = "text/html"
-        cpg.response.headerMap['content-length'] = 18
-        cpg.response.headerMap['server'] = 'CherryPy headertest'
-        cpg.response.headerMap['location'] = 'http://127.0.0.1:8000/headers/'
+        cherrypy.response.headerMap['content-type'] = "text/html"
+        cherrypy.response.headerMap['content-length'] = 18
+        cherrypy.response.headerMap['server'] = 'CherryPy headertest'
+        cherrypy.response.headerMap['location'] = 'http://127.0.0.1:8000/headers/'
         
         # Set a rare header for fun
-        cpg.response.headerMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
+        cherrypy.response.headerMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
         
         return "double header test"
 
@@ -171,17 +171,17 @@ defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
 class Method(Test):
     
     def index(self):
-        m = cpg.request.method
+        m = cherrypy.request.method
         if m in defined_http_methods:
             return m
         
         if m == "LINK":
-            cpg.response.status = 405
+            cherrypy.response.status = 405
         else:
-            cpg.response.status = 501
+            cherrypy.response.status = 501
 
 
-cpg.config.update({
+cherrypy.config.update({
     'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
@@ -197,7 +197,7 @@ cpg.config.update({
         'bax': 'this4',
     },
 })
-cpg.server.start(initOnly=True)
+cherrypy.server.start(initOnly=True)
 
 import unittest
 import helper
@@ -206,7 +206,7 @@ import os
 class CoreRequestHandlingTest(unittest.TestCase):
     
     def testConfig(self):
-        from cherrypy import _cpconfig
+        import cherrypy
         tests = [
             ('/',        'nex', None   ),
             ('/',        'foo', 'this' ),
@@ -219,112 +219,113 @@ class CoreRequestHandlingTest(unittest.TestCase):
             ('/foo/nex', 'baz', 'that2'),
         ]
         for path, key, expected in tests:
-            cpg.request.path = path
-            result = _cpconfig.get(key, None)
+            cherrypy.request.path = path
+            result = cherrypy.config.get(key, None)
             self.assertEqual(result, expected)
     
     def testStatus(self):
         helper.request("/status/")
-        self.assertEqual(cpg.response.body, 'normal')
-        self.assertEqual(cpg.response.status, '200 OK')
+        self.assertEqual(cherrypy.response.body, 'normal')
+        self.assertEqual(cherrypy.response.status, '200 OK')
         
         helper.request("/status/blank")
-        self.assertEqual(cpg.response.body, '')
-        self.assertEqual(cpg.response.status, '200 OK')
+        self.assertEqual(cherrypy.response.body, '')
+        self.assertEqual(cherrypy.response.status, '200 OK')
         
         helper.request("/status/illegal")
-        self.assertEqual(cpg.response.body, 'oops')
-        self.assertEqual(cpg.response.status, '500 Internal error')
+        self.assertEqual(cherrypy.response.body, 'oops')
+        self.assertEqual(cherrypy.response.status, '500 Internal error')
         
         helper.request("/status/unknown")
-        self.assertEqual(cpg.response.body, 'funky')
-        self.assertEqual(cpg.response.status, '431 My custom error')
+        self.assertEqual(cherrypy.response.body, 'funky')
+        self.assertEqual(cherrypy.response.status, '431 My custom error')
         
         helper.request("/status/bad")
-        self.assertEqual(cpg.response.body, 'hello')
-        self.assertEqual(cpg.response.status, '500 Internal error')
+        self.assertEqual(cherrypy.response.body, 'hello')
+        self.assertEqual(cherrypy.response.status, '500 Internal error')
     
     def testRedirect(self):
         helper.request("/redirect/")
-        self.assertEqual(cpg.response.body, 'child')
-        self.assertEqual(cpg.response.status, '200 OK')
+        self.assertEqual(cherrypy.response.body, 'child')
+        self.assertEqual(cherrypy.response.status, '200 OK')
         
         helper.request("/redirect?id=3")
-        self.assert_(cpg.response.status in ('302 Found', '303 See Other'))
-        self.assert_("<a href='http://127.0.0.1:8000/redirect/?id=3'>http://127.0.0.1:8000/redirect/?id=3</a>" in cpg.response.body)
+        self.assert_(cherrypy.response.status in ('302 Found', '303 See Other'))
+        self.assert_("<a href='http://127.0.0.1:8000/redirect/?id=3'>http://127.0.0.1:8000/redirect/?id=3</a>"
+                     in cherrypy.response.body)
         
         helper.request("/redirect/by_code?code=300")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
-        self.assertEqual(cpg.response.status, '300 Multiple Choices')
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
+        self.assertEqual(cherrypy.response.status, '300 Multiple Choices')
         
         helper.request("/redirect/by_code?code=301")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
-        self.assertEqual(cpg.response.status, '301 Moved Permanently')
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
+        self.assertEqual(cherrypy.response.status, '301 Moved Permanently')
         
         helper.request("/redirect/by_code?code=302")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
-        self.assertEqual(cpg.response.status, '302 Found')
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
+        self.assertEqual(cherrypy.response.status, '302 Found')
         
         helper.request("/redirect/by_code?code=303")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
-        self.assertEqual(cpg.response.status, '303 See Other')
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
+        self.assertEqual(cherrypy.response.status, '303 See Other')
         
         helper.request("/redirect/by_code?code=307")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cpg.response.body)
-        self.assertEqual(cpg.response.status, '307 Temporary Redirect')
+        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
+        self.assertEqual(cherrypy.response.status, '307 Temporary Redirect')
         
         helper.request("/redirect/nomodify")
-        self.assertEqual(cpg.response.body, '')
-        self.assertEqual(cpg.response.status, '304 Not modified')
+        self.assertEqual(cherrypy.response.body, '')
+        self.assertEqual(cherrypy.response.status, '304 Not modified')
         
         helper.request("/redirect/proxy")
-        self.assertEqual(cpg.response.body, '')
-        self.assertEqual(cpg.response.status, '305 Use Proxy')
+        self.assertEqual(cherrypy.response.body, '')
+        self.assertEqual(cherrypy.response.status, '305 Use Proxy')
         
         # InternalRedirect
         helper.request("/redirect/internal")
-        self.assertEqual(cpg.response.body, 'hello')
-        self.assertEqual(cpg.response.status, '200 OK')
+        self.assertEqual(cherrypy.response.body, 'hello')
+        self.assertEqual(cherrypy.response.status, '200 OK')
         
         helper.request("/redirect/internal2?user_id=Sir-not-appearing-in-this-film")
-        self.assertEqual(cpg.response.body, '0 images for Sir-not-appearing-in-this-film')
-        self.assertEqual(cpg.response.status, '200 OK')
+        self.assertEqual(cherrypy.response.body, '0 images for Sir-not-appearing-in-this-film')
+        self.assertEqual(cherrypy.response.status, '200 OK')
         
         helper.request("/redirect/internal2?user_id=parrot")
-        self.assertEqual(cpg.response.body, '0 images for slug')
-        self.assertEqual(cpg.response.status, '200 OK')
+        self.assertEqual(cherrypy.response.body, '0 images for slug')
+        self.assertEqual(cherrypy.response.status, '200 OK')
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
                     "/flatten/as_yield", "/flatten/as_dblyield",
                     "/flatten/as_refyield"]:
             helper.request(url)
-            self.assertEqual(cpg.response.body, 'content')
+            self.assertEqual(cherrypy.response.body, 'content')
     
     def testErrorHandling(self):
         valerr = '\n    raise ValueError\nValueError\n'
         helper.request("/error/page_method")
-        self.assert_(cpg.response.body.endswith(valerr))
+        self.assert_(cherrypy.response.body.endswith(valerr))
         
         helper.request("/error/page_yield")
-        self.assert_(cpg.response.body.endswith(valerr))
+        self.assert_(cherrypy.response.body.endswith(valerr))
         
-        if cpg._httpserver is None:
+        if cherrypy._httpserver is None:
             self.assertRaises(ValueError, helper.request, "/error/page_http_1_1")
         else:
             helper.request("/error/page_http_1_1")
             # Because this error is raised after the response body has
             # started, the status should not change to an error status.
-            self.assertEqual(cpg.response.status, "200 OK")
-            self.assertEqual(cpg.response.body, "helloUnrecoverable error in the server.")
+            self.assertEqual(cherrypy.response.status, "200 OK")
+            self.assertEqual(cherrypy.response.body, "helloUnrecoverable error in the server.")
     
     def testHeaderCaseSensitivity(self):
         helper.request("/headers/")
-        hnames = [name.title() for name, val in cpg.response.headers]
+        hnames = [name.title() for name, val in cherrypy.response.headers]
         hnames.sort()
         self.assertEqual(hnames, ['Content-Length', 'Content-Type', 'Date', 'Expires',
                                   'Location', 'Server'])
-        self.assertEqual(cpg.response.body, "double header test")
+        self.assertEqual(cherrypy.response.body, "double header test")
     
     def testMethods(self):
         # Test that all defined HTTP methods work.
@@ -336,15 +337,15 @@ class CoreRequestHandlingTest(unittest.TestCase):
             if m == "HEAD":
                 m = ""
             
-            self.assertEqual(cpg.response.body, m)
+            self.assertEqual(cherrypy.response.body, m)
         
         # Request a disallowed method
         helper.request("/method/", method="LINK")
-        self.assertEqual(cpg.response.status, "405 Method Not Allowed")
+        self.assertEqual(cherrypy.response.status, "405 Method Not Allowed")
         
         # Request an unknown method
         helper.request("/method/", method="SEARCH")
-        self.assertEqual(cpg.response.status, "501 Not Implemented")
+        self.assertEqual(cherrypy.response.status, "501 Not Implemented")
     
     def testFavicon(self):
         # Calls to favicon.ico are special-cased in _cphttptools.
@@ -355,10 +356,10 @@ class CoreRequestHandlingTest(unittest.TestCase):
         icofile.close()
         
         helper.request("/favicon.ico")
-        self.assertEqual(cpg.response.body, data)
+        self.assertEqual(cherrypy.response.body, data)
         
         helper.request("/redirect/favicon.ico")
-        self.assertEqual(cpg.response.body, data)
+        self.assertEqual(cherrypy.response.body, data)
 
 
 if __name__ == '__main__':

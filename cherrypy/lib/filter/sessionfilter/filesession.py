@@ -26,17 +26,15 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from basesession import BaseSession
-import cherrypy.cpg
 import cPickle as pickle
-
+import threading
 import os.path
 
-from sessionerrors import *
 import sessionconfig
-
-import threading
+from basesession import BaseSession
+from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
+
 
 class FileSession(BaseSession):
     
@@ -56,7 +54,7 @@ class FileSession(BaseSession):
     def getSession(self, sessionKey):
         if not sessionKey:
             raise SessionNotFoundError
-	
+        
         storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
         fileName = '%s_%i-%s' % (self.sessionName, hash(self), sessionKey)
         filePath = os.path.join(storageDir, fileName)

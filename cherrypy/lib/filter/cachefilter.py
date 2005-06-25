@@ -33,7 +33,7 @@ import time
 import basefilter
 
 def defaultCacheKey():
-    return cpg.request.browserUrl
+    return cherrypy.request.browserUrl
 
 
 class MemoryCache:
@@ -130,54 +130,54 @@ class CacheFilter(basefilter.BaseFilter):
         self.maxobjects = maxobjects
     
     def onStartResource(self):
-        # We have to dynamically import cpg because Python can't handle
+        # We have to dynamically import cherrypy because Python can't handle
         #   circular module imports :-(
-        global cpg, cperror
-        from cherrypy import cpg, cperror
-        cpg.threadData.cacheable = True
+        global cherrypy
+        import cherrypy
+        cherrypy.threadData.cacheable = True
     
     def beforeMain(self):
-        if not cpg.config.get('cacheFilter.on', False):
+        if not cherrypy.config.get('cacheFilter.on', False):
             return
         
-        if not hasattr(cpg, '_cache'):
-            cpg._cache = self.CacheClass(self.key, self.delay,
+        if not hasattr(cherrypy, '_cache'):
+            cherrypy._cache = self.CacheClass(self.key, self.delay,
                 self.maxobjsize, self.maxsize, self.maxobjects)
         
-        cacheData = cpg._cache.get()
-        cpg.threadData.cacheable = not cacheData
+        cacheData = cherrypy._cache.get()
+        cherrypy.threadData.cacheable = not cacheData
         if cacheData:
             expirationTime, lastModified, obj = cacheData
             # found a hit! check the if-modified-since request header
-            modifiedSince = cpg.request.headerMap.get('If-Modified-Since', None)
+            modifiedSince = cherrypy.request.headerMap.get('If-Modified-Since', None)
             # print ("Cache hit: If-Modified-Since=%s, lastModified=%s" %
             #        (modifiedSince, lastModified))
             if modifiedSince is not None and modifiedSince == lastModified:
-                cpg._cache.totNonModified += 1
-                cpg.response.status = "304 Not Modified"
-                cpg.response.body = []
+                cherrypy._cache.totNonModified += 1
+                cherrypy.response.status = "304 Not Modified"
+                cherrypy.response.body = []
             else:
                 # serve it & get out from the request
-                cpg.response.status, cpg.response.headers, body = obj
-                cpg.response.body = body
-            raise cperror.RequestHandled
+                cherrypy.response.status, cherrypy.response.headers, body = obj
+                cherrypy.response.body = body
+            raise cherrypy.RequestHandled
     
     def onEndResource(self):
         """Close & fix the cache entry after content was fully written"""
-        if not cpg.config.get('cacheFilter.on', False):
+        if not cherrypy.config.get('cacheFilter.on', False):
             return
         
-        if cpg.threadData.cacheable:
-            status = cpg.response.status
-            headers = cpg.response.headers
+        if cherrypy.threadData.cacheable:
+            status = cherrypy.response.status
+            headers = cherrypy.response.headers
             
             # Consume the body iterable. Only do this once!
-            body = cpg.response.body = [chunk for chunk in cpg.response.body]
+            body = cherrypy.response.body = [chunk for chunk in cherrypy.response.body]
             
-            if cpg.response.headerMap.get('Pragma', None) != 'no-cache':
-                lastModified = cpg.response.headerMap.get('Last-Modified', None)
+            if cherrypy.response.headerMap.get('Pragma', None) != 'no-cache':
+                lastModified = cherrypy.response.headerMap.get('Last-Modified', None)
                 # saves the cache data
-                cpg._cache.put(lastModified, (status, headers, body))
+                cherrypy._cache.put(lastModified, (status, headers, body))
 
 
 def percentual(n,d):
@@ -202,9 +202,9 @@ def formatSize(n):
 class CacheStats:
     
     def index(self):
-        cpg.response.headerMap['Content-Type'] = 'text/plain'
-        cpg.response.headerMap['Pragma'] = 'no-cache'
-        cache = cpg._cache
+        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        cherrypy.response.headerMap['Pragma'] = 'no-cache'
+        cache = cherrypy._cache
         yield "Cache statistics\n"
         yield "Maximum object size: %s\n" % formatSize(cache.maxobjsize)
         yield "Maximum cache size: %s\n" % formatSize(cache.maxsize)

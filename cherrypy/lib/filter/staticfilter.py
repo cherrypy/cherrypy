@@ -34,16 +34,17 @@ class StaticFilter(BaseFilter):
     """Filter that handles static content."""
     
     def beforeMain(self):
-        from cherrypy import cpg, _cphttptools
+        import cherrypy
+        from cherrypy import _cphttptools
         
-        if not cpg.config.get('staticFilter.on', False):
+        if not cherrypy.config.get('staticFilter.on', False):
             return
         
-        filename = cpg.config.get('staticFilter.file')
+        filename = cherrypy.config.get('staticFilter.file')
         if not filename:
-            staticDir = cpg.config.get('staticFilter.dir')
-            section = cpg.config.get('staticFilter.dir', returnSection=True)
-            extraPath = cpg.request.path[len(section) + 1:]
+            staticDir = cherrypy.config.get('staticFilter.dir')
+            section = cherrypy.config.get('staticFilter.dir', returnSection=True)
+            extraPath = cherrypy.request.path[len(section) + 1:]
             filename = os.path.join(staticDir, extraPath)
         _cphttptools.serve_file(filename)
 

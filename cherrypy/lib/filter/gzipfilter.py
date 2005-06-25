@@ -35,25 +35,26 @@ class GzipFilter(BaseFilter):
     """Filter that gzips the response."""
     
     def beforeFinalize(self):
-        # We have to dynamically import cpg because Python can't handle
+        # We have to dynamically import cherrypy because Python can't handle
         #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
-        if not cpg.config.get('gzipFilter.on', False):
+        global cherrypy
+        import cherrypy
+        
+        if not cherrypy.config.get('gzipFilter.on', False):
             return
         
-        if not cpg.response.body:
+        if not cherrypy.response.body:
             # Response body is empty (might be a 304 for instance)
             return
         
-        ct = cpg.response.headerMap.get('Content-Type').split(';')[0]
-        ae = cpg.request.headerMap.get('Accept-Encoding', '')
-        if (ct in cpg.config.get('gzipFilter.mimeTypeList', ['text/html'])
+        ct = cherrypy.response.headerMap.get('Content-Type').split(';')[0]
+        ae = cherrypy.request.headerMap.get('Accept-Encoding', '')
+        if (ct in cherrypy.config.get('gzipFilter.mimeTypeList', ['text/html'])
             and ('gzip' in ae)):
-            cpg.response.headerMap['Content-Encoding'] = 'gzip'
+            cherrypy.response.headerMap['Content-Encoding'] = 'gzip'
             # Return a generator that compresses the page
-            level = cpg.config.get('gzipFilter.compresslevel', 9)
-            cpg.response.body = self.zip_body(cpg.response.body, level)
+            level = cherrypy.config.get('gzipFilter.compresslevel', 9)
+            cherrypy.response.body = self.zip_body(cherrypy.response.body, level)
     
     def write_gzip_header(self):
         """Adapted from the gzip.py standard module code"""

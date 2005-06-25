@@ -5,7 +5,7 @@ This tutorial shows you how to link to other methods of your request
 handler.
 """
 
-from cherrypy import cpg
+import cherrypy
 
 class HelloWorld:
     
@@ -19,9 +19,9 @@ class HelloWorld:
         return "Hello world!"
     showMessage.exposed = True
 
-cpg.root = HelloWorld()
+cherrypy.root = HelloWorld()
 
 if __name__ == '__main__':
-    cpg.config.update(file = 'tutorial.conf')
-    cpg.server.start()
+    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.server.start()
 

@@ -1,22 +1,44 @@
+"""
+Copyright (c) 2004, CherryPy Team (team@cherrypy.org)
+All rights reserved.
 
+Redistribution and use in source and binary forms, with or without modification, 
+are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, 
+      this list of conditions and the following disclaimer in the documentation 
+      and/or other materials provided with the distribution.
+    * Neither the name of the CherryPy Team nor the names of its contributors 
+      may be used to endorse or promote products derived from this software 
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+"""
+Configuration system for CherryPy.
+"""
+
+import os.path
 import ConfigParser
 
-import _cputil, cperror
-from lib import autoreload
+import cherrypy
+from cherrypy import _cputil, _cperror
+from cherrypy.lib import autoreload
 
-cpg = None # delayed import
-def init():
-    global cpg
-    if not cpg:
-        import cpg
-    reset()
 
-def reset(useDefaults=True):
-    configMap.clear()
-    if useDefaults:
-        configMap["global"] = defaultGlobal.copy()
-
-# This configMap dict holds the settings metadata for all cpg objects.
+# This configMap dict holds the settings metadata for all cherrypy objects.
 # Keys are URL paths, and values are dicts.
 configMap = {}
 
@@ -43,6 +65,12 @@ defaultGlobal = {
     'sessionFilter.default.storageFileDir': '.sessionFiles'
     }
 
+def reset(useDefaults=True):
+    configMap.clear()
+    if useDefaults:
+        configMap["global"] = defaultGlobal.copy()
+reset()
+
 def update(updateMap=None, file=None):
     if updateMap:
         for section, valueMap in updateMap.items():
@@ -63,12 +91,12 @@ def update(updateMap=None, file=None):
 
 def get(key, defaultValue=None, returnSection=False, startPath = None):
     # Look, ma, no Python function calls! Uber-fast.
-    # start path lest you overload the starting search path (needed by getAll)
+    # startPath lets you overload the starting search path (needed by getAll)
     if startPath:
         path = startPath
     else:
         try:
-            path = cpg.request.path
+            path = cherrypy.request.path
         except AttributeError:
             path = "/"
     
@@ -98,8 +126,6 @@ def get(key, defaultValue=None, returnSection=False, startPath = None):
         return path
     else:
         return result
-        
-import os.path
 
 def getAll(key):
     """
@@ -122,6 +148,7 @@ def getAll(key):
         result[path] = value
     
     return result
+
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and
@@ -147,13 +174,13 @@ def _load(configFile = None):
     # Parse config file
     configParser = CaseSensitiveConfigParser()
     if hasattr(configFile, 'read'):
-        cpg.log("Reading infos from configFile stream", 'CONFIG')
+        cherrypy.log("Reading infos from configFile stream", 'CONFIG')
         configParser.readfp(configFile)
     else:
-        cpg.log("Reading infos from configFile: %s" % configFile, 'CONFIG')
+        cherrypy.log("Reading infos from configFile: %s" % configFile, 'CONFIG')
         configParser.read(configFile)
-
-    # Load INI file into cpg.configMap
+    
+    # Load INI file into cherrypy.configMap
     for section in configParser.sections():
         if section not in configMap:
             configMap[section] = {}
@@ -161,28 +188,28 @@ def _load(configFile = None):
             value = configParser.get(section, option)
             try:
                 value = _cputil.unrepr(value)
-            except cperror.WrongUnreprValue, s:
+            except _cperror.WrongUnreprValue, s:
                 msg = ("section: %s, option: %s, value: %s" %
                        (repr(section), repr(option), repr(value)))
-                raise cperror.WrongConfigValue, msg
+                raise _cperror.WrongConfigValue, msg
             configMap[section][option] = value
 
 def outputConfigMap():
-    cpg.log("Server parameters:", 'CONFIG')
-    cpg.log("  server.environment: %s" % get('server.environment'), 'CONFIG')
-    cpg.log("  server.logToScreen: %s" % get('server.logToScreen'), 'CONFIG')
-    cpg.log("  server.logFile: %s" % get('server.logFile'), 'CONFIG')
-    cpg.log("  server.protocolVersion: %s" % get('server.protocolVersion'), 'CONFIG')
-    cpg.log("  server.socketHost: %s" % get('server.socketHost'), 'CONFIG')
-    cpg.log("  server.socketPort: %s" % get('server.socketPort'), 'CONFIG')
-    cpg.log("  server.socketFile: %s" % get('server.socketFile'), 'CONFIG')
-    cpg.log("  server.reverseDNS: %s" % get('server.reverseDNS'), 'CONFIG')
-    cpg.log("  server.socketQueueSize: %s" % get('server.socketQueueSize'), 'CONFIG')
-    cpg.log("  server.threadPool: %s" % get('server.threadPool'), 'CONFIG')
-    cpg.log("  session.storageType: %s" % get('session.storageType'), 'CONFIG')
+    cherrypy.log("Server parameters:", 'CONFIG')
+    cherrypy.log("  server.environment: %s" % get('server.environment'), 'CONFIG')
+    cherrypy.log("  server.logToScreen: %s" % get('server.logToScreen'), 'CONFIG')
+    cherrypy.log("  server.logFile: %s" % get('server.logFile'), 'CONFIG')
+    cherrypy.log("  server.protocolVersion: %s" % get('server.protocolVersion'), 'CONFIG')
+    cherrypy.log("  server.socketHost: %s" % get('server.socketHost'), 'CONFIG')
+    cherrypy.log("  server.socketPort: %s" % get('server.socketPort'), 'CONFIG')
+    cherrypy.log("  server.socketFile: %s" % get('server.socketFile'), 'CONFIG')
+    cherrypy.log("  server.reverseDNS: %s" % get('server.reverseDNS'), 'CONFIG')
+    cherrypy.log("  server.socketQueueSize: %s" % get('server.socketQueueSize'), 'CONFIG')
+    cherrypy.log("  server.threadPool: %s" % get('server.threadPool'), 'CONFIG')
+    cherrypy.log("  session.storageType: %s" % get('session.storageType'), 'CONFIG')
     if get('session.storageType'):
-        cpg.log("  session.timeout: %s min" % get('session.timeout'), 'CONFIG')
-        cpg.log("  session.cleanUpDelay: %s min" % get('session.cleanUpDelay'), 'CONFIG')
-        cpg.log("  session.cookieName: %s" % get('session.cookieName'), 'CONFIG')
-        cpg.log("  session.storageFileDir: %s" % get('session.storageFileDir'), 'CONFIG')
-    cpg.log("  staticContent: %s" % get('staticContent'), 'CONFIG')
+        cherrypy.log("  session.timeout: %s min" % get('session.timeout'), 'CONFIG')
+        cherrypy.log("  session.cleanUpDelay: %s min" % get('session.cleanUpDelay'), 'CONFIG')
+        cherrypy.log("  session.cookieName: %s" % get('session.cookieName'), 'CONFIG')
+        cherrypy.log("  session.storageFileDir: %s" % get('session.storageFileDir'), 'CONFIG')
+    cherrypy.log("  staticContent: %s" % get('staticContent'), 'CONFIG')

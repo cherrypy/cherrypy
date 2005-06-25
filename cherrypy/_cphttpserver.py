@@ -27,7 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import threading, SocketServer, BaseHTTPServer, socket, Queue
-import cpg, _cpserver, _cphttptools
+import cherrypy
+from cherrypy import _cphttptools
 
 try:
     import cStringIO as StringIO
@@ -48,7 +49,7 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def address_string(self):
         """ Try to do a reverse DNS based on [server]reverseDNS in the config file """
-        if cpg.config.get('server.reverseDNS'):
+        if cherrypy.config.get('server.reverseDNS'):
             return BaseHTTPServer.BaseHTTPRequestHandler.address_string(self)
         else:
             return self.client_address[0]
@@ -79,22 +80,22 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if not self.parse_request(): # An error code has been sent, just exit
             return
         
-        cpg.request.multithread = cpg.config.get("server.threadPool") > 1
-        cpg.request.multiprocess = False
-        _cpserver.request(self.client_address[0],
-                          self.address_string(),
-                          self.raw_requestline,
-                          self._headerlist(),
-                          self.rfile)
+        cherrypy.request.multithread = cherrypy.config.get("server.threadPool") > 1
+        cherrypy.request.multiprocess = False
+        cherrypy.server.request(self.client_address[0],
+                                self.address_string(),
+                                self.raw_requestline,
+                                self._headerlist(),
+                                self.rfile)
         wfile = self.wfile
-        wfile.write("%s %s\r\n" % (self.protocol_version, cpg.response.status))
+        wfile.write("%s %s\r\n" % (self.protocol_version, cherrypy.response.status))
         
-        for name, value in cpg.response.headers:
+        for name, value in cherrypy.response.headers:
             wfile.write("%s: %s\r\n" % (name, value))
         
         wfile.write("\r\n")
         try:
-            for chunk in cpg.response.body:
+            for chunk in cherrypy.response.body:
                 wfile.write(chunk)
         except:
             s, h, b = _cphttptools.bareError()
@@ -106,7 +107,7 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def log_message(self, format, *args):
         """ We have to override this to use our own logging mechanism """
-        cpg.log(format % args, "HTTP")
+        cherrypy.log(format % args, "HTTP")
 
 
 class CherryHTTPServer(BaseHTTPServer.HTTPServer):
@@ -140,7 +141,7 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
             # interrupts on Win32, which don't interrupt accept() by default
             return 1
         except (KeyboardInterrupt, SystemExit):
-            cpg.log("<Ctrl-C> hit: shutting down http server", "HTTP")
+            cherrypy.log("<Ctrl-C> hit: shutting down http server", "HTTP")
             self.shutdown()
     
     def serve_forever(self):
@@ -194,7 +195,7 @@ class ServerThread(threading.Thread):
     def handle_error(self, request, client_address):
         """Handle an error gracefully.  May be overridden."""
         errorBody = _cphttptools.formatExc()
-        cpg.log(errorBody)
+        cherrypy.log(errorBody)
 
 
 class PooledThreadServer(SocketServer.TCPServer):
@@ -272,7 +273,7 @@ class PooledThreadServer(SocketServer.TCPServer):
         try:
             request, client_address = self.get_request()
         except (KeyboardInterrupt, SystemExit):
-            cpg.log("<Ctrl-C> hit: shutting down", "HTTP")
+            cherrypy.log("<Ctrl-C> hit: shutting down", "HTTP")
             return 0
         except socket.error, e:
             return 1
@@ -295,14 +296,14 @@ def embedded_server(handler=None):
     """Selects and instantiates the appropriate server."""
     
     # Set protocol_version
-    proto = cpg.config.get('server.protocolVersion')
+    proto = cherrypy.config.get('server.protocolVersion')
     if not proto:
         proto = "HTTP/1.0"
     CherryHTTPRequestHandler.protocol_version = proto
     
     # Select the appropriate server based on config options
-    sockFile = cpg.config.get('server.socketFile')
-    threadPool = cpg.config.get('server.threadPool')
+    sockFile = cherrypy.config.get('server.socketFile')
+    threadPool = cherrypy.config.get('server.threadPool')
     if sockFile:
         # AF_UNIX socket
         # TODO: Handle threading here
@@ -319,10 +320,10 @@ def embedded_server(handler=None):
             ServerClass = PooledThreadServer
         else:
             ServerClass = CherryHTTPServer
-        server_address = (cpg.config.get('server.socketHost'),
-                          cpg.config.get('server.socketPort'))
+        server_address = (cherrypy.config.get('server.socketHost'),
+                          cherrypy.config.get('server.socketPort'))
     
-    ServerClass.request_queue_size = cpg.config.get('server.socketQueueSize')
+    ServerClass.request_queue_size = cherrypy.config.get('server.socketQueueSize')
     
     if handler is None:
         handler = CherryHTTPRequestHandler

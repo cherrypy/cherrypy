@@ -32,16 +32,16 @@ class DecodingFilter(BaseFilter):
     """Automatically decodes request parameters (except uploads)."""
     
     def beforeMain(self):
-        # We have to dynamically import cpg because Python can't handle
+        # We have to dynamically import cherrypy because Python can't handle
         #   circular module imports :-(
-        global cpg
-        from cherrypy import cpg
-    
-        if not cpg.config.get('decodingFilter.on', False):
+        global cherrypy
+        import cherrypy
+        
+        if not cherrypy.config.get('decodingFilter.on', False):
             return
         
-        enc = cpg.config.get('decodingFilter.encoding', 'utf-8')
-        for key, value in cpg.request.paramMap.items():
+        enc = cherrypy.config.get('decodingFilter.encoding', 'utf-8')
+        for key, value in cherrypy.request.paramMap.items():
             if hasattr(value, 'file'):
                 # This is a file being uploaded: skip it
                 continue
@@ -51,5 +51,5 @@ class DecodingFilter(BaseFilter):
             else:
                 # value is a regular string: decode it
                 newValue = value.decode(enc)
-            cpg.request.paramMap[key] = newValue
+            cherrypy.request.paramMap[key] = newValue
 

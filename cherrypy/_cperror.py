@@ -39,7 +39,7 @@ class NotFound(Error):
     pass
 
 class WrongResponseType(Error):
-    """ Happens when the cpg.response.body is not a string """
+    """ Happens when the cherrypy.response.body is not a string """
     pass
 
 class WrongUnreprValue(Error):
@@ -64,20 +64,20 @@ class InternalRedirect(Exception):
     """
     
     def __init__(self, path, queryString=None):
-        from cherrypy import cpg
+        import cherrypy
         import cgi
         
         self.path = path
         if queryString is not None:
-            cpg.request.queryString = queryString
+            cherrypy.request.queryString = queryString
             
-            pm = cgi.parse_qs(cpg.request.queryString, keep_blank_values=True)
+            pm = cgi.parse_qs(cherrypy.request.queryString, keep_blank_values=True)
             for key, val in pm.items():
                 if len(val) == 1:
                     pm[key] = val[0]
-            cpg.request.paramMap = pm
+            cherrypy.request.paramMap = pm
         
-        cpg.request.browserUrl = cpg.request.base + path
+        cherrypy.request.browserUrl = cherrypy.request.base + path
 
 
 
@@ -90,7 +90,7 @@ class HTTPRedirect(Exception):
     
     def __init__(self, urls, status=None):
         import urlparse
-        from cherrypy import cpg
+        import cherrypy
         
         if isinstance(urls, basestring):
             urls = [urls]
@@ -98,7 +98,7 @@ class HTTPRedirect(Exception):
         abs_urls = []
         for url in urls:
             if url.startswith("/"):
-                url = urlparse.urljoin(cpg.request.base, url)
+                url = urlparse.urljoin(cherrypy.request.base, url)
             abs_urls.append(url)
         self.urls = abs_urls
         
@@ -106,7 +106,7 @@ class HTTPRedirect(Exception):
         # browser support for 301 is quite messy. Do 302 instead.
         # http://ppewww.ph.gla.ac.uk/~flavell/www/post-redirect.html
         if status is None:
-            if cpg.request.protocol == "HTTP/1.1":
+            if cherrypy.request.protocol == "HTTP/1.1":
                 status = 303
             else:
                 status = 302
@@ -118,14 +118,14 @@ class HTTPRedirect(Exception):
         self.status = status
     
     def set_response(self):
-        import cpg
-        cpg.response.status = status = self.status
-        cpg.response.headerMap['Content-Type'] = "text/html"
+        import cherrypy
+        cherrypy.response.status = status = self.status
+        cherrypy.response.headerMap['Content-Type'] = "text/html"
         
         if status in (300, 301, 302, 303, 307):
             # "The ... URI SHOULD be given by the Location field
             # in the response."
-            cpg.response.headerMap['Location'] = self.urls[0]
+            cherrypy.response.headerMap['Location'] = self.urls[0]
             
             # "Unless the request method was HEAD, the entity of the response
             # SHOULD contain a short hypertext note with a hyperlink to the
@@ -136,7 +136,7 @@ class HTTPRedirect(Exception):
                    303: "This resource can be found at <a href='%s'>%s</a>.",
                    307: "This resource has moved temporarily to <a href='%s'>%s</a>.",
                    }[status]
-            cpg.response.body = "<br />\n".join([msg % (url, url)
+            cherrypy.response.body = "<br />\n".join([msg % (url, url)
                                                  for url in self.urls])
         elif status == 304:
             # Not Modified.
@@ -145,11 +145,11 @@ class HTTPRedirect(Exception):
             # The "Date" header should have been set in Request.__init__
             
             # "The 304 response MUST NOT contain a message-body."
-            cpg.response.body = []
+            cherrypy.response.body = []
         elif status == 305:
             # Use Proxy.
             # self.urls[0] should be the URI of the proxy.
-            cpg.response.headerMap['Location'] = self.urls[0]
-            cpg.response.body = []
+            cherrypy.response.headerMap['Location'] = self.urls[0]
+            cherrypy.response.body = []
         else:
             raise ValueError("The %s status code is unknown." % status)
