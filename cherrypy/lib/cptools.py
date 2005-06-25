@@ -27,8 +27,35 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 """
-Just a few convenient functions
+Just a few convenient functions and classes.
 """
+
+import inspect
+
+def decorate(func, decorator):
+    """
+    Return the decorated func. This will automatically copy all
+    non-standard attributes (like exposed) to the newly decorated function.
+    """
+    newfunc = decorator(func)
+    for (k,v) in inspect.getmembers(func):
+        if not hasattr(newfunc, k):
+            setattr(newfunc, k, v)
+    return newfunc
+
+def decorateAll(obj, decorator):
+    """
+    Recursively decorate all exposed functions of obj and all of its children,
+    grandchildren, etc. If you used to use aspects, you might want to look
+    into these. This function modifies obj; there is no return value.
+    """
+    obj_type = type(obj)
+    for (k,v) in inspect.getmembers(obj):
+        if hasattr(obj_type, k): # only deal with user-defined attributes
+            continue
+        if callable(v) and getattr(v, "exposed", False):
+            setattr(obj, k, decorate(v, decorator))
+        decorateAll(v, decorator)
 
 class ExposeItems:
     """

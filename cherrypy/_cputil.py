@@ -64,7 +64,9 @@ def getObjectTrail():
     return None
 
 def getSpecialAttribute(name):
-    """ Return the special attribute """
+    """ Return the special attribute. A special attribute is
+    one that applies to all of the children from where it is
+    defined, such as _cpFilterList."""
     
     # First, we look in the right-most object if this special attribute is implemented.
     # If not, then we try the previous object and so on until we reach cpg.root
@@ -85,6 +87,16 @@ def getSpecialAttribute(name):
         raise cperror.InternalError("Special attribute %s could not be found"
                                     % repr(name))
 
+def getSpecialAttributePath(name):
+    """ Return the path to the special attribute """
+    objectList = getObjectTrail()
+    if objectList:
+        pathList = (cpg.request.objectPath or cpg.request.path).split("/")[1:]
+        for i in xrange(len(objectList) - 1, -1, -1):
+            if hasattr(objectList[i], name):
+                return "/" + "/".join(pathList[:i] + [name])
+    raise cperror.InternalError("Special attribute %s could not be found"
+                                    % repr(name))
 
 def _cpLogMessage(msg, context = '', severity = 0):
     """ Default method for logging messages """
