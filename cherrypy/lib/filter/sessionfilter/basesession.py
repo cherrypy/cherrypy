@@ -41,6 +41,9 @@ class BaseSession(object):
     The functions which need to be redefined are at the end of the file
     """
 
+    # by default don't use session caching
+    noCache = True
+
     # these are the  functions that need to rewritten 
     def delSession(self, sessionKey):
         """ delete a session from storage """
@@ -113,6 +116,7 @@ class BaseSession(object):
         return session.key
 
     def commitCache(self, sessionKey): 
+        """ commit a session to persistand storage """
         
         session = self.__sessionCache[sessionKey]
         session.threadCount = 0
@@ -120,9 +124,8 @@ class BaseSession(object):
         
         cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.sessionName, None)
         
-        if session.threadCount == 0 and not cacheTimeout:
+        if session.threadCount == 0 and (self.noCache or not cacheTimeout):
             del self.__sessionCache[sessionKey]
-        """ commit a session to persistand storage """
     
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
@@ -130,10 +133,9 @@ class BaseSession(object):
         cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.sessionName, None)
         
         # don't waste cycles if we aren't caching inactive sessions
-        if cacheTimeout:
+        if cacheTimeout and not self.noCache:
             for session in self.__sessionCache.itervalues():
                 # make sure the session doesn't have any active threads
-                expired = time.time() < (session.lastAccess + cacheTimeout)
+                expired = time.time() < (session.lastAccess + cacheTimeout * 60)
                 if session.threadCount == 0 and expired:
                     del self.__sessionCache[session.key]
-    

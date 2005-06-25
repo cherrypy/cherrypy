@@ -11,7 +11,7 @@ def _getSessions3():
     cpg = cherrypy.cpg
     sessions = {}
     
-    sessionLists = cpg.config.getAll('sessionFilter.sessionsList')
+    sessionLists = cpg.config.getAll('sessionFilter.sessionList')
 
     for sessionPath, sessionList in sessionLists.iteritems():
         if not isinstance(sessionList,list):
@@ -33,19 +33,9 @@ def _getSessions3():
 
                 sessionList[index] = sessionManager
                 
-                cpg.config.update({sessionPath: {'sessionFilter.sessionsList' : sessionList} })
+                cpg.config.update({sessionPath: {'sessionFilter.sessionList' : sessionList} })
             else:
-                if not cpg.config.get('sessionFilter.%s.on' % session, True):
-                    continue
-                
                 sessionManager = session
-                sessionManager.lastCleanUp = time.time()
-
-                cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionManager.sessionName)
-                now = time.time()
-                lastCleanUp = sessionManager.lastCleanUp
-                if lastCleanUp + cleanUpDelay * 60 <= now:
-                    sessionManager.cleanUpOldSessions()
 
             sessions[sessionManager.sessionName] = sessionManager
 
@@ -128,6 +118,16 @@ class SessionFilter:
             sessionManager = sessions[sessionName]
             sessionData = getattr(cpg.sessions, sessionName)
             sessionManager.commitCache(sessionData.key)
+            sessionManager.cleanUpCache()
+
+            sessionManager.lastCleanUp = time.time()
+
+            cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionManager.sessionName)
+            now = time.time()
+            lastCleanUp = sessionManager.lastCleanUp
+            if lastCleanUp + cleanUpDelay * 60 <= now:
+                sessionManager.cleanUpOldSessions()
+
     
     def beforeMain(self):
         cpg = cherrypy.cpg

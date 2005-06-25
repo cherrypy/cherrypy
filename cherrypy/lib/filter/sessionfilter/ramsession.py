@@ -33,6 +33,7 @@ from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
 
 class RamSession(BaseSession):
+
     def __init__(self, sessionName):
         BaseSession.__init__(self, sessionName)
         self.__data = {}

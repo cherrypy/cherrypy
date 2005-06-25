@@ -39,17 +39,14 @@ import threading
 from simplesessiondict import SimpleSessionDict
 
 class FileSession(BaseSession):
-  
+    
+    # is ok to cache filesession data
+    noCache = False
+    
     def __init__(self, sessionName):
         BaseSession.__init__(self, sessionName)
         self.__fileLock = threading.RLock()
 
-    def __storageDir(self):
-        cpg = cherrypy.cpg
-        
-	storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
-        return storageDir
-    
     def newSession(self):
         """ Return a new sessiondict instance """
         newData = self.getDefaultAttributes()
@@ -57,12 +54,15 @@ class FileSession(BaseSession):
    
     # all session writes are blocked 
     def getSession(self, sessionKey):
-        sessionStorageFileDir = self.__storageDir()
         if not sessionKey:
             raise SessionNotFoundError
-        fname = os.path.join(sessionStorageFileDir, sessionKey)
-        if os.path.exists(fname):
-            f = open(fname, "rb")
+	
+        storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
+        fileName = '%s_%i-%s' % (self.sessionName, hash(self), sessionKey)
+        filePath = os.path.join(storageDir, fileName)
+        
+        if os.path.exists(filePath):
+            f = open(filePath, "rb")
             self.__fileLock.acquire()
             sessionData = pickle.load(f)
             self.__fileLock.release()
@@ -72,26 +72,39 @@ class FileSession(BaseSession):
             raise SessionNotFoundError
     
     def setSession(self, sessionData):
-        sessionStorageFileDir = self.__storageDir()
     
-        fname=os.path.join(sessionStorageFileDir, sessionData.key)
-        f = open(fname,"wb")
+        storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
+        fileName = '%s_%i-%s' % (self.sessionName, hash(self), sessionData.key)
+        filePath = os.path.join(storageDir, fileName)
+
+        f = open(filePath,"wb")
         self.__fileLock.acquire()
         pickle.dump(sessionData, f)
         self.__fileLock.release()
         f.close()
 
     def delSession(self, sessionKey):
-        sessionStorageFileDir = self.__storageDir()
+        storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
+        fileName = '%s_%i-%s' % (self.sessionName, hash(self), sessionKey)
+        filePath = os.path.join(storageDir, fileName)
+        
+        if os.path.exists(filePath):
+            self.__fileLock.acquire()
+            os.remove(filePath)
+            self.__fileLock.release()
     
     def cleanUpOldSessions(self):
         sessionStorageFileDir = self.__storageDir()
         sessionFileList = os.listdir(sessionStorageFileDir)
-
+        
+        filePrefix = '%s_%i' % (self.sessionName, hash(self))
+        
         for sessionKey in sessionFileList:
-            session = self.getSession(sessionKey)
-            if session.expired():
-                try:
-                    os.remove(os.path.join(sessionStorageFileDir, sessionKey))
-                except:
-                    """ the session was probably removed already """
+            prefix, key = sessionFileList.split('-')
+            if filePrefix == prefix:
+                session = self.getSession(sessionKey)
+                if session.expired():
+                    try:
+                        os.remove(os.path.join(sessionStorageFileDir, sessionKey))
+                    except:
+                        """ the session was probably removed already """

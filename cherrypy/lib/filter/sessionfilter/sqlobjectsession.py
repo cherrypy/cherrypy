@@ -34,6 +34,10 @@ from sqlobject import *
 from basesessiondict import BaseSessionDict
 
 class SQLObjectSessionDict(BaseSessionDict):
+    
+    # it is ok to cache the session data
+    
+    noCache = False
     def __init__(self, sqlObject):
         self.__sqlObject = sqlObject
         self.threadCount = 0
@@ -107,7 +111,7 @@ class SQLObjectSession(BaseSession):
         
     def delSession(self, sessionKey):
         # figure out what to catch when this doesn't work
-        Session.delete(Session.q.session_key=='abcd')
+        Session.delete(Session.q.session_key==sessionKey)
         
         #raise SessionNotFoundError
     

@@ -37,6 +37,10 @@ from simplesessiondict import SimpleSessionDict
 import os.path
 
 class DBMSession(BaseSession):
+   
+    # it is ok to cache the sessoin data
+    noCache = False
+    
     def __init__(self, sessionName):
         cpg = cherrypy.cpg
 

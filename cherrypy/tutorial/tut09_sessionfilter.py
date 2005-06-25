@@ -17,8 +17,8 @@ class HitCounter:
         cpg.config.update(
                 {
                 'global' : {'sessionFilter.on': True},
-                '/admin' : {'sessionFilter.sessionsList' : ['admin'] },
-                '/forum' : {'sessionFilter.sessionsList' : ['forum'] }
+                '/admin' : {'sessionFilter.sessionList' : ['admin'] },
+                '/forum' : {'sessionFilter.sessionList' : ['forum'] }
                 })
 
     # this is just a primative template function

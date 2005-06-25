@@ -34,7 +34,7 @@ defaultGlobal = {
     'server.threadPool': 0,
 
     'sessionFilter.on' : False,
-    'sessionFilter.sessionsList' : ['default'],
+    'sessionFilter.sessionList' : ['default'],
     'sessionFilter.default.on': True,
     'sessionFilter.default.timeout': 60,
     'sessionFilter.default.cleanUpDelay': 60,
