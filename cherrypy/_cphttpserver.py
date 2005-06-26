@@ -86,7 +86,7 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                                 self.address_string(),
                                 self.raw_requestline,
                                 self._headerlist(),
-                                self.rfile)
+                                self.rfile, "http")
         wfile = self.wfile
         wfile.write("%s %s\r\n" % (self.protocol_version, cherrypy.response.status))
         

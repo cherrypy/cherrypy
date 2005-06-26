@@ -175,7 +175,18 @@ def attributes(fullAttributeName):
 
 seen_threads = {}
 
-def request(clientAddress, remoteHost, requestLine, headers, rfile):
+def request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http"):
+    """request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http")
+    
+    clientAddress: the IP address of the client
+    remoteHost: the IP address of the client
+    requestLine: "<HTTP method> <url?qs> HTTP/<version>",
+            e.g. "GET /main?abc=123 HTTP/1.1"
+    headers: a list of (key, value) tuples
+    rfile: a file-like object from which to read the HTTP request body
+    scheme: either "http" or "https"; defaults to "http"
+    """
+    
     threadID = threading._get_ident()
     if threadID not in seen_threads:
         i = len(seen_threads) + 1
@@ -186,10 +197,10 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile):
     
     if cherrypy.profiler:
         cherrypy.profiler.run(_cphttptools.Request, clientAddress, remoteHost,
-                                               requestLine, headers, rfile)
+                              requestLine, headers, rfile, scheme)
     else:
         _cphttptools.Request(clientAddress, remoteHost,
-                             requestLine, headers, rfile)
+                             requestLine, headers, rfile, scheme)
 
 def stop():
     """Shutdown CherryPy (and any HTTP servers it started)."""

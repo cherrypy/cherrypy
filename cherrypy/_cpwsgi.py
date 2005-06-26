@@ -94,6 +94,7 @@ def wsgiApp(environ, start_response):
                                 requestLine(environ),
                                 translate_headers(environ),
                                 environ['wsgi.input'],
+                                environ['wsgi.url_scheme'],
                                 )
         start_response(cherrypy.response.status, cherrypy.response.headers)
         for chunk in cherrypy.response.body:

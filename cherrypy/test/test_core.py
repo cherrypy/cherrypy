@@ -155,13 +155,15 @@ class Headers(Test):
         # header fields, one in lowercase, the other in mixed-case."
         
         # Set the most common headers
-        cherrypy.response.headerMap['content-type'] = "text/html"
-        cherrypy.response.headerMap['content-length'] = 18
-        cherrypy.response.headerMap['server'] = 'CherryPy headertest'
-        cherrypy.response.headerMap['location'] = 'http://127.0.0.1:8000/headers/'
+        hMap = cherrypy.response.headerMap
+        hMap['content-type'] = "text/html"
+        hMap['content-length'] = 18
+        hMap['server'] = 'CherryPy headertest'
+        hMap['location'] = ('%s://127.0.0.1:8000/headers/'
+                            % cherrypy.request.scheme)
         
         # Set a rare header for fun
-        cherrypy.response.headerMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
+        hMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
         
         return "double header test"
 
@@ -321,11 +323,11 @@ class CoreRequestHandlingTest(unittest.TestCase):
     
     def testHeaderCaseSensitivity(self):
         helper.request("/headers/")
+        self.assertEqual(cherrypy.response.body, "double header test")
         hnames = [name.title() for name, val in cherrypy.response.headers]
         hnames.sort()
         self.assertEqual(hnames, ['Content-Length', 'Content-Type', 'Date', 'Expires',
                                   'Location', 'Server'])
-        self.assertEqual(cherrypy.response.body, "double header test")
     
     def testMethods(self):
         # Test that all defined HTTP methods work.

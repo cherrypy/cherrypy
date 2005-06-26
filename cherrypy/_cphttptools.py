@@ -105,7 +105,8 @@ class Request(object):
     headers should be a list of (name, value) tuples.
     """
     
-    def __init__(self, clientAddress, remoteHost, requestLine, headers, rfile):
+    def __init__(self, clientAddress, remoteHost, requestLine, headers,
+                 rfile, scheme="http"):
         # When __init__ is finished, cherrypy.response should have three attributes:
         #   status, e.g. "200 OK"
         #   headers, a list of (name, value) tuples
@@ -124,6 +125,7 @@ class Request(object):
         cherrypy.request.requestLine = requestLine
         cherrypy.request.simpleCookie = Cookie.SimpleCookie()
         cherrypy.request.rfile = rfile
+        cherrypy.request.scheme = scheme
         
         # Prepare cherrypy.response variables
         cherrypy.response.status = None
@@ -180,22 +182,24 @@ class Request(object):
             handleError(sys.exc_info())
     
     def processRequestHeaders(self):
+        req = cherrypy.request
+        
         # Parse first line
-        cherrypy.request.method, path, cherrypy.request.protocol = self.requestLine.split()
-        cherrypy.request.processRequestBody = cherrypy.request.method in ("POST",)
+        req.method, path, req.protocol = self.requestLine.split()
+        req.processRequestBody = req.method in ("POST",)
         
         # find the queryString, or set it to "" if not found
         if "?" in path:
-            cherrypy.request.path, cherrypy.request.queryString = path.split("?", 1)
+            req.path, req.queryString = path.split("?", 1)
         else:
-            cherrypy.request.path, cherrypy.request.queryString = path, ""
+            req.path, req.queryString = path, ""
         
         # build a paramMap dictionary from queryString
-        pm = cgi.parse_qs(cherrypy.request.queryString, keep_blank_values=True)
+        pm = cgi.parse_qs(req.queryString, keep_blank_values=True)
         for key, val in pm.items():
             if len(val) == 1:
                 pm[key] = val[0]
-        cherrypy.request.paramMap = pm
+        req.paramMap = pm
         
         # Process the headers into request.headerMap
         for name, value in self.requestHeaders:
@@ -204,27 +208,27 @@ class Request(object):
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headerMap
             # (but they will be correctly stored in request.simpleCookie).
-            cherrypy.request.headerMap[name] = value
+            req.headerMap[name] = value
             
             # Handle cookies differently because on Konqueror, multiple cookies
             # come on different lines with the same key
             if name == 'Cookie':
-                cherrypy.request.simpleCookie.load(value)
+                req.simpleCookie.load(value)
         
-        msg = "%s - %s" % (cherrypy.request.remoteAddr, self.requestLine[:-2])
+        msg = "%s - %s" % (req.remoteAddr, self.requestLine[:-2])
         cherrypy.log(msg, "HTTP")
         
-        cherrypy.request.base = "http://" + cherrypy.request.headerMap.get('Host', '')
-        cherrypy.request.browserUrl = cherrypy.request.base + path
+        req.base = "%s://%s" % (req.scheme, req.headerMap.get('Host', ''))
+        req.browserUrl = req.base + path
         
         # Change objectPath in filters to change
         # the object that will get rendered
-        cherrypy.request.objectPath = None
+        req.objectPath = None
         
         # Save original values (in case they get modified by filters)
-        cherrypy.request.originalPath = cherrypy.request.path
-        cherrypy.request.originalParamMap = cherrypy.request.paramMap
-        cherrypy.request.originalParamList = cherrypy.request.paramList
+        req.originalPath = req.path
+        req.originalParamMap = req.paramMap
+        req.originalParamList = req.paramList
     
     def processRequestBody(self):
         # Create a copy of headerMap with lowercase keys because

@@ -144,7 +144,7 @@ def request(url, headers=None, method="GET", body=None):
             headers.append(("Host", "%s:%s" % (HOST, PORT)))
         if body is not None:
             body = StringIO.StringIO(body)
-        cherrypy.server.request(HOST, HOST, requestLine, headers, body)
+        cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
         resp.body = "".join(resp.body)
     else:
         result = getPage(url, headers, method, body)
