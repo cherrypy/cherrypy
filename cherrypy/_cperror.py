@@ -26,6 +26,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import urllib
+
 
 class Error(Exception):
     pass
@@ -57,26 +59,30 @@ class RequestHandled(Exception):
 class InternalRedirect(Exception):
     """Exception raised when processing should be handled by a different path.
     
-    If you supply a queryString, it will be used to re-populate paramMap.
+    If you supply 'params', it will be used to re-populate paramMap.
+    If 'params' is a dict, it will be used directly.
+    If 'params' is a string, it will be converted to a dict using cgi.parse_qs.
     
-    If you omit queryString, the paramMap from the original request will
+    If you omit 'params', the paramMap from the original request will
     remain in effect, including any POST parameters.
     """
     
-    def __init__(self, path, queryString=None):
+    def __init__(self, path, params=None):
         import cherrypy
         import cgi
         
         self.path = path
-        if queryString is not None:
-            cherrypy.request.queryString = queryString
-            
-            pm = cgi.parse_qs(cherrypy.request.queryString, keep_blank_values=True)
-            for key, val in pm.items():
-                if len(val) == 1:
-                    pm[key] = val[0]
-            cherrypy.request.paramMap = pm
-        
+        if params is not None:
+            if isinstance(params, basestring):
+                cherrypy.request.queryString = params
+                pm = cgi.parse_qs(params, keep_blank_values=True)
+                for key, val in pm.items():
+                    if len(val) == 1:
+                        pm[key] = val[0]
+                cherrypy.request.paramMap = pm
+            else:
+                cherrypy.request.paramMap = params.copy()
+                cherrypy.request.queryString = urllib.urlencode(params)
         cherrypy.request.browserUrl = cherrypy.request.base + path
 
 

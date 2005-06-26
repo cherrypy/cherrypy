@@ -99,6 +99,10 @@ class Redirect(Test):
             # Trade it for a slug when redirecting
             raise cherrypy.InternalRedirect('/image/getImagesByUser',
                                            "user_id=slug")
+        elif user_id == "terrier":
+            # Trade it for a fish when redirecting
+            raise cherrypy.InternalRedirect('/image/getImagesByUser',
+                                           {"user_id": "fish"})
         else:
             raise cherrypy.InternalRedirect('/image/getImagesByUser')
 
@@ -295,6 +299,10 @@ class CoreRequestHandlingTest(unittest.TestCase):
         
         helper.request("/redirect/internal2?user_id=parrot")
         self.assertEqual(cherrypy.response.body, '0 images for slug')
+        self.assertEqual(cherrypy.response.status, '200 OK')
+        
+        helper.request("/redirect/internal2?user_id=terrier")
+        self.assertEqual(cherrypy.response.body, '0 images for fish')
         self.assertEqual(cherrypy.response.status, '200 OK')
     
     def testFlatten(self):
