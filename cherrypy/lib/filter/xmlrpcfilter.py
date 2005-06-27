@@ -187,7 +187,7 @@ class XmlRpcFilter(BaseFilter):
         try:
             if not cherrypy.threadData.xmlRpcFilterOn:
                 return
-            cherrypy.response.body = [xmlrpclib.dumps(
-                xmlrpclib.Fault(1, ''.join(cherrypy.response.body)))]
+            body = ''.join([chunk for chunk in cherrypy.response.body])
+            cherrypy.response.body = [xmlrpclib.dumps(xmlrpclib.Fault(1, body))]
         except:
             pass

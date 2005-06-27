@@ -410,7 +410,7 @@ def finalize():
     
     if (cherrypy.config.get("server.protocolVersion") != "HTTP/1.1"
         and cherrypy.response.headerMap.get('Content-Length') == 0):
-        content = ''.join(cherrypy.response.body)
+        content = ''.join([chunk for chunk in cherrypy.response.body])
         cherrypy.response.body = [content]
         cherrypy.response.headerMap['Content-Length'] = len(content)
     

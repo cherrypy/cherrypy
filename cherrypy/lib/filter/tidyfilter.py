@@ -47,7 +47,7 @@ class TidyFilter(BaseFilter):
         
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
-        originalBody = ''.join(cherrypy.response.body)
+        originalBody = ''.join([chunk for chunk in cherrypy.response.body])
         cherrypy.response.body = [originalBody]
         
         fct = cherrypy.response.headerMap.get('Content-Type', '')

@@ -145,7 +145,7 @@ def request(url, headers=None, method="GET", body=None):
         if body is not None:
             body = StringIO.StringIO(body)
         cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
-        resp.body = "".join(resp.body)
+        resp.body = "".join([chunk for chunk in resp.body])
     else:
         result = getPage(url, headers, method, body)
         resp.status, resp.headerMap, resp.body = result
