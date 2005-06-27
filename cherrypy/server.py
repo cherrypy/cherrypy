@@ -119,7 +119,7 @@ def run_server(serverClass=None):
     if cherrypy.config.get('server', 'socketPort'):
         onWhat = ("socket: ('%s', %s)"
                   % (cherrypy.config.get('server.socketHost'),
-                     cherrypy.config.get('server.socketPort'))
+                     cherrypy.config.get('server.socketPort')))
     else:
         onWhat = "socket file: %s" % cherrypy.config.get('server.socketFile')
     cherrypy.log("Serving HTTP on %s" % onWhat, 'HTTP')
