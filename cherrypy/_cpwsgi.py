@@ -30,11 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 A WSGI application and server (see PEP 333).
 """
 
-import threading
-import os, socket, sys, traceback, urllib
-import SocketServer, BaseHTTPServer
+import sys
 import cherrypy
-from cherrypy import _cphttptools, _cpwsgiserver
+from cherrypy import _cputil, _cphttptools, _cpwsgiserver
 
 
 def requestLine(environ):
@@ -104,7 +102,7 @@ def wsgiApp(environ, start_response):
             chunk = str(chunk)
             yield chunk
     except:
-        tb = _cphttptools.formatExc()
+        tb = _cputil.formatExc()
         cherrypy.log(tb)
         s, h, b = _cphttptools.bareError(tb)
         # CherryPy test suite expects bareError body to be output,

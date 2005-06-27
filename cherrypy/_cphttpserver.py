@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import threading, SocketServer, BaseHTTPServer, socket, Queue
 import cherrypy
-from cherrypy import _cphttptools
+from cherrypy import _cputil, _cphttptools
 
 try:
     import cStringIO as StringIO
@@ -194,7 +194,7 @@ class ServerThread(threading.Thread):
     
     def handle_error(self, request, client_address):
         """Handle an error gracefully.  May be overridden."""
-        errorBody = _cphttptools.formatExc()
+        errorBody = _cputil.formatExc()
         cherrypy.log(errorBody)
 
 

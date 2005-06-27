@@ -30,6 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 A module containing a few utility classes/functions used by CherryPy
 """
 
+import sys
+import traceback
 import time
 import cherrypy
 
@@ -124,14 +126,20 @@ def _cpLogMessage(msg, context = '', severity = 0):
         f.write(s + '\n')
         f.close()
 
+
+def formatExc(exc=None):
+    """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
+    if exc is None:
+        exc = sys.exc_info()
+    return "".join(traceback.format_exception(*exc))
+
 def _cpOnError():
     """ Default _cpOnError method """
-    import sys, traceback
-    content = "".join(traceback.format_exception(*sys.exc_info()))
-    cherrypy.response.body = [content]
+    cherrypy.response.body = [formatExc()]
     cherrypy.response.headerMap['Content-Type'] = 'text/plain'
     if cherrypy.response.headerMap.has_key('Content-Encoding'):
         del cherrypy.response.headerMap['Content-Encoding']
+
 
 _cpFilterList = []
 

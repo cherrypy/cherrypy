@@ -30,9 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Common Service Code for CherryPy
 """
 
-import urllib, os, sys, time, traceback, types, cgi
+import urllib, os, sys, time, types, cgi
 import mimetypes, Cookie, urlparse
-from lib.filter import basefilter
 
 import cherrypy
 from cherrypy import _cputil, _cpcgifs
@@ -286,15 +285,9 @@ def handleError(exc):
     except:
         # Failure in _cpOnError, error filter, or finalize.
         # Bypass them all.
-        body = dbltrace % (formatExc(exc), formatExc())
+        body = dbltrace % (_cputil.formatExc(exc), _cputil.formatExc())
         cherrypy.response.status, cherrypy.response.headers, body = bareError(body)
         cherrypy.response.body = body
-
-def formatExc(exc=None):
-    """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
-    if exc is None:
-        exc = sys.exc_info()
-    return "".join(traceback.format_exception(*exc))
 
 def bareError(extrabody=None):
     """bareError(extrabody=None) -> status, headers, body.

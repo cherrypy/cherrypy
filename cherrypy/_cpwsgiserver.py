@@ -150,7 +150,7 @@ class WorkerThread(threading.Thread):
                 try:
                     request.parse_request()
                     if request.ready:
-		        response = self.server.wsgi_app(request.environ,
+                        response = self.server.wsgi_app(request.environ,
                                                         request.start_response)
                         for line in response:
                             request.write(line)
