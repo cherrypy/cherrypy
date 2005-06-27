@@ -39,11 +39,6 @@ import cherrypy
 from cherrypy import _cphttptools
 from cherrypy.lib import autoreload, profiler
 
-try:
-    from threading import local
-except ImportError:
-    from cherrypy._cpthreadinglocal import local
-
 
 # Set some special attributes for adding hooks
 onStartServerList = []
@@ -69,17 +64,6 @@ def _start(initOnly=False, serverClass=None):
             - create response and request objects
             - starts a server
     """
-    
-    # Create request and response object (the same objects will be used
-    #   throughout the entire life of the webserver)
-    cherrypy.request = local()
-    cherrypy.response = local()
-
-    # Create as sessions object for accessing session data
-    cherrypy.sessions = local()
-    
-    # Create threadData object as a thread-specific all-purpose storage
-    cherrypy.threadData = local()
     
     # Output config options to log
     if cherrypy.config.get("server.logConfigOptions", True):
@@ -117,6 +101,10 @@ def _start(initOnly=False, serverClass=None):
 def run_server(serverClass=None):
     """Prepare the requested server and then run it."""
     
+    if cherrypy._httpserver is not None:
+        warnings.warn("You seem to have an HTTP server still running."
+                      "Please call cherrypy.server.stop() before continuing.")
+    
     # Instantiate the server.
     if serverClass is None:
         serverClass = cherrypy.config.get("server.class", None)
@@ -129,8 +117,9 @@ def run_server(serverClass=None):
     cherrypy._httpserver = serverClass()
     
     if cherrypy.config.get('server', 'socketPort'):
-        onWhat = "socket: ('%s', %s)" % (cherrypy.config.get('server.socketHost'),
-                                         cherrypy.config.get('server.socketPort'))
+        onWhat = ("socket: ('%s', %s)"
+                  % (cherrypy.config.get('server.socketHost'),
+                     cherrypy.config.get('server.socketPort'))
     else:
         onWhat = "socket file: %s" % cherrypy.config.get('server.socketFile')
     cherrypy.log("Serving HTTP on %s" % onWhat, 'HTTP')
@@ -220,3 +209,4 @@ def stop():
     # Call the functions from cherrypy.server.onStopServerList
     for func in cherrypy.server.onStopServerList:
         func()
+    cherrypy._httpserver = None

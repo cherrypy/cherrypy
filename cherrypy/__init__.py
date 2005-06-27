@@ -39,6 +39,23 @@ import server
 
 _httpserver = None
 
+try:
+    from threading import local
+except ImportError:
+    from cherrypy._cpthreadinglocal import local
+
+# Create request and response object (the same objects will be used
+#   throughout the entire life of the webserver)
+request = local()
+response = local()
+
+# Create as sessions object for accessing session data
+sessions = local()
+
+# Create threadData object as a thread-specific all-purpose storage
+threadData = local()
+
+
 # decorator function for exposing methods
 def expose(func):
     func.exposed = True
