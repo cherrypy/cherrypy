@@ -89,16 +89,13 @@ def update(updateMap=None, file=None):
             autoreload.reloadFiles.append(file)
         _load(file)
 
-def get(key, defaultValue=None, returnSection=False, startPath = None):
+def get(key, defaultValue=None, returnSection=False):
     # Look, ma, no Python function calls! Uber-fast.
-    # startPath lets you overload the starting search path (needed by getAll)
-    if startPath:
-        path = startPath
-    else:
-        try:
-            path = cherrypy.request.path
-        except AttributeError:
-            path = "/"
+
+    try:
+        path = cherrypy.request.path
+    except AttributeError:
+        path = "/"
     
     while True:
         if path == "":
@@ -134,21 +131,33 @@ def getAll(key):
 
     This function is required by the session filter
     """
-    path = get(key, None, returnSection = True)
-    value = get(key)
     
-    result = {}
-    while value != None and path != '/':
-        result[path]= value
-        path = os.path.split(path)[0]
-        value = get(key, None, returnSection = False, startPath = path)
-        path  = get(key, None, returnSection = True, startPath = path)
+    try:
+        path = cherrypy.request.path
+    except AttributeError:
+        path = "/"
     
-    if path == '/' and value != None:
-        result[path] = value
+    pathList = cherrypy.request.path.split('/')
     
-    return result
+    results = {}
+    
+    try:
+        results = {'/' : configMap['global'][key]}
+    except KeyError:
+        pass
+    
+    if path == '/':
+        return results
+    
+    for n in xrange(1, len(pathList)):
+        path = '/'.join(pathList[0:n+1])
+        try:
+            results[path] = configMap[path][key]
+        except KeyError:
+            pass
 
+    return results
+       
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and
@@ -196,20 +205,20 @@ def _load(configFile = None):
 
 def outputConfigMap():
     cherrypy.log("Server parameters:", 'CONFIG')
-    cherrypy.log("  server.environment: %s" % get('server.environment'), 'CONFIG')
-    cherrypy.log("  server.logToScreen: %s" % get('server.logToScreen'), 'CONFIG')
-    cherrypy.log("  server.logFile: %s" % get('server.logFile'), 'CONFIG')
-    cherrypy.log("  server.protocolVersion: %s" % get('server.protocolVersion'), 'CONFIG')
-    cherrypy.log("  server.socketHost: %s" % get('server.socketHost'), 'CONFIG')
-    cherrypy.log("  server.socketPort: %s" % get('server.socketPort'), 'CONFIG')
-    cherrypy.log("  server.socketFile: %s" % get('server.socketFile'), 'CONFIG')
-    cherrypy.log("  server.reverseDNS: %s" % get('server.reverseDNS'), 'CONFIG')
-    cherrypy.log("  server.socketQueueSize: %s" % get('server.socketQueueSize'), 'CONFIG')
-    cherrypy.log("  server.threadPool: %s" % get('server.threadPool'), 'CONFIG')
-    cherrypy.log("  session.storageType: %s" % get('session.storageType'), 'CONFIG')
-    if get('session.storageType'):
-        cherrypy.log("  session.timeout: %s min" % get('session.timeout'), 'CONFIG')
-        cherrypy.log("  session.cleanUpDelay: %s min" % get('session.cleanUpDelay'), 'CONFIG')
-        cherrypy.log("  session.cookieName: %s" % get('session.cookieName'), 'CONFIG')
-        cherrypy.log("  session.storageFileDir: %s" % get('session.storageFileDir'), 'CONFIG')
-    cherrypy.log("  staticContent: %s" % get('staticContent'), 'CONFIG')
+    
+    serverVars = [
+                'server.environment',
+                'server.logToScreen',
+                'server.logFile',
+                'server.protocolVersion',
+                'server.socketHost',
+                'server.socketPort',
+                'server.socketFile',
+                'server.reverseDNS',
+                'server.socketQueueSize',
+                'server.threadPool'
+              ]
+
+    for var in serverVars:
+        cherrypy.log(  "  %s: %s" % (var, get(var)), 'CONFIG')
+

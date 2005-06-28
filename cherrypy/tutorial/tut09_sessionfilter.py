@@ -4,11 +4,6 @@ Tutorial 10 - Advanced sessionFilter usage see tut10_sessionfilter.conf
 
 import cherrypy
 
-# you will never need to import the RamSession
-# we only import it to demostrate how to manually use
-# a storage adaptor as would with a customized storage adaptor
-from cherrypy.lib.filter.sessionfilter.ramsession import RamSession
- 
 class HitCounter:
 
     def __init__(self):
