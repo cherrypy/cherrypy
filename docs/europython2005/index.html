@@ -48,7 +48,18 @@
     <li>Pythonic, object-oriented web development framework</li>
     <li>Runs everywhere python runs</li>
     <li>Requires Python-2.3 or later</li>
+    <li>BSD license</li>
     <li>Version 2.1 (used in this tutorial) coming soon</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>Brief history of CherryPy</h1>
+<ul>
+    <li>Jun 2002: CherryPy-0.1 released: users wrote .cpy files made of python code + some extensions (ex: CherryClass), then compiled them into one .py file ... bad idea (too unpythonic) ... some interest, but quite limited</li>
+    <li>Apr 2004: Last "CP1" release</li>
+    <li>Sep 2004: First "CP2" release: pure python code, no more compilation step, templating system separated from the core ... much more interest from the community</li>
+    <li>In a few weeks: CherryPy-2.1 release ... another big step forward</li>
 </ul>
 </div>
 
@@ -109,7 +120,7 @@
 <h1>Manipulating cpg.request and cpg.response</h1>
 <ul>
     <li>Ex: Reading the Host header from the request</li>
-    <li>Ex: Setting the responseCOntent-Type</li>
+    <li>Ex: Setting the response Content-Type</li>
 </ul>
 </div>
 
@@ -125,16 +136,19 @@
 <div class="slide">
 <h1>Using filters</h1>
 <ul>
-    <li>Ex: gzipFilter</li>
+    <li>Ex: gzipFilter (uses generators)</li>
     <li>Ex: encodingFilter, decodingFilter</li>
     <li>Ex: staticContentFilter</li>
+    <li>Other filters: XML-RPC, Tidy, nsgmls, virtual host, caching, ...</li>
 </ul>
 </div>
 
 <div class="slide">
 <h1>Using sessions</h1>
 <ul>
-    <li>TODO</li>
+    <li>Sessions are just a regular filter (sessionFilter)</li>
+    <li>Provides dictionary-like objects for storing session data</li>
+    <li>The default one is cherrypy.sessions.default</li>
 </ul>
 </div>
 
@@ -159,7 +173,7 @@
 </div>
 
 <div class="slide">
-<h1>Resources</h1>
+<h1>References</h1>
 <ul>
     <li>http://www.cherrypy.org</li>
     <li>Documentation: tutorial, FAQ, recipes, ...</li>
