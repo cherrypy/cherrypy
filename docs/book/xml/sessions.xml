@@ -6,9 +6,10 @@
   <title>Session Management</title>
   <abstract>
     <para>
-      CherryPy 2.1 includes a powerful sessions system provided via a new "sessionFilter".
-      The old sessions system was difficult to extend and was not thread safe, while the
-      new system addresses these issues and includes several powerful new features.
+      CherryPy 2.1 includes a powerful sessions system provided via
+      a new "sessionFilter".  The old sessions system was difficult
+      to extend and was not thread safe.  The new system addresses 
+      these issues and includes several powerful new features.
     </para>
   </abstract>
   
@@ -32,8 +33,9 @@
     <section>
       <title>SessionDicts</title>
       <para>
-        All session data is accessed through an instance of a SessionDict class.
-        SesssionDicts provide a dictionary like interface.
+        All session data is accessed through an instance of
+        a SessionDict class.  SesssionDicts provide a dictionary
+        like interface.
       </para>
 
       <para>
@@ -98,28 +100,112 @@
       </section> <!-- end default session section -->
     </section> <!-- end of cpg.sessions section -->
     
-    <section> <!-- _cpSessionList section -->
-      <title>_cpSessionsList</title>
+    <section> <!-- session configuration -->
+      <title>Session Configuration</title>
+      <itemizedlist>
+        <listitem>
+          <section>
+            <title>sessionFilter.on</title>
+            <para>
+              Can be True or False.  Will toggle on/off all sessions within the current path.
+              By default the session filter is turned off.
+            </para>
+          </section>
+        </listitem>
+        
+        <listitem>
+          <section>
+            <title>sessionFilter.sessionList</title>
+            <para>
+              The sessionsList is the most important configuration setting for the session filter.
+              The sessionsList is a python list containing an entry for every named session.
+              Careless changes to the sessionsList are likely to break the application, so the
+              sessionsList should only be modified from within application code, and not from 
+              the configuration file.
+            </para>
+          </section>
+        </listitem>
+      </itemizedlist>
+      
       <para>
-        Named sessions are created by placing an entry into _cpSessionsList.
-        _cpSessionsList is a special class attribute containing a list of
-        sessions defined for that particular class.
+        These settings are common to all storage types.
       </para>
+      
+      <itemizedlist>
+        <listitem>
+          <section>
+            <title>sessionFilter.sessionName.on</title>
+            <para>
+              Can be True or False.  Will toggle on/off a specific named session.  The setting
+              only affects individual sessions, the sessionfilter must still be turned on using
+              sessionFilter.on.
+            </para>
+          </section>
+        </listitem>
+        
+        <listitem>
+          <section>
+            <title>sessionFilter.sessionName.storageType</title>
+            <para>
+              The storagType is the string name of the storage type for sessionName.
+              The built in storageType are: 'ram', 'file', 'anydb', 'sqlobject'.  If the 
+              storageType does not match one of the built in storage adaptors a special attribute
+              look up is performed.  If ommited the storageType will default to 'ram'.
+            </para>
+          </section>
+        </listitem>
+
+        <listitem>
+          <section>
+            <title>sessionFilter.sessionName.timeout</title>
+            <para>
+              The number of minutes of inactivity before an individual session can be removed.
+            </para>
+          </section>
+        </listitem>
+
+        <listitem>
+          <section>
+            <title>sessionFilter.sessionName.cleanUpDelay</title>
+            <para>
+              The number of minutes to wait before cleaning up old sessions.
+            </para>
+          </section>
+        </listitem>
+
+        <listitem>
+          <section>
+            <title>sessionFilter.sessionName.cookiePrefix</title>
+            <para>
+              The cookiePrefix is prepended to the beginning of every session cookie name.
+            </para>
+          </section>
+        </listitem>
+
+      </itemizedlist>
       <example>
-        <title>_cpSessionList</title>
+        <title>Session Configuration</title>
         <para>
         </para>
         <programlisting>
           class MyBBS:
               # create a session named 'admin' using the SessionStorageClass
-              _cpSessionList = [SessionStorageClass(sessionName = 'admin')]
-
+              def __init__(self):
+                  cpg.config.update({
+                                      'global'    : { 'sessionFilter.on' : True },
+                                      '/site/bbs' : {
+                                                      'sessionFilter.sessionsList'    : ['bbs'],
+                                                      'sessionFilter.bbs.storageType' : 'ram',
+                                                      'sessionFilter.bbs.timeout'     : 25
+                                                    }
+                                   })
               def admin(self):
                   if cpg.session.admin['user'] != "root":
-                      return "you are not root"
+                  return "you are not root"
+              admin.exposed = True
         </programlisting>
       </example>
-    </section> <!-- end _cpSessionList section -->
+    </section> <!-- end sessionconfiguration -->
       
   </section>
 
@@ -156,21 +242,24 @@
     <section>
       <title>Relational Storage</title>
       <para>
-        With relational database drivers, all data is stored in a relational database table.  Due to the nature of
-        relational databases, there are several restrictions on how data can be stored.  Each session
-        is stored as a single row in the session table.  The session table must be created with a column
-        for each variable needed by the application.  This makes it impossible to store arbitrary key/value pairs, 
-        as can be done using several of the other storage drivers.  In addition, relational databases also place
-        restrictions on the type of data that can be stored in each column.  Attempting to store the wrong
-        type of data in a session variable will result in an error.
+        With relational database drivers, all data is stored in a relational 
+        database table.  Due to the nature of relational databases, there are several
+        restrictions on how data can be stored.  Each session is stored as a single 
+        row in the session table.  The session table must be created with a column for
+        each variable needed by the application.  This makes it impossible to store arbitrary
+        key/value pairs, as can be done using several of the other storage drivers.  
+        In addition, relational databases also place restrictions on the type of data 
+        that can be stored in each column.  Attempting to store the wrong type of data 
+        in a session variable will result in an error.
       </para>
       
       <para>
-        Despite these restrictions, storing session data in relational database has many advantages.
-        This approach allows session data to be integrated into an existing relational database, which
-        dynamic web applications often use anyway.  This approach allows for a level of scalability not possible
-        with other storage drivers.  In addition, by using a networked database server, session data can be easily
-        shared between a cluster of web servers.
+        Despite these restrictions, storing session data in relational database has many
+        advantages.  This approach allows session data to be integrated into an existing
+        relational database, which dynamic web applications often use anyway.  This approach
+        allows for a level of scalability not possible with other storage drivers. In addition, 
+        by using a networked database server, session data can be easily shared between a 
+        cluster of web servers.
       </para>
 
       <section>

@@ -207,17 +207,17 @@ def outputConfigMap():
     cherrypy.log("Server parameters:", 'CONFIG')
     
     serverVars = [
-                'server.environment',
-                'server.logToScreen',
-                'server.logFile',
-                'server.protocolVersion',
-                'server.socketHost',
-                'server.socketPort',
-                'server.socketFile',
-                'server.reverseDNS',
-                'server.socketQueueSize',
-                'server.threadPool'
-              ]
+                  'server.environment',
+                  'server.logToScreen',
+                  'server.logFile',
+                  'server.protocolVersion',
+                  'server.socketHost',
+                  'server.socketPort',
+                  'server.socketFile',
+                  'server.reverseDNS',
+                  'server.socketQueueSize',
+                  'server.threadPool'
+                 ]
 
     for var in serverVars:
         cherrypy.log(  "  %s: %s" % (var, get(var)), 'CONFIG')

@@ -28,12 +28,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import cherrypy
 from cherrypy import _cputil
-from basesession import BaseSession
+from baseadaptor import BaseSession
 from sessionerrors import *
 
 from sqlobject import *
 from basesessiondict import BaseSessionDict
 
+import time
 
 class SQLObjectSessionDict(BaseSessionDict):
     
@@ -117,5 +118,7 @@ class SQLObjectSession(BaseSession):
         #raise SessionNotFoundError
     
     def cleanUpOldSessions(self):
-        # running a single query would be a huge performace boost
-        pass
+        # print cleaning up sql sessions
+        now = time.time()
+        for session in Session.select( ((now - Session.q.last_access) < Session.q.timeout) ):
+            Session.delete(session.id)
