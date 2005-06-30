@@ -23,77 +23,99 @@ except ImportError:
     pass
 
 
-# this function gets all active sessions based on the path
-def _getSessions():
-    sessions = []
-    
-    sessionLists = cherrypy.config.getAll('sessionFilter.sessionList')
-    
-    # loop across all paths with session listts
-    for sessionPath, sessionList in sessionLists.iteritems():
-        
-        # if it isn't a list make it one
-        if not isinstance(sessionList,list):
-            sessionList=[sessionList]
-        
-        for index in xrange(len(sessionList)):
-            
-            session = sessionList[index]
-            
-            # check if the session is a string, if it is
-            # try and match it to a storage adaptor and replace
-            # the string in the list with the initilized adaptor
-            if isinstance(session, str):
-                sessionName = session
-                # if the session is off skip to the next session in the list
-                if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, True):
-                    continue
-                
-                # look up the storage type or return the default
-                storageType = sessionconfig.retrieve('storageType', sessionName)
-                
-                # try to initilize a built in session
-                try:
-                    sessionManager = _sessionTypes[storageType](sessionName)
-                except KeyError:
-                    # the storageType is not built in
-                    try:
-                        sessionManger = cherrypy._cputil.getSpecialAttribute(storageType)(sessionName)
-                    except cherrypy.InternalError:
-                        # it is not a built in session and the adaptor has not been
-                        # set as an attribute in the CherryPy tree
-                        raise SessionBadStorageTypeError(storageType)
-                        
-                
-                # we need to remember the path
-                sessionManager.path = sessionPath
-
-                # the session is born clean
-                sessionManager.lastCleanUp = time.time()
-                
-                # replace the entry in the session list
-                sessionList[index] = sessionManager
-                
-                # put then new session list back in the config map
-                cherrypy.config.update({sessionPath: {'sessionFilter.sessionList' : sessionList} })
-            else:
-                sessionManager = session
-            
-            sessions.append(sessionManager)
-    
-    return sessions
-
 class SessionFilter:
     """
     Input filter - get the sessionId (or generate a new one) and load up the session data
     """
+
+    def __init__(self):
+        """ Initilizes the session filter and creates cherrypy.sessions  """
+
+        try:
+            from threading import local
+        except ImportError:
+            from cherrypy._cpthreadinglocal import local
+
+        # Create as sessions object for accessing session data
+        cherrypy.sessions = local()
+
+
+    def __newSessionManager(self, sessionName, sessionPath):
+        """ 
+        Takes the name of a new session and its configuration path.
+        Returns a storageAdaptor instance maching the configured storage type.
+        If the storage type is not built in, it tries to use sessionFilter.storageAadaptors.
+        If the storage type still can not be found, an exception is raised.
+        """
+        # look up the storage type or return the default
+        storageType = sessionconfig.retrieve('storageType', sessionName)
+        
+        # try to initilize a built in session
+        try:
+            storageAdaptor = _sessionTypes[storageType]
+        except KeyError:
+            # the storageType is not built in
+            
+            # check for custom storage adaptors
+            adaptors = cpg.config.get('sessionFilter.storageAdaptors')
+            try:
+                storageAdaptor = adaptors[storageType]
+            except cherrypy.InternalError:
+                # we couldn't find the session
+                raise SessionBadStorageTypeError(storageType)
+        
+        return storageAdaptor(sessionName, sessionPath)        
+        
+    # this function gets all active sessions based on the path
+    def __getSessions(self):
+        """
+        Returns a list containing instances of all active sessions for the current request path.
+        """
+        sessions = []
+        
+        sessionLists = cherrypy.config.getAll('sessionFilter.sessionList')
+        
+        # loop across all paths with session listts
+        for sessionPath, sessionList in sessionLists.iteritems():
+            
+            # if it isn't a list make it one
+            if not isinstance(sessionList,list):
+                sessionList=[sessionList]
+            
+            for index in xrange(len(sessionList)):
+                
+                session = sessionList[index]
+                
+                # check if the session is a string, if it is
+                # try and match it to a storage adaptor and replace
+                # the string in the list with the initilized adaptor
+                if isinstance(session, str):
+                    sessionName = session
+    
+                    # if the session is off skip to the next session in the list
+                    if not cherrypy.config.get('sessionFilter.%s.on' % session, True):
+                        continue
+                    sessionManager = self.__newSessionManager(session, sessionPath)
+                    
+                    # now we replace the string name with the instanced storage class
+                    # thanks to references this will directly change the configMap
+                    sessionList[index] = sessionManager
+                    
+                else:
+                    sessionManager = session
+                
+                sessions.append(sessionManager)
+        
+        return sessions
+
+
 
     def __initSessions(self):
         
         # look up all of the session keys by cookie
         sessionKeys = self.getSessionKeys()
         
-        for sessionManager in _getSessions():
+        for sessionManager in self.__getSessions():
             sessionName = sessionManager.sessionName
             sessionKey = sessionKeys.get(sessionName, None)
             
@@ -112,7 +134,7 @@ class SessionFilter:
         
         sessionKeys = {}
         
-        for sessionManager in _getSessions():
+        for sessionManager in self.__getSessions():
             sessionName = sessionManager.sessionName
             
             cookiePrefix = sessionconfig.retrieve('cookiePrefix', sessionName, None)
@@ -145,7 +167,7 @@ class SessionFilter:
     
     def __saveSessions(self):
         
-        for sessionManager in _getSessions():
+        for sessionManager in self.__getSessions():
             sessionName = sessionManager.sessionName
             
             sessionData = getattr(cherrypy.sessions, sessionName)

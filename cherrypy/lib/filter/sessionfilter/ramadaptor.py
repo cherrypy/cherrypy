@@ -33,8 +33,8 @@ from simplesessiondict import SimpleSessionDict
 
 class RamSession(BaseSession):
 
-    def __init__(self, sessionName):
-        BaseSession.__init__(self, sessionName)
+    def __init__(self, sessionName, sessionPath):
+        BaseSession.__init__(self, sessionName, sessionPath)
         self.__data = {}
     
     def newSession(self):

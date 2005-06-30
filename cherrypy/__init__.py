@@ -49,12 +49,8 @@ except ImportError:
 request = local()
 response = local()
 
-# Create as sessions object for accessing session data
-sessions = local()
-
 # Create threadData object as a thread-specific all-purpose storage
 threadData = local()
-
 
 # decorator function for exposing methods
 def expose(func):

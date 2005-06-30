@@ -57,6 +57,7 @@ defaultGlobal = {
 
     'sessionFilter.on' : False,
     'sessionFilter.sessionList' : ['default'],
+    'sessionFIlter.storageAdaptors' : {},
     'sessionFilter.default.on': True,
     'sessionFilter.default.timeout': 60,
     'sessionFilter.default.cleanUpDelay': 60,

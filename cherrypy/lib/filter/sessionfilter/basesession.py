@@ -76,7 +76,7 @@ class BaseSession(object):
         
         return newKey
     
-    def __init__(self, sessionName):
+    def __init__(self, sessionName, sessionPath):
         """
         Create the session caceh and set the session name.  Make if you write
         a custom __init__ function make sure you make a call to 
@@ -85,6 +85,13 @@ class BaseSession(object):
         
         self.__sessionCache = {}
         self.sessionName = sessionName
+        
+        #set the path
+        self.path = sessionPath
+        
+
+        # the session is born clean
+        self.lastCleanUp = time.time()
     
     
     # there should never be a reason to modify the remaining functions, they used 

@@ -41,8 +41,8 @@ class FileSession(BaseSession):
     # is ok to cache filesession data
     noCache = False
     
-    def __init__(self, sessionName):
-        BaseSession.__init__(self, sessionName)
+    def __init__(self, sessionName, sessionPath):
+        BaseSession.__init__(self, sessionName, sessionPath)
         self.__fileLock = threading.RLock()
 
     def newSession(self):

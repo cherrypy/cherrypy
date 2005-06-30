@@ -88,8 +88,8 @@ class SQLObjectSessionDict(BaseSessionDict):
 
 class SQLObjectSession(BaseSession):
     
-    def __init__(self, sessionName):
-        BaseSession.__init__(self, sessionName)
+    def __init__(self, sessionName, sessionPath):
+        BaseSession.__init__(self, sessionName, sessionPath)
         
         dbClassName = cherrypy.config.get('%s.dbClassName' % sessionName)
         self.Session = _cputil.getSpecialAttribute(dbClassName)
