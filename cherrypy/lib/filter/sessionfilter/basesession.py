@@ -66,13 +66,12 @@ class BaseSession(object):
     # it might be usefull to redefine this function
     def generateSessionKey(self):
         """ Function to return a new sessioId """
-        sessionKeyFunc = sessionconfig.retrieve('keyGenerator', self.sessionName, None)
+        sessionKeyFunc = sessionconfig.retrieve('keyGenerator', self.name, None)
         
         if sessionKeyFunc:
-            from cherrypy import _cputil
-            newKey = _cputil.getSpecialAttribute(sessionKeyFunc)()
+            newKey = sessionKeyFunc()
         else:
-            newKey = sha.new('%s%s' % (time.time(), random.random())).hexdigest()
+            newKey = sha.new('%s' % random.random()).hexdigest()
         
         return newKey
     
@@ -84,15 +83,18 @@ class BaseSession(object):
         """
         
         self.__sessionCache = {}
-        self.sessionName = sessionName
+        self.name = sessionName
         
         #set the path
         self.path = sessionPath
-        
 
         # the session is born clean
         self.lastCleanUp = time.time()
-    
+        
+        # find the cookie name
+        cookiePrefix = sessionconfig.retrieve('cookiePrefix', sessionName, None)
+        self.cookieName = '%s_%s_%i' % (cookiePrefix, sessionName, hash(sessionPath))
+           
     
     # there should never be a reason to modify the remaining functions, they used 
     # internally by the sessionFilter
@@ -100,9 +102,9 @@ class BaseSession(object):
     def getDefaultAttributes(self):
       return { 
                'timestamp'  : int(time.time()),
-               'timeout'    : sessionconfig.retrieve('timeout', self.sessionName) * 60,
+               'timeout'    : sessionconfig.retrieve('timeout', self.name) * 60,
                'lastAccess' : int(time.time()),
-               'key' : self.generateSessionKey()
+               'key'        : self.generateSessionKey()
              }
        
     def loadSession(self, sessionKey, autoCreate = True):
@@ -115,8 +117,9 @@ class BaseSession(object):
             session = self.getSession(sessionKey)
             session.threadCount += 1
             self.__sessionCache[sessionKey] = session
-        
-        setattr(cherrypy.sessions, self.sessionName, session)
+    
+        session.cookieName = self.cookieName
+        setattr(cherrypy.sessions, self.name, session)
     
     def createSession(self):
         """ returns a session key """
@@ -131,7 +134,7 @@ class BaseSession(object):
         session.threadCount = 0
         self.setSession(session)
         
-        cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.sessionName, None)
+        cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.name, None)
         
         if session.threadCount == 0 and (self.noCache or not cacheTimeout):
             del self.__sessionCache[sessionKey]
@@ -139,7 +142,7 @@ class BaseSession(object):
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
-        cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.sessionName, None)
+        cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.name, None)
         
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout and not self.noCache:

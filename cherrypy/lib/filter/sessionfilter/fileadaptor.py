@@ -55,8 +55,8 @@ class FileSession(BaseSession):
         if not sessionKey:
             raise SessionNotFoundError
         
-        storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
-        fileName = '%s_%i-%s' % (self.sessionName, hash(self), sessionKey)
+        storageDir = sessionconfig.retrieve('storagePath', self.name)	
+        fileName = '%s_%i-%s' % (self.name, hash(self), sessionKey)
         filePath = os.path.join(storageDir, fileName)
         
         if os.path.exists(filePath):
@@ -71,7 +71,7 @@ class FileSession(BaseSession):
     
     def setSession(self, sessionData):
     
-        storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
+        storageDir = sessionconfig.retrieve('storagePath', self.sessionName)	
         fileName = '%s_%i-%s' % (self.sessionName, hash(self), sessionData.key)
         filePath = os.path.join(storageDir, fileName)
 
@@ -82,7 +82,7 @@ class FileSession(BaseSession):
         f.close()
 
     def delSession(self, sessionKey):
-        storageDir = sessionconfig.retrieve('storageFileDir', self.sessionName)	
+        storageDir = sessionconfig.retrieve('storagePath', self.sessionName)	
         fileName = '%s_%i-%s' % (self.sessionName, hash(self), sessionKey)
         filePath = os.path.join(storageDir, fileName)
         

@@ -17,15 +17,17 @@ class HitCounter:
                 })
 
     # this is just a primative template function
-    def __examplePage(self, poweredBy, count, links, sessionKey):
+    def __examplePage(self, poweredBy, count, links, sessionKey, cookieName):
         yield '<html><head><title>sessionFilter example</title><body>\n'
         yield 'This page uses %s based session storage.<br/>\n' % poweredBy
         yield 'You have viewed this page %i times. <br/><br/>\n' % count
         for link in links:
             yield '<a href="/%s">%s</a>&nbsp;&nbsp;\n' % (link, link)
 
-        yield '<br/><br/>The Current SessionKey is: &nbsp;&nbsp;\n'
+        yield '<br/><br/>The Current session key is: &nbsp;&nbsp;\n'
         yield sessionKey
+        yield '<br/>The Current cookie name is: &nbsp;&nbsp;\n'
+        yield cookieName
         yield '\n</body></html>'
 
     # a list of the pages used in the example so we can add pages
@@ -45,7 +47,8 @@ class HitCounter:
 
         # And display a silly hit count message!
         key = cherrypy.sessions.default.key
-        return self.__examplePage('ram', count, self.samplePages, key)
+        cookieName = cherrypy.sessions.default.cookieName
+        return self.__examplePage('ram', count, self.samplePages, key, cookieName)
 
     index.exposed = True
 
@@ -58,7 +61,8 @@ class HitCounter:
         cherrypy.sessions.admin['adminCount'] = adminCount
         
         key = cherrypy.sessions.admin.key
-        return self.__examplePage('ram', adminCount, self.samplePages, key)
+        cookieName = cherrypy.sessions.admin.cookieName
+        return self.__examplePage('ram', adminCount, self.samplePages, key, cookieName)
     
     admin.exposed = True
     
@@ -72,7 +76,9 @@ class HitCounter:
         cherrypy.sessions.forum['forumCount'] = forumCount
         
         key = cherrypy.sessions.forum.key
-        return self.__examplePage('ram', forumCount, self.samplePages, key)
+
+        cookieName = cherrypy.sessions.forum.cookieName
+        return self.__examplePage('ram', forumCount, self.samplePages, key, cookieName)
     
     forum.exposed=True
 

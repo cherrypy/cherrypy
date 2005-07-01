@@ -57,7 +57,7 @@ class SessionFilter:
             # the storageType is not built in
             
             # check for custom storage adaptors
-            adaptors = cpg.config.get('sessionFilter.storageAdaptors')
+            adaptors = cherrypy.config.get('sessionFilter.storageAdaptors')
             try:
                 storageAdaptor = adaptors[storageType]
             except cherrypy.InternalError:
@@ -116,8 +116,7 @@ class SessionFilter:
         sessionKeys = self.getSessionKeys()
         
         for sessionManager in self.__getSessions():
-            sessionName = sessionManager.sessionName
-            sessionKey = sessionKeys.get(sessionName, None)
+            sessionKey = sessionKeys.get(sessionManager.name, None)
             
             try:
                sessionManager.loadSession(sessionKey)
@@ -135,11 +134,9 @@ class SessionFilter:
         sessionKeys = {}
         
         for sessionManager in self.__getSessions():
-            sessionName = sessionManager.sessionName
-            
-            cookiePrefix = sessionconfig.retrieve('cookiePrefix', sessionName, None)
-            cookieName = '%s_%s_%i' % (cookiePrefix, sessionName, hash(sessionManager))
-            
+            sessionName = sessionManager.name
+            cookieName  = sessionManager.cookieName
+
             try:
                 sessionKeys[sessionName] = cherrypy.request.simpleCookie[cookieName].value
             except:
@@ -151,24 +148,23 @@ class SessionFilter:
         Sets the session key in a cookie. 
         """
         
-        sessionName = sessionManager.sessionName
+        sessionName = sessionManager.name
+        cookieName  = sessionManager.cookieName
         
-        cookiePrefix = sessionconfig.retrieve('cookiePrefix', sessionName, None)
-        cookieName = '%s_%s_%i' % (cookiePrefix, sessionName, hash(sessionManager))
-        
-        cherrypy.response.simpleCookie[cookieName] = sessionKey
-        cherrypy.response.simpleCookie[cookieName]['version'] = 1
         
         # if we do not have a manually defined cookie path use path where the session
         # manager was defined
-        cookiePath = sessionconfig.retrieve('cookiePath', sessionManager.sessionName, sessionManager.path)
+        cookiePath = sessionconfig.retrieve('cookiePath', sessionManager.name, sessionManager.path)
+        timeout = sessionconfig.retrieve('timeout', sessionManager.name)
         
+        cherrypy.response.simpleCookie[cookieName] = sessionKey
         cherrypy.response.simpleCookie[cookieName]['path'] = cookiePath
-    
+        cherrypy.response.simpleCookie[cookieName]['max-age'] = timeout*60
+        
     def __saveSessions(self):
         
         for sessionManager in self.__getSessions():
-            sessionName = sessionManager.sessionName
+            sessionName = sessionManager.name
             
             sessionData = getattr(cherrypy.sessions, sessionName)
             sessionManager.commitCache(sessionData.key)
@@ -176,7 +172,7 @@ class SessionFilter:
             
             sessionManager.lastCleanUp = time.time()
             
-            cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionManager.sessionName)
+            cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionManager.name)
             now = time.time()
             lastCleanUp = sessionManager.lastCleanUp
             if lastCleanUp + cleanUpDelay * 60 <= now:
