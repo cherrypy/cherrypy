@@ -67,7 +67,7 @@
       
       <para>
       For example, given a session named "checkoutSession", all data for this session will
-      be accessible through: <blockqoute>cpg.sessions.checkoutSession</blockqoute>
+      be accessible through: "cpg.sessions.checkoutSession"
       </para>
 
       <example>
@@ -182,7 +182,17 @@
           </section>
         </listitem>
 
+        <listitem>
+          <section>
+            <title>sessionFilter.sessionName.keyGenerator</title>
+            <para>
+              keyGenerator is a python function that generates new session keys.
+            </para>
+          </section>
+        </listitem>
+
       </itemizedlist>
+      
       <example>
         <title>Session Configuration</title>
         <para>
@@ -215,39 +225,56 @@
     <section>
       <title>ram storage</title>
       <para>
-          The ram driver stores all session data in memory.
-          It is the only storage driver capable of holding any Python object, including those
+          The ram adaptor stores all session data in memory.
+          It is the only storage adaptor capable of holding any Python object, including those
           that are not-picklable, such as file handles, sockets, and running generators.
           When using ream sessions, keep in mind that all session data is lost when the server
           shuts down, even during auto-reloads.
+      </para>
+      <para>
+        The ram adaptor has no additional configuration options.
       </para>
     </section> <!-- end ram storage section -->
     
     <section>
       <title>file storage</title>
       <para>
-        The file storage driver pickles the data for each session and stores it in separate files.  
-        Cleaning up expired sessions is a slow operation (this should change soon.)
+        The file storage adaptor pickles the data for each session and stores it in separate files.  
+        Cleaning up expired sessions is a slow operation, because it requires unpickling every session
+        file.
       </para>
+      <itemizedlist>
+        <listitem>
+          <title>Additional Configuration Options</title>
+          <listitem>
+            <title>storagePath</title>
+            <listitem>test item</listitem>
+            <para>
+              The path to the directory where the session files will be stored.
+              The default value is ".sessiondata"
+            </para>
+          </listitem>
+        </listitem>
+      </itemizedlist>
     </section> <!-- end file storage section -->
 
     <section>
       <title>anydb storage</title>
       <para>
-          The anydb storage driver stores session data using the shelve module, which in turn
-          uses the anydb module.  The andyb driver can only be used to store picklable objects.
+          The anydb storage adaptor stores session data using the shelve module, which in turn
+          uses the anydb module.  The andyb adaptor can only be used to store picklable objects.
       </para>
     </section> <!-- end anydb storage section -->
     
     <section>
       <title>Relational Storage</title>
       <para>
-        With relational database drivers, all data is stored in a relational 
+        With relational database adaptors, all data is stored in a relational 
         database table.  Due to the nature of relational databases, there are several
         restrictions on how data can be stored.  Each session is stored as a single 
         row in the session table.  The session table must be created with a column for
         each variable needed by the application.  This makes it impossible to store arbitrary
-        key/value pairs, as can be done using several of the other storage drivers.  
+        key/value pairs, as can be done using several of the other storage adaptors.  
         In addition, relational databases also place restrictions on the type of data 
         that can be stored in each column.  Attempting to store the wrong type of data 
         in a session variable will result in an error.
@@ -257,7 +284,7 @@
         Despite these restrictions, storing session data in relational database has many
         advantages.  This approach allows session data to be integrated into an existing
         relational database, which dynamic web applications often use anyway.  This approach
-        allows for a level of scalability not possible with other storage drivers. In addition, 
+        allows for a level of scalability not possible with other storage adaptors. In addition, 
         by using a networked database server, session data can be easily shared between a 
         cluster of web servers.
       </para>
@@ -265,14 +292,14 @@
       <section>
         <title>sqlobject storage</title>
         <para>
-          The sqlobject driver can be used with any database supported by sqlobject.
+          The sqlobject adaptors can be used with any database supported by sqlobject.
         </para>
       </section> <!-- end sqlobject storage section -->
 
       <section>
         <title>pydo storage</title>
         <para>
-          A PyDO2 driver will be included in the future.
+          A PyDO2 adaptor will be included in the future.
         </para>
       </section>
       
@@ -281,27 +308,26 @@
   </section> <!-- end sessionstoragetyps section -->
 
   <section id="customsessionstorage">
-    <title>Writing Custom Session Storage Drivers</title>
-    
+    <title>Writing Custom Session Storage Drivers</title> 
     <section>
       <title>BaseSessionDict</title>
       <para>
         BaseSessionDict is the base class for the dictionary-like class used to access session data.
         SessionDicts implement the most frequently used features of Python dictionaries.
         DO NOT add new features to a custom SessionDict class, as it could break
-        compatibility with other storage drivers.
+        compatibility with other storage adaptor.
 
         Sometimes it is not necessary to write a custom SessionDict class because the sessionFilter includes a 
-        SimpleSessionDict.  The SimpleSessionDict is used by several storage drivers and may be 
-        adequate for a custom storage driver.
+        SimpleSessionDict.  The SimpleSessionDict is used by several storage adaptor and may be 
+        adequate for a custom storage adaptor.
       </para>
     </section>
 
     <section> 
       <title>BaseSession</title>
       <para>
-        BaseSession is the base class for all session storage drivers.  There are a number of methods that must be
-        implemented by every storage driver.
+        BaseSession is the base class for all session storage adaptor.  There are a number of methods that must be
+        implemented by every storage adaptor.
       </para>
     </section>
     
