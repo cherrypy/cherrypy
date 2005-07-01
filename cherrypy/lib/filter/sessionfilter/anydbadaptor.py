@@ -33,6 +33,8 @@ from basesession import BaseSession
 from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
 
+import sessionconfig
+
 import os.path
 
 
@@ -45,12 +47,12 @@ class DBMSession(BaseSession):
         BaseSession.__init__(self, sessionName, sessionPath)
         
         # we must make sure the db file is unique
-        defaultFile = '%s-%i.db' % (sessionName, hash(self))
-        dbFilePrefix = cherrypy.config.get('sessionFilter.%s.dbFilePrefix'
-                                           % sessionName, '')
-        
-        sessionFile = os.path.join(dbFilePrefix, defaultFile)
-        self.__data = shelve.open(sessionFile, 'c')
+        dbFile = cherrypy.config.get('sessionFilter.%s.dbFile', None)
+        if not dbFile:
+            defaultFile = '%s-%i.db' % (sessionName, hash(sessionPath))
+            storagePath = sessionconfig.retrieve('storagePath', sessionName)
+            dbFile = os.path.join(storagePath, defaultFile)
+        self.__data = shelve.open(dbFile, 'c')
     
     def newSession(self):
         """ Return a new sessiondict instance """

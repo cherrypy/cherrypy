@@ -63,7 +63,7 @@ defaultGlobal = {
     'sessionFilter.default.cleanUpDelay': 60,
     'sessionFilter.default.storageType' : 'ram',
     'sessionFilter.default.cookiePrefix': 'CherryPySession',
-    'sessionFilter.default.storagePath': '.sessionFiles'
+    'sessionFilter.default.storagePath': '.sessiondata'
     }
 
 def reset(useDefaults=True):
