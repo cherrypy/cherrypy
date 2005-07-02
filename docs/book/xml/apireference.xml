@@ -304,6 +304,7 @@
           <title>_cpOnError</title>
           <para>
             _cpOnError is a function for handling internal exceptions raised by CherryPy.
+	  </para>
         </section>
       </listitem>
       <listitem>
