@@ -27,13 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import cherrypy
-from cherrypy import _cputil
-from baseadaptor import BaseSession
+from basesession import BaseSession
 from sessionerrors import *
 
 from sqlobject import *
 from basesessiondict import BaseSessionDict
-
+import sessionconfig 
 import time
 
 class SQLObjectSessionDict(BaseSessionDict):
@@ -91,8 +90,9 @@ class SQLObjectSession(BaseSession):
     def __init__(self, sessionName, sessionPath):
         BaseSession.__init__(self, sessionName, sessionPath)
         
-        dbClassName = cherrypy.config.get('%s.dbClassName' % sessionName)
-        self.Session = _cputil.getSpecialAttribute(dbClassName)
+        self.Session = cherrypy.config.get('sessionFilter.%s.tableObject' % sessionName)
+        if sessionconfig.retrieve('instantUpdate', sessionName, False):
+            self.Session._lazyUpdate = True
     
     def newSession(self):
         """ Return a new sessionMap instance """
@@ -109,7 +109,11 @@ class SQLObjectSession(BaseSession):
     
     def setSession(self, sessionData):
         # all changes are automatically commited so
-        pass
+        try:
+            if self.Session._lazyUpdate:
+                self.Session.sync()
+        except AttributeError:
+            pass
         
     def delSession(self, sessionKey):
         # figure out what to catch when this doesn't work

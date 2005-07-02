@@ -4,7 +4,7 @@ import cherrypy
 
 import sessionconfig
 
-from sessionerrors import SessionNotFoundError, SessionIncompatibleError, SessionBadStorageTypeError
+from sessionerrors import SessionNotFoundError, SessionIncompatibleError, SessionBadStorageTypeError, SessionConfigError
 from ramadaptor import RamSession
 from fileadaptor import FileSession
 from anydbadaptor import DBMSession
@@ -17,9 +17,10 @@ _sessionTypes = {
 
 try:
     # the user might not have sqlobject instaled
-    from sqlobjectsession  import SQLObjectSession
+    from sqlobjectadaptor import SQLObjectSession
     _sessionTypes['sqlobject'] = SQLObjectSession
-except ImportError:
+#except ImportError:
+except KeyError:
     pass
 
 
@@ -38,6 +39,8 @@ class SessionFilter:
 
         # Create as sessions object for accessing session data
         cherrypy.sessions = local()
+
+        self.sessionManagers = {}
 
 
     def __newSessionManager(self, sessionName, sessionPath):
@@ -67,7 +70,7 @@ class SessionFilter:
         return storageAdaptor(sessionName, sessionPath)        
         
     # this function gets all active sessions based on the path
-    def __getSessions(self):
+    def __getSessions(self, names = False):
         """
         Returns a list containing instances of all active sessions for the current request path.
         """
@@ -76,39 +79,29 @@ class SessionFilter:
         sessionLists = cherrypy.config.getAll('sessionFilter.sessionList')
         
         # loop across all paths with session listts
-        for sessionPath, sessionList in sessionLists.iteritems():
+        for sessionPath, sessionList in sessionLists:
             
             # if it isn't a list make it one
             if not isinstance(sessionList,list):
                 sessionList=[sessionList]
             
-            for index in xrange(len(sessionList)):
+            for sessionName in sessionList:
+                # if the session is off skip to the next session in the list
+                if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, True):
+                    continue
                 
-                session = sessionList[index]
-                
-                # check if the session is a string, if it is
-                # try and match it to a storage adaptor and replace
-                # the string in the list with the initilized adaptor
-                if isinstance(session, str):
-                    sessionName = session
-    
-                    # if the session is off skip to the next session in the list
-                    if not cherrypy.config.get('sessionFilter.%s.on' % session, True):
-                        continue
-                    sessionManager = self.__newSessionManager(session, sessionPath)
-                    
-                    # now we replace the string name with the instanced storage class
-                    # thanks to references this will directly change the configMap
-                    sessionList[index] = sessionManager
-                    
-                else:
-                    sessionManager = session
+                # check that the new sessionName is unique
+                try:
+                    sessionManager = self.sessionManagers[sessionName]
+                    if sessionManager.path != sessionPath:
+                        raise SessionConfigError()
+                except KeyError:
+                    sessionManager = self.__newSessionManager(sessionName, sessionPath)
+                    self.sessionManagers[sessionName] = sessionManager
                 
                 sessions.append(sessionManager)
-        
+                
         return sessions
-
-
 
     def __initSessions(self):
         
@@ -170,13 +163,12 @@ class SessionFilter:
             sessionManager.commitCache(sessionData.key)
             sessionManager.cleanUpCache()
             
-            sessionManager.lastCleanUp = time.time()
             
-            cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionManager.name)
             now = time.time()
-            lastCleanUp = sessionManager.lastCleanUp
-            if lastCleanUp + cleanUpDelay * 60 <= now:
+            if sessionManager.nextCleanUp < now:
                 sessionManager.cleanUpOldSessions()
+                cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionManager.name)
+                sessionManager.nextCleanUp=now + cleanUpDelay * 60
     
     def beforeMain(self):
         if (not cherrypy.config.get('staticFilter.on', False)

@@ -128,8 +128,7 @@ def get(key, defaultValue=None, returnSection=False):
 def getAll(key):
     """
     getAll will lookup the key in the current node and all of its parent nodes,
-    it will return a dictionary paths of each node containing the key and its value
-
+    it will return a list of path, value pairs
     This function is required by the session filter
     """
     
@@ -140,10 +139,10 @@ def getAll(key):
     
     pathList = cherrypy.request.path.split('/')
     
-    results = {}
+    results = []
     
     try:
-        results = {'/' : configMap['global'][key]}
+        results = [('/',  configMap['global'][key])]
     except KeyError:
         pass
     
@@ -153,7 +152,7 @@ def getAll(key):
     for n in xrange(1, len(pathList)):
         path = '/'.join(pathList[0:n+1])
         try:
-            results[path] = configMap[path][key]
+            results.append(path, configMap[path][key])
         except KeyError:
             pass
 

@@ -88,12 +88,12 @@ class BaseSession(object):
         #set the path
         self.path = sessionPath
 
-        # the session is born clean
-        self.lastCleanUp = time.time()
-        
+        cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', self.name)
+        self.nextCleanUp = time.time()+cleanUpDelay * 60
+
         # find the cookie name
         cookiePrefix = sessionconfig.retrieve('cookiePrefix', sessionName, None)
-        self.cookieName = '%s_%s_%i' % (cookiePrefix, sessionName, hash(sessionPath))
+        self.cookieName = '%s_%s' % (cookiePrefix, sessionName)
            
     
     # there should never be a reason to modify the remaining functions, they used 
@@ -129,25 +129,35 @@ class BaseSession(object):
     
     def commitCache(self, sessionKey): 
         """ commit a session to persistand storage """
+        # this function might require locking
+        # but i don't think anything bad could happen ;)
+        try:
+            session = self.__sessionCache[sessionKey]
+            session.threadCount = 0
+            self.setSession(session)
         
-        session = self.__sessionCache[sessionKey]
-        session.threadCount = 0
-        self.setSession(session)
-        
-        cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.name, None)
-        
-        if session.threadCount == 0 and (self.noCache or not cacheTimeout):
-            del self.__sessionCache[sessionKey]
+            cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.name, None)
+            
+            if session.threadCount == 0 and (self.noCache or not cacheTimeout):
+                del self.__sessionCache[sessionKey]
+        except KeyError:
+            # i don't think this should happen but it does
+            # this is probably the result of two thread calling commitCache
+            # but nothing bad should happen
+            pass
     
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
         cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.name, None)
-        
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout and not self.noCache:
+            deleteList = []
             for session in self.__sessionCache.itervalues():
                 # make sure the session doesn't have any active threads
-                expired = time.time() < (session.lastAccess + cacheTimeout * 60)
+                expired = (time.time() - session.lastAccess) < cacheTimeout
                 if session.threadCount == 0 and expired:
-                    del self.__sessionCache[session.key]
+                    deleteList.append(session)
+            for session in deleteList:
+                self.commitCache(session.key)
+                del self.__sessionCache[session.key]

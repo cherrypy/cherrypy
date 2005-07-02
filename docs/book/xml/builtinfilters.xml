@@ -167,12 +167,12 @@
     
     beforeRequestBody:
         Unmarshalls the posted data to a methodname and parameters.
-        - These are stored in cpg.request.rpcMethod and .rpcParams
-        - The method is also stored in cpg.request.path, so CP2 will find
+        - These are stored in cherrypy.request.rpcMethod and .rpcParams
+        - The method is also stored in cherrypy.request.path, so CP2 will find
           the right method to call for you, based on the root's position.
     beforeFinalize:
-        Marshalls cpg.response.body to xmlrpc.
-        - Until resolved: cpg.response.body must be a python source string;
+        Marshalls cherrypy.response.body to xmlrpc.
+        - Until resolved: cherrypy.response.body must be a python source string;
           this string is 'eval'ed to return the results. This will be
           resolved in the future.
         - Content-Type and Content-Length are set according to the new

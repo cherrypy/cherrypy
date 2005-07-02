@@ -55,23 +55,23 @@
       </para>
     </section> <!-- end SessionDict section -->
 
-    <section> <!-- cpg.sessions section -->
-      <title>cpg.sessions</title>
+    <section> <!-- cherrypy.sessions section -->
+      <title>cherrypy.sessions</title>
       <para>
-        cpg.sessions is the single point of access for all session data.
+        cherrypy.sessions is the single point of access for all session data.
         At the beginning of each request, the sessionFilter checks for any sessions that may
         have been defined for the requested portion of the site.
         For each defined session, a SessionDict is created and is added as an attribute of
-        cpg.sessions.
+        cherrypy.sessions.
       </para>
       
       <para>
       For example, given a session named "checkoutSession", all data for this session will
-      be accessible through: "cpg.sessions.checkoutSession"
+      be accessible through: "cherrypy.sessions.checkoutSession"
       </para>
 
       <example>
-        <title>cpg.session</title>
+        <title>cherrypy.session</title>
         <para>
           This code iterates over a list of items in a shopping cart, and computes 
           The total cost of all items.
@@ -79,7 +79,7 @@
         <programlisting>
           totalCost = 0.0
           
-          for item in cpg.sessions.checkoutSession['shoppingCart']:
+          for item in cherrypy.sessions.checkoutSession['shoppingCart']:
               totalCost += item.cost
         </programlisting>
       </example>
@@ -88,7 +88,7 @@
         <title>The default session</title>
         <para>
           By default, the sessionFilter provides a session named "default", 
-          which is accessed through "cpg.sessions.default".
+          which is accessed through "cherrypy.sessions.default".
         </para>
 
         <para>
@@ -98,7 +98,7 @@
           performance than that of custom named sessions.
         </para>
       </section> <!-- end default session section -->
-    </section> <!-- end of cpg.sessions section -->
+    </section> <!-- end of cherrypy.sessions section -->
     
     <section> <!-- session configuration -->
       <title>Session Configuration</title>
@@ -201,7 +201,7 @@
           class MyBBS:
               # create a session named 'admin' using the SessionStorageClass
               def __init__(self):
-                  cpg.config.update({
+                  cherrypy.config.update({
                                       'global'    : { 'sessionFilter.on' : True },
                                       '/site/bbs' : {
                                                       'sessionFilter.sessionsList'    : ['bbs'],
@@ -210,7 +210,7 @@
                                                     }
                                    })
               def admin(self):
-                  if cpg.session.admin['user'] != "root":
+                  if cherrypy.session.admin['user'] != "root":
                   return "you are not root"
               admin.exposed = True
         </programlisting>
