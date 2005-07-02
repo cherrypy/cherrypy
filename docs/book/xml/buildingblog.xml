@@ -7,18 +7,110 @@
   <section>
     <sectioninfo>
       <abstract>
-	<para></para>
+	<para>The following sections will describe the step to build a simple blogging system. 
+	It does not aim to create a comprehensive one but to give you an overview of how 
+	to build a CherryPy application.</para>
       </abstract>
     </sectioninfo>
-    <title>Setting up the project</title>
+    <title>Features of the blog</title>
+    <para>The blogging system will feature some basic functionalities such as :</para>
+    <itemizedlist>
+      <listitem>Add new entries</listitem>
+      <listitem>Delete existing entries</listitem>
+      <listitem>Add a new comment</listitem>
+      <listitem>Display a calendar</listitem>
+      <listitem>Use positional parameters</listitem>
+      <listitem>Present a RSS feed</listitem>
+    </itemizedlist>
   </section>
   <section>
-    <sectioninfo>
-      <abstract>
-	<para></para>
-      </abstract>
-    </sectioninfo>
+    <title>Setting up the project</title>
+    <para>Our first step will be to define the directory structure of the projet.
+    This structure is only one amongst others of course.</para>
+    <example>
+      <title>Directory structure of the blog project</title>
+      <para>Imagine our root directory is called <code>blog</code>, then the structure will be  :</para>
+      <screen>
+<co id="blogpy" />blog/blog.py
+<co id="license"/>blog/LICENSE
+<co id="readme"/>blog/README
+<co id="media"/>blog/media/
+<co id="mediaconf"/>blog/media/conf/
+<co id="mediacss"/>blog/media/css/
+<co id="mediadb"/>blog/media/db/
+<co id="mediafeed"/>blog/media/feed/
+<co id="mediatemplates"/>blog/media/templates/
+<co id="mediautils"/>blog/media/utils/
+<co id="src" />blog/src/
+      </screen>
+      <calloutlist>
+	<callout arearefs="blogpy">
+	  <para>This is the main script of our application. It contains the code to
+	  start up the web server and the application.
+	  </para>
+	</callout>
+	
+	<callout arearefs="license">
+	  <para>Your application should always contain a license.
+	  </para>
+	</callout>
+	
+	<callout arearefs="readme">
+	  <para>Your application should also come with a readme file.
+	  </para>
+	</callout>
+	
+	<callout arearefs="media">
+	  <para>We will divide the directory structure into two main sub directories.
+	  One will deal with the source code itself, and the other one will deal with
+	  all the data you might work with.
+	  </para>
+	</callout>
+	
+	<callout arearefs="mediaconf">
+	  <para>Contains the configuration file we will define for the application.
+	  </para>
+	</callout>
+	
+	<callout arearefs="mediacss">
+	  <para>Contains the CSS stylesheet we will be using.
+	  </para>
+	</callout>
+	
+	<callout arearefs="mediadb">
+	  <para>Our blogging system will use a very simple interface to store content
+	  as you will see later.
+	  This directory will hold the data.
+	  </para>
+	</callout>
+	
+	<callout arearefs="mediafeed">
+	  <para>We will only support RSS here but as you may extend yourself the
+	  applictaion, this directory will let you hold all different kind of
+	  feed format files.
+	  </para>
+	</callout>
+	
+	<callout arearefs="mediatemplates">
+	  <para>Contains all templating files we will be using.
+	  </para>
+	</callout>
+	
+	<callout arearefs="mediautils">
+	  <para>Where to put some helper files we will need.
+	  </para>
+	</callout>
+	
+	<callout arearefs="src">
+	  <para>Contains the source code itself.
+	  </para>
+	</callout>
+      </calloutlist>
+    </example>
+  </section>
+  <section>
     <title>Design consideration</title>
+    <para></para>
   </section>
   <section>
     <sectioninfo>
