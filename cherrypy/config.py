@@ -152,7 +152,7 @@ def getAll(key):
     for n in xrange(1, len(pathList)):
         path = '/'.join(pathList[0:n+1])
         try:
-            results.append(path, configMap[path][key])
+            results.append((path, configMap[path][key]))
         except KeyError:
             pass
 
