@@ -19,8 +19,7 @@ try:
     # the user might not have sqlobject instaled
     from sqlobjectadaptor import SQLObjectSession
     _sessionTypes['sqlobject'] = SQLObjectSession
-#except ImportError:
-except KeyError:
+except ImportError:
     pass
 
 
