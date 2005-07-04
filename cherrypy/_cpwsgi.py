@@ -84,7 +84,7 @@ def wsgiApp(environ, start_response):
         # user after having been mapped to a local account.
         # Both IIS and Apache set REMOTE_USER, when possible.
         cherrypy.request.login = (environ.get('LOGON_USER')
-                             or environ.get('REMOTE_USER') or None)
+                                  or environ.get('REMOTE_USER') or None)
         cherrypy.request.multithread = environ['wsgi.multithread']
         cherrypy.request.multiprocess = environ['wsgi.multiprocess']
         cherrypy.server.request(environ.get('REMOTE_ADDR', ''),
@@ -95,6 +95,13 @@ def wsgiApp(environ, start_response):
                                 environ['wsgi.url_scheme'],
                                 )
         start_response(cherrypy.response.status, cherrypy.response.headers)
+    except:
+        tb = _cputil.formatExc()
+        cherrypy.log(tb)
+        s, h, b = _cphttptools.bareError(tb)
+        start_response(s, h, sys.exc_info())
+    
+    try:
         for chunk in cherrypy.response.body:
             # WSGI requires all data to be of type "str". This coercion should
             # not take any time at all if chunk is already of type "str".
@@ -108,7 +115,6 @@ def wsgiApp(environ, start_response):
         # CherryPy test suite expects bareError body to be output,
         # so don't call start_response (which, according to PEP 333,
         # may raise its own error at that point).
-##        start_response(s, h, sys.exc_info())
         for chunk in b:
             yield str(chunk)
 

@@ -140,6 +140,16 @@ def main():
     print "CherryPy version", cherrypy.__version__
     print
     
+    import cherrypy
+    from cherrypy.test import helper
+    
+    class NotReadyTest(unittest.TestCase):
+        def testNotReadyError(self):
+            # Without having called "cherrypy.server.start()", we should
+            # get a NotReady error
+            self.assertRaises(cherrypy.NotReady, helper.request, "/")
+    CPTestRunner(verbosity=2).run(NotReadyTest("testNotReadyError"))
+    
     testList = [
         'test_baseurl_filter',
         'test_cache_filter',
@@ -153,9 +163,6 @@ def main():
         'test_tutorials',
         'test_virtualhost_filter',
     ]
-    
-    import cherrypy
-    from cherrypy.test import helper
     
     server_conf = {'server.socketHost': helper.HOST,
                    'server.socketPort': helper.PORT,

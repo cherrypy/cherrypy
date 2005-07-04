@@ -46,6 +46,7 @@ onStartThreadList = []
 onStopServerList = []
 onStopThreadList = []
 
+
 def start(initOnly=False, serverClass=None):
     if cherrypy.config.get("server.environment") == "development":
         # Check initOnly. If True, we're probably not starting
@@ -64,6 +65,12 @@ def _start(initOnly=False, serverClass=None):
             - create response and request objects
             - starts a server
     """
+    
+    # Use a flag to indicate the state of the cherrypy application server.
+    # 0 = Not started
+    # None = In process of starting
+    # 1 = Started, ready to receive requests
+    cherrypy._appserver_state = None
     
     # Output config options to log
     if cherrypy.config.get("server.logConfigOptions", True):
@@ -95,7 +102,9 @@ def _start(initOnly=False, serverClass=None):
     else:
         cherrypy.profiler = None
     
-    if not initOnly:
+    if initOnly:
+        cherrypy._appserver_state = 1
+    else:
         run_server(serverClass)
 
 def run_server(serverClass=None):
@@ -126,6 +135,7 @@ def run_server(serverClass=None):
     
     # Start the http server.
     try:
+        cherrypy._appserver_state = 1
         cherrypy._httpserver.start()
     except (KeyboardInterrupt, SystemExit):
         cherrypy.log("<Ctrl-C> hit: shutting down", "HTTP")
@@ -176,6 +186,11 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http
     scheme: either "http" or "https"; defaults to "http"
     """
     
+    if cherrypy._appserver_state == 0:
+        raise cherrypy.NotReady("No thread has called cherrypy.server.start().")
+    elif cherrypy._appserver_state == None:
+        raise cherrypy.NotReady("cherrypy.server.start() encountered errors.")
+    
     threadID = threading._get_ident()
     if threadID not in seen_threads:
         i = len(seen_threads) + 1
@@ -209,4 +224,6 @@ def stop():
     # Call the functions from cherrypy.server.onStopServerList
     for func in cherrypy.server.onStopServerList:
         func()
+    
     cherrypy._httpserver = None
+    cherrypy._appserver_state = 0

@@ -39,6 +39,7 @@ cherrypy.root = Root()
 cherrypy.config.update({
     'global': {
         'server.environment': 'production',
+        'server.logToScreen': False,
         'baseUrlFilter.on': True,
         'baseUrlFilter.baseUrl': 'http://www.mydomain.com'
     }

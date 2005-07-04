@@ -36,6 +36,10 @@ class InternalError(Error):
     """ Error that should never happen """
     pass
 
+class NotReady(Error):
+    """A request was made before the app server has been started."""
+    pass
+
 class NotFound(Error):
     """ Happens when a URL couldn't be mapped to any class.method """
     pass
