@@ -30,8 +30,8 @@ import cherrypy
 
 # these get copied to the configMap when the filter
 # is initilized
+
 _sessionDefaults = {
-    'sessionFilter.on' : False,
     'sessionFilter.sessionList' : ['default'],
     'sessionFIlter.storageAdaptors' : {},
     'sessionFilter.default.on': True,
