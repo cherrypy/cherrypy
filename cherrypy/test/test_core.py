@@ -50,6 +50,12 @@ class Test(object):
     __metaclass__ = TestType
 
 
+class Params(Test):
+    
+    def index(self, thing):
+        return thing
+
+
 class Status(Test):
     
     def index(self):
@@ -212,7 +218,6 @@ import os
 class CoreRequestHandlingTest(unittest.TestCase):
     
     def testConfig(self):
-        import cherrypy
         tests = [
             ('/',        'nex', None   ),
             ('/',        'foo', 'this' ),
@@ -228,6 +233,13 @@ class CoreRequestHandlingTest(unittest.TestCase):
             cherrypy.request.path = path
             result = cherrypy.config.get(key, None)
             self.assertEqual(result, expected)
+    
+    def testParams(self):
+        helper.request("/params/?thing=a")
+        self.assertEqual(cherrypy.response.body, 'a')
+        
+        helper.request("/params/?thing=a&thing=b&thing=c")
+        self.assertEqual(cherrypy.response.body, 'abc')
     
     def testStatus(self):
         helper.request("/status/")
@@ -313,6 +325,9 @@ class CoreRequestHandlingTest(unittest.TestCase):
             self.assertEqual(cherrypy.response.body, 'content')
     
     def testErrorHandling(self):
+        helper.request("/error/missing")
+        self.assert_("NotFound" in cherrypy.response.body)
+        
         valerr = '\n    raise ValueError\nValueError\n'
         helper.request("/error/page_method")
         self.assert_(cherrypy.response.body.endswith(valerr))
@@ -337,7 +352,7 @@ class CoreRequestHandlingTest(unittest.TestCase):
         self.assertEqual(hnames, ['Content-Length', 'Content-Type', 'Date', 'Expires',
                                   'Location', 'Server'])
     
-    def testMethods(self):
+    def testHTTPMethods(self):
         # Test that all defined HTTP methods work.
         for m in defined_http_methods:
             h = []
