@@ -91,6 +91,7 @@ class HTTPRequest(object):
             envname = "HTTP_" + k.upper().replace("-","_")
             self.environ[envname] = v
         self.ready = True
+    
     def start_response(self, status, headers, exc_info = None):
         if self.started_response:
             if not exc_info:
@@ -105,12 +106,14 @@ class HTTPRequest(object):
         self.outheaders = headers
         self.outheaderkeys = [key.lower() for (key,value) in self.outheaders]
         return self.write
+    
     def write(self, d):
         if not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
         self.wfile.write(d)
         self.wfile.flush()
+    
     def send_headers(self):
         if "content-length" not in self.outheaderkeys:
             self.close_at_end = True
@@ -123,6 +126,7 @@ class HTTPRequest(object):
             self.wfile.write(k + ": " + v + "\r\n")
         self.wfile.write("\r\n")
         self.wfile.flush()
+    
     def terminate(self):
         if self.ready and not self.sent_headers:
             self.sent_headers = True
@@ -154,6 +158,14 @@ class WorkerThread(threading.Thread):
                                                         request.start_response)
                         for line in response:
                             request.write(line)
+                except socket.error, e:
+                    errno = e.args[0]
+                    if errno in (32, 10053, 10054):
+                        # Client probably closed the connection before the
+                        # response was sent.
+                        pass
+                    else:
+                        raise
                 except:
                     traceback.print_exc()
             finally:
