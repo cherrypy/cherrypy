@@ -32,6 +32,7 @@ import cherrypy
 # is initilized
 
 _sessionDefaults = {
+    'sessionFilter.on' : False,
     'sessionFilter.sessionList' : ['default'],
     'sessionFIlter.storageAdaptors' : {},
     'sessionFilter.default.on': True,
@@ -41,6 +42,10 @@ _sessionDefaults = {
     'sessionFilter.default.cookiePrefix': 'CherryPySession',
     'sessionFilter.default.storagePath': '.sessiondata'
 }
+
+def _loadDefaults():
+    for key, value in _sessionDefaults.iteritems():
+        cherrypy.config.configMap['global'].setdefault(key, value)
 
 def retrieve(keyName, sessionName, default = None):
     missing = object()

@@ -39,7 +39,8 @@ class SessionFilter:
         # Create as sessions object for accessing session data
         cherrypy.sessions = local()
         self.sessionManagers = {}
-        cherrypy.config.update({'global' : sessionconfig._sessionDefaults})
+        sessionconfig._loadDefaults()
+        #cherrypy.config.update({'global' : sessionconfig._sessionDefaults})
 
 
     def __newSessionManager(self, sessionName, sessionPath):
