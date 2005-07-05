@@ -94,15 +94,19 @@ def wsgiApp(environ, start_response):
                                 environ['wsgi.input'],
                                 environ['wsgi.url_scheme'],
                                 )
-        start_response(cherrypy.response.status, cherrypy.response.headers)
     except:
         tb = _cputil.formatExc()
         cherrypy.log(tb)
         s, h, b = _cphttptools.bareError(tb)
-        start_response(s, h, sys.exc_info())
+        exc = sys.exc_info()
+    else:
+        resp = cherrypy.response
+        s, h, b = resp.status, resp.headers, resp.body
+        exc = None
     
     try:
-        for chunk in cherrypy.response.body:
+        start_response(s, h, exc)
+        for chunk in b:
             # WSGI requires all data to be of type "str". This coercion should
             # not take any time at all if chunk is already of type "str".
             # If it's unicode, it could be a big performance hit (x ~500).
