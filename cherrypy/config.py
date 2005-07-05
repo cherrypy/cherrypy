@@ -54,16 +54,6 @@ defaultGlobal = {
     'server.logFile': '',
     'server.reverseDNS': False,
     'server.threadPool': 0,
-
-    'sessionFilter.on' : False,
-    'sessionFilter.sessionList' : ['default'],
-    'sessionFIlter.storageAdaptors' : {},
-    'sessionFilter.default.on': True,
-    'sessionFilter.default.timeout': 60,
-    'sessionFilter.default.cleanUpDelay': 60,
-    'sessionFilter.default.storageType' : 'ram',
-    'sessionFilter.default.cookiePrefix': 'CherryPySession',
-    'sessionFilter.default.storagePath': '.sessiondata'
     }
 
 def reset(useDefaults=True):

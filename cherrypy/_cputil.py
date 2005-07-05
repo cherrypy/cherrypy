@@ -147,42 +147,79 @@ _cpFilterList = []
 from cherrypy.lib.filter import baseurlfilter, cachefilter, \
     decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
     staticfilter, nsgmlsfilter, tidyfilter, \
-    virtualhostfilter, xmlrpcfilter, sessionauthenticatefilter
+    virtualhostfilter, xmlrpcfilter, sessionauthenticatefilter, \
+    sessionfilter
 
-from cherrypy.lib.filter import sessionfilter
+# this contains the classes for each filter type
+# we do not store the instances here because the test
+# suite must reinitilize the filters without restarting
+# the server
+_cpDefaultFilterClasses = {
+    'BaseUrlFilter'      : baseurlfilter.BaseUrlFilter,
+    'CacheFilter'        : cachefilter.CacheFilter,
+    'DecodingFilter'     : decodingfilter.DecodingFilter,
+    'EncodingFilter'     : encodingfilter.EncodingFilter,
+    'GzipFilter'         : gzipfilter.GzipFilter,
+    'LogDebugInfoFilter' : logdebuginfofilter.LogDebugInfoFilter,
+    'NsgmlsFilter'       : nsgmlsfilter.NsgmlsFilter,
+    'SessionAuthenticateFilter' : sessionauthenticatefilter.SessionAuthenticateFilter,
+    'SessionFilter'      : sessionfilter.SessionFilter,
+    'StaticFilter'       : staticfilter.StaticFilter,
+    'TidyFilter'         : tidyfilter.TidyFilter,
+    'VirtualHostFilter'  : virtualhostfilter.VirtualHostFilter,
+    'XmlRpcFilter'       : xmlrpcfilter.XmlRpcFilter,
+}
 
-_cachefilter = cachefilter.CacheFilter()
-_logdebuginfofilter = logdebuginfofilter.LogDebugInfoFilter()
-_nsgmlsfilter = nsgmlsfilter.NsgmlsFilter()
-_sessionfilter = sessionfilter.SessionFilter()
-_tidyfilter = tidyfilter.TidyFilter()
-_xmlfilter = xmlrpcfilter.XmlRpcFilter()
+# this is where the actuall filter instances are first stored
+_cpDefaultFilterInstances = {}
 
 # These are in order for a reason!
+# They must be strings matching keys in _cpDefaultFilterClasses
+__cpDefaultInputFilters = [
+    'CacheFilter',
+    'LogDebugInfoFilter',
+    'VirtualHostFilter',
+    'BaseUrlFilter',
+    'DecodingFilter',
+    'SessionFilter',
+    'SessionAuthenticateFilter',
+    'StaticFilter',
+    'NsgmlsFilter',
+    'TidyFilter',
+    'XmlRpcFilter',
+]
 
-_cpDefaultInputFilterList = [
-    _cachefilter,
-    _logdebuginfofilter,
-    virtualhostfilter.VirtualHostFilter(),
-    baseurlfilter.BaseUrlFilter(),
-    decodingfilter.DecodingFilter(),
-    _sessionfilter,
-    sessionauthenticatefilter.SessionAuthenticateFilter(),
-    staticfilter.StaticFilter(),
-    _nsgmlsfilter,
-    _tidyfilter,
-    _xmlfilter,
+__cpDefaultOutputFilters = [
+    'XmlRpcFilter',
+    'EncodingFilter',
+    'TidyFilter',
+    'NsgmlsFilter',
+    'LogDebugInfoFilter',
+    'GzipFilter',
+    'SessionFilter',
+    'CacheFilter',
 ]
-_cpDefaultOutputFilterList = [
-    _xmlfilter,
-    encodingfilter.EncodingFilter(),
-    _tidyfilter,
-    _nsgmlsfilter,
-    _logdebuginfofilter,
-    gzipfilter.GzipFilter(),
-    _sessionfilter,
-    _cachefilter,
-]
+
+# these are the lists cp internally uses to access the filters
+# they are populated when _cpInitDefaultFilters is called
+_cpDefaultInputFilterList  = []
+_cpDefaultOutputFilterList = []
+
+# initilize the default filters
+def _cpInitDefaultFilters():
+    global _cpDefaultInputFilterList, _cpDefaultOutputFilterList
+    _cpDefaultInputFilterList  = []
+    _cpDefaultOutputFilterList = []
+
+    for filterName in __cpDefaultInputFilters:
+        filterClass = _cpDefaultFilterClasses[filterName]
+        filterInstance = _cpDefaultFilterInstances.setdefault(filterName, filterClass())
+        _cpDefaultInputFilterList.append(filterInstance)
+    
+    for filterName in __cpDefaultOutputFilters:
+        filterClass = _cpDefaultFilterClasses[filterName]
+        filterInstance = _cpDefaultFilterInstances.setdefault(filterName, filterClass())
+        _cpDefaultOutputFilterList.append(filterInstance)
 
 # public domain "unrepr" implementation, found on the web and then improved.
 import compiler
@@ -194,7 +231,19 @@ def getObj(s):
 
 class UnknownType(Exception):
     pass
-
+    # initilize the built in filters 
+    for n in xrange(len(_cpDefaultInputFilterList)):
+        try:
+            _cpDefaultInputFilterList[n] = _cpDefaultInputFilterList[n]()
+        except:
+            pass
+    
+    for n in xrange(len(_cpDefaultOutputFilterList)):
+        try:
+            _cpDefaultOutputFilterList[n] = _cpDefaultOutputFilterList[n]()
+        except:
+            pass
+ 
 class Builder:
 
     def build(self, o):

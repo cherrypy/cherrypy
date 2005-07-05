@@ -64,6 +64,7 @@ def _start(initOnly=False, serverClass=None):
             - output config options
             - create response and request objects
             - starts a server
+            - initilizes built in filters
     """
     
     # Use a flag to indicate the state of the cherrypy application server.
@@ -101,6 +102,9 @@ def _start(initOnly=False, serverClass=None):
         cherrypy.profiler = profiler.Profiler(ppath)
     else:
         cherrypy.profiler = None
+
+    # Initilize the built in filters
+    cherrypy._cputil._cpInitDefaultFilters()
     
     if initOnly:
         cherrypy._appserver_state = 1

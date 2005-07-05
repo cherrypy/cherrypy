@@ -186,6 +186,7 @@ def main():
             # because each module uses/overwrites cherrypy globals.
             cherrypy.config.reset()
             cherrypy.config.update({'global': server_conf.copy()})
+            cherrypy._cputil._cpInitDefaultFilters()
             suite = CPTestLoader.loadTestsFromName(testmod)
             CPTestRunner(verbosity=2).run(suite)
         helper.stopServer()
