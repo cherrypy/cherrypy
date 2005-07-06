@@ -11,9 +11,9 @@ class HitCounter:
         # and forum sections of the site
         cherrypy.config.update(
                 {
-                'global' : {'sessionFilter.on': True},
-                '/admin' : {'sessionFilter.sessionList' : ['admin'] },
-                '/forum' : {'sessionFilter.sessionList' : ['forum'] }
+                'global' : { 'sessionFilter.on': True},
+                '/admin' : { 'sessionFilter.admin.on' : True },
+                '/forum' : { 'sessionFilter.forum.on' : True }
                 })
 
     # this is just a primative template function

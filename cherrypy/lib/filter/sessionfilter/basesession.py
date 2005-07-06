@@ -94,6 +94,14 @@ class BaseSession(object):
         # find the cookie name
         cookiePrefix = sessionconfig.retrieve('cookiePrefix', sessionName, None)
         self.cookieName = '%s_%s' % (cookiePrefix, sessionName)
+
+        try:
+            from threading import local
+        except ImportError:
+            from cherrypy._cpthreadinglocal import local
+
+        # settings dict
+        self.settings = local()
            
     
     # there should never be a reason to modify the remaining functions, they used 

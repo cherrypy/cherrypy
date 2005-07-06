@@ -62,23 +62,28 @@ def reset(useDefaults=True):
         configMap["global"] = defaultGlobal.copy()
 reset()
 
-def update(updateMap=None, file=None):
+def update(updateMap=None, file=None, setDefault = False):
+    """ Update the configMap from a dictionary or a config file.
+        If setDefault is True then the update will not modify
+        values already defined in the configMap.
+    """
     if updateMap:
-        for section, valueMap in updateMap.items():
+        for section, valueMap in updateMap.iteritems():
             if not isinstance(valueMap, dict):
                 # Shortcut syntax
                 #   ex: update({'server.socketPort': 80})
                 valueMap = {section: valueMap}
                 section = 'global'
-            s = configMap.get(section)
-            if not s:
-                configMap[section] = valueMap
+            sectionMap = configMap.setdefault(section, {})
+            if not setDefault:
+                sectionMap.update(valueMap)
             else:
-                s.update(valueMap)
+                for key, value in valueMap.iteritems():
+                    sectionMap.setdefault(key, value)
     if file:
         if file not in autoreload.reloadFiles:
             autoreload.reloadFiles.append(file)
-        _load(file)
+        _load(file, setDefault)
 
 def get(key, defaultValue=None, returnSection=False):
     # Look, ma, no Python function calls! Uber-fast.
@@ -167,8 +172,10 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
             self._read(fp, filename)
             fp.close()
 
-def _load(configFile = None):
-    """ Convert an INI file to a dictionary """
+def _load(configFile = None, setDefault = False):
+    """ Convert an INI file to a dictionary.  If set default is True
+        Values allready in the configMap will not be changed.
+    """
     
     # Parse config file
     configParser = CaseSensitiveConfigParser()
@@ -191,7 +198,10 @@ def _load(configFile = None):
                 msg = ("section: %s, option: %s, value: %s" %
                        (repr(section), repr(option), repr(value)))
                 raise _cperror.WrongConfigValue, msg
-            configMap[section][option] = value
+            if not setDefault:
+                configMap[section][option] = value
+            else:
+                configMap[section].setdefault(option, value)
 
 def outputConfigMap():
     cherrypy.log("Server parameters:", 'CONFIG')

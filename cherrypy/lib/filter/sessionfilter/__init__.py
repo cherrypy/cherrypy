@@ -38,9 +38,12 @@ class SessionFilter:
         
         # Create as sessions object for accessing session data
         cherrypy.sessions = local()
+        
+        self.__configData = local()
+        self.__currentSessions = local()
+        
         self.sessionManagers = {}
-        sessionconfig._loadDefaults()
-        #cherrypy.config.update({'global' : sessionconfig._sessionDefaults})
+        cherrypy.config.update(sessionconfig._sessionDefaults, setDefault = True)
 
 
     def __newSessionManager(self, sessionName, sessionPath):
@@ -69,46 +72,55 @@ class SessionFilter:
         
         return storageAdaptor(sessionName, sessionPath)        
         
-    # this function gets all active sessions based on the path
-    def __getSessions(self, names = False):
-        """
-        Returns a list containing instances of all active sessions for the current request path.
-        """
-        sessions = []
-        
-        sessionLists = cherrypy.config.getAll('sessionFilter.sessionList')
-        
-        # loop across all paths with session listts
-        for sessionPath, sessionList in sessionLists:
+    def __loadConfigData(self):
+        try:
+            path = cherrypy.request.path
+        except AttributeError:
+            path = "/"
             
-            # if it isn't a list make it one
-            if not isinstance(sessionList,list):
-                sessionList=[sessionList]
+        configMap = cherrypy.config.configMap
+        
+        self.__configData = {}
+        for section, settings in configMap.iteritems():
+            if section == 'global':
+                section = '/'
+            if path.startswith(section):
+                for key, value in settings.iteritems():
+                    if key.startswith('sessionFilter.'):
+                        sectionData = self.__configData.setdefault(section, {})
+                        keySplit = key.split('.')
+                        if len(keySplit) == 2:
+                            defaults = sectionData.setdefault(None, {})
+                            defaults[keySplit[1]] = value
+                        elif len(keySplit) == 3:
+                            currentSession = sectionData.setdefault(keySplit[1], {})
+                            currentSession[keySplit[2]] = value
+        
+        self.__activeSessions = []
+        for path, sessions in self.__configData.iteritems():
             
-            for sessionName in sessionList:
-                # if the session is off skip to the next session in the list
-                if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, True):
+            for session, sessionSettings in sessions.iteritems():
+                if session == None:
+                    # because i couldn't stand more tabs
                     continue
-                
-                # check that the new sessionName is unique
                 try:
-                    sessionManager = self.sessionManagers[sessionName]
-                    if sessionManager.path != sessionPath:
-                        raise SessionConfigError()
+                    sessionManager = self.sessionManagers[session]
                 except KeyError:
-                    sessionManager = self.__newSessionManager(sessionName, sessionPath)
-                    self.sessionManagers[sessionName] = sessionManager
-                
-                sessions.append(sessionManager)
-                
-        return sessions
+                    sessionManager = self.__newSessionManager(session, path)
+                    self.sessionManagers[session] = sessionManager
+
+                sessionManager.settings = sessionSettings.copy()
+
+                self.__activeSessions.append(sessionManager)
 
     def __initSessions(self):
         
         # look up all of the session keys by cookie
-        sessionKeys = self.getSessionKeys()
+        self.__loadConfigData()
         
-        for sessionManager in self.__getSessions():
+        sessionKeys = self.getSessionKeys()
+
+        for sessionManager in self.__activeSessions:
             sessionKey = sessionKeys.get(sessionManager.name, None)
             
             try:
@@ -126,7 +138,7 @@ class SessionFilter:
         
         sessionKeys = {}
         
-        for sessionManager in self.__getSessions():
+        for sessionManager in self.__activeSessions:
             sessionName = sessionManager.name
             cookieName  = sessionManager.cookieName
 
@@ -156,7 +168,7 @@ class SessionFilter:
         
     def __saveSessions(self):
         
-        for sessionManager in self.__getSessions():
+        for sessionManager in self.__activeSessions:
             sessionName = sessionManager.name
             
             sessionData = getattr(cherrypy.sessions, sessionName)
@@ -169,6 +181,9 @@ class SessionFilter:
                 sessionManager.cleanUpOldSessions()
                 cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', sessionManager.name)
                 sessionManager.nextCleanUp=now + cleanUpDelay * 60
+
+        # this isn't needed but may be helpfull for debugging
+#        self.configData = None
     
     def beforeMain(self):
         if (not cherrypy.config.get('staticFilter.on', False)

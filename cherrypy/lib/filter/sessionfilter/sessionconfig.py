@@ -43,10 +43,6 @@ _sessionDefaults = {
     'sessionFilter.default.storagePath': '.sessiondata'
 }
 
-def _loadDefaults():
-    for key, value in _sessionDefaults.iteritems():
-        cherrypy.config.configMap['global'].setdefault(key, value)
-
 def retrieve(keyName, sessionName, default = None):
     missing = object()
     value = cherrypy.config.get('sessionFilter.%s.%s'
