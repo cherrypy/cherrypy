@@ -214,7 +214,7 @@ class Request(object):
             if name == 'Cookie':
                 req.simpleCookie.load(value)
         
-        msg = "%s - %s" % (req.remoteAddr, self.requestLine[:-2])
+        msg = "%s - %s" % (req.remoteAddr, self.requestLine.strip())
         cherrypy.log(msg, "HTTP")
         
         req.base = "%s://%s" % (req.scheme, req.headerMap.get('Host', ''))
