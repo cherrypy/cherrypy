@@ -4,6 +4,17 @@
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xml:id="apireference">
   <title>API reference</title>
+  <section id="cherrypy">
+    <title>cherrypy</title>
+    <itemizedlist>
+      <listitem>
+        <section>
+          <title>cherrypy.threadData</title>
+          <para>This attribute holds attributes that map to this thread only.</para>
+        </section>
+      </listitem>
+    </itemizedlist>
+  </section>
   <section id="cherrypyrequest">
     <title>cherrypy.request</title>
     <itemizedlist>
