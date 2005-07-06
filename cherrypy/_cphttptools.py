@@ -185,7 +185,7 @@ class Request(object):
         
         # Parse first line
         req.method, path, req.protocol = self.requestLine.split()
-        req.processRequestBody = req.method in ("POST",)
+        req.processRequestBody = req.method in ("POST", "PUT")
         
         # find the queryString, or set it to "" if not found
         if "?" in path:
@@ -230,31 +230,36 @@ class Request(object):
         req.originalParamList = req.paramList
     
     def processRequestBody(self):
+        req = cherrypy.request
+        
         # Create a copy of headerMap with lowercase keys because
         # FieldStorage doesn't work otherwise
         lowerHeaderMap = {}
-        for key, value in cherrypy.request.headerMap.items():
+        for key, value in req.headerMap.items():
             lowerHeaderMap[key.lower()] = value
-        forms = _cpcgifs.FieldStorage(fp=cherrypy.request.rfile, headers=lowerHeaderMap,
-                                      environ = {'REQUEST_METHOD': 'POST'},
-                                      keep_blank_values = 1)
+        
+        methenv = {'REQUEST_METHOD': req.method}
+        forms = _cpcgifs.FieldStorage(fp=req.rfile,
+                                      headers=lowerHeaderMap,
+                                      environ=methenv,
+                                      keep_blank_values=1)
         
         for key in forms.keys():
             valueList = forms[key]
             if isinstance(valueList, list):
-                cherrypy.request.paramMap[key] = []
+                req.paramMap[key] = []
                 for item in valueList:
                     if item.file is not None:
                         value = item # It's a file upload
                     else:
                         value = item.value # It's a regular field
-                    cherrypy.request.paramMap[key].append(value)
+                    req.paramMap[key].append(value)
             else:
                 if valueList.file is not None:
                     value = valueList # It's a file upload
                 else:
                     value = valueList.value # It's a regular field
-                cherrypy.request.paramMap[key] = value
+                req.paramMap[key] = value
 
 
 # Error handling

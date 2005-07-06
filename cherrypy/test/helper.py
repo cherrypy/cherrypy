@@ -121,7 +121,7 @@ def request(url, headers=None, method="GET", body=None):
     if headers is None:
         headers = []
     
-    if method == "POST":
+    if method in ("POST", "PUT"):
         # Stick in default type and length headers if not present
         found = False
         for k, v in headers:
