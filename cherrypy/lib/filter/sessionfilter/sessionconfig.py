@@ -36,11 +36,19 @@ _sessionDefaults = {
     'sessionFilter.sessionList' : ['default'],
     'sessionFIlter.storageAdaptors' : {},
     'sessionFilter.default.on': True,
+
     'sessionFilter.default.timeout': 60,
     'sessionFilter.default.cleanUpDelay': 60,
     'sessionFilter.default.storageType' : 'ram',
     'sessionFilter.default.cookiePrefix': 'CherryPySession',
-    'sessionFilter.default.storagePath': '.sessiondata'
+    'sessionFilter.default.storagePath': '.sessiondata',
+
+    'sessionFilter.timeout': 60,
+    'sessionFilter.cleanUpDelay': 60,
+    'sessionFilter.storageType' : 'ram',
+    'sessionFilter.cookiePrefix': 'CherryPySession',
+    'sessionFilter.storagePath': '.sessiondata',
+    'sessionFilter.default.on': True
 }
 
 def retrieve(keyName, sessionName, default = None):
@@ -48,6 +56,6 @@ def retrieve(keyName, sessionName, default = None):
     value = cherrypy.config.get('sessionFilter.%s.%s'
                                 % (sessionName, keyName), missing)
     if value is missing:
-        value = cherrypy.config.get('sessionFilter.default.%s'
+        value = cherrypy.config.get('sessionFilter.%s'
                                     % keyName, default)
     return value

@@ -39,8 +39,7 @@ class SessionFilter:
         # Create as sessions object for accessing session data
         cherrypy.sessions = local()
         
-        self.__configData = local()
-        self.__currentSessions = local()
+        self.__localData= local()
         
         self.sessionManagers = {}
         cherrypy.config.update(sessionconfig._sessionDefaults, setDefault = True)
@@ -80,14 +79,14 @@ class SessionFilter:
             
         configMap = cherrypy.config.configMap
         
-        self.__configData = {}
+        self.__localData.config = {}
         for section, settings in configMap.iteritems():
             if section == 'global':
                 section = '/'
             if path.startswith(section):
                 for key, value in settings.iteritems():
                     if key.startswith('sessionFilter.'):
-                        sectionData = self.__configData.setdefault(section, {})
+                        sectionData = self.__localData.config.setdefault(section, {})
                         keySplit = key.split('.')
                         if len(keySplit) == 2:
                             defaults = sectionData.setdefault(None, {})
@@ -97,7 +96,7 @@ class SessionFilter:
                             currentSession[keySplit[2]] = value
         
         self.__activeSessions = []
-        for path, sessions in self.__configData.iteritems():
+        for path, sessions in self.__localData.config.iteritems():
             
             for session, sessionSettings in sessions.iteritems():
                 if session == None:
