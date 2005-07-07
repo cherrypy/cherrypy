@@ -124,6 +124,56 @@ class ReloadingTestLoader(unittest.TestLoader):
 CPTestLoader = ReloadingTestLoader()
 
 
+def report_coverage(coverage):
+    localDir = os.path.dirname(__file__)
+    curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
+    basedir = os.path.normpath(os.path.join(curpath, '../'))
+    
+    coverage.get_ready()
+    morfs = [x for x in coverage.cexecuted if x.startswith(basedir.lower())]
+    
+    total_statements = 0
+    total_executed = 0
+    
+    print
+    print "CODE COVERAGE (this might take a while)",
+    for morf in morfs:
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        name = os.path.split(morf)[1]
+        try:
+            _, statements, _, missing, readable  = coverage.analysis2(morf)
+            n = len(statements)
+            m = n - len(missing)
+            total_statements = total_statements + n
+            total_executed = total_executed + m
+        except KeyboardInterrupt:
+            raise
+        except:
+            pass
+    
+    pc = 100.0
+    if total_statements > 0:
+        pc = 100.0 * total_executed / total_statements
+    
+    print ("\nTotal: %s Covered: %s Percent: %2d%%"
+           % (total_statements, total_executed, pc))
+
+
+def run_test_suite(moduleNames, server, conf):
+    cherrypy.config.update({'global': conf.copy()})
+    helper.startServer(server)
+    for testmod in moduleNames:
+        # Must run each module in a separate suite,
+        # because each module uses/overwrites cherrypy globals.
+        cherrypy.config.reset()
+        cherrypy.config.update({'global': conf.copy()})
+        cherrypy._cputil._cpInitDefaultFilters()
+        suite = CPTestLoader.loadTestsFromName(testmod)
+        CPTestRunner(verbosity=2).run(suite)
+    helper.stopServer()
+
+
 def main():
     # Place our current directory's parent (cherrypy/) at the beginning
     # of sys.path, so that all imports are from our current directory.
@@ -131,17 +181,26 @@ def main():
     curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
     sys.path.insert(0, os.path.normpath(os.path.join(curpath, '../../')))
     
+    # Start the coverage tool before importing cherrypy, so module-level
+    # global statements are covered.
+    try:
+        from coverage import the_coverage as coverage
+        coverage.cache_default = os.path.join(os.path.dirname(__file__),
+                                              "../lib/coverage.cache")
+        coverage.start()
+    except ImportError:
+        coverage = None
+    
+    global cherrypy, helper
     print "Python version used to run this test script:", sys.version.split()[0]
     try:
         import cherrypy
+        from cherrypy.test import helper
     except ImportError:
         print "Error: couldn't find CherryPy !"
         os._exit(-1)
     print "CherryPy version", cherrypy.__version__
     print
-    
-    import cherrypy
-    from cherrypy.test import helper
     
     class NotReadyTest(unittest.TestCase):
         def testNotReadyError(self):
@@ -169,28 +228,31 @@ def main():
                    'server.threadPool': 10,
                    'server.logToScreen': False,
                    'server.environment': "production",
-                   'profiling.on': True,
                    }
     
-    for name, server in [("Serverless", None),
-                         ("Native HTTP Server", "cherrypy._cphttpserver.embedded_server"),
-                         ("Native WSGI Server", "cherrypy._cpwsgi.WSGIServer"),
-                         ]:
-        print
-        print "Running tests:", name
-        
-        cherrypy.config.update({'global': server_conf.copy()})
-        helper.startServer(server)
-        for testmod in testList:
-            # Must run each module in a separate suite,
-            # because each module uses/overwrites cherrypy globals.
-            cherrypy.config.reset()
-            cherrypy.config.update({'global': server_conf.copy()})
-            cherrypy._cputil._cpInitDefaultFilters()
-            suite = CPTestLoader.loadTestsFromName(testmod)
-            CPTestRunner(verbosity=2).run(suite)
-        helper.stopServer()
+    print
+    print "Running tests: Serverless"
+    cherrypy.codecoverage = True
+    run_test_suite(testList, None, server_conf)
+    cherrypy.codecoverage = False
     
+    print
+    print "Running tests: Native HTTP Server"
+    run_test_suite(testList, "cherrypy._cphttpserver.embedded_server", server_conf)
+    
+    print
+    print "Running tests: Native WSGI Server"
+    server_conf['profiling.on'] = True
+    run_test_suite(testList, "cherrypy._cpwsgi.WSGIServer", server_conf)
+    del server_conf['profiling.on']
+    
+    if coverage:
+        report_coverage(coverage)
+        print "run /cherrypy/lib/covercp.py as a script to serve coverage results on port 8080"
+    
+    print "run /cherrypy/lib/profiler.py as a script to serve profiling results on port 8080"
+    
+    print
     raw_input('hit enter')
 
 if __name__ == '__main__':

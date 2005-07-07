@@ -37,7 +37,7 @@ import sys
 
 import cherrypy
 from cherrypy import _cphttptools
-from cherrypy.lib import autoreload, profiler
+from cherrypy.lib import autoreload, profiler, covercp
 
 
 # Set some special attributes for adding hooks
@@ -66,6 +66,9 @@ def _start(initOnly=False, serverClass=None):
             - starts a server
             - initilizes built in filters
     """
+    
+    if cherrypy.codecoverage:
+        covercp.start()
     
     # Use a flag to indicate the state of the cherrypy application server.
     # 0 = Not started
@@ -189,7 +192,6 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http
     rfile: a file-like object from which to read the HTTP request body
     scheme: either "http" or "https"; defaults to "http"
     """
-    
     if cherrypy._appserver_state == 0:
         raise cherrypy.NotReady("No thread has called cherrypy.server.start().")
     elif cherrypy._appserver_state == None:
@@ -197,6 +199,10 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http
     
     threadID = threading._get_ident()
     if threadID not in seen_threads:
+        
+        if cherrypy.codecoverage:
+            covercp.start()
+        
         i = len(seen_threads) + 1
         seen_threads[threadID] = i
         # Call the functions from cherrypy.server.onStartThreadList

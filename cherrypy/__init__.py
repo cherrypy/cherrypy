@@ -44,6 +44,8 @@ import server
 _appserver_state = 0
 _httpserver = None
 
+codecoverage = False
+
 try:
     from threading import local
 except ImportError:
