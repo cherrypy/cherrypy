@@ -62,7 +62,7 @@ def reset(useDefaults=True):
         configMap["global"] = defaultGlobal.copy()
 reset()
 
-def update(updateMap=None, file=None, override = False):
+def update(updateMap=None, file=None, override = True):
     """ Update the configMap from a dictionary or a config file.
         If override is True then the update will not modify
         values already defined in the configMap.
@@ -75,7 +75,7 @@ def update(updateMap=None, file=None, override = False):
                 valueMap = {section: valueMap}
                 section = 'global'
             sectionMap = configMap.setdefault(section, {})
-            if not override:
+            if override:
                 sectionMap.update(valueMap)
             else:
                 for key, value in valueMap.iteritems():
