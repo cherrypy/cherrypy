@@ -230,7 +230,7 @@ def getOptions():
     else:
         servers.add('wsgi')
     
-    argSet.difference(['-wsgi', '-native', '-serverless', '-all'])
+    argSet.difference_update(['-wsgi', '-native', '-serverless', '-all'])
 
     tests = []
     for testString, test in testDict.iteritems():
@@ -243,6 +243,7 @@ def getOptions():
     
     if len(argSet):
         for arg in sys.argv:
+            print arg, arg.lower(), arg.lower() in argSet
             if arg.lower() in argSet:
                 raise BadArgument(arg)
     return (servers, tests)
