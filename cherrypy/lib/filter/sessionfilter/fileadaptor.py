@@ -30,19 +30,19 @@ import cPickle as pickle
 import threading
 import os.path
 
-import sessionconfig
-from basesession import BaseSession
+
+from baseadaptor import BaseAdaptor
 from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
 
 
-class FileSession(BaseSession):
+class FileSession(BaseAdaptor):
     
     # is ok to cache filesession data
     noCache = False
     
     def __init__(self, sessionName, sessionPath):
-        BaseSession.__init__(self, sessionName, sessionPath)
+        BaseAdaptor.__init__(self, sessionName, sessionPath)
         self.__fileLock = threading.RLock()
 
     def newSession(self):

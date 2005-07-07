@@ -29,29 +29,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import shelve
 
 import cherrypy
-from basesession import BaseSession
+from baseadaptor import BaseAdaptor
 from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
 
-import sessionconfig
+
 
 import os.path
 
 
-class DBMSession(BaseSession):
+class DBMSession(BaseAdaptor):
    
     # it is ok to cache the session data
     noCache = False
     
     def __init__(self, sessionName, sessionPath):
-        BaseSession.__init__(self, sessionName, sessionPath)
+        BaseAdaptor.__init__(self, sessionName, sessionPath)
         
         # we must make sure the db file is unique
         dbFile = cherrypy.config.get('sessionFilter.%s.dbFile', None)
         if not dbFile:
             defaultFile = '%s.db' % sessionName
             
-            storagePath = sessionconfig.retrieve('storagePath', sessionName)
+            storagePath = self.getSetting('storagePath')
             
             dbFile = os.path.join(storagePath, defaultFile)
         self.__data = shelve.open(dbFile, 'c')

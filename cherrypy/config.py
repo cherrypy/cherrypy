@@ -62,9 +62,9 @@ def reset(useDefaults=True):
         configMap["global"] = defaultGlobal.copy()
 reset()
 
-def update(updateMap=None, file=None, setDefault = False):
+def update(updateMap=None, file=None, override = False):
     """ Update the configMap from a dictionary or a config file.
-        If setDefault is True then the update will not modify
+        If override is True then the update will not modify
         values already defined in the configMap.
     """
     if updateMap:
@@ -75,7 +75,7 @@ def update(updateMap=None, file=None, setDefault = False):
                 valueMap = {section: valueMap}
                 section = 'global'
             sectionMap = configMap.setdefault(section, {})
-            if not setDefault:
+            if not override:
                 sectionMap.update(valueMap)
             else:
                 for key, value in valueMap.iteritems():
@@ -83,7 +83,7 @@ def update(updateMap=None, file=None, setDefault = False):
     if file:
         if file not in autoreload.reloadFiles:
             autoreload.reloadFiles.append(file)
-        _load(file, setDefault)
+        _load(file, override)
 
 def get(key, defaultValue=None, returnSection=False):
     # Look, ma, no Python function calls! Uber-fast.
@@ -172,8 +172,8 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
             self._read(fp, filename)
             fp.close()
 
-def _load(configFile = None, setDefault = False):
-    """ Convert an INI file to a dictionary.  If set default is True
+def _load(configFile = None, override = True):
+    """ Convert an INI file to a dictionary.  If override is false
         Values allready in the configMap will not be changed.
     """
     
@@ -198,7 +198,7 @@ def _load(configFile = None, setDefault = False):
                 msg = ("section: %s, option: %s, value: %s" %
                        (repr(section), repr(option), repr(value)))
                 raise _cperror.WrongConfigValue, msg
-            if not setDefault:
+            if override:
                 configMap[section][option] = value
             else:
                 configMap[section].setdefault(option, value)

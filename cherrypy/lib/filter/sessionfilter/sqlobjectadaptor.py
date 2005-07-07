@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import cherrypy
-from basesession import BaseSession
+from baseadaptor import BaseAdaptor
 from sessionerrors import *
 
 from sqlobject import *
 from basesessiondict import BaseSessionDict
-import sessionconfig 
+ 
 import time
 
 class SQLObjectSessionDict(BaseSessionDict):
@@ -85,13 +85,13 @@ class SQLObjectSessionDict(BaseSessionDict):
         return str(self.__sqlObject)
 
 
-class SQLObjectSession(BaseSession):
+class SQLObjectSession(BaseAdaptor):
     
     def __init__(self, sessionName, sessionPath):
-        BaseSession.__init__(self, sessionName, sessionPath)
+        BaseAdaptor.__init__(self, sessionName, sessionPath)
         
         self.Session = cherrypy.config.get('sessionFilter.%s.tableObject' % sessionName)
-        if sessionconfig.retrieve('instantUpdate', sessionName, False):
+        if self.getSetting('instantUpdate', False):
             self.Session._lazyUpdate = True
     
     def newSession(self):

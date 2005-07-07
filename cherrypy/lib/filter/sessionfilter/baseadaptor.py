@@ -30,10 +30,8 @@ import random, time, sha, string
 
 import cherrypy
 from cherrypy.lib.filter.sessionfilter.simplesessiondict import SimpleSessionDict
-from cherrypy.lib.filter.sessionfilter import sessionconfig
 
-
-class BaseSession(object):
+class BaseAdaptor(object):
     """
     This is the class from which all session storage types are derived.
     The functions which need to be redefined are at the end of the file
@@ -45,23 +43,23 @@ class BaseSession(object):
     # these are the  functions that need to rewritten 
     def delSession(self, sessionKey):
         """ delete a session from storage """
-        pass
+        raise NotImplementedError('delSession has not been implemented')
     
     def getSession(self, sessionKey):
         """ function to lookup the session """
-        pass
+        raise NotImplementedError('getSession has not been implemented')
     
     def setSession(self, sessionData):
         """ function to save sesion data """
-        pass
+        raise NotImplementedError('setSession has not been implemented')
     
     def cleanUpOldSessions(self):
         """This function cleans up expired sessions"""
-        pass
+        raise NotImplementedError('cleanUpOldSessions has not been implemented')
     
     def newSession(self):
         """ Return a new sessiondict instance """
-        pass
+        raise NotImplementedError('newSession not been implemented')
     
     # it might be usefull to redefine this function
     def generateSessionKey(self):
@@ -82,7 +80,7 @@ class BaseSession(object):
         """
         Create the session caceh and set the session name.  Make if you write
         a custom __init__ function make sure you make a call to 
-        BaseSession.__init__(sessioName)
+        BaseAdaptor.__init__(sessioName)
         """
         
         self.__sessionCache = {}
@@ -91,11 +89,13 @@ class BaseSession(object):
         #set the path
         self.path = sessionPath
 
-        cleanUpDelay = sessionconfig.retrieve('cleanUpDelay', self.name)
+        cleanUpDelay = self.getSetting('cleanUpDelay')
+
         self.nextCleanUp = time.time()+cleanUpDelay * 60
 
         # find the cookie name
-        cookiePrefix = sessionconfig.retrieve('cookiePrefix', sessionName, None)
+        cookiePrefix = self.getSetting('cookiePrefix')
+        
         self.cookieName = '%s_%s' % (cookiePrefix, sessionName)
 
         try:
@@ -113,11 +113,24 @@ class BaseSession(object):
     def getDefaultAttributes(self):
       return { 
                'timestamp'  : int(time.time()),
-               'timeout'    : sessionconfig.retrieve('timeout', self.name) * 60,
+               'timeout'    : self.settings.timeout,
                'lastAccess' : int(time.time()),
                'key'        : self.generateSessionKey()
              }
-       
+             
+    def getSetting(self, settingName, default = None):
+        try:
+            return getattr(self.settings, settingName)
+        except AttributeError:
+            missing = object()
+            result = cherrypy.config.get('sessionFilter.%s.%s' % (self.name, settingName), missing)
+            if result is missing:
+                result = cherrypy.config.get('sessionFilter.%s' % settingName, default)
+
+            return result
+
+            
+        
     def loadSession(self, sessionKey, autoCreate = True):
         try:
             # look for the session in the cache

@@ -2,12 +2,26 @@ import time
 
 import cherrypy
 
-import sessionconfig
+_sessionDefaults = {
+    'sessionFilter.on' : False,
+    'sessionFilter.sessionList' : ['default'],
+    'sessionFIlter.storageAdaptors' : {},
+    'sessionFilter.default.on': True,
+
+    'sessionFilter.timeout': 60,
+    'sessionFilter.cleanUpDelay': 60,
+    'sessionFilter.storageType' : 'ram',
+    'sessionFilter.cookiePrefix': 'CherryPySession',
+    'sessionFilter.storagePath': '.sessiondata',
+    'sessionFilter.default.on': True,
+    'sessionFilter.cacheTimeout' : 0
+}
 
 from sessionerrors import SessionNotFoundError, SessionIncompatibleError, SessionBadStorageTypeError, SessionConfigError
 from ramadaptor import RamSession
 from fileadaptor import FileSession
 from anydbadaptor import DBMSession
+
 
 _sessionTypes = {
                   'ram'       : RamSession,
@@ -42,7 +56,7 @@ class SessionFilter:
         self.__localData= local()
         
         self.sessionManagers = {}
-        cherrypy.config.update(sessionconfig._sessionDefaults, setDefault = True)
+        cherrypy.config.update(_sessionDefaults, override = True)
 
 
     def __newSessionManager(self, sessionName, sessionPath):
@@ -53,7 +67,9 @@ class SessionFilter:
         If the storage type still can not be found, an exception is raised.
         """
         # look up the storage type or return the default
-        storageType = sessionconfig.retrieve('storageType', sessionName)
+        storageType = cherrypy.config.get('sessionFilter.%s.storageType' % sessionName, None)
+        if not storageType:
+            storageType = cherrypy.config.get('sessionFilter.storageType')
         
         # try to initilize a built in session
         try:
@@ -233,7 +249,6 @@ class SessionFilter:
             sessionData = getattr(cherrypy.sessions, sessionName)
             sessionManager.commitCache(sessionData.key)
             sessionManager.cleanUpCache()
-            
             
             now = time.time()
             if sessionManager.nextCleanUp < now:

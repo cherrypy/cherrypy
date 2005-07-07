@@ -26,15 +26,15 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from basesession import BaseSession
+from baseadaptor import BaseAdaptor
 from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
 
 
-class RamSession(BaseSession):
+class RamSession(BaseAdaptor):
 
     def __init__(self, sessionName, sessionPath):
-        BaseSession.__init__(self, sessionName, sessionPath)
+        BaseAdaptor.__init__(self, sessionName, sessionPath)
         self.__data = {}
     
     def newSession(self):
