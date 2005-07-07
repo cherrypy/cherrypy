@@ -36,6 +36,7 @@ If you run this module from the command line, it will call serve() for you.
 
 import sys
 import os, os.path
+localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
 
 try:
     import cStringIO as StringIO
@@ -45,9 +46,6 @@ except ImportError:
 
 try:
     from coverage import the_coverage as coverage
-    coverage.cache_default = os.path.join(os.path.dirname(__file__),
-                                                       "coverage.cache")
-    
     def start():
         coverage.start()
     
@@ -76,22 +74,19 @@ class CoverStats(object):
     
     def menu(self):
         yield "<h2>CherryPy Coverage</h2>"
-        if coverage is None:
-            yield "<p>The coverage module could not be imported.</p>"
-        else:
-            yield "<p>Click on one of the modules below to see coverage analysis.</p>"
-            coverage.get_ready()
-            runs = coverage.cexecuted.keys()
-            runs.sort()
-            if runs:
-                base = ""
-                for i in runs:
-                    newbase, fname = os.path.split(i)
-                    if base != newbase:
-                        base = newbase
-                        yield "<h3>%s</h3>\n" % newbase
-                    yield ("<a href='report?name=%s' target='main'>%s</a><br />\n"
-                           % (i, fname))
+        yield "<p>Click on one of the modules below to see coverage analysis.</p>"
+        coverage.get_ready()
+        runs = [os.path.split(x) for x in coverage.cexecuted.keys()]
+        runs.sort()
+        if runs:
+            base = ""
+            for x in runs:
+                newbase, fname = x
+                if base != newbase:
+                    base = newbase
+                    yield "<h3>%s</h3>\n" % newbase
+                yield ("<a href='report?name=%s' target='main'>%s</a><br />\n"
+                       % (os.path.join(newbase, fname), fname))
     menu.exposed = True
     
     def annotated_file(self, filename, statements, excluded, missing):
@@ -138,17 +133,18 @@ class CoverStats(object):
         return result
     
     def report(self, name):
-        if coverage is None:
-            return "<p>The coverage module could not be imported.</p>"
-        else:
-            import cherrypy
-            cherrypy.response.headerMap['Content-Type'] = 'text/plain'
-            filename, statements, excluded, missing, _ = coverage.analysis2(name)
-            return self.annotated_file(filename, statements, excluded, missing)
+        import cherrypy
+        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        filename, statements, excluded, missing, _ = coverage.analysis2(name)
+        return self.annotated_file(filename, statements, excluded, missing)
     report.exposed = True
 
 
-def serve(port=8080):
+def serve(path=localFile, port=8080):
+    if coverage is None:
+        raise ImportError("<p>The coverage module could not be imported.</p>")
+    coverage.cache_default = path
+    
     import cherrypy
     cherrypy.root = CoverStats()
     cherrypy.config.update({'global': {'server.socketPort': port,

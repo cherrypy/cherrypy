@@ -185,8 +185,10 @@ def main():
     # global statements are covered.
     try:
         from coverage import the_coverage as coverage
-        coverage.cache_default = os.path.join(os.path.dirname(__file__),
-                                              "../lib/coverage.cache")
+        coverage.cache_default = c = os.path.join(os.path.dirname(__file__),
+                                                  "../lib/coverage.cache")
+        if c and os.path.exists(c):
+            os.remove(c)
         coverage.start()
     except ImportError:
         coverage = None
@@ -247,6 +249,7 @@ def main():
     del server_conf['profiling.on']
     
     if coverage:
+        coverage.save()
         report_coverage(coverage)
         print "run /cherrypy/lib/covercp.py as a script to serve coverage results on port 8080"
     
