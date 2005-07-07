@@ -173,8 +173,90 @@ def run_test_suite(moduleNames, server, conf):
         CPTestRunner(verbosity=2).run(suite)
     helper.stopServer()
 
+testDict = {
+    'baseurlFilter'          : 'test_baseurl_filter',
+    'cacheFilter'            : 'test_cache_filter',
+    'combinedFilters'        : 'test_combinedfilters',
+    'core'                   : 'test_core',
+    'decodingEncodingFilter' : 'test_decodingencoding_filter',
+    'gzipFilter'             : 'test_gzip_filter',
+    'logDebugInfoFilter'     : 'test_logdebuginfo_filter',
+    'objectMapping'          : 'test_objectmapping',
+    'staticFilter'           : 'test_static_filter',
+    'tutorials'              : 'test_tutorials',
+    'virtualHostFilter'      : 'test_virtualhost_filter'
+}
+
+import sys
+
+def help():
+    print """CherryPy Test Program
+    Usage: 
+        test.py -mode testName1 testName2 testName...
+
+    modes: wsgi, severless, native, all
+      default: wsgi
+    """
+
+    print '    tests:'
+    for testString in testDict:
+        print '        ', testString
+
+    
+class BadArgument(Exception):
+    def __init__(self, arg):
+        self.arg = arg
+    def __str__(self):
+        return 'Error:\n    %s is not a valid option.' % self.arg
+        
+class DisplayHelp(Exception):      pass
+
+def getOptions():
+
+    argSet = set([arg.lower() for arg in sys.argv[1:]])
+    
+    if '-help' in sys.argv:
+        raise DisplayHelp
+    
+    servers = set()
+    if '-all' in argSet:
+        servers.update(['wsgi', 'native', 'serverless'])
+    elif '-wsgi' in argSet:
+        servers.add('wsgi')
+    elif '-native' in argSet:
+        servers.add('native')
+    elif '-serverless' in argSet:
+        servers.add('serverless')
+    else:
+        servers.add('wsgi')
+    
+    argSet.difference(['-wsgi', '-native', '-serverless', '-all'])
+
+    tests = []
+    for testString, test in testDict.iteritems():
+        if testString.lower() in argSet:
+            tests.append(testDict[testString])
+            argSet.discard(testString.lower())
+    
+    if not tests:
+        tests = testDict.values()
+    
+    if len(argSet):
+        for arg in sys.argv:
+            if arg.lower() in argSet:
+                raise BadArgument(arg)
+    return (servers, tests)
 
 def main():
+    try:
+        servers, testList = getOptions()
+        runTests(servers, testList)
+    except DisplayHelp:
+        help()
+    except BadArgument, argError:
+        print argError
+    
+def runTests(servers, testList):
     # Place our current directory's parent (cherrypy/) at the beginning
     # of sys.path, so that all imports are from our current directory.
     localDir = os.path.dirname(__file__)
@@ -211,20 +293,6 @@ def main():
             self.assertRaises(cherrypy.NotReady, helper.request, "/")
     CPTestRunner(verbosity=2).run(NotReadyTest("testNotReadyError"))
     
-    testList = [
-        'test_baseurl_filter',
-        'test_cache_filter',
-        'test_combinedfilters',
-        'test_core',
-        'test_decodingencoding_filter',
-        'test_gzip_filter',
-        'test_logdebuginfo_filter',
-        'test_objectmapping',
-        'test_static_filter',
-        'test_tutorials',
-        'test_virtualhost_filter',
-    ]
-    
     server_conf = {'server.socketHost': helper.HOST,
                    'server.socketPort': helper.PORT,
                    'server.threadPool': 10,
@@ -232,21 +300,26 @@ def main():
                    'server.environment': "production",
                    }
     
-    print
-    print "Running tests: Serverless"
-    cherrypy.codecoverage = True
-    run_test_suite(testList, None, server_conf)
-    cherrypy.codecoverage = False
+    if 'serverless' in servers:
+        print
+        print "Running testList: Serverless"
+        cherrypy.codecoverage = True
+        run_test_suite(testList, None, server_conf)
+        cherrypy.codecoverage = False
+    
+    if 'native' in servers:
+        print
+        print "Running testList: Native HTTP Server"
+        run_test_suite(testList, "cherrypy._cphttpserver.embedded_server", server_conf)
+    
+    if 'wsgi' in servers:
+        print
+        print "Running testList: Native WSGI Server"
+        server_conf['profiling.on'] = True
+        run_test_suite(testList, "cherrypy._cpwsgi.WSGIServer", server_conf)
+        del server_conf['profiling.on']
     
     print
-    print "Running tests: Native HTTP Server"
-    run_test_suite(testList, "cherrypy._cphttpserver.embedded_server", server_conf)
-    
-    print
-    print "Running tests: Native WSGI Server"
-    server_conf['profiling.on'] = True
-    run_test_suite(testList, "cherrypy._cpwsgi.WSGIServer", server_conf)
-    del server_conf['profiling.on']
     
     if coverage:
         coverage.save()
