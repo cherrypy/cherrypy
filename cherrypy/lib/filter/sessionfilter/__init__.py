@@ -5,7 +5,7 @@ import cherrypy
 _sessionDefaults = {
     'sessionFilter.on' : False,
     'sessionFilter.sessionList' : ['default'],
-    'sessionFIlter.storageAdaptors' : {},
+    'sessionFilter.storageAdaptors' : {},
     'sessionFilter.default.on': True,
 
     'sessionFilter.timeout': 60,
