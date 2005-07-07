@@ -50,7 +50,9 @@ class DBMSession(BaseSession):
         dbFile = cherrypy.config.get('sessionFilter.%s.dbFile', None)
         if not dbFile:
             defaultFile = '%s.db' % sessionName
+            
             storagePath = sessionconfig.retrieve('storagePath', sessionName)
+            
             dbFile = os.path.join(storagePath, defaultFile)
         self.__data = shelve.open(dbFile, 'c')
     

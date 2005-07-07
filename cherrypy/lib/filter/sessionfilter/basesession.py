@@ -66,7 +66,10 @@ class BaseSession(object):
     # it might be usefull to redefine this function
     def generateSessionKey(self):
         """ Function to return a new sessioId """
-        sessionKeyFunc = sessionconfig.retrieve('keyGenerator', self.name, None)
+        try:
+            sessionKeyFunc = self.settings.keyGenerator
+        except AttributeError:
+            sessionKeyFunc = None
         
         if sessionKeyFunc:
             newKey = sessionKeyFunc()
@@ -101,7 +104,7 @@ class BaseSession(object):
             from cherrypy._cpthreadinglocal import local
 
         # settings dict
-        self.settings = local()
+        self.settings = None
            
     
     # there should never be a reason to modify the remaining functions, they used 
@@ -144,7 +147,7 @@ class BaseSession(object):
             session.threadCount = 0
             self.setSession(session)
         
-            cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.name, None)
+            cacheTimeout = self.settings.cacheTimeout
             
             if session.threadCount == 0 and (self.noCache or not cacheTimeout):
                 del self.__sessionCache[sessionKey]
@@ -157,7 +160,8 @@ class BaseSession(object):
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
-        cacheTimeout = sessionconfig.retrieve('cacheTimeout',  self.name, None)
+        cacheTimeout = self.settings.cacheTimeout
+        
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout and not self.noCache:
             deleteList = []

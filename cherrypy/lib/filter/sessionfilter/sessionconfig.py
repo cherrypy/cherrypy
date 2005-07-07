@@ -42,7 +42,8 @@ _sessionDefaults = {
     'sessionFilter.storageType' : 'ram',
     'sessionFilter.cookiePrefix': 'CherryPySession',
     'sessionFilter.storagePath': '.sessiondata',
-    'sessionFilter.default.on': True
+    'sessionFilter.default.on': True,
+    'sessionFilter.cacheTimeout' : 0
 }
 
 def retrieve(keyName, sessionName, default = None):
