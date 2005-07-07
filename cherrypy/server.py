@@ -37,7 +37,7 @@ import sys
 
 import cherrypy
 from cherrypy import _cphttptools
-from cherrypy.lib import autoreload, profiler, covercp
+from cherrypy.lib import autoreload, profiler
 
 
 # Set some special attributes for adding hooks
@@ -68,6 +68,7 @@ def _start(initOnly=False, serverClass=None):
     """
     
     if cherrypy.codecoverage:
+        from cherrypy.lib import covercp
         covercp.start()
     
     # Use a flag to indicate the state of the cherrypy application server.
@@ -201,6 +202,7 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http
     if threadID not in seen_threads:
         
         if cherrypy.codecoverage:
+            from cherrypy.lib import covercp
             covercp.start()
         
         i = len(seen_threads) + 1
