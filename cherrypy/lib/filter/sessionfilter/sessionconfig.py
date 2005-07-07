@@ -37,12 +37,6 @@ _sessionDefaults = {
     'sessionFIlter.storageAdaptors' : {},
     'sessionFilter.default.on': True,
 
-    'sessionFilter.default.timeout': 60,
-    'sessionFilter.default.cleanUpDelay': 60,
-    'sessionFilter.default.storageType' : 'ram',
-    'sessionFilter.default.cookiePrefix': 'CherryPySession',
-    'sessionFilter.default.storagePath': '.sessiondata',
-
     'sessionFilter.timeout': 60,
     'sessionFilter.cleanUpDelay': 60,
     'sessionFilter.storageType' : 'ram',
