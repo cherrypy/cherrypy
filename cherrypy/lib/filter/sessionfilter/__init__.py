@@ -56,7 +56,7 @@ class SessionFilter:
         self.__localData= local()
         
         self.sessionManagers = {}
-        cherrypy.config.update(_sessionDefaults, override = True)
+        cherrypy.config.update(_sessionDefaults, override = False)
 
 
     def __newSessionManager(self, sessionName, sessionPath):
