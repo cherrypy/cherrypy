@@ -249,13 +249,13 @@ class Request(object):
             if isinstance(valueList, list):
                 req.paramMap[key] = []
                 for item in valueList:
-                    if item.file is not None:
+                    if item.filename is not None:
                         value = item # It's a file upload
                     else:
                         value = item.value # It's a regular field
                     req.paramMap[key].append(value)
             else:
-                if valueList.file is not None:
+                if valueList.filename is not None:
                     value = valueList # It's a file upload
                 else:
                     value = valueList.value # It's a regular field
