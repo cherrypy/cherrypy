@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-         xml:id="buildingblog">
+<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="buildingblog">
   <title>A real case application : A blog.</title>
   <section>
     <sectioninfo>
       <abstract>
-	<para>The following sections will describe the step to build a simple blogging system. 
-	It does not aim to create a comprehensive one but to give you an overview of how 
-	to build a CherryPy application.</para>
+        <para>The following sections will describe the step to build a simple blogging system. It
+          does not aim to create a comprehensive one but to give you an overview of how to build a
+          CherryPy application.</para>
       </abstract>
     </sectioninfo>
     <title>Features of the blog</title>
@@ -25,13 +23,13 @@
   </section>
   <section>
     <title>Setting up the project</title>
-    <para>Our first step will be to define the directory structure of the projet.
-    This structure is only one amongst others of course.</para>
+    <para>Our first step will be to define the directory structure of the projet. This structure is
+      only one amongst others of course.</para>
     <example>
       <title>Directory structure of the blog project</title>
-      <para>Imagine our root directory is called <code>blog</code>, then the structure will be  :</para>
+      <para>Imagine our root directory is called <code>blog</code>, then the structure will be :</para>
       <screen>
-<co id="blogpy" />blog/blog.py
+<co id="blogpy"/>blog/blog.py
 <co id="license"/>blog/LICENSE
 <co id="readme"/>blog/README
 <co id="media"/>blog/media/
@@ -41,113 +39,235 @@
 <co id="mediafeed"/>blog/media/feed/
 <co id="mediatemplates"/>blog/media/templates/
 <co id="mediautils"/>blog/media/utils/
-<co id="src" />blog/src/
+<co id="src"/>blog/src/
       </screen>
       <calloutlist>
-	<callout arearefs="blogpy">
-	  <para>This is the main script of our application. It contains the code to
-	  start up the web server and the application.
-	  </para>
-	</callout>
-	
-	<callout arearefs="license">
-	  <para>Your application should always contain a license.
-	  </para>
-	</callout>
-	
-	<callout arearefs="readme">
-	  <para>Your application should also come with a readme file.
-	  </para>
-	</callout>
-	
-	<callout arearefs="media">
-	  <para>We will divide the directory structure into two main sub directories.
-	  One will deal with the source code itself, and the other one will deal with
-	  all the data you might work with.
-	  </para>
-	</callout>
-	
-	<callout arearefs="mediaconf">
-	  <para>Contains the configuration file we will define for the application.
-	  </para>
-	</callout>
-	
-	<callout arearefs="mediacss">
-	  <para>Contains the CSS stylesheet we will be using.
-	  </para>
-	</callout>
-	
-	<callout arearefs="mediadb">
-	  <para>Our blogging system will use a very simple interface to store content
-	  as you will see later.
-	  This directory will hold the data.
-	  </para>
-	</callout>
-	
-	<callout arearefs="mediafeed">
-	  <para>We will only support RSS here but as you may extend yourself the
-	  applictaion, this directory will let you hold all different kind of
-	  feed format files.
-	  </para>
-	</callout>
-	
-	<callout arearefs="mediatemplates">
-	  <para>Contains all templating files we will be using.
-	  </para>
-	</callout>
-	
-	<callout arearefs="mediautils">
-	  <para>Where to put some helper files we will need.
-	  </para>
-	</callout>
-	
-	<callout arearefs="src">
-	  <para>Contains the source code itself.
-	  </para>
-	</callout>
+        <callout arearefs="blogpy">
+          <para>This is the main script of our application. It contains the code to start up the web
+            server and the application. </para>
+        </callout>
+        <callout arearefs="license">
+          <para>Your application should always contain a license. </para>
+        </callout>
+        <callout arearefs="readme">
+          <para>Your application should also come with a readme file. </para>
+        </callout>
+        <callout arearefs="media">
+          <para>We will divide the directory structure into two main sub directories. One will deal
+            with the source code itself, and the other one will deal with all the data you might
+            work with. </para>
+        </callout>
+        <callout arearefs="mediaconf">
+          <para>Contains the configuration file we will define for the application. </para>
+        </callout>
+        <callout arearefs="mediacss">
+          <para>Contains the CSS stylesheet we will be using. </para>
+        </callout>
+        <callout arearefs="mediadb">
+          <para>Our blogging system will use a very simple interface to store content as you will
+            see later. This directory will hold the data. </para>
+        </callout>
+        <callout arearefs="mediafeed">
+          <para>We will only support RSS here but as you may extend yourself the applictaion, this
+            directory will let you hold all different kind of feed format files. </para>
+        </callout>
+        <callout arearefs="mediatemplates">
+          <para>Contains all templating files we will be using. </para>
+        </callout>
+        <callout arearefs="mediautils">
+          <para>Where to put some helper files we will need. </para>
+        </callout>
+        <callout arearefs="src">
+          <para>Contains the source code itself. </para>
+        </callout>
       </calloutlist>
     </example>
+    <para>Again this structure is not required by CherryPy itself. It is a choice made for this
+      tutorial.</para>
   </section>
   <section>
     <title>Design consideration</title>
-    <para></para>
+    <para/>
   </section>
   <section>
     <sectioninfo>
       <abstract>
-	<para></para>
+        <para/>
       </abstract>
     </sectioninfo>
     <title>Tools</title>
     <section>
-      <sectioninfo>
-	<abstract>
-	  <para></para>
-	</abstract>
-      </sectioninfo>
       <title>The backend: persistence</title>
+      <para>Mainly one can look at four the following directions when deciding to store and persist
+        content :</para>
+      <itemizedlist>
+        <listitem>Native SQL driven database</listitem>
+        <listitem>Native XML driven database</listitem>
+        <listitem>Native Objects driven database</listitem>
+      </itemizedlist>
+      <para>By far the first choice is the most used at any rate. It is efficient, reliable,
+        well-known and powerful. XML and native object database are gaining some success slowly but
+        are still quite young.</para>
+      <para>The solution we have chosen is non of the above for keeping this tutorial simple. We do
+        want to avoid having to import too many external modules. Besides since this blogging system
+        is so simple, we can use another way to store and persist our content : pickling pure python
+        objects thanks to the standard <ulink url="http://docs.python.org/lib/module-shelve.html"
+          >shelve</ulink>module.</para>
+      <para>
+        <blockquote> A ``shelf'' is a persistent, dictionary-like object. The difference with
+          ``dbm'' databases is that the values (not the keys!) in a shelf can be essentially
+          arbitrary Python objects -- anything that the pickle module can handle. This includes most
+          class instances, recursive data types, and objects containing lots of shared sub-objects.
+          The keys are ordinary strings. </blockquote>
+      </para>
+      <para>This solution allows us to focus on CherryPy and not too much on the backend
+      itself.</para>
     </section>
     <section>
-      <sectioninfo>
-	<abstract>
-	  <para></para>
-	</abstract>
-      </sectioninfo>
-      <title>Templating</title>
+      <title>Templating : presentation</title>
+      <para>A templating language is meant to offer the developer and easy way to transform an input
+        into an output of his/her choice. In the web application field, usually it referes to the
+        presentation system to transform the content intot nice XHTML output sent to the browser.</para>
+      <para>The CherryPy developers have made the clear choice of not providing any default
+        templating system. The main reason is that it would make developers feeling like they must
+        use this particular one. CherryPy allows actually the developer to choose his/her favourite
+        templating system and go with it. CherryPy does not know anything about templating language
+        in fact. It also means that the developers has the possibility to use a templating system as
+        he/she wishes, through a filter or not for instance. </para>
+      <para>We could have written this blogging system by generating the HTML directly from the
+        source code. But, also this is totally possible we have felt it would be much cleaner to use
+        a dedicated templating language. Our choise was <ulink
+          url="http://cherrytemplate.python-hosting.com/">CherryTemplate</ulink> written and
+        maintained by Remi Delon. It is a small package to install and which provides the basic
+        functionnalities we will need : loop, condition, etc. Its learning curve is really
+      low.</para>
+    </section>
+  </section>
+  <section>
+    <title>Building the application</title>
+    <section>
+      <title>Main entry point</title>
+      <para>The first file we need to create is the blog.py file which will be the entry point of
+        the blog.</para>
+      <section>
+        <title>Importing required modules</title>
+        <para>The first thing we need is to important the modules we will be using from this entry point.</para>
+        <example>
+          <title>Blogging system - import modules</title>
+          <programlisting linenumbering="numbered">
+<co id="modsys" />import sys
+import time
+            
+<co id="sysapp" />sys.path.append('src')
+            
+<co id="modcp" />import cherrypy
+<co id="modct" />from cherrytemplate import cherrytemplate, renderTemplate
+
+<co id="modother" />
+from entryManager import BlogEntryManager
+from commentManager import BlogCommentManager
+from comment import BlogComment
+from admin import BlogAdmin
+from cal import getCurrentCalendar
+          </programlisting>
+          <calloutlist>
+            <callout arearefs="modsys">
+              <para>We use the sys module to be able to add a directory to the search path where Python looks for modules.</para>
+            </callout>
+              <callout arearefs="sysapp">
+                <para>Here we add the sub-directory <code>src</code> to the Python search path.</para>
+              </callout>
+            <callout arearefs="modcp">
+              <para>CherryPy requires only one import. In version 2.0 of CherryPy, it used to be <code>from cherrypy import cpg</code>
+              but not any longer.</para>
+            </callout>
+            <callout arearefs="modct">
+              <para>Import two modules from CherryTemplate. The first one is used to modify some global variable of CherryTemplate
+              as we will see later on. The second one is the actual function to parse a template file and fetch the output.</para>
+            </callout>
+            <callout arearefs="modother">
+              <para>The last modules imported are those we will write later on in this tutorial.</para>
+            </callout>
+        </example>
+      </section>
+      <example>
+        <title>Main entry point to the blogging system</title>
+        <programlisting linenumbering="numbered">
+import sys
+import time
+
+sys.path.append('src')
+
+import cherrypy
+from cherrytemplate import cherrytemplate, renderTemplate
+
+from entryManager import BlogEntryManager
+from commentManager import BlogCommentManager
+from comment import BlogComment
+from admin import BlogAdmin
+from cal import getCurrentCalendar
+
+class Blog:
+    def __init__(self, *args):
+        self.em = BlogEntryManager()
+        self.cm = BlogCommentManager()
+        cherrytemplate.defaultOutputEncoding = 'latin-1'
+        cherrytemplate.defaultInputEncoding = 'latin-1'
+        cherrytemplate.defaultTemplateDir = 'media/templates/'
+        
+    def index(self):
+        entries = self.em.fetchLastEntries()
+        cal = getCurrentCalendar()
+        rssPath = cherrypy.request.base + '/media/feed/rss.xml'
+        return renderTemplate(file = "Blog_show_entry.tmpl")
+    index.exposed = True
+
+    def default(self, *args):
+        cal = getCurrentCalendar()
+        rssPath = cherrypy.request.base + '/media/feed/rss.xml'
+        if len(args) == 3:
+            date = "%s-%s-%s" % (args[0], args[1], args[2])
+            entries = self.em.fetchEntriesByDate(date)
+        elif len(args) == 4:
+            entry = self.em.fetchEntry(args[0], args[1], args[2], args[3])
+            if not entry:
+                return renderTemplate(file = "error404.tmpl")
+            entries = [entry]
+        else:
+            return self.index()
+        return renderTemplate(file = "Blog_show_entry.tmpl")
+    default.exposed = True
+
+    def comment(self, id):
+        entryId = id
+        entry = self.em.fetchEntryById(id)
+        comments = self.cm.fetchCommentsByEntry(id)
+        cal = getCurrentCalendar()
+        rssPath = cherrypy.request.base + '/media/feed/rss.xml'
+        return renderTemplate(file = "Blog_comment_add.tmpl")
+    comment.exposed = True
+    
+    def addComment(self, entryId, title, author, message):
+        rssPath = cherrypy.request.base + '/media/feed/rss.xml'
+        self.cm.addComment(BlogComment(title, author, message, entryId))
+        return self.comment(entryId)
+    addComment.exposed = True
+
+cherrypy.root = Blog()
+cherrypy.root.admin = BlogAdmin()
+
+cherrypy.config.update(file='media/conf/Blog.conf')
+cherrypy.server.start()
+          
+        </programlisting>
+      </example>
+      <para>This source page contains many points that we need </para>
     </section>
   </section>
   <section>
     <sectioninfo>
       <abstract>
-	<para></para>
-      </abstract>
-    </sectioninfo>
-    <title>Building the application</title>
-  </section>
-  <section>
-    <sectioninfo>
-      <abstract>
-	<para></para>
+        <para/>
       </abstract>
     </sectioninfo>
     <title>Running the application</title>
