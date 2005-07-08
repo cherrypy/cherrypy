@@ -189,7 +189,8 @@ testDict = {
     'objectMapping'          : 'test_objectmapping',
     'staticFilter'           : 'test_static_filter',
     'tutorials'              : 'test_tutorials',
-    'virtualHostFilter'      : 'test_virtualhost_filter'
+    'virtualHostFilter'      : 'test_virtualhost_filter',
+    'sessionFilter'          : 'test_session_filter'
 }
 
 def help():
