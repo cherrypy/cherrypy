@@ -49,7 +49,7 @@ def load_tut_module(tutorialName):
     if target in sys.modules:
         module = reload(sys.modules[target])
     else:
-        module = __import__(target)
+        module = __import__(target, globals(), locals(), [''])
     
     cherrypy.server.start(initOnly=True)
 
@@ -145,16 +145,8 @@ class TutorialTest(unittest.TestCase):
                          "\n            page 2 times! Your life is a patio of fun!"
                          "\n        ")
     
-    def test08GeneratorsAndYield(self):
-        load_tut_module("tut08_generators_and_yield")
-        helper.request('/')
-        self.assertEqual(cherrypy.response.body,
-                         '<html><body><h2>Generators rule!</h2>'
-                         '<h3>List of users:</h3>'
-                         'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
-                         '</body></html>')
-    def test09SessionFilter(self):
-        load_tut_module("tut09_sessionfilter")
+    def test08AdvancedSessions(self):
+        load_tut_module("tut08_advanced_sessions")
         cherrypy.config.update({"global": {"sessionFilter.on": True}})
         
         helper.request('/')
@@ -162,6 +154,15 @@ class TutorialTest(unittest.TestCase):
         
         helper.request('/', [('Cookie', dict(cherrypy.response.headers)['Set-Cookie'])])
         self.assert_("viewed this page 2 times" in cherrypy.response.body)
+    
+    def test09GeneratorsAndYield(self):
+        load_tut_module("tut09_generators_and_yield")
+        helper.request('/')
+        self.assertEqual(cherrypy.response.body,
+                         '<html><body><h2>Generators rule!</h2>'
+                         '<h3>List of users:</h3>'
+                         'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
+                         '</body></html>')
     
     def test10FileUpload(self):
         load_tut_module("tut10_file_upload")
