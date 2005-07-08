@@ -188,6 +188,7 @@ from cal import getCurrentCalendar
             <callout arearefs="modother">
               <para>The last modules imported are those we will write later on in this tutorial.</para>
             </callout>
+            </calloutlist>
         </example>
       </section>
       <example>
