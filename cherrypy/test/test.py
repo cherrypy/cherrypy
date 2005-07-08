@@ -31,6 +31,11 @@ import sys
 import os, os.path
 import unittest
 
+try:
+    set
+except NameError:
+    from sets import Set as set
+
 
 class CPTestResult(unittest._TextTestResult):
     def printErrors(self):
@@ -187,94 +192,86 @@ testDict = {
     'virtualHostFilter'      : 'test_virtualhost_filter'
 }
 
-import sys
-
 def help():
     print """CherryPy Test Program
     Usage: 
         test.py -mode testName1 testName2 testName...
-
+    
     modes: wsgi, severless, native, all
       default: wsgi
     """
-
+    
     print '    tests:'
     for testString in testDict:
         print '        ', testString
 
-    
+
 class BadArgument(Exception):
-    def __init__(self, arg):
-        self.arg = arg
-    def __str__(self):
-        return 'Error:\n    %s is not a valid option.' % self.arg
-        
-class DisplayHelp(Exception):      pass
+    pass
 
-def getOptions():
+class DisplayHelp(Exception):
+    pass
 
-    argSet = set([arg.lower() for arg in sys.argv[1:]])
+
+def getOptions(args):
     
-    if '-help' in sys.argv:
+    argSet = set([arg.lower() for arg in args])
+    
+    if '-help' in args:
         raise DisplayHelp
     
     servers = set()
     if '-all' in argSet:
         servers.update(['wsgi', 'native', 'serverless'])
-    elif '-wsgi' in argSet:
-        servers.add('wsgi')
-    elif '-native' in argSet:
-        servers.add('native')
-    elif '-serverless' in argSet:
-        servers.add('serverless')
     else:
-        servers.add('wsgi')
-    
+        if '-native' in argSet:
+            servers.add('native')
+        if '-serverless' in argSet:
+            servers.add('serverless')
+        if '-wsgi' in argSet or not servers:
+            servers.add('wsgi')
     argSet.difference_update(['-wsgi', '-native', '-serverless', '-all'])
-
+    
+    cover = ("-cover" in argSet)
+    profile = ("-profile" in argSet)
+    if cover and profile:
+        raise BadArgument('Bad Arguments: you cannot run the profiler and the coverage tool at the same time.')
+    argSet.difference_update(['-cover', '-profile'])
+    
     tests = []
     for testString, test in testDict.iteritems():
         if testString.lower() in argSet:
             tests.append(testDict[testString])
             argSet.discard(testString.lower())
-    
     if not tests:
         tests = testDict.values()
     
     if len(argSet):
-        for arg in sys.argv:
-            print arg, arg.lower(), arg.lower() in argSet
+        for arg in args:
             if arg.lower() in argSet:
-                raise BadArgument(arg)
-    return (servers, tests)
+                raise BadArgument('Bad Argument: %s is not a valid option.' % arg)
+    return (servers, tests, cover, profile)
 
-def main():
-    try:
-        servers, testList = getOptions()
-        runTests(servers, testList)
-    except DisplayHelp:
-        help()
-    except BadArgument, argError:
-        print argError
-    
-def runTests(servers, testList):
+
+def runTests(servers, testList, cover=False, profile=False):
     # Place our current directory's parent (cherrypy/) at the beginning
     # of sys.path, so that all imports are from our current directory.
     localDir = os.path.dirname(__file__)
     curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
     sys.path.insert(0, os.path.normpath(os.path.join(curpath, '../../')))
     
-    # Start the coverage tool before importing cherrypy, so module-level
-    # global statements are covered.
-    try:
-        from coverage import the_coverage as coverage
-        coverage.cache_default = c = os.path.join(os.path.dirname(__file__),
-                                                  "../lib/coverage.cache")
-        if c and os.path.exists(c):
-            os.remove(c)
-        coverage.start()
-    except ImportError:
-        coverage = None
+    if cover:
+        # Start the coverage tool before importing cherrypy, so module-level
+        # global statements are covered.
+        try:
+            from coverage import the_coverage as coverage
+            coverage.cache_default = c = os.path.join(os.path.dirname(__file__),
+                                                      "../lib/coverage.cache")
+            if c and os.path.exists(c):
+                os.remove(c)
+            coverage.start()
+        except ImportError:
+            coverage = None
     
     global cherrypy, helper
     print "Python version used to run this test script:", sys.version.split()[0]
@@ -301,12 +298,16 @@ def runTests(servers, testList):
                    'server.environment': "production",
                    }
     
+    if cover:
+        cherrypy.codecoverage = True
+    
+    if profile:
+        server_conf['profiling.on'] = True
+    
     if 'serverless' in servers:
         print
         print "Running testList: Serverless"
-        cherrypy.codecoverage = True
         run_test_suite(testList, None, server_conf)
-        cherrypy.codecoverage = False
     
     if 'native' in servers:
         print
@@ -316,21 +317,32 @@ def runTests(servers, testList):
     if 'wsgi' in servers:
         print
         print "Running testList: Native WSGI Server"
-        server_conf['profiling.on'] = True
         run_test_suite(testList, "cherrypy._cpwsgi.WSGIServer", server_conf)
+    
+    if profile or cover:
+        print
+    
+    if profile:
         del server_conf['profiling.on']
+        print "run /cherrypy/lib/profiler.py as a script to serve profiling results on port 8080"
     
-    print
-    
-    if coverage:
-        coverage.save()
-        report_coverage(coverage)
-        print "run /cherrypy/lib/covercp.py as a script to serve coverage results on port 8080"
-    
-    print "run /cherrypy/lib/profiler.py as a script to serve profiling results on port 8080"
+    if cover:
+        cherrypy.codecoverage = False
+        if coverage:
+            coverage.save()
+            report_coverage(coverage)
+            print "run /cherrypy/lib/covercp.py as a script to serve coverage results on port 8080"
     
     print
     raw_input('hit enter')
 
+
 if __name__ == '__main__':
-    main()
+    try:
+        servers, testList, cover, profile = getOptions(sys.argv[1:])
+    except DisplayHelp:
+        help()
+    except BadArgument, argError:
+        print argError
+    else:
+        runTests(servers, testList, cover, profile)
