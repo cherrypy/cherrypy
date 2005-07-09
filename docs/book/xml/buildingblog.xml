@@ -126,16 +126,14 @@
     <section>
       <title>Templating : presentation</title>
       <para>A templating language is meant to offer the developer and easy way to transform an input
-        into an output of his/her choice. In the web application field, usually it referes to the
-        presentation system to transform the content intot nice XHTML output sent to the browser.</para>
+        into an output of his/her choice. In the web application field, usually it refers to the
+        presentation system to transform the content into nice XHTML output sent to the browser.</para>
       <para>The CherryPy developers have made the clear choice of not providing any default
-        templating system. The main reason is that it would make developers feeling like they must
-        use this particular one. CherryPy allows actually the developer to choose his/her favourite
-        templating system and go with it. CherryPy does not know anything about templating language
-        in fact. It also means that the developers has the possibility to use a templating system as
-        he/she wishes, through a filter or not for instance. </para>
+        templating system. The main reason is that it CherryPy is to stay at low level, besides it would make 
+        developers feeling like they must use this particular one. CherryPy allows actually the developer 
+        to choose his/her favourite templating system and work with it. </para>
       <para>We could have written this blogging system by generating the HTML directly from the
-        source code. But, also this is totally possible we have felt it would be much cleaner to use
+        source code. Although this is totally possible we have felt it would be much cleaner to use
         a dedicated templating language. Our choise was <ulink
           url="http://cherrytemplate.python-hosting.com/">CherryTemplate</ulink> written and
         maintained by Remi Delon. It is a small package to install and which provides the basic
@@ -191,78 +189,167 @@ from cal import getCurrentCalendar
             </calloutlist>
         </example>
       </section>
-      <example>
-        <title>Main entry point to the blogging system</title>
-        <programlisting linenumbering="numbered">
-import sys
-import time
-
-sys.path.append('src')
-
-import cherrypy
-from cherrytemplate import cherrytemplate, renderTemplate
-
-from entryManager import BlogEntryManager
-from commentManager import BlogCommentManager
-from comment import BlogComment
-from admin import BlogAdmin
-from cal import getCurrentCalendar
-
-class Blog:
-    def __init__(self, *args):
-        self.em = BlogEntryManager()
-        self.cm = BlogCommentManager()
-        cherrytemplate.defaultOutputEncoding = 'latin-1'
-        cherrytemplate.defaultInputEncoding = 'latin-1'
-        cherrytemplate.defaultTemplateDir = 'media/templates/'
-        
-    def index(self):
-        entries = self.em.fetchLastEntries()
-        cal = getCurrentCalendar()
-        rssPath = cherrypy.request.base + '/media/feed/rss.xml'
-        return renderTemplate(file = "Blog_show_entry.tmpl")
-    index.exposed = True
-
-    def default(self, *args):
-        cal = getCurrentCalendar()
-        rssPath = cherrypy.request.base + '/media/feed/rss.xml'
-        if len(args) == 3:
-            date = "%s-%s-%s" % (args[0], args[1], args[2])
-            entries = self.em.fetchEntriesByDate(date)
-        elif len(args) == 4:
-            entry = self.em.fetchEntry(args[0], args[1], args[2], args[3])
-            if not entry:
-                return renderTemplate(file = "error404.tmpl")
-            entries = [entry]
-        else:
-            return self.index()
-        return renderTemplate(file = "Blog_show_entry.tmpl")
-    default.exposed = True
-
-    def comment(self, id):
-        entryId = id
-        entry = self.em.fetchEntryById(id)
-        comments = self.cm.fetchCommentsByEntry(id)
-        cal = getCurrentCalendar()
-        rssPath = cherrypy.request.base + '/media/feed/rss.xml'
-        return renderTemplate(file = "Blog_comment_add.tmpl")
-    comment.exposed = True
-    
-    def addComment(self, entryId, title, author, message):
-        rssPath = cherrypy.request.base + '/media/feed/rss.xml'
-        self.cm.addComment(BlogComment(title, author, message, entryId))
-        return self.comment(entryId)
-    addComment.exposed = True
-
+      <section>
+        <title>The main class</title>
+        <example>
+          <title>Blogging system - the root class</title>
+          <programlisting linenumbering="numbered">
+<co id="classname" />class Blog:
+  def __init__(self):
+    <co id="classinit" />
+    self.em = BlogEntryManager()
+    self.cm = BlogCommentManager()
+    cherrytemplate.defaultOutputEncoding = 'latin-1'
+    cherrytemplate.defaultInputEncoding = 'latin-1'
+    cherrytemplate.defaultTemplateDir = 'media/templates/'
+          </programlisting>
+          <calloutlist>
+            <callout arearefs="classname">
+              <para>CherryPy needs at least one python callable at its root (eg: a class or a function).
+              Here we will eb using a class called Blog.
+              </para>
+            </callout>
+            <callout arearefs="classinit">
+              <para>Since a CherryPy application runs as a long process on your system, we can
+              define variables that will be shared during the full run of the process. In this case we need
+              a manager of entries and comments, classes tha we will define later on. Wel also define
+              some global variable used by CherryTemplate.</para>
+            </callout>
+          </calloutlist>
+        </example>
+      </section>
+      <section>
+        <title>Defining an index and a default method</title>
+        <para>CherryPy does not force you to define any kind opf method but index and default are the one that CherryPy
+        will look for as a fallback. The <code>index()</code> method is the equivalent to the index.html page by default used
+        with Apache. The <code>default()</code> method is called by CherryPy when all other lookup fail. If CherryPy
+        doesn't find it, it will issue an exception. <code>index()</code> is by far the most common one to
+          be defined.</para>
+        <para>Before a method can be used to serve content it needs to be <emphasis role="bold">published</emphasis>
+        and <emphasis role="bold">exposed</emphasis>. Publishing is the process to create an instance of the 
+        class to the main cherrypy object tree as we will see later. Exposing is done by setting the exposed attribute
+          to the method that we want to be able to call from the client side.</para>
+        <para>Now we can define both methods as follow.</para>
+        <example>
+          <programlisting>
+ <co id="index" />
+def index(self):
+  entries = self.em.fetchLastEntries()
+  cal = getCurrentCalendar()
+  rssPath = cherrypy.request.base + '/media/feed/rss.xml'
+  return renderTemplate(file = "Blog_show_entry.tmpl")
+index.exposed = True
+           
+ <co id="default" />
+def default(self, *args):
+  cal = getCurrentCalendar()
+  rssPath = cherrypy.request.base + '/media/feed/rss.xml'
+  if len(args) == 3:
+    date = "%s-%s-%s" % (args[0], args[1], args[2])
+    entries = self.em.fetchEntriesByDate(date)
+  elif len(args) == 4:
+    entry = self.em.fetchEntry(args[0], args[1], args[2], args[3])
+    if not entry:
+      return renderTemplate(file = "error404.tmpl")
+    entries = [entry]
+  else:
+    return self.index()
+  return renderTemplate(file = "Blog_show_entry.tmpl")
+default.exposed = True
+          </programlisting>
+          <calloutlist>
+            <callout arearefs="index">
+              <para>When the index metjod is called we fetch the last entries added to the blog as well
+              as the calendar of the current month (we will see later how to build it). Then we define
+                the RSS feed path.</para>
+              <para>Those three variables will be transparently passed to the CherryTemplate which 
+              is rendered through the <code>renderTemplate()</code> function. Since we have defined 
+              the templates directory as a global variable of CherryTemplate, we simply need to
+                provide the name of the template itself to the method.</para>
+              <para>We will then serve to the client the string resulting from the rendering,
+                although CherryPy allows you to return a string, a list, a generator to serve the content</para>
+              <para><code>index.exposed = True</code> tells CherryPy that this method is available to 
+              serve content.</para>
+            </callout>
+            <callout arearefs="default">
+              <para>The default method is called when CherryPy failed to match the requested URL to a
+                published object in its internal tree, but you can also use it to slightly change CherryPy's 
+                behavior.</para>
+              <para>In this particular context we will use <code>default()</code> allow URL with
+              positional parameters such as : http://myhost/2005/06/18/78, which would be the equivalent of :
+                http://myhost/?year=2005&amp;month=06&amp;day=18&amp;entry=78.
+                The former URL looks nicer and is more search engione friendly.</para>
+              <para>This behavior is not automatically handled by CherryPy and using the default method
+              is the most common workaround.</para>
+              <para>First we get the current month calendar then we set the RSS feed path. Then we check
+              what to do next by testing the number of passed arguments to the request. If this equals to three
+              then the user asked to view a full day and all its entries. If it equals to four he specified the entry id
+              as well. Otherwise we simply fallback to callback <code>index()</code>.</para>
+            </callout>
+          </calloutlist>
+        </example>
+      </section>
+      <section>
+        <title>Serving more content</title>
+        <para>We will define two more exposed methods to our <code>Blog</code> class.</para>
+        <example>
+          <programlisting linenumbering="numbered">
+ <code id="comment" />
+def comment(self, id):
+  entryId = id
+  entry = self.em.fetchEntryById(id)
+  comments = self.cm.fetchCommentsByEntry(id)
+  cal = getCurrentCalendar()
+  rssPath = cherrypy.request.base + '/media/feed/rss.xml'
+  return renderTemplate(file = "Blog_comment_add.tmpl")
+comment.exposed = True
+ 
+ <co id="addcomment" />
+def addComment(self, entryId, title, author, message):
+  rssPath = cherrypy.request.base + '/media/feed/rss.xml'
+  self.cm.addComment(BlogComment(title, author, message, entryId))
+  return self.comment(entryId)
+addComment.exposed = True
+          </programlisting>
+          <calloutlist>
+            <callout arearefs="comment">
+              <para>Called when an user wants to read the comments adde to an entry.</para>
+            </callout>
+            <callout arearefs="addcomment">
+              <para>Called when an user submitted a new comment through the HTML form.</para>
+            </callout>
+          </calloutlist>
+        </example>
+      </section>
+      <section>
+        <title>Setting up the tree and the server</title>
+        <para>Finally we need to set up the CherryPy tree of published objects, specify what settings we need and
+          finally start the server.</para>
+        <example>
+          <programlisting linenumbering="numbered">
+<co id="tree" />
 cherrypy.root = Blog()
 cherrypy.root.admin = BlogAdmin()
 
+<co id="config" />
 cherrypy.config.update(file='media/conf/Blog.conf')
+<co id="server" />
 cherrypy.server.start()
-          
-        </programlisting>
-      </example>
-      <para>This source page contains many points that we need </para>
+          </programlisting>
+          <calloutlist>
+            <callout arearefs="tree">
+              <para>Define the tree structure. Our blogging system only publish two objects.</para>
+            </callout>
+            <callout arearefs="config">
+              <para>Our settings will be defined in a seperate file. We could have defined them inline as a Python
+              dictionnary.</para>
+            </callout>
+            <callout arearefs="server">
+              <para>Let's start the server.</para>
+            </callout>
+          </calloutlist>
+        </example>
+      </section>
     </section>
   </section>
   <section>
