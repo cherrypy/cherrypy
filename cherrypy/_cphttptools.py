@@ -238,28 +238,33 @@ class Request(object):
         for key, value in req.headerMap.items():
             lowerHeaderMap[key.lower()] = value
         
-        methenv = {'REQUEST_METHOD': req.method}
+        # FieldStorage only recognizes POST, so fake it.
+        methenv = {'REQUEST_METHOD': "POST"}
         forms = _cpcgifs.FieldStorage(fp=req.rfile,
                                       headers=lowerHeaderMap,
                                       environ=methenv,
                                       keep_blank_values=1)
         
-        for key in forms.keys():
-            valueList = forms[key]
-            if isinstance(valueList, list):
-                req.paramMap[key] = []
-                for item in valueList:
-                    if item.filename is not None:
-                        value = item # It's a file upload
-                    else:
-                        value = item.value # It's a regular field
-                    req.paramMap[key].append(value)
-            else:
-                if valueList.filename is not None:
-                    value = valueList # It's a file upload
+        if forms.file:
+            # request body was a content-type other than form params.
+            cherrypy.request.body = forms.file
+        else:
+            for key in forms.keys():
+                valueList = forms[key]
+                if isinstance(valueList, list):
+                    req.paramMap[key] = []
+                    for item in valueList:
+                        if item.filename is not None:
+                            value = item # It's a file upload
+                        else:
+                            value = item.value # It's a regular field
+                        req.paramMap[key].append(value)
                 else:
-                    value = valueList.value # It's a regular field
-                req.paramMap[key] = value
+                    if valueList.filename is not None:
+                        value = valueList # It's a file upload
+                    else:
+                        value = valueList.value # It's a regular field
+                    req.paramMap[key] = value
 
 
 # Error handling

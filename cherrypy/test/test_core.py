@@ -191,6 +191,14 @@ class Method(Test):
             cherrypy.response.status = 405
         else:
             cherrypy.response.status = 501
+    
+    def parameterized(self, data):
+        return data
+    
+    def request_body(self):
+        # This should be a file object (temp file),
+        # which CP will just pipe back out if we tell it to.
+        return cherrypy.request.body
 
 
 cherrypy.config.update({
@@ -363,6 +371,19 @@ class CoreRequestHandlingTest(unittest.TestCase):
                 m = ""
             
             self.assertEqual(cherrypy.response.body, m)
+        
+        # Request a PUT method with a form-urlencoded body
+        helper.request("/method/parameterized", method="PUT",
+                       body="data=on+top+of+other+things")
+        self.assertEqual(cherrypy.response.body, "on top of other things")
+        
+        # Request a PUT method with a file body
+        h = [("Content-type", "text/plain"),
+             ("Content-Length", "27")]
+        
+        helper.request("/method/request_body", headers=h, method="PUT",
+                       body="one thing on top of another")
+        self.assertEqual(cherrypy.response.body, "one thing on top of another")
         
         # Request a disallowed method
         helper.request("/method/", method="LINK")
