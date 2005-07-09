@@ -48,7 +48,8 @@ onStopThreadList = []
 
 
 def start(initOnly=False, serverClass=None):
-    if cherrypy.config.get("server.environment") == "development":
+    defaultOn = (cherrypy.config.get("server.environment") == "development")
+    if cherrypy.config.get('autoreload.on', defaultOn):
         # Check initOnly. If True, we're probably not starting
         # our own webserver, and therefore could do Very Bad Things
         # when autoreload calls sys.exit.
