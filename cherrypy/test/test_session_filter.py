@@ -33,17 +33,21 @@ import os
 import cherrypy
 from cherrypy.test import helper
 
+localDir = os.path.dirname(__file__)
+curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
+tmpFolder = os.path.join(curpath, 'tmpSessionTestData')
+
 server_conf = {
                'global' : 
                    {
                     'server.socketHost': helper.HOST,
                     'server.socketPort': helper.PORT,
-                    'server.threadPool': 10,
+                    'server.threadPool': 1,
                     'server.logToScreen': False,
                     'server.environment': "production",
                     'sessionFilter.on' : True,
-                    'sessionFilter.default.on' : False,
-                    'sessionFilter.storagePath' : 'tmpSessionTestData'
+                    'sessionFilter.cacheTimeout' : 60,
+                    'sessionFilter.storagePath' : tmpFolder
                     },
                '/ram'   : { 'sessionFilter.ram.on'   : True, 'sessionFilter.ram.storageType'   : 'ram'   },
                '/file'  : { 'sessionFilter.file.on'  : True, 'sessionFilter.file.storageType'  : 'file'  },
@@ -76,12 +80,13 @@ class TestSite:
 cherrypy.root = TestSite()
 cherrypy.config.update(server_conf.copy())
 
-class TutorialTest(unittest.TestCase):
+import threading
 
-    persistantCookies = {}
+class SessionFilterTest(unittest.TestCase):
 
-    def __testStorageType(self, storageType, startCount = 1, iterations = 0):
-        
+    persistantCookies = []
+
+    def __testStorageType(self, storageType, startCount = 1, iterations = 4):
         #cherrypy.config.update({"sessionFilter.storageType": storageType})
         
         helper.request('/' + storageType)
@@ -102,18 +107,29 @@ class TutorialTest(unittest.TestCase):
     
     def testAnydbSessions(self):
         self.__testStorageType('anydb')
-
+   
+    def testThreadSafety(self, storageType = 'ram'):
+        for z in range(3):
+            try:
+                threading.Thread(target = self.__testStorageType, args = ('ram', 1, 4)).start()
+            except:
+                pass
+    
     '''
     def testSqlObjectSession(self):
         self.__testStorageType('sqlobject')
     '''
-    
+
 if __name__ == "__main__":
     try:
-        os.mkdir('tmpSessionTestData')
-        for file in os.listdir('tmpSessionTestData'):
-            os.unlink(os.path.join('tmpSessionTestData', file))
+        os.mkdir(tmpFolder)
     except OSError:
         pass
+    
     cherrypy.server.start(initOnly=True)
-    unittest.main()
+    try:
+        unittest.main()
+    except SystemExit:
+        pass
+        #shutil.rmtree(tmpFolder)
+        #os.rmdir(tmpFolder)
