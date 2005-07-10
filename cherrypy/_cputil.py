@@ -210,10 +210,11 @@ def _cpInitDefaultFilters():
     global _cpDefaultInputFilterList, _cpDefaultOutputFilterList
     _cpDefaultInputFilterList  = []
     _cpDefaultOutputFilterList = []
-
+    _cpDefaultFilterInstances = {}
+    
     for filterName in __cpDefaultInputFilters:
         filterClass = _cpDefaultFilterClasses[filterName]
-        filterInstance = _cpDefaultFilterInstances.setdefault(filterName, filterClass())
+        filterInstance = _cpDefaultFilterInstances[filterName] = filterClass()
         _cpDefaultInputFilterList.append(filterInstance)
     
     for filterName in __cpDefaultOutputFilters:

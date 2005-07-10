@@ -77,16 +77,20 @@ class TestSite:
         return self.__go('anydb')
     anydb.exposed = True
 
-cherrypy.root = TestSite()
-cherrypy.config.update(server_conf.copy())
 
 import threading
 
+cherrypy.root = TestSite()
+cherrypy.config.update(server_conf.copy())
+
+def reloadCP():
+    reload(cherrypy)
+    cherrypy.config.update(server_conf.copy())
+    cherrypy.server.start(initOnly = True)
+
 class SessionFilterTest(unittest.TestCase):
 
-    persistantCookies = []
-
-    def __testStorageType(self, storageType, startCount = 1, iterations = 4):
+    def __testStorageType(self, storageType, startCount = 1, iterations = 5, persistant=False):
         #cherrypy.config.update({"sessionFilter.storageType": storageType})
         
         helper.request('/' + storageType)
@@ -96,25 +100,31 @@ class SessionFilterTest(unittest.TestCase):
         
         # this loop will be used to test thread safety
         for n in xrange(startCount+1, startCount + iterations + 1):
+            if persistant:
+                cherrypy.server.stop()
+                cherrypy.server.start(initOnly = True)
             helper.request('/' + storageType, [('Cookie', cookie)])
             self.assertEqual(cherrypy.response.body, str(n))
-        
+
+    def __testCleanUp(self, storageType):
+        pass
+
+    def __testCacheCleanUp(self, storageType):
+        pass
+    
     def testRamSessions(self):
-        self.__testStorageType('ram')
+        self.__testStorageType('ram', persistant=False)
     
     def testFileSessions(self):
-        self.__testStorageType('file')
+        self.__testStorageType('file', persistant=True)
     
     def testAnydbSessions(self):
-        self.__testStorageType('anydb')
+        self.__testStorageType('anydb', persistant=True)
    
-    def testThreadSafety(self, storageType = 'ram'):
-        for z in range(3):
-            try:
-                threading.Thread(target = self.__testStorageType, args = ('ram', 1, 4)).start()
-            except:
-                pass
-    
+    def __testThreadSafety(self, storageType = 'ram'):
+        for z in range(30):
+            threading.Thread(target = self.__testStorageType, args = ('ram', 1, 4)).start()
+
     '''
     def testSqlObjectSession(self):
         self.__testStorageType('sqlobject')
@@ -125,11 +135,6 @@ if __name__ == "__main__":
         os.mkdir(tmpFolder)
     except OSError:
         pass
-    
-    cherrypy.server.start(initOnly=True)
-    try:
-        unittest.main()
-    except SystemExit:
-        pass
-        #shutil.rmtree(tmpFolder)
-        #os.rmdir(tmpFolder)
+   
+    cherrypy.server.start(initOnly = True)
+    unittest.main()
