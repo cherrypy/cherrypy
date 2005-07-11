@@ -96,7 +96,8 @@ class SessionFilter:
             pathList.append(path)
             i=path.rfind('/')
         pathList.append('/')
-        return reversed(pathList)
+        pathList.reverse()
+        return pathList
 
     def __loadConfigData(self):
         try:
