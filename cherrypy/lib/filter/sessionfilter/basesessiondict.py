@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import time
 from cherrypy.lib.filter.sessionfilter.sessionerrors import SessionImmutableError
 
+from exceptions import NotImplementedError
 
 # this is a dictionary like class that will be exposed to the application
 # this class is used by 
@@ -53,37 +54,34 @@ class BaseSessionDict(object):
     def __init__(self):
         pass
     
-    def __eq__(self, sessionDict):
-        pass 
-        
     def get(self, key, default = None):
-        pass
+        raise NotImplementedError()
         
     def __getitem__(self, key):
-        pass 
+        raise NotImplementedError()
      
     def __setitem__(self, key, value):
-        pass 
+        raise NotImplementedError()
 
     def __getattr__(self, attr):
-        pass 
+        raise NotImplementedError()
     
     def __setattr__(self, attr, value):
-        pass
+        raise NotImplementedError()
 
     def setdefault(self, key, default):
-        pass
+        raise NotImplementedError()
 
     # needed for conversion to a dict
     def __iter__(self):
-        pass
+        raise NotImplementedError()
     
     def expired(self):
         now = time.time()
         
         return (now - self.lastAccess) > self.timeout
     
-    # additional functions
+    # additional functions may/may not be necessary
     '''
     def __getstate__(self):
         pass
