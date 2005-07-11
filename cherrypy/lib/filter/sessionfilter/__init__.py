@@ -87,13 +87,16 @@ class SessionFilter:
         
         return storageAdaptor(sessionName, sessionPath)
     
-    def __pathList(self):
-        pathList = cherrypy.request.path.split('/')
-        results = ['/']
-        for n in xrange(1, len(pathList)):
-            path = '/'.join(pathList[0:n+1])
-            results.append(path)
-        return results
+    def __pathIter(self):
+        path = cherrypy.request.path.rstrip('/')
+        i = path.rfind("/")
+        pathList=[path]
+        while 0 < i:
+            path = path[:i]
+            pathList.append(path)
+            i=path.rfind('/')
+        pathList.append('/')
+        return reversed(pathList)
 
     def __loadConfigData(self):
         try:
@@ -106,7 +109,7 @@ class SessionFilter:
         configData = {}
         self.__localData.activeSessions = []
         
-        for path in self.__pathList():
+        for path in self.__pathIter():
             # cut index off the end of the pass
             if path.endswith('/index'):
                 path = path[0:-5]
