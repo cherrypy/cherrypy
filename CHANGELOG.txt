@@ -1,6 +1,6 @@
 2005-07-09:
     * Request entities that are not form params now get stuck in cherrypy.request.body (as a temp file object). (fumanchu)
-
+    * cherrypy.config.update can be called with an the keyword override=False to prevent values from being overwritten.
 2005-07-06:
     * Added code-coverage tools. (fumanchu)
 
