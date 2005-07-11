@@ -1,3 +1,6 @@
+2005-07-12:
+    * CherryPy-2.1.0-beta released. Check http://www.cherrypy.org/wiki/WhatsNewIn21 for instructions on how to upgrade from 2.0. (remi)
+
 2005-07-09:
     * Request entities that are not form params now get stuck in cherrypy.request.body (as a temp file object). (fumanchu)
     * cherrypy.config.update can be called with an the keyword override=False to prevent values from being overwritten.
