@@ -15,7 +15,7 @@ _sessionDefaults = {
     'sessionFilter.cacheTimeout' : 0
 }
 
-from sessionerrors import SessionNotFoundError, SessionIncompatibleError, SessionBadStorageTypeError, SessionConfigError
+from sessionerrors import SessionNotFoundError, SessionIncompatibleError, SessionBadStorageTypeError, SessionConfigError, DuplicateSessionError
 from ramadaptor import RamSession
 from fileadaptor import FileSession
 from anydbadaptor import DBMSession
@@ -68,6 +68,11 @@ class SessionFilter:
         
         # try to initilize a built in session
         try:
+            try:
+                if self.sessionManagers[storageType].path != sessionPath:
+                    raise DuplicateSessionError()
+            except KeyError:
+                pass
             storageAdaptor = _sessionTypes[storageType]
         except KeyError:
             # the storageType is not built in
@@ -81,6 +86,7 @@ class SessionFilter:
                 raise SessionBadStorageTypeError(storageType)
         
         return storageAdaptor(sessionName, sessionPath)
+    
     def __pathList(self):
         pathList = cherrypy.request.path.split('/')
         results = ['/']

@@ -31,6 +31,9 @@ class SessionError(Exception):
     def __init__(self, *args, **kwds):
         Exception.__init__(self, *args, **kwds)
 
+class DuplicateSessionError(SessionError):
+    """ raised when two sessions are configured with the same name"""
+
 class SessionExpiredError(SessionError):
     """ Possibly raised when the sessions Expire """
 
