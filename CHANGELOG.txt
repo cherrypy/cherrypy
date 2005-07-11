@@ -1,11 +1,17 @@
+2005-07-09:
+    * Request entities that are not form params now get stuck in cherrypy.request.body (as a temp file object). (fumanchu)
+
+2005-07-06:
+    * Added code-coverage tools. (fumanchu)
+
 2005-06-25:
     * BACKWARD INCOMPATIBILITY: Removed cpg module, renamed _cpserver to server, _cpconfig to config, cperror to _cperror. See http://www.cherrypy.org/wiki/PackageLayout21 (fumanchu)
 
 2005-06-21:
-    * New generic HTTPRedirect exception for 3xx responses (fumanchu)
+    * New generic HTTPRedirect exception for 3xx responses. (fumanchu)
 
 2005-06-17:
-    * Handle all HTTP methods (fumanchu)
+    * Handle all HTTP methods. (fumanchu)
 
 2005-06-16:
     * First check-in of the documentation project (lawouach)
