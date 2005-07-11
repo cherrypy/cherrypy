@@ -26,6 +26,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+testThreadCount = 3
+
 import unittest
 import sys
 import os
@@ -90,8 +92,7 @@ cherrypy.config.update(server_conf.copy())
 
 class SessionFilterTest(unittest.TestCase):
 
-    def __testSession(self, requestPath, iterations = 5, persistant=False):
-        #cherrypy.config.update({"sessionFilter.storageType": storageType})
+    def __testSession(self, requestPath, iterations = 5, persistant=False, dummy = None):
         
         helper.request(requestPath)
         self.assertEqual(cherrypy.response.body, '1')
@@ -106,8 +107,16 @@ class SessionFilterTest(unittest.TestCase):
             helper.request(requestPath, [('Cookie', cookie)])
             self.assertEqual(cherrypy.response.body, str(n))
 
-    def __testCleanUp(self, storageType):
-        pass
+        return cookie
+
+    def testCleanUp(self, testPath = '/ram'):
+        cookies = []
+        for n in xrange(5):
+            continue
+            cookies.append(self.__testSesssion(testPath, persistant=False))
+
+        SessionFilter = cherrypy._cputil._cpDefaultFilterInstances['SessionFilter']
+        sessionManagers = SessionFilter.sessionManagers
 
     def __testCacheCleanUp(self, storageType):
         pass
@@ -123,10 +132,10 @@ class SessionFilterTest(unittest.TestCase):
     
     def testAnydbSessions(self):
         self.__testSession('/anydb', persistant=True)
-   
-    def __testThreadSafety(self):
-        for z in range(30):
-            threading.Thread(target = self.__testSession, args = ('/ram')).start()
+    
+    def testThreadSafety(self):
+        for z in range(testThreadCount):
+            threading.Thread(target = self.__testSession, args = ('/ram',)).start()
 
     '''
     def testSqlObjectSession(self):
