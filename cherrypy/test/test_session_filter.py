@@ -47,7 +47,8 @@ server_conf = {
                     'server.environment': "production",
                     'sessionFilter.on' : True,
                     'sessionFilter.cacheTimeout' : 60,
-                    'sessionFilter.storagePath' : tmpFolder
+                    'sessionFilter.storagePath' : tmpFolder,
+                    'sessionFilter.default.on' : True
                     },
                '/ram'   : { 'sessionFilter.ram.on'   : True, 'sessionFilter.ram.storageType'   : 'ram'   },
                '/file'  : { 'sessionFilter.file.on'  : True, 'sessionFilter.file.storageType'  : 'file'  },
@@ -59,11 +60,16 @@ cherrypy.config.update(server_conf)
 class TestSite:
     
     def __go(self, storageType):
-        session = getattr(cherrypy.sessions, storageType)
-        count = session.get('count', 0) + 1
-        session['count'] = count
+        session = getattr(cherrypy.session, storageType)
+        count = session.setdefault('count', 1)
+        session['count'] = count + 1
         return str(count)
 
+    def index(self):
+        count = cherrypy.session.setdefault('count', 1)
+        cherrypy.session['count'] = count + 1
+        return str(count)
+    index.exposed = True
 
     def ram(self):
         return self.__go('ram')
@@ -72,38 +78,32 @@ class TestSite:
     def file(self):
         return self.__go('file')
     file.exposed = True
-
+    
     def anydb(self):
         return self.__go('anydb')
     anydb.exposed = True
-
 
 import threading
 
 cherrypy.root = TestSite()
 cherrypy.config.update(server_conf.copy())
 
-def reloadCP():
-    reload(cherrypy)
-    cherrypy.config.update(server_conf.copy())
-    cherrypy.server.start(initOnly = True)
-
 class SessionFilterTest(unittest.TestCase):
 
-    def __testStorageType(self, storageType, startCount = 1, iterations = 5, persistant=False):
+    def __testSession(self, requestPath, iterations = 5, persistant=False):
         #cherrypy.config.update({"sessionFilter.storageType": storageType})
         
-        helper.request('/' + storageType)
-        self.assertEqual(cherrypy.response.body, str(startCount))
+        helper.request(requestPath)
+        self.assertEqual(cherrypy.response.body, '1')
         
         cookie = dict(cherrypy.response.headers)['Set-Cookie']
         
         # this loop will be used to test thread safety
-        for n in xrange(startCount+1, startCount + iterations + 1):
+        for n in xrange(2, 3 + iterations):
             if persistant:
                 cherrypy.server.stop()
                 cherrypy.server.start(initOnly = True)
-            helper.request('/' + storageType, [('Cookie', cookie)])
+            helper.request(requestPath, [('Cookie', cookie)])
             self.assertEqual(cherrypy.response.body, str(n))
 
     def __testCleanUp(self, storageType):
@@ -112,22 +112,25 @@ class SessionFilterTest(unittest.TestCase):
     def __testCacheCleanUp(self, storageType):
         pass
     
+    def testDefaultSession(self):
+        self.__testSession('/', persistant=False)
+        
     def testRamSessions(self):
-        self.__testStorageType('ram', persistant=False)
+        self.__testSession('/ram', persistant=False)
     
     def testFileSessions(self):
-        self.__testStorageType('file', persistant=True)
+        self.__testSession('/file', persistant=True)
     
     def testAnydbSessions(self):
-        self.__testStorageType('anydb', persistant=True)
+        self.__testSession('/anydb', persistant=True)
    
-    def __testThreadSafety(self, storageType = 'ram'):
+    def __testThreadSafety(self):
         for z in range(30):
-            threading.Thread(target = self.__testStorageType, args = ('ram', 1, 4)).start()
+            threading.Thread(target = self.__testSession, args = ('/ram')).start()
 
     '''
     def testSqlObjectSession(self):
-        self.__testStorageType('sqlobject')
+        self.__testSession('sqlobject')
     '''
 
 if __name__ == "__main__":

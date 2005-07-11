@@ -39,15 +39,18 @@ class HitCounter:
         # it may not be the defualt in future versions
         
         # Increase the silly hit counter
-        count = cherrypy.sessions.default.get('count', 0) + 1
+        count = cherrypy.session.get('count', 0) + 1
 
         # Store the new value in the session dictionary
-        # cherrypy.sessions.default is available by default
-        cherrypy.sessions.default['count'] = count
+        # cherrypy.session is available by default
+        cherrypy.session['count'] = count
 
         # And display a silly hit count message!
-        key = cherrypy.sessions.default.key
-        cookieName = cherrypy.sessions.default.cookieName
+        # cherrypy.session is an alias to cherrypy.session.default
+        # it allows dictionary functionality but the attributes
+        # must be accessed through cherrypy.session.default
+        key = cherrypy.session.default.key
+        cookieName = cherrypy.session.default.cookieName
         return self.__examplePage('ram', count, self.samplePages, key, cookieName)
 
     index.exposed = True
@@ -57,11 +60,11 @@ class HitCounter:
         # the config file "tut10_sessionFilter.conf", otherwise
         # it mirrors the session function
 
-        adminCount = cherrypy.sessions.admin.get('adminCount', 0) + 1
-        cherrypy.sessions.admin['adminCount'] = adminCount
+        adminCount = cherrypy.session.admin.get('adminCount', 0) + 1
+        cherrypy.session.admin['adminCount'] = adminCount
         
-        key = cherrypy.sessions.admin.key
-        cookieName = cherrypy.sessions.admin.cookieName
+        key = cherrypy.session.admin.key
+        cookieName = cherrypy.session.admin.cookieName
         return self.__examplePage('ram', adminCount, self.samplePages, key, cookieName)
     
     admin.exposed = True
@@ -72,12 +75,12 @@ class HitCounter:
         # the config file "tut10_sessionFilter.conf", otherwise
         # it mirrors the session function
         
-        forumCount = cherrypy.sessions.forum.get('forumCount', 0) + 1
-        cherrypy.sessions.forum['forumCount'] = forumCount
+        forumCount = cherrypy.session.forum.get('forumCount', 0) + 1
+        cherrypy.session.forum['forumCount'] = forumCount
         
-        key = cherrypy.sessions.forum.key
+        key = cherrypy.session.forum.key
 
-        cookieName = cherrypy.sessions.forum.cookieName
+        cookieName = cherrypy.session.forum.cookieName
         return self.__examplePage('ram', forumCount, self.samplePages, key, cookieName)
     
     forum.exposed=True

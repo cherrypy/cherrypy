@@ -52,7 +52,7 @@ untarDocbook() {
 	then
 	tar zxf docbook-xsl-1.68.1.tar.gz
     fi
-    cd $current
+    cd "$current"
 }
 
 #

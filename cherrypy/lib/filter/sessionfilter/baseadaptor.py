@@ -143,7 +143,7 @@ class BaseAdaptor(object):
             self.__sessionCache[sessionKey] = session
     
         session.cookieName = self.cookieName
-        setattr(cherrypy.sessions, self.name, session)
+        setattr(cherrypy.session, self.name, session)
     
     def createSession(self):
         """ returns a session key """

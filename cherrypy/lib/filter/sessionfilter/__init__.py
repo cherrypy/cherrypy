@@ -6,8 +6,6 @@ _sessionDefaults = {
     'sessionFilter.on' : False,
     'sessionFilter.sessionList' : ['default'],
     'sessionFilter.storageAdaptors' : {},
-    'sessionFilter.default.on': True,
-
     'sessionFilter.timeout': 60,
     'sessionFilter.cleanUpDelay': 60,
     'sessionFilter.storageType' : 'ram',
@@ -50,9 +48,6 @@ class SessionFilter:
     def __init__(self):
         """ Initilizes the session filter and creates cherrypy.sessions  """
 
-        # Create as sessions object for accessing session data
-        cherrypy.sessions = local()
-        
         self.__localData= local()
         
         self.sessionManagers = {}
@@ -246,7 +241,7 @@ class SessionFilter:
         for sessionManager in self.__localData.activeSessions:
             sessionName = sessionManager.name
             
-            sessionData = getattr(cherrypy.sessions, sessionName)
+            sessionData = getattr(cherrypy.session, sessionName)
             sessionManager.commitCache(sessionData.key)
             sessionManager.cleanUpCache()
             

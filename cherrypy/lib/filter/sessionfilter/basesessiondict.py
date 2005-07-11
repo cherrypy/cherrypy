@@ -30,14 +30,6 @@ import time
 from cherrypy.lib.filter.sessionfilter.sessionerrors import SessionImmutableError
 
 
-def locker(function):
-    def _inner(self, *args, **kwds):
-        self._lock.acquire()
-        result = function(self, *args, **kwds)
-        self._lock.release()
-        return result
-    return _inner
-
 # this is a dictionary like class that will be exposed to the application
 # this class is used by 
 class BaseSessionDict(object):
@@ -65,10 +57,7 @@ class BaseSessionDict(object):
         pass 
         
     def get(self, key, default = None):
-        try:
-            return self.__getitem__(key)
-        except KeyError:
-            return default
+        pass
         
     def __getitem__(self, key):
         pass 
@@ -80,11 +69,19 @@ class BaseSessionDict(object):
         pass 
     
     def __setattr__(self, attr, value):
-        pass 
+        pass
+
+    def setdefault(self, key, default):
+        pass
+
+    # needed for conversion to a dict
+    def __iter__(self):
+        pass
     
     def expired(self):
         now = time.time()
-        return (now - self.lastAccess) < self.timeout
+        
+        return (now - self.lastAccess) > self.timeout
     
     # additional functions
     '''

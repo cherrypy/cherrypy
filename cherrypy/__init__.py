@@ -56,6 +56,10 @@ except ImportError:
 request = local()
 response = local()
 
+from cherrypy.lib.filter.sessionfilter.localdict import LocalDict
+# create session object
+session = LocalDict()
+
 # Create threadData object as a thread-specific all-purpose storage
 threadData = local()
 

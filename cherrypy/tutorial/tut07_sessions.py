@@ -14,10 +14,10 @@ import cherrypy
 class HitCounter:
     def index(self):
         # Increase the silly hit counter
-        count = cherrypy.sessions.default.get('count', 0) + 1
+        count = cherrypy.session.get('count', 0) + 1
         
         # Store the new value in the session dictionary
-        cherrypy.sessions.default['count'] = count
+        cherrypy.session['count'] = count
         
         # And display a silly hit count message!
         return '''

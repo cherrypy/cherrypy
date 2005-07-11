@@ -66,7 +66,15 @@ class SimpleSessionDict(BaseSessionDict):
     def __setitem__(self, key, value):
         self.__sessionData[key] = value
     __setitem__=locker(__setitem__)
-        
+      
+    def setdefault(self, key, default):
+        try:
+            return self.__sessionData[key]
+        except KeyError:
+            self.__sessionData[key] = default
+            return default
+    setdefault=locker(setdefault)
+
     def __getattr__(self, attr):
         try:
           return self.__sessionAttributes[attr]
@@ -90,6 +98,9 @@ class SimpleSessionDict(BaseSessionDict):
             object.__setattr__(self, attr, value)
         self._lock.release()
     
+    def __iter__(self):
+        return iter(self.__sessionData.copy())
+        
     def __getstate__(self):
         """ remove the lock so we can pickle """
         stateDict = self.__dict__.copy()
