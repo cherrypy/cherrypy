@@ -498,7 +498,8 @@ def serve_file(filename):
     # Set Content-Length and use an iterable (file object)
     #   this way CP won't load the whole file in memory
     cherrypy.response.headerMap['Content-Length'] = stat[6]
-    cherrypy.response.body = open(filename, 'rb')
+    bodyfile = open(filename, 'rb')
+    cherrypy.response.body = fileGenerator(bodyfile)
     
     # Set content-type based on filename extension
     i = filename.rfind('.')
