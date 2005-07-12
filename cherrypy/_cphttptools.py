@@ -408,7 +408,7 @@ for _ in entity_header_fields:
 
 def finalize():
     """Transform headerMap + cookies into cherrypy.response.headers."""
-    
+
     checkStatus()
     
     if (cherrypy.config.get("server.protocolVersion") != "HTTP/1.1"
@@ -416,7 +416,7 @@ def finalize():
         content = ''.join([chunk for chunk in cherrypy.response.body])
         cherrypy.response.body = [content]
         cherrypy.response.headerMap['Content-Length'] = len(content)
-    
+
     # Headers
     headers = []
     for key, valueList in cherrypy.response.headerMap.iteritems():
@@ -430,11 +430,12 @@ def finalize():
     # ending with the entity-header fields.'
     headers.sort()
     cherrypy.response.headers = [item[1] for item in headers]
-    
+
     cookie = cherrypy.response.simpleCookie.output()
     if cookie:
         name, value = cookie.split(": ", 1)
         cherrypy.response.headers.append((name, value))
+
     return cherrypy.response.headers
 
 def applyFilters(methodName):
@@ -483,6 +484,16 @@ def serve_file(filename):
         stat = os.stat(filename)
     except OSError:
         raise cherrypy.NotFound(cherrypy.request.path)
+
+    # Set content-type based on filename extension
+    i = filename.rfind('.')
+    if i != -1:
+        ext = filename[i:]
+    else:
+        ext = ""
+        
+    contentType = mimetypes.types_map.get(ext, "text/plain")
+    cherrypy.response.headerMap['Content-Type'] = contentType
     
     modifTime = stat.st_mtime
     strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
@@ -501,14 +512,7 @@ def serve_file(filename):
     bodyfile = open(filename, 'rb')
     cherrypy.response.body = fileGenerator(bodyfile)
     
-    # Set content-type based on filename extension
-    i = filename.rfind('.')
-    if i != -1:
-        ext = filename[i:]
-    else:
-        ext = ""
-    contentType = mimetypes.types_map.get(ext, "text/plain")
-    cherrypy.response.headerMap['Content-Type'] = contentType
+    
 
 
 # Object lookup
