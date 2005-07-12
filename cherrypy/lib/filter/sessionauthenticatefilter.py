@@ -71,12 +71,10 @@ class SessionAuthenticateFilter(BaseFilter):
         elif cherrypy.request.path.endswith('doLogout'):
             sessionMap[sessionKey] = None
             cherrypy.threadData.user = None
-            fromPage = cherrypy.request.paramMap.get('fromPage')
-            if fromPage is None:
-                fromPage = '/'
+            fromPage = cherrypy.request.paramMap.get('fromPage', '..')
             cherrypy.response.body = httptools.redirect(fromPage)
         elif cherrypy.request.path.endswith('doLogin'):
-            fromPage = cherrypy.request.paramMap['fromPage']
+            fromPage = cherrypy.request.paramMap.get('fromPage', '..')
             login = cherrypy.request.paramMap['login']
             password = cherrypy.request.paramMap['password']
             errorMsg = checkLoginAndPassword(login, password)
