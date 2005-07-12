@@ -60,7 +60,7 @@ class BaseAdaptor(object):
     def newSession(self):
         """ Return a new sessiondict instance """
         raise NotImplementedError('newSession not been implemented')
-    
+   
     # it might be usefull to redefine this function
     def generateSessionKey(self):
         """ Function to return a new sessioId """
@@ -90,8 +90,9 @@ class BaseAdaptor(object):
         self.path = sessionPath
 
         cleanUpDelay = self.getSetting('cleanUpDelay')
+        timeMultiple = self.getSetting('timeMultiple')
 
-        self.nextCleanUp = time.time()+cleanUpDelay * 60
+        self.nextCleanUp = time.time()+cleanUpDelay * timeMultiple
 
         # find the cookie name
         cookiePrefix = self.getSetting('cookiePrefix')

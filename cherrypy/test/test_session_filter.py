@@ -50,7 +50,11 @@ server_conf = {
                     'sessionFilter.on' : True,
                     'sessionFilter.cacheTimeout' : 60,
                     'sessionFilter.storagePath' : tmpFolder,
-                    'sessionFilter.default.on' : True
+                    'sessionFilter.default.on' : True,
+                    'sessionFilter.timeMultiple' : 1,
+                    'sessionFilter.cleanUpDelay' : 1,
+                    'sessionFilter.timeout' : 1,
+                    'testMode' : True
                     },
                '/ram'   : { 'sessionFilter.ram.on'   : True, 'sessionFilter.ram.storageType'   : 'ram'   },
                '/file'  : { 'sessionFilter.file.on'  : True, 'sessionFilter.file.storageType'  : 'file'  },
@@ -89,10 +93,11 @@ import threading
 
 cherrypy.root = TestSite()
 cherrypy.config.update(server_conf.copy())
+import time
 
 class SessionFilterTest(unittest.TestCase):
 
-    def __testSession(self, requestPath, iterations = 5, persistant=False, dummy = None):
+    def __testSession(self, requestPath, iterations = 5, persistant=False):
         
         helper.request(requestPath)
         self.assertEqual(cherrypy.response.body, '1')
@@ -100,23 +105,31 @@ class SessionFilterTest(unittest.TestCase):
         cookie = dict(cherrypy.response.headers)['Set-Cookie']
         
         # this loop will be used to test thread safety
-        for n in xrange(2, 3 + iterations):
+        for n in xrange(0, iterations):
             if persistant:
                 cherrypy.server.stop()
                 cherrypy.server.start(initOnly = True)
             helper.request(requestPath, [('Cookie', cookie)])
-            self.assertEqual(cherrypy.response.body, str(n))
-
+            self.assertEqual(cherrypy.response.body, str(n + 2))
+        
         return cookie
 
-    def testCleanUp(self, testPath = '/ram'):
-        cookies = []
-        for n in xrange(5):
-            continue
-            cookies.append(self.__testSesssion(testPath, persistant=False))
-
+    def __testCleanUp(self, storageType):
+        sessionPath = '/' + storageType
         SessionFilter = cherrypy._cputil._cpDefaultFilterInstances['SessionFilter']
+
+        cookies = []
+        for n in xrange(3, iterations = 3):
+            cookies.append(self.__testSession(sessionPath, persistant=False))
+
         sessionManagers = SessionFilter.sessionManagers
+
+        time.sleep(1)
+        # this should trigger a session cleanup
+        self.__testSession(sessionPath, persistant=False)
+        
+        SessionCount = len(sessionManagers[storageType]._debugDump())
+        self.assertEqual(1, SessionCount)
 
     def __testCacheCleanUp(self, storageType):
         pass
@@ -126,16 +139,21 @@ class SessionFilterTest(unittest.TestCase):
         
     def testRamSessions(self):
         self.__testSession('/ram', persistant=False)
+        self.__testCleanUp('ram')
     
     def testFileSessions(self):
         self.__testSession('/file', persistant=True)
+        #self.__testCleanUp('file')
     
     def testAnydbSessions(self):
         self.__testSession('/anydb', persistant=True)
-    
+        #self.__testCleanUp('anydb')
+   
+    '''
     def testThreadSafety(self):
         for z in range(testThreadCount):
             threading.Thread(target = self.__testSession, args = ('/ram',)).start()
+    '''
 
     '''
     def testSqlObjectSession(self):

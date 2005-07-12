@@ -77,10 +77,17 @@ class DBMSession(BaseAdaptor):
             raise SessionNotFoundError
     
     def cleanUpOldSessions(self):
-        deleteList = []
+        #deleteList = []
         for sessionKey in self.__data:
             session = self.__data[sessionKey]
             if session.expired():
-                deleteList.append(sessionKey)
-        for key in deleteList:
-            self.delSession(sessionKey)
+                del self.__data[sessionKey]
+                #deleteList.append(sessionKey)
+        #for key in deleteList:
+        #    self.delSession(sessionKey)
+
+        def _debugDump(self):
+            if not cherrypy.config.get('testMode', False):
+                raise AttributeError()
+            else:
+                return dict(self.__data)

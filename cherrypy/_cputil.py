@@ -208,6 +208,7 @@ _cpDefaultOutputFilterList = []
 # initilize the default filters
 def _cpInitDefaultFilters():
     global _cpDefaultInputFilterList, _cpDefaultOutputFilterList
+    global _cpDefaultFilterInstances
     _cpDefaultInputFilterList  = []
     _cpDefaultOutputFilterList = []
     _cpDefaultFilterInstances = {}

@@ -12,7 +12,8 @@ _sessionDefaults = {
     'sessionFilter.cookiePrefix': 'CherryPySession',
     'sessionFilter.storagePath': '.sessiondata',
     'sessionFilter.default.on': True,
-    'sessionFilter.cacheTimeout' : 0
+    'sessionFilter.cacheTimeout' : 0,
+    'sessionFilter.timeMultiple' : 60
 }
 
 from sessionerrors import SessionNotFoundError, SessionIncompatibleError, SessionBadStorageTypeError, SessionConfigError, DuplicateSessionError
