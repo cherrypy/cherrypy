@@ -30,6 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Just a few convenient functions and classes
 """
 
+import cherrypy
+
 import inspect
 
 def decorate(func, decorator):
@@ -102,5 +104,7 @@ class PositionalParametersAware(object):
             args = ("index",)
         if hasattr( self, args[ 0 ] ):
             return getattr( self, args[ 0 ] )( *args[ 1: ], **kwargs )
+        else:
+            raise cherrypy.NotFound, cherrypy.request.path
     default.exposed = True
     
