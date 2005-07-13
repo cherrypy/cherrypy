@@ -32,7 +32,7 @@ from simplesessiondict import SimpleSessionDict
 
 import cherrypy
 
-class RamSession(BaseAdaptor):
+class RamAdaptor(BaseAdaptor):
 
     def __init__(self, sessionName, sessionPath):
         BaseAdaptor.__init__(self, sessionName, sessionPath)

@@ -36,7 +36,7 @@ from sessionerrors import *
 from simplesessiondict import SimpleSessionDict
 
 
-class FileSession(BaseAdaptor):
+class FileAdaptor(BaseAdaptor):
     
     # is ok to cache filesession data
     noCache = False
@@ -55,10 +55,10 @@ class FileSession(BaseAdaptor):
         if not sessionKey:
             raise SessionNotFoundError
         
-        storageDir = self.settings.storagePath
+        storagePath = self.settings.storagePath
 
         fileName = '%s-%s' % (self.name, sessionKey)
-        filePath = os.path.join(storageDir, fileName)
+        filePath = os.path.join(storagePath, fileName)
         
         if os.path.exists(filePath):
             f = open(filePath, "rb")
@@ -72,10 +72,10 @@ class FileSession(BaseAdaptor):
     
     def setSession(self, sessionData):
     
-        storageDir = self.settings.storagePath
+        storagePath = self.settings.storagePath
 
         fileName = '%s-%s' % (self.name, sessionData.key)
-        filePath = os.path.join(storageDir, fileName)
+        filePath = os.path.join(storagePath, fileName)
 
         f = open(filePath,"wb")
         self.__fileLock.acquire()
@@ -84,9 +84,9 @@ class FileSession(BaseAdaptor):
         f.close()
 
     def delSession(self, sessionKey):
-        storageDir = self.settings.storagePath
+        storagePath = self.settings.storagePath
         fileName = '%s-%s' % (self.name, sessionKey)
-        filePath = os.path.join(storageDir, fileName)
+        filePath = os.path.join(storagePath, fileName)
         
         if os.path.exists(filePath):
             self.__fileLock.acquire()
@@ -94,17 +94,32 @@ class FileSession(BaseAdaptor):
             self.__fileLock.release()
     
     def cleanUpOldSessions(self):
-        sessionStorageFileDir = self.__storageDir()
-        sessionFileList = os.listdir(sessionStorageFileDir)
+        storagePath = self.settings.storagePath
+        sessionFileList = os.listdir(storagePath)
+        
+        for fileName in sessionFileList:
+            try:
+                prefix, sessionKey = fileName.split('-')
+                if prefix == self.name:
+                    session = self.getSession(sessionKey)
+                    if session.expired():
+                        os.remove(os.path.join(storagePath, fileName))
+            except ValueError:
+                pass
+
+    def _debugDump(self):
+        storagePath = self.settings.storagePath
+        sessionFileList = os.listdir(storagePath)
         
         filePrefix = '%s-' % self.name
-        
-        for sessionKey in sessionFileList:
-            prefix, key = sessionFileList.split('-')
-            if filePrefix == prefix:
-                session = self.getSession(sessionKey)
-                if session.expired():
-                    try:
-                        os.remove(os.path.join(sessionStorageFileDir, sessionKey))
-                    except:
-                        """ the session was probably removed already """
+        dump = {}
+        for fileName in sessionFileList:
+            try:
+                prefix, sessionKey = fileName.split('-')
+                if prefix == self.name:
+                    dump[sessionKey] = self.getSession(sessionKey)
+            except ValueError:
+                pass
+
+        return dump
+

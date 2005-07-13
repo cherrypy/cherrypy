@@ -85,7 +85,7 @@ class SQLObjectSessionDict(BaseSessionDict):
         return str(self.__sqlObject)
 
 
-class SQLObjectSession(BaseAdaptor):
+class SQLObjectAdaptor(BaseAdaptor):
     
     def __init__(self, sessionName, sessionPath):
         BaseAdaptor.__init__(self, sessionName, sessionPath)

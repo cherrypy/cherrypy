@@ -144,6 +144,8 @@ class BaseAdaptor(object):
             self.__sessionCache[sessionKey] = session
     
         session.cookieName = self.cookieName
+        session.lastAccess = time.time()
+
         setattr(cherrypy.session, self.name, session)
     
     def createSession(self):

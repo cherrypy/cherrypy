@@ -17,15 +17,15 @@ _sessionDefaults = {
 }
 
 from sessionerrors import SessionNotFoundError, SessionIncompatibleError, SessionBadStorageTypeError, SessionConfigError, DuplicateSessionError
-from ramadaptor import RamSession
-from fileadaptor import FileSession
-from anydbadaptor import DBMSession
+from ramadaptor import RamAdaptor
+from fileadaptor import FileAdaptor
+from anydbadaptor import DBMAdaptor
 
 
 _sessionTypes = {
-                  'ram'       : RamSession,
-                  'file'      : FileSession,
-                  'anydb'     : DBMSession
+                  'ram'       : RamAdaptor,
+                  'file'      : FileAdaptor,
+                  'anydb'     : DBMAdaptor
                 }
 
 try:

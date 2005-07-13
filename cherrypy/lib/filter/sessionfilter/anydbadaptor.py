@@ -38,7 +38,7 @@ from simplesessiondict import SimpleSessionDict
 import os.path
 
 
-class DBMSession(BaseAdaptor):
+class DBMAdaptor(BaseAdaptor):
    
     # it is ok to cache the session data
     noCache = False

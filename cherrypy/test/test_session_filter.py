@@ -143,7 +143,7 @@ class SessionFilterTest(unittest.TestCase):
     
     def testFileSessions(self):
         self.__testSession('/file', persistant=True)
-        #self.__testCleanUp('file')
+        self.__testCleanUp('file')
     
     def testAnydbSessions(self):
         self.__testSession('/anydb', persistant=True)
