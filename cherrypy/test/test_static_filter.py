@@ -62,8 +62,11 @@ class StaticFilterTest(unittest.TestCase):
         
         helper.request("/style.css")
         self.assertEqual(cherrypy.response.headerMap['Content-Type'], 'text/css')
-        self.assertEqual(cherrypy.response.body, 'Dummy stylesheet\n')
-
+        # Note: The body should be exactly 'Dummy stylesheet\n', but
+        #   unfortunately some tools such as WinZip sometimes turn \n
+        #   into \r\n on Windows when extracting the CherryPy tarball so
+        #   we just check the content
+        self.assert_(cherrypy.response.body.startswith('Dummy stylesheet'))
 
 if __name__ == "__main__":
     unittest.main()
