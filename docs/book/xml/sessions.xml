@@ -44,6 +44,7 @@
           <listitem>__setitem__(key, value)</listitem>
           <listitem>__getitem__(key)       </listitem>
           <listitem>get(key, default)      </listitem>
+          <listitem>__iter__()</listitem>
         </itemizedlist>
         SessionDicts also provide the following attributes:
         <itemizedlist>
@@ -56,15 +57,16 @@
     </section> <!-- end SessionDict section -->
 
     <section> <!-- cherrypy.sessions section -->
-      <title>cherrypy.sessions</title>
+      <title>cherrypy.session</title>
+      
       <para>
-        cherrypy.sessions is the single point of access for all session data.
+        cherrypy.session is the single point of access for all session data.
         At the beginning of each request, the sessionFilter checks for any sessions that may
         have been defined for the requested portion of the site.
         For each defined session, a SessionDict is created and is added as an attribute of
-        cherrypy.sessions.
+        cherrypy.session.
       </para>
-      
+
       <para>
       For example, given a session named "checkoutSession", all data for this session will
       be accessible through: "cherrypy.sessions.checkoutSession"
@@ -88,7 +90,10 @@
         <title>The default session</title>
         <para>
           By default, the sessionFilter provides a session named "default", 
-          which is accessed through "cherrypy.sessions.default".
+          which is accessed through "cherrypy.sessions.default".  As a shortcut
+          the ".default" can be ommited and  "cherrypy.sessions" will behave like a 
+          dictionary.  Session attributes, such as "cookieName", can only be retrieved through
+          cherrypy.sessions.default.
         </para>
 
         <para>
@@ -113,18 +118,6 @@
           </section>
         </listitem>
         
-        <listitem>
-          <section>
-            <title>sessionFilter.sessionList</title>
-            <para>
-              The sessionsList is the most important configuration setting for the session filter.
-              The sessionsList is a python list containing an entry for every named session.
-              Careless changes to the sessionsList are likely to break the application, so the
-              sessionsList should only be modified from within application code, and not from 
-              the configuration file.
-            </para>
-          </section>
-        </listitem>
       </itemizedlist>
       
       <para>
@@ -134,7 +127,7 @@
       <itemizedlist>
         <listitem>
           <section>
-            <title>sessionFilter.sessionName.on</title>
+            <title>sessionFilter.on</title>
             <para>
               Can be True or False.  Will toggle on/off a specific named session.  The setting
               only affects individual sessions, the sessionfilter must still be turned on using
@@ -145,7 +138,7 @@
         
         <listitem>
           <section>
-            <title>sessionFilter.sessionName.storageType</title>
+            <title>sessionFilter.storageType</title>
             <para>
               The storagType is the string name of the storage type for sessionName.
               The built in storageType are: 'ram', 'file', 'anydb', 'sqlobject'.  If the 
@@ -157,7 +150,7 @@
 
         <listitem>
           <section>
-            <title>sessionFilter.sessionName.timeout</title>
+            <title>sessionFilter.timeout</title>
             <para>
               The number of minutes of inactivity before an individual session can be removed.
             </para>
@@ -166,7 +159,7 @@
 
         <listitem>
           <section>
-            <title>sessionFilter.sessionName.cleanUpDelay</title>
+            <title>sessionFilter.cleanUpDelay</title>
             <para>
               The number of minutes to wait before cleaning up old sessions.
             </para>
@@ -175,7 +168,7 @@
 
         <listitem>
           <section>
-            <title>sessionFilter.sessionName.cookiePrefix</title>
+            <title>sessionFilter.cookiePrefix</title>
             <para>
               The cookiePrefix is prepended to the beginning of every session cookie name.
             </para>
@@ -184,7 +177,7 @@
 
         <listitem>
           <section>
-            <title>sessionFilter.sessionName.keyGenerator</title>
+            <title>sessionFilter.keyGenerator</title>
             <para>
               keyGenerator is a python function that generates new session keys.
             </para>
@@ -264,6 +257,26 @@
           The anydb storage adaptor stores session data using the shelve module, which in turn
           uses the anydb module.  The andyb adaptor can only be used to store picklable objects.
       </para>
+      <itemizedlist>
+        <listitem>
+          <title>Additional Configuration Options</title>
+          <listitem>
+            <title>storagePath</title>
+            <listitem>test item</listitem>
+            <para>
+              The path to the directory where the database files will be stored.
+              By default, the filter will create a file based on the session name.
+            </para>
+          </listitem>
+          <listitem>
+            <title>dbFile</title>
+            <listitem>test item</listitem>
+            <para>
+              An absolute path pointing to the database file to use with the session.
+            </para>
+          </listitem>
+        </listitem>
+      </itemizedlist>
     </section> <!-- end anydb storage section -->
     
     <section>
@@ -324,7 +337,7 @@
     </section>
 
     <section> 
-      <title>BaseSession</title>
+      <title>BaseAdaptor</title>
       <para>
         BaseSession is the base class for all session storage adaptor.  There are a number of methods that must be
         implemented by every storage adaptor.
