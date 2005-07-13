@@ -86,8 +86,8 @@ class DBMAdaptor(BaseAdaptor):
         #for key in deleteList:
         #    self.delSession(sessionKey)
 
-        def _debugDump(self):
-            if not cherrypy.config.get('testMode', False):
-                raise AttributeError()
-            else:
-                return dict(self.__data)
+    def _debugDump(self):
+        if not cherrypy.config.get('testMode', False):
+            raise AttributeError()
+        else:
+            return dict(self.__data)

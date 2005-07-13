@@ -44,7 +44,7 @@ server_conf = {
                    {
                     'server.socketHost': helper.HOST,
                     'server.socketPort': helper.PORT,
-                    'server.threadPool': 1,
+                    'server.threadPool': 5,
                     'server.logToScreen': False,
                     'server.environment': "production",
                     'sessionFilter.on' : True,
@@ -77,88 +77,100 @@ class TestSite:
         return str(count)
     index.exposed = True
 
-    def ram(self):
-        return self.__go('ram')
-    ram.exposed = True
-
-    def file(self):
-        return self.__go('file')
-    file.exposed = True
-    
-    def anydb(self):
-        return self.__go('anydb')
-    anydb.exposed = True
-
+    def default(self, sessionName):
+        return self.__go(sessionName)
+    default.exposed = True
+        
 import threading
 
 cherrypy.root = TestSite()
 cherrypy.config.update(server_conf.copy())
 import time
 
-class SessionFilterTest(unittest.TestCase):
 
-    def __testSession(self, requestPath, iterations = 5, persistant=False):
-        
-        helper.request(requestPath)
-        self.assertEqual(cherrypy.response.body, '1')
+
+
+class sessionTest:
+    
+    def __testSession(self):
+
+        helper.request(self.sessionPath)
+        if cherrypy.response.body != '1':
+            raise cherrypy.response.body
+            raise "Error creating a new session.\n"
         
         cookie = dict(cherrypy.response.headers)['Set-Cookie']
-        
+
         # this loop will be used to test thread safety
-        for n in xrange(0, iterations):
-            if persistant:
+        for n in xrange(0, self.iterations):
+            if self.persistant:
                 cherrypy.server.stop()
                 cherrypy.server.start(initOnly = True)
-            helper.request(requestPath, [('Cookie', cookie)])
-            self.assertEqual(cherrypy.response.body, str(n + 2))
+            helper.request(self.sessionPath, [('Cookie', cookie)])
+            if cherrypy.response.body != str(n+2):
+                raise "Error using session data."
         
-        return cookie
-
-    def __testCleanUp(self, storageType):
-        sessionPath = '/' + storageType
+    def __testCleanUp(self, sessionCount = 1):
         SessionFilter = cherrypy._cputil._cpDefaultFilterInstances['SessionFilter']
-
-        cookies = []
-        for n in xrange(3, iterations = 3):
-            cookies.append(self.__testSession(sessionPath, persistant=False))
+        
+        #  create several new sessions
+        for n in xrange(sessionCount):
+            helper.request(self.sessionPath)
 
         sessionManagers = SessionFilter.sessionManagers
 
         time.sleep(1)
-        # this should trigger a session cleanup
-        self.__testSession(sessionPath, persistant=False)
+        # this should trigger a clean up
+        helper.request(self.sessionPath)
+        SessionCount = len(sessionManagers[self.sessionName]._debugDump())
+        sessionManagers[self.sessionName].cleanUpOldSessions()
+        if SessionCount != 1:
+            raise 'clean up failed %s != 1' % SessionCount
+#        self.assertEqual(1, SessionCount)
+    
+    def __testThreadSafety(self):
+        for z in range(3):
+            threading.Thread(target = self.__testSession).start()
+            
+    def __init__(self, sessionName, sessionPath, storageType, persistant):
+        self.cookies = []
+
+        self.iterations = 2
         
-        SessionCount = len(sessionManagers[storageType]._debugDump())
-        self.assertEqual(1, SessionCount)
+        self.sessionName = sessionName
+        self.sessionPath = sessionPath
+        self.storageType = storageType
+        self.persistant  = persistant
+        
+    
+    def __call__(self):
+        self.__testSession()
+        self.persistant = False
+        self.__testCleanUp()
+
+
+testSessions = {
+  'default' : ('/', 'ram', False),
+  'ram'     : ('/ram', 'ram', False),
+  'file'    : ('/file', 'file', True),
+  'anydb'   : ('/anydb', 'anydb', True)
+}
+class SessionFilterTest(unittest.TestCase):
 
     def __testCacheCleanUp(self, storageType):
         pass
     
-    def testDefaultSession(self):
-        self.__testSession('/', persistant=False)
-        
-    def testRamSessions(self):
-        self.__testSession('/ram', persistant=False)
-        self.__testCleanUp('ram')
-    
-    def testFileSessions(self):
-        self.__testSession('/file', persistant=True)
-        self.__testCleanUp('file')
-    
-    def testAnydbSessions(self):
-        self.__testSession('/anydb', persistant=True)
-        #self.__testCleanUp('anydb')
-   
-    '''
-    def testThreadSafety(self):
-        for z in range(testThreadCount):
-            threading.Thread(target = self.__testSession, args = ('/ram',)).start()
     '''
 
-    '''
     def testSqlObjectSession(self):
         self.__testSession('sqlobject')
     '''
+
+for key, values in testSessions.iteritems():
+    if key == 'default' or 1: 
+        st = sessionTest(key, values[0], values[1], values[2])
+        setattr(SessionFilterTest, 'test%s' % key, st)
+    
 
 if __name__ == "__main__":
     try:
