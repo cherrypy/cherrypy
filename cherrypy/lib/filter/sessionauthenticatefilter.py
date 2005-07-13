@@ -64,7 +64,7 @@ class SessionAuthenticateFilter(BaseFilter):
         loadUserByUsername = cherrypy.config.get('sessionAuthenticateFilter.loadUserByUsername')
         sessionName = cherrypy.config.get('sessionAuthenticateFilter.sessionName', 'default')
         sessionKey = cherrypy.config.get('sessionAuthenticateFilter.sessionKey', 'username')
-        sessionMap = getattr(cherrypy.sessions, sessionName)
+        sessionMap = getattr(cherrypy.session, sessionName)
 
         if cherrypy.request.path.endswith('loginScreen'):
             return
