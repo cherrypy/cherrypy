@@ -31,14 +31,10 @@ Common Service Code for CherryPy
 """
 
 import urllib, os, sys, time, types, cgi
-import mimetypes, Cookie, urlparse
+import mimetypes, Cookie
 
 import cherrypy
 from cherrypy import _cputil, _cpcgifs
-
-# Can't use cStringIO; doesn't support unicode strings  
-# See http://www.python.org/sf/216388  
-import StringIO
 
 from BaseHTTPServer import BaseHTTPRequestHandler
 responseCodes = BaseHTTPRequestHandler.responses

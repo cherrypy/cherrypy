@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Configuration system for CherryPy.
 """
 
-import os.path
 import ConfigParser
 
 import cherrypy

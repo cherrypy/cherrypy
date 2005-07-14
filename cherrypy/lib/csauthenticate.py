@@ -117,8 +117,8 @@ class CSAuthenticate(Aspect):
 
     def doLogout(self):
         try:
-            sessionId = request.simpleCookie[self.sessionIdCookieName].value
-            del request.sessionMap[sessionId]
+            sessionId = cherrypy.request.simpleCookie[self.sessionIdCookieName].value
+            del cherrypy.request.sessionMap[sessionId]
         except: pass
         
         cherrypy.response.simpleCookie[self.sessionIdCookieName] = ""

@@ -31,6 +31,7 @@ Main CherryPy module:
     - Creates a server
 """
 
+import warnings
 import threading
 import time
 import sys

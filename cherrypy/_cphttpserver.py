@@ -26,7 +26,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import threading, SocketServer, BaseHTTPServer, socket, Queue
+import threading, os, socket
+import SocketServer, BaseHTTPServer, Queue
 import cherrypy
 from cherrypy import _cputil, _cphttptools
 
