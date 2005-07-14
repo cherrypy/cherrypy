@@ -1,4 +1,19 @@
+"""Test WSGI servers and gateways, such as mod_python.
+
+mod_python
+----------
+
+Put the following four lines somewhere in your Apache2 .conf:
+
+PythonImport cherrypy.test.test_noserver REDROVER.HQAMOR.amorhq.net
+SetHandler python-program
+PythonHandler wsgiref.modpython_gateway::handler
+PythonOption application cherrypy._cpwsgi::wsgiApp
+
+"""
+
 import cherrypy
+from cherrypy import _cpwsgi
 
 class HelloWorld:
     def index(self):
@@ -9,7 +24,6 @@ class HelloWorld:
 cherrypy.root = HelloWorld()
 cherrypy.root.test = HelloWorld()
 
-cherrypy.config.update({"global": {"server.environment": "production",
-                              "session.storageType": "ram"}})
+cherrypy.config.update({"server.environment": "production"})
 cherrypy.server.start(initOnly = True)
 
