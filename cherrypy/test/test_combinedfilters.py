@@ -52,7 +52,7 @@ cherrypy.server.start(initOnly=True)
 import unittest
 import helper
 
-class CombinedFiltersTest(unittest.TestCase):
+class CombinedFiltersTest(helper.CPWebCase):
     
     def testCombinedFilters(self):
         expectedResult = (u"Hello,world" + europoundUnicode).encode('utf-8')
@@ -61,7 +61,7 @@ class CombinedFiltersTest(unittest.TestCase):
         zfile.write(expectedResult)
         zfile.close()
         
-        helper.request("/", headers=[("Accept-Encoding", "gzip")])
+        self.getPage("/", headers=[("Accept-Encoding", "gzip")])
         self.assert_(zbuf.getvalue()[:3] in cherrypy.response.body)
 
 

@@ -28,17 +28,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os, os.path
 import time
-import sys
 import socket
 import StringIO
-import httplib
 import threading
 
 import cherrypy
-
+import webtest
+import types
+for _x in dir(cherrypy):
+    y = getattr(cherrypy, _x)
+    if isinstance(y, types.ClassType) and issubclass(y, cherrypy.Error):
+        webtest.ignored_exceptions.append(y)
 
 HOST = "127.0.0.1"
 PORT = 8000
+
 
 def port_is_free():
     try:
@@ -69,85 +73,44 @@ def stopServer():
         time.sleep(1.1)
 
 
-def getPage(url, headers=None, method="GET", body=None):
-    # The trying 10 times is simply in case of socket errors.
-    # Normal case--it should run once.
-    trial = 0
-    while trial < 10:
-        try:
-            conn = httplib.HTTPConnection('%s:%s' % (HOST, PORT))
-##            conn.set_debuglevel(1)
-            conn.putrequest(method.upper(), url)
+def onerror():
+    handled = webtest.server_error()
+    if not handled:
+        cherrypy._cputil._cpOnError()
+
+
+class CPWebCase(webtest.WebCase):
+    
+    def getPage(self, url, headers=None, method="GET", body=None):
+        # Install a custom error handler, so errors in the server will:
+        # 1) show server tracebacks in the test output, and
+        # 2) stop the HTTP request (if any) and ignore further assertions.
+        cherrypy.root._cpOnError = onerror
+        
+        resp = cherrypy.response
+        if cherrypy._httpserver is None:
+            requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
+            headers = webtest.cleanHeaders(headers, method, body)
             
-            for key, value in headers:
-                conn.putheader(key, value)
-            conn.endheaders()
+            found = False
+            for k, v in headers:
+                if k.lower() == 'host':
+                    found = True
+                    break
+            if not found:
+                headers.append(("Host", "%s:%s" % (HOST, PORT)))
             
             if body is not None:
-                conn.send(body)
+                body = StringIO.StringIO(body)
             
-            # Handle response
-            try:
-                response = conn.getresponse()
-            except httplib.BadStatusLine:
-                # Improper response from server.
-                print
-                print "Server did not return a response."
-                print "status>", repr(cherrypy.response.status)
-                print "headers>", repr(cherrypy.response.headers)
-                print "body>", repr(cherrypy.response.body)
-                raise
-            
-            status = "%s %s" % (response.status, response.reason)
-            
-            headerMap = {}
-            for line in response.msg.headers:
-                key, value = line.split(":", 1)
-                headerMap[key.strip()] = value.strip()
-            
-            body = response.read()
-            
-            conn.close()
-            return status, headerMap, body
-        except socket.error:
-            trial += 1
-            if trial >= 10:
-                raise
-            else:
-                time.sleep(0.5)
-
-
-def request(url, headers=None, method="GET", body=None):
-    if headers is None:
-        headers = []
-    
-    if method in ("POST", "PUT"):
-        # Stick in default type and length headers if not present
-        found = False
-        for k, v in headers:
-            if k.lower() == 'content-type':
-                found = True
-                break
-        if not found:
-            headers.append(("Content-type", "application/x-www-form-urlencoded"))
-            headers.append(("Content-Length", str(len(body or ""))))
-    
-    resp = cherrypy.response
-    if cherrypy._httpserver is None:
-        requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
-        found = False
-        for k, v in headers:
-            if k.lower() == 'host':
-                found = True
-                break
-        if not found:
-            headers.append(("Host", "%s:%s" % (HOST, PORT)))
-        if body is not None:
-            body = StringIO.StringIO(body)
-        cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
-        resp.body = "".join([chunk for chunk in resp.body])
-    else:
-        result = getPage(url, headers, method, body)
-        resp.status, resp.headerMap, resp.body = result
-        resp.headers = [(k, v) for k, v in resp.headerMap.iteritems()]
+            cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
+            resp.body = "".join([chunk for chunk in resp.body])
+            if webtest.ServerError.on:
+                webtest.ServerError.on = False
+                raise webtest.ServerError
+        else:
+            result = webtest.WebCase.getPage(self, url, headers, method, body)
+            resp.status, resp.headerMap, resp.body = result
+            # We want both .headerMap and .headers to be available.
+            resp.headers = [(k, v) for k, v in resp.headerMap.iteritems()]
 

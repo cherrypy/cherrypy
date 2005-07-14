@@ -121,6 +121,7 @@ class Request(object):
         cherrypy.request.simpleCookie = Cookie.SimpleCookie()
         cherrypy.request.rfile = rfile
         cherrypy.request.scheme = scheme
+        cherrypy.request.method = ""
         
         # Prepare cherrypy.response variables
         cherrypy.response.status = None
@@ -404,15 +405,18 @@ for _ in entity_header_fields:
 
 def finalize():
     """Transform headerMap + cookies into cherrypy.response.headers."""
-
+    
     checkStatus()
+    
+    if cherrypy.response.body is None:
+        cherrypy.response.body = []
     
     if (cherrypy.config.get("server.protocolVersion") != "HTTP/1.1"
         and cherrypy.response.headerMap.get('Content-Length') == 0):
         content = ''.join([chunk for chunk in cherrypy.response.body])
         cherrypy.response.body = [content]
         cherrypy.response.headerMap['Content-Length'] = len(content)
-
+    
     # Headers
     headers = []
     for key, valueList in cherrypy.response.headerMap.iteritems():
@@ -426,12 +430,12 @@ def finalize():
     # ending with the entity-header fields.'
     headers.sort()
     cherrypy.response.headers = [item[1] for item in headers]
-
+    
     cookie = cherrypy.response.simpleCookie.output()
     if cookie:
         name, value = cookie.split(": ", 1)
         cherrypy.response.headers.append((name, value))
-
+    
     return cherrypy.response.headers
 
 def applyFilters(methodName):

@@ -58,7 +58,7 @@ import helper
 
 europoundUtf8 = u'\x80\xa3'.encode('utf-8')
 
-class GzipFilterTest(unittest.TestCase):
+class GzipFilterTest(helper.CPWebCase):
     
     def testGzipFilter(self):
         zbuf = StringIO.StringIO()
@@ -66,13 +66,17 @@ class GzipFilterTest(unittest.TestCase):
         zfile.write("Hello, world")
         zfile.close()
         
-        helper.request('/', headers=[("Accept-Encoding", "gzip")])
+        self.getPage('/', headers=[("Accept-Encoding", "gzip")])
         self.assert_(zbuf.getvalue()[:3] in cherrypy.response.body)
         
         # Test for ticket #147
-        helper.request('/noshow', headers=[("Accept-Encoding", "gzip")])
-        self.assert_('Content-Encoding' not in cherrypy.response.headerMap)
-        self.assert_(cherrypy.response.body.endswith("IndexError\n"))
+        helper.webtest.ignored_exceptions.append(IndexError)
+        try:
+            self.getPage('/noshow', headers=[("Accept-Encoding", "gzip")])
+            self.assert_('Content-Encoding' not in cherrypy.response.headerMap)
+            self.assert_(cherrypy.response.body.endswith("IndexError\n"))
+        finally:
+            helper.webtest.ignored_exceptions.pop()
 
 
 if __name__ == "__main__":

@@ -48,10 +48,10 @@ cherrypy.server.start(initOnly=True)
 import unittest
 import helper
 
-class VirtualHostFilterTest(unittest.TestCase):
+class VirtualHostFilterTest(helper.CPWebCase):
     
     def testVirtualHostFilter(self):
-        helper.request("/")
+        self.getPage("/")
         self.assertEqual(cherrypy.response.body, 'Hello, world')
 
 

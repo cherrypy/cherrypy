@@ -53,10 +53,10 @@ cherrypy.server.start(initOnly=True)
 import unittest
 import helper
 
-class LogDebugInfoFilterTest(unittest.TestCase):
+class LogDebugInfoFilterTest(helper.CPWebCase):
     
     def testLogDebugInfoFilter(self):
-        helper.request('/')
+        self.getPage('/')
         self.assert_('Build time' in cherrypy.response.body)
         self.assert_('Page size' in cherrypy.response.body)
         # not compatible with the sessionFilter

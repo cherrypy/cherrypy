@@ -52,10 +52,10 @@ import helper
 
 europoundUtf8 = europoundUnicode.encode('utf-8')
 
-class DecodingEncodingFilterTest(unittest.TestCase):
+class DecodingEncodingFilterTest(helper.CPWebCase):
     
     def testDecodingEncodingFilter(self):
-        helper.request('/?param=%s' % europoundUtf8)
+        self.getPage('/?param=%s' % europoundUtf8)
         self.assertEqual(cherrypy.response.body, europoundUtf8)
 
 

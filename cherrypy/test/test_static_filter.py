@@ -53,14 +53,14 @@ cherrypy.server.start(initOnly=True)
 import unittest
 import helper
 
-class StaticFilterTest(unittest.TestCase):
+class StaticFilterTest(helper.CPWebCase):
     
     def testStaticFilter(self):
-        helper.request("/static/index.html")
+        self.getPage("/static/index.html")
         self.assertEqual(cherrypy.response.headerMap['Content-Type'], 'text/html')
         self.assertEqual(cherrypy.response.body, 'Hello, world\r\n')
         
-        helper.request("/style.css")
+        self.getPage("/style.css")
         self.assertEqual(cherrypy.response.headerMap['Content-Type'], 'text/css')
         # Note: The body should be exactly 'Dummy stylesheet\n', but
         #   unfortunately some tools such as WinZip sometimes turn \n

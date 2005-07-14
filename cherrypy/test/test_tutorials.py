@@ -54,38 +54,38 @@ def load_tut_module(tutorialName):
     cherrypy.server.start(initOnly=True)
 
 
-class TutorialTest(unittest.TestCase):
+class TutorialTest(helper.CPWebCase):
     
     def test01HelloWorld(self):
         load_tut_module("tut01_helloworld")
-        helper.request("/")
+        self.getPage("/")
         self.assertEqual(cherrypy.response.body, 'Hello world!')
     
     def test02ExposeMethods(self):
         load_tut_module("tut02_expose_methods")
-        helper.request("/showMessage")
+        self.getPage("/showMessage")
         self.assertEqual(cherrypy.response.body, 'Hello world!')
     
     def test03GetAndPost(self):
         load_tut_module("tut03_get_and_post")
         
         # Try different GET queries
-        helper.request("/greetUser?name=Bob")
+        self.getPage("/greetUser?name=Bob")
         self.assertEqual(cherrypy.response.body, "Hey Bob, what's up?")
         
-        helper.request("/greetUser")
+        self.getPage("/greetUser")
         self.assertEqual(cherrypy.response.body,
                          'Please enter your name <a href="./">here</a>.')
         
-        helper.request("/greetUser?name=")
+        self.getPage("/greetUser?name=")
         self.assertEqual(cherrypy.response.body,
                          'No, really, enter your name <a href="./">here</a>.')
         
         # Try the same with POST
-        helper.request("/greetUser", method="POST", body="name=Bob")
+        self.getPage("/greetUser", method="POST", body="name=Bob")
         self.assertEqual(cherrypy.response.body, "Hey Bob, what's up?")
         
-        helper.request("/greetUser", method="POST", body="name=")
+        self.getPage("/greetUser", method="POST", body="name=")
         self.assertEqual(cherrypy.response.body,
                          'No, really, enter your name <a href="./">here</a>.')
     
@@ -100,7 +100,7 @@ class TutorialTest(unittest.TestCase):
             </ul>
             
             <p>[<a href="../">Return to links page</a>]</p>'''
-        helper.request("/links/extra/")
+        self.getPage("/links/extra/")
         self.assertEqual(cherrypy.response.body, msg)
     
     def test05DerivedObjects(self):
@@ -120,12 +120,12 @@ class TutorialTest(unittest.TestCase):
             </body>
             </html>
         '''
-        helper.request("/another/")
+        self.getPage("/another/")
         self.assertEqual(cherrypy.response.body, msg)
     
     def test06DefaultMethod(self):
         load_tut_module("tut06_default_method")
-        helper.request('/hendrik')
+        self.getPage('/hendrik')
         self.assertEqual(cherrypy.response.body,
                          'Hendrik Mans, CherryPy co-developer & crazy German '
                          '(<a href="./">back</a>)')
@@ -133,13 +133,13 @@ class TutorialTest(unittest.TestCase):
         load_tut_module("tut07_sessions")
         cherrypy.config.update({"global": {"sessionFilter.on": True}})
         
-        helper.request('/')
+        self.getPage('/')
         self.assertEqual(cherrypy.response.body,
                          "\n            During your current session, you've viewed this"
                          "\n            page 1 times! Your life is a patio of fun!"
                          "\n        ")
         
-        helper.request('/', [('Cookie', dict(cherrypy.response.headers)['Set-Cookie'])])
+        self.getPage('/', [('Cookie', dict(cherrypy.response.headers)['Set-Cookie'])])
         self.assertEqual(cherrypy.response.body,
                          "\n            During your current session, you've viewed this"
                          "\n            page 2 times! Your life is a patio of fun!"
@@ -149,15 +149,15 @@ class TutorialTest(unittest.TestCase):
         load_tut_module("tut08_advanced_sessions")
         cherrypy.config.update({"global": {"sessionFilter.on": True}})
         
-        helper.request('/')
+        self.getPage('/')
         self.assert_("viewed this page 1 times" in cherrypy.response.body)
         
-        helper.request('/', [('Cookie', dict(cherrypy.response.headers)['Set-Cookie'])])
+        self.getPage('/', [('Cookie', dict(cherrypy.response.headers)['Set-Cookie'])])
         self.assert_("viewed this page 2 times" in cherrypy.response.body)
     
     def test09GeneratorsAndYield(self):
         load_tut_module("tut09_generators_and_yield")
-        helper.request('/')
+        self.getPage('/')
         self.assertEqual(cherrypy.response.body,
                          '<html><body><h2>Generators rule!</h2>'
                          '<h3>List of users:</h3>'
@@ -176,7 +176,7 @@ Content-Type: text/plain
 hello
 --x--
 """
-        helper.request('/upload', h, "POST", b)
+        self.getPage('/upload', h, "POST", b)
         self.assertEqual(cherrypy.response.body, '''
         <html><body>
             myFile length: 5<br />

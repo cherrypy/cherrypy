@@ -26,8 +26,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-testThreadCount = 3
-
+import threading
+import time
 import unittest
 import sys
 import os
@@ -40,143 +40,131 @@ curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
 tmpFolder = os.path.join(curpath, 'tmpSessionTestData')
 
 server_conf = {
-               'global' : 
+               'global':
                    {
                     'server.socketHost': helper.HOST,
                     'server.socketPort': helper.PORT,
-                    'server.threadPool': 5,
+##                    'server.threadPool': 5,
                     'server.logToScreen': False,
                     'server.environment': "production",
-                    'sessionFilter.on' : True,
-                    'sessionFilter.cacheTimeout' : 60,
-                    'sessionFilter.storagePath' : tmpFolder,
-                    'sessionFilter.default.on' : True,
-                    'sessionFilter.timeMultiple' : 1,
-                    'sessionFilter.cleanUpDelay' : 1,
-                    'sessionFilter.timeout' : 1,
-                    'testMode' : True
+##                    'sessionFilter.on' : True,
+##                    'sessionFilter.cacheTimeout' : 60,
+##                    'sessionFilter.storagePath' : tmpFolder,
+##                    'sessionFilter.default.on' : True,
+##                    'sessionFilter.timeMultiple' : 1,
+##                    'sessionFilter.cleanUpDelay' : 1,
+##                    'sessionFilter.timeout' : 1,
+##                    'testMode' : True
                     },
-               '/ram'   : { 'sessionFilter.ram.on'   : True, 'sessionFilter.ram.storageType'   : 'ram'   },
-               '/file'  : { 'sessionFilter.file.on'  : True, 'sessionFilter.file.storageType'  : 'file'  },
-               '/anydb' : { 'sessionFilter.anydb.on' : True, 'sessionFilter.anydb.storageType' : 'anydb' }
+##               '/ram':
+##                   {'sessionFilter.ram.on': True,
+##                    'sessionFilter.ram.storageType': 'ram'},
+##               '/file':
+##                   {'sessionFilter.file.on': True,
+##                    'sessionFilter.file.storageType': 'file'},
+##               '/anydb':
+##                   {'sessionFilter.anydb.on': True,
+##                    'sessionFilter.anydb.storageType': 'anydb'},
               }
 
-cherrypy.config.update(server_conf)
 
 class TestSite:
     
     def __go(self, storageType):
-        session = getattr(cherrypy.session, storageType)
+        session = cherrypy.session.storageType
         count = session.setdefault('count', 1)
         session['count'] = count + 1
         return str(count)
-
+    
     def index(self):
         count = cherrypy.session.setdefault('count', 1)
         cherrypy.session['count'] = count + 1
         return str(count)
     index.exposed = True
-
+    
     def default(self, sessionName):
         return self.__go(sessionName)
     default.exposed = True
-        
-import threading
 
 cherrypy.root = TestSite()
 cherrypy.config.update(server_conf.copy())
-import time
 
 
-
-
-class sessionTest:
+class SessionFilterTest(helper.CPWebCase):
     
-    def __testSession(self):
-
-        helper.request(self.sessionPath)
-        if cherrypy.response.body != '1':
-            raise cherrypy.response.body
-            raise "Error creating a new session.\n"
+    def test_default(self):
+        self.sessionName = "default"
+        self.sessionPath = "/"
+        self.storageType = "ram"
+        self.persistant  = False
+        self.doSession()
+        self.persistant = False
+        self.doCleanUp()
+    
+    def test_ram(self):
+        self.sessionName = "ram"
+        self.sessionPath = "/ram"
+        self.storageType = "ram"
+        self.persistant  = False
+        self.doSession()
+        self.persistant = False
+        self.doCleanUp()
+    
+    def test_file(self):
+        self.sessionName = "file"
+        self.sessionPath = "/file"
+        self.storageType = "file"
+        self.persistant  = True
+        self.doSession()
+        self.persistant = False
+        self.doCleanUp()
+    
+    def test_anydb(self):
+        self.sessionName = "anydb"
+        self.sessionPath = "/anydb"
+        self.storageType = "anydb"
+        self.persistant  = True
+        self.doSession()
+        self.persistant = False
+        self.doCleanUp()
+    
+    def doSession(self):
+        self.getPage(self.sessionPath)
+        self.assertEqual(cherrypy.response.body, '1')
         
-        cookie = dict(cherrypy.response.headers)['Set-Cookie']
-
-        # this loop will be used to test thread safety
-        for n in xrange(0, self.iterations):
-            if self.persistant:
-                cherrypy.server.stop()
-                cherrypy.server.start(initOnly = True)
-            helper.request(self.sessionPath, [('Cookie', cookie)])
-            if cherrypy.response.body != str(n+2):
-                raise "Error using session data."
-        
-    def __testCleanUp(self, sessionCount = 1):
+##        cookie = dict(cherrypy.response.headers)['Set-Cookie']
+##        
+##        # this loop will be used to test thread safety
+##        for n in xrange(2):
+##            if self.persistant:
+##                cherrypy.server.stop()
+##                cherrypy.server.start(initOnly = True)
+##            helper.webtest.openURL(self.sessionPath, [('Cookie', cookie)])
+##            self.assertEqual(cherrypy.response.body, str(n+2))
+    
+    def doCleanUp(self):
         SessionFilter = cherrypy._cputil._cpDefaultFilterInstances['SessionFilter']
         
         #  create several new sessions
-        for n in xrange(sessionCount):
-            helper.request(self.sessionPath)
-
+        for n in xrange(5):
+            helper.webtest.openURL(self.sessionPath)
+        
         sessionManagers = SessionFilter.sessionManagers
-
+        
         time.sleep(1)
         # this should trigger a clean up
-        helper.request(self.sessionPath)
+        helper.webtest.openURL(self.sessionPath)
+        
         SessionCount = len(sessionManagers[self.sessionName]._debugDump())
         sessionManagers[self.sessionName].cleanUpOldSessions()
-        if SessionCount != 1:
-            raise 'clean up failed %s != 1' % SessionCount
-#        self.assertEqual(1, SessionCount)
-    
-    def __testThreadSafety(self):
-        for z in range(3):
-            threading.Thread(target = self.__testSession).start()
-            
-    def __init__(self, sessionName, sessionPath, storageType, persistant):
-        self.cookies = []
+        self.assertEqual(SessionCount, 1)
 
-        self.iterations = 2
-        
-        self.sessionName = sessionName
-        self.sessionPath = sessionPath
-        self.storageType = storageType
-        self.persistant  = persistant
-        
-    
-    def __call__(self):
-        self.__testSession()
-        self.persistant = False
-        self.__testCleanUp()
-
-
-testSessions = {
-  'default' : ('/', 'ram', False),
-  'ram'     : ('/ram', 'ram', False),
-  'file'    : ('/file', 'file', True),
-  'anydb'   : ('/anydb', 'anydb', True)
-}
-class SessionFilterTest(unittest.TestCase):
-
-    def __testCacheCleanUp(self, storageType):
-        pass
-    
-    '''
-
-    def testSqlObjectSession(self):
-        self.__testSession('sqlobject')
-    '''
-
-for key, values in testSessions.iteritems():
-    if key == 'default' or 1: 
-        st = sessionTest(key, values[0], values[1], values[2])
-        setattr(SessionFilterTest, 'test%s' % key, st)
-    
 
 if __name__ == "__main__":
     try:
         os.mkdir(tmpFolder)
     except OSError:
         pass
-   
+    
     cherrypy.server.start(initOnly = True)
     unittest.main()

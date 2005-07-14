@@ -26,10 +26,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import time
 import sys
 import os, os.path
-import unittest
+import webtest
 
 try:
     set
@@ -37,96 +36,8 @@ except NameError:
     from sets import Set as set
 
 
-class CPTestResult(unittest._TextTestResult):
-    def printErrors(self):
-        # Overridden to avoid unnecessary empty line
-        if self.errors or self.failures:
-            if self.dots or self.showAll:
-                self.stream.writeln()
-            self.printErrorList('ERROR', self.errors)
-            self.printErrorList('FAIL', self.failures)
-
-
-class CPTestRunner(unittest.TextTestRunner):
-    """A test runner class that displays results in textual form."""
-    
-    def _makeResult(self):
-        return CPTestResult(self.stream, self.descriptions, self.verbosity)
-    
-    def run(self, test):
-        "Run the given test case or test suite."
-        # Overridden to remove unnecessary empty lines and separators
-        result = self._makeResult()
-        startTime = time.time()
-        test(result)
-        timeTaken = float(time.time() - startTime)
-        result.printErrors()
-        if not result.wasSuccessful():
-            self.stream.write("FAILED (")
-            failed, errored = map(len, (result.failures, result.errors))
-            if failed:
-                self.stream.write("failures=%d" % failed)
-            if errored:
-                if failed: self.stream.write(", ")
-                self.stream.write("errors=%d" % errored)
-            self.stream.writeln(")")
-        return result
-
-
-class ReloadingTestLoader(unittest.TestLoader):
-    
-    def loadTestsFromName(self, name, module=None):
-        """Return a suite of all tests cases given a string specifier.
-
-        The name may resolve either to a module, a test case class, a
-        test method within a test case class, or a callable object which
-        returns a TestCase or TestSuite instance.
-
-        The method optionally resolves the names relative to a given module.
-        """
-        parts = name.split('.')
-        if module is None:
-            if not parts:
-                raise ValueError, "incomplete test name: %s" % name
-            else:
-                parts_copy = parts[:]
-                while parts_copy:
-                    target = ".".join(parts_copy)
-                    if target in sys.modules:
-                        module = reload(sys.modules[target])
-                        break
-                    else:
-                        try:
-                            module = __import__(target)
-                            break
-                        except ImportError:
-                            del parts_copy[-1]
-                            if not parts_copy: raise
-                parts = parts[1:]
-        obj = module
-        for part in parts:
-            obj = getattr(obj, part)
-        
-        import unittest
-        import types
-        if type(obj) == types.ModuleType:
-            return self.loadTestsFromModule(obj)
-        elif (isinstance(obj, (type, types.ClassType)) and
-              issubclass(obj, unittest.TestCase)):
-            return self.loadTestsFromTestCase(obj)
-        elif type(obj) == types.UnboundMethodType:
-            return obj.im_class(obj.__name__)
-        elif callable(obj):
-            test = obj()
-            if not isinstance(test, unittest.TestCase) and \
-               not isinstance(test, unittest.TestSuite):
-                raise ValueError, \
-                      "calling %s returned %s, not a test" % (obj,test)
-            return test
-        else:
-            raise ValueError, "don't know how to make test from: %s" % obj
-
-CPTestLoader = ReloadingTestLoader()
+CPTestLoader = webtest.ReloadingTestLoader()
+CPTestRunner = webtest.TerseTestRunner(verbosity=2)
 
 
 def report_coverage(coverage):
@@ -175,7 +86,8 @@ def run_test_suite(moduleNames, server, conf):
         cherrypy.config.update({'global': conf.copy()})
         cherrypy._cputil._cpInitDefaultFilters()
         suite = CPTestLoader.loadTestsFromName(testmod)
-        CPTestRunner(verbosity=2).run(suite)
+        
+        CPTestRunner.run(suite)
     helper.stopServer()
 
 testDict = {
@@ -189,8 +101,8 @@ testDict = {
     'objectMapping'          : 'test_objectmapping',
     'staticFilter'           : 'test_static_filter',
     'tutorials'              : 'test_tutorials',
-    'virtualHostFilter'      : 'test_virtualhost_filter'
-   # 'sessionFilter'          : 'test_session_filter'
+    'virtualHostFilter'      : 'test_virtualhost_filter',
+##    'sessionFilter'          : 'test_session_filter'
 }
 
 def help():
@@ -285,12 +197,14 @@ def runTests(servers, testList, cover=False, profile=False):
     print "CherryPy version", cherrypy.__version__
     print
     
-    class NotReadyTest(unittest.TestCase):
+    class NotReadyTest(helper.CPWebCase):
         def testNotReadyError(self):
             # Without having called "cherrypy.server.start()", we should
             # get a NotReady error
-            self.assertRaises(cherrypy.NotReady, helper.request, "/")
-    CPTestRunner(verbosity=2).run(NotReadyTest("testNotReadyError"))
+            class Root: pass
+            cherrypy.root = Root()
+            self.assertRaises(cherrypy.NotReady, self.getPage, "/")
+    CPTestRunner.run(NotReadyTest("testNotReadyError"))
     
     server_conf = {'server.socketHost': helper.HOST,
                    'server.socketPort': helper.PORT,

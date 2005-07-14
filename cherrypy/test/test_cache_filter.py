@@ -53,11 +53,11 @@ cherrypy.config.update({
 import unittest
 import helper
 
-class CacheFilterTest(unittest.TestCase):
+class CacheFilterTest(helper.CPWebCase):
     
     def testCaching(self):
         for trial in xrange(2):
-            helper.request("/")
+            self.getPage("/")
             self.assertEqual(cherrypy.response.body, 'visit #1')
 
 if __name__ == '__main__':

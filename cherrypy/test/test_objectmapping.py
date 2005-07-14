@@ -100,43 +100,44 @@ cherrypy.config.update({
 })
 cherrypy.server.start(initOnly=True)
 
+
 import unittest
 import helper
 
-class ObjectMappingTest(unittest.TestCase):
+class ObjectMappingTest(helper.CPWebCase):
     
     def testObjectMapping(self):
-        helper.request('/')
+        self.getPage('/')
         self.assertEqual(cherrypy.response.body, 'world')
         
-        helper.request("/dir1/myMethod")
+        self.getPage("/dir1/myMethod")
         self.assertEqual(cherrypy.response.body, "myMethod from dir1, object Path is:'/dir1/myMethod'")
         
-        helper.request("/this/method/does/not/exist")
+        self.getPage("/this/method/does/not/exist")
         self.assertEqual(cherrypy.response.body, "default:('this', 'method', 'does', 'not', 'exist')")
         
-        helper.request("/extra/too/much")
+        self.getPage("/extra/too/much")
         self.assertEqual(cherrypy.response.body, "default:('extra', 'too', 'much')")
         
-        helper.request("/other")
+        self.getPage("/other")
         self.assertEqual(cherrypy.response.body, 'other')
         
-        helper.request("/notExposed")
+        self.getPage("/notExposed")
         self.assertEqual(cherrypy.response.body, "default:('notExposed',)")
         
-        helper.request("/dir1/dir2/")
+        self.getPage("/dir1/dir2/")
         self.assertEqual(cherrypy.response.body, 'index for dir2, path is:/dir1/dir2/')
         
-        helper.request("/dir1/dir2")
+        self.getPage("/dir1/dir2")
         self.assert_(cherrypy.response.status in ('302 Found', '303 See Other'))
         self.assertEqual(cherrypy.response.headerMap['Location'],
                          'http://%s:%s/dir1/dir2/' % (helper.HOST, helper.PORT))
         
-        helper.request("/dir1/dir2/dir3/dir4/index")
+        self.getPage("/dir1/dir2/dir3/dir4/index")
         self.assertEqual(cherrypy.response.body,
                          "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
         
-        helper.request("/redirect")
+        self.getPage("/redirect")
         self.assertEqual(cherrypy.response.status, '302 Found')
         self.assertEqual(cherrypy.response.headerMap['Location'],
                          'http://%s:%s/dir1/' % (helper.HOST, helper.PORT))

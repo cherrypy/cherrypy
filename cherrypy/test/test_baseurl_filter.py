@@ -48,10 +48,10 @@ cherrypy.config.update({
 import unittest
 import helper
 
-class BaseUrlFilterTest(unittest.TestCase):
+class BaseUrlFilterTest(helper.CPWebCase):
     
     def testBaseUrlFilter(self):
-        helper.request("/")
+        self.getPage("/")
         self.assertEqual(cherrypy.response.headerMap['Location'],
                          "http://www.mydomain.com/dummy")
 
