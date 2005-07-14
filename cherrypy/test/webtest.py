@@ -154,7 +154,6 @@ class WebCase(TestCase):
         result = openURL(url, headers, method, body, self.HOST, self.PORT)
         
         if ServerError.on:
-            ServerError.on = False
             raise ServerError
         return result
 
@@ -223,6 +222,11 @@ def openURL(url, headers=None, method="GET", body=None,
 # normally (that you don't want server_error to trap).
 ignored_exceptions = []
 
+# You'll want set this to True when you can't guarantee
+# that each response will immediately follow each request;
+# for example, when handling requests via multiple threads.
+ignore_all = False
+
 class ServerError(Exception):
     on = False
 
@@ -236,7 +240,7 @@ def server_error(exc=None):
     if exc is None: 
         exc = sys.exc_info()
     
-    if exc[0] in ignored_exceptions:
+    if ignore_all or exc[0] in ignored_exceptions:
         return False
     else:
         ServerError.on = True

@@ -92,15 +92,15 @@ cherrypy.config.update(server_conf.copy())
 
 class SessionFilterTest(helper.CPWebCase):
     
-    def __test_default(self):
-        self.sessionName = "default"
-        self.sessionPath = "/"
-        self.storageType = "ram"
-        self.persistant  = False
-        self.doSession()
-        self.persistant = False
-        self.doCleanUp()
-        self.doThreadSafety()
+##    def test_default(self):
+##        self.sessionName = "default"
+##        self.sessionPath = "/"
+##        self.storageType = "ram"
+##        self.persistant  = False
+##        self.doSession()
+##        self.persistant = False
+##        self.doCleanUp()
+##        self.doThreadSafety()
     
     def test_ram(self):
         self.sessionName = "ram"
@@ -152,10 +152,13 @@ class SessionFilterTest(helper.CPWebCase):
             if not threaded:
                 self.getPage(*getPageArgs)
             else:
+                import webtest
+                webtest.ignore_all = True
                 thread = threading.Thread(target = self.getPage, args = getPageArgs)
                 thread.start()
                 while thread.isAlive():
                     pass
+                webtest.ignore_all = False
                 
         self.assertEqual(cherrypy.response.body, str(3))
     
@@ -167,7 +170,7 @@ class SessionFilterTest(helper.CPWebCase):
             thread.start()
         print cherrypy.response.body
         self.threadTesting = False
-            
+        
     def doCleanUp(self):
         SessionFilter = cherrypy._cputil._cpDefaultFilterInstances['SessionFilter']
         

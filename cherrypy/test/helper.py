@@ -106,7 +106,6 @@ class CPWebCase(webtest.WebCase):
             cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
             resp.body = "".join([chunk for chunk in resp.body])
             if webtest.ServerError.on:
-                webtest.ServerError.on = False
                 raise webtest.ServerError
         else:
             result = webtest.WebCase.getPage(self, url, headers, method, body)
