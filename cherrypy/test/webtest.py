@@ -46,6 +46,7 @@ of further significance to your tests).
 
 import os, sys, time
 import types
+import pprint
 import socket
 import httplib
 import traceback
@@ -143,6 +144,25 @@ class ReloadingTestLoader(TestLoader):
             raise ValueError, "don't know how to make test from: %s" % obj
 
 
+try:
+    # On Windows, msvcrt.getch reads a single char without output.
+    import msvcrt
+    def getchar():
+        return msvcrt.getch()
+except ImportError:
+    # Unix getchr
+    import tty, termios
+    def getchar():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+
 class WebCase(TestCase):
     
     HOST = "127.0.0.1"
@@ -151,6 +171,7 @@ class WebCase(TestCase):
     def getPage(self, url, headers=None, method="GET", body=None):
         ServerError.on = False
         
+        self.url = url
         result = openURL(url, headers, method, body, self.HOST, self.PORT)
         self.status, self.headers, self.body = result
         
@@ -158,11 +179,54 @@ class WebCase(TestCase):
             raise ServerError
         return result
     
+    interactive = True
+    console_height = 30
+    
+    def handleWebError(self, msg):
+        if not self.interactive:
+            raise self.failureException, msg
+        
+        print
+        print "    ERROR:", msg
+        p = "    Show: [B]ody [H]eaders [S]tatus [U]RL; [I]gnore, [R]aise, or sys.e[X]it >> "
+        print p,
+        while True:
+            i = getchar().upper()
+            if i not in "BHSUIRX":
+                continue
+            print i.upper()  # Also prints new line
+            if i == "B":
+                for x, line in enumerate(self.body.splitlines()):
+                    if (x + 1) % self.console_height == 0:
+                        # The \r and comma should make the next line overwrite
+                        print "<-- More -->\r",
+                        m = getchar().lower()
+                        # Erase our "More" prompt
+                        print "            \r",
+                        if m == "q":
+                            break
+                    print line
+            elif i == "H":
+                pprint.pprint(self.headers)
+            elif i == "S":
+                print self.status
+            elif i == "U":
+                print self.url
+            elif i == "I":
+                # return without raising the normal exception
+                return
+            elif i == "R":
+                raise self.failureException, msg
+            elif i == "X":
+                sys.exit()
+            print p,
+    
     def assertStatus(self, status, msg=None):
         """Fail if self.status != status."""
         if not self.status == status:
-            raise self.failureException, \
-                  (msg or 'Status (%s) != %s' % (`self.status`, `status`))
+            if msg is None:
+                msg = 'Status (%s) != %s' % (`self.status`, `status`)
+            self.handleWebError(msg)
     
     def assertHeader(self, key, value=None, msg=None):
         """Fail if (key, [value]) not in self.headers."""
@@ -172,28 +236,33 @@ class WebCase(TestCase):
                 if value is None or value == v:
                     return
         
-        if value is None:
-            raise self.failureException, msg or '%s not in headers' % `key`
-        else:
-            raise self.failureException, \
-                  (msg or '%s:%s not in headers' % (`key`, `value`))
+        if msg is None:
+            if value is None:
+                msg = '%s not in headers' % `key`
+            else:
+                msg = '%s:%s not in headers' % (`key`, `value`)
+        self.handleWebError(msg)
     
     def assertBody(self, value, msg=None):
         """Fail if value != self.body."""
         if value != self.body:
             if msg is None:
                 msg = 'expected body:\n%s\n\nactual body:\n%s' % (`value`, `self.body`)
-            raise self.failureException, msg
+            self.handleWebError(msg)
     
     def assertInBody(self, value, msg=None):
         """Fail if value not in self.body."""
         if value not in self.body:
-            raise self.failureException, msg or '%s not in body' % `value`
+            if msg is None:
+                msg = '%s not in body' % `value`
+            self.handleWebError(msg)
     
     def assertNotInBody(self, value, msg=None):
         """Fail if value in self.body."""
         if value in self.body:
-            raise self.failureException, msg or '%s found in body' % `value`
+            if msg is None:
+                msg = '%s found in body' % `value`
+            self.handleWebError(msg)
 
 
 
