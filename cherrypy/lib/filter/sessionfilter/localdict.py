@@ -41,7 +41,7 @@ class LocalDict(local):
     def __setitem__(self, key, value):
         self.default[key] = value
 
-    def get(self, key, value):
+    def get(self, key, value = None):
         return self.default.get(key, value)
 
     def setdefault(self, key, default):
