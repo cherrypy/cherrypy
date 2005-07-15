@@ -206,8 +206,8 @@ class Request(object):
             # (but they will be correctly stored in request.simpleCookie).
             req.headerMap[name] = value
             
-            # Handle cookies differently because on Konqueror, multiple cookies
-            # come on different lines with the same key
+            # Handle cookies differently because on Konqueror, multiple
+            # cookies come on different lines with the same key
             if name == 'Cookie':
                 req.simpleCookie.load(value)
         
@@ -433,8 +433,10 @@ def finalize():
     
     cookie = cherrypy.response.simpleCookie.output()
     if cookie:
-        name, value = cookie.split(": ", 1)
-        cherrypy.response.headers.append((name, value))
+        lines = cookie.split("\n")
+        for line in lines:
+            name, value = line.split(": ", 1)
+            cherrypy.response.headers.append((name, value))
     
     return cherrypy.response.headers
 

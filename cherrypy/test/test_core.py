@@ -201,6 +201,18 @@ class Method(Test):
         return cherrypy.request.body
 
 
+class Cookies(Test):
+    
+    def single(self, name):
+        cookie = cherrypy.request.simpleCookie[name]
+        cherrypy.response.simpleCookie[name] = cookie.value
+    
+    def multiple(self, names):
+        for name in names:
+            cookie = cherrypy.request.simpleCookie[name]
+            cherrypy.response.simpleCookie[name] = cookie.value
+
+
 cherrypy.config.update({
     'global': {
         'server.logToScreen': False,
@@ -410,6 +422,17 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         self.getPage("/redirect/favicon.ico")
         self.assertEqual(cherrypy.response.body, data)
+    
+    def testCookies(self):
+        self.getPage("/cookies/single?name=First",
+                     [('Cookie', 'First=Dinsdale;')])
+        self.assert_(('Set-Cookie', 'First=Dinsdale;') in cherrypy.response.headers)
+        
+        self.getPage("/cookies/multiple?names=First&names=Last",
+                     [('Cookie', 'First=Dinsdale; Last=Piranha;'),
+                      ])
+        self.assert_(('Set-Cookie', 'First=Dinsdale;') in cherrypy.response.headers)
+        self.assert_(('Set-Cookie', 'Last=Piranha;') in cherrypy.response.headers)
 
 
 if __name__ == '__main__':

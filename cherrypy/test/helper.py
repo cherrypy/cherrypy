@@ -103,13 +103,14 @@ class CPWebCase(webtest.WebCase):
             if body is not None:
                 body = StringIO.StringIO(body)
             
+            webtest.ServerError.on = False
             cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
             resp.body = "".join([chunk for chunk in resp.body])
             if webtest.ServerError.on:
                 raise webtest.ServerError
         else:
             result = webtest.WebCase.getPage(self, url, headers, method, body)
-            resp.status, resp.headerMap, resp.body = result
+            resp.status, resp.headers, resp.body = result
             # We want both .headerMap and .headers to be available.
-            resp.headers = [(k, v) for k, v in resp.headerMap.iteritems()]
+            resp.headerMap = dict(resp.headers)
 

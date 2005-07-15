@@ -201,15 +201,15 @@ def openURL(url, headers=None, method="GET", body=None,
             
             status = "%s %s" % (response.status, response.reason)
             
-            headerMap = {}
+            outheaders = []
             for line in response.msg.headers:
                 key, value = line.split(":", 1)
-                headerMap[key.strip()] = value.strip()
+                outheaders.append((key.strip(), value.strip()))
             
-            body = response.read()
+            outbody = response.read()
             
             conn.close()
-            return status, headerMap, body
+            return status, outheaders, outbody
         except socket.error:
             trial += 1
             if trial >= 10:
