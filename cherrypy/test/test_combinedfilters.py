@@ -62,7 +62,7 @@ class CombinedFiltersTest(helper.CPWebCase):
         zfile.close()
         
         self.getPage("/", headers=[("Accept-Encoding", "gzip")])
-        self.assert_(zbuf.getvalue()[:3] in cherrypy.response.body)
+        self.assertInBody(zbuf.getvalue()[:3])
 
 
 if __name__ == '__main__':

@@ -57,16 +57,16 @@ class StaticFilterTest(helper.CPWebCase):
     
     def testStaticFilter(self):
         self.getPage("/static/index.html")
-        self.assertEqual(cherrypy.response.headerMap['Content-Type'], 'text/html')
-        self.assertEqual(cherrypy.response.body, 'Hello, world\r\n')
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello, world\r\n')
         
         self.getPage("/style.css")
-        self.assertEqual(cherrypy.response.headerMap['Content-Type'], 'text/css')
+        self.assertHeader('Content-Type', 'text/css')
         # Note: The body should be exactly 'Dummy stylesheet\n', but
         #   unfortunately some tools such as WinZip sometimes turn \n
         #   into \r\n on Windows when extracting the CherryPy tarball so
         #   we just check the content
-        self.assert_(cherrypy.response.body.startswith('Dummy stylesheet'))
+        self.assert_(self.body.startswith('Dummy stylesheet'))
 
 if __name__ == "__main__":
     unittest.main()

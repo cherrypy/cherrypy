@@ -256,106 +256,106 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testParams(self):
         self.getPage("/params/?thing=a")
-        self.assertEqual(cherrypy.response.body, 'a')
+        self.assertBody('a')
         
         self.getPage("/params/?thing=a&thing=b&thing=c")
-        self.assertEqual(cherrypy.response.body, 'abc')
+        self.assertBody('abc')
     
     def testStatus(self):
         self.getPage("/status/")
-        self.assertEqual(cherrypy.response.body, 'normal')
-        self.assertEqual(cherrypy.response.status, '200 OK')
+        self.assertBody('normal')
+        self.assertStatus('200 OK')
         
         self.getPage("/status/blank")
-        self.assertEqual(cherrypy.response.body, '')
-        self.assertEqual(cherrypy.response.status, '200 OK')
+        self.assertBody('')
+        self.assertStatus('200 OK')
         
         self.getPage("/status/illegal")
-        self.assertEqual(cherrypy.response.body, 'oops')
-        self.assertEqual(cherrypy.response.status, '500 Internal error')
+        self.assertBody('oops')
+        self.assertStatus('500 Internal error')
         
         self.getPage("/status/unknown")
-        self.assertEqual(cherrypy.response.body, 'funky')
-        self.assertEqual(cherrypy.response.status, '431 My custom error')
+        self.assertBody('funky')
+        self.assertStatus('431 My custom error')
         
         self.getPage("/status/bad")
-        self.assertEqual(cherrypy.response.body, 'hello')
-        self.assertEqual(cherrypy.response.status, '500 Internal error')
+        self.assertBody('hello')
+        self.assertStatus('500 Internal error')
     
     def testRedirect(self):
         self.getPage("/redirect/")
-        self.assertEqual(cherrypy.response.body, 'child')
-        self.assertEqual(cherrypy.response.status, '200 OK')
+        self.assertBody('child')
+        self.assertStatus('200 OK')
         
         self.getPage("/redirect?id=3")
-        self.assert_(cherrypy.response.status in ('302 Found', '303 See Other'))
-        self.assert_("<a href='http://127.0.0.1:8000/redirect/?id=3'>http://127.0.0.1:8000/redirect/?id=3</a>"
-                     in cherrypy.response.body)
+        self.assert_(self.status in ('302 Found', '303 See Other'))
+        self.assertInBody("<a href='http://127.0.0.1:8000/redirect/?id=3'>"
+                          "http://127.0.0.1:8000/redirect/?id=3</a>")
         
         self.getPage("/redirect/by_code?code=300")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
-        self.assertEqual(cherrypy.response.status, '300 Multiple Choices')
+        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertStatus('300 Multiple Choices')
         
         self.getPage("/redirect/by_code?code=301")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
-        self.assertEqual(cherrypy.response.status, '301 Moved Permanently')
+        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertStatus('301 Moved Permanently')
         
         self.getPage("/redirect/by_code?code=302")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
-        self.assertEqual(cherrypy.response.status, '302 Found')
+        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertStatus('302 Found')
         
         self.getPage("/redirect/by_code?code=303")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
-        self.assertEqual(cherrypy.response.status, '303 See Other')
+        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertStatus('303 See Other')
         
         self.getPage("/redirect/by_code?code=307")
-        self.assert_("<a href='somewhere else'>somewhere else</a>" in cherrypy.response.body)
-        self.assertEqual(cherrypy.response.status, '307 Temporary Redirect')
+        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertStatus('307 Temporary Redirect')
         
         self.getPage("/redirect/nomodify")
-        self.assertEqual(cherrypy.response.body, '')
-        self.assertEqual(cherrypy.response.status, '304 Not modified')
+        self.assertBody('')
+        self.assertStatus('304 Not modified')
         
         self.getPage("/redirect/proxy")
-        self.assertEqual(cherrypy.response.body, '')
-        self.assertEqual(cherrypy.response.status, '305 Use Proxy')
+        self.assertBody('')
+        self.assertStatus('305 Use Proxy')
         
         # InternalRedirect
         self.getPage("/redirect/internal")
-        self.assertEqual(cherrypy.response.body, 'hello')
-        self.assertEqual(cherrypy.response.status, '200 OK')
+        self.assertBody('hello')
+        self.assertStatus('200 OK')
         
         self.getPage("/redirect/internal2?user_id=Sir-not-appearing-in-this-film")
-        self.assertEqual(cherrypy.response.body, '0 images for Sir-not-appearing-in-this-film')
-        self.assertEqual(cherrypy.response.status, '200 OK')
+        self.assertBody('0 images for Sir-not-appearing-in-this-film')
+        self.assertStatus('200 OK')
         
         self.getPage("/redirect/internal2?user_id=parrot")
-        self.assertEqual(cherrypy.response.body, '0 images for slug')
-        self.assertEqual(cherrypy.response.status, '200 OK')
+        self.assertBody('0 images for slug')
+        self.assertStatus('200 OK')
         
         self.getPage("/redirect/internal2?user_id=terrier")
-        self.assertEqual(cherrypy.response.body, '0 images for fish')
-        self.assertEqual(cherrypy.response.status, '200 OK')
+        self.assertBody('0 images for fish')
+        self.assertStatus('200 OK')
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
                     "/flatten/as_yield", "/flatten/as_dblyield",
                     "/flatten/as_refyield"]:
             self.getPage(url)
-            self.assertEqual(cherrypy.response.body, 'content')
+            self.assertBody('content')
     
     def testErrorHandling(self):
         self.getPage("/error/missing")
-        self.assert_("NotFound" in cherrypy.response.body)
+        self.assertInBody("NotFound")
         
         helper.webtest.ignored_exceptions.append(ValueError)
         try:
             valerr = '\n    raise ValueError\nValueError\n'
             self.getPage("/error/page_method")
-            self.assert_(cherrypy.response.body.endswith(valerr))
+            self.assert_(self.body.endswith(valerr))
             
             self.getPage("/error/page_yield")
-            self.assert_(cherrypy.response.body.endswith(valerr))
+            self.assert_(self.body.endswith(valerr))
             
             if cherrypy._httpserver is None:
                 self.assertRaises(ValueError, self.getPage, "/error/page_http_1_1")
@@ -363,15 +363,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 self.getPage("/error/page_http_1_1")
                 # Because this error is raised after the response body has
                 # started, the status should not change to an error status.
-                self.assertEqual(cherrypy.response.status, "200 OK")
-                self.assertEqual(cherrypy.response.body, "helloUnrecoverable error in the server.")
+                self.assertStatus("200 OK")
+                self.assertBody("helloUnrecoverable error in the server.")
         finally:
             helper.webtest.ignored_exceptions.pop()
     
     def testHeaderCaseSensitivity(self):
         self.getPage("/headers/")
-        self.assertEqual(cherrypy.response.body, "double header test")
-        hnames = [name.title() for name, val in cherrypy.response.headers]
+        self.assertBody("double header test")
+        hnames = [name.title() for name, val in self.headers]
         hnames.sort()
         self.assertEqual(hnames, ['Content-Length', 'Content-Type', 'Date', 'Expires',
                                   'Location', 'Server'])
@@ -386,12 +386,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             if m == "HEAD":
                 m = ""
             
-            self.assertEqual(cherrypy.response.body, m)
+            self.assertBody(m)
         
         # Request a PUT method with a form-urlencoded body
         self.getPage("/method/parameterized", method="PUT",
                        body="data=on+top+of+other+things")
-        self.assertEqual(cherrypy.response.body, "on top of other things")
+        self.assertBody("on top of other things")
         
         # Request a PUT method with a file body
         h = [("Content-type", "text/plain"),
@@ -399,15 +399,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         self.getPage("/method/request_body", headers=h, method="PUT",
                        body="one thing on top of another")
-        self.assertEqual(cherrypy.response.body, "one thing on top of another")
+        self.assertBody("one thing on top of another")
         
         # Request a disallowed method
         self.getPage("/method/", method="LINK")
-        self.assertEqual(cherrypy.response.status, "405 Method Not Allowed")
+        self.assertStatus("405 Method Not Allowed")
         
         # Request an unknown method
         self.getPage("/method/", method="SEARCH")
-        self.assertEqual(cherrypy.response.status, "501 Not Implemented")
+        self.assertStatus("501 Not Implemented")
     
     def testFavicon(self):
         # Calls to favicon.ico are special-cased in _cphttptools.
@@ -418,21 +418,21 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         icofile.close()
         
         self.getPage("/favicon.ico")
-        self.assertEqual(cherrypy.response.body, data)
+        self.assertBody(data)
         
         self.getPage("/redirect/favicon.ico")
-        self.assertEqual(cherrypy.response.body, data)
+        self.assertBody(data)
     
     def testCookies(self):
         self.getPage("/cookies/single?name=First",
                      [('Cookie', 'First=Dinsdale;')])
-        self.assert_(('Set-Cookie', 'First=Dinsdale;') in cherrypy.response.headers)
+        self.assertHeader('Set-Cookie', 'First=Dinsdale;')
         
         self.getPage("/cookies/multiple?names=First&names=Last",
                      [('Cookie', 'First=Dinsdale; Last=Piranha;'),
                       ])
-        self.assert_(('Set-Cookie', 'First=Dinsdale;') in cherrypy.response.headers)
-        self.assert_(('Set-Cookie', 'Last=Piranha;') in cherrypy.response.headers)
+        self.assertHeader('Set-Cookie', 'First=Dinsdale;')
+        self.assertHeader('Set-Cookie', 'Last=Piranha;')
 
 
 if __name__ == '__main__':

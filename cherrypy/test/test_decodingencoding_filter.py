@@ -56,7 +56,7 @@ class DecodingEncodingFilterTest(helper.CPWebCase):
     
     def testDecodingEncodingFilter(self):
         self.getPage('/?param=%s' % europoundUtf8)
-        self.assertEqual(cherrypy.response.body, europoundUtf8)
+        self.assertBody(europoundUtf8)
 
 
 if __name__ == "__main__":

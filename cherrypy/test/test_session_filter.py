@@ -139,12 +139,11 @@ class SessionFilterTest(helper.CPWebCase):
     
     def doSession(self, threaded = False):
         self.getPage(self.sessionPath)
-        self.assertEqual(cherrypy.response.body, '1')
+        self.assertBody('1')
         
         h = []
         for k, v in cherrypy.response.headers:
             if k == 'Set-Cookie':
-                print ">>", v
                 h.append(('Cookie', v))
         getPageArgs = (self.sessionPath, h)
         
@@ -163,11 +162,8 @@ class SessionFilterTest(helper.CPWebCase):
                 while thread.isAlive():
                     pass
                 webtest.ignore_all = False
-            for k, v in cherrypy.response.headers:
-                if k.lower() == 'set-cookie':
-                    print ">", v
             
-        self.assertEqual(cherrypy.response.body, str(3))
+        self.assertBody(str(3))
     
     def doThreadSafety(self):
         return

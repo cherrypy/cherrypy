@@ -52,8 +52,7 @@ class BaseUrlFilterTest(helper.CPWebCase):
     
     def testBaseUrlFilter(self):
         self.getPage("/")
-        self.assertEqual(cherrypy.response.headerMap['Location'],
-                         "http://www.mydomain.com/dummy")
+        self.assertHeader('Location', "http://www.mydomain.com/dummy")
 
 
 if __name__ == '__main__':

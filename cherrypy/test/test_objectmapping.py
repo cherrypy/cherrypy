@@ -108,39 +108,38 @@ class ObjectMappingTest(helper.CPWebCase):
     
     def testObjectMapping(self):
         self.getPage('/')
-        self.assertEqual(cherrypy.response.body, 'world')
+        self.assertBody('world')
         
         self.getPage("/dir1/myMethod")
-        self.assertEqual(cherrypy.response.body, "myMethod from dir1, object Path is:'/dir1/myMethod'")
+        self.assertBody("myMethod from dir1, object Path is:'/dir1/myMethod'")
         
         self.getPage("/this/method/does/not/exist")
-        self.assertEqual(cherrypy.response.body, "default:('this', 'method', 'does', 'not', 'exist')")
+        self.assertBody("default:('this', 'method', 'does', 'not', 'exist')")
         
         self.getPage("/extra/too/much")
-        self.assertEqual(cherrypy.response.body, "default:('extra', 'too', 'much')")
+        self.assertBody("default:('extra', 'too', 'much')")
         
         self.getPage("/other")
-        self.assertEqual(cherrypy.response.body, 'other')
+        self.assertBody('other')
         
         self.getPage("/notExposed")
-        self.assertEqual(cherrypy.response.body, "default:('notExposed',)")
+        self.assertBody("default:('notExposed',)")
         
         self.getPage("/dir1/dir2/")
-        self.assertEqual(cherrypy.response.body, 'index for dir2, path is:/dir1/dir2/')
+        self.assertBody('index for dir2, path is:/dir1/dir2/')
         
         self.getPage("/dir1/dir2")
-        self.assert_(cherrypy.response.status in ('302 Found', '303 See Other'))
-        self.assertEqual(cherrypy.response.headerMap['Location'],
-                         'http://%s:%s/dir1/dir2/' % (helper.HOST, helper.PORT))
+        self.assert_(self.status in ('302 Found', '303 See Other'))
+        self.assertHeader('Location', 'http://%s:%s/dir1/dir2/'
+                          % (helper.HOST, helper.PORT))
         
         self.getPage("/dir1/dir2/dir3/dir4/index")
-        self.assertEqual(cherrypy.response.body,
-                         "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
+        self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
         
         self.getPage("/redirect")
-        self.assertEqual(cherrypy.response.status, '302 Found')
-        self.assertEqual(cherrypy.response.headerMap['Location'],
-                         'http://%s:%s/dir1/' % (helper.HOST, helper.PORT))
+        self.assertStatus('302 Found')
+        self.assertHeader('Location', 'http://%s:%s/dir1/'
+                          % (helper.HOST, helper.PORT))
 
 
 if __name__ == "__main__":

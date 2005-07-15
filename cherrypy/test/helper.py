@@ -81,36 +81,37 @@ def onerror():
 
 class CPWebCase(webtest.WebCase):
     
+    def _getRequest(self, url, headers, method, body):
+        # Like getPage, but for serverless requests.
+        requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
+        headers = webtest.cleanHeaders(headers, method, body)
+        
+        found = False
+        for k, v in headers:
+            if k.lower() == 'host':
+                found = True
+                break
+        if not found:
+            headers.append(("Host", "%s:%s" % (HOST, PORT)))
+        
+        if body is not None:
+            body = StringIO.StringIO(body)
+        
+        webtest.ServerError.on = False
+        cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
+        self.status = cherrypy.response.status
+        self.headers = cherrypy.response.headers
+        self.body = "".join([chunk for chunk in cherrypy.response.body])
+        if webtest.ServerError.on:
+            raise webtest.ServerError
+    
     def getPage(self, url, headers=None, method="GET", body=None):
         # Install a custom error handler, so errors in the server will:
         # 1) show server tracebacks in the test output, and
         # 2) stop the HTTP request (if any) and ignore further assertions.
         cherrypy.root._cpOnError = onerror
         
-        resp = cherrypy.response
         if cherrypy._httpserver is None:
-            requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
-            headers = webtest.cleanHeaders(headers, method, body)
-            
-            found = False
-            for k, v in headers:
-                if k.lower() == 'host':
-                    found = True
-                    break
-            if not found:
-                headers.append(("Host", "%s:%s" % (HOST, PORT)))
-            
-            if body is not None:
-                body = StringIO.StringIO(body)
-            
-            webtest.ServerError.on = False
-            cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
-            resp.body = "".join([chunk for chunk in resp.body])
-            if webtest.ServerError.on:
-                raise webtest.ServerError
+            self._getRequest(url, headers, method, body)
         else:
-            result = webtest.WebCase.getPage(self, url, headers, method, body)
-            resp.status, resp.headers, resp.body = result
-            # We want both .headerMap and .headers to be available.
-            resp.headerMap = dict(resp.headers)
-
+            webtest.WebCase.getPage(self, url, headers, method, body)

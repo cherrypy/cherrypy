@@ -58,7 +58,7 @@ class CacheFilterTest(helper.CPWebCase):
     def testCaching(self):
         for trial in xrange(2):
             self.getPage("/")
-            self.assertEqual(cherrypy.response.body, 'visit #1')
+            self.assertBody('visit #1')
 
 if __name__ == '__main__':
     cherrypy.server.start(initOnly=True)

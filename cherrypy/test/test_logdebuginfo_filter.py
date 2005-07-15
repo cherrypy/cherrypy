@@ -57,10 +57,10 @@ class LogDebugInfoFilterTest(helper.CPWebCase):
     
     def testLogDebugInfoFilter(self):
         self.getPage('/')
-        self.assert_('Build time' in cherrypy.response.body)
-        self.assert_('Page size' in cherrypy.response.body)
+        self.assertInBody('Build time')
+        self.assertInBody('Page size')
         # not compatible with the sessionFilter
-        #self.assert_('Session data size' in cherrypy.response.body)
+        #self.assertInBody('Session data size')
 
 
 if __name__ == "__main__":

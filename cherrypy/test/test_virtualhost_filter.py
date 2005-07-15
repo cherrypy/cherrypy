@@ -52,7 +52,7 @@ class VirtualHostFilterTest(helper.CPWebCase):
     
     def testVirtualHostFilter(self):
         self.getPage("/")
-        self.assertEqual(cherrypy.response.body, 'Hello, world')
+        self.assertBody('Hello, world')
 
 
 if __name__ == "__main__":

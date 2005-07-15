@@ -152,10 +152,49 @@ class WebCase(TestCase):
         ServerError.on = False
         
         result = openURL(url, headers, method, body, self.HOST, self.PORT)
+        self.status, self.headers, self.body = result
         
         if ServerError.on:
             raise ServerError
         return result
+    
+    def assertStatus(self, status, msg=None):
+        """Fail if self.status != status."""
+        if not self.status == status:
+            raise self.failureException, \
+                  (msg or 'Status (%s) != %s' % (`self.status`, `status`))
+    
+    def assertHeader(self, key, value=None, msg=None):
+        """Fail if (key, [value]) not in self.headers."""
+        lowkey = key.lower()
+        for k, v in self.headers:
+            if k.lower() == lowkey:
+                if value is None or value == v:
+                    return
+        
+        if value is None:
+            raise self.failureException, msg or '%s not in headers' % `key`
+        else:
+            raise self.failureException, \
+                  (msg or '%s:%s not in headers' % (`key`, `value`))
+    
+    def assertBody(self, value, msg=None):
+        """Fail if value != self.body."""
+        if value != self.body:
+            if msg is None:
+                msg = 'expected body:\n%s\n\nactual body:\n%s' % (`value`, `self.body`)
+            raise self.failureException, msg
+    
+    def assertInBody(self, value, msg=None):
+        """Fail if value not in self.body."""
+        if value not in self.body:
+            raise self.failureException, msg or '%s not in body' % `value`
+    
+    def assertNotInBody(self, value, msg=None):
+        """Fail if value in self.body."""
+        if value in self.body:
+            raise self.failureException, msg or '%s found in body' % `value`
+
 
 
 def cleanHeaders(headers, method, body):

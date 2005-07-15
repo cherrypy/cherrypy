@@ -67,14 +67,14 @@ class GzipFilterTest(helper.CPWebCase):
         zfile.close()
         
         self.getPage('/', headers=[("Accept-Encoding", "gzip")])
-        self.assert_(zbuf.getvalue()[:3] in cherrypy.response.body)
+        self.assertInBody(zbuf.getvalue()[:3])
         
         # Test for ticket #147
         helper.webtest.ignored_exceptions.append(IndexError)
         try:
             self.getPage('/noshow', headers=[("Accept-Encoding", "gzip")])
-            self.assert_('Content-Encoding' not in cherrypy.response.headerMap)
-            self.assert_(cherrypy.response.body.endswith("IndexError\n"))
+            self.assert_('Content-Encoding' not in dict(self.headers))
+            self.assert_(self.body.endswith("IndexError\n"))
         finally:
             helper.webtest.ignored_exceptions.pop()
 
