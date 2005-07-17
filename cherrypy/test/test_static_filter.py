@@ -47,10 +47,7 @@ cherrypy.config.update({
         'staticFilter.file': 'style.css',
     }
 })
-cherrypy.server.start(initOnly=True)
 
-
-import unittest
 import helper
 
 class StaticFilterTest(helper.CPWebCase):
@@ -69,4 +66,4 @@ class StaticFilterTest(helper.CPWebCase):
         self.assert_(self.body.startswith('Dummy stylesheet'))
 
 if __name__ == "__main__":
-    unittest.main()
+    helper.testmain()

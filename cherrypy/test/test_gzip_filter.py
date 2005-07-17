@@ -50,10 +50,7 @@ cherrypy.config.update({
     }
 })
 
-cherrypy.server.start(initOnly=True)
 
-
-import unittest
 import helper
 
 europoundUtf8 = u'\x80\xa3'.encode('utf-8')
@@ -80,5 +77,4 @@ class GzipFilterTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
-
+    helper.testmain()

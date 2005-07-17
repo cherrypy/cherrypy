@@ -47,9 +47,7 @@ cherrypy.config.update({
         'encodingFilter.on': True,
     }
 })
-cherrypy.server.start(initOnly=True)
 
-import unittest
 import helper
 
 class CombinedFiltersTest(helper.CPWebCase):
@@ -66,4 +64,4 @@ class CombinedFiltersTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    helper.testmain()

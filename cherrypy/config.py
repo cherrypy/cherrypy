@@ -61,7 +61,7 @@ def reset(useDefaults=True):
         configMap["global"] = defaultGlobal.copy()
 reset()
 
-def update(updateMap=None, file=None, override = True):
+def update(updateMap=None, file=None, override=True):
     """ Update the configMap from a dictionary or a config file.
         If override is True then the update will not modify
         values already defined in the configMap.
@@ -157,8 +157,10 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and
         that raises an exception if the file cannot be read
     """
+    
     def optionxform(self, optionstr):
         return optionstr
+    
     def read(self, filenames):
         if isinstance(filenames, basestring):
             filenames = [filenames]
@@ -171,18 +173,16 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
             self._read(fp, filename)
             fp.close()
 
-def _load(configFile = None, override = True):
-    """ Convert an INI file to a dictionary.  If override is false
-        Values allready in the configMap will not be changed.
+def _load(configFile, override=True):
+    """ Convert an INI file to a dictionary. If override is false,
+        values already in the configMap will not be changed.
     """
     
     # Parse config file
     configParser = CaseSensitiveConfigParser()
     if hasattr(configFile, 'read'):
-        cherrypy.log("Reading infos from configFile stream", 'CONFIG')
         configParser.readfp(configFile)
     else:
-        cherrypy.log("Reading infos from configFile: %s" % configFile, 'CONFIG')
         configParser.read(configFile)
     
     # Load INI file into cherrypy.configMap

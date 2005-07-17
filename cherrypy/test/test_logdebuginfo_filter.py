@@ -47,10 +47,8 @@ cherrypy.config.update({
         'logDebugInfoFilter.on': True,
     }
 })
-cherrypy.server.start(initOnly=True)
 
 
-import unittest
 import helper
 
 class LogDebugInfoFilterTest(helper.CPWebCase):
@@ -64,4 +62,4 @@ class LogDebugInfoFilterTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    helper.testmain()

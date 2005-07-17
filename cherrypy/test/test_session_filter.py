@@ -198,5 +198,4 @@ if __name__ == "__main__":
     except OSError:
         pass
     
-    cherrypy.server.start(initOnly = True)
-    unittest.main()
+    helper.testmain()

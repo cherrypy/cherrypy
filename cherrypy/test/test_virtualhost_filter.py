@@ -42,10 +42,7 @@ cherrypy.config.update({
         'virtualHostFilter.prefix': '/index2',
     },
 })
-cherrypy.server.start(initOnly=True)
 
-
-import unittest
 import helper
 
 class VirtualHostFilterTest(helper.CPWebCase):
@@ -56,4 +53,4 @@ class VirtualHostFilterTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    helper.testmain()

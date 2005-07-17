@@ -50,7 +50,6 @@ cherrypy.config.update({
 })
 
 
-import unittest
 import helper
 
 class CacheFilterTest(helper.CPWebCase):
@@ -61,5 +60,4 @@ class CacheFilterTest(helper.CPWebCase):
             self.assertBody('visit #1')
 
 if __name__ == '__main__':
-    cherrypy.server.start(initOnly=True)
-    unittest.main()
+    helper.testmain()

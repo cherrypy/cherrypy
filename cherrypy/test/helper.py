@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os, os.path
+import sys
 import time
 import socket
 import StringIO
@@ -115,3 +116,83 @@ class CPWebCase(webtest.WebCase):
             self._getRequest(url, headers, method, body)
         else:
             webtest.WebCase.getPage(self, url, headers, method, body)
+
+CPTestLoader = webtest.ReloadingTestLoader()
+CPTestRunner = webtest.TerseTestRunner(verbosity=2)
+
+
+def report_coverage(coverage, basedir=None):
+    if not basedir:
+        localDir = os.path.dirname(__file__)
+        basedir = os.path.normpath(os.path.join(os.getcwd(), localDir, '../'))
+    
+    coverage.get_ready()
+    morfs = [x for x in coverage.cexecuted if x.startswith(basedir.lower())]
+    
+    total_statements = 0
+    total_executed = 0
+    
+    print
+    print "CODE COVERAGE (this might take a while)",
+    for morf in morfs:
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        name = os.path.split(morf)[1]
+        try:
+            _, statements, _, missing, readable  = coverage.analysis2(morf)
+            n = len(statements)
+            m = n - len(missing)
+            total_statements = total_statements + n
+            total_executed = total_executed + m
+        except KeyboardInterrupt:
+            raise
+        except:
+            # No, really! We truly want to ignore any other errors.
+            pass
+    
+    pc = 100.0
+    if total_statements > 0:
+        pc = 100.0 * total_executed / total_statements
+    
+    print ("\nTotal: %s Covered: %s Percent: %2d%%"
+           % (total_statements, total_executed, pc))
+
+
+def run_test_suite(moduleNames, server, conf):
+    if isinstance(conf, basestring):
+        # assume it's a filename
+        cherrypy.config.update(file=conf)
+    else:
+        cherrypy.config.update(conf.copy())
+    startServer(server)
+    for testmod in moduleNames:
+        # Must run each module in a separate suite,
+        # because each module uses/overwrites cherrypy globals.
+        cherrypy.config.reset()
+        if isinstance(conf, basestring):
+            cherrypy.config.update(file=conf)
+        else:
+            cherrypy.config.update(conf.copy())
+        cherrypy._cputil._cpInitDefaultFilters()
+        
+        suite = CPTestLoader.loadTestsFromName(testmod)
+        CPTestRunner.run(suite)
+    stopServer()
+
+
+def testmain(server=None, conf={}):
+    if isinstance(conf, basestring):
+        # assume it's a filename
+        cherrypy.config.update(file=conf)
+    else:
+        cherrypy.config.update(conf.copy())
+    
+    startServer(server)
+    try:
+        cherrypy._cputil._cpInitDefaultFilters()
+        webtest.main()
+    finally:
+        # webtest.main == unittest.main, which raises SystemExit,
+        # so put stopServer in a finally clause
+        stopServer()
+

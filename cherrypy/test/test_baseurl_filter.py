@@ -45,7 +45,6 @@ cherrypy.config.update({
     }
 })
 
-import unittest
 import helper
 
 class BaseUrlFilterTest(helper.CPWebCase):
@@ -56,6 +55,5 @@ class BaseUrlFilterTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    cherrypy.server.start(initOnly=True)
-    unittest.main()
+    helper.testmain()
 

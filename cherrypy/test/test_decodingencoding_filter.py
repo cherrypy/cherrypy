@@ -44,10 +44,8 @@ cherrypy.config.update({
         'decodingFilter.on': True
     }
 })
-cherrypy.server.start(initOnly=True)
 
 
-import unittest
 import helper
 
 europoundUtf8 = europoundUnicode.encode('utf-8')
@@ -60,4 +58,4 @@ class DecodingEncodingFilterTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    helper.testmain()

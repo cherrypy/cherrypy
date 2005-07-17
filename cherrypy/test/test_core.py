@@ -229,9 +229,7 @@ cherrypy.config.update({
         'bax': 'this4',
     },
 })
-cherrypy.server.start(initOnly=True)
 
-import unittest
 import helper
 import os
 
@@ -436,4 +434,4 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    helper.testmain()

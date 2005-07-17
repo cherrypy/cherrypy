@@ -98,10 +98,8 @@ cherrypy.config.update({
         'server.environment': "production",
     }
 })
-cherrypy.server.start(initOnly=True)
 
 
-import unittest
 import helper
 
 class ObjectMappingTest(helper.CPWebCase):
@@ -143,5 +141,4 @@ class ObjectMappingTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
-
+    helper.testmain()
