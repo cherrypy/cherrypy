@@ -173,10 +173,8 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
             self._read(fp, filename)
             fp.close()
 
-def _load(configFile, override=True):
-    """ Convert an INI file to a dictionary. If override is false,
-        values already in the configMap will not be changed.
-    """
+def dict_from_config_file(configFile):
+    """ Convert an INI file to a dictionary. """
     
     # Parse config file
     configParser = CaseSensitiveConfigParser()
@@ -185,10 +183,11 @@ def _load(configFile, override=True):
     else:
         configParser.read(configFile)
     
-    # Load INI file into cherrypy.configMap
+    # Load INI file into a dict
+    result = {}
     for section in configParser.sections():
-        if section not in configMap:
-            configMap[section] = {}
+        if section not in result:
+            result[section] = {}
         for option in configParser.options(section):
             value = configParser.get(section, option)
             try:
@@ -197,10 +196,26 @@ def _load(configFile, override=True):
                 msg = ("section: %s, option: %s, value: %s" %
                        (repr(section), repr(option), repr(value)))
                 raise _cperror.WrongConfigValue, msg
+            result[section][option] = value
+    return result
+
+
+def _load(configFile, override=True):
+    """ Merge an INI file into configMap. If override is false,
+        values already in the configMap will not be changed.
+    """
+    
+    conf = dict_from_config_file(configFile)
+    
+    # Load new conf into cherrypy.configMap
+    for section, options in conf.iteritems():
+        bucket = configMap.setdefault(section, {})
+        for key, value in options.iteritems():
             if override:
-                configMap[section][option] = value
+                bucket[key] = value
             else:
-                configMap[section].setdefault(option, value)
+                bucket.setdefault(key, value)
+
 
 def outputConfigMap():
     cherrypy.log("Server parameters:", 'CONFIG')

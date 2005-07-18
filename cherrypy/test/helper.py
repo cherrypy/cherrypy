@@ -193,16 +193,6 @@ def run_test_suite(moduleNames, server, conf):
 def testmain(server=None, conf=None):
     if conf is None:
         conf = {}
-##        conf = {'global': {'server.socketHost': HOST,
-##                                  'server.socketPort': PORT,
-##                                  'server.protocolVersion': "HTTP/1.1",
-##                                  'server.threadPool': 10,
-##                                  'server.logToScreen': False,
-##                                  'server.environment': "production",
-##                                  }
-##                       }
-##    if server is None:
-##        server = "cherrypy._cphttpserver.embedded_server"
     if isinstance(conf, basestring):
         # assume it's a filename
         cherrypy.config.update(file=conf)

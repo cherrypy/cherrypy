@@ -28,6 +28,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Code-coverage tools for CherryPy.
 
+To use this module, or the coverage tools in the test suite,
+you need to download 'coverage.py', either Gareth Rees' original
+implementation:
+http://www.garethrees.org/2001/12/04/python-coverage/
+
+or Ned Batchelder's enhanced version:
+http://www.nedbatchelder.com/code/modules/coverage.html
+
 Set "cherrypy.codecoverage = True" to turn on coverage tracing.
 Then, use the serve() function to browse the results in a web browser.
 If you run this module from the command line, it will call serve() for you.
@@ -50,8 +58,10 @@ try:
         coverage.start()
     
 except ImportError:
-    # This will raise errors that need to be trapped downstream
+    # Setting coverage to None will raise errors
+    # that need to be trapped downstream.
     coverage = None
+    
     import warnings
     warnings.warn("No code coverage will be performed; coverage.py could not be imported.")
     

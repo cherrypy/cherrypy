@@ -36,34 +36,23 @@ except NameError:
     from sets import Set as set
 
 
-testDict = {
-    'baseurlFilter'          : 'test_baseurl_filter',
-    'cacheFilter'            : 'test_cache_filter',
-    'combinedFilters'        : 'test_combinedfilters',
-    'core'                   : 'test_core',
-    'decodingEncodingFilter' : 'test_decodingencoding_filter',
-    'gzipFilter'             : 'test_gzip_filter',
-    'logDebugInfoFilter'     : 'test_logdebuginfo_filter',
-    'objectMapping'          : 'test_objectmapping',
-    'staticFilter'           : 'test_static_filter',
-    'tutorials'              : 'test_tutorials',
-    'virtualHostFilter'      : 'test_virtualhost_filter',
-##    'sessionFilter'          : 'test_session_filter'
-}
-
-
-def help():
+def help(testList):
     print """CherryPy Test Program
     Usage: 
-        test.py -mode testName1 testName2 testName...
+        test.py -mode -cover -profile -1.1 testName1 testName2 testName...
     
-    modes: wsgi, severless, native, all
-      default: wsgi
+    modes: wsgi, severless, native, all (default is wsgi)
+    
+    cover: turns on code-coverage tool
+    
+    profile: turns on profiling tool
+    
+    1.1: use HTTP/1.1 servers instead of default HTTP/1.0
     """
     
     print '    tests:'
-    for testString in testDict:
-        print '        ', testString
+    for name in testList:
+        print '        ', name
 
 
 class BadArgument(Exception):
@@ -75,7 +64,7 @@ class DisplayHelp(Exception):
 
 class Options:
     
-    def __init__(self, args):
+    def __init__(self, args, testList):
         argSet = set([arg.lower() for arg in args])
         
         if '-help' in args:
@@ -108,12 +97,12 @@ class Options:
         
         # All remaining args should be test names.
         tests = []
-        for testString, test in testDict.iteritems():
-            if testString.lower() in argSet:
-                tests.append(testDict[testString])
-                argSet.discard(testString.lower())
+        for name in testList:
+            if ("-" + name) in argSet:
+                tests.append(name)
+                argSet.discard("-" + name)
         if not tests:
-            tests = testDict.values()
+            tests = testList
         self.tests = tests
         
         if len(argSet):
@@ -121,26 +110,36 @@ class Options:
                 if arg.lower() in argSet:
                     raise BadArgument('Bad Argument: %s is not a valid option.' % arg)
 
-
-def main(opts):
-    # Place our current directory's parent (cherrypy/) at the beginning
-    # of sys.path, so that all imports are from our current directory.
-    localDir = os.path.dirname(__file__)
-    curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
-    sys.path.insert(0, os.path.normpath(os.path.join(curpath, '../../')))
+def get_coverage():
+    """get_coverage() -> a coverage instance.
     
+    To use this feature, or the coverage server in cherrypy/lib/covercp,
+    you need to download 'coverage.py', either Gareth Rees' original
+    implementation:
+    http://www.garethrees.org/2001/12/04/python-coverage/
+
+    or Ned Batchelder's enhanced version:
+    http://www.nedbatchelder.com/code/modules/coverage.html
+    
+    If neither module is found in PYTHONPATH, this module returns None.
+    """
+    try:
+        from coverage import the_coverage as coverage
+        c = os.path.join(os.path.dirname(__file__), "../lib/coverage.cache")
+        coverage.cache_default = c
+        if c and os.path.exists(c):
+            os.remove(c)
+        coverage.start()
+    except ImportError:
+        coverage = None
+    return coverage
+
+
+def main(opts, conf=None, includeNotReady=False):
     if opts.cover:
         # Start the coverage tool before importing cherrypy,
         # so module-level global statements are covered.
-        try:
-            from coverage import the_coverage as coverage
-            coverage.cache_default = c = os.path.join(os.path.dirname(__file__),
-                                                      "../lib/coverage.cache")
-            if c and os.path.exists(c):
-                os.remove(c)
-            coverage.start()
-        except ImportError:
-            coverage = None
+        coverage = get_coverage()
     
     import cherrypy
     print "Python version used to run this test script:", sys.version.split()[0]
@@ -149,54 +148,59 @@ def main(opts):
     
     from cherrypy.test import helper
     
-    class NotReadyTest(helper.CPWebCase):
-        def testNotReadyError(self):
-            # Without having called "cherrypy.server.start()", we should
-            # get a NotReady error
-            class Root: pass
-            cherrypy.root = Root()
-            self.assertRaises(cherrypy.NotReady, self.getPage, "/")
-    helper.CPTestRunner.run(NotReadyTest("testNotReadyError"))
+    if includeNotReady:
+        class NotReadyTest(helper.CPWebCase):
+            def testNotReadyError(self):
+                # Without having called "cherrypy.server.start()", we should
+                # get a NotReady error
+                class Root: pass
+                cherrypy.root = Root()
+                self.assertRaises(cherrypy.NotReady, self.getPage, "/")
+        helper.CPTestRunner.run(NotReadyTest("testNotReadyError"))
     
-    server_conf = {'global': {'server.socketHost': helper.HOST,
-                              'server.socketPort': helper.PORT,
-                              'server.protocolVersion': opts.protocol,
-                              'server.threadPool': 10,
-                              'server.logToScreen': False,
-                              'server.environment': "production",
-                              }
-                   }
+    if conf is None:
+        conf = {'global': {'server.socketHost': helper.HOST,
+                           'server.socketPort': helper.PORT,
+                           'server.threadPool': 10,
+                           'server.logToScreen': False,
+                           'server.environment': "production",
+                           }
+                }
+    elif isinstance(conf, basestring):
+        conf = cherrypy.config.dict_from_config_file(conf)
+    
+    conf['server.protocolVersion'] = opts.protocol
     
     if opts.cover:
         cherrypy.codecoverage = True
     
     if opts.profile:
-        server_conf['profiling.on'] = True
+        conf['profiling.on'] = True
     
     if 'serverless' in opts.servers:
         print
         print "Running tests: Serverless"
-        helper.run_test_suite(opts.tests, None, server_conf)
+        helper.run_test_suite(opts.tests, None, conf)
     
     if 'native' in opts.servers:
         print
         print "Running tests: Native HTTP Server"
         helper.run_test_suite(opts.tests,
                               "cherrypy._cphttpserver.embedded_server",
-                              server_conf)
+                              conf)
     
     if 'wsgi' in opts.servers:
         print
         print "Running tests: Native WSGI Server"
         helper.run_test_suite(opts.tests,
                               "cherrypy._cpwsgi.WSGIServer",
-                              server_conf)
+                              conf)
     
     if opts.profile or opts.cover:
         print
     
     if opts.profile:
-        del server_conf['profiling.on']
+        del conf['profiling.on']
         print "run /cherrypy/lib/profiler.py as a script to serve profiling results on port 8080"
     
     if opts.cover:
@@ -211,11 +215,33 @@ def main(opts):
 
 
 if __name__ == '__main__':
+    
+    testList = [
+        'test_baseurl_filter',
+        'test_cache_filter',
+        'test_combinedfilters',
+        'test_core',
+        'test_decodingencoding_filter',
+        'test_gzip_filter',
+        'test_logdebuginfo_filter',
+        'test_objectmapping',
+        'test_static_filter',
+        'test_tutorials',
+        'test_virtualhost_filter',
+##        'test_session_filter',
+    ]
+    
     try:
-        opts = Options(sys.argv[1:])
+        opts = Options(sys.argv[1:], testList)
     except DisplayHelp:
-        help()
+        help(testList)
     except BadArgument, argError:
         print argError
     else:
-        main(opts)
+        # Place our current directory's parent (cherrypy/) at the beginning
+        # of sys.path, so that all imports are from our current directory.
+        localDir = os.path.dirname(__file__)
+        curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
+        sys.path.insert(0, os.path.normpath(os.path.join(curpath, '../../')))
+        
+        main(opts, includeNotReady=True)
