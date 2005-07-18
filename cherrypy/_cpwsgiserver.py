@@ -118,7 +118,11 @@ class HTTPRequest(object):
         if "content-length" not in self.outheaderkeys:
             self.close_at_end = True
         if "date" not in self.outheaderkeys:
-            self.outheaders.append(("Date", time.ctime()))
+            # HTTP 1.1 mandates date output in RFC 1123 format.
+            year, month, day, hh, mm, ss, wd, y, z = time.gmtime()
+            dt = ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
+                  (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
+            self.outheaders.append(("Date", dt))
         if "server" not in self.outheaderkeys:
             self.outheaders.append(("Server", self.server.version))
         self.wfile.write(self.environ["SERVER_PROTOCOL"] + " " + self.status + "\r\n")

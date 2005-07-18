@@ -42,8 +42,30 @@ responseCodes = BaseHTTPRequestHandler.responses
 mimetypes.types_map['.dwg']='image/x-dwg'
 mimetypes.types_map['.ico']='image/x-icon'
 
+
 weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+def httpdate(dt=None):
+    """httpdate(dt=None) -> the given time.struct_time in RFC 1123 format.
+    
+    RFC 2616: "[Concerning RFC 1123, RFC 850, asctime date formats]...
+    HTTP/1.1 clients and servers that parse the date value MUST
+    accept all three formats (for compatibility with HTTP/1.0),
+    though they MUST only generate the RFC 1123 format for
+    representing HTTP-date values in header fields."
+    
+    RFC 1945 (HTTP/1.0) requires the same.
+    """
+    
+    if dt is None:
+        dt = time.gmtime()
+    
+    year, month, day, hh, mm, ss, wd, y, z = dt
+    # Is "%a, %d %b %Y %H:%M:%S GMT" better or worse?
+    return ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
+            (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
 
 
 class KeyTitlingDict(dict):
@@ -128,14 +150,11 @@ class Request(object):
         cherrypy.response.headers = None
         cherrypy.response.body = None
         
-        year, month, day, hh, mm, ss, wd, y, z = time.gmtime()
-        date = ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
-                (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
         cherrypy.response.headerMap = KeyTitlingDict()
         cherrypy.response.headerMap.update({
             "Content-Type": "text/html",
             "Server": "CherryPy/" + cherrypy.__version__,
-            "Date": date,
+            "Date": httpdate(),
             "Set-Cookie": [],
             "Content-Length": 0
         })
@@ -497,9 +516,7 @@ def serve_file(filename):
     contentType = mimetypes.types_map.get(ext, "text/plain")
     cherrypy.response.headerMap['Content-Type'] = contentType
     
-    modifTime = stat.st_mtime
-    strModifTime = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
-                                 time.gmtime(modifTime))
+    strModifTime = httpdate(time.gmtime(stat.st_mtime))
     if cherrypy.request.headerMap.has_key('If-Modified-Since'):
         # Check if if-modified-since date is the same as strModifTime
         if cherrypy.request.headerMap['If-Modified-Since'] == strModifTime:
