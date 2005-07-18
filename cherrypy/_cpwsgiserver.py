@@ -125,6 +125,9 @@ class HTTPRequest(object):
             self.outheaders.append(("Date", dt))
         if "server" not in self.outheaderkeys:
             self.outheaders.append(("Server", self.server.version))
+        if (self.environ["SERVER_PROTOCOL"] == "HTTP/1.1"
+            and "connection" not in self.outheaderkeys):
+            self.outheaders.append(("Connection", "close"))
         self.wfile.write(self.environ["SERVER_PROTOCOL"] + " " + self.status + "\r\n")
         for (k,v) in self.outheaders:
             self.wfile.write(k + ": " + v + "\r\n")

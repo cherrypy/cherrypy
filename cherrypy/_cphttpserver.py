@@ -100,6 +100,20 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             # This server doesn't support persistent connections yet, so we
             # must add a "Connection: close" header to tell the client that
             # we will close the connection when we're done sending output.
+            # 
+            # From RFC 2616 sec 14.10:
+            # HTTP/1.1 defines the "close" connection option for the sender
+            # to signal that the connection will be closed after completion
+            # of the response. For example,
+            # 
+            #    Connection: close
+            # 
+            # in either the request or the response header fields indicates
+            # that the connection SHOULD NOT be considered `persistent'
+            # (section 8.1) after the current request/response is complete.
+            # 
+            # HTTP/1.1 applications that do not support persistent connections
+            # MUST include the "close" connection option in every message.
             wfile.write("Connection: close\r\n")
         
         wfile.write("\r\n")

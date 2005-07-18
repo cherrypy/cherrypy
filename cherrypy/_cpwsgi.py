@@ -115,7 +115,7 @@ def wsgiApp(environ, start_response):
     except:
         tb = _cputil.formatExc()
         cherrypy.log(tb)
-        s, h, b = _cphttptools.bareError(tb)
+        s, h, b = _cphttptools.bareError()
         # CherryPy test suite expects bareError body to be output,
         # so don't call start_response (which, according to PEP 333,
         # may raise its own error at that point).

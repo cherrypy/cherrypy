@@ -96,7 +96,23 @@ class CPWebCase(webtest.WebCase):
         
         self.status = cherrypy.response.status
         self.headers = cherrypy.response.headers
-        self.body = "".join([chunk for chunk in cherrypy.response.body])
+        try:
+            self.body = []
+            for chunk in cherrypy.response.body:
+                self.body.append(chunk)
+        except:
+            if cherrypy.config.get("server.protocolVersion") == "HTTP/1.0":
+                # Pass the error through
+                raise
+            
+            from cherrypy import _cphttptools
+            s, h, b = _cphttptools.bareError()
+            # Don't reset status or headers; we're emulating an error which
+            # occurs after status and headers have been written to the client.
+            for chunk in b:
+                self.body.append(chunk)
+        self.body = "".join(self.body)
+        
         if webtest.ServerError.on:
             raise webtest.ServerError
     

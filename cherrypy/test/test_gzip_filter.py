@@ -70,8 +70,19 @@ class GzipFilterTest(helper.CPWebCase):
         helper.webtest.ignored_exceptions.append(IndexError)
         try:
             self.getPage('/noshow', headers=[("Accept-Encoding", "gzip")])
-            self.assert_('Content-Encoding' not in dict(self.headers))
-            self.assert_(self.body.endswith("IndexError\n"))
+            
+            import cherrypy
+            proto = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
+            if proto == "HTTP/1.1":
+                # In this case, there's nothing we can do to deliver a
+                # readable page, since 1) the gzip header is already set,
+                # and 2) we may have already written some of the body.
+                # The fix is to not use yield when using HTTP/1.1 and gzip.
+                self.assertHeader('Content-Encoding', 'gzip')
+                self.assertMatchesBody(r"Unrecoverable error in the server.$")
+            else:
+                self.assertNoHeader('Content-Encoding')
+                self.assertMatchesBody(r"IndexError\n$")
         finally:
             helper.webtest.ignored_exceptions.pop()
 

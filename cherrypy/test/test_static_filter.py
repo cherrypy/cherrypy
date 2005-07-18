@@ -63,7 +63,7 @@ class StaticFilterTest(helper.CPWebCase):
         #   unfortunately some tools such as WinZip sometimes turn \n
         #   into \r\n on Windows when extracting the CherryPy tarball so
         #   we just check the content
-        self.assert_(self.body.startswith('Dummy stylesheet'))
+        self.assertMatchesBody('^Dummy stylesheet')
 
 if __name__ == "__main__":
     helper.testmain()

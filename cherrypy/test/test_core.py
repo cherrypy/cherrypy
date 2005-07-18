@@ -348,14 +348,18 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         helper.webtest.ignored_exceptions.append(ValueError)
         try:
-            valerr = '\n    raise ValueError\nValueError\n'
+            valerr = r'\n    raise ValueError\nValueError\n$'
             self.getPage("/error/page_method")
-            self.assert_(self.body.endswith(valerr))
+            self.assertMatchesBody(valerr)
             
+            import cherrypy
+            proto = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
+            if proto == "HTTP/1.1":
+                valerr = r'Unrecoverable error in the server.$'
             self.getPage("/error/page_yield")
-            self.assert_(self.body.endswith(valerr))
+            self.assertMatchesBody(valerr)
             
-            if cherrypy._httpserver is None:
+            if cherrypy._httpserver is None and proto == "HTTP/1.0":
                 self.assertRaises(ValueError, self.getPage, "/error/page_http_1_1")
             else:
                 self.getPage("/error/page_http_1_1")
@@ -367,12 +371,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             helper.webtest.ignored_exceptions.pop()
     
     def testHeaderCaseSensitivity(self):
+        """Tests that each header only appears once, regardless of case."""
         self.getPage("/headers/")
         self.assertBody("double header test")
         hnames = [name.title() for name, val in self.headers]
-        hnames.sort()
-        self.assertEqual(hnames, ['Content-Length', 'Content-Type', 'Date', 'Expires',
-                                  'Location', 'Server'])
+        for key in ['Content-Length', 'Content-Type', 'Date',
+                    'Expires', 'Location', 'Server']:
+            self.assertEqual(hnames.count(key), 1)
     
     def testHTTPMethods(self):
         # Test that all defined HTTP methods work.
