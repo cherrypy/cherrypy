@@ -91,8 +91,16 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         wfile = self.wfile
         wfile.write("%s %s\r\n" % (self.protocol_version, cherrypy.response.status))
         
+        has_close_conn = False
         for name, value in cherrypy.response.headers:
             wfile.write("%s: %s\r\n" % (name, value))
+            if name.lower == 'connection' and value.lower == 'close':
+                has_close_conn = True
+        if not has_close_conn:
+            # This server doesn't support persistent connections yet, so we
+            # must add a "Connection: close" header to tell the client that
+            # we will close the connection when we're done sending output.
+            wfile.write("Connection: close\r\n")
         
         wfile.write("\r\n")
         try:
@@ -105,6 +113,9 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         
         if self.command == "POST":
             self.connection = self.request
+        
+        # Close the conn, since we do not yet support persistent connections.
+        self.close_connection = 1
     
     def log_message(self, format, *args):
         """ We have to override this to use our own logging mechanism """
