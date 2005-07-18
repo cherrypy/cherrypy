@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Common Service Code for CherryPy
 """
 
-import urllib, os, sys, time, types, cgi
+import urllib, os, sys, time, types, cgi, re
 import mimetypes, Cookie
 
 import cherrypy
@@ -66,6 +66,47 @@ def httpdate(dt=None):
     # Is "%a, %d %b %Y %H:%M:%S GMT" better or worse?
     return ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
             (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
+
+
+class Version(object):
+    
+    def __init__(self, atoms):
+        if isinstance(atoms, basestring):
+            self.atoms = re.split(r'\W', atoms)
+        else:
+            self.atoms = [str(x) for x in atoms]
+    
+    def from_http(cls, version_str):
+        return cls(version_str[5:])
+    from_http = classmethod(from_http)
+    
+    def to_http(self):
+        return "HTTP/%s.%s" % tuple(self.atoms[:2])
+    
+    def __str__(self):
+        return ".".join([str(x) for x in self.atoms])
+    
+    def __cmp__(self, other):
+        cls = self.__class__
+        if not isinstance(other, cls):
+            # Try to coerce other to a Version instance.
+            other = cls(other)
+        
+        index = 0
+        while index < len(self.atoms) and index < len(other.atoms):
+            mine, theirs = self.atoms[index], other.atoms[index]
+            if mine.isdigit() and theirs.isdigit():
+                mine, theirs = int(mine), int(theirs)
+            if mine < theirs:
+                return -1
+            if mine > theirs:
+                return 1
+            index += 1
+        if index < len(other.atoms):
+            return -1
+        if index < len(self.atoms):
+            return 1
+        return 0
 
 
 class KeyTitlingDict(dict):
@@ -124,7 +165,7 @@ class Request(object):
     
     def __init__(self, clientAddress, remoteHost, requestLine, headers,
                  rfile, scheme="http"):
-        # When __init__ is finished, cherrypy.response should have three attributes:
+        # When __init__ is done, cherrypy.response should have 3 attributes:
         #   status, e.g. "200 OK"
         #   headers, a list of (name, value) tuples
         #   body, an iterable yielding strings
@@ -156,7 +197,7 @@ class Request(object):
             "Server": "CherryPy/" + cherrypy.__version__,
             "Date": httpdate(),
             "Set-Cookie": [],
-            "Content-Length": 0
+            "Content-Length": None
         })
         cherrypy.response.simpleCookie = Cookie.SimpleCookie()
         
@@ -203,6 +244,23 @@ class Request(object):
         req.method, path, req.protocol = self.requestLine.split()
         req.processRequestBody = req.method in ("POST", "PUT")
         
+        # Compare request and server HTTP versions, in case our server does
+        # not support the requested version. We can't tell the server what
+        # version number to write in the response, so we limit our output
+        # to min(req, server). We want the following output:
+        #   request version   server version   response version   features
+        # a       1.0              1.0               1.0            1.0
+        # b       1.0              1.1               1.1            1.0
+        # c       1.1              1.0               1.0            1.0
+        # d       1.1              1.1               1.1            1.1
+        # Notice that, in (b), the response will be "HTTP/1.1" even though
+        # the client only understands 1.0. RFC 2616 10.5.6 says we should
+        # only return 505 if the _major_ version is different.
+        request_v = Version.from_http(req.protocol)
+        server_v = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
+        server_v = Version.from_http(server_v)
+        cherrypy.request.version = min(request_v, server_v)
+        
         # find the queryString, or set it to "" if not found
         if "?" in path:
             req.path, req.queryString = path.split("?", 1)
@@ -233,9 +291,6 @@ class Request(object):
         msg = "%s - %s" % (req.remoteAddr, self.requestLine.strip())
         cherrypy.log(msg, "HTTP")
         
-        req.base = "%s://%s" % (req.scheme, req.headerMap.get('Host', ''))
-        req.browserUrl = req.base + path
-        
         # Change objectPath in filters to change
         # the object that will get rendered
         req.objectPath = None
@@ -244,6 +299,18 @@ class Request(object):
         req.originalPath = req.path
         req.originalParamMap = req.paramMap
         req.originalParamList = req.paramList
+        
+        if cherrypy.request.version >= "1.1":
+            # All Internet-based HTTP/1.1 servers MUST respond with a 400
+            # (Bad Request) status code to any HTTP/1.1 request message
+            # which lacks a Host header field.
+            if not req.headerMap.has_key("Host"):
+                cherrypy.response.status = 400
+                cherrypy.response.body = ["HTTP/1.1 requires a 'Host' request header."]
+                finalize()
+                raise cherrypy.RequestHandled
+        req.base = "%s://%s" % (req.scheme, req.headerMap.get('Host', ''))
+        req.browserUrl = req.base + path
     
     def processRequestBody(self):
         req = cherrypy.request
@@ -430,11 +497,11 @@ def finalize():
     if cherrypy.response.body is None:
         cherrypy.response.body = []
     
-    if (cherrypy.config.get("server.protocolVersion") != "HTTP/1.1"
-        and cherrypy.response.headerMap.get('Content-Length') == 0):
-        content = ''.join([chunk for chunk in cherrypy.response.body])
-        cherrypy.response.body = [content]
-        cherrypy.response.headerMap['Content-Length'] = len(content)
+    if cherrypy.response.headerMap.get('Content-Length') is None:
+        if cherrypy.request.version < "1.1":
+            content = ''.join([chunk for chunk in cherrypy.response.body])
+            cherrypy.response.body = [content]
+            cherrypy.response.headerMap['Content-Length'] = len(content)
     
     # Headers
     headers = []
@@ -505,14 +572,14 @@ def serve_file(filename):
         stat = os.stat(filename)
     except OSError:
         raise cherrypy.NotFound(cherrypy.request.path)
-
+    
     # Set content-type based on filename extension
     i = filename.rfind('.')
     if i != -1:
         ext = filename[i:]
     else:
         ext = ""
-        
+    
     contentType = mimetypes.types_map.get(ext, "text/plain")
     cherrypy.response.headerMap['Content-Type'] = contentType
     
@@ -530,8 +597,6 @@ def serve_file(filename):
     cherrypy.response.headerMap['Content-Length'] = stat[6]
     bodyfile = open(filename, 'rb')
     cherrypy.response.body = fileGenerator(bodyfile)
-    
-    
 
 
 # Object lookup

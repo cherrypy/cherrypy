@@ -87,7 +87,7 @@ class CPWebCase(webtest.WebCase):
         webtest.ServerError.on = False
         self.url = url
         
-        requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
+        requestLine = "%s %s HTTP/1.1" % (method.upper(), url)
         headers = webtest.cleanHeaders(headers, method, body, HOST, PORT)
         if body is not None:
             body = StringIO.StringIO(body)
@@ -174,7 +174,19 @@ def run_test_suite(moduleNames, server, conf):
     stopServer()
 
 
-def testmain(server=None, conf={}):
+def testmain(server=None, conf=None):
+    if conf is None:
+        conf = {}
+##        conf = {'global': {'server.socketHost': HOST,
+##                                  'server.socketPort': PORT,
+##                                  'server.protocolVersion': "HTTP/1.1",
+##                                  'server.threadPool': 10,
+##                                  'server.logToScreen': False,
+##                                  'server.environment': "production",
+##                                  }
+##                       }
+##    if server is None:
+##        server = "cherrypy._cphttpserver.embedded_server"
     if isinstance(conf, basestring):
         # assume it's a filename
         cherrypy.config.update(file=conf)

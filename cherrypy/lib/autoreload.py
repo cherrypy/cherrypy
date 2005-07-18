@@ -5,7 +5,7 @@ import os
 import sys
 import time
 import thread
-from cherrypy import _cputil
+import cherrypy
 
 RUN_RELOADER = True
 reloadFiles = []
@@ -27,7 +27,8 @@ def reloader_thread():
 def restart_with_reloader():
     while True:
         args = [sys.executable] + sys.argv
-        if sys.platform == "win32": args = ['"%s"' % arg for arg in args]
+        if sys.platform == "win32":
+            args = ['"%s"' % arg for arg in args]
         new_environ = os.environ.copy()
         new_environ["RUN_MAIN"] = 'true'
         exit_code = os.spawnve(os.P_WAIT, sys.executable,
@@ -52,4 +53,4 @@ def main(main_func, args=None, kwargs=None):
         try:
             sys.exit(restart_with_reloader())
         except KeyboardInterrupt:
-            _cputil.getSpecialAttribute('_cpLogMessage')("<Ctrl-C> hit: shutting down autoreloader", "HTTP")
+            cherrypy.log("<Ctrl-C> hit: shutting down autoreloader", "HTTP")

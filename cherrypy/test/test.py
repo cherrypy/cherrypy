@@ -73,54 +73,63 @@ class DisplayHelp(Exception):
     pass
 
 
-def getOptions(args):
+class Options:
     
-    argSet = set([arg.lower() for arg in args])
-    
-    if '-help' in args:
-        raise DisplayHelp
-    
-    servers = set()
-    if '-all' in argSet:
-        servers.update(['wsgi', 'native', 'serverless'])
-    else:
-        if '-native' in argSet:
-            servers.add('native')
-        if '-serverless' in argSet:
-            servers.add('serverless')
-        if '-wsgi' in argSet or not servers:
-            servers.add('wsgi')
-    argSet.difference_update(['-wsgi', '-native', '-serverless', '-all'])
-    
-    cover = ("-cover" in argSet)
-    profile = ("-profile" in argSet)
-    if cover and profile:
-        raise BadArgument('Bad Arguments: you cannot run the profiler and the coverage tool at the same time.')
-    argSet.difference_update(['-cover', '-profile'])
-    
-    tests = []
-    for testString, test in testDict.iteritems():
-        if testString.lower() in argSet:
-            tests.append(testDict[testString])
-            argSet.discard(testString.lower())
-    if not tests:
-        tests = testDict.values()
-    
-    if len(argSet):
-        for arg in args:
-            if arg.lower() in argSet:
-                raise BadArgument('Bad Argument: %s is not a valid option.' % arg)
-    return (servers, tests, cover, profile)
+    def __init__(self, args):
+        argSet = set([arg.lower() for arg in args])
+        
+        if '-help' in args:
+            raise DisplayHelp
+        
+        servers = set()
+        if '-all' in argSet:
+            servers.update(['wsgi', 'native', 'serverless'])
+        else:
+            if '-native' in argSet:
+                servers.add('native')
+            if '-serverless' in argSet:
+                servers.add('serverless')
+            if '-wsgi' in argSet or not servers:
+                servers.add('wsgi')
+        self.servers = servers
+        argSet.difference_update(['-wsgi', '-native', '-serverless', '-all'])
+        
+        self.cover = ("-cover" in argSet)
+        self.profile = ("-profile" in argSet)
+        if self.cover and self.profile:
+            raise BadArgument('Bad Arguments: you cannot run the profiler and the coverage tool at the same time.')
+        argSet.difference_update(['-cover', '-profile'])
+        
+        if "-1.1" in argSet:
+            self.protocol = "HTTP/1.1"
+            argSet.difference_update(['-1.1'])
+        else:
+            self.protocol = "HTTP/1.0"
+        
+        # All remaining args should be test names.
+        tests = []
+        for testString, test in testDict.iteritems():
+            if testString.lower() in argSet:
+                tests.append(testDict[testString])
+                argSet.discard(testString.lower())
+        if not tests:
+            tests = testDict.values()
+        self.tests = tests
+        
+        if len(argSet):
+            for arg in args:
+                if arg.lower() in argSet:
+                    raise BadArgument('Bad Argument: %s is not a valid option.' % arg)
 
 
-def main(servers, testList, cover=False, profile=False):
+def main(opts):
     # Place our current directory's parent (cherrypy/) at the beginning
     # of sys.path, so that all imports are from our current directory.
     localDir = os.path.dirname(__file__)
     curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
     sys.path.insert(0, os.path.normpath(os.path.join(curpath, '../../')))
     
-    if cover:
+    if opts.cover:
         # Start the coverage tool before importing cherrypy,
         # so module-level global statements are covered.
         try:
@@ -151,41 +160,46 @@ def main(servers, testList, cover=False, profile=False):
     
     server_conf = {'global': {'server.socketHost': helper.HOST,
                               'server.socketPort': helper.PORT,
+                              'server.protocolVersion': opts.protocol,
                               'server.threadPool': 10,
                               'server.logToScreen': False,
                               'server.environment': "production",
                               }
                    }
     
-    if cover:
+    if opts.cover:
         cherrypy.codecoverage = True
     
-    if profile:
+    if opts.profile:
         server_conf['profiling.on'] = True
     
-    if 'serverless' in servers:
+    if 'serverless' in opts.servers:
         print
-        print "Running testList: Serverless"
-        helper.run_test_suite(testList, None, server_conf)
+        print "Running tests: Serverless"
+        helper.run_test_suite(opts.tests, None, server_conf)
     
-    if 'native' in servers:
+    if 'native' in opts.servers:
         print
-        print "Running testList: Native HTTP Server"
-        helper.run_test_suite(testList, "cherrypy._cphttpserver.embedded_server", server_conf)
+        print "Running tests: Native HTTP Server"
+        helper.run_test_suite(opts.tests,
+                              "cherrypy._cphttpserver.embedded_server",
+                              server_conf)
     
-    if 'wsgi' in servers:
+    if 'wsgi' in opts.servers:
         print
-        print "Running testList: Native WSGI Server"
-        helper.run_test_suite(testList, "cherrypy._cpwsgi.WSGIServer", server_conf)
+        print "Running tests: Native WSGI Server"
+        helper.run_test_suite(opts.tests,
+                              "cherrypy._cpwsgi.WSGIServer",
+                              server_conf)
     
-    if profile or cover:
+    if opts.profile or opts.cover:
         print
     
-    if profile:
+    if opts.profile:
         del server_conf['profiling.on']
         print "run /cherrypy/lib/profiler.py as a script to serve profiling results on port 8080"
     
-    if cover:
+    if opts.cover:
         cherrypy.codecoverage = False
         if coverage:
             coverage.save()
@@ -198,10 +212,10 @@ def main(servers, testList, cover=False, profile=False):
 
 if __name__ == '__main__':
     try:
-        servers, testList, cover, profile = getOptions(sys.argv[1:])
+        opts = Options(sys.argv[1:])
     except DisplayHelp:
         help()
     except BadArgument, argError:
         print argError
     else:
-        main(servers, testList, cover, profile)
+        main(opts)
