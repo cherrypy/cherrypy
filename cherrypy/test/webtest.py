@@ -44,7 +44,7 @@ the traceback to stdout, and keep any assertions you have from running
 of further significance to your tests).
 """
 
-import os, sys, time
+import os, sys, time, re
 import types
 import pprint
 import socket
@@ -262,6 +262,13 @@ class WebCase(TestCase):
         if value in self.body:
             if msg is None:
                 msg = '%s found in body' % `value`
+            self.handleWebError(msg)
+    
+    def assertMatchesBody(self, pattern, msg=None, flags=0):
+        """Fail if value (a regex pattern) is not in self.body."""
+        if re.search(pattern, self.body, flags) is None:
+            if msg is None:
+                msg = 'No match for %s in body' % `pattern`
             self.handleWebError(msg)
 
 

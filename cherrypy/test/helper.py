@@ -84,6 +84,7 @@ class CPWebCase(webtest.WebCase):
     
     def _getRequest(self, url, headers, method, body):
         # Like getPage, but for serverless requests.
+        self.url = url
         requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
         headers = webtest.cleanHeaders(headers, method, body)
         
