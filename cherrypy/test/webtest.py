@@ -273,9 +273,18 @@ class WebCase(TestCase):
 
 
 
-def cleanHeaders(headers, method, body):
+def cleanHeaders(headers, method, body, host, port):
     if headers is None:
         headers = []
+    
+    # Add the required Host header if not present
+    found = False
+    for k, v in headers:
+        if k.lower() == 'host':
+            found = True
+            break
+    if not found:
+        headers.append(("Host", "%s:%s" % (host, port)))
     
     if method in ("POST", "PUT"):
         # Stick in default type and length headers if not present
@@ -294,7 +303,7 @@ def cleanHeaders(headers, method, body):
 def openURL(url, headers=None, method="GET", body=None,
             host="127.0.0.1", port=8000):
     
-    headers = cleanHeaders(headers, method, body)
+    headers = cleanHeaders(headers, method, body, host, port)
     
     # Trying 10 times is simply in case of socket errors.
     # Normal case--it should run once.

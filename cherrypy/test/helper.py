@@ -84,23 +84,16 @@ class CPWebCase(webtest.WebCase):
     
     def _getRequest(self, url, headers, method, body):
         # Like getPage, but for serverless requests.
+        webtest.ServerError.on = False
         self.url = url
+        
         requestLine = "%s %s HTTP/1.0" % (method.upper(), url)
-        headers = webtest.cleanHeaders(headers, method, body)
-        
-        found = False
-        for k, v in headers:
-            if k.lower() == 'host':
-                found = True
-                break
-        if not found:
-            headers.append(("Host", "%s:%s" % (HOST, PORT)))
-        
+        headers = webtest.cleanHeaders(headers, method, body, HOST, PORT)
         if body is not None:
             body = StringIO.StringIO(body)
         
-        webtest.ServerError.on = False
         cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
+        
         self.status = cherrypy.response.status
         self.headers = cherrypy.response.headers
         self.body = "".join([chunk for chunk in cherrypy.response.body])
