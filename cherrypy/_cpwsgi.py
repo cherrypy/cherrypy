@@ -27,16 +27,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 """
-A WSGI application and server (see PEP 333).
+A WSGI application interface (see PEP 333).
 """
 
 import sys
 import cherrypy
-from cherrypy import _cputil, _cphttptools, _cpwsgiserver
+from cherrypy import _cputil, _cphttptools
+from cherrypy._cpwsgiserver import CherryPyWSGIServer as server
 
 
 def requestLine(environ):
-    # Rebuild first line of the request
+    """Rebuild first line of the request (e.g. "GET /path HTTP/1.0")."""
+    
     resource = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
     if not resource.startswith("/"):
         resource = "/" + resource
@@ -57,6 +59,7 @@ headerNames = {'HTTP_CGI_AUTHORIZATION': 'Authorization',
                }
 
 def translate_headers(environ):
+    """Translate CGI-environ header names to HTTP header names."""
     for cgiName in environ:
         translatedHeader = headerNames.get(cgiName.upper())
         if translatedHeader:
@@ -74,6 +77,7 @@ class NullWriter(object):
 
 
 def wsgiApp(environ, start_response):
+    """The WSGI 'application object' for CherryPy."""
     
     # Trap screen output from BaseHTTPRequestHandler.log_message()
     if not cherrypy.config.get('server.logToScreen'):
@@ -125,15 +129,22 @@ def wsgiApp(environ, start_response):
 
 
 # Server components.
-# _cpwsgiserver should not reference CherryPy in any way, so that it can
-# be used in other frameworks and applications. Therefore, we wrap it here.
 
-class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
+class WSGIServer(server):
+    
+    """Wrapper for _cpwsgiserver.CherryPyWSGIServer.
+    
+    _cpwsgiserver has been designed to not reference CherryPy in any way,
+    so that it can be used in other frameworks and applications. Therefore,
+    we wrap it here.
+    
+    """
+    
     def __init__(self):
         conf = cherrypy.config.get
-        _cpwsgiserver.CherryPyWSGIServer.__init__(self,
-                                                  (conf("server.socketHost"),
-                                                   conf("server.socketPort")),
-                                                  wsgiApp,
-                                                  conf("server.threadPool"),
-                                                  conf("server.socketHost"))
+        server.__init__(self,
+                        (conf("server.socketHost"), conf("server.socketPort")),
+                        wsgiApp,
+                        conf("server.threadPool"),
+                        conf("server.socketHost"),
+                        )

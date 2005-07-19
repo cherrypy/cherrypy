@@ -48,7 +48,10 @@ monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 def httpdate(dt=None):
-    """httpdate(dt=None) -> the given time.struct_time in RFC 1123 format.
+    """Return the given time.struct_time as a string in RFC 1123 format.
+    
+    If no arguments are provided, the current time (as determined by
+    time.gmtime() is used).
     
     RFC 2616: "[Concerning RFC 1123, RFC 850, asctime date formats]...
     HTTP/1.1 clients and servers that parse the date value MUST
@@ -57,6 +60,7 @@ def httpdate(dt=None):
     representing HTTP-date values in header fields."
     
     RFC 1945 (HTTP/1.0) requires the same.
+    
     """
     
     if dt is None:
@@ -70,17 +74,32 @@ def httpdate(dt=None):
 
 class Version(object):
     
+    """A version, such as "2.1 beta 3", which can be compared atom-by-atom.
+    
+    If a string is provided to the constructor, it will be split on word
+    boundaries; that is, "1.4.13 beta 9" -> ["1", "4", "13", "beta", "9"].
+    
+    Comparisons are performed atom-by-atom, numerically if both atoms are
+    numeric. Therefore, "2.12" is greater than "2.4", and "3.0 beta" is
+    greater than "3.0 alpha" (only because "b" > "a"). If an atom is
+    provided in one Version and not another, the longer Version is
+    greater than the shorter, that is: "4.8 alpha" > "4.8".
+    """
+    
     def __init__(self, atoms):
+        """A Version object. A str argument will be split on word boundaries."""
         if isinstance(atoms, basestring):
             self.atoms = re.split(r'\W', atoms)
         else:
             self.atoms = [str(x) for x in atoms]
     
     def from_http(cls, version_str):
+        """Return a Version object from the given 'HTTP/x.y' string."""
         return cls(version_str[5:])
     from_http = classmethod(from_http)
     
     def to_http(self):
+        """Return a 'HTTP/x.y' string for this Version object."""
         return "HTTP/%s.%s" % tuple(self.atoms[:2])
     
     def __str__(self):
@@ -110,10 +129,12 @@ class Version(object):
 
 
 class KeyTitlingDict(dict):
-    """dict subclass which changes each key to str(key).title()
     
-    This should allow response headers to be case-insensitive and
+    """A dict subclass which changes each key to str(key).title()
+    
+    This allows response headers to be case-insensitive and
     avoid duplicates.
+    
     """
     
     def __getitem__(self, key):
@@ -158,19 +179,29 @@ class KeyTitlingDict(dict):
 
 
 class Request(object):
-    """Process a request and yield a series of response chunks.
     
-    headers should be a list of (name, value) tuples.
-    """
+    """Process an HTTP request and set cherrypy.response attributes."""
     
     def __init__(self, clientAddress, remoteHost, requestLine, headers,
                  rfile, scheme="http"):
-        # When __init__ is done, cherrypy.response should have 3 attributes:
-        #   status, e.g. "200 OK"
-        #   headers, a list of (name, value) tuples
-        #   body, an iterable yielding strings
-        # Consumer code should then access these three attributes
-        # to build the outbound stream.
+        """Populate a new Request object.
+        
+        clientAddress and remoteHost should be IP address strings.
+        requestLine should be of the form "GET /path HTTP/1.0".
+        headers should be a list of (name, value) tuples.
+        rfile should be a file-like object containing the HTTP request
+            entity.
+        scheme should be a string, either "http" or "https".
+        
+        When __init__ is done, cherrypy.response should have 3 attributes:
+          status, e.g. "200 OK"
+          headers, a list of (name, value) tuples
+          body, an iterable yielding strings
+        
+        Consumer code (HTTP servers) should then access these response
+        attributes to build the outbound stream.
+        
+        """
         
         self.requestLine = requestLine
         self.requestHeaders = headers
@@ -208,6 +239,7 @@ class Request(object):
             cherrypy.response.body = []
     
     def run(self):
+        """Process the Request."""
         try:
             try:
                 applyFilters('onStartResource')
@@ -383,7 +415,7 @@ def handleError(exc):
         cherrypy.response.body = body
 
 def bareError(extrabody=None):
-    """bareError(extrabody=None) -> status, headers, body.
+    """Produce status, headers, body for a critical error.
     
     Returns a triple without calling any other questionable functions,
     so it should be as error-free as possible. Call it from an HTTP server
@@ -407,7 +439,7 @@ def bareError(extrabody=None):
 # Response functions
 
 def main(path=None):
-    """Obtain and set cherrypy.response.body."""
+    """Obtain and set cherrypy.response.body from a page handler."""
     if path is None:
         path = cherrypy.request.objectPath or cherrypy.request.path
     
@@ -426,7 +458,7 @@ def main(path=None):
             path = x.path
 
 def iterable(body):
-    # build a uniform return type (iterable)
+    """Convert the given body to an iterable object."""
     if isinstance(body, types.FileType):
         body = fileGenerator(body)
     elif isinstance(body, types.GeneratorType):
@@ -490,7 +522,7 @@ for _ in entity_header_fields:
 
 
 def finalize():
-    """Transform headerMap + cookies into cherrypy.response.headers."""
+    """Transform headerMap (and cookies) into cherrypy.response.headers."""
     
     checkStatus()
     
@@ -527,6 +559,7 @@ def finalize():
     return cherrypy.response.headers
 
 def applyFilters(methodName):
+    """Execute the given method for all registered filters."""
     if methodName in ('beforeRequestBody', 'beforeMain'):
         filterList = (_cputil._cpDefaultInputFilterList +
                       _cputil.getSpecialAttribute('_cpFilterList'))
@@ -545,7 +578,7 @@ def applyFilters(methodName):
             method()
 
 def fileGenerator(input, chunkSize=65536):
-    # Iterate over the file in 64k chunks
+    """Yield the given input (a file object) in chunks (default 64k)."""
     chunk = input.read(chunkSize)
     while chunk:
         yield chunk
@@ -553,6 +586,7 @@ def fileGenerator(input, chunkSize=65536):
     input.close()
 
 def flattener(input):
+    """Yield the given input, recursively iterating over each result (if needed)."""
     for x in input:
         if not isinstance(x, types.GeneratorType):
             yield x
@@ -562,6 +596,8 @@ def flattener(input):
 
 
 def serve_file(filename):
+    """Set status, headers, and body in order to serve the given file."""
+    
     # If filename is relative, make absolute using cherrypy.root's module.
     if not os.path.isabs(filename):
         root = os.path.dirname(sys.modules[cherrypy.root.__module__].__file__)
@@ -602,9 +638,11 @@ def serve_file(filename):
 # Object lookup
 
 def getObjFromPath(objPathList):
-    """ For a given objectPathList (like ['root', 'a', 'b', 'index']),
-         return the object (or None if it doesn't exist).
+    """For a given objectPathList, return the object (or None).
+    
+    objPathList should be a list of the form: ['root', 'a', 'b', 'index'].
     """
+    
     root = cherrypy
     for objname in objPathList:
         # maps virtual filenames to Python identifiers (substitutes '.' for '_')
@@ -617,16 +655,23 @@ def getObjFromPath(objPathList):
     return root
 
 def mapPathToObject(path):
-    # Traverse path:
-    # for /a/b?arg=val, we'll try:
-    #   root.a.b.index -> redirect to /a/b/?arg=val
-    #   root.a.b.default(arg='val') -> redirect to /a/b/?arg=val
-    #   root.a.b(arg='val')
-    #   root.a.default('b', arg='val')
-    #   root.default('a', 'b', arg='val')
+    """For path, return the corresponding exposed callable (or raise NotFound).
     
-    # Also, we ignore trailing slashes
-    # Also, a method has to have ".exposed = True" in order to be exposed
+    path should be a "relative" URL path, like "/app/a/b/c". Leading and
+    trailing slashes are ignored.
+    
+    Traverse path:
+    for /a/b?arg=val, we'll try:
+      root.a.b.index -> redirect to /a/b/?arg=val
+      root.a.b.default(arg='val') -> redirect to /a/b/?arg=val
+      root.a.b(arg='val')
+      root.a.default('b', arg='val')
+      root.default('a', 'b', arg='val')
+    
+    The target method must have an ".exposed = True" attribute.
+    
+    """
+    
     # Remove leading and trailing slash
     tpath = path.strip("/")
     # Replace quoted chars (eg %20) from url
