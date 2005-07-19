@@ -38,6 +38,10 @@ import sys
 import time
 import traceback
 
+weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 
 class HTTPRequest(object):
     def __init__(self, socket, addr, server):
