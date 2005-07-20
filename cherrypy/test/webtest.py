@@ -169,6 +169,7 @@ class WebCase(TestCase):
     PORT = 8000
     
     def getPage(self, url, headers=None, method="GET", body=None):
+        """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
         
         self.url = url
@@ -182,7 +183,7 @@ class WebCase(TestCase):
     interactive = True
     console_height = 30
     
-    def handleWebError(self, msg):
+    def _handlewebError(self, msg):
         if not self.interactive:
             raise self.failureException, msg
         
@@ -226,7 +227,7 @@ class WebCase(TestCase):
         if not self.status == status:
             if msg is None:
                 msg = 'Status (%s) != %s' % (`self.status`, `status`)
-            self.handleWebError(msg)
+            self._handlewebError(msg)
     
     def assertHeader(self, key, value=None, msg=None):
         """Fail if (key, [value]) not in self.headers."""
@@ -241,7 +242,7 @@ class WebCase(TestCase):
                 msg = '%s not in headers' % `key`
             else:
                 msg = '%s:%s not in headers' % (`key`, `value`)
-        self.handleWebError(msg)
+        self._handlewebError(msg)
     
     def assertNoHeader(self, key, msg=None):
         """Fail if key in self.headers."""
@@ -250,39 +251,40 @@ class WebCase(TestCase):
         if matches:
             if msg is None:
                 msg = '%s in headers' % `key`
-            self.handleWebError(msg)
+            self._handlewebError(msg)
     
     def assertBody(self, value, msg=None):
         """Fail if value != self.body."""
         if value != self.body:
             if msg is None:
                 msg = 'expected body:\n%s\n\nactual body:\n%s' % (`value`, `self.body`)
-            self.handleWebError(msg)
+            self._handlewebError(msg)
     
     def assertInBody(self, value, msg=None):
         """Fail if value not in self.body."""
         if value not in self.body:
             if msg is None:
                 msg = '%s not in body' % `value`
-            self.handleWebError(msg)
+            self._handlewebError(msg)
     
     def assertNotInBody(self, value, msg=None):
         """Fail if value in self.body."""
         if value in self.body:
             if msg is None:
                 msg = '%s found in body' % `value`
-            self.handleWebError(msg)
+            self._handlewebError(msg)
     
     def assertMatchesBody(self, pattern, msg=None, flags=0):
         """Fail if value (a regex pattern) is not in self.body."""
         if re.search(pattern, self.body, flags) is None:
             if msg is None:
                 msg = 'No match for %s in body' % `pattern`
-            self.handleWebError(msg)
+            self._handlewebError(msg)
 
 
 
 def cleanHeaders(headers, method, body, host, port):
+    """Return headers, with required headers added (if missing)."""
     if headers is None:
         headers = []
     
@@ -311,6 +313,7 @@ def cleanHeaders(headers, method, body, host, port):
 
 def openURL(url, headers=None, method="GET", body=None,
             host="127.0.0.1", port=8000):
+    """Open the given HTTP resource and return status, headers, and body."""
     
     headers = cleanHeaders(headers, method, body, host, port)
     
@@ -365,7 +368,7 @@ class ServerError(Exception):
 
 
 def server_error(exc=None):
-    """server_error(exc=None) -> True if exception handled, False if ignored.
+    """Server debug hook. Return True if exception handled, False if ignored.
     
     You probably want to wrap this, so you can still handle an error using
     your framework when it's ignored.

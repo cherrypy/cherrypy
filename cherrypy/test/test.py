@@ -37,6 +37,8 @@ except NameError:
 
 
 def help(testList):
+    """Print help for test.py command-line options."""
+    
     print """CherryPy Test Program
     Usage: 
         test.py -mode -cover -profile -1.1 testName1 testName2 testName...
@@ -64,7 +66,15 @@ class DisplayHelp(Exception):
 
 class Options:
     
+    """A container for test.py command-line options."""
+    
     def __init__(self, args, testList):
+        """Constructor to populate the Options instance.
+        
+        args is usually sys.argv[1:].
+        testList should be a list of module names (strings).
+        """
+        
         argSet = set([arg.lower() for arg in args])
         
         if '-help' in args:
@@ -111,13 +121,13 @@ class Options:
                     raise BadArgument('Bad Argument: %s is not a valid option.' % arg)
 
 def get_coverage():
-    """get_coverage() -> a coverage instance.
+    """Return a coverage.the_coverage instance.
     
     To use this feature, or the coverage server in cherrypy/lib/covercp,
     you need to download 'coverage.py', either Gareth Rees' original
     implementation:
     http://www.garethrees.org/2001/12/04/python-coverage/
-
+    
     or Ned Batchelder's enhanced version:
     http://www.nedbatchelder.com/code/modules/coverage.html
     
@@ -136,6 +146,23 @@ def get_coverage():
 
 
 def main(opts, conf=None, includeNotReady=False):
+    """Run the test suite against multiple servers and other options.
+    
+    opts should be an Options instance, with the following attributes:
+        tests = a list of module names
+        servers = a list of servers (serverless, wsgi, native, all)
+        cover = whether or not to run the coverage tool
+        profile = whether or not to run the profiling tool
+        protocol = the HTTP protocol version for requests, e.g. "HTTP/1.0"
+    
+    conf may be a dictionary or a filename (string).
+    
+    includeNotReady specifies whether or not to run the NotReadyTest,
+        (which is typically only run for cherrypy itself; other apps
+        which use this module may safely leave it off/False).
+    
+    """
+    
     if opts.cover:
         # Start the coverage tool before importing cherrypy,
         # so module-level global statements are covered.
@@ -209,9 +236,6 @@ def main(opts, conf=None, includeNotReady=False):
             coverage.save()
             helper.report_coverage(coverage)
             print "run /cherrypy/lib/covercp.py as a script to serve coverage results on port 8080"
-    
-    print
-    raw_input('hit enter')
 
 
 if __name__ == '__main__':
@@ -245,3 +269,6 @@ if __name__ == '__main__':
         sys.path.insert(0, os.path.normpath(os.path.join(curpath, '../../')))
         
         main(opts, includeNotReady=True)
+    
+    print
+    raw_input('hit enter')

@@ -46,6 +46,7 @@ PORT = 8000
 
 
 def port_is_free():
+    """Return True if helper.PORT is free on helper.HOST, otherwise False."""
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((HOST, PORT))
@@ -56,6 +57,7 @@ def port_is_free():
 
 
 def startServer(serverClass=None):
+    """Start the given server (default serverless) in a new thread."""
     if serverClass is None:
         cherrypy.server.start(initOnly=True)
     else:
@@ -68,6 +70,7 @@ def startServer(serverClass=None):
 
 
 def stopServer():
+    """Stop the current CP server."""
     cherrypy.server.stop()
     if cherrypy.config.get('server.threadPool') > 1:
         # With thread-pools, it can take up to 1 sec for the server to stop
@@ -75,6 +78,7 @@ def stopServer():
 
 
 def onerror():
+    """Assign to _cpOnError to enable webtest server-side debugging."""
     handled = webtest.server_error()
     if not handled:
         cherrypy._cputil._cpOnError()
@@ -117,6 +121,7 @@ class CPWebCase(webtest.WebCase):
             raise webtest.ServerError
     
     def getPage(self, url, headers=None, method="GET", body=None):
+        """Open the url with debugging support. Return status, headers, body."""
         # Install a custom error handler, so errors in the server will:
         # 1) show server tracebacks in the test output, and
         # 2) stop the HTTP request (if any) and ignore further assertions.
@@ -132,7 +137,10 @@ CPTestRunner = webtest.TerseTestRunner(verbosity=2)
 
 
 def report_coverage(coverage, basedir=None):
+    """Print a summary from the code coverage tool."""
+    
     if not basedir:
+        # Assume we want to cover everything starting with "cherrypy/"
         localDir = os.path.dirname(__file__)
         basedir = os.path.normpath(os.path.join(os.getcwd(), localDir, '../'))
     
@@ -169,6 +177,11 @@ def report_coverage(coverage, basedir=None):
 
 
 def run_test_suite(moduleNames, server, conf):
+    """Run the given test modules using the given server and conf.
+    
+    The server is started and stopped once, regardless of the number
+    of test modules. The config, however, is reset for each module.
+    """
     if isinstance(conf, basestring):
         # assume it's a filename
         cherrypy.config.update(file=conf)
@@ -191,6 +204,7 @@ def run_test_suite(moduleNames, server, conf):
 
 
 def testmain(server=None, conf=None):
+    """Run __main__ as a test module, with webtest debugging."""
     if conf is None:
         conf = {}
     if isinstance(conf, basestring):
