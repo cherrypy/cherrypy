@@ -102,9 +102,13 @@ class PositionalParametersAware(object):
         # remap parameters to fix positional parameters
         if len(args) == 0:
             args = ("index",)
-        if hasattr( self, args[ 0 ] ):
-            return getattr( self, args[ 0 ] )( *args[ 1: ], **kwargs )
+        m = getattr(self, args[0], None)
+        if m and getattr(m, "exposed", False):
+            return getattr(self, args[0])(*args[1:], **kwargs)
         else:
+            m = getattr(self, "index", None)
+            if m and getattr(m, "exposed", False):
+                return self.index(*args, **kwargs)
             raise cherrypy.NotFound, cherrypy.request.path
     default.exposed = True
     
