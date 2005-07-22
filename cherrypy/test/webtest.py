@@ -284,11 +284,12 @@ class WebCase(TestCase):
 
 
 def cleanHeaders(headers, method, body, host, port):
-    """Return headers, with required headers added (if missing)."""
+    """Return request headers, with required headers added (if missing)."""
     if headers is None:
         headers = []
     
-    # Add the required Host header if not present
+    # Add the required Host request header if not present.
+    # [This specifies the host:port of the server, not the client.]
     found = False
     for k, v in headers:
         if k.lower() == 'host':

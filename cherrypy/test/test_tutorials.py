@@ -32,42 +32,39 @@ import sys
 import cherrypy
 from cherrypy.test import helper
 
-server_conf = {'server.socketHost': helper.HOST,
-               'server.socketPort': helper.PORT,
-               'server.threadPool': 10,
-               'server.logToScreen': False,
-               'server.environment': "production",
-##               'profiling.on': True,
-               }
-
-def load_tut_module(tutorialName):
-    """Import or reload tutorial module as needed."""
-    cherrypy.config.reset()
-    cherrypy.config.update({'global': server_conf.copy()})
-    
-    target = "cherrypy.tutorial." + tutorialName
-    if target in sys.modules:
-        module = reload(sys.modules[target])
-    else:
-        module = __import__(target, globals(), locals(), [''])
-    
-    cherrypy.server.start(initOnly=True)
-
 
 class TutorialTest(helper.CPWebCase):
     
+    def load_tut_module(self, tutorialName):
+        """Import or reload tutorial module as needed."""
+        cherrypy.config.reset()
+        cherrypy.config.update({'global': {'server.socketHost': self.HOST,
+                                           'server.socketPort': self.PORT,
+                                           'server.threadPool': 10,
+                                           'server.logToScreen': False,
+                                           'server.environment': "production",
+                                           }})
+        
+        target = "cherrypy.tutorial." + tutorialName
+        if target in sys.modules:
+            module = reload(sys.modules[target])
+        else:
+            module = __import__(target, globals(), locals(), [''])
+        
+        cherrypy.server.start(initOnly=True)
+    
     def test01HelloWorld(self):
-        load_tut_module("tut01_helloworld")
+        self.load_tut_module("tut01_helloworld")
         self.getPage("/")
         self.assertBody('Hello world!')
     
     def test02ExposeMethods(self):
-        load_tut_module("tut02_expose_methods")
+        self.load_tut_module("tut02_expose_methods")
         self.getPage("/showMessage")
         self.assertBody('Hello world!')
     
     def test03GetAndPost(self):
-        load_tut_module("tut03_get_and_post")
+        self.load_tut_module("tut03_get_and_post")
         
         # Try different GET queries
         self.getPage("/greetUser?name=Bob")
@@ -87,7 +84,7 @@ class TutorialTest(helper.CPWebCase):
         self.assertBody('No, really, enter your name <a href="./">here</a>.')
     
     def test04ComplexSite(self):
-        load_tut_module("tut04_complex_site")
+        self.load_tut_module("tut04_complex_site")
         msg = '''
             <p>Here are some extra useful links:</p>
             
@@ -101,7 +98,7 @@ class TutorialTest(helper.CPWebCase):
         self.assertBody(msg)
     
     def test05DerivedObjects(self):
-        load_tut_module("tut05_derived_objects")
+        self.load_tut_module("tut05_derived_objects")
         msg = '''
             <html>
             <head>
@@ -121,12 +118,12 @@ class TutorialTest(helper.CPWebCase):
         self.assertBody(msg)
     
     def test06DefaultMethod(self):
-        load_tut_module("tut06_default_method")
+        self.load_tut_module("tut06_default_method")
         self.getPage('/hendrik')
         self.assertBody('Hendrik Mans, CherryPy co-developer & crazy German '
                          '(<a href="./">back</a>)')
     def test07Sessions(self):
-        load_tut_module("tut07_sessions")
+        self.load_tut_module("tut07_sessions")
         cherrypy.config.update({"global": {"sessionFilter.on": True}})
         
         self.getPage('/')
@@ -140,7 +137,7 @@ class TutorialTest(helper.CPWebCase):
                          "\n        ")
     
     def test08AdvancedSessions(self):
-        load_tut_module("tut08_advanced_sessions")
+        self.load_tut_module("tut08_advanced_sessions")
         cherrypy.config.update({"global": {"sessionFilter.on": True}})
         
         self.getPage('/')
@@ -150,7 +147,7 @@ class TutorialTest(helper.CPWebCase):
         self.assertInBody("viewed this page 2 times")
     
     def test09GeneratorsAndYield(self):
-        load_tut_module("tut09_generators_and_yield")
+        self.load_tut_module("tut09_generators_and_yield")
         self.getPage('/')
         self.assertBody('<html><body><h2>Generators rule!</h2>'
                          '<h3>List of users:</h3>'
@@ -158,7 +155,7 @@ class TutorialTest(helper.CPWebCase):
                          '</body></html>')
     
     def test10FileUpload(self):
-        load_tut_module("tut10_file_upload")
+        self.load_tut_module("tut10_file_upload")
         
         h = [("Content-type", "multipart/form-data; boundary=x"),
              ("Content-Length", "110")]

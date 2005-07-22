@@ -41,30 +41,14 @@ for _x in dir(cherrypy):
     if isinstance(y, types.ClassType) and issubclass(y, cherrypy.Error):
         webtest.ignored_exceptions.append(y)
 
-HOST = "127.0.0.1"
-PORT = 8000
-
-
-def port_is_free():
-    """Return True if helper.PORT is free on helper.HOST, otherwise False."""
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((HOST, PORT))
-        s.close()
-        return False
-    except socket.error:
-        return True
-
 
 def startServer(serverClass=None):
     """Start the given server (default serverless) in a new thread."""
     if serverClass is None:
         cherrypy.server.start(initOnly=True)
     else:
-        if not port_is_free():
-            raise IOError("Port %s is in use; perhaps the previous server "
-                          "did not shut down properly." % PORT)
-        t = threading.Thread(target=cherrypy.server.start, args=(False, serverClass))
+        t = threading.Thread(target=cherrypy.server.start,
+                             args=(False, serverClass))
         t.start()
         time.sleep(1)
 
@@ -92,11 +76,13 @@ class CPWebCase(webtest.WebCase):
         self.url = url
         
         requestLine = "%s %s HTTP/1.1" % (method.upper(), url)
-        headers = webtest.cleanHeaders(headers, method, body, HOST, PORT)
+        headers = webtest.cleanHeaders(headers, method, body,
+                                       self.HOST, self.PORT)
         if body is not None:
             body = StringIO.StringIO(body)
         
-        cherrypy.server.request(HOST, HOST, requestLine, headers, body, "http")
+        cherrypy.server.request(self.HOST, self.HOST, requestLine,
+                                headers, body, "http")
         
         self.status = cherrypy.response.status
         self.headers = cherrypy.response.headers
@@ -134,46 +120,6 @@ class CPWebCase(webtest.WebCase):
 
 CPTestLoader = webtest.ReloadingTestLoader()
 CPTestRunner = webtest.TerseTestRunner(verbosity=2)
-
-
-def report_coverage(coverage, basedir=None):
-    """Print a summary from the code coverage tool."""
-    
-    if not basedir:
-        # Assume we want to cover everything starting with "cherrypy/"
-        localDir = os.path.dirname(__file__)
-        basedir = os.path.normpath(os.path.join(os.getcwd(), localDir, '../'))
-    
-    coverage.get_ready()
-    morfs = [x for x in coverage.cexecuted if x.startswith(basedir.lower())]
-    
-    total_statements = 0
-    total_executed = 0
-    
-    print
-    print "CODE COVERAGE (this might take a while)",
-    for morf in morfs:
-        sys.stdout.write(".")
-        sys.stdout.flush()
-        name = os.path.split(morf)[1]
-        try:
-            _, statements, _, missing, readable  = coverage.analysis2(morf)
-            n = len(statements)
-            m = n - len(missing)
-            total_statements = total_statements + n
-            total_executed = total_executed + m
-        except KeyboardInterrupt:
-            raise
-        except:
-            # No, really! We truly want to ignore any other errors.
-            pass
-    
-    pc = 100.0
-    if total_statements > 0:
-        pc = 100.0 * total_executed / total_statements
-    
-    print ("\nTotal: %s Covered: %s Percent: %2d%%"
-           % (total_statements, total_executed, pc))
 
 
 def run_test_suite(moduleNames, server, conf):

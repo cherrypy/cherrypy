@@ -129,7 +129,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage("/dir1/dir2")
         self.assert_(self.status in ('302 Found', '303 See Other'))
         self.assertHeader('Location', 'http://%s:%s/dir1/dir2/'
-                          % (helper.HOST, helper.PORT))
+                          % (self.HOST, self.PORT))
         
         self.getPage("/dir1/dir2/dir3/dir4/index")
         self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
@@ -137,7 +137,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage("/redirect")
         self.assertStatus('302 Found')
         self.assertHeader('Location', 'http://%s:%s/dir1/'
-                          % (helper.HOST, helper.PORT))
+                          % (self.HOST, self.PORT))
 
 
 if __name__ == "__main__":

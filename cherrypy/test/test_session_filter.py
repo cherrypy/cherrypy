@@ -42,8 +42,8 @@ tmpFolder = os.path.join(curpath, 'tmpSessionTestData')
 server_conf = {
                'global':
                    {
-                    'server.socketHost': helper.HOST,
-                    'server.socketPort': helper.PORT,
+                    'server.socketHost': '127.0.0.1',
+                    'server.socketPort': 8000,
                     'server.threadPool': 5,
                     'server.logToScreen': False,
                     'server.environment': "production",
