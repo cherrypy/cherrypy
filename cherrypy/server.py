@@ -117,6 +117,19 @@ def _start(initOnly=False, serverClass=None):
     else:
         run_server(serverClass)
 
+def check_port(host, port):
+    """Raise an error if the given port is not free on the given host."""
+    
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, int(port)))
+        s.close()
+        raise IOError("Port %s is in use on %s; perhaps the previous "
+                      "server did not shut down properly." % (port, host))
+    except socket.error:
+        pass
+
 def run_server(serverClass=None):
     """Prepare the requested server and then run it."""
     
@@ -133,17 +146,17 @@ def run_server(serverClass=None):
         import _cpwsgi
         serverClass = _cpwsgi.WSGIServer
     
-    cherrypy._httpserver = serverClass()
-    
     if cherrypy.config.get('server', 'socketPort'):
-        onWhat = ("socket: ('%s', %s)"
-                  % (cherrypy.config.get('server.socketHost'),
-                     cherrypy.config.get('server.socketPort')))
+        host = cherrypy.config.get('server.socketHost')
+        port = cherrypy.config.get('server.socketPort')
+        check_port(host, port)
+        onWhat = "socket: ('%s', %s)" % (host, port)
     else:
         onWhat = "socket file: %s" % cherrypy.config.get('server.socketFile')
     cherrypy.log("Serving HTTP on %s" % onWhat, 'HTTP')
     
-    # Start the http server.
+    # Start the http server. This must be done after check_port, above.
+    cherrypy._httpserver = serverClass()
     try:
         cherrypy._appserver_state = 1
         cherrypy._httpserver.start()

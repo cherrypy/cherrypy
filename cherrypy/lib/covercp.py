@@ -145,6 +145,7 @@ class CoverStats(object):
     def report(self, name):
         import cherrypy
         cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        coverage.get_ready()
         filename, statements, excluded, missing, _ = coverage.analysis2(name)
         return self.annotated_file(filename, statements, excluded, missing)
     report.exposed = True
