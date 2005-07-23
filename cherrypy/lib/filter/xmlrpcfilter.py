@@ -127,8 +127,15 @@ class XmlRpcFilter(BaseFilter):
     
     def testValidityOfRequest(self):
         # test if the content-length was sent
-        result = int(cherrypy.request.headerMap.get('Content-Length',0)) > 0
-        ct = cherrypy.request.headerMap.get('Content-Type', 'text/xml').lower()
+        result = False
+        if cherrypy.request.headerMap.has_key('Content-Length'):
+        	length = cherrypy.request.headerMap.get('Content-Length', 0)
+        	if length is None or length == "": length = 0
+        	result = int(length) > 0
+        ct = 'text/xml'
+       	if cherrypy.request.headerMap.has_key('Content-Type'):
+       		ct = cherrypy.request.headerMap.get('Content-Type', 'text/xml').lower()
+        	if ct is None or ct == "": ct = 'text/xml'
         result = result and ct in ['text/xml']
         return result
     
