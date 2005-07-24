@@ -333,7 +333,8 @@ def embedded_server(handler=None):
     if sockFile:
         # AF_UNIX socket
         # TODO: Handle threading here
-        class ServerClass(CherryHTTPServer): address_family = socket.AF_UNIX
+        class ServerClass(CherryHTTPServer):
+            address_family = socket.AF_UNIX
         
         # So we can reuse the socket
         try: os.unlink(sockFile)

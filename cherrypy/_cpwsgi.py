@@ -101,6 +101,8 @@ def wsgiApp(environ, start_response):
     except:
         tb = _cputil.formatExc()
         cherrypy.log(tb)
+        if cherrypy.config.get('server.environment') != 'development':
+            tb = ""
         s, h, b = _cphttptools.bareError(tb)
         exc = sys.exc_info()
     else:

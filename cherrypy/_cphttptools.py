@@ -410,9 +410,13 @@ def handleError(exc):
     except:
         # Failure in _cpOnError, error filter, or finalize.
         # Bypass them all.
-        body = dbltrace % (_cputil.formatExc(exc), _cputil.formatExc())
-        cherrypy.response.status, cherrypy.response.headers, body = bareError(body)
-        cherrypy.response.body = body
+        if cherrypy.config.get('server.environment') == 'development':
+            body = dbltrace % (_cputil.formatExc(exc), _cputil.formatExc())
+        else:
+            body = ""
+        resp = cherrypy.response
+        resp.status, resp.headers, resp.body = bareError(body)
+
 
 def bareError(extrabody=None):
     """Produce status, headers, body for a critical error.
@@ -555,8 +559,7 @@ def finalize():
         for line in lines:
             name, value = line.split(": ", 1)
             cherrypy.response.headers.append((name, value))
-    
-    return cherrypy.response.headers
+
 
 def applyFilters(methodName):
     """Execute the given method for all registered filters."""

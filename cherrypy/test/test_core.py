@@ -154,6 +154,10 @@ class Error(Test):
             raise ValueError
             yield "oops"
         return inner()
+    
+    def cause_err_in_finalize(self):
+        # Since status must start with an int, this should error.
+        cherrypy.response.status = "ZOO OK"
 
 
 class Headers(Test):
@@ -346,7 +350,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/error/missing")
         self.assertInBody("NotFound")
         
-        helper.webtest.ignored_exceptions.append(ValueError)
+        ignore = helper.webtest.ignored_exceptions
+        ignore.append(ValueError)
         try:
             valerr = r'\n    raise ValueError\nValueError\n$'
             self.getPage("/error/page_method")
@@ -367,8 +372,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 # started, the status should not change to an error status.
                 self.assertStatus("200 OK")
                 self.assertBody("helloUnrecoverable error in the server.")
+            
+            self.getPage("/error/cause_err_in_finalize")
+            # We're in 'production' mode, so body should be empty
+            self.assertBody("")
         finally:
-            helper.webtest.ignored_exceptions.pop()
+            ignore.pop()
     
     def testHeaderCaseSensitivity(self):
         """Tests that each header only appears once, regardless of case."""
