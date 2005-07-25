@@ -47,9 +47,9 @@ class StaticFilter(BaseFilter):
             extraPath = cherrypy.request.path[len(section) + 1:]
             filename = os.path.join(staticDir, extraPath)
         
-        # If filename is relative, make absolute using "documentRoot".
+        # If filename is relative, make absolute using "root".
         if not os.path.isabs(filename):
-            root = cherrypy.config.get('staticFilter.documentRoot', '')
+            root = cherrypy.config.get('staticFilter.root', '')
             if root:
                 filename = os.path.join(root, filename)
         
