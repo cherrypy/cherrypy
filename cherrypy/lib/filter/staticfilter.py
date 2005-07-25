@@ -46,5 +46,12 @@ class StaticFilter(BaseFilter):
             section = cherrypy.config.get('staticFilter.dir', returnSection=True)
             extraPath = cherrypy.request.path[len(section) + 1:]
             filename = os.path.join(staticDir, extraPath)
+        
+        # If filename is relative, make absolute using "documentRoot".
+        if not os.path.isabs(filename):
+            root = cherrypy.config.get('staticFilter.documentRoot', '')
+            if root:
+                filename = os.path.join(root, filename)
+        
         _cphttptools.serve_file(filename)
 

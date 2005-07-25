@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import cherrypy
+import os
 
 
 class Root: pass
@@ -45,7 +46,12 @@ cherrypy.config.update({
     '/style.css': {
         'staticFilter.on': True,
         'staticFilter.file': 'style.css',
-    }
+    },
+    '/docroot': {
+        'staticFilter.on': True,
+        'staticFilter.root': os.path.dirname(__file__),
+        'staticFilter.dir': 'static',
+    },
 })
 
 import helper
@@ -53,7 +59,13 @@ import helper
 class StaticFilterTest(helper.CPWebCase):
     
     def testStaticFilter(self):
+        # This should resolve relative to cherrypy.root.__module__.
         self.getPage("/static/index.html")
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello, world\r\n')
+        
+        # Using a staticFilter.root value...
+        self.getPage("/docroot/index.html")
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
