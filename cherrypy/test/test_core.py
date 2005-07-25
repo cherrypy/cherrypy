@@ -152,7 +152,7 @@ class Error(Test):
         def inner():
             yield "hello"
             raise ValueError
-            yield "oops"
+            yield "very oops"
         return inner()
     
     def cause_err_in_finalize(self):
@@ -273,7 +273,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus('200 OK')
         
         self.getPage("/status/illegal")
-        self.assertBody('oops')
+        self.assertBody('oops' + (" " * 509))
         self.assertStatus('500 Internal error')
         
         self.getPage("/status/unknown")
@@ -281,7 +281,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus('431 My custom error')
         
         self.getPage("/status/bad")
-        self.assertBody('hello')
+        self.assertBody('hello' + (" " * 508))
         self.assertStatus('500 Internal error')
     
     def testRedirect(self):
@@ -348,6 +348,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testErrorHandling(self):
         self.getPage("/error/missing")
+        self.assertStatus("404 Not Found")
         self.assertInBody("NotFound")
         
         ignore = helper.webtest.ignored_exceptions

@@ -266,6 +266,9 @@ class Request(object):
                     finalize()
             finally:
                 applyFilters('onEndResource')
+        except cherrypy.NotFound:
+            cherrypy.response.status = 404
+            handleError(sys.exc_info())
         except:
             handleError(sys.exc_info())
     
@@ -524,6 +527,11 @@ for _ in response_header_fields:
 for _ in entity_header_fields:
     _header_order_map[_] = 2
 
+_ie_friendly_error_sizes = {400: 512, 403: 256, 404: 512, 405: 256,
+                            406: 512, 408: 512, 409: 512, 410: 256,
+                            500: 512, 501: 512, 505: 512,
+                            }
+
 
 def finalize():
     """Transform headerMap (and cookies) into cherrypy.response.headers."""
@@ -538,6 +546,25 @@ def finalize():
             content = ''.join([chunk for chunk in cherrypy.response.body])
             cherrypy.response.body = [content]
             cherrypy.response.headerMap['Content-Length'] = len(content)
+    
+    # For some statuses, Internet Explorer 5+ shows "friendly error messages"
+    # instead of our response.body if the body is smaller than a given size.
+    # Fix this by returning a body over that size (by adding whitespace).
+    # See http://support.microsoft.com/kb/q218155/
+    s = int(cherrypy.response.status.split(" ")[0])
+    s = _ie_friendly_error_sizes.get(s, 0)
+    if s:
+        s += 1
+        # Since we are issuing an HTTP error status, we assume that
+        # the entity is short, and we should just collapse it.
+        content = ''.join([chunk for chunk in cherrypy.response.body])
+        cherrypy.response.body = [content]
+        l = len(content)
+        if l and l < s:
+            # IN ADDITION: the response must be written to IE
+            # in one chunk or it will still get replaced! Bah.
+            cherrypy.response.body = [cherrypy.response.body[0] + (" " * (s - l))]
+            cherrypy.response.headerMap['Content-Length'] = s
     
     # Headers
     headers = []
