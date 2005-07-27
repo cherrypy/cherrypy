@@ -67,8 +67,8 @@ xsltproc \
     --timing \
     --xinclude \
     --output html/index.html \
-    $DOCBOOK_BASE_PATH$DOCBOOK_XSL_DIRECTORY/html/docbook.xsl \
     xsl/html.xsl \
+    $DOCBOOK_BASE_PATH$DOCBOOK_XSL_DIRECTORY/html/docbook.xsl \
     xml/cherrypy.xml 
  
 #
@@ -83,8 +83,8 @@ xsltproc \
     --timing \
     --xinclude \
     --output chunk/index.html \
-    $DOCBOOK_BASE_PATH$DOCBOOK_XSL_DIRECTORY/html/chunk.xsl \
     xsl/chunked.xsl \
+    $DOCBOOK_BASE_PATH$DOCBOOK_XSL_DIRECTORY/html/chunk.xsl \
     xml/cherrypy.xml 
 
 exit

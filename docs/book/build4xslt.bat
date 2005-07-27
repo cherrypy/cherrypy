@@ -35,9 +35,9 @@ set DOCBOOK_XSL_DIRECTORY=docbook-xsl-1.68.1
 rmdir /q/s html
 mkdir html\css
 copy css\*.css html\css
-4xslt --outfile=html/index.html xml/cherrypy.xml %DOCBOOK_BASE_PATH%%DOCBOOK_XSL_DIRECTORY%/html/docbook.xsl xsl/html.xsl
+4xslt --outfile=html/index.html xml/cherrypy.xml  xsl/html.xsl %DOCBOOK_BASE_PATH%%DOCBOOK_XSL_DIRECTORY%/html/docbook.xsl
 
 rmdir /q/s chunk
 mkdir chunk\css
 copy css\*.css chunk\css
-4xslt --outfile=chunk/index.html xml/cherrypy.xml %DOCBOOK_BASE_PATH%%DOCBOOK_XSL_DIRECTORY%/html/docbook.xsl xsl/chunked.xsl
+4xslt --outfile=chunk/index.html xml/cherrypy.xml xsl/chunked.xsl %DOCBOOK_BASE_PATH%%DOCBOOK_XSL_DIRECTORY%/html/docbook.xsl 
