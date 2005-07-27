@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import random, time, sha, string
 
 import cherrypy
-from cherrypy.lib.filter.sessionfilter.simplesessiondict import SimpleSessionDict
 
 class BaseAdaptor(object):
     """

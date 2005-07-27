@@ -31,8 +31,7 @@ import shelve
 import cherrypy
 from baseadaptor import BaseAdaptor
 from sessionerrors import *
-from simplesessiondict import SimpleSessionDict
-
+from sessiondict import SessionDict
 
 
 import os.path
@@ -59,7 +58,7 @@ class DBMAdaptor(BaseAdaptor):
     def newSession(self):
         """ Return a new sessiondict instance """
         newData = self.getDefaultAttributes()
-        return SimpleSessionDict(newData)
+        return SessionDict(sessionAttributes = newData)
 
     def getSession(self, sessionKey):
         try:

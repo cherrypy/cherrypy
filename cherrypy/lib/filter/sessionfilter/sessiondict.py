@@ -33,47 +33,25 @@ from sessionerrors import SessionImmutableError
 def locker(function):
     def _inner(self, *args, **kwds):
         self._lock.acquire()
-        result = function(self, *args, **kwds)
-        self._lock.release()
-        return result
+        try:
+            return function(self, *args, **kwds)
+        finally:
+            self._lock.release()
     return _inner
 
 import threading 
 
-from basesessiondict import BaseSessionDict
+class SessionDict(dict):
 
-class SimpleSessionDict(BaseSessionDict):
-
-    def __init__(self, sessionData = {}):
+    def __init__(self, sessionData = {}, sessionAttributes = {}):
         self._lock = threading.RLock()
         self.threadCount = 0
         
-        self.__sessionData = sessionData.copy()
-        self.__sessionAttributes = {}
+        dict.__init__(self, sessionData)
+        self.__sessionAttributes = sessionAttributes
         
-        # move the attributes into a seperate dictionary
-        for attr in ['timestamp', 'timeout', 'lastAccess', 'key']:
-            self.__sessionAttributes[attr] = self.__sessionData.pop(attr)
-
-    def get(self, key, default = None):
-        return self.__sessionData.get(key, default)
-    get=locker(get)
-    
-    def __getitem__(self, key):
-        return self.__sessionData[key]
-    __getitem__=locker(__getitem__)
-     
-    def __setitem__(self, key, value):
-        self.__sessionData[key] = value
-    __setitem__=locker(__setitem__)
-      
-    def setdefault(self, key, default):
-        try:
-            return self.__sessionData[key]
-        except KeyError:
-            self.__sessionData[key] = default
-            return default
-    setdefault=locker(setdefault)
+    get=locker(dict.get)
+    setdefault=locker(dict.setdefault)
 
     def __getattr__(self, attr):
         try:
@@ -90,16 +68,20 @@ class SimpleSessionDict(BaseSessionDict):
             return
 
         self._lock.acquire()
-        if attr in ['key', 'timestamp']:
-            raise SessionImmutableError(attr)
-        elif attr in ['timeout', 'lastAccess']:
-            self.__sessionData[attr] = value
+        
+        if attr in ['timeout', 'lastAccess' ]:
+            self.__sessionAttributes[attr] = value
+        elif attr in ['timestamp', 'key']:
+            raise AttributeError('%s is immutable' % attr)
         else:
             object.__setattr__(self, attr, value)
+
         self._lock.release()
     
-    def __iter__(self):
-        return iter(self.__sessionData.copy())
+    def expired(self):
+        now = time.time()
+        return (now - self.lastAccess) > self.timeout
+    expired = locker(expired)
         
     def __getstate__(self):
         """ remove the lock so we can pickle """
@@ -107,9 +89,12 @@ class SimpleSessionDict(BaseSessionDict):
         stateDict['threadCount'] = 0
         stateDict.pop('_lock')
         return stateDict
+    __getstate__ = locker(__getstate__)
 
     def __setstate__(self, stateDict):
         """ create a new lock object """
         self.__dict__['_lock'] = threading.RLock()
         self.__dict__.update(stateDict)
 
+    def attributeDict(self):
+        return self.__sessionAttributes

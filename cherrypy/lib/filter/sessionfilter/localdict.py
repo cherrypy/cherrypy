@@ -32,8 +32,6 @@ try:
 except ImportError:
     from cherrypy._cpthreadinglocal import local
 
-from cherrypy.lib.filter.sessionfilter.basesessiondict import BaseSessionDict
-
 class LocalDict(local):
     def __getitem__(self, key):
         return self.default[key]
@@ -51,10 +49,13 @@ class LocalDict(local):
         return iter(self.default)
 
     def __setattr__(self, attr, value):
-        if isinstance(value, BaseSessionDict):
-            local.__setattr__(self, attr, value)
+        local.__setattr__(self, attr, value)
+        '''
         else:
+            local.__setattr__(self, attr, value)
+            return
             raise TypeError('%s is not a session dict.' % attr)
+        '''
     
     def __getattribute__(self, attr):
         return local.__getattribute__(self, attr)

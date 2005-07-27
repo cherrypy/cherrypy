@@ -33,7 +33,7 @@ import os.path
 
 from baseadaptor import BaseAdaptor
 from sessionerrors import *
-from simplesessiondict import SimpleSessionDict
+from sessiondict import SessionDict
 
 
 class FileAdaptor(BaseAdaptor):
@@ -48,7 +48,7 @@ class FileAdaptor(BaseAdaptor):
     def newSession(self):
         """ Return a new sessiondict instance """
         newData = self.getDefaultAttributes()
-        return SimpleSessionDict(newData)
+        return SessionDict(sessionAttributes = newData)
    
     # all session writes are blocked 
     def getSession(self, sessionKey):
@@ -63,9 +63,11 @@ class FileAdaptor(BaseAdaptor):
         if os.path.exists(filePath):
             f = open(filePath, "rb")
             self.__fileLock.acquire()
-            sessionData = pickle.load(f)
-            self.__fileLock.release()
-            f.close()
+            try:
+                sessionData = pickle.load(f)
+            finally:
+                self.__fileLock.release()
+                f.close()
             return sessionData
         else:
             raise SessionNotFoundError

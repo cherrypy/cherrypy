@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from baseadaptor import BaseAdaptor
 from sessionerrors import *
-from simplesessiondict import SimpleSessionDict
+from sessiondict import SessionDict
 
 import cherrypy
 
@@ -41,7 +41,7 @@ class RamAdaptor(BaseAdaptor):
     def newSession(self):
         """ Return a new sessiondict instance """
         newData = self.getDefaultAttributes()
-        return SimpleSessionDict(newData)
+        return SessionDict(sessionAttributes = newData)
         
     def getSession(self, sessionKey):
         try:
@@ -69,7 +69,8 @@ class RamAdaptor(BaseAdaptor):
             if session.expired():
                 del self.__data[sessionKey]
                 #deleteList.append(sessionKey)
-        return
+       
+        return 
         for key in deleteList:
             self.delSession(sessionKey)
 

@@ -31,11 +31,12 @@ from baseadaptor import BaseAdaptor
 from sessionerrors import *
 
 from sqlobject import *
-from basesessiondict import BaseSessionDict
+
+#from basesessiondict import BaseSessionDict
  
 import time
 
-class SQLObjectSessionDict(BaseSessionDict):
+class SQLObjectSessionDict:#(BaseSessionDict):
     
     # it is ok to cache the session data
     
@@ -43,6 +44,8 @@ class SQLObjectSessionDict(BaseSessionDict):
     def __init__(self, sqlObject):
         self.__sqlObject = sqlObject
         self.threadCount = 0
+
+        raise "The sqlobject driver will work sometime in the future"
     
     def __attrSub(self, attr):
         return { 
