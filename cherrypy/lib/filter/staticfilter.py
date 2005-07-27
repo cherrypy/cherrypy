@@ -34,22 +34,29 @@ class StaticFilter(BaseFilter):
     """Filter that handles static content."""
     
     def beforeMain(self):
-        import cherrypy
-        from cherrypy import _cphttptools
+        from cherrypy import _cphttptools, config, request
         
-        if not cherrypy.config.get('staticFilter.on', False):
+        if not config.get('staticFilter.on', False):
             return
         
-        filename = cherrypy.config.get('staticFilter.file')
+        regex = config.get('staticFilter.match', '')
+        if regex:
+            import re
+            if not re.search(regex, request.path):
+                return
+        
+        filename = config.get('staticFilter.file')
         if not filename:
-            staticDir = cherrypy.config.get('staticFilter.dir')
-            section = cherrypy.config.get('staticFilter.dir', returnSection=True)
-            extraPath = cherrypy.request.path[len(section) + 1:]
+            staticDir = config.get('staticFilter.dir')
+            section = config.get('staticFilter.dir', returnSection=True)
+            section = section.rstrip(r"\/")
+            extraPath = request.path[len(section) + 1:]
+            extraPath = extraPath.lstrip(r"\/")
             filename = os.path.join(staticDir, extraPath)
         
         # If filename is relative, make absolute using "root".
         if not os.path.isabs(filename):
-            root = cherrypy.config.get('staticFilter.root', '')
+            root = config.get('staticFilter.root', '').rstrip(r"\/")
             if root:
                 filename = os.path.join(root, filename)
         

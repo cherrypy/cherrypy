@@ -49,7 +49,7 @@ cherrypy.config.update({
     },
     '/docroot': {
         'staticFilter.on': True,
-        'staticFilter.root': os.path.dirname(__file__),
+        'staticFilter.root': os.path.join(os.getcwd(), os.path.dirname(__file__)),
         'staticFilter.dir': 'static',
     },
 })

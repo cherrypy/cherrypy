@@ -381,7 +381,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             ignore.pop()
     
     def testHeaderCaseSensitivity(self):
-        """Tests that each header only appears once, regardless of case."""
+        # Tests that each header only appears once, regardless of case.
         self.getPage("/headers/")
         self.assertBody("double header test")
         hnames = [name.title() for name, val in self.headers]
