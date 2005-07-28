@@ -16,6 +16,12 @@ _sessionDefaults = {
     'sessionFilter.timeMultiple' : 60
 }
 
+_sessionSettingNames = []
+
+for key in _sessionDefaults:
+    _sessionSettingNames.append(key.split('.')[-1])
+    
+
 from sessionerrors import SessionNotFoundError, SessionIncompatibleError, SessionBadStorageTypeError, SessionConfigError, DuplicateSessionError
 from ramadaptor import RamAdaptor
 from fileadaptor import FileAdaptor
@@ -53,7 +59,8 @@ class SessionFilter:
         
         self.sessionManagers = {}
         cherrypy.config.update(_sessionDefaults, override = False)
-
+        
+        self.__initSessionManagers()
 
     def __newSessionManager(self, sessionName, sessionPath):
         """ 
@@ -70,7 +77,7 @@ class SessionFilter:
         # try to initilize a built in session
         try:
             try:
-                if self.sessionManagers[storageType].path != sessionPath:
+                if sessionName in self.sessionManagers:
                     raise DuplicateSessionError()
             except KeyError:
                 pass
@@ -99,118 +106,68 @@ class SessionFilter:
         pathList.append('/')
         pathList.reverse()
         return pathList
-
-    def __loadConfigData(self):
-        try:
-            path = cherrypy.request.path
-        except AttributeError:
-            path = "/"
-            
-        configMap = cherrypy.config.configMap
-        
-        configData = {}
-        self.__localData.activeSessions = []
-        
-        for path in self.__pathIter():
-            # cut index off the end of the pass
-            if path.endswith('/index'):
-                path = path[0:-5]
-            
-            # set the section 
-            if path == '/':
-                section = 'global'
-            else:
-                section = path
-            
-            # will will place all of the config data here as we read it
-            sectionData = {}
-            
-            # get the current settings or return an empty dictionary
-            settings = cherrypy.config.configMap.get(section, {})
-            
-            # iterate over all of the settings for the current path
-            for key, value in settings.iteritems():
-                # make sure this is a session setting
-                if key.startswith('sessionFilter.'):
-                    sectionData = configData.setdefault(section, {})
-                    keySplit = key.split('.')
-                    
-                    # if the key has 1 '.' then it is a default setting
-                    if len(keySplit) == 2:
-                        # we use None as the key for default settings
-                        # and we place the key, value in the dictionary
-
-                        # because we iterate from / down to the current node
-                        # we will automatically overwite any default values
-                        # if they are redefined by child nodes
-                        defaults = configData.setdefault(None, {})
-                        defaults[keySplit[1]] = value
-                    
-                    # if the key has 3 '.' then it is a named session
-                    elif len(keySplit) == 3:
-                        currentSession = sectionData.setdefault(keySplit[1], {})
-                        currentSession[keySplit[2]] = value
-            
-            # we now iterate back over the settings and
-            # locate/initilize the session manager
-            for session, settings in sectionData.iteritems():
-                if not settings['on']:
-                    continue
-                try:
-                    sessionManager = self.sessionManagers[session]
-                except KeyError:
-                    sessionManager = self.__newSessionManager(session, path)
-                    self.sessionManagers[session] = sessionManager
-                
-                # create a new local instance
-                setattr(sessionManager, 'settings', local())
-                
-                # set all of the default settings
-                for key, value in configData.get(None, {}).iteritems():
-                    setattr(sessionManager.settings, key, value)
-                
-                # set all of settings
-                for key, value in settings.iteritems():
-                    setattr(sessionManager.settings, key, value)
-
-                # add this to the list of active session managers
-                self.__localData.activeSessions.append(sessionManager)
     
+    def __initSessionManagers(self):
+        for section, settings in cherrypy.config.configMap.iteritems():
+            for setting, value in settings.iteritems():
+                if not setting.startswith('sessionFilter'):
+                    continue
+
+                keySplit = setting.split('.')
+                if len(keySplit) == 2:
+                    sessionName = 'default'
+                else:
+                    sessionName = keySplit[1]
+                
+                if keySplit[-1] != 'on' or value == False:
+                    continue
+
+                if section == 'global':
+                    path = '/'
+                else:
+                    path = section
+
+                if sessionName not in self.sessionManagers:
+                    sessionManager = self.__newSessionManager(sessionName, path)
+                    # create a new local instance
+                    setattr(sessionManager, 'settings', local())
+
+                    self.sessionManagers[sessionName] = sessionManager
+    
+    def __loadConfigData(self, sessionName):
+            sessionManager = self.sessionManagers[sessionName]
+            for settingName in _sessionSettingNames:
+                
+                default = cherrypy.config.get('sessionFilter.%s' % settingName)
+                value = cherrypy.config.get('sessionFilter.%s.%s' % (sessionName, settingName), default)
+                
+                setattr(sessionManager.settings, settingName, value)
+                
     def __initSessions(self):
         
         # look up all of the session keys by cookie
-        self.__loadConfigData()
         
-        sessionKeys = self.getSessionKeys()
+        for sessionName, sessionManager in self.sessionManagers.iteritems():
+            if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, False):
+                continue
 
-        for sessionManager in self.__localData.activeSessions:
-            sessionKey = sessionKeys.get(sessionManager.name, None)
+            self.__loadConfigData(sessionName)
+            cookieName = sessionManager.cookieName
             
             try:
-               sessionManager.loadSession(sessionKey)
-            except SessionNotFoundError:
-               newKey = sessionManager.createSession()
-               sessionManager.loadSession(newKey)
-               
-               self.setSessionKey(newKey, sessionManager) 
-    
-    def getSessionKeys(self):
-        """ 
-        Returns the all current sessionkeys as a dict
-        """
-        
-        sessionKeys = {}
-        
-        for sessionManager in self.__localData.activeSessions:
-            sessionName = sessionManager.name
-            cookieName  = sessionManager.cookieName
+                sessionKey = cherrypy.request.simpleCookie[cookieName].value
+            except KeyError:
+                sessionKey = sessionManager.createSession()
+                self.setSessionKey(sessionKey, sessionManager) 
+                sessionManager.loadSession(sessionKey)
 
             try:
-                sessionKeys[sessionName] = cherrypy.request.simpleCookie[cookieName].value
-            except:
-                sessionKeys[sessionName] = None
-        return sessionKeys
-      
+                sessionManager.loadSession(sessionKey)
+            except SessionNotFoundError:
+                sessionKey = sessionManager.createSession()
+                self.setSessionKey(sessionKey, sessionManager)  
+                sessionManager.loadSession(sessionKey)
+
     def setSessionKey(self, sessionKey, sessionManager):
         """ 
         Sets the session key in a cookie. 
@@ -249,22 +206,16 @@ class SessionFilter:
 
     def __saveSessions(self):
         
-        for sessionManager in self.__localData.activeSessions:
-            sessionName = sessionManager.name
-            
+        for sessionName, sessionManager in self.sessionManagers.iteritems():
+            if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, False):
+                continue
+
             sessionData = getattr(cherrypy.session, sessionName)
             sessionManager.commitCache(sessionData.key)
             sessionManager.cleanUpCache()
             
-            now = time.time()
-            if sessionManager.nextCleanUp < now:
-                sessionManager.cleanUpOldSessions()
-                cleanUpDelay = sessionManager.settings.cleanUpDelay
-                sessionManager.nextCleanUp=now + cleanUpDelay * 60
+            sessionManager.cleanUpOldSessions()
 
-        # this isn't needed but may be helpfull for debugging
-#        self.configData = None
-    
     def beforeMain(self):
         if (not cherrypy.config.get('staticFilter.on', False)
             and cherrypy.config.get('sessionFilter.on')):
@@ -275,7 +226,6 @@ class SessionFilter:
             and cherrypy.config.get('sessionFilter.on')):
             self.__saveSessions()
 
-    #this breaks a test case
     def beforeErrorResponse(self):
         # Still save session data
         if not cherrypy.config.get('staticFilter.on', False) and \

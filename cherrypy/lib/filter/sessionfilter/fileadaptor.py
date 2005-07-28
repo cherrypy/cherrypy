@@ -95,7 +95,7 @@ class FileAdaptor(BaseAdaptor):
             os.remove(filePath)
             self.__fileLock.release()
     
-    def cleanUpOldSessions(self):
+    def _cleanUpOldSessions(self):
         storagePath = self.settings.storagePath
         sessionFileList = os.listdir(storagePath)
         

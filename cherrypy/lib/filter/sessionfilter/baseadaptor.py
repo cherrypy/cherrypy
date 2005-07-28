@@ -52,7 +52,7 @@ class BaseAdaptor(object):
         """ function to save sesion data """
         raise NotImplementedError('setSession has not been implemented')
     
-    def cleanUpOldSessions(self):
+    def _cleanUpOldSessions(self):
         """This function cleans up expired sessions"""
         raise NotImplementedError('cleanUpOldSessions has not been implemented')
     
@@ -130,6 +130,10 @@ class BaseAdaptor(object):
             return result
 
             
+    def cleanUpOldSessions(self):
+        now = time.time()
+        if self.nextCleanUp < now:
+            self._cleanUpOldSessions()
         
     def loadSession(self, sessionKey, autoCreate = True):
         try:

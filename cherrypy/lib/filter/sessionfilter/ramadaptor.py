@@ -62,7 +62,7 @@ class RamAdaptor(BaseAdaptor):
         except KeyError:
             raise SessionNotFoundError
     
-    def cleanUpOldSessions(self):
+    def _cleanUpOldSessions(self):
         #deleteList = []
         for sessionKey in self.__data.keys():
             session = self.__data[sessionKey]

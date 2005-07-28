@@ -110,8 +110,6 @@ class SessionFilterTest(helper.CPWebCase):
         self.doSession()
         self.persistant = False
         self.doCleanUp()
-        self.doSession(threaded = True)
-        self.doThreadSafety()
     
     def test_file(self):
         self.sessionName = "file"
@@ -121,8 +119,6 @@ class SessionFilterTest(helper.CPWebCase):
         self.doSession()
         self.persistant = False
         self.doCleanUp()
-        self.doSession(threaded = True)
-        self.doThreadSafety()
     
     def test_anydb(self):
         self.sessionName = "anydb"
@@ -132,12 +128,8 @@ class SessionFilterTest(helper.CPWebCase):
         self.doSession()
         self.persistant = False
         self.doCleanUp()
-        self.doSession(threaded = True)
-        self.doThreadSafety()
     
-    threadTesting = False
-    
-    def doSession(self, threaded = False):
+    def doSession(self):
         self.getPage(self.sessionPath)
         self.assertBody('1')
         
@@ -149,31 +141,12 @@ class SessionFilterTest(helper.CPWebCase):
         
         # this loop will be used to test thread safety
         for n in xrange(2):
-            if self.persistant and not self.threadTesting:
+            if self.persistant:
                 cherrypy.server.stop()
                 cherrypy.server.start(initOnly = True)
-            if not threaded:
-                self.getPage(*getPageArgs)
-            else:
-                import webtest
-                webtest.ignore_all = True
-                thread = threading.Thread(target = self.getPage, args = getPageArgs)
-                thread.start()
-                while thread.isAlive():
-                    pass
-                webtest.ignore_all = False
-            
+            self.getPage(*getPageArgs)
         self.assertBody(str(3))
     
-    def doThreadSafety(self):
-        return
-        self.threadTesting = True
-        for n in xrange(13):
-            thread = threading.Thread(target=self.doSession)
-            thread.start()
-        print cherrypy.response.body
-        self.threadTesting = False
-        
     def doCleanUp(self):
         SessionFilter = cherrypy._cputil._cpDefaultFilterInstances['SessionFilter']
         

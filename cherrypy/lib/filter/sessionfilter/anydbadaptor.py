@@ -75,7 +75,7 @@ class DBMAdaptor(BaseAdaptor):
         except KeyError:
             raise SessionNotFoundError
     
-    def cleanUpOldSessions(self):
+    def _cleanUpOldSessions(self):
         #deleteList = []
         for sessionKey in self.__data:
             session = self.__data[sessionKey]
