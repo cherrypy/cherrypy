@@ -160,9 +160,13 @@ def run_server(serverClass=None):
     # Start the http server. This must be done after check_port, above.
     cherrypy._httpserver = serverClass()
     try:
-        cherrypy._appserver_state = 1
-        cherrypy._httpserver.start()
-    except (KeyboardInterrupt, SystemExit):
+        try:
+            cherrypy._appserver_state = 1
+            # This should block until the http server stops.
+            cherrypy._httpserver.start()
+        except (KeyboardInterrupt, SystemExit):
+            pass
+    finally:
         cherrypy.log("<Ctrl-C> hit: shutting down", "HTTP")
         stop()
 
@@ -212,8 +216,14 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http
     """
     if cherrypy._appserver_state == 0:
         raise cherrypy.NotReady("No thread has called cherrypy.server.start().")
-    elif cherrypy._appserver_state == None:
-        raise cherrypy.NotReady("cherrypy.server.start() encountered errors.")
+    
+    trials = 0
+    while cherrypy._appserver_state == None:
+        # Give the server thread time to complete.
+        trials += 1
+        if trials > 10:
+            raise cherrypy.NotReady("cherrypy.server.start() encountered errors.")
+        time.sleep(1)
     
     threadID = threading._get_ident()
     if threadID not in seen_threads:
