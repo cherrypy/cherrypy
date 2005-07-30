@@ -111,6 +111,7 @@ def _start(initOnly=False, serverClass=None):
 
     # Initilize the built in filters
     cherrypy._cputil._cpInitDefaultFilters()
+    cherrypy._cputil._cpInitUserDefinedFilters()
     
     if initOnly:
         cherrypy._appserver_state = 1

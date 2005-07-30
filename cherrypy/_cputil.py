@@ -223,6 +223,32 @@ def _cpInitDefaultFilters():
         filterInstance = _cpDefaultFilterInstances.setdefault(filterName, filterClass())
         _cpDefaultOutputFilterList.append(filterInstance)
 
+def _cpInitUserDefinedFilters():
+    filtersRoot = cherrypy.config.get('server.filtersRoot', [])
+    inputFiltersDict = cherrypy.config.get('server.inputFiltersDict', {})
+    outputFiltersDict = cherrypy.config.get('server.outputFiltersDict', {})
+    
+    if len(filtersRoot) == 0:
+        return
+
+    sys.path.extend(filtersRoot)
+        
+    for filterName, filterClassname in inputFiltersDict.items():
+        filterModule = __import__(filterName, globals(),  locals(), [])
+        filterClass = getattr(filterModule, filterClassname, None)
+        filterInstance = filterClass()
+        _cpDefaultInputFilterList.append(filterInstance)
+
+    for filterName, filterClassname in outputFiltersDict.items():
+        filterModule = __import__(filterName, globals(),  locals(), [])
+        filterClass = getattr(filterModule, filterClassname, None)
+        filterInstance = filterClass()
+        _cpDefaultOutputFilterList.append(filterInstance)
+
+    # Avoid pollution of the system path
+    for path in filtersRoot:
+        sys.path.remove(path)   
+
 # public domain "unrepr" implementation, found on the web and then improved.
 import compiler
 
