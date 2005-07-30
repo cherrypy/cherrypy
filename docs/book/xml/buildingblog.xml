@@ -385,7 +385,7 @@ addComment.exposed = True
                   data = []
                   try:
                     _dbLocker.acquire()
-                    db = shelve.open(&apos;media/db/okpee.db&apos;, &apos;r&apos;)
+                    db = shelve.open(&apos;media/db/blob.db&apos;, &apos;r&apos;)
                     data = db.keys()
                     if db: db.close()
                   finally:
