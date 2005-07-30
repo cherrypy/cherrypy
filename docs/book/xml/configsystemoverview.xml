@@ -46,12 +46,12 @@
             <code>/css/default.css</code> the static filter will be called and the server will
         actually return the physical file name <filename>data/css/default.css</filename>. </para>
     <para>Since the path <code>/service/xmlrpc</code> has the XML-RPC filter enabled, all the exposed
-    method of the object <code>cherrypy.root.service.xmlrpc</code> will be treated as XML-RPC methods.</para>
+    methods of the object <code>cherrypy.root.service.xmlrpc</code> will be treated as XML-RPC methods.</para>
     <para>The root entry, defined as <code>global</code>, is also responsible for defining the server settings
         such as the port, the protocol version to use by default, the number of threads to start with the server, etc.</para>
     <para>The configuration file requires that all the value are Python values. Strings must be quoted,
         boolean are set to True or False, etc.</para>
-    <para>The <code>server.environment</code> entry controls how CherryPy should be run. Three values are
+    <para>The <code>server.environment</code> entry controls how CherryPy should run. Three values are
         legal :</para>
     <itemizedlist>
         <listitem>development

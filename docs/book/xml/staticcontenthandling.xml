@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="globaloverviewcherrypy">
+    <title>Static content handling</title>
+    <para>Static content is now handled by a filter called "staticFilter" that can easily be enabled and configured in your config file. 
+        For instance, if you wanted to serve <code>/style.css</code> from <filename>/home/site/style.css</filename> and <code>/static/*</code>
+        from <filename>/home/site/static/*</filename>, you can use the following configuration:
+        </para>
+        
+    <example>
+        <title>Static filter configuration</title>
+        <programlisting>
+            [global]
+            staticFilter.root = "/home/site"
+            
+            [/style.css]
+            staticFilter.on = True
+            staticFilter.file = "style.css"
+            
+            [/static]
+            staticFilter.on = True
+            staticFilter.dir = "static"
+        </programlisting>
+    </example>
+    <para>The <code>staticFilter.root</code> entry is not required; if you omit it, it defaults to the directory of your <code>cherrypy.root</code> class. </para>
+   </section>

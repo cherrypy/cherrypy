@@ -12,4 +12,6 @@
     <xi:include href="configsystemoverview.xml"/>
     <xi:include href="sessions.xml"/>
     <xi:include href="templateindependant.xml"/>
+    <xi:include href="staticcontenthandling.xml"/>
+    <xi:include href="fileuploadbehavior.xml"/>
 </section>

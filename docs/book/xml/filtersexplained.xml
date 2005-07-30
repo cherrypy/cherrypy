@@ -1,30 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-         xml:id="filtersexplained">
+<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="filtersexplained">
   <title>Filters explained</title>
-  <para>
-    Filters provide a powerfull mechanism for extending CherryPy.
-    The aim is to provide code called at the HTTP request level itself.
-    More specifically it means that you can write code that will be called:
-  </para>
-  
+  <para> Filters provide a powerful mechanism for extending CherryPy. The aim is to provide code
+    called at the HTTP request level itself. More specifically it means that you can write code that
+    will be called: </para>
   <itemizedlist>
-    <listitem>
-      before a request is processed
-    </listitem>
-    <listitem>
-      after a request has been processed
-    </listitem>
-    <listitem>
-      before a response is sent to the client
-    </listitem>
-    <listitem>
-      after a response is sent to the client
-    </listitem>
+    <listitem> before a request is processed </listitem>
+    <listitem> after a request has been processed </listitem>
+    <listitem> before a response is sent to the client </listitem>
+    <listitem> after a response is sent to the client </listitem>
   </itemizedlist>
-
   <xi:include href="builtinfilters.xml"/>
   <xi:include href="writingfilters.xml"/>
 </section>
