@@ -1,45 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="globaloverviewcherrypy">
-  <title>Global overview of CherryPy</title>
-  <section>
-    <title>Object-oriented web application framework</title>
-  </section>
-  <section>
-    <title>Filters</title>
-    <para>Filters are one of the most important features of CherryPy. A filter is a class defining a
-      set of function that will be called by the core at specific point of a request processing. The
-      very nature of filters are to let the developer write code that will be called at a low level
-      - the HTTP request/response level - and therefore should only be used in that context.</para>
-    <para>CherryPy comes with a set of filters which are turned off by default. To enable them, you
-      must use the configuration system as follow :</para>
-    <itemizedlist>
-      <listitem>First you must decide at which level of the cherrypy tree of published objects you
-        need the filter to act on. The filter will then act on that level and all its sub-levels in
-        the tree. Remember that the tree is accessed as a path and then mapped internally by the
-        core to match the correct exposed object.</listitem>
-      <listitem>Second in the config file you must turn the filter on like this :
-          <code>filterName.on = True</code></listitem>
-    </itemizedlist>
-    <example>
-      <title>Turning on a default filter</title>
-      <programlisting linenumbering="numbered">
+  <title>Filters</title>
+  <para>Filters are one of the most important features of CherryPy. A filter is a class defining a
+    set of function that will be called by the core at specific point of a request processing. The
+    very nature of filters are to let the developer write code that will be called at a low level -
+    the HTTP request/response level - and therefore should only be used in that context.</para>
+  <para>CherryPy comes with a set of filters which are turned off by default. To enable them, you
+    must use the configuration system as follow :</para>
+  <itemizedlist>
+    <listitem>First you must decide at which level of the cherrypy tree of published objects you
+      need the filter to act on. The filter will then act on that level and all its sub-levels in
+      the tree. Remember that the tree is accessed as a path and then mapped internally by the core
+      to match the correct exposed object.</listitem>
+    <listitem>Second in the config file you must turn the filter on like this : <code>filterName.on
+        = True</code></listitem>
+  </itemizedlist>
+  <example>
+    <title>Turning on a default filter</title>
+    <programlisting linenumbering="numbered">
         [/entries/view]
         tidyFilter.on = True
         tidyFilter.tmpDir = "/tmp"
         tidyFilter.strictXml = True
       </programlisting>
-      <para> On the first line we define that when the path <code>/entries/view</code> is called, or
-        one of its sub-paths, the tidy filter will be used by the core. On the two last lines we
-        also define some parameters used by the filter. </para>
-    </example>
-    <para>CherryPy lets you write your own filters as we will see in the developer reference
-      chapter. Nonetheless the way to use them is different from the default filters since you do
-      not declare them within the configuration file but from the source code itself using the
-        <code>_cpFilterList</code> list as a class member of the object that will use the filter.</para>
-    <example>
-      <title>Using a non default filter</title>
-      <programlisting linenumbering="numbered">
+  </example>
+  <para> On the first line we define that when the path <code>/entries/view</code> is called, or one
+    of its sub-paths, the tidy filter will be used by the core. On the two last lines we also define
+    some parameters used by the filter. </para>
+  <para>CherryPy lets you write your own filters as we will see in the developer reference chapter.
+    Nonetheless the way to use them is different from the default filters since you do not declare
+    them within the configuration file but from the source code itself using the
+    <code>_cpFilterList</code> list as a class member of the object that will use the filter.</para>
+  <example>
+    <title>Using a non default filter</title>
+    <programlisting linenumbering="numbered">
         import cherrypy
         from myfiltermodule import MyFilterClass
         
@@ -55,10 +50,9 @@
         cherrypy.root.entries = Entry()
         cherrypy.server.start()
       </programlisting>
-      <para>As all objects below <code>cherrypy.root.entries</code> will inherit the filter, there
-        is no need to re-specify it in each <code>_cpFilterList</code> underneath.</para>
-    </example>
-    <para>Keep in mind that the user defined filters are called in the order you add them to the
-      list.</para>
-  </section>
+  </example>
+  <para>As all objects below <code>cherrypy.root.entries</code> will inherit the filter, there is no
+    need to re-specify it in each <code>_cpFilterList</code> underneath.</para>
+  <para>Keep in mind that the user defined filters are called in the order you add them to the
+  list.</para>
 </section>

@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-         xml:id="templateindependant">
-  <title>Templating language independant</title>
+<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="templateindependant">
+    <title>Templating language independant</title>
+    <para>CherryPy is a low level framework to build web application and thus does not 
+    offer high level features such as an integrated templating system. This is quite a different
+        point of view from the other web frameworks already existing.</para>
+    <para>The great point is that CherryPy does not force you to use a specific tamplating language,
+       instead it allows you to plug your favourite one the way you need.
+    </para>
+    <para>CherryPy has been reported to be working with all the main templating systems:</para>
+    <itemizedlist>
+        <listitem>Cheetah</listitem>
+        <listitem>XSLT</listitem>
+        <listitem>CherryTemplate</listitem>
+        <listitem>HTMLTemplate</listitem>
+        <listitem>Kid</listitem>
+        <listitem>Zope Page Template</listitem>
+    </itemizedlist>
+    <para>You will find recipes on how to use them on the CherryPy website.</para>
 </section>
