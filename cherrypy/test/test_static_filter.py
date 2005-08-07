@@ -69,6 +69,11 @@ class StaticFilterTest(helper.CPWebCase):
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
+        # Check a filename with spaces in it
+        self.getPage("/static/has%20space.html")
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello, world\r\n')
+        
         self.getPage("/style.css")
         self.assertHeader('Content-Type', 'text/css')
         # Note: The body should be exactly 'Dummy stylesheet\n', but

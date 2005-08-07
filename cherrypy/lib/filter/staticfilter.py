@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
+import urllib
 from basefilter import BaseFilter
 
 
@@ -52,6 +53,7 @@ class StaticFilter(BaseFilter):
             section = section.rstrip(r"\/")
             extraPath = request.path[len(section) + 1:]
             extraPath = extraPath.lstrip(r"\/")
+            extraPath = urllib.unquote(extraPath)
             filename = os.path.join(staticDir, extraPath)
         
         # If filename is relative, make absolute using "root".
