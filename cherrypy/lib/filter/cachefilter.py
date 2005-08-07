@@ -113,21 +113,12 @@ class CacheFilter(basefilter.BaseFilter):
     If the page is not in the cache, caches the output.
     """
     
-    def __init__(
-            self, 
-            CacheClass=MemoryCache,
-            key=defaultCacheKey, 
-            delay=600,         # 10 minutes
-            maxobjsize=100000, # 100 KB
-            maxsize=10000000,  # 10 MB
-            maxobjects=1000    # 1000 objects
-            ):
-        self.CacheClass = CacheClass
-        self.key = key
-        self.delay = delay
-        self.maxobjsize = maxobjsize
-        self.maxsize = maxsize
-        self.maxobjects = maxobjects
+    CacheClass = property(lambda self: cherrypy.config.get("cacheFilter.cacheClass", MemoryCache))
+    key = property(lambda self: cherrypy.config.get("cacheFilter.key", defaultCacheKey))
+    delay = property(lambda self: cherrypy.config.get("cacheFilter.delay", 600))
+    maxobjsize = property(lambda self: cherrypy.config.get("cacheFilter.maxobjsize", 100000))
+    maxsize = property(lambda self: cherrypy.config.get("cacheFilter.maxsize", 10000000))
+    maxobjects = property(lambda self: cherrypy.config.get("cacheFilter.maxobjects", 1000))
     
     def onStartResource(self):
         # We have to dynamically import cherrypy because Python can't handle
