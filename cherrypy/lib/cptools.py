@@ -108,6 +108,9 @@ class PositionalParametersAware(object):
         else:
             m = getattr(self, "index", None)
             if m and getattr(m, "exposed", False):
-                return self.index(*args, **kwargs)
+                try:
+                    return self.index(*args, **kwargs)
+                except TypeError:
+                    pass
             raise cherrypy.NotFound, cherrypy.request.path
     default.exposed = True
