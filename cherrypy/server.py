@@ -142,7 +142,7 @@ def run_server(serverClass=None):
     if serverClass is None:
         serverClass = cherrypy.config.get("server.class", None)
     if serverClass and isinstance(serverClass, basestring):
-        serverClass = attributes(serverClass)
+        serverClass = cherrypy._cputil.attributes(serverClass)
     if serverClass is None:
         import _cpwsgi
         serverClass = _cpwsgi.WSGIServer
@@ -170,36 +170,6 @@ def run_server(serverClass=None):
     finally:
         cherrypy.log("<Ctrl-C> hit: shutting down", "HTTP")
         stop()
-
-def modules(modulePath):
-    """Load a module and retrieve a reference to that module."""
-    try:
-        aMod = sys.modules[modulePath]
-        if aMod is None:
-            raise KeyError
-    except KeyError:
-        # The last [''] is important.
-        aMod = __import__(modulePath, globals(), locals(), [''])
-    return aMod
-
-def attributes(fullAttributeName):
-    """Load a module and retrieve an attribute of that module."""
-    
-    # Parse out the path, module, and attribute
-    lastDot = fullAttributeName.rfind(u".")
-    attrName = fullAttributeName[lastDot + 1:]
-    modPath = fullAttributeName[:lastDot]
-    
-    aMod = modules(modPath)
-    # Let an AttributeError propagate outward.
-    try:
-        anAttr = getattr(aMod, attrName)
-    except AttributeError:
-        raise AttributeError("'%s' object has no attribute '%s'"
-                             % (modPath, attrName))
-    
-    # Return a reference to the attribute.
-    return anAttr
 
 
 seen_threads = {}

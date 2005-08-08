@@ -249,6 +249,7 @@ def _cpInitUserDefinedFilters():
     for path in filtersRoot:
         sys.path.remove(path)   
 
+
 # public domain "unrepr" implementation, found on the web and then improved.
 import compiler
 
@@ -257,9 +258,10 @@ def getObj(s):
     p = compiler.parse(s)
     return p.getChildren()[1].getChildren()[0].getChildren()[1]
 
+
 class UnknownType(Exception):
-    pass
-    # initilize the built in filters 
+    
+    # initialize the built-in filters 
     for n in xrange(len(_cpDefaultInputFilterList)):
         try:
             _cpDefaultInputFilterList[n] = _cpDefaultInputFilterList[n]()
@@ -271,40 +273,48 @@ class UnknownType(Exception):
             _cpDefaultOutputFilterList[n] = _cpDefaultOutputFilterList[n]()
         except:
             pass
- 
-class Builder:
 
+
+class Builder:
+    
     def build(self, o):
-        m = getattr(self, 'build_'+o.__class__.__name__, None)
+        m = getattr(self, 'build_' + o.__class__.__name__, None)
         if m is None:
             raise UnknownType(o.__class__.__name__)
         return m(o)
-
+    
     def build_List(self, o):
         return map(self.build, o.getChildren())
-
+    
     def build_Const(self, o):
         return o.value
-
+    
     def build_Dict(self, o):
         d = {}
         i = iter(map(self.build, o.getChildren()))
         for el in i:
             d[el] = i.next()
         return d
-
+    
     def build_Tuple(self, o):
         return tuple(self.build_List(o))
-
+    
     def build_Name(self, o):
         if o.name == 'None':
             return None
-        elif o.name == 'True':
+        if o.name == 'True':
             return True
-        elif o.name == 'False':
+        if o.name == 'False':
             return False
+        
+        # See if the Name is a package or module
+        try:
+            return modules(o.name)
+        except ImportError:
+            pass
+        
         raise UnknownType(o.name)
-
+    
     def build_Add(self, o):
         real, imag = map(self.build_Const, o.getChildren())
         try:
@@ -314,6 +324,11 @@ class Builder:
         if not isinstance(imag, complex) or imag.real != 0.0:
             raise UnknownType('Add')
         return real+imag
+    
+    def build_Getattr(self, o):
+        parent = self.build(o.expr)
+        return getattr(parent, o.attrname)
+
 
 def unrepr(s):
     if not s:
@@ -321,4 +336,34 @@ def unrepr(s):
     try:
         return Builder().build(getObj(s))
     except:
-        raise cherrypy.WrongUnreprValue, repr(s)
+        raise #cherrypy.WrongUnreprValue, repr(s)
+
+def modules(modulePath):
+    """Load a module and retrieve a reference to that module."""
+    try:
+        mod = sys.modules[modulePath]
+        if mod is None:
+            raise KeyError
+    except KeyError:
+        # The last [''] is important.
+        mod = __import__(modulePath, globals(), locals(), [''])
+    return mod
+
+def attributes(fullAttributeName):
+    """Load a module and retrieve an attribute of that module."""
+    
+    # Parse out the path, module, and attribute
+    lastDot = fullAttributeName.rfind(u".")
+    attrName = fullAttributeName[lastDot + 1:]
+    modPath = fullAttributeName[:lastDot]
+    
+    aMod = modules(modPath)
+    # Let an AttributeError propagate outward.
+    try:
+        attr = getattr(aMod, attrName)
+    except AttributeError:
+        raise AttributeError("'%s' object has no attribute '%s'"
+                             % (modPath, attrName))
+    
+    # Return a reference to the attribute.
+    return attr
