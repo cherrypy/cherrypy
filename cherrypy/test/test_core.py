@@ -32,9 +32,14 @@ import cherrypy
 import types
 
 class Root:
+    
     def index(self):
         return "hello"
     index.exposed = True
+    
+    def _global(self):
+        pass
+    _global.exposed = True
 
 cherrypy.root = Root()
 
@@ -244,10 +249,8 @@ import os
 class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testConfig(self):
-        self.assertEqual(cherrypy.config.configMap["global"]["luxuryyacht"],
-                         'throatwobblermangrove')
-        
         tests = [
+            ('global',   'luxuryyacht', 'throatwobblermangrove'),
             ('/',        'nex', None   ),
             ('/',        'foo', 'this' ),
             ('/',        'bar', 'that' ),
@@ -428,6 +431,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # Request an unknown method
         self.getPage("/method/", method="SEARCH")
         self.assertStatus("501 Not Implemented")
+        
+        # Request the OPTIONS method with a Request-URI of "*".
+        self.getPage("*", method="OPTIONS")
+        self.assertStatus("200 OK")
+        # Content-Length header required for OPTIONS with no response body.
+        # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.2
+        self.assertHeader("Content-Length", "0")
     
     def testFavicon(self):
         # Calls to favicon.ico are special-cased in _cphttptools.

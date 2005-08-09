@@ -732,6 +732,8 @@ def mapPathToObject(path):
         objectPathList = []
     else:
         objectPathList = tpath.split('/')
+    if objectPathList == ['global']:
+        objectPathList = ['_global']
     objectPathList = ['root'] + objectPathList + ['index']
     
     if getattr(cherrypy, "debug", None):

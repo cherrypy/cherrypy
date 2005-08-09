@@ -40,7 +40,7 @@ def requestLine(environ):
     """Rebuild first line of the request (e.g. "GET /path HTTP/1.0")."""
     
     resource = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
-    if not resource.startswith("/"):
+    if not (resource == "*" or resource.startswith("/")):
         resource = "/" + resource
     qString = environ.get('QUERY_STRING')
     if qString:
