@@ -37,12 +37,10 @@ class Root:
 
 cherrypy.root = Root()
 cherrypy.config.update({
-    'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
         'encodingFilter.on': True,
         'decodingFilter.on': True
-    }
 })
 
 

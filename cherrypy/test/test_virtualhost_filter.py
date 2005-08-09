@@ -35,12 +35,10 @@ class Root:
 
 cherrypy.root = Root()
 cherrypy.config.update({
-    'global': {
         'server.logToScreen': False,
         'server.environment': 'production',
         'virtualHostFilter.on': True,
         'virtualHostFilter.prefix': '/index2',
-    },
 })
 
 import helper

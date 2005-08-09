@@ -93,10 +93,8 @@ cherrypy.root.dir1.dir2 = Dir2()
 cherrypy.root.dir1.dir2.dir3 = Dir3()
 cherrypy.root.dir1.dir2.dir3.dir4 = Dir4()
 cherrypy.config.update({
-    'global': {
         'server.logToScreen': False,
         'server.environment': "production",
-    }
 })
 
 

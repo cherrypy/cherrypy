@@ -243,12 +243,11 @@ class TestHarness(object):
         print
         
         if conf is None:
-            conf = {'global': {'server.socketHost': '127.0.0.1',
-                               'server.socketPort': 8000,
-                               'server.threadPool': 10,
-                               'server.logToScreen': False,
-                               'server.environment': "production",
-                               }
+            conf = {'server.socketHost': '127.0.0.1',
+                    'server.socketPort': 8000,
+                    'server.threadPool': 10,
+                    'server.logToScreen': False,
+                    'server.environment': "production",
                     }
         elif isinstance(conf, basestring):
             conf = cherrypy.config.dict_from_config_file(conf)

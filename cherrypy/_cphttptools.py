@@ -32,6 +32,7 @@ Common Service Code for CherryPy
 
 import urllib, os, sys, time, types, cgi, re
 import mimetypes, Cookie
+from urlparse import urlparse
 
 import cherrypy
 from cherrypy import _cputil, _cpcgifs
@@ -203,7 +204,10 @@ class Request(object):
         
         """
         
-        self.requestLine = requestLine
+        cherrypy.request.method = ""
+        cherrypy.request.requestLine = requestLine.strip()
+        self.parseFirstLine()
+        
         self.requestHeaders = headers
         
         # Prepare cherrypy.request variables
@@ -211,11 +215,9 @@ class Request(object):
         cherrypy.request.remoteHost = remoteHost
         cherrypy.request.paramList = [] # Only used for Xml-Rpc
         cherrypy.request.headerMap = {}
-        cherrypy.request.requestLine = requestLine
         cherrypy.request.simpleCookie = Cookie.SimpleCookie()
         cherrypy.request.rfile = rfile
         cherrypy.request.scheme = scheme
-        cherrypy.request.method = ""
         
         # Prepare cherrypy.response variables
         cherrypy.response.status = None
@@ -272,12 +274,36 @@ class Request(object):
         except:
             handleError(sys.exc_info())
     
-    def processRequestHeaders(self):
+    def parseFirstLine(self):
+        # This has to be done very early in the request process,
+        # because request.path is used for config lookups right away.
         req = cherrypy.request
         
         # Parse first line
-        req.method, path, req.protocol = self.requestLine.split()
+        req.method, path, req.protocol = req.requestLine.split()
         req.processRequestBody = req.method in ("POST", "PUT")
+        
+        # separate the queryString, or set it to "" if not found
+        if "?" in path:
+            path, req.queryString = path.split("?", 1)
+        else:
+            path, req.queryString = path, ""
+        
+        # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+        if path == "*":
+            path = "global"
+        elif not path.startswith("/"):
+            # path is an absolute path (including "http://host.domain.tld");
+            # convert it to a relative path, so configMap lookups work. This
+            # default method assumes all hosts are valid for this server.
+            scheme, location, p, pm, q, f = urlparse(path)
+            path = path[len(scheme + "://" + location):]
+        
+        # Save original value (in case it gets modified by filters)
+        req.path = req.originalPath = path
+    
+    def processRequestHeaders(self):
+        req = cherrypy.request
         
         # Compare request and server HTTP versions, in case our server does
         # not support the requested version. We can't tell the server what
@@ -295,12 +321,6 @@ class Request(object):
         server_v = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
         server_v = Version.from_http(server_v)
         cherrypy.request.version = min(request_v, server_v)
-        
-        # find the queryString, or set it to "" if not found
-        if "?" in path:
-            req.path, req.queryString = path.split("?", 1)
-        else:
-            req.path, req.queryString = path, ""
         
         # build a paramMap dictionary from queryString
         pm = cgi.parse_qs(req.queryString, keep_blank_values=True)
@@ -323,7 +343,7 @@ class Request(object):
             if name == 'Cookie':
                 req.simpleCookie.load(value)
         
-        msg = "%s - %s" % (req.remoteAddr, self.requestLine.strip())
+        msg = "%s - %s" % (req.remoteAddr, req.requestLine)
         cherrypy.log(msg, "HTTP")
         
         # Change objectPath in filters to change
@@ -331,7 +351,6 @@ class Request(object):
         req.objectPath = None
         
         # Save original values (in case they get modified by filters)
-        req.originalPath = req.path
         req.originalParamMap = req.paramMap
         req.originalParamList = req.paramList
         
@@ -345,7 +364,7 @@ class Request(object):
                 finalize()
                 raise cherrypy.RequestHandled
         req.base = "%s://%s" % (req.scheme, req.headerMap.get('Host', ''))
-        req.browserUrl = req.base + path
+        req.browserUrl = req.base + req.path
     
     def processRequestBody(self):
         req = cherrypy.request
@@ -546,6 +565,8 @@ def finalize():
             content = ''.join([chunk for chunk in cherrypy.response.body])
             cherrypy.response.body = [content]
             cherrypy.response.headerMap['Content-Length'] = len(content)
+        else:
+            del cherrypy.response.headerMap['Content-Length']
     
     # For some statuses, Internet Explorer 5+ shows "friendly error messages"
     # instead of our response.body if the body is smaller than a given size.

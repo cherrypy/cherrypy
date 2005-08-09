@@ -38,12 +38,12 @@ class TutorialTest(helper.CPWebCase):
     def load_tut_module(self, tutorialName):
         """Import or reload tutorial module as needed."""
         cherrypy.config.reset()
-        cherrypy.config.update({'global': {'server.socketHost': self.HOST,
-                                           'server.socketPort': self.PORT,
-                                           'server.threadPool': 10,
-                                           'server.logToScreen': False,
-                                           'server.environment': "production",
-                                           }})
+        cherrypy.config.update({'server.socketHost': self.HOST,
+                                'server.socketPort': self.PORT,
+                                'server.threadPool': 10,
+                                'server.logToScreen': False,
+                                'server.environment': "production",
+                                })
         
         target = "cherrypy.tutorial." + tutorialName
         if target in sys.modules:
@@ -124,7 +124,7 @@ class TutorialTest(helper.CPWebCase):
                          '(<a href="./">back</a>)')
     def test07Sessions(self):
         self.load_tut_module("tut07_sessions")
-        cherrypy.config.update({"global": {"sessionFilter.on": True}})
+        cherrypy.config.update({"sessionFilter.on": True})
         
         self.getPage('/')
         self.assertBody("\n            During your current session, you've viewed this"
@@ -138,7 +138,7 @@ class TutorialTest(helper.CPWebCase):
     
     def test08AdvancedSessions(self):
         self.load_tut_module("tut08_advanced_sessions")
-        cherrypy.config.update({"global": {"sessionFilter.on": True}})
+        cherrypy.config.update({"sessionFilter.on": True})
         
         self.getPage('/')
         self.assertInBody("viewed this page 1 times")

@@ -247,7 +247,7 @@ def _cpInitUserDefinedFilters():
 
     # Avoid pollution of the system path
     for path in filtersRoot:
-        sys.path.remove(path)   
+        sys.path.remove(path)
 
 
 # public domain "unrepr" implementation, found on the web and then improved.

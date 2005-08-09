@@ -218,9 +218,10 @@ class Cookies(Test):
 
 
 cherrypy.config.update({
-    'global': {
-        'server.logToScreen': False,
-        'server.environment': 'production',
+    'global': {'server.logToScreen': False,
+               'server.environment': 'production',
+               },
+    '/': {
         'foo': 'this',
         'bar': 'that',
     },
@@ -234,12 +235,18 @@ cherrypy.config.update({
     },
 })
 
+# Shortcut syntax--should get put in the "global" bucket
+cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
+
 import helper
 import os
 
 class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testConfig(self):
+        self.assertEqual(cherrypy.config.configMap["global"]["luxuryyacht"],
+                         'throatwobblermangrove')
+        
         tests = [
             ('/',        'nex', None   ),
             ('/',        'foo', 'this' ),

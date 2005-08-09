@@ -28,7 +28,7 @@ class HitCounter:
 
 
 cherrypy.root = HitCounter()
-cherrypy.config.update({'global': {'sessionFilter.on': True}})
+cherrypy.config.update({'sessionFilter.on': True})
 
 if __name__ == '__main__':
     cherrypy.config.update(file = 'tutorial.conf')

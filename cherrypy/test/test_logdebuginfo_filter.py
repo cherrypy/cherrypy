@@ -35,7 +35,6 @@ class Root:
 
 cherrypy.root = Root()
 cherrypy.config.update({
-    'global': {
         'session.storageType': 'ram',
         'session.timeout': 60,
         'session.cleanUpDelay': 60,
@@ -45,7 +44,6 @@ cherrypy.config.update({
         'server.logToScreen': False,
         'server.environment': 'production',
         'logDebugInfoFilter.on': True,
-    }
 })
 
 

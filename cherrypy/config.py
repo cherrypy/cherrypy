@@ -46,7 +46,7 @@ defaultGlobal = {
     'server.socketHost': '',
     'server.socketFile': '',
     'server.socketQueueSize': 5,
-
+    
     'server.environment': 'development',
     'server.protocolVersion': 'HTTP/1.0',
     'server.logToScreen': True,
@@ -90,31 +90,27 @@ def get(key, defaultValue=None, returnSection=False):
     try:
         path = cherrypy.request.path
     except AttributeError:
-        path = "/"
+        # There's no request.path yet, so use the global settings.
+        path = "global"
     
     while True:
         if path == "":
             path = "/"
+        
         try:
             result = configMap[path][key]
         except KeyError:
-            if path not in ("/", "global"):
-                i = path.rfind("/")
-                if i < 0:
-                    result = defaultValue
-                else:
-                    path = path[:i]
-                    continue
-            elif path != "global":
+            if path == "global":
+                result = defaultValue
+            elif path == "/":
                 path = "global"
                 continue
             else:
-                result = defaultValue
+                path = path[:path.rfind("/")]
+                continue
         break
     
     if returnSection:
-        if path == 'global':
-            return '/'
         return path
     else:
         return result
@@ -127,31 +123,26 @@ def getAll(key):
     """
     
     try:
-        path = cherrypy.request.path
-    except AttributeError:
-        path = "/"
-    
-    pathList = cherrypy.request.path.split('/')
-    
-    results = []
+        results = [('global', configMap['global'][key])]
+    except KeyError:
+        results = []
     
     try:
-        results = [('/',  configMap['global'][key])]
-    except KeyError:
-        pass
-    
-    if path == '/':
+        path = cherrypy.request.path
+    except AttributeError:
         return results
     
+    pathList = path.split('/')
+    
     for n in xrange(1, len(pathList)):
-        path = '/'.join(pathList[0:n+1])
+        path = '/' + '/'.join(pathList[0:n+1])
         try:
             results.append((path, configMap[path][key]))
         except KeyError:
             pass
-
+    
     return results
-       
+
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """ Sub-class of ConfigParser that keeps the case of options and
