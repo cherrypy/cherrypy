@@ -1,3 +1,9 @@
+2005-08-09:
+    * The config section [global] is now distinct from, and the parent of, [/]. (fumanchu)
+    * cherrypy.request.path is now parsed and set before onStartResource filter methods are called. (fumanchu)
+    * Absolute Request-URI's are now acceptable, and are converted to relative paths. (fumanchu)
+    * A Request-URI of "*" now maps to the [global] config section, and to cherrypy.root._global. (fumanchu)
+
 2005-07-12:
     * CherryPy-2.1.0-beta released. Check http://www.cherrypy.org/wiki/WhatsNewIn21 for instructions on how to upgrade from 2.0. (remi)
 
