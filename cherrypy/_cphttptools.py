@@ -240,6 +240,38 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
     
+    def parseFirstLine(self):
+        # This has to be done very early in the request process,
+        # because request.path is used for config lookups right away.
+        req = cherrypy.request
+        
+        # Parse first line
+        req.method, path, req.protocol = req.requestLine.split()
+        req.processRequestBody = req.method in ("POST", "PUT")
+        
+        # separate the queryString, or set it to "" if not found
+        if "?" in path:
+            path, req.queryString = path.split("?", 1)
+        else:
+            path, req.queryString = path, ""
+        
+        # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+        if path == "*":
+            path = "global"
+        elif not path.startswith("/"):
+            # path is an absolute path (including "http://host.domain.tld");
+            # convert it to a relative path, so configMap lookups work. This
+            # default method assumes all hosts are valid for this server.
+            scheme, location, p, pm, q, f = urlparse(path)
+            path = path[len(scheme + "://" + location):]
+        
+        # Save original value (in case it gets modified by filters)
+        req.path = req.originalPath = path
+        
+        # Change objectPath in filters to change
+        # the object that will get rendered
+        req.objectPath = None
+    
     def run(self):
         """Process the Request."""
         try:
@@ -273,34 +305,6 @@ class Request(object):
             handleError(sys.exc_info())
         except:
             handleError(sys.exc_info())
-    
-    def parseFirstLine(self):
-        # This has to be done very early in the request process,
-        # because request.path is used for config lookups right away.
-        req = cherrypy.request
-        
-        # Parse first line
-        req.method, path, req.protocol = req.requestLine.split()
-        req.processRequestBody = req.method in ("POST", "PUT")
-        
-        # separate the queryString, or set it to "" if not found
-        if "?" in path:
-            path, req.queryString = path.split("?", 1)
-        else:
-            path, req.queryString = path, ""
-        
-        # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-        if path == "*":
-            path = "global"
-        elif not path.startswith("/"):
-            # path is an absolute path (including "http://host.domain.tld");
-            # convert it to a relative path, so configMap lookups work. This
-            # default method assumes all hosts are valid for this server.
-            scheme, location, p, pm, q, f = urlparse(path)
-            path = path[len(scheme + "://" + location):]
-        
-        # Save original value (in case it gets modified by filters)
-        req.path = req.originalPath = path
     
     def processRequestHeaders(self):
         req = cherrypy.request
@@ -345,10 +349,6 @@ class Request(object):
         
         msg = "%s - %s" % (req.remoteAddr, req.requestLine)
         cherrypy.log(msg, "HTTP")
-        
-        # Change objectPath in filters to change
-        # the object that will get rendered
-        req.objectPath = None
         
         # Save original values (in case they get modified by filters)
         req.originalParamMap = req.paramMap

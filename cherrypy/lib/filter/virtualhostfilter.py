@@ -35,14 +35,13 @@ class VirtualHostFilter(basefilter.BaseFilter):
     See CherryPy recipes for the documentation.
     """
     
-    def beforeRequestBody(self):
+    def onStartResource(self):
         import cherrypy
         from cherrypy import _cphttptools
     
         if not cherrypy.config.get('virtualHostFilter.on', False):
             return
         
-        domain = cherrypy.request.base.split('//')[1]
         # Re-use "mapPathToObject" function to find the actual objectPath
         prefix = cherrypy.config.get('virtualHostFilter.prefix', '/')
         virtualPath = prefix + cherrypy.request.path
