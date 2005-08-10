@@ -225,5 +225,5 @@ def outputConfigMap():
                  ]
 
     for var in serverVars:
-        cherrypy.log(  "  %s: %s" % (var, get(var)), 'CONFIG')
+        cherrypy.log("  %s: %s" % (var, get(var)), 'CONFIG')
 
