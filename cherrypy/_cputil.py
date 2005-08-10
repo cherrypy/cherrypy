@@ -101,28 +101,47 @@ def getSpecialAttributePath(name):
     raise cherrypy.InternalError("Special attribute %s could not be found"
                                  % repr(name))
 
-def _cpLogMessage(msg, context = '', severity = 0):
-    """ Default method for logging messages """
+
+def logtime():
+    return '%04d/%02d/%02d %02d:%02d:%02d' % time.localtime(time.time())[:6]
+
+def _cpLogAccess():
+    """ Default method for logging access """
     
-    nowTuple = time.localtime(time.time())
-    nowStr = '%04d/%02d/%02d %02d:%02d:%02d' % (nowTuple[:6])
-    if severity == 0:
-        level = "INFO"
-    elif severity == 1:
-        level = "WARNING"
-    elif severity == 2:
-        level = "ERROR"
-    else:
-        level = "UNKNOWN"
-    try:
-        logToScreen = cherrypy.config.get('server.logToScreen')
-    except:
-        logToScreen = True
-    s = nowStr + ' ' + context + ' ' + level + ' ' + msg
-    if logToScreen:
+    tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s'
+    s = tmpl % {'h': cherrypy.request.remoteHost,
+                'l': '-',
+                'u': getattr(cherrypy.request, "login", None) or "-",
+                't': logtime(),
+                'r': cherrypy.request.requestLine,
+                's': cherrypy.response.status.split(" ", 1)[0],
+                'b': cherrypy.response.headerMap.get('Content-Length', '') or "-",
+                }
+    
+    if cherrypy.config.get('server.logToScreen', True):
         print s
-    if cherrypy.config.get('server.logFile'):
-        f = open(cherrypy.config.get('server.logFile'), 'ab')
+    
+    fname = cherrypy.config.get('server.logAccessFile', '')
+    if fname:
+        f = open(fname, 'ab')
+        f.write(s + '\n')
+        f.close()
+
+
+_log_severity_levels = {0: "INFO", 1: "WARNING", 2: "ERROR"}
+
+def _cpLogMessage(msg, context = '', severity = 0):
+    """ Default method for logging messages (error log)"""
+    
+    level = _log_severity_levels.get(severity, "UNKNOWN")
+    s = logtime() + ' ' + context + ' ' + level + ' ' + msg
+    
+    if cherrypy.config.get('server.logToScreen', True):
+        print s
+    
+    fname = cherrypy.config.get('server.logFile', '')
+    if fname:
+        f = open(fname, 'ab')
         f.write(s + '\n')
         f.close()
 

@@ -69,7 +69,9 @@ def expose(func):
     return func
 
 def log(msg, context='', severity=0):
-    """Syntactic sugar for writing to the log."""
+    """Syntactic sugar for writing to the (error) log."""
+    # Load _cputil lazily to avoid circular references, and
+    # to allow profiler and coverage tools to work on it.
     import _cputil
     logfunc = _cputil.getSpecialAttribute('_cpLogMessage')
     logfunc(msg, context, severity)

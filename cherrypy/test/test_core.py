@@ -30,6 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import cherrypy
 import types
+import os
+localDir = os.path.dirname(__file__)
+
 
 class Root:
     
@@ -222,9 +225,13 @@ class Cookies(Test):
             cherrypy.response.simpleCookie[name] = cookie.value
 
 
+logFile = os.path.join(localDir, "error.log")
+logAccessFile = os.path.join(localDir, "access.log")
+
 cherrypy.config.update({
     'global': {'server.logToScreen': False,
                'server.environment': 'production',
+               'server.protocolVersion': "HTTP/1.1",
                },
     '/': {
         'foo': 'this',
@@ -238,13 +245,16 @@ cherrypy.config.update({
         'foo': 'this3',
         'bax': 'this4',
     },
+    '/flatten': {
+        'server.logFile': logFile,
+        'server.logAccessFile': logAccessFile,
+    },
 })
 
 # Shortcut syntax--should get put in the "global" bucket
 cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
 
 import helper
-import os
 
 class CoreRequestHandlingTest(helper.CPWebCase):
     
@@ -293,6 +303,43 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/status/bad")
         self.assertBody('hello' + (" " * 508))
         self.assertStatus('500 Internal error')
+    
+    def testLogging(self):
+        open(logFile, "wb").write("")
+        open(logAccessFile, "wb").write("")
+        
+        self.getPage("/flatten/as_string")
+        self.assertBody('content')
+        self.assertStatus('200 OK')
+        
+        self.getPage("/flatten/as_yield")
+        self.assertBody('content')
+        self.assertStatus('200 OK')
+        
+        data = open(logFile, "rb").readlines()
+        self.assertEqual(data[0][-55:], ' HTTP INFO 127.0.0.1 - GET /flatten/as_string HTTP/1.1\n')
+        self.assertEqual(data[1][-54:], ' HTTP INFO 127.0.0.1 - GET /flatten/as_yield HTTP/1.1\n')
+        
+        data = open(logAccessFile, "rb").readlines()
+        self.assertEqual(data[0][:15], '127.0.0.1 - - [')
+        haslength = False
+        for k, v in self.headers:
+            if k.lower() == 'content-length':
+                haslength = True
+        if haslength:
+            self.assertEqual(data[0][-42:], '] "GET /flatten/as_string HTTP/1.1" 200 7\n')
+        else:
+            self.assertEqual(data[0][-42:], '] "GET /flatten/as_string HTTP/1.1" 200 -\n')
+        
+        self.assertEqual(data[1][:15], '127.0.0.1 - - [')
+        haslength = False
+        for k, v in self.headers:
+            if k.lower() == 'content-length':
+                haslength = True
+        if haslength:
+            self.assertEqual(data[1][-41:], '] "GET /flatten/as_yield HTTP/1.1" 200 7\n')
+        else:
+            self.assertEqual(data[1][-41:], '] "GET /flatten/as_yield HTTP/1.1" 200 -\n')
     
     def testRedirect(self):
         self.getPage("/redirect/")
@@ -441,7 +488,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testFavicon(self):
         # Calls to favicon.ico are special-cased in _cphttptools.
-        localDir = os.path.dirname(__file__)
         icofilename = os.path.join(localDir, "../favicon.ico")
         icofile = open(icofilename, "rb")
         data = icofile.read()

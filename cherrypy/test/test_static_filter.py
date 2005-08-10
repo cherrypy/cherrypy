@@ -61,20 +61,24 @@ class StaticFilterTest(helper.CPWebCase):
     def testStaticFilter(self):
         # This should resolve relative to cherrypy.root.__module__.
         self.getPage("/static/index.html")
+        self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
         # Using a staticFilter.root value...
         self.getPage("/docroot/index.html")
+        self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
         # Check a filename with spaces in it
         self.getPage("/static/has%20space.html")
+        self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
         self.getPage("/style.css")
+        self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/css')
         # Note: The body should be exactly 'Dummy stylesheet\n', but
         #   unfortunately some tools such as WinZip sometimes turn \n

@@ -239,6 +239,8 @@ class Request(object):
         if cherrypy.request.method == "HEAD":
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
+        
+        _cputil.getSpecialAttribute("_cpLogAccess")()
     
     def parseFirstLine(self):
         # This has to be done very early in the request process,
@@ -561,7 +563,11 @@ def finalize():
         cherrypy.response.body = []
     
     if cherrypy.response.headerMap.get('Content-Length') is None:
-        if cherrypy.request.version < "1.1":
+        if (cherrypy.request.version < "1.1" or
+            # OPTIONS requests MUST include a Content-Length of 0 if no body.
+            # Just punt and figure len for all OPTIONS requests.
+            cherrypy.request.method == "OPTIONS"):
+            
             content = ''.join([chunk for chunk in cherrypy.response.body])
             cherrypy.response.body = [content]
             cherrypy.response.headerMap['Content-Length'] = len(content)
@@ -658,6 +664,8 @@ def serve_file(filename):
     try:
         stat = os.stat(filename)
     except OSError:
+        if getattr(cherrypy, "debug", None):
+            cherrypy.log("    NOT FOUND file: %s" % filename, "DEBUG")
         raise cherrypy.NotFound(cherrypy.request.path)
     
     # Set content-type based on filename extension
@@ -676,6 +684,8 @@ def serve_file(filename):
         if cherrypy.request.headerMap['If-Modified-Since'] == strModifTime:
             cherrypy.response.status = "304 Not Modified"
             cherrypy.response.body = []
+            if getattr(cherrypy, "debug", None):
+                cherrypy.log("    Found file (304 Not Modified): %s" % filename, "DEBUG")
             return
     cherrypy.response.headerMap['Last-Modified'] = strModifTime
     
@@ -684,6 +694,8 @@ def serve_file(filename):
     cherrypy.response.headerMap['Content-Length'] = stat[6]
     bodyfile = open(filename, 'rb')
     cherrypy.response.body = fileGenerator(bodyfile)
+    if getattr(cherrypy, "debug", None):
+        cherrypy.log("    Found file: %s" % filename, "DEBUG")
 
 
 # Object lookup
@@ -699,7 +711,7 @@ def getObjFromPath(objPathList):
         # maps virtual filenames to Python identifiers (substitutes '.' for '_')
         objname = objname.replace('.', '_')
         if getattr(cherrypy, "debug", None):
-            print "Attempting to call method: %s.%s" % (root, objname)
+            cherrypy.log("    Trying: %s.%s" % (root, objname), "DEBUG")
         root = getattr(root, objname, None)
         if root is None:
             return None
@@ -737,8 +749,8 @@ def mapPathToObject(path):
     objectPathList = ['root'] + objectPathList + ['index']
     
     if getattr(cherrypy, "debug", None):
-        print "Attempting to map path: %s" % tpath
-        print "    objectPathList: %s" % objectPathList
+        cherrypy.log("  Attempting to map path: %s using %s"
+                     % (tpath, objectPathList), "DEBUG")
     
     # Try successive objects... (and also keep the remaining object list)
     isFirst = True
@@ -780,6 +792,8 @@ def mapPathToObject(path):
             raise cherrypy.RequestHandled
         else:
             # We didn't find anything
+            if getattr(cherrypy, "debug", None):
+                cherrypy.log("    NOT FOUND", "DEBUG")
             raise cherrypy.NotFound(path)
     
     if isFirst:
@@ -790,7 +804,11 @@ def mapPathToObject(path):
             newUrl = path + '/'
             if cherrypy.request.queryString:
                 newUrl += "?" + cherrypy.request.queryString
+            if getattr(cherrypy, "debug", None):
+                cherrypy.log("    Found: redirecting to %s" % newUrl, "DEBUG")
             raise cherrypy.HTTPRedirect(newUrl)
     
+    if getattr(cherrypy, "debug", None):
+        cherrypy.log("    Found: %s" % candidate, "DEBUG")
     return candidate, objectPathList, virtualPathList
 

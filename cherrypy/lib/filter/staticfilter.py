@@ -50,6 +50,8 @@ class StaticFilter(BaseFilter):
         if not filename:
             staticDir = config.get('staticFilter.dir')
             section = config.get('staticFilter.dir', returnSection=True)
+            if section == 'global':
+                section = "/"
             section = section.rstrip(r"\/")
             extraPath = request.path[len(section) + 1:]
             extraPath = extraPath.lstrip(r"\/")

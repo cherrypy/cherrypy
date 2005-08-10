@@ -93,7 +93,7 @@ class TestHarness(object):
                 self.cover = True
             elif o == "--profile":
                 self.profile = True
-            elif o == "-1.1":
+            elif o == "--1.1":
                 self.protocol = "HTTP/1.1"
             elif o == "--basedir":
                 self.basedir = a
