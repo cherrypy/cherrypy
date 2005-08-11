@@ -30,6 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Just a few convenient functions
 """
 
+import warnings
+warnings.warn("This module is deprecated and will be removed in CherryPy 2.2.",
+              DeprecationWarning)
+
 import cherrypy
 import urlparse
 
@@ -38,7 +42,5 @@ def canonicalizeUrl(url):
     return urlparse.urljoin(cherrypy.request.browserUrl, url)
 
 def redirect(url):
-    """ Sends a redirect to the browser (after canonicalizing the URL) """
-    cherrypy.response.status = "302 Found"
-    cherrypy.response.headerMap['Location'] = canonicalizeUrl(url)
-    return ""
+    """ Sends a 302 redirect to the browser (after canonicalizing the URL) """
+    raise cherrypy.HTTPRedirect(url, 302)

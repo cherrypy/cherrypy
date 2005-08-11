@@ -352,23 +352,23 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                           "http://127.0.0.1:8000/redirect/?id=3</a>")
         
         self.getPage("/redirect/by_code?code=300")
-        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
         self.assertStatus('300 Multiple Choices')
         
         self.getPage("/redirect/by_code?code=301")
-        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
         self.assertStatus('301 Moved Permanently')
         
         self.getPage("/redirect/by_code?code=302")
-        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
         self.assertStatus('302 Found')
         
         self.getPage("/redirect/by_code?code=303")
-        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
         self.assertStatus('303 See Other')
         
         self.getPage("/redirect/by_code?code=307")
-        self.assertInBody("<a href='somewhere else'>somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
         self.assertStatus('307 Temporary Redirect')
         
         self.getPage("/redirect/nomodify")

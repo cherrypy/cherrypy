@@ -75,7 +75,10 @@ class InternalRedirect(Exception):
         import cherrypy
         import cgi
         
+        # Set a 'path' member attribute so that code which traps this
+        # error can have access to it.
         self.path = path
+        
         if params is not None:
             if isinstance(params, basestring):
                 cherrypy.request.queryString = params
@@ -85,8 +88,9 @@ class InternalRedirect(Exception):
                         pm[key] = val[0]
                 cherrypy.request.paramMap = pm
             else:
-                cherrypy.request.paramMap = params.copy()
                 cherrypy.request.queryString = urllib.urlencode(params)
+                cherrypy.request.paramMap = params.copy()
+        
         cherrypy.request.browserUrl = cherrypy.request.base + path
 
 
@@ -95,7 +99,9 @@ class HTTPRedirect(Exception):
     """Exception raised when the request should be redirected.
     
     The new URL must be passed as the first argument to the Exception, e.g.,
-        cperror.HTTPRedirect(newUrl). Multiple URLs are allowed.
+        cperror.HTTPRedirect(newUrl). Multiple URLs are allowed. If a URL
+        is absolute, it will be used as-is. If it is relative, it is assumed
+        to be relative to the current cherrypy.request.path.
     """
     
     def __init__(self, urls, status=None):
@@ -107,13 +113,16 @@ class HTTPRedirect(Exception):
         
         abs_urls = []
         for url in urls:
-            if url.startswith("/"):
-                url = urlparse.urljoin(cherrypy.request.base, url)
+            # Note that urljoin will "do the right thing" whether url is:
+            #  1. a complete URL with host (e.g. "http://www.dummy.biz/test")
+            #  2. a URL relative to root (e.g. "/dummy")
+            #  3. a URL relative to the current path
+            url = urlparse.urljoin(cherrypy.request.browserUrl, url)
             abs_urls.append(url)
         self.urls = abs_urls
         
         # RFC 2616 indicates a 301 response code fits our goal; however,
-        # browser support for 301 is quite messy. Do 302 instead.
+        # browser support for 301 is quite messy. Do 302 instead. See
         # http://ppewww.ph.gla.ac.uk/~flavell/www/post-redirect.html
         if status is None:
             if cherrypy.request.version >= "1.1":
