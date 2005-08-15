@@ -95,18 +95,6 @@ class SessionFilter:
         
         return storageAdaptor(sessionName, sessionPath)
     
-    def __pathIter(self):
-        path = cherrypy.request.path.rstrip('/')
-        i = path.rfind("/")
-        pathList=[path]
-        while 0 < i:
-            path = path[:i]
-            pathList.append(path)
-            i=path.rfind('/')
-        pathList.append('/')
-        pathList.reverse()
-        return pathList
-    
     def __initSessionManagers(self):
         for section, settings in cherrypy.config.configMap.iteritems():
             for setting, value in settings.iteritems():
@@ -136,14 +124,16 @@ class SessionFilter:
     
     def __loadConfigData(self, sessionName):
             sessionManager = self.sessionManagers[sessionName]
+            
+            settings = {}
             for settingName in _sessionSettingNames:
-                
                 default = cherrypy.config.get('sessionFilter.%s' % settingName)
                 value = cherrypy.config.get('sessionFilter.%s.%s' % (sessionName, settingName), default)
+                settings[settingName] = value
                 
                 setattr(sessionManager.settings, settingName, value)
                 
-    def __initSessions(self):
+    def __loadSessions(self):
         
         # look up all of the session keys by cookie
         
@@ -219,7 +209,7 @@ class SessionFilter:
     def beforeMain(self):
         if (not cherrypy.config.get('staticFilter.on', False)
             and cherrypy.config.get('sessionFilter.on')):
-           self.__initSessions()
+           self.__loadSessions()
 
     def beforeFinalize(self):
         if (not cherrypy.config.get('staticFilter.on', False)
