@@ -434,7 +434,8 @@ def handleError(exc):
     except:
         # Failure in _cpOnError, error filter, or finalize.
         # Bypass them all.
-        if cherrypy.config.get('server.environment') == 'development':
+        defaultOn = (cherrypy.config.get('server.environment') == 'development')
+        if cherrypy.config.get('showTracebacks', defaultOn):
             body = dbltrace % (_cputil.formatExc(exc), _cputil.formatExc())
         else:
             body = ""

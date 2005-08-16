@@ -154,7 +154,11 @@ def formatExc(exc=None):
 
 def _cpOnError():
     """ Default _cpOnError method """
-    cherrypy.response.body = [formatExc()]
+    defaultOn = (cherrypy.config.get('server.environment') == 'development')
+    if cherrypy.config.get("showTracebacks", defaultOn):
+        cherrypy.response.body = [formatExc()]
+    else:
+        cherrypy.response.body = "Unrecoverable error in the application."
     cherrypy.response.headerMap['Content-Type'] = 'text/plain'
     if cherrypy.response.headerMap.has_key('Content-Encoding'):
         del cherrypy.response.headerMap['Content-Encoding']
