@@ -248,6 +248,7 @@ class TestHarness(object):
                     'server.threadPool': 10,
                     'server.logToScreen': False,
                     'server.environment': "production",
+                    'showTracebacks': True,
                     }
         elif isinstance(conf, basestring):
             conf = cherrypy.config.dict_from_config_file(conf)
