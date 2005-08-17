@@ -138,6 +138,35 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 class CherryHTTPServer(BaseHTTPServer.HTTPServer):
     
+    def __init__(self):
+        # Set protocol_version
+        proto = cherrypy.config.get('server.protocolVersion') or "HTTP/1.0"
+        CherryHTTPRequestHandler.protocol_version = proto
+        
+        # Select the appropriate server based on config options
+        sockFile = cherrypy.config.get('server.socketFile')
+        if sockFile:
+            # AF_UNIX socket
+            self.address_family = socket.AF_UNIX
+            
+            # So we can reuse the socket
+            try: os.unlink(sockFile)
+            except: pass
+            
+            # So everyone can access the socket
+            try: os.chmod(sockFile, 0777)
+            except: pass
+            
+            server_address = sockFile
+        else:
+            # AF_INET socket
+            server_address = (cherrypy.config.get('server.socketHost'),
+                              cherrypy.config.get('server.socketPort'))
+        
+        self.request_queue_size = cherrypy.config.get('server.socketQueueSize')
+        
+        BaseHTTPServer.HTTPServer.__init__(self, server_address, CherryHTTPRequestHandler)
+    
     def server_activate(self):
         """Override server_activate to set timeout on our listener socket"""
         self.socket.settimeout(1)
@@ -236,18 +265,26 @@ class PooledThreadServer(SocketServer.TCPServer):
     
     allow_reuse_address = 1
     
-    def __init__(self, serverAddress, numThreads, RequestHandlerClass, ThreadClass=ServerThread):
-        assert(numThreads > 0)
+    def __init__(self):
+        # Set protocol_version
+        proto = cherrypy.config.get('server.protocolVersion') or "HTTP/1.0"
+        CherryHTTPRequestHandler.protocol_version = proto
+        
+        # Select the appropriate server based on config options
+        threadPool = cherrypy.config.get('server.threadPool')
+        server_address = (cherrypy.config.get('server.socketHost'),
+                          cherrypy.config.get('server.socketPort'))
+        self.request_queue_size = cherrypy.config.get('server.socketQueueSize')
         
         # I know it says "do not override", but I have to in order to implement SSL support !
-        SocketServer.BaseServer.__init__(self, serverAddress, RequestHandlerClass)
-        self.socket=socket.socket(self.address_family, self.socket_type)
+        SocketServer.BaseServer.__init__(self, server_address, CherryHTTPRequestHandler)
+        self.socket = socket.socket(self.address_family, self.socket_type)
         self.server_bind()
         self.server_activate()
         
-        self._numThreads = numThreads
-        self._RequestHandlerClass = RequestHandlerClass
-        self._ThreadClass = ThreadClass
+        self._numThreads = threadPool
+        self._RequestHandlerClass = CherryHTTPRequestHandler
+        self._ThreadClass = ServerThread
         self._requestQueue = Queue.Queue()
         self._workerThreads = []
     
@@ -321,49 +358,12 @@ class PooledThreadServer(SocketServer.TCPServer):
 def embedded_server(handler=None):
     """Selects and instantiates the appropriate server."""
     
-    # Set protocol_version
-    proto = cherrypy.config.get('server.protocolVersion')
-    if not proto:
-        proto = "HTTP/1.0"
-    CherryHTTPRequestHandler.protocol_version = proto
-    
     # Select the appropriate server based on config options
     sockFile = cherrypy.config.get('server.socketFile')
     threadPool = cherrypy.config.get('server.threadPool')
-    if sockFile:
-        # AF_UNIX socket
-        # TODO: Handle threading here
-        class ServerClass(CherryHTTPServer):
-            address_family = socket.AF_UNIX
-        
-        # So we can reuse the socket
-        try: os.unlink(sockFile)
-        except: pass
-        
-        server_address = sockFile
+    if threadPool > 1 and not sockFile:
+        ServerClass = PooledThreadServer
     else:
-        # AF_INET socket
-        if threadPool > 1:
-            ServerClass = PooledThreadServer
-        else:
-            ServerClass = CherryHTTPServer
-        server_address = (cherrypy.config.get('server.socketHost'),
-                          cherrypy.config.get('server.socketPort'))
-    
-    ServerClass.request_queue_size = cherrypy.config.get('server.socketQueueSize')
-    
-    if handler is None:
-        handler = CherryHTTPRequestHandler
-    
-    if threadPool > 1:
-        myCherryHTTPServer = ServerClass(server_address, threadPool, handler)
-    else:
-        myCherryHTTPServer = ServerClass(server_address, handler)
-    
-    # So everyone can access the socket
-    if sockFile:
-        try: os.chmod(sockFile, 0777)
-        except: pass
-    
-    return myCherryHTTPServer
+        ServerClass = CherryHTTPServer
+    return ServerClass()
 

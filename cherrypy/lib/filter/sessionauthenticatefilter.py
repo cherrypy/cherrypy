@@ -54,10 +54,11 @@ class SessionAuthenticateFilter(BaseFilter):
 
     def beforeMain(self):
         import cherrypy
-        from cherrypy.lib import httptools
-        
         if not cherrypy.config.get('sessionAuthenticateFilter.on', False):
             return
+        
+        from cherrypy.lib import httptools
+        
         checkLoginAndPassword = cherrypy.config.get('sessionAuthenticateFilter.checkLoginAndPassword', defaultCheckLoginAndPassword)
         loginScreen = cherrypy.config.get('sessionAuthenticateFilter.loginScreen', defaultLoginScreen)
         notLoggedIn = cherrypy.config.get('sessionAuthenticateFilter.notLoggedIn')
