@@ -11,6 +11,7 @@ _sessionDefaults = {
     'sessionFilter.storageType' : 'ram',
     'sessionFilter.cookiePrefix': 'CherryPySession',
     'sessionFilter.storagePath': '.sessiondata',
+    'sessionFilter.dbFile': 'sessionData.db',
     'sessionFilter.default.on': True,
     'sessionFilter.cacheTimeout' : 0,
     'sessionFilter.timeMultiple' : 60
@@ -28,7 +29,7 @@ from fileadaptor import FileAdaptor
 from anydbadaptor import DBMAdaptor
 
 
-_sessionTypes = {
+sessionTypes = {
                   'ram'       : RamAdaptor,
                   'file'      : FileAdaptor,
                   'anydb'     : DBMAdaptor
@@ -37,7 +38,7 @@ _sessionTypes = {
 try:
     # the user might not have sqlobject instaled
     from sqlobjectadaptor import SQLObjectSession
-    _sessionTypes['sqlobject'] = SQLObjectSession
+    sessionTypes['sqlobject'] = SQLObjectSession
 except ImportError:
     pass
 
@@ -52,18 +53,17 @@ class SessionFilter:
     Input filter - get the sessionId (or generate a new one) and load up the session data
     """
 
-    def __init__(self):
+    def __init__(self, sessionName = 'default', sessionPath = '/'):
         """ Initilizes the session filter and creates cherrypy.sessions  """
 
         self.__localData= local()
         
-        self.sessionManagers = {}
         cherrypy.config.update(_sessionDefaults, override = False)
+        self.sessionManager = self.__newSessionManager(sessionName, sessionPath)
+        self.sessionManager.settings = local()
         
-        self.__initSessionManagers()
-
     def __newSessionManager(self, sessionName, sessionPath):
-        """ 
+        """
         Takes the name of a new session and its configuration path.
         Returns a storageAdaptor instance maching the configured storage type.
         If the storage type is not built in, it tries to use sessionFilter.storageAadaptors.
@@ -76,12 +76,7 @@ class SessionFilter:
         
         # try to initilize a built in session
         try:
-            try:
-                if sessionName in self.sessionManagers:
-                    raise DuplicateSessionError()
-            except KeyError:
-                pass
-            storageAdaptor = _sessionTypes[storageType]
+            storageAdaptor = sessionTypes[storageType]
         except KeyError:
             # the storageType is not built in
             
@@ -95,70 +90,43 @@ class SessionFilter:
         
         return storageAdaptor(sessionName, sessionPath)
     
-    def __initSessionManagers(self):
-        for section, settings in cherrypy.config.configMap.iteritems():
-            for setting, value in settings.iteritems():
-                if not setting.startswith('sessionFilter'):
-                    continue
-
-                keySplit = setting.split('.')
-                if len(keySplit) == 2:
-                    sessionName = 'default'
-                else:
-                    sessionName = keySplit[1]
-                
-                if keySplit[-1] != 'on' or value == False:
-                    continue
-
-                if section == 'global':
-                    path = '/'
-                else:
-                    path = section
-
-                if sessionName not in self.sessionManagers:
-                    sessionManager = self.__newSessionManager(sessionName, path)
-                    # create a new local instance
-                    setattr(sessionManager, 'settings', local())
-
-                    self.sessionManagers[sessionName] = sessionManager
     
-    def __loadConfigData(self, sessionName):
-            sessionManager = self.sessionManagers[sessionName]
-            
+    def __loadConfigData(self, sessionManager):
             settings = {}
             for settingName in _sessionSettingNames:
                 default = cherrypy.config.get('sessionFilter.%s' % settingName)
-                value = cherrypy.config.get('sessionFilter.%s.%s' % (sessionName, settingName), default)
+                value = cherrypy.config.get('sessionFilter.%s.%s' % (sessionManager.name, settingName), default)
                 settings[settingName] = value
                 
                 setattr(sessionManager.settings, settingName, value)
-                
+
     def __loadSessions(self):
-        
         # look up all of the session keys by cookie
+        sessionManager = self.sessionManager
+        sessionName = sessionManager.name
         
-        for sessionName, sessionManager in self.sessionManagers.iteritems():
-            if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, False):
-                continue
+        if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, False):
+            return
 
-            self.__loadConfigData(sessionName)
-            cookieName = sessionManager.cookieName
-            
-            try:
-                sessionKey = cherrypy.request.simpleCookie[cookieName].value
-            except KeyError:
-                sessionKey = sessionManager.createSession()
-                self.setSessionKey(sessionKey, sessionManager) 
-                sessionManager.loadSession(sessionKey)
+        self.__loadConfigData(sessionManager)
+        
+        cookieName = sessionManager.cookieName
+        
+        try:
+            sessionKey = cherrypy.request.simpleCookie[cookieName].value
+        except KeyError:
+            sessionKey = sessionManager.createSession()
+            self.saveSessionDictKey(sessionKey, sessionManager) 
+            sessionManager.loadSession(sessionKey)
 
-            try:
-                sessionManager.loadSession(sessionKey)
-            except SessionNotFoundError:
-                sessionKey = sessionManager.createSession()
-                self.setSessionKey(sessionKey, sessionManager)  
-                sessionManager.loadSession(sessionKey)
+        try:
+            sessionManager.loadSession(sessionKey)
+        except SessionNotFoundError:
+            sessionKey = sessionManager.createSession()
+            self.saveSessionDictKey(sessionKey, sessionManager)  
+            sessionManager.loadSession(sessionKey)
 
-    def setSessionKey(self, sessionKey, sessionManager):
+    def saveSessionDictKey(self, sessionKey, sessionManager):
         """ 
         Sets the session key in a cookie. 
         """
@@ -195,17 +163,16 @@ class SessionFilter:
             pass
 
     def __saveSessions(self):
+        try:
+            sessionData = getattr(cherrypy.session, self.sessionManager.name)
         
-        for sessionName, sessionManager in self.sessionManagers.iteritems():
-            if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, False):
-                continue
+            self.sessionManager.commitCache(sessionData.key)
+            self.sessionManager.cleanUpCache()
 
-            sessionData = getattr(cherrypy.session, sessionName)
-            sessionManager.commitCache(sessionData.key)
-            sessionManager.cleanUpCache()
-            
-            sessionManager.cleanUpOldSessions()
-
+            self.sessionManager.cleanUpOldSessions()
+        except AttributeError:
+            return
+        
     def beforeMain(self):
         if (not cherrypy.config.get('staticFilter.on', False)
             and cherrypy.config.get('sessionFilter.on')):

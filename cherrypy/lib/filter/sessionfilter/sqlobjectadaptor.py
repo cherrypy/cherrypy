@@ -102,7 +102,7 @@ class SQLObjectAdaptor(BaseAdaptor):
         newSession = self.Session(session_key = self.generateSessionKey())
         return SQLObjectSessionDict(newSession)
         
-    def getSession(self, sessionKey):
+    def getSessionDict(self, sessionKey):
         resultList = list(self.Session.select(self.Session.q.session_key == sessionKey))
         
         if resultList:
@@ -110,7 +110,7 @@ class SQLObjectAdaptor(BaseAdaptor):
         else:
             raise SessionNotFoundError
     
-    def setSession(self, sessionData):
+    def saveSessionDict(self, sessionData):
         # all changes are automatically commited so
         try:
             if self.Session._lazyUpdate:
@@ -118,7 +118,7 @@ class SQLObjectAdaptor(BaseAdaptor):
         except AttributeError:
             pass
         
-    def delSession(self, sessionKey):
+    def deleteSession(self, sessionKey):
         # figure out what to catch when this doesn't work
         Session.delete(Session.q.session_key==sessionKey)
         

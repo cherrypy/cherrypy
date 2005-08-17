@@ -60,16 +60,16 @@ class DBMAdaptor(BaseAdaptor):
         newData = self.getDefaultAttributes()
         return SessionDict(sessionAttributes = newData)
 
-    def getSession(self, sessionKey):
+    def getSessionDict(self, sessionKey):
         try:
             return self.__data[sessionKey]
         except KeyError:
             raise SessionNotFoundError
     
-    def setSession(self, sessionData):
+    def saveSessionDict(self, sessionData):
         self.__data[sessionData.key] = sessionData
 
-    def delSession(self, sessionKey):
+    def deleteSession(self, sessionKey):
         try:
             del self.__data[sessionKey]
         except KeyError:
@@ -83,7 +83,7 @@ class DBMAdaptor(BaseAdaptor):
                 del self.__data[sessionKey]
                 #deleteList.append(sessionKey)
         #for key in deleteList:
-        #    self.delSession(sessionKey)
+        #    self.deleteSession(sessionKey)
 
     def _debugDump(self):
         if not cherrypy.config.get('testMode', False):

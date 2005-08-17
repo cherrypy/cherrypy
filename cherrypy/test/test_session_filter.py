@@ -55,18 +55,8 @@ server_conf = {
                     'sessionFilter.cleanUpDelay' : 1,
                     'sessionFilter.timeout' : 1,
                     'testMode' : True
-                    },
-               '/ram':
-                   {'sessionFilter.ram.on': True,
-                    'sessionFilter.ram.storageType': 'ram'},
-               '/file':
-                   {'sessionFilter.file.on': True,
-                    'sessionFilter.file.storageType': 'file'},
-               '/anydb':
-                   {'sessionFilter.anydb.on': True,
-                    'sessionFilter.anydb.storageType': 'anydb'},
-              }
-
+                    }
+}
 
 class TestSite:
     
@@ -92,38 +82,28 @@ cherrypy.config.update(server_conf.copy())
 
 class SessionFilterTest(helper.CPWebCase):
     
-##    def test_default(self):
-##        self.sessionName = "default"
-##        self.sessionPath = "/"
-##        self.storageType = "ram"
-##        self.persistant  = False
-##        self.doSession()
-##        self.persistant = False
-##        self.doCleanUp()
-##        self.doThreadSafety()
-    
     def test_ram(self):
-        self.sessionName = "ram"
-        self.sessionPath = "/ram"
-        self.storageType = "ram"
+        self.sessionName = "default"
+        cherrypy.config.update({'global' : {'sessionFilter.storageType' : 'ram' }})
+        cherrypy.server.stop()
+        cherrypy.server.start(initOnly = True)
+        self.sessionPath = "/"
         self.persistant  = False
         self.doSession()
         self.persistant = False
         self.doCleanUp()
     
-    def test_file(self):
-        self.sessionName = "file"
+    def _test_file(self):
+        self.sessionName = "default"
         self.sessionPath = "/file"
-        self.storageType = "file"
         self.persistant  = True
         self.doSession()
         self.persistant = False
         self.doCleanUp()
     
-    def test_anydb(self):
-        self.sessionName = "anydb"
+    def _test_anydb(self):
+        self.sessionName = "default"
         self.sessionPath = "/anydb"
-        self.storageType = "anydb"
         self.persistant  = True
         self.doSession()
         self.persistant = False

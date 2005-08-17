@@ -51,7 +51,7 @@ class FileAdaptor(BaseAdaptor):
         return SessionDict(sessionAttributes = newData)
    
     # all session writes are blocked 
-    def getSession(self, sessionKey):
+    def getSessionDict(self, sessionKey):
         if not sessionKey:
             raise SessionNotFoundError
         
@@ -72,7 +72,7 @@ class FileAdaptor(BaseAdaptor):
         else:
             raise SessionNotFoundError
     
-    def setSession(self, sessionData):
+    def saveSessionDict(self, sessionData):
     
         storagePath = self.settings.storagePath
 
@@ -85,7 +85,7 @@ class FileAdaptor(BaseAdaptor):
         self.__fileLock.release()
         f.close()
 
-    def delSession(self, sessionKey):
+    def deleteSession(self, sessionKey):
         storagePath = self.settings.storagePath
         fileName = '%s-%s' % (self.name, sessionKey)
         filePath = os.path.join(storagePath, fileName)
@@ -103,7 +103,7 @@ class FileAdaptor(BaseAdaptor):
             try:
                 prefix, sessionKey = fileName.split('-')
                 if prefix == self.name:
-                    session = self.getSession(sessionKey)
+                    session = self.getSessionDict(sessionKey)
                     if session.expired():
                         os.remove(os.path.join(storagePath, fileName))
             except ValueError:
@@ -119,7 +119,7 @@ class FileAdaptor(BaseAdaptor):
             try:
                 prefix, sessionKey = fileName.split('-')
                 if prefix == self.name:
-                    dump[sessionKey] = self.getSession(sessionKey)
+                    dump[sessionKey] = self.getSessionDict(sessionKey)
             except ValueError:
                 pass
 

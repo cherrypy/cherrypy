@@ -40,17 +40,17 @@ class BaseAdaptor(object):
     noCache = True
     
     # these are the  functions that need to rewritten 
-    def delSession(self, sessionKey):
+    def deleteSession(self, sessionKey):
         """ delete a session from storage """
-        raise NotImplementedError('delSession has not been implemented')
+        raise NotImplementedError('deleteSession has not been implemented')
     
-    def getSession(self, sessionKey):
+    def getSessionDict(self, sessionKey):
         """ function to lookup the session """
-        raise NotImplementedError('getSession has not been implemented')
+        raise NotImplementedError('getSessionDict has not been implemented')
     
-    def setSession(self, sessionData):
+    def saveSessionDict(self, sessionData):
         """ function to save sesion data """
-        raise NotImplementedError('setSession has not been implemented')
+        raise NotImplementedError('saveSessionDict has not been implemented')
     
     def _cleanUpOldSessions(self):
         """This function cleans up expired sessions"""
@@ -104,7 +104,7 @@ class BaseAdaptor(object):
             from cherrypy._cpthreadinglocal import local
 
         # settings dict
-        self.settings = None
+        self.settings = local()
            
     
     # there should never be a reason to modify the remaining functions, they used 
@@ -142,7 +142,7 @@ class BaseAdaptor(object):
             session.threadCount += 1
         except KeyError:
             # look in the primary storage
-            session = self.getSession(sessionKey)
+            session = self.getSessionDict(sessionKey)
             session.threadCount += 1
             self.__sessionCache[sessionKey] = session
     
@@ -154,7 +154,7 @@ class BaseAdaptor(object):
     def createSession(self):
         """ returns a session key """
         session = self.newSession()
-        self.setSession(session)
+        self.saveSessionDict(session)
         return session.key
     
     def commitCache(self, sessionKey): 
@@ -164,7 +164,7 @@ class BaseAdaptor(object):
         try:
             session = self.__sessionCache[sessionKey]
             session.threadCount = 0
-            self.setSession(session)
+            self.saveSessionDict(session)
         
             cacheTimeout = self.settings.cacheTimeout
             

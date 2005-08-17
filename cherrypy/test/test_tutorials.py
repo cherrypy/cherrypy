@@ -136,7 +136,7 @@ class TutorialTest(helper.CPWebCase):
                          "\n            page 2 times! Your life is a patio of fun!"
                          "\n        ")
     
-    def test08AdvancedSessions(self):
+    def __test08AdvancedSessions(self):
         self.load_tut_module("tut08_advanced_sessions")
         cherrypy.config.update({"sessionFilter.on": True})
         

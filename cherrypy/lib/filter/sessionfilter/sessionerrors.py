@@ -56,7 +56,7 @@ class SessionConfigError(SessionError):
 
 class SessionBadStorageTypeError(SessionError):
     def __init__(self, storageType):
-        self.storageType = self.storageType
+        self.storageType = storageType
 
     def __str__(self):
         return "Could not find %s storage type." % self.storageType
