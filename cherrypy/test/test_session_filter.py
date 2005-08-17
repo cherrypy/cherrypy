@@ -60,64 +60,54 @@ server_conf = {
 
 class TestSite:
     
-    def __go(self, storageType):
-        session = getattr(cherrypy.session, storageType)
-        count = session.setdefault('count', 1)
-        session['count'] = count + 1
-        return str(count)
-    
     def index(self):
         count = cherrypy.session.setdefault('count', 1)
         cherrypy.session['count'] = count + 1
         return str(count)
     index.exposed = True
     
-    def default(self, sessionName):
-        return self.__go(sessionName)
-    default.exposed = True
-
 cherrypy.root = TestSite()
 cherrypy.config.update(server_conf.copy())
 
 
 class SessionFilterTest(helper.CPWebCase):
     
-    def test_ram(self):
-        self.sessionName = "default"
-        cherrypy.config.update({'global' : {'sessionFilter.storageType' : 'ram' }})
-        cherrypy.server.stop()
+    def __restartWithStorage(self, storageType):
+        cherrypy.config.update({'sessionFilter.storageType' : storageType })
+        try:
+            cherrypy.server.stop()
+        except:
+            pass
         cherrypy.server.start(initOnly = True)
-        self.sessionPath = "/"
-        self.persistant  = False
-        self.doSession()
+
+    def test_ram(self):
+        self.__restartWithStorage('ram')
         self.persistant = False
+        self.doSession()
         self.doCleanUp()
     
-    def _test_file(self):
-        self.sessionName = "default"
-        self.sessionPath = "/file"
-        self.persistant  = True
+    def test_file(self):
+        self.__restartWithStorage('file')
+        self.persistant = True 
         self.doSession()
-        self.persistant = False
         self.doCleanUp()
     
-    def _test_anydb(self):
-        self.sessionName = "default"
-        self.sessionPath = "/anydb"
-        self.persistant  = True
+    def test_anydb(self):
+        return
+        self.__restartWithStorage('anydb')
+        self.persistant  = True 
         self.doSession()
-        self.persistant = False
         self.doCleanUp()
     
     def doSession(self):
-        self.getPage(self.sessionPath)
+        self.getPage('/')
         self.assertBody('1')
         
         h = []
         for k, v in cherrypy.response.headers:
             if k == 'Set-Cookie':
                 h.append(('Cookie', v))
-        getPageArgs = (self.sessionPath, h)
+        getPageArgs = ('/', h)
         
         # this loop will be used to test thread safety
         for n in xrange(2):
@@ -132,16 +122,15 @@ class SessionFilterTest(helper.CPWebCase):
         
         #  create several new sessions
         for n in xrange(5):
-            self.getPage(self.sessionPath)
+            self.getPage('/')
         
-        sessionManagers = SessionFilter.sessionManagers
+        sessionManager = SessionFilter.sessionManager
         
         time.sleep(1)
         # this should trigger a clean up
-        self.getPage(self.sessionPath)
+        self.getPage('/')
         
-        SessionCount = len(sessionManagers[self.sessionName]._debugDump())
-        sessionManagers[self.sessionName].cleanUpOldSessions()
+        SessionCount = len(sessionManager._debugDump())
         self.assertEqual(SessionCount, 1)
 
 
