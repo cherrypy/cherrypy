@@ -131,7 +131,7 @@ class TutorialTest(helper.CPWebCase):
                          "\n            page 1 times! Your life is a patio of fun!"
                          "\n        ")
         
-        self.getPage('/', [('Cookie', dict(self.headers)['Set-Cookie'])])
+        self.getPage('/', self.cookies)
         self.assertBody("\n            During your current session, you've viewed this"
                          "\n            page 2 times! Your life is a patio of fun!"
                          "\n        ")
@@ -143,7 +143,7 @@ class TutorialTest(helper.CPWebCase):
         self.getPage('/')
         self.assertInBody("viewed this page 1 times")
         
-        self.getPage('/', [('Cookie', dict(self.headers)['Set-Cookie'])])
+        self.getPage('/', self.cookies)
         self.assertInBody("viewed this page 2 times")
     
     def test09GeneratorsAndYield(self):

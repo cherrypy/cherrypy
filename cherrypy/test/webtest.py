@@ -176,6 +176,10 @@ class WebCase(TestCase):
         result = openURL(url, headers, method, body, self.HOST, self.PORT)
         self.status, self.headers, self.body = result
         
+        # Build a list of request cookies from the previous response cookies.
+        self.cookies = [('Cookie', v) for k, v in self.headers
+                        if k.lower() == 'set-cookie']
+        
         if ServerError.on:
             raise ServerError
         return result

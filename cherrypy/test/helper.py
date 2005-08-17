@@ -86,6 +86,11 @@ class CPWebCase(webtest.WebCase):
         
         self.status = cherrypy.response.status
         self.headers = cherrypy.response.headers
+        
+        # Build a list of request cookies from the previous response cookies.
+        self.cookies = [('Cookie', v) for k, v in self.headers
+                        if k.lower() == 'set-cookie']
+        
         try:
             self.body = []
             for chunk in cherrypy.response.body:
