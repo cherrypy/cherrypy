@@ -93,7 +93,6 @@ class SessionFilterTest(helper.CPWebCase):
         self.doCleanUp()
     
     def test_anydb(self):
-        return
         self.__restartWithStorage('anydb')
         self.persistant  = True 
         self.doSession()
