@@ -59,12 +59,12 @@ class BaseAdaptor(object):
     def newSession(self):
         """ Return a new sessiondict instance """
         raise NotImplementedError('newSession not been implemented')
-    
+   
     # it might be usefull to redefine this function
     def generateSessionKey(self):
         """ Function to return a new sessioId """
         try:
-            sessionKeyFunc = self.getSetting('keyGenerator')
+            sessionKeyFunc = self.settings.keyGenerator
         except AttributeError:
             sessionKeyFunc = None
         
@@ -103,37 +103,33 @@ class BaseAdaptor(object):
         except ImportError:
             from cherrypy._cpthreadinglocal import local
 
+        # settings dict
+        self.settings = local()
+           
+    
     # there should never be a reason to modify the remaining functions, they used 
     # internally by the sessionFilter
     
-    def getSetting(self, key, defaultValue = None):
-        dummy = object()
-        value = cherrypy.config.get('sessionFilter.%s.%s' % (self.name, key), dummy)
-        if value is dummy:
-            return cherrypy.config.get('sessionFilter.%s' % key, defaultValue)
-    
-    def setSetting(self, key, value, override = True):
-        if not override:
-            dummy = object()
-            test = self.getSetting(key, dummy)
-            if test is not dummy:
-                # we don't need to do anything
-                return
-
-        if self.name == 'default':
-            cKey = 'sessionFilter.%s' % key
-        else:
-            cKey = 'sessionFilter.%s.%s' % (self.name, key)
-
-        cherrypy
     def getDefaultAttributes(self):
       return { 
                'timestamp'  : int(time.time()),
-               'timeout'    : self.getSetting('timeout'),
+               'timeout'    : self.settings.timeout,
                'lastAccess' : int(time.time()),
                'key'        : self.generateSessionKey()
              }
              
+    def getSetting(self, settingName, default = None):
+        try:
+            return getattr(self.settings, settingName)
+        except AttributeError:
+            missing = object()
+            result = cherrypy.config.get('sessionFilter.%s.%s' % (self.name, settingName), missing)
+            if result is missing:
+                result = cherrypy.config.get('sessionFilter.%s' % settingName, default)
+
+            return result
+
+            
     def cleanUpOldSessions(self):
         now = time.time()
         if self.nextCleanUp < now:
@@ -170,7 +166,7 @@ class BaseAdaptor(object):
             session.threadCount = 0
             self.saveSessionDict(session)
         
-            cacheTimeout = self.getSetting('cacheTimeout')
+            cacheTimeout = self.settings.cacheTimeout
             
             if session.threadCount == 0 and (self.noCache or not cacheTimeout):
                 del self.__sessionCache[sessionKey]
@@ -183,7 +179,7 @@ class BaseAdaptor(object):
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
-        cacheTimeout = self.getSetting('cacheTimeout')
+        cacheTimeout = self.settings.cacheTimeout
         
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout and not self.noCache:

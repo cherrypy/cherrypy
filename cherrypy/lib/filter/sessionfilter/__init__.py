@@ -28,6 +28,7 @@ from ramadaptor import RamAdaptor
 from fileadaptor import FileAdaptor
 from anydbadaptor import DBMAdaptor
 
+
 sessionTypes = {
                   'ram'       : RamAdaptor,
                   'file'      : FileAdaptor,
@@ -59,6 +60,8 @@ class SessionFilter:
         
         cherrypy.config.update(_sessionDefaults, override = False)
         self.sessionManager = self.__newSessionManager(sessionName, sessionPath)
+        self.sessionManager.settings = local()
+        
     def __newSessionManager(self, sessionName, sessionPath):
         """
         Takes the name of a new session and its configuration path.
@@ -88,6 +91,15 @@ class SessionFilter:
         return storageAdaptor(sessionName, sessionPath)
     
     
+    def __loadConfigData(self, sessionManager):
+            settings = {}
+            for settingName in _sessionSettingNames:
+                default = cherrypy.config.get('sessionFilter.%s' % settingName)
+                value = cherrypy.config.get('sessionFilter.%s.%s' % (sessionManager.name, settingName), default)
+                settings[settingName] = value
+                
+                setattr(sessionManager.settings, settingName, value)
+
     def __loadSessions(self):
         # look up all of the session keys by cookie
         sessionManager = self.sessionManager
@@ -96,38 +108,41 @@ class SessionFilter:
         if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, False):
             return
 
+        self.__loadConfigData(sessionManager)
+        
         cookieName = sessionManager.cookieName
         
         try:
             sessionKey = cherrypy.request.simpleCookie[cookieName].value
         except KeyError:
             sessionKey = sessionManager.createSession()
-            self.saveSessionDictKey(sessionKey) 
+            self.saveSessionDictKey(sessionKey, sessionManager) 
             sessionManager.loadSession(sessionKey)
 
         try:
             sessionManager.loadSession(sessionKey)
         except SessionNotFoundError:
             sessionKey = sessionManager.createSession()
-            self.saveSessionDictKey(sessionKey)
+            self.saveSessionDictKey(sessionKey, sessionManager)  
             sessionManager.loadSession(sessionKey)
 
-    def saveSessionDictKey(self, sessionKey):
+    def saveSessionDictKey(self, sessionKey, sessionManager):
         """ 
         Sets the session key in a cookie. 
         """
         
-        sessionManager = self.sessionManager
-
         sessionName = sessionManager.name
         cookieName  = sessionManager.cookieName
         
         
         # if we do not have a manually defined cookie path use path where the session
         # manager was defined
-        cookiePath = sessionManager.getSetting('cookiePath', sessionManager.path)
+        try:
+            cookiePath = self.settings.cookiePath
+        except AttributeError:
+            cookiePath = sessionManager.path
 
-        timeout = sessionManager.getSetting('timeout')
+        timeout = sessionManager.settings.timeout
         
         cherrypy.response.simpleCookie[cookieName] = sessionKey
         cherrypy.response.simpleCookie[cookieName]['path'] = cookiePath
@@ -135,14 +150,14 @@ class SessionFilter:
         
         # try and set the cookie domain
         try:
-            cookieDomain = sessionManager.getSetting('cookieDomain')
+            cookieDomain = self.settings.cookieDomain
             cherrypy.response.simpleCookie[cookieName]['domain'] = cookieDomain
         except AttributeError:
             pass
 
         # try and set a cookie comment
         try:
-            cookieComment = sessionManager.getSetting('cookieComment')
+            cookieComment = self.settings.cookieComment
             cherrypy.response.simpleCookie[cookieName]['comment'] = cookieComment
         except AttributeError:
             pass

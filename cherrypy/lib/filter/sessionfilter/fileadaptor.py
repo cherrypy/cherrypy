@@ -55,7 +55,7 @@ class FileAdaptor(BaseAdaptor):
         if not sessionKey:
             raise SessionNotFoundError
         
-        storagePath = self.getSetting('storagePath')
+        storagePath = self.settings.storagePath
 
         fileName = '%s-%s' % (self.name, sessionKey)
         filePath = os.path.join(storagePath, fileName)
@@ -74,7 +74,7 @@ class FileAdaptor(BaseAdaptor):
     
     def saveSessionDict(self, sessionData):
     
-        storagePath = self.getSetting('storagePath')
+        storagePath = self.settings.storagePath
 
         fileName = '%s-%s' % (self.name, sessionData.key)
         filePath = os.path.join(storagePath, fileName)
@@ -86,7 +86,7 @@ class FileAdaptor(BaseAdaptor):
         f.close()
 
     def deleteSession(self, sessionKey):
-        storagePath = self.getSetting('storagePath')
+        storagePath = self.settings.storagePath
         fileName = '%s-%s' % (self.name, sessionKey)
         filePath = os.path.join(storagePath, fileName)
         
@@ -96,7 +96,7 @@ class FileAdaptor(BaseAdaptor):
             self.__fileLock.release()
     
     def _cleanUpOldSessions(self):
-        storagePath = self.getSetting('storagePath')
+        storagePath = self.settings.storagePath
         sessionFileList = os.listdir(storagePath)
         
         for fileName in sessionFileList:
@@ -110,7 +110,7 @@ class FileAdaptor(BaseAdaptor):
                 pass
 
     def _debugDump(self):
-        storagePath = self.getSetting('storagePath')
+        storagePath = self.settings.storagePath
         sessionFileList = os.listdir(storagePath)
         
         filePrefix = '%s-' % self.name
