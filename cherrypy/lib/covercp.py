@@ -56,7 +56,6 @@ try:
     from coverage import the_coverage as coverage
     def start():
         coverage.start()
-    
 except ImportError:
     # Setting coverage to None will raise errors
     # that need to be trapped downstream.
@@ -90,11 +89,13 @@ class CoverStats(object):
         runs.sort()
         if runs:
             base = ""
-            for x in runs:
-                newbase, fname = x
+            for newbase, fname in runs:
+                # Make each directory a new section with a header
                 if base != newbase:
                     base = newbase
                     yield "<h3>%s</h3>\n" % newbase
+                
+                # Yield a link to each annotated file.
                 yield ("<a href='report?name=%s' target='main'>%s</a><br />\n"
                        % (os.path.join(newbase, fname), fname))
     menu.exposed = True
@@ -145,9 +146,20 @@ class CoverStats(object):
     def report(self, name):
         import cherrypy
         cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        
+        yield name
+        yield "\n"
+        
         coverage.get_ready()
         filename, statements, excluded, missing, _ = coverage.analysis2(name)
-        return self.annotated_file(filename, statements, excluded, missing)
+        s = len(statements)
+        e = s - len(missing)
+        if s > 0:
+            pc = 100.0 * e / s
+            yield "%2d%% covered\n" % pc
+        
+        yield "\n"
+        yield self.annotated_file(filename, statements, excluded, missing)
     report.exposed = True
 
 
@@ -161,7 +173,6 @@ def serve(path=localFile, port=8080):
     cherrypy.config.update({'server.socketPort': port,
                             'server.threadPool': 10,
                             'server.environment': "production",
-                            'session.storageType': "ram",
                             })
     cherrypy.server.start()
 
