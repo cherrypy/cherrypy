@@ -64,7 +64,7 @@ class BaseAdaptor(object):
     def generateSessionKey(self):
         """ Function to return a new sessioId """
         try:
-            sessionKeyFunc = self.settings.keyGenerator
+            sessionKeyFunc = self.getSetting('keyGenerator')
         except AttributeError:
             sessionKeyFunc = None
         
@@ -103,25 +103,18 @@ class BaseAdaptor(object):
         except ImportError:
             from cherrypy._cpthreadinglocal import local
 
-        # settings dict
-        self.settings = local()
-           
-    
     # there should never be a reason to modify the remaining functions, they used 
     # internally by the sessionFilter
     
     def getDefaultAttributes(self):
       return { 
                'timestamp'  : int(time.time()),
-               'timeout'    : self.settings.timeout,
+               'timeout'    : self.getSetting('timeout'),
                'lastAccess' : int(time.time()),
                'key'        : self.generateSessionKey()
              }
              
     def getSetting(self, settingName, default = None):
-        try:
-            return getattr(self.settings, settingName)
-        except AttributeError:
             missing = object()
             result = cherrypy.config.get('sessionFilter.%s.%s' % (self.name, settingName), missing)
             if result is missing:
@@ -166,7 +159,7 @@ class BaseAdaptor(object):
             session.threadCount = 0
             self.saveSessionDict(session)
         
-            cacheTimeout = self.settings.cacheTimeout
+            cacheTimeout = self.getSetting('cacheTimeout')
             
             if session.threadCount == 0 and (self.noCache or not cacheTimeout):
                 del self.__sessionCache[sessionKey]
@@ -179,7 +172,7 @@ class BaseAdaptor(object):
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
-        cacheTimeout = self.settings.cacheTimeout
+        cacheTimeout = self.getSetting('cacheTimeout')
         
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout and not self.noCache:
