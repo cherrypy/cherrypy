@@ -74,11 +74,7 @@ class SessionFilterTest(helper.CPWebCase):
     
     def __restartWithStorage(self, storageType):
         cherrypy.config.update({'sessionFilter.storageType' : storageType })
-        try:
-            cherrypy.server.stop()
-        except:
-            pass
-        cherrypy.server.start(initOnly = True)
+        cherrypy.server.restart()
 
     def test_ram(self):
         self.__restartWithStorage('ram')
