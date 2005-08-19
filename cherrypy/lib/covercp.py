@@ -41,7 +41,7 @@ Then, use the serve() function to browse the results in a web browser.
 If you run this module from the command line, it will call serve() for you.
 """
 
-
+import re
 import sys
 import os, os.path
 localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
@@ -73,7 +73,7 @@ class CoverStats(object):
     def index(self):
         return """<html>
         <head><title>CherryPy coverage data</title></head>
-        <frameset cols='200, 1*'>
+        <frameset cols='250, 1*'>
             <frame src='menu' />
             <frame name='main' src='' />
         </frameset>
@@ -81,23 +81,101 @@ class CoverStats(object):
         """
     index.exposed = True
     
-    def menu(self):
-        yield "<h2>CherryPy Coverage</h2>"
-        yield "<p>Click on one of the modules below to see coverage analysis.</p>"
+    def menu(self, base="", pct=""):
+        yield """<html>
+<head>
+    <title>CherryPy Coverage Menu</title>
+    <style>
+        body {font: 9pt Arial, serif;}
+        #tree {font: 8pt Courier, sans-serif;}
+        #tree a:active, a:focus {
+            background-color: #EEEEFF;
+            padding: 1px;
+            border: 1px solid #9999FF;
+            -moz-outline-style: none;
+        }
+        .fail {color: red;}
+        #pct {text-align: right;}
+    </style>
+</head>
+<body>
+<h2>CherryPy Coverage</h2>"""
+        
         coverage.get_ready()
-        runs = [os.path.split(x) for x in coverage.cexecuted.keys()]
-        runs.sort()
+        runs = coverage.cexecuted.keys()
         if runs:
-            base = ""
-            for newbase, fname in runs:
-                # Make each directory a new section with a header
-                if base != newbase:
-                    base = newbase
-                    yield "<h3>%s</h3>\n" % newbase
+            yield """<form action='menu'>
+    <input type='hidden' name='base' value='%s' />
+    <input type='submit' value='Show %%' />
+    threshold: <input type='text' id='pct' name='pct' value='%s' size='3' />%%
+</form>""" % (base, pct or "50")
+            
+            yield "<div id='tree'>"
+            tree = {}
+            def graft(path):
+                b, n = os.path.split(path)
+                if n:
+                    return graft(b).setdefault(n, {})
+                else:
+                    return tree.setdefault(b.strip(r"\/"), {})
+            for path in runs:
+                if not os.path.isdir(path):
+                    b, n = os.path.split(path)
+                    if b.startswith(base):
+                        graft(b)[n] = None
+            
+            def show(root, depth=0, path=""):
+                dirs = [k for k, v in root.iteritems() if v is not None]
+                dirs.sort()
+                for name in dirs:
+                    if path:
+                        newpath = os.sep.join((path, name))
+                    else:
+                        newpath = name
+                    
+                    yield "<nobr>" + ("|&nbsp;" * depth) + "<b>"
+                    yield "<a href='menu?base=%s'>%s</a>" % (newpath, name)
+                    yield "</b></nobr><br />\n"
+                    for chunk in show(root[name], depth + 1, newpath):
+                        yield chunk
                 
-                # Yield a link to each annotated file.
-                yield ("<a href='report?name=%s' target='main'>%s</a><br />\n"
-                       % (os.path.join(newbase, fname), fname))
+                files = [k for k, v in root.iteritems() if v is None]
+                files.sort()
+                for name in files:
+                    if path:
+                        newpath = os.sep.join((path, name))
+                    else:
+                        newpath = name
+                    
+                    pc_str = ""
+                    if pct:
+                        try:
+                            _, statements, _, missing, _ = coverage.analysis2(newpath)
+                        except:
+                            # Yes, we really want to pass on all errors.
+                            pass
+                        else:
+                            s = len(statements)
+                            e = s - len(missing)
+                            if s > 0:
+                                pc = 100.0 * e / s
+                                pc_str = "%d%% " % pc
+                                if pc < 100:
+                                    pc_str = "&nbsp;" + pc_str
+                                    if pc < 10:
+                                        pc_str = "&nbsp;" + pc_str
+                                if pc < float(pct):
+                                    pc_str = "<span class='fail'>%s</span>" % pc_str
+                    yield ("<nobr>%s%s<a href='report?name=%s' target='main'>%s</a></nobr><br />\n"
+                           % ("|&nbsp;" * depth, pc_str, newpath, name))
+            
+            for chunk in show(tree):
+                yield chunk
+            
+            yield "</div>"
+        else:
+            yield "<p>No modules covered.</p>"
+        yield "</body></html>"
     menu.exposed = True
     
     def annotated_file(self, filename, statements, excluded, missing):
