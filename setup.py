@@ -46,7 +46,8 @@ data_files=[
     ),
     ('cherrypy', ['cherrypy/favicon.ico',]),
     ('cherrypy/test', ['cherrypy/test/style.css',]),
-    ('cherrypy/test/static', ['cherrypy/test/static/index.html',]),
+    ('cherrypy/test/static', ['cherrypy/test/static/index.html',
+                              'cherrypy/test/static/has space.html',]),
 ]
 ###############################################################################
 # end arguments for setup
