@@ -329,10 +329,16 @@ class Request(object):
         cherrypy.request.version = min(request_v, server_v)
         
         # build a paramMap dictionary from queryString
-        pm = cgi.parse_qs(req.queryString, keep_blank_values=True)
-        for key, val in pm.items():
-            if len(val) == 1:
-                pm[key] = val[0]
+        if re.match(r"[0-9]+,[0-9]+", req.queryString):
+            # Server-side image map. Map the coords to 'x' and 'y'
+            # (like CGI::Request does).
+            pm = req.queryString.split(",")
+            pm = {'x': int(pm[0]), 'y': int(pm[1])}
+        else:
+            pm = cgi.parse_qs(req.queryString, keep_blank_values=True)
+            for key, val in pm.items():
+                if len(val) == 1:
+                    pm[key] = val[0]
         req.paramMap = pm
         
         # Process the headers into request.headerMap
