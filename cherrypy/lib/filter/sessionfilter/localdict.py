@@ -39,6 +39,10 @@ class LocalDict(local):
     def __setitem__(self, key, value):
         self.default[key] = value
 
+    def __delitem__(self, key):
+        print key, self.default.keys()
+        del self.default[key]
+
     def get(self, key, value = None):
         return self.default.get(key, value)
 

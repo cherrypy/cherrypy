@@ -36,13 +36,6 @@ sessionTypes = {
                 }
 
 try:
-    # the user might not have sqlobject instaled
-    from sqlobjectadaptor import SQLObjectSession
-    sessionTypes['sqlobject'] = SQLObjectSession
-except ImportError:
-    pass
-
-try:
     from threading import local
 except ImportError:
     from cherrypy._cpthreadinglocal import local

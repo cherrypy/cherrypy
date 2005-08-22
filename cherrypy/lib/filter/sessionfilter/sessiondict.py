@@ -54,6 +54,7 @@ class SessionDict(dict):
     setdefault=locker(dict.setdefault)
 
     def __getattr__(self, attr):
+        print attr
         try:
           return self.__sessionAttributes[attr]
         except KeyError:
