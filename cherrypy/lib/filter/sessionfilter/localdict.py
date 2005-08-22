@@ -40,7 +40,6 @@ class LocalDict(local):
         self.default[key] = value
 
     def __delitem__(self, key):
-        print key, self.default.keys()
         del self.default[key]
 
     def get(self, key, value = None):
