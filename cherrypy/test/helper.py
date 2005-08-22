@@ -109,7 +109,11 @@ class CPWebCase(webtest.WebCase):
         self.body = "".join(self.body)
         
         if webtest.ServerError.on:
+            self.tearDown()
             raise webtest.ServerError
+    
+    def tearDown(self):
+        pass
     
     def getPage(self, url, headers=None, method="GET", body=None):
         """Open the url with debugging support. Return status, headers, body."""
