@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """Basic tests for the CherryPy core: request handling."""
 
 import cherrypy
+from cherrypy import _cphttptools
 import types
 import os
 localDir = os.path.dirname(__file__)
@@ -169,6 +170,18 @@ class Error(Test):
     def cause_err_in_finalize(self):
         # Since status must start with an int, this should error.
         cherrypy.response.status = "ZOO OK"
+
+
+class Ranges(Test):
+    
+    def get_ranges(self):
+        return repr(_cphttptools.get_ranges(8))
+    
+    def slice_file(self):
+        path = os.path.join(os.getcwd(), os.path.dirname(__file__))
+        _cphttptools.serve_file(os.path.join(path, "static/index.html"))
+        # Ugly hack but it works
+        return cherrypy.response.body
 
 
 class Headers(Test):
@@ -444,6 +457,51 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertBody("")
         finally:
             ignore.pop()
+    
+    def test_Ranges(self):
+        self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
+        self.assertBody("[(3, 7)]")
+        
+        # Test multiple ranges and a suffix-byte-range-spec, for good measure.
+        self.getPage("/ranges/get_ranges", [('Range', 'bytes=2-4,-1')])
+        self.assertBody("[(2, 5), (7, 8)]")
+        
+        # Get a partial file.
+        self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
+        self.assertStatus("206 Partial Content")
+        self.assertHeader("Content-Type", "text/html")
+        self.assertHeader("Content-Range", "bytes 2-5/14")
+        self.assertBody("llo,")
+        
+        # What happens with overlapping ranges (and out of order, too)?
+        self.getPage("/ranges/slice_file", [('Range', 'bytes=4-6,2-5')])
+        self.assertStatus("206 Partial Content")
+        ct = ""
+        for k, v in self.headers:
+            if k.lower() == "content-type":
+                ct = v
+                break
+        expected_type = "multipart/byteranges; boundary="
+        self.assert_(ct.startswith(expected_type))
+        boundary = ct[len(expected_type):]
+        expected_body = """--%s
+Content-type: text/html
+Content-range: bytes 4-6/14
+
+o, w
+--%s
+Content-type: text/html
+Content-range: bytes 2-5/14
+
+llo, 
+--%s""" % (boundary, boundary, boundary)
+        self.assertBody(expected_body)
+        self.assertNoHeader("Content-Length")
+        
+        # Test "416 Requested Range Not Satisfiable"
+        self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
+        self.assertStatus("416 Requested Range Not Satisfiable")
+        self.assertHeader("Content-Range", "bytes */14")
     
     def testHeaderCaseSensitivity(self):
         # Tests that each header only appears once, regardless of case.

@@ -40,10 +40,6 @@ class NotReady(Error):
     """A request was made before the app server has been started."""
     pass
 
-class NotFound(Error):
-    """ Happens when a URL couldn't be mapped to any class.method """
-    pass
-
 class WrongResponseType(Error):
     """ Happens when the cherrypy.response.body is not a string """
     pass
@@ -172,3 +168,27 @@ class HTTPRedirect(Exception):
             cherrypy.response.body = []
         else:
             raise ValueError("The %s status code is unknown." % status)
+
+
+_missing = object()
+
+class HTTPClientError(Error):
+    """Exception raised when the client has made an error in its request."""
+    
+    def __init__(self, status=400, body=_missing):
+        self.status = status = int(status)
+        if status < 400 or status > 499:
+            raise ValueError("status must be between 400 and 499.")
+        
+        import cherrypy
+        cherrypy.response.status = status
+        if body is not _missing:
+            cherrypy.response.body = body
+
+
+class NotFound(HTTPClientError):
+    """ Happens when a URL couldn't be mapped to any class.method """
+    
+    def __init__(self, path):
+        self.args = (path,)
+        HTTPClientError.__init__(self, 404)

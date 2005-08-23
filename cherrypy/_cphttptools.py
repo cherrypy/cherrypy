@@ -302,10 +302,8 @@ class Request(object):
                     finalize()
             finally:
                 applyFilters('onEndResource')
-        except cherrypy.NotFound:
-            cherrypy.response.status = 404
-            handleError(sys.exc_info())
         except:
+            # This includes HTTPClientError and NotFound
             handleError(sys.exc_info())
     
     def processRequestHeaders(self):
@@ -579,7 +577,10 @@ def finalize():
             cherrypy.response.body = [content]
             cherrypy.response.headerMap['Content-Length'] = len(content)
         else:
-            del cherrypy.response.headerMap['Content-Length']
+            try:
+                del cherrypy.response.headerMap['Content-Length']
+            except KeyError:
+                pass
     
     # For some statuses, Internet Explorer 5+ shows "friendly error messages"
     # instead of our response.body if the body is smaller than a given size.
@@ -659,6 +660,61 @@ def flattener(input):
                 yield y 
 
 
+def get_ranges(content_length):
+    """Return a list of (start, stop) indices from a Range header, or None.
+    
+    Each (start, stop) tuple will be composed of two ints, which are suitable
+    for use in a slicing operation. That is, the header "Range: bytes=3-6",
+    if applied against a Python string, is requesting resource[3:7]. This
+    function will return the list [(3, 7)].
+    """
+    
+    r = cherrypy.request.headerMap.get('Range')
+    if not r:
+        return None
+    
+    result = []
+    bytesunit, byteranges = r.split("=", 1)
+    for brange in byteranges.split(","):
+        start, stop = [x.strip() for x in brange.split("-", 1)]
+        if start:
+            if not stop:
+                stop = content_length - 1
+            start, stop = map(int, (start, stop))
+            if start >= content_length:
+                # From rfc 2616 sec 14.16:
+                # "If the server receives a request (other than one
+                # including an If-Range request-header field) with an
+                # unsatisfiable Range request-header field (that is,
+                # all of whose byte-range-spec values have a first-byte-pos
+                # value greater than the current length of the selected
+                # resource), it SHOULD return a response code of 416
+                # (Requested range not satisfiable)."
+                continue
+            if stop < start:
+                # From rfc 2616 sec 14.16:
+                # "If the server ignores a byte-range-spec because it
+                # is syntactically invalid, the server SHOULD treat
+                # the request as if the invalid Range header field
+                # did not exist. (Normally, this means return a 200
+                # response containing the full entity)."
+                return None
+            result.append((start, stop + 1))
+        else:
+            if not stop:
+                # See rfc quote above.
+                return None
+            # Negative subscript (last N bytes)
+            result.append((content_length - int(stop), content_length))
+    
+    if result == []:
+        cherrypy.response.headerMap['Content-Range'] = "bytes */%s" % content_length
+        b = "Invalid Range (first-byte-pos greater than Content-Length)"
+        raise cherrypy.HTTPClientError(416, b)
+    
+    return result
+
+
 def serve_file(filename):
     """Set status, headers, and body in order to serve the given file."""
     
@@ -682,27 +738,64 @@ def serve_file(filename):
     else:
         ext = ""
     
+    resp = cherrypy.response
+    
     contentType = mimetypes.types_map.get(ext, "text/plain")
-    cherrypy.response.headerMap['Content-Type'] = contentType
+    resp.headerMap['Content-Type'] = contentType
     
     strModifTime = httpdate(time.gmtime(stat.st_mtime))
     if cherrypy.request.headerMap.has_key('If-Modified-Since'):
         # Check if if-modified-since date is the same as strModifTime
         if cherrypy.request.headerMap['If-Modified-Since'] == strModifTime:
-            cherrypy.response.status = "304 Not Modified"
-            cherrypy.response.body = []
+            resp.status = "304 Not Modified"
+            resp.body = []
             if getattr(cherrypy, "debug", None):
                 cherrypy.log("    Found file (304 Not Modified): %s" % filename, "DEBUG")
             return
-    cherrypy.response.headerMap['Last-Modified'] = strModifTime
+    resp.headerMap['Last-Modified'] = strModifTime
     
     # Set Content-Length and use an iterable (file object)
     #   this way CP won't load the whole file in memory
-    cherrypy.response.headerMap['Content-Length'] = stat[6]
+    c_len = stat[6]
     bodyfile = open(filename, 'rb')
-    cherrypy.response.body = fileGenerator(bodyfile)
     if getattr(cherrypy, "debug", None):
         cherrypy.log("    Found file: %s" % filename, "DEBUG")
+    
+    resp.headerMap["Accept-Ranges"] = "bytes"
+    r = get_ranges(c_len)
+    if r:
+        if len(r) == 1:
+            # Return a single-part response.
+            start, stop = r[0]
+            r_len = stop - start
+            resp.status = "206 Partial Content"
+            resp.headerMap['Content-Range'] = ("bytes %s-%s/%s" %
+                                               (start, stop - 1, c_len))
+            resp.headerMap['Content-Length'] = r_len
+            bodyfile.seek(start)
+            resp.body = [bodyfile.read(r_len)]
+        else:
+            # Return a multipart/byteranges response.
+            resp.status = "206 Partial Content"
+            import mimetools
+            boundary = mimetools.choose_boundary()
+            resp.headerMap['Content-Type'] = "multipart/byteranges; boundary=%s" % boundary
+            del resp.headerMap['Content-Length']
+            def fileRanges():
+                for start, stop in r:
+                    yield "--" + boundary
+                    yield "\nContent-type: %s" % contentType
+                    yield ("\nContent-range: bytes %s-%s/%s\n\n"
+                           % (start, stop - 1, c_len))
+                    bodyfile.seek(start)
+                    yield bodyfile.read((stop + 1) - start)
+                    yield "\n"
+                # Final boundary
+                yield "--" + boundary
+            resp.body = fileRanges()
+    else:
+        resp.headerMap['Content-Length'] = c_len
+        resp.body = fileGenerator(bodyfile)
 
 
 # Object lookup
