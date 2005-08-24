@@ -16,7 +16,10 @@ def reloader_thread():
         for filename in filter(lambda v: v, map(lambda m: getattr(m, "__file__", None), sys.modules.values())) + reloadFiles:
             if filename.endswith(".pyc"):
                 filename = filename[:-1]
-            mtime = os.stat(filename).st_mtime
+            try:
+                mtime = os.stat(filename).st_mtime
+            except OSError:
+                sys.exit(3) # force reload
             if filename not in mtimes:
                 mtimes[filename] = mtime
                 continue

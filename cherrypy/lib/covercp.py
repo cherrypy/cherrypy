@@ -77,36 +77,83 @@ TEMPLATE_MENU = """<html>
     <title>CherryPy Coverage Menu</title>
     <style>
         body {font: 9pt Arial, serif;}
-        #tree {font: 8pt Courier, sans-serif;}
+        #tree {
+            font-size: 8pt;
+            font-family: Andale Mono, monospace;
+            white-space: pre;
+            }
         #tree a:active, a:focus {
-            background-color: #EEEEFF;
+            background-color: black;
             padding: 1px;
-            border: 1px solid #9999FF;
+            color: white;
+            border: 0px solid #9999FF;
             -moz-outline-style: none;
-        }
-        .fail {color: red;}
-        .pass {color: #888;}
-        #pct {text-align: right;}
-        h3 { font-size: small; font-weight: bold; font-style: italic; margin-top: 5px;}
+            }
+        .fail { color: red;}
+        .pass { color: #888;}
+        #pct { text-align: right;}
+        h3 {
+            font-size: small;
+            font-weight: bold;
+            font-style: italic;
+            margin-top: 5px; 
+            }
         input { border: 1px solid #ccc; padding: 2px; }
+        .directory {
+            color: #933;
+            font-style: italic;
+            font-weight: bold;
+            font-size: 10pt;
+            }
+        .file {
+            color: #400;
+            }
+        a { text-decoration: none; }
+        #crumbs {
+            color: white;
+            font-size: 8pt;
+            font-family: Andale Mono, monospace;
+            width: 100%;
+            background-color: black;
+            }
+        #crumbs a {
+            color: #f88;
+            }
+        #options {
+            line-height: 2.3em;
+            border: 1px solid black;
+            background-color: #eee;
+            padding: 4px;
+            }
+        #exclude {
+            width: 100%;
+            margin-bottom: 3px;
+            border: 1px solid #999;
+            }
+        #submit {
+            background-color: black;
+            color: white;
+            border: 0;
+            margin-bottom: -9px;
+            }
     </style>
 </head>
 <body>
 <h2>CherryPy Coverage</h2>"""
 
 TEMPLATE_FORM = """
+<div id="options">
 <form action='menu' method=GET>
     <input type='hidden' name='base' value='%(base)s' />
-    <h3>Options</h3>
-    <input type='checkbox' %(showpct)s name='showpct' value='checked'/>
-    show percentages <br />
+    Show percentages <input type='checkbox' %(showpct)s name='showpct' value='checked' /><br />
     Hide files over <input type='text' id='pct' name='pct' value='%(pct)s' size='3' />%%<br />
     Exclude files matching<br />
     <input type='text' id='exclude' name='exclude' value='%(exclude)s' size='20' />
     <br />
 
-    <input type='submit' value='Change view' />
-</form>""" 
+    <input type='submit' value='Change view' id="submit"/>
+</form>
+</div>""" 
 
 TEMPLATE_FRAMESET = """<html>
 <head><title>CherryPy coverage data</title></head>
@@ -153,10 +200,7 @@ TEMPLATE_LOC_EXCLUDED = """<tr class="excluded">
     <td>%s</td>
 </tr>\n"""
 
-
-def _skip_file(path, exclude):
-    if exclude:
-        return bool(re.search(exclude, path))
+TEMPLATE_ITEM = "%s%s<a class='file' href='report?name=%s' target='main'>%s</a>\n"
 
 def _percent(statements, missing):
     s = len(statements)
@@ -165,23 +209,19 @@ def _percent(statements, missing):
         return int(round(100.0 * e / s))
     return 0
 
-def _show_branch(root, base="", path="", pct=0, showpct=False, exclude=""):
+def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
     
     # Show the directory name and any of our children
-    dirs = [k for k, v in root.iteritems() if v is not None]
+    dirs = [k for k, v in root.iteritems() if v]
     dirs.sort()
     for name in dirs:
-        if path:
-            newpath = os.sep.join((path, name))
-        else:
-            newpath = name
+        newpath = os.path.join(path, name)
         
         if newpath.startswith(base):
             relpath = newpath[len(base):]
-            yield "<nobr>" + ("|&nbsp;" * relpath.count(os.sep)) + "<b>"
-            yield ("<a href='menu?base=%s&exclude=%s'>%s</a>" %
-                   (newpath, urllib.quote_plus(exclude), name))
-            yield "</b></nobr><br />\n"
+            yield "| " * relpath.count(os.sep)
+            yield "<a class='directory' href='menu?base=%s&exclude=%s'>%s</a>\n" % \
+                   (newpath, urllib.quote_plus(exclude), name)
         
         for chunk in _show_branch(root[name], base, newpath, pct, showpct, exclude):
             yield chunk
@@ -189,13 +229,10 @@ def _show_branch(root, base="", path="", pct=0, showpct=False, exclude=""):
     # Now list the files
     if path.startswith(base):
         relpath = path[len(base):]
-        files = [k for k, v in root.iteritems() if v is None]
+        files = [k for k, v in root.iteritems() if not v]
         files.sort()
         for name in files:
-            if path:
-                newpath = os.sep.join((path, name))
-            else:
-                newpath = name
+            newpath = os.path.join(path, name)
             
             pc_str = ""
             if showpct:
@@ -212,8 +249,31 @@ def _show_branch(root, base="", path="", pct=0, showpct=False, exclude=""):
                     else:
                         pc_str = "<span class='pass'>%s</span>" % pc_str
             
-            yield ("<nobr>%s%s<a href='report?name=%s' target='main'>%s</a></nobr><br />\n"
-                   % ("|&nbsp;" * (relpath.count(os.sep) + 1), pc_str, newpath, name))
+            yield TEMPLATE_ITEM % ("| " * (relpath.count(os.sep) + 1),
+                                   pc_str, newpath, name)
+
+def _skip_file(path, exclude):
+    if exclude:
+        return bool(re.search(exclude, path))
+
+def _graft(path, tree):
+    d = tree
+    
+    p = path
+    atoms = []
+    while True:
+        p, tail = os.path.split(p)
+        if not tail:
+            break
+        atoms.append(tail)
+    atoms.append(p)
+    if p != "/":
+        atoms.append("/")
+    
+    atoms.reverse()
+    for node in atoms:
+        if node:
+            d = d.setdefault(node, {})
 
 def get_tree(base, exclude):
     """Return covered module names as a nested dict."""
@@ -221,21 +281,11 @@ def get_tree(base, exclude):
     coverage.get_ready()
     runs = coverage.cexecuted.keys()
     if runs:
-        tree = {}
-        def graft(path):
-            head, tail = os.path.split(path)
-            if tail:
-                return graft(head).setdefault(tail, {})
-            else:
-                return tree.setdefault(head.strip(r"\/"), {})
-        
         for path in runs:
             if not _skip_file(path, exclude) and not os.path.isdir(path):
-                head, tail = os.path.split(path)
-                if head.startswith(base):
-                    graft(head)[tail] = None
+                _graft(path, tree)
+    print tree
     return tree
-
 
 class CoverStats(object):
     
@@ -243,7 +293,7 @@ class CoverStats(object):
         return TEMPLATE_FRAMESET
     index.exposed = True
     
-    def menu(self, base="", pct="50", showpct="",
+    def menu(self, base="/", pct="50", showpct="",
              exclude=r'python\d\.\d|test|tut\d|tutorial'):
         
         # The coverage module uses all-lower-case names.
@@ -252,24 +302,26 @@ class CoverStats(object):
         yield TEMPLATE_MENU
         yield TEMPLATE_FORM % locals()
         
-        yield "<div id='tree'>"
-        
         # Start by showing links for parent paths
+        yield "<div id='crumbs'>"
         path = ""
         atoms = base.split(os.sep)
         atoms.pop()
         for atom in atoms:
             path += atom + os.sep
-            yield ("<nobr><b><a href='menu?base=%s&exclude=%s'>%s</a></b></nobr>%s\n"
+            yield ("<a href='menu?base=%s&exclude=%s'>%s</a> %s"
                    % (path, urllib.quote_plus(exclude), atom, os.sep))
+        yield "</div>"
         
+        yield "<div id='tree'>"
+        
+        # Then display the tree
         tree = get_tree(base, exclude)
         if not tree:
             yield "<p>No modules covered.</p>"
         else:
-            # Now show all visible branches
-            yield "<br />"
-            for chunk in _show_branch(tree, base, "", pct, showpct=='checked', exclude):
+            for chunk in _show_branch(tree, base, "/", pct,
+                                      showpct=='checked', exclude):
                 yield chunk
         
         yield "</div>"
@@ -315,7 +367,7 @@ class CoverStats(object):
 
 def serve(path=localFile, port=8080):
     if coverage is None:
-        raise ImportError("<p>The coverage module could not be imported.</p>")
+        raise ImportError("The coverage module could not be imported.")
     coverage.cache_default = path
     
     import cherrypy

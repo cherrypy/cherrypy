@@ -209,6 +209,8 @@ class TestHarness(object):
             sys.stdout.write(".")
             sys.stdout.flush()
             name = os.path.split(morf)[1]
+            if morf.find('test') != -1:
+                continue
             try:
                 _, statements, _, missing, readable  = self.coverage.analysis2(morf)
                 n = len(statements)
