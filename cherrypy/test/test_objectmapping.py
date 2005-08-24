@@ -53,6 +53,11 @@ class Root:
     def notExposed(self):
         return "not exposed"
 
+def mapped_func(self, ID=None):
+    return "ID is %s" % ID
+mapped_func.exposed = True
+setattr(Root, "Von B\xfclow", mapped_func)
+
 
 class Dir1:
     def index(self):
@@ -136,6 +141,10 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertStatus('302 Found')
         self.assertHeader('Location', 'http://%s:%s/dir1/'
                           % (self.HOST, self.PORT))
+        
+        # Test that we can use URL's which aren't all valid Python identifiers
+        self.getPage("/Von%20B\xfclow?ID=14")
+        self.assertBody("ID is 14")
 
 
 if __name__ == "__main__":
