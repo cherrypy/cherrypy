@@ -284,7 +284,6 @@ def get_tree(base, exclude):
         for path in runs:
             if not _skip_file(path, exclude) and not os.path.isdir(path):
                 _graft(path, tree)
-    print tree
     return tree
 
 class CoverStats(object):
@@ -330,23 +329,25 @@ class CoverStats(object):
     
     def annotated_file(self, filename, statements, excluded, missing):
         source = open(filename, 'r')
-        lineno = 0
-        while 1:
-            line = source.readline()
-            if line == '':
-                break
-            line = line[:-1]
-            lineno = lineno + 1
-            if line == '':
-                yield '&nbsp;'
-                continue
+        buffer = []
+        for lineno, line in enumerate(source.readlines()):
+            lineno += 1
+            line = line.strip("\n\r")
+            empty_the_buffer = True
             if lineno in excluded:
                 template = TEMPLATE_LOC_EXCLUDED
             elif lineno in missing:
                 template = TEMPLATE_LOC_NOT_COVERED
-            else:
+            elif lineno in statements:
                 template = TEMPLATE_LOC_COVERED
-            yield template % (lineno, cgi.escape(line))
+            else:
+                empty_the_buffer = False
+                buffer.append((lineno, line))
+            if empty_the_buffer:
+                for lno, pastline in buffer:
+                    yield template % (lno, cgi.escape(pastline))
+                buffer = []
+                yield template % (lineno, cgi.escape(line))
     
     def report(self, name):
         coverage.get_ready()
