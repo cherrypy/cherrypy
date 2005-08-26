@@ -62,7 +62,7 @@ class Test(object):
 class Params(Test):
     
     def index(self, thing):
-        return thing
+        return repr(thing)
     
     def ismap(self, x, y):
         return "Coordinates: %s, %s" % (x, y)
@@ -295,10 +295,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testParams(self):
         self.getPage("/params/?thing=a")
-        self.assertBody('a')
+        self.assertBody("'a'")
         
         self.getPage("/params/?thing=a&thing=b&thing=c")
-        self.assertBody('abc')
+        self.assertBody("['a', 'b', 'c']")
         
         # Test coordinates sent by <img ismap>
         self.getPage("/params/ismap?223,114")
