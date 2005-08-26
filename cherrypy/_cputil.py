@@ -359,7 +359,7 @@ def unrepr(s):
     try:
         return Builder().build(getObj(s))
     except:
-        raise #cherrypy.WrongUnreprValue(repr(s))
+        raise cherrypy.WrongUnreprValue(repr(s))
 
 def modules(modulePath):
     """Load a module and retrieve a reference to that module."""
