@@ -300,6 +300,16 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/params/?thing=a&thing=b&thing=c")
         self.assertBody("['a', 'b', 'c']")
         
+        # Test friendly error message when given params are not accepted.
+        ignore = helper.webtest.ignored_exceptions
+        ignore.append(TypeError)
+        try:
+            self.getPage("/params/?notathing=meeting")
+            self.assertInBody("The 'index' page handler received a 'notathing' "
+                              "parameter, which it does not handle.")
+        finally:
+            ignore.pop()
+        
         # Test coordinates sent by <img ismap>
         self.getPage("/params/ismap?223,114")
         self.assertBody("Coordinates: 223, 114")

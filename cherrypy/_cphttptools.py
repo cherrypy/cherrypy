@@ -482,8 +482,16 @@ def main(path=None):
             
             # Remove "root" from objectPathList and join it to get objectPath
             cherrypy.request.objectPath = '/' + '/'.join(objectPathList[1:])
-            body = func(*(virtualPathList + cherrypy.request.paramList),
-                        **(cherrypy.request.paramMap))
+            try:
+                body = func(*(virtualPathList + cherrypy.request.paramList),
+                            **(cherrypy.request.paramMap))
+            except TypeError, x:
+                m = re.match(r"(.*)\(\) got an unexpected keyword argument '(.*)'", x.args[0])
+                if m:
+                    fname, pname = m.groups()
+                    msg = ("The '%s' page handler received a '%s' parameter, "
+                           "which it does not handle." % (fname, pname))
+                    raise TypeError(msg, repr(func))
             cherrypy.response.body = iterable(body)
             return
         except cherrypy.InternalRedirect, x:
