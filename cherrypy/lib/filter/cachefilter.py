@@ -151,7 +151,7 @@ class CacheFilter(basefilter.BaseFilter):
                 # serve it & get out from the request
                 cherrypy.response.status, cherrypy.response.headers, body = obj
                 cherrypy.response.body = body
-            raise cherrypy.RequestHandled
+            raise cherrypy.RequestHandled()
     
     def onEndResource(self):
         """Close & fix the cache entry after content was fully written"""

@@ -186,7 +186,7 @@ def dict_from_config_file(configFile):
             except _cperror.WrongUnreprValue, s:
                 msg = ("section: %s, option: %s, value: %s" %
                        (repr(section), repr(option), repr(value)))
-                raise _cperror.WrongConfigValue, msg
+                raise _cperror.WrongConfigValue(msg)
             result[section][option] = value
     return result
 

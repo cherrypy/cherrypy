@@ -53,7 +53,7 @@ class FileAdaptor(BaseAdaptor):
     # all session writes are blocked 
     def getSessionDict(self, sessionKey):
         if not sessionKey:
-            raise SessionNotFoundError
+            raise SessionNotFoundError()
         
         storagePath = self.getSetting('storagePath')
 
@@ -70,7 +70,7 @@ class FileAdaptor(BaseAdaptor):
                 f.close()
             return sessionData
         else:
-            raise SessionNotFoundError
+            raise SessionNotFoundError()
     
     def saveSessionDict(self, sessionData):
     

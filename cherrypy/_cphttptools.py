@@ -368,7 +368,7 @@ class Request(object):
                 cherrypy.response.status = 400
                 cherrypy.response.body = ["HTTP/1.1 requires a 'Host' request header."]
                 finalize()
-                raise cherrypy.RequestHandled
+                raise cherrypy.RequestHandled()
         req.base = "%s://%s" % (req.scheme, req.headerMap.get('Host', ''))
         req.browserUrl = req.base + req.path
     
@@ -889,7 +889,7 @@ def mapPathToObject(path):
             icofile = os.path.join(os.path.dirname(__file__), "favicon.ico")
             serve_file(icofile)
             finalize()
-            raise cherrypy.RequestHandled
+            raise cherrypy.RequestHandled()
         else:
             # We didn't find anything
             if getattr(cherrypy, "debug", None):

@@ -153,17 +153,17 @@ class Flatten(Test):
 class Error(Test):
     
     def page_method(self):
-        raise ValueError
+        raise ValueError()
     
     def page_yield(self):
         yield "hello"
-        raise ValueError
+        raise ValueError()
     
     def page_http_1_1(self):
         cherrypy.response.headerMap["Content-Length"] = 39
         def inner():
             yield "hello"
-            raise ValueError
+            raise ValueError()
             yield "very oops"
         return inner()
     
@@ -432,7 +432,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
         try:
-            valerr = r'\n    raise ValueError\nValueError\n$'
+            valerr = r'\n    raise ValueError\(\)\nValueError\n$'
             self.getPage("/error/page_method")
             self.assertMatchesBody(valerr)
             

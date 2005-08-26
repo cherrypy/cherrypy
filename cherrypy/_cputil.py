@@ -359,14 +359,14 @@ def unrepr(s):
     try:
         return Builder().build(getObj(s))
     except:
-        raise #cherrypy.WrongUnreprValue, repr(s)
+        raise #cherrypy.WrongUnreprValue(repr(s))
 
 def modules(modulePath):
     """Load a module and retrieve a reference to that module."""
     try:
         mod = sys.modules[modulePath]
         if mod is None:
-            raise KeyError
+            raise KeyError()
     except KeyError:
         # The last [''] is important.
         mod = __import__(modulePath, globals(), locals(), [''])

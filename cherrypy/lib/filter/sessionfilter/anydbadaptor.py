@@ -64,7 +64,7 @@ class DBMAdaptor(BaseAdaptor):
         try:
             return self.__data[sessionKey]
         except KeyError:
-            raise SessionNotFoundError
+            raise SessionNotFoundError()
     
     def saveSessionDict(self, sessionData):
         self.__data[sessionData.key] = sessionData
@@ -73,7 +73,7 @@ class DBMAdaptor(BaseAdaptor):
         try:
             del self.__data[sessionKey]
         except KeyError:
-            raise SessionNotFoundError
+            raise SessionNotFoundError()
     
     def _cleanUpOldSessions(self):
         #deleteList = []

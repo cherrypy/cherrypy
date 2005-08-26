@@ -106,7 +106,7 @@ class ReloadingTestLoader(TestLoader):
         parts = name.split('.')
         if module is None:
             if not parts:
-                raise ValueError, "incomplete test name: %s" % name
+                raise ValueError("incomplete test name: %s" % name)
             else:
                 parts_copy = parts[:]
                 while parts_copy:
@@ -120,7 +120,8 @@ class ReloadingTestLoader(TestLoader):
                             break
                         except ImportError:
                             del parts_copy[-1]
-                            if not parts_copy: raise
+                            if not parts_copy:
+                                raise
                 parts = parts[1:]
         obj = module
         for part in parts:
@@ -137,11 +138,11 @@ class ReloadingTestLoader(TestLoader):
             test = obj()
             if not isinstance(test, TestCase) and \
                not isinstance(test, TestSuite):
-                raise ValueError, \
-                      "calling %s returned %s, not a test" % (obj,test)
+                raise ValueError("calling %s returned %s, "
+                                 "not a test" % (obj,test))
             return test
         else:
-            raise ValueError, "don't know how to make test from: %s" % obj
+            raise ValueError("don't know how to make test from: %s" % obj)
 
 
 try:
@@ -181,7 +182,7 @@ class WebCase(TestCase):
                         if k.lower() == 'set-cookie']
         
         if ServerError.on:
-            raise ServerError
+            raise ServerError()
         return result
     
     interactive = True
@@ -189,7 +190,7 @@ class WebCase(TestCase):
     
     def _handlewebError(self, msg):
         if not self.interactive:
-            raise self.failureException, msg
+            raise self.failureException(msg)
         
         print
         print "    ERROR:", msg
@@ -221,7 +222,7 @@ class WebCase(TestCase):
                 # return without raising the normal exception
                 return
             elif i == "R":
-                raise self.failureException, msg
+                raise self.failureException(msg)
             elif i == "X":
                 sys.exit()
             print p,

@@ -37,7 +37,7 @@ class Root:
     def noshow(self):
         # Test for ticket #147, where yield showed no exceptions (content-
         # encoding was still gzip even though traceback wasn't zipped).
-        raise IndexError
+        raise IndexError()
         yield "Here be dragons"
     noshow.exposed = True
 

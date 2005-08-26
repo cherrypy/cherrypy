@@ -112,5 +112,5 @@ class PositionalParametersAware(object):
                     return self.index(*args, **kwargs)
                 except TypeError:
                     pass
-            raise cherrypy.NotFound, cherrypy.request.path
+            raise cherrypy.NotFound(cherrypy.request.path)
     default.exposed = True

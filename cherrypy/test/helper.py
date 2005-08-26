@@ -110,7 +110,7 @@ class CPWebCase(webtest.WebCase):
         
         if webtest.ServerError.on:
             self.tearDown()
-            raise webtest.ServerError
+            raise webtest.ServerError()
     
     def tearDown(self):
         pass

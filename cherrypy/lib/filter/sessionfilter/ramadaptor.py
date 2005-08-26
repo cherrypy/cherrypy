@@ -47,7 +47,7 @@ class RamAdaptor(BaseAdaptor):
         try:
             return self.__data[sessionKey]
         except KeyError:
-            raise SessionNotFoundError
+            raise SessionNotFoundError()
     
     def saveSessionDict(self, sessionData):
         # since everything in in ram the 
@@ -60,7 +60,7 @@ class RamAdaptor(BaseAdaptor):
         try:
             del self.__data[sessionKey]
         except KeyError:
-            raise SessionNotFoundError
+            raise SessionNotFoundError()
     
     def _cleanUpOldSessions(self):
         #deleteList = []
