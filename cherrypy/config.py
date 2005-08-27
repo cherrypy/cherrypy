@@ -161,8 +161,10 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
             # except IOError:
             #     continue
             fp = open(filename)
-            self._read(fp, filename)
-            fp.close()
+            try:
+                self._read(fp, filename)
+            finally:
+                fp.close()
 
 def dict_from_config_file(configFile):
     """ Convert an INI file to a dictionary. """
