@@ -63,10 +63,9 @@ def reset(useDefaults=True):
 reset()
 
 def update(updateMap=None, file=None, override=True):
-    """
-    Update configMap from a dictionary or a config file.  If override is
-    True then the update will not modify values already defined in the
-    configMap.
+    """Update configMap from a dictionary or a config file
+    If override is True then the update will not modify values already defined
+    in the configMap.
     """
     if updateMap:
         for section, valueMap in updateMap.iteritems():
@@ -87,10 +86,9 @@ def update(updateMap=None, file=None, override=True):
         _load(file, override)
 
 def get(key, defaultValue=None, returnSection=False):
-    """
-    Return the configuration value corresponding to key. If specified, return
-    defaultValue on lookup failure. If returnSection is specified, return the
-    path to the value, instead of the value itself.
+    """Return the configuration value corresponding to key
+    If specified, return defaultValue on lookup failure. If returnSection is
+    specified, return the path to the value, instead of the value itself.
     """
     # Look, ma, no Python function calls! Uber-fast.
 
@@ -123,9 +121,8 @@ def get(key, defaultValue=None, returnSection=False):
         return result
 
 def getAll(key):
-    """
-    Lookup key in the current node and all of its parent nodes. Return a list
-    of path, value pairs.
+    """Lookup key in the current node and all of its parent nodes
+    as a list of path, value pairs.
     """
     # Needed by the session filter
     
@@ -152,9 +149,8 @@ def getAll(key):
 
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
-    """
-    Sub-class of ConfigParser that keeps the case of options and that raises an
-    exception if the file cannot be read.
+    """Sub-class of ConfigParser that keeps the case of options and that raises
+    an exception if the file cannot be read.
     """
     
     def optionxform(self, optionstr):
@@ -202,9 +198,8 @@ def dict_from_config_file(configFile):
 
 
 def _load(configFile, override=True):
-    """
-    Merge an INI file into configMap. If override is false, preserve values
-    already in the configMap.
+    """Merge an INI file into configMap
+    If override is false, preserve values already in the configMap.
     """
     
     conf = dict_from_config_file(configFile)
