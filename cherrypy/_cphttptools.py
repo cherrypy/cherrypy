@@ -257,8 +257,15 @@ class Request(object):
         else:
             path, req.queryString = path, ""
         
-        # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+        # Unquote the path (e.g. "/this%20path" -> "this path").
+        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+        # Note that cgi.parse_qs will decode the querystring for us.
+        path = urllib.unquote(path)
+        
         if path == "*":
+            # "...the request does not apply to a particular resource,
+            # but to the server itself". See
+            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
             path = "global"
         elif not path.startswith("/"):
             # path is an absolute path (including "http://host.domain.tld");
@@ -850,8 +857,6 @@ def mapPathToObject(path):
     
     # Remove leading and trailing slash
     tpath = path.strip("/")
-    # Replace quoted chars (eg %20) from url
-    tpath = urllib.unquote(tpath)
     
     if not tpath:
         objectPathList = []

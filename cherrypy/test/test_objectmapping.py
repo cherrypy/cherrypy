@@ -143,7 +143,8 @@ class ObjectMappingTest(helper.CPWebCase):
                           % (self.HOST, self.PORT))
         
         # Test that we can use URL's which aren't all valid Python identifiers
-        self.getPage("/Von%20B\xfclow?ID=14")
+        # This should also test the %XX-unquoting of URL's.
+        self.getPage("/Von%20B%fclow?ID=14")
         self.assertBody("ID is 14")
 
 

@@ -66,6 +66,9 @@ class Params(Test):
     
     def ismap(self, x, y):
         return "Coordinates: %s, %s" % (x, y)
+    
+    def default(self, *args, **kwargs):
+        return "args: %s kwargs: %s" % (args, kwargs)
 
 
 class Status(Test):
@@ -266,6 +269,9 @@ cherrypy.config.update({
         'server.logFile': logFile,
         'server.logAccessFile': logAccessFile,
     },
+    '/params': {
+        'server.logFile': logFile,
+    },
 })
 
 # Shortcut syntax--should get put in the "global" bucket
@@ -310,6 +316,16 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         finally:
             ignore.pop()
         
+        # Test "% HEX HEX"-encoded URL, param keys, and values
+        self.getPage("/params/%e3/cheese?Gruy%E8re=Bulgn%e9ville")
+        self.assertBody(r"args: ('\xe3', 'cheese') "
+                        r"kwargs: {'Gruy\xe8re': 'Bulgn\xe9ville'}")
+        
+        # Make sure that encoded = and & get parsed correctly
+        self.getPage("/params/code?url=http%3A//cherrypy.org/index%3Fa%3D1%26b%3D2")
+        self.assertBody(r"args: ('code',) "
+                        r"kwargs: {'url': 'http://cherrypy.org/index?a=1&b=2'}")
+        
         # Test coordinates sent by <img ismap>
         self.getPage("/params/ismap?223,114")
         self.assertBody("Coordinates: 223, 114")
@@ -347,10 +363,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('content')
         self.assertStatus('200 OK')
         
-        data = open(logFile, "rb").readlines()
-        self.assertEqual(data[0][-55:], ' HTTP INFO 127.0.0.1 - GET /flatten/as_string HTTP/1.1\n')
-        self.assertEqual(data[1][-54:], ' HTTP INFO 127.0.0.1 - GET /flatten/as_yield HTTP/1.1\n')
-        
         data = open(logAccessFile, "rb").readlines()
         self.assertEqual(data[0][:15], '127.0.0.1 - - [')
         haslength = False
@@ -371,6 +383,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertEqual(data[1][-41:], '] "GET /flatten/as_yield HTTP/1.1" 200 7\n')
         else:
             self.assertEqual(data[1][-41:], '] "GET /flatten/as_yield HTTP/1.1" 200 -\n')
+        
+        data = open(logFile, "rb").readlines()
+        self.assertEqual(data, [])
+        
+        # Test that error log gets access messages if no logAccess defined.
+        self.getPage("/params/?thing=a")
+        self.assertBody("'a'")
+        data = open(logFile, "rb").readlines()
+        self.assertEqual(data[0][-53:], ' HTTP INFO 127.0.0.1 - GET /params/?thing=a HTTP/1.1\n')
     
     def testRedirect(self):
         self.getPage("/redirect/")
