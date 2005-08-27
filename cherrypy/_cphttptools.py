@@ -490,20 +490,20 @@ def main(path=None):
     
     while True:
         try:
-            func, objectPathList, virtualPathList = mapPathToObject(path)
+            page_handler, object_path, virtual_path = mapPathToObject(path)
             
-            # Remove "root" from objectPathList and join it to get objectPath
-            cherrypy.request.objectPath = '/' + '/'.join(objectPathList[1:])
+            # Remove "root" from object_path and join it to get objectPath
+            cherrypy.request.objectPath = '/' + '/'.join(object_path[1:])
             try:
-                body = func(*(virtualPathList + cherrypy.request.paramList),
-                            **(cherrypy.request.paramMap))
+                args = virtual_path + cherrypy.request.paramList
+                body = page_handler(*args, **cherrypy.request.paramMap)
             except TypeError, x:
                 m = re.match(r"(.*)\(\) got an unexpected keyword argument '(.*)'", x.args[0])
                 if m:
                     fname, pname = m.groups()
                     msg = ("The '%s' page handler received a '%s' parameter, "
                            "which it does not handle." % (fname, pname))
-                    raise TypeError(msg, repr(func))
+                    raise TypeError(msg, repr(page_handler))
             cherrypy.response.body = iterable(body)
             return
         except cherrypy.InternalRedirect, x:
