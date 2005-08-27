@@ -56,15 +56,17 @@ defaultGlobal = {
     }
 
 def reset(useDefaults=True):
+    """Clear configuration and restore defaults"""
     configMap.clear()
     if useDefaults:
         configMap["global"] = defaultGlobal.copy()
 reset()
 
 def update(updateMap=None, file=None, override=True):
-    """ Update the configMap from a dictionary or a config file.
-        If override is True then the update will not modify
-        values already defined in the configMap.
+    """
+    Update configMap from a dictionary or a config file.  If override is
+    True then the update will not modify values already defined in the
+    configMap.
     """
     if updateMap:
         for section, valueMap in updateMap.iteritems():
@@ -85,6 +87,11 @@ def update(updateMap=None, file=None, override=True):
         _load(file, override)
 
 def get(key, defaultValue=None, returnSection=False):
+    """
+    Return the configuration value corresponding to key. If specified, return
+    defaultValue on lookup failure. If returnSection is specified, return the
+    path to the value, instead of the value itself.
+    """
     # Look, ma, no Python function calls! Uber-fast.
 
     try:
@@ -117,10 +124,10 @@ def get(key, defaultValue=None, returnSection=False):
 
 def getAll(key):
     """
-    getAll will lookup the key in the current node and all of its parent nodes,
-    it will return a list of path, value pairs
-    This function is required by the session filter
+    Lookup key in the current node and all of its parent nodes. Return a list
+    of path, value pairs.
     """
+    # Needed by the session filter
     
     try:
         results = [('global', configMap['global'][key])]
@@ -145,8 +152,9 @@ def getAll(key):
 
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
-    """ Sub-class of ConfigParser that keeps the case of options and
-        that raises an exception if the file cannot be read
+    """
+    Sub-class of ConfigParser that keeps the case of options and that raises an
+    exception if the file cannot be read.
     """
     
     def optionxform(self, optionstr):
@@ -167,7 +175,7 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
                 fp.close()
 
 def dict_from_config_file(configFile):
-    """ Convert an INI file to a dictionary. """
+    """Convert an INI file to a dictionary"""
     
     # Parse config file
     configParser = CaseSensitiveConfigParser()
@@ -194,8 +202,9 @@ def dict_from_config_file(configFile):
 
 
 def _load(configFile, override=True):
-    """ Merge an INI file into configMap. If override is false,
-        values already in the configMap will not be changed.
+    """
+    Merge an INI file into configMap. If override is false, preserve values
+    already in the configMap.
     """
     
     conf = dict_from_config_file(configFile)
@@ -211,6 +220,7 @@ def _load(configFile, override=True):
 
 
 def outputConfigMap():
+    """Log server configuration parameters"""
     cherrypy.log("Server parameters:", 'CONFIG')
     
     serverVars = [
