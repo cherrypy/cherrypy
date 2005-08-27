@@ -504,6 +504,7 @@ def main(path=None):
                     msg = ("The '%s' page handler received a '%s' parameter, "
                            "which it does not handle." % (fname, pname))
                     raise TypeError(msg, repr(page_handler))
+                raise
             cherrypy.response.body = iterable(body)
             return
         except cherrypy.InternalRedirect, x:
