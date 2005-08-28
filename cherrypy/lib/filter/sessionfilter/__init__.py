@@ -121,23 +121,23 @@ class SessionFilter:
         # if we do not have a manually defined cookie path use path where the session
         # manager was defined
         
-        cookiePath = sessionManager.getSetting('cookiePath')
+        cookiePath = cherrypy.config.get('sessionFilter.cookiePath')
         if not cookiePath:
             cookiePath = sessionManager.path
 
-        timeout = sessionManager.getSetting('timeout')
+        timeout = cherrypy.config.get('sessionFilter.timeout')
         
         cherrypy.response.simpleCookie[cookieName] = sessionKey
         cherrypy.response.simpleCookie[cookieName]['path'] = cookiePath
         cherrypy.response.simpleCookie[cookieName]['max-age'] = timeout*60
         
         # try and set the cookie domain
-        cookieDomain = sessionManager.getSetting('cookieDomain')
+        cookieDomain = cherrypy.config.get('sessionFilter.cookieDomain')
         if cookieDomain:
             cherrypy.response.simpleCookie[cookieName]['domain'] = cookieDomain
 
         # try and set a cookie comment
-        cookieComment = sessionManager.getSetting('cookieComment')
+        cookieComment = cherrypy.config.get('sessionFilter.cookieComment')
         if cookieComment:
             cherrypy.response.simpleCookie[cookieName]['comment'] = cookieComment
 

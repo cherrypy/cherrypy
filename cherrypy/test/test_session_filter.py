@@ -121,7 +121,7 @@ class SessionFilterTest(helper.CPWebCase):
         # this should trigger a clean up
         self.getPage('/')
         
-        SessionCount = len(sessionManager._debugDump())
+        SessionCount = sessionManager._sessionCount()
         self.assertEqual(SessionCount, 1)
 
 

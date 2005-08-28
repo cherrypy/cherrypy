@@ -30,6 +30,7 @@ import cPickle as pickle
 import threading
 import os.path
 import mrow
+import cherrypy
 
 from baseadaptor import BaseAdaptor
 from sessionerrors import *
@@ -49,7 +50,7 @@ class FileAdaptor(BaseAdaptor):
         if not sessionKey:
             raise SessionNotFoundError()
         
-        storagePath = self.getSetting('storagePath')
+        storagePath = cherrypy.config.get('sessionFilter.storagePath')
 
         fileName = '%s-%s' % (self.name, sessionKey)
         filePath = os.path.join(storagePath, fileName)
@@ -68,7 +69,7 @@ class FileAdaptor(BaseAdaptor):
     
     def saveSessionDict(self, sessionData):
     
-        storagePath = self.getSetting('storagePath')
+        storagePath = cherrypy.config.get('sessionFilter.storagePath')
 
         fileName = '%s-%s' % (self.name, sessionData.key)
         filePath = os.path.join(storagePath, fileName)
@@ -84,7 +85,7 @@ class FileAdaptor(BaseAdaptor):
     def _cleanUpOldSessions(self):
         self.__fileLock.lock_read()
         try:
-            storagePath = self.getSetting('storagePath')
+            storagePath = cherrypy.config.get('sessionFilter.storagePath')
             sessionFileList = os.listdir(storagePath)
             
             for fileName in sessionFileList:
@@ -102,7 +103,7 @@ class FileAdaptor(BaseAdaptor):
     def _sessionCount(self):
         self.__fileLock.lock_read()
         try:
-            storagePath = self.getSetting('storagePath')
+            storagePath = cherrypy.config.get('sessionFilter.storagePath')
             sessionFileList = os.listdir(storagePath)
         
             count = 0

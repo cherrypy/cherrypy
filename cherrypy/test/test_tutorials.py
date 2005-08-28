@@ -136,26 +136,16 @@ class TutorialTest(helper.CPWebCase):
                          "\n            page 2 times! Your life is a patio of fun!"
                          "\n        ")
     
-    def test08AdvancedSessions(self):
-        self.load_tut_module("tut08_advanced_sessions")
-        cherrypy.config.update({"sessionFilter.on": True})
-        
-        self.getPage('/')
-        self.assertInBody("viewed this page 1 times")
-        
-        self.getPage('/', self.cookies)
-        self.assertInBody("viewed this page 2 times")
-    
-    def test09GeneratorsAndYield(self):
-        self.load_tut_module("tut09_generators_and_yield")
+    def test08GeneratorsAndYield(self):
+        self.load_tut_module("tut08_generators_and_yield")
         self.getPage('/')
         self.assertBody('<html><body><h2>Generators rule!</h2>'
                          '<h3>List of users:</h3>'
                          'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
                          '</body></html>')
     
-    def test10FileUpload(self):
-        self.load_tut_module("tut10_file_upload")
+    def test09FileUpload(self):
+        self.load_tut_module("tut09_file_upload")
         
         h = [("Content-type", "multipart/form-data; boundary=x"),
              ("Content-Length", "110")]

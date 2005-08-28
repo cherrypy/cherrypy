@@ -61,7 +61,7 @@ class BaseAdaptor(object):
         """ Return a new sessiondict instance """
         attributes = { 
                'timestamp'  : int(time.time()),
-               'timeout'    : self.getSetting('timeout'),
+               'timeout'    : cherrypy.config.get('sessionFilter.timeout'),
                'lastAccess' : int(time.time()),
                'key'        : self.generateSessionKey()
                }
@@ -83,13 +83,13 @@ class BaseAdaptor(object):
         #set the path
         self.path = sessionPath
 
-        cleanUpDelay = self.getSetting('cleanUpDelay')
-        timeMultiple = self.getSetting('timeMultiple')
+        cleanUpDelay = cherrypy.config.get('sessionFilter.cleanUpDelay')
+        timeMultiple = cherrypy.config.get('sessionFilter.timeMultiple')
 
         self.nextCleanUp = time.time()+cleanUpDelay * timeMultiple
 
         # find the cookie name
-        cookiePrefix = self.getSetting('cookiePrefix')
+        cookiePrefix = cherrypy.config.get('sessionFilter.cookiePrefix')
         
         self.cookieName = '%s_%s' % (cookiePrefix, sessionName)
 
@@ -98,14 +98,6 @@ class BaseAdaptor(object):
         except ImportError:
             from cherrypy._cpthreadinglocal import local
 
-    def getSetting(self, settingName, default = None):
-            missing = object()
-            result = cherrypy.config.get('sessionFilter.%s.%s' % (self.name, settingName), missing)
-            if result is missing:
-                result = cherrypy.config.get('sessionFilter.%s' % settingName, default)
-
-            return result
-    
     def cleanUpOldSessions(self):
         now = time.time()
         if self.nextCleanUp < now:
@@ -147,7 +139,7 @@ class BaseAdaptor(object):
             session.threadCount = 0
             self.saveSessionDict(session)
         
-            cacheTimeout = self.getSetting('cacheTimeout')
+            cacheTimeout = cherrypy.config.get('sessionFilter.cacheTimeout')
             
             if session.threadCount == 0 and (self.noCache or not cacheTimeout):
                 del self.__sessionCache[sessionKey]
@@ -160,7 +152,7 @@ class BaseAdaptor(object):
     def cleanUpCache(self):
         """ cleanup all inactive sessions """
         
-        cacheTimeout = self.getSetting('cacheTimeout')
+        cacheTimeout = cherrypy.config.get('sessionFilter.cacheTimeout')
         
         # don't waste cycles if we aren't caching inactive sessions
         if cacheTimeout and not self.noCache:

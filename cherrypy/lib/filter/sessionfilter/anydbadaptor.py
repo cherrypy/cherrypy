@@ -50,7 +50,7 @@ class DBMAdaptor(BaseAdaptor):
         if not dbFile:
             defaultFile = '%s.db' % sessionName
             
-            storagePath = self.getSetting('storagePath')
+            storagePath = cherrypy.config.get('sessionFilter.storagePath')
             
             dbFile = os.path.join(storagePath, defaultFile)
         self.__data = shelve.open(dbFile, 'c')
