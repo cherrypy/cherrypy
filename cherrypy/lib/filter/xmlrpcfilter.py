@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## Remco Boerma
 ##
 ## History:
+## 1.0.4   : 2005-08-28 Fixed issues on input types which are not strings
 ## 1.0.3   : 2005-01-28 Bugfix on content-length in 1.0.2 code fixed by
 ##           Gian Paolo Ciceri
 ## 1.0.2   : 2005-01-26 changed infile dox based on ticket #97
@@ -184,9 +185,17 @@ class XmlRpcFilter(BaseFilter):
         if (not cherrypy.threadData.xmlRpcFilterOn
             or not cherrypy.request.isRPC):
             return
+
+        encoding = cherrypy.config.get('xmlRpcFilter.encoding', 'utf-8')
+
+        if not isinstance(cherrypy.response.body, list):
+            cherrypy.response.body = [cherrypy.response.body]
         
         cherrypy.response.body = [xmlrpclib.dumps(
-            (cherrypy.response.body[0],), methodresponse=1, allow_none=1)]
+            (cherrypy.response.body[0],),
+            methodresponse=1,
+            encoding=encoding,
+            allow_none=1)]
         cherrypy.response.headerMap['Content-Type'] = 'text/xml'
         cherrypy.response.headerMap['Content-Length'] = `len(cherrypy.response.body[0])`
     
