@@ -33,6 +33,8 @@ A module containing a few utility classes/functions used by CherryPy
 import sys
 import traceback
 import time
+import os
+import os.path
 import cherrypy
 
 
@@ -140,6 +142,9 @@ def _cpLogMessage(msg, context = '', severity = 0):
         print s
     
     fname = cherrypy.config.get('server.logFile', '')
+    logdir = os.path.dirname(fname)
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
     if fname:
         f = open(fname, 'ab')
         f.write(s + '\n')
