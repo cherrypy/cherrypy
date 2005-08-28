@@ -42,17 +42,16 @@ class DBMAdaptor(BaseAdaptor):
     # it is ok to cache the session data
     noCache = False
     
-    def __init__(self, sessionName, sessionPath):
-        BaseAdaptor.__init__(self, sessionName, sessionPath)
+    def __init__(self):
+        BaseAdaptor.__init__(self)
         
         # we must make sure the db file is unique
-        dbFile = cherrypy.config.get('sessionFilter.%s.dbFile', None)
-        if not dbFile:
-            defaultFile = '%s.db' % sessionName
+        dbFile = cherrypy.config.get('sessionFilter.dbFile')
+ 
+        storagePath = cherrypy.config.get('sessionFilter.storagePath')
             
-            storagePath = cherrypy.config.get('sessionFilter.storagePath')
-            
-            dbFile = os.path.join(storagePath, defaultFile)
+        dbFile = os.path.join(storagePath, dbFile)
+        
         self.__data = shelve.open(dbFile, 'c')
     
     def _getSessionDict(self, sessionKey):

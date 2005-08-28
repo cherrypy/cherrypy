@@ -9,7 +9,8 @@ _sessionDefaults = {
     'sessionFilter.timeout': 60,
     'sessionFilter.cleanUpDelay': 60,
     'sessionFilter.storageType' : 'ram',
-    'sessionFilter.cookiePrefix': 'CherryPySession',
+    'sessionFilter.cookieName': 'CherryPySession',
+    'sessionFilter.cookiePath'  : '/',
     'sessionFilter.storagePath': '.sessiondata',
     'sessionFilter.dbFile': 'sessionData.db',
     'sessionFilter.default.on': True,
@@ -46,25 +47,15 @@ class SessionFilter:
     Input filter - get the sessionId (or generate a new one) and load up the session data
     """
 
-    def __init__(self, sessionName = 'default', sessionPath = '/'):
+    def __init__(self):
         """ Initilizes the session filter and creates cherrypy.sessions  """
 
         self.__localData= local()
         
         cherrypy.config.update(_sessionDefaults, override = False)
-        self.sessionManager = self.__newSessionManager(sessionName, sessionPath)
         
-    def __newSessionManager(self, sessionName, sessionPath):
-        """
-        Takes the name of a new session and its configuration path.
-        Returns a storageAdaptor instance maching the configured storage type.
-        If the storage type is not built in, it tries to use sessionFilter.storageAadaptors.
-        If the storage type still can not be found, an exception is raised.
-        """
         # look up the storage type or return the default
-        storageType = cherrypy.config.get('sessionFilter.%s.storageType' % sessionName, None)
-        if not storageType:
-            storageType = cherrypy.config.get('sessionFilter.storageType')
+        storageType = cherrypy.config.get('sessionFilter.storageType', None)
         
         # try to initilize a built in session
         try:
@@ -80,50 +71,40 @@ class SessionFilter:
                 # we couldn't find the session
                 raise SessionBadStorageTypeError(storageType)
         
-        return storageAdaptor(sessionName, sessionPath)
+        self.sessionManager = storageAdaptor()
     
     
-    def __loadSessions(self):
-        
+    def __loadSession(self):
+        """ loads the session or creates a new one """
         sessionManager = self.sessionManager
-        sessionName = sessionManager.name
         
-        if not cherrypy.config.get('sessionFilter.%s.on' % sessionName, False):
-            return
-
-        cookieName = sessionManager.cookieName
+        cookieName = cherrypy.config.get('sessionFilter.cookieName')
         
         try:
             sessionKey = cherrypy.request.simpleCookie[cookieName].value
         except KeyError:
             sessionKey = sessionManager.createSession()
-            self.saveSessionDictKey(sessionKey) 
-            sessionManager.loadSession(sessionKey)
+            self.sessionManager.loadSession(sessionKey)
 
         try:
-            sessionManager.loadSession(sessionKey)
+            self.sessionManager.loadSession(sessionKey)
         except SessionNotFoundError:
             sessionKey = sessionManager.createSession()
-            self.saveSessionDictKey(sessionKey)  
-            sessionManager.loadSession(sessionKey)
+            self.sessionManager.loadSession(sessionKey)
+        
+        # currently we have to keep setting the cookie to update the timeout value
+        self.setSessionCookie(sessionKey)  
 
-    def saveSessionDictKey(self, sessionKey):
+    def setSessionCookie(self, sessionKey):
         """ 
         Sets the session key in a cookie. 
         """
 
         sessionManager = self.sessionManager
         
-        sessionName = sessionManager.name
-        cookieName  = sessionManager.cookieName
-        
-        
-        # if we do not have a manually defined cookie path use path where the session
-        # manager was defined
+        cookieName  = cherrypy.config.get('sessionFilter.cookieName')
         
         cookiePath = cherrypy.config.get('sessionFilter.cookiePath')
-        if not cookiePath:
-            cookiePath = sessionManager.path
 
         timeout = cherrypy.config.get('sessionFilter.timeout')
         
@@ -143,7 +124,8 @@ class SessionFilter:
 
     def __saveSessions(self):
         try:
-            sessionData = getattr(cherrypy.session, self.sessionManager.name)
+            #sessionData = getattr(cherrypy.session, 'default')
+            sessionData = cherrypy.session._getDict()
         
             self.sessionManager.commitCache(sessionData.key)
             self.sessionManager.cleanUpCache()
@@ -155,7 +137,7 @@ class SessionFilter:
     def beforeMain(self):
         if (not cherrypy.config.get('staticFilter.on', False)
             and cherrypy.config.get('sessionFilter.on')):
-           self.__loadSessions()
+           self.__loadSession()
 
     def beforeFinalize(self):
         if (not cherrypy.config.get('staticFilter.on', False)

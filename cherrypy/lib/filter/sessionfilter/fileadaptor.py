@@ -41,8 +41,8 @@ class FileAdaptor(BaseAdaptor):
     # is ok to cache filesession data
     noCache = False
     
-    def __init__(self, sessionName, sessionPath):
-        BaseAdaptor.__init__(self, sessionName, sessionPath)
+    def __init__(self):
+        BaseAdaptor.__init__(self)
         self.__fileLock = mrow.MROWLock() 
 
     # all session writes are blocked 
@@ -52,7 +52,7 @@ class FileAdaptor(BaseAdaptor):
         
         storagePath = cherrypy.config.get('sessionFilter.storagePath')
 
-        fileName = '%s-%s' % (self.name, sessionKey)
+        fileName = 'sessionFile-' + sessionKey
         filePath = os.path.join(storagePath, fileName)
         
         if os.path.exists(filePath):
@@ -71,7 +71,7 @@ class FileAdaptor(BaseAdaptor):
     
         storagePath = cherrypy.config.get('sessionFilter.storagePath')
 
-        fileName = '%s-%s' % (self.name, sessionData.key)
+        fileName = 'sessionFile-' + sessionData.key
         filePath = os.path.join(storagePath, fileName)
 
         self.__fileLock.lock_write()
@@ -91,7 +91,7 @@ class FileAdaptor(BaseAdaptor):
             for fileName in sessionFileList:
                 try:
                     prefix, sessionKey = fileName.split('-')
-                    if prefix == self.name:
+                    if prefix == 'sessionFile':
                         session = self._getSessionDict(sessionKey)
                         if session.expired():
                             os.remove(os.path.join(storagePath, fileName))
@@ -108,7 +108,7 @@ class FileAdaptor(BaseAdaptor):
         
             count = 0
             for fileName in sessionFileList:
-                if fileName.startswith(self.name + '-'):
+                if fileName.startswith('sessionFile-'):
                     count += 1
         
             return count

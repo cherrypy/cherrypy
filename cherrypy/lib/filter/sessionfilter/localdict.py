@@ -26,39 +26,21 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-
 try:
     from threading import local
 except ImportError:
     from cherrypy._cpthreadinglocal import local
 
-class LocalDict(local):
-    def __getitem__(self, key):
-        return self.default[key]
+class LocalDict:
+    def __init__(self):
+        self.localObj = local()
     
-    def __setitem__(self, key, value):
-        self.default[key] = value
+    def __getattr__(self, attr):
+        return getattr(self.localObj.sessionDict, attr)
+        
+    def _setDict(self, sessionDict):
+        self.localObj.sessionDict = sessionDict
 
-    def __delitem__(self, key):
-        del self.default[key]
+    def _getDict(self):
+        return self.localObj.sessionDict
 
-    def get(self, key, value = None):
-        return self.default.get(key, value)
-
-    def setdefault(self, key, default):
-        return self.default.setdefault(key, default)
-
-    def __iter__(self):
-        return iter(self.default)
-
-    def __setattr__(self, attr, value):
-        local.__setattr__(self, attr, value)
-        '''
-        else:
-            local.__setattr__(self, attr, value)
-            return
-            raise TypeError('%s is not a session dict.' % attr)
-        '''
-    
-    def __getattribute__(self, attr):
-        return local.__getattribute__(self, attr)

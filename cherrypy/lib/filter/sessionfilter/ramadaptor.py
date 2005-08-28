@@ -34,8 +34,8 @@ import cherrypy
 
 class RamAdaptor(BaseAdaptor):
 
-    def __init__(self, sessionName, sessionPath):
-        BaseAdaptor.__init__(self, sessionName, sessionPath)
+    def __init__(self):
+        BaseAdaptor.__init__(self)
         self.__data = {}
     
     def _getSessionDict(self, sessionKey):

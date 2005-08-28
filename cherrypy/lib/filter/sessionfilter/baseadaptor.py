@@ -70,7 +70,7 @@ class BaseAdaptor(object):
     # there should never be a reason to modify the remaining functions, they are used 
     # internally by the sessionFilter
         
-    def __init__(self, sessionName, sessionPath):
+    def __init__(self):
         """
         Create the session caceh and set the session name.  Make if you write
         a custom __init__ function make sure you make a call to 
@@ -78,20 +78,12 @@ class BaseAdaptor(object):
         """
         
         self.__sessionCache = {}
-        self.name = sessionName
         
         #set the path
-        self.path = sessionPath
-
         cleanUpDelay = cherrypy.config.get('sessionFilter.cleanUpDelay')
         timeMultiple = cherrypy.config.get('sessionFilter.timeMultiple')
 
         self.nextCleanUp = time.time()+cleanUpDelay * timeMultiple
-
-        # find the cookie name
-        cookiePrefix = cherrypy.config.get('sessionFilter.cookiePrefix')
-        
-        self.cookieName = '%s_%s' % (cookiePrefix, sessionName)
 
         try:
             from threading import local
@@ -119,10 +111,10 @@ class BaseAdaptor(object):
     def loadSession(self, sessionKey):
         session = self.getSessionDict(sessionKey)
 
-        session.cookieName = self.cookieName
         session.lastAccess = time.time()
 
-        setattr(cherrypy.session, self.name, session)
+        #setattr(cherrypy.session, 'default', session)
+        cherrypy.session._setDict(session)
     
     def createSession(self):
         """ returns a session key """
