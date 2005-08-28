@@ -38,12 +38,7 @@ class RamAdaptor(BaseAdaptor):
         BaseAdaptor.__init__(self, sessionName, sessionPath)
         self.__data = {}
     
-    def newSession(self):
-        """ Return a new sessiondict instance """
-        newData = self.getDefaultAttributes()
-        return SessionDict(sessionAttributes = newData)
-        
-    def getSessionDict(self, sessionKey):
+    def _getSessionDict(self, sessionKey):
         try:
             return self.__data[sessionKey]
         except KeyError:
@@ -56,26 +51,15 @@ class RamAdaptor(BaseAdaptor):
         if not self.__data.has_key(sessionData.key):
             self.__data[sessionData.key] = sessionData
 
-    def deleteSession(self, sessionKey):
-        try:
-            del self.__data[sessionKey]
-        except KeyError:
-            raise SessionNotFoundError()
-    
     def _cleanUpOldSessions(self):
-        #deleteList = []
-        for sessionKey in self.__data.keys():
-            session = self.__data[sessionKey]
+        deleteList = []
+        
+        for session in self.__data.itervalues():
             if session.expired():
-                del self.__data[sessionKey]
-                #deleteList.append(sessionKey)
-       
-        return 
+                deleteList.append(session.key)
+        
         for key in deleteList:
-            self.deleteSession(sessionKey)
-
-    def _debugDump(self):
-        if not cherrypy.config.get('testMode', False):
-            raise AttributeError()
-        else:
-            return self.__data
+            del self.__data[key]
+            
+    def _sessionCount(self):
+        return len(self.__data)

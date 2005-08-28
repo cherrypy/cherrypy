@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import random, time, sha, string
-
+from sessiondict import SessionDict
 import cherrypy
 
 class BaseAdaptor(object):
@@ -39,42 +39,37 @@ class BaseAdaptor(object):
     # by default don't use session caching
     noCache = True
     
-    # these are the  functions that need to rewritten 
-    def deleteSession(self, sessionKey):
-        """ delete a session from storage """
-        raise NotImplementedError('deleteSession has not been implemented')
-    
-    def getSessionDict(self, sessionKey):
+    def _getSessionDict(self, sessionKey):
         """ function to lookup the session """
-        raise NotImplementedError('getSessionDict has not been implemented')
+        raise NotImplementedError('_getSessionDict has not been implemented')
     
     def saveSessionDict(self, sessionData):
         """ function to save sesion data """
         raise NotImplementedError('saveSessionDict has not been implemented')
-    
+
     def _cleanUpOldSessions(self):
-        """This function cleans up expired sessions"""
-        raise NotImplementedError('cleanUpOldSessions has not been implemented')
+        """ function to clean up old sesion data """
+        raise NotImplementedError('cleanUpOldSession has not been implemented')
     
-    def newSession(self):
-        """ Return a new sessiondict instance """
-        raise NotImplementedError('newSession not been implemented')
-   
-    # it might be usefull to redefine this function
+    # it might be usefull to redefine these function
     def generateSessionKey(self):
         """ Function to return a new sessioId """
-        try:
-            sessionKeyFunc = self.getSetting('keyGenerator')
-        except AttributeError:
-            sessionKeyFunc = None
         
-        if sessionKeyFunc:
-            newKey = sessionKeyFunc()
-        else:
-            newKey = sha.new('%s' % random.random()).hexdigest()
+        return sha.new('%s' % random.random()).hexdigest()
         
-        return newKey
+    def newSession(self):
+        """ Return a new sessiondict instance """
+        attributes = { 
+               'timestamp'  : int(time.time()),
+               'timeout'    : self.getSetting('timeout'),
+               'lastAccess' : int(time.time()),
+               'key'        : self.generateSessionKey()
+               }
+        return SessionDict(sessionAttributes = attributes)
     
+    # there should never be a reason to modify the remaining functions, they are used 
+    # internally by the sessionFilter
+        
     def __init__(self, sessionName, sessionPath):
         """
         Create the session caceh and set the session name.  Make if you write
@@ -103,17 +98,6 @@ class BaseAdaptor(object):
         except ImportError:
             from cherrypy._cpthreadinglocal import local
 
-    # there should never be a reason to modify the remaining functions, they used 
-    # internally by the sessionFilter
-    
-    def getDefaultAttributes(self):
-      return { 
-               'timestamp'  : int(time.time()),
-               'timeout'    : self.getSetting('timeout'),
-               'lastAccess' : int(time.time()),
-               'key'        : self.generateSessionKey()
-             }
-             
     def getSetting(self, settingName, default = None):
             missing = object()
             result = cherrypy.config.get('sessionFilter.%s.%s' % (self.name, settingName), missing)
@@ -121,24 +105,28 @@ class BaseAdaptor(object):
                 result = cherrypy.config.get('sessionFilter.%s' % settingName, default)
 
             return result
-
-            
+    
     def cleanUpOldSessions(self):
         now = time.time()
         if self.nextCleanUp < now:
             self._cleanUpOldSessions()
-        
-    def loadSession(self, sessionKey, autoCreate = True):
+    
+    def getSessionDict(self, sessionKey):
         try:
             # look for the session in the cache
             session = self.__sessionCache[sessionKey]
             session.threadCount += 1
         except KeyError:
             # look in the primary storage
-            session = self.getSessionDict(sessionKey)
+            session = self._getSessionDict(sessionKey)
             session.threadCount += 1
             self.__sessionCache[sessionKey] = session
-    
+
+        return session
+
+    def loadSession(self, sessionKey):
+        session = self.getSessionDict(sessionKey)
+
         session.cookieName = self.cookieName
         session.lastAccess = time.time()
 
@@ -185,3 +173,6 @@ class BaseAdaptor(object):
             for session in deleteList:
                 self.commitCache(session.key)
                 del self.__sessionCache[session.key]
+
+    def _cacheSize(self):
+        return len(self.__sessionCache)

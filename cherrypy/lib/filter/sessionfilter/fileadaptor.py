@@ -29,12 +29,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import cPickle as pickle
 import threading
 import os.path
-
+import mrow
 
 from baseadaptor import BaseAdaptor
 from sessionerrors import *
 from sessiondict import SessionDict
-
 
 class FileAdaptor(BaseAdaptor):
     
@@ -43,15 +42,10 @@ class FileAdaptor(BaseAdaptor):
     
     def __init__(self, sessionName, sessionPath):
         BaseAdaptor.__init__(self, sessionName, sessionPath)
-        self.__fileLock = threading.RLock()
+        self.__fileLock = mrow.MROWLock() 
 
-    def newSession(self):
-        """ Return a new sessiondict instance """
-        newData = self.getDefaultAttributes()
-        return SessionDict(sessionAttributes = newData)
-   
     # all session writes are blocked 
-    def getSessionDict(self, sessionKey):
+    def _getSessionDict(self, sessionKey):
         if not sessionKey:
             raise SessionNotFoundError()
         
@@ -62,11 +56,11 @@ class FileAdaptor(BaseAdaptor):
         
         if os.path.exists(filePath):
             f = open(filePath, "rb")
-            self.__fileLock.acquire()
+            self.__fileLock.lock_read()
             try:
                 sessionData = pickle.load(f)
             finally:
-                self.__fileLock.release()
+                self.__fileLock.unlock_read()
                 f.close()
             return sessionData
         else:
@@ -79,49 +73,45 @@ class FileAdaptor(BaseAdaptor):
         fileName = '%s-%s' % (self.name, sessionData.key)
         filePath = os.path.join(storagePath, fileName)
 
-        f = open(filePath,"wb")
-        self.__fileLock.acquire()
-        pickle.dump(sessionData, f)
-        self.__fileLock.release()
-        f.close()
+        self.__fileLock.lock_write()
+        try:
+            f = open(filePath,"wb")
+            pickle.dump(sessionData, f)
+            f.close()
+        finally:
+            self.__fileLock.unlock_write()
 
-    def deleteSession(self, sessionKey):
-        storagePath = self.getSetting('storagePath')
-        fileName = '%s-%s' % (self.name, sessionKey)
-        filePath = os.path.join(storagePath, fileName)
-        
-        if os.path.exists(filePath):
-            self.__fileLock.acquire()
-            os.remove(filePath)
-            self.__fileLock.release()
-    
     def _cleanUpOldSessions(self):
-        storagePath = self.getSetting('storagePath')
-        sessionFileList = os.listdir(storagePath)
+        self.__fileLock.lock_read()
+        try:
+            storagePath = self.getSetting('storagePath')
+            sessionFileList = os.listdir(storagePath)
+            
+            for fileName in sessionFileList:
+                try:
+                    prefix, sessionKey = fileName.split('-')
+                    if prefix == self.name:
+                        session = self._getSessionDict(sessionKey)
+                        if session.expired():
+                            os.remove(os.path.join(storagePath, fileName))
+                except ValueError:
+                    pass
+        finally:
+            self.__fileLock.unlock_read()
+    
+    def _sessionCount(self):
+        self.__fileLock.lock_read()
+        try:
+            storagePath = self.getSetting('storagePath')
+            sessionFileList = os.listdir(storagePath)
         
-        for fileName in sessionFileList:
-            try:
-                prefix, sessionKey = fileName.split('-')
-                if prefix == self.name:
-                    session = self.getSessionDict(sessionKey)
-                    if session.expired():
-                        os.remove(os.path.join(storagePath, fileName))
-            except ValueError:
-                pass
-
-    def _debugDump(self):
-        storagePath = self.getSetting('storagePath')
-        sessionFileList = os.listdir(storagePath)
+            count = 0
+            for fileName in sessionFileList:
+                if fileName.startswith(self.name + '-'):
+                    count += 1
         
-        filePrefix = '%s-' % self.name
-        dump = {}
-        for fileName in sessionFileList:
-            try:
-                prefix, sessionKey = fileName.split('-')
-                if prefix == self.name:
-                    dump[sessionKey] = self.getSessionDict(sessionKey)
-            except ValueError:
-                pass
-
-        return dump
-
+            return count
+        finally:
+            self.__fileLock.lock_read()
+        
+    

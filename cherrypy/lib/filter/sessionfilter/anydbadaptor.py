@@ -55,12 +55,7 @@ class DBMAdaptor(BaseAdaptor):
             dbFile = os.path.join(storagePath, defaultFile)
         self.__data = shelve.open(dbFile, 'c')
     
-    def newSession(self):
-        """ Return a new sessiondict instance """
-        newData = self.getDefaultAttributes()
-        return SessionDict(sessionAttributes = newData)
-
-    def getSessionDict(self, sessionKey):
+    def _getSessionDict(self, sessionKey):
         try:
             return self.__data[sessionKey]
         except KeyError:
@@ -69,24 +64,15 @@ class DBMAdaptor(BaseAdaptor):
     def saveSessionDict(self, sessionData):
         self.__data[sessionData.key] = sessionData
 
-    def deleteSession(self, sessionKey):
-        try:
-            del self.__data[sessionKey]
-        except KeyError:
-            raise SessionNotFoundError()
-    
     def _cleanUpOldSessions(self):
-        #deleteList = []
-        for sessionKey in self.__data:
-            session = self.__data[sessionKey]
+        deleteList = []
+        
+        for session in self.__data.itervalues():
             if session.expired():
-                del self.__data[sessionKey]
-                #deleteList.append(sessionKey)
-        #for key in deleteList:
-        #    self.deleteSession(sessionKey)
+                deleteList.append(session.key)
+        
+        for key in deleteList:
+            del self.__data[key]
 
-    def _debugDump(self):
-        if not cherrypy.config.get('testMode', False):
-            raise AttributeError()
-        else:
-            return dict(self.__data)
+    def _sessionCount(self):
+        return len(self.__data)
