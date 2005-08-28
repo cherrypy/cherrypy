@@ -107,8 +107,8 @@ def wsgiApp(environ, start_response):
         s, h, b = _cphttptools.bareError(tb)
         exc = sys.exc_info()
     else:
-        resp = cherrypy.response
-        s, h, b = resp.status, resp.headers, resp.body
+        response = cherrypy.response
+        s, h, b = response.status, response.headers, response.body
         exc = None
     
     try:

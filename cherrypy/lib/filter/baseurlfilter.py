@@ -41,14 +41,14 @@ class BaseUrlFilter(BaseFilter):
         if not cherrypy.config.get('baseUrlFilter.on', False):
             return
         
-        req = cherrypy.request
+        request = cherrypy.request
         newBaseUrl = cherrypy.config.get('baseUrlFilter.baseUrl', 'http://localhost')
         if cherrypy.config.get('baseUrlFilter.useXForwardedHost', True):
-            newBaseUrl = req.headerMap.get("X-Forwarded-Host", newBaseUrl)
+            newBaseUrl = request.headerMap.get("X-Forwarded-Host", newBaseUrl)
         
         if newBaseUrl.find("://") == -1:
             # add http:// or https:// if needed
-            newBaseUrl = req.base[:req.base.find("://") + 3] + newBaseUrl
+            newBaseUrl = request.base[:request.base.find("://") + 3] + newBaseUrl
         
-        req.browserUrl = req.browserUrl.replace(req.base, newBaseUrl)
-        req.base = newBaseUrl
+        request.browserUrl = request.browserUrl.replace(request.base, newBaseUrl)
+        request.base = newBaseUrl

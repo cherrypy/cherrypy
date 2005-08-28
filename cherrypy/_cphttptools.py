@@ -245,17 +245,17 @@ class Request(object):
     def parseFirstLine(self):
         # This has to be done very early in the request process,
         # because request.path is used for config lookups right away.
-        req = cherrypy.request
+        request = cherrypy.request
         
         # Parse first line
-        req.method, path, req.protocol = req.requestLine.split()
-        req.processRequestBody = req.method in ("POST", "PUT")
+        request.method, path, request.protocol = request.requestLine.split()
+        request.processRequestBody = request.method in ("POST", "PUT")
         
         # separate the queryString, or set it to "" if not found
         if "?" in path:
-            path, req.queryString = path.split("?", 1)
+            path, request.queryString = path.split("?", 1)
         else:
-            path, req.queryString = path, ""
+            path, request.queryString = path, ""
         
         # Unquote the path (e.g. "/this%20path" -> "this path").
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
@@ -275,11 +275,11 @@ class Request(object):
             path = path[len(scheme + "://" + location):]
         
         # Save original value (in case it gets modified by filters)
-        req.path = req.originalPath = path
+        request.path = request.originalPath = path
         
         # Change objectPath in filters to change
         # the object that will get rendered
-        req.objectPath = None
+        request.objectPath = None
     
     def run(self):
         """Process the Request."""
@@ -314,7 +314,7 @@ class Request(object):
             handleError(sys.exc_info())
     
     def processRequestHeaders(self):
-        req = cherrypy.request
+        request = cherrypy.request
         
         # Compare request and server HTTP versions, in case our server does
         # not support the requested version. We can't tell the server what
@@ -328,23 +328,23 @@ class Request(object):
         # Notice that, in (b), the response will be "HTTP/1.1" even though
         # the client only understands 1.0. RFC 2616 10.5.6 says we should
         # only return 505 if the _major_ version is different.
-        request_v = Version.from_http(req.protocol)
+        request_v = Version.from_http(request.protocol)
         server_v = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
         server_v = Version.from_http(server_v)
         cherrypy.request.version = min(request_v, server_v)
         
         # build a paramMap dictionary from queryString
-        if re.match(r"[0-9]+,[0-9]+", req.queryString):
+        if re.match(r"[0-9]+,[0-9]+", request.queryString):
             # Server-side image map. Map the coords to 'x' and 'y'
             # (like CGI::Request does).
-            pm = req.queryString.split(",")
+            pm = request.queryString.split(",")
             pm = {'x': int(pm[0]), 'y': int(pm[1])}
         else:
-            pm = cgi.parse_qs(req.queryString, keep_blank_values=True)
+            pm = cgi.parse_qs(request.queryString, keep_blank_values=True)
             for key, val in pm.items():
                 if len(val) == 1:
                     pm[key] = val[0]
-        req.paramMap = pm
+        request.paramMap = pm
         
         # Process the headers into request.headerMap
         for name, value in self.requestHeaders:
@@ -353,49 +353,49 @@ class Request(object):
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headerMap
             # (but they will be correctly stored in request.simpleCookie).
-            req.headerMap[name] = value
+            request.headerMap[name] = value
             
             # Handle cookies differently because on Konqueror, multiple
             # cookies come on different lines with the same key
             if name == 'Cookie':
-                req.simpleCookie.load(value)
+                request.simpleCookie.load(value)
         
         # Write a message to the error.log only if there is no access.log.
         # This is only here for backwards-compatibility (with the time
         # before the access.log existed), and should be removed in CP 2.2.
         fname = cherrypy.config.get('server.logAccessFile', '')
         if not fname:
-            msg = "%s - %s" % (req.remoteAddr, req.requestLine)
+            msg = "%s - %s" % (request.remoteAddr, request.requestLine)
             cherrypy.log(msg, "HTTP")
         
         # Save original values (in case they get modified by filters)
-        req.originalParamMap = req.paramMap
-        req.originalParamList = req.paramList
+        request.originalParamMap = request.paramMap
+        request.originalParamList = request.paramList
         
         if cherrypy.request.version >= "1.1":
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
             # (Bad Request) status code to any HTTP/1.1 request message
             # which lacks a Host header field.
-            if not req.headerMap.has_key("Host"):
+            if not request.headerMap.has_key("Host"):
                 cherrypy.response.status = 400
                 cherrypy.response.body = ["HTTP/1.1 requires a 'Host' request header."]
                 finalize()
                 raise cherrypy.RequestHandled()
-        req.base = "%s://%s" % (req.scheme, req.headerMap.get('Host', ''))
-        req.browserUrl = req.base + req.path
+        request.base = "%s://%s" % (request.scheme, request.headerMap.get('Host', ''))
+        request.browserUrl = request.base + request.path
     
     def processRequestBody(self):
-        req = cherrypy.request
+        request = cherrypy.request
         
         # Create a copy of headerMap with lowercase keys because
         # FieldStorage doesn't work otherwise
         lowerHeaderMap = {}
-        for key, value in req.headerMap.items():
+        for key, value in request.headerMap.items():
             lowerHeaderMap[key.lower()] = value
         
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
-        forms = _cpcgifs.FieldStorage(fp=req.rfile,
+        forms = _cpcgifs.FieldStorage(fp=request.rfile,
                                       headers=lowerHeaderMap,
                                       environ=methenv,
                                       keep_blank_values=1)
@@ -407,19 +407,19 @@ class Request(object):
             for key in forms.keys():
                 valueList = forms[key]
                 if isinstance(valueList, list):
-                    req.paramMap[key] = []
+                    request.paramMap[key] = []
                     for item in valueList:
                         if item.filename is not None:
                             value = item # It's a file upload
                         else:
                             value = item.value # It's a regular field
-                        req.paramMap[key].append(value)
+                        request.paramMap[key].append(value)
                 else:
                     if valueList.filename is not None:
                         value = valueList # It's a file upload
                     else:
                         value = valueList.value # It's a regular field
-                    req.paramMap[key] = value
+                    request.paramMap[key] = value
 
 
 # Error handling
@@ -455,8 +455,8 @@ def handleError(exc):
             body = dbltrace % (_cputil.formatExc(exc), _cputil.formatExc())
         else:
             body = ""
-        resp = cherrypy.response
-        resp.status, resp.headers, resp.body = bareError(body)
+        response = cherrypy.response
+        response.status, response.headers, response.body = bareError(body)
 
 
 def bareError(extrabody=None):
@@ -759,21 +759,21 @@ def serve_file(filename):
     else:
         ext = ""
     
-    resp = cherrypy.response
+    response = cherrypy.response
     
     contentType = mimetypes.types_map.get(ext, "text/plain")
-    resp.headerMap['Content-Type'] = contentType
+    response.headerMap['Content-Type'] = contentType
     
     strModifTime = httpdate(time.gmtime(stat.st_mtime))
     if cherrypy.request.headerMap.has_key('If-Modified-Since'):
         # Check if if-modified-since date is the same as strModifTime
         if cherrypy.request.headerMap['If-Modified-Since'] == strModifTime:
-            resp.status = "304 Not Modified"
-            resp.body = []
+            response.status = "304 Not Modified"
+            response.body = []
             if getattr(cherrypy, "debug", None):
                 cherrypy.log("    Found file (304 Not Modified): %s" % filename, "DEBUG")
             return
-    resp.headerMap['Last-Modified'] = strModifTime
+    response.headerMap['Last-Modified'] = strModifTime
     
     # Set Content-Length and use an iterable (file object)
     #   this way CP won't load the whole file in memory
@@ -782,26 +782,26 @@ def serve_file(filename):
     if getattr(cherrypy, "debug", None):
         cherrypy.log("    Found file: %s" % filename, "DEBUG")
     
-    resp.headerMap["Accept-Ranges"] = "bytes"
+    response.headerMap["Accept-Ranges"] = "bytes"
     r = get_ranges(c_len)
     if r:
         if len(r) == 1:
             # Return a single-part response.
             start, stop = r[0]
             r_len = stop - start
-            resp.status = "206 Partial Content"
-            resp.headerMap['Content-Range'] = ("bytes %s-%s/%s" %
+            response.status = "206 Partial Content"
+            response.headerMap['Content-Range'] = ("bytes %s-%s/%s" %
                                                (start, stop - 1, c_len))
-            resp.headerMap['Content-Length'] = r_len
+            response.headerMap['Content-Length'] = r_len
             bodyfile.seek(start)
-            resp.body = [bodyfile.read(r_len)]
+            response.body = [bodyfile.read(r_len)]
         else:
             # Return a multipart/byteranges response.
-            resp.status = "206 Partial Content"
+            response.status = "206 Partial Content"
             import mimetools
             boundary = mimetools.choose_boundary()
-            resp.headerMap['Content-Type'] = "multipart/byteranges; boundary=%s" % boundary
-            del resp.headerMap['Content-Length']
+            response.headerMap['Content-Type'] = "multipart/byteranges; boundary=%s" % boundary
+            del response.headerMap['Content-Length']
             def fileRanges():
                 for start, stop in r:
                     yield "--" + boundary
@@ -813,10 +813,10 @@ def serve_file(filename):
                     yield "\n"
                 # Final boundary
                 yield "--" + boundary
-            resp.body = fileRanges()
+            response.body = fileRanges()
     else:
-        resp.headerMap['Content-Length'] = c_len
-        resp.body = fileGenerator(bodyfile)
+        response.headerMap['Content-Length'] = c_len
+        response.body = fileGenerator(bodyfile)
 
 
 # Object lookup
