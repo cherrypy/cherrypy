@@ -143,7 +143,6 @@ def _cpLogMessage(msg, context = '', severity = 0):
     
     fname = cherrypy.config.get('server.logFile', '')
     logdir = os.path.dirname(fname)
-    print logdir
     if logdir and not os.path.exists(logdir):
         os.makedirs(logdir)
     if fname:
