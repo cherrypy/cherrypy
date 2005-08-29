@@ -1,30 +1,47 @@
-                                                                                                                                                                                                                                                               
-import threading
 
 # write should lock out everyone
 # read should only lock out writing
 
+import threading
+
+try:
+    from threading import local
+except ImportError:
+    from cherrypy._cpthreadinglocal import local
+
+
 class MROWLock(object):
+    
     def __init__(self):
-        self.local = threading.local()
-        self.writelock = threading.RLock() # this is required so that multiple writers won't mess up writing event
-        self.writing = threading.Event() # must wait() for this; it'll tell you when a write is over (like a lock that you dont acquire, you just wiat for)
-        self.writing.set() # we are not writing to it right now
-        self.readers = [] # list of all reader Events. when clear, they are reading. must wait() for all of these to be sure no one is reading
-        self.readerslock = threading.RLock() # lock for readers list so it is not changed while looping
+        self.local = local()
+        # this is required so that multiple writers won't mess up writing event
+        self.writelock = threading.RLock()
+        # must wait() for this; it'll tell you when a write is over
+        # (like a lock that you dont acquire, you just wait for)
+        self.writing = threading.Event()
+        # we are not writing to it right now
+        self.writing.set()
+        # list of all reader Events. when clear, they are reading.
+        # must wait() for all of these to be sure no one is reading
+        self.readers = []
+        # lock for readers list so it is not changed while looping
+        self.readerslock = threading.RLock()
     
     def lock_read(self):
         if not hasattr(self.local, "reader"):
             self.local.reader = threading.Event()
             self.local.reader.set()
-            self.readerslock.acquire() # lock the list so it won't mess up the loop in lock_write
+            # lock the list so it won't mess up the loop in lock_write
+            self.readerslock.acquire()
             self.readers.append(self.local.reader)
             self.readerslock.release()
         
-        # only wait if the writing thread is not the thread same which is requesting a read lock
+        # only wait if the writing thread is not the thread same
+        # which is requesting a read lock
         if not hasattr(self.local, 'writing'):
-            self.writing.wait() # wait for any writes to finish
-
+            # wait for any writes to finish
+            self.writing.wait()
+        
         # tell everyone we are reading
         self.local.reader.clear()
     
@@ -33,10 +50,13 @@ class MROWLock(object):
         # lock_write is being called by the same thread
         if not hasattr(self.local, 'writing'):
             self.local.writing = True
-            self.writing.wait() # wait for any writes to finish (this is a bit redundant with the next line)
+            # wait for any writes to finish
+            # (this is a bit redundant with the next line)
+            self.writing.wait()
             
         self.writelock.acquire()
-        self.writing.clear() # lock out everyone reading from this dict
+        # lock out everyone reading from this dict
+        self.writing.clear()
         self.readerslock.acquire()
         for reader in self.readers:
             reader.wait()
@@ -48,17 +68,22 @@ class MROWLock(object):
             self.local.reader.set()
     
     def unlock_write(self):
-        self.writing.set() # wake everyone else up. TODO: what if one thread has the lock, and another calls this method?
+        # wake everyone else up.
+        # TODO: what if one thread has the lock, and another calls this method?
+        self.writing.set()
         self.writelock.release()
 
 
 class MROWDict(dict):
+    
     def __init__(self, auto_lock = False, auto_lock_safe = True, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         self._locks = {}
         self._lockslock = threading.RLock()
-        self._auto_lock = auto_lock # automatically acquire locks for getitem setitem (BAD IDEA)
-        self._auto_lock_safe = auto_lock_safe # when autolocking, lock the whole dict (GOOD IDEA)
+        # automatically acquire locks for getitem setitem (BAD IDEA)
+        self._auto_lock = auto_lock
+        # when autolocking, lock the whole dict (GOOD IDEA)
+        self._auto_lock_safe = auto_lock_safe
     
     def _init_lock(self, key):
         self._lockslock.acquire()
@@ -127,52 +152,50 @@ class MROWDict(dict):
                 self.lock_write(key)
         dict.update(self, values)
 
-'''
+
 # test code
 import time, thread
 
-deadthreads = 0
-
-def writer_thread(d, l):
-    global deadthreads
-    for i in range(0, 100):
-        l.lock_write()
-        hits = d["hits"]
-        hits = hits + 1
-        time.sleep(.01)
-        d["hits"] = hits
-        l.unlock_write()
-    deadthreads += 1
-
-def reader_thread(d, l):
-    while True:
-        l.lock_read()
-        try:
-            hits = d["hits"]
-            if deadthreads == 3:
-                if d["hits"] != 300:
-                    print "omfg error",d["hits"]
+class MROWTest(object):
+    
+    def __init__(self):
+        self.deadthreads = 0
+        self.hitdict = {"hits": 0}
+        self.lock = MROWLock()
+        for i in xrange(0, 2):
+            thread.start_new_thread(self.reader_thread, ())
+        for i in range(0, 3):
+            thread.start_new_thread(self.writer_thread, ())
+        self.reader_thread()
+    
+    def writer_thread(self):
+        for i in xrange(100):
+            self.lock.lock_write()
+            hits = self.hitdict["hits"] + 1
+            time.sleep(.01)
+            self.hitdict["hits"] = hits
+            self.lock.unlock_write()
+        self.deadthreads += 1
+    
+    def reader_thread(self):
+        while True:
+            self.lock.lock_read()
+            try:
+                hits = self.hitdict["hits"]
+                if self.deadthreads == 3:
                     break
-                else:
-                    print "its all ok"
-                    break
-        finally:
-            l.unlock_read()
-        time.sleep(.01)
+            finally:
+                self.lock.unlock_read()
+            time.sleep(.01)
+        
+        if hits != 300:
+            print "omfg error", hits
+        else:
+            print "its all ok"
 
-def main():
-    global deadthreads
-    deadthreads = 0
-    d = {}
-    d["hits"] = 0
-    l = MROWLock()
-    for i in range(0, 2):
-        thread.start_new_thread(reader_thread, (d,l))
-    for i in range(0, 3):
-        thread.start_new_thread(writer_thread, (d,l))
-    reader_thread(d, l)
 
 if __name__ == "__main__":
     while True:
-        main()
-'''
+        MROWTest()
+
+del time, thread, MROWTest
