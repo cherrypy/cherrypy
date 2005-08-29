@@ -30,6 +30,8 @@ import random, time, sha, string
 from sessiondict import SessionDict
 import cherrypy
 
+import mrow
+
 class BaseAdaptor(object):
     """
     This is the class from which all session storage types are derived.
@@ -59,17 +61,21 @@ class BaseAdaptor(object):
         
     def newSession(self):
         """ Return a new sessiondict instance """
-        attributes = { 
-               'timestamp'  : int(time.time()),
-               'timeout'    : cherrypy.config.get('sessionFilter.timeout'),
-               'lastAccess' : int(time.time()),
-               'key'        : self.generateSessionKey()
-               }
+        attributes = self.getDefaultAttributes()
         return SessionDict(sessionAttributes = attributes)
     
     # there should never be a reason to modify the remaining functions, they are used 
     # internally by the sessionFilter
-        
+    
+    def getDefaultAttributes(self):
+        """ return the default attributes as a dict"""
+        return { 
+                 'timestamp'  : int(time.time()),
+                 'timeout'    : cherrypy.config.get('sessionFilter.timeout'),
+                 'lastAccess' : int(time.time()),
+                 'key'        : self.generateSessionKey()
+               }
+ 
     def __init__(self):
         """
         Create the session caceh and set the session name.  Make if you write
@@ -78,6 +84,7 @@ class BaseAdaptor(object):
         """
         
         self.__sessionCache = {}
+        self.__sessionLocks = {}
         
         #set the path
         cleanUpDelay = cherrypy.config.get('sessionFilter.cleanUpDelay')
@@ -99,13 +106,25 @@ class BaseAdaptor(object):
         try:
             # look for the session in the cache
             session = self.__sessionCache[sessionKey]
-            session.threadCount += 1
+            session.lock_write()
+            try:
+                session.threadCount += 1
+            finally:
+                session.unlock_write()
         except KeyError:
-            # look in the primary storage
-            session = self._getSessionDict(sessionKey)
-            session.threadCount += 1
-            self.__sessionCache[sessionKey] = session
-
+            lock = self.__sessionLocks.setdefault(sessionKey, mrow.MROWLock())
+            lock.lock_write()
+            try:
+                # look in the primary storage
+                session = self._getSessionDict(sessionKey)
+            
+                # make the session use same lock the internally
+                session.setLock(self.__sessionLocks[sessionKey])
+            
+                session.threadCount += 1
+                self.__sessionCache[sessionKey] = session
+            finally:
+                lock.unlock_write()
         return session
 
     def loadSession(self, sessionKey):
@@ -113,7 +132,6 @@ class BaseAdaptor(object):
 
         session.lastAccess = time.time()
 
-        #setattr(cherrypy.session, 'default', session)
         cherrypy.session._setDict(session)
     
     def createSession(self):
@@ -128,17 +146,21 @@ class BaseAdaptor(object):
         # but i don't think anything bad could happen ;)
         try:
             session = self.__sessionCache[sessionKey]
-            session.threadCount = 0
-            self.saveSessionDict(session)
+            session.threadCount -= 1
+            try:
+                session.lock_write()
+                
+                self.saveSessionDict(session)
         
-            cacheTimeout = cherrypy.config.get('sessionFilter.cacheTimeout')
+                cacheTimeout = cherrypy.config.get('sessionFilter.cacheTimeout')
             
-            if session.threadCount == 0 and (self.noCache or not cacheTimeout):
-                del self.__sessionCache[sessionKey]
+                if session.threadCount == 0 and (self.noCache or not cacheTimeout):
+                    del self.__sessionCache[sessionKey]
+                    del self.__sessionLocks[sessionKey]
+            finally:
+                session.unlock_write()
         except KeyError:
-            # i don't think this should happen but it does
-            # this is probably the result of two thread calling commitCache
-            # but nothing bad should happen
+            # another thread beat us to the delete
             pass
     
     def cleanUpCache(self):
@@ -154,9 +176,9 @@ class BaseAdaptor(object):
                 expired = (time.time() - session.lastAccess) < cacheTimeout
                 if session.threadCount == 0 and expired:
                     deleteList.append(session)
+            
             for session in deleteList:
                 self.commitCache(session.key)
-                del self.__sessionCache[session.key]
 
     def _cacheSize(self):
         return len(self.__sessionCache)

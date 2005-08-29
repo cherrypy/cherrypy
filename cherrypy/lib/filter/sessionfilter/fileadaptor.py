@@ -74,13 +74,14 @@ class FileAdaptor(BaseAdaptor):
         fileName = 'sessionFile-' + sessionData.key
         filePath = os.path.join(storagePath, fileName)
 
-        self.__fileLock.lock_write()
+        #self.__fileLock.lock_write()
         try:
             f = open(filePath,"wb")
             pickle.dump(sessionData, f)
             f.close()
         finally:
-            self.__fileLock.unlock_write()
+            pass
+            #self.__fileLock.unlock_write()
 
     def _cleanUpOldSessions(self):
         self.__fileLock.lock_read()

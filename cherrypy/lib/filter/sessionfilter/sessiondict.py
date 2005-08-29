@@ -30,35 +30,62 @@ import time
 
 from sessionerrors import SessionImmutableError
 
-def locker(function):
+def readLocker(function):
     def _inner(self, *args, **kwds):
-        self._lock.acquire()
+        self._lock.lock_read()
         try:
             return function(self, *args, **kwds)
         finally:
-            self._lock.release()
+            self._lock.unlock_read()
+    return _inner
+
+def writeLocker(function):
+    def _inner(self, *args, **kwds):
+        self._lock.lock_write()
+        try:
+            return function(self, *args, **kwds)
+        finally:
+            self._lock.unlock_write()
     return _inner
 
 import threading 
 
+import mrow
+
 class SessionDict(dict):
 
     def __init__(self, sessionData = {}, sessionAttributes = {}):
-        self._lock = threading.RLock()
+        self._lock = mrow.MROWLock()
         self.threadCount = 0
         
         dict.__init__(self, sessionData)
         self.__sessionAttributes = sessionAttributes
         
-    get=locker(dict.get)
-    setdefault=locker(dict.setdefault)
+    get=readLocker(dict.get)
+    setdefault=writeLocker(dict.setdefault)
+    
+    def setLock(self, lockObject):
+        """ set the lock object """
+        self._lock = lockObject
+    
+    def lock_write(self):
+        self._lock.lock_write()
 
+    def unlock_write(self):
+        self._lock.unlock_write()
+
+    def lock_read(self):
+        self._lock.lock_read()
+
+    def unlock_read(self):
+        self._lock.unlock_read()
+    
     def __getattr__(self, attr):
         try:
           return self.__sessionAttributes[attr]
         except KeyError:
             return object.__getattribute__(self, attr)
-    __getattr__=locker(__getattr__)
+    __getattr__=readLocker(__getattr__)
     
     # this function we lock the hard way
     # so we don't try to lock the lock
@@ -67,21 +94,22 @@ class SessionDict(dict):
             object.__setattr__(self, attr, value)
             return
 
-        self._lock.acquire()
+        self._lock.lock_read()
+        try:
         
-        if attr in ['timeout', 'lastAccess' ]:
-            self.__sessionAttributes[attr] = value
-        elif attr in ['timestamp', 'key']:
-            raise AttributeError('%s is immutable' % attr)
-        else:
-            object.__setattr__(self, attr, value)
-
-        self._lock.release()
+            if attr in ['timeout', 'lastAccess' ]:
+                self.__sessionAttributes[attr] = value
+            elif attr in ['timestamp', 'key']:
+                raise AttributeError('%s is immutable' % attr)
+            else:
+                object.__setattr__(self, attr, value)
+        finally:
+            self._lock.unlock_read()
     
     def expired(self):
         now = time.time()
         return (now - self.lastAccess) > self.timeout
-    expired = locker(expired)
+    expired = readLocker(expired)
         
     def __getstate__(self):
         """ remove the lock so we can pickle """
@@ -89,11 +117,11 @@ class SessionDict(dict):
         stateDict['threadCount'] = 0
         stateDict.pop('_lock')
         return stateDict
-    __getstate__ = locker(__getstate__)
+    __getstate__ = readLocker(__getstate__)
 
     def __setstate__(self, stateDict):
         """ create a new lock object """
-        self.__dict__['_lock'] = threading.RLock()
+        self.__dict__['_lock'] = mrow.MROWLock()
         self.__dict__.update(stateDict)
 
     def attributeDict(self):

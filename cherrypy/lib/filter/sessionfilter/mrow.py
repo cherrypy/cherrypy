@@ -12,6 +12,7 @@ class MROWLock(object):
         self.writing.set() # we are not writing to it right now
         self.readers = [] # list of all reader Events. when clear, they are reading. must wait() for all of these to be sure no one is reading
         self.readerslock = threading.RLock() # lock for readers list so it is not changed while looping
+    
     def lock_read(self):
         if not hasattr(self.local, "reader"):
             self.local.reader = threading.Event()
@@ -19,11 +20,21 @@ class MROWLock(object):
             self.readerslock.acquire() # lock the list so it won't mess up the loop in lock_write
             self.readers.append(self.local.reader)
             self.readerslock.release()
-        self.writing.wait() # wait for any writes to finish
+        
+        # only wait if the writing thread is not the thread same which is requesting a read lock
+        if not hasattr(self.local, 'writing'):
+            self.writing.wait() # wait for any writes to finish
+
         # tell everyone we are reading
         self.local.reader.clear()
+    
     def lock_write(self):
-        self.writing.wait() # wait for any writes to finish (this is a bit redundant with the next line)
+        # we set the writing attribute so we know if 
+        # lock_write is being called by the same thread
+        if not hasattr(self.local, 'writing'):
+            self.local.writing = True
+            self.writing.wait() # wait for any writes to finish (this is a bit redundant with the next line)
+            
         self.writelock.acquire()
         self.writing.clear() # lock out everyone reading from this dict
         self.readerslock.acquire()
@@ -31,12 +42,15 @@ class MROWLock(object):
             reader.wait()
         self.readerslock.release()
         # at this point, all systems go
+    
     def unlock_read(self):
         if hasattr(self.local, "reader"):
             self.local.reader.set()
+    
     def unlock_write(self):
         self.writing.set() # wake everyone else up. TODO: what if one thread has the lock, and another calls this method?
         self.writelock.release()
+
 
 class MROWDict(dict):
     def __init__(self, auto_lock = False, auto_lock_safe = True, *args, **kwargs):
@@ -45,27 +59,34 @@ class MROWDict(dict):
         self._lockslock = threading.RLock()
         self._auto_lock = auto_lock # automatically acquire locks for getitem setitem (BAD IDEA)
         self._auto_lock_safe = auto_lock_safe # when autolocking, lock the whole dict (GOOD IDEA)
+    
     def _init_lock(self, key):
         self._lockslock.acquire()
         if key not in self._locks:
             self._locks[key] = MROWLock()
         self._lockslock.release()
+    
     def lock_read(self, key = "__me__"):
         self._init_lock(key)
         return self._locks[key].lock_read()
+    
     def lock_write(self, key = "__me__"):
         self._init_lock(key)
         return self._locks[key].lock_write()
+    
     def unlock_read(self, key = "__me__"):
         return self._locks[key].unlock_read()
+    
     def unlock_write(self, key = "__me__"):
         return self._locks[key].unlock_write()
+    
     def __delitem__(self, key):
         if key in self._locks:
             self.unlock_read(key)
             self.unlock_write(key)
             del self._locks[key]
             dict.__delitem__(self, key)
+    
     def __getitem__(self, key):
         if self._auto_lock:
             if self._auto_lock_safe:
@@ -73,6 +94,7 @@ class MROWDict(dict):
             else:
                 self.lock_read(key)
         return dict.__getitem__(self, key)
+    
     def __setitem__(self, key, value):
         if self._auto_lock:
             if self._auto_lock_safe:
@@ -80,9 +102,33 @@ class MROWDict(dict):
             else:
                 self.lock_write(key)
         dict.__setitem__(self, key, value)
+    
+    def get(self, key):
+        if self._auto_lock:
+            if self._auto_lock_safe:
+                self.lock_read()
+            else:
+                self.lock_read(key)
+        return dict.get(self, key)
+    
+    def setdefault(self, key, value):
+        if self._auto_lock:
+            if self._auto_lock_safe:
+                self.lock_write()
+            else:
+                self.lock_write(key)
+        dict.setdefault(self, key, value)
 
-# test code
+    def update(self, values):
+        if self._auto_lock:
+            if self._auto_lock_safe:
+                self.lock_write()
+            else:
+                self.lock_write(key)
+        dict.update(self, values)
+
 '''
+# test code
 import time, thread
 
 deadthreads = 0
