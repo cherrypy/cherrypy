@@ -157,13 +157,13 @@ hello
 --x--
 """
         self.getPage('/upload', h, "POST", b)
-        self.assertBody('''
-        <html><body>
+        self.assertBody('''<html>
+        <body>
             myFile length: 5<br />
             myFile filename: hello.txt<br />
             myFile mime-type: text/plain
-        </body></html>
-        ''')
+        </body>
+        </html>''')
 
 if __name__ == "__main__":
     helper.testmain()

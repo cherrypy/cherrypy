@@ -17,15 +17,26 @@ class FileUploadDemo(object):
     index.exposed = True
     
     def upload(self, myFile):
-        return """
-        <html><body>
+        out = """<html>
+        <body>
             myFile length: %s<br />
             myFile filename: %s<br />
             myFile mime-type: %s
-        </body></html>
-        """ % (len(myFile.value),
-               myFile.filename,
-               myFile.type)
+        </body>
+        </html>"""
+        
+        # Although this just counts the file length, it demonstrates
+        # how to read large files in chunks instead of all at once.
+        # CherryPy uses Python's cgi module to read the uploaded file
+        # into a temporary file; myFile.file.read reads from that.
+        size = 0
+        while True:
+            data = myFile.file.read(8192)
+            if not data:
+                break
+            size += len(data)
+        
+        return out % (size, myFile.filename, myFile.type)
     upload.exposed = True
 
 
