@@ -35,7 +35,8 @@ class StaticFilter(BaseFilter):
     """Filter that handles static content."""
     
     def beforeMain(self):
-        from cherrypy import _cphttptools, config, request
+        from cherrypy import config, request
+        from cherrypy.lib import cptools
         
         if not config.get('staticFilter.on', False):
             return
@@ -64,5 +65,5 @@ class StaticFilter(BaseFilter):
             if root:
                 filename = os.path.join(root, filename)
         
-        _cphttptools.serve_file(filename)
+        cptools.serveFile(filename)
 

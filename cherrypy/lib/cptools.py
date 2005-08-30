@@ -30,9 +30,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Just a few convenient functions and classes
 """
 
+import inspect
+import mimetools
+
+import mimetypes
+mimetypes.types_map['.dwg']='image/x-dwg'
+mimetypes.types_map['.ico']='image/x-icon'
+
+import os
+import sys
+import time
 import cherrypy
 
-import inspect
 
 def decorate(func, decorator):
     """
@@ -80,6 +89,7 @@ class ExposeItems:
     def __getattr__(self, key):
         return self.items[key]
 
+
 class PositionalParametersAware(object):
     """
     Utility class that restores positional parameters functionality that
@@ -114,3 +124,194 @@ class PositionalParametersAware(object):
                     pass
             raise cherrypy.NotFound(cherrypy.request.path)
     default.exposed = True
+
+
+weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+def HTTPDate(dt=None):
+    """Return the given time.struct_time as a string in RFC 1123 format.
+    
+    If no arguments are provided, the current time (as determined by
+    time.gmtime() is used).
+    
+    RFC 2616: "[Concerning RFC 1123, RFC 850, asctime date formats]...
+    HTTP/1.1 clients and servers that parse the date value MUST
+    accept all three formats (for compatibility with HTTP/1.0),
+    though they MUST only generate the RFC 1123 format for
+    representing HTTP-date values in header fields."
+    
+    RFC 1945 (HTTP/1.0) requires the same.
+    
+    """
+    
+    if dt is None:
+        dt = time.gmtime()
+    
+    year, month, day, hh, mm, ss, wd, y, z = dt
+    # Is "%a, %d %b %Y %H:%M:%S GMT" better or worse?
+    return ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
+            (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
+
+
+def getRanges(content_length):
+    """Return a list of (start, stop) indices from a Range header, or None.
+    
+    Each (start, stop) tuple will be composed of two ints, which are suitable
+    for use in a slicing operation. That is, the header "Range: bytes=3-6",
+    if applied against a Python string, is requesting resource[3:7]. This
+    function will return the list [(3, 7)].
+    """
+    
+    r = cherrypy.request.headerMap.get('Range')
+    if not r:
+        return None
+    
+    result = []
+    bytesunit, byteranges = r.split("=", 1)
+    for brange in byteranges.split(","):
+        start, stop = [x.strip() for x in brange.split("-", 1)]
+        if start:
+            if not stop:
+                stop = content_length - 1
+            start, stop = map(int, (start, stop))
+            if start >= content_length:
+                # From rfc 2616 sec 14.16:
+                # "If the server receives a request (other than one
+                # including an If-Range request-header field) with an
+                # unsatisfiable Range request-header field (that is,
+                # all of whose byte-range-spec values have a first-byte-pos
+                # value greater than the current length of the selected
+                # resource), it SHOULD return a response code of 416
+                # (Requested range not satisfiable)."
+                continue
+            if stop < start:
+                # From rfc 2616 sec 14.16:
+                # "If the server ignores a byte-range-spec because it
+                # is syntactically invalid, the server SHOULD treat
+                # the request as if the invalid Range header field
+                # did not exist. (Normally, this means return a 200
+                # response containing the full entity)."
+                return None
+            result.append((start, stop + 1))
+        else:
+            if not stop:
+                # See rfc quote above.
+                return None
+            # Negative subscript (last N bytes)
+            result.append((content_length - int(stop), content_length))
+    
+    if result == []:
+        cherrypy.response.headerMap['Content-Range'] = "bytes */%s" % content_length
+        b = "Invalid Range (first-byte-pos greater than Content-Length)"
+        raise cherrypy.HTTPClientError(416, b)
+    
+    return result
+
+
+def serveFile(path, contentType=None, disposition=None, name=None):
+    """Set status, headers, and body in order to serve the given file.
+    
+    The Content-Type header will be set to the contentType arg, if provided.
+    If not provided, the Content-Type will be guessed by its extension.
+    
+    If disposition is not None, the Content-Disposition header will be set
+    to "<disposition>; filename=<name>". If name is None, it will be set
+    to the basename of path. If disposition is None, no Content-Disposition
+    header will be written.
+    """
+    
+    response = cherrypy.response
+    
+    # If path is relative, make absolute using cherrypy.root's module.
+    if not os.path.isabs(path):
+        root = os.path.dirname(sys.modules[cherrypy.root.__module__].__file__)
+        path = os.path.join(root, path)
+    
+    try:
+        stat = os.stat(path)
+    except OSError:
+        if getattr(cherrypy, "debug", None):
+            cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
+        raise cherrypy.NotFound(cherrypy.request.path)
+    
+    if contentType is None:
+        # Set content-type based on filename extension
+        ext = ""
+        i = path.rfind('.')
+        if i != -1:
+            ext = path[i:]
+        contentType = mimetypes.types_map.get(ext, "text/plain")
+    response.headerMap['Content-Type'] = contentType
+    
+    strModifTime = HTTPDate(time.gmtime(stat.st_mtime))
+    if cherrypy.request.headerMap.has_key('If-Modified-Since'):
+        # Check if if-modified-since date is the same as strModifTime
+        if cherrypy.request.headerMap['If-Modified-Since'] == strModifTime:
+            response.status = "304 Not Modified"
+            response.body = []
+            if getattr(cherrypy, "debug", None):
+                cherrypy.log("    Found file (304 Not Modified): %s" % path, "DEBUG")
+            return []
+    response.headerMap['Last-Modified'] = strModifTime
+    
+    if disposition is not None:
+        if name is None:
+            name = os.path.basename(path)
+        cd = "%s; filename=%s" % (disposition, name)
+        response.headerMap["Content-Disposition"] = cd
+    
+    # Set Content-Length and use an iterable (file object)
+    #   this way CP won't load the whole file in memory
+    c_len = stat.st_size
+    bodyfile = open(path, 'rb')
+    if getattr(cherrypy, "debug", None):
+        cherrypy.log("    Found file: %s" % path, "DEBUG")
+    
+    response.headerMap["Accept-Ranges"] = "bytes"
+    r = getRanges(c_len)
+    if r:
+        if len(r) == 1:
+            # Return a single-part response.
+            start, stop = r[0]
+            r_len = stop - start
+            response.status = "206 Partial Content"
+            response.headerMap['Content-Range'] = ("bytes %s-%s/%s" %
+                                                   (start, stop - 1, c_len))
+            response.headerMap['Content-Length'] = r_len
+            bodyfile.seek(start)
+            response.body = [bodyfile.read(r_len)]
+        else:
+            # Return a multipart/byteranges response.
+            response.status = "206 Partial Content"
+            boundary = mimetools.choose_boundary()
+            ct = "multipart/byteranges; boundary=%s" % boundary
+            response.headerMap['Content-Type'] = ct
+            del response.headerMap['Content-Length']
+            
+            def fileRanges():
+                for start, stop in r:
+                    yield "--" + boundary
+                    yield "\nContent-type: %s" % contentType
+                    yield ("\nContent-range: bytes %s-%s/%s\n\n"
+                           % (start, stop - 1, c_len))
+                    bodyfile.seek(start)
+                    yield bodyfile.read((stop + 1) - start)
+                    yield "\n"
+                # Final boundary
+                yield "--" + boundary
+            response.body = fileRanges()
+    
+    else:
+        response.headerMap['Content-Length'] = c_len
+        response.body = fileGenerator(bodyfile)
+    return response.body
+
+def fileGenerator(input, chunkSize=65536):
+    """Yield the given input (a file object) in chunks (default 64k)."""
+    chunk = input.read(chunkSize)
+    while chunk:
+        yield chunk
+        chunk = input.read(chunkSize)
+    input.close()

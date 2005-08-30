@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """Basic tests for the CherryPy core: request handling."""
 
 import cherrypy
-from cherrypy import _cphttptools
+from cherrypy.lib import cptools
 import types
 import os
 localDir = os.path.dirname(__file__)
@@ -178,13 +178,11 @@ class Error(Test):
 class Ranges(Test):
     
     def get_ranges(self):
-        return repr(_cphttptools.get_ranges(8))
+        return repr(cptools.getRanges(8))
     
     def slice_file(self):
         path = os.path.join(os.getcwd(), os.path.dirname(__file__))
-        _cphttptools.serve_file(os.path.join(path, "static/index.html"))
-        # Ugly hack but it works
-        return cherrypy.response.body
+        return cptools.serveFile(os.path.join(path, "static/index.html"))
 
 
 class Headers(Test):
