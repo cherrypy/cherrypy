@@ -174,7 +174,7 @@ class WorkerThread(threading.Thread):
                             request.write(line)
                 except socket.error, e:
                     errno = e.args[0]
-                    if errno in (32, 10053, 10054):
+                    if errno in (32, 104, 10053, 10054):
                         # Client probably closed the connection before the
                         # response was sent.
                         pass
