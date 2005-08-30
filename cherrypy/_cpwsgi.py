@@ -42,9 +42,13 @@ def requestLine(environ):
     resource = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
     if not (resource == "*" or resource.startswith("/")):
         resource = "/" + resource
+    
     qString = environ.get('QUERY_STRING')
     if qString:
         resource += '?' + qString
+    
+    resource = resource.replace(" ", "%20")
+    
     return ('%s %s %s' % (environ['REQUEST_METHOD'],
                           resource or '/',
                           environ['SERVER_PROTOCOL']

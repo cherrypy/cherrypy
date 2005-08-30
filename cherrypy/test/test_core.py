@@ -317,8 +317,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             ignore.pop()
         
         # Test "% HEX HEX"-encoded URL, param keys, and values
-        self.getPage("/params/%e3/cheese?Gruy%E8re=Bulgn%e9ville")
-        self.assertBody(r"args: ('\xe3', 'cheese') "
+        self.getPage("/params/%d4%20%e3/cheese?Gruy%E8re=Bulgn%e9ville")
+        self.assertBody(r"args: ('\xd4 \xe3', 'cheese') "
                         r"kwargs: {'Gruy\xe8re': 'Bulgn\xe9ville'}")
         
         # Make sure that encoded = and & get parsed correctly
