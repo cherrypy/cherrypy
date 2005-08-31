@@ -26,109 +26,34 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import threading
-import time
-import unittest
-import sys
-import os
-
 import cherrypy
-from cherrypy.test import helper
 
-localDir = os.path.dirname(__file__)
-curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
-tmpFolder = os.path.join(curpath, 'tmpSessionTestData')
-
-server_conf = {
-               'global':
-                   {
-                    'server.socketHost': '127.0.0.1',
-                    'server.socketPort': 8000,
-                    'server.threadPool': 5,
-                    'server.logToScreen': False,
-                    'server.environment': "production",
-                    'sessionFilter.on' : True,
-                    'sessionFilter.cacheTimeout' : 60,
-                    'sessionFilter.storagePath' : tmpFolder,
-                    'sessionFilter.default.on' : True,
-                    'sessionFilter.timeMultiple' : 1,
-                    'sessionFilter.cleanUpDelay' : 1,
-                    'sessionFilter.timeout' : 1,
-                    'testMode' : True
-                    }
-}
-
-class TestSite:
-    
+class Root:
     def index(self):
-        count = cherrypy.session.setdefault('count', 1)
-        cherrypy.session['count'] = count + 1
-        return str(count)
+        counter = cherrypy.session.get('counter', 0) + 1
+        cherrypy.session['counter'] = counter
+        yield str(counter)
     index.exposed = True
     
-cherrypy.root = TestSite()
-cherrypy.config.update(server_conf.copy())
+cherrypy.root = Root()
+cherrypy.config.update({
+        'server.logToScreen': False,
+        'server.environment': 'production',
+        'sessionFilter.on': True,
+})
 
+import helper
 
 class SessionFilterTest(helper.CPWebCase):
     
-    def __restartWithStorage(self, storageType):
-        cherrypy.config.update({'sessionFilter.storageType' : storageType })
-        cherrypy.server.restart()
-
-    def test_ram(self):
-        self.__restartWithStorage('ram')
-        self.persistant = False
-        self.doSession()
-        self.doCleanUp()
-    
-    def test_file(self):
-        self.__restartWithStorage('file')
-        self.persistant = True 
-        self.doSession()
-        self.doCleanUp()
-    
-    def test_anydb(self):
-        self.__restartWithStorage('anydb')
-        self.persistant  = True 
-        self.doSession()
-        self.doCleanUp()
-    
-    def doSession(self):
+    def testSessionFilter(self):
         self.getPage('/')
         self.assertBody('1')
+        self.getPage('/', self.cookies)
+        self.assertBody('2')
+        self.getPage('/', self.cookies)
+        self.assertBody('3')
         
-        getPageArgs = ('/', self.cookies)
-        
-        # this loop will be used to test thread safety
-        for n in xrange(2):
-            if self.persistant:
-                cherrypy.server.stop()
-                cherrypy.server.start(initOnly = True)
-            self.getPage(*getPageArgs)
-        self.assertBody(str(3))
-    
-    def doCleanUp(self):
-        SessionFilter = cherrypy._cputil._cpDefaultFilterInstances['SessionFilter']
-        
-        #  create several new sessions
-        for n in xrange(5):
-            self.getPage('/')
-        
-        sessionManager = SessionFilter.sessionManager
-        
-        time.sleep(1)
-        # this should trigger a clean up
-        self.getPage('/')
-        
-        SessionCount = sessionManager._sessionCount()
-        self.assertEqual(SessionCount, 1)
-
-
 if __name__ == "__main__":
-    try:
-        os.mkdir(tmpFolder)
-    except OSError:
-        pass
-    
     helper.testmain()
+

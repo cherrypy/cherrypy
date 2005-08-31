@@ -56,12 +56,11 @@ except ImportError:
 request = local()
 response = local()
 
-from cherrypy.lib.filter.sessionfilter.localdict import LocalDict
-# create session object
-session = LocalDict()
-
 # Create threadData object as a thread-specific all-purpose storage
 threadData = local()
+
+from lib.filter import sessionfilter
+session = sessionfilter.SessionWrapper()
 
 # decorator function for exposing methods
 def expose(func):

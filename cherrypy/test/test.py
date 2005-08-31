@@ -321,7 +321,7 @@ if __name__ == '__main__':
         'test_static_filter',
         'test_tutorials',
         'test_virtualhost_filter',
-##        'test_session_filter',
+        'test_session_filter',
     ]
     CPTestHarness(testList).run()
     

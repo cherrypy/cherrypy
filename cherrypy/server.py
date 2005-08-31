@@ -87,11 +87,6 @@ def _start(initOnly=False, serverClass=None):
     # TODO
     # config.checkConfigOptions()
     
-    # Initialize a few global variables
-    cherrypy._lastCacheFlushTime = time.time()
-    cherrypy._lastSessionCleanUpTime = time.time()
-    cherrypy._sessionMap = {} # Map of "cookie" -> ("session object", "expiration time")
-    
     # If sessions are stored in files and we
     # use threading, we need a lock on the file
     if (cherrypy.config.get('server.threadPool') > 1
