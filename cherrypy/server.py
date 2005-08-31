@@ -172,7 +172,7 @@ seen_threads = {}
 def request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http"):
     """request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http")
     
-    clientAddress: the IP address of the client
+    clientAddress: the (IP address, port) of the client
     remoteHost: the IP address of the client
     requestLine: "<HTTP method> <url?qs> HTTP/<version>",
             e.g. "GET /main?abc=123 HTTP/1.1"

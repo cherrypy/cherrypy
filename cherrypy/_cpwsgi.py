@@ -95,7 +95,11 @@ def wsgiApp(environ, start_response):
                                   or environ.get('REMOTE_USER') or None)
         cherrypy.request.multithread = environ['wsgi.multithread']
         cherrypy.request.multiprocess = environ['wsgi.multiprocess']
-        cherrypy.server.request(environ.get('REMOTE_ADDR', ''),
+        clientAddr = (
+            environ.get('REMOTE_ADDR', ''),
+            int(environ.get('REMOTE_PORT', -1))
+        )
+        cherrypy.server.request(clientAddr,
                                 environ.get('REMOTE_ADDR', ''),
                                 requestLine(environ),
                                 translate_headers(environ),

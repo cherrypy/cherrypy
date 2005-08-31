@@ -21,7 +21,15 @@
       <listitem>
         <section>
           <title>cherrypy.request.remoteAddr</title>
-          <para>This attribute is a string containing the IP address of the client.</para>
+          <para>This attribute is a string containing the IP address of the
+          client. It will be an empty string if it is not available.</para>
+        </section>
+      </listitem>
+      <listitem>
+        <section>
+          <title>cherrypy.request.remotePort</title>
+          <para>This attribute is an int containing the TCP port number of
+          the client. It will be -1 if it is not available.</para>
         </section>
       </listitem>
       <listitem>

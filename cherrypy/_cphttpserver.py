@@ -83,7 +83,7 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         
         cherrypy.request.multithread = cherrypy.config.get("server.threadPool") > 1
         cherrypy.request.multiprocess = False
-        cherrypy.server.request(self.client_address[0],
+        cherrypy.server.request(self.client_address,
                                 self.address_string(),
                                 self.raw_requestline,
                                 self._headerlist(),

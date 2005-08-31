@@ -162,7 +162,8 @@ class Request(object):
                  rfile, scheme="http"):
         """Populate a new Request object.
         
-        clientAddress and remoteHost should be IP address strings.
+        clientAddress should be a tuple of client IP address, client Port
+        remoteHost should be string of the client's IP address.
         requestLine should be of the form "GET /path HTTP/1.0".
         headers should be a list of (name, value) tuples.
         rfile should be a file-like object containing the HTTP request
@@ -186,7 +187,8 @@ class Request(object):
         self.requestHeaders = headers
         
         # Prepare cherrypy.request variables
-        cherrypy.request.remoteAddr = clientAddress
+        cherrypy.request.remoteAddr = clientAddress[0]
+        cherrypy.request.remotePort = clientAddress[1]
         cherrypy.request.remoteHost = remoteHost
         cherrypy.request.paramList = [] # Only used for Xml-Rpc
         cherrypy.request.headerMap = {}
