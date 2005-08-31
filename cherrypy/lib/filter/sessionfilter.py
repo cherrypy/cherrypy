@@ -27,11 +27,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 """ Session implementation for CherryPy.
-We use cherrypy.threadData (td) to store some sonvenient variables as
+We use cherrypy.threadData (td) to store some convenient variables as
 well as data about the session for the current request.
 
 Variables used to store config options:
-
     - td._sessionTimeout: timeout delay for the session
     - td._sessionLocking: mechanism used to lock the session ('implicit' or 'explicit')
 
@@ -124,7 +123,7 @@ class SessionFilter(basefilter.BaseFilter):
         td._sessionStorage.save(
                 td._sessionID, (td._sessionData, expirationTime))
         try:
-            # Always try to release the lock in the end
+            # Always try to release the lock at the end
             td._sessionStorage.releaseLock()
         except:
             pass
@@ -140,23 +139,21 @@ class SessionFilter(basefilter.BaseFilter):
 
 class RamStorage:
     """ Implementation of the RAM backend for sessions """
-    def load(self, id):
+    def __init__(self):
         try:
             cherrypy._sessionDataHolder
         except:
             cherrypy._sessionDataHolder = {}
-        return cherrypy._sessionDataHolder.get(id)
-    def save(self, id, data):
-        try:
-            cherrypy._sessionDataHolder
-        except:
-            cherrypy._sessionDataHolder = {}
-        cherrypy._sessionDataHolder[id] = data
-    def acquireLock(self):
         try:
             cherrypy._sessionLockDict
         except:
             cherrypy._sessionLockDict = {}
+
+    def load(self, id):
+        return cherrypy._sessionDataHolder.get(id)
+    def save(self, id, data):
+        cherrypy._sessionDataHolder[id] = data
+    def acquireLock(self):
         id = cherrypy.session['_id']
         lock = cherrypy._sessionLockDict.get(id)
         if lock is None:
