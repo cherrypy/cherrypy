@@ -33,8 +33,7 @@ url="http://www.cherrypy.org"
 cp_license="BSD"
 packages=[
     "cherrypy", "cherrypy.lib", "cherrypy.lib.filter",
-    "cherrypy.lib.filter.sessionfilter", "cherrypy.tutorial",
-    "cherrypy.test",
+    "cherrypy.tutorial", "cherrypy.test",
 ]
 download_url="http://www.cherrypy.org/wiki/CherryPyDownload"
 data_files=[
