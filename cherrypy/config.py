@@ -53,6 +53,8 @@ defaultGlobal = {
     'server.logFile': '',
     'server.reverseDNS': False,
     'server.threadPool': 0,
+
+    'server.maxRequestSize' : 0, # 0 == unlimited
     }
 
 def reset(useDefaults=True):

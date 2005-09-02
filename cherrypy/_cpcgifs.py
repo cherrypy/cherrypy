@@ -1,8 +1,36 @@
 import cgi
+import cherrypy
 
+try:
+    from threading import local
+except ImportError:
+    from cherrypy._cpthreadinglocal import local
 
-class FieldStorage(cgi.FieldStorage):
+class LocalInt:
+    def __init__(self, value):
+        self.__local = local()
+        self.__local.value = value
+
+    def __int__(self):
+        return self.__local.value
+
+    def __nonzero__(self):
+        return bool(self.__local.value)
     
+    def __str__(self):
+        return str(self.__local.value)
+    
+class FieldStorage(cgi.FieldStorage):
+    def __init__(self, *args, **kwds):
+        maxlen = cherrypy.config.get('server.maxRequestSize')
+        cgi.maxlen = LocalInt(maxlen)
+        
+        try:
+            cgi.FieldStorage.__init__(self, *args, **kwds)
+        except ValueError:
+            ec = cherrypy._cperror.HTTPClientError
+            raise ec(status=413)
+
     def read_lines_to_eof(self):
         """Internal: read lines until EOF."""
         while 1:
