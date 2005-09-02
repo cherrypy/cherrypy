@@ -10,6 +10,9 @@ class LocalInt:
     def __init__(self, value):
         self.__local = local()
         self.__local.value = value
+    
+    def setValue(self, value):
+        self.__local.value = value
 
     def __int__(self):
         return self.__local.value
@@ -19,12 +22,13 @@ class LocalInt:
     
     def __str__(self):
         return str(self.__local.value)
-    
+
+cgi.maxlen = LocalInt(0)
+
 class FieldStorage(cgi.FieldStorage):
     def __init__(self, *args, **kwds):
         maxlen = cherrypy.config.get('server.maxRequestSize')
-        cgi.maxlen = LocalInt(maxlen)
-        
+        cgi.maxlen.setValue(maxlen)
         try:
             cgi.FieldStorage.__init__(self, *args, **kwds)
         except ValueError:
