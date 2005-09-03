@@ -63,14 +63,12 @@ class SessionAuthenticateFilter(BaseFilter):
         loginScreen = cherrypy.config.get('sessionAuthenticateFilter.loginScreen', defaultLoginScreen)
         notLoggedIn = cherrypy.config.get('sessionAuthenticateFilter.notLoggedIn')
         loadUserByUsername = cherrypy.config.get('sessionAuthenticateFilter.loadUserByUsername')
-        sessionName = cherrypy.config.get('sessionAuthenticateFilter.sessionName', 'default')
         sessionKey = cherrypy.config.get('sessionAuthenticateFilter.sessionKey', 'username')
-        sessionMap = getattr(cherrypy.session, sessionName)
 
         if cherrypy.request.path.endswith('loginScreen'):
             return
         elif cherrypy.request.path.endswith('doLogout'):
-            sessionMap[sessionKey] = None
+            cherrypy.session[sessionKey] = None
             cherrypy.threadData.user = None
             fromPage = cherrypy.request.paramMap.get('fromPage', '..')
             cherrypy.response.body = httptools.redirect(fromPage)
@@ -82,22 +80,22 @@ class SessionAuthenticateFilter(BaseFilter):
             if errorMsg:
                 cherrypy.response.body = loginScreen(fromPage, login = login, errorMsg = errorMsg)
             else:
-                sessionMap[sessionKey] = login
+                cherrypy.session[sessionKey] = login
                 if not fromPage:
                     fromPage = '/'
                 cherrypy.response.body = httptools.redirect(fromPage)
             return
 
         # Check if user is logged in
-        if (not sessionMap.get(sessionKey)) and notLoggedIn:
+        if (not cherrypy.session.get(sessionKey)) and notLoggedIn:
             # Call notLoggedIn so that applications where anynymous user
             #   is OK can handle it
             notLoggedIn()
-        if not sessionMap.get(sessionKey):
+        if not cherrypy.session.get(sessionKey):
             cherrypy.response.body = loginScreen(cherrypy.request.browserUrl)
             return
 
         # Everything is OK: user is logged in
         if loadUserByUsername:
-            username = sessionMap[sessionKey]
+            username = cherrypy.session[sessionKey]
             cherrypy.threadData.user = loadUserByUsername(username)

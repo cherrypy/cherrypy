@@ -73,6 +73,10 @@ class SessionDeadlockError(Exception):
     """
     pass
 
+class SessionNotEnabledError(Exception):
+    """ Happens if user forgot to set sessionFilter.on to True """
+    pass
+
 class SessionFilter(basefilter.BaseFilter):
     def beforeRequestBody(self):
         # We have to dynamically import cherrypy because Python can't handle
@@ -392,8 +396,10 @@ def generateSessionID():
 #   cherrypy.threadData._session.sessionData
 class SessionWrapper(object):
     def __getattribute__(self, name):
-        # Create thread-specific dictionary if needed
         sess = cherrypy.threadData._session
+        if sess.sessionStorage is None:
+            raise SessionNotEnabledError()
+        # Create thread-specific dictionary if needed
         sess.sessionData = getattr(sess, 'sessionData', {})
         if name == 'acquireLock':
             return sess.sessionStorage.acquireLock
@@ -402,10 +408,21 @@ class SessionWrapper(object):
         return sess.sessionData.__getattribute__(name)
     def __getitem__(self, *a, **b):
         sess = cherrypy.threadData._session
+        if sess.sessionStorage is None:
+            raise SessionNotEnabledError()
         return sess.sessionData.__getitem__(*a, **b)
     def __setitem__(self, *a, **b):
         sess = cherrypy.threadData._session
+        if sess.sessionStorage is None:
+            raise SessionNotEnabledError()
         return sess.sessionData.__setitem__(*a, **b)
     def __delitem__(self, *a, **b):
         sess = cherrypy.threadData._session
+        if sess.sessionStorage is None:
+            raise SessionNotEnabledError()
         return sess.sessionData.__delitem__(*a, **b)
+    def __contains__(self, *a, **b):
+        sess = cherrypy.threadData._session
+        if sess.sessionStorage is None:
+            raise SessionNotEnabledError()
+        return sess.sessionData.__contains__(*a, **b)
