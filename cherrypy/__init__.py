@@ -32,8 +32,9 @@ Global module that all modules developing with CherryPy should import.
 
 __version__ = '2.1.0-beta'
 
-from _cperror import *
+import datetime
 
+from _cperror import *
 import config
 import server
 
@@ -59,8 +60,12 @@ response = local()
 # Create threadData object as a thread-specific all-purpose storage
 threadData = local()
 
+# Create variables needed for session (see lib/sessionfilter.py for more info)
 from lib.filter import sessionfilter
 session = sessionfilter.SessionWrapper()
+_sessionDataHolder = {} # Needed for RAM sessions only
+_sessionLockDict = {} # Needed for RAM sessions only
+_sessionLastCleanUpTime = datetime.datetime.now()
 
 # decorator function for exposing methods
 def expose(func):
