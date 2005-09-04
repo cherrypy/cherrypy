@@ -184,6 +184,11 @@ class HTTPClientError(Error):
         cherrypy.response.status = status
         if body is not _missing:
             cherrypy.response.body = body
+        
+        self.message = body
+    
+    def getArgs(self):
+        return (self.status, self.message)
 
 
 class NotFound(HTTPClientError):

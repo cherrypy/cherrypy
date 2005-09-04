@@ -247,8 +247,9 @@ logAccessFile = os.path.join(localDir, "access.log")
 
 cherrypy.config.update({
     'global': {'server.logToScreen': False,
+               'server.httpErrors' : False,
                'server.environment': 'production',
-               'showTracebacks': True,
+               'server.showTracebacks': True,
                'server.protocolVersion': "HTTP/1.1",
                },
     '/': {

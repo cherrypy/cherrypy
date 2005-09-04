@@ -428,7 +428,7 @@ def handleError(exc):
         # Failure in _cpOnError, error filter, or finalize.
         # Bypass them all.
         defaultOn = (cherrypy.config.get('server.environment') == 'development')
-        if cherrypy.config.get('showTracebacks', defaultOn):
+        if cherrypy.config.get('server.showTracebacks', defaultOn):
             body = dbltrace % (_cputil.formatExc(exc), _cputil.formatExc())
         else:
             body = ""
@@ -448,10 +448,25 @@ def bareError(extrabody=None):
     as-is to the body.
     """
     
-    body = "Unrecoverable error in the server."
-    if extrabody is not None:
-        body += "\n" + extrabody
-    return ("500 Internal Server Error",
+    try:
+        isProduction = cherrypy.config.get('server.environment') == 'production'
+        httpErrors = cherrypy.config.get('server.httpErrors')
+        
+        if isProduction and httpErrors:
+            if not extrabody:
+                extrabody = ''
+            status, _body = httperrors.getErrorPage(500, extrabody)
+            headers = [('Content-Length', str(len(_body))), ('Content-Type', 'text/html')]
+            return (status, headers, _body)
+        else:
+            # raise a dummy exception to force a plain error message
+            raise Exception()
+    except:
+        body = "Unrecoverable error in the server."
+        if extrabody is not None:
+            body += "\n" + extrabody
+        
+        return ("500 Internal Server Error",
             [('Content-Type', 'text/plain'),
              ('Content-Length', str(len(body)))],
             [body])

@@ -45,7 +45,8 @@ cherrypy.root = Root()
 cherrypy.config.update({
         'server.logToScreen': False,
         'server.environment': 'production',
-        'showTracebacks': True,
+        'server.httpErrors': False,
+        'server.showTracebacks': True,
         'gzipFilter.on': True,
 })
 

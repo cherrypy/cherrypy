@@ -150,6 +150,17 @@ def _cpLogMessage(msg, context = '', severity = 0):
         f.write(s + '\n')
         f.close()
 
+from cherrypy.lib import httperrors
+
+def _cpOnHTTPError():
+    """ Default _cpOnHTTPError method """
+    status, customMessage = sys.exc_info()[1].getArgs()
+    
+    page = httperrors.getErrorPage(status, customMessage = customMessage)
+    cherrypy.response.status, cherrypy.response.body = page
+    
+    if cherrypy.response.headerMap.has_key('Content-Encoding'):
+        del cherrypy.response.headerMap['Content-Encoding']
 
 def formatExc(exc=None):
     """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
@@ -159,15 +170,28 @@ def formatExc(exc=None):
 
 def _cpOnError():
     """ Default _cpOnError method """
-    defaultOn = (cherrypy.config.get('server.environment') == 'development')
-    if cherrypy.config.get("showTracebacks", defaultOn):
+    developmentMode  = cherrypy.config.get('server.environment') == 'development'
+    httpErrors     = cherrypy.config.get('server.httpErrors')
+    showTracebacks = cherrypy.config.get('server.showTracebacks')
+    
+    response = cherrypy.response
+    
+    if not developmentMode and httpErrors:
+        if response.status == 404:
+            response.status, response.body = httperrors.getErrorPage(404)
+        else:
+            response.status, response.body = httperrors.getErrorPage(500)
+    elif developmentMode or showTracebacks:
         cherrypy.response.body = [formatExc()]
+        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
     else:
-        cherrypy.response.body = "Unrecoverable error in the application."
-    cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        if cherrypy.config.get('showTraceBacks', False):
+            cherrypy
+        cherrypy.response.body = "Unrecoverable error in the server"
+        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+    
     if cherrypy.response.headerMap.has_key('Content-Encoding'):
         del cherrypy.response.headerMap['Content-Encoding']
-
 
 _cpFilterList = []
 

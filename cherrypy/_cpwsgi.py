@@ -110,7 +110,7 @@ def wsgiApp(environ, start_response):
         tb = _cputil.formatExc()
         cherrypy.log(tb)
         defaultOn = (cherrypy.config.get('server.environment') == 'development')
-        if not cherrypy.config.get("showTracebacks", defaultOn):
+        if not cherrypy.config.get("server.showTracebacks", defaultOn):
             tb = ""
         s, h, b = _cphttptools.bareError(tb)
         exc = sys.exc_info()
