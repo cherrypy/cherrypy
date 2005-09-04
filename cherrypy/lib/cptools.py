@@ -204,8 +204,8 @@ def getRanges(content_length):
     
     if result == []:
         cherrypy.response.headerMap['Content-Range'] = "bytes */%s" % content_length
-        b = "Invalid Range (first-byte-pos greater than Content-Length)"
-        raise cherrypy.HTTPClientError(416, b)
+        message = "Invalid Range (first-byte-pos greater than Content-Length)"
+        raise cherrypy.HTTPClientError(416, message)
     
     return result
 

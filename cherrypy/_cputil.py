@@ -155,7 +155,8 @@ from cherrypy.lib import httperrors
 def _cpOnHTTPError():
     """ Default _cpOnHTTPError method """
     status, customMessage = sys.exc_info()[1].getArgs()
-    
+   
+    # get the error mage
     page = httperrors.getErrorPage(status, customMessage = customMessage)
     cherrypy.response.status, cherrypy.response.body = page
     
@@ -170,25 +171,29 @@ def formatExc(exc=None):
 
 def _cpOnError():
     """ Default _cpOnError method """
-    developmentMode  = cherrypy.config.get('server.environment') == 'development'
-    httpErrors     = cherrypy.config.get('server.httpErrors')
-    showTracebacks = cherrypy.config.get('server.showTracebacks')
+    developmentMode = cherrypy.config.get('server.environment') == 'development'
+    httpErrors      = cherrypy.config.get('server.httpErrors')
+    showTracebacks  = cherrypy.config.get('server.showTracebacks')
     
     response = cherrypy.response
     
     if not developmentMode and httpErrors:
+        # if it isn't development mode and http errors are turned on
+        # set the respose status and render the body
         if response.status == 404:
             response.status, response.body = httperrors.getErrorPage(404)
         else:
             response.status, response.body = httperrors.getErrorPage(500)
     elif developmentMode or showTracebacks:
-        cherrypy.response.body = [formatExc()]
-        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        # if it is development mode or tracebacks are turned on
+        # return the traceback as plaintext
+        response.body = [formatExc()]
+        response.headerMap['Content-Type'] = 'text/plain'
     else:
-        if cherrypy.config.get('showTraceBacks', False):
-            cherrypy
-        cherrypy.response.body = "Unrecoverable error in the server"
-        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        # If it is production mode but http errors are disabled then
+        # Display a simple, generic error message
+        response.body = "Unrecoverable error in the server"
+        response.headerMap['Content-Type'] = 'text/plain'
     
     if cherrypy.response.headerMap.has_key('Content-Encoding'):
         del cherrypy.response.headerMap['Content-Encoding']

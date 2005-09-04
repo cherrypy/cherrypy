@@ -449,6 +449,8 @@ def bareError(extrabody=None):
     """
     
     try:
+        # try to return a nice error page if we are in production mode and http errors
+        # are enabled
         isProduction = cherrypy.config.get('server.environment') == 'production'
         httpErrors = cherrypy.config.get('server.httpErrors')
         
@@ -462,6 +464,8 @@ def bareError(extrabody=None):
             # raise a dummy exception to force a plain error message
             raise Exception()
     except:
+        # if there was a problem generating the error page
+        # then return a basic message
         body = "Unrecoverable error in the server."
         if extrabody is not None:
             body += "\n" + extrabody
