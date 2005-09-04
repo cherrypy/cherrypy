@@ -417,9 +417,12 @@ def handleError(exc):
     try:
         applyFilters('beforeErrorResponse')
         
-        # _cpOnError will probably change cherrypy.response.body.
-        # It may also change the headerMap, etc.
-        _cputil.getSpecialAttribute('_cpOnError')()
+        # _cpOnError and _cpOnHTTPError will probably change cherrypy.response.body.
+        # They may also change the headerMap, etc.
+        if sys.exc_info()[0] is cherrypy._cperror.HTTPClientError:
+            _cputil.getSpecialAttribute('_cpOnHTTPError')()
+        else:
+            _cputil.getSpecialAttribute('_cpOnError')()
         
         finalize()
         
