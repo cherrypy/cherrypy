@@ -287,7 +287,7 @@ class Request(object):
             finally:
                 applyFilters('onEndResource')
         except:
-            # This includes HTTPClientError and NotFound
+            # This includes HTTPStatusError and NotFound
             handleError(sys.exc_info())
     
     def processRequestHeaders(self):
@@ -419,7 +419,7 @@ def handleError(exc):
         
         # _cpOnError and _cpOnHTTPError will probably change cherrypy.response.body.
         # They may also change the headerMap, etc.
-        if sys.exc_info()[0] is cherrypy._cperror.HTTPClientError:
+        if sys.exc_info()[0] is cherrypy.HTTPStatusError:
             _cputil.getSpecialAttribute('_cpOnHTTPError')()
         else:
             _cputil.getSpecialAttribute('_cpOnError')()

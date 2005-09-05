@@ -4,88 +4,9 @@
   <title>Session Management</title>
   <abstract>
     <para> CherryPy 2.1 includes a powerful sessions system provided via a new "sessionFilter". The
-      old sessions system was difficult to extend and was not thread safe. The new system addresses
-      these issues and includes several powerful new features. </para>
+        old sessions system was difficult to extend and was not thread safe.
+    </para>
   </abstract>
-  <section id="sessionfeaturs">
-    <title>Session Features</title>
-    <itemizedlist>
-      <listitem>Multiple Storage Types</listitem>
-      <listitem>Thread Safety</listitem>
-      <listitem>Easy to extend</listitem>
-      <listitem>Session Caching</listitem>
-      <listitem>Multiple Named Sessions</listitem>
-    </itemizedlist>
-  </section>
-  <section id="sessionconfig">
-    <title>Session Configuration</title>
-  </section>
-  <section id="usingsessions">
-    <title>Using Sessions</title>
-    <section>
-      <title>SessionDicts</title>
-      <para> All session data is accessed through an instance of a SessionDict class. SesssionDicts
-        provide a dictionary like interface. </para>
-      <para> The following dictionary methods are provided: <itemizedlist>
-          <listitem>__setitem__(key, value)</listitem>
-          <listitem>__getitem__(key) </listitem>
-          <listitem>get(key, default) </listitem>
-          <listitem>__iter__()</listitem>
-        </itemizedlist> SessionDicts also provide the following attributes: <itemizedlist>
-          <listitem>sessionKey (read only)</listitem>
-          <listitem>lastAccess (read only)</listitem>
-          <listitem>createdAt (read only)</listitem>
-          <listitem>timeout </listitem>
-        </itemizedlist>
-      </para>
-    </section>
-    <!-- end SessionDict section -->
-    <section>
-      <!-- cherrypy.sessions section -->
-      <title>cherrypy.session</title>
-      <para> cherrypy.session is the single point of access for all session data. At the beginning
-        of each request, the sessionFilter checks for any sessions that may have been defined for
-        the requested portion of the site. For each defined session, a SessionDict is created and is
-        added as an attribute of cherrypy.session. </para>
-      <para> For example, given a session named "checkoutSession", all data for this session will be
-        accessible through: "cherrypy.sessions.checkoutSession" </para>
-      <example>
-        <title>cherrypy.session</title>
-        <para> This code iterates over a list of items in a shopping cart, and computes The total
-          cost of all items. </para>
-        <programlisting>
-          totalCost = 0.0
-          
-          for item in cherrypy.sessions.checkoutSession[&apos;shoppingCart&apos;]:
-              totalCost += item.cost
-        </programlisting>
-      </example>
-      <section>
-        <title>The default session</title>
-        <para> By default, the sessionFilter provides a session named "default", which is accessed
-          through "cherrypy.sessions.default". As a shortcut the ".default" can be ommited and
-          "cherrypy.sessions" will behave like a dictionary. Session attributes, such as
-          "cookieName", can only be retrieved through cherrypy.sessions.default. </para>
-        <para> Unless there is a clear advantage to having more that one named session, the default
-          session should be used to store all session data. The default session may (in the future)
-          be optimized to provide superior performance than that of custom named sessions. </para>
-      </section>
-      <!-- end default session section -->
-    </section>
-    <!-- end of cherrypy.sessions section -->
-    <section>
-      <!-- session configuration -->
-      <title>Session Configuration</title>
-      <itemizedlist>
-        <listitem>
-          <section>
-            <title>sessionFilter.on</title>
-            <para> Can be True or False. Will toggle on/off all sessions within the current path. By
-              default the session filter is turned off. </para>
-          </section>
-        </listitem>
-      </itemizedlist>
-      <para> These settings are common to all storage types. </para>
       <itemizedlist>
         <listitem>
           <section>
@@ -99,10 +20,7 @@
           <section>
             <title>sessionFilter.storageType</title>
             <para> The storagType is the string name of the storage type for sessionName. The built
-              in storageType are: &apos;ram&apos;, &apos;file&apos;,
-              &apos;anydb&apos;, &apos;sqlobject&apos;. If the storageType does not
-              match one of the built in storage adaptors a special attribute look up is performed.
-              If ommited the storageType will default to &apos;ram&apos;. </para>
+              in storageType are: &apos;ram&apos;, &apos;file&apos;,</para>
           </section>
         </listitem>
         <listitem>
@@ -118,132 +36,5 @@
             <para> The number of minutes to wait before cleaning up old sessions. </para>
           </section>
         </listitem>
-        <listitem>
-          <section>
-            <title>sessionFilter.cookiePrefix</title>
-            <para> The cookiePrefix is prepended to the beginning of every session cookie name.
-            </para>
-          </section>
-        </listitem>
-        <listitem>
-          <section>
-            <title>sessionFilter.keyGenerator</title>
-            <para> keyGenerator is a python function that generates new session keys. </para>
-          </section>
-        </listitem>
       </itemizedlist>
-      <example>
-        <title>Session Configuration</title>
-        <para> </para>
-        <programlisting>
-          class MyBBS:
-              # create a session named &apos;admin&apos; using the SessionStorageClass
-              def __init__(self):
-                  cherrypy.config.update({
-                                      &apos;global&apos;    : { &apos;sessionFilter.on&apos; : True },
-                                      &apos;/site/bbs&apos; : {
-                                                      &apos;sessionFilter.sessionsList&apos;    : [&apos;bbs&apos;],
-                                                      &apos;sessionFilter.bbs.storageType&apos; : &apos;ram&apos;,
-                                                      &apos;sessionFilter.bbs.timeout&apos;     : 25
-                                                    }
-                                   })
-              def admin(self):
-                  if cherrypy.session.admin[&apos;user&apos;] != "root":
-                  return "you are not root"
-              admin.exposed = True
-        </programlisting>
-      </example>
-    </section>
-    <!-- end sessionconfiguration -->
-  </section>
-  <section id="sessionstoragetypes">
-    <title>Session Storage Types</title>
-    <para>CherryPy includes several session storage backends: ram, file, anydb, sqlobject</para>
-    <section>
-      <title>ram storage</title>
-      <para> The ram adaptor stores all session data in memory. It is the only storage adaptor
-        capable of holding any Python object, including those that are not-picklable, such as file
-        handles, sockets, and running generators. When using ream sessions, keep in mind that all
-        session data is lost when the server shuts down, even during auto-reloads. </para>
-      <para> The ram adaptor has no additional configuration options. </para>
-    </section>
-    <!-- end ram storage section -->
-    <section>
-      <title>file storage</title>
-      <para> The file storage adaptor pickles the data for each session and stores it in separate
-        files. Cleaning up expired sessions is a slow operation, because it requires unpickling
-        every session file. </para>
-      <itemizedlist>
-        <listitem>Additional Configuration Options 
-            <itemizedlist>
-            <listitem>storagePath : The path to the directory where the session files will be
-                stored. The default value is ".sessiondata" 
-            </listitem>
-          </itemizedlist>
-        </listitem>
-      </itemizedlist>
-    </section>
-    <!-- end file storage section -->
-    <section>
-      <title>anydb storage</title>
-      <para> The anydb storage adaptor stores session data using the shelve module, which in turn
-        uses the anydb module. The andyb adaptor can only be used to store picklable objects. </para>
-      <itemizedlist>
-        <listitem>Additional Configuration Options
-          <itemizedlist>
-          <listitem>storagePath : The path to the directory where the database files will be stored. By default,
-              the filter will create a file based on the session name.
-          </listitem>
-          <listitem>dbFile : An absolute path pointing to the database file to use with the session. 
-          </listitem>
-          </itemizedlist>
-        </listitem>
-      </itemizedlist>
-    </section>
-    <!-- end anydb storage section -->
-    <section>
-      <title>Relational Storage</title>
-      <para> With relational database adaptors, all data is stored in a relational database table.
-        Due to the nature of relational databases, there are several restrictions on how data can be
-        stored. Each session is stored as a single row in the session table. The session table must
-        be created with a column for each variable needed by the application. This makes it
-        impossible to store arbitrary key/value pairs, as can be done using several of the other
-        storage adaptors. In addition, relational databases also place restrictions on the type of
-        data that can be stored in each column. Attempting to store the wrong type of data in a
-        session variable will result in an error. </para>
-      <para> Despite these restrictions, storing session data in relational database has many
-        advantages. This approach allows session data to be integrated into an existing relational
-        database, which dynamic web applications often use anyway. This approach allows for a level
-        of scalability not possible with other storage adaptors. In addition, by using a networked
-        database server, session data can be easily shared between a cluster of web servers. </para>
-      <section>
-        <title>sqlobject storage</title>
-        <para> The sqlobject adaptors can be used with any database supported by sqlobject. </para>
-      </section>
-      <!-- end sqlobject storage section -->
-      <section>
-        <title>pydo storage</title>
-        <para> A PyDO2 adaptor will be included in the future. </para>
-      </section>
-    </section>
-    <!-- end relational storage section -->
-  </section>
-  <!-- end sessionstoragetyps section -->
-  <section id="customsessionstorage">
-    <title>Writing Custom Session Storage Drivers</title>
-    <section>
-      <title>BaseSessionDict</title>
-      <para> BaseSessionDict is the base class for the dictionary-like class used to access session
-        data. SessionDicts implement the most frequently used features of Python dictionaries. DO
-        NOT add new features to a custom SessionDict class, as it could break compatibility with
-        other storage adaptor. Sometimes it is not necessary to write a custom SessionDict class
-        because the sessionFilter includes a SimpleSessionDict. The SimpleSessionDict is used by
-        several storage adaptor and may be adequate for a custom storage adaptor. </para>
-    </section>
-    <section>
-      <title>BaseAdaptor</title>
-      <para> BaseSession is the base class for all session storage adaptor. There are a number of
-        methods that must be implemented by every storage adaptor. </para>
-    </section>
-  </section>
 </section>

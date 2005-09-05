@@ -39,8 +39,7 @@ class HTTPErrorDemo(object):
     def error(self, code):
         # raise an error based on the get query
         code = int(code)
-        HTTPClientError = cherrypy._cperror.HTTPClientError
-        raise HTTPClientError(status = code)
+        raise cherrypy.HTTPStatusError(status = code)
     error.exposed = True
 
 cherrypy.root = HTTPErrorDemo()

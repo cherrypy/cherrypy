@@ -214,6 +214,14 @@
       </listitem>
       <listitem>
         <section>
+          <title>cherrypy.server.restart()</title>
+          <para>
+            Restart the CherryPy Server.
+          </para>
+        </section>
+      </listitem>
+      <listitem>
+        <section>
           <title>cherrypy.server.onStartServerList</title>
           <para>
             A list of functions that will be called when the server starts.
@@ -287,16 +295,32 @@
   <section id="exceptions">
     <title>cherrypy exceptions</title>
     <itemizedlist>
+        
       <listitem>
         <section>
-          <title>cherrypy.HTTPRedirect</title>
+            <title>cherrypy.HTTPStatusError</title>
+            <para>
+                This exception can be used to automatically send a response 
+                using a http status code, with an appropriate error page.
+            </para>
         </section>
       </listitem>
+      
       <listitem>
         <section>
-          <title>cherrypy.NotFound</title>
+            <title>cherrypy.HTTPRedirect</title>
+            This exception will force a HTTP redirect.
         </section>
       </listitem>
+      
+      <listitem>
+        <section>
+            <title>cherrypy.NotFound</title>
+            This exception is raised when CherryPy is unable to map a
+            requested path to an internal method.
+        </section>
+      </listitem>
+    
     </itemizedlist>
   </section>
   

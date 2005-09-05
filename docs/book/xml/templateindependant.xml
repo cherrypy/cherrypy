@@ -10,12 +10,34 @@
     </para>
     <para>CherryPy has been reported to be working with all the main templating systems:</para>
     <itemizedlist>
-        <listitem>Cheetah</listitem>
-        <listitem>XSLT</listitem>
-        <listitem>CherryTemplate</listitem>
-        <listitem>HTMLTemplate</listitem>
-        <listitem>Kid</listitem>
-        <listitem>Zope Page Template</listitem>
+        <listitem>
+            <ulink url="http://www.cheetahtemplate.org">Cheetah</ulink>
+        </listitem>
+        <listitem>
+            <ulink url="http://www.w3.org/TR/xslt">
+                XSLT
+            </ulink>
+            </listitem>
+        <listitem>
+            <ulink url="http://cherrytemplate.python-hosting.com/">
+                CherryTemplate
+            </ulink>
+        </listitem>
+        <listitem>
+            <ulink url="http://freespace.virgin.net/hamish.sanderson/htmltemplate.html">
+                HTMLTemplate
+            </ulink>
+        </listitem>
+        <listitem>
+            <ulink url="http://lesscode.org/projects/kid">
+                Kid
+            </ulink>
+        </listitem>
+        <listitem>
+            <ulink url="http://www.zope.org/DevHome/Wikis/DevSite/Projects/ZPT/FrontPage">
+                Zope Page Template
+            </ulink>
+        </listitem>
     </itemizedlist>
     <para>You will find recipes on how to use them on the CherryPy website.</para>
 </section>

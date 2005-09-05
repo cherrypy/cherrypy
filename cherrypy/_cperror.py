@@ -172,7 +172,7 @@ class HTTPRedirect(Exception):
 
 _missing = object()
 
-class HTTPClientError(Error):
+class HTTPStatusError(Error):
     """Exception raised when the client has made an error in its request."""
     
     def __init__(self, status=400, message=None):
@@ -190,9 +190,9 @@ class HTTPClientError(Error):
         return (self.status, self.message)
 
 
-class NotFound(HTTPClientError):
+class NotFound(HTTPStatusError):
     """ Happens when a URL couldn't be mapped to any class.method """
     
     def __init__(self, path):
         self.args = (path,)
-        HTTPClientError.__init__(self, 404)
+        HTTPStatusError.__init__(self, 404)

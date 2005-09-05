@@ -32,8 +32,7 @@ class FieldStorage(cgi.FieldStorage):
         try:
             cgi.FieldStorage.__init__(self, *args, **kwds)
         except ValueError:
-            ec = cherrypy._cperror.HTTPClientError
-            raise ec(status=413)
+            raise cherrypy.HTTPStatusError(status=413)
 
     def read_lines_to_eof(self):
         """Internal: read lines until EOF."""
