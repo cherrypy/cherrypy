@@ -121,9 +121,13 @@ class SessionFilter(basefilter.BaseFilter):
 
         storage = cherrypy.config.get('sessionFilter.storageType', 'Ram')
         storage = storage[0].upper() + storage[1:]
-        # TODO: support custom storage types (allow users to pass
-        #   their own class through another config option)
-        sess.sessionStorage = globals()[storage + 'Storage']()
+
+        # People can set their own custom class
+        #   through sessionFilter.storageClass
+        sess.sessionStorage = \
+            cherrypy.config.get('sessionFilter.storageClass', None)
+        if sess.sessionStorage is None:
+            sess.sessionStorage = globals()[storage + 'Storage']()
 
         # Check if we need to clean up old sessions
         if cherrypy._sessionLastCleanUpTime + \
@@ -394,8 +398,8 @@ def generateSessionID():
 #   to be thread-specific so we use a special wrapper that forwards
 #   calls to cherrypy.session to a thread-specific dictionary called
 #   cherrypy.threadData._session.sessionData
-class SessionWrapper(object):
-    def __getattribute__(self, name):
+class SessionWrapper:
+    def __getattr__(self, name):
         sess = cherrypy.threadData._session
         if sess.sessionStorage is None:
             raise SessionNotEnabledError()
@@ -405,24 +409,4 @@ class SessionWrapper(object):
             return sess.sessionStorage.acquireLock
         elif name == 'releaseLock':
             return sess.sessionStorage.releaseLock
-        return sess.sessionData.__getattribute__(name)
-    def __getitem__(self, *a, **b):
-        sess = cherrypy.threadData._session
-        if sess.sessionStorage is None:
-            raise SessionNotEnabledError()
-        return sess.sessionData.__getitem__(*a, **b)
-    def __setitem__(self, *a, **b):
-        sess = cherrypy.threadData._session
-        if sess.sessionStorage is None:
-            raise SessionNotEnabledError()
-        return sess.sessionData.__setitem__(*a, **b)
-    def __delitem__(self, *a, **b):
-        sess = cherrypy.threadData._session
-        if sess.sessionStorage is None:
-            raise SessionNotEnabledError()
-        return sess.sessionData.__delitem__(*a, **b)
-    def __contains__(self, *a, **b):
-        sess = cherrypy.threadData._session
-        if sess.sessionStorage is None:
-            raise SessionNotEnabledError()
-        return sess.sessionData.__contains__(*a, **b)
+        return getattr(sess.sessionData, name)
