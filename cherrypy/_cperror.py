@@ -175,15 +175,17 @@ _missing = object()
 class HTTPStatusError(Error):
     """Exception raised when the client has made an error in its request."""
     
-    def __init__(self, status=400, message=None):
+    def __init__(self, status=400, message=_missing):
         self.status = status = int(status)
-        if status < 400 or status > 499:
-            raise ValueError("status must be between 400 and 499.")
+        if status < 400 or status > 599:
+            raise ValueError("status must be between 400 and 599.")
         
-        # these 2 lines might dissapear
+        # these 4 lines might dissapear
         import cherrypy
         cherrypy.response.status = status
-        
+        if message is not _missing:
+            cherrypy.response.body=message
+
         self.message = message
     
     def getArgs(self):
