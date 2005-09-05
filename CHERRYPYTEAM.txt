@@ -1,1 +1,1 @@
-See http://trac.cherrypy.org/wiki/CherryPyTeam
+See http://www.cherrypy.org/wiki/CherryPyTeam
