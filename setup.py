@@ -35,7 +35,7 @@ packages=[
     "cherrypy", "cherrypy.lib", "cherrypy.lib.filter",
     "cherrypy.tutorial", "cherrypy.test",
 ]
-download_url="http://www.cherrypy.org/wiki/CherryPyDownload"
+download_url="http://sourceforge.net/project/showfiles.php?group_id=56099"
 data_files=[
     ('cherrypy/tutorial',
         [
