@@ -6,7 +6,10 @@ Run:
 to install this package.
 """
 
-from distutils.core import setup
+from ez_setup import use_setuptools
+use_setuptools()
+from setuptools import setup
+
 from distutils.command.install import INSTALL_SCHEMES
 import sys
 
