@@ -1,3 +1,8 @@
+2005-09-04:
+    * Generalized mechanism for handling HTTP errors
+    * raising a HTTPStatusError will automatically send an appropriate error page
+    * All errors in production mode will cause CP to respond with a http error
+
 2005-08-17:
     * The session filter has been simplified, the mechanism for creating multiple sessions has been removed. However .. (mikerobi)
     * The session filter can placed inside a _cpFilterList to provide an alternative to the default session.            (mikerobi)

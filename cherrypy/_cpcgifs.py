@@ -1,11 +1,6 @@
 import cgi
 import cherrypy
 
-try:
-    from threading import local
-except ImportError:
-    from cherrypy._cpthreadinglocal import local
-
 class LocalInt:
     def __init__(self, value):
         self.__local = local()
@@ -23,16 +18,15 @@ class LocalInt:
     def __str__(self):
         return str(self.__local.value)
 
-cgi.maxlen = LocalInt(0)
-
 class FieldStorage(cgi.FieldStorage):
     def __init__(self, *args, **kwds):
-        maxlen = cherrypy.config.get('server.maxRequestSize')
-        cgi.maxlen.setValue(maxlen)
         try:
             cgi.FieldStorage.__init__(self, *args, **kwds)
-        except ValueError:
-            raise cherrypy.HTTPStatusError(status=413)
+        except ValueError, ex:
+            if str(ex) == 'Maximum content length exceeded':
+                raise cherrypy.HTTPStatusError(status=413)
+            else:
+                raise ex
 
     def read_lines_to_eof(self):
         """Internal: read lines until EOF."""

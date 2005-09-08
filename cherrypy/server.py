@@ -93,6 +93,10 @@ def _start(initOnly=False, serverClass=None):
         and cherrypy.config.get('session.storageType') == 'file'):
         cherrypy._sessionFileLock = threading.RLock()
     
+    # set cgi.maxlen which will limit the size of POST request bodies
+    import cgi
+    cgi.maxlen = cherrypy.config.get('server.maxRequestSize')
+    
     # Call the functions from cherrypy.server.onStartServerList
     for func in cherrypy.server.onStartServerList:
         func()

@@ -460,7 +460,7 @@ def bareError(extrabody=None):
         if isProduction and httpErrors:
             if not extrabody:
                 extrabody = ''
-            status, _body = httperrors.getErrorPage(500, extrabody)
+            status, _body = cherrypy.lib.httperrors.getErrorPage(500, extrabody)
             headers = [('Content-Length', str(len(_body))), ('Content-Type', 'text/html')]
             return (status, headers, _body)
         else:
