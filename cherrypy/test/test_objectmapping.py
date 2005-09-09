@@ -26,6 +26,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import sys
+
 import cherrypy
 from cherrypy.lib import httptools
 
@@ -57,6 +59,23 @@ def mapped_func(self, ID=None):
     return "ID is %s" % ID
 mapped_func.exposed = True
 setattr(Root, "Von B\xfclow", mapped_func)
+
+
+if sys.hexversion > 0x020400A2:
+    from cp_decorator_tests import Exposing, ExposingNewStyle
+else:
+    class Exposing:
+        def base(self):
+            return "expose works!"
+        cherrypy.expose(base, "1")
+        cherrypy.expose(base, "2")
+    
+    class ExposingNewStyle(object):
+        def base(self):
+            return "expose works!"
+        cherrypy.expose(base, "1")
+        cherrypy.expose(base, "2")
+
 
 
 class Dir1:
@@ -93,6 +112,8 @@ class Dir4:
         return "index for dir4, not exposed"
 
 cherrypy.root = Root()
+cherrypy.root.exposing = Exposing()
+cherrypy.root.exposingnew = ExposingNewStyle()
 cherrypy.root.dir1 = Dir1()
 cherrypy.root.dir1.dir2 = Dir2()
 cherrypy.root.dir1.dir2.dir3 = Dir3()
@@ -146,6 +167,21 @@ class ObjectMappingTest(helper.CPWebCase):
         # This should also test the %XX-unquoting of URL's.
         self.getPage("/Von%20B%fclow?ID=14")
         self.assertBody("ID is 14")
+    
+    def testExpose(self):
+        # Test the cherrypy.expose function/decorator
+        self.getPage("/exposing/1")
+        self.assertBody("expose works!")
+        
+        self.getPage("/exposing/2")
+        self.assertBody("expose works!")
+        
+        self.getPage("/exposingnew/1")
+        self.assertBody("expose works!")
+        
+        self.getPage("/exposingnew/2")
+        self.assertBody("expose works!")
+
 
 
 if __name__ == "__main__":

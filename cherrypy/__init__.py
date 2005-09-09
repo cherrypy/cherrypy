@@ -33,6 +33,8 @@ Global module that all modules developing with CherryPy should import.
 __version__ = '2.1.0-beta'
 
 import datetime
+import sys
+import types
 
 from _cperror import *
 import config
@@ -67,10 +69,28 @@ _sessionDataHolder = {} # Needed for RAM sessions only
 _sessionLockDict = {} # Needed for RAM sessions only
 _sessionLastCleanUpTime = datetime.datetime.now()
 
-# decorator function for exposing methods
-def expose(func):
-    func.exposed = True
-    return func
+def expose(func=None, alias=None):
+    """Expose the function, optionally providing an alias or set of aliases."""
+    
+    def expose_(func):
+        func.exposed = True
+        if alias is not None:
+            if isinstance(alias, basestring):
+                parentDict[alias] = func
+            else:
+                for a in alias:
+                    parentDict[a] = func
+        return func
+    
+    parentDict = sys._getframe(1).f_locals
+    if isinstance(func, (types.FunctionType, types.MethodType)):
+        # expose is being called directly, before the method has been bound
+        return expose_(func)
+    else:
+        # expose is being called as a decorator
+        if alias is None:
+            alias = func
+        return expose_
 
 def log(msg, context='', severity=0):
     """Syntactic sugar for writing to the (error) log."""
