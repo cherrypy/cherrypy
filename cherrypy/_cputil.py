@@ -34,8 +34,10 @@ import sys
 import traceback
 import time
 import os
-import os.path
+#import os.path
+
 import cherrypy
+from cherrypy.lib import httperrors
 
 
 class EmptyClass:
@@ -150,13 +152,11 @@ def _cpLogMessage(msg, context = '', severity = 0):
         f.write(s + '\n')
         f.close()
 
-from cherrypy.lib import httperrors
-
 def _cpOnHTTPError():
     """ Default _cpOnHTTPError method """
     status, customMessage = sys.exc_info()[1].getArgs()
    
-    # get the error mage
+    # get the error page
     page = httperrors.getErrorPage(status, customMessage = customMessage)
     cherrypy.response.status, cherrypy.response.body = page
     
@@ -175,11 +175,15 @@ def _cpOnError():
     httpErrors      = cherrypy.config.get('server.httpErrors')
     showTracebacks  = cherrypy.config.get('server.showTracebacks')
     
+    logTracebacks  = cherrypy.config.get('server.logTracebacks')
+    if logTracebacks:
+        cherrypy.log(formatExc())
+    
     response = cherrypy.response
     
     if not developmentMode and httpErrors:
         # if it isn't development mode and http errors are turned on
-        # set the respose status and render the body
+        # set the response status and render the body
         if response.status == 404:
             response.status, response.body = httperrors.getErrorPage(404)
         else:

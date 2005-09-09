@@ -271,6 +271,10 @@ cherrypy.config.update({
     '/params': {
         'server.logFile': logFile,
     },
+    '/error': {
+        'server.logFile': logFile,
+        'server.logTracebacks': True,
+    },
 })
 
 # Shortcut syntax--should get put in the "global" bucket
@@ -391,6 +395,18 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody("'a'")
         data = open(logFile, "rb").readlines()
         self.assertEqual(data[0][-53:], ' HTTP INFO 127.0.0.1 - GET /params/?thing=a HTTP/1.1\n')
+        
+        # Test that tracebacks get written to the error log.
+        ignore = helper.webtest.ignored_exceptions
+        ignore.append(ValueError)
+        try:
+            self.getPage("/error/page_method")
+            self.assertInBody("raise ValueError()")
+            data = open(logFile, "rb").readlines()
+            self.assertEqual(data[2][-41:], ' INFO Traceback (most recent call last):\n')
+            self.assertEqual(data[8], '    raise ValueError()\n')
+        finally:
+            ignore.pop()
     
     def testRedirect(self):
         self.getPage("/redirect/")
