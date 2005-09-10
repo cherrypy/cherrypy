@@ -1,9 +1,14 @@
 """Tutorial: File upload"""
 
+import os
+localDir = os.path.dirname(__file__)
+absDir = os.path.join(os.getcwd(), localDir)
+
 import cherrypy
+from cherrypy.lib import cptools
 
 
-class FileUploadDemo(object):
+class FileDemo(object):
     
     def index(self):
         return """
@@ -38,9 +43,15 @@ class FileUploadDemo(object):
         
         return out % (size, myFile.filename, myFile.type)
     upload.exposed = True
+    
+    def download(self):
+        path = os.path.join(absDir, "ReturnVsYield.pdf")
+        return cptools.serveFile(path, "application/x-download",
+                                 "attachment", os.path.basename(path))
+    download.exposed = True
 
 
-cherrypy.root = FileUploadDemo()
+cherrypy.root = FileDemo()
 
 if __name__ == '__main__':
     # Use the configuration file tutorial.conf.

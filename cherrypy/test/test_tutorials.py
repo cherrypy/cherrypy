@@ -144,9 +144,10 @@ class TutorialTest(helper.CPWebCase):
                          'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
                          '</body></html>')
     
-    def test09FileUpload(self):
-        self.load_tut_module("tut09_file_upload")
+    def test09Files(self):
+        self.load_tut_module("tut09_files")
         
+        # Test upload
         h = [("Content-type", "multipart/form-data; boundary=x"),
              ("Content-Length", "110")]
         b = """--x
@@ -164,6 +165,13 @@ hello
             myFile mime-type: text/plain
         </body>
         </html>''')
+    
+        # Test download
+        self.getPage('/download')
+        self.assertStatus("200 OK")
+        self.assertHeader("Content-Type", "application/x-download")
+        self.assertHeader("Content-Disposition", "attachment; filename=ReturnVsYield.pdf")
+        self.assertEqual(len(self.body), 326111)
 
 if __name__ == "__main__":
     helper.testmain()
