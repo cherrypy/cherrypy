@@ -175,7 +175,7 @@ def _cpOnError():
     httpErrors      = cherrypy.config.get('server.httpErrors')
     showTracebacks  = cherrypy.config.get('server.showTracebacks')
     
-    logTracebacks  = cherrypy.config.get('server.logTracebacks')
+    logTracebacks  = cherrypy.config.get('server.logTracebacks', True)
     if logTracebacks:
         cherrypy.log(formatExc())
     
