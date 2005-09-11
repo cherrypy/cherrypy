@@ -1,22 +1,6 @@
 import cgi
 import cherrypy
 
-class LocalInt:
-    def __init__(self, value):
-        self.__local = local()
-        self.__local.value = value
-    
-    def setValue(self, value):
-        self.__local.value = value
-
-    def __int__(self):
-        return self.__local.value
-
-    def __nonzero__(self):
-        return bool(self.__local.value)
-    
-    def __str__(self):
-        return str(self.__local.value)
 
 class FieldStorage(cgi.FieldStorage):
     def __init__(self, *args, **kwds):
