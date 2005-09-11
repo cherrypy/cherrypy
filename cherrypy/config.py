@@ -54,8 +54,6 @@ defaultGlobal = {
     'server.logFile': '',
     'server.reverseDNS': False,
     'server.threadPool': 0,
-
-    'server.maxRequestSize' : 0, # 0 == unlimited
     }
 
 def reset(useDefaults=True):
@@ -88,19 +86,20 @@ def update(updateMap=None, file=None, override=True):
             autoreload.reloadFiles.append(file)
         _load(file, override)
 
-def get(key, defaultValue=None, returnSection=False):
+def get(key, defaultValue=None, returnSection=False, path = None):
     """Return the configuration value corresponding to key
     If specified, return defaultValue on lookup failure. If returnSection is
     specified, return the path to the value, instead of the value itself.
     """
     # Look, ma, no Python function calls! Uber-fast.
 
-    try:
-        path = cherrypy.request.path
-    except AttributeError:
-        # There's no request.path yet, so use the global settings.
-        path = "global"
-    
+    if path is None:
+        try:
+            path = cherrypy.request.path
+        except AttributeError:
+            # There's no request.path yet, so use the global settings.
+            path = "global"
+
     while True:
         if path == "":
             path = "/"

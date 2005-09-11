@@ -158,4 +158,5 @@ class WSGIServer(server):
                         wsgiApp,
                         conf("server.threadPool"),
                         conf("server.socketHost"),
+                        config = cherrypy.config
                         )

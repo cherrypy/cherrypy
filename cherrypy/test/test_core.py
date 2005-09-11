@@ -235,7 +235,6 @@ class Method(Test):
         # which CP will just pipe back out if we tell it to.
         return cherrypy.request.body
 
-
 class Cookies(Test):
     
     def single(self, name):
@@ -247,6 +246,13 @@ class Cookies(Test):
             cookie = cherrypy.request.simpleCookie[name]
             cherrypy.response.simpleCookie[name] = cookie.value
 
+class MaxRequestSize(Test):
+    
+    def index(self):
+        return "OK"
+
+    def upload(self, file):
+        return "Size: %s" % len(file.file.read())
 
 logFile = os.path.join(localDir, "error.log")
 logAccessFile = os.path.join(localDir, "access.log")
@@ -632,6 +638,32 @@ llo,
         self.assertHeader('Set-Cookie', 'First=Dinsdale;')
         self.assertHeader('Set-Cookie', 'Last=Piranha;')
 
+    def testMaxRequestSize(self):
+        self.getPage("/maxrequestsize/index")
+        self.assertBody("OK")
+        cherrypy.config.update({'server.maxRequestHeaderSize': 10})
+        self.getPage("/maxrequestsize/index")
+        self.assertStatus("413 Request Entity Too Large")
+        self.assertBody("Request Entity Too Large")
+        cherrypy.config.update({'server.maxRequestHeaderSize': 0})
+
+        # Test upload
+        h = [("Content-type", "multipart/form-data; boundary=x"),
+             ("Content-Length", "110")]
+        b = """--x
+Content-Disposition: form-data; name="file"; filename="hello.txt"
+Content-Type: text/plain
+
+hello
+--x--
+"""
+        self.getPage('/maxrequestsize/upload', h, "POST", b)
+        self.assertBody('Size: 5')
+        cherrypy.config.update({
+            '/maxrequestsize': {'server.maxRequestBodySize': 3}})
+        self.getPage('/maxrequestsize/upload', h, "POST", b)
+        self.assertStatus("413 Request Entity Too Large")
+        self.assertInBody("Request Entity Too Large")
 
 if __name__ == '__main__':
     helper.testmain()

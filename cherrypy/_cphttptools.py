@@ -44,7 +44,7 @@ import urllib
 from urlparse import urlparse
 
 import cherrypy
-from cherrypy import _cputil, _cpcgifs
+from cherrypy import _cputil, _cpcgifs, _cperror, _cpwsgiserver
 from cherrypy.lib import cptools
 
 
@@ -372,10 +372,14 @@ class Request(object):
         
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
-        forms = _cpcgifs.FieldStorage(fp=request.rfile,
+        try:
+            forms = _cpcgifs.FieldStorage(fp=request.rfile,
                                       headers=lowerHeaderMap,
                                       environ=methenv,
                                       keep_blank_values=1)
+        except _cpwsgiserver.MaxSizeExceeded:
+            # Post data is too big
+            raise _cperror.HTTPStatusError(413)
         
         if forms.file:
             # request body was a content-type other than form params.
