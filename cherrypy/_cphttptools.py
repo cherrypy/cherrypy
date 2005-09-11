@@ -427,17 +427,28 @@ def handleError(exc):
         finalize()
         
         applyFilters('afterErrorResponse')
+        return
+    except cherrypy.HTTPRedirect, inst:
+        try:
+            inst.set_response()
+            finalize()
+            return
+        except:
+            # Fall through to the second error handler
+            pass
     except:
-        # Failure in _cpOnError, error filter, or finalize.
-        # Bypass them all.
-        defaultOn = (cherrypy.config.get('server.environment') == 'development')
-        if cherrypy.config.get('server.showTracebacks', defaultOn):
-            body = dbltrace % (_cputil.formatExc(exc), _cputil.formatExc())
-        else:
-            body = ""
-        response = cherrypy.response
-        response.status, response.headers, response.body = bareError(body)
-
+        # Fall through to the second error handler
+        pass
+    
+    # Failure in _cpOnError, error filter, or finalize.
+    # Bypass them all.
+    defaultOn = (cherrypy.config.get('server.environment') == 'development')
+    if cherrypy.config.get('server.showTracebacks', defaultOn):
+        body = dbltrace % (_cputil.formatExc(exc), _cputil.formatExc())
+    else:
+        body = ""
+    response = cherrypy.response
+    response.status, response.headers, response.body = bareError(body)
 
 def bareError(extrabody=None):
     """Produce status, headers, body for a critical error.

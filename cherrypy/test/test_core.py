@@ -100,6 +100,12 @@ class Status(Test):
 
 class Redirect(Test):
     
+    def _cpOnError(self):
+        raise cherrypy.HTTPRedirect("/errpage")
+    
+    def error(self):
+        raise NameError()
+    
     def index(self):
         return "child"
     
@@ -461,6 +467,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/internal2?user_id=terrier")
         self.assertBody('0 images for fish')
         self.assertStatus('200 OK')
+        
+        # HTTPRedirect on error
+        self.getPage("/redirect/error")
+        self.assertStatus('303 See Other')
+        self.assertInBody('/errpage')
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
