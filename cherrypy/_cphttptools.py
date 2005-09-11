@@ -451,32 +451,18 @@ def bareError(extrabody=None):
     as-is to the body.
     """
     
-    try:
-        # try to return a nice error page if we are in production mode and http errors
-        # are enabled
-        isProduction = cherrypy.config.get('server.environment') == 'production'
-        httpErrors = cherrypy.config.get('server.httpErrors')
-        
-        if isProduction and httpErrors:
-            if not extrabody:
-                extrabody = ''
-            status, _body = cherrypy.lib.httperrors.getErrorPage(500, extrabody)
-            headers = [('Content-Length', str(len(_body))), ('Content-Type', 'text/html')]
-            return (status, headers, _body)
-        else:
-            # raise a dummy exception to force a plain error message
-            raise Exception()
-    except:
-        # if there was a problem generating the error page
-        # then return a basic message
-        body = "Unrecoverable error in the server."
-        if extrabody is not None:
-            body += "\n" + extrabody
-        
-        return ("500 Internal Server Error",
-            [('Content-Type', 'text/plain'),
-             ('Content-Length', str(len(body)))],
-            [body])
+    # The whole point of this function is to be a last line-of-defense
+    # in handling errors. That is, it must not raise any errors itself;
+    # it cannot be allowed to fail. Therefore, don't add to it!
+    # In particular, don't call any other CP functions.
+    body = "Unrecoverable error in the server."
+    if extrabody is not None:
+        body += "\n" + extrabody
+    
+    return ("500 Internal Server Error",
+        [('Content-Type', 'text/plain'),
+         ('Content-Length', str(len(body)))],
+        [body])
 
 
 
