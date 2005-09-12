@@ -164,26 +164,32 @@ class SessionFilter(basefilter.BaseFilter):
 
     def beforeFinalize(self):
         def returnBodyAndSaveData(body, sess):
-            # If the body is a generator, we have to save the data
-            #   *after* the generator has been consumed
-            if isinstance(body, types.GeneratorType):
-                for line in body:
-                    yield line
+            try:
+                # If the body is a generator, we have to save the data
+                #   *after* the generator has been consumed
+                if isinstance(body, types.GeneratorType):
+                    for line in body:
+                        yield line
 
-            # Save session data
-            expirationTime = datetime.datetime.now() + \
-                    datetime.timedelta(seconds = sess.sessionTimeout * 60)
-            sess.sessionStorage.save(
-                    sess.sessionID, sess.sessionData, expirationTime)
-            if sess.locked:
-                # Always release the lock if the user didn't release it
-                sess.sessionStorage.releaseLock()
+                # Save session data
+                expirationTime = datetime.datetime.now() + \
+                        datetime.timedelta(seconds = sess.sessionTimeout * 60)
+                sess.sessionStorage.save(
+                        sess.sessionID, sess.sessionData, expirationTime)
+                if sess.locked:
+                    # Always release the lock if the user didn't release it
+                    sess.sessionStorage.releaseLock()
 
-            # If the body is not a generator, we save the data
-            #   before the body is returned
-            if not isinstance(body, types.GeneratorType):
-                for line in body:
-                    yield line
+                # If the body is not a generator, we save the data
+                #   before the body is returned
+                if not isinstance(body, types.GeneratorType):
+                    for line in body:
+                        yield line
+            except:
+                # Can't use try/finally because of yield
+                self._clean(sess)
+                raise
+            self._clean(sess)
 
         sess = cherrypy.threadData._session
         if not sess.sessionStorage:
@@ -195,9 +201,7 @@ class SessionFilter(basefilter.BaseFilter):
         cherrypy.response.body = \
             returnBodyAndSaveData(cherrypy.response.body, sess)
 
-
-    def onEndResource(self):
-        sess = cherrypy.threadData._session
+    def _clean(self, sess):
         if getattr(sess, 'locked', None):
             # If the session is still locked there probably was an
             #   error while processing the request.
@@ -205,6 +209,7 @@ class SessionFilter(basefilter.BaseFilter):
             sess.sessionStorage.releaseLock()
         if getattr(sess, 'sessionStorage', None):
             del sess.sessionStorage
+
 
 class RamStorage:
     """ Implementation of the RAM backend for sessions """

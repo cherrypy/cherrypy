@@ -283,6 +283,7 @@ class Request(object):
                     # For an HTTPRedirect, we don't go through the regular
                     # mechanism: we return the redirect immediately
                     inst.set_response()
+                    applyFilters('beforeFinalize')
                     finalize()
             finally:
                 applyFilters('onEndResource')
@@ -470,6 +471,7 @@ def bareError(extrabody=None):
     # in handling errors. That is, it must not raise any errors itself;
     # it cannot be allowed to fail. Therefore, don't add to it!
     # In particular, don't call any other CP functions.
+
     body = "Unrecoverable error in the server."
     if extrabody is not None:
         body += "\n" + extrabody
@@ -637,18 +639,21 @@ def finalize():
 
 def applyFilters(methodName):
     """Execute the given method for all registered filters."""
-    if methodName in ('beforeRequestBody', 'beforeMain'):
+    if methodName in ('onStartResource', 'beforeRequestBody', 'beforeMain'):
         filterList = (_cputil._cpDefaultInputFilterList +
                       _cputil.getSpecialAttribute('_cpFilterList'))
-    elif methodName in ('beforeFinalize',):
+    elif methodName in ('beforeFinalize', 'onEndResource',
+                'beforeErrorResponse', 'afterErrorResponse'):
         filterList = (_cputil.getSpecialAttribute('_cpFilterList') +
                       _cputil._cpDefaultOutputFilterList)
+    #else:
+    #    # '', 
+    #    # 'beforeErrorResponse', 'afterErrorResponse'
+    #    filterList = (_cputil._cpDefaultInputFilterList +
+    #                  _cputil.getSpecialAttribute('_cpFilterList') +
+    #                  _cputil._cpDefaultOutputFilterList)
     else:
-        # 'onStartResource', 'onEndResource'
-        # 'beforeErrorResponse', 'afterErrorResponse'
-        filterList = (_cputil._cpDefaultInputFilterList +
-                      _cputil.getSpecialAttribute('_cpFilterList') +
-                      _cputil._cpDefaultOutputFilterList)
+        assert False # Wrong methodName for the filter
     for filter in filterList:
         method = getattr(filter, methodName, None)
         if method:
