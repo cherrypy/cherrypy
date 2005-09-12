@@ -1,16 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
-  xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="sessions">
-    <title>Session Management</title>
-    <abstract>
-        <para>CherryPy 2.1 includes a powerful sessions system provided via a new <literal>sessionFilter</literal>. </para>
-    </abstract>
-    <section id="usingsessions">
-        <title>Using Sessions</title>
-        <para>First you need to enable the session filter through the configuration system, by setting <option>sessionFilter.on</option> to <literal>True</literal>. This gives you a variable called <literal>cherrypy.session</literal>, which is a dictionary-like object where you can read/store your session data. This dictionnary always has a special key called <literal>_id</literal> which contains the session id.</para>
-        <para>Here is a sample code showing how to implement a simple counter using sessions:</para>
-        <example>
-            <programlisting>
+<?xml version="1.0" encoding="UTF-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="sessions">
+  <title>Session Management</title>
+  <abstract>
+    <para>CherryPy 2.1 includes a powerful sessions system provided via a new
+    <literal>sessionFilter</literal>.</para>
+  </abstract>
+  <section id="usingsessions">
+    <title>Using Sessions</title>
+    <para>First you need to enable the session filter through the
+    configuration system, by setting <option>sessionFilter.on</option> to
+    <literal>True</literal>. This gives you a variable called
+    <literal>cherrypy.session</literal>, which is a dictionary-like object
+    where you can read/store your session data. This dictionary always has a
+    special key called <literal>_id</literal> which contains the session
+    id.</para>
+    <para>Here is sample code showing how to implement a simple counter using
+    sessions:</para>
+    <example>
+      <programlisting>
             import cherrypy
             class Root:
                 def index(self):
@@ -22,88 +31,106 @@
             cherrypy.config.update({'sessionFilter.on': True})
             cherrypy.server.start()
             </programlisting>
-        </example>
-    </section>
-    <section>
-        <title>Configuring sessions</title>
-        <para> The following configuration options are available for "sessionFilter": </para>
-        <itemizedlist>
-            <listitem>
-                <para><option>sessionFilter.on</option>:
-                <literal>True</literal> or <literal>False</literal> (default): enable/disable sessions</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.storageType</option>:
-                Specify which storage type should be used for storing session data on the server. Built-in types are <literal>Ram</literal> (default), <literal>File</literal> and <literal>PostgreSQL</literal> (see <xref linkend="backends"/> for more info)</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.timeout</option>:
-                The number of minutes of inactivity before an individual session can be removed. It can be a float (ex: 0.5 for 30 seconds). Defaults to 60.</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.cleanUpDelay</option>:
-                Once in a while the server cleans up old/expired sessions. This config option specifies how often this clean up process should happe. The delay is in minutes. Defaults to 5.</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.cookieName</option>:
-                The name of the cookie that CherryPy will use to store the session ID. Defaults to <literal>sessionID</literal>.</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.getDB</option>:
-                See the <option>PostgreSQL</option> backend from <xref linkend="backends"/>.</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.deadlockTimeout</option>:
-                See <xref linkend="concurrent"/>.</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.onCreateSession</option>:
-                See <xref linkend="callbacks"/>.</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.onDeleteSession</option>:
-                See <xref linkend="callbacks"/>.</para>
-            </listitem>
-            <listitem>
-                <para><option>sessionFilter.storageClass</option>:
-                See <xref linkend="custombackend"/>.</para>
-            </listitem>
-        </itemizedlist>
-    </section>
-
-    <section id="backends">
-        <title>Choosing the backend</title>
-        <para>CherryPy comes with multiple build-in backends for storing session data on the server side. They are:</para>
-
-        <itemizedlist>
-            <listitem>
-                <para><option>Ram</option>:
-                All data is stored in RAM; this is the fastest storage, but it means that the data will be lost if you restart the server; and it also means that it won't scale to multiple processes/machines</para>
-            </listitem>
-            <listitem>
-                <para><option>File</option>:
-                All data is stored on disk; this is a bit slower than Ram storage, but the data will persist if you restart the server server; it also means that data can also be shared amongst multiple CherryPy processes (either on the same machine, or on multiple machines if all machines have access to the same disk ... through something like NFS for instance)</para>
-            </listitem>
-            <listitem>
-                <para><option>PostgreSQL</option>:
-                This backend is included with CherryPy to show how easy it is to implement your own custom backend for the session system. All data is stored in a PostgreSQL database; storing your data in a database is the recommend setup for production if you have a very high traffic website and you need to scale your site accross multiple machines. To use this backend you'll need to create the following table in your PostgreSQL database:
-                <screen>
+    </example>
+  </section>
+  <section>
+    <title>Configuring sessions</title>
+    <para>The following configuration options are available for
+    "sessionFilter":</para>
+    <itemizedlist>
+      <listitem>
+        <para><option>sessionFilter.on</option>: <literal>True</literal> or
+        <literal>False</literal> (default): enable/disable sessions</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.storageType</option>: Specify which
+        storage type should be used for storing session data on the server.
+        Built-in types are <literal>Ram</literal> (default),
+        <literal>File</literal> and <literal>PostgreSQL</literal> (see <xref
+        linkend="backends" /> for more info)</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.timeout</option>: The number of minutes of
+        inactivity before an individual session can be removed. It can be a
+        float (ex: 0.5 for 30 seconds). Defaults to 60.</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.cleanUpDelay</option>: Once in a while the
+        server cleans up old/expired sessions. This config option specifies
+        how often this clean up process should happen. The delay is in
+        minutes. Defaults to 5.</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.cookieName</option>: The name of the
+        cookie that CherryPy will use to store the session ID. Defaults to
+        <literal>sessionID</literal>.</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.getDB</option>: See the
+        <option>PostgreSQL</option> backend from <xref
+        linkend="backends" />.</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.deadlockTimeout</option>: See <xref
+        linkend="concurrent" />.</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.onCreateSession</option>: See <xref
+        linkend="callbacks" />.</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.onDeleteSession</option>: See <xref
+        linkend="callbacks" />.</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.storageClass</option>: See <xref
+        linkend="custombackend" />.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+  <section id="backends">
+    <title>Choosing the backend</title>
+    <para>CherryPy comes with multiple build-in backends for storing session
+    data on the server side. They are:</para>
+    <itemizedlist>
+      <listitem>
+        <para><option>Ram</option>: All data is stored in RAM; this is the
+        fastest storage, but it means that the data will be lost if you
+        restart the server; and it also means that it won't scale to multiple
+        processes/machines</para>
+      </listitem>
+      <listitem>
+        <para><option>File</option>: All data is stored on disk; this is a bit
+        slower than Ram storage, but the data will persist if you restart the
+        server. It also means that data can be shared amongst multiple
+        CherryPy processes, either on the same machine, or on multiple
+        machines if all machines have access to the same disk (for example,
+        via NFS).</para>
+      </listitem>
+      <listitem><para><option>PostgreSQL</option>: This backend is included
+      with CherryPy to show how easy it is to implement your own custom
+      backend for the session system. All data is stored in a PostgreSQL
+      database; storing your data in a database is the recommend setup for
+      production if you have a very high traffic website and you need to scale
+      your site across multiple machines. To use this backend, you'll need to
+      create the following table in your PostgreSQL database: <screen>
                 create table session (
                     id varchar(40),
                     data text,
                     expiration_time timestamp
                 )
-                </screen>
-                </para>
-                You also need to programmatically set the <literal>sessionFilter.getDB</literal> config option to a function that returns a DB connection.
-            </listitem>
-        </itemizedlist>
-    </section>
-
-    <section id="custombackend">
-        <title>Writing your own custom backend</title>
-        <para>By default, CherryPy comes with 3 built-in backends, but if you have specific needs, it is very easy to implement your own custom backend (for instance, another database, or an XML-RPC server, ...). To do so, all you have to do is write a class that implements the following methods:
-            <screen>
+                </screen> </para> You also need to programmatically set the
+      <literal>sessionFilter.getDB</literal> config option to a function that
+      returns a DB connection.</listitem>
+    </itemizedlist>
+  </section>
+  <section id="custombackend">
+    <title>Writing your own custom backend</title>
+    <para>By default, CherryPy comes with 3 built-in backends, but if you have
+    specific needs, it is very easy to implement your own custom backend (for
+    instance, another database, or an XML-RPC server, ...). To do so, all you
+    have to do is write a class that implements the following methods:
+    <screen>
             class MyCustomBackend:
                 def save(self, id, data, expirationTime):
                     """ Save the session data and expirationTime for that session id """
@@ -114,28 +141,59 @@
                 def cleanUp(self):
                     """ Delete expired session data from storage and call
                         'onDeleteSession' for each deleted session id """
-            </screen>
-            Note that if you want to use <option>explicit</option> locking (see <xref linkend="concurrent"/>), you also have to implement two extra methods: <literal>acquireLock</literal> and <literal>releaseLock</literal>.
-        </para>
-
-        <para>Once you have written this class, you have to programmatically set the <literal>sessionFilter.storageClass</literal> config option to this class.</para>
-
-        <para>If you need help in writing your own custom backend it is a good idea to look at how the current ones (ram, file and postgresql) are implemented. They are implemented in the file <filename>cherrypy/lib/filter/sessionfilter.py</filename></para>
-    </section>
-
-    <section id="concurrent">
-        <title>Handling concurrent requests for the same session data</title>
-        <para>It is normally quite rare to have two simultaneous requests with the same session ID. It means that a same browser is making 2 requests to your server at the same time (to dynamic pages ... static data like images don't have sessions). However, this case can happen (if you're using frames for instance), and it will happen more and more often as more and more people start using Ajax.</para>
-        <para>In that case, we need to make sure that access to the session data is serialized. This way threads can't both modify the data at the same time and leave it in an inconsistent state.</para>
-        <para>By default, CherryPy will serialize access to the session data, so if a browser makes a second request while a first request is still being handled by the server, the second request will block while the first request is accessing the data. As soon as the first request is finished then the second request will be able to access it.</para>
-        <para>This means that the second request will block until the first request is finished. If you're using the <option>ram</option> backend, you can manually shorten the window where the second request will block. This is achieved by having the first request explicitely tell CherryPy when it starts using the session data and when it is finished with it. In order to do so, you have to call <literal>cherrypy.session.acquireLock</literal> and <literal>cherrypy.session.releaseLock</literal>. You also have to set the <literal>sessionFilter.locking</literal> config option to <option>explicit</option>.</para>
-        <para>Note that this technique only works with the <option>ram</option> backend. For other backends like <option>file</option> or <option>postgresql</option>, it is not safe to release the session before the request is finished, because the session data will only be saved at the end of the request anyway. So it would be bad if some other thread started accessing the data between the time when it is released and the time when it is saved.
-        </para>
-    </section>
-
-    <section id="callbacks">
-        <title>Being notified when sessions are created/deleted</title>
-        <para>It is possible to configure the <literal>sessionFilter</literal> so that it calls some special callback functions from your code when sessions are being created/deleted. To do so you have to set the <literal>sessionFilter.onCreateSession</literal> and <literal>sessionFilter.onDeleteSession</literal> config options. When a session is created/deleted, CherryPy will call these functions and pass them the session data.</para>
-    </section>
+            </screen> Note that if you want to use <option>explicit</option>
+    locking (see <xref linkend="concurrent" />), you also have to implement
+    two extra methods: <literal>acquireLock</literal> and
+    <literal>releaseLock</literal>.</para>
+    <para>Once you have written this class, you have to programmatically set
+    the <literal>sessionFilter.storageClass</literal> config option to this
+    class.</para>
+    <para>If you need help in writing your own custom backend it is a good
+    idea to look at how the current ones (ram, file and postgresql) are
+    implemented. They are implemented in the file
+    <filename>cherrypy/lib/filter/sessionfilter.py</filename></para>
+  </section>
+  <section id="concurrent">
+    <title>Handling concurrent requests for the same session data</title>
+    <para>It is normally quite rare to have two simultaneous requests with the
+    same session ID. It means that a same browser is making 2 requests to your
+    server at the same time (to dynamic pages ... static data like images
+    don't have sessions). However, this case can happen (if you're using
+    frames for instance), and it will happen more and more often as more and
+    more people start using Ajax.</para>
+    <para>In that case, we need to make sure that access to the session data
+    is serialized. This way, threads can't both modify the data at the same
+    time and leave it in an inconsistent state.</para>
+    <para>By default, CherryPy will serialize access to the session data, so
+    if a browser makes a second request while a first request is still being
+    handled by the server, the second request will block while the first
+    request is accessing the data. As soon as the first request is finished
+    then the second request will be able to access it.</para>
+    <para>This means that the second request will block until the first
+    request is finished. If you're using the <option>ram</option> backend, you
+    can manually shorten the window where the second request will block. This
+    is achieved by having the first request explicitly tell CherryPy when it
+    starts using the session data and when it is finished with it. In order to
+    do so, you have to call <literal>cherrypy.session.acquireLock</literal>
+    and <literal>cherrypy.session.releaseLock</literal>. You also have to set
+    the <literal>sessionFilter.locking</literal> config option to
+    <option>explicit</option>.</para>
+    <para>Note that this technique only works with the <option>ram</option>
+    backend. For other backends like <option>file</option> or
+    <option>postgresql</option>, it is not safe to release the session before
+    the request is finished, because the session data will only be saved at
+    the end of the request anyway. So it would be bad if some other thread
+    started accessing the data between the time when it is released and the
+    time when it is saved.</para>
+  </section>
+  <section id="callbacks">
+    <title>Being notified when sessions are created/deleted</title>
+    <para>It is possible to configure the <literal>sessionFilter</literal> so
+    that it calls some special callback functions from your code when sessions
+    are being created/deleted. To do so you have to set the
+    <literal>sessionFilter.onCreateSession</literal> and
+    <literal>sessionFilter.onDeleteSession</literal> config options. When a
+    session is created/deleted, CherryPy will call these functions and pass
+    them the session data.</para>
+  </section>
 </section>
-

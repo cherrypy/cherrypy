@@ -1,17 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="appdeveloperreference">
-    <title>Application developer reference</title>
-    <abstract>CherryPy tries to bring to Python developers a system that let them use their language
-        to develop web application as they would use it for any other type of environment. Therefore,
-        building a web application with CherryPy is very straightforward and does not require the
-        developer to change his/her habits, nor to learn many features before being able to pull out a
-        working application. This section will review the basic bricks offered by CherryPy to build an 
-        application.</abstract>
-    <xi:include href="globaloverviewcherrypy.xml"/>
-    <xi:include href="configsystemoverview.xml"/>
-    <xi:include href="sessions.xml"/>
-    <xi:include href="templateindependant.xml"/>
-    <xi:include href="staticcontenthandling.xml"/>
-    <xi:include href="fileuploadbehavior.xml"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+         xml:id="appdeveloperreference">
+  <title>Application developer reference</title>
+  <abstract>CherryPy lets developers use Python to develop web applications,
+  just as they would use Python for any other type of application. Building a
+  web application with CherryPy is very straightforward and does not require
+  the developer to change habits, or learn many features, before being able to
+  produce a working application. This section will review the basic components
+  which CherryPy provides to build an application.</abstract>
+  <xi:include href="globaloverviewcherrypy.xml" />
+  <xi:include href="configsystemoverview.xml" />
+  <xi:include href="sessions.xml" />
+  <xi:include href="templateindependant.xml" />
+  <xi:include href="staticcontenthandling.xml" />
+  <xi:include href="fileuploadbehavior.xml" />
 </section>

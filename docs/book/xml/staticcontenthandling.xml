@@ -1,15 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="globaloverviewcherrypy">
-    <title>Static content handling</title>
-    <para>Static content is now handled by a filter called "staticFilter" that can easily be enabled and configured in your config file. 
-        For instance, if you wanted to serve <code>/style.css</code> from <filename>/home/site/style.css</filename> and <code>/static/*</code>
-        from <filename>/home/site/static/*</filename>, you can use the following configuration:
-        </para>
-        
-    <example>
-        <title>Static filter configuration</title>
-        <programlisting>
+<?xml version="1.0" encoding="UTF-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+         xml:id="globaloverviewcherrypy">
+  <title>Static content handling</title>
+  <para>Static content is now handled by a filter called "staticFilter" that
+  can easily be enabled and configured in your config file. For instance, if
+  you wanted to serve <code>/style.css</code> from
+  <filename>/home/site/style.css</filename> and <code>/static/*</code> from
+  <filename>/home/site/static/*</filename>, you can use the following
+  configuration:</para>
+  <example>
+    <title>Static filter configuration</title>
+    <programlisting>
             [global]
             staticFilter.root = "/home/site"
             
@@ -21,6 +24,19 @@
             staticFilter.on = True
             staticFilter.dir = "static"
         </programlisting>
-    </example>
-    <para>The <code>staticFilter.root</code> entry is not required; if you omit it, it defaults to the directory of your <code>cherrypy.root</code> class. </para>
-   </section>
+  </example>
+  <para>The <code>staticFilter.root</code> entry can be either absolute or
+  relative. If absolute, static content is sought within that absolute path.
+  Since CherryPy cannot guess where your application root is located, relative
+  paths are assumed to be relative to the directory where your
+  <code>cherrypy.root</code> class is defined (if you do not provide a root,
+  it defaults to "", and therefore to the directory of your
+  <code>cherrypy.root</code> class).</para>
+  <para>As an application developer, the design of your application affects
+  whether you choose to use absolute or relative paths. If you are creating a
+  one-off application that will only be deployed once, you might as well use
+  absolute paths. But you can make multiple deployments easier by using
+  relative paths, letting CherryPy calculate the absolute path each time for
+  you. Absolute paths, however, give deployers the ability to place static
+  content on read-only filesystems, or on faster disks.</para>
+</section>

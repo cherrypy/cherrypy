@@ -1,20 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="configsystemoverview">
-    <title>Configuration system overview</title>
-    <para>The CherryPy configuration system specifies with a fine grain how each part of the
-        application should react. You will use it for two reason: </para>
-    <itemizedlist>
-        <listitem>Web server settings</listitem>
-        <listitem>Enabling filters per path</listitem>
-    </itemizedlist>
-    <para>You will be able to declare the configuration settings either from a file or from a Python
-        dictionnary.</para>
-    <para>First of all, let&apos;s see how a typical configuration file is defined.</para>
-    <example>
-        <title>Configuration file</title>
-        <programlisting linenumbering="numbered">
-            #The configuration file called myconfigfile.conf
+<?xml version="1.0" encoding="UTF-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+         xml:id="configsystemoverview">
+  <title>Configuration system overview</title>
+  <para>The CherryPy configuration system provides fine-grained control over
+  how each part of the application should react. You will use it for two
+  reasons:</para>
+  <itemizedlist>
+    <listitem>Web server settings</listitem>
+    <listitem>Enabling filters per path</listitem>
+  </itemizedlist>
+  <para>You will be able to declare the configuration settings either from a
+  file or from a Python dictionary.</para>
+  <para>First of all, let's see how a typical configuration file is
+  defined.</para>
+  <example>
+    <title>Configuration file</title>
+    <programlisting linenumbering="numbered">
+            # The configuration file called myconfigfile.conf
             [global]
             server.socketPort=8080
             server.socketHost=""
@@ -40,66 +44,70 @@
             # From your script...
             cherrypy.config.update(file="myconfigfile.conf") 
         </programlisting>
-    </example>
-    <para>The settings can also be defined using a python dictionnary instead of a file as follow :</para>
-    <example>
-        <title>Configuration dictionnary</title>
-        <programlisting linenumbering="numbered">
+  </example>
+  <para>The settings can also be defined using a python dictionary instead of
+  a file as follows:</para>
+  <example>
+    <title>Configuration dictionary</title>
+    <programlisting linenumbering="numbered">
       settings = { 
-         &apos;global&apos;: {
-            &apos;server.socketPort&apos; : 8080,
-            &apos;server.socketHost&apos;: "",
-            &apos;server.socketFile&apos;: "",
-            &apos;server.socketQueueSize&apos;: 5,
-            &apos;server.protocolVersion&apos;: "HTTP/1.0",
-            &apos;server.logToScreen&apos;: True,
-            &apos;server.logFile&apos;: "",
-            &apos;server.reverseDNS&apos;: False,
-            &apos;server.threadPool&apos;: 10,
-            &apos;server.environment&apos;: "development"
+         'global': {
+            'server.socketPort' : 8080,
+            'server.socketHost': "",
+            'server.socketFile': "",
+            'server.socketQueueSize': 5,
+            'server.protocolVersion': "HTTP/1.0",
+            'server.logToScreen': True,
+            'server.logFile': "",
+            'server.reverseDNS': False,
+            'server.threadPool': 10,
+            'server.environment': "development"
          },
-         &apos;/service/xmlrpc&apos; : {
-            &apos;xmlRpcFilter.on&apos;: True
+         '/service/xmlrpc' : {
+            'xmlRpcFilter.on': True
          },
-         &apos;/admin&apos;: {
-            &apos;sessionAuthenticateFilter.on&apos; :True
+         '/admin': {
+            'sessionAuthenticateFilter.on' :True
          },
-         &apos;/css/default.css&apos;: {
-            &apos;staticFilter.on&apos;: True,
-            &apos;staticFilter.file&apos;: "data/css/default.css"
+         '/css/default.css': {
+            'staticFilter.on': True,
+            'staticFilter.file': "data/css/default.css"
          }
       }
       cherrypy.config.update(settings)
         </programlisting>
-    </example>
-    <para>Each section of the configuration is a path that can be mapped to a published object
-        of the tree handled by CherryPy. Therefore when the server receives a request to
-            <code>/css/default.css</code> the static filter will be called and the server will
-        actually return the physical file name <filename>data/css/default.css</filename>. </para>
-    <para>Since the path <code>/service/xmlrpc</code> has the XML-RPC filter enabled, all the
-        exposed methods of the object <code>cherrypy.root.service.xmlrpc</code> will be treated as
-        XML-RPC methods.</para>
-    <para>The root entry, defined as <code>global</code>, is also responsible for defining the
-        server settings such as the port, the protocol version to use by default, the number of
-        threads to start with the server, etc.</para>
-    <para>The configuration file requires that all the value are Python values. Strings must be
-        quoted, boolean are set to True or False, etc.</para>
-    <para>The <code>server.environment</code> entry controls how CherryPy should run. Three values
-        are legal :</para>
-    <itemizedlist>
-        <listitem>development <itemizedlist>
-                <listitem>logDebugInfoFilter is enabled by default</listitem>
-                <listitem> the default _cpOnError displays tracebacks in the browser if errors occur
-                    but still returns a "200" status code</listitem>
-                <listitem>autoreload is enabled by default</listitem>
-            </itemizedlist>
+  </example>
+  <para>Each section of the configuration refers to a URL path; each path is
+  mapped to a published object of the tree handled by CherryPy. Therefore when
+  the server receives a request for <code>/css/default.css</code>, the static
+  filter will be called and the server will actually return the physical file
+  name <filename>data/css/default.css</filename>.</para>
+  <para>Since the path <code>/service/xmlrpc</code> has the XML-RPC filter
+  enabled, all the exposed methods of the object
+  <code>cherrypy.root.service.xmlrpc</code> will be treated as XML-RPC
+  methods.</para>
+  <para>The root entry, defined as <code>global</code>, is also responsible
+  for defining the server settings such as the port, the protocol version to
+  use by default, the number of threads to start with the server, etc.</para>
+  <para>All values in the configuration file must be valid Python values.
+  Strings must be quoted, booleans must be True or False, etc.</para>
+  <para>The <code>server.environment</code> entry controls how CherryPy should
+  run. Three values are legal:</para>
+  <itemizedlist>
+    <listitem>development <itemizedlist>
+        <listitem>logDebugInfoFilter is enabled by default</listitem>
+        <listitem>the default _cpOnError displays tracebacks in the browser if
+        errors occur</listitem>
+        <listitem>autoreload is enabled by default</listitem>
+      </itemizedlist></listitem>
+    <listitem>production <itemizedlist>
+        <listitem>logDebugInfoFilter is disabled by default</listitem>
+        <listitem>
+          <para>tracebacks are logged, but are not displayed in the
+          browser</para>
         </listitem>
-        <listitem>production <itemizedlist>
-                <listitem>logDebugInfoFilter is disabled by default</listitem>
-                <listitem>the default _cpOnError returns "304" or "500" status codes if errors
-                occur</listitem>
-            </itemizedlist>
-        </listitem>
-        <listitem>staging (same as production for the moment)</listitem>
-    </itemizedlist>
+        <listitem>autoreload is disabled by default</listitem>
+      </itemizedlist></listitem>
+    <listitem>staging (same as production for the moment)</listitem>
+  </itemizedlist>
 </section>
