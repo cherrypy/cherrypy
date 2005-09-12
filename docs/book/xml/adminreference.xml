@@ -6,6 +6,7 @@
   <title>Administrator reference</title>
   
   <xi:include href="installapplication.xml"/>
+  <xi:include href="configreference.xml"/>
   <xi:include href="configureapplication.xml"/>
   <xi:include href="productionsetup.xml"/>
 </section>
