@@ -201,6 +201,13 @@ class SessionFilter(basefilter.BaseFilter):
         cherrypy.response.body = \
             returnBodyAndSaveData(cherrypy.response.body, sess)
 
+    def afterErrorResponse(self):
+        sess = cherrypy.threadData._session
+        if not sess.sessionStorage:
+            # Sessions are not enabled: do nothing
+            return
+        self._clean(sess)
+
     def _clean(self, sess):
         if getattr(sess, 'locked', None):
             # If the session is still locked there probably was an
