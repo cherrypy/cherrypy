@@ -52,10 +52,10 @@ Global variables (RAM backend only):
 """
 
 import datetime
-import sha
 import os
 import pickle
 import random
+import sha
 import StringIO
 import time
 import threading
@@ -63,90 +63,85 @@ import types
 
 import basefilter
 
+
 class EmptyClass:
     """ An empty class """
     pass
 
+
 class SessionDeadlockError(Exception):
-    """ Happens when a session can't acquire a lock after a
-        certain time
-    """
+    """ The session could not acquire a lock after a certain time """
     pass
+
 
 class SessionNotEnabledError(Exception):
-    """ Happens if user forgot to set sessionFilter.on to True """
+    """ User forgot to set sessionFilter.on to True """
     pass
 
+
 class SessionFilter(basefilter.BaseFilter):
+    
     def beforeRequestBody(self):
         # We have to dynamically import cherrypy because Python can't handle
         #   circular module imports :-(
         global cherrypy
         import cherrypy
+        conf = cherrypy.config.get
+        
         cherrypy.threadData._session = EmptyClass()
         sess = cherrypy.threadData._session
         now = datetime.datetime.now()
         # Dont enable session if sessionFilter is off or if this is a
         #   request for static data
-        if (not cherrypy.config.get('sessionFilter.on', False)) or \
-                cherrypy.config.get('staticFilter.on', False):
+        if ((not conf('sessionFilter.on', False))
+              or conf('staticFilter.on', False)):
             sess.sessionStorage = None
             return
-
+        
         sess.locked = False # Not locked by default
-
+        
         # Read config options
-        sess.sessionTimeout = \
-            cherrypy.config.get('sessionFilter.timeout', 60)
-
-        sess.sessionLocking = \
-            cherrypy.config.get('sessionFilter.locking', 'implicit')
-
-        sess.onCreateSession = \
-            cherrypy.config.get('sessionFilter.onCreateSession',
-                lambda data: None)
-
-        sess.onDeleteSession = \
-            cherrypy.config.get('sessionFilter.onDeleteSession',
-                lambda data: None)
-
-        cleanUpDelay = \
-            cherrypy.config.get('sessionFilter.cleanUpDelay', 5)
-
-        cookieName = \
-            cherrypy.config.get('sessionFilter.cookieName', 'sessionID')
-
-        sess.deadlockTimeout = \
-            cherrypy.config.get('sessionFilter.deadlockTimeout', 30)
-
-        storage = cherrypy.config.get('sessionFilter.storageType', 'Ram')
+        sess.sessionTimeout = conf('sessionFilter.timeout', 60)
+        sess.sessionLocking = conf('sessionFilter.locking', 'implicit')
+        sess.onCreateSession = conf('sessionFilter.onCreateSession',
+                                    lambda data: None)
+        sess.onDeleteSession = conf('sessionFilter.onDeleteSession',
+                                    lambda data: None)
+        
+        cleanUpDelay = conf('sessionFilter.cleanUpDelay', 5)
+        cleanUpDelay = datetime.timedelta(seconds = cleanUpDelay * 60)
+        
+        cookieName = conf('sessionFilter.cookieName', 'sessionID')
+        sess.deadlockTimeout = conf('sessionFilter.deadlockTimeout', 30)
+        
+        storage = conf('sessionFilter.storageType', 'Ram')
         storage = storage[0].upper() + storage[1:]
-
+        
         # People can set their own custom class
         #   through sessionFilter.storageClass
-        sess.sessionStorage = \
-            cherrypy.config.get('sessionFilter.storageClass', None)
+        sess.sessionStorage = conf('sessionFilter.storageClass', None)
         if sess.sessionStorage is None:
             sess.sessionStorage = globals()[storage + 'Storage']()
-
+        
         # Check if we need to clean up old sessions
-        if cherrypy._sessionLastCleanUpTime + \
-                datetime.timedelta(seconds = cleanUpDelay * 60) < now:
+        if cherrypy._sessionLastCleanUpTime + cleanUpDelay < now:
             sess.sessionStorage.cleanUp()
-
+        
         # Check if request came with a session ID
         if cookieName in cherrypy.request.simpleCookie:
             # It did: we try to load the session data
             sess.sessionID = cherrypy.request.simpleCookie[cookieName].value
+            
             # If using implicit locking, acquire lock
             if sess.sessionLocking == 'implicit':
                 sess.sessionData = {'_id': sess.sessionID}
                 sess.sessionStorage.acquireLock()
+            
             data = sess.sessionStorage.load(sess.sessionID)
             # data is either None or a tuple (sessionData, expirationTime)
             if data is None or data[1] < now:
-                # Expired session: flush session data (but keep the same
-                #   sessionID)
+                # Expired session:
+                # flush session data (but keep the same sessionID)
                 sess.sessionData = {'_id': sess.sessionID}
             else:
                 sess.sessionData = data[0]
@@ -156,30 +151,30 @@ class SessionFilter(basefilter.BaseFilter):
             sess.sessionData = {'_id': sess.sessionID}
             sess.onCreateSession(sess.sessionData)
         # Set response cookie
-        cherrypy.response.simpleCookie[cookieName] = sess.sessionID
-        cherrypy.response.simpleCookie[cookieName]['path'] = '/'
-        cherrypy.response.simpleCookie[cookieName]['max-age'] = \
-            sess.sessionTimeout * 60
-        cherrypy.response.simpleCookie[cookieName]['version'] = 1
-
+        cookie = cherrypy.response.simpleCookie
+        cookie[cookieName] = sess.sessionID
+        cookie[cookieName]['path'] = '/'
+        cookie[cookieName]['max-age'] = sess.sessionTimeout * 60
+        cookie[cookieName]['version'] = 1
+    
     def beforeFinalize(self):
-        def returnBodyAndSaveData(body, sess):
+        def saveData(body, sess):
             try:
                 # If the body is a generator, we have to save the data
                 #   *after* the generator has been consumed
                 if isinstance(body, types.GeneratorType):
                     for line in body:
                         yield line
-
+                
                 # Save session data
-                expirationTime = datetime.datetime.now() + \
-                        datetime.timedelta(seconds = sess.sessionTimeout * 60)
-                sess.sessionStorage.save(
-                        sess.sessionID, sess.sessionData, expirationTime)
+                t = datetime.timedelta(seconds = sess.sessionTimeout * 60)
+                expirationTime = datetime.datetime.now() + t
+                sess.sessionStorage.save(sess.sessionID, sess.sessionData,
+                                         expirationTime)
                 if sess.locked:
                     # Always release the lock if the user didn't release it
                     sess.sessionStorage.releaseLock()
-
+                
                 # If the body is not a generator, we save the data
                 #   before the body is returned
                 if not isinstance(body, types.GeneratorType):
@@ -190,24 +185,23 @@ class SessionFilter(basefilter.BaseFilter):
                 self._clean(sess)
                 raise
             self._clean(sess)
-
+        
         sess = cherrypy.threadData._session
         if not sess.sessionStorage:
             # Sessions are not enabled: do nothing
             return
-
+        
         # Make a wrapper around the body in order to save the session
         #   either before or after the body is returned
-        cherrypy.response.body = \
-            returnBodyAndSaveData(cherrypy.response.body, sess)
-
+        cherrypy.response.body = saveData(cherrypy.response.body, sess)
+    
     def afterErrorResponse(self):
         sess = cherrypy.threadData._session
         if not sess.sessionStorage:
             # Sessions are not enabled: do nothing
             return
         self._clean(sess)
-
+    
     def _clean(self, sess):
         if getattr(sess, 'locked', None):
             # If the session is still locked there probably was an
@@ -220,10 +214,13 @@ class SessionFilter(basefilter.BaseFilter):
 
 class RamStorage:
     """ Implementation of the RAM backend for sessions """
+    
     def load(self, id):
         return cherrypy._sessionDataHolder.get(id)
+    
     def save(self, id, data, expirationTime):
         cherrypy._sessionDataHolder[id] = (data, expirationTime)
+    
     def acquireLock(self):
         sess = cherrypy.threadData._session
         id = cherrypy.session['_id']
@@ -238,11 +235,13 @@ class RamStorage:
             if time.time() - startTime > sess.deadlockTimeout:
                 raise SessionDeadlockError()
         sess.locked = True
+    
     def releaseLock(self):
         sess = cherrypy.threadData._session
         id = cherrypy.session['_id']
         cherrypy._sessionLockDict[id].release()
         sess.locked = False
+    
     def cleanUp(self):
         sess = cherrypy.threadData._session
         toBeDeleted = []
@@ -254,10 +253,13 @@ class RamStorage:
             sess.onDeleteSession(cherrypy._sessionDataHolder[id])
             del cherrypy._sessionDataHolder[id]
 
+
 class FileStorage:
     """ Implementation of the File backend for sessions """
+    
     SESSION_PREFIX = 'session-'
     LOCK_SUFFIX = '.lock'
+    
     def load(self, id):
         filePath = self._getFilePath(id)
         try:
@@ -267,25 +269,27 @@ class FileStorage:
             return data
         except IOError:
             return None
+    
     def save(self, id, data, expirationTime):
         filePath = self._getFilePath(id)
         f = open(filePath, "wb")
         pickle.dump((data, expirationTime), f)
         f.close()
+    
     def acquireLock(self):
         sess = cherrypy.threadData._session
         filePath = self._getFilePath(cherrypy.session['_id'])
         lockFilePath = filePath + self.LOCK_SUFFIX
         self._lockFile(lockFilePath)
         sess.locked = True
-
+    
     def releaseLock(self):
         sess = cherrypy.threadData._session
         filePath = self._getFilePath(cherrypy.session['_id'])
         lockFilePath = filePath + self.LOCK_SUFFIX
         self._unlockFile(lockFilePath)
         sess.locked = False
-
+    
     def cleanUp(self):
         sess = cherrypy.threadData._session
         storagePath = cherrypy.config.get('sessionFilter.storagePath')
@@ -293,8 +297,8 @@ class FileStorage:
         # Iterate over all files in the dir/ and exclude non session files
         #   and lock files
         for fname in os.listdir(storagePath):
-            if fname.startswith(self.SESSION_PREFIX) and \
-                        (not fname.endswith(self.LOCK_SUFFIX)):
+            if (fname.startswith(self.SESSION_PREFIX)
+                and not fname.endswith(self.LOCK_SUFFIX)):
                 # We have a session file: lock it, load it and check
                 #   if it's expired
                 filePath = os.path.join(storagePath, fname)
@@ -302,7 +306,7 @@ class FileStorage:
                 self._lockFile(lockFilePath)
                 try:
                     f = open(filePath, "rb")
-                    (data, expirationTime) = pickle.load(f)
+                    data, expirationTime = pickle.load(f)
                     f.close()
                     if expirationTime < now:
                         # Session expired: deleting it
@@ -313,13 +317,13 @@ class FileStorage:
                     # We can't access the file ... nevermind
                     pass
                 self._unlockFile(lockFilePath)
-
+    
     def _getFilePath(self, id):
         storagePath = cherrypy.config.get('sessionFilter.storagePath')
         fileName = self.SESSION_PREFIX + id
         filePath = os.path.join(storagePath, fileName)
         return filePath
-
+    
     def _lockFile(self, path):
         sess = cherrypy.threadData._session
         startTime = time.time()
@@ -332,8 +336,10 @@ class FileStorage:
             else:
                 os.close(lockfd) 
                 break
+    
     def _unlockFile(self, path):
         os.unlink(path)
+
 
 class PostgreSQLStorage:
     """ Implementation of the PostgreSQL backend for sessions. It assumes
@@ -345,13 +351,16 @@ class PostgreSQLStorage:
                 expiration_time timestamp
             )
     """
+    
     def __init__(self):
         self.db = cherrypy.config.get('sessionFilter.getDB')()
         self.cursor = self.db.cursor()
+    
     def __del__(self):
         if self.cursor:
             self.cursor.close()
         self.db.commit()
+    
     def load(self, id):
         # Select session data from table
         self.cursor.execute(
@@ -365,6 +374,7 @@ class PostgreSQLStorage:
         f = StringIO.StringIO(data)
         data = pickle.load(f)
         return (data, expirationTime)
+    
     def save(self, id, data, expirationTime):
         # Try to delete session if it was already there
         self.cursor.execute(
@@ -377,18 +387,19 @@ class PostgreSQLStorage:
         self.cursor.execute(
             'insert into session (id, data, expiration_time) values (%s, %s, %s)',
             (id, f.getvalue(), expirationTime))
-
+    
     def acquireLock(self):
         # We use the "for update" clause to lock the row
         self.cursor.execute(
             'select id from session where id=%s for update',
             (cherrypy.session['_id'],))
-
+    
     def releaseLock(self):
         # We just close the cursor and that will remove the lock
         #   introduced by the "for update" clause
         self.cursor.close()
         self.cursor = None
+    
     def cleanUp(self):
         sess = cherrypy.threadData._session
         now = datetime.datetime.now()
@@ -402,15 +413,18 @@ class PostgreSQLStorage:
             'delete from session where expiration_time < %s',
             (now,))
 
+
 def generateSessionID():
-        """ Return a new sessionID """
-        return sha.new('%s' % random.random()).hexdigest()
+    """ Return a new sessionID """
+    return sha.new('%s' % random.random()).hexdigest()
+
 
 # Users access sessions through cherrypy.session, but we want this
 #   to be thread-specific so we use a special wrapper that forwards
 #   calls to cherrypy.session to a thread-specific dictionary called
 #   cherrypy.threadData._session.sessionData
 class SessionWrapper:
+    
     def __getattr__(self, name):
         sess = cherrypy.threadData._session
         if sess.sessionStorage is None:
@@ -422,3 +436,4 @@ class SessionWrapper:
         elif name == 'releaseLock':
             return sess.sessionStorage.releaseLock
         return getattr(sess.sessionData, name)
+
