@@ -3,17 +3,18 @@
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xml:id="appdeveloperreference">
-  <title>Application developer reference</title>
-  <abstract>CherryPy lets developers use Python to develop web applications,
-  just as they would use Python for any other type of application. Building a
-  web application with CherryPy is very straightforward and does not require
-  the developer to change habits, or learn many features, before being able to
-  produce a working application. This section will review the basic components
-  which CherryPy provides to build an application.</abstract>
-  <xi:include href="globaloverviewcherrypy.xml" />
-  <xi:include href="configsystemoverview.xml" />
-  <xi:include href="sessions.xml" />
-  <xi:include href="templateindependant.xml" />
-  <xi:include href="staticcontenthandling.xml" />
-  <xi:include href="fileuploadbehavior.xml" />
+    <title>Application developer reference</title>
+    <abstract>CherryPy lets developers use Python to develop web applications,
+    just as they would use Python for any other type of application. Building
+    a web application with CherryPy is very straightforward and does not
+    require the developer to change habits, or learn many features, before
+    being able to produce a working application. This section will review the
+    basic components which you will use to build a CherryPy
+    application.</abstract>
+    <xi:include href="globaloverviewcherrypy.xml" />
+    <xi:include href="configsystemoverview.xml" />
+    <xi:include href="sessions.xml" />
+    <xi:include href="templateindependant.xml" />
+    <xi:include href="staticcontenthandling.xml" />
+    <xi:include href="fileuploadbehavior.xml" />
 </section>

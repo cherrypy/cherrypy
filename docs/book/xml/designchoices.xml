@@ -1,7 +1,50 @@
-<?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-         xml:id="designchoices">
-  <title>Design choices</title>
+<?xml version="1.0" encoding="UTF-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="designchoices">
+    <title>Design choices</title>
+    <section>
+        <title>A layered API</title>
+        <section>
+            <title>Simple apps should not require any knowledge of HTTP</title>
+            <para>At its most basic, CherryPy is designed to allow the production of simple websites
+            without having to think about any of the details of HTTP. Notice we're saying HTTP (the
+            transport), not HTML (the markup language)! In particular, developers should not have to
+            concern themselves with:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Responding to unpublished requests</para>
+                </listitem>
+                <listitem>
+                    <para>Logging and notifying users appropriately when unhandled exceptions
+                    occur</para>
+                </listitem>
+                <listitem>
+                    <para>The difference between query strings and POSTed params</para>
+                </listitem>
+                <listitem>
+                    <para>The decoding and unpacking of request headers and bodies, including file
+                    uploads</para>
+                </listitem>
+                <listitem>
+                    <para>Response status or headers</para>
+                </listitem>
+            </itemizedlist>
+            <para>For the most part, simple "page handlers" (functions attached to
+            <code>cherrypy.root</code>), should never have to refer to cherrypy at all! They receive
+            params via function arguments, and return content directly. Advanced functionality is
+            most often enabled via the built-in filters, which encapsulate the particulars of HTTP,
+            and can be completely controlled via the config file.</para>
+        </section>
+        <section>
+            <title>Advanced apps should have full control over (valid) HTTP output</title>
+            <para>Simple apps are produced simply, but when a developer needs to step out of the
+            mundane and provide real value, they should be able to leverage the complete power and
+            flexibility of the HTTP specification. In general, the HTTP request and response messages
+            are completely represented in the <code>cherrypy.request</code> and
+            <code>.response</code> objects. At the lowest level, a developer should be able to
+            generate any valid HTTP response message by modifying
+            <code>cherrypy.response.status</code>, <code>.headerMap</code>, and/or
+            <code>.body</code>.</para>
+        </section>
+    </section>
 </section>

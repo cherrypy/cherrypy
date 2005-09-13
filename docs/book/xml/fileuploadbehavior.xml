@@ -3,21 +3,21 @@
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xml:id="globaloverviewcherrypy">
-  <title>File upload</title>
-  <para>Before version 2.1, CherryPy handled file uploads by reading the
-  entire file into memory, storing it in a string, and passing it to the page
-  handler. This worked well for small files, but not so well for large
-  files.</para>
-  <para>CherryPy 2.1 uses the python <code>cgi</code> module to parse the POST
-  data. When a file is being uploaded, the <code>cgi</code> module stores it
-  in a temp file and returns a <code>FieldStorage</code> instance which
-  contains information about this file. CherryPy then passes this
-  <code>FieldStorage</code> instance to the method. The
-  <code>FieldStorage</code> instance has the following attributes:</para>
-  <itemizedlist>
-    <listitem><code>file</code>: the file(-like) object from which you can
-    read the data</listitem>
-    <listitem><code>filename</code>: the client-side filename</listitem>
-    <listitem><code>type</code>: the content-type of the file</listitem>
-  </itemizedlist>
+    <title>File upload</title>
+    <para>Before version 2.1, CherryPy handled file uploads by reading the
+    entire file into memory, storing it in a string, and passing it to the
+    page handler method. This worked well for small files, but not so well for
+    large files.</para>
+    <para>CherryPy 2.1 uses the python <code>cgi</code> module to parse the
+    POST data. When a file is being uploaded, the <code>cgi</code> module
+    stores it in a temp file and returns a <code>FieldStorage</code> instance
+    which contains information about this file. CherryPy then passes this
+    <code>FieldStorage</code> instance to the method. The
+    <code>FieldStorage</code> instance has the following attributes:</para>
+    <itemizedlist>
+        <listitem><code>file</code>: the file(-like) object from which you can
+        read the data</listitem>
+        <listitem><code>filename</code>: the client-side filename</listitem>
+        <listitem><code>type</code>: the content-type of the file</listitem>
+    </itemizedlist>
 </section>
