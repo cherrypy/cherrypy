@@ -78,7 +78,7 @@ class SizeCheckWrapper(object):
             self._check_length()
             res.append(data)
             if len(data) < 256:
-                return ''.join(data)
+                return ''.join(res)
     def close(self):
         self.rfile.close()
 
