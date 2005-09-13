@@ -17,6 +17,8 @@ class HTTPErrorDemo(object):
         <html><body>
             <a href="toggleTracebacks">Toggle tracebacks %s</a><br/><br/>
             <a href="/doesNotExist">Click me i'm a broken link!</a>
+            <br/>
+            <a href="/customMessage">Use a custom error message</a>
             <br/><br/>
             These errors are explicitly raised by the application.
             <a href="/error?code=400">400</a>
@@ -39,8 +41,12 @@ class HTTPErrorDemo(object):
     def error(self, code):
         # raise an error based on the get query
         code = int(code)
-        raise cherrypy.HTTPStatusError(status = code)
+        raise cherrypy.HTTPError(status = code)
     error.exposed = True
+
+    def customMessage(self):
+        raise cherrypy.HTTPError(500, "Plain text message")
+    customMessage.exposed = True
 
 cherrypy.root = HTTPErrorDemo()
 

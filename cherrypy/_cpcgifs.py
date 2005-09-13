@@ -8,7 +8,7 @@ class FieldStorage(cgi.FieldStorage):
             cgi.FieldStorage.__init__(self, *args, **kwds)
         except ValueError, ex:
             if str(ex) == 'Maximum content length exceeded':
-                raise cherrypy.HTTPStatusError(status=413)
+                raise cherrypy.HTTPError(status=413)
             else:
                 raise ex
 

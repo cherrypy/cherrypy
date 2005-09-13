@@ -45,7 +45,6 @@ cherrypy.root = Root()
 cherrypy.config.update({
         'server.logToScreen': False,
         'server.environment': 'production',
-        'server.httpErrors': False,
         'server.showTracebacks': True,
         'gzipFilter.on': True,
 })
@@ -82,7 +81,8 @@ class GzipFilterTest(helper.CPWebCase):
                 self.assertMatchesBody(r"Unrecoverable error in the server.$")
             else:
                 self.assertNoHeader('Content-Encoding')
-                self.assertMatchesBody(r"IndexError\n$")
+                self.assertStatus('500 Internal error')
+                self.assertErrorPage(500, "IndexError\n")
         finally:
             helper.webtest.ignored_exceptions.pop()
 

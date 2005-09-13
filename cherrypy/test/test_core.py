@@ -489,15 +489,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     def testErrorHandling(self):
         self.getPage("/error/missing")
         self.assertStatus("404 Not Found")
-        self.assertInBody("NotFound")
+        self.assertErrorPage(404)
         
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
         try:
-            valerr = r'\n    raise ValueError\(\)\nValueError\n$'
+            valerr = r'\n    raise ValueError\(\)\nValueError\n'
             self.getPage("/error/page_method")
-            self.assertMatchesBody(valerr)
-            
+            self.assertErrorPage(500, valerr)
+
             import cherrypy
             proto = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
             if proto == "HTTP/1.1":

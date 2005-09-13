@@ -172,29 +172,42 @@ class HTTPRedirect(Exception):
 
 _missing = object()
 
-class HTTPStatusError(Error):
-    """Exception raised when the client has made an error in its request."""
+class HTTPError(Error):
+    """ Exception raised when the client has made an error in its request.
+        This exception will automatically set the response status and body.
+        
+        A custom body can be pased to the init method in place of the standard error page.
+    """
     
-    def __init__(self, status=400, message=_missing):
+    def __init__(self, status=500, body=_missing):
         self.status = status = int(status)
         if status < 400 or status > 599:
             raise ValueError("status must be between 400 and 599.")
         
         # these 4 lines might dissapear
         import cherrypy
-        cherrypy.response.status = status
-        if message is not _missing:
-            cherrypy.response.body=message
+        self.statusString = cherrypy._cputil.getErrorStatusAndPage(status)[0]
+        cherrypy.response.status = self.statusString
 
-        self.message = message
+        if body is _missing:
+            # because the init method is called before the exception is raised
+            # it is impossible to embed the traceback in the error page at this point.
+            # We use a generator so that the error page is generated at a later point (
+            # after the exception is raised).
+            cherrypy.response.body = self.pageGenerator()
+        else:
+            cherrypy.response.body = body
     
-    def getArgs(self):
-        return (self.status, self.message)
+    def __str__(self):
+        return self.statusString
 
+    def pageGenerator(self):
+        import cherrypy
+        yield cherrypy._cputil.getErrorStatusAndPage(self.status)[1]
 
-class NotFound(HTTPStatusError):
+class NotFound(HTTPError):
     """ Happens when a URL couldn't be mapped to any class.method """
     
     def __init__(self, path):
         self.args = (path,)
-        HTTPStatusError.__init__(self, 404)
+        HTTPError.__init__(self, 404)

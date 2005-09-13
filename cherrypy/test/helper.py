@@ -36,6 +36,8 @@ import threading
 import cherrypy
 import webtest
 import types
+import re
+
 for _x in dir(cherrypy):
     y = getattr(cherrypy, _x)
     if isinstance(y, types.ClassType) and issubclass(y, cherrypy.Error):
@@ -126,6 +128,34 @@ class CPWebCase(webtest.WebCase):
             self._getRequest(url, headers, method, body)
         else:
             webtest.WebCase.getPage(self, url, headers, method, body)
+ 
+    def assertErrorPage(self, errorCode, pattern = ''):
+        """ Compare the response body with a built in error page.
+            The function will optionally look for the regexp pattern, 
+            within the exception embedded in the error page.
+        """
+
+        from cherrypy._cputil import getErrorStatusAndPage
+        page = getErrorStatusAndPage(errorCode, '')[1]
+
+        # escape the question marks
+        page = page.replace('?', r'\?')
+        
+        # re to find the traceback in the page
+        traceRe = re.compile('(<pre id="traceback">)(</pre>)')
+
+        # stick the pattern in the page so we can match everythign
+        # at once
+        page = traceRe.sub( '\g<1>.*%s.*\g<2>' % pattern, page)
+        
+        # check if there is no exception
+        if pattern and traceRe.search(self.body):
+            msg = 'No match for %s in body' % `pattern`
+            self._handlewebError(msg)
+        else:
+            if not re.search(page, self.body, re.DOTALL):
+                msg = 'Error page does not match'
+                self._handlewebError(msg)
 
 CPTestLoader = webtest.ReloadingTestLoader()
 CPTestRunner = webtest.TerseTestRunner(verbosity=2)

@@ -37,8 +37,6 @@ import os
 #import os.path
 
 import cherrypy
-from cherrypy.lib import httperrors
-
 
 class EmptyClass:
     """ An empty class """
@@ -152,28 +150,91 @@ def _cpLogMessage(msg, context = '', severity = 0):
         f.write(s + '\n')
         f.close()
 
-def _cpOnHTTPError():
-    """ Default _cpOnHTTPError method """
-    status, customMessage = sys.exc_info()[1].getArgs()
-   
-    # get the error page
-    page = httperrors.getErrorPage(status, customMessage = customMessage)
-    cherrypy.response.status, cherrypy.response.body = page
+def _HTTPErrorTemplate(errorString, message, traceback, version):
+    subTuple = (errorString, errorString, message, traceback, cherrypy.__version__)
     
-    if cherrypy.response.headerMap.has_key('Content-Encoding'):
-        del cherrypy.response.headerMap['Content-Encoding']
+    return '''<?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    <html>
+    <head>
+        <title>%s</title>
+        <style type="text/css">
+        #poweredBy {
+            margin-top: 20px;
+            border-top: 2px solid black;
+            font-style: italic;
+        }
+
+        #traceback {
+            color: red;
+        }
+        </style>
+    </head>
+        <body>
+            <h2>%s</h2>
+            <p>%s</p>
+            <pre id="traceback">%s</pre>
+        <div id="poweredBy">
+        <span>Powered by <a href="http://www.cherrypy.org">Cherrypy %s</a></span>
+        </div>
+        </body>
+    </html>
+    ''' % subTuple
+
+import BaseHTTPServer
+_HTTPResponses = BaseHTTPServer.BaseHTTPRequestHandler.responses
+
+def getErrorStatusAndPage(status, traceback = None):
+    statusString, message = _HTTPResponses[status]
+    statusString = '%d %s' % (status, statusString)
+    
+    if traceback is None:
+        traceback = ''
+        # get the traceback from formatExc
+        developmentMode = (cherrypy.config.get('server.environment') == 'development')
+        if cherrypy.config.get('server.showTracebacks') or developmentMode:
+            traceback = formatExc()
+    
+    page = _HTTPErrorTemplate(statusString, message, traceback, cherrypy.__version__)
+    
+    return statusString, page
 
 def formatExc(exc=None):
     """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
     if exc is None:
         exc = sys.exc_info()
+
+    if exc == (None, None, None):
+        return ""
+    return "".join(traceback.format_exception(*exc))
+
+def getErrorStatusAndPage(status, traceback = None):
+    statusString, message = _HTTPResponses[status]
+    statusString = '%d %s' % (status, statusString)
+    
+    if traceback is None:
+        traceback = ''
+        # get the traceback from formatExc
+        developmentMode = (cherrypy.config.get('server.environment') == 'development')
+        if cherrypy.config.get('server.showTracebacks') or developmentMode:
+            traceback = formatExc()
+    
+    page = _HTTPErrorTemplate(statusString, message, traceback, cherrypy.__version__)
+    
+    return statusString, page
+
+    """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
+    if exc is None:
+        exc = sys.exc_info()
+    
+    if exc == (None, None, None):
+        return ""
+
     return "".join(traceback.format_exception(*exc))
 
 def _cpOnError():
     """ Default _cpOnError method """
-    developmentMode = cherrypy.config.get('server.environment') == 'development'
-    httpErrors      = cherrypy.config.get('server.httpErrors')
-    showTracebacks  = cherrypy.config.get('server.showTracebacks')
     
     logTracebacks  = cherrypy.config.get('server.logTracebacks', True)
     if logTracebacks:
@@ -181,23 +242,11 @@ def _cpOnError():
     
     response = cherrypy.response
     
-    if not developmentMode and httpErrors:
-        # if it isn't development mode and http errors are turned on
-        # set the response status and render the body
-        if response.status == 404:
-            response.status, response.body = httperrors.getErrorPage(404)
-        else:
-            response.status, response.body = httperrors.getErrorPage(500)
-    elif developmentMode or showTracebacks:
-        # if it is development mode or tracebacks are turned on
-        # return the traceback as plaintext
-        response.body = [formatExc()]
-        response.headerMap['Content-Type'] = 'text/plain'
+    if isinstance(sys.exc_info()[1], cherrypy.HTTPError):
+        # status, body already set
+        pass
     else:
-        # If it is production mode but http errors are disabled then
-        # Display a simple, generic error message
-        response.body = "Unrecoverable error in the server"
-        response.headerMap['Content-Type'] = 'text/plain'
+        response.status, response.body = getErrorStatusAndPage(500)
     
     if cherrypy.response.headerMap.has_key('Content-Encoding'):
         del cherrypy.response.headerMap['Content-Encoding']

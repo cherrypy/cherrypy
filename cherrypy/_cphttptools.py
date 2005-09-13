@@ -44,7 +44,7 @@ import urllib
 from urlparse import urlparse
 
 import cherrypy
-from cherrypy import _cputil, _cpcgifs, _cperror, _cpwsgiserver
+from cherrypy import _cputil, _cpcgifs, _cpwsgiserver, _cperror
 from cherrypy.lib import cptools
 
 
@@ -288,7 +288,7 @@ class Request(object):
             finally:
                 applyFilters('onEndResource')
         except:
-            # This includes HTTPStatusError and NotFound
+            # This includes HTTPError and NotFound
             handleError(sys.exc_info())
     
     def processRequestHeaders(self):
@@ -380,7 +380,7 @@ class Request(object):
                                       keep_blank_values=1)
         except _cpwsgiserver.MaxSizeExceeded:
             # Post data is too big
-            raise _cperror.HTTPStatusError(413)
+            raise _cperror.HTTPError(413)
         
         if forms.file:
             # request body was a content-type other than form params.
@@ -422,12 +422,9 @@ def handleError(exc):
     try:
         applyFilters('beforeErrorResponse')
         
-        # _cpOnError and _cpOnHTTPError will probably change cherrypy.response.body.
+        # _cpOnError will probably change cherrypy.response.body.
         # They may also change the headerMap, etc.
-        if sys.exc_info()[0] is cherrypy.HTTPStatusError:
-            _cputil.getSpecialAttribute('_cpOnHTTPError')()
-        else:
-            _cputil.getSpecialAttribute('_cpOnError')()
+        _cputil.getSpecialAttribute('_cpOnError')()
         
         finalize()
         
