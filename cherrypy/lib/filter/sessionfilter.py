@@ -333,6 +333,7 @@ class FileStorage:
             except OSError:
                 if time.time() - startTime > sess.deadlockTimeout:
                     raise SessionDeadlockError()
+                time.sleep(0.5)
             else:
                 os.close(lockfd) 
                 break
