@@ -123,30 +123,31 @@ class TestHarness(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server --1.1 --cover --basedir=path --profile --test
+        test.py --servers* --1.1 --cover --basedir=path --profile --tests**
+        
     """
-        print '    servers:'
+        print '    * servers:'
         s = [(val, name) for name, val in self.available_servers.iteritems()]
         s.sort()
         for val, name in s:
             if name == self.default_server:
-                print '        ', name, '(default)'
+                print '        --' + name, '(default)'
             else:
-                print '        ', name
+                print '        --' + name
         
-        print """         all (runs all servers in order)
+        print """        --all (runs all servers in order)
     
-    1.1: use HTTP/1.1 servers instead of default HTTP/1.0
+    --1.1: use HTTP/1.1 servers instead of default HTTP/1.0
     
-    cover: turn on code-coverage tool
-    basedir=path: display coverage stats for some path other than cherrypy.
+    --cover: turn on code-coverage tool
+    --basedir=path: display coverage stats for some path other than cherrypy.
     
-    profile: turn on profiling tool
+    --profile: turn on profiling tool
     """
         
-        print '    tests:'
+        print '    ** tests:'
         for name in self.available_tests:
-            print '        ', name
+            print '        --' + name
     
     def start_coverage(self):
         """Start the coverage tool.
