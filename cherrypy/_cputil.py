@@ -242,11 +242,7 @@ def _cpOnError():
     
     response = cherrypy.response
     
-    if isinstance(sys.exc_info()[1], cherrypy.HTTPError):
-        # status, body already set
-        pass
-    else:
-        response.status, response.body = getErrorStatusAndPage(500)
+    response.status, response.body = getErrorStatusAndPage(500)
     
     if cherrypy.response.headerMap.has_key('Content-Encoding'):
         del cherrypy.response.headerMap['Content-Encoding']

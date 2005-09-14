@@ -421,10 +421,14 @@ def handleError(exc):
     """Set status, headers, and body when an error occurs."""
     try:
         applyFilters('beforeErrorResponse')
-        
-        # _cpOnError will probably change cherrypy.response.body.
-        # They may also change the headerMap, etc.
-        _cputil.getSpecialAttribute('_cpOnError')()
+       
+        if isinstance(sys.exc_info()[1], cherrypy.HTTPError):
+            # status, body already set by HTTPError constructor
+            pass
+        else:
+            # _cpOnError will probably change cherrypy.response.body.
+            # They may also change the headerMap, etc.
+            _cputil.getSpecialAttribute('_cpOnError')()
         
         finalize()
         
