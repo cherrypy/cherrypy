@@ -6,10 +6,7 @@ Run:
 to install this package.
 """
 
-from ez_setup import use_setuptools
-use_setuptools()
-from setuptools import setup
-
+from distutils.core import setup
 from distutils.command.install import INSTALL_SCHEMES
 import sys
 
@@ -83,3 +80,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
