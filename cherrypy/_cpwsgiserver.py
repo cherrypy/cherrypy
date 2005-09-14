@@ -82,6 +82,17 @@ class SizeCheckWrapper(object):
     def close(self):
         self.rfile.close()
 
+    def __iter__(self):
+        return self.rfile
+
+    def next(self):
+        data = self.rfile.next()
+        self.bytes_read += len(data)
+        try:
+            self._check_length()
+        except:
+            raise StopIteration()
+        return data
 
 class HTTPRequest(object):
     def __init__(self, socket, addr, server):
