@@ -17,4 +17,5 @@
     <xi:include href="templateindependant.xml" />
     <xi:include href="staticcontenthandling.xml" />
     <xi:include href="fileuploadbehavior.xml" />
+    <xi:include href="errorhandling.xml" />
 </section>

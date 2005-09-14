@@ -298,7 +298,7 @@
         
       <listitem>
         <section>
-            <title>cherrypy.HTTPStatusError</title>
+            <title>cherrypy.HTTPError</title>
             <para>
                 This exception can be used to automatically send a response 
                 using a http status code, with an appropriate error page.

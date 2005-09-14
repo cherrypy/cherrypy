@@ -41,6 +41,8 @@ data_files=[
         [
             'cherrypy/tutorial/tutorial.conf',
             'cherrypy/tutorial/README.txt',
+            'cherrypy/tutorial/ReturnVsYield.txt',
+            'cherrypy/tutorial/custom_error.html',
         ]
     ),
     ('cherrypy', ['cherrypy/favicon.ico',]),

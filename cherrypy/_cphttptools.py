@@ -285,6 +285,12 @@ class Request(object):
                     inst.set_response()
                     applyFilters('beforeFinalize')
                     finalize()
+                except cherrypy.HTTPError, inst:
+                    # This includes NotFound
+                    inst.set_response()
+                    applyFilters('beforeFinalize')
+                    finalize()
+
             finally:
                 applyFilters('onEndResource')
         except:
@@ -422,11 +428,9 @@ def handleError(exc):
     try:
         applyFilters('beforeErrorResponse')
        
-        # status, body may already be set by HTTPError constructor
-        if not isinstance(exc, cherrypy.HTTPError):
-            # _cpOnError will probably change cherrypy.response.body.
-            # It may also change the headerMap, etc.
-            _cputil.getSpecialAttribute('_cpOnError')()
+        # _cpOnError will probably change cherrypy.response.body.
+        # It may also change the headerMap, etc.
+        _cputil.getSpecialAttribute('_cpOnError')()
         
         finalize()
         

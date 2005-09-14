@@ -2,6 +2,12 @@
 
 import cherrypy
 
+# we want to customize 403 errors
+customErrors = {
+                 'errorPage.403' : "custom_error.html"
+               }
+
+cherrypy.config.update({'/' : customErrors})
 
 class HTTPErrorDemo(object):
     
@@ -15,16 +21,18 @@ class HTTPErrorDemo(object):
             
         return """
         <html><body>
-            <a href="toggleTracebacks">Toggle tracebacks %s</a><br/><br/>
+            <h2><a href="toggleTracebacks">Toggle tracebacks %s</a><br/><br/></h2>
             <a href="/doesNotExist">Click me i'm a broken link!</a>
-            <br/>
-            <a href="/customMessage">Use a custom error message</a>
+            <br/><br/>
+            <a href="/error?code=403">Use a custom an error page from a file.</a>
             <br/><br/>
             These errors are explicitly raised by the application.
             <a href="/error?code=400">400</a>
             <a href="/error?code=401">401</a>
             <a href="/error?code=402">402</a>
             <a href="/error?code=500">500</a>
+            <br/><br/>
+            <a href="/bodyArg">You can also set the response body when you raise an error</a>
         </body></html>
         """ % trace
     index.exposed = True
@@ -44,9 +52,12 @@ class HTTPErrorDemo(object):
         raise cherrypy.HTTPError(status = code)
     error.exposed = True
 
-    def customMessage(self):
-        raise cherrypy.HTTPError(500, "Plain text message")
-    customMessage.exposed = True
+    def bodyArg(self):
+        message = """ If you construct a HTTPError wiht body argument, the body argument
+                      will overide any default or custom error page.
+                  """
+        raise cherrypy.HTTPError(403, body = message)
+    bodyArg.exposed = True
 
 cherrypy.root = HTTPErrorDemo()
 

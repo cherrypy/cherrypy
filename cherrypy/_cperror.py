@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import urllib
+import os
 
 
 class Error(Exception):
@@ -184,28 +185,41 @@ class HTTPError(Error):
         self.status = status = int(status)
         if status < 400 or status > 599:
             raise ValueError("status must be between 400 and 599.")
-        
-        # these 4 lines might dissapear
+         
+        self.body = body
+    
+    def set_response(self):
         import cherrypy
-        self.statusString = cherrypy._cputil.getErrorStatusAndPage(status)[0]
-        cherrypy.response.status = self.statusString
-
-        if body is _missing:
-            # because the init method is called before the exception
-            # is raised it is impossible to embed the traceback in the
-            # error page at this point. We use a generator so that the
-            # error page is generated at a later point (after the
-            # exception is raised).
-            body = self.pageGenerator()
         
-        cherrypy.response.body = body
+        # we now now have access to the traceback 
+        statusString, defaultBody = cherrypy._cputil.getErrorStatusAndPage(self.status)
+        
+        if self.body is _missing:
+            self.body = defaultBody
+            # try to look up a custom error page in the config map
+            # if there is no error page then use the pageGenerator
+            
+            # The page generator is used because the init method is called 
+            # before the exception is raised.  It is impossible to embed the
+            # traceback in the error page at this piont so we use the generator
+            # to render the error page at a later point
+            
+            import cherrypy
+            # try and read the page from a file
+            # we use the default if the page can't be read
+            try:
+                errorPageFile = cherrypy.config.get('errorPage.%s' % status, '')
+                self.body = file(errorPageFile, 'r')
+            except:
+                # we have alread set the body
+                pass
+
+        cherrypy.response.status = statusString
+        cherrypy.response.body   = self.body
     
     def __str__(self):
-        return self.statusString
-
-    def pageGenerator(self):
         import cherrypy
-        yield cherrypy._cputil.getErrorStatusAndPage(self.status)[1]
+        return cherrypy._cputil.getErrorStatusAndPage(self.status)[0]
 
 class NotFound(HTTPError):
     """ Happens when a URL couldn't be mapped to any class.method """
@@ -213,3 +227,6 @@ class NotFound(HTTPError):
     def __init__(self, path):
         self.args = (path,)
         HTTPError.__init__(self, 404)
+
+    def __str__(self):
+        return self.args[0]
