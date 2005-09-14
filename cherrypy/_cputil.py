@@ -209,30 +209,6 @@ def formatExc(exc=None):
         return ""
     return "".join(traceback.format_exception(*exc))
 
-def getErrorStatusAndPage(status, traceback = None):
-    statusString, message = _HTTPResponses[status]
-    statusString = '%d %s' % (status, statusString)
-    
-    if traceback is None:
-        traceback = ''
-        # get the traceback from formatExc
-        developmentMode = (cherrypy.config.get('server.environment') == 'development')
-        if cherrypy.config.get('server.showTracebacks') or developmentMode:
-            traceback = formatExc()
-    
-    page = _HTTPErrorTemplate(statusString, message, traceback, cherrypy.__version__)
-    
-    return statusString, page
-
-    """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
-    if exc is None:
-        exc = sys.exc_info()
-    
-    if exc == (None, None, None):
-        return ""
-
-    return "".join(traceback.format_exception(*exc))
-
 def _cpOnError():
     """ Default _cpOnError method """
     

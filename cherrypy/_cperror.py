@@ -173,10 +173,11 @@ class HTTPRedirect(Exception):
 _missing = object()
 
 class HTTPError(Error):
-    """ Exception raised when the client has made an error in its request.
+    """ Exception used to return an HTTP error code to the client.
         This exception will automatically set the response status and body.
         
-        A custom body can be pased to the init method in place of the standard error page.
+        A custom body can be pased to the init method in place of the
+        standard error page.
     """
     
     def __init__(self, status=500, body=_missing):
@@ -190,13 +191,14 @@ class HTTPError(Error):
         cherrypy.response.status = self.statusString
 
         if body is _missing:
-            # because the init method is called before the exception is raised
-            # it is impossible to embed the traceback in the error page at this point.
-            # We use a generator so that the error page is generated at a later point (
-            # after the exception is raised).
-            cherrypy.response.body = self.pageGenerator()
-        else:
-            cherrypy.response.body = body
+            # because the init method is called before the exception
+            # is raised it is impossible to embed the traceback in the
+            # error page at this point. We use a generator so that the
+            # error page is generated at a later point (after the
+            # exception is raised).
+            body = self.pageGenerator()
+        
+        cherrypy.response.body = body
     
     def __str__(self):
         return self.statusString
