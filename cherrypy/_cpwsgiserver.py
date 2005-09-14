@@ -88,10 +88,13 @@ class SizeCheckWrapper(object):
     def next(self):
         data = self.rfile.next()
         self.bytes_read += len(data)
-        try:
-            self._check_length()
-        except:
-            raise StopIteration()
+        self._check_length()
+##      Normally the next method must raise StopIteration when it
+##      fails but CP expects MaxSizeExceeded 
+##        try:
+##            self._check_length()
+##        except:
+##            raise StopIteration()
         return data
 
 class HTTPRequest(object):
