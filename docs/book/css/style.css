@@ -11,9 +11,12 @@ body {
   -moz-background-clip: initial;
   -moz-background-origin: initial;
   -moz-background-inline-policy: initial;
-  font-size: 11px;
-}
+  font-size: small;
+  line-height: 150%;
+  width: 52em;
 
+  margin: 2em  auto;
+}
 body.book, p { 
   text-align: justify;
 }
