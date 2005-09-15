@@ -1,7 +1,8 @@
-<?xml version='1.0'?>
+<?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:xi="http://www.w3.org/2001/XInclude"
   xmlns:exsl="http://exslt.org/common" version="1.0">
+  <xsl:import href="../../../tools/docbook/docbook-xsl-1.68.1/xhtml/docbook.xsl" />
   <xsl:param name="html.stylesheet.type">text/css</xsl:param>
   <xsl:param name="html.stylesheet" select="'css/style.css'" />
   <xsl:param name="generate.index" select="1"/>
