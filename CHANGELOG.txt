@@ -1,3 +1,11 @@
+2005-09-15:
+    * CherryPy-2.1.0-rc1 released
+
+2005-09-10:
+    * New session implementation. See the CherryPy book for docs (remi)
+    * New server.maxRequestBodySize and maxRequestHeaderSize options.
+    *   See the CherryPy book for docs (remi)
+
 2005-09-04:
     * Generalized mechanism for handling HTTP errors
     * raising a HTTPStatusError will automatically send an appropriate error page

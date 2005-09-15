@@ -263,7 +263,7 @@ class WorkerThread(threading.Thread):
 
 
 class CherryPyWSGIServer(object):
-    version = "CherryPy/2.1.0-beta"
+    version = "CherryPy/2.1.0-rc1"
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  stderr=sys.stderr, bufsize=-1, max=-1,
                  config = None):
