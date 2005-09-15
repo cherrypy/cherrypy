@@ -1,6 +1,10 @@
 2005-09-15:
     * CherryPy-2.1.0-rc1 released
 
+2005-09-14:
+    * The new HTTP error mechanism has been completely rewritten (see tutorial
+    10)
+    
 2005-09-10:
     * New session implementation. See the CherryPy book for docs (remi)
     * New server.maxRequestBodySize and maxRequestHeaderSize options.
