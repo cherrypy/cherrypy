@@ -48,7 +48,7 @@ class MaxSizeExceeded(Exception):
 class SizeCheckWrapper(object):
     """ Wrapper around the rfile object. For each data reading method,
         it reads the data but it checks that the size of the data doesn't
-        except a certain limit
+        exceed a certain limit
     """
     def __init__(self, rfile, maxlen):
         self.rfile = rfile
