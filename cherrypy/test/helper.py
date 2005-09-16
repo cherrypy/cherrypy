@@ -26,6 +26,24 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+# This is a library of helper functions for the CherryPy test suite.
+# The actual script that runs the entire CP test suite is called
+# "test.py" (in this folder); test.py calls this module as a library.
+# 
+# GREAT CARE has been taken to separate this module from test.py,
+# because different consumers of each have mutually-exclusive import
+# requirements. So don't go moving functions from here into test.py,
+# or vice-versa, unless you *really* know what you're doing.
+# 
+# Usage:
+#   Each individual test_*.py module imports this module (helper),
+#   usually to make an instance of CPWebCase, and then call testmain().
+#   
+#   The CP test suite script (test.py) imports this module and calls
+#   run_test_suite, possibly more than once. CP applications may also
+#   import test.py (to use TestHarness), which then calls helper.py.
+
+
 import os, os.path
 import sys
 import time

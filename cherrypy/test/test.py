@@ -26,6 +26,16 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+# This is the actual script that runs the entire CP test suite.
+# There is a library of helper functions for the CherryPy test suite,
+# called "helper.py" (in this folder); this module calls that as a library.
+# 
+# GREAT CARE has been taken to separate this module from helper.py,
+# because different consumers of each have mutually-exclusive import
+# requirements. So don't go moving functions from here into helper.py,
+# or vice-versa, unless you *really* know what you're doing.
+
+
 import sys
 import os, os.path
 import webtest
