@@ -101,6 +101,9 @@ class CPWebCase(webtest.WebCase):
         if body is not None:
             body = StringIO.StringIO(body)
         
+        cherrypy.request.purge__()
+        cherrypy.response.purge__()
+        
         cherrypy.server.request((self.HOST, self.PORT), self.HOST,
                                 requestLine, headers, body, "http")
         

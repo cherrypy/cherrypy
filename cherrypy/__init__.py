@@ -54,10 +54,40 @@ try:
 except ImportError:
     from cherrypy._cpthreadinglocal import local
 
+# Create a threadlocal object to hold the request and response objects.
+# In this way, we can easily dump those objects when we stop/start a
+# new HTTP conversation.
+serving = local()
+
+class _AttributeDump:
+    pass
+
+class _ThreadLocalProxy:
+    
+    def __init__(self, attrname):
+        self.__dict__["__attrname__"] = attrname
+    
+    def purge__(self):
+        """Make a new, emtpy proxied object in cherrypy.serving."""
+        setattr(serving, self.__attrname__, _AttributeDump())
+    
+    def __getattr__(self, name):
+        childobject = getattr(serving, self.__attrname__)
+        return getattr(childobject, name)
+    
+    def __setattr__(self, name, value):
+        childobject = getattr(serving, self.__attrname__)
+        setattr(childobject, name, value)
+    
+    def __delattr__(self, name):
+        childobject = getattr(serving, self.__attrname__)
+        delattr(childobject, name)
+
 # Create request and response object (the same objects will be used
-#   throughout the entire life of the webserver)
-request = local()
-response = local()
+#   throughout the entire life of the webserver, but will redirect
+#   to the "serving" object)
+request = _ThreadLocalProxy('request')
+response = _ThreadLocalProxy('response')
 
 # Create threadData object as a thread-specific all-purpose storage
 threadData = local()

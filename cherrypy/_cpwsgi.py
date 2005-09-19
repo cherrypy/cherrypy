@@ -88,6 +88,9 @@ def wsgiApp(environ, start_response):
         sys.stderr = NullWriter()
     
     try:
+        cherrypy.request.purge__()
+        cherrypy.response.purge__()
+        
         # LOGON_USER is served by IIS, and is the name of the
         # user after having been mapped to a local account.
         # Both IIS and Apache set REMOTE_USER, when possible.

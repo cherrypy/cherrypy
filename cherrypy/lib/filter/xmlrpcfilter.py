@@ -148,8 +148,8 @@ class XmlRpcFilter(BaseFilter):
     
     def beforeRequestBody(self):
         """ Called after the request header has been read/parsed"""
-        cherrypy.threadData.xmlRpcFilterOn = cherrypy.config.get('xmlRpcFilter.on', False)
-        if not cherrypy.threadData.xmlRpcFilterOn:
+        cherrypy.request.xmlRpcFilterOn = cherrypy.config.get('xmlRpcFilter.on', False)
+        if not cherrypy.request.xmlRpcFilterOn:
             return True
         
         cherrypy.request.isRPC = self.testValidityOfRequest()
@@ -182,7 +182,7 @@ class XmlRpcFilter(BaseFilter):
     
     def beforeFinalize(self):
         """ Called before finalizing output """
-        if (not cherrypy.threadData.xmlRpcFilterOn
+        if (not cherrypy.request.xmlRpcFilterOn
             or not cherrypy.request.isRPC):
             return
 
@@ -201,7 +201,7 @@ class XmlRpcFilter(BaseFilter):
     
     def beforeErrorResponse(self):
         try:
-            if not cherrypy.threadData.xmlRpcFilterOn:
+            if not cherrypy.request.xmlRpcFilterOn:
                 return
             body = ''.join([chunk for chunk in cherrypy.response.body])
             cherrypy.response.body = [xmlrpclib.dumps(xmlrpclib.Fault(1, body))]

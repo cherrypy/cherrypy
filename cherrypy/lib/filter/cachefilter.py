@@ -125,7 +125,7 @@ class CacheFilter(basefilter.BaseFilter):
         #   circular module imports :-(
         global cherrypy
         import cherrypy
-        cherrypy.threadData.cacheable = True
+        cherrypy.request.cacheable = True
     
     def beforeMain(self):
         if not cherrypy.config.get('cacheFilter.on', False):
@@ -136,7 +136,7 @@ class CacheFilter(basefilter.BaseFilter):
                 self.maxobjsize, self.maxsize, self.maxobjects)
         
         cacheData = cherrypy._cache.get()
-        cherrypy.threadData.cacheable = not cacheData
+        cherrypy.request.cacheable = not cacheData
         if cacheData:
             expirationTime, lastModified, obj = cacheData
             # found a hit! check the if-modified-since request header
@@ -158,7 +158,7 @@ class CacheFilter(basefilter.BaseFilter):
         if not cherrypy.config.get('cacheFilter.on', False):
             return
         
-        if cherrypy.threadData.cacheable:
+        if cherrypy.request.cacheable:
             status = cherrypy.response.status
             headers = cherrypy.response.headers
             

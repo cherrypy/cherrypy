@@ -69,7 +69,7 @@ class SessionAuthenticateFilter(BaseFilter):
             return
         elif cherrypy.request.path.endswith('doLogout'):
             cherrypy.session[sessionKey] = None
-            cherrypy.threadData.user = None
+            cherrypy.request.user = None
             fromPage = cherrypy.request.paramMap.get('fromPage', '..')
             cherrypy.response.body = httptools.redirect(fromPage)
         elif cherrypy.request.path.endswith('doLogin'):
@@ -98,4 +98,4 @@ class SessionAuthenticateFilter(BaseFilter):
         # Everything is OK: user is logged in
         if loadUserByUsername:
             username = cherrypy.session[sessionKey]
-            cherrypy.threadData.user = loadUserByUsername(username)
+            cherrypy.request.user = loadUserByUsername(username)

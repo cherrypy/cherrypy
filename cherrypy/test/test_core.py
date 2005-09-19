@@ -254,6 +254,14 @@ class MaxRequestSize(Test):
     def upload(self, file):
         return "Size: %s" % len(file.file.read())
 
+class ThreadLocal(Test):
+    
+    def index(self):
+        existing = repr(getattr(cherrypy.request, "asdf", None))
+        cherrypy.request.asdf = "hello"
+        return existing
+
+
 logFile = os.path.join(localDir, "error.log")
 logAccessFile = os.path.join(localDir, "access.log")
 
@@ -309,6 +317,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             ('/foo/bar', 'baz', 'that2'),
             ('/foo/nex', 'baz', 'that2'),
         ]
+        cherrypy.request.purge__()
         for path, key, expected in tests:
             cherrypy.request.path = path
             result = cherrypy.config.get(key, None)
@@ -668,6 +677,14 @@ hello
             self.getPage('/maxrequestsize/upload', h, "POST", b)
             self.assertStatus("413 Request Entity Too Large")
             self.assertInBody("Request Entity Too Large")
+    
+    def testEmptyThreadlocals(self):
+        results = []
+        for x in xrange(20):
+            self.getPage("/threadlocal/")
+            results.append(self.body)
+        self.assertEqual(results, ["None"] * 20)
+
 
 if __name__ == '__main__':
     helper.testmain()

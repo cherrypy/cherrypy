@@ -81,6 +81,9 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if not self.parse_request(): # An error code has been sent, just exit
             return
         
+        cherrypy.request.purge__()
+        cherrypy.response.purge__()
+        
         cherrypy.request.multithread = cherrypy.config.get("server.threadPool") > 1
         cherrypy.request.multiprocess = False
         cherrypy.server.request(self.client_address,
