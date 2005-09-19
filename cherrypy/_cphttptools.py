@@ -32,9 +32,6 @@ Common Service Code for CherryPy
 
 import cgi
 
-from BaseHTTPServer import BaseHTTPRequestHandler
-responseCodes = BaseHTTPRequestHandler.responses
-
 import Cookie
 import os
 import re
@@ -543,7 +540,7 @@ def checkStatus():
         
         if reason is None:
             try:
-                reason = responseCodes[code][0]
+                reason = _cputil.responseCodes[code][0]
             except (KeyError, IndexError):
                 reason = ""
         

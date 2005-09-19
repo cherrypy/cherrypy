@@ -36,6 +36,9 @@ import time
 import os
 #import os.path
 
+from BaseHTTPServer import BaseHTTPRequestHandler
+responseCodes = BaseHTTPRequestHandler.responses
+
 import cherrypy
 
 class EmptyClass:
@@ -182,11 +185,8 @@ def _HTTPErrorTemplate(errorString, message, traceback, version):
     </html>
     ''' % subTuple
 
-import BaseHTTPServer
-_HTTPResponses = BaseHTTPServer.BaseHTTPRequestHandler.responses
-
 def getErrorStatusAndPage(status, traceback = None):
-    statusString, message = _HTTPResponses[status]
+    statusString, message = responseCodes[status]
     statusString = '%d %s' % (status, statusString)
     
     if traceback is None:
