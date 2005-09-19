@@ -5,26 +5,30 @@ import os
 import sys
 import time
 import thread
-import cherrypy
 
 RUN_RELOADER = True
 reloadFiles = []
     
 def reloader_thread():
     mtimes = {}
+    
+    def fileattr(m):
+        return getattr(m, "__file__", None)
+    
     while RUN_RELOADER:
-        for filename in filter(lambda v: v, map(lambda m: getattr(m, "__file__", None), sys.modules.values())) + reloadFiles:
-            if filename.endswith(".pyc"):
-                filename = filename[:-1]
-            try:
-                mtime = os.stat(filename).st_mtime
-            except OSError:
-                sys.exit(3) # force reload
-            if filename not in mtimes:
-                mtimes[filename] = mtime
-                continue
-            if mtime > mtimes[filename]:
-                sys.exit(3) # force reload
+        for filename in map(fileattr, sys.modules.values()) + reloadFiles:
+            if filename:
+                if filename.endswith(".pyc"):
+                    filename = filename[:-1]
+                try:
+                    mtime = os.stat(filename).st_mtime
+                except OSError:
+                    sys.exit(3) # force reload
+                if filename not in mtimes:
+                    mtimes[filename] = mtime
+                    continue
+                if mtime > mtimes[filename]:
+                    sys.exit(3) # force reload
         time.sleep(1)
 
 def restart_with_reloader():
@@ -53,7 +57,6 @@ def main(main_func, args=None, kwargs=None):
         except KeyboardInterrupt:
             pass
     else:
-        try:
-            sys.exit(restart_with_reloader())
-        except KeyboardInterrupt:
-            cherrypy.log("<Ctrl-C> hit: shutting down autoreloader", "HTTP")
+        # If KeyboardInterrupt is raised within restart_with_reloader,
+        # let it propagate out to the caller.
+        sys.exit(restart_with_reloader())

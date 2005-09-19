@@ -55,7 +55,10 @@ def start(initOnly=False, serverClass=None):
         # our own webserver, and therefore could do Very Bad Things
         # when autoreload calls sys.exit.
         if not initOnly:
-            autoreload.main(_start, (initOnly, serverClass))
+            try:
+                autoreload.main(_start, (initOnly, serverClass))
+            except KeyboardInterrupt:
+                cherrypy.log("<Ctrl-C> hit: shutting down autoreloader", "HTTP")
             return
     
     _start(initOnly, serverClass)
