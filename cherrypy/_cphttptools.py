@@ -177,21 +177,22 @@ class Request(object):
         
         """
         
-        cherrypy.request.method = ""
-        cherrypy.request.requestLine = requestLine.strip()
+        request = cherrypy.request
+        request.method = ""
+        request.requestLine = requestLine.strip()
         self.parseFirstLine()
         
         self.requestHeaders = headers
         
         # Prepare cherrypy.request variables
-        cherrypy.request.remoteAddr = clientAddress[0]
-        cherrypy.request.remotePort = clientAddress[1]
-        cherrypy.request.remoteHost = remoteHost
-        cherrypy.request.paramList = [] # Only used for Xml-Rpc
-        cherrypy.request.headerMap = {}
-        cherrypy.request.simpleCookie = Cookie.SimpleCookie()
-        cherrypy.request.rfile = rfile
-        cherrypy.request.scheme = scheme
+        request.remoteAddr = clientAddress[0]
+        request.remotePort = clientAddress[1]
+        request.remoteHost = remoteHost
+        request.paramList = [] # Only used for Xml-Rpc
+        request.headerMap = {}
+        request.simpleCookie = Cookie.SimpleCookie()
+        request.rfile = rfile
+        request.scheme = scheme
         
         # Prepare cherrypy.response variables
         cherrypy.response.status = None
@@ -210,7 +211,7 @@ class Request(object):
         
         self.run()
         
-        if cherrypy.request.method == "HEAD":
+        if request.method == "HEAD":
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
