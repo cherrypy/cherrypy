@@ -248,7 +248,8 @@ def restart():
         # Give HTTP servers time to shut down their thread pools.
         time.sleep(1)
         # Start the server in a new thread
-        threading.Thread(target=_start, kwargs={"serverClass": http.__class__}).start
+        thread_args = {"serverClass": http.__class__}
+        threading.Thread(target=_start, kwargs=thread_args).start()
     else:
         stop()
         _start(initOnly=True)
