@@ -204,9 +204,7 @@ class SessionFilter(basefilter.BaseFilter):
     
     def _clean(self, sess):
         if getattr(sess, 'locked', None):
-            # If the session is still locked there probably was an
-            #   error while processing the request.
-            #   In that case we release the lock anyway.
+            # If the session is still locked we release the lock
             sess.sessionStorage.releaseLock()
         if getattr(sess, 'sessionStorage', None):
             del sess.sessionStorage
@@ -234,6 +232,7 @@ class RamStorage:
                 break
             if time.time() - startTime > sess.deadlockTimeout:
                 raise SessionDeadlockError()
+            time.sleep(0.5)
         sess.locked = True
     
     def releaseLock(self):

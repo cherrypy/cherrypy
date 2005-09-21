@@ -755,6 +755,7 @@ def mapPathToObject(path):
             # that raises NotFound.
             icofile = os.path.join(os.path.dirname(__file__), "favicon.ico")
             cptools.serveFile(icofile)
+            applyFilters('beforeFinalize')
             finalize()
             raise cherrypy.RequestHandled()
         else:
