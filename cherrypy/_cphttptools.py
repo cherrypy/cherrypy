@@ -105,9 +105,7 @@ class KeyTitlingDict(dict):
     
     """A dict subclass which changes each key to str(key).title()
     
-    This allows response headers to be case-insensitive and
-    avoid duplicates.
-    
+    This allows headers to be case-insensitive and avoid duplicates.
     """
     
     def __getitem__(self, key):
@@ -189,7 +187,7 @@ class Request(object):
         request.remotePort = clientAddress[1]
         request.remoteHost = remoteHost
         request.paramList = [] # Only used for Xml-Rpc
-        request.headerMap = {}
+        request.headerMap = KeyTitlingDict()
         request.simpleCookie = Cookie.SimpleCookie()
         request.rfile = rfile
         request.scheme = scheme
@@ -330,7 +328,6 @@ class Request(object):
         
         # Process the headers into request.headerMap
         for name, value in self.requestHeaders:
-            name = name.title()
             value = value.strip()
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headerMap
@@ -339,7 +336,7 @@ class Request(object):
             
             # Handle cookies differently because on Konqueror, multiple
             # cookies come on different lines with the same key
-            if name == 'Cookie':
+            if name.title() == 'Cookie':
                 request.simpleCookie.load(value)
         
         # Write a message to the error.log only if there is no access.log.
