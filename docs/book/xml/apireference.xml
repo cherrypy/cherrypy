@@ -1,407 +1,367 @@
-<?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-         xml:id="apireference">
-  <title>API reference</title>
-  <section id="cherrypy">
-    <title>cherrypy</title>
-    <itemizedlist>
-      <listitem>
-        <section>
-          <title>cherrypy.threadData</title>
-          <para>This attribute holds attributes that map to this thread only.</para>
-        </section>
-      </listitem>
-    </itemizedlist>
-  </section>
-  <section id="cherrypyrequest">
-    <title>cherrypy.request</title>
-    <itemizedlist>
-      <listitem>
-        <section>
-          <title>cherrypy.request.remoteAddr</title>
-          <para>This attribute is a string containing the IP address of the
-          client. It will be an empty string if it is not available.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.remotePort</title>
-          <para>This attribute is an int containing the TCP port number of
-          the client. It will be -1 if it is not available.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.remoteHost</title>
-          <para>This attribute is a string containing the remote hostname of the client.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.headerMap</title>
-          <para>This attribute is dictionary containing the received HTTP headers.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.requestLine</title>
-          <para>This attribute is a string containing the first line of the raw HTTP request.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.simpleCookie</title>
-          <para>This attribute is a SimpleCookie instance from the standard library's Cookie module
-          which contains the incoming cookie values from the client.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.remoteAddr</title>
-          <para>This attribute is a string containing the IP address of the client.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.rfile</title>
-          <para>This attribute is the input stream to the client. See cherrypy.request.processRequestBody
-          for more information.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.processRequestBody</title>
-          <para>This attribute should be accessed during the beforeRequestBody stage of the request
-          (if you don't know what this means, read the section on filters). This specifies whether
-          or not the request's POST data will be parsed into the cherrypy.request.paramMap.
-          It defaults to true for POST requests, but when false, cherrypy.request.rfile will be readable by
-          the exposed method. Otherwise, rfile is completely read before control is handled to the
-          exposed method.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.method</title>
-          <para>This attribute is a string containing the HTTP request method, such as GET or POST.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.protocol</title>
-          <para>This attribute is a string containing the HTTP protocol of the request in the form of
-          HTTP/x.x</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.queryString</title>
-          <para>This attribute is a string containing the query string of the request (the part
-          of the URL following '?').</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.path</title>
-          <para>This attribute is a string containing the path of the resource the client requested.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.paramMap</title>
-          <para>This attribute is a dictionary containing the query string and POST arguments
-          of this request.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.base</title>
-          <para>This attribute is a string containing the root URL of the server.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.browserUrl</title>
-          <para>This attribute is a string containing the URL the client requested.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.objectPath</title>
-          <para>This attribute is a string containing the path of the exposed method that will
-          be called to handle this request. This is usually the same as cherrypy.request.path, but
-          can be changed in a filter to change which method is actually called.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.originalPath</title>
-          <para>This attribute is a string containing the original value of cherrypy.request.path,
-          in case it is modified by a filter during the request.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.originalParamMap</title>
-          <para>This attribute is a string containing the original value of cherrypy.request.paramMap,
-          in case it is modified by a filter during the request.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.request.scheme</title>
-          <para>This attribute is a string containing the URL scheme used in this request. It
-            is either "http" or "https".</para>
-        </section>
-      </listitem>
-    </itemizedlist>
-  </section> <!-- end cherrypy.request section -->
-  
-  <section id="cherrypyresponse">
-    <title>cherrypy.response</title>
-    <itemizedlist>
-      <listitem>
-        <section>
-          <title>cherrypy.response.headerMap</title>
-          <para>This attribute is a dictionary with automatically titled keys. It holds all outgoing
-          HTTP headers to the client.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.response.simpleCookie</title>
-          <para>This attribute is a SimpleCookie instance from the standard library's Cookie module. It
-          contains the outgoing cookie values.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.response.body</title>
-          <para>This attribute is originally just the return value of the exposed method, but by the end of the
-          request it must be an iterable (usually a list or generator of strings) which will be the
-          content of the HTTP response.</para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.response.status</title>
-          <para>This attribute is a string containing the HTTP response code in the form "### Reason Phrase",
-            i.e. "200 OK"</para>
-        </section>
-      </listitem>
-    </itemizedlist>
-  </section>
-  
-  <section id="cherrypyserver">
-    <title>cherrypy.server</title>
-    <itemizedlist>
-      <listitem>
-        <section>
-          <title>cherrypy.server.start()</title>
-          <para>
-            Start the CherryPy Server.
-          </para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.server.stop()</title>
-          <para>
-            Stop the CherryPy Server.
-          </para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.server.restart()</title>
-          <para>
-            Restart the CherryPy Server.
-          </para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.server.onStartServerList</title>
-          <para>
-            A list of functions that will be called when the server starts.
-          </para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.server.onStopServerList</title>
-          <para>
-            A list of functions that will be called when the server stops.
-          </para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.server.onStartThreadList</title>
-          <para>
-            A list of functions that will be called when each thread is started.
-          </para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.server.onStopThreadList</title>
-          <para>
-            A list of functions that will be called when each thread is stopped.
-          </para>
-        </section>
-      </listitem>
-    </itemizedlist>
-  </section> <!-- end cherrypyserver section -->
-  
-  <section id="cherrypyconfig">
-    <title>cherrypy.config</title>
-    <itemizedlist>
-      <listitem>
-        <section>
-          <title>cherrypy.config.get(key, defaultValue = None, returnSection = False)</title>
-          <para>
-            This function returns the configuration value for the given key.  The function
-            checks if the setting is defined for the current request path, it walks up the 
-            request path until the key is found, or it returns the default value.  If 
-            returnSection is True, the function returns the configuration path where the key
-            is defined.
-          </para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.config.getAll(key)</title>
-          <para>
-            The getAll function returns a list containing a (path, value) tuple for all occurences
-            of the key within the request path.  This function allows applications to inherit 
-            configuration data defined for parent paths.
-          </para>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>cherrypy.config.update(updateMap=None, file=None)</title>
-          <para>
-            Function to update the configuration map.  upDateMap is a dictionary of the form
-            {'sectionPath' : { } }, file is the path to the configuration file.
-          </para>
-        </section>
-      </listitem>
-    </itemizedlist>
-  </section>
-  
-  <section id="exceptions">
-    <title>cherrypy exceptions</title>
-    <itemizedlist>
-        
-      <listitem>
-        <section>
-            <title>cherrypy.HTTPError</title>
-            <para>
-                This exception can be used to automatically send a response 
-                using a http status code, with an appropriate error page.
-            </para>
-        </section>
-      </listitem>
-      
-      <listitem>
-        <section>
-            <title>cherrypy.HTTPRedirect</title>
-            This exception will force a HTTP redirect.
-        </section>
-      </listitem>
-      
-      <listitem>
-        <section>
-            <title>cherrypy.NotFound</title>
-            This exception is raised when CherryPy is unable to map a
-            requested path to an internal method.
-        </section>
-      </listitem>
-    
-    </itemizedlist>
-  </section>
-  
-  <section id="lib">
-    <title>CherryPy included library functions</title>
-    <section>
-      <title>cherrypy.lib.cptools</title>
-      <itemizedlist>
-        <section>
-          <title>ExposeItems</title>
-        </section>
-        <section>
-          <title>PositionalParametersAware</title>
-        </section>
-      </itemizedlist>
+<?xml version="1.0" encoding="UTF-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="apireference">
+    <title>API reference</title>
+    <section id="cherrypy">
+        <title>cherrypy</title>
+        <itemizedlist>
+            <listitem>
+                <section>
+                    <title>cherrypy.threadData</title>
+                    <para>This attribute holds attributes that map to this thread only.</para>
+                </section>
+            </listitem>
+        </itemizedlist>
     </section>
-  </section>
-
-  <section id="specialfunctions">
-    <title>Special functions and attributes</title>
-    <itemizedlist>
-      <listitem>
+    <section id="cherrypyrequest">
+        <title>cherrypy.request</title>
+        <itemizedlist>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.remoteAddr</title>
+                    <para>This attribute is a string containing the IP address of the client. It will
+                    be an empty string if it is not available.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.remotePort</title>
+                    <para>This attribute is an int containing the TCP port number of the client. It
+                    will be -1 if it is not available.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.remoteHost</title>
+                    <para>This attribute is a string containing the remote hostname of the
+                    client.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.headerMap</title>
+                    <para>This attribute is dictionary containing the received HTTP headers.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.requestLine</title>
+                    <para>This attribute is a string containing the first line of the raw HTTP
+                    request.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.simpleCookie</title>
+                    <para>This attribute is a SimpleCookie instance from the standard library's
+                    Cookie module which contains the incoming cookie values from the client.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.rfile</title>
+                    <para>This attribute is the input stream to the client. See
+                    cherrypy.request.processRequestBody for more information.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.processRequestBody</title>
+                    <para>This attribute should be accessed during the beforeRequestBody stage of the
+                    request (if you don't know what this means, read the section on filters). This
+                    specifies whether or not the request's POST data will be parsed into the
+                    cherrypy.request.paramMap. It defaults to true for POST requests, but when false,
+                    cherrypy.request.rfile will be readable by the exposed method. Otherwise, rfile
+                    is completely read before control is handled to the exposed method.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.method</title>
+                    <para>This attribute is a string containing the HTTP request method, such as GET
+                    or POST.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.protocol</title>
+                    <para>This attribute is a string containing the HTTP protocol of the request in
+                    the form of HTTP/x.x</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.queryString</title>
+                    <para>This attribute is a string containing the query string of the request (the
+                    part of the URL following '?').</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.path</title>
+                    <para>This attribute is a string containing the path of the resource the client
+                    requested.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.paramMap</title>
+                    <para>This attribute is a dictionary containing the query string and POST
+                    arguments of this request.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.base</title>
+                    <para>This attribute is a string containing the root URL of the server.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.browserUrl</title>
+                    <para>This attribute is a string containing the URL the client requested.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.objectPath</title>
+                    <para>This attribute is a string containing the path of the exposed method that
+                    will be called to handle this request. This is usually the same as
+                    cherrypy.request.path, but can be changed in a filter to change which method is
+                    actually called.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.originalPath</title>
+                    <para>This attribute is a string containing the original value of
+                    cherrypy.request.path, in case it is modified by a filter during the
+                    request.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.originalParamMap</title>
+                    <para>This attribute is a string containing the original value of
+                    cherrypy.request.paramMap, in case it is modified by a filter during the
+                    request.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.request.scheme</title>
+                    <para>This attribute is a string containing the URL scheme used in this request.
+                    It is either "http" or "https".</para>
+                </section>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <!-- end cherrypy.request section -->
+    <section id="cherrypyresponse">
+        <title>cherrypy.response</title>
+        <itemizedlist>
+            <listitem>
+                <section>
+                    <title>cherrypy.response.headerMap</title>
+                    <para>This attribute is a dictionary with automatically titled keys. It holds all
+                    outgoing HTTP headers to the client.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.response.simpleCookie</title>
+                    <para>This attribute is a SimpleCookie instance from the standard library's
+                    Cookie module. It contains the outgoing cookie values.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.response.body</title>
+                    <para>This attribute is originally just the return value of the exposed method,
+                    but by the end of the request it must be an iterable (usually a list or generator
+                    of strings) which will be the content of the HTTP response.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.response.status</title>
+                    <para>This attribute is a string containing the HTTP response code in the form
+                    "### Reason Phrase", i.e. "200 OK"</para>
+                </section>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="cherrypyserver">
+        <title>cherrypy.server</title>
+        <itemizedlist>
+            <listitem>
+                <section>
+                    <title>cherrypy.server.start()</title>
+                    <para>Start the CherryPy Server.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.server.stop()</title>
+                    <para>Stop the CherryPy Server.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.server.restart()</title>
+                    <para>Restart the CherryPy Server.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.server.onStartServerList</title>
+                    <para>A list of functions that will be called when the server starts.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.server.onStopServerList</title>
+                    <para>A list of functions that will be called when the server stops.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.server.onStartThreadList</title>
+                    <para>A list of functions that will be called when each thread is started.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.server.onStopThreadList</title>
+                    <para>A list of functions that will be called when each thread is stopped.</para>
+                </section>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <!-- end cherrypyserver section -->
+    <section id="cherrypyconfig">
+        <title>cherrypy.config</title>
+        <itemizedlist>
+            <listitem>
+                <section>
+                    <title>cherrypy.config.get(key, defaultValue = None, returnSection =
+                    False)</title>
+                    <para>This function returns the configuration value for the given key. The
+                    function checks if the setting is defined for the current request path, it walks
+                    up the request path until the key is found, or it returns the default value. If
+                    returnSection is True, the function returns the configuration path where the key
+                    is defined.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.config.getAll(key)</title>
+                    <para>The getAll function returns a list containing a (path, value) tuple for all
+                    occurences of the key within the request path. This function allows applications
+                    to inherit configuration data defined for parent paths.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>cherrypy.config.update(updateMap=None, file=None)</title>
+                    <para>Function to update the configuration map. upDateMap is a dictionary of the
+                    form {'sectionPath' : { } }, file is the path to the configuration file.</para>
+                </section>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="exceptions">
+        <title>cherrypy exceptions</title>
+        <itemizedlist>
+            <listitem>
+                <section>
+                    <title>cherrypy.HTTPError</title>
+                    <para>This exception can be used to automatically send a response using a http
+                    status code, with an appropriate error page.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section><title>cherrypy.HTTPRedirect</title> This exception will force a HTTP
+                redirect.</section>
+            </listitem>
+            <listitem>
+                <section><title>cherrypy.NotFound</title> This exception is raised when CherryPy is
+                unable to map a requested path to an internal method.</section>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="lib">
+        <title>CherryPy included library functions</title>
         <section>
-          <title>_cpOnError</title>
-          <para>
-            _cpOnError is a function for handling internal exceptions raised by CherryPy.
-	  </para>
+            <title>cherrypy.lib.cptools</title>
+            <itemizedlist>
+                <section>
+                    <title>ExposeItems</title>
+                </section>
+                <section>
+                    <title>PositionalParametersAware</title>
+                </section>
+            </itemizedlist>
         </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>_cpFilterList</title>
-          <para>
-            User defined filters are enabled using the class attribute _cpFilterList.
-            Any filter instances placed in _cpFilterList will be applied to all methods
-            of the class.
-          </para>
-        </section>
-      </listitem>
-    </itemizedlist>
-  </section>
-  
-  <section id="filters">
-    <title>Filter API</title>
-    <itemizedlist>
-      <listitem>
-        <section>
-          <title>onStartResource</title>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>beforeRequestBody</title>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>beforeMain</title>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>beforeFinalize</title>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>onEndResource</title>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>beforeErrorResponse</title>
-        </section>
-      </listitem>
-      <listitem>
-        <section>
-          <title>afterErrorResponse</title>
-        </section>
-      </listitem>
-    </itemizedlist>
-  </section>
-
+    </section>
+    <section id="specialfunctions">
+        <title>Special functions and attributes</title>
+        <itemizedlist>
+            <listitem>
+                <section>
+                    <title>_cpOnError</title>
+                    <para>_cpOnError is a function for handling internal exceptions raised by
+                    CherryPy.</para>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>_cpFilterList</title>
+                    <para>User defined filters are enabled using the class attribute _cpFilterList.
+                    Any filter instances placed in _cpFilterList will be applied to all methods of
+                    the class.</para>
+                </section>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="filters">
+        <title>Filter API</title>
+        <itemizedlist>
+            <listitem>
+                <section>
+                    <title>onStartResource</title>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>beforeRequestBody</title>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>beforeMain</title>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>beforeFinalize</title>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>onEndResource</title>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>beforeErrorResponse</title>
+                </section>
+            </listitem>
+            <listitem>
+                <section>
+                    <title>afterErrorResponse</title>
+                </section>
+            </listitem>
+        </itemizedlist>
+    </section>
 </section>

@@ -1,197 +1,108 @@
-<?xml version="1.0" encoding="utf-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-         xml:id="builtinfilters">
-  <title>Builtin Filters</title>
-  
+<?xml version="1.0" encoding="UTF-8"?>
+<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="builtinfilters">
+    <title>Builtin Filters</title>
     <section id="baseurlfilter">
-      <title>baseurlfilter</title>
-      <para>
-        The baseurlfilter changes the base url of a request.
-        It is usefull for running CherryPy behind Apache with mod-rewrite.
-      </para>
-      
-      <para>
-        The baseurlfilter has the following configuration options
-      </para>
-
-      <itemizedlist>
-        <listitem>baseUrlFilter.baseUrl</listitem>
-        <listitem>baseUrlFilter.useXForwardedHost</listitem>
-      </itemizedlist>
-
+        <title>baseurlfilter</title>
+        <para>The baseurlfilter changes the base url of a request. It is useful for running CherryPy
+        behind Apache with mod_rewrite.</para>
+        <para>The baseurlfilter has the following configuration options</para>
+        <itemizedlist>
+            <listitem>baseUrlFilter.baseUrl</listitem>
+            <listitem>baseUrlFilter.useXForwardedHost</listitem>
+        </itemizedlist>
     </section>
-    
     <section id="cachefilter">
-      <title>cachefilter</title>
+        <title>cachefilter</title>
     </section>
-    
     <section id="decodingfilter">
-      <title>decodingfilter</title>
-      <para>
-        The decoding filter can be configured to automatically decode incoming requests.
-      </para>
-      
-      <para>
-        The decodingfilter has the following configuration options:
-      </para>
-      
-      <itemizedlist>
-        <listitem>decodingFilter.encoding</listitem>
-      </itemizedlist>
+        <title>decodingfilter</title>
+        <para>The decoding filter can be configured to automatically decode incoming requests.</para>
+        <para>The decodingfilter has the following configuration options:</para>
+        <itemizedlist>
+            <listitem>decodingFilter.encoding</listitem>
+        </itemizedlist>
     </section>
-    
     <section id="encodingfilter">
-      <title>encodingfilter</title>
-      
-      <para>
-        The encodingfilter can be configured to automatically outgoing responses.
-      </para>
-      
-      <para>
-        The encodingfilter has the following configuration options:
-      </para>
-      
-      <itemizedlist>
-        <listitem>encodingFilter.encoding</listitem>
-        <listitem>encodingFilter.mimeTypeList</listitem>
-      </itemizedlist>
+        <title>encodingfilter</title>
+        <para>The encodingfilter can be configured to automatically encode outgoing responses.</para>
+        <para>The encodingfilter has the following configuration options:</para>
+        <itemizedlist>
+            <listitem>encodingFilter.encoding</listitem>
+            <listitem>encodingFilter.mimeTypeList</listitem>
+        </itemizedlist>
     </section>
-    
     <section id="gzipfilter">
-      <title>gzipfilter</title>
-      <para>
-        The gzipfilter will automatically gzip outgoing requests, 
-        if it is supported by the client.
-      </para>
-
-      <para>
-        The gzipfilter does not have any configuration options.
-      </para>
-      
+        <title>gzipfilter</title>
+        <para>The gzipfilter will automatically gzip outgoing requests, if it is supported by the
+        client.</para>
+        <para>The gzipfilter does not have any configuration options.</para>
     </section>
-    
     <section id="logdebuginfofilter">
-      <title>logdebuginfofilter</title>
-      <para>
-        The logdebuinfofilter adds debug information to each page.
-        The filter is automatically turned on when the server
-        environment is set to development.
-      </para>
-
-      <para>
-        The logdebuginfo has the following configuration options:
-      </para>
-      
-      <itemizedlist>
-        <itemizedlist>logDebugInfoFilter.mimeTypeList, ['text/html']</itemizedlist>
-        <itemizedlist>logDebugInfoFilter.logAsComment, False</itemizedlist>
-        <itemizedlist>logDebugInfoFilter.logBuildTime, True</itemizedlist>
-        <itemizedlist>logDebugInfoFilter.logPageSize, True</itemizedlist>
-      </itemizedlist>
-
+        <title>logdebuginfofilter</title>
+        <para>The logdebuinfofilter adds debug information to each page. The filter is automatically
+        turned on when "server.environment" is set to "development".</para>
+        <para>The logdebuginfofilter has the following configuration options:</para>
+        <itemizedlist>
+            <itemizedlist>logDebugInfoFilter.mimeTypeList, ['text/html']</itemizedlist>
+            <itemizedlist>logDebugInfoFilter.logAsComment, False</itemizedlist>
+            <itemizedlist>logDebugInfoFilter.logBuildTime, True</itemizedlist>
+            <itemizedlist>logDebugInfoFilter.logPageSize, True</itemizedlist>
+        </itemizedlist>
     </section>
-    
     <section id="staticfilter">
-      <title>staticfilter</title>
-      <para>
-        The static filter allows CherryPy to serve static files.
-      </para>
-      
-      <para>
-        The staticfilter has the following configuration options:
-      </para>
-     
-      <itemizedlist>
-        <listitem>staticFilter.file</listitem>
-        <listitem>staticFilter.dir</listitem>
-      </itemizedlist>
-
+        <title>staticfilter</title>
+        <para>The static filter allows CherryPy to serve static files.</para>
+        <para>The staticfilter has the following configuration options:</para>
+        <itemizedlist>
+            <listitem>staticFilter.file</listitem>
+            <listitem>staticFilter.dir</listitem>
+            <listitem>
+                <para>staticFilter.root</para>
+            </listitem>
+        </itemizedlist>
     </section>
-    
     <section id="nsgmlsfilter">
-      <title>nsgmlsfilter</title>
+        <title>nsgmlsfilter</title>
     </section>
-    
     <section id="tidyfilter">
-      <title>tidyfilter</title>
-      <para>
-        The tidyfilter cleans up returned html by running the response through Tidy.
-      </para>
-
-      <para>
-        Note that we use the standalone Tidy tool rather than the python
-        mxTidy module. This is because this module doesn't seem to be
-        stable and it crashes on some HTML pages (which means that the
-        server would also crash.)
-      </para>
-      
-      <para>
-        The staticfilter has the following configuration options:
-      </para>
-
-      <itemizedlist>
-        <listitem>tidyFilter.tmpDir</listitem>
-        <listitem>tidyFilter.strictXml, False</listitem>
-        <listitem>tidyFilter.tidyPath</listitem>
-        <listitem>encodingFilter.errorsToIgnore, []</listitem>
-      </itemizedlist>
-
+        <title>tidyfilter</title>
+        <para>The tidyfilter cleans up returned html by running the response through Tidy.</para>
+        <para>Note that we use the standalone Tidy tool rather than the python mxTidy module. This is
+        because this module doesn't seem to be stable and it crashes on some HTML pages (which means
+        that the server would also crash.)</para>
+        <para>The tidyfilter has the following configuration options:</para>
+        <itemizedlist>
+            <listitem>tidyFilter.tmpDir</listitem>
+            <listitem>tidyFilter.strictXml, False</listitem>
+            <listitem>tidyFilter.tidyPath</listitem>
+            <listitem>encodingFilter.errorsToIgnore, []</listitem>
+        </itemizedlist>
     </section>
-    
     <section id="virtualhostfilter">
-      <title>virtualhostfilter</title>
-
-      <para>
-        The virtualhostfilter changes the ObjectPath based on the Host.
-        This filter when running multiple sites within one CP server.
-      </para>
-      
-      <para>
-        The virtualhostfilter has the following configuration options:
-      </para>
-      <itemizedlist>
-        <listitem>virtualHostFilter.prefix, '/'</listitem>
-      </itemizedlist>
+        <title>virtualhostfilter</title>
+        <para>The virtualhostfilter changes the ObjectPath based on the Host. Use this filter when
+        running multiple sites within one CP server.</para>
+        <para>The virtualhostfilter has the following configuration options:</para>
+        <itemizedlist>
+            <listitem>virtualHostFilter.prefix, '/'</listitem>
+        </itemizedlist>
     </section>
-    
     <section id="xmlrpcfilter">
-      <title>xmlrpcfilter</title>
-      <para>
-        The xmlrpcfilter converts XMLRPC to CherryPy2 object system and vice-versa.
-      </para>
-      
-      <para>
-    PLEASE NOTE:
-    
-    beforeRequestBody:
-        Unmarshalls the posted data to a methodname and parameters.
-        - These are stored in cherrypy.request.rpcMethod and .rpcParams
-        - The method is also stored in cherrypy.request.path, so CP2 will find
-          the right method to call for you, based on the root's position.
-    beforeFinalize:
-        Marshalls cherrypy.response.body to xmlrpc.
-        - Until resolved: cherrypy.response.body must be a python source string;
-          this string is 'eval'ed to return the results. This will be
-          resolved in the future.
-        - Content-Type and Content-Length are set according to the new
-          (marshalled) data
-      </para>
-      
-      <para>
-        The xmlrpcfilter does not have any configuration options.
-      </para>
-      
+        <title>xmlrpcfilter</title>
+        <para>The xmlrpcfilter converts XMLRPC to the CherryPy2 object system and vice-versa.</para>
+        <para>PLEASE NOTE: beforeRequestBody: Unmarshalls the posted data to a methodname and
+        parameters. - These are stored in cherrypy.request.rpcMethod and .rpcParams - The method is
+        also stored in cherrypy.request.path, so CP2 will find the right method to call for you,
+        based on the root's position. beforeFinalize: Marshalls cherrypy.response.body to xmlrpc. -
+        Until resolved: cherrypy.response.body must be a python source string; this string is
+        'eval'ed to return the results. This will be resolved in the future. - Content-Type and
+        Content-Length are set according to the new (marshalled) data</para>
+        <para>The xmlrpcfilter does not have any configuration options.</para>
     </section>
-    
     <section id="sessionauthfilter">
-      <title>sessionauthenticatefilter</title>
+        <title>sessionauthenticatefilter</title>
     </section>
-    
-    <section id="sessionfilter">
-      <title>sessionfilter</title>
-      The Session Filter has its own section
-    </section>
-
+    <section id="sessionfilter"><title>sessionfilter</title> The Session Filter has its own
+    section</section>
 </section>
