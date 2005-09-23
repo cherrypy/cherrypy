@@ -61,20 +61,19 @@ mapped_func.exposed = True
 setattr(Root, "Von B\xfclow", mapped_func)
 
 
-if sys.hexversion > 0x020400A2:
-    from cp_decorator_tests import Exposing, ExposingNewStyle
-else:
-    class Exposing:
-        def base(self):
-            return "expose works!"
-        cherrypy.expose(base, "1")
-        cherrypy.expose(base, "2")
-    
-    class ExposingNewStyle(object):
-        def base(self):
-            return "expose works!"
-        cherrypy.expose(base, "1")
-        cherrypy.expose(base, "2")
+class Exposing:
+    def base(self):
+        return "expose works!"
+    cherrypy.expose(base)
+    cherrypy.expose(base, "1")
+    cherrypy.expose(base, "2")
+
+class ExposingNewStyle(object):
+    def base(self):
+        return "expose works!"
+    cherrypy.expose(base)
+    cherrypy.expose(base, "1")
+    cherrypy.expose(base, "2")
 
 
 
@@ -170,10 +169,16 @@ class ObjectMappingTest(helper.CPWebCase):
     
     def testExpose(self):
         # Test the cherrypy.expose function/decorator
+        self.getPage("/exposing/base")
+        self.assertBody("expose works!")
+        
         self.getPage("/exposing/1")
         self.assertBody("expose works!")
         
         self.getPage("/exposing/2")
+        self.assertBody("expose works!")
+        
+        self.getPage("/exposingnew/base")
         self.assertBody("expose works!")
         
         self.getPage("/exposingnew/1")
