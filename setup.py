@@ -9,6 +9,8 @@ to install this package.
 from distutils.core import setup
 from distutils.command.install import INSTALL_SCHEMES
 import sys
+import os
+import shutil
 
 required_python_version = '2.3'
 
@@ -54,6 +56,7 @@ data_files=[
 # end arguments for setup
 ###############################################################################
 
+
 def main():
     if sys.version < required_python_version:
         s = "I'm sorry, but %s %s requires Python %s or later."
@@ -65,7 +68,7 @@ def main():
     for scheme in INSTALL_SCHEMES.values():
         scheme['data'] = scheme['purelib']
 
-    setup(
+    dist = setup(
         name=name,
         version=version,
         description=desc,
@@ -80,6 +83,47 @@ def main():
         data_files=data_files,
     )
 
+    # the code in the following "if" block handles situations where the
+    # user has installed over an older release of 2.1 with a conflicting
+    # version of the sessionfilter
+    if 'install_lib' in dist.command_obj:
+        
+        # get the installation directory (is there a better way to do this?)
+        install_dir = dist.command_obj['install_lib'].install_dir
+
+        # make sure we have an absolute install path
+        install_dir = os.path.join(os.path.abspath('/'), install_dir)
+        
+        old_session_filter_path = os.path.join(
+            install_dir, 'cherrypy', 'lib', 'filter', 'sessionfilter')
+        
+        # check for existence of old sessionfilter package dir
+        # and prompt the user if it exists
+        if os.path.exists(old_session_filter_path):
+            handle_old_session_filter(old_session_filter_path)
+
+        
+def handle_old_session_filter(pth):
+    warn_old_session_filter(pth)
+    choice = raw_input('Delete old sessionfilter directory? (yes/no): ')
+    if choice.lower() in ('y', 'yes'):
+        shutil.rmtree(pth)
+        print "Old sessionfilter directory deleted."
+    else:
+        print "You will need to manually need to delete the old sessionfilter directory."
+
+
+def warn_old_session_filter(pth):
+    msg = """
+************************ WARNING *****************************
+ Since you have installed over the top of an existing CherryPy
+ installation, you must remove the old sessionfilter package
+ directory at:
+ %s
+************************ WARNING *****************************
+""" % (pth,)
+    print msg
+    
+
 if __name__ == "__main__":
     main()
-
