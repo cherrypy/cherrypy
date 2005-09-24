@@ -137,7 +137,7 @@ class KeyTitlingDict(dict):
         return newdict
     fromkeys = classmethod(fromkeys)
     
-    def setdefault(key, x=None):
+    def setdefault(self, key, x=None):
         key = str(key).title()
         try:
             return self[key]
