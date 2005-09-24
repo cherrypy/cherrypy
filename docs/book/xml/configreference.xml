@@ -11,6 +11,18 @@
         <para><option>[global] server.socketPort</option>: port number where the server is listening (defaults to 8080)</para>
       </listitem>
       <listitem>
+        <para><option>[global] server.logFile</option>: path to a file to log CherryPy server activity.  Items logged include startup config info, tracebacks and HTTP requests.  It is disabled by default and everything is logged to the screen.</para>
+      </listitem>
+      <listitem>
+        <para><option>[global] server.logAccessFile</option>: path to a file where access log data will be stored in Common Log Format.  The default is to write access log data to the screen.  If a file is specified, the access log data is no longer written to the screen.</para>
+      </listitem>
+      <listitem>
+        <para><option>[global] server.logToScreen</option>: controls whether any log data is written to the screen.  It defaults to on (True).  For performance reasons, it is best to have this option turned off on a production server.</para>
+      </listitem>
+      <listitem>
+        <para><option>[global] server.logTracebacks</option>: controls whether or not tracebacks are written to the log (screen or otherwise).  Defaults to on (True)  If set to False, only a 500 return code will be logged in the access log.</para>
+      </listitem>
+      <listitem>
         <para><option>[global] server.maxRequestHeaderSize</option>: maximum acceptable size of a request header, in bytes (defaults to 500KB). If a longer request arrives, the server will interrupt it and return a 413 error. This setting is global (ie: doesn't depend on the path). Set it to zero to remove the limit</para>
       </listitem>
       <listitem>
