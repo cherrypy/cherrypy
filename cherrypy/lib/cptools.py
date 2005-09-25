@@ -225,6 +225,13 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     response = cherrypy.response
     
     # If path is relative, make absolute using cherrypy.root's module.
+    # If there is no cherrypy.root, or it doesn't have a __module__
+    # attribute, then users should fix the issue by making path absolute.
+    # That is, CherryPy should not guess where the application root is
+    # any further than trying cherrypy.root.__module__, and it certainly
+    # should *not* use cwd (since CP may be invoked from a variety of
+    # paths). If using staticFilter, you can make your relative paths
+    # become absolute by supplying a value for "staticFilter.root".
     if not os.path.isabs(path):
         root = os.path.dirname(sys.modules[cherrypy.root.__module__].__file__)
         path = os.path.join(root, path)
