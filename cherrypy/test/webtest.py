@@ -239,7 +239,7 @@ class WebCase(TestCase):
         lowkey = key.lower()
         for k, v in self.headers:
             if k.lower() == lowkey:
-                if value is None or value == v:
+                if value is None or str(value) == v:
                     return
         
         if msg is None:
