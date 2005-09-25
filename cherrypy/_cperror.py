@@ -122,7 +122,7 @@ class HTTPRedirect(Exception):
         # browser support for 301 is quite messy. Do 302 instead. See
         # http://ppewww.ph.gla.ac.uk/~flavell/www/post-redirect.html
         if status is None:
-            if cherrypy.request.version >= "1.1":
+            if cherrypy.response.version >= "1.1":
                 status = 303
             else:
                 status = 302

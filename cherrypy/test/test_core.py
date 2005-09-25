@@ -168,13 +168,10 @@ class Error(Test):
         yield "hello"
         raise ValueError()
     
-    def page_http_1_1(self):
-        cherrypy.response.headerMap["Content-Length"] = 39
-        def inner():
-            yield "hello"
-            raise ValueError()
-            yield "very oops"
-        return inner()
+    def page_streamed(self):
+        yield "hello"
+        raise ValueError()
+        yield "very oops"
     
     def cause_err_in_finalize(self):
         # Since status must start with an int, this should error.
@@ -294,6 +291,9 @@ cherrypy.config.update({
     '/error': {
         'server.logFile': logFile,
         'server.logTracebacks': True,
+    },
+    '/error/page_streamed': {
+        'streamResponse': True,
     },
 })
 
@@ -506,18 +506,17 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             valerr = r'\n    raise ValueError\(\)\nValueError\n'
             self.getPage("/error/page_method")
             self.assertErrorPage(500, valerr)
-
-            import cherrypy
-            proto = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
-            if proto == "HTTP/1.1":
-                valerr = r'Unrecoverable error in the server.$'
-            self.getPage("/error/page_yield")
-            self.assertMatchesBody(valerr)
             
-            if cherrypy._httpserver is None and proto == "HTTP/1.0":
-                self.assertRaises(ValueError, self.getPage, "/error/page_http_1_1")
+            self.getPage("/error/page_yield")
+            self.assertErrorPage(500, valerr)
+            
+            import cherrypy
+            # streamResponse should be True for this path.
+            if cherrypy._httpserver is None:
+                self.assertRaises(ValueError, self.getPage,
+                                  "/error/page_streamed")
             else:
-                self.getPage("/error/page_http_1_1")
+                self.getPage("/error/page_streamed")
                 # Because this error is raised after the response body has
                 # started, the status should not change to an error status.
                 self.assertStatus("200 OK")
@@ -567,7 +566,7 @@ Content-range: bytes 2-5/14
 llo, 
 --%s""" % (boundary, boundary, boundary)
         self.assertBody(expected_body)
-        self.assertNoHeader("Content-Length")
+        self.assertHeader("Content-Length")
         
         # Test "416 Requested Range Not Satisfiable"
         self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])

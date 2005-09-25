@@ -119,7 +119,7 @@ class CPWebCase(webtest.WebCase):
             for chunk in cherrypy.response.body:
                 self.body.append(chunk)
         except:
-            if cherrypy.config.get("server.protocolVersion") == "HTTP/1.0":
+            if cherrypy.config.get("streamResponse", False):
                 # Pass the error through
                 raise
             

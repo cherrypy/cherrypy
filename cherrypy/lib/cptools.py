@@ -269,40 +269,44 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     if getattr(cherrypy, "debug", None):
         cherrypy.log("    Found file: %s" % path, "DEBUG")
     
-    response.headerMap["Accept-Ranges"] = "bytes"
-    r = getRanges(c_len)
-    if r:
-        if len(r) == 1:
-            # Return a single-part response.
-            start, stop = r[0]
-            r_len = stop - start
-            response.status = "206 Partial Content"
-            response.headerMap['Content-Range'] = ("bytes %s-%s/%s" %
-                                                   (start, stop - 1, c_len))
-            response.headerMap['Content-Length'] = r_len
-            bodyfile.seek(start)
-            response.body = [bodyfile.read(r_len)]
-        else:
-            # Return a multipart/byteranges response.
-            response.status = "206 Partial Content"
-            boundary = mimetools.choose_boundary()
-            ct = "multipart/byteranges; boundary=%s" % boundary
-            response.headerMap['Content-Type'] = ct
-            del response.headerMap['Content-Length']
-            
-            def fileRanges():
-                for start, stop in r:
+    # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
+    if cherrypy.response.version >= "1.1":
+        response.headerMap["Accept-Ranges"] = "bytes"
+        r = getRanges(c_len)
+        if r:
+            if len(r) == 1:
+                # Return a single-part response.
+                start, stop = r[0]
+                r_len = stop - start
+                response.status = "206 Partial Content"
+                response.headerMap['Content-Range'] = ("bytes %s-%s/%s" %
+                                                       (start, stop - 1, c_len))
+                response.headerMap['Content-Length'] = r_len
+                bodyfile.seek(start)
+                response.body = [bodyfile.read(r_len)]
+            else:
+                # Return a multipart/byteranges response.
+                response.status = "206 Partial Content"
+                boundary = mimetools.choose_boundary()
+                ct = "multipart/byteranges; boundary=%s" % boundary
+                response.headerMap['Content-Type'] = ct
+##                del response.headerMap['Content-Length']
+                
+                def fileRanges():
+                    for start, stop in r:
+                        yield "--" + boundary
+                        yield "\nContent-type: %s" % contentType
+                        yield ("\nContent-range: bytes %s-%s/%s\n\n"
+                               % (start, stop - 1, c_len))
+                        bodyfile.seek(start)
+                        yield bodyfile.read((stop + 1) - start)
+                        yield "\n"
+                    # Final boundary
                     yield "--" + boundary
-                    yield "\nContent-type: %s" % contentType
-                    yield ("\nContent-range: bytes %s-%s/%s\n\n"
-                           % (start, stop - 1, c_len))
-                    bodyfile.seek(start)
-                    yield bodyfile.read((stop + 1) - start)
-                    yield "\n"
-                # Final boundary
-                yield "--" + boundary
-            response.body = fileRanges()
-    
+                response.body = fileRanges()
+        else:
+            response.headerMap['Content-Length'] = c_len
+            response.body = fileGenerator(bodyfile)
     else:
         response.headerMap['Content-Length'] = c_len
         response.body = fileGenerator(bodyfile)

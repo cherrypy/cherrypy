@@ -300,18 +300,23 @@ class Request(object):
         # not support the requested version. We can't tell the server what
         # version number to write in the response, so we limit our output
         # to min(req, server). We want the following output:
-        #   request version   server version   response version   features
-        # a       1.0              1.0               1.0            1.0
-        # b       1.0              1.1               1.1            1.0
-        # c       1.1              1.0               1.0            1.0
-        # d       1.1              1.1               1.1            1.1
+        #     request    server     actual written   supported response
+        #     version    version   response version  feature set (resp.v)
+        # a     1.0        1.0           1.0                1.0
+        # b     1.0        1.1           1.1                1.0
+        # c     1.1        1.0           1.0                1.0
+        # d     1.1        1.1           1.1                1.1
         # Notice that, in (b), the response will be "HTTP/1.1" even though
         # the client only understands 1.0. RFC 2616 10.5.6 says we should
         # only return 505 if the _major_ version is different.
         request_v = Version.from_http(request.protocol)
         server_v = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
         server_v = Version.from_http(server_v)
-        cherrypy.request.version = min(request_v, server_v)
+        # cherrypy.response.version should be used to determine whether or
+        # not to include a given HTTP/1.1 feature in the response content.
+        cherrypy.response.version = min(request_v, server_v)
+        # cherrypy.request.version == request.protocol in a Version instance.
+        cherrypy.request.version = request_v
         
         # build a paramMap dictionary from queryString
         if re.match(r"[0-9]+,[0-9]+", request.queryString):
@@ -351,7 +356,7 @@ class Request(object):
         request.originalParamMap = request.paramMap
         request.originalParamList = request.paramList
         
-        if cherrypy.request.version >= "1.1":
+        if cherrypy.response.version >= "1.1":
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
             # (Bad Request) status code to any HTTP/1.1 request message
             # which lacks a Host header field.
@@ -576,46 +581,51 @@ def finalize():
     
     checkStatus()
     
-    if cherrypy.response.body is None:
-        cherrypy.response.body = []
+    response = cherrypy.response
+    if response.body is None:
+        response.body = []
     
-    if cherrypy.response.headerMap.get('Content-Length') is None:
-        if (cherrypy.request.version < "1.1" or
-            # OPTIONS requests MUST include a Content-Length of 0 if no body.
-            # Just punt and figure len for all OPTIONS requests.
-            cherrypy.request.method == "OPTIONS"):
-            
-            content = ''.join([chunk for chunk in cherrypy.response.body])
-            cherrypy.response.body = [content]
-            cherrypy.response.headerMap['Content-Length'] = len(content)
-        else:
-            try:
-                del cherrypy.response.headerMap['Content-Length']
-            except KeyError:
-                pass
+    stream = cherrypy.config.get("streamResponse", False)
+    # OPTIONS requests MUST include a Content-Length of 0 if no body.
+    # Just punt and figure Content-Length for all OPTIONS requests.
+    if cherrypy.request.method == "OPTIONS":
+        stream = False
+    
+    if stream:
+        try:
+            del response.headerMap['Content-Length']
+        except KeyError:
+            pass
+    else:
+        # Responses which are not streamed should have a Content-Length,
+        # but allow user code to set Content-Length if desired.
+        if response.headerMap.get('Content-Length') is None:
+            content = ''.join([chunk for chunk in response.body])
+            response.body = [content]
+            response.headerMap['Content-Length'] = len(content)
     
     # For some statuses, Internet Explorer 5+ shows "friendly error messages"
     # instead of our response.body if the body is smaller than a given size.
     # Fix this by returning a body over that size (by adding whitespace).
     # See http://support.microsoft.com/kb/q218155/
-    s = int(cherrypy.response.status.split(" ")[0])
+    s = int(response.status.split(" ")[0])
     s = _ie_friendly_error_sizes.get(s, 0)
     if s:
         s += 1
         # Since we are issuing an HTTP error status, we assume that
         # the entity is short, and we should just collapse it.
-        content = ''.join([chunk for chunk in cherrypy.response.body])
-        cherrypy.response.body = [content]
+        content = ''.join([chunk for chunk in response.body])
+        response.body = [content]
         l = len(content)
         if l and l < s:
             # IN ADDITION: the response must be written to IE
             # in one chunk or it will still get replaced! Bah.
-            cherrypy.response.body = [cherrypy.response.body[0] + (" " * (s - l))]
-            cherrypy.response.headerMap['Content-Length'] = s
+            response.body = [response.body[0] + (" " * (s - l))]
+            response.headerMap['Content-Length'] = s
     
     # Headers
     headers = []
-    for key, valueList in cherrypy.response.headerMap.iteritems():
+    for key, valueList in response.headerMap.iteritems():
         order = _header_order_map.get(key, 3)
         if not isinstance(valueList, list):
             valueList = [valueList]
@@ -625,14 +635,14 @@ def finalize():
     # first, followed by request-header or response-header fields, and
     # ending with the entity-header fields.'
     headers.sort()
-    cherrypy.response.headers = [item[1] for item in headers]
+    response.headers = [item[1] for item in headers]
     
-    cookie = cherrypy.response.simpleCookie.output()
+    cookie = response.simpleCookie.output()
     if cookie:
         lines = cookie.split("\n")
         for line in lines:
             name, value = line.split(": ", 1)
-            cherrypy.response.headers.append((name, value))
+            response.headers.append((name, value))
 
 
 def applyFilters(methodName):

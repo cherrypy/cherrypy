@@ -40,13 +40,22 @@ class Root:
         raise IndexError()
         yield "Here be dragons"
     noshow.exposed = True
+    
+    def noshow_stream(self):
+        # Test for ticket #147, where yield showed no exceptions (content-
+        # encoding was still gzip even though traceback wasn't zipped).
+        raise IndexError()
+        yield "Here be dragons"
+    noshow_stream.exposed = True
 
 cherrypy.root = Root()
 cherrypy.config.update({
-        'server.logToScreen': False,
-        'server.environment': 'production',
-        'server.showTracebacks': True,
-        'gzipFilter.on': True,
+    'global': {'server.logToScreen': False,
+               'server.environment': 'production',
+               'server.showTracebacks': True,
+               'gzipFilter.on': True,
+               },
+    '/noshow_stream': {'streamResponse': True},
 })
 
 
@@ -69,20 +78,23 @@ class GzipFilterTest(helper.CPWebCase):
         helper.webtest.ignored_exceptions.append(IndexError)
         try:
             self.getPage('/noshow', headers=[("Accept-Encoding", "gzip")])
+            self.assertNoHeader('Content-Encoding')
+            self.assertStatus('500 Internal error')
+            self.assertErrorPage(500, "IndexError\n")
             
-            import cherrypy
-            proto = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
-            if proto == "HTTP/1.1":
-                # In this case, there's nothing we can do to deliver a
-                # readable page, since 1) the gzip header is already set,
-                # and 2) we may have already written some of the body.
-                # The fix is to not use yield when using HTTP/1.1 and gzip.
+            # In this case, there's nothing we can do to deliver a
+            # readable page, since 1) the gzip header is already set,
+            # and 2) we may have already written some of the body.
+            # The fix is to never stream yields when using gzip.
+            if cherrypy._httpserver is None:
+                self.assertRaises(IndexError, self.getPage,
+                                  '/noshow_stream',
+                                  [("Accept-Encoding", "gzip")])
+            else:
+                self.getPage('/noshow_stream',
+                             headers=[("Accept-Encoding", "gzip")])
                 self.assertHeader('Content-Encoding', 'gzip')
                 self.assertMatchesBody(r"Unrecoverable error in the server.$")
-            else:
-                self.assertNoHeader('Content-Encoding')
-                self.assertStatus('500 Internal error')
-                self.assertErrorPage(500, "IndexError\n")
         finally:
             helper.webtest.ignored_exceptions.pop()
 

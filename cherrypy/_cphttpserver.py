@@ -84,7 +84,8 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         cherrypy.request.purge__()
         cherrypy.response.purge__()
         
-        cherrypy.request.multithread = cherrypy.config.get("server.threadPool") > 1
+        tp = cherrypy.config.get("server.threadPool")
+        cherrypy.request.multithread = (tp > 1)
         cherrypy.request.multiprocess = False
         cherrypy.server.request(self.client_address,
                                 self.address_string(),
@@ -92,7 +93,8 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                                 self._headerlist(),
                                 self.rfile, "http")
         wfile = self.wfile
-        wfile.write("%s %s\r\n" % (self.protocol_version, cherrypy.response.status))
+        wfile.write("%s %s\r\n" %
+                    (self.protocol_version, cherrypy.response.status))
         
         has_close_conn = False
         for name, value in cherrypy.response.headers:

@@ -251,7 +251,8 @@ class TestHarness(object):
             self.start_coverage()
         
         import cherrypy
-        print "Python version used to run this test script:", sys.version.split()[0]
+        v = sys.version.split()[0]
+        print "Python version used to run this test script:", v
         print "CherryPy version", cherrypy.__version__
         print
         
