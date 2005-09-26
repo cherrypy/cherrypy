@@ -33,7 +33,6 @@ A module containing a few utility classes/functions used by CherryPy
 import sys
 import traceback
 import time
-import os
 #import os.path
 
 from BaseHTTPServer import BaseHTTPRequestHandler

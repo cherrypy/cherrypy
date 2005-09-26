@@ -34,7 +34,6 @@ Main CherryPy module:
 import warnings
 import threading
 import time
-import sys
 
 import cherrypy
 from cherrypy import _cphttptools

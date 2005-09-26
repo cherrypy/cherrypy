@@ -31,12 +31,6 @@ import SocketServer, BaseHTTPServer, Queue
 import cherrypy
 from cherrypy import _cputil, _cphttptools
 
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
-
-
 class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     """CherryPy HTTP request handler with the following commands:
