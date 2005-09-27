@@ -27,8 +27,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 """
-Just a few convenient functions and classes
+Tools which both the CherryPy framework and application developers invoke.
 """
+
+from BaseHTTPServer import BaseHTTPRequestHandler
+responseCodes = BaseHTTPRequestHandler.responses
 
 import inspect
 import mimetools
@@ -40,6 +43,8 @@ mimetypes.types_map['.ico']='image/x-icon'
 import os
 import sys
 import time
+
+
 import cherrypy
 
 
@@ -326,3 +331,44 @@ def fileGenerator(input, chunkSize=65536):
         yield chunk
         chunk = input.read(chunkSize)
     input.close()
+
+def validStatus(status):
+    """Return legal HTTP status Code, Reason-phrase and Message.
+    
+    The status arg must be an int, or a str that begins with an int.
+    
+    If status is an int, or a str and  no reason-phrase is supplied,
+    a default reason-phrase will be provided.
+    """
+    
+    if not status:
+        status = 200
+    
+    status = str(status)
+    parts = status.split(" ", 1)
+    if len(parts) == 1:
+        # No reason supplied.
+        code, = parts
+        reason = None
+    else:
+        code, reason = parts
+        reason = reason.strip()
+    
+    try:
+        code = int(code)
+    except ValueError:
+        raise cherrypy.HTTPError(500, "Illegal response status from server (non-numeric).")
+    
+    if code < 100 or code > 599:
+        raise cherrypy.HTTPError(500, "Illegal response status from server (out of range).")
+    
+    if code not in responseCodes:
+        # code is unknown but not illegal
+        defaultReason, message = "", ""
+    else:
+        defaultReason, message = responseCodes[code]
+    
+    if reason is None:
+        reason = defaultReason
+    
+    return code, reason, message

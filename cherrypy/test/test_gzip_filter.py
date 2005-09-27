@@ -80,7 +80,7 @@ class GzipFilterTest(helper.CPWebCase):
             self.getPage('/noshow', headers=[("Accept-Encoding", "gzip")])
             self.assertNoHeader('Content-Encoding')
             self.assertStatus('500 Internal error')
-            self.assertErrorPage(500, "IndexError\n")
+            self.assertErrorPage(500, pattern="IndexError\n")
             
             # In this case, there's nothing we can do to deliver a
             # readable page, since 1) the gzip header is already set,

@@ -149,34 +149,36 @@ class CPWebCase(webtest.WebCase):
             self._getRequest(url, headers, method, body)
         else:
             webtest.WebCase.getPage(self, url, headers, method, body)
- 
-    def assertErrorPage(self, errorCode, pattern = ''):
+    
+    def assertErrorPage(self, status, message=None, pattern=''):
         """ Compare the response body with a built in error page.
             The function will optionally look for the regexp pattern, 
             within the exception embedded in the error page.
         """
-
-        from cherrypy._cputil import getErrorStatusAndPage
-        page = getErrorStatusAndPage(errorCode, '')[1]
-
-        # escape the question marks
-        page = page.replace('?', r'\?')
         
-        # re to find the traceback in the page
-        traceRe = re.compile('(<pre id="traceback">)(</pre>)')
-
-        # stick the pattern in the page so we can match everythign
-        # at once
-        page = traceRe.sub( '\g<1>.*%s.*\g<2>' % pattern, page)
+        from cherrypy._cputil import getErrorPage
+        esc = re.escape
+        page = esc(getErrorPage(status, message=message))
         
-        # check if there is no exception
-        if pattern and traceRe.search(self.body):
-            msg = 'No match for %s in body' % `pattern`
-            self._handlewebError(msg)
+        # First, test the response body without checking the traceback.
+        # Stick a match-all group (.*) in to grab the traceback.
+        page = page.replace(esc('<pre id="traceback"></pre>'),
+                            esc('<pre id="traceback">') + '(.*)' + esc('</pre>'))
+        m = re.match(page, self.body, re.DOTALL)
+        if not m:
+            self._handlewebError('Error page does not match')
+            return
+        
+        # Now test the pattern against the traceback
+        if pattern is None:
+            # Special-case None to mean that there should be *no* traceback.
+            if m and m.group(1):
+                self._handlewebError('Error page contains traceback')
         else:
-            if not re.search(page, self.body, re.DOTALL):
-                msg = 'Error page does not match'
-                self._handlewebError(msg)
+            if (m is None) or (not re.search(pattern, m.group(1))):
+                msg = 'Error page does not contain %s in traceback'
+                self._handlewebError(msg % repr(pattern))
+
 
 CPTestLoader = webtest.ReloadingTestLoader()
 CPTestRunner = webtest.TerseTestRunner(verbosity=2)

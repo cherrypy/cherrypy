@@ -295,6 +295,9 @@ cherrypy.config.update({
     '/error/page_streamed': {
         'streamResponse': True,
     },
+    '/error/cause_err_in_finalize': {
+        'server.showTracebacks': False,
+    },
 })
 
 # Shortcut syntax--should get put in the "global" bucket
@@ -363,16 +366,18 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus('200 OK')
         
         self.getPage("/status/illegal")
-        self.assertBody('oops' + (" " * 509))
         self.assertStatus('500 Internal error')
+        msg = "Illegal response status from server (out of range)."
+        self.assertErrorPage(500, msg)
         
         self.getPage("/status/unknown")
         self.assertBody('funky')
         self.assertStatus('431 My custom error')
         
         self.getPage("/status/bad")
-        self.assertBody('hello' + (" " * 508))
         self.assertStatus('500 Internal error')
+        msg = "Illegal response status from server (non-numeric)."
+        self.assertErrorPage(500, msg)
     
     def testLogging(self):
         open(logFile, "wb").write("")
@@ -498,17 +503,17 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     def testErrorHandling(self):
         self.getPage("/error/missing")
         self.assertStatus("404 Not Found")
-        self.assertErrorPage(404)
+        self.assertErrorPage(404, "The path '/error/missing' was not found.")
         
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
         try:
             valerr = r'\n    raise ValueError\(\)\nValueError\n'
             self.getPage("/error/page_method")
-            self.assertErrorPage(500, valerr)
+            self.assertErrorPage(500, pattern=valerr)
             
             self.getPage("/error/page_yield")
-            self.assertErrorPage(500, valerr)
+            self.assertErrorPage(500, pattern=valerr)
             
             import cherrypy
             # streamResponse should be True for this path.
@@ -522,9 +527,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 self.assertStatus("200 OK")
                 self.assertBody("helloUnrecoverable error in the server.")
             
+            # No traceback should be present
             self.getPage("/error/cause_err_in_finalize")
-            # We're in 'production' mode, so body should be empty
-            self.assertBody("")
+            msg = "Illegal response status from server (non-numeric)."
+            self.assertErrorPage(500, msg, None)
         finally:
             ignore.pop()
     

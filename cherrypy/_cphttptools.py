@@ -275,22 +275,16 @@ class Request(object):
                     finalize()
                 except cherrypy.RequestHandled:
                     pass
-                except cherrypy.HTTPRedirect, inst:
-                    # For an HTTPRedirect, we don't go through the regular
-                    # mechanism: we return the redirect immediately
+                except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
+                    # For an HTTPRedirect or HTTPError (including NotFound),
+                    # we don't go through the regular mechanism:
+                    # we return the redirect or error page immediately
                     inst.set_response()
                     applyFilters('beforeFinalize')
                     finalize()
-                except cherrypy.HTTPError, inst:
-                    # This includes NotFound
-                    inst.set_response()
-                    applyFilters('beforeFinalize')
-                    finalize()
-
             finally:
                 applyFilters('onEndResource')
         except:
-            # This includes HTTPError and NotFound
             handleError(sys.exc_info())
     
     def processRequestHeaders(self):
@@ -424,7 +418,7 @@ dbltrace = """
 """
 
 def handleError(exc):
-    """Set status, headers, and body when an error occurs."""
+    """Set status, headers, and body when an unanticipated error occurs."""
     try:
         applyFilters('beforeErrorResponse')
        
@@ -436,7 +430,7 @@ def handleError(exc):
         
         applyFilters('afterErrorResponse')
         return
-    except cherrypy.HTTPRedirect, inst:
+    except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
         try:
             inst.set_response()
             finalize()
@@ -519,37 +513,6 @@ def iterable(body):
         body = [""]
     return body
 
-def checkStatus():
-    """Test/set cherrypy.response.status. Provide Reason-phrase if missing."""
-    if not cherrypy.response.status:
-        cherrypy.response.status = "200 OK"
-    else:
-        status = str(cherrypy.response.status)
-        parts = status.split(" ", 1)
-        if len(parts) == 1:
-            # No reason supplied.
-            code, = parts
-            reason = None
-        else:
-            code, reason = parts
-            reason = reason.strip()
-        
-        try:
-            code = int(code)
-            assert code >= 100 and code < 600
-        except (ValueError, AssertionError):
-            code = 500
-            reason = None
-        
-        if reason is None:
-            try:
-                reason = _cputil.responseCodes[code][0]
-            except (KeyError, IndexError):
-                reason = ""
-        
-        cherrypy.response.status = "%s %s" % (code, reason)
-    return cherrypy.response.status
-
 
 general_header_fields = ["Cache-Control", "Connection", "Date", "Pragma",
                          "Trailer", "Transfer-Encoding", "Upgrade", "Via",
@@ -579,9 +542,11 @@ _ie_friendly_error_sizes = {400: 512, 403: 256, 404: 512, 405: 256,
 def finalize():
     """Transform headerMap (and cookies) into cherrypy.response.headers."""
     
-    checkStatus()
-    
     response = cherrypy.response
+    
+    code, reason, _ = cptools.validStatus(response.status)
+    response.status = "%s %s" % (code, reason)
+    
     if response.body is None:
         response.body = []
     

@@ -171,62 +171,49 @@ class HTTPRedirect(Exception):
             raise ValueError("The %s status code is unknown." % status)
 
 
-_missing = object()
-
 class HTTPError(Error):
     """ Exception used to return an HTTP error code to the client.
         This exception will automatically set the response status and body.
         
-        A custom body can be pased to the init method in place of the
-        standard error page.
+        A custom message (a long description to display in the browser)
+        can be provided in place of the default.
     """
     
-    def __init__(self, status=500, body=_missing):
+    def __init__(self, status=500, message=None):
         self.status = status = int(status)
         if status < 400 or status > 599:
             raise ValueError("status must be between 400 and 599.")
-         
-        self.body = body
+        self.message = message
     
     def set_response(self):
         import cherrypy
+        from cherrypy._cputil import getErrorPage, formatExc
         
-        # we now now have access to the traceback 
-        statusString, defaultBody = cherrypy._cputil.getErrorStatusAndPage(self.status)
+        tb = formatExc()
+        if cherrypy.config.get('server.logTracebacks', True):
+            cherrypy.log(tb)
         
-        if self.body is _missing:
-            self.body = defaultBody
-            # try to look up a custom error page in the config map
-            # if there is no error page then use the pageGenerator
-            
-            # The page generator is used because the init method is called 
-            # before the exception is raised.  It is impossible to embed the
-            # traceback in the error page at this piont so we use the generator
-            # to render the error page at a later point
-            
-            import cherrypy
-            # try and read the page from a file
-            # we use the default if the page can't be read
-            try:
-                errorPageFile = cherrypy.config.get('errorPage.%s' % status, '')
-                self.body = file(errorPageFile, 'r')
-            except:
-                # we have alread set the body
-                pass
-
-        cherrypy.response.status = statusString
-        cherrypy.response.body   = self.body
+        defaultOn = (cherrypy.config.get('server.environment') == 'development')
+        if not cherrypy.config.get('server.showTracebacks', defaultOn):
+            tb = None
+        
+        # In all cases, finalize will be called after this method,
+        # so don't bother cleaning up response values here.
+        cherrypy.response.status = self.status
+        cherrypy.response.body = getErrorPage(self.status, traceback=tb,
+                                              message=self.message)
+        
+        if cherrypy.response.headerMap.has_key("Content-Encoding"):
+            del cherrypy.response.headerMap['Content-Encoding']
     
     def __str__(self):
         import cherrypy
-        return cherrypy._cputil.getErrorStatusAndPage(self.status)[0]
+        return "%s: %s" % (self.status, self.message or "")
+
 
 class NotFound(HTTPError):
     """ Happens when a URL couldn't be mapped to any class.method """
     
     def __init__(self, path):
         self.args = (path,)
-        HTTPError.__init__(self, 404)
-
-    def __str__(self):
-        return self.args[0]
+        HTTPError.__init__(self, 404, "The path %s was not found." % repr(path))

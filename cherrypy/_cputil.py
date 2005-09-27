@@ -33,12 +33,10 @@ A module containing a few utility classes/functions used by CherryPy
 import sys
 import traceback
 import time
-#import os.path
-
-from BaseHTTPServer import BaseHTTPRequestHandler
-responseCodes = BaseHTTPRequestHandler.responses
 
 import cherrypy
+from cherrypy.lib import cptools
+
 
 class EmptyClass:
     """ An empty class """
@@ -152,75 +150,72 @@ def _cpLogMessage(msg, context = '', severity = 0):
         f.write(s + '\n')
         f.close()
 
-def _HTTPErrorTemplate(errorString, message, traceback, version):
-    subTuple = (errorString, errorString, message, traceback, cherrypy.__version__)
-    
-    return '''<?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-    <html>
-    <head>
-        <title>%s</title>
-        <style type="text/css">
-        #poweredBy {
-            margin-top: 20px;
-            border-top: 2px solid black;
-            font-style: italic;
-        }
 
-        #traceback {
-            color: red;
-        }
-        </style>
-    </head>
-        <body>
-            <h2>%s</h2>
-            <p>%s</p>
-            <pre id="traceback">%s</pre>
-        <div id="poweredBy">
-        <span>Powered by <a href="http://www.cherrypy.org">Cherrypy %s</a></span>
-        </div>
-        </body>
-    </html>
-    ''' % subTuple
+_HTTPErrorTemplate = '''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>%(status)s</title>
+    <style type="text/css">
+    #poweredBy {
+        margin-top: 20px;
+        border-top: 2px solid black;
+        font-style: italic;
+    }
 
-def getErrorStatusAndPage(status, traceback = None):
-    statusString, message = responseCodes[status]
-    statusString = '%d %s' % (status, statusString)
+    #traceback {
+        color: red;
+    }
+    </style>
+</head>
+    <body>
+        <h2>%(status)s</h2>
+        <p>%(message)s</p>
+        <pre id="traceback">%(traceback)s</pre>
+    <div id="poweredBy">
+    <span>Powered by <a href="http://www.cherrypy.org">Cherrypy %(version)s</a></span>
+    </div>
+    </body>
+</html>
+'''
+
+def getErrorPage(status, **kwargs):
+    """Return an HTML page, containing a pretty error response.
     
-    if traceback is None:
-        traceback = ''
-        # get the traceback from formatExc
-        developmentMode = (cherrypy.config.get('server.environment') == 'development')
-        if cherrypy.config.get('server.showTracebacks') or developmentMode:
-            traceback = formatExc()
+    status should be an int or a str.
+    kwargs will be interpolated into the page template.
+    """
     
-    page = _HTTPErrorTemplate(statusString, message, traceback, cherrypy.__version__)
+    code, reason, message = cptools.validStatus(status)
+    errorPageFile = cherrypy.config.get('errorPage.%s' % code, '')
+    if errorPageFile:
+        template = file(errorPageFile, 'rb')
+    else:
+        template = _HTTPErrorTemplate
     
-    return statusString, page
+    kwargs.setdefault('status', "%s %s" % (code, reason))
+    kwargs.setdefault('message', '')
+    kwargs.setdefault('traceback', '')
+    kwargs.setdefault('version', cherrypy.__version__)
+    for k, v in kwargs.iteritems():
+        if v is None:
+            kwargs[k] = ""
+    
+    return template % kwargs
 
 def formatExc(exc=None):
-    """formatExc(exc=None) -> exc (or sys.exc_info), formatted."""
+    """formatExc(exc=None) -> exc (or sys.exc_info if None), formatted."""
     if exc is None:
         exc = sys.exc_info()
-
+    
     if exc == (None, None, None):
         return ""
     return "".join(traceback.format_exception(*exc))
 
 def _cpOnError():
     """ Default _cpOnError method """
-    
-    logTracebacks  = cherrypy.config.get('server.logTracebacks', True)
-    if logTracebacks:
-        cherrypy.log(formatExc())
-    
-    response = cherrypy.response
-    
-    response.status, response.body = getErrorStatusAndPage(500)
-    
-    if cherrypy.response.headerMap.has_key('Content-Encoding'):
-        del cherrypy.response.headerMap['Content-Encoding']
+    cherrypy.HTTPError(500).set_response()
 
 _cpFilterList = []
 
