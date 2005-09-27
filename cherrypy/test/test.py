@@ -298,19 +298,16 @@ class TestHarness(object):
 class CPTestHarness(TestHarness):
     
     def _run_all_servers(self, conf):
-        from cherrypy.test import helper
-        
-        class NotReadyTest(helper.CPWebCase):
-            def testNotReadyError(self):
-                # Without having called "cherrypy.server.start()", we should
-                # get a NotReady error
-                class Root: pass
-                import cherrypy
-                cherrypy.root = Root()
-                self.assertRaises(cherrypy.NotReady, self.getPage, "/")
-        helper.CPTestRunner.run(NotReadyTest("testNotReadyError"))
-        
-        TestHarness._run_all_servers(self, conf)
+        # helper must be imported lazily so the coverage tool
+        # can run against module-level statements within cherrypy.
+        from cherrypy.test import helper, test_states
+        s = [self.available_servers[name] for name in self.servers]
+        s.sort()
+        for priority, name, cls in s:
+            print
+            print "Running tests:", name
+            test_states.run(cls, conf)
+            helper.run_test_suite(self.tests, cls, conf)
 
 
 if __name__ == '__main__':
