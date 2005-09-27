@@ -194,9 +194,9 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
             # The only reason for the timeout is so we can notice keyboard
             # interrupts on Win32, which don't interrupt accept() by default
             return 1
-        except (KeyboardInterrupt, SystemExit):
-            cherrypy.log("<Ctrl-C> hit: shutting down http server", "HTTP")
-            self.shutdown()
+##        except (KeyboardInterrupt, SystemExit):
+##            cherrypy.log("<Ctrl-C> hit: shutting down http server", "HTTP")
+##            self.shutdown()
     
     def serve_forever(self):
         """Override serve_forever to handle shutdown."""
@@ -334,9 +334,9 @@ class PooledThreadServer(SocketServer.TCPServer):
            server."""
         try:
             request, client_address = self.get_request()
-        except (KeyboardInterrupt, SystemExit):
-            cherrypy.log("<Ctrl-C> hit: shutting down", "HTTP")
-            return 0
+##        except (KeyboardInterrupt, SystemExit):
+##            cherrypy.log("<Ctrl-C> hit: shutting down", "HTTP")
+##            return 0
         except socket.error, e:
             return 1
         self._requestQueue.put((request, client_address))
