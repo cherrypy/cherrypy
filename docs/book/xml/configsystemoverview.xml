@@ -96,8 +96,8 @@
   <itemizedlist>
     <listitem>development <itemizedlist>
         <listitem>logDebugInfoFilter is enabled by default</listitem>
-        <listitem>the default _cpOnError displays tracebacks in the browser if
-        errors occur</listitem>
+        <listitem>HTTPErrors (and therefore the default _cpOnError) display
+        tracebacks in the browser if errors occur</listitem>
         <listitem>autoreload is enabled by default</listitem>
       </itemizedlist></listitem>
     <listitem>production <itemizedlist>

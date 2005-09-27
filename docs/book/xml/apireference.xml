@@ -310,8 +310,9 @@
             <listitem>
                 <section>
                     <title>_cpOnError</title>
-                    <para>_cpOnError is a function for handling internal exceptions raised by
-                    CherryPy.</para>
+                    <para>_cpOnError is a function for handling unanticipated exceptions, whether
+                    raised by CherryPy itself, or in user applications. The default simply raises
+                    HTTPError(500).</para>
                 </section>
             </listitem>
             <listitem>

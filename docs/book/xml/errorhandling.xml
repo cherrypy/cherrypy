@@ -5,9 +5,9 @@
          xml:id="globaloverviewcherrypy">
     <title>Exceptions and Error Handling</title>
     <para>
-        Exceptions raised inside CherryPy applications result in a call
-        to the _cpOnError function.  HTTPError and HTTPRedirect exceptions do not result in calls to
-        _cpOnError.  HTTPError exceptions force the server to set 
+        Unhandled exceptions raised inside CherryPy applications result in a call
+        to the _cpOnError function.  HTTPError and HTTPRedirect exceptions do not
+        result in calls to _cpOnError.  HTTPError exceptions force the server to set 
         response status and return an error page.
     </para>
 </section>
