@@ -148,7 +148,7 @@ def run_server(serverClass=None):
         import _cpwsgi
         serverClass = _cpwsgi.WSGIServer
     
-    if cherrypy.config.get('server', 'socketPort'):
+    if cherrypy.config.get('server.socketPort'):
         host = cherrypy.config.get('server.socketHost')
         port = cherrypy.config.get('server.socketPort')
         check_port(host, port)
