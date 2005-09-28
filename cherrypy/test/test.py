@@ -306,6 +306,7 @@ class CPTestHarness(TestHarness):
         for priority, name, cls in s:
             print
             print "Running tests:", name
+            reload(test_states)
             test_states.run(cls, conf)
             helper.run_test_suite(self.tests, cls, conf)
 

@@ -137,6 +137,8 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 class CherryHTTPServer(BaseHTTPServer.HTTPServer):
     
+    ready = False
+    
     def __init__(self):
         # Set protocol_version
         proto = cherrypy.config.get('server.protocolVersion') or "HTTP/1.0"
@@ -172,15 +174,17 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
         BaseHTTPServer.HTTPServer.server_activate(self)
     
     def server_bind(self):
-        # Removed getfqdn call because it was timing out on localhost when calling gethostbyaddr
+        # Removed getfqdn call because it was timing out
+        # on localhost when calling gethostbyaddr
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
     
     def get_request(self):
-        # With Python 2.3 it seems that an accept socket in timeout (nonblocking) mode
-        #  results in request sockets that are also set in nonblocking mode. Since that doesn't play
-        #  well with makefile() (where wfile and rfile are set in SocketServer.py) we explicitly set
-        #  the request socket to blocking
+        # With Python 2.3 it seems that an accept socket in timeout
+        # (nonblocking) mode results in request sockets that are also set
+        # in nonblocking mode. Since that doesn't play well with makefile()
+        # (where wfile and rfile are set in SocketServer.py) we explicitly
+        # set the request socket to blocking
         
         request, client_address = self.socket.accept()
         request.setblocking(1)
@@ -194,19 +198,19 @@ class CherryHTTPServer(BaseHTTPServer.HTTPServer):
             # The only reason for the timeout is so we can notice keyboard
             # interrupts on Win32, which don't interrupt accept() by default
             return 1
-##        except (KeyboardInterrupt, SystemExit):
-##            cherrypy.log("<Ctrl-C> hit: shutting down http server", "HTTP")
-##            self.shutdown()
     
     def serve_forever(self):
         """Override serve_forever to handle shutdown."""
         self.__running = 1
+        self.ready = True
         while self.__running:
             self.handle_request()
     start = serve_forever
     
     def shutdown(self):
         self.__running = 0
+        # Close the socket
+        self.server_close()
     stop = shutdown
 
 
@@ -215,11 +219,13 @@ _SHUTDOWNREQUEST = (0,0)
 class ServerThread(threading.Thread):
     
     def __init__(self, RequestHandlerClass, requestQueue):
+        self.ready = False
         threading.Thread.__init__(self)
         self._RequestHandlerClass = RequestHandlerClass
         self._requestQueue = requestQueue
     
     def run(self):
+        self.ready = True
         while 1:
             request, client_address = self._requestQueue.get()
             if (request, client_address) == _SHUTDOWNREQUEST:
@@ -263,6 +269,7 @@ class PooledThreadServer(SocketServer.TCPServer):
        requests (i.e. you don't have to bother with Deferreds)."""
     
     allow_reuse_address = 1
+    ready = False
     
     def __init__(self):
         # Set protocol_version
@@ -275,7 +282,8 @@ class PooledThreadServer(SocketServer.TCPServer):
                           cherrypy.config.get('server.socketPort'))
         self.request_queue_size = cherrypy.config.get('server.socketQueueSize')
         
-        # I know it says "do not override", but I have to in order to implement SSL support !
+        # I know it says "do not override",
+        # but I have to in order to implement SSL support !
         SocketServer.BaseServer.__init__(self, server_address, CherryHTTPRequestHandler)
         self.socket = socket.socket(self.address_family, self.socket_type)
         self.server_bind()
@@ -302,6 +310,8 @@ class PooledThreadServer(SocketServer.TCPServer):
     def shutdown(self):
         """Gracefully shutdown a server that is serve_forever()ing."""
         self.__running = 0
+        # Close the socket so restarts work.
+        self.server_close()
         
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
@@ -309,7 +319,7 @@ class PooledThreadServer(SocketServer.TCPServer):
             self._requestQueue.put(_SHUTDOWNREQUEST)
         current = threading.currentThread()
         for worker in self._workerThreads:
-            if worker is not current:
+            if worker is not current and worker.isAlive:
                 worker.join()
         self._workerThreads = []
     stop = shutdown
@@ -321,7 +331,14 @@ class PooledThreadServer(SocketServer.TCPServer):
                 self._workerThreads.append(self.createThread())
             for worker in self._workerThreads:
                 worker.start()
+        
         self.__running = 1
+        
+        for worker in self._workerThreads:
+            while not worker.ready:
+                time.sleep(.1)
+        self.ready = True
+        
         while self.__running:
             if not self.handle_request():
                 break
@@ -334,20 +351,18 @@ class PooledThreadServer(SocketServer.TCPServer):
            server."""
         try:
             request, client_address = self.get_request()
-##        except (KeyboardInterrupt, SystemExit):
-##            cherrypy.log("<Ctrl-C> hit: shutting down", "HTTP")
-##            return 0
         except socket.error, e:
             return 1
         self._requestQueue.put((request, client_address))
         return 1
     
     def get_request(self):
-        # With Python 2.3 it seems that an accept socket in timeout (nonblocking) mode
-        #  results in request sockets that are also set in nonblocking mode. Since that doesn't play
-        #  well with makefile() (where wfile and rfile are set in SocketServer.py) we explicitly set
-        #  the request socket to blocking
-
+        # With Python 2.3 it seems that an accept socket in timeout
+        # (nonblocking) mode results in request sockets that are also set
+        # in nonblocking mode. Since that doesn't play well with makefile()
+        # (where wfile and rfile are set in SocketServer.py) we explicitly
+        # set the request socket to blocking
+        
         request, client_address = self.socket.accept()
         if hasattr(request,'setblocking'):
             request.setblocking(1)

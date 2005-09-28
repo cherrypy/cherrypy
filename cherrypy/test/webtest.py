@@ -328,7 +328,7 @@ def openURL(url, headers=None, method="GET", body=None,
     trial = 0
     while trial < 10:
         try:
-            conn = httplib.HTTPConnection('%s:%s' % (host, port))
+            conn = httplib.HTTPConnection(host, port)
             conn.putrequest(method.upper(), url)
             
             for key, value in headers:

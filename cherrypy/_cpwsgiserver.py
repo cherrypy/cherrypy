@@ -224,10 +224,12 @@ _SHUTDOWNREQUEST = None
 class WorkerThread(threading.Thread):
     
     def __init__(self, server):
+        self.ready = False
         self.server = server
         threading.Thread.__init__(self)
     
     def run(self):
+        self.ready = True
         while self.server._running:
             request = self.server.requests.get()
             if request is _SHUTDOWNREQUEST:
@@ -263,7 +265,10 @@ class WorkerThread(threading.Thread):
 
 
 class CherryPyWSGIServer(object):
+    
     version = "CherryPy/2.1.0-rc1"
+    ready = False
+    
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  stderr=sys.stderr, bufsize=-1, max=-1,
                  config = None):
@@ -294,6 +299,7 @@ class CherryPyWSGIServer(object):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.bind_addr)
+        # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
         self.socket.listen(5)
         
@@ -304,6 +310,10 @@ class CherryPyWSGIServer(object):
             self._workerThreads.append(WorkerThread(self))
         for worker in self._workerThreads:
             worker.start()
+        for worker in self._workerThreads:
+            while not worker.ready:
+                time.sleep(.1)
+        self.ready = True
         
         while self._running:
             self.tick()
@@ -311,16 +321,19 @@ class CherryPyWSGIServer(object):
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         self._running = False
+        self.socket.close()
         
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
         for worker in self._workerThreads:
             self.requests.put(_SHUTDOWNREQUEST)
         
+        # Don't join currentThread (when stop is called inside a request).
         current = threading.currentThread()
         for worker in self._workerThreads:
             if worker is not current:
                 worker.join()
+        
         self._workerThreads = []
     
     def tick(self):

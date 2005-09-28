@@ -62,7 +62,7 @@ class ServerStateTests(helper.CPWebCase):
         helper.startServer(self.serverClass)
         self.assertEqual(cherrypy._appserver_state, 1)
         
-        if cherrypy._httpserver:
+        if self.serverClass:
             host = cherrypy.config.get('server.socketHost')
             port = cherrypy.config.get('server.socketPort')
             self.assertRaises(IOError, cherrypy.server.check_port, host, port)
@@ -78,35 +78,44 @@ class ServerStateTests(helper.CPWebCase):
         self.assertRaises(cherrypy.NotReady, self.getPage, "/")
     
     def test_1_KeyboardInterrupts(self):
-        helper.startServer(self.serverClass)
-        
-        if cherrypy._httpserver:
+        if self.serverClass:
             # Raise a keyboard interrupt in the HTTP server's main thread.
+            
             def raiser(x=None):
                 raise KeyboardInterrupt
+            
+            helper.startServer(self.serverClass)
+            
             name = cherrypy._httpserver.__class__.__name__
             if name == "WSGIServer":
                 cherrypy._httpserver.tick = raiser
             elif name in ("CherryHTTPServer", "PooledThreadServer"):
                 cherrypy._httpserver.handle_request = raiser
+            else:
+                raise ValueError("Unknown HTTP server: %s" % name)
+            
             # Give the server time to shut down.
-            time.sleep(1)
-            self.assertEqual(cherrypy._appserver_state, 0)
+            while cherrypy._appserver_state != 0:
+                time.sleep(.1)
+            self.assertEqual(cherrypy._httpserver, None)
             
             # Once the server has stopped, we should get a NotReady error again.
             self.assertRaises(cherrypy.NotReady, self.getPage, "/")
-##    
-##    def test_2_Restart(self):
-##        # Test server start
-##        helper.startServer(self.serverClass)
-##        self.getPage("/")
-##        self.assertBody("Hello World")
-##        
-##        # Test server stop
-##        cherrypy.server.restart()
-##        self.assertEqual(cherrypy._appserver_state, 1)
-##        self.getPage("/")
-##        self.assertBody("Hello World")
+    
+    def test_2_Restart(self):
+        # Test server start
+        import cherrypy
+        
+        helper.startServer(self.serverClass)
+        self.getPage("/")
+        self.assertBody("Hello World")
+        
+        # Test server restart
+        cherrypy.server.restart()
+        
+        self.assertEqual(cherrypy._appserver_state, 1)
+        self.getPage("/")
+        self.assertBody("Hello World")
 
 
 def run(server, conf):
@@ -125,6 +134,7 @@ if __name__ == "__main__":
             'server.socketPort': 8000,
             'server.threadPool': 10,
             'server.logToScreen': False,
+            'server.logConfigOptions': False,
             'server.environment': "production",
             'server.showTracebacks': True,
             }

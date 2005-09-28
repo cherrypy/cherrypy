@@ -63,22 +63,19 @@ for _x in dir(cherrypy):
 
 
 def startServer(serverClass=None):
-    """Start the given server (default serverless) in a new thread."""
+    """Start server in a new thread (same thread if serverClass is None)."""
     if serverClass is None:
         cherrypy.server.start(initOnly=True)
     else:
         t = threading.Thread(target=cherrypy.server.start,
                              args=(False, serverClass))
         t.start()
-        time.sleep(1)
+    cherrypy.server.wait_until_ready()
 
 
 def stopServer():
     """Stop the current CP server."""
     cherrypy.server.stop()
-    if cherrypy.config.get('server.threadPool') > 1:
-        # With thread-pools, it can take up to 1 sec for the server to stop
-        time.sleep(1.1)
 
 
 def onerror():
@@ -190,6 +187,7 @@ def setConfig(conf):
         cherrypy.config.update(file=conf)
     else:
         cherrypy.config.update(conf.copy())
+
 
 def run_test_suite(moduleNames, server, conf):
     """Run the given test modules using the given server and conf.
