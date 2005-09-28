@@ -183,6 +183,13 @@ class CPWebCase(webtest.WebCase):
 CPTestLoader = webtest.ReloadingTestLoader()
 CPTestRunner = webtest.TerseTestRunner(verbosity=2)
 
+def setConfig(conf):
+    """Set the config using a copy of conf."""
+    if isinstance(conf, basestring):
+        # assume it's a filename
+        cherrypy.config.update(file=conf)
+    else:
+        cherrypy.config.update(conf.copy())
 
 def run_test_suite(moduleNames, server, conf):
     """Run the given test modules using the given server and conf.
@@ -190,20 +197,13 @@ def run_test_suite(moduleNames, server, conf):
     The server is started and stopped once, regardless of the number
     of test modules. The config, however, is reset for each module.
     """
-    if isinstance(conf, basestring):
-        # assume it's a filename
-        cherrypy.config.update(file=conf)
-    else:
-        cherrypy.config.update(conf.copy())
+    setConfig(conf)
     startServer(server)
     for testmod in moduleNames:
         # Must run each module in a separate suite,
         # because each module uses/overwrites cherrypy globals.
         cherrypy.config.reset()
-        if isinstance(conf, basestring):
-            cherrypy.config.update(file=conf)
-        else:
-            cherrypy.config.update(conf.copy())
+        setConfig(conf)
         cherrypy._cputil._cpInitDefaultFilters()
         
         suite = CPTestLoader.loadTestsFromName(testmod)
@@ -215,11 +215,7 @@ def testmain(server=None, conf=None):
     """Run __main__ as a test module, with webtest debugging."""
     if conf is None:
         conf = {}
-    if isinstance(conf, basestring):
-        # assume it's a filename
-        cherrypy.config.update(file=conf)
-    else:
-        cherrypy.config.update(conf.copy())
+    setConfig(conf)
     
     startServer(server)
     try:
