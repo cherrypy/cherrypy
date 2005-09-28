@@ -44,8 +44,6 @@ class LogDebugInfoFilter(BaseFilter):
         #   circular module imports :-(
         global cherrypy
         import cherrypy
-    
-    def beforeMain(self):
         cherrypy.request.startBuilTime = time.time()
     
     def beforeFinalize(self):
