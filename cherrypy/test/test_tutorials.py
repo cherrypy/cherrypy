@@ -171,7 +171,7 @@ hello
         self.assertStatus("200 OK")
         self.assertHeader("Content-Type", "application/x-download")
         self.assertHeader("Content-Disposition", "attachment; filename=ReturnVsYield.pdf")
-        self.assertEqual(len(self.body), 326111)
+        self.assertEqual(len(self.body), 325256)
 
 if __name__ == "__main__":
     helper.testmain()
