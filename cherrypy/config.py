@@ -48,7 +48,6 @@ defaultGlobal = {
     'server.socketQueueSize': 5,
     
     'server.environment': 'development',
-    'server.httpErrors' : True,
     'server.protocolVersion': 'HTTP/1.0',
     'server.logToScreen': True,
     'server.logFile': '',

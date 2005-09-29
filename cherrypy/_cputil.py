@@ -188,19 +188,33 @@ def getErrorPage(status, **kwargs):
     """
     
     code, reason, message = cptools.validStatus(status)
-    errorPageFile = cherrypy.config.get('errorPage.%s' % code, '')
-    if errorPageFile:
-        template = file(errorPageFile, 'rb')
-    else:
-        template = _HTTPErrorTemplate
     
-    kwargs.setdefault('status', "%s %s" % (code, reason))
-    kwargs.setdefault('message', '')
-    kwargs.setdefault('traceback', '')
-    kwargs.setdefault('version', cherrypy.__version__)
+    # We can't use setdefault here, because some
+    # callers send None for kwarg values.
+    if kwargs.get('status') is None:
+        kwargs['status'] = "%s %s" % (code, reason)
+    if kwargs.get('message') is None:
+        kwargs['message'] = message
+    if kwargs.get('traceback') is None:
+        kwargs['traceback'] = ''
+    if kwargs.get('version') is None:
+        kwargs['version'] = cherrypy.__version__
     for k, v in kwargs.iteritems():
         if v is None:
             kwargs[k] = ""
+    
+    template = _HTTPErrorTemplate
+    errorPageFile = cherrypy.config.get('errorPage.%s' % code, '')
+    if errorPageFile:
+        try:
+            template = file(errorPageFile, 'rb')
+        except:
+            m = kwargs['message']
+            if m:
+                m += "<br />"
+            m += ("In addition, the custom error page "
+                  "failed:\n<br />%s" % (sys.exc_info()[1]))
+            kwargs['message'] = m
     
     return template % kwargs
 

@@ -161,6 +161,9 @@ class Flatten(Test):
 
 class Error(Test):
     
+    def custom(self):
+        raise cherrypy.HTTPError(404)
+    
     def page_method(self):
         raise ValueError()
     
@@ -264,7 +267,6 @@ logAccessFile = os.path.join(localDir, "access.log")
 
 cherrypy.config.update({
     'global': {'server.logToScreen': False,
-               'server.httpErrors' : False,
                'server.environment': 'production',
                'server.showTracebacks': True,
                'server.protocolVersion': "HTTP/1.1",
@@ -297,6 +299,9 @@ cherrypy.config.update({
     },
     '/error/cause_err_in_finalize': {
         'server.showTracebacks': False,
+    },
+    '/error/custom': {
+        'errorPage.404': "nonexistent.html",
     },
 })
 
@@ -533,6 +538,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertErrorPage(500, msg, None)
         finally:
             ignore.pop()
+        
+        # Test error in custom error page (ticket #305).
+        self.getPage("/error/custom")
+        self.assertStatus("404 Not Found")
+        msg = ("Nothing matches the given URI<br />"
+               "In addition, the custom error page failed:\n<br />"
+               "[Errno 2] No such file or directory: 'nonexistent.html'")
+        self.assertInBody(msg)
+
     
     def test_Ranges(self):
         self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
