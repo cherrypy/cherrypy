@@ -223,9 +223,9 @@ class Method(Test):
             return m
         
         if m == "LINK":
-            cherrypy.response.status = 405
+            raise cherrypy.HTTPError(405)
         else:
-            cherrypy.response.status = 501
+            raise cherrypy.HTTPError(501)
     
     def parameterized(self, data):
         return data
@@ -605,7 +605,6 @@ llo,
     def testHTTPMethods(self):
         # Test that all defined HTTP methods work.
         for m in defined_http_methods:
-            h = []
             self.getPage("/method/", method=m)
             
             # HEAD requests should not return any body.

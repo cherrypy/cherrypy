@@ -102,12 +102,12 @@ class HTTPRequest(object):
         self.socket = socket
         self.addr = addr
         self.server = server
-        self.environ = None
+        self.environ = {}
         self.ready = False
         self.started_response = False
-        self.status = None
-        self.outheaders = None
-        self.outheaderkeys = None
+        self.status = ""
+        self.outheaders = []
+        self.outheaderkeys = []
         self.rfile = self.socket.makefile("r", self.server.bufsize)
         if self.server.config:
             mhs = self.server.config.get(
@@ -211,7 +211,7 @@ class HTTPRequest(object):
         self.wfile.flush()
     
     def terminate(self):
-        if self.ready and not self.sent_headers:
+        if self.ready and not self.sent_headers and not self.server.interrupt:
             self.sent_headers = True
             self.send_headers()
         self.rfile.close()
@@ -229,45 +229,51 @@ class WorkerThread(threading.Thread):
         threading.Thread.__init__(self)
     
     def run(self):
-        self.ready = True
-        while self.server._running:
-            request = self.server.requests.get()
-            if request is _SHUTDOWNREQUEST:
-                return
-            
-            try:
+        try:
+            self.ready = True
+            while True:
+                request = self.server.requests.get()
+                if request is _SHUTDOWNREQUEST:
+                    return
+                
                 try:
-                    request.parse_request()
-                    if request.ready:
-                        response = self.server.wsgi_app(request.environ,
-                                                        request.start_response)
-                        for line in response:
-                            request.write(line)
-                except socket.error, e:
-                    errno = e.args[0]
-                    if errno in (32, 104, 10053, 10054):
-                        # Client probably closed the connection before the
-                        # response was sent.
-                        pass
-                    else:
-                        raise
-                except MaxSizeExceeded:
-                    str = "Request Entity Too Large"
-                    proto = request.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
-                    request.wfile.write("%s 413 %s\r\n" % (proto, str))
-                    request.wfile.write("Content-Length: %s\r\n\r\n" % len(str))
-                    request.wfile.write(str)
-                    request.wfile.flush()
-                except:
-                    traceback.print_exc()
-            finally:
-                request.terminate()
+                    try:
+                        request.parse_request()
+                        if request.ready:
+                            response = self.server.wsgi_app(request.environ,
+                                                            request.start_response)
+                            for line in response:
+                                request.write(line)
+                    except socket.error, e:
+                        errno = e.args[0]
+                        if errno in (32, 104, 10053, 10054):
+                            # Client probably closed the connection before the
+                            # response was sent.
+                            pass
+                        else:
+                            raise
+                    except MaxSizeExceeded:
+                        str = "Request Entity Too Large"
+                        proto = request.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
+                        request.wfile.write("%s 413 %s\r\n" % (proto, str))
+                        request.wfile.write("Content-Length: %s\r\n\r\n" % len(str))
+                        request.wfile.write(str)
+                        request.wfile.flush()
+                    except (KeyboardInterrupt, SystemExit), exc:
+                        self.server.interrupt = exc
+                    except:
+                        traceback.print_exc()
+                finally:
+                    request.terminate()
+        except (KeyboardInterrupt, SystemExit), exc:
+            self.server.interrupt = exc
 
 
 class CherryPyWSGIServer(object):
     
     version = "CherryPy/2.1.0-rc1"
     ready = False
+    interrupt = None
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  stderr=sys.stderr, bufsize=-1, max=-1,
@@ -303,8 +309,6 @@ class CherryPyWSGIServer(object):
         self.socket.settimeout(1)
         self.socket.listen(5)
         
-        self._running = True
-        
         # Create worker threads
         for i in xrange(self.numthreads):
             self._workerThreads.append(WorkerThread(self))
@@ -313,28 +317,14 @@ class CherryPyWSGIServer(object):
         for worker in self._workerThreads:
             while not worker.ready:
                 time.sleep(.1)
+        
         self.ready = True
-        
-        while self._running:
+        while self.ready:
             self.tick()
-    
-    def stop(self):
-        """Gracefully shutdown a server that is serving forever."""
-        self._running = False
-        self.socket.close()
-        
-        # Must shut down threads here so the code that calls
-        # this method can know when all threads are stopped.
-        for worker in self._workerThreads:
-            self.requests.put(_SHUTDOWNREQUEST)
-        
-        # Don't join currentThread (when stop is called inside a request).
-        current = threading.currentThread()
-        for worker in self._workerThreads:
-            if worker is not current:
-                worker.join()
-        
-        self._workerThreads = []
+            if self.interrupt:
+                i = self.interrupt
+                self.interrupt = None
+                raise i
     
     def tick(self):
         try:
@@ -350,3 +340,21 @@ class CherryPyWSGIServer(object):
             # notice keyboard interrupts on Win32, which don't interrupt
             # accept() by default
             return
+    
+    def stop(self):
+        """Gracefully shutdown a server that is serving forever."""
+        self.ready = False
+        self.socket.close()
+        
+        # Must shut down threads here so the code that calls
+        # this method can know when all threads are stopped.
+        for worker in self._workerThreads:
+            self.requests.put(_SHUTDOWNREQUEST)
+        
+        # Don't join currentThread (when stop is called inside a request).
+        current = threading.currentThread()
+        for worker in self._workerThreads:
+            if worker is not current:
+                worker.join()
+        
+        self._workerThreads = []

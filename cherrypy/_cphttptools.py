@@ -284,6 +284,8 @@ class Request(object):
                     finalize()
             finally:
                 applyFilters('onEndResource')
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
             handleError(sys.exc_info())
     
@@ -435,9 +437,13 @@ def handleError(exc):
             inst.set_response()
             finalize()
             return
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
             # Fall through to the second error handler
             pass
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except:
         # Fall through to the second error handler
         pass

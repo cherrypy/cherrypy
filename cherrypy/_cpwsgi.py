@@ -109,6 +109,8 @@ def wsgiApp(environ, start_response):
                                 environ['wsgi.input'],
                                 environ['wsgi.url_scheme'],
                                 )
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except:
         tb = _cputil.formatExc()
         cherrypy.log(tb)
@@ -130,6 +132,8 @@ def wsgiApp(environ, start_response):
             # If it's unicode, it could be a big performance hit (x ~500).
             chunk = str(chunk)
             yield chunk
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except:
         tb = _cputil.formatExc()
         cherrypy.log(tb)

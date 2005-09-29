@@ -157,8 +157,11 @@ def run_server(serverClass=None):
         cherrypy._appserver_state = 1
         # This should block until the http server stops.
         cherrypy._httpserver.start()
-    except (KeyboardInterrupt, SystemExit):
+    except KeyboardInterrupt:
         cherrypy.log("<Ctrl-C> hit: shutting down server", "HTTP")
+        stop()
+    except SystemExit:
+        cherrypy.log("SystemExit raised: shutting down server", "HTTP")
         stop()
 
 
@@ -270,6 +273,7 @@ def check_port(host, port):
         pass
 
 def wait_for_free_port(host, port):
+    """Wait for the specified port to become free (drop requests)."""
     for trial in xrange(50):
         try:
             check_port(host, port)
@@ -283,6 +287,7 @@ def wait_for_free_port(host, port):
     raise cherrypy.NotReady("Port not free.")
 
 def wait_for_occupied_port(host, port):
+    """Wait for the specified port to become active (receive requests)."""
     for trial in xrange(50):
         try:
             check_port(host, port)
