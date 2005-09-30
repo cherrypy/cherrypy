@@ -39,6 +39,11 @@ class Root:
     def ctrlc(self):
         raise KeyboardInterrupt()
     ctrlc.exposed = True
+    
+    def restart(self):
+        cherrypy.server.restart()
+        return "app was restarted succesfully"
+    restart.exposed = True
 
 cherrypy.root = Root()
 cherrypy.config.update({
@@ -110,11 +115,16 @@ class ServerStateTests(helper.CPWebCase):
         self.getPage("/")
         self.assertBody("Hello World")
         
-        # Test server restart
+        # Test server restart from this thread
         cherrypy.server.restart()
         self.assertEqual(cherrypy._appserver_state, 1)
         self.getPage("/")
         self.assertBody("Hello World")
+        
+        # Test server restart from inside a page handler
+        self.getPage("/restart")
+        self.assertEqual(cherrypy._appserver_state, 1)
+        self.assertBody("app was restarted succesfully")
         
         # Now that we've restarted, test a KeyboardInterrupt (ticket 321).
         if self.serverClass:
@@ -126,6 +136,7 @@ class ServerStateTests(helper.CPWebCase):
             
             # Once the server has stopped, we should get a NotReady error again.
             self.assertRaises(cherrypy.NotReady, self.getPage, "/")
+
 
 
 def run(server, conf):
@@ -143,7 +154,7 @@ if __name__ == "__main__":
     conf = {'server.socketHost': '127.0.0.1',
             'server.socketPort': 8000,
             'server.threadPool': 10,
-            'server.logToScreen': False,
+            'server.logToScreen': True,
             'server.logConfigOptions': False,
             'server.environment': "production",
             'server.showTracebacks': True,
@@ -154,7 +165,7 @@ if __name__ == "__main__":
         run(server, conf)
     _run(None)
     _run("cherrypy._cpwsgi.WSGIServer")
-    _run("cherrypy._cphttpserver.PooledThreadServer")
-    conf['server.threadPool'] = 1
-    _run("cherrypy._cphttpserver.CherryHTTPServer")
+##    _run("cherrypy._cphttpserver.PooledThreadServer")
+##    conf['server.threadPool'] = 1
+##    _run("cherrypy._cphttpserver.CherryHTTPServer")
 
