@@ -29,6 +29,7 @@
                 index.exposed = True
 
             cherrypy.config.update({'sessionFilter.on': True})
+            cherrypy.root = Root()
             cherrypy.server.start()
             </programlisting>
     </example>
