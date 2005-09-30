@@ -162,7 +162,7 @@ class Flatten(Test):
 class Error(Test):
     
     def custom(self):
-        raise cherrypy.HTTPError(404)
+        raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
     
     def page_method(self):
         raise ValueError()
@@ -540,9 +540,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             ignore.pop()
         
         # Test error in custom error page (ticket #305).
+        # Note that the message is escaped for HTML (ticket #310).
         self.getPage("/error/custom")
         self.assertStatus("404 Not Found")
-        msg = ("Nothing matches the given URI<br />"
+        msg = ("No, &lt;b&gt;really&lt;/b&gt;, not found!<br />"
                "In addition, the custom error page failed:\n<br />"
                "[Errno 2] No such file or directory: 'nonexistent.html'")
         self.assertInBody(msg)

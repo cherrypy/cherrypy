@@ -33,6 +33,7 @@ A module containing a few utility classes/functions used by CherryPy
 import sys
 import traceback
 import time
+import cgi
 
 import cherrypy
 from cherrypy.lib import cptools
@@ -151,11 +152,11 @@ def _cpLogMessage(msg, context = '', severity = 0):
         f.close()
 
 
-_HTTPErrorTemplate = '''<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+_HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>%(status)s</title>
     <style type="text/css">
     #poweredBy {
@@ -202,6 +203,8 @@ def getErrorPage(status, **kwargs):
     for k, v in kwargs.iteritems():
         if v is None:
             kwargs[k] = ""
+        else:
+            kwargs[k] = cgi.escape(kwargs[k])
     
     template = _HTTPErrorTemplate
     errorPageFile = cherrypy.config.get('errorPage.%s' % code, '')
