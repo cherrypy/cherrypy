@@ -50,8 +50,6 @@ class TutorialTest(helper.CPWebCase):
             module = reload(sys.modules[target])
         else:
             module = __import__(target, globals(), locals(), [''])
-        
-        cherrypy.server.start(initOnly=True)
     
     def test01HelloWorld(self):
         self.load_tut_module("tut01_helloworld")

@@ -25,5 +25,5 @@ cherrypy.root = HelloWorld()
 cherrypy.root.test = HelloWorld()
 
 cherrypy.config.update({"server.environment": "production"})
-cherrypy.server.start(initOnly = True)
+cherrypy.server.start(serverClass=None)
 

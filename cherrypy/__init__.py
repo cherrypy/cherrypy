@@ -46,6 +46,8 @@ import server
 # 1 = Started, ready to receive requests
 _appserver_state = 0
 _httpserver = None
+_httpserverclass = None
+_interrupt = None
 
 codecoverage = False
 

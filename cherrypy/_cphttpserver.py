@@ -222,9 +222,7 @@ class CherryHTTPServer(SocketServer.TCPServer):
         while self.ready:
             self.handle_request()
             if self.interrupt:
-                i = self.interrupt
-                self.interrupt = None
-                raise i
+                raise self.interrupt
     start = serve_forever
     
     def shutdown(self):
@@ -363,9 +361,7 @@ class PooledThreadServer(SocketServer.TCPServer):
         self.ready = True
         while self.ready:
             if self.interrupt:
-                i = self.interrupt
-                self.interrupt = None
-                raise i
+                raise self.interrupt
             if not self.handle_request():
                 break
         self.server_close()

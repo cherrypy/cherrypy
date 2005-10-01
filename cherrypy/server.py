@@ -31,9 +31,10 @@ Main CherryPy module:
     - Creates a server
 """
 
-import warnings
+import cgi
 import threading
 import time
+import warnings
 
 import cherrypy
 from cherrypy import _cphttptools
@@ -47,13 +48,35 @@ onStopServerList = []
 onStopThreadList = []
 
 
-def start(initOnly=False, serverClass=None):
-    defaultOn = (cherrypy.config.get("server.environment") == "development")
-    if cherrypy.config.get('autoreload.on', defaultOn):
-        # Check initOnly. If True, we're probably not starting
-        # our own webserver, and therefore could do Very Bad Things
-        # when autoreload calls sys.exit.
-        if not initOnly:
+_missing = object()
+
+def start(initOnly=False, serverClass=_missing):
+    """Main function. MUST be called from the main thread.
+    
+    Set initOnly to True to keep this function from blocking.
+    Set serverClass to None to skip starting any HTTP server.
+    """
+    # This duplicates the line in start_app_server on purpose.
+    cherrypy._appserver_state = None
+    cherrypy._interrupt = None
+    
+    conf = cherrypy.config.get
+    
+    if serverClass is _missing:
+        serverClass = conf("server.class", _missing)
+    if serverClass is _missing:
+        import _cpwsgi
+        serverClass = _cpwsgi.WSGIServer
+    elif serverClass and isinstance(serverClass, basestring):
+        # Dynamically load the class from the given string
+        serverClass = cherrypy._cputil.attributes(serverClass)
+    
+    # Autoreload, but check serverClass. If None, we're not starting
+    # our own webserver, and therefore could do Very Bad Things when
+    # autoreload calls sys.exit.
+    if serverClass is not None:
+        defaultOn = (conf("server.environment") == "development")
+        if conf('autoreload.on', defaultOn):
             try:
                 autoreload.main(_start, (initOnly, serverClass))
             except KeyboardInterrupt:
@@ -62,68 +85,86 @@ def start(initOnly=False, serverClass=None):
     
     _start(initOnly, serverClass)
 
-def _start(initOnly=False, serverClass=None):
-    """Main function."""
+def _start(initOnly, serverClass):
+    # This duplicates the line in start_app_server on purpose.
+    cherrypy._appserver_state = None
+    
+    cherrypy._httpserverclass = serverClass
+    conf = cherrypy.config.get
+    
     try:
         if cherrypy.codecoverage:
             from cherrypy.lib import covercp
             covercp.start()
         
-        # Use a flag to indicate the state of the cherrypy application server.
-        # 0 = Not started
-        # None = In process of starting
-        # 1 = Started, ready to receive requests
-        cherrypy._appserver_state = None
-        
         # Output config options to log
-        if cherrypy.config.get("server.logConfigOptions", True):
+        if conf("server.logConfigOptions", True):
             cherrypy.config.outputConfigMap()
-        
-        # Check the config options
-        # TODO
-        # config.checkConfigOptions()
+        # TODO: config.checkConfigOptions()
         
         # If sessions are stored in files and we
         # use threading, we need a lock on the file
-        if (cherrypy.config.get('server.threadPool') > 1
-            and cherrypy.config.get('session.storageType') == 'file'):
+        if (conf('server.threadPool') > 1
+            and conf('session.storageType') == 'file'):
             cherrypy._sessionFileLock = threading.RLock()
         
         # set cgi.maxlen which will limit the size of POST request bodies
-        import cgi
-        cgi.maxlen = cherrypy.config.get('server.maxRequestSize')
-        
-        # Call the functions from cherrypy.server.onStartServerList
-        for func in cherrypy.server.onStartServerList:
-            func()
+        cgi.maxlen = conf('server.maxRequestSize')
         
         # Set up the profiler if requested.
-        if cherrypy.config.get("profiling.on", False):
-            ppath = cherrypy.config.get("profiling.path", "")
+        if conf("profiling.on", False):
+            ppath = conf("profiling.path", "")
             cherrypy.profiler = profiler.Profiler(ppath)
         else:
             cherrypy.profiler = None
-
-        # Initilize the built in filters
+        
+        # Initialize the built in filters
         cherrypy._cputil._cpInitDefaultFilters()
         cherrypy._cputil._cpInitUserDefinedFilters()
         
-        if initOnly:
-            cherrypy._appserver_state = 1
-        else:
-            run_server(serverClass)
-    except:
-        # _start may be called as the target of a Thread, in which case
-        # any errors would pass silently. Log them at least.
-        cherrypy.log(cherrypy._cputil.formatExc())
-        raise
+        start_app_server()
+        start_http_server()
+        wait_until_ready()
+        
+        if not initOnly:
+            # Block forever (wait for KeyboardInterrupt or SystemExit).
+            while True:
+                time.sleep(.1)
+                if cherrypy._interrupt:
+                    raise cherrypy._interrupt
+    except KeyboardInterrupt:
+        cherrypy.log("<Ctrl-C> hit: shutting down server", "HTTP")
+        stop()
+    except SystemExit:
+        cherrypy.log("SystemExit raised: shutting down server", "HTTP")
+        stop()
 
+def start_app_server():
+    """Start the CherryPy core."""
+    # Use a flag to indicate the state of the cherrypy application server.
+    # 0 = Not started
+    # None = In process of starting
+    # 1 = Started, ready to receive requests
+    cherrypy._appserver_state = None
+    
+    # Call the functions from cherrypy.server.onStartServerList
+    for func in cherrypy.server.onStartServerList:
+        func()
+    
+    cherrypy._appserver_state = 1
 
-def run_server(serverClass=None):
-    """Prepare the requested server and then run it."""
+def start_http_server(serverClass=None):
+    """Start the requested HTTP server."""
+    if serverClass is None:
+        serverClass = cherrypy._httpserverclass
+    if serverClass is None:
+        return
+    
     if cherrypy._httpserver is not None:
-        warnings.warn("You seem to have an HTTP server still running."
-                      "Please call cherrypy.server.stop() before continuing.")
+        msg = ("You seem to have an HTTP server still running."
+               "Please call cherrypy.server.stop_http_server() "
+               "before continuing.")
+        warnings.warn(msg)
     
     if cherrypy.config.get('server.socketPort'):
         host = cherrypy.config.get('server.socketHost')
@@ -139,30 +180,18 @@ def run_server(serverClass=None):
     cherrypy.log("Serving HTTP on %s" % onWhat, 'HTTP')
     
     # Instantiate the server.
-    if serverClass is None:
-        serverClass = cherrypy.config.get("server.class", None)
-    if serverClass and isinstance(serverClass, basestring):
-        serverClass = cherrypy._cputil.attributes(serverClass)
-    if serverClass is None:
-        import _cpwsgi
-        serverClass = _cpwsgi.WSGIServer
     cherrypy._httpserver = serverClass()
     
-    # Start the http server. Must be done after wait_for_free_port (above).
-    # Note that _httpserver.start() will block this thread, so there
-    # isn't any notification in this thread that the HTTP server is
-    # truly ready. See wait_until_ready() for all the things that
-    # other threads should wait for before proceeding with requests.
-    try:
-        cherrypy._appserver_state = 1
-        # This should block until the http server stops.
-        cherrypy._httpserver.start()
-    except KeyboardInterrupt:
-        cherrypy.log("<Ctrl-C> hit: shutting down server", "HTTP")
-        stop()
-    except SystemExit:
-        cherrypy.log("SystemExit raised: shutting down server", "HTTP")
-        stop()
+    # HTTP servers MUST be started in a new thread, so that the
+    # main thread persists to receive KeyboardInterrupt's. This
+    # wrapper traps an interrupt in the http server's main thread
+    # and shutdowns CherryPy.
+    def _start_http():
+        try:
+            cherrypy._httpserver.start()
+        except (KeyboardInterrupt, SystemExit), exc:
+            cherrypy._interrupt = exc
+    threading.Thread(target=_start_http).start()
 
 
 seen_threads = {}
@@ -204,13 +233,23 @@ def request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http
                              requestLine, headers, rfile, scheme)
 
 def stop():
-    """Shutdown CherryPy (and any HTTP servers it started)."""
+    """Stop CherryPy and any HTTP servers it started."""
+    stop_http_server()
+    stop_app_server()
+
+def stop_app_server():
+    """Stop CherryPy."""
+    cherrypy._appserver_state = 0
+    cherrypy.log("CherryPy shut down", "HTTP")
+
+def stop_http_server():
+    """Stop the HTTP server."""
     try:
         httpstop = cherrypy._httpserver.stop
     except AttributeError:
         pass
     else:
-        # httpstop() should block until the server is *truly* stopped.
+        # httpstop() MUST block until the server is *truly* stopped.
         httpstop()
         cherrypy.log("HTTP Server shut down", "HTTP")
     
@@ -225,32 +264,24 @@ def stop():
         func()
     
     cherrypy._httpserver = None
-    cherrypy._appserver_state = 0
-    cherrypy.log("CherryPy shut down", "HTTP")
 
 def restart():
-    """Stop and start CherryPy."""
-    http = getattr(cherrypy, '_httpserver', None)
+    """Restart CherryPy (and any HTTP servers it started)."""
     stop()
-    if http:
-        # Start the server in a new thread
-        thread_args = {"serverClass": http.__class__}
-        t = threading.Thread(target=_start, kwargs=thread_args)
-        t.start()
-    else:
-        _start(initOnly=True)
+    start_app_server()
+    start_http_server()
     wait_until_ready()
 
 def wait_until_ready():
     """Block the caller until CherryPy is ready to receive requests."""
     
+    # Wait for app to start up
     while cherrypy._appserver_state != 1:
         time.sleep(.1)
     
-    http = getattr(cherrypy, '_httpserver', None)
-    if http:
-        # Wait for HTTP server to start up
-        while not http.ready:
+    # Wait for HTTP server to start up
+    if cherrypy._httpserverclass is not None:
+        while not getattr(cherrypy._httpserver, "ready", None):
             time.sleep(.1)
         
         # Wait for port to be occupied
@@ -298,3 +329,17 @@ def wait_for_occupied_port(host, port):
     
     cherrypy.log("Port %s not bound" % port, 'HTTP')
     raise cherrypy.NotReady("Port not bound.")
+
+def start_with_callback(func, args=None, kwargs=None, serverClass=_missing):
+    """Start CherryPy, then callback the given func in a new thread."""
+    if args is None:
+        args = ()
+    if kwargs is None:
+        kwargs = {}
+    args = (func,) + args
+    threading.Thread(target=_callback_intermediary, args=args, kwargs=kwargs).start()
+    cherrypy.server.start(serverClass=serverClass)
+
+def _callback_intermediary(func, *args, **kwargs):
+    wait_until_ready()
+    func(*args, **kwargs)

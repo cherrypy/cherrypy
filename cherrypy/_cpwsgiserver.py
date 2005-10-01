@@ -116,6 +116,7 @@ class HTTPRequest(object):
             self.rfile = SizeCheckWrapper(self.rfile, mhs)
         self.wfile = self.socket.makefile("w", self.server.bufsize)
         self.sent_headers = False
+    
     def parse_request(self):
         self.sent_headers = False
         self.environ = {}
@@ -322,9 +323,7 @@ class CherryPyWSGIServer(object):
         while self.ready:
             self.tick()
             if self.interrupt:
-                i = self.interrupt
-                self.interrupt = None
-                raise i
+                raise self.interrupt
     
     def tick(self):
         try:
@@ -354,7 +353,7 @@ class CherryPyWSGIServer(object):
         # Don't join currentThread (when stop is called inside a request).
         current = threading.currentThread()
         for worker in self._workerThreads:
-            if worker is not current:
+            if worker is not current and worker.isAlive:
                 worker.join()
         
         self._workerThreads = []

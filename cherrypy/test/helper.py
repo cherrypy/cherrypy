@@ -45,37 +45,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 import os, os.path
-import sys
-import time
+import re
 import socket
 import StringIO
+import sys
+import thread
 import threading
+import time
+import types
 
 import cherrypy
 import webtest
-import types
-import re
 
 for _x in dir(cherrypy):
     y = getattr(cherrypy, _x)
     if isinstance(y, types.ClassType) and issubclass(y, cherrypy.Error):
         webtest.ignored_exceptions.append(y)
-
-
-def startServer(serverClass=None):
-    """Start server in a new thread (same thread if serverClass is None)."""
-    if serverClass is None:
-        cherrypy.server.start(initOnly=True)
-    else:
-        t = threading.Thread(target=cherrypy.server.start,
-                             args=(False, serverClass))
-        t.start()
-    cherrypy.server.wait_until_ready()
-
-
-def stopServer():
-    """Stop the current CP server."""
-    cherrypy.server.stop()
 
 
 def onerror():
@@ -86,6 +71,9 @@ def onerror():
 
 
 class CPWebCase(webtest.WebCase):
+    
+    def exit(self):
+        sys.exit()
     
     def _getRequest(self, url, headers, method, body):
         # Like getPage, but for serverless requests.
@@ -197,7 +185,12 @@ def run_test_suite(moduleNames, server, conf):
     of test modules. The config, however, is reset for each module.
     """
     setConfig(conf)
-    startServer(server)
+    cherrypy.server.start_with_callback(_run_test_suite_thread,
+                                        args=(moduleNames, conf),
+                                        serverClass=server)
+
+def _run_test_suite_thread(moduleNames, conf):
+    cherrypy.server.wait_until_ready()
     for testmod in moduleNames:
         # Must run each module in a separate suite,
         # because each module uses/overwrites cherrypy globals.
@@ -207,21 +200,20 @@ def run_test_suite(moduleNames, server, conf):
         
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)
-    stopServer()
-
+    thread.interrupt_main()
 
 def testmain(server=None, conf=None):
     """Run __main__ as a test module, with webtest debugging."""
     if conf is None:
         conf = {}
     setConfig(conf)
-    
-    startServer(server)
+    cherrypy.server.start_with_callback(_test_main_thread, serverClass=server)
+
+def _test_main_thread():
+    cherrypy.server.wait_until_ready()
+    cherrypy._cputil._cpInitDefaultFilters()
     try:
-        cherrypy._cputil._cpInitDefaultFilters()
         webtest.main()
     finally:
-        # webtest.main == unittest.main, which raises SystemExit,
-        # so put stopServer in a finally clause
-        stopServer()
+        thread.interrupt_main()
 
