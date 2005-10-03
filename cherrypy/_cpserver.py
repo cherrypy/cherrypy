@@ -221,6 +221,15 @@ class Server(object):
     def stop(self):
         """Stop, including any HTTP servers."""
         self.stop_http_server()
+        
+        for thread_ident, i in seen_threads.iteritems():
+            for func in self.onStopThreadList:
+                func(i)
+        seen_threads.clear()
+        
+        for func in self.onStopServerList:
+            func()
+        
         self.state = STOPPED
         cherrypy.log("CherryPy shut down", "HTTP")
     
@@ -234,14 +243,6 @@ class Server(object):
             # httpstop() MUST block until the server is *truly* stopped.
             httpstop()
             cherrypy.log("HTTP Server shut down", "HTTP")
-        
-        for thread_ident, i in seen_threads.iteritems():
-            for func in self.onStopThreadList:
-                func(i)
-        seen_threads.clear()
-        
-        for func in self.onStopServerList:
-            func()
         
         self.httpserver = None
     
