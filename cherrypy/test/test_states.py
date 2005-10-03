@@ -67,19 +67,19 @@ class ServerStateTests(helper.CPWebCase):
         
         # Test server start
         cherrypy.server.start(True, self.serverClass)
-        self.assertEqual(cherrypy._appserver_state, 1)
+        self.assertEqual(cherrypy.server.state, 1)
         
         if self.serverClass:
             host = cherrypy.config.get('server.socketHost')
             port = cherrypy.config.get('server.socketPort')
-            self.assertRaises(IOError, cherrypy.server.check_port, host, port)
+            self.assertRaises(IOError, cherrypy._cpserver.check_port, host, port)
         
         self.getPage("/")
         self.assertBody("Hello World")
         
         # Test server stop
         cherrypy.server.stop()
-        self.assertEqual(cherrypy._appserver_state, 0)
+        self.assertEqual(cherrypy.server.state, 0)
         
         # Once the server has stopped, we should get a NotReady error again.
         self.assertRaises(cherrypy.NotReady, self.getPage, "/")
@@ -92,32 +92,32 @@ class ServerStateTests(helper.CPWebCase):
         
         # Test server restart from this thread
         cherrypy.server.restart()
-        self.assertEqual(cherrypy._appserver_state, 1)
+        self.assertEqual(cherrypy.server.state, 1)
         self.getPage("/")
         self.assertBody("Hello World")
         
         # Test server restart from inside a page handler
         self.getPage("/restart")
-        self.assertEqual(cherrypy._appserver_state, 1)
+        self.assertEqual(cherrypy.server.state, 1)
         self.assertBody("app was restarted succesfully")
         
         cherrypy.server.stop()
-        self.assertEqual(cherrypy._appserver_state, 0)
+        self.assertEqual(cherrypy.server.state, 0)
     
     def test_2_KeyboardInterrupt(self):
         if self.serverClass:
             
             # Raise a keyboard interrupt in the HTTP server's main thread.
             def interrupt():
-                cherrypy.server.wait_until_ready()
-                cherrypy._httpserver.interrupt = KeyboardInterrupt
+                cherrypy.server.wait()
+                cherrypy.server.httpserver.interrupt = KeyboardInterrupt
             threading.Thread(target=interrupt).start()
             
             # We must start the server in this, the main thread
             cherrypy.server.start(False, self.serverClass)
             # Time passes...
-            self.assertEqual(cherrypy._httpserver, None)
-            self.assertEqual(cherrypy._appserver_state, 0)
+            self.assertEqual(cherrypy.server.httpserver, None)
+            self.assertEqual(cherrypy.server.state, 0)
             self.assertRaises(cherrypy.NotReady, self.getPage, "/")
             
             # Raise a keyboard interrupt in a page handler; on multithreaded
@@ -125,15 +125,15 @@ class ServerStateTests(helper.CPWebCase):
             # This should raise a BadStatusLine error, since the worker
             # thread will just die without writing a response.
             def interrupt():
-                cherrypy.server.wait_until_ready()
+                cherrypy.server.wait()
                 from httplib import BadStatusLine
                 self.assertRaises(BadStatusLine, self.getPage, "/ctrlc")
             threading.Thread(target=interrupt).start()
             
             cherrypy.server.start(False, self.serverClass)
             # Time passes...
-            self.assertEqual(cherrypy._httpserver, None)
-            self.assertEqual(cherrypy._appserver_state, 0)
+            self.assertEqual(cherrypy.server.httpserver, None)
+            self.assertEqual(cherrypy.server.state, 0)
             self.assertRaises(cherrypy.NotReady, self.getPage, "/")
 
 

@@ -86,7 +86,7 @@ class GzipFilterTest(helper.CPWebCase):
             # readable page, since 1) the gzip header is already set,
             # and 2) we may have already written some of the body.
             # The fix is to never stream yields when using gzip.
-            if cherrypy._httpserver is None:
+            if cherrypy.server.httpserver is None:
                 self.assertRaises(IndexError, self.getPage,
                                   '/noshow_stream',
                                   [("Accept-Encoding", "gzip")])

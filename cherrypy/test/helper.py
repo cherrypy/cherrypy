@@ -130,7 +130,7 @@ class CPWebCase(webtest.WebCase):
         # 2) stop the HTTP request (if any) and ignore further assertions.
         cherrypy.root._cpOnError = onerror
         
-        if cherrypy._httpserver is None:
+        if cherrypy.server.httpserver is None:
             self._getRequest(url, headers, method, body)
         else:
             webtest.WebCase.getPage(self, url, headers, method, body)
@@ -190,7 +190,7 @@ def run_test_suite(moduleNames, server, conf):
                                         serverClass=server)
 
 def _run_test_suite_thread(moduleNames, conf):
-    cherrypy.server.wait_until_ready()
+    cherrypy.server.wait()
     for testmod in moduleNames:
         # Must run each module in a separate suite,
         # because each module uses/overwrites cherrypy globals.
@@ -210,7 +210,7 @@ def testmain(server=None, conf=None):
     cherrypy.server.start_with_callback(_test_main_thread, serverClass=server)
 
 def _test_main_thread():
-    cherrypy.server.wait_until_ready()
+    cherrypy.server.wait()
     cherrypy._cputil._cpInitDefaultFilters()
     try:
         webtest.main()

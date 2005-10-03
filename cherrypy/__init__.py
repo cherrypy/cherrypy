@@ -38,16 +38,8 @@ import types
 
 from _cperror import *
 import config
-import server
-
-# Use a flag to indicate the state of the cherrypy application server.
-# 0 = Not started
-# None = In process of starting
-# 1 = Started, ready to receive requests
-_appserver_state = 0
-_httpserver = None
-_httpserverclass = None
-_interrupt = None
+import _cpserver
+server = _cpserver.Server()
 
 codecoverage = False
 

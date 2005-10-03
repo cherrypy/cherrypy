@@ -522,7 +522,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             
             import cherrypy
             # streamResponse should be True for this path.
-            if cherrypy._httpserver is None:
+            if cherrypy.server.httpserver is None:
                 self.assertRaises(ValueError, self.getPage,
                                   "/error/page_streamed")
             else:
@@ -670,7 +670,8 @@ llo,
         self.getPage("/maxrequestsize/index")
         self.assertBody("OK")
         
-        if cherrypy._httpserver.__class__.__name__ == "WSGIServer":
+        httpcls = cherrypy.server.httpserverclass
+        if httpcls and httpcls.__name__ == "WSGIServer":
             cherrypy.config.update({'server.maxRequestHeaderSize': 10})
             self.getPage("/maxrequestsize/index")
             self.assertStatus("413 Request Entity Too Large")
@@ -690,7 +691,7 @@ hello
         self.getPage('/maxrequestsize/upload', h, "POST", b)
         self.assertBody('Size: 5')
         
-        if cherrypy._httpserver.__class__.__name__ == "WSGIServer":
+        if cherrypy.server.httpserverclass.__name__ == "WSGIServer":
             cherrypy.config.update({
                 '/maxrequestsize': {'server.maxRequestBodySize': 3}})
             self.getPage('/maxrequestsize/upload', h, "POST", b)
