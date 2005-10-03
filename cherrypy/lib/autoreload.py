@@ -38,8 +38,7 @@ def restart_with_reloader():
             args = ['"%s"' % arg for arg in args]
         new_environ = os.environ.copy()
         new_environ["RUN_MAIN"] = 'true'
-        exit_code = os.spawnve(os.P_WAIT, sys.executable,
-                               args, new_environ)
+        exit_code = os.spawnve(os.P_WAIT, sys.executable, args, new_environ)
         if exit_code != 3:
             return exit_code
 
@@ -52,10 +51,9 @@ def main(main_func, args=None, kwargs=None):
             kwargs = {}
         thread.start_new_thread(main_func, args, kwargs)
         
-        try:
-            reloader_thread()
-        except KeyboardInterrupt:
-            pass
+        # If KeyboardInterrupt is raised within reloader_thread,
+        # let it propagate out to the caller.
+        reloader_thread()
     else:
         # If KeyboardInterrupt is raised within restart_with_reloader,
         # let it propagate out to the caller.

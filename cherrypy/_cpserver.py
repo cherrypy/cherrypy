@@ -98,6 +98,10 @@ class Server(object):
                     autoreload.main(self._start)
                 except KeyboardInterrupt:
                     cherrypy.log("<Ctrl-C> hit: shutting down autoreloader", "HTTP")
+                    self.stop()
+                except SystemExit:
+                    cherrypy.log("SystemExit raised: shutting down autoreloader", "HTTP")
+                    self.stop()
                 return
         
         self._start()
