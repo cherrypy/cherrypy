@@ -3,73 +3,87 @@
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="apireference">
     <title>API reference</title>
     <section id="cherrypy">
-        <title>cherrypy</title>
-        <itemizedlist>
-            <listitem>
-                <title>cherrypy.threadData</title>
-                <para>This attribute holds attributes that map to this thread only.</para>
-            </listitem>
-        </itemizedlist>
+        <title>cherrypy.threadData</title>
+        <para>This attribute holds attributes that map to this thread only.</para>
     </section>
     <section id="cherrypyrequest">
         <title>cherrypy.request</title>
         <section>
             <title>cherrypy.request.remoteAddr</title>
-            <para>This attribute is a string containing the IP address of the client. It will
-            be an empty string if it is not available.</para>
+            <para>This attribute is a string containing the IP address of the client. It will be an
+            empty string if it is not available.</para>
         </section>
         <section>
             <title>cherrypy.request.remotePort</title>
-            <para>This attribute is an int containing the TCP port number of the client. It
-            will be -1 if it is not available.</para>
+            <para>This attribute is an int containing the TCP port number of the client. It will be
+            -1 if it is not available.</para>
         </section>
         <section>
             <title>cherrypy.request.remoteHost</title>
-            <para>This attribute is a string containing the remote hostname of the
-            client.</para>
+            <para>This attribute is a string containing the remote hostname of the client.</para>
         </section>
         <section>
             <title>cherrypy.request.headerMap</title>
-            <para>This attribute is dictionary containing the received HTTP headers.</para>
+            <para>This attribute is a dictionary containing the received HTTP headers, with
+            automatically titled keys (e.g., "Content-Type"). As it's a dictionary, no duplicates are
+            allowed.</para>
+        </section>
+        <section>
+            <title>cherrypy.request.headers</title>
+            <para>This attribute is a list of (header, value) tuples containing the received HTTP
+            headers. In general, you probably want to use headerMap instead; this is only here in
+            case you need to inspect duplicates in the request headers.</para>
         </section>
         <section>
             <title>cherrypy.request.requestLine</title>
-            <para>This attribute is a string containing the first line of the raw HTTP
-            request.</para>
+            <para>This attribute is a string containing the first line of the raw HTTP request; for
+            example, "GET /path/page HTTP/1.1".</para>
         </section>
         <section>
             <title>cherrypy.request.simpleCookie</title>
-            <para>This attribute is a SimpleCookie instance from the standard library's
-            Cookie module which contains the incoming cookie values from the client.</para>
+            <para>This attribute is a SimpleCookie instance from the standard library's Cookie module
+            which contains the incoming cookie values from the client.</para>
         </section>
         <section>
             <title>cherrypy.request.rfile</title>
-            <para>This attribute is the input stream to the client. See
+            <para>This attribute is the input stream to the client, if applicable. See
+            cherrypy.request.processRequestBody for more information.</para>
+        </section>
+        <section>
+            <title>cherrypy.request.body</title>
+            <para>This attribute is the request entity body, if applicable. See
             cherrypy.request.processRequestBody for more information.</para>
         </section>
         <section>
             <title>cherrypy.request.processRequestBody</title>
-            <para>This attribute should be accessed during the beforeRequestBody stage of the
-            request (if you don't know what this means, read the section on filters). This
-            specifies whether or not the request's POST data will be parsed into the
-            cherrypy.request.paramMap. It defaults to true for POST requests, but when false,
-            cherrypy.request.rfile will be readable by the exposed method. Otherwise, rfile
-            is completely read before control is handled to the exposed method.</para>
+            <para>This attribute specifies whether or not the request's body (request.rfile, which is
+            POST or PUT data) will be handled by CherryPy. If True (the default for POST and PUT
+            requests), then request.rfile will be consumed by CherryPy (and unreadable after that).
+            If the request Content-Type is "application/x-www-form-urlencoded", then the rfile will
+            be parsed and placed into request.paramMap; otherwise, it will be available in
+            request.body. If cherrypy.request.processRequestBody is False, then the rfile is not
+            consumed, but will be readable by the exposed method.</para>
         </section>
         <section>
             <title>cherrypy.request.method</title>
-            <para>This attribute is a string containing the HTTP request method, such as GET
-            or POST.</para>
+            <para>This attribute is a string containing the HTTP request method, such as GET or
+            POST.</para>
         </section>
         <section>
             <title>cherrypy.request.protocol</title>
-            <para>This attribute is a string containing the HTTP protocol of the request in
-            the form of HTTP/x.x</para>
+            <para>This attribute is a string containing the HTTP protocol of the request in the form
+            of HTTP/x.x</para>
+        </section>
+        <section>
+            <title>cherrypy.request.version</title>
+            <para>This attribute is a Version object which represents the HTTP protocol. It's the
+            same os request.protocol, but allows easy comparisons like <code>if
+            cherrypy.request.version &gt;= "1.1": do_http_1_1_thing</code>.</para>
         </section>
         <section>
             <title>cherrypy.request.queryString</title>
-            <para>This attribute is a string containing the query string of the request (the
-            part of the URL following '?').</para>
+            <para>This attribute is a string containing the query string of the request (the part of
+            the URL following '?').</para>
         </section>
         <section>
             <title>cherrypy.request.path</title>
@@ -78,40 +92,39 @@
         </section>
         <section>
             <title>cherrypy.request.paramMap</title>
-            <para>This attribute is a dictionary containing the query string and POST
-            arguments of this request.</para>
+            <para>This attribute is a dictionary containing the query string and POST arguments of
+            this request.</para>
         </section>
         <section>
             <title>cherrypy.request.base</title>
-            <para>This attribute is a string containing the root URL of the server.</para>
+            <para>This attribute is a string containing the root URL of the server. By default, it is
+            equal to request.scheme://request.headerMap['Host'].</para>
         </section>
         <section>
             <title>cherrypy.request.browserUrl</title>
-            <para>This attribute is a string containing the URL the client requested.</para>
+            <para>This attribute is a string containing the URL the client requested. By default, it
+            is equal to <code>request.base + request.path</code>.</para>
         </section>
         <section>
             <title>cherrypy.request.objectPath</title>
-            <para>This attribute is a string containing the path of the exposed method that
-            will be called to handle this request. This is usually the same as
-            cherrypy.request.path, but can be changed in a filter to change which method is
-            actually called.</para>
+            <para>This attribute is a string containing the path of the exposed method that will be
+            called to handle this request. This is usually the same as cherrypy.request.path, but can
+            be changed in a filter to change which method is actually called.</para>
         </section>
         <section>
             <title>cherrypy.request.originalPath</title>
-            <para>This attribute is a string containing the original value of
-            cherrypy.request.path, in case it is modified by a filter during the
-            request.</para>
+            <para>This attribute is a string containing the original value of cherrypy.request.path,
+            in case it is modified by a filter during the request.</para>
         </section>
         <section>
             <title>cherrypy.request.originalParamMap</title>
             <para>This attribute is a string containing the original value of
-            cherrypy.request.paramMap, in case it is modified by a filter during the
-            request.</para>
+            cherrypy.request.paramMap, in case it is modified by a filter during the request.</para>
         </section>
         <section>
             <title>cherrypy.request.scheme</title>
-            <para>This attribute is a string containing the URL scheme used in this request.
-            It is either "http" or "https".</para>
+            <para>This attribute is a string containing the URL scheme used in this request. It is
+            either "http" or "https".</para>
         </section>
     </section>
     <!-- end cherrypy.request section -->
@@ -119,35 +132,149 @@
         <title>cherrypy.response</title>
         <section>
             <title>cherrypy.response.headerMap</title>
-            <para>This attribute is a dictionary with automatically titled keys. It holds all
-            outgoing HTTP headers to the client.</para>
+            <para>This attribute is a dictionary with automatically titled keys (e.g.,
+            "Content-Length"). It holds all outgoing HTTP headers to the client.</para>
+        </section>
+        <section>
+            <title>cherrypy.response.headers</title>
+            <para>This attribute is a list of (header, value) tuples. It's not available until the
+            response has been finalized; it's really only there in the extremely rare cases when you
+            need duplicate response headers. In general, you should use request.headerMap
+            instead.</para>
         </section>
         <section>
             <title>cherrypy.response.simpleCookie</title>
-            <para>This attribute is a SimpleCookie instance from the standard library's
-            Cookie module. It contains the outgoing cookie values.</para>
+            <para>This attribute is a SimpleCookie instance from the standard library's Cookie
+            module. It contains the outgoing cookie values.</para>
         </section>
         <section>
             <title>cherrypy.response.body</title>
-            <para>This attribute is originally just the return value of the exposed method,
-            but by the end of the request it must be an iterable (usually a list or generator
-            of strings) which will be the content of the HTTP response.</para>
+            <para>This attribute is originally just the return value of the exposed method, but by
+            the end of the request it must be an iterable (usually a list or generator of strings)
+            which will be the content of the HTTP response.</para>
         </section>
         <section>
             <title>cherrypy.response.status</title>
-            <para>This attribute is a string containing the HTTP response code in the form
-            "### Reason Phrase", i.e. "200 OK"</para>
+            <para>This attribute is a string containing the HTTP response code in the form "###
+            Reason-Phrase", i.e. "200 OK". You may also set it to an int, in which case the response
+            finalization process will supply a Reason-Phrase for you.</para>
+        </section>
+        <section>
+            <title>cherrypy.response.version</title>
+            <para>This attribute is a Version object, representing the HTTP protocol version of the
+            response. This is not necessarily the value that will be written in the response!
+            Instead, it should be used to determine which features are <emphasis>available</emphasis>
+            for the response. For example, an HTTP server may send an HTTP/1.1 response even though
+            the client is known to only understand HTTP/1.0—the response.version will be set to
+            Version("1.0") to inform you of this, so that you (and CherryPy) can restrict the
+            response to HTTP/1.0 features only.</para>
         </section>
     </section>
     <section id="cherrypyserver">
         <title>cherrypy.server</title>
         <section>
-            <title>cherrypy.server.start()</title>
-            <para>Start the CherryPy Server.</para>
+            <title>cherrypy.server.start(initOnly=False, serverClass=_missing)</title>
+            <para>Start the CherryPy Server. Simple websites may call this without any arguments, to
+            run the default server. If initOnly is False (the default), this function will block
+            until KeyboardInterrupt or SystemExit is raised, so that the process will persist. When
+            using one of the built-in HTTP servers, you should leave this set to False. You should
+            only set it to True if you're running CherryPy as an extension to another HTTP server
+            (for example, when using Apache and mod_python with CherryPy), in which case the foreign
+            HTTP server should do its own process-management.</para>
+            <para>Use the serverClass argument to specify that you wish to use an HTTP server other
+            than the default, built-in WSGIServer. If missing, config.get("server.class") will be
+            checked for an alternate value; otherwise, the default is used. Possible alternate values
+            (you may pass the class names as a string if you wish):</para>
+            <itemizedlist>
+                <listitem>
+                    <para><code>cherrypy._cphttpserver.CherryHTTPServer</code>: this will load the
+                    old, single-threaded built-in HTTP server. This server is deprecated and will
+                    probably be removed in CherryPy 2.2.</para>
+                </listitem>
+                <listitem>
+                    <para><code>cherrypy._cphttpserver.PooledThreadServer</code>: this will load the
+                    old, multi-threaded built-in HTTP server. This server is deprecated and will
+                    probably be removed in CherryPy 2.2.</para>
+                </listitem>
+                <listitem>
+                    <para><code>cherrypy._cphttpserver.embedded_server</code>: use this to
+                    automatically select between the CherryHTTPServer and the PooledThreadServer
+                    based on the value of config.get("server.threadPool") and
+                    config.get("server.socketFile").</para>
+                </listitem>
+                <listitem>
+                    <para><code>None</code>: this will not load any HTTP server. Note that this is
+                    not the default; the default (if serverClass is not given) is to load the
+                    WSGIServer.</para>
+                </listitem>
+                <listitem>
+                    <para>Any other class (or dotted-name string): load a custom HTTP server.</para>
+                </listitem>
+            </itemizedlist>
+            <para>You <emphasis>must</emphasis> call this function from Python's main thread, and set
+            initOnly to False, if you want CherryPy to shut down when KeyboardInterrupt or SystemExit
+            are raised (including Ctrl-C). The only time you might want to do otherwise is if you run
+            CherryPy as a Windows service, or as an extension to, say, mod_python, and even then, you
+            might want to anyway.</para>
+        </section>
+        <section>
+            <title>cherrypy.server.blocking</title>
+            <para>If the "initOnly" argument to server.start is True, this will be False, and
+            vice-versa.</para>
+        </section>
+        <section>
+            <title>cherrypy.server.httpserverclass</title>
+            <para>Whatever HTTP server class is set in server.start will be stuck in here.</para>
+        </section>
+        <section>
+            <title>cherrypy.server.httpserver</title>
+            <para>Whatever HTTP server class is set in server.start will be instantiated and stuck in
+            here.</para>
+        </section>
+        <section>
+            <title>cherrypy.server.state</title>
+            <para>One of three values, indicating the state of the server:<itemizedlist>
+                    <listitem>
+                        <para>STOPPED = 0: The server hasn't been started, and will not accept
+                        requests.</para>
+                    </listitem>
+                    <listitem>
+                        <para>STARTING = None: The server is in the process of starting, or an error
+                        occured while trying to start the server.</para>
+                    </listitem>
+                    <listitem>
+                        <para>STARTED = 1: The server has started (including an HTTP server if
+                        requested), and is ready to receive requests.</para>
+                    </listitem>
+                </itemizedlist></para>
+        </section>
+        <section>
+            <title>cherrypy.server.ready</title>
+            <para>True if the server is ready to receive requests, false otherwise. Read-only.</para>
+        </section>
+        <section>
+            <title>cherrypy.server.wait()</title>
+            <para>Since server.start usually blocks, other threads need to be started before calling
+            server.start; however, they often must wait for server.start to complete it's setup of
+            the HTTP server. Use this function from other threads to make them wait for the HTTP
+            server to be ready to receive requests.</para>
+        </section>
+        <section>
+            <title>cherrypy.server.start_with_callback(func, args=(), kwargs={},
+            serverClass=_missing)</title>
+            <para>Since server.start usually blocks, use this to easily run another function in a new
+            thread. It starts the new thread and then runs server.start. The new thread automatically
+            waits for the server to finish its startup procedure.</para>
         </section>
         <section>
             <title>cherrypy.server.stop()</title>
-            <para>Stop the CherryPy Server.</para>
+            <para>Stop the CherryPy Server. Well, "suspend" might be a better term—this doesn't
+            terminate the process.</para>
+        </section>
+        <section>
+            <title>cherrypy.server.interrupt</title>
+            <para>Usually None, set this to KeyboardInterrupt() or SystemExit() to shut down the
+            entire process. That is, the new exception will be raised in the main thread.</para>
         </section>
         <section>
             <title>cherrypy.server.restart()</title>
@@ -163,57 +290,66 @@
         </section>
         <section>
             <title>cherrypy.server.onStartThreadList</title>
-            <para>A list of functions that will be called when each thread is started.</para>
+            <para>A list of functions that will be called when each request thread is started. Note
+            that such threads do not need to be started or controlled by CherryPy; for example, when
+            using CherryPy with mod_python, Apache will start and stop the request threads.
+            Nevertheless, CherryPy will run the onStartThreadList functions upon the first request
+            using each distinct thread.</para>
         </section>
         <section>
             <title>cherrypy.server.onStopThreadList</title>
-            <para>A list of functions that will be called when each thread is stopped.</para>
+            <para>A list of functions that will be called when each request thread is stopped.</para>
+        </section>
+        <section>
+            <title>cherrypy.server.request()</title>
+            <para>HTTP servers should call this function to hand off the HTTP request to the CherryPy
+            core. There is no return value; instead, the core sets response content in the
+            cherrypy.response object.</para>
         </section>
     </section>
     <!-- end cherrypyserver section -->
     <section id="cherrypyconfig">
         <title>cherrypy.config</title>
         <section>
-            <title>cherrypy.config.get(key, defaultValue = None, returnSection =
-            False)</title>
-            <para>This function returns the configuration value for the given key. The
-            function checks if the setting is defined for the current request path, it walks
-            up the request path until the key is found, or it returns the default value. If
-            returnSection is True, the function returns the configuration path where the key
-            is defined.</para>
+            <title>cherrypy.config.get(key, defaultValue = None, returnSection = False)</title>
+            <para>This function returns the configuration value for the given key. The function
+            checks if the setting is defined for the current request path; it walks up the request
+            path until the key is found, or it returns the default value. If returnSection is True,
+            the function returns the configuration path where the key is defined instead.</para>
         </section>
         <section>
             <title>cherrypy.config.getAll(key)</title>
             <para>The getAll function returns a list containing a (path, value) tuple for all
-            occurences of the key within the request path. This function allows applications
-            to inherit configuration data defined for parent paths.</para>
+            occurences of the key within the request path. This function allows applications to
+            inherit configuration data defined for parent paths.</para>
         </section>
         <section>
             <title>cherrypy.config.update(updateMap=None, file=None)</title>
-            <para>Function to update the configuration map. upDateMap is a dictionary of the
-            form {'sectionPath' : { } }, file is the path to the configuration file.</para>
+            <para>Function to update the configuration map. The "updateMap" argument is a dictionary
+            of the form {'sectionPath' : { } }. The "file" argument is the path to the configuration
+            file.</para>
         </section>
     </section>
     <section id="exceptions">
         <title>cherrypy exceptions</title>
         <section>
             <title>cherrypy.HTTPError</title>
-            <para>This exception can be used to automatically send a response using a http
-            status code, with an appropriate error page.</para>
+            <para>This exception can be used to automatically send a response using a http status
+            code, with an appropriate error page.</para>
+            <section>
+                <title>cherrypy.NotFound</title>
+                <para>This exception is raised when CherryPy is unable to map a requested path to an
+                internal method. It's a subclass of HTTPError.</para>
+            </section>
         </section>
         <section>
             <title>cherrypy.HTTPRedirect</title>
             <para>This exception will force a HTTP redirect.</para>
         </section>
         <section>
-            <title>cherrypy.NotFound</title>
-            <para>This exception is raised when CherryPy is unable to map a requested path to
-            an internal method.</para>
-        </section>
-        <section>
             <title>cherrypy.InternalRedirect</title>
-            <para>This exception will redirect processing to another path within the site
-            (without informing the client).</para>
+            <para>This exception will redirect processing to another path within the site (without
+            informing the client).</para>
         </section>
     </section>
     <section id="lib">
@@ -234,15 +370,15 @@
         <title>Special functions and attributes</title>
         <section>
             <title>_cpOnError</title>
-            <para>_cpOnError is a function for handling unanticipated exceptions, whether
-            raised by CherryPy itself, or in user applications. The default simply raises
+            <para>_cpOnError is a function for handling unanticipated exceptions, whether raised by
+            CherryPy itself, or in user applications. The default simply raises
             HTTPError(500).</para>
         </section>
         <section>
             <title>_cpFilterList</title>
-            <para>User defined filters are enabled using the class attribute _cpFilterList.
-            Any filter instances placed in _cpFilterList will be applied to all methods of
-            the class.</para>
+            <para>User defined filters are enabled using the class attribute _cpFilterList. Any
+            filter instances placed in _cpFilterList will be applied to all methods of the
+            class.</para>
         </section>
     </section>
     <section id="filters">
