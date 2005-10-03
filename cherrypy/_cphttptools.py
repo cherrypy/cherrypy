@@ -180,13 +180,12 @@ class Request(object):
         request.requestLine = requestLine.strip()
         self.parseFirstLine()
         
-        self.requestHeaders = headers
-        
         # Prepare cherrypy.request variables
         request.remoteAddr = clientAddress[0]
         request.remotePort = clientAddress[1]
         request.remoteHost = remoteHost
         request.paramList = [] # Only used for Xml-Rpc
+        request.headers = headers
         request.headerMap = KeyTitlingDict()
         request.simpleCookie = Cookie.SimpleCookie()
         request.rfile = rfile
@@ -328,7 +327,7 @@ class Request(object):
         request.paramMap = pm
         
         # Process the headers into request.headerMap
-        for name, value in self.requestHeaders:
+        for name, value in request.headers:
             value = value.strip()
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headerMap
