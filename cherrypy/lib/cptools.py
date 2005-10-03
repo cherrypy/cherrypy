@@ -127,7 +127,7 @@ class PositionalParametersAware(object):
                     return self.index(*args, **kwargs)
                 except TypeError:
                     pass
-            raise cherrypy.NotFound(cherrypy.request.path)
+            raise cherrypy.NotFound()
     default.exposed = True
 
 
@@ -246,7 +246,7 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     except OSError:
         if getattr(cherrypy, "debug", None):
             cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
-        raise cherrypy.NotFound(cherrypy.request.path)
+        raise cherrypy.NotFound()
     
     if contentType is None:
         # Set content-type based on filename extension

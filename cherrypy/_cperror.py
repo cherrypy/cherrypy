@@ -208,7 +208,9 @@ class HTTPError(Error):
 class NotFound(HTTPError):
     """ Happens when a URL couldn't be mapped to any class.method """
     
-    def __init__(self, path):
+    def __init__(self, path=None):
+        if path is None:
+            path = cherrypy.request.path
         self.args = (path,)
         HTTPError.__init__(self, 404, "The path %s was not found." % repr(path))
 
