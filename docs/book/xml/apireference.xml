@@ -403,13 +403,19 @@
             <para>You can profile any of your page handlers (exposed methods) as follows:</para>
             <example>
                 <title>Profiling example</title>
-                <para>
-                    <code>from cherrypy.lib import profile class Root: p =
-                    profile.Profiler("/path/to/profile/dir") def index(self): self.p.run(self._index)
-                    index.exposed = True def _index(self): return "Hello, world!" cherrypy.root =
-                    Root()</code>
-                    
-                </para>
+                <programlisting><code>from cherrypy.lib import profile
+
+class Root:
+    p = profile.Profiler("/path/to/profile/dir")
+    
+    def index(self):
+        self.p.run(self._index)
+    index.exposed = True
+    
+    def _index(self):
+        return "Hello, world!"
+
+cherrypy.root = Root()</code></programlisting>
             </example>
             <para>Set the config entry: "profiling.on = True" if you'd rather turn on profiling for
             all requests. Then, use the serve() function to browse the results in a web browser. If
@@ -421,6 +427,21 @@
             Python 2.4 (Python 2.3 will be much slower due to threadlocal being implemented in
             Python, not C). You can profile the test suite by supplying the --profile option to
             test.py.</para>
+        </section>
+        <section>
+            <title>cherrypy.lib.autoreload</title>
+            <para>This module provides a brute-force method of reloading application files on the
+            fly. When the config entry "autoreload.on" is True (or when "server.environment" is
+            "development"), CherryPy uses the autoreload module to restart the current process
+            whenever one of the files in use is changed. The mechanism by which it does so is pretty
+            complicated:<figure>
+                    <title>The autoreload process</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="autoreload.gif" format="GIF" />
+                        </imageobject>
+                    </mediaobject>
+                </figure></para>
         </section>
     </section>
     <section id="specialfunctions">
