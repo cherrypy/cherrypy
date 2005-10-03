@@ -102,6 +102,7 @@ class Server(object):
                 except SystemExit:
                     cherrypy.log("SystemExit raised: shutting down autoreloader", "HTTP")
                     self.stop()
+                    raise
                 return
         
         self._start()
