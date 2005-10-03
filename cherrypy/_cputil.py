@@ -89,8 +89,8 @@ def getSpecialAttribute(name):
     try:
         return globals()[name]
     except KeyError:
-        raise cherrypy.InternalError("Special attribute %s could not be found"
-                                     % repr(name))
+        msg = "Special attribute %s could not be found" % repr(name)
+        raise cherrypy.HTTPError(500, msg)
 
 def getSpecialAttributePath(name):
     """ Return the path to the special attribute """
@@ -101,8 +101,8 @@ def getSpecialAttributePath(name):
         for i in xrange(len(objectList) - 1, -1, -1):
             if hasattr(objectList[i], name):
                 return "/" + "/".join(pathList[:i] + [name])
-    raise cherrypy.InternalError("Special attribute %s could not be found"
-                                 % repr(name))
+    msg = "Special attribute %s could not be found" % repr(name)
+    raise cherrypy.HTTPError(500, msg)
 
 
 def logtime():

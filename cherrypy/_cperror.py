@@ -31,10 +31,6 @@ import urllib
 class Error(Exception):
     pass
 
-class InternalError(Error):
-    """ Error that should never happen """
-    pass
-
 class NotReady(Error):
     """A request was made before the app server has been started."""
     pass
@@ -215,3 +211,10 @@ class NotFound(HTTPError):
     def __init__(self, path):
         self.args = (path,)
         HTTPError.__init__(self, 404, "The path %s was not found." % repr(path))
+
+
+class InternalError(HTTPError):
+    """ Error that should never happen """
+    
+    def __init__(self, message=None):
+        HTTPError.__init__(self, 500, message)
