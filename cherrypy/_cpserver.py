@@ -250,8 +250,8 @@ class Server(object):
         self.stop()
         for func in self.onStartServerList:
             func()
-        self.state = STARTED
         self.start_http_server()
+        self.state = STARTED
     
     def wait(self):
         """Block the caller until ready to receive requests."""
