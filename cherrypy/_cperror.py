@@ -210,6 +210,7 @@ class NotFound(HTTPError):
     
     def __init__(self, path=None):
         if path is None:
+            import cherrypy
             path = cherrypy.request.path
         self.args = (path,)
         HTTPError.__init__(self, 404, "The path %s was not found." % repr(path))
