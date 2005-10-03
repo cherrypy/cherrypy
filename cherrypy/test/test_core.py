@@ -691,7 +691,8 @@ hello
         self.getPage('/maxrequestsize/upload', h, "POST", b)
         self.assertBody('Size: 5')
         
-        if cherrypy.server.httpserverclass.__name__ == "WSGIServer":
+        httpcls = cherrypy.server.httpserverclass
+        if httpcls and httpcls.__name__ == "WSGIServer":
             cherrypy.config.update({
                 '/maxrequestsize': {'server.maxRequestBodySize': 3}})
             self.getPage('/maxrequestsize/upload', h, "POST", b)
