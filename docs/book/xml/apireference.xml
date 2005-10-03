@@ -353,17 +353,74 @@
         </section>
     </section>
     <section id="lib">
-        <title>CherryPy included library functions</title>
+        <title>The CherryPy library</title>
         <section>
             <title>cherrypy.lib.cptools</title>
             <section>
                 <title>ExposeItems</title>
-                <para />
+                <para>Utility class that exposes a getitem-aware object. It does not provide index()
+                or default() methods, and it does not expose the individual item objects - just the
+                list or dict that contains them. User-specific index() and default() methods can be
+                implemented by inheriting from this class.</para>
             </section>
             <section>
                 <title>PositionalParametersAware</title>
-                <para />
+                <para>Utility class that restores positional parameters functionality that was found
+                in 2.0.0-beta.</para>
             </section>
+            <section>
+                <title>getRanges(content_length)</title>
+                <para>Returns a list of (start, stop) indices from a Range request header. Returns
+                None if no such header is provided in the request. Each (start, stop) tuple will be
+                composed of two ints, which are suitable for use in a slicing operation. That is, the
+                header "Range: bytes=3-6", if applied against a Python string, is requesting
+                resource[3:7]. This function will return the list [(3, 7)].</para>
+            </section>
+            <section>
+                <title>serveFile(path, contentType=None, disposition=None, name=None)</title>
+                <para>Set status, headers, and body in order to serve the file at the given path. The
+                Content-Type header will be set to the contentType arg, if provided. If not provided,
+                the Content-Type will be guessed by the extension of the file. If disposition is not
+                None, the Content-Disposition header will be set to "&lt;disposition&gt;;
+                filename=&lt;name&gt;". If name is None, it will be set to the basename of path. If
+                disposition is None, no Content-Disposition header will be written.</para>
+            </section>
+        </section>
+        <section>
+            <title>cherrypy.lib.covercp</title>
+            <para>This module both provides code-coverage tools, and may also be run as a script. To
+            use this module, or the coverage tools in the test suite, you need to download
+            'coverage.py', either Gareth Rees' <ulink url="???">original implementation</ulink> or
+            Ned Batchelder's <ulink
+            url="http://www.nedbatchelder.com/code/modules/coverage.html">enhanced
+            version</ulink>.</para>
+            <para>Set cherrypy.codecoverage to True to turn on coverage tracing. Then, use the
+            covercp.serve() function to browse the results in a web browser. If you run this module
+            as a script (i.e., from the command line), it will call serve() for you.</para>
+        </section>
+        <section>
+            <title>cherrypy.lib.profiler</title>
+            <para>You can profile any of your page handlers (exposed methods) as follows:</para>
+            <example>
+                <title>Profiling example</title>
+                <para>
+                    <code>from cherrypy.lib import profile class Root: p =
+                    profile.Profiler("/path/to/profile/dir") def index(self): self.p.run(self._index)
+                    index.exposed = True def _index(self): return "Hello, world!" cherrypy.root =
+                    Root()</code>
+                    
+                </para>
+            </example>
+            <para>Set the config entry: "profiling.on = True" if you'd rather turn on profiling for
+            all requests. Then, use the serve() function to browse the results in a web browser. If
+            you run this module as a script (i.e., from the command line), it will call serve() for
+            you.</para>
+            <para>Developers: this module should be used whenever you make significant changes to
+            CherryPy, to get a quick sanity-check on the performance of the request process. Basic
+            requests should complete in about 5 milliseconds on a reasonably-fast machine running
+            Python 2.4 (Python 2.3 will be much slower due to threadlocal being implemented in
+            Python, not C). You can profile the test suite by supplying the --profile option to
+            test.py.</para>
         </section>
     </section>
     <section id="specialfunctions">
