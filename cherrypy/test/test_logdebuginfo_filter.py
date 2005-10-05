@@ -78,7 +78,7 @@ hello
 """
             cherrypy.config.update({
                 '/bug326': {'server.maxRequestBodySize': 3,
-                            'server.environment': 'developement',
+                            'server.environment': 'development',
                 }
             })
             ignore = helper.webtest.ignored_exceptions
