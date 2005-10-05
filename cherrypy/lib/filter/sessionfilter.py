@@ -122,6 +122,8 @@ class SessionFilter(basefilter.BaseFilter):
         sess.sessionStorage = conf('sessionFilter.storageClass', None)
         if sess.sessionStorage is None:
             sess.sessionStorage = globals()[storage + 'Storage']()
+        else:
+            sess.sessionStorage = sess.sessionStorage()
         
         # Check if we need to clean up old sessions
         if cherrypy._sessionLastCleanUpTime + cleanUpDelay < now:
