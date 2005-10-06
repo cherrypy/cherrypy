@@ -184,9 +184,9 @@ class SessionFilter(basefilter.BaseFilter):
                         yield line
             except:
                 # Can't use try/finally because of yield
-                self._clean(sess)
+                self._clean()
                 raise
-            self._clean(sess)
+            self._clean()
         
         sess = cherrypy.request._session
         if not sess.sessionStorage:
@@ -196,15 +196,20 @@ class SessionFilter(basefilter.BaseFilter):
         # Make a wrapper around the body in order to save the session
         #   either before or after the body is returned
         cherrypy.response.body = saveData(cherrypy.response.body, sess)
-    
+
+    def onEndResource(self):
+        # If RequestHandled is raised, beforeFinalize and afterErrorResponse
+        #   are not called, so we release the session here
+        self._clean()
+
     def afterErrorResponse(self):
+        self._clean()
+    
+    def _clean(self):
         sess = cherrypy.request._session
-        if not sess.sessionStorage:
+        if not getattr(sess, 'sessionStorage', None):
             # Sessions are not enabled: do nothing
             return
-        self._clean(sess)
-    
-    def _clean(self, sess):
         if getattr(sess, 'locked', None):
             # If the session is still locked we release the lock
             sess.sessionStorage.releaseLock()
