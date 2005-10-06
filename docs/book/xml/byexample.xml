@@ -33,7 +33,7 @@
     <title>Exposed Methods</title>
     <para>
     For security reasons, CherryPy requires developers to explicitly specify which methods may
-    be accessed via the web. The 'exposed' attribute, when set totrue, indicates that a given
+    be accessed via the web. The method's 'exposed' attribute, when True, indicates that a given
     method is published to the web.
     </para>
     <example>
