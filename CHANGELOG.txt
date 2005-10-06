@@ -1,3 +1,7 @@
+2005-10-06:
+    * CherryPy-2.1.0-rc2 released
+    * Bug in sessionfilter fixed
+
 2005-09-15:
     * CherryPy-2.1.0-rc1 released
 
