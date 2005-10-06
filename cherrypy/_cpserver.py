@@ -102,6 +102,9 @@ class Server(object):
                 except SystemExit:
                     cherrypy.log("SystemExit raised: shutting down autoreloader", "HTTP")
                     self.stop()
+                    # We must raise here: if this is a process spawned by
+                    # autoreload, then it must return its error code to
+                    # the parent.
                     raise
                 return
         

@@ -66,6 +66,7 @@ class TestHarness(object):
         self.profile = False
         self.protocol = "HTTP/1.0"
         self.basedir = None
+        self.PORT = 8000
         
         self.servers = []
         self.tests = []
@@ -77,7 +78,8 @@ class TestHarness(object):
             set of args if you like.
         """
         
-        longopts = ['cover', 'profile', '1.1', 'help', 'basedir=', 'all']
+        longopts = ['cover', 'profile', '1.1', 'help',
+                    'basedir=', 'all', 'port=']
         longopts.extend(self.available_servers)
         longopts.extend(self.available_tests)
         try:
@@ -109,6 +111,8 @@ class TestHarness(object):
                 self.basedir = a
             elif o == "--all":
                 self.servers = self.available_servers.keys()
+            elif o == "--port":
+                self.PORT = int(a)
             else:
                 o = o[2:]
                 if o in self.available_servers and o not in self.servers:
@@ -258,7 +262,7 @@ class TestHarness(object):
         
         if conf is None:
             conf = {'server.socketHost': '127.0.0.1',
-                    'server.socketPort': 8000,
+                    'server.socketPort': self.PORT,
                     'server.threadPool': 10,
                     'server.logToScreen': False,
                     'server.environment': "production",
@@ -286,9 +290,14 @@ class TestHarness(object):
     def _run_all_servers(self, conf):
         # helper must be imported lazily so the coverage tool
         # can run against module-level statements within cherrypy.
-        from cherrypy.test import helper
+        # Also, we have to do a relative import here, not
+        # "from cherrypy.test import helper", because the latter
+        # would stick a second instance of webtest in sys.modules,
+        # and we wouldn't be able to globally override the port anymore.
+        import helper
         s = [self.available_servers[name] for name in self.servers]
         s.sort()
+        webtest.WebCase.PORT = self.PORT
         for priority, name, cls in s:
             print
             print "Running tests:", name
@@ -300,9 +309,14 @@ class CPTestHarness(TestHarness):
     def _run_all_servers(self, conf):
         # helper must be imported lazily so the coverage tool
         # can run against module-level statements within cherrypy.
-        from cherrypy.test import helper, test_states
+        # Also, we have to do a relative import here, not
+        # "from cherrypy.test import helper", because the latter
+        # would stick a second instance of webtest in sys.modules,
+        # and we wouldn't be able to globally override the port anymore.
+        import helper, test_states
         s = [self.available_servers[name] for name in self.servers]
         s.sort()
+        webtest.WebCase.PORT = self.PORT
         for priority, name, cls in s:
             print
             print "Running tests:", name

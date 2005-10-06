@@ -30,7 +30,7 @@ import unittest
 import sys
 
 import cherrypy
-from cherrypy.test import helper
+import helper
 
 
 class TutorialTest(helper.CPWebCase):
@@ -38,18 +38,19 @@ class TutorialTest(helper.CPWebCase):
     def load_tut_module(self, tutorialName):
         """Import or reload tutorial module as needed."""
         cherrypy.config.reset()
-        cherrypy.config.update({'server.socketHost': self.HOST,
-                                'server.socketPort': self.PORT,
-                                'server.threadPool': 10,
-                                'server.logToScreen': False,
-                                'server.environment': "production",
-                                })
         
         target = "cherrypy.tutorial." + tutorialName
         if target in sys.modules:
             module = reload(sys.modules[target])
         else:
             module = __import__(target, globals(), locals(), [''])
+        
+        cherrypy.config.update({'server.socketHost': self.HOST,
+                                'server.socketPort': self.PORT,
+                                'server.threadPool': 10,
+                                'server.logToScreen': False,
+                                'server.environment': "production",
+                                })
     
     def test01HelloWorld(self):
         self.load_tut_module("tut01_helloworld")

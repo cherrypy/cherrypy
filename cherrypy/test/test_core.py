@@ -204,8 +204,9 @@ class Headers(Test):
         hMap['content-type'] = "text/html"
         hMap['content-length'] = 18
         hMap['server'] = 'CherryPy headertest'
-        hMap['location'] = ('%s://127.0.0.1:8000/headers/'
-                            % cherrypy.request.scheme)
+        hMap['location'] = ('%s://127.0.0.1:%s/headers/'
+                            % (cherrypy.request.remotePort,
+                               cherrypy.request.scheme))
         
         # Set a rare header for fun
         hMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
@@ -445,8 +446,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         self.getPage("/redirect?id=3")
         self.assert_(self.status in ('302 Found', '303 See Other'))
-        self.assertInBody("<a href='http://127.0.0.1:8000/redirect/?id=3'>"
-                          "http://127.0.0.1:8000/redirect/?id=3</a>")
+        self.assertInBody("<a href='http://127.0.0.1:%s/redirect/?id=3'>"
+                          "http://127.0.0.1:%s/redirect/?id=3</a>" %
+                          (self.PORT, self.PORT))
         
         self.getPage("/redirect/by_code?code=300")
         self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
