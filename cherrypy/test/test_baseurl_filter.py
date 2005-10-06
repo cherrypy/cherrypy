@@ -27,12 +27,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import cherrypy
-from cherrypy.lib import httptools
 
 
 class Root:
     def index(self):
-        return httptools.redirect('dummy')
+        raise cherrypy.HTTPRedirect('dummy')
     index.exposed = True
 
 cherrypy.root = Root()

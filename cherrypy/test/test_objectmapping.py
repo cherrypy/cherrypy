@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import sys
 
 import cherrypy
-from cherrypy.lib import httptools
+
 
 class Root:
     def index(self, name="world"):
@@ -49,7 +49,7 @@ class Root:
     extra.exposed = True
     
     def redirect(self):
-        return httptools.redirect('dir1/')
+        raise cherrypy.HTTPRedirect('dir1/', 302)
     redirect.exposed = True
     
     def notExposed(self):
