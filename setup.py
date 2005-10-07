@@ -43,7 +43,7 @@ data_files=[
         [
             'cherrypy/tutorial/tutorial.conf',
             'cherrypy/tutorial/README.txt',
-            'cherrypy/tutorial/ReturnVsYield.pdf',
+            'cherrypy/tutorial/pdf_file.pdf',
             'cherrypy/tutorial/custom_error.html',
         ]
     ),
