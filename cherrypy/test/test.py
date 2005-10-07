@@ -324,9 +324,7 @@ class CPTestHarness(TestHarness):
             test_states.run(cls, conf)
             helper.run_test_suite(self.tests, cls, conf)
 
-
-if __name__ == '__main__':
-    
+def run():
     # Place this __file__'s grandparent (../../) at the start of sys.path,
     # so that all cherrypy/* imports are from this __file__'s package.
     localDir = os.path.dirname(__file__)
@@ -351,3 +349,7 @@ if __name__ == '__main__':
     
     print
     raw_input('hit enter')
+
+
+if __name__ == '__main__':
+    run()
