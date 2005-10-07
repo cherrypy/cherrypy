@@ -45,7 +45,7 @@ class FileDemo(object):
     upload.exposed = True
     
     def download(self):
-        path = os.path.join(absDir, "ReturnVsYield.pdf")
+        path = os.path.join(absDir, "pdf_file.pdf")
         return cptools.serveFile(path, "application/x-download",
                                  "attachment", os.path.basename(path))
     download.exposed = True
