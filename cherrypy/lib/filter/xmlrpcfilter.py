@@ -179,6 +179,34 @@ class XmlRpcFilter(BaseFilter):
         cherrypy.request.paramList = list(params)
         # used for debugging and more info
         # print "XMLRPC Filter: calling '%s' with args: '%s' " % (cherrypy.request.path,params)
+
+    def beforeMain(self):
+        """This is a variation of main() from _cphttptools.
+
+        The reason it is redone here is because we don't want
+        cherrypy.response.body = iterable(body) - we want to use
+        whatever real value the user returned from their callable
+        to reach the xmlrpcfilter unchanged."""
+        
+        if not cherrypy.request.xmlRpcFilterOn:
+            return
+        
+        from cherrypy._cphttptools import mapPathToObject
+        path = cherrypy.request.objectPath or cherrypy.request.path
+        
+        while True:
+            try:
+                page_handler, object_path, virtual_path = mapPathToObject(path)
+                
+                # Remove "root" from object_path and join it to get objectPath
+                cherrypy.request.objectPath = '/' + '/'.join(object_path[1:])
+                args = virtual_path + cherrypy.request.paramList
+                body = page_handler(*args, **cherrypy.request.paramMap)
+                cherrypy.response.body = body
+                return
+            except cherrypy.InternalRedirect, x:
+                # Try again with the new path
+                path = x.path        
     
     def beforeFinalize(self):
         """ Called before finalizing output """
@@ -187,17 +215,14 @@ class XmlRpcFilter(BaseFilter):
             return
 
         encoding = cherrypy.config.get('xmlRpcFilter.encoding', 'utf-8')
-
-        if not isinstance(cherrypy.response.body, list):
-            cherrypy.response.body = [cherrypy.response.body]
         
         cherrypy.response.body = [xmlrpclib.dumps(
-            (cherrypy.response.body[0],),
+            (cherrypy.response.body,),
             methodresponse=1,
             encoding=encoding,
             allow_none=1)]
         cherrypy.response.headerMap['Content-Type'] = 'text/xml'
-        cherrypy.response.headerMap['Content-Length'] = `len(cherrypy.response.body[0])`
+        cherrypy.response.headerMap['Content-Length'] = `len(cherrypy.response.body)`
     
     def beforeErrorResponse(self):
         try:
