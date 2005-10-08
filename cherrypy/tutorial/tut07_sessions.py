@@ -1,5 +1,5 @@
 """
-Tutorial 08 - Sessions
+Tutorial - Sessions
 
 Storing session data in CherryPy applications is very easy: cherrypy.request
 provides a dictionary called sessionMap that represents the session

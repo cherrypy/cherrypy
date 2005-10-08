@@ -1,5 +1,5 @@
 """
-Tutorial 01 - Hello World
+Tutorial - Hello World
 
 The most basic (working) CherryPy application possible.
 """

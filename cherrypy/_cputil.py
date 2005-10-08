@@ -210,7 +210,7 @@ def getErrorPage(status, **kwargs):
     errorPageFile = cherrypy.config.get('errorPage.%s' % code, '')
     if errorPageFile:
         try:
-            template = file(errorPageFile, 'rb')
+            template = file(errorPageFile, 'rb').read()
         except:
             m = kwargs['message']
             if m:

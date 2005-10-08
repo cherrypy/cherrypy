@@ -1,5 +1,5 @@
 """
-Tutorial 07 - The default method
+Tutorial - The default method
 
 Request handler objects can implement a method called "default" that
 is called when no other suitable method/object could be found.

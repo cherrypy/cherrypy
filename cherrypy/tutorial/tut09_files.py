@@ -1,4 +1,39 @@
-"""Tutorial: File upload"""
+"""
+
+Tutorial: File upload and download
+
+Uploads
+-------
+
+When a client uploads a file to a CherryPy application, it's placed
+on disk immediately. CherryPy will pass it to your exposed method
+as an argument (see "myFile" below); that arg will have a "file"
+attribute, which is a handle to the temporary uploaded file.
+If you wish to permanently save the file, you need to read()
+from myFile.file and write() somewhere else.
+
+Note the use of 'enctype="multipart/form-data"' and 'input type="file"'
+in the HTML which the client uses to upload the file.
+
+
+Downloads
+---------
+
+If you wish to send a file to the client, you have two options:
+First, you can simply return a file-like object from your page handler.
+CherryPy will read the file and serve it as the content (HTTP body)
+of the response. However, that doesn't tell the client that
+the response is a file to be saved, rather than displayed.
+Use cherrypy.lib.cptools.serveFile for that; it takes four
+arguments:
+
+serveFile(path, contentType=None, disposition=None, name=None)
+
+Set "name" to the filename that you expect clients to use when they save
+your file. Note that the "name" argument is ignored if you don't also
+provide a "disposition" ("application/x-download" works in most cases).
+
+"""
 
 import os
 localDir = os.path.dirname(__file__)

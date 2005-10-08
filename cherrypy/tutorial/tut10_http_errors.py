@@ -1,13 +1,15 @@
-"""Tutorial: http errors """
+"""
+
+Tutorial: HTTP errors
+
+HTTPError is used to return an error response to the client.
+CherryPy has lots of options regarding how such errors are
+logged, displayed, and formatted.
+
+"""
 
 import cherrypy
 
-# we want to customize 403 errors
-customErrors = {
-                 'errorPage.403' : "custom_error.html"
-               }
-
-cherrypy.config.update({'/' : customErrors})
 
 class HTTPErrorDemo(object):
     
@@ -21,45 +23,52 @@ class HTTPErrorDemo(object):
             
         return """
         <html><body>
-            <h2><a href="toggleTracebacks">Toggle tracebacks %s</a><br/><br/></h2>
-            <a href="/doesNotExist">Click me i'm a broken link!</a>
-            <br/><br/>
-            <a href="/error?code=403">Use a custom an error page from a file.</a>
-            <br/><br/>
-            These errors are explicitly raised by the application.
-            <a href="/error?code=400">400</a>
-            <a href="/error?code=401">401</a>
-            <a href="/error?code=402">402</a>
-            <a href="/error?code=500">500</a>
-            <br/><br/>
-            <a href="/bodyArg">You can also set the response body when you raise an error</a>
+            <h2><a href="toggleTracebacks">Toggle tracebacks %s</a></h2>
+            <p><a href="/doesNotExist">Click me; I'm a broken link!</a></p>
+            <p><a href="/error?code=403">Use a custom an error page from a file.</a></p>
+            <p>These errors are explicitly raised by the application:</p>
+            <ul>
+                <li><a href="/error?code=400">400</a></li>
+                <li><a href="/error?code=401">401</a></li>
+                <li><a href="/error?code=402">402</a></li>
+                <li><a href="/error?code=500">500</a></li>
+            </ul>
+            <p><a href="/messageArg">You can also set the response body
+            when you raise an error.</a></p>
         </body></html>
         """ % trace
     index.exposed = True
-
+    
     def toggleTracebacks(self):
         # simple function to toggle tracebacks on and off 
         tracebacks = cherrypy.config.get('server.showTracebacks')
         cherrypy.config.update({'server.showTracebacks': not tracebacks})
         
         # redirect back to the index
-        raise cherrypy._cperror.HTTPRedirect('/')
-    toggleTracebacks.exposed=True
+        raise cherrypy.HTTPRedirect('/')
+    toggleTracebacks.exposed = True
     
     def error(self, code):
         # raise an error based on the get query
-        code = int(code)
         raise cherrypy.HTTPError(status = code)
     error.exposed = True
+    
+    def messageArg(self):
+        message = ("If you construct an HTTPError with a 'message' "
+                   "argument, it wil be placed on the error page "
+                   "(underneath the status line by default).")
+        raise cherrypy.HTTPError(500, message=message)
+    messageArg.exposed = True
 
-    def bodyArg(self):
-        message = """ If you construct a HTTPError wiht body argument, the body argument
-                      will overide any default or custom error page.
-                  """
-        raise cherrypy.HTTPError(403, body = message)
-    bodyArg.exposed = True
 
 cherrypy.root = HTTPErrorDemo()
+
+# Set a custom response for 403 errors.
+import os
+localDir = os.path.dirname(__file__)
+curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
+cherrypy.config.update({'errorPage.403' : os.path.join(curpath, "custom_error.html")})
+
 
 if __name__ == '__main__':
     # Use the configuration file tutorial.conf.

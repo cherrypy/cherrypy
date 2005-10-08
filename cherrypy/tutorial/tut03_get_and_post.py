@@ -1,5 +1,5 @@
 """
-Tutorial 03 - Passing variables
+Tutorial - Passing variables
 
 This tutorial shows you how to pass GET/POST variables to methods.
 """

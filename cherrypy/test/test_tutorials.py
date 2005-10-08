@@ -171,6 +171,34 @@ hello
         self.assertHeader("Content-Type", "application/x-download")
         self.assertHeader("Content-Disposition", "attachment; filename=pdf_file.pdf")
         self.assertEqual(len(self.body), 85698)
+    
+    def test10HTTPErrors(self):
+        self.load_tut_module("tut10_http_errors")
+        
+        self.getPage("/")
+        self.assertInBody("""<a href="toggleTracebacks">""")
+        self.assertInBody("""<a href="/doesNotExist">""")
+        self.assertInBody("""<a href="/error?code=403">""")
+        self.assertInBody("""<a href="/error?code=500">""")
+        self.assertInBody("""<a href="/messageArg">""")
+        
+        tracebacks = cherrypy.config.get('server.showTracebacks')
+        self.getPage("/toggleTracebacks")
+        self.assertEqual(cherrypy.config.get('server.showTracebacks'), not tracebacks)
+        self.assertStatus("302 Found")
+        
+        self.getPage("/error?code=500")
+        self.assertStatus("500 Internal error")
+        self.assertInBody("Server got itself in trouble")
+        
+        self.getPage("/error?code=403")
+        self.assertStatus("403 Forbidden")
+        self.assertInBody("<h2>You can't do that!</h2>")
+        
+        self.getPage("/messageArg")
+        self.assertStatus("500 Internal error")
+        self.assertInBody("If you construct an HTTPError with a 'message'")
+
 
 if __name__ == "__main__":
     helper.testmain()

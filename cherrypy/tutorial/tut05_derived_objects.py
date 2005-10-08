@@ -1,5 +1,5 @@
 """
-Tutorial 05 - Object inheritance
+Tutorial - Object inheritance
 
 You are free to derive your request handler classes from any base
 class you wish. In most real-world applications, you will probably
