@@ -356,10 +356,8 @@ class Request(object):
             # (Bad Request) status code to any HTTP/1.1 request message
             # which lacks a Host header field.
             if not request.headerMap.has_key("Host"):
-                cherrypy.response.status = 400
-                cherrypy.response.body = ["HTTP/1.1 requires a 'Host' request header."]
-                finalize()
-                raise cherrypy.RequestHandled()
+                msg = "HTTP/1.1 requires a 'Host' request header."
+                raise cherrypy.HTTPError(400, msg)
         request.base = "%s://%s" % (request.scheme, request.headerMap.get('Host', ''))
         request.browserUrl = request.base + request.path
     
