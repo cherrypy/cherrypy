@@ -76,20 +76,25 @@ class XmlRpc:
 cherrypy.root = Root()
 cherrypy.root.xmlrpc = XmlRpc()
 
+import helper
+        
 cherrypy.config.update({
     'global': {'server.logToScreen': False,
                'server.environment': 'production',
                'server.showTracebacks': True,
+               'server.socketHost': helper.CPWebCase.HOST,
+               'server.socketPort': helper.CPWebCase.PORT,
                },
     '/xmlrpc':
                {'xmlRpcFilter.on':True}
               })
+        
 
-import helper
 
 class XmlRpcFilterTest(helper.CPWebCase):
     def testXmlRpcFilter(self):
-        proxy = xmlrpclib.ServerProxy('http://localhost:8080/xmlrpc/')
+        
+        proxy = xmlrpclib.ServerProxy('http://localhost:%s/xmlrpc/' % (self.PORT))
 
         self.assertEqual(proxy.return_single_item_list(),
                          [42]
