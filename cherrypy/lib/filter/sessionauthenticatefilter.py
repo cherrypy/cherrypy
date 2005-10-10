@@ -49,7 +49,7 @@ def defaultCheckLoginAndPassword(login, password):
 
 class SessionAuthenticateFilter(BaseFilter):
     """
-    Filter that adds debug information to the page
+    Filter allows for simple forms based authentication and access control
     """
 
     def beforeMain(self):
@@ -57,7 +57,6 @@ class SessionAuthenticateFilter(BaseFilter):
         if not cherrypy.config.get('sessionAuthenticateFilter.on', False):
             return
         
-        from cherrypy.lib import httptools
         
         checkLoginAndPassword = cherrypy.config.get('sessionAuthenticateFilter.checkLoginAndPassword', defaultCheckLoginAndPassword)
         loginScreen = cherrypy.config.get('sessionAuthenticateFilter.loginScreen', defaultLoginScreen)
@@ -71,7 +70,7 @@ class SessionAuthenticateFilter(BaseFilter):
             cherrypy.session[sessionKey] = None
             cherrypy.request.user = None
             fromPage = cherrypy.request.paramMap.get('fromPage', '..')
-            cherrypy.response.body = httptools.redirect(fromPage)
+            raise cherrypy.HTTPRedirect(fromPage)
         elif cherrypy.request.path.endswith('doLogin'):
             fromPage = cherrypy.request.paramMap.get('fromPage', '..')
             login = cherrypy.request.paramMap['login']
@@ -83,7 +82,7 @@ class SessionAuthenticateFilter(BaseFilter):
                 cherrypy.session[sessionKey] = login
                 if not fromPage:
                     fromPage = '/'
-                cherrypy.response.body = httptools.redirect(fromPage)
+                raise cherrypy.HTTPRedirect(fromPage)
             return
 
         # Check if user is logged in
