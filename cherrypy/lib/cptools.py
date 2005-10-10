@@ -31,7 +31,7 @@ Tools which both the CherryPy framework and application developers invoke.
 """
 
 from BaseHTTPServer import BaseHTTPRequestHandler
-responseCodes = BaseHTTPRequestHandler.responses
+responseCodes = BaseHTTPRequestHandler.responses.copy()
 
 import inspect
 import mimetools
@@ -244,7 +244,7 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     try:
         stat = os.stat(path)
     except OSError:
-        if getattr(cherrypy, "debug", None):
+        if cherrypy.config.get('server.environment') == 'development':
             cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
         raise cherrypy.NotFound()
     
