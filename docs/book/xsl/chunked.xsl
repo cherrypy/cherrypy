@@ -18,6 +18,7 @@
   <xsl:param name="css.decoration" select="0" />
   <xsl:param name="chunk.section.depth" select="1"/>
   <xsl:param name="local.l10n.xml" select="document(&apos;&apos;)"/>
+  <xsl:param name="img.src.path">./images/</xsl:param>
   <l:i18n xmlns:l="http://docbook.sourceforge.net/xmlns/l10n/1.0">
     <l:l10n xmlns:l="http://docbook.sourceforge.net/xmlns/l10n/1.0" language="en">
       <l:context name="xref">

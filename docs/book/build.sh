@@ -61,28 +61,34 @@ untarDocbook() {
 rm -rf ./html
 mkdir html
 mkdir html/css
+mkdir html/images
+cp xml/*.gif html/images/
 cp css/*.css html/css/
 untarDocbook
+cd xml
 xsltproc \
     --timing \
     --xinclude \
-    --output html/index.html \
-    xsl/html.xsl \
-    xml/cherrypy.xml 
- 
+    --output ../html/index.html \
+    ../xsl/html.xsl \
+    cherrypy.xml 
+cd .. 
 #
 # Let's chunk the doc in different files
 #
 rm -rf ./chunk
 mkdir chunk
 mkdir chunk/css
+mkdir chunk/images
 cp css/*.css chunk/css/
+cp xml/*.gif chunk/images/
 untarDocbook
+cd xml
 xsltproc \
     --timing \
     --xinclude \
-    --output chunk/index.html \
-    xsl/chunked.xsl \
-    xml/cherrypy.xml 
-
+    --output ../chunk/index.html \
+    ../xsl/chunked.xsl \
+    cherrypy.xml 
+cd ..
 exit
