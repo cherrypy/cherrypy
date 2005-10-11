@@ -511,6 +511,9 @@ def iterable(body):
     elif isinstance(body, types.GeneratorType):
         body = flattener(body)
     elif isinstance(body, basestring):
+        # strings get wrapped in a list because iterating over a single
+        # item list is much faster than iterating over every character
+        # in a long string.
         body = [body]
     elif body is None:
         body = [""]

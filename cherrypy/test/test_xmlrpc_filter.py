@@ -73,6 +73,10 @@ class XmlRpc:
         return True
     return_boolean.exposed = True
 
+    def test_argument_passing(self, num):
+        return num * 2
+    test_argument_passing.exposed = True
+
 cherrypy.root = Root()
 cherrypy.root.xmlrpc = XmlRpc()
 
@@ -123,6 +127,9 @@ class XmlRpcFilterTest(helper.CPWebCase):
         self.assertEqual(proxy.return_boolean(),
                          True
                          )
+        self.assertEqual(proxy.test_argument_passing(22), 
+                        22 * 2
+                        )
 
 
 if __name__ == '__main__':

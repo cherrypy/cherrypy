@@ -344,6 +344,7 @@ def run():
         'test_tutorials',
         'test_virtualhost_filter',
         'test_session_filter',
+        'test_sessionauthenticate_filter',
         'test_xmlrpc_filter',
     ]
     CPTestHarness(testList).run()
