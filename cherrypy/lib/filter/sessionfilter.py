@@ -90,6 +90,7 @@ class SessionFilter(basefilter.BaseFilter):
         
         cherrypy.request._session = EmptyClass()
         sess = cherrypy.request._session
+        sess.toBeCleaned = True
         now = datetime.datetime.now()
         # Dont enable session if sessionFilter is off or if this is a
         #   request for static data
@@ -196,11 +197,14 @@ class SessionFilter(basefilter.BaseFilter):
         # Make a wrapper around the body in order to save the session
         #   either before or after the body is returned
         cherrypy.response.body = saveData(cherrypy.response.body, sess)
+        sess.toBeCleaned = False
 
     def onEndResource(self):
         # If RequestHandled is raised, beforeFinalize and afterErrorResponse
         #   are not called, so we release the session here
-        self._clean()
+        sess = cherrypy.request._session
+        if sess.toBeCleaned:
+            self._clean()
 
     def afterErrorResponse(self):
         self._clean()
