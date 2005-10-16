@@ -360,6 +360,8 @@ class Request(object):
                 raise cherrypy.HTTPError(400, msg)
         request.base = "%s://%s" % (request.scheme, request.headerMap.get('Host', ''))
         request.browserUrl = request.base + request.path
+        if request.queryString:
+            request.browserUrl += '?' + request.queryString
     
     def processRequestBody(self):
         request = cherrypy.request
