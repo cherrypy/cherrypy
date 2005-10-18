@@ -48,7 +48,12 @@
         storage type should be used for storing session data on the server.
         Built-in types are <literal>Ram</literal> (default),
         <literal>File</literal> and <literal>PostgreSQL</literal> (see <xref
-        linkend="backends" /> for more info)</para>
+        linkend="backends" /> for more info).</para>
+      </listitem>
+      <listitem>
+        <para><option>sessionFilter.storagePath</option>: Specifies the directory 
+        in which CherryPy puts the session files when sessionFilter.storageType is set
+        to <literal>File</literal>.</para>
       </listitem>
       <listitem>
         <para><option>sessionFilter.timeout</option>: The number of minutes of
