@@ -45,6 +45,49 @@
             generate any valid HTTP response message by modifying
             <code>cherrypy.response.status</code>, <code>.headerMap</code>, and/or
             <code>.body</code>.</para>
+            <section>
+                <title>How CherryPy relates to REST (REpresentational State Transfer)</title>
+                <para>The design of HTTP itself is guided by REST, a set of principles which
+                constrain its expressivity and therefore its implementation. HTTP is a transfer
+                protocol which enables the exchange of representations of resources. In a RESTful
+                design, clients never expect to access a resource directly; instead, they request a
+                representation of that resource. For example, if a resource has both an XML and an
+                HTML representation, then an HTTP/1.1 server might be expected to inspect the Accept
+                request header in order to decide which representation to serve in response.</para>
+                <para>It's important to clarify some terminology, here. In <ulink
+                url="http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm">REST terms</ulink>,
+                a "resource" is "any concept that might be the target of an author’s hypertext
+                reference...a conceptual mapping to a set of entities, not the entity that
+                corresponds to the mapping at any particular point in time". A resource is not the
+                request, nor the response, in an HTTP conversation. "The resource is not the storage
+                object. The resource is not a mechanism that the server uses to handle the storage
+                object. The resource is a conceptual mapping — the server receives the identifier
+                (which identifies the mapping) and applies it to its current mapping implementation
+                (usually a combination of collection-specific deep tree traversal and/or hash tables)
+                to find the currently responsible handler implementation and the handler
+                implementation then selects the appropriate action+response based on the request
+                content."</para>
+                <para>CherryPy, therefore, does not provide REST resources, nor model them, nor serve
+                them. Instead, it provides mappings between identifiers (URI's) and handlers
+                (functions). It allows application developers to model resources, perhaps, but it
+                only serves representations of resources.</para>
+                <para>By default, these identifier-to-handler mappings (which we will call "handler
+                dispatch" from now on) follow a simple pattern: since the path portion of a URI is
+                hierarchical, CherryPy arranges handlers in a similar heirarchy, starting at
+                cherrypy.root, and branching on each attribute; every leaf node in this tree must be
+                "exposed" (but the branches need not be, see section 2.2). Note in particular that,
+                although the query portion of a Request-URI is part of the resource identifier,
+                CherryPy does not use it to map identifiers to handlers. Application developers may
+                use the query string to further identify the requested resource, of course, but
+                CherryPy, not having any domain-specific knowledge about the format or semantic of a
+                query string, doesn't try to guess.</para>
+                <para>Filters, then, are CherryPy's way to wrap or circumvent the default handler
+                dispatch. EncodingFilter, for example, wraps the response from a handler, encoding
+                the response body as it is produced. StaticFilter, on the other hand, intercepts some
+                requests (based on the path portion of the Request-URI) and implements its own
+                identifier-to-handler mapping. Developers who wish to provide their own handler
+                dispatch mechanisms are encouraged to do so via a filter.</para>
+            </section>
         </section>
     </section>
 </section>
