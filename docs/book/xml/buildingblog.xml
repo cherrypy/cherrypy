@@ -5,7 +5,8 @@
   <section>
     <sectioninfo>
       <abstract>
-        <para>The following sections will describe the step to build a simple blogging system. It
+      <para><emphasis>This section is about to be rewritten completely in a better way. So feel free to have al ook at it but don't spend too much time on it.</emphasis></para>
+      <para>The following sections will describe the step to build a simple blogging system. It
           does not aim to create a comprehensive one but to give you an overview of how to build a
           CherryPy application.</para>
       </abstract>
