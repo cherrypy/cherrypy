@@ -129,6 +129,7 @@
       <literal>sessionFilter.getDB</literal> config option to a function that
       returns a DB connection.</listitem>
     </itemizedlist>
+    Note that when using the <literal>Ram</literal> backend, the session data is saved as soon as you stick it in <literal>cherrypy.session</literal>. So even if an error occurs later on in the page handler the data is still saved; this is not the case for the other backends.
   </section>
   <section id="custombackend">
     <title>Writing your own custom backend</title>
