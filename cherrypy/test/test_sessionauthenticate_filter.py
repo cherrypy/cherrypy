@@ -50,6 +50,7 @@ import helper
 class SessionAuthenticateFilterTest(helper.CPWebCase):
     
     def testSessionAuthenticateFilter(self):
+        protocol = cherrypy.config.get('server.protocolVersion')
         # request a page and check for login form
         self.getPage('/')
         self.assertInBody('<form method="post" action="doLogin">')
@@ -59,7 +60,10 @@ class SessionAuthenticateFilterTest(helper.CPWebCase):
 
         # attempt a login
         self.getPage('/doLogin', method='POST', body=login_body)
-        self.assertStatus('302 Found')
+        if protocol == 'HTTP/1.0':
+            self.assertStatus('302 Found')
+        else:
+            self.assertStatus('303 See Other')
 
         # get the page now that we are logged in
         self.getPage('/', self.cookies)
@@ -67,7 +71,10 @@ class SessionAuthenticateFilterTest(helper.CPWebCase):
 
         # do a logout
         self.getPage('/doLogout', self.cookies)
-        self.assertStatus('302 Found')
+        if protocol == 'HTTP/1.0':
+            self.assertStatus('302 Found')
+        else:
+            self.assertStatus('303 See Other')
 
         # verify we are logged out
         self.getPage('/', self.cookies)
