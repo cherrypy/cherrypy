@@ -15,7 +15,7 @@
       <year>2005</year>
     </copyright>
     <pubdate></pubdate>
-    <releaseinfo>Revision: x.x</releaseinfo>
+    <releaseinfo>Revision: 2.1.0</releaseinfo>
   </bookinfo>
 
   <xi:include href="preface.xml"/>

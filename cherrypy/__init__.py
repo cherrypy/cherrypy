@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Global module that all modules developing with CherryPy should import.
 """
 
-__version__ = '2.1.0-rc2'
+__version__ = '2.1.0'
 
 import datetime
 import sys

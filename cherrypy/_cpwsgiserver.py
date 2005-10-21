@@ -272,7 +272,7 @@ class WorkerThread(threading.Thread):
 
 class CherryPyWSGIServer(object):
     
-    version = "CherryPy/2.1.0-rc2"
+    version = "CherryPy/2.1.0"
     ready = False
     interrupt = None
     
