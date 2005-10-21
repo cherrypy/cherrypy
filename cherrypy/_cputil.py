@@ -240,7 +240,7 @@ _cpFilterList = []
 from cherrypy.lib.filter import baseurlfilter, cachefilter, \
     decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
     staticfilter, nsgmlsfilter, tidyfilter, \
-    virtualhostfilter, xmlrpcfilter, sessionauthenticatefilter, \
+    xmlrpcfilter, sessionauthenticatefilter, \
     sessionfilter
 
 # this contains the classes for each filter type
@@ -259,7 +259,6 @@ _cpDefaultFilterClasses = {
     'SessionFilter'      : sessionfilter.SessionFilter,
     'StaticFilter'       : staticfilter.StaticFilter,
     'TidyFilter'         : tidyfilter.TidyFilter,
-    'VirtualHostFilter'  : virtualhostfilter.VirtualHostFilter,
     'XmlRpcFilter'       : xmlrpcfilter.XmlRpcFilter,
 }
 
@@ -271,7 +270,6 @@ _cpDefaultFilterInstances = {}
 __cpDefaultInputFilters = [
     'CacheFilter',
     'LogDebugInfoFilter',
-    'VirtualHostFilter',
     'BaseUrlFilter',
     'DecodingFilter',
     'SessionFilter',
