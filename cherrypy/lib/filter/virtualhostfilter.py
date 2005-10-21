@@ -26,6 +26,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import warnings
+warnings.warn("This module doesn't currently behave as expected and will be completely rewritten for CherryPy-2.2.",
+              FutureWarning)
+
 import basefilter
 
 class VirtualHostFilter(basefilter.BaseFilter):
