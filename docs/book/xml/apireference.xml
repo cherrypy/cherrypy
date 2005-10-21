@@ -8,6 +8,11 @@
     </section>
     <section id="cherrypyrequest">
         <title>cherrypy.request</title>
+        <para>The cherrypy.request object contains request-related objects. Pretty lame description,
+        but that's all it does; it's a big data dump. At the beginning of each HTTP request, the
+        existing request object is destroyed, and a new one is created, (one request object for each
+        thread). Therefore, CherryPy (and you yourself) can stick data into cherrypy.request and not
+        worry about it conflicting with other requests.</para>
         <section>
             <title>cherrypy.request.remoteAddr</title>
             <para>This attribute is a string containing the IP address of the client. It will be an
@@ -130,6 +135,11 @@
     <!-- end cherrypy.request section -->
     <section id="cherrypyresponse">
         <title>cherrypy.response</title>
+        <para>The cherrypy.response object contains response-related objects. Pretty lame
+        description, but that's all it does; it's a big data dump. At the beginning of each HTTP
+        request, the existing response object is destroyed, and a new one is created, (one response
+        object for each thread). Therefore, CherryPy (and you yourself) can stick data into
+        cherrypy.response and not worry about it conflicting with other requests.</para>
         <section>
             <title>cherrypy.response.headerMap</title>
             <para>This attribute is a dictionary with automatically titled keys (e.g.,

@@ -80,9 +80,8 @@
                 <arg choice="req">install</arg>
             </cmdsynopsis>
             <para>Alternately, since CherryPy has no dependencies, you don't have to run setup.py.
-            Simply checkout the code into a directory which is on your Python path, such as your
-            site-packages directory.
-            </para>
+            Instead, checkout <code>/trunk/cherrypy</code> into a directory which is on your Python
+            path, such as <code>site-packages/cherrypy</code>.</para>
         </section>
     </section>
     <section>
