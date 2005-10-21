@@ -170,27 +170,13 @@
     <para>In that case, we need to make sure that access to the session data
     is serialized. This way, threads can't both modify the data at the same
     time and leave it in an inconsistent state.</para>
-    <para>By default, CherryPy will serialize access to the session data, so
+    <para>You can easily make CherryPy serialize access to the session data by setting the <option>sessionFilter.locking</option> config option to <literal>implicit</literal> (the default is <literal>explicit</literal>, which means that CherryPy won't do any locking for you). In the <literal>implicit</literal> mode,
     if a browser makes a second request while a first request is still being
     handled by the server, the second request will block while the first
     request is accessing the data. As soon as the first request is finished
     then the second request will be able to access it.</para>
     <para>This means that the second request will block until the first
-    request is finished. If you're using the <option>ram</option> backend, you
-    can manually shorten the window where the second request will block. This
-    is achieved by having the first request explicitly tell CherryPy when it
-    starts using the session data and when it is finished with it. In order to
-    do so, you have to call <literal>cherrypy.session.acquireLock</literal>
-    and <literal>cherrypy.session.releaseLock</literal>. You also have to set
-    the <literal>sessionFilter.locking</literal> config option to
-    <option>explicit</option>.</para>
-    <para>Note that this technique only works with the <option>ram</option>
-    backend. For other backends like <option>file</option> or
-    <option>postgresql</option>, it is not safe to release the session before
-    the request is finished, because the session data will only be saved at
-    the end of the request anyway. So it would be bad if some other thread
-    started accessing the data between the time when it is released and the
-    time when it is saved.</para>
+    request is finished.</para>
   </section>
   <section id="callbacks">
     <title>Being notified when sessions are created/deleted</title>

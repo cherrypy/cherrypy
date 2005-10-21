@@ -103,7 +103,7 @@ class SessionFilter(basefilter.BaseFilter):
         
         # Read config options
         sess.sessionTimeout = conf('sessionFilter.timeout', 60)
-        sess.sessionLocking = conf('sessionFilter.locking', 'implicit')
+        sess.sessionLocking = conf('sessionFilter.locking', 'explicit')
         sess.onCreateSession = conf('sessionFilter.onCreateSession',
                                     lambda data: None)
         sess.onDeleteSession = conf('sessionFilter.onDeleteSession',
