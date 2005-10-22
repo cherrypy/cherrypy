@@ -81,25 +81,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##---------------------------------------------------------------------
 ## 
 ## EXAMPLE CODE FOR THE SERVER:
-##    from cherrypy.lib.filter.xmlrpcfilter import XmlRpcFilter
-##    from cherrypy import cherrypy
+##    import cherrypy
 ##
 ##    class Root:
-##        _cpFilterList = [XmlRpcFilter()]
-##        
-##        def longString(self,s,times):
-##            return s*times
+##        def longString(self, s, times):
+##            return s * times
 ##        longString.exposed = True
 ##
 ##    cherrypy.root = Root()
+##    cherrypy.config.update({'xmlRpcFilter.on': True,
+##                            'socketPort': 9001,
+##                            'threadPool':0,
+##                            'socketQueueSize':10 })
 ##    if __name__=='__main__':
-##        cherrypy.server.start(configMap = {'socketPort': 9001,
-##                                      'threadPool':0,
-##                                      'socketQueueSize':10 })
+##        cherrypy.server.start()
+##
 ## EXAMPLE CODE FOR THE CLIENT:
 ## >>> import xmlrpclib
 ## >>> server = xmlrpclib.ServerProxy('http://localhost:9001')
-## >>> assert server.longString('abc',3) == 'abcabcabc'
+## >>> assert server.longString('abc', 3) == 'abcabcabc'
 ## >>>
 ######################################################################
 
