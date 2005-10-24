@@ -49,6 +49,7 @@ cherrypy.root = Root()
 
 
 class TestType(type):
+    """Metaclass which automatically exposes all functions in each subclass."""
     def __init__(cls, name, bases, dct):
         type.__init__(name, bases, dct)
         for value in dct.itervalues():
@@ -261,6 +262,21 @@ class ThreadLocal(Test):
         existing = repr(getattr(cherrypy.request, "asdf", None))
         cherrypy.request.asdf = "hello"
         return existing
+
+
+class NadsatFilter:
+    def beforeFinalize(self):
+        body = "".join([chunk for chunk in cherrypy.response.body])
+        body = body.replace("good", "horrorshow")
+        body = body.replace("piece", "lomtick")
+        cherrypy.response.body = [body]
+
+class CPFilterList(Test):
+    
+    _cpFilterList = [NadsatFilter()]
+    
+    def index(self):
+        return "A good piece of cherry pie"
 
 
 logFile = os.path.join(localDir, "error.log")
@@ -499,6 +515,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/error")
         self.assertStatus('303 See Other')
         self.assertInBody('/errpage')
+    
+    def testCPFilterList(self):
+        self.getPage("/cpfilterlist/")
+        self.assertBody("A horrorshow lomtick of cherry pie")
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
