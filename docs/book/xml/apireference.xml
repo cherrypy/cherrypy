@@ -108,7 +108,8 @@
         <section>
             <title>cherrypy.request.browserUrl</title>
             <para>This attribute is a string containing the URL the client requested. By default, it
-            is equal to <code>request.base + request.path</code>.</para>
+            is equal to <code>request.base + request.path</code>, plus the querystring, if
+            provided.</para>
         </section>
         <section>
             <title>cherrypy.request.objectPath</title>
