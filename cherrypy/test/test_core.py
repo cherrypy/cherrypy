@@ -237,6 +237,35 @@ class Method(Test):
         # which CP will just pipe back out if we tell it to.
         return cherrypy.request.body
 
+class Divorce:
+    """HTTP Method handlers shouldn't collide with normal method names.
+    For example, a GET-handler shouldn't collide with a method named 'get'.
+    
+    If you build HTTP method dispatching into CherryPy, rewrite this class
+    to use your new dispatch mechanism and make sure that:
+        "GET /divorce HTTP/1.1" maps to divorce.index() and
+        "GET /divorce/get?ID=13 HTTP/1.1" maps to divorce.get()
+    """
+    
+    documents = {}
+    
+    def index(self):
+        yield "<h1>Choose your document</h1>\n"
+        yield "<ul>\n"
+        for id, contents in self.documents:
+            yield ("    <li><a href='/divorce/get?ID=%s'>%s</a>: %s</li>\n"
+                   % (id, id, contents))
+        yield "</ul>"
+    index.exposed = True
+    
+    def get(self, ID):
+        return ("Divorce document %s: %s" %
+                (ID, self.documents.get(ID, "empty")))
+    get.exposed = True
+
+cherrypy.root.divorce = Divorce()
+
+
 class Cookies(Test):
     
     def single(self, name):
@@ -460,6 +489,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('child')
         self.assertStatus('200 OK')
         
+        # Test that requests for index methods without a trailing slash
+        # get redirected to the same URI path with a trailing slash.
         self.getPage("/redirect?id=3")
         self.assert_(self.status in ('302 Found', '303 See Other'))
         self.assertInBody("<a href='http://127.0.0.1:%s/redirect/?id=3'>"
@@ -663,6 +694,17 @@ llo,
         # Content-Length header required for OPTIONS with no response body.
         # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.2
         self.assertHeader("Content-Length", "0")
+        
+        # For method dispatchers: make sure that an HTTP method doesn't
+        # collide with a virtual path atom. If you build HTTP-method
+        # dispatching into the core, rewrite these handlers to use
+        # your dispatch idioms.
+        self.getPage("/divorce/get?ID=13")
+        self.assertBody('Divorce document 13: empty')
+        self.assertStatus('200 OK')
+        self.getPage("/divorce/", method="GET")
+        self.assertBody('<h1>Choose your document</h1>\n<ul>\n</ul>')
+        self.assertStatus('200 OK')
     
     def testFavicon(self):
         # Calls to favicon.ico are special-cased in _cphttptools.
