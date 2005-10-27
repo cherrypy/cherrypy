@@ -37,6 +37,8 @@ localDir = os.path.dirname(__file__)
 
 class Root:
     
+    _cpFilterList = []
+    
     def index(self):
         return "hello"
     index.exposed = True
@@ -49,7 +51,9 @@ cherrypy.root = Root()
 
 
 class TestType(type):
-    """Metaclass which automatically exposes all functions in each subclass."""
+    """Metaclass which automatically exposes all functions in each subclass,
+    and adds an instance of the subclass as an attribute of cherrypy.root.
+    """
     def __init__(cls, name, bases, dct):
         type.__init__(name, bases, dct)
         for value in dct.itervalues():
@@ -133,6 +137,20 @@ class Redirect(Test):
                                            {"user_id": "fish"})
         else:
             raise cherrypy.InternalRedirect('/image/getImagesByUser')
+
+
+class Slash(Test):
+    def index(self):
+        return "slashed!"
+
+class VPrefix:
+    def __init__(self, prefix):
+        self.prefix = prefix
+    def onStartResource(self):
+        path = cherrypy.request.path
+        if path.startswith(self.prefix):
+            cherrypy.request.objectPath = path[len(self.prefix):]
+cherrypy.root._cpFilterList.append(VPrefix("/vpath"))
 
 
 class Image(Test):
@@ -546,6 +564,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/error")
         self.assertStatus('303 See Other')
         self.assertInBody('/errpage')
+        
+        # Trailing slash redirect on a virtualpath child.
+        self.getPage("/vpath/slash")
+        self.assertStatus('303 See Other')
+        self.assertInBody('/vpath/slash/')
     
     def testCPFilterList(self):
         self.getPage("/cpfilterlist/")

@@ -752,9 +752,10 @@ def mapPathToObject(path):
         # Check if the original path had a trailing slash (otherwise, do
         #   a redirect)
         if path[-1] != '/':
-            newUrl = path + '/'
-            if cherrypy.request.queryString:
-                newUrl += "?" + cherrypy.request.queryString
+            atoms = cherrypy.request.browserUrl.split("?", 1)
+            newUrl = atoms.pop(0) + '/'
+            if atoms:
+                newUrl += "?" + atoms[0]
             if getattr(cherrypy, "debug", None):
                 cherrypy.log("    Found: redirecting to %s" % newUrl, "DEBUG")
             raise cherrypy.HTTPRedirect(newUrl)
