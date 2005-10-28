@@ -41,10 +41,12 @@ class StaticFilter(BaseFilter):
         if not config.get('staticFilter.on', False):
             return
         
+        path = request.objectPath or request.path
+        
         regex = config.get('staticFilter.match', '')
         if regex:
             import re
-            if not re.search(regex, request.path):
+            if not re.search(regex, path):
                 return
         
         filename = config.get('staticFilter.file')
@@ -54,7 +56,7 @@ class StaticFilter(BaseFilter):
             if section == 'global':
                 section = "/"
             section = section.rstrip(r"\/")
-            extraPath = request.path[len(section) + 1:]
+            extraPath = path[len(section) + 1:]
             extraPath = extraPath.lstrip(r"\/")
             extraPath = urllib.unquote(extraPath)
             filename = os.path.join(staticDir, extraPath)
