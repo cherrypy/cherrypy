@@ -85,6 +85,15 @@ class StaticFilterTest(helper.CPWebCase):
         #   into \r\n on Windows when extracting the CherryPy tarball so
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
+        
+        # Check a directory (should currently fail--no provision for it)
+        ignore = helper.webtest.ignored_exceptions
+        ignore.append(IOError)
+        try:
+            self.getPage("/static/")
+            self.assertErrorPage(500)
+        finally:
+            ignore.pop()
 
 if __name__ == "__main__":
     helper.testmain()
