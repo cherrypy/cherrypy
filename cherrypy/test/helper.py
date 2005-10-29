@@ -70,6 +70,19 @@ def onerror():
         cherrypy._cputil._cpOnError()
 
 
+class VirtualRootFilter:
+    
+    def __init__(self, prefix):
+        self.prefix = prefix
+    
+    def onStartResource(self):
+        path = cherrypy.request.path
+        if path.startswith(self.prefix):
+            cherrypy.request.objectPath = path[len(self.prefix):]
+vroot = ""
+test_vrf = VirtualRootFilter(vroot)
+
+
 class CPWebCase(webtest.WebCase):
     
     def exit(self):
@@ -129,6 +142,14 @@ class CPWebCase(webtest.WebCase):
         # 1) show server tracebacks in the test output, and
         # 2) stop the HTTP request (if any) and ignore further assertions.
         cherrypy.root._cpOnError = onerror
+        
+        if vroot:
+            url = vroot + url
+            filters = getattr(cherrypy.root, "_cpFilterList", None)
+            if filters is None:
+                cherrypy.root._cpFilterList = filters = []
+            if test_vrf not in filters:
+                filters.append(test_vrf)
         
         if cherrypy.server.httpserver is None:
             self._getRequest(url, headers, method, body)

@@ -37,11 +37,13 @@ localDir = os.path.dirname(__file__)
 
 class Root:
     
-    _cpFilterList = []
-    
     def index(self):
         return "hello"
     index.exposed = True
+    
+    def andnow(self):
+        return "the larch"
+    andnow.exposed = True
     
     def _global(self):
         pass
@@ -100,7 +102,7 @@ class Status(Test):
     # Non-numeric code
     def bad(self):
         cherrypy.response.status = "error"
-        return "hello"
+        return "bad news"
 
 
 class Redirect(Test):
@@ -139,20 +141,6 @@ class Redirect(Test):
             raise cherrypy.InternalRedirect('/image/getImagesByUser')
 
 
-class Slash(Test):
-    def index(self):
-        return "slashed!"
-
-class VPrefix:
-    def __init__(self, prefix):
-        self.prefix = prefix
-    def onStartResource(self):
-        path = cherrypy.request.path
-        if path.startswith(self.prefix):
-            cherrypy.request.objectPath = path[len(self.prefix):]
-cherrypy.root._cpFilterList.append(VPrefix("/vpath"))
-
-
 class Image(Test):
     
     def getImagesByUser(self, user_id):
@@ -187,11 +175,11 @@ class Error(Test):
         raise ValueError()
     
     def page_yield(self):
-        yield "hello"
+        yield "howdy"
         raise ValueError()
     
     def page_streamed(self):
-        yield "hello"
+        yield "word up"
         raise ValueError()
         yield "very oops"
     
@@ -307,7 +295,7 @@ class ThreadLocal(Test):
     
     def index(self):
         existing = repr(getattr(cherrypy.request, "asdf", None))
-        cherrypy.request.asdf = "hello"
+        cherrypy.request.asdf = "rassfrassin"
         return existing
 
 
@@ -509,6 +497,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         # Test that requests for index methods without a trailing slash
         # get redirected to the same URI path with a trailing slash.
+        # Make sure GET params are preserved.
         self.getPage("/redirect?id=3")
         self.assert_(self.status in ('302 Found', '303 See Other'))
         self.assertInBody("<a href='http://127.0.0.1:%s/redirect/?id=3'>"
@@ -564,11 +553,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/error")
         self.assertStatus('303 See Other')
         self.assertInBody('/errpage')
-        
-        # Trailing slash redirect on a virtualpath child.
-        self.getPage("/vpath/slash")
-        self.assertStatus('303 See Other')
-        self.assertInBody('/vpath/slash/')
     
     def testCPFilterList(self):
         self.getPage("/cpfilterlist/")
@@ -606,7 +590,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 # Because this error is raised after the response body has
                 # started, the status should not change to an error status.
                 self.assertStatus("200 OK")
-                self.assertBody("helloUnrecoverable error in the server.")
+                self.assertBody("word upUnrecoverable error in the server.")
             
             # No traceback should be present
             self.getPage("/error/cause_err_in_finalize")
