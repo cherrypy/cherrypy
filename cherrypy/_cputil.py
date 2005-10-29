@@ -230,6 +230,32 @@ def formatExc(exc=None):
         return ""
     return "".join(traceback.format_exception(*exc))
 
+def bareError(extrabody=None):
+    """Produce status, headers, body for a critical error.
+    
+    Returns a triple without calling any other questionable functions,
+    so it should be as error-free as possible. Call it from an HTTP server
+    if you get errors after Request() is done.
+    
+    If extrabody is None, a friendly but rather unhelpful error message
+    is set in the body. If extrabody is a string, it will be appended
+    as-is to the body.
+    """
+    
+    # The whole point of this function is to be a last line-of-defense
+    # in handling errors. That is, it must not raise any errors itself;
+    # it cannot be allowed to fail. Therefore, don't add to it!
+    # In particular, don't call any other CP functions.
+    
+    body = "Unrecoverable error in the server."
+    if extrabody is not None:
+        body += "\n" + extrabody
+    
+    return ("500 Internal Server Error",
+            [('Content-Type', 'text/plain'),
+             ('Content-Length', str(len(body)))],
+            [body])
+
 def _cpOnError():
     """ Default _cpOnError method """
     cherrypy.HTTPError(500).set_response()

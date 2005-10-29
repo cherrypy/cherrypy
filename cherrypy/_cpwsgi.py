@@ -32,7 +32,7 @@ A WSGI application interface (see PEP 333).
 
 import sys
 import cherrypy
-from cherrypy import _cputil, _cphttptools
+from cherrypy import _cputil
 from cherrypy._cpwsgiserver import CherryPyWSGIServer as server
 
 
@@ -88,27 +88,19 @@ def wsgiApp(environ, start_response):
         sys.stderr = NullWriter()
     
     try:
-        cherrypy.request.purge__()
-        cherrypy.response.purge__()
-        
         # LOGON_USER is served by IIS, and is the name of the
         # user after having been mapped to a local account.
         # Both IIS and Apache set REMOTE_USER, when possible.
-        cherrypy.request.login = (environ.get('LOGON_USER')
-                                  or environ.get('REMOTE_USER') or None)
-        cherrypy.request.multithread = environ['wsgi.multithread']
-        cherrypy.request.multiprocess = environ['wsgi.multiprocess']
-        clientAddr = (
-            environ.get('REMOTE_ADDR', ''),
-            int(environ.get('REMOTE_PORT', -1))
-        )
-        cherrypy.server.request(clientAddr,
-                                environ.get('REMOTE_ADDR', ''),
-                                requestLine(environ),
-                                translate_headers(environ),
-                                environ['wsgi.input'],
-                                environ['wsgi.url_scheme'],
-                                )
+        env = environ.get
+        clientAddr = (env('REMOTE_ADDR', ''), int(env('REMOTE_PORT', -1)))
+        request = cherrypy.server.request(clientAddr, env('REMOTE_ADDR', ''),
+                                          environ['wsgi.url_scheme'])
+        request.login = (env('LOGON_USER') or env('REMOTE_USER') or None)
+        request.multithread = environ['wsgi.multithread']
+        request.multiprocess = environ['wsgi.multiprocess']
+        response = request.run(requestLine(environ),
+                               translate_headers(environ),
+                               environ['wsgi.input'])
     except (KeyboardInterrupt, SystemExit):
         raise
     except:
@@ -117,10 +109,9 @@ def wsgiApp(environ, start_response):
         defaultOn = (cherrypy.config.get('server.environment') == 'development')
         if not cherrypy.config.get("server.showTracebacks", defaultOn):
             tb = ""
-        s, h, b = _cphttptools.bareError(tb)
+        s, h, b = _cputil.bareError(tb)
         exc = sys.exc_info()
     else:
-        response = cherrypy.response
         s, h, b = response.status, response.headers, response.body
         exc = None
     
@@ -137,7 +128,7 @@ def wsgiApp(environ, start_response):
     except:
         tb = _cputil.formatExc()
         cherrypy.log(tb)
-        s, h, b = _cphttptools.bareError()
+        s, h, b = _cputil.bareError()
         # CherryPy test suite expects bareError body to be output,
         # so don't call start_response (which, according to PEP 333,
         # may raise its own error at that point).

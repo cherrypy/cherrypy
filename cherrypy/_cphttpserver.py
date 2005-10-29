@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import threading, os, socket
 import SocketServer, BaseHTTPServer, Queue
 import cherrypy
-from cherrypy import _cputil, _cphttptools
+from cherrypy import _cputil
 
 
 class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -76,23 +76,18 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if not self.parse_request(): # An error code has been sent, just exit
             return
         
-        cherrypy.request.purge__()
-        cherrypy.response.purge__()
+        request = cherrypy.server.request(self.client_address,
+                                          self.address_string(), "http")
+        request.multithread = cherrypy.config.get("server.threadPool") > 1
+        request.multiprocess = False
+        response = request.run(self.raw_requestline, self._headerlist(),
+                               self.rfile)
         
-        tp = cherrypy.config.get("server.threadPool")
-        cherrypy.request.multithread = (tp > 1)
-        cherrypy.request.multiprocess = False
-        cherrypy.server.request(self.client_address,
-                                self.address_string(),
-                                self.raw_requestline,
-                                self._headerlist(),
-                                self.rfile, "http")
         wfile = self.wfile
-        wfile.write("%s %s\r\n" %
-                    (self.protocol_version, cherrypy.response.status))
+        wfile.write("%s %s\r\n" % (self.protocol_version, response.status))
         
         has_close_conn = False
-        for name, value in cherrypy.response.headers:
+        for name, value in response.headers:
             wfile.write("%s: %s\r\n" % (name, value))
             if name.lower == 'connection' and value.lower == 'close':
                 has_close_conn = True
@@ -118,10 +113,10 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         
         wfile.write("\r\n")
         try:
-            for chunk in cherrypy.response.body:
+            for chunk in response.body:
                 wfile.write(chunk)
         except:
-            s, h, b = _cphttptools.bareError()
+            s, h, b = _cputil.bareError()
             for chunk in b:
                 wfile.write(chunk)
         

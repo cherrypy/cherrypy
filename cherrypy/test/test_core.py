@@ -377,9 +377,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             ('/foo/bar', 'baz', 'that2'),
             ('/foo/nex', 'baz', 'that2'),
         ]
-        cherrypy.request.purge__()
         for path, key, expected in tests:
-            cherrypy.request.path = path
+            from cherrypy import _cphttptools
+            cherrypy.serving.request = r = _cphttptools.Request("", "", "")
+            r.path = path
             result = cherrypy.config.get(key, None)
             self.assertEqual(result, expected)
     
@@ -609,7 +610,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertInBody(msg)
 
     
-    def test_Ranges(self):
+    def testRanges(self):
         self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
         self.assertBody("[(3, 7)]")
         

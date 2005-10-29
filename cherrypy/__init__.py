@@ -53,17 +53,10 @@ except ImportError:
 # new HTTP conversation.
 serving = local()
 
-class _AttributeDump:
-    pass
-
 class _ThreadLocalProxy:
     
     def __init__(self, attrname):
         self.__dict__["__attrname__"] = attrname
-    
-    def purge__(self):
-        """Make a new, emtpy proxied object in cherrypy.serving."""
-        setattr(serving, self.__attrname__, _AttributeDump())
     
     def __getattr__(self, name):
         childobject = getattr(serving, self.__attrname__)

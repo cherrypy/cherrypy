@@ -191,12 +191,11 @@ class XmlRpcFilter(BaseFilter):
         if not cherrypy.request.xmlRpcFilterOn:
             return
         
-        from cherrypy._cphttptools import mapPathToObject
         path = cherrypy.request.objectPath or cherrypy.request.path
         
         while True:
             try:
-                page_handler, object_path, virtual_path = mapPathToObject(path)
+                page_handler, object_path, virtual_path = cherrypy.request.mapPathToObject(path)
                 
                 # Remove "root" from object_path and join it to get objectPath
                 cherrypy.request.objectPath = '/' + '/'.join(object_path[1:])
@@ -206,7 +205,7 @@ class XmlRpcFilter(BaseFilter):
                 return
             except cherrypy.InternalRedirect, x:
                 # Try again with the new path
-                path = x.path        
+                path = x.path
     
     def beforeFinalize(self):
         """ Called before finalizing output """

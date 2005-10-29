@@ -99,14 +99,11 @@ class CPWebCase(webtest.WebCase):
         if body is not None:
             body = StringIO.StringIO(body)
         
-        cherrypy.request.purge__()
-        cherrypy.response.purge__()
+        request = cherrypy.server.request((self.HOST, self.PORT), self.HOST, "http")
+        response = request.run(requestLine, headers, body)
         
-        cherrypy.server.request((self.HOST, self.PORT), self.HOST,
-                                requestLine, headers, body, "http")
-        
-        self.status = cherrypy.response.status
-        self.headers = cherrypy.response.headers
+        self.status = response.status
+        self.headers = response.headers
         
         # Build a list of request cookies from the previous response cookies.
         self.cookies = [('Cookie', v) for k, v in self.headers
@@ -114,15 +111,15 @@ class CPWebCase(webtest.WebCase):
         
         try:
             self.body = []
-            for chunk in cherrypy.response.body:
+            for chunk in response.body:
                 self.body.append(chunk)
         except:
             if cherrypy.config.get("streamResponse", False):
                 # Pass the error through
                 raise
             
-            from cherrypy import _cphttptools
-            s, h, b = _cphttptools.bareError()
+            from cherrypy import _cputil
+            s, h, b = _cputil.bareError()
             # Don't reset status or headers; we're emulating an error which
             # occurs after status and headers have been written to the client.
             for chunk in b:

@@ -189,16 +189,11 @@ class Server(object):
                 port = cherrypy.config.get('server.socketPort')
                 wait_for_occupied_port(host, port)
     
-    def request(self, clientAddress, remoteHost, requestLine,
-                headers, rfile, scheme="http"):
-        """request(clientAddress, remoteHost, requestLine, headers, rfile, scheme="http")
+    def request(self, clientAddress, remoteHost, scheme="http"):
+        """Obtain an HTTP Request object.
         
         clientAddress: the (IP address, port) of the client
         remoteHost: the IP address of the client
-        requestLine: "<HTTP method> <url?qs> HTTP/<version>",
-                e.g. "GET /main?abc=123 HTTP/1.1"
-        headers: a list of (key, value) tuples
-        rfile: a file-like object from which to read the HTTP request body
         scheme: either "http" or "https"; defaults to "http"
         """
         if self.state == STOPPED:
@@ -219,12 +214,11 @@ class Server(object):
             for func in self.onStartThreadList:
                 func(i)
         
-        if cherrypy.profiler:
-            cherrypy.profiler.run(_cphttptools.Request, clientAddress, remoteHost,
-                                  requestLine, headers, rfile, scheme)
-        else:
-            _cphttptools.Request(clientAddress, remoteHost,
-                                 requestLine, headers, rfile, scheme)
+        r = _cphttptools.Request(clientAddress[0], clientAddress[1],
+                                 remoteHost, scheme)
+        cherrypy.serving.request = r
+        cherrypy.serving.response = _cphttptools.Response()
+        return r
     
     def stop(self):
         """Stop, including any HTTP servers."""
