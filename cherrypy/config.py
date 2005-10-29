@@ -94,11 +94,11 @@ def get(key, defaultValue=None, returnSection=False, path = None):
 
     if path is None:
         try:
-            path = cherrypy.request.path
+            path = cherrypy.request.objectPath
         except AttributeError:
-            # There's no request.path yet, so use the global settings.
+            # There's no request.objectPath yet, so use the global settings.
             path = "global"
-
+    
     while True:
         if path == "":
             path = "/"
@@ -133,7 +133,7 @@ def getAll(key):
         results = []
     
     try:
-        path = cherrypy.request.path
+        path = cherrypy.request.objectPath
     except AttributeError:
         return results
     

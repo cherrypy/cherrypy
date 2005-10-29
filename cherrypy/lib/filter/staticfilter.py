@@ -41,7 +41,7 @@ class StaticFilter(BaseFilter):
         if not config.get('staticFilter.on', False):
             return
         
-        path = request.objectPath or request.path
+        path = request.objectPath
         
         regex = config.get('staticFilter.match', '')
         if regex:

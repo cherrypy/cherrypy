@@ -259,7 +259,6 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     
     strModifTime = HTTPDate(time.gmtime(stat.st_mtime))
     if cherrypy.request.headerMap.has_key('If-Modified-Since'):
-        # Check if if-modified-since date is the same as strModifTime
         if cherrypy.request.headerMap['If-Modified-Since'] == strModifTime:
             response.status = "304 Not Modified"
             response.body = []

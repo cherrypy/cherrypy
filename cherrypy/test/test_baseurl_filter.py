@@ -48,7 +48,8 @@ class BaseUrlFilterTest(helper.CPWebCase):
     
     def testBaseUrlFilter(self):
         self.getPage("/")
-        self.assertHeader('Location', "http://www.mydomain.com/dummy")
+        self.assertHeader('Location',
+                          "http://www.mydomain.com%s/dummy" % helper.vroot)
 
 
 if __name__ == '__main__':

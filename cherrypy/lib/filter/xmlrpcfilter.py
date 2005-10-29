@@ -115,8 +115,9 @@ class XmlRpcFilter(BaseFilter):
     beforeRequestBody:
         Unmarshalls the posted data to a methodname and parameters.
         - These are stored in cherrypy.request.rpcMethod and .rpcParams
-        - The method is also stored in cherrypy.request.path, so CP2 will find
-          the right method to call for you, based on the root's position.
+        - The method is also stored in cherrypy.request.objectPath,
+          so CP2 will find the right method to call for you,
+          based on the root's position.
     beforeFinalize:
         Marshalls cherrypy.response.body to xmlrpc.
         - Until resolved: cherrypy.response.body must be a python source string;
@@ -148,41 +149,42 @@ class XmlRpcFilter(BaseFilter):
     
     def beforeRequestBody(self):
         """ Called after the request header has been read/parsed"""
-        cherrypy.request.xmlRpcFilterOn = cherrypy.config.get('xmlRpcFilter.on', False)
-        if not cherrypy.request.xmlRpcFilterOn:
+        request = cherrypy.request
+        
+        request.xmlRpcFilterOn = cherrypy.config.get('xmlRpcFilter.on', False)
+        if not request.xmlRpcFilterOn:
             return True
         
-        cherrypy.request.isRPC = self.testValidityOfRequest()
-        if not cherrypy.request.isRPC: 
+        request.isRPC = self.testValidityOfRequest()
+        if not request.isRPC: 
             # used for debugging or more info
             # print 'not a valid xmlrpc call'
             return # break this if it's not for this filter!!
-        # used for debugging, or more info:
-        # print "xmlrpcmethod...",
-        cherrypy.request.processRequestBody = False
-        dataLength = int(cherrypy.request.headerMap.get('Content-Length', 0))
-        data = cherrypy.request.rfile.read(dataLength)
+        
+        request.processRequestBody = False
+        dataLength = int(request.headerMap.get('Content-Length', 0))
+        data = request.rfile.read(dataLength)
         try:
             params, method = xmlrpclib.loads(data)
         except Exception:
             params, method = ('ERROR PARAMS', ), 'ERRORMETHOD'
-        cherrypy.request.rpcMethod, cherrypy.request.rpcParams = method, params
+        request.rpcMethod, request.rpcParams = method, params
+        
         # patch the path. there are only a few options:
         # - 'RPC2' + method >> method
         # - 'someurl' + method >> someurl.method
         # - 'someurl/someother' + method >> someurl.someother.method
-        if not cherrypy.request.path.endswith('/'):
-            cherrypy.request.path += '/'
-        if cherrypy.request.path.startswith('/RPC2/'):
-            cherrypy.request.path=cherrypy.request.path[5:] ## strip the first /rpc2
-        cherrypy.request.path += str(method).replace('.', '/')
-        cherrypy.request.paramList = list(params)
-        # used for debugging and more info
-        # print "XMLRPC Filter: calling '%s' with args: '%s' " % (cherrypy.request.path,params)
-
+        if not request.objectPath.endswith('/'):
+            request.objectPath += '/'
+        if request.objectPath.startswith('/RPC2/'):
+            # strip the first /rpc2
+            request.objectPath = request.objectPath[5:]
+        request.objectPath += str(method).replace('.', '/')
+        request.paramList = list(params)
+    
     def beforeMain(self):
         """This is a variation of main() from _cphttptools.
-
+        
         The reason it is redone here is because we don't want
         cherrypy.response.body = iterable(body) - we want to use
         whatever real value the user returned from their callable
@@ -191,7 +193,7 @@ class XmlRpcFilter(BaseFilter):
         if not cherrypy.request.xmlRpcFilterOn:
             return
         
-        path = cherrypy.request.objectPath or cherrypy.request.path
+        path = cherrypy.request.objectPath
         
         while True:
             try:

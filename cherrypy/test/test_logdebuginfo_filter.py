@@ -77,8 +77,9 @@ hello
 --x--
 """
             cherrypy.config.update({
-                '/bug326': {'server.maxRequestBodySize': 3,
-                            'server.environment': 'development',
+                ('%s/bug326' % helper.vroot): {
+                    'server.maxRequestBodySize': 3,
+                    'server.environment': 'development',
                 }
             })
             ignore = helper.webtest.ignored_exceptions

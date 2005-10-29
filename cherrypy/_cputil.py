@@ -51,7 +51,7 @@ def getObjectTrail():
         objectTrail = [root]
         # Try object path
         try:
-            path = cherrypy.request.objectPath or cherrypy.request.path
+            path = cherrypy.request.objectPath
         except AttributeError:
             path = '/'
         if path:
@@ -96,7 +96,7 @@ def getSpecialAttributePath(name):
     """ Return the path to the special attribute """
     objectList = getObjectTrail()
     if objectList:
-        pathList = cherrypy.request.objectPath or cherrypy.request.path
+        pathList = cherrypy.request.objectPath
         pathList = pathList.split("/")[1:]
         for i in xrange(len(objectList) - 1, -1, -1):
             if hasattr(objectList[i], name):

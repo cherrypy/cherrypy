@@ -269,10 +269,16 @@ class WebCase(TestCase):
     
     def assertStatus(self, status, msg=None):
         """Fail if self.status != status."""
-        if not self.status == status:
-            if msg is None:
-                msg = 'Status (%s) != %s' % (`self.status`, `status`)
-            self._handlewebError(msg)
+        if isinstance(status, basestring):
+            if not self.status == status:
+                if msg is None:
+                    msg = 'Status (%s) != %s' % (`self.status`, `status`)
+                self._handlewebError(msg)
+        else:
+            if not self.status in status:
+                if msg is None:
+                    msg = 'Status (%s) not in %s' % (`self.status`, `status`)
+                self._handlewebError(msg)
     
     def assertHeader(self, key, value=None, msg=None):
         """Fail if (key, [value]) not in self.headers."""

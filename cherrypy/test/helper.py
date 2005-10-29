@@ -76,10 +76,11 @@ class VirtualRootFilter:
         self.prefix = prefix
     
     def onStartResource(self):
-        path = cherrypy.request.path
+        path = cherrypy.request.objectPath
         if path.startswith(self.prefix):
             cherrypy.request.objectPath = path[len(self.prefix):]
 vroot = ""
+##vroot = "/vpath"
 test_vrf = VirtualRootFilter(vroot)
 
 
@@ -141,7 +142,8 @@ class CPWebCase(webtest.WebCase):
         cherrypy.root._cpOnError = onerror
         
         if vroot:
-            url = vroot + url
+            if url != "*":
+                url = vroot + url
             filters = getattr(cherrypy.root, "_cpFilterList", None)
             if filters is None:
                 cherrypy.root._cpFilterList = filters = []

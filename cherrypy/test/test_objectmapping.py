@@ -147,20 +147,20 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertBody("default:('notExposed',)")
         
         self.getPage("/dir1/dir2/")
-        self.assertBody('index for dir2, path is:/dir1/dir2/')
+        self.assertBody('index for dir2, path is:%s/dir1/dir2/' % helper.vroot)
         
         self.getPage("/dir1/dir2")
         self.assert_(self.status in ('302 Found', '303 See Other'))
-        self.assertHeader('Location', 'http://%s:%s/dir1/dir2/'
-                          % (self.HOST, self.PORT))
+        self.assertHeader('Location', 'http://%s:%s%s/dir1/dir2/'
+                          % (self.HOST, self.PORT, helper.vroot))
         
         self.getPage("/dir1/dir2/dir3/dir4/index")
         self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
         
         self.getPage("/redirect")
         self.assertStatus('302 Found')
-        self.assertHeader('Location', 'http://%s:%s/dir1/'
-                          % (self.HOST, self.PORT))
+        self.assertHeader('Location', 'http://%s:%s%s/dir1/'
+                          % (self.HOST, self.PORT, helper.vroot))
         
         # Test that we can use URL's which aren't all valid Python identifiers
         # This should also test the %XX-unquoting of URL's.

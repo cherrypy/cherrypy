@@ -380,7 +380,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         for path, key, expected in tests:
             from cherrypy import _cphttptools
             cherrypy.serving.request = r = _cphttptools.Request("", "", "")
-            r.path = path
+            r.objectPath = r.path = path
             result = cherrypy.config.get(key, None)
             self.assertEqual(result, expected)
     
@@ -456,9 +456,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             if k.lower() == 'content-length':
                 haslength = True
         if haslength:
-            self.assertEqual(data[0][-42:], '] "GET /flatten/as_string HTTP/1.1" 200 7\n')
+            self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7\n'
+                                          % helper.vroot))
         else:
-            self.assertEqual(data[0][-42:], '] "GET /flatten/as_string HTTP/1.1" 200 -\n')
+            self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 -\n'
+                                          % helper.vroot))
         
         self.assertEqual(data[1][:15], '127.0.0.1 - - [')
         haslength = False
@@ -466,9 +468,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             if k.lower() == 'content-length':
                 haslength = True
         if haslength:
-            self.assertEqual(data[1][-41:], '] "GET /flatten/as_yield HTTP/1.1" 200 7\n')
+            self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 7\n'
+                                          % helper.vroot))
         else:
-            self.assertEqual(data[1][-41:], '] "GET /flatten/as_yield HTTP/1.1" 200 -\n')
+            self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 -\n'
+                                          % helper.vroot))
         
         data = open(logFile, "rb").readlines()
         self.assertEqual(data, [])
@@ -477,7 +481,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/params/?thing=a")
         self.assertBody("'a'")
         data = open(logFile, "rb").readlines()
-        self.assertEqual(data[0][-53:], ' HTTP INFO 127.0.0.1 - GET /params/?thing=a HTTP/1.1\n')
+        self.assert_(data[0].endswith(' HTTP INFO 127.0.0.1 - GET %s/params/?thing=a HTTP/1.1\n'
+                                      % helper.vroot))
         
         # Test that tracebacks get written to the error log.
         ignore = helper.webtest.ignored_exceptions
@@ -500,10 +505,19 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # get redirected to the same URI path with a trailing slash.
         # Make sure GET params are preserved.
         self.getPage("/redirect?id=3")
-        self.assert_(self.status in ('302 Found', '303 See Other'))
-        self.assertInBody("<a href='http://127.0.0.1:%s/redirect/?id=3'>"
-                          "http://127.0.0.1:%s/redirect/?id=3</a>" %
-                          (self.PORT, self.PORT))
+        self.assertStatus(('302 Found', '303 See Other'))
+        self.assertInBody("<a href='http://127.0.0.1:%s%s/redirect/?id=3'>"
+                          "http://127.0.0.1:%s%s/redirect/?id=3</a>" %
+                          (self.PORT, helper.vroot, self.PORT, helper.vroot))
+        
+        if helper.vroot:
+            # Corner case: the "trailing slash" redirect could be tricky if
+            # we're using a virtual root and the URI is "/vroot" (no slash).
+            self.getPage("")
+            self.assertStatus(('302 Found', '303 See Other'))
+            self.assertInBody("<a href='http://127.0.0.1:%s%s/'>"
+                              "http://127.0.0.1:%s%s/</a>" %
+                              (self.PORT, helper.vroot, self.PORT, helper.vroot))
         
         self.getPage("/redirect/by_code?code=300")
         self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
@@ -766,7 +780,7 @@ hello
         httpcls = cherrypy.server.httpserverclass
         if httpcls and httpcls.__name__ == "WSGIServer":
             cherrypy.config.update({
-                '/maxrequestsize': {'server.maxRequestBodySize': 3}})
+                '%s/maxrequestsize' % helper.vroot: {'server.maxRequestBodySize': 3}})
             self.getPage('/maxrequestsize/upload', h, "POST", b)
             self.assertStatus("413 Request Entity Too Large")
             self.assertInBody("Request Entity Too Large")

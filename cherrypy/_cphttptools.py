@@ -199,7 +199,8 @@ class Request(object):
             self.rfile = rfile
             
             # This has to be done very early in the request process,
-            # because request.path is used for config lookups right away.
+            # because request.objectPath is used for config lookups
+            # right away.
             self.processRequestLine(requestLine)
             
             try:
@@ -245,35 +246,32 @@ class Request(object):
         self.method, path, self.protocol = self.requestLine.split()
         self.processRequestBody = self.method in ("POST", "PUT")
         
-        # separate the queryString, or set it to "" if not found
-        if "?" in path:
-            path, self.queryString = path.split("?", 1)
-        else:
-            path, self.queryString = path, ""
-        
-        # Unquote the path (e.g. "/this%20path" -> "this path").
-        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-        # Note that cgi.parse_qs will decode the querystring for us.
-        path = urllib.unquote(path)
-        
+        # path may be an abs_path (including "http://host.domain.tld");
+        # Ignore scheme, location, and fragments (so config lookups work).
+        # [Therefore, this assumes all hosts are valid for this server.]
+        scheme, location, path, params, qs, frag = urlparse(path)
         if path == "*":
             # "...the request does not apply to a particular resource,
             # but to the server itself". See
             # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
             path = "global"
-        elif not path.startswith("/"):
-            # path is an absolute path (including "http://host.domain.tld");
-            # convert it to a relative path, so configMap lookups work. This
-            # default method assumes all hosts are valid for this server.
-            scheme, location, p, pm, q, f = urlparse(path)
-            path = path[len(scheme + "://" + location):]
+        else:
+            if params:
+                params = ";" + params
+            path = path + params
+            
+            # Unquote the path (e.g. "/this%20path" -> "this path").
+            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+            # Note that cgi.parse_qs will decode the querystring for us.
+            path = urllib.unquote(path)
         
         # Save original value (in case it gets modified by filters)
         self.path = self.originalPath = path
+        self.queryString = qs
         
         # Change objectPath in filters to change
         # the object that will get rendered
-        self.objectPath = None
+        self.objectPath = path
     
     def processHeaders(self):
         # Compare request and server HTTP versions, in case our server does
@@ -346,7 +344,7 @@ class Request(object):
                 raise cherrypy.HTTPError(400, msg)
         self.base = "%s://%s" % (self.scheme, self.headerMap.get('Host', ''))
         self.browserUrl = self.base + self.path
-        if self.queryString:  
+        if self.queryString:
             self.browserUrl += '?' + self.queryString
     
     def processBody(self):
@@ -391,7 +389,7 @@ class Request(object):
     def main(self, path=None):
         """Obtain and set cherrypy.response.body from a page handler."""
         if path is None:
-            path = self.objectPath or self.path
+            path = self.objectPath
         
         while True:
             try:
@@ -407,7 +405,7 @@ class Request(object):
                 # Try again with the new path
                 path = x.path
     
-    def mapPathToObject(self, path):
+    def mapPathToObject(self, objectpath):
         """For path, return the corresponding exposed callable (or raise NotFound).
         
         path should be a "relative" URL path, like "/app/a/b/c". Leading and
@@ -426,7 +424,7 @@ class Request(object):
         """
         
         # Remove leading and trailing slash
-        tpath = path.strip("/")
+        tpath = objectpath.strip("/")
         
         if not tpath:
             objectPathList = []
@@ -483,13 +481,12 @@ class Request(object):
                 # We didn't find anything
                 if getattr(cherrypy, "debug", None):
                     cherrypy.log("    NOT FOUND", "DEBUG")
-                raise cherrypy.NotFound(path)
+                raise cherrypy.NotFound(objectpath)
         
         if isFirst:
-            # We found the extra ".index"
-            # Check if the original path had a trailing slash (otherwise, do
-            #   a redirect)
-            if path[-1] != '/':
+            # We found the extra ".index". Check if the original path
+            # had a trailing slash (otherwise, do a redirect).
+            if not objectpath.endswith('/'):
                 atoms = self.browserUrl.split("?", 1)
                 newUrl = atoms.pop(0) + '/'
                 if atoms:
