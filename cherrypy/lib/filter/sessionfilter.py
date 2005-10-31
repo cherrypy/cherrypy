@@ -90,7 +90,6 @@ class SessionFilter(basefilter.BaseFilter):
         
         cherrypy.request._session = EmptyClass()
         sess = cherrypy.request._session
-        sess.toBeCleaned = True
         now = datetime.datetime.now()
         # Dont enable session if sessionFilter is off or if this is a
         #   request for static data
@@ -162,32 +161,26 @@ class SessionFilter(basefilter.BaseFilter):
     
     def beforeFinalize(self):
         def saveData(body, sess):
-            try:
-                # If the body is a generator, we have to save the data
-                #   *after* the generator has been consumed
-                if isinstance(body, types.GeneratorType):
-                    for line in body:
-                        yield line
-                
-                # Save session data
-                t = datetime.timedelta(seconds = sess.sessionTimeout * 60)
-                expirationTime = datetime.datetime.now() + t
-                sess.sessionStorage.save(sess.sessionID, sess.sessionData,
-                                         expirationTime)
-                if sess.locked:
-                    # Always release the lock if the user didn't release it
-                    sess.sessionStorage.releaseLock()
-                
-                # If the body is not a generator, we save the data
-                #   before the body is returned
-                if not isinstance(body, types.GeneratorType):
-                    for line in body:
-                        yield line
-            except:
-                # Can't use try/finally because of yield
-                self._clean()
-                raise
-            self._clean()
+            # If the body is a generator, we have to save the data
+            #   *after* the generator has been consumed
+            if isinstance(body, types.GeneratorType):
+                for line in body:
+                    yield line
+            
+            # Save session data
+            t = datetime.timedelta(seconds = sess.sessionTimeout * 60)
+            expirationTime = datetime.datetime.now() + t
+            sess.sessionStorage.save(sess.sessionID, sess.sessionData,
+                                     expirationTime)
+            if sess.locked:
+                # Always release the lock if the user didn't release it
+                sess.sessionStorage.releaseLock()
+            
+            # If the body is not a generator, we save the data
+            #   before the body is returned
+            if not isinstance(body, types.GeneratorType):
+                for line in body:
+                    yield line
         
         sess = cherrypy.request._session
         if not getattr(sess, 'sessionStorage', None):
@@ -197,14 +190,9 @@ class SessionFilter(basefilter.BaseFilter):
         # Make a wrapper around the body in order to save the session
         #   either before or after the body is returned
         cherrypy.response.body = saveData(cherrypy.response.body, sess)
-        sess.toBeCleaned = False
 
     def onEndResource(self):
-        # If RequestHandled is raised, beforeFinalize and afterErrorResponse
-        #   are not called, so we release the session here
-        sess = cherrypy.request._session
-        if sess.toBeCleaned:
-            self._clean()
+        self._clean()
 
     def afterErrorResponse(self):
         self._clean()
