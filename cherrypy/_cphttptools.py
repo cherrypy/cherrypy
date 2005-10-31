@@ -6,8 +6,6 @@ import os
 import re
 import sys
 import types
-import urllib
-from urlparse import urlparse
 
 import cherrypy
 from cherrypy import _cputil, _cpcgifs, _cpwsgiserver
@@ -163,7 +161,6 @@ class Request(object):
             self.headers = headers
             self.headerMap = KeyTitlingDict()
             self.simpleCookie = Cookie.SimpleCookie()
-            
             self.rfile = rfile
             
             # This has to be done very early in the request process,
@@ -210,32 +207,17 @@ class Request(object):
         _cputil.getSpecialAttribute("_cpLogAccess")()
     
     def processRequestLine(self, requestLine):
-        self.requestLine = requestLine.strip()
-        self.method, path, self.protocol = self.requestLine.split()
-        self.processRequestBody = self.method in ("POST", "PUT")
-        
-        # path may be an abs_path (including "http://host.domain.tld");
-        # Ignore scheme, location, and fragments (so config lookups work).
-        # [Therefore, this assumes all hosts are valid for this server.]
-        scheme, location, path, params, qs, frag = urlparse(path)
+        self.requestLine = rl = requestLine.strip()
+        method, path, qs, proto = cptools.parseRequestLine(rl)
         if path == "*":
-            # "...the request does not apply to a particular resource,
-            # but to the server itself". See
-            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
             path = "global"
-        else:
-            if params:
-                params = ";" + params
-            path = path + params
-            
-            # Unquote the path (e.g. "/this%20path" -> "this path").
-            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-            # Note that cgi.parse_qs will decode the querystring for us.
-            path = urllib.unquote(path)
         
-        # Save original value (in case it gets modified by filters)
-        self.path = self.originalPath = path
+        self.method = method
+        self.processRequestBody = method in ("POST", "PUT")
+        
+        self.path = path
         self.queryString = qs
+        self.protocol = proto
         
         # Change objectPath in filters to change
         # the object that will get rendered
@@ -265,18 +247,7 @@ class Request(object):
         # not to include a given HTTP/1.1 feature in the response content.
         cherrypy.response.version = min(self.version, server_v)
         
-        # build a paramMap dictionary from queryString
-        if re.match(r"[0-9]+,[0-9]+", self.queryString):
-            # Server-side image map. Map the coords to 'x' and 'y'
-            # (like CGI::Request does).
-            pm = self.queryString.split(",")
-            pm = {'x': int(pm[0]), 'y': int(pm[1])}
-        else:
-            pm = cgi.parse_qs(self.queryString, keep_blank_values=True)
-            for key, val in pm.items():
-                if len(val) == 1:
-                    pm[key] = val[0]
-        self.paramMap = pm
+        self.paramMap = cptools.parseQueryString(self.queryString)
         
         # Process the headers into self.headerMap
         for name, value in self.headers:
@@ -336,22 +307,7 @@ class Request(object):
             # request body was a content-type other than form params.
             self.body = forms.file
         else:
-            for key in forms.keys():
-                valueList = forms[key]
-                if isinstance(valueList, list):
-                    self.paramMap[key] = []
-                    for item in valueList:
-                        if item.filename is not None:
-                            value = item # It's a file upload
-                        else:
-                            value = item.value # It's a regular field
-                        self.paramMap[key].append(value)
-                else:
-                    if valueList.filename is not None:
-                        value = valueList # It's a file upload
-                    else:
-                        value = valueList.value # It's a regular field
-                    self.paramMap[key] = value
+            self.paramMap.update(cptools.paramsFromCGIForm(forms))
     
     def main(self, path=None):
         """Obtain and set cherrypy.response.body from a page handler."""

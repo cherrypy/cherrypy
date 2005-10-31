@@ -3,6 +3,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
 responseCodes = BaseHTTPRequestHandler.responses.copy()
 
+import cgi
 import inspect
 import mimetools
 
@@ -11,9 +12,11 @@ mimetypes.types_map['.dwg']='image/x-dwg'
 mimetypes.types_map['.ico']='image/x-icon'
 
 import os
+import re
 import sys
 import time
-
+import urllib
+from urlparse import urlparse
 
 import cherrypy
 
@@ -341,3 +344,64 @@ def validStatus(status):
         reason = defaultReason
     
     return code, reason, message
+
+def parseRequestLine(requestLine):
+    """Return (method, path, querystring, protocol) from a requestLine."""
+    method, path, protocol = requestLine.split()
+    
+    # path may be an abs_path (including "http://host.domain.tld");
+    # Ignore scheme, location, and fragments (so config lookups work).
+    # [Therefore, this assumes all hosts are valid for this server.]
+    scheme, location, path, params, qs, frag = urlparse(path)
+    if path == "*":
+        # "...the request does not apply to a particular resource,
+        # but to the server itself". See
+        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+        pass
+    else:
+        if params:
+            params = ";" + params
+        path = path + params
+        
+        # Unquote the path (e.g. "/this%20path" -> "this path").
+        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+        # Note that cgi.parse_qs will decode the querystring for us.
+        path = urllib.unquote(path)
+    
+    return method, path, qs, protocol
+
+def parseQueryString(queryString, keep_blank_values=True):
+    """Build a paramMap dictionary from a queryString."""
+    if re.match(r"[0-9]+,[0-9]+", queryString):
+        # Server-side image map. Map the coords to 'x' and 'y'
+        # (like CGI::Request does).
+        pm = queryString.split(",")
+        pm = {'x': int(pm[0]), 'y': int(pm[1])}
+    else:
+        pm = cgi.parse_qs(queryString, keep_blank_values)
+        for key, val in pm.items():
+            if len(val) == 1:
+                pm[key] = val[0]
+    return pm
+
+def paramsFromCGIForm(form):
+    paramMap = {}
+    for key in form.keys():
+        valueList = form[key]
+        if isinstance(valueList, list):
+            paramMap[key] = []
+            for item in valueList:
+                if item.filename is not None:
+                    value = item # It's a file upload
+                else:
+                    value = item.value # It's a regular field
+                paramMap[key].append(value)
+        else:
+            if valueList.filename is not None:
+                value = valueList # It's a file upload
+            else:
+                value = valueList.value # It's a regular field
+            paramMap[key] = value
+    return paramMap
+
+
