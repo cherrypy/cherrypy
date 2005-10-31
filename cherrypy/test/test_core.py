@@ -79,11 +79,14 @@ class Status(Test):
 
 class Redirect(Test):
     
-    def _cpOnError(self):
-        raise cherrypy.HTTPRedirect("/errpage")
-    
-    def error(self):
-        raise NameError()
+    class Error:
+        def _cpOnError(self):
+            raise cherrypy.HTTPRedirect("/errpage")
+        
+        def index(self):
+            raise NameError()
+        index.exposed = True
+    error = Error()
     
     def index(self):
         return "child"
@@ -111,6 +114,9 @@ class Redirect(Test):
                                            {"user_id": "fish"})
         else:
             raise cherrypy.InternalRedirect('/image/getImagesByUser')
+    
+    def stringify(self):
+        return str(cherrypy.HTTPRedirect("/"))
 
 
 class Image(Test):
@@ -503,9 +509,14 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus('200 OK')
         
         # HTTPRedirect on error
-        self.getPage("/redirect/error")
+        self.getPage("/redirect/error/")
         self.assertStatus('303 See Other')
         self.assertInBody('/errpage')
+        
+        # Make sure str(HTTPRedirect()) works.
+        self.getPage("/redirect/stringify")
+        self.assertStatus('200 OK')
+        self.assertBody("(['http://127.0.0.1:8000/'], 303)")
     
     def testCPFilterList(self):
         self.getPage("/cpfilterlist/")

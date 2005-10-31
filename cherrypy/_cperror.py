@@ -60,6 +60,8 @@ class InternalRedirect(Exception):
         request.browserUrl = request.base + path
         if request.queryString:
             request.browserUrl += '?' + request.queryString
+        
+        Exception.__init__(self, path, params)
 
 
 
@@ -104,6 +106,7 @@ class HTTPRedirect(Exception):
                 raise ValueError("status must be between 300 and 399.")
         
         self.status = status
+        Exception.__init__(self, abs_urls, status)
     
     def set_response(self):
         import cherrypy
@@ -156,6 +159,7 @@ class HTTPError(Error):
         if status < 400 or status > 599:
             raise ValueError("status must be between 400 and 599.")
         self.message = message
+        Error.__init__(self, status, message)
     
     def set_response(self):
         import cherrypy
@@ -176,10 +180,6 @@ class HTTPError(Error):
         
         if cherrypy.response.headerMap.has_key("Content-Encoding"):
             del cherrypy.response.headerMap['Content-Encoding']
-    
-    def __str__(self):
-        import cherrypy
-        return "%s: %s" % (self.status, self.message or "")
 
 
 class NotFound(HTTPError):
