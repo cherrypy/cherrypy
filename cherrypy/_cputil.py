@@ -191,6 +191,45 @@ def getErrorPage(status, **kwargs):
     
     return template % kwargs
 
+def _cpOnHTTPError(status, message):
+    """ Default _cpOnHTTPError method.
+    
+    status should be an int.
+    """
+    tb = formatExc()
+    if cherrypy.config.get('server.logTracebacks', True):
+        cherrypy.log(tb)
+    
+    if not cherrypy.config.get('server.showTracebacks', False):
+        tb = None
+    
+    response = cherrypy.response
+    
+    # Remove headers which applied to the original content,
+    # but do not apply to the error page.
+    for key in ["Accept-Ranges", "Age", "ETag", "Location",
+                "Retry-After", "Vary", "Content-Encoding",
+                "Content-Length", "Content-Location", "Content-MD5",
+                "Expires", "Last-Modified"]:
+        if response.headerMap.has_key(key):
+            del response.headerMap[key]
+    
+    if status != 416:
+        # A server sending a response with status code 416 (Requested
+        # range not satisfiable) SHOULD include a Content-Range field
+        # with a byte-range- resp-spec of "*". The instance-length
+        # specifies the current length of the selected resource.
+        # A response with status code 206 (Partial Content) MUST NOT
+        # include a Content-Range field with a byte-range- resp-spec of "*".
+        if response.headerMap.has_key("Content-Range"):
+            del response.headerMap["Content-Range"]
+    
+    # In all cases, finalize will be called after this method,
+    # so don't bother cleaning up response values here.
+    response.status = status
+    response.headerMap['Content-Type'] = "text/html"
+    response.body = getErrorPage(status, traceback=tb, message=message)
+
 def formatExc(exc=None):
     """formatExc(exc=None) -> exc (or sys.exc_info if None), formatted."""
     if exc is None:

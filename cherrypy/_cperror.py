@@ -163,23 +163,8 @@ class HTTPError(Error):
     
     def set_response(self):
         import cherrypy
-        from cherrypy._cputil import getErrorPage, formatExc
-        
-        tb = formatExc()
-        if cherrypy.config.get('server.logTracebacks', True):
-            cherrypy.log(tb)
-        
-        if not cherrypy.config.get('server.showTracebacks', False):
-            tb = None
-        
-        # In all cases, finalize will be called after this method,
-        # so don't bother cleaning up response values here.
-        cherrypy.response.status = self.status
-        cherrypy.response.body = getErrorPage(self.status, traceback=tb,
-                                              message=self.message)
-        
-        if cherrypy.response.headerMap.has_key("Content-Encoding"):
-            del cherrypy.response.headerMap['Content-Encoding']
+        handler = cherrypy._cputil.getSpecialAttribute("_cpOnHTTPError")
+        handler(self.status, self.message)
 
 
 class NotFound(HTTPError):
@@ -198,3 +183,4 @@ class InternalError(HTTPError):
     
     def __init__(self, message=None):
         HTTPError.__init__(self, 500, message)
+
