@@ -46,44 +46,71 @@ defaultGlobal = {
     'server.socketHost': '',
     'server.socketFile': '',
     'server.socketQueueSize': 5,
-    
-    'server.environment': 'development',
     'server.protocolVersion': 'HTTP/1.0',
     'server.logToScreen': True,
     'server.logFile': '',
     'server.reverseDNS': False,
     'server.threadPool': 0,
+    'server.environment': "development",
     }
+
+environments = {
+    "development": {
+        'autoreload.on': True,
+        'logDebugInfoFilter.on': True,
+        'server.logFileNotFound': True,
+        'server.showTracebacks': True,
+        },
+    "staging": {
+        'autoreload.on': False,
+        'logDebugInfoFilter.on': False,
+        'server.logFileNotFound': False,
+        'server.showTracebacks': False,
+        },
+    "production": {
+        'autoreload.on': False,
+        'logDebugInfoFilter.on': False,
+        'server.logFileNotFound': False,
+        'server.showTracebacks': False,
+        },
+    }
+
+def update(updateMap=None, file=None, overwrite=True):
+    """Update configMap from a dictionary or a config file.
+    
+    If overwrite is False then the update will not modify values
+    already defined in the configMap.
+    """
+    if updateMap is None:
+        updateMap = {}
+    
+    if file:
+        if file not in autoreload.reloadFiles:
+            autoreload.reloadFiles.append(file)
+        updateMap = updateMap.copy()
+        updateMap.update(dict_from_config_file(file))
+    
+    # Load new conf into cherrypy.configMap
+    for section, valueMap in updateMap.iteritems():
+        # Handle shortcut syntax for "global" section
+        #   example: update({'server.socketPort': 80})
+        if not isinstance(valueMap, dict):
+            valueMap = {section: valueMap}
+            section = 'global'
+        
+        bucket = configMap.setdefault(section, {})
+        if overwrite:
+            bucket.update(valueMap)
+        else:
+            for key, value in valueMap.iteritems():
+                bucket.setdefault(key, value)
 
 def reset(useDefaults=True):
     """Clear configuration and restore defaults"""
     configMap.clear()
     if useDefaults:
-        configMap["global"] = defaultGlobal.copy()
+        update(defaultGlobal)
 reset()
-
-def update(updateMap=None, file=None, override=True):
-    """Update configMap from a dictionary or a config file
-    If override is True then the update will not modify values already defined
-    in the configMap.
-    """
-    if updateMap:
-        for section, valueMap in updateMap.iteritems():
-            if not isinstance(valueMap, dict):
-                # Shortcut syntax
-                #   ex: update({'server.socketPort': 80})
-                valueMap = {section: valueMap}
-                section = 'global'
-            sectionMap = configMap.setdefault(section, {})
-            if override:
-                sectionMap.update(valueMap)
-            else:
-                for key, value in valueMap.iteritems():
-                    sectionMap.setdefault(key, value)
-    if file:
-        if file not in autoreload.reloadFiles:
-            autoreload.reloadFiles.append(file)
-        _load(file, override)
 
 def get(key, defaultValue=None, returnSection=False, path = None):
     """Return the configuration value corresponding to key
@@ -105,16 +132,27 @@ def get(key, defaultValue=None, returnSection=False, path = None):
         
         try:
             result = configMap[path][key]
+            break
         except KeyError:
-            if path == "global":
-                result = defaultValue
-            elif path == "/":
-                path = "global"
-                continue
-            else:
-                path = path[:path.rfind("/")]
-                continue
-        break
+            pass
+        
+        try:
+            # Check for a server.environment entry at this node.
+            env = configMap[path]["server.environment"]
+            result = environments[env][key]
+            break
+        except KeyError:
+            pass
+        
+        if path == "global":
+            result = defaultValue
+            break
+        
+        # Move one node up the tree and try again.
+        if path == "/":
+            path = "global"
+        else:
+            path = path[:path.rfind("/")]
     
     if returnSection:
         return path
@@ -196,23 +234,6 @@ def dict_from_config_file(configFile):
                 raise _cperror.WrongConfigValue(msg)
             result[section][option] = value
     return result
-
-
-def _load(configFile, override=True):
-    """Merge an INI file into configMap
-    If override is false, preserve values already in the configMap.
-    """
-    
-    conf = dict_from_config_file(configFile)
-    
-    # Load new conf into cherrypy.configMap
-    for section, options in conf.iteritems():
-        bucket = configMap.setdefault(section, {})
-        for key, value in options.iteritems():
-            if override:
-                bucket[key] = value
-            else:
-                bucket.setdefault(key, value)
 
 
 def outputConfigMap():

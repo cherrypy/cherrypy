@@ -187,8 +187,7 @@ class HTTPError(Error):
         if cherrypy.config.get('server.logTracebacks', True):
             cherrypy.log(tb)
         
-        defaultOn = (cherrypy.config.get('server.environment') == 'development')
-        if not cherrypy.config.get('server.showTracebacks', defaultOn):
+        if not cherrypy.config.get('server.showTracebacks', False):
             tb = None
         
         # In all cases, finalize will be called after this method,

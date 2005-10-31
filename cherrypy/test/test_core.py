@@ -323,18 +323,6 @@ cherrypy.config.update({
                'server.showTracebacks': True,
                'server.protocolVersion': "HTTP/1.1",
                },
-    '/': {
-        'foo': 'this',
-        'bar': 'that',
-    },
-    '/foo': {
-        'foo': 'this2',
-        'baz': 'that2',
-    },
-    '/foo/bar': {
-        'foo': 'this3',
-        'bax': 'this4',
-    },
     '/flatten': {
         'server.logFile': logFile,
         'server.logAccessFile': logAccessFile,
@@ -357,32 +345,10 @@ cherrypy.config.update({
     },
 })
 
-# Shortcut syntax--should get put in the "global" bucket
-cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
 
 import helper
 
 class CoreRequestHandlingTest(helper.CPWebCase):
-    
-    def testConfig(self):
-        tests = [
-            ('global',   'luxuryyacht', 'throatwobblermangrove'),
-            ('/',        'nex', None   ),
-            ('/',        'foo', 'this' ),
-            ('/',        'bar', 'that' ),
-            ('/xyz',     'foo', 'this' ),
-            ('/foo',     'foo', 'this2'),
-            ('/foo',     'bar', 'that' ),
-            ('/foo',     'bax', None   ),
-            ('/foo/bar', 'baz', 'that2'),
-            ('/foo/nex', 'baz', 'that2'),
-        ]
-        for path, key, expected in tests:
-            from cherrypy import _cphttptools
-            cherrypy.serving.request = r = _cphttptools.Request("", "", "")
-            r.objectPath = r.path = path
-            result = cherrypy.config.get(key, None)
-            self.assertEqual(result, expected)
     
     def testParams(self):
         self.getPage("/params/?thing=a")

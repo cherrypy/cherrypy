@@ -106,8 +106,7 @@ def wsgiApp(environ, start_response):
     except:
         tb = _cputil.formatExc()
         cherrypy.log(tb)
-        defaultOn = (cherrypy.config.get('server.environment') == 'development')
-        if not cherrypy.config.get("server.showTracebacks", defaultOn):
+        if not cherrypy.config.get("server.showTracebacks", False):
             tb = ""
         s, h, b = _cputil.bareError(tb)
         exc = sys.exc_info()

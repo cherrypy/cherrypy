@@ -661,8 +661,7 @@ class Response(object):
         
         # Failure in _cpOnError, error filter, or finalize.
         # Bypass them all.
-        defaultOn = (cherrypy.config.get('server.environment') == 'development')
-        if cherrypy.config.get('server.showTracebacks', defaultOn):
+        if cherrypy.config.get('server.showTracebacks', False):
             body = self.dbltrace % (_cputil.formatExc(exc),
                                     _cputil.formatExc())
         else:

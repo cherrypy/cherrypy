@@ -47,13 +47,7 @@ class LogDebugInfoFilter(BaseFilter):
         cherrypy.request.startBuilTime = time.time()
     
     def beforeFinalize(self):
-        if cherrypy.config.get('server.environment') == 'development':
-            # In "dev" environment, log everything by default
-            defaultOn = True
-        else:
-            defaultOn = False
-        
-        if not cherrypy.config.get('logDebugInfoFilter.on', defaultOn):
+        if not cherrypy.config.get('logDebugInfoFilter.on', False):
             return
         
         mimelist = cherrypy.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])

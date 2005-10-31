@@ -244,7 +244,7 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     try:
         stat = os.stat(path)
     except OSError:
-        if cherrypy.config.get('server.environment') == 'development':
+        if cherrypy.config.get('server.logFileNotFound', False):
             cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
         raise cherrypy.NotFound()
     

@@ -92,8 +92,7 @@ class Server(object):
         # our own webserver, and therefore could do Very Bad Things when
         # autoreload calls sys.exit.
         if serverClass is not None:
-            defaultOn = (conf("server.environment") == "development")
-            if conf('autoreload.on', defaultOn):
+            if conf('autoreload.on', False):
                 try:
                     autoreload.main(self._start)
                 except KeyboardInterrupt:
