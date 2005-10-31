@@ -98,3 +98,4 @@ class SessionAuthenticateFilter(BaseFilter):
         if loadUserByUsername:
             username = cherrypy.session[sessionKey]
             cherrypy.request.user = loadUserByUsername(username)
+            cherrypy.threadData.user = loadUserByUsername(username)
