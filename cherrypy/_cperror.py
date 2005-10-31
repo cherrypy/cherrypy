@@ -65,6 +65,7 @@ class InternalRedirect(Exception):
     def __init__(self, path, params=None):
         import cherrypy
         import cgi
+        request = cherrypy.request
         
         # Set a 'path' member attribute so that code which traps this
         # error can have access to it.
@@ -72,17 +73,19 @@ class InternalRedirect(Exception):
         
         if params is not None:
             if isinstance(params, basestring):
-                cherrypy.request.queryString = params
+                request.queryString = params
                 pm = cgi.parse_qs(params, keep_blank_values=True)
                 for key, val in pm.items():
                     if len(val) == 1:
                         pm[key] = val[0]
-                cherrypy.request.paramMap = pm
+                request.paramMap = pm
             else:
-                cherrypy.request.queryString = urllib.urlencode(params)
-                cherrypy.request.paramMap = params.copy()
+                request.queryString = urllib.urlencode(params)
+                request.paramMap = params.copy()
         
-        cherrypy.request.browserUrl = cherrypy.request.base + path
+        request.browserUrl = request.base + path
+        if request.queryString:
+            request.browserUrl += '?' + request.queryString
 
 
 
@@ -108,6 +111,7 @@ class HTTPRedirect(Exception):
             #  1. a complete URL with host (e.g. "http://www.dummy.biz/test")
             #  2. a URL relative to root (e.g. "/dummy")
             #  3. a URL relative to the current path
+            # Note that any querystring in browserUrl will be discarded.
             url = urlparse.urljoin(cherrypy.request.browserUrl, url)
             abs_urls.append(url)
         self.urls = abs_urls
