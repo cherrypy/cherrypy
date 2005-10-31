@@ -190,7 +190,7 @@ class SessionFilter(basefilter.BaseFilter):
             self._clean()
         
         sess = cherrypy.request._session
-        if not sess.sessionStorage:
+        if not getattr(sess, 'sessionStorage', None):
             # Sessions are not enabled: do nothing
             return
         
