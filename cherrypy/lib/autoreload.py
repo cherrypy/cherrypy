@@ -8,8 +8,8 @@ import thread
 
 RUN_RELOADER = True
 reloadFiles = []
-    
-def reloader_thread():
+
+def reloader_thread(freq):
     mtimes = {}
     
     def fileattr(m):
@@ -29,7 +29,7 @@ def reloader_thread():
                     continue
                 if mtime > mtimes[filename]:
                     sys.exit(3) # force reload
-        time.sleep(1)
+        time.sleep(freq)
 
 def restart_with_reloader():
     while True:
@@ -42,7 +42,7 @@ def restart_with_reloader():
         if exit_code != 3:
             return exit_code
 
-def main(main_func, args=None, kwargs=None):
+def main(main_func, args=None, kwargs=None, freq=1):
     if os.environ.get("RUN_MAIN") == "true":
         
         if args is None:
@@ -53,7 +53,7 @@ def main(main_func, args=None, kwargs=None):
         
         # If KeyboardInterrupt is raised within reloader_thread,
         # let it propagate out to the caller.
-        reloader_thread()
+        reloader_thread(freq)
     else:
         # If KeyboardInterrupt is raised within restart_with_reloader,
         # let it propagate out to the caller.

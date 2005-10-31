@@ -63,7 +63,8 @@ class Server(object):
         if serverClass is not None:
             if conf('autoreload.on', False):
                 try:
-                    autoreload.main(self._start)
+                    freq = conf('autoreload.frequency', 1)
+                    autoreload.main(self._start, freq)
                 except KeyboardInterrupt:
                     cherrypy.log("<Ctrl-C> hit: shutting down autoreloader", "HTTP")
                     self.stop()
