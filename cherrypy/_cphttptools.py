@@ -1,7 +1,6 @@
-"""Common Service Code for CherryPy"""
+"""CherryPy core request/response handling."""
 
 import cgi
-
 import Cookie
 import os
 import re
@@ -161,7 +160,6 @@ class Request(object):
     def _run(self, requestLine, headers, rfile):
         
         try:
-            self.paramList = [] # Only used for Xml-Rpc
             self.headers = headers
             self.headerMap = KeyTitlingDict()
             self.simpleCookie = Cookie.SimpleCookie()
@@ -303,7 +301,6 @@ class Request(object):
         
         # Save original values (in case they get modified by filters)
         self.originalParamMap = self.paramMap
-        self.originalParamList = self.paramList
         
         if self.version >= "1.1":
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
@@ -367,8 +364,7 @@ class Request(object):
                 
                 # Remove "root" from object_path and join it to get objectPath
                 self.objectPath = '/' + '/'.join(object_path[1:])
-                args = virtual_path + self.paramList
-                body = page_handler(*args, **self.paramMap)
+                body = page_handler(*virtual_path, **self.paramMap)
                 cherrypy.response.body = iterable(body)
                 return
             except cherrypy.InternalRedirect, x:
