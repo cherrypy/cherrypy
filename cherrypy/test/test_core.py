@@ -184,7 +184,7 @@ class Accept(Test):
 
 class Headers(Test):
     
-    def index(self):
+    def doubledheaders(self):
         # From http://www.cherrypy.org/ticket/165:
         # "header field names should not be case sensitive sayes the rfc.
         # if i set a headerfield in complete lowercase i end up with two
@@ -671,9 +671,9 @@ llo,
                         "en-gb;q=0.8\n"
                         "en;q=0.7")
     
-    def testHeaderCaseSensitivity(self):
+    def testHeaders(self):
         # Tests that each header only appears once, regardless of case.
-        self.getPage("/headers/")
+        self.getPage("/headers/doubledheaders")
         self.assertBody("double header test")
         hnames = [name.title() for name, val in self.headers]
         for key in ['Content-Length', 'Content-Type', 'Date',

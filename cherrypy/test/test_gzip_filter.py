@@ -45,14 +45,20 @@ class GzipFilterTest(helper.CPWebCase):
         
         self.getPage('/', headers=[("Accept-Encoding", "gzip")])
         self.assertInBody(zbuf.getvalue()[:3])
+        self.assertHeader("Vary", "Accept-Encoding")
         
         # Test when gzip is denied.
         self.getPage('/', headers=[("Accept-Encoding", "identity")])
+        self.assertNoHeader("Vary")
         self.assertBody("Hello, world")
+        
         self.getPage('/', headers=[("Accept-Encoding", "gzip;q=0")])
+        self.assertNoHeader("Vary")
         self.assertBody("Hello, world")
+        
         self.getPage('/', headers=[("Accept-Encoding", "*;q=0")])
         self.assertStatus("406 Not Acceptable")
+        self.assertNoHeader("Vary")
         self.assertErrorPage(406, "identity, gzip")
         
         # Test for ticket #147

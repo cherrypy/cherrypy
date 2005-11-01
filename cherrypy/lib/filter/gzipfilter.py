@@ -23,6 +23,12 @@ class GzipFilter(BaseFilter):
         
         def zipit():
             # Return a generator that compresses the page
+            varies = response.headerMap.get("Vary", "")
+            varies = [x.strip() for x in varies.split(",") if x.strip()]
+            if "Accept-Encoding" not in varies:
+                varies.append("Accept-Encoding")
+            response.headerMap['Vary'] = ", ".join(varies)
+            
             response.headerMap['Content-Encoding'] = 'gzip'
             level = cherrypy.config.get('gzipFilter.compresslevel', 9)
             response.body = self.zip_body(response.body, level)
