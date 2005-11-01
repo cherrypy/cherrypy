@@ -6,7 +6,7 @@ class Root:
     def index(self, key):
         return cherrypy.config.get(key, "None")
     index.exposed = True
-    _global = index
+    global_ = index
     xyz = index
 
 class Foo:

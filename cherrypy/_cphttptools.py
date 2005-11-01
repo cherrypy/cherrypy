@@ -305,7 +305,7 @@ class Request(object):
         else:
             objectPathList = tpath.split('/')
         if objectPathList == ['global']:
-            objectPathList = ['_global']
+            objectPathList = ['global_']
         objectPathList = ['root'] + objectPathList + ['index']
         
         if getattr(cherrypy, "debug", None):

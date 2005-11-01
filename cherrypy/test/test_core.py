@@ -17,9 +17,9 @@ class Root:
         return "the larch"
     andnow.exposed = True
     
-    def _global(self):
+    def global_(self):
         pass
-    _global.exposed = True
+    global_.exposed = True
 
 cherrypy.root = Root()
 
