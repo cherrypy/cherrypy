@@ -188,6 +188,87 @@ def getRanges(content_length):
     return result
 
 
+class AcceptValue(object):
+    """A value (with parameters) from an Accept-* request header."""
+    
+    def __init__(self, value, params=None):
+        self.value = value
+        if params is None:
+            params = {}
+        self.params = params
+    
+    def qvalue(self):
+        val = self.params.get("q", "1")
+        if isinstance(val, AcceptValue):
+            val = val.value
+        return float(val)
+    qvalue = property(qvalue, doc="The qvalue, or priority, of this value.")
+    
+    def __str__(self):
+        p = [";%s=%s" % (k, v) for k, v in self.params.iteritems()]
+        return "%s%s" % (self.value, "".join(p))
+    
+    def __cmp__(self, other):
+        # If you sort a list of AcceptValue objects, they will be listed in
+        # priority order; that is, the most preferred value will be first.
+        diff = cmp(other.qvalue, self.qvalue)
+        if diff == 0:
+            diff = cmp(str(other), str(self))
+        return diff
+
+
+def getAccept(headername='Accept'):
+    """Return a list of AcceptValues from an Accept header, or None."""
+    
+    r = cherrypy.request.headerMap.get(headername)
+    if not r:
+        return None
+    
+    result = []
+    for capability in r.split(","):
+        # The first "q" parameter (if any) separates the initial
+        # parameter(s) (if any) from the accept-params.
+        atoms = re.split(r'; *q *=', capability, 1)
+        capvalue = atoms.pop(0).strip()
+        if atoms:
+            qvalue = atoms[0].strip()
+            if headername == 'Accept':
+                # The qvalue for an Accept header can have extensions.
+                atoms = [x.strip() for x in qvalue.split(";")]
+                qvalue = atoms.pop(0).strip()
+                ext = {}
+                for atom in atoms:
+                    atom = atom.split("=", 1)
+                    key = atom.pop(0).strip()
+                    if atom:
+                        val = atom[0].strip()
+                    else:
+                        val = ""
+                    ext[key] = val
+                qvalue = AcceptValue(qvalue, ext)
+            params = {"q": qvalue}
+        else:
+            params = {}
+        
+        if headername == 'Accept':
+            # The media-range may have parameters (before the qvalue).
+            atoms = [x.strip() for x in capvalue.split(";")]
+            capvalue = atoms.pop(0).strip()
+            for atom in atoms:
+                atom = atom.split("=", 1)
+                key = atom.pop(0).strip()
+                if atom:
+                    val = atom[0].strip()
+                else:
+                    val = ""
+                params[key] = val
+        
+        result.append(AcceptValue(capvalue, params))
+    
+    result.sort()
+    return result
+
+
 def serveFile(path, contentType=None, disposition=None, name=None):
     """Set status, headers, and body in order to serve the given file.
     

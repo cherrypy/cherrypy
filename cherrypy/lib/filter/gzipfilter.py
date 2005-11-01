@@ -16,18 +16,41 @@ class GzipFilter(BaseFilter):
         if not cherrypy.config.get('gzipFilter.on', False):
             return
         
-        if not cherrypy.response.body:
+        response = cherrypy.response
+        if not response.body:
             # Response body is empty (might be a 304 for instance)
             return
         
-        ct = cherrypy.response.headerMap.get('Content-Type').split(';')[0]
-        ae = cherrypy.request.headerMap.get('Accept-Encoding', '')
-        if (ct in cherrypy.config.get('gzipFilter.mimeTypeList', ['text/html'])
-            and ('gzip' in ae)):
-            cherrypy.response.headerMap['Content-Encoding'] = 'gzip'
+        def zipit():
             # Return a generator that compresses the page
+            response.headerMap['Content-Encoding'] = 'gzip'
             level = cherrypy.config.get('gzipFilter.compresslevel', 9)
-            cherrypy.response.body = self.zip_body(cherrypy.response.body, level)
+            response.body = self.zip_body(response.body, level)
+        
+        from cherrypy.lib import cptools
+        acceptable = cptools.getAccept('Accept-Encoding')
+        if acceptable is None:
+            # If no Accept-Encoding field is present in a request,
+            # the server MAY assume that the client will accept any
+            # content coding. In this case, if "identity" is one of
+            # the available content-codings, then the server SHOULD use
+            # the "identity" content-coding, unless it has additional
+            # information that a different content-coding is meaningful
+            # to the client.
+            return
+        
+        ct = response.headerMap.get('Content-Type').split(';')[0]
+        ct = ct in cherrypy.config.get('gzipFilter.mimeTypeList', ['text/html'])
+        for coding in acceptable:
+            if coding.value == 'identity' and coding.qvalue != 0:
+                return
+            if coding.value in ('gzip', 'x-gzip'):
+                if coding.qvalue == 0:
+                    return
+                if ct:
+                    zipit()
+                    return
+        cherrypy.HTTPError(406, "identity, gzip").set_response()
     
     def write_gzip_header(self):
         """Adapted from the gzip.py standard module code"""

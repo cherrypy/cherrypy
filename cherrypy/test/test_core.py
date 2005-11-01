@@ -176,6 +176,12 @@ class Ranges(Test):
         return cptools.serveFile(os.path.join(path, "static/index.html"))
 
 
+class Accept(Test):
+    
+    def get_accept(self, headername):
+        return "\n".join([str(x) for x in cptools.getAccept(headername)])
+
+
 class Headers(Test):
     
     def index(self):
@@ -571,7 +577,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                "In addition, the custom error page failed:\n<br />"
                "[Errno 2] No such file or directory: 'nonexistent.html'")
         self.assertInBody(msg)
-
     
     def testRanges(self):
         self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
@@ -617,6 +622,54 @@ llo,
         self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
         self.assertStatus("416 Requested Range Not Satisfiable")
         self.assertHeader("Content-Range", "bytes */14")
+    
+    def testAccept(self):
+        h = [('Accept', 'audio/*; q=0.2, audio/basic')]
+        self.getPage("/accept/get_accept?headername=Accept", h)
+        self.assertStatus("200 OK")
+        self.assertBody("audio/basic\n"
+                        "audio/*;q=0.2")
+        
+        h = [('Accept', 'text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c')]
+        self.getPage("/accept/get_accept?headername=Accept", h)
+        self.assertStatus("200 OK")
+        self.assertBody("text/x-c\n"
+                        "text/html\n"
+                        "text/x-dvi;q=0.8\n"
+                        "text/plain;q=0.5")
+        
+        # Test that more specific media ranges get priority.
+        # Note that the highest priority will be first in the list.
+        h = [('Accept', 'text/*, text/html, text/html;level=1, */*')]
+        self.getPage("/accept/get_accept?headername=Accept", h)
+        self.assertStatus("200 OK")
+        self.assertBody("text/html;level=1\n"
+                        "text/html\n"
+                        "text/*\n"
+                        "*/*")
+        
+        # Test Accept-Charset
+        h = [('Accept-Charset', 'iso-8859-5, unicode-1-1;q=0.8')]
+        self.getPage("/accept/get_accept?headername=Accept-Charset", h)
+        self.assertStatus("200 OK")
+        self.assertBody("iso-8859-5\n"
+                        "unicode-1-1;q=0.8")
+        
+        # Test Accept-Encoding
+        h = [('Accept-Encoding', 'gzip;q=1.0, identity; q=0.5, *;q=0')]
+        self.getPage("/accept/get_accept?headername=Accept-Encoding", h)
+        self.assertStatus("200 OK")
+        self.assertBody("gzip;q=1.0\n"
+                        "identity;q=0.5\n"
+                        "*;q=0")
+        
+        # Test Accept-Language
+        h = [('Accept-Language', 'da, en-gb;q=0.8, en;q=0.7')]
+        self.getPage("/accept/get_accept?headername=Accept-Language", h)
+        self.assertStatus("200 OK")
+        self.assertBody("da\n"
+                        "en-gb;q=0.8\n"
+                        "en;q=0.7")
     
     def testHeaderCaseSensitivity(self):
         # Tests that each header only appears once, regardless of case.
