@@ -1,3 +1,6 @@
+import test
+test.prefer_parent_path()
+
 import cherrypy
 import os
 

@@ -1,5 +1,8 @@
 """Basic tests for the CherryPy core: request handling."""
 
+import test
+test.prefer_parent_path()
+
 import cherrypy
 from cherrypy.lib import cptools
 import types

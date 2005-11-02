@@ -1,4 +1,6 @@
 """Tests for the CherryPy configuration system."""
+import test
+test.prefer_parent_path()
 
 import cherrypy
 

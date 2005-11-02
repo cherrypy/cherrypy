@@ -1,5 +1,7 @@
+import test
+test.prefer_parent_path()
+
 import xmlrpclib
-from datetime import datetime
 import cherrypy
 
 class Root:

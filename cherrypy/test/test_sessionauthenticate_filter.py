@@ -1,5 +1,7 @@
+import test
+test.prefer_parent_path()
 
-import cherrypy, time, os
+import cherrypy
 
 class Test:
     def index(self):

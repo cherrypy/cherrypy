@@ -1,4 +1,6 @@
-import unittest
+import test
+test.prefer_parent_path()
+
 import sys
 
 import cherrypy

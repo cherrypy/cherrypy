@@ -1,4 +1,7 @@
-import cherrypy, time, os
+import test
+test.prefer_parent_path()
+
+import cherrypy, os
 
 class Root:
     def testGen(self):

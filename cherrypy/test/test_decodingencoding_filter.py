@@ -1,3 +1,5 @@
+import test
+test.prefer_parent_path()
 
 import cherrypy
 europoundUnicode = u'\x80\xa3'

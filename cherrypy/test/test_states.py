@@ -1,4 +1,6 @@
-import time
+import test
+test.prefer_parent_path()
+
 import threading
 
 import cherrypy

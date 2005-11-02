@@ -11,6 +11,8 @@ PythonHandler wsgiref.modpython_gateway::handler
 PythonOption application cherrypy._cpwsgi::wsgiApp
 
 """
+import test
+test.prefer_parent_path()
 
 import cherrypy
 from cherrypy import _cpwsgi

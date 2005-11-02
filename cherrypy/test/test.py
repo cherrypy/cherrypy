@@ -298,12 +298,18 @@ class CPTestHarness(TestHarness):
             test_states.run(cls, conf)
             helper.run_test_suite(self.tests, cls, conf)
 
-def run():
+def prefer_parent_path():
     # Place this __file__'s grandparent (../../) at the start of sys.path,
     # so that all cherrypy/* imports are from this __file__'s package.
     localDir = os.path.dirname(__file__)
     curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
-    sys.path.insert(0, os.path.normpath(os.path.join(curpath, '../../')))
+    grandparent = os.path.normpath(os.path.join(curpath, '../../'))
+    if grandparent not in sys.path:
+        sys.path.insert(0, grandparent)
+
+def run():
+    
+    prefer_parent_path()
     
     testList = [
         'test_baseurl_filter',
