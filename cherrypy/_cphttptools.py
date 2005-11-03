@@ -214,14 +214,6 @@ class Request(object):
             if name.title() == 'Cookie':
                 self.simpleCookie.load(value)
         
-        # Write a message to the error.log only if there is no access.log.
-        # This is only here for backwards-compatibility (with the time
-        # before the access.log existed), and should be removed in CP 2.2.
-        fname = cherrypy.config.get('server.logAccessFile', '')
-        if not fname:
-            msg = "%s - %s" % (self.remoteAddr, self.requestLine)
-            cherrypy.log(msg, "HTTP")
-        
         # Save original values (in case they get modified by filters)
         self.originalParamMap = self.paramMap
         

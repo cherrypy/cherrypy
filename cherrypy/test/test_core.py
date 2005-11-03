@@ -430,13 +430,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         data = open(logFile, "rb").readlines()
         self.assertEqual(data, [])
         
-        # Test that error log gets access messages if no logAccess defined.
-        self.getPage("/params/?thing=a")
-        self.assertBody("'a'")
-        data = open(logFile, "rb").readlines()
-        self.assert_(data[0].endswith(' HTTP INFO 127.0.0.1 - GET %s/params/?thing=a HTTP/1.1\n'
-                                      % helper.vroot))
-        
         # Test that tracebacks get written to the error log.
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
@@ -444,8 +437,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.getPage("/error/page_method")
             self.assertInBody("raise ValueError()")
             data = open(logFile, "rb").readlines()
-            self.assertEqual(data[2][-41:], ' INFO Traceback (most recent call last):\n')
-            self.assertEqual(data[8], '    raise ValueError()\n')
+            self.assertEqual(data[0][-41:], ' INFO Traceback (most recent call last):\n')
+            self.assertEqual(data[6], '    raise ValueError()\n')
         finally:
             ignore.pop()
     
