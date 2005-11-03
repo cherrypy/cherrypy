@@ -176,7 +176,7 @@
             response. This is not necessarily the value that will be written in the response!
             Instead, it should be used to determine which features are <emphasis>available</emphasis>
             for the response. For example, an HTTP server may send an HTTP/1.1 response even though
-            the client is known to only understand HTTP/1.0â€”the response.version will be set to
+            the client is known to only understand HTTP/1.0—the response.version will be set to
             Version("1.0") to inform you of this, so that you (and CherryPy) can restrict the
             response to HTTP/1.0 features only.</para>
         </section>
@@ -279,7 +279,7 @@
         </section>
         <section>
             <title>cherrypy.server.stop()</title>
-            <para>Stop the CherryPy Server. Well, "suspend" might be a better termâ€”this doesn't
+            <para>Stop the CherryPy Server. Well, "suspend" might be a better term—this doesn't
             terminate the process.</para>
         </section>
         <section>
@@ -313,9 +313,9 @@
         </section>
         <section>
             <title>cherrypy.server.request()</title>
-            <para>HTTP servers should call this function to hand off the HTTP request to the CherryPy
-            core. There is no return value; instead, the core sets response content in the
-            cherrypy.response object.</para>
+            <para>HTTP servers should call this function to create a new Request and Response object.
+            The return value is the Request object; call its <code>run</code> method to have the
+            CherryPy core process the request data and populate the response.</para>
         </section>
     </section>
     <!-- end cherrypyserver section -->
@@ -340,6 +340,10 @@
             of the form {'sectionPath' : { } }. The "file" argument is the path to the configuration
             file.</para>
         </section>
+        <section>
+            <title>cherrypy.config.environments</title>
+            <para>Dict containing config defaults for each named server.environment.</para>
+        </section>
     </section>
     <section id="exceptions">
         <title>cherrypy exceptions</title>
@@ -350,7 +354,7 @@
             <section>
                 <title>cherrypy.NotFound</title>
                 <para>This exception is raised when CherryPy is unable to map a requested path to an
-                internal method. It's a subclass of HTTPError.</para>
+                internal method. It's a subclass of HTTPError (404).</para>
             </section>
         </section>
         <section>
@@ -380,12 +384,54 @@
                 in 2.0.0-beta.</para>
             </section>
             <section>
+                <title>getAccept(headername)</title>
+                <para>Returns a list of AcceptValue objects from the specified Accept-* header (or
+                None if the header is not present). The list is sorted so that the most-preferred
+                values are first in the list.</para>
+                <para>Each AcceptValue object has a <code>value</code> attribute, a string which is
+                the value itself. For example, if <code>headername</code> is "Accept-Encoding", the
+                <code>value</code> attribute might be "gzip". It also has a (read-only)
+                <code>qvalue</code> attribute, a float between 0 and 1 which specifies the client's
+                preference for the value; higher numbers are preferred. Finally, each AcceptValue
+                also has a <code>params</code> attribute, a dict; for most headers, this dict will
+                only possess the original "q" value as a string.</para>
+                <para>If <code>headername</code> is "Accept" (the default), then the params attribute
+                may contain extra parameters which further differentiate the value. In addition,
+                <code>params["q"]</code> may itself be an AcceptValue object, with its own
+                <code>params</code> dict. Don't ask us why; ask the authors of the HTTP spec.</para>
+            </section>
+            <section>
                 <title>getRanges(content_length)</title>
                 <para>Returns a list of (start, stop) indices from a Range request header. Returns
                 None if no such header is provided in the request. Each (start, stop) tuple will be
                 composed of two ints, which are suitable for use in a slicing operation. That is, the
                 header "Range: bytes=3-6", if applied against a Python string, is requesting
                 resource[3:7]. This function will return the list [(3, 7)].</para>
+            </section>
+            <section>
+                <title>HeaderMap</title>
+                <para>A subclass of Python's builtin <code>dict</code> class; CherryPy's default
+                <code>request.headerMap</code> and <code>response.headerMap</code> objects are
+                instances of this class. The keys are automatically titled
+                (<code>str(key).title()</code>) in order to provide case-insensitive comparisons and
+                avoid duplicates.</para>
+            </section>
+            <section>
+                <title>parseRequestLine(requestLine)</title>
+                <para>Returns (<code>method, path, querystring, protocol</code>) from an HTTP
+                requestLine. The default Request processor calls this function.</para>
+            </section>
+            <section>
+                <title>parseQueryString(queryString, keep_blank_values=True)</title>
+                <para>Returns a dict of <code>{'key': 'value'}</code> pairs from an HTTP "key=value"
+                query string. Also handles server-side image map query strings. The default Request
+                processor calls this function.</para>
+            </section>
+            <section>
+                <title>paramsFromCGIForm(form)</title>
+                <para>Returns a dict of <code>{'key': ''value'}</code> pairs from a
+                <code>cgi.FieldStorage</code> object. The default Request processor calls this
+                function.</para>
             </section>
             <section>
                 <title>serveFile(path, contentType=None, disposition=None, name=None)</title>
@@ -460,14 +506,28 @@ cherrypy.root = Root()</code></programlisting>
         <section>
             <title>_cpOnError</title>
             <para>_cpOnError is a function for handling unanticipated exceptions, whether raised by
-            CherryPy itself, or in user applications. The default simply raises
-            HTTPError(500).</para>
+            CherryPy itself, or in user applications. The default simply responds as if
+            HTTPError(500) had been raised.</para>
+        </section>
+        <section>
+            <title>_cpOnHTTPError</title>
+            <para>_cpOnHTTPError handles HTTPError responses, setting cherrypy.response.status,
+            headers, and body.</para>
         </section>
         <section>
             <title>_cpFilterList</title>
             <para>User defined filters are enabled using the class attribute _cpFilterList. Any
             filter instances placed in _cpFilterList will be applied to all methods of the
             class.</para>
+        </section>
+        <section>
+            <title>_cpLogAccess</title>
+            <para>Function to log HTTP requests into the access.log file.</para>
+        </section>
+        <section>
+            <title>_cpLogMessage</title>
+            <para>Function to log errors into the error.log file. The <code>cherrypy.log</code>
+            function is syntactic sugar for this one.</para>
         </section>
     </section>
     <section id="filters">
