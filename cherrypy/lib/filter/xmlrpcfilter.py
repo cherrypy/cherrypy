@@ -192,11 +192,14 @@ class XmlRpcFilter(BaseFilter):
 
         encoding = cherrypy.config.get('xmlRpcFilter.encoding', 'utf-8')
 
+        # See xmlrpclib documentation
+        # Python's None value cannot be used in standard XML-RPC;
+        # to allow using it via an extension, provide a true value for allow_none.
         cherrypy.response.body = [xmlrpclib.dumps(
             (cherrypy.response.body,),
             methodresponse=1,
             encoding=encoding,
-            allow_none=1)]
+            allow_none=0)]
         cherrypy.response.headerMap['Content-Type'] = 'text/xml'
         cherrypy.response.headerMap['Content-Length'] = len(cherrypy.response.body[0])
     
