@@ -14,66 +14,63 @@ class EmptyClass:
     pass
 
 
-def getObjectTrail():
-    """ Return all objects from the currenct object to cherrypy """
-    root = getattr(cherrypy, 'root', None)
-    if root:
-        objectTrail = [root]
-        # Try object path
+def get_object_trail(objectpath=None):
+    """
+    List of (name, object) pairs, from cherrypy.root to the current object.
+    
+    If any named objects are unreachable, (name, None) pairs are used.
+    """
+    
+    if objectpath is None:
         try:
-            path = cherrypy.request.objectPath
+            objectpath = cherrypy.request.objectPath
         except AttributeError:
-            path = '/'
-        if path:
-            pathList = path.split('/')[1:]
-            
-            # Successively get objects from the path
-            for newObj in pathList:
-                try:
-                    root = getattr(root, newObj)
-                    objectTrail.append(root)
-                except AttributeError:
-                    break
-        
-        return objectTrail
-    return None
+            pass
+    
+    if objectpath is not None:
+        objectpath = objectpath.strip('/')
+    
+    # Convert the objectpath into a list of names
+    if not objectpath:
+        nameList = []
+    else:
+        nameList = objectpath.split('/')
+    if nameList == ['global']:
+        nameList = ['global_']
+    nameList = ['root'] + nameList + ['index']
+    
+    # Convert the list of names into a list of objects
+    node = cherrypy
+    objectTrail = []
+    for objname in nameList:
+        # maps virtual names to Python identifiers (replaces '.' with '_')
+        objname = objname.replace('.', '_')
+        node = getattr(node, objname, None)
+        objectTrail.append((objname, node))
+    
+    return objectTrail
 
 def getSpecialAttribute(name):
     """Return the special attribute. A special attribute is one that
     applies to all of the children from where it is defined, such as
     _cpFilterList."""
     
-    # First, we look in the right-most object if this special attribute is implemented.
-    # If not, then we try the previous object and so on until we reach cherrypy.root
-    # If it's still not there, we use the implementation from this module.
+    # First, we look in the right-most object to see if this special
+    # attribute is implemented. If not, then we try the previous object,
+    # and so on until we reach cherrypy.root. If it's still not there,
+    # we use the implementation from this module.
     
-    objectList = getObjectTrail()
-    if objectList:
-        
-        objectList.reverse()
-        for obj in objectList:
-            attr = getattr(obj, name, None)
-            if attr != None:
-                return attr
+    objectList = get_object_trail()
+    objectList.reverse()
+    for objname, obj in objectList:
+        if hasattr(obj, name):
+            return getattr(obj, name)
     
     try:
         return globals()[name]
     except KeyError:
         msg = "Special attribute %s could not be found" % repr(name)
         raise cherrypy.HTTPError(500, msg)
-
-def getSpecialAttributePath(name):
-    """ Return the path to the special attribute """
-    objectList = getObjectTrail()
-    if objectList:
-        pathList = cherrypy.request.objectPath
-        pathList = pathList.split("/")[1:]
-        for i in xrange(len(objectList) - 1, -1, -1):
-            if hasattr(objectList[i], name):
-                return "/" + "/".join(pathList[:i] + [name])
-    msg = "Special attribute %s could not be found" % repr(name)
-    raise cherrypy.HTTPError(500, msg)
-
 
 def logtime():
     return '%04d/%02d/%02d %02d:%02d:%02d' % time.localtime(time.time())[:6]

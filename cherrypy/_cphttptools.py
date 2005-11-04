@@ -286,101 +286,50 @@ class Request(object):
           root.default('a', 'b', arg='val')
         
         The target method must have an ".exposed = True" attribute.
-        
         """
         
-        # Remove leading and trailing slash
-        tpath = objectpath.strip("/")
+        objectTrail = _cputil.get_object_trail(objectpath)
+        names = [name for name, candidate in objectTrail]
         
-        if not tpath:
-            objectPathList = []
+        # Try successive objects
+        for i in xrange(len(objectTrail) - 1, -1, -1):
+            
+            name, candidate = objectTrail[i]
+            
+            # Try a "default" method on the current leaf.
+            defhandler = getattr(candidate, "default", None)
+            if callable(defhandler) and getattr(defhandler, 'exposed', False):
+                return defhandler, names[:i+1] + ["default"], names[i+1:-1]
+            
+            # Uncomment the next line to restrict positional params to "default".
+            # if i < len(objectTrail) - 2: continue
+            
+            # Try the current leaf.
+            if callable(candidate) and getattr(candidate, 'exposed', False):
+                if i == len(objectTrail) - 1:
+                    # We found the extra ".index". Check if the original path
+                    # had a trailing slash (otherwise, do a redirect).
+                    if not objectpath.endswith('/'):
+                        atoms = self.browserUrl.split("?", 1)
+                        newUrl = atoms.pop(0) + '/'
+                        if atoms:
+                            newUrl += "?" + atoms[0]
+                        raise cherrypy.HTTPRedirect(newUrl)
+                return candidate, names[:i+1], names[i+1:-1]
+        
+        # Not found at any node
+        if objectpath.endswith("favicon.ico"):
+            # Use CherryPy's default favicon.ico. If developers really,
+            # really want no favicon, they can make a dummy method
+            # that raises NotFound.
+            icofile = os.path.join(os.path.dirname(__file__), "favicon.ico")
+            cptools.serveFile(icofile)
+            applyFilters('beforeFinalize')
+            cherrypy.response.finalize()
+            raise cherrypy.RequestHandled()
         else:
-            objectPathList = tpath.split('/')
-        if objectPathList == ['global']:
-            objectPathList = ['global_']
-        objectPathList = ['root'] + objectPathList + ['index']
-        
-        if getattr(cherrypy, "debug", None):
-            cherrypy.log("  Attempting to map path: %s using %s"
-                         % (tpath, objectPathList), "DEBUG")
-        
-        # Try successive objects... (and also keep the remaining object list)
-        isFirst = True
-        isSecond = False
-        foundIt = False
-        virtualPathList = []
-        while objectPathList:
-            if isFirst or isSecond:
-                # Only try this for a.b.index() or a.b()
-                candidate = self.getObjFromPath(objectPathList)
-                if callable(candidate) and getattr(candidate, 'exposed', False):
-                    foundIt = True
-                    break
-            # Couldn't find the object: pop one from the list and try "default"
-            lastObj = objectPathList.pop()
-            if (not isFirst) or (not tpath):
-                virtualPathList.insert(0, lastObj)
-                objectPathList.append('default')
-                candidate = self.getObjFromPath(objectPathList)
-                if callable(candidate) and getattr(candidate, 'exposed', False):
-                    foundIt = True
-                    break
-                objectPathList.pop() # Remove "default"
-            if isSecond:
-                isSecond = False
-            if isFirst:
-                isFirst = False
-                isSecond = True
-        
-        # Check results of traversal
-        if not foundIt:
-            if tpath.endswith("favicon.ico"):
-                # Use CherryPy's default favicon.ico. If developers really,
-                # really want no favicon, they can make a dummy method
-                # that raises NotFound.
-                icofile = os.path.join(os.path.dirname(__file__), "favicon.ico")
-                cptools.serveFile(icofile)
-                applyFilters('beforeFinalize')
-                cherrypy.response.finalize()
-                raise cherrypy.RequestHandled()
-            else:
-                # We didn't find anything
-                if getattr(cherrypy, "debug", None):
-                    cherrypy.log("    NOT FOUND", "DEBUG")
-                raise cherrypy.NotFound(objectpath)
-        
-        if isFirst:
-            # We found the extra ".index". Check if the original path
-            # had a trailing slash (otherwise, do a redirect).
-            if not objectpath.endswith('/'):
-                atoms = self.browserUrl.split("?", 1)
-                newUrl = atoms.pop(0) + '/'
-                if atoms:
-                    newUrl += "?" + atoms[0]
-                if getattr(cherrypy, "debug", None):
-                    cherrypy.log("    Found: redirecting to %s" % newUrl, "DEBUG")
-                raise cherrypy.HTTPRedirect(newUrl)
-        
-        if getattr(cherrypy, "debug", None):
-            cherrypy.log("    Found: %s" % candidate, "DEBUG")
-        return candidate, objectPathList, virtualPathList
-    
-    def getObjFromPath(self, objPathList):
-        """For a given objectPathList, return the object (or None).
-        
-        objPathList should be a list of the form: ['root', 'a', 'b', 'index'].
-        """
-        
-        root = cherrypy
-        for objname in objPathList:
-            # maps virtual filenames to Python identifiers (substitutes '.' for '_')
-            objname = objname.replace('.', '_')
-            if getattr(cherrypy, "debug", None):
-                cherrypy.log("    Trying: %s.%s" % (root, objname), "DEBUG")
-            root = getattr(root, objname, None)
-            if root is None:
-                return None
-        return root
+            # We didn't find anything
+            raise cherrypy.NotFound(objectpath)
 
 
 general_header_fields = ["Cache-Control", "Connection", "Date", "Pragma",
@@ -431,9 +380,6 @@ class Response(object):
         
         code, reason, _ = cptools.validStatus(self.status)
         self.status = "%s %s" % (code, reason)
-        
-        if self.body is None:
-            self.body = []
         
         stream = cherrypy.config.get("streamResponse", False)
         # OPTIONS requests MUST include a Content-Length of 0 if no body.

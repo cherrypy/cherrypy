@@ -72,6 +72,10 @@ class Dir2:
     def method(self):
         return "method for dir2"
     method.exposed = True
+    
+    def posparam(self, *vpath):
+        return "/".join(vpath)
+    posparam.exposed = True
 
 
 class Dir3:
@@ -111,7 +115,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertBody("default:('this', 'method', 'does', 'not', 'exist')")
         
         self.getPage("/extra/too/much")
-        self.assertBody("default:('extra', 'too', 'much')")
+        self.assertBody("('too', 'much')")
         
         self.getPage("/other")
         self.assertBody('other')
@@ -129,6 +133,10 @@ class ObjectMappingTest(helper.CPWebCase):
         
         self.getPage("/dir1/dir2/dir3/dir4/index")
         self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
+        
+        # Test positional parameters
+        self.getPage("/dir1/dir2/posparam/18/24/hut/hike")
+        self.assertBody("18/24/hut/hike")
         
         self.getPage("/redirect")
         self.assertStatus('302 Found')
