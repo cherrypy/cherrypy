@@ -1,7 +1,9 @@
 ##########################################################################
 ## Remco Boerma
+## Sylvain Hellegouarch
 ##
 ## History:
+## 1.0.5   : 2005-11-04 Fixed Content-Length bug (http://www.cherrypy.org/ticket/384)
 ## 1.0.4   : 2005-08-28 Fixed issues on input types which are not strings
 ## 1.0.3   : 2005-01-28 Bugfix on content-length in 1.0.2 code fixed by
 ##           Gian Paolo Ciceri
@@ -189,14 +191,14 @@ class XmlRpcFilter(BaseFilter):
             return
 
         encoding = cherrypy.config.get('xmlRpcFilter.encoding', 'utf-8')
-        
+
         cherrypy.response.body = [xmlrpclib.dumps(
             (cherrypy.response.body,),
             methodresponse=1,
             encoding=encoding,
             allow_none=1)]
         cherrypy.response.headerMap['Content-Type'] = 'text/xml'
-        cherrypy.response.headerMap['Content-Length'] = `len(cherrypy.response.body)`
+        cherrypy.response.headerMap['Content-Length'] = len(cherrypy.response.body[0])
     
     def beforeErrorResponse(self):
         try:
