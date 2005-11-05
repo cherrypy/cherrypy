@@ -204,8 +204,6 @@ class XmlRpcFilter(BaseFilter):
             import sys
             # Since we got here because of an exception, let's get its error message if any
             message = str(sys.exc_info()[1])
-            cherrypy.response.headerMap['Content-Type'] = 'text/xml'
-            cherrypy.response.headerMap['Content-Length'] = len(cherrypy.response.body[0])
             body = ''.join([chunk for chunk in message])
             cherrypy.response.body = [xmlrpclib.dumps(xmlrpclib.Fault(1, body))]
             cherrypy.response.headerMap['Content-Type'] = 'text/xml'
