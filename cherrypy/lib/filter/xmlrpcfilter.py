@@ -169,20 +169,13 @@ class XmlRpcFilter(BaseFilter):
             return
         
         path = cherrypy.request.objectPath
-        
-        while True:
-            try:
-                page_handler, object_path, virtual_path = cherrypy.request.mapPathToObject(path)
-                
-                # Remove "root" from object_path and join it to get objectPath
-                cherrypy.request.objectPath = '/' + '/'.join(object_path[1:])
-                args = virtual_path + cherrypy.request.paramList
-                body = page_handler(*args, **cherrypy.request.paramMap)
-                cherrypy.response.body = body
-                return
-            except cherrypy.InternalRedirect, x:
-                # Try again with the new path
-                path = x.path
+        page_handler, object_path, virtual_path = cherrypy.request.mapPathToObject(path)
+
+        # Remove "root" from object_path and join it to get objectPath
+        cherrypy.request.objectPath = '/' + '/'.join(object_path[1:])
+        args = virtual_path + cherrypy.request.paramList
+        body = page_handler(*args, **cherrypy.request.paramMap)
+        cherrypy.response.body = body
     
     def beforeFinalize(self):
         """ Called before finalizing output """
@@ -207,7 +200,21 @@ class XmlRpcFilter(BaseFilter):
         try:
             if not cherrypy.request.xmlRpcFilterOn:
                 return
-            body = ''.join([chunk for chunk in cherrypy.response.body])
+            import sys
+            # Since we got here because of an exception, let's get its error message if any
+            message = str(sys.exc_info()[1])
+            cherrypy.response.headerMap['Content-Type'] = 'text/xml'
+            cherrypy.response.headerMap['Content-Length'] = len(cherrypy.response.body[0])
+            body = ''.join([chunk for chunk in message])
             cherrypy.response.body = [xmlrpclib.dumps(xmlrpclib.Fault(1, body))]
         except:
             pass
+        
+    def afterErrorResponse(self):
+        # The XML-RPC spec (http://www.xmlrpc.com/spec) says:
+        # "Unless there's a lower-level error, always return 200 OK."
+        # However if arrived here we do have a status set to 500 then
+        # it means we got an error we didn't want to trap explicitely
+        # so let's assume it's part of the "lower-level error" defined above.
+        if cherrypy.response.status[:3] != '500':
+            cherrypy.response.status = '200 OK'
