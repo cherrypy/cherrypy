@@ -188,6 +188,7 @@ def getErrorPage(status, **kwargs):
     
     return template % kwargs
 
+
 def _cpOnHTTPError(status, message):
     """ Default _cpOnHTTPError method.
     
@@ -204,10 +205,9 @@ def _cpOnHTTPError(status, message):
     
     # Remove headers which applied to the original content,
     # but do not apply to the error page.
-    for key in ["Accept-Ranges", "Age", "ETag", "Location",
-                "Retry-After", "Vary", "Content-Encoding",
-                "Content-Length", "Content-Location", "Content-MD5",
-                "Expires", "Last-Modified"]:
+    for key in ["Accept-Ranges", "Age", "ETag", "Location", "Retry-After",
+                "Vary", "Content-Encoding", "Content-Length", "Expires",
+                "Content-Location", "Content-MD5", "Last-Modified"]:
         if response.headerMap.has_key(key):
             del response.headerMap[key]
     
@@ -226,6 +226,41 @@ def _cpOnHTTPError(status, message):
     response.status = status
     response.headerMap['Content-Type'] = "text/html"
     response.body = getErrorPage(status, traceback=tb, message=message)
+    
+    be_ie_unfriendly(status)
+    
+    response.headerMap['Content-Length'] = len(response.body)
+
+
+_ie_friendly_error_sizes = {
+    400: 512, 403: 256, 404: 512, 405: 256,
+    406: 512, 408: 512, 409: 512, 410: 256,
+    500: 512, 501: 512, 505: 512,
+    }
+
+
+def be_ie_unfriendly(status):
+    
+    response = cherrypy.response
+    
+    # For some statuses, Internet Explorer 5+ shows "friendly error
+    # messages" instead of our response.body if the body is smaller
+    # than a given size. Fix this by returning a body over that size
+    # (by adding whitespace).
+    # See http://support.microsoft.com/kb/q218155/
+    s = _ie_friendly_error_sizes.get(status, 0)
+    if s:
+        s += 1
+        # Since we are issuing an HTTP error status, we assume that
+        # the entity is short, and we should just collapse it.
+        content = ''.join([chunk for chunk in response.body])
+        l = len(content)
+        if l and l < s:
+            # IN ADDITION: the response must be written to IE
+            # in one chunk or it will still get replaced! Bah.
+            response.body = [content + (" " * (s - l))]
+        else:
+            response.body = [content]
 
 def formatExc(exc=None):
     """formatExc(exc=None) -> exc (or sys.exc_info if None), formatted."""

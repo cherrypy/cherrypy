@@ -152,6 +152,9 @@ class Error(Test):
     def custom(self):
         raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
     
+    def noexist(self):
+        raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
+    
     def page_method(self):
         raise ValueError()
     
@@ -328,6 +331,9 @@ cherrypy.config.update({
         'server.showTracebacks': False,
     },
     '/error/custom': {
+        'errorPage.404': os.path.join(localDir, "static/index.html"),
+    },
+    '/error/noexist': {
         'errorPage.404': "nonexistent.html",
     },
 })
@@ -565,9 +571,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         finally:
             ignore.pop()
         
+        # Test custom error page.
+        self.getPage("/error/custom")
+        self.assertStatus("404 Not Found")
+        self.assertEqual(len(self.body), 513)
+        self.assertBody("Hello, world\r\n" + (" " * 499))
+        
         # Test error in custom error page (ticket #305).
         # Note that the message is escaped for HTML (ticket #310).
-        self.getPage("/error/custom")
+        self.getPage("/error/noexist")
         self.assertStatus("404 Not Found")
         msg = ("No, &lt;b&gt;really&lt;/b&gt;, not found!<br />"
                "In addition, the custom error page failed:\n<br />"

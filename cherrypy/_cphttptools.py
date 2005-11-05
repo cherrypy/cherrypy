@@ -351,11 +351,6 @@ for _ in response_header_fields:
 for _ in entity_header_fields:
     _header_order_map[_] = 2
 
-_ie_friendly_error_sizes = {400: 512, 403: 256, 404: 512, 405: 256,
-                            406: 512, 408: 512, 409: 512, 410: 256,
-                            500: 512, 501: 512, 505: 512,
-                            }
-
 
 class Response(object):
     """An HTTP Response."""
@@ -400,25 +395,6 @@ class Response(object):
                 self.body = [content]
                 self.headerMap['Content-Length'] = len(content)
         
-        # For some statuses, Internet Explorer 5+ shows "friendly error messages"
-        # instead of our response.body if the body is smaller than a given size.
-        # Fix this by returning a body over that size (by adding whitespace).
-        # See http://support.microsoft.com/kb/q218155/
-        s = int(self.status.split(" ")[0])
-        s = _ie_friendly_error_sizes.get(s, 0)
-        if s:
-            s += 1
-            # Since we are issuing an HTTP error status, we assume that
-            # the entity is short, and we should just collapse it.
-            content = ''.join([chunk for chunk in self.body])
-            self.body = [content]
-            l = len(content)
-            if l and l < s:
-                # IN ADDITION: the response must be written to IE
-                # in one chunk or it will still get replaced! Bah.
-                self.body = [self.body[0] + (" " * (s - l))]
-                self.headerMap['Content-Length'] = s
-        
         # Headers
         headers = []
         for key, valueList in self.headerMap.iteritems():
@@ -427,9 +403,9 @@ class Response(object):
                 valueList = [valueList]
             for value in valueList:
                 headers.append((order, (key, str(value))))
-        # RFC 2616: '... it is "good practice" to send general-header fields
-        # first, followed by request-header or response-header fields, and
-        # ending with the entity-header fields.'
+        # RFC 2616: '... it is "good practice" to send general-header
+        # fields first, followed by request-header or response-header
+        # fields, and ending with the entity-header fields.'
         headers.sort()
         self.headers = [item[1] for item in headers]
         
