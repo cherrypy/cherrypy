@@ -9,63 +9,7 @@ import types
 
 import cherrypy
 from cherrypy import _cputil, _cpcgifs, _cpwsgiserver
-from cherrypy.lib import cptools
-
-
-class Version(object):
-    
-    """A version, such as "2.1 beta 3", which can be compared atom-by-atom.
-    
-    If a string is provided to the constructor, it will be split on word
-    boundaries; that is, "1.4.13 beta 9" -> ["1", "4", "13", "beta", "9"].
-    
-    Comparisons are performed atom-by-atom, numerically if both atoms are
-    numeric. Therefore, "2.12" is greater than "2.4", and "3.0 beta" is
-    greater than "3.0 alpha" (only because "b" > "a"). If an atom is
-    provided in one Version and not another, the longer Version is
-    greater than the shorter, that is: "4.8 alpha" > "4.8".
-    """
-    
-    def __init__(self, atoms):
-        """A Version object. A str argument will be split on word boundaries."""
-        if isinstance(atoms, basestring):
-            self.atoms = re.split(r'\W', atoms)
-        else:
-            self.atoms = [str(x) for x in atoms]
-    
-    def from_http(cls, version_str):
-        """Return a Version object from the given 'HTTP/x.y' string."""
-        return cls(version_str[5:])
-    from_http = classmethod(from_http)
-    
-    def to_http(self):
-        """Return a 'HTTP/x.y' string for this Version object."""
-        return "HTTP/%s.%s" % tuple(self.atoms[:2])
-    
-    def __str__(self):
-        return ".".join([str(x) for x in self.atoms])
-    
-    def __cmp__(self, other):
-        cls = self.__class__
-        if not isinstance(other, cls):
-            # Try to coerce other to a Version instance.
-            other = cls(other)
-        
-        index = 0
-        while index < len(self.atoms) and index < len(other.atoms):
-            mine, theirs = self.atoms[index], other.atoms[index]
-            if mine.isdigit() and theirs.isdigit():
-                mine, theirs = int(mine), int(theirs)
-            if mine < theirs:
-                return -1
-            if mine > theirs:
-                return 1
-            index += 1
-        if index < len(other.atoms):
-            return -1
-        if index < len(self.atoms):
-            return 1
-        return 0
+from cherrypy.lib import cptools, httptools
 
 
 class Request(object):
@@ -111,7 +55,7 @@ class Request(object):
         
         try:
             self.headers = headers
-            self.headerMap = cptools.HeaderMap()
+            self.headerMap = httptools.HeaderMap()
             self.simpleCookie = Cookie.SimpleCookie()
             self.rfile = rfile
             
@@ -160,7 +104,7 @@ class Request(object):
     
     def processRequestLine(self, requestLine):
         self.requestLine = rl = requestLine.strip()
-        method, path, qs, proto = cptools.parseRequestLine(rl)
+        method, path, qs, proto = httptools.parseRequestLine(rl)
         if path == "*":
             path = "global"
         
@@ -191,15 +135,15 @@ class Request(object):
         # only return 505 if the _major_ version is different.
         
         # cherrypy.request.version == request.protocol in a Version instance.
-        self.version = Version.from_http(self.protocol)
+        self.version = httptools.Version.from_http(self.protocol)
         server_v = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
-        server_v = Version.from_http(server_v)
+        server_v = httptools.Version.from_http(server_v)
         
         # cherrypy.response.version should be used to determine whether or
         # not to include a given HTTP/1.1 feature in the response content.
         cherrypy.response.version = min(self.version, server_v)
         
-        self.paramMap = cptools.parseQueryString(self.queryString)
+        self.paramMap = httptools.parseQueryString(self.queryString)
         
         # Process the headers into self.headerMap
         for name, value in self.headers:
@@ -251,7 +195,7 @@ class Request(object):
             # request body was a content-type other than form params.
             self.body = forms.file
         else:
-            self.paramMap.update(cptools.paramsFromCGIForm(forms))
+            self.paramMap.update(httptools.paramsFromCGIForm(forms))
     
     def main(self, path=None):
         """Obtain and set cherrypy.response.body from a page handler."""
@@ -360,11 +304,11 @@ class Response(object):
         self.headers = None
         self.body = None
         
-        self.headerMap = cptools.HeaderMap()
+        self.headerMap = httptools.HeaderMap()
         self.headerMap.update({
             "Content-Type": "text/html",
             "Server": "CherryPy/" + cherrypy.__version__,
-            "Date": cptools.HTTPDate(),
+            "Date": httptools.HTTPDate(),
             "Set-Cookie": [],
             "Content-Length": None
         })
@@ -373,7 +317,11 @@ class Response(object):
     def finalize(self):
         """Transform headerMap (and cookies) into cherrypy.response.headers."""
         
-        code, reason, _ = cptools.validStatus(self.status)
+        try:
+            code, reason, _ = httptools.validStatus(self.status)
+        except ValueError, x:
+            raise cherrypy.HTTPError(500, x.args[0])
+        
         self.status = "%s %s" % (code, reason)
         
         stream = cherrypy.config.get("streamResponse", False)

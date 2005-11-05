@@ -6,7 +6,7 @@ import time
 import cgi
 
 import cherrypy
-from cherrypy.lib import cptools
+from cherrypy.lib import httptools
 
 
 class EmptyClass:
@@ -155,7 +155,10 @@ def getErrorPage(status, **kwargs):
     kwargs will be interpolated into the page template.
     """
     
-    code, reason, message = cptools.validStatus(status)
+    try:
+        code, reason, message = httptools.validStatus(status)
+    except ValueError, x:
+        raise cherrypy.HTTPError(500, x.args[0])
     
     # We can't use setdefault here, because some
     # callers send None for kwarg values.

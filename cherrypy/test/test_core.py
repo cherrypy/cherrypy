@@ -4,7 +4,7 @@ import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy.lib import cptools
+from cherrypy.lib import cptools, httptools
 import types
 import os
 localDir = os.path.dirname(__file__)
@@ -175,7 +175,8 @@ class Error(Test):
 class Ranges(Test):
     
     def get_ranges(self):
-        return repr(cptools.getRanges(8))
+        h = cherrypy.request.headerMap.get('Range')
+        return repr(httptools.getRanges(h, 8))
     
     def slice_file(self):
         path = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -185,7 +186,8 @@ class Ranges(Test):
 class Accept(Test):
     
     def get_accept(self, headername):
-        return "\n".join([str(x) for x in cptools.getAccept(headername)])
+        h = cherrypy.request.headerMap.get(headername)
+        return "\n".join([str(x) for x in httptools.getAccept(h, headername)])
 
 
 class Headers(Test):
