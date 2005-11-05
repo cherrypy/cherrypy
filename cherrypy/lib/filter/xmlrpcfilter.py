@@ -3,7 +3,7 @@
 ## Sylvain Hellegouarch
 ##
 ## History:
-## 1.0.5   : 2005-11-04 Fixed Content-Length bug (http://www.cherrypy.org/ticket/384)
+## 1.0.5   : 2005-11-04 Fixed Content-Length bug (http://www.cherrypy.org/ticket/384)
 ## 1.0.4   : 2005-08-28 Fixed issues on input types which are not strings
 ## 1.0.3   : 2005-01-28 Bugfix on content-length in 1.0.2 code fixed by
 ##           Gian Paolo Ciceri
