@@ -159,7 +159,8 @@ class Request(object):
                 self.simpleCookie.load(value)
         
         # Save original values (in case they get modified by filters)
-        self.originalParamMap = self.paramMap
+        # This feature is deprecated in 2.2 and will be removed in 2.3.
+        self._originalParamMap = self.paramMap.copy()
         
         if self.version >= "1.1":
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
@@ -169,6 +170,12 @@ class Request(object):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
         self.base = "%s://%s" % (self.scheme, self.headerMap.get('Host', ''))
+    
+    def _get_original_param_map(self):
+        # This feature is deprecated in 2.2 and will be removed in 2.3.
+        return self._originalParamMap
+    originalParamMap = property(_get_original_param_map,
+                        doc="Deprecated. A copy of the original paramMap.")
     
     def _get_browserUrl(self):
         url = self.base + self.path
