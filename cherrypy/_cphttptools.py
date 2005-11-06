@@ -169,9 +169,14 @@ class Request(object):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
         self.base = "%s://%s" % (self.scheme, self.headerMap.get('Host', ''))
-        self.browserUrl = self.base + self.path
+    
+    def _get_browserUrl(self):
+        url = self.base + self.path
         if self.queryString:
-            self.browserUrl += '?' + self.queryString
+            url += '?' + self.queryString
+        return url
+    browserUrl = property(_get_browserUrl,
+                          doc="The URL as entered in a browser (read-only).")
     
     def processBody(self):
         # Create a copy of headerMap with lowercase keys because

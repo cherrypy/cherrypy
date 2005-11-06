@@ -23,5 +23,4 @@ class BaseUrlFilter(BaseFilter):
             # add http:// or https:// if needed
             newBaseUrl = request.base[:request.base.find("://") + 3] + newBaseUrl
         
-        request.browserUrl = request.browserUrl.replace(request.base, newBaseUrl)
         request.base = newBaseUrl

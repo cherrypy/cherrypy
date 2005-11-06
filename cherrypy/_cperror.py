@@ -57,10 +57,6 @@ class InternalRedirect(Exception):
                 request.queryString = urllib.urlencode(params)
                 request.paramMap = params.copy()
         
-        request.browserUrl = request.base + path
-        if request.queryString:
-            request.browserUrl += '?' + request.queryString
-        
         Exception.__init__(self, path, params)
 
 
