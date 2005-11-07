@@ -134,10 +134,6 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage("/dir1/dir2/dir3/dir4/index")
         self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
         
-        # Test positional parameters
-        self.getPage("/dir1/dir2/posparam/18/24/hut/hike")
-        self.assertBody("18/24/hut/hike")
-        
         self.getPage("/redirect")
         self.assertStatus('302 Found')
         self.assertHeader('Location', 'http://%s:%s%s/dir1/'
@@ -147,6 +143,15 @@ class ObjectMappingTest(helper.CPWebCase):
         # This should also test the %XX-unquoting of URL's.
         self.getPage("/Von%20B%fclow?ID=14")
         self.assertBody("ID is 14")
+        
+    def testPositionalParams(self):
+        self.getPage("/dir1/dir2/posparam/18/24/hut/hike")
+        self.assertBody("18/24/hut/hike")
+        
+        # intermediate index methods should not receive posparams;
+        # only the "final" index method should do so.
+        self.getPage("/dir1/dir2/5/3/sir")
+        self.assertBody("default for dir1, param is:('dir2', '5', '3', 'sir')")
     
     def testExpose(self):
         # Test the cherrypy.expose function/decorator
