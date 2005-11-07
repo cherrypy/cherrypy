@@ -176,7 +176,7 @@
             response. This is not necessarily the value that will be written in the response!
             Instead, it should be used to determine which features are <emphasis>available</emphasis>
             for the response. For example, an HTTP server may send an HTTP/1.1 response even though
-            the client is known to only understand HTTP/1.0—the response.version will be set to
+            the client is known to only understand HTTP/1.0&#8212;the response.version will be set to
             Version("1.0") to inform you of this, so that you (and CherryPy) can restrict the
             response to HTTP/1.0 features only.</para>
         </section>
@@ -279,7 +279,7 @@
         </section>
         <section>
             <title>cherrypy.server.stop()</title>
-            <para>Stop the CherryPy Server. Well, "suspend" might be a better term—this doesn't
+            <para>Stop the CherryPy Server. Well, "suspend" might be a better term&#8212;this doesn't
             terminate the process.</para>
         </section>
         <section>
