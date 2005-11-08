@@ -227,12 +227,11 @@ def _cpOnHTTPError(status, message):
     # In all cases, finalize will be called after this method,
     # so don't bother cleaning up response values here.
     response.status = status
-    response.headerMap['Content-Type'] = "text/html"
     response.body = getErrorPage(status, traceback=tb, message=message)
+    response.headerMap['Content-Length'] = len(response.body)
+    response.headerMap['Content-Type'] = "text/html"
     
     be_ie_unfriendly(status)
-    
-    response.headerMap['Content-Length'] = len(response.body)
 
 
 _ie_friendly_error_sizes = {
@@ -264,6 +263,7 @@ def be_ie_unfriendly(status):
             response.body = [content + (" " * (s - l))]
         else:
             response.body = [content]
+        response.headerMap['Content-Length'] = len(response.body[0])
 
 def formatExc(exc=None):
     """formatExc(exc=None) -> exc (or sys.exc_info if None), formatted."""

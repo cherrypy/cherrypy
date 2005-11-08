@@ -135,15 +135,18 @@ class CPWebCase(webtest.WebCase):
         """
         
         from cherrypy._cputil import getErrorPage
-        esc = re.escape
+        
         # This will never contain a traceback:
-        page = esc(getErrorPage(status, message=message))
+        page = getErrorPage(status, message=message)
         
         # First, test the response body without checking the traceback.
         # Stick a match-all group (.*) in to grab the traceback.
-        page = page.replace(esc('<pre id="traceback"></pre>'),
-                            esc('<pre id="traceback">') + '(.*)' + esc('</pre>'))
-        m = re.match(page, self.body, re.DOTALL)
+        esc = re.escape
+        epage = esc(page)
+        epage = epage.replace(esc('<pre id="traceback"></pre>'),
+                              esc('<pre id="traceback">')
+                              + '(.*)' + esc('</pre>'))
+        m = re.match(epage, self.body, re.DOTALL)
         if not m:
             self._handlewebError('Error page does not match\n' + page)
             return
