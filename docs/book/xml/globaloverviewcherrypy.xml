@@ -80,7 +80,86 @@ cherrypy.root.admin.search = Search()</programlisting>
             <code>cherrypy.root</code> tree doesn't have any children, that node will be called for
             all of its child paths, and CherryPy will pass the leftover path info as positional
             arguments. In our example, CherryPy will call <code>cherrypy.root.admin.user("8173",
-            "schedule")</code>.</para>
+            "schedule")</code>. Let's rewrite our user method to handle such requests:</para>
+            <example>
+                <title>A user method which handles positional parameters</title>
+                <programlisting>class Admin:
+    def user(self, *args):
+        if not args:
+            raise cherrypy.HTTPError(400, "A user id was expected but not supplied.")
+        id = args.pop(0)
+        if args and args[0] == 'schedule':
+            return self.schedule(id)
+        return "You asked for user '%s'" % id
+    user.exposed = True</programlisting>
+            </example>
+            <para>Note that this is different behavior than CherryPy 2.1, which only allowed
+            positional params for methods named "default".</para>
+        </section>
+        <section>
+            <title>Default methods</title>
+            <para>Are you ready for another special case? What handler is called in our example if
+            you request the URI "/not/a/valid/path"? Given the behavior we have described up to this
+            point, you might deduce that the <code>root.index</code> method will end up handling
+            <emphasis>any</emphasis> path that can't be mapped elsewhere. This would mean, in effect,
+            that CherryPy applications with a <code>root.index</code> could never return a "404 Not
+            Found" response!</para>
+            <para>To prevent this, CherryPy doesn't try to call index methods unless they are
+            attached to the last node in the path; in our example, the only index method that might
+            be called would be a <code>root.not.a.valid.path.index</code> method. If you truly want
+            an intermediate index method to receive positional parameters, well, you can't do that.
+            But what you can do is define a <code>default</code> method to do that for you, instead
+            of an <code>index</code> method. If we wanted our <code>cherrypy.root</code> to handle
+            any child path, and receive positional parameters, we could rewrite it like this:</para>
+            <example>
+                <title>A <code>default</code> method example</title>
+                <programlisting>class Root:
+    def index(self):
+        return "Hello, world!"
+    index.exposed = True
+    
+    def default(self, *args):
+        return "Extra path info: %s" % repr(args)
+    default.exposed = True</programlisting>
+            </example>
+            <para>This new Root class would handle the URI's "/" and "/index" via the
+            <code>index</code> method, and would handle URI's like "/not/a/valid/path" and
+            "/admin/unknown" via the <code>default</code> method.</para>
+        </section>
+        <section>
+            <title>Traversal examples</title>
+            <para>For those of you who need to see in exactly what order CherryPy will try various
+            handlers, here are some examples, using the application above. We always start by trying
+            to find the longest object path first, and then working backwards until an exposed,
+            callable handler is found:</para>
+            <example>
+                <title>Traversal examples</title>
+                <programlisting>"/admin/user/8192/schedule"
+    Trying to reach cherrypy.root.admin.user.8192.schedule.index...
+    cherrypy.root                     exists? Yes.
+            .root.admin               exists? Yes.
+                 .admin.user          exists? Yes.
+                       .user.8192     exists? No.
+                       .user.default  is callable and exposed? No.
+                 .admin.user          is callable and exposed? Yes. Call it.
+
+"/admin/search/"
+    Trying to reach cherrypy.root.admin.search.index...
+    cherrypy.root                     exists? Yes.
+            .root.admin               exists? Yes.
+                 .admin.search        exists? Yes.
+                       .search.index  exists? Yes. Path exhausted.
+                       .search.index  is callable and exposed? Yes. Call it.
+
+"/admin/unknown"
+    Trying to reach cherrypy.root.admin.unknown.index...
+    cherrypy.root                     exists? Yes.
+            .root.admin               exists? Yes.
+                 .admin.unknown       exists? No.
+                 .admin.default       is callable and exposed? No.
+            .root.admin               is callable and exposed? No.
+            .root.default             is callable and exposed? Yes. Call it.</programlisting>
+            </example>
         </section>
     </section>
 </section>
