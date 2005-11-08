@@ -1,67 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-         xml:id="globaloverviewcherrypy">
-  <title>Filters</title>
-  <para>Filters are one of the most important features of CherryPy. The
-  CherryPy core can call user-defined functions at specific points during
-  request processing; a filter is a class which defines those functions.
-  Filters are designed to be called at a low level—the HTTP request/response
-  level—and therefore should only be used in that context.</para>
-  <para>CherryPy comes with a set of built-in filters, but they're turned off
-  by default. To enable them, you must use the configuration system as
-  follows:</para>
-  <itemizedlist>
-    <listitem>First you must decide where to enable the filter. CherryPy
-    maintains a tree of published objects; you must decide which branch should
-    use the filter. The filter will then apply to that branch and all its
-    children in the tree. Remember that the tree is accessed as a path and
-    then mapped internally by the core to match the correct exposed
-    object.</listitem>
-    <listitem>Second in the config file you must turn the filter on like this
-    : <code>filterName.on = True</code></listitem>
-  </itemizedlist>
-  <example>
-    <title>Turning on a default filter</title>
-    <programlisting linenumbering="numbered">
-        [/entries/view]
-        tidyFilter.on = True
-        tidyFilter.tmpDir = "/tmp"
-        tidyFilter.strictXml = True
-      </programlisting>
-  </example>
-  <para>On the first line we define that the tidy filter will be used by the
-  core whenever the path <code>/entries/view</code> (or one of its sub-paths)
-  is called. On the two last lines we also define some parameters used by the
-  filter.</para>
-  <para>CherryPy lets you write your own filters as we will see in the
-  developer reference chapter. However, the way to use them is different from
-  the default filters. You do not declare custom filters within the
-  configuration file; instead, use the <code>_cpFilterList</code> attribute in
-  your source code:</para>
-  <example>
-    <title>Using a non default filter</title>
-    <programlisting linenumbering="numbered">
-        import cherrypy
-        from myfiltermodule import MyFilterClass
-        
-        class Entry:
-          _cpFilterList = [ MyFilterClass() ]
-          def view(self, id): 
-            # do suff...
-          view.exposed = True
-        
-        class Root: pass
-        
-        cherrypy.root = Root()
-        cherrypy.root.entries = Entry()
-        cherrypy.server.start()
-      </programlisting>
-  </example>
-  <para>As all objects below <code>cherrypy.root.entries</code> will inherit
-  the filter, there is no need to re-specify it in each
-  <code>_cpFilterList</code> underneath.</para>
-  <para>Keep in mind that the user-defined filters are called in the order you
-  add them to the list.</para>
+<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="globaloverviewcherrypy">
+    <title>Global Overview</title>
+    <section>
+        <title>Mapping URI's to handlers</title>
+        <para>CherryPy has lots of fancy features to help you manage HTTP messages. But the most
+        fundamental thing it does is allow you to map URI's to handler functions. It does this in a
+        very straightforward way: the path portion of a URI is heirarchical, so CherryPy uses a
+        parallel heirarchy of objects, starting with <code>cherrypy.root</code>. If your application
+        receives a request for "/admin/user?name=idunno", then CherryPy will try to find the handler:
+        <code>cherrypy.root.admin.user</code>. If it exists, is callable, and has an "exposed = True"
+        attribute, then CherryPy will hand off control to that function. Any URI parameters (like
+        "name=idunno", above) are passed to the handler as keyword arguments.</para>
+        <section>
+            <title>Index methods</title>
+            <para>There are some special cases, however. To what handler should we map a path like
+            "/admin/search/"? Note the trailing slash after "search"—it indicates that our path has
+            three components: "admin", "search", and "". Static webservers interpret this to mean
+            that the <code>search</code> object is a directory, and, since the third component is
+            blank, they use an <code>index.html</code> file if it exists. CherryPy is a dynamic
+            webserver, so it allows you to specify an <code>index</code> method to handle this. In
+            our example, CherryPy will look for a handler at
+            <code>cherrypy.root.admin.search.index</code>. Let's pause and show our example
+            application so far:</para>
+            <example>
+                <title>Sample application (handler mapping example)</title>
+                <programlisting>import cherrypy
+
+class Root:
+    def index(self):
+        return "Hello, world!"
+    index.exposed = True
+
+class Admin:
+    def user(self, name=""):
+        return "You asked for user '%s'" % name
+    user.exposed = True
+
+class Search:
+    def index(self):
+        return search_page()
+    index.exposed = True
+
+cherrypy.root = Root()
+cherrypy.root.admin = Admin()
+cherrypy.root.admin.search = Search()</programlisting>
+            </example>
+            <para>So far, we have three exposed handlers:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><code>root.index</code>. This will be called for the URI's "/" and
+                    "/index".</para>
+                </listitem>
+                <listitem>
+                    <para><code>root.admin.user</code>. This will be called for the URI
+                    "/admin/user".</para>
+                </listitem>
+                <listitem>
+                    <para><code>root.admin.search.index</code>. This will be called for the URI's
+                    "/admin/search/" and "/admin/search".</para>
+                </listitem>
+            </itemizedlist>
+            <para>Yes, you read that third line correctly: <code>root.admin.search.index</code> will
+            be called whether or not the URI has a trailing slash. Actually, that isn't quite true;
+            CherryPy will answer a request for "/admin/search" (without the slash) with an HTTP
+            Redirect response. Most browsers will then request "/admin/search/" as the redirection
+            suggests, and <emphasis>then</emphasis> our <code>root.admin.search.index</code> handler
+            will be called. But the final outcome is the same.</para>
+        </section>
+        <section>
+            <title>Positional Parameters</title>
+            <para>Now, let's consider another special case. What if, instead of passing a user name
+            as a parameter, we wish to use a user id as part of the path? What to do with a URI like
+            "/admin/user/8173/schedule"? This is intended to reference the schedule belonging to
+            "user #8173", but we certainly don't want to have a separate function for each user
+            id!</para>
+            <para>CherryPy allows you to map a single handler to multiple URI's with the simple
+            approach of <emphasis>not writing handlers you don't need</emphasis>. If a node in the
+            <code>cherrypy.root</code> tree doesn't have any children, that node will be called for
+            all of its child paths, and CherryPy will pass the leftover path info as positional
+            arguments. In our example, CherryPy will call <code>cherrypy.root.admin.user("8173",
+            "schedule")</code>.</para>
+        </section>
+    </section>
 </section>

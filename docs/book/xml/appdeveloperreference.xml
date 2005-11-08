@@ -12,6 +12,7 @@
     basic components which you will use to build a CherryPy
     application.</abstract>
     <xi:include href="globaloverviewcherrypy.xml" />
+    <xi:include href="usingfilters.xml" />
     <xi:include href="configsystemoverview.xml" />
     <xi:include href="sessions.xml" />
     <xi:include href="templateindependant.xml" />
