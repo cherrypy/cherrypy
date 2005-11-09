@@ -166,7 +166,8 @@ class XmlRpcFilter(BaseFilter):
         whatever real value the user returned from their callable
         to reach the xmlrpcfilter unchanged."""
         
-        if not cherrypy.request.xmlRpcFilterOn:
+        if (not cherrypy.config.get('xmlRpcFilter.on', False)
+            or not getattr(cherrypy.request, 'isRPC', False)):
             return
         
         path = cherrypy.request.objectPath
@@ -180,8 +181,8 @@ class XmlRpcFilter(BaseFilter):
     
     def beforeFinalize(self):
         """ Called before finalizing output """
-        if (not cherrypy.request.xmlRpcFilterOn
-            or not cherrypy.request.isRPC):
+        if (not cherrypy.config.get('xmlRpcFilter.on', False)
+            or not getattr(cherrypy.request, 'isRPC', False)):
             return
 
         encoding = cherrypy.config.get('xmlRpcFilter.encoding', 'utf-8')
@@ -199,7 +200,8 @@ class XmlRpcFilter(BaseFilter):
     
     def beforeErrorResponse(self):
         try:
-            if not cherrypy.request.xmlRpcFilterOn:
+            if (not cherrypy.config.get('xmlRpcFilter.on', False)
+                or not getattr(cherrypy.request, 'isRPC', False)):
                 return
             import sys
             # Since we got here because of an exception, let's get its error message if any
@@ -212,6 +214,9 @@ class XmlRpcFilter(BaseFilter):
             pass
         
     def afterErrorResponse(self):
+        if (not cherrypy.config.get('xmlRpcFilter.on', False)
+            or not getattr(cherrypy.request, 'isRPC', False)):
+            return
         # The XML-RPC spec (http://www.xmlrpc.com/spec) says:
         # "Unless there's a lower-level error, always return 200 OK."
         # However if arrived here we do have a status set to 500 then
