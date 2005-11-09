@@ -150,6 +150,56 @@ def getRanges(headervalue, content_length):
     return result
 
 
+class ExpectValue(object):
+    """A (token, value) tuple (with its parameters) from an Expect header"""
+    def __init__(self, token, value=None, params=None):
+        self.token = token
+        self.value = value
+        if params is None:
+            params = {}
+        self.params = params
+
+    def __str__(self):
+        if self.token.lower() == '100-continue':
+            return self.token
+        p = [";%s=%s" % (k, v.value) for k, v in self.params.iteritems()]
+        return "%s=%s%s" % (self.token, self.value, "".join(p))
+
+
+def getExpect(headervalue, headername='Expect'):
+    """
+    Returns the Expect token and parameters as an ExpectValue instance
+    """    
+    if not headervalue:
+        return None
+
+    # RFC defines the Expect header as follow:
+    # Expect       =  "Expect" ":" 1#expectation
+    # expectation  =  "100-continue" | expectation-extension
+    # expectation-extension =  token [ "=" ( token | quoted-string )
+    #                          *expect-params ]
+    # expect-params =  ";" token [ "=" ( token | quoted-string ) ]
+    
+    if headername == 'Expect':
+        # most cases
+        if headervalue.lower() == '100-continue':
+            return ExpectValue(headervalue)
+        # the following should be rare
+        tokens = headervalue.split(';')
+        token, value = tokens.pop(0).split('=')
+        expectvalue = ExpectValue(token.strip(), value.strip())
+        params = {}
+        # Let's deal with potential expectation-extension
+        for param in tokens:
+            token, value = param.split('=')
+            token = token.strip()
+            params[token] = ExpectValue(token, value.strip())
+        expectvalue.params = params
+        return expectvalue
+    
+    return None    
+
+
 class AcceptValue(object):
     """A value (with parameters) from an Accept-* request header."""
     

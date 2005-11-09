@@ -190,6 +190,20 @@ class Accept(Test):
         return "\n".join([str(x) for x in httptools.getAccept(h, headername)])
 
 
+class Expect(Test):
+    
+    def get_expect(self, headername):
+        h = cherrypy.request.headerMap.get(headername)
+        cherrypy.response.status = '100 Continue'
+        return str(httptools.getExpect(h, headername))
+
+    def expectation_failed(self, headername):
+        h = cherrypy.request.headerMap.get(headername)
+        expect = httptools.getExpect(h, headername)
+        if expect and expect.token != '100-continue':
+            raise cherrypy.HTTPError(400)
+        raise cherrypy.HTTPError(417, 'Expectation Failed')
+
 class Headers(Test):
     
     def doubledheaders(self):
@@ -632,6 +646,16 @@ llo,
         self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
         self.assertStatus("416 Requested Range Not Satisfiable")
         self.assertHeader("Content-Range", "bytes */14")
+
+##     def testExpect(self):
+##         self.getPage("/expect/get_expect?headername=Expect", [('Expect', '100-continue')])
+##         self.assertStatus('100 Continue')
+##         self.assertBody('100-continue')
+
+##         self.getPage("/expect/expectation_failed?headername=Expect",
+##                      [('Content-Length', '200'), ('Expect', '100-continue')])
+##         self.assertStatus('417 Expectation Failed')
+
     
     def testAccept(self):
         h = [('Accept', 'audio/*; q=0.2, audio/basic')]
