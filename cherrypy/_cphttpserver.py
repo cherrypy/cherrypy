@@ -1,6 +1,6 @@
 """A native HTTP server for CherryPy."""
 
-import threading, os, socket
+import threading, os, socket, time
 import SocketServer, BaseHTTPServer, Queue
 import cherrypy
 from cherrypy import _cputil
