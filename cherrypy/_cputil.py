@@ -42,11 +42,14 @@ def get_object_trail(objectpath=None):
     # Convert the list of names into a list of objects
     node = cherrypy
     objectTrail = []
-    for objname in nameList:
+    for name in nameList:
         # maps virtual names to Python identifiers (replaces '.' with '_')
-        objname = objname.replace('.', '_')
+        objname = name.replace('.', '_')
         node = getattr(node, objname, None)
-        objectTrail.append((objname, node))
+        if node is None:
+            objectTrail.append((name, node))
+        else:
+            objectTrail.append((objname, node))
     
     return objectTrail
 
