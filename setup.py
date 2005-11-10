@@ -35,7 +35,7 @@ url="http://www.cherrypy.org"
 cp_license="BSD"
 packages=[
     "cherrypy", "cherrypy.lib", "cherrypy.lib.filter",
-    "cherrypy.tutorial", "cherrypy.test",
+    "cherrypy.tutorial", "cherrypy.test", "cherrypy.filters",
 ]
 download_url="http://sourceforge.net/project/showfiles.php?group_id=56099"
 data_files=[
