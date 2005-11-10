@@ -7,6 +7,7 @@ import types
 
 import cherrypy
 from cherrypy import _cputil, _cpcgifs, _cpwsgiserver
+from cherrypy.lib.filter import applyFilters
 from cherrypy.lib import cptools, httptools
 
 
@@ -441,19 +442,3 @@ def flattener(input):
         else:
             for y in flattener(x):
                 yield y 
-
-def applyFilters(methodName):
-    """Execute the given method for all registered filters."""
-    if methodName in ('onStartResource', 'beforeRequestBody', 'beforeMain'):
-        filterList = (_cputil._cpDefaultInputFilterList +
-                      _cputil.getSpecialAttribute('_cpFilterList'))
-    elif methodName in ('beforeFinalize', 'onEndResource',
-                'beforeErrorResponse', 'afterErrorResponse'):
-        filterList = (_cputil.getSpecialAttribute('_cpFilterList') +
-                      _cputil._cpDefaultOutputFilterList)
-    else:
-        assert False # Wrong methodName for the filter
-    for filter in filterList:
-        method = getattr(filter, methodName, None)
-        if method:
-            method()

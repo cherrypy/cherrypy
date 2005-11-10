@@ -3,8 +3,8 @@
 import ConfigParser
 
 import cherrypy
-from cherrypy import _cputil, _cperror
-from cherrypy.lib import autoreload
+from cherrypy import _cputil
+from cherrypy.lib import autoreload, cptools
 
 
 # This configMap dict holds the settings metadata for all cherrypy objects.
@@ -197,11 +197,11 @@ def dict_from_config_file(configFile):
         for option in configParser.options(section):
             value = configParser.get(section, option)
             try:
-                value = _cputil.unrepr(value)
-            except _cperror.WrongUnreprValue, s:
+                value = cptools.unrepr(value)
+            except cherrypy.WrongUnreprValue, s:
                 msg = ("section: %s, option: %s, value: %s" %
                        (repr(section), repr(option), repr(value)))
-                raise _cperror.WrongConfigValue(msg)
+                raise cherrypy.WrongConfigValue(msg)
             result[section][option] = value
     return result
 

@@ -192,7 +192,8 @@ def _run_test_suite_thread(moduleNames, conf):
         # because each module uses/overwrites cherrypy globals.
         cherrypy.config.reset()
         setConfig(conf)
-        cherrypy._cputil._cpInitDefaultFilters()
+        from cherrypy.lib import filter
+        filter.init()
         
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)
@@ -207,7 +208,8 @@ def testmain(server=None, conf=None):
 
 def _test_main_thread():
     cherrypy.server.wait()
-    cherrypy._cputil._cpInitDefaultFilters()
+    from cherrypy.lib import filter
+    filter.init()
     try:
         webtest.main()
     finally:

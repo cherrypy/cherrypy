@@ -315,6 +315,7 @@ def run():
         'test_baseurl_filter',
         'test_cache_filter',
         'test_combinedfilters',
+        'test_config',
         'test_core',
         'test_decodingencoding_filter',
         'test_gzip_filter',

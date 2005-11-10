@@ -7,7 +7,7 @@ import warnings
 
 import cherrypy
 from cherrypy import _cphttptools
-from cherrypy.lib import autoreload, profiler
+from cherrypy.lib import autoreload, profiler, filter, cptools
 
 # Use a flag to indicate the state of the application server.
 STOPPED = 0
@@ -52,7 +52,7 @@ class Server(object):
             serverClass = _cpwsgi.WSGIServer
         elif serverClass and isinstance(serverClass, basestring):
             # Dynamically load the class from the given string
-            serverClass = cherrypy._cputil.attributes(serverClass)
+            serverClass = cptools.attributes(serverClass)
         
         self.blocking = not initOnly
         self.httpserverclass = serverClass
@@ -277,8 +277,7 @@ def configure():
         cherrypy.profiler = None
     
     # Initialize the built in filters
-    cherrypy._cputil._cpInitDefaultFilters()
-    cherrypy._cputil._cpInitUserDefinedFilters()
+    filter.init()
 
 
 def check_port(host, port):
