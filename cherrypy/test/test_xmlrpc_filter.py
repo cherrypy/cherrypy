@@ -66,16 +66,40 @@ cherrypy.config.update({
     '/xmlrpc':
                {'xmlRpcFilter.on':True}
               })
+
         
+class ServerlessProxy(object):
+    """An xmlrpc proxy for the test suite's 'serverless' tests."""
+    def __init__(self, webcase, url):
+        self._webcase = webcase
+        self.url = url
+
+    def __getattr__(self, attr, *args):
+        def xmlrpc_method(*args):
+            args = tuple(args)
+            body = xmlrpclib.dumps(args, attr)
+            cl = len(body)
+            headers = [('Content-Type', 'text/xml'), ('Content-Length', str(cl))]
+            self._webcase.getPage(self.url, headers=headers, method="POST", body=body)
+            return xmlrpclib.loads("".join(self._webcase.body))[0][0]            
+        return xmlrpc_method
 
 
 class XmlRpcFilterTest(helper.CPWebCase):
     def testXmlRpcFilter(self):
-        
-        proxy = xmlrpclib.ServerProxy('http://localhost:%s/xmlrpc/' % (self.PORT))
 
+        # load the appropriate xmlrpc proxy
+        if cherrypy.server.httpserver is None:        
+            proxy = ServerlessProxy(self, 'http://localhost:%s/xmlrpc/' % (self.PORT))
+        else:
+            proxy = xmlrpclib.ServerProxy('http://localhost:%s/xmlrpc/' % (self.PORT))
+
+        # begin the tests ...
         self.assertEqual(proxy.return_single_item_list(),
                          [42]
+                         )
+        self.assertNotEqual(proxy.return_single_item_list(),
+                         'one bazillion'
                          )
         self.assertEqual(proxy.return_string(),
                          "here is a string"
