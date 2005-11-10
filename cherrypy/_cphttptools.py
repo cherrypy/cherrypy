@@ -62,7 +62,24 @@ class Request(object):
             # because request.objectPath is used for config lookups
             # right away.
             self.processRequestLine(requestLine)
-            
+
+            # if we receive OPTIONS * HTTP/1.1
+            # then we should simply answer right away
+            if self.method == 'OPTIONS':
+                # this normally should be * but processRequestLine
+                # switched it to 'global' for the configuration handling
+                if self.path == 'global':
+                    # OPTIONS is defined in HTTP 1.1
+                    if self.protocol == 'HTTP/1.1':
+                        cherrypy.response.body = []
+                        cherrypy.response.status = '200 OK'
+                        cherrypy.response.headerMap['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
+                        cherrypy.response.headerMap['Content-Length'] = 0
+                        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+                        cherrypy.response.finalize()
+                        _cputil.getSpecialAttribute("_cpLogAccess")()
+                        return
+                    
             try:
                 applyFilters('onStartResource')
                 
