@@ -50,7 +50,7 @@ response = _ThreadLocalProxy('response')
 threadData = local()
 
 # Create variables needed for session (see lib/sessionfilter.py for more info)
-from lib.filter import sessionfilter
+from filters import sessionfilter
 session = sessionfilter.SessionWrapper()
 _sessionDataHolder = {} # Needed for RAM sessions only
 _sessionLockDict = {} # Needed for RAM sessions only

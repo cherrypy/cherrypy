@@ -7,7 +7,7 @@ import types
 
 import cherrypy
 from cherrypy import _cputil, _cpcgifs, _cpwsgiserver
-from cherrypy.lib.filter import applyFilters
+from cherrypy.filters import applyFilters
 from cherrypy.lib import cptools, httptools
 
 

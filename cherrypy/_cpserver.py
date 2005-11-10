@@ -6,8 +6,8 @@ import time
 import warnings
 
 import cherrypy
-from cherrypy import _cphttptools
-from cherrypy.lib import autoreload, profiler, filter, cptools
+from cherrypy import _cphttptools, filters
+from cherrypy.lib import autoreload, profiler, cptools
 
 # Use a flag to indicate the state of the application server.
 STOPPED = 0
@@ -277,7 +277,7 @@ def configure():
         cherrypy.profiler = None
     
     # Initialize the built in filters
-    filter.init()
+    filters.init()
 
 
 def check_port(host, port):
