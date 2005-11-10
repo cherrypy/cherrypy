@@ -60,7 +60,13 @@ class Version(object):
     """
     
     def __init__(self, atoms):
-        """A Version object. A str argument will be split on word boundaries."""
+        """A Version object.
+        
+        atoms: if a str, it will be split on word boundaries;
+               if a float or int, it will be split at the decimal point.
+        """
+        if isinstance(atoms, (int, float)):
+            atoms = str(atoms)
         if isinstance(atoms, basestring):
             self.atoms = re.split(r'\W', atoms)
         else:

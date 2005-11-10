@@ -62,7 +62,7 @@ class Request(object):
             # because request.objectPath is used for config lookups
             # right away.
             self.processRequestLine(requestLine)
-
+            
             # if we receive OPTIONS * HTTP/1.1
             # then we should simply answer right away
             if self.method == 'OPTIONS':
@@ -70,16 +70,17 @@ class Request(object):
                 # switched it to 'global' for the configuration handling
                 if self.path == 'global':
                     # OPTIONS is defined in HTTP 1.1
-                    if self.protocol == 'HTTP/1.1':
-                        cherrypy.response.body = []
-                        cherrypy.response.status = '200 OK'
-                        cherrypy.response.headerMap['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
-                        cherrypy.response.headerMap['Content-Length'] = 0
-                        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
-                        cherrypy.response.finalize()
+                    response = cherrypy.response
+                    if response.version >= '1.1':
+                        response.body = []
+                        response.status = '200 OK'
+                        response.headerMap['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
+                        response.headerMap['Content-Length'] = 0
+                        response.headerMap['Content-Type'] = 'text/plain'
+                        response.finalize()
                         _cputil.getSpecialAttribute("_cpLogAccess")()
                         return
-                    
+            
             try:
                 applyFilters('onStartResource')
                 
@@ -134,8 +135,7 @@ class Request(object):
         # Change objectPath in filters to change
         # the object that will get rendered
         self.objectPath = path
-    
-    def processHeaders(self):
+        
         # Compare request and server HTTP versions, in case our server does
         # not support the requested version. We can't tell the server what
         # version number to write in the response, so we limit our output
@@ -158,6 +158,8 @@ class Request(object):
         # cherrypy.response.version should be used to determine whether or
         # not to include a given HTTP/1.1 feature in the response content.
         cherrypy.response.version = min(self.version, server_v)
+    
+    def processHeaders(self):
         
         self.paramMap = httptools.parseQueryString(self.queryString)
         
