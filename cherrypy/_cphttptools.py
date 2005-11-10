@@ -1,9 +1,7 @@
 """CherryPy core request/response handling."""
 
-import cgi
 import Cookie
 import os
-import re
 import sys
 import types
 

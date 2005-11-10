@@ -305,6 +305,11 @@ def bareError(extrabody=None):
 
 def _cpOnError():
     """ Default _cpOnError method """
+    # Allow logging of only *unexpected* HTTPError's.
+    if (not cherrypy.config.get('server.logTracebacks', True)
+        and cherrypy.config.get('server.logUnhandledTracebacks', True)):
+        cherrypy.log(formatExc())
+    
     cherrypy.HTTPError(500).set_response()
 
 _cpFilterList = []

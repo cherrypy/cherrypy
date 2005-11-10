@@ -170,6 +170,9 @@ class Error(Test):
     def cause_err_in_finalize(self):
         # Since status must start with an int, this should error.
         cherrypy.response.status = "ZOO OK"
+    
+    def log_unhandled(self):
+        raise ValueError()
 
 
 class Ranges(Test):
@@ -352,6 +355,10 @@ cherrypy.config.update({
     '/error/noexist': {
         'errorPage.404': "nonexistent.html",
     },
+    '/error/log_unhandled': {
+        'server.logTracebacks': False,
+        'server.logUnhandledTracebacks': True,
+    },
 })
 
 
@@ -452,15 +459,25 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         data = open(logFile, "rb").readlines()
         self.assertEqual(data, [])
         
-        # Test that tracebacks get written to the error log.
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
         try:
+            # Test that tracebacks get written to the error log.
             self.getPage("/error/page_method")
             self.assertInBody("raise ValueError()")
             data = open(logFile, "rb").readlines()
             self.assertEqual(data[0][-41:], ' INFO Traceback (most recent call last):\n')
             self.assertEqual(data[6], '    raise ValueError()\n')
+            
+            # Test that unhandled tracebacks get written to the error log
+            # if logTracebacks is False but logUnhandledTracebacks is True.
+            self.getPage("/error/log_unhandled")
+            self.assertInBody("raise ValueError()")
+            data = open(logFile, "rb").readlines()
+            self.assertEqual(data[9][-41:], ' INFO Traceback (most recent call last):\n')
+            self.assertEqual(data[15], '    raise ValueError()\n')
+            # Each error should write only one traceback (9 lines each).
+            self.assertEqual(len(data), 18)
         finally:
             ignore.pop()
     
