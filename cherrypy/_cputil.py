@@ -9,11 +9,6 @@ import cherrypy
 from cherrypy.lib import httptools
 
 
-class EmptyClass:
-    """ An empty class """
-    pass
-
-
 def get_object_trail(objectpath=None):
     """
     List of (name, object) pairs, from cherrypy.root to the current object.
@@ -340,12 +335,12 @@ _cpDefaultFilterClasses = {
     'XmlRpcFilter'       : xmlrpcfilter.XmlRpcFilter,
 }
 
-# this is where the actuall filter instances are first stored
+# this is where the actual filter instances are first stored
 _cpDefaultFilterInstances = {}
 
 # These are in order for a reason!
 # They must be strings matching keys in _cpDefaultFilterClasses
-__cpDefaultInputFilters = [
+__cpDefaultInputFilterNames = [
     'CacheFilter',
     'LogDebugInfoFilter',
     'BaseUrlFilter',
@@ -358,7 +353,7 @@ __cpDefaultInputFilters = [
     'XmlRpcFilter',
 ]
 
-__cpDefaultOutputFilters = [
+__cpDefaultOutputFilterNames = [
     'XmlRpcFilter',
     'EncodingFilter',
     'TidyFilter',
@@ -382,12 +377,12 @@ def _cpInitDefaultFilters():
     _cpDefaultOutputFilterList = []
     _cpDefaultFilterInstances = {}
     
-    for filterName in __cpDefaultInputFilters:
+    for filterName in __cpDefaultInputFilterNames:
         filterClass = _cpDefaultFilterClasses[filterName]
         filterInstance = _cpDefaultFilterInstances[filterName] = filterClass()
         _cpDefaultInputFilterList.append(filterInstance)
     
-    for filterName in __cpDefaultOutputFilters:
+    for filterName in __cpDefaultOutputFilterNames:
         filterClass = _cpDefaultFilterClasses[filterName]
         filterInstance = _cpDefaultFilterInstances.setdefault(filterName, filterClass())
         _cpDefaultOutputFilterList.append(filterInstance)
@@ -399,21 +394,21 @@ def _cpInitUserDefinedFilters():
     
     if len(filtersRoot) == 0:
         return
-
+    
     sys.path.extend(filtersRoot)
-        
+    
     for filterName, filterClassname in inputFiltersDict.items():
         filterModule = __import__(filterName, globals(),  locals(), [])
         filterClass = getattr(filterModule, filterClassname, None)
         filterInstance = filterClass()
         _cpDefaultInputFilterList.append(filterInstance)
-
+    
     for filterName, filterClassname in outputFiltersDict.items():
         filterModule = __import__(filterName, globals(),  locals(), [])
         filterClass = getattr(filterModule, filterClassname, None)
         filterInstance = filterClass()
         _cpDefaultOutputFilterList.append(filterInstance)
-
+    
     # Avoid pollution of the system path
     for path in filtersRoot:
         sys.path.remove(path)
@@ -429,19 +424,7 @@ def getObj(s):
 
 
 class UnknownType(Exception):
-    
-    # initialize the built-in filters 
-    for n in xrange(len(_cpDefaultInputFilterList)):
-        try:
-            _cpDefaultInputFilterList[n] = _cpDefaultInputFilterList[n]()
-        except:
-            pass
-    
-    for n in xrange(len(_cpDefaultOutputFilterList)):
-        try:
-            _cpDefaultOutputFilterList[n] = _cpDefaultOutputFilterList[n]()
-        except:
-            pass
+    pass
 
 
 class Builder:
