@@ -30,18 +30,21 @@ environments = {
         'logDebugInfoFilter.on': True,
         'server.logFileNotFound': True,
         'server.showTracebacks': True,
+        'server.showRequestHeaders': True,
         },
     "staging": {
         'autoreload.on': False,
         'logDebugInfoFilter.on': False,
         'server.logFileNotFound': False,
         'server.showTracebacks': False,
+        'server.showRequestHeaders': False,
         },
     "production": {
         'autoreload.on': False,
         'logDebugInfoFilter.on': False,
         'server.logFileNotFound': False,
         'server.showTracebacks': False,
+        'server.showRequestHeaders': False,
         },
     }
 

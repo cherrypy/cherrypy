@@ -70,6 +70,26 @@ def getSpecialAttribute(name):
         msg = "Special attribute %s could not be found" % repr(name)
         raise cherrypy.HTTPError(500, msg)
 
+def _cpGlobalInformation():
+    """Handles OPTIONS * HTTP/1.1 requests"""
+    request = cherrypy.request
+    if request.method == 'OPTIONS':
+        # this normally should be * but processRequestLine
+        # switched it to 'global' for the configuration handling
+        if request.path == 'global':
+            # OPTIONS is defined in HTTP 1.1
+            if request.version >= '1.1':
+                response = cherrypy.response
+                response.body = []
+                response.status = '200 OK'
+                response.headerMap['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
+                response.headerMap['Content-Length'] = 0
+                response.headerMap['Content-Type'] = 'text/plain'
+                response.finalize()
+                getSpecialAttribute("_cpLogAccess")()
+                return True
+    return False
+
 def logtime():
     return '%04d/%02d/%02d %02d:%02d:%02d' % time.localtime(time.time())[:6]
 
@@ -102,7 +122,12 @@ def _cpLogMessage(msg, context = '', severity = 0):
     """ Default method for logging messages (error log)"""
     
     level = _log_severity_levels.get(severity, "UNKNOWN")
-    s = logtime() + ' ' + context + ' ' + level + ' ' + msg
+    
+    requestheaders = ''
+    if cherrypy.config.get('server.showRequestHeaders', True):
+        requestheaders = format_request_headers()
+        
+    s = ' '.join((logtime(), context, level, requestheaders, msg))
     
     if cherrypy.config.get('server.logToScreen', True):
         print s
@@ -271,6 +296,13 @@ def formatExc(exc=None):
     if exc == (None, None, None):
         return ""
     return "".join(traceback.format_exception(*exc))
+
+def format_request_headers():
+    """returns the list of request headers as a string separated by new lines, one header on each line"""
+    if hasattr(cherrypy.request, 'headerMap'):
+        headers = '\n'.join(': '.join((header, value)) for header, value in cherrypy.request.headerMap.items())
+        return ''.join(('\n', headers, '\n', '\n'))
+    return ''
 
 def bareError(extrabody=None):
     """Produce status, headers, body for a critical error.
