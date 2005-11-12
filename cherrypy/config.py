@@ -18,6 +18,7 @@ defaultGlobal = {
     'server.socketQueueSize': 5,
     'server.protocolVersion': 'HTTP/1.0',
     'server.logToScreen': True,
+    'server.logTracebacks': True,
     'server.logFile': '',
     'server.reverseDNS': False,
     'server.threadPool': 0,
@@ -30,21 +31,21 @@ environments = {
         'logDebugInfoFilter.on': True,
         'server.logFileNotFound': True,
         'server.showTracebacks': True,
-        'server.showRequestHeaders': True,
+        'server.logRequestHeaders': True,
         },
     "staging": {
         'autoreload.on': False,
         'logDebugInfoFilter.on': False,
         'server.logFileNotFound': False,
         'server.showTracebacks': False,
-        'server.showRequestHeaders': False,
+        'server.logRequestHeaders': False,
         },
     "production": {
         'autoreload.on': False,
         'logDebugInfoFilter.on': False,
         'server.logFileNotFound': False,
         'server.showTracebacks': False,
-        'server.showRequestHeaders': False,
+        'server.logRequestHeaders': False,
         },
     }
 
@@ -217,13 +218,15 @@ def outputConfigMap():
                   'server.environment',
                   'server.logToScreen',
                   'server.logFile',
+                  'server.logTracebacks',
+                  'server.logRequestHeaders',
                   'server.protocolVersion',
                   'server.socketHost',
                   'server.socketPort',
                   'server.socketFile',
                   'server.reverseDNS',
                   'server.socketQueueSize',
-                  'server.threadPool'
+                  'server.threadPool',
                  ]
 
     for var in serverVars:

@@ -53,7 +53,7 @@ class Request(object):
     def _run(self, requestLine, headers, rfile):
         
         try:
-            self.headers = headers
+            self.headers = list(headers)
             self.headerMap = httptools.HeaderMap()
             self.simpleCookie = Cookie.SimpleCookie()
             self.rfile = rfile

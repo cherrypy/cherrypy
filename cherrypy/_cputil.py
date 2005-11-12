@@ -119,15 +119,15 @@ def _cpLogAccess():
 _log_severity_levels = {0: "INFO", 1: "WARNING", 2: "ERROR"}
 
 def _cpLogMessage(msg, context = '', severity = 0):
-    """ Default method for logging messages (error log)"""
+    """Default method for logging messages (error log).
+    
+    This is not just for errors! Applications may call this at any time to
+    log application-specific information.
+    """
     
     level = _log_severity_levels.get(severity, "UNKNOWN")
     
-    requestheaders = ''
-    if cherrypy.config.get('server.showRequestHeaders', True):
-        requestheaders = format_request_headers()
-        
-    s = ' '.join((logtime(), context, level, requestheaders, msg))
+    s = ' '.join((logtime(), context, level, msg))
     
     if cherrypy.config.get('server.logToScreen', True):
         print s
@@ -221,8 +221,15 @@ def _cpOnHTTPError(status, message):
     status should be an int.
     """
     tb = formatExc()
+    logmsg = ""
+    
     if cherrypy.config.get('server.logTracebacks', True):
-        cherrypy.log(tb)
+        logmsg = tb
+    if cherrypy.config.get('server.logRequestHeaders', True):
+        h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.headers]
+        logmsg += 'Request Headers:\n' + '\n'.join(h)
+    if logmsg:
+        cherrypy.log(logmsg, "HTTP")
     
     if not cherrypy.config.get('server.showTracebacks', False):
         tb = None
@@ -296,13 +303,6 @@ def formatExc(exc=None):
     if exc == (None, None, None):
         return ""
     return "".join(traceback.format_exception(*exc))
-
-def format_request_headers():
-    """returns the list of request headers as a string separated by new lines, one header on each line"""
-    if hasattr(cherrypy.request, 'headerMap'):
-        headers = '\n'.join(': '.join((header, value)) for header, value in cherrypy.request.headerMap.items())
-        return ''.join(('\n', headers, '\n', '\n'))
-    return ''
 
 def bareError(extrabody=None):
     """Produce status, headers, body for a critical error.
