@@ -1,18 +1,14 @@
-
-import zlib
 import struct
 import time
+import zlib
+
+import cherrypy
 from basefilter import BaseFilter
 
 class GzipFilter(BaseFilter):
     """Filter that gzips the response."""
     
     def beforeFinalize(self):
-        # We have to dynamically import cherrypy because Python can't handle
-        #   circular module imports :-(
-        global cherrypy
-        import cherrypy
-        
         if not cherrypy.config.get('gzipFilter.on', False):
             return
         

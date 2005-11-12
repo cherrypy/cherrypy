@@ -1,15 +1,10 @@
-
+import cherrypy
 from basefilter import BaseFilter
 
 class DecodingFilter(BaseFilter):
     """Automatically decodes request parameters (except uploads)."""
     
     def beforeMain(self):
-        # We have to dynamically import cherrypy because Python can't handle
-        #   circular module imports :-(
-        global cherrypy
-        import cherrypy
-        
         if not cherrypy.config.get('decodingFilter.on', False):
             return
         

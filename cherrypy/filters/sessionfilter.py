@@ -33,6 +33,7 @@ import time
 import threading
 import types
 
+import cherrypy
 import basefilter
 
 
@@ -54,10 +55,6 @@ class SessionNotEnabledError(Exception):
 class SessionFilter(basefilter.BaseFilter):
     
     def beforeRequestBody(self):
-        # We have to dynamically import cherrypy because Python can't handle
-        #   circular module imports :-(
-        global cherrypy
-        import cherrypy
         conf = cherrypy.config.get
         
         cherrypy.request._session = EmptyClass()

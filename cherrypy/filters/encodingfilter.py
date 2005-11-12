@@ -1,15 +1,10 @@
-
+import cherrypy
 from basefilter import BaseFilter
 
 class EncodingFilter(BaseFilter):
     """Filter that automatically encodes the response."""
     
     def beforeFinalize(self):
-        # We have to dynamically import cherrypy because Python can't handle
-        #   circular module imports :-(
-        global cherrypy
-        import cherrypy
-        
         conf = cherrypy.config.get
         if not conf('encodingFilter.on', False):
             return

@@ -1,5 +1,6 @@
-
 import os, cgi
+
+import cherrypy
 from basefilter import BaseFilter
 
 
@@ -8,11 +9,6 @@ class NsgmlsFilter(BaseFilter):
     """
     
     def beforeFinalize(self):
-        # We have to dynamically import cherrypy because Python can't handle
-        #   circular module imports :-(
-        global cherrypy
-        import cherrypy
-        
         if not cherrypy.config.get('nsgmlsFilter.on', False):
             return
         
@@ -63,5 +59,4 @@ class NsgmlsFilter(BaseFilter):
                     newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                 
                 cherrypy.response.body = [newBody]
-
 

@@ -1,4 +1,3 @@
-
 import time
 
 try:
@@ -6,6 +5,7 @@ try:
 except ImportError:
     import pickle
 
+import cherrypy
 from basefilter import BaseFilter
 
 
@@ -13,10 +13,6 @@ class LogDebugInfoFilter(BaseFilter):
     """Filter that adds debug information to the page"""
     
     def onStartResource(self):
-        # We have to dynamically import cherrypy because Python can't handle
-        #   circular module imports :-(
-        global cherrypy
-        import cherrypy
         cherrypy.request.startBuilTime = time.time()
     
     def beforeFinalize(self):

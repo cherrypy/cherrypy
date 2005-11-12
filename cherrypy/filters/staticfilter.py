@@ -1,18 +1,20 @@
 import os
 import urllib
-from basefilter import BaseFilter
+
+import cherrypy
+from cherrypy.lib import cptools
+from cherrypy.filters.basefilter import BaseFilter
 
 
 class StaticFilter(BaseFilter):
     """Filter that handles static content."""
     
     def beforeMain(self):
-        from cherrypy import config, request
-        from cherrypy.lib import cptools
-        
+        config = cherrypy.config
         if not config.get('staticFilter.on', False):
             return
         
+        request = cherrypy.request
         path = request.objectPath
         
         regex = config.get('staticFilter.match', '')

@@ -79,8 +79,10 @@
 ## >>>
 ######################################################################
 
-from basefilter import BaseFilter
 import xmlrpclib
+
+import cherrypy
+from basefilter import BaseFilter
 
 
 class XmlRpcFilter(BaseFilter):
@@ -116,12 +118,6 @@ class XmlRpcFilter(BaseFilter):
             if ct is None or ct == "": ct = 'text/xml'
         result = result and ct in ['text/xml']
         return result
-    
-    def onStartResource(self):
-        # We have to dynamically import cherrypy because Python can't handle
-        #   circular module imports :-(
-        global cherrypy
-        import cherrypy
     
     def beforeRequestBody(self):
         """ Called after the request header has been read/parsed"""

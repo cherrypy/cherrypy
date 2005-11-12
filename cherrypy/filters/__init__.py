@@ -1,34 +1,8 @@
 import cherrypy
 from cherrypy import _cputil
 
-# Filters that are always included
-from cherrypy.filters import baseurlfilter, cachefilter, \
-    decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
-    staticfilter, nsgmlsfilter, tidyfilter, \
-    xmlrpcfilter, sessionauthenticatefilter, \
-    sessionfilter
-
-# this contains the classes for each filter type
-# we do not store the instances here because the test
-# suite must reinitialize the filters without restarting
-# the server
-_classes = {
-    'BaseUrlFilter'      : baseurlfilter.BaseUrlFilter,
-    'CacheFilter'        : cachefilter.CacheFilter,
-    'DecodingFilter'     : decodingfilter.DecodingFilter,
-    'EncodingFilter'     : encodingfilter.EncodingFilter,
-    'GzipFilter'         : gzipfilter.GzipFilter,
-    'LogDebugInfoFilter' : logdebuginfofilter.LogDebugInfoFilter,
-    'NsgmlsFilter'       : nsgmlsfilter.NsgmlsFilter,
-    'SessionAuthenticateFilter' : sessionauthenticatefilter.SessionAuthenticateFilter,
-    'SessionFilter'      : sessionfilter.SessionFilter,
-    'StaticFilter'       : staticfilter.StaticFilter,
-    'TidyFilter'         : tidyfilter.TidyFilter,
-    'XmlRpcFilter'       : xmlrpcfilter.XmlRpcFilter,
-}
-
 # These are in order for a reason!
-# They must be strings matching keys in _classes
+# They must be strings matching keys in classMap
 _input_order = [
     'CacheFilter',
     'LogDebugInfoFilter',
@@ -60,6 +34,28 @@ _output_methods = ['beforeFinalize', 'onEndResource',
 
 def init():
     """Initialize the filters."""
+    
+    from cherrypy.filters import baseurlfilter, cachefilter, \
+        decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
+        staticfilter, nsgmlsfilter, tidyfilter, \
+        xmlrpcfilter, sessionauthenticatefilter, \
+        sessionfilter
+    
+    classMap = {
+        'BaseUrlFilter'      : baseurlfilter.BaseUrlFilter,
+        'CacheFilter'        : cachefilter.CacheFilter,
+        'DecodingFilter'     : decodingfilter.DecodingFilter,
+        'EncodingFilter'     : encodingfilter.EncodingFilter,
+        'GzipFilter'         : gzipfilter.GzipFilter,
+        'LogDebugInfoFilter' : logdebuginfofilter.LogDebugInfoFilter,
+        'NsgmlsFilter'       : nsgmlsfilter.NsgmlsFilter,
+        'SessionAuthenticateFilter' : sessionauthenticatefilter.SessionAuthenticateFilter,
+        'SessionFilter'      : sessionfilter.SessionFilter,
+        'StaticFilter'       : staticfilter.StaticFilter,
+        'TidyFilter'         : tidyfilter.TidyFilter,
+        'XmlRpcFilter'       : xmlrpcfilter.XmlRpcFilter,
+    }
+    
     instances = {}
     inputs, outputs = [], []
     
@@ -68,13 +64,13 @@ def init():
     for name in _input_order + conf('server.inputFilters', []):
         f = instances.get(name)
         if f is None:
-            f = instances[name] = _classes[name]()
+            f = instances[name] = classMap[name]()
         inputs.append(f)
     
     for name in conf('server.outputFilters', []) + _output_order:
         f = instances.get(name)
         if f is None:
-            f = instances[name] = _classes[name]()
+            f = instances[name] = classMap[name]()
         outputs.append(f)
     
     # Transform the instance lists into a dict of methods

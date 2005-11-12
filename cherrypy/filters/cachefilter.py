@@ -3,6 +3,7 @@ import threading
 import Queue
 import time
 
+import cherrypy
 import basefilter
 
 def defaultCacheKey():
@@ -92,13 +93,6 @@ class CacheFilter(basefilter.BaseFilter):
     maxobjsize = property(lambda self: cherrypy.config.get("cacheFilter.maxobjsize", 100000))
     maxsize = property(lambda self: cherrypy.config.get("cacheFilter.maxsize", 10000000))
     maxobjects = property(lambda self: cherrypy.config.get("cacheFilter.maxobjects", 1000))
-    
-    def onStartResource(self):
-        # We have to dynamically import cherrypy because Python can't handle
-        #   circular module imports :-(
-        global cherrypy
-        import cherrypy
-        cherrypy.request.cacheable = True
     
     def beforeMain(self):
         if not cherrypy.config.get('cacheFilter.on', False):

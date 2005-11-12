@@ -1,4 +1,9 @@
-import os, cgi, StringIO, traceback
+import cgi
+import os
+import StringIO
+import traceback
+
+import cherrypy
 from basefilter import BaseFilter
 
 
@@ -12,8 +17,6 @@ class TidyFilter(BaseFilter):
     """
     
     def beforeFinalize(self):
-        import cherrypy
-        
         if not cherrypy.config.get('tidyFilter.on', False):
             return
         

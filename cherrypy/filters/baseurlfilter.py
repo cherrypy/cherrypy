@@ -1,4 +1,4 @@
-
+import cherrypy
 from basefilter import BaseFilter
 
 
@@ -9,8 +9,6 @@ class BaseUrlFilter(BaseFilter):
     """
     
     def beforeRequestBody(self):
-        import cherrypy
-        
         if not cherrypy.config.get('baseUrlFilter.on', False):
             return
         

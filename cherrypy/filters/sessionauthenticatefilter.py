@@ -1,4 +1,4 @@
-
+import cherrypy
 from basefilter import BaseFilter
 
 
@@ -24,9 +24,8 @@ class SessionAuthenticateFilter(BaseFilter):
     """
     Filter allows for simple forms based authentication and access control
     """
-
+    
     def beforeMain(self):
-        import cherrypy
         if not cherrypy.config.get('sessionAuthenticateFilter.on', False):
             return
         
