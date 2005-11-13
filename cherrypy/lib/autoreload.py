@@ -13,6 +13,9 @@ def reloader_thread(freq):
     mtimes = {}
     
     def fileattr(m):
+        if hasattr(m, "__loader__"):
+            if hasattr(m.__loader__, "archive"):
+                return m.__loader__.archive
         return getattr(m, "__file__", None)
     
     while RUN_RELOADER:
