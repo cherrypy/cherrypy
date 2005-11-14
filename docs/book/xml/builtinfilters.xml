@@ -8,19 +8,27 @@
         behind Apache with mod_rewrite.</para>
         <para>The baseurlfilter has the following configuration options</para>
         <itemizedlist>
-            <listitem>baseUrlFilter.baseUrl</listitem>
-            <listitem>baseUrlFilter.useXForwardedHost</listitem>
+            <listitem>
+                <para>baseUrlFilter.baseUrl</para>
+            </listitem>
+            <listitem>
+                <para>baseUrlFilter.useXForwardedHost</para>
+            </listitem>
         </itemizedlist>
     </section>
     <section id="cachefilter">
         <title>cachefilter</title>
+        <para>The cachefilter stores responses in memory. If an identical request is subsequently
+        made, then the cached response is output without calling the page handler.</para>
     </section>
     <section id="decodingfilter">
         <title>decodingfilter</title>
         <para>The decoding filter can be configured to automatically decode incoming requests.</para>
         <para>The decodingfilter has the following configuration options:</para>
         <itemizedlist>
-            <listitem>decodingFilter.encoding</listitem>
+            <listitem>
+                <para>decodingFilter.encoding</para>
+            </listitem>
         </itemizedlist>
     </section>
     <section id="encodingfilter">
@@ -28,8 +36,14 @@
         <para>The encodingfilter can be configured to automatically encode outgoing responses.</para>
         <para>The encodingfilter has the following configuration options:</para>
         <itemizedlist>
-            <listitem>encodingFilter.encoding</listitem>
-            <listitem>encodingFilter.mimeTypeList</listitem>
+            <listitem>
+                <para>encodingFilter.encoding: Force all text responses to be encoded with this
+                encoding.</para>
+            </listitem>
+            <listitem>
+                <para>encodingFilter.defaultEncoding: Default all text responses to this encoding (if
+                the user-agent does not request otherwise).</para>
+            </listitem>
         </itemizedlist>
     </section>
     <section id="gzipfilter">
@@ -44,10 +58,18 @@
         turned on when "server.environment" is set to "development".</para>
         <para>The logdebuginfofilter has the following configuration options:</para>
         <itemizedlist>
-            <itemizedlist>logDebugInfoFilter.mimeTypeList, ['text/html']</itemizedlist>
-            <itemizedlist>logDebugInfoFilter.logAsComment, False</itemizedlist>
-            <itemizedlist>logDebugInfoFilter.logBuildTime, True</itemizedlist>
-            <itemizedlist>logDebugInfoFilter.logPageSize, True</itemizedlist>
+            <listitem>
+                <para>logDebugInfoFilter.mimeTypeList, ['text/html']</para>
+            </listitem>
+            <listitem>
+                <para>logDebugInfoFilter.logAsComment, False</para>
+            </listitem>
+            <listitem>
+                <para>logDebugInfoFilter.logBuildTime, True</para>
+            </listitem>
+            <listitem>
+                <para>logDebugInfoFilter.logPageSize, True</para>
+            </listitem>
         </itemizedlist>
     </section>
     <section id="staticfilter">
@@ -55,8 +77,12 @@
         <para>The static filter allows CherryPy to serve static files.</para>
         <para>The staticfilter has the following configuration options:</para>
         <itemizedlist>
-            <listitem>staticFilter.file</listitem>
-            <listitem>staticFilter.dir</listitem>
+            <listitem>
+                <para>staticFilter.file</para>
+            </listitem>
+            <listitem>
+                <para>staticFilter.dir</para>
+            </listitem>
             <listitem>
                 <para>staticFilter.root</para>
             </listitem>
@@ -64,6 +90,7 @@
     </section>
     <section id="nsgmlsfilter">
         <title>nsgmlsfilter</title>
+        <para>The nsgmlsfilter parses and validates SGML responses.</para>
     </section>
     <section id="tidyfilter">
         <title>tidyfilter</title>
@@ -73,10 +100,15 @@
         that the server would also crash.)</para>
         <para>The tidyfilter has the following configuration options:</para>
         <itemizedlist>
-            <listitem>tidyFilter.tmpDir</listitem>
-            <listitem>tidyFilter.strictXml, False</listitem>
-            <listitem>tidyFilter.tidyPath</listitem>
-            <listitem>encodingFilter.errorsToIgnore, []</listitem>
+            <listitem>
+                <para>tidyFilter.tmpDir</para>
+            </listitem>
+            <listitem>
+                <para>tidyFilter.strictXml, False</para>
+            </listitem>
+            <listitem>
+                <para>tidyFilter.tidyPath</para>
+            </listitem>
         </itemizedlist>
     </section>
     <section id="virtualhostfilter">
@@ -85,7 +117,9 @@
         running multiple sites within one CP server.</para>
         <para>The virtualhostfilter has the following configuration options:</para>
         <itemizedlist>
-            <listitem>virtualHostFilter.prefix, '/'</listitem>
+            <listitem>
+                <para>virtualHostFilter.prefix, '/'</para>
+            </listitem>
         </itemizedlist>
     </section>
     <section id="xmlrpcfilter">
@@ -102,7 +136,11 @@
     </section>
     <section id="sessionauthfilter">
         <title>sessionauthenticatefilter</title>
+        <para>The sessionauthenticatefilter provides simple form-based authentication and access
+        control.</para>
     </section>
-    <section id="sessionfilter"><title>sessionfilter</title> The Session Filter has its own
-    section</section>
+    <section id="sessionfilter">
+        <title>sessionfilter</title>
+        <para> The Session Filter has its own section</para>
+    </section>
 </section>
