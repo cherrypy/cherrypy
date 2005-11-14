@@ -82,12 +82,11 @@ class EncodingFilter(BaseFilter):
         if not conf('encodingFilter.on', False):
             return
         
-        charset = self.find_acceptable_charset()
-        
-        # Set "charset=..." param on response Content-Type header
         ct = cherrypy.response.headerMap.elements("Content-Type")
         if ct is not None:
             ct = ct[0]
-            ct.params['charset'] = charset
-            cherrypy.response.headerMap["Content-Type"] = str(ct)
+            if ct.value.lower().startswith("text/"):
+                # Set "charset=..." param on response Content-Type header
+                ct.params['charset'] = self.find_acceptable_charset()
+                cherrypy.response.headerMap["Content-Type"] = str(ct)
 
