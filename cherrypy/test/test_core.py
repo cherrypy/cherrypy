@@ -186,24 +186,11 @@ class Ranges(Test):
         return cptools.serveFile(os.path.join(path, "static/index.html"))
 
 
-class Accept(Test):
-    
-    def get_accept(self, headername):
-        h = cherrypy.request.headerMap.get(headername)
-        return "\n".join([str(x) for x in httptools.getAccept(h, headername)])
-
-
 class Expect(Test):
     
-    def get_expect(self, headername):
-        h = cherrypy.request.headerMap.get(headername)
-        cherrypy.response.status = '100 Continue'
-        return str(httptools.getExpect(h, headername))
-
-    def expectation_failed(self, headername):
-        h = cherrypy.request.headerMap.get(headername)
-        expect = httptools.getExpect(h, headername)
-        if expect and expect.token != '100-continue':
+    def expectation_failed(self):
+        expect = cherrypy.request.header_elements("Expect")
+        if expect and expect[0].value != '100-continue':
             raise cherrypy.HTTPError(400)
         raise cherrypy.HTTPError(417, 'Expectation Failed')
 
@@ -228,6 +215,13 @@ class Headers(Test):
         hMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
         
         return "double header test"
+
+
+class HeaderElements(Test):
+    
+    def get_elements(self, headername):
+        e = cherrypy.request.header_elements(headername)
+        return "\n".join([str(x) for x in e])
 
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
@@ -296,9 +290,10 @@ class MaxRequestSize(Test):
     
     def index(self):
         return "OK"
-
+    
     def upload(self, file):
         return "Size: %s" % len(file.file.read())
+
 
 class ThreadLocal(Test):
     
@@ -663,26 +658,25 @@ llo,
         self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
         self.assertStatus("416 Requested Range Not Satisfiable")
         self.assertHeader("Content-Range", "bytes */14")
-
-##     def testExpect(self):
-##         self.getPage("/expect/get_expect?headername=Expect", [('Expect', '100-continue')])
-##         self.assertStatus('100 Continue')
-##         self.assertBody('100-continue')
-
-##         self.getPage("/expect/expectation_failed?headername=Expect",
-##                      [('Content-Length', '200'), ('Expect', '100-continue')])
-##         self.assertStatus('417 Expectation Failed')
-
     
-    def testAccept(self):
+    def testExpect(self):
+        e = ('Expect', '100-continue')
+        self.getPage("/headerelements/get_elements?headername=Expect", [e])
+        self.assertBody('100-continue')
+        
+        self.getPage("/expect/expectation_failed", [('Content-Length', '200'), e])
+        self.assertStatus('417 Expectation Failed')
+    
+    def testHeaderElements(self):
+        # Accept-* header elements should be sorted, with most preferred first.
         h = [('Accept', 'audio/*; q=0.2, audio/basic')]
-        self.getPage("/accept/get_accept?headername=Accept", h)
+        self.getPage("/headerelements/get_elements?headername=Accept", h)
         self.assertStatus("200 OK")
         self.assertBody("audio/basic\n"
                         "audio/*;q=0.2")
         
         h = [('Accept', 'text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c')]
-        self.getPage("/accept/get_accept?headername=Accept", h)
+        self.getPage("/headerelements/get_elements?headername=Accept", h)
         self.assertStatus("200 OK")
         self.assertBody("text/x-c\n"
                         "text/html\n"
@@ -690,9 +684,8 @@ llo,
                         "text/plain;q=0.5")
         
         # Test that more specific media ranges get priority.
-        # Note that the highest priority will be first in the list.
         h = [('Accept', 'text/*, text/html, text/html;level=1, */*')]
-        self.getPage("/accept/get_accept?headername=Accept", h)
+        self.getPage("/headerelements/get_elements?headername=Accept", h)
         self.assertStatus("200 OK")
         self.assertBody("text/html;level=1\n"
                         "text/html\n"
@@ -701,14 +694,14 @@ llo,
         
         # Test Accept-Charset
         h = [('Accept-Charset', 'iso-8859-5, unicode-1-1;q=0.8')]
-        self.getPage("/accept/get_accept?headername=Accept-Charset", h)
+        self.getPage("/headerelements/get_elements?headername=Accept-Charset", h)
         self.assertStatus("200 OK")
         self.assertBody("iso-8859-5\n"
                         "unicode-1-1;q=0.8")
         
         # Test Accept-Encoding
         h = [('Accept-Encoding', 'gzip;q=1.0, identity; q=0.5, *;q=0')]
-        self.getPage("/accept/get_accept?headername=Accept-Encoding", h)
+        self.getPage("/headerelements/get_elements?headername=Accept-Encoding", h)
         self.assertStatus("200 OK")
         self.assertBody("gzip;q=1.0\n"
                         "identity;q=0.5\n"
@@ -716,7 +709,7 @@ llo,
         
         # Test Accept-Language
         h = [('Accept-Language', 'da, en-gb;q=0.8, en;q=0.7')]
-        self.getPage("/accept/get_accept?headername=Accept-Language", h)
+        self.getPage("/headerelements/get_elements?headername=Accept-Language", h)
         self.assertStatus("200 OK")
         self.assertBody("da\n"
                         "en-gb;q=0.8\n"

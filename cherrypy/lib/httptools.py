@@ -156,58 +156,8 @@ def getRanges(headervalue, content_length):
     return result
 
 
-class ExpectValue(object):
-    """A (token, value) tuple (with its parameters) from an Expect header"""
-    def __init__(self, token, value=None, params=None):
-        self.token = token
-        self.value = value
-        if params is None:
-            params = {}
-        self.params = params
-
-    def __str__(self):
-        if self.token.lower() == '100-continue':
-            return self.token
-        p = [";%s=%s" % (k, v.value) for k, v in self.params.iteritems()]
-        return "%s=%s%s" % (self.token, self.value, "".join(p))
-
-
-def getExpect(headervalue, headername='Expect'):
-    """
-    Returns the Expect token and parameters as an ExpectValue instance
-    """    
-    if not headervalue:
-        return None
-
-    # RFC defines the Expect header as follow:
-    # Expect       =  "Expect" ":" 1#expectation
-    # expectation  =  "100-continue" | expectation-extension
-    # expectation-extension =  token [ "=" ( token | quoted-string )
-    #                          *expect-params ]
-    # expect-params =  ";" token [ "=" ( token | quoted-string ) ]
-    
-    if headername == 'Expect':
-        # most cases
-        if headervalue.lower() == '100-continue':
-            return ExpectValue(headervalue)
-        # the following should be rare
-        tokens = headervalue.split(';')
-        token, value = tokens.pop(0).split('=')
-        expectvalue = ExpectValue(token.strip(), value.strip())
-        params = {}
-        # Let's deal with potential expectation-extension
-        for param in tokens:
-            token, value = param.split('=')
-            token = token.strip()
-            params[token] = ExpectValue(token, value.strip())
-        expectvalue.params = params
-        return expectvalue
-    
-    return None    
-
-
-class AcceptValue(object):
-    """A value (with parameters) from an Accept-* request header."""
+class HeaderElement(object):
+    """An element (with parameters) from an HTTP header's element list."""
     
     def __init__(self, value, params=None):
         self.value = value
@@ -215,72 +165,85 @@ class AcceptValue(object):
             params = {}
         self.params = params
     
-    def qvalue(self):
-        val = self.params.get("q", "1")
-        if isinstance(val, AcceptValue):
-            val = val.value
-        return float(val)
-    qvalue = property(qvalue, doc="The qvalue, or priority, of this value.")
-    
     def __str__(self):
         p = [";%s=%s" % (k, v) for k, v in self.params.iteritems()]
         return "%s%s" % (self.value, "".join(p))
     
+    def parse(elementstr):
+        """Transform 'token;key=val' to ('token', {'key': 'val'})."""
+        # Split the element into a value and parameters. The 'value' may
+        # be of the form, "token=token", but we don't split that here.
+        atoms = [x.strip() for x in elementstr.split(";")]
+        initial_value = atoms.pop(0).strip()
+        params = {}
+        for atom in atoms:
+            atom = [x.strip() for x in atom.split("=", 1) if x.strip()]
+            key = atom.pop(0)
+            if atom:
+                val = atom[0]
+            else:
+                val = ""
+            params[key] = val
+        return initial_value, params
+    parse = staticmethod(parse)
+    
+    def from_str(cls, elementstr):
+        """Construct an instance from a string of the form 'token;key=val'."""
+        ival, params = cls.parse(elementstr)
+        return cls(ival, params)
+    from_str = classmethod(from_str)
+
+
+class AcceptElement(HeaderElement):
+    """An element (with parameters) from an Accept-* header's element list."""
+    
+    def from_str(cls, elementstr):
+        qvalue = None
+        # The first "q" parameter (if any) separates the initial
+        # parameter(s) (if any) from the accept-params.
+        atoms = re.split(r'; *q *=', elementstr, 1)
+        initial_value = atoms.pop(0).strip()
+        if atoms:
+            # The qvalue for an Accept header can have extensions. The other
+            # headers cannot, but it's easier to parse them as if they did.
+            qvalue = HeaderElement.from_str(atoms[0].strip())
+        
+        ival, params = cls.parse(initial_value)
+        if qvalue is not None:
+            params["q"] = qvalue
+        return cls(ival, params)
+    from_str = classmethod(from_str)
+    
+    def qvalue(self):
+        val = self.params.get("q", "1")
+        if isinstance(val, HeaderElement):
+            val = val.value
+        return float(val)
+    qvalue = property(qvalue, doc="The qvalue, or priority, of this value.")
+    
     def __cmp__(self, other):
-        # If you sort a list of AcceptValue objects, they will be listed in
-        # priority order; that is, the most preferred value will be first.
+        # If you sort a list of AcceptElement objects, they will be listed
+        # in priority order; the most preferred value will be first.
         diff = cmp(other.qvalue, self.qvalue)
         if diff == 0:
             diff = cmp(str(other), str(self))
         return diff
 
 
-def getAccept(headervalue, headername='Accept'):
-    """Return a list of AcceptValues from an Accept header, or None."""
+def header_elements(fieldname, fieldvalue):
+    """Return a HeaderElement list from a comma-separated header str."""
     
-    if not headervalue:
+    if not fieldvalue:
         return None
+    headername = fieldname.lower()
     
     result = []
-    for capability in headervalue.split(","):
-        # The first "q" parameter (if any) separates the initial
-        # parameter(s) (if any) from the accept-params.
-        atoms = re.split(r'; *q *=', capability, 1)
-        capvalue = atoms.pop(0).strip()
-        if atoms:
-            qvalue = atoms[0].strip()
-            if headername == 'Accept':
-                # The qvalue for an Accept header can have extensions.
-                atoms = [x.strip() for x in qvalue.split(";")]
-                qvalue = atoms.pop(0).strip()
-                ext = {}
-                for atom in atoms:
-                    atom = atom.split("=", 1)
-                    key = atom.pop(0).strip()
-                    if atom:
-                        val = atom[0].strip()
-                    else:
-                        val = ""
-                    ext[key] = val
-                qvalue = AcceptValue(qvalue, ext)
-            params = {"q": qvalue}
+    for element in fieldvalue.split(","):
+        if headername.startswith("accept") or headername == 'te':
+            hv = AcceptElement.from_str(element)
         else:
-            params = {}
-        
-        if headername == 'Accept':
-            # The media-range may have parameters (before the qvalue).
-            atoms = [x.strip() for x in capvalue.split(";")]
-            capvalue = atoms.pop(0).strip()
-            for atom in atoms:
-                atom = atom.split("=", 1)
-                key = atom.pop(0).strip()
-                if atom:
-                    val = atom[0].strip()
-                else:
-                    val = ""
-                params[key] = val
-        
-        result.append(AcceptValue(capvalue, params))
+            hv = HeaderElement.from_str(element)
+        result.append(hv)
     
     result.sort()
     return result

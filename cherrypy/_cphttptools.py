@@ -195,6 +195,13 @@ class Request(object):
     browserUrl = property(_get_browserUrl,
                           doc="The URL as entered in a browser (read-only).")
     
+    def header_elements(self, headername):
+        """Return a list of HeaderElements for the given header (or None)."""
+        h = self.headerMap.get(headername)
+        if h is None:
+            return None
+        return httptools.header_elements(headername, h)
+    
     def processBody(self):
         # Create a copy of headerMap with lowercase keys because
         # FieldStorage doesn't work otherwise
