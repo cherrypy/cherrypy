@@ -2,6 +2,15 @@
 <section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="globaloverviewcherrypy">
     <title>Exceptions and Error Handling</title>
+    <para>As you read this section, refer to the following diagram to understand the flow of
+    execution:</para>
+    <figure>
+        <mediaobject>
+            <imageobject>
+                <imagedata fileref="errors.gif" />
+            </imageobject>
+        </mediaobject>
+    </figure>
     <section>
         <title>Unanticipated exceptions</title>
         <para>When an unhandled exception is raised inside CherryPy, three actions occur (in
@@ -12,6 +21,9 @@
             </listitem>
             <listitem>
                 <para>a <code>_cpOnError</code> method is called</para>
+            </listitem>
+            <listitem>
+                <para><code>response.finalize</code> is called</para>
             </listitem>
             <listitem>
                 <para><code>afterErrorResponse</code> filter methods are called</para>
