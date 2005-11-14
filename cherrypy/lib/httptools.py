@@ -396,3 +396,10 @@ class HeaderMap(dict):
     
     def pop(self, key, default):
         return dict.pop(self, str(key).title(), default)
+    
+    def elements(self, key):
+        """Return a list of HeaderElements for the given header (or None)."""
+        h = self.get(key)
+        if h is None:
+            return None
+        return header_elements(key, h)

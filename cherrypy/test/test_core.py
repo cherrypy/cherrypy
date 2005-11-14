@@ -189,7 +189,7 @@ class Ranges(Test):
 class Expect(Test):
     
     def expectation_failed(self):
-        expect = cherrypy.request.header_elements("Expect")
+        expect = cherrypy.request.headerMap.elements("Expect")
         if expect and expect[0].value != '100-continue':
             raise cherrypy.HTTPError(400)
         raise cherrypy.HTTPError(417, 'Expectation Failed')
@@ -220,7 +220,7 @@ class Headers(Test):
 class HeaderElements(Test):
     
     def get_elements(self, headername):
-        e = cherrypy.request.header_elements(headername)
+        e = cherrypy.request.headerMap.elements(headername)
         return "\n".join([str(x) for x in e])
 
 

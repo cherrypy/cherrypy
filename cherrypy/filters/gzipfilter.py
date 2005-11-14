@@ -30,7 +30,7 @@ class GzipFilter(BaseFilter):
             response.body = self.zip_body(response.body, level)
         
         from cherrypy.lib import httptools
-        acceptable = cherrypy.request.header_elements('Accept-Encoding')
+        acceptable = cherrypy.request.headerMap.elements('Accept-Encoding')
         if acceptable is None:
             # If no Accept-Encoding field is present in a request,
             # the server MAY assume that the client will accept any
