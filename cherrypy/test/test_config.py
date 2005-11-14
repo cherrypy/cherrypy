@@ -31,7 +31,6 @@ cherrypy.config.update({
     'global': {'server.logToScreen': False,
                'server.environment': 'production',
                'server.showTracebacks': True,
-               'server.protocolVersion': "HTTP/1.1",
                },
     '/': {
         'foo': 'this',

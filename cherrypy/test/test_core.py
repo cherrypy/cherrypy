@@ -325,7 +325,6 @@ cherrypy.config.update({
     'global': {'server.logToScreen': False,
                'server.environment': 'production',
                'server.showTracebacks': True,
-               'server.protocolVersion': "HTTP/1.1",
                },
     '/flatten': {
         'server.logFile': logFile,
@@ -546,13 +545,17 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         # HTTPRedirect on error
         self.getPage("/redirect/error/")
-        self.assertStatus('303 See Other')
+        self.assertStatus(('302 Found', '303 See Other'))
         self.assertInBody('/errpage')
         
         # Make sure str(HTTPRedirect()) works.
         self.getPage("/redirect/stringify")
         self.assertStatus('200 OK')
-        self.assertBody("(['http://127.0.0.1:8000/'], 303)")
+        protocol = cherrypy.config.get('server.protocolVersion')
+        if protocol == "HTTP/1.1":
+            self.assertBody("(['http://127.0.0.1:8000/'], 303)")
+        else:
+            self.assertBody("(['http://127.0.0.1:8000/'], 302)")
     
     def testCPFilterList(self):
         self.getPage("/cpfilterlist/")
@@ -615,32 +618,34 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertInBody(msg)
     
     def testRanges(self):
-        self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
-        self.assertBody("[(3, 7)]")
-        
-        # Test multiple ranges and a suffix-byte-range-spec, for good measure.
-        self.getPage("/ranges/get_ranges", [('Range', 'bytes=2-4,-1')])
-        self.assertBody("[(2, 5), (7, 8)]")
-        
-        # Get a partial file.
-        self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
-        self.assertStatus("206 Partial Content")
-        self.assertHeader("Content-Type", "text/html")
-        self.assertHeader("Content-Range", "bytes 2-5/14")
-        self.assertBody("llo,")
-        
-        # What happens with overlapping ranges (and out of order, too)?
-        self.getPage("/ranges/slice_file", [('Range', 'bytes=4-6,2-5')])
-        self.assertStatus("206 Partial Content")
-        ct = ""
-        for k, v in self.headers:
-            if k.lower() == "content-type":
-                ct = v
-                break
-        expected_type = "multipart/byteranges; boundary="
-        self.assert_(ct.startswith(expected_type))
-        boundary = ct[len(expected_type):]
-        expected_body = """--%s
+        protocol = cherrypy.config.get('server.protocolVersion')
+        if protocol == "HTTP/1.1":
+            self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
+            self.assertBody("[(3, 7)]")
+            
+            # Test multiple ranges and a suffix-byte-range-spec, for good measure.
+            self.getPage("/ranges/get_ranges", [('Range', 'bytes=2-4,-1')])
+            self.assertBody("[(2, 5), (7, 8)]")
+            
+            # Get a partial file.
+            self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
+            self.assertStatus("206 Partial Content")
+            self.assertHeader("Content-Type", "text/html")
+            self.assertHeader("Content-Range", "bytes 2-5/14")
+            self.assertBody("llo,")
+            
+            # What happens with overlapping ranges (and out of order, too)?
+            self.getPage("/ranges/slice_file", [('Range', 'bytes=4-6,2-5')])
+            self.assertStatus("206 Partial Content")
+            ct = ""
+            for k, v in self.headers:
+                if k.lower() == "content-type":
+                    ct = v
+                    break
+            expected_type = "multipart/byteranges; boundary="
+            self.assert_(ct.startswith(expected_type))
+            boundary = ct[len(expected_type):]
+            expected_body = """--%s
 Content-type: text/html
 Content-range: bytes 4-6/14
 
@@ -651,13 +656,17 @@ Content-range: bytes 2-5/14
 
 llo, 
 --%s""" % (boundary, boundary, boundary)
-        self.assertBody(expected_body)
-        self.assertHeader("Content-Length")
-        
-        # Test "416 Requested Range Not Satisfiable"
-        self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
-        self.assertStatus("416 Requested Range Not Satisfiable")
-        self.assertHeader("Content-Range", "bytes */14")
+            self.assertBody(expected_body)
+            self.assertHeader("Content-Length")
+            
+            # Test "416 Requested Range Not Satisfiable"
+            self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
+            self.assertStatus("416 Requested Range Not Satisfiable")
+            self.assertHeader("Content-Range", "bytes */14")
+        else:
+            self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
+            self.assertStatus("200 OK")
+            self.assertBody("Hello, world\r\n")
     
     def testExpect(self):
         e = ('Expect', '100-continue')
@@ -762,6 +771,13 @@ llo,
         # Content-Length header required for OPTIONS with no response body.
         # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.2
         self.assertHeader("Content-Length", "0")
+        
+        # Now be really dastardly and delete our custom global_ handler,
+        # to see if the default one works.
+        del Root.global_
+        self.getPage("*", method="OPTIONS")
+        self.assertStatus("200 OK")
+        self.assertHeader("Allow", 'HEAD, GET, POST, PUT, OPTIONS')
         
         # For method dispatchers: make sure that an HTTP method doesn't
         # collide with a virtual path atom. If you build HTTP-method

@@ -30,8 +30,15 @@ def get_object_trail(objectpath=None):
         nameList = []
     else:
         nameList = objectpath.split('/')
+    
     if nameList == ['global']:
-        nameList = ['global_']
+        # Special-case a Request-URI of * to allow for our default handler.
+        root = getattr(cherrypy, 'root', None)
+        if root is None:
+            return [('root', None), ('global_', None), ('index', None)]
+        gh = getattr(root, 'global_', _cpGlobalHandler)
+        return [('root', cherrypy.root), ('global_', gh), ('index', None)]
+    
     nameList = ['root'] + nameList + ['index']
     
     # Convert the list of names into a list of objects
@@ -70,25 +77,19 @@ def getSpecialAttribute(name):
         msg = "Special attribute %s could not be found" % repr(name)
         raise cherrypy.HTTPError(500, msg)
 
-def _cpGlobalInformation():
-    """Handles OPTIONS * HTTP/1.1 requests"""
+def _cpGlobalHandler():
+    """Default handler for a Request-URI of '*'."""
+    response = cherrypy.response
+    response.headerMap['Content-Type'] = 'text/plain'
+    
+    # OPTIONS is defined in HTTP 1.1 and greater
     request = cherrypy.request
-    if request.method == 'OPTIONS':
-        # this normally should be * but processRequestLine
-        # switched it to 'global' for the configuration handling
-        if request.path == 'global':
-            # OPTIONS is defined in HTTP 1.1
-            if request.version >= '1.1':
-                response = cherrypy.response
-                response.body = []
-                response.status = '200 OK'
-                response.headerMap['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
-                response.headerMap['Content-Length'] = 0
-                response.headerMap['Content-Type'] = 'text/plain'
-                response.finalize()
-                getSpecialAttribute("_cpLogAccess")()
-                return True
-    return False
+    if request.method == 'OPTIONS' and request.version >= 1.1:
+        response.headerMap['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
+    else:
+        response.headerMap['Allow'] = 'HEAD, GET, POST'
+    return ""
+_cpGlobalHandler.exposed = True
 
 def logtime():
     return '%04d/%02d/%02d %02d:%02d:%02d' % time.localtime(time.time())[:6]

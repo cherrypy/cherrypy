@@ -62,16 +62,6 @@ class Request(object):
             # because request.objectPath is used for config lookups
             # right away.
             self.processRequestLine(requestLine)
-
-            # handles "OPTIONS * HTTP/1.1" requests
-            # we could avoid testing for the method value here but
-            # we still do it to avoid an useless call to getSpecialAttribute
-            # OPTIONS request should be very rare compare to regular requests
-            # let's not add too much overhead
-            if cherrypy.request.method == 'OPTIONS':
-                if _cputil.getSpecialAttribute("_cpGlobalInformation")() == True:
-                    # if we had such a request we don't have to keep processing
-                    return
             
             try:
                 applyFilters('onStartResource')
