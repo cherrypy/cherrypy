@@ -218,6 +218,9 @@ class Request(object):
             try:
                 page_handler, object_path, virtual_path = self.mapPathToObject(path)
                 
+                # Decode any leftover %2F in the virtual_path atoms.
+                virtual_path = [x.replace("%2F", "/") for x in virtual_path]
+                
                 # Remove "root" from object_path and join it to get objectPath
                 self.objectPath = '/' + '/'.join(object_path[1:])
                 body = page_handler(*virtual_path, **self.paramMap)

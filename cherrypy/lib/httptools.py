@@ -310,8 +310,14 @@ def parseRequestLine(requestLine):
         
         # Unquote the path (e.g. "/this%20path" -> "this path").
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-        # Note that cgi.parse_qs will decode the querystring for us.
-        path = urllib.unquote(path)
+        #
+        # But note that "...a URI must be separated into its components
+        # before the escaped characters within those components can be
+        # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
+        #
+        # Note also that cgi.parse_qs will decode the querystring for us.
+        atoms = [urllib.unquote(x) for x in re.split("(?i)%2F", path)]
+        path = "%2F".join(atoms)
     
     return method, path, qs, protocol
 
