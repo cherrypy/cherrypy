@@ -223,7 +223,11 @@ class Request(object):
                 
                 # Remove "root" from object_path and join it to get objectPath
                 self.objectPath = '/' + '/'.join(object_path[1:])
-                body = page_handler(*virtual_path, **self.paramMap)
+                try:
+                    body = page_handler(*virtual_path, **self.paramMap)
+                except Exception, x:
+                    x.args = (page_handler,) + x.args
+                    raise
                 cherrypy.response.body = iterable(body)
                 return
             except cherrypy.InternalRedirect, x:
