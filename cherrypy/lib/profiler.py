@@ -32,6 +32,15 @@ module from the command line, it will call serve() for you.
 """
 
 
+# Make profiler output more readable by adding __init__ modules' parents.
+def new_func_strip_path(func_name):
+    filename, line, name = func_name
+    if filename.endswith("__init__.py"):
+        return os.path.basename(filename[:-12]) + filename[-12:], line, name
+    return os.path.basename(filename), line, name
+import pstats
+pstats.func_strip_path = new_func_strip_path
+
 import hotshot
 import os, os.path
 import sys
