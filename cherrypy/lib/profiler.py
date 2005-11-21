@@ -120,7 +120,7 @@ class Profiler(object):
 def serve(path=None, port=8080):
     import cherrypy
     cherrypy.root = Profiler(path)
-    cherrypy.config.update({'server.socketPort': port,
+    cherrypy.config.update({'server.socketPort': int(port),
                             'server.threadPool': 10,
                             'server.environment': "production",
                             'session.storageType': "ram",
