@@ -1,13 +1,12 @@
 """A few utility classes/functions used by CherryPy."""
 
+import cgi
+import datetime
 import sys
 import traceback
-import time
-import cgi
 
 import cherrypy
 from cherrypy.lib import httptools
-
 
 def get_object_trail(objectpath=None):
     """
@@ -92,7 +91,10 @@ def _cpGlobalHandler():
 _cpGlobalHandler.exposed = True
 
 def logtime():
-    return '%04d/%02d/%02d %02d:%02d:%02d' % time.localtime(time.time())[:6]
+    now = datetime.datetime.now()
+    month = httptools.monthname[now.month][:3].capitalize()
+    return '%02d/%s/%04d:%02d:%02d:%02d' % (
+        now.day, month, now.year, now.hour, now.minute, now.second)
 
 def _cpLogAccess():
     """ Default method for logging access """
