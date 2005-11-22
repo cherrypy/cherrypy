@@ -23,7 +23,7 @@ class EncodingFilter(BaseFilter):
             response.body = ''.join([chunk for chunk in response.body])
             def encode_body(encoding):
                 try:
-                    response.body = response.body.encode(encoding)
+                    response.body = [response.body.encode(encoding)]
                 except UnicodeError:
                     # Try the next encoding
                     return False

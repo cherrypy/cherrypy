@@ -123,8 +123,8 @@ class HTTPRedirect(Exception):
                    303: "This resource can be found at <a href='%s'>%s</a>.",
                    307: "This resource has moved temporarily to <a href='%s'>%s</a>.",
                    }[status]
-            cherrypy.response.body = "<br />\n".join([msg % (url, url)
-                                                 for url in self.urls])
+            cherrypy.response.body = ["<br />\n".join([msg % (url, url)
+                                                  for url in self.urls])]
         elif status == 304:
             # Not Modified.
             # "The response MUST include the following header fields:

@@ -260,8 +260,9 @@ def _cpOnHTTPError(status, message):
     # In all cases, finalize will be called after this method,
     # so don't bother cleaning up response values here.
     response.status = status
-    response.body = getErrorPage(status, traceback=tb, message=message)
-    response.headerMap['Content-Length'] = len(response.body)
+    content = getErrorPage(status, traceback=tb, message=message)
+    response.body = [content]
+    response.headerMap['Content-Length'] = len(content)
     response.headerMap['Content-Type'] = "text/html"
     
     be_ie_unfriendly(status)
