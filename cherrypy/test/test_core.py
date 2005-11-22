@@ -372,7 +372,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         ignore.append(TypeError)
         try:
             self.getPage("/params/?notathing=meeting")
-            self.assertInBody("TypeError: index() got an unexpected keyword argument 'notathing'")
+            self.assertInBody("index() got an unexpected keyword argument 'notathing'")
         finally:
             ignore.pop()
         
