@@ -44,24 +44,26 @@ class Request(object):
         attributes to build the outbound stream.
         
         """
+        self.requestLine = requestLine.strip()
+        self.headers = list(headers)
+        self.rfile = rfile
+        
         if cherrypy.profiler:
-            cherrypy.profiler.run(self._run, requestLine, headers, rfile)
+            cherrypy.profiler.run(self._run)
         else:
-            self._run(requestLine, headers, rfile)
+            self._run()
         return cherrypy.response
     
-    def _run(self, requestLine, headers, rfile):
+    def _run(self):
         
         try:
-            self.headers = list(headers)
             self.headerMap = httptools.HeaderMap()
             self.simpleCookie = Cookie.SimpleCookie()
-            self.rfile = rfile
             
             # This has to be done very early in the request process,
             # because request.objectPath is used for config lookups
             # right away.
-            self.processRequestLine(requestLine)
+            self.processRequestLine()
             
             try:
                 applyFilters('onStartResource')
@@ -101,8 +103,8 @@ class Request(object):
         
         _cputil.getSpecialAttribute("_cpLogAccess")()
     
-    def processRequestLine(self, requestLine):
-        self.requestLine = rl = requestLine.strip()
+    def processRequestLine(self):
+        rl = self.requestLine
         method, path, qs, proto = httptools.parseRequestLine(rl)
         if path == "*":
             path = "global"

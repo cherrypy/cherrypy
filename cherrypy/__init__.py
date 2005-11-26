@@ -18,9 +18,10 @@ try:
 except ImportError:
     from cherrypy._cpthreadinglocal import local
 
-# Create a threadlocal object to hold the request and response objects.
-# In this way, we can easily dump those objects when we stop/start a
-# new HTTP conversation.
+# Create a threadlocal object to hold the request and response
+# objects. In this way, we can easily dump those objects when
+# we stop/start a new HTTP conversation, yet still refer to
+# them as module-level globals in a thread-safe way.
 serving = local()
 
 class _ThreadLocalProxy:
