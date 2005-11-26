@@ -9,14 +9,6 @@ class NotReady(Error):
     """A request was made before the app server has been started."""
     pass
 
-class WrongResponseType(Error):
-    """ Happens when the cherrypy.response.body is not a string """
-    pass
-
-class WrongUnreprValue(Error):
-    """ Happens when unrepr can't parse a value """
-    pass
-
 class WrongConfigValue(Error):
     """ Happens when unrepr can't parse a config value """
     pass

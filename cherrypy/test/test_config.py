@@ -2,6 +2,7 @@
 import test
 test.prefer_parent_path()
 
+import StringIO
 import cherrypy
 
 class Root:
@@ -71,6 +72,13 @@ class ConfigTests(helper.CPWebCase):
         for path, key, expected in tests:
             self.getPage(path + "?key=" + key)
             self.assertBody(expected)
+    
+    def testUnrepr(self):
+        self.assertRaises(cherrypy.WrongConfigValue, cherrypy.config.update,
+                          file=StringIO.StringIO("""
+[global]
+server.environment = production
+"""))
     
     def testEnvironments(self):
         for key, val in cherrypy.config.environments['development'].iteritems():

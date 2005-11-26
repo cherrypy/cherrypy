@@ -283,8 +283,5 @@ class Builder:
 def unrepr(s):
     if not s:
         return s
-    try:
-        return Builder().build(getObj(s))
-    except:
-        raise cherrypy.WrongUnreprValue(repr(s))
+    return Builder().build(getObj(s))
 

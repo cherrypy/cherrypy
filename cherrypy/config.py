@@ -202,10 +202,12 @@ def dict_from_config_file(configFile):
             value = configParser.get(section, option)
             try:
                 value = cptools.unrepr(value)
-            except cherrypy.WrongUnreprValue, s:
+            except Exception, x:
                 msg = ("section: %s, option: %s, value: %s" %
                        (repr(section), repr(option), repr(value)))
-                raise cherrypy.WrongConfigValue(msg)
+                e = cherrypy.WrongConfigValue(msg)
+                e.args += (x.__class__.__name__, x.args)
+                raise e
             result[section][option] = value
     return result
 
