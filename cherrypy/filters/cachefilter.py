@@ -105,11 +105,9 @@ class CacheFilter(basefilter.BaseFilter):
         cacheData = cherrypy._cache.get()
         cherrypy.request.cacheable = not cacheData
         if cacheData:
-            expirationTime, lastModified, obj = cacheData
             # found a hit! check the if-modified-since request header
+            expirationTime, lastModified, obj = cacheData
             modifiedSince = cherrypy.request.headerMap.get('If-Modified-Since', None)
-            # print ("Cache hit: If-Modified-Since=%s, lastModified=%s" %
-            #        (modifiedSince, lastModified))
             if modifiedSince is not None and modifiedSince == lastModified:
                 cherrypy._cache.totNonModified += 1
                 cherrypy.response.status = "304 Not Modified"
@@ -120,22 +118,34 @@ class CacheFilter(basefilter.BaseFilter):
                 cherrypy.response.body = body
             raise cherrypy.RequestHandled()
     
-    def onEndResource(self):
-        """Close & fix the cache entry after content was fully written"""
-        if not cherrypy.config.get('cacheFilter.on', False):
+    def beforeFinalize(self):
+        if not (cherrypy.config.get('cacheFilter.on', False) and
+                cherrypy.request.cacheable):
             return
         
-        if cherrypy.request.cacheable:
-            status = cherrypy.response.status
-            headers = cherrypy.response.headers
-            
-            # Consume the body iterable. Only do this once!
-            body = cherrypy.response.collapse_body()
-            
-            if cherrypy.response.headerMap.get('Pragma', None) != 'no-cache':
-                lastModified = cherrypy.response.headerMap.get('Last-Modified', None)
-                # saves the cache data
-                cherrypy._cache.put(lastModified, (status, headers, body))
+        cherrypy.response._cachefilter_tee = []
+        def tee(body):
+            """Tee response.body into response._cachefilter_tee (a list)."""
+            for chunk in body:
+                cherrypy.response._cachefilter_tee.append(chunk)
+                yield chunk
+        cherrypy.response.body = tee(cherrypy.response.body)
+    
+    def onEndRequest(self):
+        # Close & fix the cache entry after content was fully written
+        if not (cherrypy.config.get('cacheFilter.on', False) and
+                cherrypy.request.cacheable):
+            return
+        
+        response = cherrypy.response
+        status = response.status
+        headers = response.headers
+        body = ''.join([chunk for chunk in response._cachefilter_tee])
+        
+        if response.headerMap.get('Pragma', None) != 'no-cache':
+            lastModified = response.headerMap.get('Last-Modified', None)
+            # saves the cache data
+            cherrypy._cache.put(lastModified, (status, headers, body))
 
 
 def percentual(n,d):

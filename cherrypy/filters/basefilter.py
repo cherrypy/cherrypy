@@ -33,4 +33,8 @@ class BaseFilter(object):
     def onEndResource(self):
         """Called after finalizing the output (status, header, and body)"""
         pass
+    
+    def onEndRequest(self):
+        """Called when the server closes the request."""
+        pass
 

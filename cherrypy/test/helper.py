@@ -87,6 +87,7 @@ class CPWebCase(webtest.WebCase):
             self.body = []
             for chunk in response.body:
                 self.body.append(chunk)
+            request.close()
         except:
             if cherrypy.config.get("streamResponse", False):
                 # Pass the error through

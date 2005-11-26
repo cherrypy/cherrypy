@@ -28,7 +28,7 @@ _output_order = [
 ]
 
 _input_methods = ['onStartResource', 'beforeRequestBody', 'beforeMain']
-_output_methods = ['beforeFinalize', 'onEndResource',
+_output_methods = ['beforeFinalize', 'onEndResource', 'onEndRequest',
                    'beforeErrorResponse', 'afterErrorResponse']
 
 
@@ -49,7 +49,8 @@ def init():
         'GzipFilter'         : gzipfilter.GzipFilter,
         'LogDebugInfoFilter' : logdebuginfofilter.LogDebugInfoFilter,
         'NsgmlsFilter'       : nsgmlsfilter.NsgmlsFilter,
-        'SessionAuthenticateFilter' : sessionauthenticatefilter.SessionAuthenticateFilter,
+        'SessionAuthenticateFilter':
+                    sessionauthenticatefilter.SessionAuthenticateFilter,
         'SessionFilter'      : sessionfilter.SessionFilter,
         'StaticFilter'       : staticfilter.StaticFilter,
         'TidyFilter'         : tidyfilter.TidyFilter,

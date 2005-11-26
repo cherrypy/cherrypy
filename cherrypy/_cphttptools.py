@@ -27,6 +27,22 @@ class Request(object):
         self.remoteHost = remoteHost
         self.scheme = scheme
         self.executeMain = True
+        self.closed = False
+    
+    def close(self):
+        self.closed = True
+        try:
+            applyFilters('onEndRequest')
+            cherrypy.serving.request = None
+            cherrypy.serving.response = None
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            cherrypy.log(_cputil.formatExc())
+    
+    def __del__(self):
+        if not self.closed:
+            self.close()
     
     def run(self, requestLine, headers, rfile):
         """Process the Request.

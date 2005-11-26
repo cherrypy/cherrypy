@@ -57,6 +57,7 @@ def wsgiApp(environ, start_response):
     if not cherrypy.config.get('server.logToScreen'):
         sys.stderr = NullWriter()
     
+    request = None
     try:
         # LOGON_USER is served by IIS, and is the name of the
         # user after having been mapped to a local account.
@@ -71,6 +72,8 @@ def wsgiApp(environ, start_response):
         response = request.run(requestLine(environ),
                                translate_headers(environ),
                                environ['wsgi.input'])
+        s, h, b = response.status, response.headers, response.body
+        exc = None
     except (KeyboardInterrupt, SystemExit):
         raise
     except:
@@ -80,9 +83,6 @@ def wsgiApp(environ, start_response):
             tb = ""
         s, h, b = _cputil.bareError(tb)
         exc = sys.exc_info()
-    else:
-        s, h, b = response.status, response.headers, response.body
-        exc = None
     
     try:
         start_response(s, h, exc)
@@ -92,6 +92,8 @@ def wsgiApp(environ, start_response):
             # If it's unicode, it could be a big performance hit (x ~500).
             chunk = str(chunk)
             yield chunk
+        if request:
+            request.close()
     except (KeyboardInterrupt, SystemExit):
         raise
     except:

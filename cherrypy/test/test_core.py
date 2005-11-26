@@ -304,17 +304,26 @@ class ThreadLocal(Test):
 
 
 class NadsatFilter:
+    
     def beforeFinalize(self):
+        self.ended = False
         def nadsat_it_up(body):
             for chunk in body:
                 chunk = chunk.replace("good", "horrorshow")
                 chunk = chunk.replace("piece", "lomtick")
                 yield chunk
         cherrypy.response.body = nadsat_it_up(cherrypy.response.body)
+    
+    def onEndRequest(self):
+        # This runs after the request has been completely written out.
+        cherrypy.response.body = "razdrez"
+        self.ended = True
+
+_nf = NadsatFilter()
 
 class CPFilterList(Test):
     
-    _cpFilterList = [NadsatFilter()]
+    _cpFilterList = [_nf]
     
     def index(self):
         return "A good piece of cherry pie"
@@ -561,7 +570,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testCPFilterList(self):
         self.getPage("/cpfilterlist/")
+        # If body is "razdrez", then onEndRequest is being called too early.
         self.assertBody("A horrorshow lomtick of cherry pie")
+        # If this fails, then onEndRequest isn't being called at all.
+        self.assertEqual(_nf.ended, True)
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",

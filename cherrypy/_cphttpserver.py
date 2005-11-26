@@ -89,6 +89,7 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             for chunk in response.body:
                 wfile.write(chunk)
+            request.close()
         except:
             s, h, b = _cputil.bareError()
             for chunk in b:

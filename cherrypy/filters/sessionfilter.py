@@ -159,14 +159,8 @@ class SessionFilter(basefilter.BaseFilter):
         # Make a wrapper around the body in order to save the session
         #   either before or after the body is returned
         cherrypy.response.body = saveData(cherrypy.response.body, sess)
-
-    def onEndResource(self):
-        self._clean()
-
-    def afterErrorResponse(self):
-        self._clean()
     
-    def _clean(self):
+    def onEndRequest(self):
         sess = cherrypy.request._session
         if not getattr(sess, 'sessionStorage', None):
             # Sessions are not enabled: do nothing
