@@ -42,4 +42,5 @@ class StaticFilter(BaseFilter):
                 filename = os.path.join(root, filename)
         
         cptools.serveFile(filename)
+        request.executeMain = False
 

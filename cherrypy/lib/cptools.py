@@ -107,7 +107,7 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     if cherrypy.request.headerMap.has_key('If-Modified-Since'):
         if cherrypy.request.headerMap['If-Modified-Since'] == strModifTime:
             response.status = "304 Not Modified"
-            response.body = []
+            response.body = None
             if getattr(cherrypy, "debug", None):
                 cherrypy.log("    Found file (304 Not Modified): %s" % path, "DEBUG")
             return []
@@ -144,7 +144,7 @@ def serveFile(path, contentType=None, disposition=None, name=None):
                                                        (start, stop - 1, c_len))
                 response.headerMap['Content-Length'] = r_len
                 bodyfile.seek(start)
-                response.body = [bodyfile.read(r_len)]
+                response.body = bodyfile.read(r_len)
             else:
                 # Return a multipart/byteranges response.
                 response.status = "206 Partial Content"
@@ -167,10 +167,10 @@ def serveFile(path, contentType=None, disposition=None, name=None):
                 response.body = fileRanges()
         else:
             response.headerMap['Content-Length'] = c_len
-            response.body = fileGenerator(bodyfile)
+            response.body = bodyfile
     else:
         response.headerMap['Content-Length'] = c_len
-        response.body = fileGenerator(bodyfile)
+        response.body = bodyfile
     return response.body
 
 def fileGenerator(input, chunkSize=65536):

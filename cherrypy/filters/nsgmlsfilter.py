@@ -14,8 +14,7 @@ class NsgmlsFilter(BaseFilter):
         
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
-        originalBody = ''.join([chunk for chunk in cherrypy.response.body])
-        cherrypy.response.body = [originalBody]
+        originalBody = cherrypy.response.collapse_body()
         
         fct = cherrypy.response.headerMap.get('Content-Type', '')
         ct = fct.split(';')[0]
@@ -58,5 +57,5 @@ class NsgmlsFilter(BaseFilter):
                     i += 1
                     newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                 
-                cherrypy.response.body = [newBody]
+                cherrypy.response.body = newBody
 

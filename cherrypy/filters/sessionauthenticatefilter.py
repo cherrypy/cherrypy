@@ -50,6 +50,7 @@ class SessionAuthenticateFilter(BaseFilter):
             errorMsg = checkLoginAndPassword(login, password)
             if errorMsg:
                 cherrypy.response.body = loginScreen(fromPage, login = login, errorMsg = errorMsg)
+                cherrypy.request.executeMain = False
             else:
                 cherrypy.session[sessionKey] = login
                 if not fromPage:
@@ -64,8 +65,9 @@ class SessionAuthenticateFilter(BaseFilter):
             notLoggedIn()
         if not cherrypy.session.get(sessionKey):
             cherrypy.response.body = loginScreen(cherrypy.request.browserUrl)
+            cherrypy.request.executeMain = False
             return
-
+        
         # Everything is OK: user is logged in
         if loadUserByUsername:
             username = cherrypy.session[sessionKey]

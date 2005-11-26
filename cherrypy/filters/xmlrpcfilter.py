@@ -98,7 +98,7 @@ class XmlRpcFilter(BaseFilter):
         - The method is also stored in cherrypy.request.objectPath,
           so CP2 will find the right method to call for you,
           based on the root's position.
-    beforeFinalize:
+    beforeMain:
         Marshalls cherrypy.response.body to xmlrpc.
         - Until resolved: cherrypy.response.body must be a python source string;
           this string is 'eval'ed to return the results. This will be
@@ -170,8 +170,6 @@ class XmlRpcFilter(BaseFilter):
                 self.objectPath = '/' + '/'.join(object_path[1:])
                 args = virtual_path + cherrypy.request.paramList
                 body = page_handler(*args, **cherrypy.request.paramMap)
-                # Don't form an iterable like CP core main() does
-##                cherrypy.response.body = iterable(body)
                 break
             except cherrypy.InternalRedirect, x:
                 # Try again with the new path
@@ -184,6 +182,7 @@ class XmlRpcFilter(BaseFilter):
         body = xmlrpclib.dumps((body,), methodresponse=1,
                                encoding=encoding, allow_none=0)
         self.respond(body)
+        cherrypy.request.executeMain = False
     
     def afterErrorResponse(self):
         if (not cherrypy.config.get('xmlRpcFilter.on', False)
@@ -203,7 +202,7 @@ class XmlRpcFilter(BaseFilter):
         # as a "Protocol Error", we'll just return 200 every time.
         response = cherrypy.response
         response.status = '200 OK'
-        response.body = [body]
+        response.body = body
         response.headerMap['Content-Type'] = 'text/xml'
         response.headerMap['Content-Length'] = len(body)
 

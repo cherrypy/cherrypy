@@ -261,7 +261,7 @@ def _cpOnHTTPError(status, message):
     # so don't bother cleaning up response values here.
     response.status = status
     content = getErrorPage(status, traceback=tb, message=message)
-    response.body = [content]
+    response.body = content
     response.headerMap['Content-Length'] = len(content)
     response.headerMap['Content-Type'] = "text/html"
     
@@ -289,15 +289,14 @@ def be_ie_unfriendly(status):
         s += 1
         # Since we are issuing an HTTP error status, we assume that
         # the entity is short, and we should just collapse it.
-        content = ''.join([chunk for chunk in response.body])
+        content = response.collapse_body()
         l = len(content)
         if l and l < s:
             # IN ADDITION: the response must be written to IE
             # in one chunk or it will still get replaced! Bah.
-            response.body = [content + (" " * (s - l))]
-        else:
-            response.body = [content]
-        response.headerMap['Content-Length'] = len(response.body[0])
+            content = content + (" " * (s - l))
+        response.body = content
+        response.headerMap['Content-Length'] = len(content)
 
 def formatExc(exc=None):
     """formatExc(exc=None) -> exc (or sys.exc_info if None), formatted."""

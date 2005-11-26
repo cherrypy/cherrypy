@@ -106,13 +106,14 @@ class HTTPRedirect(Exception):
     
     def set_response(self):
         import cherrypy
-        cherrypy.response.status = status = self.status
-        cherrypy.response.headerMap['Content-Type'] = "text/html"
+        response = cherrypy.response
+        response.status = status = self.status
+        response.headerMap['Content-Type'] = "text/html"
         
         if status in (300, 301, 302, 303, 307):
             # "The ... URI SHOULD be given by the Location field
             # in the response."
-            cherrypy.response.headerMap['Location'] = self.urls[0]
+            response.headerMap['Location'] = self.urls[0]
             
             # "Unless the request method was HEAD, the entity of the response
             # SHOULD contain a short hypertext note with a hyperlink to the
@@ -123,8 +124,7 @@ class HTTPRedirect(Exception):
                    303: "This resource can be found at <a href='%s'>%s</a>.",
                    307: "This resource has moved temporarily to <a href='%s'>%s</a>.",
                    }[status]
-            cherrypy.response.body = ["<br />\n".join([msg % (url, url)
-                                                  for url in self.urls])]
+            response.body = "<br />\n".join([msg % (u, u) for u in self.urls])
         elif status == 304:
             # Not Modified.
             # "The response MUST include the following header fields:
@@ -132,12 +132,12 @@ class HTTPRedirect(Exception):
             # The "Date" header should have been set in Request.__init__
             
             # "The 304 response MUST NOT contain a message-body."
-            cherrypy.response.body = []
+            response.body = None
         elif status == 305:
             # Use Proxy.
             # self.urls[0] should be the URI of the proxy.
-            cherrypy.response.headerMap['Location'] = self.urls[0]
-            cherrypy.response.body = []
+            response.headerMap['Location'] = self.urls[0]
+            response.body = None
         else:
             raise ValueError("The %s status code is unknown." % status)
 

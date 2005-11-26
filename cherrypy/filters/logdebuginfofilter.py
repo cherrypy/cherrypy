@@ -22,7 +22,7 @@ class LogDebugInfoFilter(BaseFilter):
         mimelist = cherrypy.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])
         ct = cherrypy.response.headerMap.get('Content-Type').split(';')[0]
         if ct in mimelist:
-            body = ''.join([chunk for chunk in cherrypy.response.body])
+            body = cherrypy.response.collapse_body()
             debuginfo = '\n'
             
             logAsComment = cherrypy.config.get('logDebugInfoFilter.logAsComment', False)

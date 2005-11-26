@@ -113,7 +113,7 @@ class CacheFilter(basefilter.BaseFilter):
             if modifiedSince is not None and modifiedSince == lastModified:
                 cherrypy._cache.totNonModified += 1
                 cherrypy.response.status = "304 Not Modified"
-                cherrypy.response.body = []
+                cherrypy.response.body = None
             else:
                 # serve it & get out from the request
                 cherrypy.response.status, cherrypy.response.headers, body = obj
@@ -130,7 +130,7 @@ class CacheFilter(basefilter.BaseFilter):
             headers = cherrypy.response.headers
             
             # Consume the body iterable. Only do this once!
-            body = cherrypy.response.body = [chunk for chunk in cherrypy.response.body]
+            body = cherrypy.response.collapse_body()
             
             if cherrypy.response.headerMap.get('Pragma', None) != 'no-cache':
                 lastModified = cherrypy.response.headerMap.get('Last-Modified', None)

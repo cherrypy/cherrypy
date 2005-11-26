@@ -26,6 +26,7 @@ class Request(object):
         self.remotePort = remotePort
         self.remoteHost = remoteHost
         self.scheme = scheme
+        self.executeMain = True
     
     def run(self, requestLine, headers, rfile):
         """Process the Request.
@@ -76,7 +77,7 @@ class Request(object):
                         self.processBody()
                     
                     applyFilters('beforeMain')
-                    if cherrypy.response.body is None:
+                    if self.executeMain:
                         self.main()
                     
                     applyFilters('beforeFinalize')
@@ -230,7 +231,7 @@ class Request(object):
                 except Exception, x:
                     x.args = x.args + (page_handler,)
                     raise
-                cherrypy.response.body = iterable(body)
+                cherrypy.response.body = body
                 return
             except cherrypy.InternalRedirect, x:
                 # Try again with the new path
@@ -317,8 +318,46 @@ for _ in entity_header_fields:
     _header_order_map[_] = 2
 
 
+class Body(object):
+    """The body of the HTTP response (the response entity)."""
+    
+    def __get__(self, obj, objclass=None):
+        if obj is None:
+            # When calling on the class instead of an instance...
+            return self
+        else:
+            return obj._body
+    
+    def __set__(self, obj, value):
+        # Convert the given value to an iterable object.
+        if isinstance(value, types.FileType):
+            value = cptools.fileGenerator(value)
+        elif isinstance(value, types.GeneratorType):
+            value = flattener(value)
+        elif isinstance(value, basestring):
+            # strings get wrapped in a list because iterating over a single
+            # item list is much faster than iterating over every character
+            # in a long string.
+            value = [value]
+        elif value is None:
+            value = []
+        obj._body = value
+
+
+def flattener(input):
+    """Yield the given input, recursively iterating over each result (if needed)."""
+    for x in input:
+        if not isinstance(x, types.GeneratorType):
+            yield x
+        else:
+            for y in flattener(x):
+                yield y 
+
+
 class Response(object):
     """An HTTP Response."""
+    
+    body = Body()
     
     def __init__(self):
         self.status = None
@@ -334,6 +373,11 @@ class Response(object):
             "Content-Length": None
         })
         self.simpleCookie = Cookie.SimpleCookie()
+    
+    def collapse_body(self):
+        newbody = ''.join([chunk for chunk in self.body])
+        self.body = newbody
+        return newbody
     
     def finalize(self):
         """Transform headerMap (and cookies) into cherrypy.response.headers."""
@@ -360,8 +404,7 @@ class Response(object):
             # Responses which are not streamed should have a Content-Length,
             # but allow user code to set Content-Length if desired.
             if self.headerMap.get('Content-Length') is None:
-                content = ''.join([chunk for chunk in self.body])
-                self.body = [content]
+                content = self.collapse_body()
                 self.headerMap['Content-Length'] = len(content)
         
         # Headers
@@ -428,27 +471,3 @@ class Response(object):
     def setBareError(self, body=None):
         self.status, self.headers, self.body = _cputil.bareError(body)
 
-
-def iterable(body):
-    """Convert the given body to an iterable object."""
-    if isinstance(body, types.FileType):
-        body = cptools.fileGenerator(body)
-    elif isinstance(body, types.GeneratorType):
-        body = flattener(body)
-    elif isinstance(body, basestring):
-        # strings get wrapped in a list because iterating over a single
-        # item list is much faster than iterating over every character
-        # in a long string.
-        body = [body]
-    elif body is None:
-        body = [""]
-    return body
-
-def flattener(input):
-    """Yield the given input, recursively iterating over each result (if needed)."""
-    for x in input:
-        if not isinstance(x, types.GeneratorType):
-            yield x
-        else:
-            for y in flattener(x):
-                yield y 

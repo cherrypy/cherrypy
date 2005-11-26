@@ -20,10 +20,13 @@ class EncodingFilter(BaseFilter):
                 response.body = encoder(response.body)
                 return True
         else:
-            response.body = ''.join([chunk for chunk in response.body])
+            response.collapse_body()
             def encode_body(encoding):
                 try:
-                    response.body = [response.body.encode(encoding)]
+                    body = []
+                    for chunk in response.body:
+                        body.append(chunk.encode(encoding))
+                    response.body = body
                 except UnicodeError:
                     # Try the next encoding
                     return False

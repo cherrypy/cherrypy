@@ -22,8 +22,7 @@ class TidyFilter(BaseFilter):
         
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
-        originalBody = ''.join([chunk for chunk in cherrypy.response.body])
-        cherrypy.response.body = [originalBody]
+        originalBody = cherrypy.response.collapse_body()
         
         fct = cherrypy.response.headerMap.get('Content-Type', '')
         ct = fct.split(';')[0]
@@ -73,7 +72,7 @@ class TidyFilter(BaseFilter):
                     i += 1
                     newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                 
-                cherrypy.response.body = [newBody]
+                cherrypy.response.body = newBody
 
             elif strictXml:
                 # The HTML is OK, but is it valid XML
@@ -93,7 +92,7 @@ class TidyFilter(BaseFilter):
                     # Wrong XML
                     bodyFile = StringIO.StringIO()
                     traceback.print_exc(file = bodyFile)
-                    cherrypy.response.body = [bodyFile.getvalue()]
+                    cherrypy.response.body = bodyFile.getvalue()
                     
                     newBody = "Wrong XML:<br />" + cgi.escape(bodyFile.getvalue().replace('\n','<br />'))
                     newBody += '<br /><br />'
@@ -102,5 +101,5 @@ class TidyFilter(BaseFilter):
                         i += 1
                         newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                     
-                    cherrypy.response.body = [newBody]
+                    cherrypy.response.body = newBody
 
