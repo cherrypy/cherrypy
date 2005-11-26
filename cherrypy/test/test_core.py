@@ -305,10 +305,12 @@ class ThreadLocal(Test):
 
 class NadsatFilter:
     def beforeFinalize(self):
-        body = "".join([chunk for chunk in cherrypy.response.body])
-        body = body.replace("good", "horrorshow")
-        body = body.replace("piece", "lomtick")
-        cherrypy.response.body = [body]
+        def nadsat_it_up(body):
+            for chunk in body:
+                chunk = chunk.replace("good", "horrorshow")
+                chunk = chunk.replace("piece", "lomtick")
+                yield chunk
+        cherrypy.response.body = nadsat_it_up(cherrypy.response.body)
 
 class CPFilterList(Test):
     
@@ -576,7 +578,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
         try:
-            valerr = r'\n    raise ValueError\(\)\nValueError\n'
+            valerr = '\n    raise ValueError()\nValueError'
             self.getPage("/error/page_method")
             self.assertErrorPage(500, pattern=valerr)
             

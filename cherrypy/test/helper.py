@@ -157,7 +157,7 @@ class CPWebCase(webtest.WebCase):
             if m and m.group(1):
                 self._handlewebError('Error page contains traceback')
         else:
-            if (m is None) or (not re.search(pattern, m.group(1))):
+            if (m is None) or (not re.search(re.escape(pattern), m.group(1))):
                 msg = 'Error page does not contain %s in traceback'
                 self._handlewebError(msg % repr(pattern))
 
