@@ -79,6 +79,8 @@
 ## >>>
 ######################################################################
 
+
+import sys
 import xmlrpclib
 
 import cherrypy
@@ -107,17 +109,9 @@ class XmlRpcFilter(BaseFilter):
     
     def testValidityOfRequest(self):
         # test if the content-length was sent
-        result = False
-        if cherrypy.request.headerMap.has_key('Content-Length'):
-            length = cherrypy.request.headerMap.get('Content-Length', 0)
-            if length is None or length == "": length = 0
-            result = int(length) > 0
-        ct = 'text/xml'
-        if cherrypy.request.headerMap.has_key('Content-Type'):
-            ct = cherrypy.request.headerMap.get('Content-Type', 'text/xml').lower()
-            if ct is None or ct == "": ct = 'text/xml'
-        result = result and ct in ['text/xml']
-        return result
+        length = cherrypy.request.headerMap.get('Content-Length') or 0
+        ct = cherrypy.request.headerMap.get('Content-Type') or 'text/xml'
+        return int(length) > 0 and ct.lower() in ['text/xml']
     
     def beforeRequestBody(self):
         """ Called after the request header has been read/parsed"""
@@ -125,16 +119,14 @@ class XmlRpcFilter(BaseFilter):
         
         request.xmlRpcFilterOn = cherrypy.config.get('xmlRpcFilter.on', False)
         if not request.xmlRpcFilterOn:
-            return True
+            return
         
         request.isRPC = self.testValidityOfRequest()
         if not request.isRPC: 
-            # used for debugging or more info
-            # print 'not a valid xmlrpc call'
-            return # break this if it's not for this filter!!
+            return
         
         request.processRequestBody = False
-        dataLength = int(request.headerMap.get('Content-Length', 0))
+        dataLength = int(request.headerMap.get('Content-Length') or 0)
         data = request.rfile.read(dataLength)
         try:
             params, method = xmlrpclib.loads(data)
@@ -157,66 +149,61 @@ class XmlRpcFilter(BaseFilter):
     def beforeMain(self):
         """This is a variation of main() from _cphttptools.
         
-        The reason it is redone here is because we don't want
-        cherrypy.response.body = iterable(body) - we want to use
-        whatever real value the user returned from their callable
-        to reach the xmlrpcfilter unchanged."""
+        It is redone here because:
+            1. we want to handle responses of any type
+            2. we need to pass our own paramList
+        """
         
         if (not cherrypy.config.get('xmlRpcFilter.on', False)
             or not getattr(cherrypy.request, 'isRPC', False)):
             return
         
         path = cherrypy.request.objectPath
-        page_handler, object_path, virtual_path = cherrypy.request.mapPathToObject(path)
-
-        # Remove "root" from object_path and join it to get objectPath
-        cherrypy.request.objectPath = '/' + '/'.join(object_path[1:])
-        args = virtual_path + cherrypy.request.paramList
-        body = page_handler(*args, **cherrypy.request.paramMap)
-        cherrypy.response.body = body
-    
-    def beforeFinalize(self):
-        """ Called before finalizing output """
-        if (not cherrypy.config.get('xmlRpcFilter.on', False)
-            or not getattr(cherrypy.request, 'isRPC', False)):
-            return
-
-        encoding = cherrypy.config.get('xmlRpcFilter.encoding', 'utf-8')
-
+        while True:
+            try:
+                page_handler, object_path, virtual_path = cherrypy.request.mapPathToObject(path)
+                
+                # Decode any leftover %2F in the virtual_path atoms.
+                virtual_path = [x.replace("%2F", "/") for x in virtual_path]
+                
+                # Remove "root" from object_path and join it to get objectPath
+                self.objectPath = '/' + '/'.join(object_path[1:])
+                args = virtual_path + cherrypy.request.paramList
+                body = page_handler(*args, **cherrypy.request.paramMap)
+                # Don't form an iterable like CP core main() does
+##                cherrypy.response.body = iterable(body)
+                break
+            except cherrypy.InternalRedirect, x:
+                # Try again with the new path
+                path = x.path
+        
         # See xmlrpclib documentation
         # Python's None value cannot be used in standard XML-RPC;
         # to allow using it via an extension, provide a true value for allow_none.
-        cherrypy.response.body = [xmlrpclib.dumps(
-            (cherrypy.response.body,),
-            methodresponse=1,
-            encoding=encoding,
-            allow_none=0)]
-        cherrypy.response.headerMap['Content-Type'] = 'text/xml'
-        cherrypy.response.headerMap['Content-Length'] = len(cherrypy.response.body[0])
+        encoding = cherrypy.config.get('xmlRpcFilter.encoding', 'utf-8')
+        body = xmlrpclib.dumps((body,), methodresponse=1,
+                               encoding=encoding, allow_none=0)
+        self.respond(body)
     
-    def beforeErrorResponse(self):
-        try:
-            if (not cherrypy.config.get('xmlRpcFilter.on', False)
-                or not getattr(cherrypy.request, 'isRPC', False)):
-                return
-            import sys
-            # Since we got here because of an exception, let's get its error message if any
-            message = str(sys.exc_info()[1])
-            body = ''.join([chunk for chunk in message])
-            cherrypy.response.body = [xmlrpclib.dumps(xmlrpclib.Fault(1, body))]
-            cherrypy.response.headerMap['Content-Type'] = 'text/xml'
-            cherrypy.response.headerMap['Content-Length'] = len(cherrypy.response.body[0])
-        except:
-            pass
-        
     def afterErrorResponse(self):
         if (not cherrypy.config.get('xmlRpcFilter.on', False)
             or not getattr(cherrypy.request, 'isRPC', False)):
             return
+        
+        # Since we got here because of an exception,
+        # let's get its error message if any
+        body = str(sys.exc_info()[1])
+        body = xmlrpclib.dumps(xmlrpclib.Fault(1, body))
+        self.respond(body)
+    
+    def respond(self, body):
         # The XML-RPC spec (http://www.xmlrpc.com/spec) says:
         # "Unless there's a lower-level error, always return 200 OK."
-        # However if arrived here we do have a status set to 500 then
-        # it means we got an error we didn't want to trap explicitely
-        # so let's assume it's part of the "lower-level error" defined above.
-        if cherrypy.response.status[:3] != '500':
-            cherrypy.response.status = '200 OK'
+        # Since Python's xmlrpclib interprets a non-200 response
+        # as a "Protocol Error", we'll just return 200 every time.
+        response = cherrypy.response
+        response.status = '200 OK'
+        response.body = [body]
+        response.headerMap['Content-Type'] = 'text/xml'
+        response.headerMap['Content-Length'] = len(body)
+

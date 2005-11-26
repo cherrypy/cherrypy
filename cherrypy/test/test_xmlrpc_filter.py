@@ -9,7 +9,7 @@ class Root:
         return "I'm a standard index!"
     index.exposed = True
 
-    
+
 class XmlRpc:
     def return_single_item_list(self):
         return [42]
@@ -54,8 +54,9 @@ class XmlRpc:
 cherrypy.root = Root()
 cherrypy.root.xmlrpc = XmlRpc()
 
+
 import helper
-        
+
 cherrypy.config.update({
     'global': {'server.logToScreen': False,
                'server.environment': 'production',
@@ -63,75 +64,78 @@ cherrypy.config.update({
                'server.socketHost': helper.CPWebCase.HOST,
                'server.socketPort': helper.CPWebCase.PORT,
                },
-    '/xmlrpc':
-               {'xmlRpcFilter.on':True}
-              })
+    '/xmlrpc': {'xmlRpcFilter.on':True},
+    })
 
-        
+
 class ServerlessProxy(object):
     """An xmlrpc proxy for the test suite's 'serverless' tests."""
     def __init__(self, webcase, url):
         self._webcase = webcase
         self.url = url
-
+    
     def __getattr__(self, attr, *args):
         def xmlrpc_method(*args):
             args = tuple(args)
             body = xmlrpclib.dumps(args, attr)
             cl = len(body)
             headers = [('Content-Type', 'text/xml'), ('Content-Length', str(cl))]
-            self._webcase.getPage(self.url, headers=headers, method="POST", body=body)
-            return xmlrpclib.loads("".join(self._webcase.body))[0][0]            
+            self._webcase.getPage(self.url, headers=headers,
+                                  method="POST", body=body)
+            p, u = xmlrpclib.getparser()
+            for line in self._webcase.body:
+                p.feed(line)
+            p.close()
+            response = u.close()
+            if len(response) == 1:
+                response = response[0]
+            return response
         return xmlrpc_method
 
 
 class XmlRpcFilterTest(helper.CPWebCase):
     def testXmlRpcFilter(self):
-
+        
         # load the appropriate xmlrpc proxy
-        if cherrypy.server.httpserver is None:        
-            proxy = ServerlessProxy(self, 'http://localhost:%s/xmlrpc/' % (self.PORT))
+        url = 'http://localhost:%s/xmlrpc/' % (self.PORT)
+        if cherrypy.server.httpserver is None:
+            proxy = ServerlessProxy(self, url)
         else:
-            proxy = xmlrpclib.ServerProxy('http://localhost:%s/xmlrpc/' % (self.PORT))
-
+            proxy = xmlrpclib.ServerProxy(url)
+        
         # begin the tests ...
-        self.assertEqual(proxy.return_single_item_list(),
-                         [42]
-                         )
-        self.assertNotEqual(proxy.return_single_item_list(),
-                         'one bazillion'
-                         )
-        self.assertEqual(proxy.return_string(),
-                         "here is a string"
-                         )
-        self.assertEqual(proxy.return_tuple(),
-                         list(('here', 'is', 1, 'tuple'))
-                         )
-        self.assertEqual(proxy.return_dict(),
-                         {'a': 1, 'c': 3, 'b': 2}
-                         )
+        self.assertEqual(proxy.return_single_item_list(), [42])
+        self.assertNotEqual(proxy.return_single_item_list(), 'one bazillion')
+        self.assertEqual(proxy.return_string(), "here is a string")
+        self.assertEqual(proxy.return_tuple(), list(('here', 'is', 1, 'tuple')))
+        self.assertEqual(proxy.return_dict(), {'a': 1, 'c': 3, 'b': 2})
         self.assertEqual(proxy.return_composite(),
-                         [{'a': 1, 'z': 26}, 'hi', ['welcome', 'friend']]
-                         )
-        self.assertEqual(proxy.return_int(),
-                         42
-                         )
-        self.assertEqual(proxy.return_float(),
-                               3.14
-                        )
+                         [{'a': 1, 'z': 26}, 'hi', ['welcome', 'friend']])
+        self.assertEqual(proxy.return_int(), 42)
+        self.assertEqual(proxy.return_float(), 3.14)
         self.assertEqual(proxy.return_datetime(),
-                         xmlrpclib.DateTime((2003, 10, 7, 8, 1, 0, 1, 280, -1))
-                         )
-        self.assertEqual(proxy.return_boolean(),
-                         True
-                         )
-        self.assertEqual(proxy.test_argument_passing(22), 
-                        22 * 2
-                        )
+                         xmlrpclib.DateTime((2003, 10, 7, 8, 1, 0, 1, 280, -1)))
+        self.assertEqual(proxy.return_boolean(), True)
+        self.assertEqual(proxy.test_argument_passing(22), 22 * 2)
+        
+        # Test an error in the page handler (should raise an xmlrpclib.Fault)
+        ignore = helper.webtest.ignored_exceptions
+        ignore.append(TypeError)
+        try:
+            try:
+                proxy.test_argument_passing({})
+            except Exception, x:
+                self.assertEqual(x.__class__, xmlrpclib.Fault)
+                self.assertEqual(x.faultString, ("unsupported operand type(s) "
+                                                 "for *: 'dict' and 'int'"))
+            else:
+                self.fail("Expected xmlrpclib.Fault")
+        finally:
+            ignore.pop()
 
 
 if __name__ == '__main__':
     from cherrypy import _cpwsgi
     serverClass = _cpwsgi.WSGIServer
     helper.testmain(serverClass)
-    
+
