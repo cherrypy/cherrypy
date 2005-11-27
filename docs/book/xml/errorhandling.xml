@@ -1,74 +1,116 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<section xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xml:id="globaloverviewcherrypy">
-    <title>Exceptions and Error Handling</title>
-    <para>As you read this section, refer to the following diagram to understand the flow of
-    execution:</para>
-    <figure>
-        <mediaobject>
-            <imageobject>
-                <imagedata fileref="errors.gif" />
-            </imageobject>
-        </mediaobject>
-    </figure>
-    <section>
-        <title>Unanticipated exceptions</title>
-        <para>When an unhandled exception is raised inside CherryPy, three actions occur (in
-        order):</para>
-        <itemizedlist>
-            <listitem>
-                <para><code>beforeErrorResponse</code> filter methods are called</para>
-            </listitem>
-            <listitem>
-                <para>a <code>_cpOnError</code> method is called</para>
-            </listitem>
-            <listitem>
-                <para><code>response.finalize</code> is called</para>
-            </listitem>
-            <listitem>
-                <para><code>afterErrorResponse</code> filter methods are called</para>
-            </listitem>
-        </itemizedlist>
-        <para>The error response filter methods are defined by each filter; they cannot prevent the
-        call to <code>_cpOnError</code> (unless <code>beforeErrorResponse</code> raises an exception,
-        including HTTPRedirect).</para>
-        <para>The <code>_cpOnError</code> function is a CherryPy "special attribute"; that is, you
-        can define your own <code>_cpOnError</code> method for any branch in your
-        <code>cherrypy.root</code> object tree, and it will be invoked for all child handlers. For
-        example:</para>
-        <example>
-            <title>A custom <code>_cpOnError</code> method</title>
-            <programlisting>import cherrypy
+<?xml version='1.0'?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5b1//EN" "http://www.oasis-open.org/docbook/xml/4.5b1/docbookx.dtd">
+<section xml:id="globaloverviewcherrypy" xmlns:db="http://docbook.org/docbook-ng" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+  <title>Exceptions and Error Handling</title>
+
+  <para>As you read this section, refer to the following diagram to 
+  understand the flow of execution:</para>
+
+  <figure><title>Error flow execution</title><mediaobject><imageobject>
+  <imagedata fileref="errors.gif"/></imageobject></mediaobject></figure>
+
+  <section>
+
+    <title>Unanticipated exceptions</title>
+
+    <para>When an unhandled exception is raised inside CherryPy, three 
+    actions occur (in order):</para>
+
+    <itemizedlist>
+
+      <listitem>
+
+        <para><code>beforeErrorResponse</code> filter methods are 
+        called</para>
+
+      </listitem>
+
+      <listitem>
+
+        <para>a <code>_cpOnError</code> method is called</para>
+
+      </listitem>
+
+      <listitem>
+
+        <para><code>response.finalize</code> is called</para>
+
+      </listitem>
+
+      <listitem>
+
+        <para><code>afterErrorResponse</code> filter methods are 
+        called</para>
+
+      </listitem>
+
+    </itemizedlist>
+
+    <para>The error response filter methods are defined by each filter; 
+    they cannot prevent the call to <code>_cpOnError</code> (unless 
+    <code>beforeErrorResponse</code> raises an exception, including 
+    HTTPRedirect).</para>
+
+    <para>The <code>_cpOnError</code> function is a CherryPy 
+    &quot;special attribute&quot;; that is, you can define your own 
+    <code>_cpOnError</code> method for any branch in your 
+    <code>cherrypy.root</code> object tree, and it will be invoked for 
+    all child handlers. For example:</para>
+
+    <example>
+
+      <title>A custom <code>_cpOnError</code> method</title>
+
+      <programlisting>import cherrypy
 
 class Root:
     
     def _cpOnError(self):
-        cherrypy.response.body = ("We apologise for the fault in the website. "
-                                  "Those responsible have been sacked.")
+        cherrypy.response.body = (&quot;We apologise for the fault in the website. &quot;
+                                  &quot;Those responsible have been sacked.&quot;)
     
     def index(self):
-        return "A m" + 00 + "se once bit my sister..."
+        return &quot;A m&quot; + 00 + &quot;se once bit my sister...&quot;
     index.exposed = True</programlisting>
-        </example>
-        <para>The default <code>_cpOnError</code> function simply responds as if an HTTPError 500 had
-        been raised (see the next section).</para>
-        <para>If an HTTPRedirect is raised during the error-handling process, it will be handled
-        appropriately. If any other kind of error occurs during the handling of an initial error,
-        then CherryPy punts, returning a bare-bones, <code>text/plain</code> error response
-        (containing both tracebacks if <code>server.showTracebacks</code> is True).</para>
-    </section>
-    <section>
-        <title>HTTPError</title>
-        <para>HTTPError exceptions do not result in calls to <code>_cpOnError</code>. Instead, they
-        have their own <code>_cpOnHTTPError</code> function. Like <code>_cpOnError</code>, this is a
-        "special attribute" and can be overridden by cherrypy.root objects. The default
-        <code>_cpOnHTTPError</code> handler sets the HTTP response to a pretty HTML error
-        page.</para>
-    </section>
-    <section>
-        <title>HTTPRedirect</title>
-        <para>HTTPRedirect exceptions are not errors; therefore, there is no way to override their
-        behavior. They set the response to an appropriate status, header set, and body, according to
-        the HTTP spec.</para>
-    </section>
+    </example>
+
+    <para>The default <code>_cpOnError</code> function simply responds 
+    as if an HTTPError 500 had been raised (see the next 
+    section).</para>
+
+    <para>If an HTTPRedirect is raised during the error-handling 
+    process, it will be handled appropriately. If any other kind of 
+    error occurs during the handling of an initial error, then CherryPy 
+    punts, returning a bare-bones, <code>text/plain</code> error 
+    response (containing both tracebacks if 
+    <code>server.showTracebacks</code> is True).</para>
+
+  </section>
+
+  <section>
+
+    <title>HTTPError</title>
+
+    <para>HTTPError exceptions do not result in calls to 
+    <code>_cpOnError</code>. Instead, they have their own 
+    <code>_cpOnHTTPError</code> function. Like <code>_cpOnError</code>, 
+    this is a &quot;special attribute&quot; and can be overridden by 
+    cherrypy.root objects. The default <code>_cpOnHTTPError</code> 
+    handler sets the HTTP response to a pretty HTML error page.</para>
+
+  </section>
+
+  <section>
+
+    <title>HTTPRedirect</title>
+
+    <para>HTTPRedirect exceptions are not errors; therefore, there is 
+    no way to override their behavior. They set the response to an 
+    appropriate status, header set, and body, according to the HTTP 
+    spec.</para>
+
+  </section>
+
 </section>
+

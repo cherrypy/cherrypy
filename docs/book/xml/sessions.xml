@@ -19,6 +19,7 @@
     <para>Here is sample code showing how to implement a simple counter using
     sessions:</para>
     <example>
+            <tile>Basic example of session usage</tile>
       <programlisting>
             import cherrypy
             class Root:
