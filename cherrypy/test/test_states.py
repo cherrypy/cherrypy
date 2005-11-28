@@ -183,9 +183,9 @@ def run(server, conf):
         cherrypy.server.stop()
 
 
-if __name__ == "__main__":
-    conf = {'server.socketHost': '127.0.0.1',
-            'server.socketPort': 8000,
+def run_all(host, port):
+    conf = {'server.socketHost': host,
+            'server.socketPort': port,
             'server.threadPool': 10,
             'server.logToScreen': False,
             'server.logConfigOptions': False,
@@ -194,10 +194,52 @@ if __name__ == "__main__":
             }
     def _run(server):
         print
-        print "Testing %s..." % (server or "serverless")
+        print "Testing %s on %s:%s..." % (server or "serverless", host, port)
         run(server, conf)
     _run(None)
     _run("cherrypy._cpwsgi.WSGIServer")
     _run("cherrypy._cphttpserver.PooledThreadServer")
     conf['server.threadPool'] = 1
     _run("cherrypy._cphttpserver.CherryHTTPServer")
+
+
+def run_localhosts(port):
+    for host in ("", "127.0.0.1", "localhost"):
+        conf = {'server.socketHost': host,
+                'server.socketPort': port,
+                'server.threadPool': 10,
+                'server.logToScreen': False,
+                'server.logConfigOptions': False,
+                'server.environment': "production",
+                'server.showTracebacks': True,
+                }
+        def _run(server):
+            print
+            print "Testing %s on %s:%s..." % (server or "serverless", host, port)
+            run(server, conf)
+        _run("cherrypy._cpwsgi.WSGIServer")
+        _run("cherrypy._cphttpserver.PooledThreadServer")
+        conf['server.threadPool'] = 1
+        _run("cherrypy._cphttpserver.CherryHTTPServer")
+
+
+if __name__ == "__main__":
+    import sys
+    host = '127.0.0.1'
+    port = 8000
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+        if cmd in [prefix + atom for atom in ("?", "h", "help")
+                   for prefix in ("", "-", "--", "\\")]:
+            print
+            print "test_states.py -?             -> this help page"
+            print "test_states.py [host] [port]  -> run the tests on the given host/port"
+            print "test_states.py -localhosts [port]  -> try various localhost strings"
+            sys.exit(0)
+        if len(sys.argv) > 2:
+            port = int(sys.argv[2])
+        if cmd == "-localhosts":
+            run_hosts(port)
+            sys.exit(0)
+        host = sys.argv[1].strip("\"'")
+    run_all(host, port)
