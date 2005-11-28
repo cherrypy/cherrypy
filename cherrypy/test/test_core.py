@@ -327,6 +327,13 @@ class CPFilterList(Test):
     
     def index(self):
         return "A good piece of cherry pie"
+    
+    def err(self):
+        raise ValueError()
+    
+    def errinstream(self):
+        raise ValueError()
+        yield "confidential"
 
 
 logFile = os.path.join(localDir, "error.log")
@@ -363,6 +370,9 @@ cherrypy.config.update({
     '/error/log_unhandled': {
         'server.logTracebacks': False,
         'server.logUnhandledTracebacks': True,
+    },
+    '/cpfilterlist/errinstream': {
+        'streamResponse': True,
     },
 })
 
@@ -574,6 +584,31 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody("A horrorshow lomtick of cherry pie")
         # If this fails, then onEndRequest isn't being called at all.
         self.assertEqual(_nf.ended, True)
+        
+        ignore = helper.webtest.ignored_exceptions
+        ignore.append(ValueError)
+        try:
+            valerr = '\n    raise ValueError()\nValueError'
+            self.getPage("/cpfilterlist/err")
+            # If body is "razdrez", then onEndRequest is being called too early.
+            self.assertErrorPage(500, pattern=valerr)
+            # If this fails, then onEndRequest isn't being called at all.
+            self.assertEqual(_nf.ended, True)
+            
+            # If body is "razdrez", then onEndRequest is being called too early.
+            if cherrypy.server.httpserver is None:
+                self.assertRaises(ValueError, self.getPage,
+                                  "/cpfilterlist/errinstream")
+            else:
+                self.getPage("/cpfilterlist/errinstream")
+                # Because this error is raised after the response body has
+                # started, the status should not change to an error status.
+                self.assertStatus("200 OK")
+                self.assertBody("Unrecoverable error in the server.")
+            # If this fails, then onEndRequest isn't being called at all.
+            self.assertEqual(_nf.ended, True)
+        finally:
+            ignore.pop()
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",

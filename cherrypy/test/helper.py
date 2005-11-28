@@ -88,13 +88,16 @@ class CPWebCase(webtest.WebCase):
             for chunk in response.body:
                 self.body.append(chunk)
             request.close()
-        except:
+        except Exception, ex:
             if cherrypy.config.get("streamResponse", False):
+                try:
+                    request.close()
+                except:
+                    cherrypy.log(cherrypy._cputil.formatExc())
                 # Pass the error through
-                raise
+                raise ex
             
-            from cherrypy import _cputil
-            s, h, b = _cputil.bareError()
+            s, h, b = cherrypy._cputil.bareError()
             # Don't reset status or headers; we're emulating an error which
             # occurs after status and headers have been written to the client.
             for chunk in b:
@@ -135,10 +138,8 @@ class CPWebCase(webtest.WebCase):
             within the exception embedded in the error page.
         """
         
-        from cherrypy._cputil import getErrorPage
-        
         # This will never contain a traceback:
-        page = getErrorPage(status, message=message)
+        page = cherrypy._cputil.getErrorPage(status, message=message)
         
         # First, test the response body without checking the traceback.
         # Stick a match-all group (.*) in to grab the traceback.

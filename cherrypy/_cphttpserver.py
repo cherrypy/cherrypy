@@ -74,48 +74,78 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
         if not self.parse_request(): # An error code has been sent, just exit
             return
         
-        request = cherrypy.server.request(self.client_address,
-                                          self.address_string(), "http")
-        request.multithread = cherrypy.config.get("server.threadPool") > 1
-        request.multiprocess = False
-        response = request.run(self.raw_requestline, self._headerlist(),
-                               self.rfile)
-        
-        wfile = self.wfile
-        wfile.write("%s %s\r\n" % (self.protocol_version, response.status))
-        
-        has_close_conn = False
-        for name, value in response.headers:
-            wfile.write("%s: %s\r\n" % (name, value))
-            if name.lower == 'connection' and value.lower == 'close':
-                has_close_conn = True
-        if not has_close_conn:
-            # This server doesn't support persistent connections yet, so we
-            # must add a "Connection: close" header to tell the client that
-            # we will close the connection when we're done sending output.
-            # 
-            # From RFC 2616 sec 14.10:
-            # HTTP/1.1 defines the "close" connection option for the sender
-            # to signal that the connection will be closed after completion
-            # of the response. For example,
-            # 
-            #    Connection: close
-            # 
-            # in either the request or the response header fields indicates
-            # that the connection SHOULD NOT be considered `persistent'
-            # (section 8.1) after the current request/response is complete.
-            # 
-            # HTTP/1.1 applications that do not support persistent connections
-            # MUST include the "close" connection option in every message.
-            wfile.write("Connection: close\r\n")
-        
-        wfile.write("\r\n")
+        request = None
         try:
-            for chunk in response.body:
-                wfile.write(chunk)
-            request.close()
+            request = cherrypy.server.request(self.client_address,
+                                              self.address_string(), "http")
+            request.multithread = cherrypy.config.get("server.threadPool") > 1
+            request.multiprocess = False
+            response = request.run(self.raw_requestline, self._headerlist(),
+                                   self.rfile)
+            s, h, b = response.status, response.headers, response.body
+            exc = None
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
+            tb = _cputil.formatExc()
+            cherrypy.log(tb)
+            if not cherrypy.config.get("server.showTracebacks", False):
+                tb = ""
+            s, h, b = _cputil.bareError(tb)
+        
+        try:
+            wfile = self.wfile
+            wfile.write("%s %s\r\n" % (self.protocol_version, s))
+            
+            has_close_conn = False
+            for name, value in h:
+                wfile.write("%s: %s\r\n" % (name, value))
+                if name.lower == 'connection' and value.lower == 'close':
+                    has_close_conn = True
+            if not has_close_conn:
+                # This server doesn't support persistent connections yet, so we
+                # must add a "Connection: close" header to tell the client that
+                # we will close the connection when we're done sending output.
+                # 
+                # From RFC 2616 sec 14.10:
+                # HTTP/1.1 defines the "close" connection option for the sender
+                # to signal that the connection will be closed after completion
+                # of the response. For example,
+                # 
+                #    Connection: close
+                # 
+                # in either the request or the response header fields indicates
+                # that the connection SHOULD NOT be considered `persistent'
+                # (section 8.1) after the current request/response is complete.
+                # 
+                # HTTP/1.1 applications that do not support persistent connections
+                # MUST include the "close" connection option in every message.
+                wfile.write("Connection: close\r\n")
+            
+            wfile.write("\r\n")
+            for chunk in b:
+                wfile.write(chunk)
+            if request:
+                request.close()
+        except (KeyboardInterrupt, SystemExit), ex:
+            try:
+                if request:
+                    request.close()
+            except:
+                cherrypy.log(_cputil.formatExc())
+            raise ex
+        except:
+            tb = _cputil.formatExc()
+            try:
+                if request:
+                    request.close()
+            except:
+                cherrypy.log(_cputil.formatExc())
+            cherrypy.log(tb)
             s, h, b = _cputil.bareError()
+            # CherryPy test suite expects bareError body to be output,
+            # so don't call start_response (which, according to PEP 333,
+            # may raise its own error at that point).
             for chunk in b:
                 wfile.write(chunk)
         
