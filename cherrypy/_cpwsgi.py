@@ -2,8 +2,8 @@
 
 import sys
 import cherrypy
-from cherrypy import _cputil
-from cherrypy._cpwsgiserver import CherryPyWSGIServer as server
+from cherrypy import _cputil, _cpwsgiserver
+from cherrypy.lib import httptools
 
 
 def requestLine(environ):
@@ -107,10 +107,47 @@ def wsgiApp(environ, start_response):
             yield str(chunk)
 
 
-
 # Server components.
 
-class WSGIServer(server):
+
+class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
+    
+    def __init__(self, socket, addr, server):
+        _cpwsgiserver.HTTPRequest.__init__(self, socket, addr, server)
+        mhs = int(cherrypy.config.get('server.maxRequestHeaderSize',
+                                      500 * 1024))
+        self.rfile = httptools.SizeCheckWrapper(self.rfile, mhs)
+    
+    def parse_request(self):
+        try:
+            _cpwsgiserver.HTTPRequest.parse_request(self)
+        except httptools.MaxSizeExceeded:
+            msg = "Request Entity Too Large"
+            proto = self.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
+            self.wfile.write("%s 413 %s\r\n" % (proto, msg))
+            self.wfile.write("Content-Length: %s\r\n\r\n" % len(msg))
+            self.wfile.write(msg)
+            self.wfile.flush()
+            self.ready = False
+            
+            tb = _cputil.formatExc()
+            cherrypy.log(tb)
+        else:
+            if self.ready:
+                # Request header is parsed
+                # We prepare the SizeCheckWrapper for the request body
+                self.rfile.bytes_read = 0
+                path = self.environ["SCRIPT_NAME"]
+                if path == "*":
+                    path = "global"
+                else:
+                    path = "/" + path
+                mbs = int(cherrypy.config.get('server.maxRequestBodySize',
+                                              100 * 1024 * 1024, path=path))
+                self.rfile.maxlen = mbs
+
+
+class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     
     """Wrapper for _cpwsgiserver.CherryPyWSGIServer.
     
@@ -120,12 +157,21 @@ class WSGIServer(server):
     
     """
     
+    RequestHandlerClass = CPHTTPRequest
+    
     def __init__(self):
         conf = cherrypy.config.get
-        server.__init__(self,
-                        (conf("server.socketHost"), conf("server.socketPort")),
-                        wsgiApp,
-                        conf("server.threadPool"),
-                        conf("server.socketHost"),
-                        config = cherrypy.config
-                        )
+        
+        sockFile = cherrypy.config.get('server.socketFile')
+        if sockFile:
+            bind_addr = sockFile
+        else:
+            bind_addr = (conf("server.socketHost"), conf("server.socketPort"))
+        
+        s = _cpwsgiserver.CherryPyWSGIServer
+        s.__init__(self, bind_addr, wsgiApp,
+                   conf("server.threadPool"),
+                   conf("server.socketHost"),
+                   request_queue_size = conf('server.socketQueueSize'),
+                   )
+

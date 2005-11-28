@@ -12,62 +12,12 @@ weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-class MaxSizeExceeded(Exception):
-    pass
-
-class SizeCheckWrapper(object):
-    """ Wrapper around the rfile object. For each data reading method,
-        it reads the data but it checks that the size of the data doesn't
-        exceed a certain limit
-    """
-    def __init__(self, rfile, maxlen):
-        self.rfile = rfile
-        self.maxlen = maxlen
-        self.bytes_read = 0
-    def _check_length(self):
-        if self.maxlen and self.bytes_read > self.maxlen:
-            raise MaxSizeExceeded()
-    def read(self, size = None):
-        data = self.rfile.read(size)
-        self.bytes_read += len(data)
-        self._check_length()
-        return data
-    def readline(self, size = None):
-        if size is not None:
-            data = self.rfile.readline(size)
-            self.bytes_read += len(data)
-            self._check_length()
-            return data
-
-        # User didn't specify a size ...
-        # We read the line in chunks to make sure it's not a 100MB line !
-        res = []
-        while True:
-            data = self.rfile.readline(256)
-            self.bytes_read += len(data)
-            self._check_length()
-            res.append(data)
-            if len(data) < 256:
-                return ''.join(res)
-    def close(self):
-        self.rfile.close()
-
-    def __iter__(self):
-        return self.rfile
-
-    def next(self):
-        data = self.rfile.next()
-        self.bytes_read += len(data)
-        self._check_length()
-##      Normally the next method must raise StopIteration when it
-##      fails but CP expects MaxSizeExceeded 
-##        try:
-##            self._check_length()
-##        except:
-##            raise StopIteration()
-        return data
 
 class HTTPRequest(object):
+    
+    stderr = sys.stderr
+    bufsize = -1
+    
     def __init__(self, socket, addr, server):
         self.socket = socket
         self.addr = addr
@@ -78,13 +28,8 @@ class HTTPRequest(object):
         self.status = ""
         self.outheaders = []
         self.outheaderkeys = []
-        self.rfile = self.socket.makefile("r", self.server.bufsize)
-        if self.server.config:
-            mhs = self.server.config.get(
-                'server.maxRequestHeaderSize',
-                500 * 1024) # 500KB by default
-            self.rfile = SizeCheckWrapper(self.rfile, mhs)
-        self.wfile = self.socket.makefile("w", self.server.bufsize)
+        self.rfile = self.socket.makefile("r", self.bufsize)
+        self.wfile = self.socket.makefile("w", self.bufsize)
         self.sent_headers = False
     
     def parse_request(self):
@@ -93,7 +38,7 @@ class HTTPRequest(object):
         self.environ["wsgi.version"] = (1,0)
         self.environ["wsgi.url_scheme"] = "http"
         self.environ["wsgi.input"] = self.rfile
-        self.environ["wsgi.errors"] = self.server.stderr
+        self.environ["wsgi.errors"] = self.stderr
         self.environ["wsgi.multithread"] = True
         self.environ["wsgi.multiprocess"] = False
         self.environ["wsgi.run_once"] = False
@@ -115,11 +60,16 @@ class HTTPRequest(object):
         self.environ["QUERY_STRING"] = qs
         self.environ["SERVER_PROTOCOL"] = version
         self.environ["SERVER_NAME"] = self.server.server_name
-        self.environ["SERVER_PORT"] = str(self.server.bind_addr[1])
-        # optional values
-        self.environ["REMOTE_HOST"] = self.addr[0]
-        self.environ["REMOTE_ADDR"] = self.addr[0]
-        self.environ["REMOTE_PORT"] = str(self.addr[1])
+        if isinstance(self.server.bind_addr, basestring):
+            # AF_UNIX. This isn't really allowed by WSGI, which doesn't
+            # address unix domain sockets. But it's better than nothing.
+            self.environ["SERVER_PORT"] = ""
+        else:
+            self.environ["SERVER_PORT"] = str(self.server.bind_addr[1])
+            # optional values
+            self.environ["REMOTE_HOST"] = self.addr[0]
+            self.environ["REMOTE_ADDR"] = self.addr[0]
+            self.environ["REMOTE_PORT"] = str(self.addr[1])
         # then all the http headers
         headers = mimetools.Message(self.rfile)
         self.environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
@@ -128,16 +78,6 @@ class HTTPRequest(object):
             envname = "HTTP_" + k.upper().replace("-","_")
             self.environ[envname] = v
         self.ready = True
-
-        # Request header is parsed
-        # We prepare the SizeCheckWrapper for the request body
-        if self.server.config:
-            mbs = self.server.config.get(
-                'server.maxRequestBodySize',
-                100 * 1024 * 1024, # 100MB by default
-                path = path)
-            self.rfile.bytes_read = 0
-            self.rfile.maxlen = mbs
     
     def start_response(self, status, headers, exc_info = None):
         if self.started_response:
@@ -223,13 +163,6 @@ class WorkerThread(threading.Thread):
                             pass
                         else:
                             raise
-                    except MaxSizeExceeded:
-                        str = "Request Entity Too Large"
-                        proto = request.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
-                        request.wfile.write("%s 413 %s\r\n" % (proto, str))
-                        request.wfile.write("Content-Length: %s\r\n\r\n" % len(str))
-                        request.wfile.write(str)
-                        request.wfile.flush()
                     except (KeyboardInterrupt, SystemExit), exc:
                         self.server.interrupt = exc
                     except:
@@ -245,10 +178,10 @@ class CherryPyWSGIServer(object):
     version = "CherryPy/2.2.0-beta"
     ready = False
     interrupt = None
+    RequestHandlerClass = HTTPRequest
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-                 stderr=sys.stderr, bufsize=-1, max=-1,
-                 config = None):
+                 max=-1, request_queue_size=5):
         '''
         be careful w/ max
         '''
@@ -256,29 +189,59 @@ class CherryPyWSGIServer(object):
         self.wsgi_app = wsgi_app
         self.bind_addr = bind_addr
         self.numthreads = numthreads or 1
-        self.config = config
-        if server_name:
-            self.server_name = server_name
-        else:
-            self.server_name = socket.gethostname()
-        self.stderr = stderr
-        self.bufsize = bufsize
+        if not server_name:
+            server_name = socket.gethostname()
+        self.server_name = server_name
+        self.request_queue_size = request_queue_size
         self._workerThreads = []
     
     def start(self):
-        '''
-        run the server forever
-        '''
+        """Run the server forever."""
         # We don't have to trap KeyboardInterrupt or SystemExit here,
         # because cherrpy.server already does so, calling self.stop() for us.
         # If you're using this server with another framework, you should
         # trap those exceptions in whatever code block calls start().
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.bind_addr)
+        
+        # Select the appropriate socket
+        if isinstance(self.bind_addr, basestring):
+            # AF_UNIX socket
+            
+            # So we can reuse the socket...
+            try: os.unlink(self.bind_addr)
+            except: pass
+            
+            # So everyone can access the socket...
+            try: os.chmod(self.bind_addr, 0777)
+            except: pass
+            
+            self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.bind(self.bind_addr)
+        else:
+            # AF_INET or AF_INET6 socket
+            # Get the correct address family for our host (allows IPv6 addresses)
+            host, port = self.bind_addr
+            for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
+                                          socket.SOCK_STREAM):
+                af, socktype, proto, canonname, sa = res
+                try:
+                    self.socket = socket.socket(af, socktype, proto)
+                    self.socket.setsockopt(socket.SOL_SOCKET,
+                                           socket.SO_REUSEADDR, 1)
+                    self.socket.bind(self.bind_addr)
+                except socket.error, msg:
+                    if self.socket:
+                        self.socket.close()
+                    self.socket = None
+                    continue
+                break
+            
+            if not self.socket:
+                raise socket.error, msg
+        
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
-        self.socket.listen(5)
+        self.socket.listen(self.request_queue_size)
         
         # Create worker threads
         for i in xrange(self.numthreads):
@@ -300,10 +263,8 @@ class CherryPyWSGIServer(object):
             s, addr = self.socket.accept()
             if hasattr(s, 'setblocking'):
                 s.setblocking(1)
-            request = HTTPRequest(s, addr, self)
+            request = self.RequestHandlerClass(s, addr, self)
             self.requests.put(request)
-            # optimized version follows
-            #self.requests.put(HTTPRequest(*self.socket.accept()))
         except socket.timeout:
             # The only reason for the timeout in start() is so we can
             # notice keyboard interrupts on Win32, which don't interrupt

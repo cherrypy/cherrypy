@@ -6,7 +6,7 @@ import sys
 import types
 
 import cherrypy
-from cherrypy import _cputil, _cpcgifs, _cpwsgiserver
+from cherrypy import _cputil, _cpcgifs
 from cherrypy.filters import applyFilters
 from cherrypy.lib import cptools, httptools
 
@@ -218,7 +218,7 @@ class Request(object):
                                           headers=lowerHeaderMap,
                                           environ=methenv,
                                           keep_blank_values=1)
-        except _cpwsgiserver.MaxSizeExceeded:
+        except httptools.MaxSizeExceeded:
             # Post data is too big
             raise cherrypy.HTTPError(413)
         

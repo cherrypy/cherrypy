@@ -409,3 +409,63 @@ class HeaderMap(dict):
         if h is None:
             return None
         return header_elements(key, h)
+
+
+class MaxSizeExceeded(Exception):
+    pass
+
+class SizeCheckWrapper(object):
+    """ Wrapper around an rfile object. For each data reading method,
+        it reads the data but it checks that the size of the data doesn't
+        exceed a certain limit
+    """
+    def __init__(self, rfile, maxlen):
+        self.rfile = rfile
+        self.maxlen = maxlen
+        self.bytes_read = 0
+    
+    def _check_length(self):
+        if self.maxlen and self.bytes_read > self.maxlen:
+            raise MaxSizeExceeded()
+    
+    def read(self, size = None):
+        data = self.rfile.read(size)
+        self.bytes_read += len(data)
+        self._check_length()
+        return data
+    
+    def readline(self, size = None):
+        if size is not None:
+            data = self.rfile.readline(size)
+            self.bytes_read += len(data)
+            self._check_length()
+            return data
+
+        # User didn't specify a size ...
+        # We read the line in chunks to make sure it's not a 100MB line !
+        res = []
+        while True:
+            data = self.rfile.readline(256)
+            self.bytes_read += len(data)
+            self._check_length()
+            res.append(data)
+            if len(data) < 256:
+                return ''.join(res)
+    
+    def close(self):
+        self.rfile.close()
+    
+    def __iter__(self):
+        return self.rfile
+    
+    def next(self):
+        data = self.rfile.next()
+        self.bytes_read += len(data)
+        self._check_length()
+##      Normally the next method must raise StopIteration when it
+##      fails but CP expects MaxSizeExceeded 
+##        try:
+##            self._check_length()
+##        except:
+##            raise StopIteration()
+        return data

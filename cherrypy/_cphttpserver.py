@@ -1,44 +1,68 @@
 """A native HTTP server for CherryPy."""
 
-import threading, os, socket, time
-import SocketServer, BaseHTTPServer, Queue
+from BaseHTTPServer import BaseHTTPRequestHandler
+import os
+import Queue
+import socket
+import SocketServer
+import threading
+import time
+
 import cherrypy
 from cherrypy import _cputil
+from cherrypy.lib import httptools
 
 
-class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    
-    """CherryPy HTTP request handler with the following commands:
-        
-        o  GET
-        o  HEAD
-        o  POST
-        o  HOTRELOAD
-        
-    """
+class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
+    """CherryPy HTTP request handler"""
     
     def address_string(self):
-        """ Try to do a reverse DNS based on [server]reverseDNS in the config file """
+        """ Try to do a reverse DNS based on server.reverseDNS in the config file """
         if cherrypy.config.get('server.reverseDNS'):
-            return BaseHTTPServer.BaseHTTPRequestHandler.address_string(self)
+            return BaseHTTPRequestHandler.address_string(self)
         else:
             return self.client_address[0]
     
     def _headerlist(self):
-        list = []
+        hlist = []
         hit = 0
         for line in self.headers.headers:
             if line:
                 if line[0] in ' \t':
                     # Continuation line. Add to previous entry.
-                    if list:
-                        list[-1][1] += " " + line.lstrip()
+                    if hlist:
+                        hlist[-1][1] += " " + line.lstrip()
                 else:
                     # New header. Add a new entry. We don't catch
                     # ValueError here because we trust rfc822.py.
                     name, value = line.split(":", 1)
-                    list.append((name.strip(), value.strip()))
-        return list
+                    hlist.append((name.strip(), value.strip()))
+        return hlist
+    
+    def parse_request(self):
+        # Extended to provide header and body length limits.
+        mhs = int(cherrypy.config.get('server.maxRequestHeaderSize',
+                                      500 * 1024))
+        self.rfile = httptools.SizeCheckWrapper(self.rfile, mhs)
+        try:
+            presult = BaseHTTPRequestHandler.parse_request(self)
+        except httptools.MaxSizeExceeded:
+            self.send_error(413, "Request Entity Too Large")
+            tb = _cputil.formatExc()
+            cherrypy.log(tb)
+            return False
+        else:
+            if presult:
+                # Request header is parsed
+                # We prepare the SizeCheckWrapper for the request body
+                self.rfile.bytes_read = 0
+                path = self.path
+                if path == "*":
+                    path = "global"
+                mbs = int(cherrypy.config.get('server.maxRequestBodySize',
+                                              100 * 1024 * 1024, path=path))
+                self.rfile.maxlen = mbs
+        return presult
     
     def handle_one_request(self):
         """Handle a single HTTP request."""
@@ -106,19 +130,24 @@ class CherryHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         cherrypy.log(format % args, "HTTP")
 
 
-class CherryHTTPServer(SocketServer.TCPServer):
-    # Subclass TCPServer (instead of BaseHTTPServer.HTTPServer), because
+class CherryHTTPServer(SocketServer.BaseServer):
+    # Subclass BaseServer (instead of BaseHTTPServer.HTTPServer), because
     # getfqdn call was timing out on localhost when calling gethostbyaddr.
     
     ready = False
     interrupt = None
-    
+    RequestHandlerClass = CherryHTTPRequestHandler
     allow_reuse_address = True
     
     def __init__(self):
+        # SocketServer __init__'s all say "do not override",
+        # but we have to in order to implement SSL and IPv6 support!
+        
         # Set protocol_version
-        proto = cherrypy.config.get('server.protocolVersion') or "HTTP/1.0"
-        CherryHTTPRequestHandler.protocol_version = proto
+        httpproto = cherrypy.config.get('server.protocolVersion') or "HTTP/1.0"
+        self.RequestHandlerClass.protocol_version = httpproto
+        
+        self.request_queue_size = cherrypy.config.get('server.socketQueueSize')
         
         # Select the appropriate server based on config options
         sockFile = cherrypy.config.get('server.socketFile')
@@ -134,20 +163,50 @@ class CherryHTTPServer(SocketServer.TCPServer):
             try: os.chmod(sockFile, 0777)
             except: pass
             
-            server_address = sockFile
+            self.server_address = sockFile
+            self.socket = socket.socket(self.address_family, self.socket_type)
+            self.server_bind()
         else:
-            # AF_INET socket
-            server_address = (cherrypy.config.get('server.socketHost'),
-                              cherrypy.config.get('server.socketPort'))
+            # AF_INET or AF_INET6 socket
+            host = cherrypy.config.get('server.socketHost')
+            port = cherrypy.config.get('server.socketPort')
+            self.server_address = (host, port)
+            
+            # Get the correct address family for our host (allows IPv6 addresses)
+            for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
+                                          socket.SOCK_STREAM):
+                af, socktype, proto, canonname, sa = res
+                self.address_family = af
+                self.socket_type = socktype
+                try:
+                    self.socket = socket.socket(af, socktype, proto)
+                    self.server_bind()
+                except socket.error, msg:
+                    if self.socket:
+                        self.socket.close()
+                    self.socket = None
+                    continue
+                break
+            
+            if not self.socket:
+                raise socket.error, msg
         
-        self.request_queue_size = cherrypy.config.get('server.socketQueueSize')
-        
-        SocketServer.TCPServer.__init__(self, server_address, CherryHTTPRequestHandler)
+        self.server_activate()
     
     def server_activate(self):
         """Override server_activate to set timeout on our listener socket"""
         self.socket.settimeout(1)
-        SocketServer.TCPServer.server_activate(self)
+        self.socket.listen(self.request_queue_size)
+    
+    def server_bind(self):
+        """Called by constructor to bind the socket."""
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
+    
+    def close_request(self, request):
+        """Called to clean up an individual request."""
+        request.close()
     
     def get_request(self):
         # With Python 2.3 it seems that an accept socket in timeout
@@ -155,9 +214,9 @@ class CherryHTTPServer(SocketServer.TCPServer):
         # in nonblocking mode. Since that doesn't play well with makefile()
         # (where wfile and rfile are set in SocketServer.py) we explicitly
         # set the request socket to blocking
-        
         request, client_address = self.socket.accept()
-        request.setblocking(1)
+        if hasattr(request, 'setblocking'):
+            request.setblocking(1)
         return request, client_address
     
     def handle_request(self):
@@ -165,41 +224,98 @@ class CherryHTTPServer(SocketServer.TCPServer):
         # Overridden to trap socket.timeout and KeyboardInterrupt/SystemExit.
         try:
             request, client_address = self.get_request()
-        except socket.error:
-            return
-        except socket.timeout:
+        except (socket.error, socket.timeout):
             # The only reason for the timeout is so we can notice keyboard
             # interrupts on Win32, which don't interrupt accept() by default
-            return 1
+            return
         
-        if self.verify_request(request, client_address):
-            try:
-                self.process_request(request, client_address)
-            except (KeyboardInterrupt, SystemExit):
-                self.close_request(request)
-                raise
-            except:
-                self.handle_error(request, client_address)
-                self.close_request(request)
+        try:
+            self.process_request(request, client_address)
+        except (KeyboardInterrupt, SystemExit):
+            self.close_request(request)
+            raise
+        except:
+            self.handle_error(request, client_address)
+            self.close_request(request)
     
     def handle_error(self, request, client_address):
-        errorBody = _cputil.formatExc()
-        cherrypy.log(errorBody)
+        cherrypy.log(_cputil.formatExc())
     
     def serve_forever(self):
         """Override serve_forever to handle shutdown."""
         self.ready = True
         while self.ready:
-            self.handle_request()
             if self.interrupt:
                 raise self.interrupt
+            self.handle_request()
+        self.server_close()
     start = serve_forever
     
-    def shutdown(self):
+    def server_close(self):
         self.ready = False
-        # Close the socket
-        self.server_close()
-    stop = shutdown
+        self.socket.close()
+    stop = shutdown = server_close
+
+
+class PooledThreadServer(CherryHTTPServer):
+    """A TCP Server using a pool of worker threads. This is superior to the
+       alternatives provided by the Python standard library, which only offer
+       (1) handling a single request at a time, (2) handling each request in
+       a separate thread (via ThreadingMixIn), or (3) handling each request in
+       a separate process (via ForkingMixIn). It's also superior in some ways
+       to the pure async approach used by Twisted because it allows a more
+       straightforward and simple programming model in the face of blocking
+       requests (i.e. you don't have to bother with Deferreds)."""
+    
+    def __init__(self):
+        self.numThreads = cherrypy.config.get('server.threadPool')
+        self.ThreadClass = ServerThread
+        self.requestQueue = Queue.Queue()
+        self.workerThreads = []
+        CherryHTTPServer.__init__(self)
+    
+    def process_request(self, request, client_address):
+        """Call finish_request."""
+        self.finish_request(request, client_address)
+        # Let the ServerThread close the request when it's finished.
+##      NO!  self.close_request(request)
+    
+    def finish_request(self, request, client_address):
+        """Finish one request by passing it to the Queue."""
+        self.requestQueue.put((request, client_address))
+    
+    def createThread(self):
+        return self.ThreadClass(self.RequestHandlerClass, self.requestQueue, self)
+    
+    def serve_forever(self):
+        """Handle one request at a time until doomsday (or shutdown is called)."""
+        if self.workerThreads == []:
+            for i in xrange(self.numThreads):
+                self.workerThreads.append(self.createThread())
+            for worker in self.workerThreads:
+                worker.start()
+        
+        for worker in self.workerThreads:
+            while not worker.ready:
+                time.sleep(.1)
+        
+        CherryHTTPServer.serve_forever(self)
+    start = serve_forever
+    
+    def server_close(self):
+        """Gracefully shutdown a server that is serve_forever()ing."""
+        CherryHTTPServer.server_close(self)
+        
+        # Must shut down threads here so the code that calls
+        # this method can know when all threads are stopped.
+        for worker in self.workerThreads:
+            self.requestQueue.put(_SHUTDOWNREQUEST)
+        current = threading.currentThread()
+        for worker in self.workerThreads:
+            if worker is not current and worker.isAlive:
+                worker.join()
+        self.workerThreads = []
+    stop = shutdown = server_close
 
 
 _SHUTDOWNREQUEST = (0,0)
@@ -210,164 +326,34 @@ class ServerThread(threading.Thread):
         self.server = server
         self.ready = False
         threading.Thread.__init__(self)
-        self._RequestHandlerClass = RequestHandlerClass
-        self._requestQueue = requestQueue
+        self.RequestHandlerClass = RequestHandlerClass
+        self.requestQueue = requestQueue
     
     def run(self):
         try:
             self.ready = True
             while 1:
-                request, client_address = self._requestQueue.get()
+                request, client_address = self.requestQueue.get()
                 if (request, client_address) == _SHUTDOWNREQUEST:
                     return
-                if self.verify_request(request, client_address):
+                try:
                     try:
-                        self.process_request(request, client_address)
+                        self.RequestHandlerClass(request, client_address, self)
                     except (KeyboardInterrupt, SystemExit):
-                        self.close_request(request)
                         raise
                     except:
-                        self.handle_error(request, client_address)
-                        self.close_request(request)
-                else:
-                    self.close_request(request)
+                        cherrypy.log(_cputil.formatExc())
+                finally:
+                    request.close()
         except (KeyboardInterrupt, SystemExit), exc:
             self.server.interrupt = exc
-    
-    def verify_request(self, request, client_address):
-        """ Verify the request.  May be overridden.
-            Return 1 if we should proceed with this request. """
-        return 1
-    
-    def process_request(self, request, client_address):
-        self._RequestHandlerClass(request, client_address, self)
-        self.close_request(request)
-    
-    def close_request(self, request):
-        """ Called to clean up an individual request. """
-        request.close()
-    
-    def handle_error(self, request, client_address):
-        """Handle an error gracefully.  May be overridden."""
-        errorBody = _cputil.formatExc()
-        cherrypy.log(errorBody)
-
-
-class PooledThreadServer(SocketServer.TCPServer):
-    """A TCP Server using a pool of worker threads. This is superior to the
-       alternatives provided by the Python standard library, which only offer
-       (1) handling a single request at a time, (2) handling each request in
-       a separate thread (via ThreadingMixIn), or (3) handling each request in
-       a separate process (via ForkingMixIn). It's also superior in some ways
-       to the pure async approach used by Twisted because it allows a more
-       straightforward and simple programming model in the face of blocking
-       requests (i.e. you don't have to bother with Deferreds)."""
-    
-    allow_reuse_address = 1
-    ready = False
-    interrupt = None
-    
-    def __init__(self):
-        # Set protocol_version
-        proto = cherrypy.config.get('server.protocolVersion') or "HTTP/1.0"
-        CherryHTTPRequestHandler.protocol_version = proto
-        
-        # Select the appropriate server based on config options
-        threadPool = cherrypy.config.get('server.threadPool')
-        server_address = (cherrypy.config.get('server.socketHost'),
-                          cherrypy.config.get('server.socketPort'))
-        self.request_queue_size = cherrypy.config.get('server.socketQueueSize')
-        
-        # I know it says "do not override",
-        # but I have to in order to implement SSL support !
-        SocketServer.BaseServer.__init__(self, server_address, CherryHTTPRequestHandler)
-        self.socket = socket.socket(self.address_family, self.socket_type)
-        self.server_bind()
-        self.server_activate()
-        
-        self._numThreads = threadPool
-        self._RequestHandlerClass = CherryHTTPRequestHandler
-        self._ThreadClass = ServerThread
-        self._requestQueue = Queue.Queue()
-        self._workerThreads = []
-    
-    def createThread(self):
-        return self._ThreadClass(self._RequestHandlerClass, self._requestQueue, self)
-    
-    def server_activate(self):
-        """Override server_activate to set timeout on our listener socket"""
-        self.socket.settimeout(1)
-        SocketServer.TCPServer.server_activate(self)
-    
-    def shutdown(self):
-        """Gracefully shutdown a server that is serve_forever()ing."""
-        self.ready = False
-        # Close the socket so restarts work.
-        self.server_close()
-        
-        # Must shut down threads here so the code that calls
-        # this method can know when all threads are stopped.
-        for worker in self._workerThreads:
-            self._requestQueue.put(_SHUTDOWNREQUEST)
-        current = threading.currentThread()
-        for worker in self._workerThreads:
-            if worker is not current and worker.isAlive:
-                worker.join()
-        self._workerThreads = []
-    stop = shutdown
-    
-    def serve_forever(self):
-        """Handle one request at a time until doomsday (or shutdown is called)."""
-        if self._workerThreads == []:
-            for i in xrange(self._numThreads):
-                self._workerThreads.append(self.createThread())
-            for worker in self._workerThreads:
-                worker.start()
-        
-        for worker in self._workerThreads:
-            while not worker.ready:
-                time.sleep(.1)
-        
-        self.ready = True
-        while self.ready:
-            if self.interrupt:
-                raise self.interrupt
-            if not self.handle_request():
-                break
-        self.server_close()
-    start = serve_forever
-    
-    def handle_request(self):
-        """Override handle_request to enqueue requests rather than handle
-           them synchronously. Return 1 by default, 0 to shutdown the
-           server."""
-        try:
-            request, client_address = self.get_request()
-        except socket.error, e:
-            return 1
-        self._requestQueue.put((request, client_address))
-        return 1
-    
-    def get_request(self):
-        # With Python 2.3 it seems that an accept socket in timeout
-        # (nonblocking) mode results in request sockets that are also set
-        # in nonblocking mode. Since that doesn't play well with makefile()
-        # (where wfile and rfile are set in SocketServer.py) we explicitly
-        # set the request socket to blocking
-        
-        request, client_address = self.socket.accept()
-        if hasattr(request,'setblocking'):
-            request.setblocking(1)
-        return request, client_address
 
 
 def embedded_server(handler=None):
     """Selects and instantiates the appropriate server."""
     
     # Select the appropriate server based on config options
-    sockFile = cherrypy.config.get('server.socketFile')
-    threadPool = cherrypy.config.get('server.threadPool')
-    if threadPool > 1 and not sockFile:
+    if cherrypy.config.get('server.threadPool', 1) > 1:
         ServerClass = PooledThreadServer
     else:
         ServerClass = CherryHTTPServer

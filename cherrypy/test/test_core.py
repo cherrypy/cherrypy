@@ -833,11 +833,11 @@ llo,
         self.assertBody("OK")
         
         httpcls = cherrypy.server.httpserverclass
-        if httpcls and httpcls.__name__ == "WSGIServer":
+        if httpcls:
             cherrypy.config.update({'server.maxRequestHeaderSize': 10})
             self.getPage("/maxrequestsize/index")
             self.assertStatus("413 Request Entity Too Large")
-            self.assertBody("Request Entity Too Large")
+            self.assertInBody("Request Entity Too Large")
             cherrypy.config.update({'server.maxRequestHeaderSize': 0})
         
         # Test upload
@@ -854,7 +854,7 @@ hello
         self.assertBody('Size: 5')
         
         httpcls = cherrypy.server.httpserverclass
-        if httpcls and httpcls.__name__ == "WSGIServer":
+        if httpcls:
             cherrypy.config.update({
                 '%s/maxrequestsize' % helper.vroot: {'server.maxRequestBodySize': 3}})
             self.getPage('/maxrequestsize/upload', h, "POST", b)
