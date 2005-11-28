@@ -229,23 +229,30 @@ class CherryPyWSGIServer(object):
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6 addresses)
             host, port = self.bind_addr
-            for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                          socket.SOCK_STREAM):
-                af, socktype, proto, canonname, sa = res
-                try:
-                    self.socket = socket.socket(af, socktype, proto)
-                    self.socket.setsockopt(socket.SOL_SOCKET,
-                                           socket.SO_REUSEADDR, 1)
-                    self.socket.bind(self.bind_addr)
-                except socket.error, msg:
-                    if self.socket:
-                        self.socket.close()
-                    self.socket = None
-                    continue
-                break
-            
-            if not self.socket:
-                raise socket.error, msg
+            try:
+                info = socket.getaddrinfo(host, port, socket.AF_UNSPEC,
+                                          socket.SOCK_STREAM)
+            except socket.gaierror:
+                # Probably a DNS issue. Assume IPv4.
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self.socket.bind(self.bind_addr)
+            else:
+                for res in info:
+                    af, socktype, proto, canonname, sa = res
+                    try:
+                        self.socket = socket.socket(af, socktype, proto)
+                        self.socket.setsockopt(socket.SOL_SOCKET,
+                                               socket.SO_REUSEADDR, 1)
+                        self.socket.bind(self.bind_addr)
+                    except socket.error, msg:
+                        if self.socket:
+                            self.socket.close()
+                        self.socket = None
+                        continue
+                    break
+                if not self.socket:
+                    raise socket.error, msg
         
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)

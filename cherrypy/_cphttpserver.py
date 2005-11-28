@@ -172,24 +172,32 @@ class CherryHTTPServer(SocketServer.BaseServer):
             port = cherrypy.config.get('server.socketPort')
             self.server_address = (host, port)
             
-            # Get the correct address family for our host (allows IPv6 addresses)
-            for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                          socket.SOCK_STREAM):
-                af, socktype, proto, canonname, sa = res
-                self.address_family = af
-                self.socket_type = socktype
-                try:
-                    self.socket = socket.socket(af, socktype, proto)
-                    self.server_bind()
-                except socket.error, msg:
-                    if self.socket:
-                        self.socket.close()
-                    self.socket = None
-                    continue
-                break
-            
-            if not self.socket:
-                raise socket.error, msg
+            try:
+                info = socket.getaddrinfo(host, port, socket.AF_UNSPEC,
+                                          socket.SOCK_STREAM)
+            except socket.gaierror:
+                # Probably a DNS issue.
+                # Must...refuse...temptation..to..guess...
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self.socket.bind(self.server_address)
+            else:
+                # Get the correct address family for our host (allows IPv6 addresses)
+                for res in info:
+                    af, socktype, proto, canonname, sa = res
+                    self.address_family = af
+                    self.socket_type = socktype
+                    try:
+                        self.socket = socket.socket(af, socktype, proto)
+                        self.server_bind()
+                    except socket.error, msg:
+                        if self.socket:
+                            self.socket.close()
+                        self.socket = None
+                        continue
+                    break
+                if not self.socket:
+                    raise socket.error, msg
         
         self.server_activate()
     
