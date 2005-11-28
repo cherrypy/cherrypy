@@ -169,10 +169,8 @@ class WorkerThread(threading.Thread):
                                 request.write(line)
                     except socket.error, e:
                         errno = e.args[0]
-                        if errno in socket_errors_to_ignore:
-                            pass
-                        else:
-                            raise
+                        if errno not in socket_errors_to_ignore:
+                            traceback.print_exc()
                     except (KeyboardInterrupt, SystemExit), exc:
                         self.server.interrupt = exc
                     except:
