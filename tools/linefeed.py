@@ -10,7 +10,8 @@ def main():
     basepath = os.path.split(scriptdir)[0]
     filelist = []
     for directory in ['/tools','/cherrypy','/cherrypy/lib/filter','/',
-                      '/cherrypy/lib','/cherrypy/test','/cherrypy/tutorial']:
+                      '/cherrypy/filters','/cherrypy/lib','/cherrypy/test',
+                      '/cherrypy/tutorial']:
         filelist.extend(glob.glob(basepath+directory+'/*.py'))
         filelist.extend(glob.glob(basepath+directory+'/*.conf'))
         filelist.extend(glob.glob(basepath+directory+'/*.txt'))

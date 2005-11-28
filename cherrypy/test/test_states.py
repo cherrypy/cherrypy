@@ -239,7 +239,7 @@ if __name__ == "__main__":
         if len(sys.argv) > 2:
             port = int(sys.argv[2])
         if cmd == "-localhosts":
-            run_hosts(port)
+            run_localhosts(port)
             sys.exit(0)
         host = sys.argv[1].strip("\"'")
     run_all(host, port)
