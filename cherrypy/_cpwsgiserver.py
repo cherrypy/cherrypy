@@ -12,6 +12,18 @@ weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+import errno
+socket_errors_to_ignore = []
+# Not all of these names will be defined for every platform.
+for _ in ("EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
+          "EHOSTDOWN", "EHOSTUNREACH",
+          "WSAECONNABORTED", "WSAECONNREFUSED", "WSAECONNRESET",
+          "WSAENETRESET", "WSAETIMEDOUT"):
+    if _ in dir(errno):
+        socket_errors_to_ignore.append(getattr(errno, _))
+# de-dupe the list
+socket_errors_to_ignore = dict.fromkeys(socket_errors_to_ignore).keys()
+
 
 class HTTPRequest(object):
     
@@ -157,9 +169,7 @@ class WorkerThread(threading.Thread):
                                 request.write(line)
                     except socket.error, e:
                         errno = e.args[0]
-                        if errno in (32, 104, 113, 10053, 10054):
-                            # Client probably closed the connection before the
-                            # response was sent.
+                        if errno in socket_errors_to_ignore:
                             pass
                         else:
                             raise
