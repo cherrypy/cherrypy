@@ -28,7 +28,6 @@ import os
 import pickle
 import random
 import sha
-import StringIO
 import time
 import threading
 import types
@@ -331,10 +330,9 @@ class PostgreSQLStorage:
         rows = self.cursor.fetchall()
         if not rows:
             return None
-        data, expirationTime = rows[0]
+        pickled_data, expirationTime = rows[0]
         # Unpickle data
-        f = StringIO.StringIO(data)
-        data = pickle.load(f)
+        data = pickle.loads(pickled_data)
         return (data, expirationTime)
     
     def save(self, id, data, expirationTime):
@@ -343,12 +341,11 @@ class PostgreSQLStorage:
             'delete from session where id=%s',
             (id,))
         # Pickle data
-        f = StringIO.StringIO()
-        pickle.dump(data, f)
+        pickled_data = pickle.dumps(data)
         # Insert new session data
         self.cursor.execute(
             'insert into session (id, data, expiration_time) values (%s, %s, %s)',
-            (id, f.getvalue(), expirationTime))
+            (id, pickled_data, expirationTime))
     
     def acquireLock(self):
         # We use the "for update" clause to lock the row
