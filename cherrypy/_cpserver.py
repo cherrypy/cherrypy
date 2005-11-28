@@ -282,19 +282,36 @@ def configure():
 
 def check_port(host, port):
     """Raise an error if the given port is not free on the given host."""
+    sockFile = cherrypy.config.get('server.socketFile')
+    if sockFile:
+        return
+    
     if not host:
         host = 'localhost'
+    port = int(port)
     
     import socket
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((host, int(port)))
-        s.close()
-        raise IOError("Port %s is in use on %s; perhaps the previous "
-                      "server did not shut down properly." %
-                      (repr(port), repr(host)))
-    except socket.error:
-        pass
+    
+    # AF_INET or AF_INET6 socket
+    # Get the correct address family for our host (allows IPv6 addresses)
+    for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
+                                  socket.SOCK_STREAM):
+        af, socktype, proto, canonname, sa = res
+        s = None
+        try:
+            s = socket.socket(af, socktype, proto)
+            # See http://groups.google.com/group/cherrypy-users/
+            #        browse_frm/thread/bbfe5eb39c904fe0
+            s.settimeout(1.0)
+            s.connect((host, port))
+            s.close()
+            raise IOError("Port %s is in use on %s; perhaps the previous "
+                          "server did not shut down properly." %
+                          (repr(port), repr(host)))
+        except socket.error, msg:
+            if s:
+                s.close()
+
 
 def wait_for_free_port(host, port):
     """Wait for the specified port to become free (drop requests)."""
