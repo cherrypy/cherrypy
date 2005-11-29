@@ -41,7 +41,7 @@ def new_func_strip_path(func_name):
 import pstats
 pstats.func_strip_path = new_func_strip_path
 
-import hotshot
+import profile
 import os, os.path
 import sys
 
@@ -65,9 +65,9 @@ class Profiler(object):
         """run(func, *args). Run func, dumping profile data into self.path."""
         self.count += 1
         path = os.path.join(self.path, "cp_%04d.prof" % self.count)
-        prof = hotshot.Profile(path)
+        prof = profile.Profile()
         prof.runcall(func, *args)
-        prof.close()
+        prof.dump_stats(path)
     
     def statfiles(self):
         """statfiles() -> list of available profiles."""
@@ -76,8 +76,7 @@ class Profiler(object):
     
     def stats(self, filename, sortby='cumulative'):
         """stats(index) -> output of print_stats() for the given profile."""
-        from hotshot.stats import load
-        s = load(os.path.join(self.path, filename))
+        s = pstats.Stats(os.path.join(self.path, filename))
         s.strip_dirs()
         s.sort_stats(sortby)
         oldout = sys.stdout
