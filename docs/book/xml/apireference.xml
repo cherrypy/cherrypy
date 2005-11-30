@@ -995,7 +995,7 @@ cherrypy.root = Root()</code></programlisting>
                     Then the filter could add that instance to the cherrypy.request.paramMap which in turns would be passed to your page handler like if it had actually been sent like that through the HTTP request. 
             Therefore your filter has turned the XML string into an XML DOM instance transparently and makes your life easier. In that case you do not want CherryPy to parse the request body.
                     It could also be used to scan the request body before it is being processed any further and decide to reject it if needed.</para>
-            <para>This hook is not called if an error occurs during the process before hand.</para
+            <para>This hook is not called if an error occurs during the process before hand.</para>
     </section>
 
     <section>
