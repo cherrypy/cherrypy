@@ -137,16 +137,17 @@ except ImportError:
 
 
 class WebCase(TestCase):
-    
     HOST = "127.0.0.1"
     PORT = 8000
+    HTTP_CONN=httplib.HTTPConnection
     
     def getPage(self, url, headers=None, method="GET", body=None):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
         
         self.url = url
-        result = openURL(url, headers, method, body, self.HOST, self.PORT)
+        result = openURL(url, headers, method, body, self.HOST, self.PORT,
+                         self.HTTP_CONN)
         self.status, self.headers, self.body = result
         
         # Build a list of request cookies from the previous response cookies.
@@ -336,7 +337,7 @@ def cleanHeaders(headers, method, body, host, port):
 
 
 def openURL(url, headers=None, method="GET", body=None,
-            host="127.0.0.1", port=8000):
+            host="127.0.0.1", port=8000, http_conn=httplib.HTTPConnection):
     """Open the given HTTP resource and return status, headers, and body."""
     
     headers = cleanHeaders(headers, method, body, host, port)
@@ -346,7 +347,7 @@ def openURL(url, headers=None, method="GET", body=None,
     trial = 0
     while trial < 10:
         try:
-            conn = httplib.HTTPConnection(host, port)
+            conn = http_conn(host, port)
             conn.putrequest(method.upper(), url)
             
             for key, value in headers:
