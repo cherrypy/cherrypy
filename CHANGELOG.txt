@@ -1,3 +1,6 @@
+2005-12-03:
+    * Huge change: switching to lowercase_with_underscore names everywhere ... CP keeps backward compatibility though (remi)
+
 2005-10-21:
     * CherryPy-2.1.0 released
     * Changed the default value for sessionFilter.locking from "implicit" to "explicit" (remi)

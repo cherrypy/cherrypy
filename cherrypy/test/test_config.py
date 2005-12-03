@@ -29,9 +29,9 @@ cherrypy.root = Root()
 cherrypy.root.foo = Foo()
 cherrypy.root.env = Env()
 cherrypy.config.update({
-    'global': {'server.logToScreen': False,
+    'global': {'server.log_to_screen': False,
                'server.environment': 'production',
-               'server.showTracebacks': True,
+               'server.show_tracebacks': True,
                },
     '/': {
         'foo': 'this',

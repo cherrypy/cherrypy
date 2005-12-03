@@ -29,10 +29,16 @@ class Server(object):
         self.interrupt = None
         
         # Set some special attributes for adding hooks
-        self.onStartServerList = []
-        self.onStartThreadList = []
-        self.onStopServerList = []
-        self.onStopThreadList = []
+        self.on_start_server_list = []
+        self.on_start_thread_list = []
+        self.on_stop_server_list = []
+        self.on_stop_thread_list = []
+
+        # Backward compatibility:
+        self.onStopServerList = self.on_stop_server_list
+        self.onStartThreadList = self.on_start_thread_list
+        self.onStartServerList = self.on_start_server_list
+        self.onStopThreadList = self.on_stop_thread_list
     
     def start(self, initOnly=False, serverClass=_missing):
         """Main function. MUST be called from the main thread.
@@ -81,13 +87,13 @@ class Server(object):
     
     def _start(self):
         # Output config options to log
-        if cherrypy.config.get("server.logConfigOptions", True):
+        if cherrypy.config.get("server.log_config_options", True):
             cherrypy.config.outputConfigMap()
         
         try:
             configure()
             
-            for func in cherrypy.server.onStartServerList:
+            for func in cherrypy.server.on_start_server_list:
                 func()
             self.start_http_server()
             self.state = STARTED
@@ -116,17 +122,17 @@ class Server(object):
         if self.httpserverclass is None:
             return
         
-        if cherrypy.config.get('server.socketPort'):
-            host = cherrypy.config.get('server.socketHost')
-            port = cherrypy.config.get('server.socketPort')
+        if cherrypy.config.get('server.socket_port'):
+            host = cherrypy.config.get('server.socket_host')
+            port = cherrypy.config.get('server.socket_port')
             
             wait_for_free_port(host, port)
             
             if not host:
                 host = 'localhost'
-            onWhat = "http://%s:%s/" % (host, port)
+            on_what = "http://%s:%s/" % (host, port)
         else:
-            onWhat = "socket file: %s" % cherrypy.config.get('server.socketFile')
+            on_what = "socket file: %s" % cherrypy.config.get('server.socket_file')
         
         # Instantiate the server.
         self.httpserver = self.httpserverclass()
@@ -145,7 +151,7 @@ class Server(object):
         if blocking:
             self.wait_for_http_ready()
         
-        cherrypy.log("Serving HTTP on %s" % onWhat, 'HTTP')
+        cherrypy.log("Serving HTTP on %s" % on_what, 'HTTP')
     
     def wait_for_http_ready(self):
         if self.httpserverclass is not None:
@@ -153,9 +159,9 @@ class Server(object):
                 time.sleep(.1)
             
             # Wait for port to be occupied
-            if cherrypy.config.get('server.socketPort'):
-                host = cherrypy.config.get('server.socketHost')
-                port = cherrypy.config.get('server.socketPort')
+            if cherrypy.config.get('server.socket_port'):
+                host = cherrypy.config.get('server.socket_host')
+                port = cherrypy.config.get('server.socket_port')
                 wait_for_occupied_port(host, port)
     
     def request(self, clientAddress, remoteHost, scheme="http"):
@@ -180,7 +186,7 @@ class Server(object):
             i = len(seen_threads) + 1
             seen_threads[threadID] = i
             
-            for func in self.onStartThreadList:
+            for func in self.on_start_thread_list:
                 func(i)
         
         r = _cphttptools.Request(clientAddress[0], clientAddress[1],
@@ -194,11 +200,11 @@ class Server(object):
         self.stop_http_server()
         
         for thread_ident, i in seen_threads.iteritems():
-            for func in self.onStopThreadList:
+            for func in self.on_stop_thread_list:
                 func(i)
         seen_threads.clear()
         
-        for func in self.onStopServerList:
+        for func in self.on_stop_server_list:
             func()
         
         self.state = STOPPED
@@ -220,7 +226,7 @@ class Server(object):
     def restart(self):
         """Restart, including any HTTP servers."""
         self.stop()
-        for func in self.onStartServerList:
+        for func in self.on_start_server_list:
             func()
         self.start_http_server()
         self.state = STARTED
@@ -262,12 +268,12 @@ def configure():
     
     # If sessions are stored in files and we
     # use threading, we need a lock on the file
-    if (conf('server.threadPool') > 1
-        and conf('session.storageType') == 'file'):
+    if (conf('server.thread_pool') > 1
+        and conf('session.storage_type') == 'file'):
         cherrypy._sessionFileLock = threading.RLock()
     
     # set cgi.maxlen which will limit the size of POST request bodies
-    cgi.maxlen = conf('server.maxRequestSize')
+    cgi.maxlen = conf('server.max_request_size')
     
     # Set up the profiler if requested.
     if conf("profiling.on", False):
@@ -282,8 +288,8 @@ def configure():
 
 def check_port(host, port):
     """Raise an error if the given port is not free on the given host."""
-    sockFile = cherrypy.config.get('server.socketFile')
-    if sockFile:
+    sock_file = cherrypy.config.get('server.socket_file')
+    if sock_file:
         return
     
     if not host:

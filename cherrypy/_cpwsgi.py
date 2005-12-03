@@ -54,7 +54,7 @@ def wsgiApp(environ, start_response):
     """The WSGI 'application object' for CherryPy."""
     
     # Trap screen output from BaseHTTPRequestHandler.log_message()
-    if not cherrypy.config.get('server.logToScreen'):
+    if not cherrypy.config.get('server.log_to_screen'):
         sys.stderr = NullWriter()
     
     request = None
@@ -72,14 +72,14 @@ def wsgiApp(environ, start_response):
         response = request.run(requestLine(environ),
                                translate_headers(environ),
                                environ['wsgi.input'])
-        s, h, b = response.status, response.headers, response.body
+        s, h, b = response.status, response.header_list, response.body
         exc = None
     except (KeyboardInterrupt, SystemExit):
         raise
     except:
         tb = _cputil.formatExc()
         cherrypy.log(tb)
-        if not cherrypy.config.get("server.showTracebacks", False):
+        if not cherrypy.config.get("server.show_tracebacks", False):
             tb = ""
         s, h, b = _cputil.bareError(tb)
         exc = sys.exc_info()
@@ -124,7 +124,7 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
     
     def __init__(self, socket, addr, server):
         _cpwsgiserver.HTTPRequest.__init__(self, socket, addr, server)
-        mhs = int(cherrypy.config.get('server.maxRequestHeaderSize',
+        mhs = int(cherrypy.config.get('server.max_request_header_size',
                                       500 * 1024))
         self.rfile = httptools.SizeCheckWrapper(self.rfile, mhs)
     
@@ -152,7 +152,7 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
                     path = "global"
                 else:
                     path = "/" + path
-                mbs = int(cherrypy.config.get('server.maxRequestBodySize',
+                mbs = int(cherrypy.config.get('server.max_request_body_size',
                                               100 * 1024 * 1024, path=path))
                 self.rfile.maxlen = mbs
 
@@ -172,16 +172,16 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     def __init__(self):
         conf = cherrypy.config.get
         
-        sockFile = cherrypy.config.get('server.socketFile')
+        sockFile = cherrypy.config.get('server.socket_file')
         if sockFile:
             bind_addr = sockFile
         else:
-            bind_addr = (conf("server.socketHost"), conf("server.socketPort"))
+            bind_addr = (conf("server.socket_host"), conf("server.socket_port"))
         
         s = _cpwsgiserver.CherryPyWSGIServer
         s.__init__(self, bind_addr, wsgiApp,
-                   conf("server.threadPool"),
-                   conf("server.socketHost"),
-                   request_queue_size = conf('server.socketQueueSize'),
+                   conf("server.thread_pool"),
+                   conf("server.socket_host"),
+                   request_queue_size = conf('server.socket_queue_size'),
                    )
 

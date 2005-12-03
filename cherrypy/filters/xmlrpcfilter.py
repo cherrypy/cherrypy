@@ -65,10 +65,10 @@
 ##        longString.exposed = True
 ##
 ##    cherrypy.root = Root()
-##    cherrypy.config.update({'xmlRpcFilter.on': True,
-##                            'socketPort': 9001,
-##                            'threadPool':0,
-##                            'socketQueueSize':10 })
+##    cherrypy.config.update({'xmlrpc_filter.on': True,
+##                            'socket_port': 9001,
+##                            'thread_pool':0,
+##                            'socket_queue_size':10 })
 ##    if __name__=='__main__':
 ##        cherrypy.server.start()
 ##
@@ -92,13 +92,13 @@ class XmlRpcFilter(BaseFilter):
     
     PLEASE NOTE:
     
-    beforeRequestBody:
+    before_request_body:
         Unmarshalls the posted data to a methodname and parameters.
         - These are stored in cherrypy.request.rpcMethod and .rpcParams
         - The method is also stored in cherrypy.request.objectPath,
           so CP2 will find the right method to call for you,
           based on the root's position.
-    beforeMain:
+    before_main:
         Marshalls cherrypy.response.body to xmlrpc.
         - Until resolved: cherrypy.response.body must be a python source string;
           this string is 'eval'ed to return the results. This will be
@@ -109,24 +109,24 @@ class XmlRpcFilter(BaseFilter):
     
     def testValidityOfRequest(self):
         # test if the content-length was sent
-        length = cherrypy.request.headerMap.get('Content-Length') or 0
-        ct = cherrypy.request.headerMap.get('Content-Type') or 'text/xml'
+        length = cherrypy.request.headers.get('Content-Length') or 0
+        ct = cherrypy.request.headers.get('Content-Type') or 'text/xml'
         return int(length) > 0 and ct.lower() in ['text/xml']
     
-    def beforeRequestBody(self):
+    def before_request_body(self):
         """ Called after the request header has been read/parsed"""
         request = cherrypy.request
         
-        request.xmlRpcFilterOn = cherrypy.config.get('xmlRpcFilter.on', False)
-        if not request.xmlRpcFilterOn:
+        request.xmlrpc_filter_on = cherrypy.config.get('xmlrpc_filter.on', False)
+        if not request.xmlrpc_filter_on:
             return
         
-        request.isRPC = self.testValidityOfRequest()
-        if not request.isRPC: 
+        request.is_rpc = self.testValidityOfRequest()
+        if not request.is_rpc: 
             return
         
         request.processRequestBody = False
-        dataLength = int(request.headerMap.get('Content-Length') or 0)
+        dataLength = int(request.headers.get('Content-Length') or 0)
         data = request.rfile.read(dataLength)
         try:
             params, method = xmlrpclib.loads(data)
@@ -146,7 +146,7 @@ class XmlRpcFilter(BaseFilter):
         request.objectPath += str(method).replace('.', '/')
         request.paramList = list(params)
     
-    def beforeMain(self):
+    def before_main(self):
         """This is a variation of main() from _cphttptools.
         
         It is redone here because:
@@ -154,8 +154,8 @@ class XmlRpcFilter(BaseFilter):
             2. we need to pass our own paramList
         """
         
-        if (not cherrypy.config.get('xmlRpcFilter.on', False)
-            or not getattr(cherrypy.request, 'isRPC', False)):
+        if (not cherrypy.config.get('xmlrpc_filter.on', False)
+            or not getattr(cherrypy.request, 'is_rpc', False)):
             return
         
         path = cherrypy.request.objectPath
@@ -169,7 +169,7 @@ class XmlRpcFilter(BaseFilter):
                 # Remove "root" from object_path and join it to get objectPath
                 self.objectPath = '/' + '/'.join(object_path[1:])
                 args = virtual_path + cherrypy.request.paramList
-                body = page_handler(*args, **cherrypy.request.paramMap)
+                body = page_handler(*args, **cherrypy.request.params)
                 break
             except cherrypy.InternalRedirect, x:
                 # Try again with the new path
@@ -178,15 +178,15 @@ class XmlRpcFilter(BaseFilter):
         # See xmlrpclib documentation
         # Python's None value cannot be used in standard XML-RPC;
         # to allow using it via an extension, provide a true value for allow_none.
-        encoding = cherrypy.config.get('xmlRpcFilter.encoding', 'utf-8')
+        encoding = cherrypy.config.get('xmlrpc_filter.encoding', 'utf-8')
         body = xmlrpclib.dumps((body,), methodresponse=1,
                                encoding=encoding, allow_none=0)
         self.respond(body)
         cherrypy.request.executeMain = False
     
-    def afterErrorResponse(self):
-        if (not cherrypy.config.get('xmlRpcFilter.on', False)
-            or not getattr(cherrypy.request, 'isRPC', False)):
+    def after_error_response(self):
+        if (not cherrypy.config.get('xmlrpc_filter.on', False)
+            or not getattr(cherrypy.request, 'is_rpc', False)):
             return
         
         # Since we got here because of an exception,
@@ -203,6 +203,6 @@ class XmlRpcFilter(BaseFilter):
         response = cherrypy.response
         response.status = '200 OK'
         response.body = body
-        response.headerMap['Content-Type'] = 'text/xml'
-        response.headerMap['Content-Length'] = len(body)
+        response.headers['Content-Type'] = 'text/xml'
+        response.headers['Content-Length'] = len(body)
 

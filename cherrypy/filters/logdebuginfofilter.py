@@ -12,36 +12,36 @@ from basefilter import BaseFilter
 class LogDebugInfoFilter(BaseFilter):
     """Filter that adds debug information to the page"""
     
-    def onStartResource(self):
+    def on_start_resource(self):
         cherrypy.request.startBuilTime = time.time()
     
-    def beforeFinalize(self):
-        if not cherrypy.config.get('logDebugInfoFilter.on', False):
+    def before_finalize(self):
+        if not cherrypy.config.get('log_debug_info_filter.on', False):
             return
         
-        mimelist = cherrypy.config.get('logDebugInfoFilter.mimeTypeList', ['text/html'])
-        ct = cherrypy.response.headerMap.get('Content-Type').split(';')[0]
+        mimelist = cherrypy.config.get('log_debug_info_filter.mime_types', ['text/html'])
+        ct = cherrypy.response.headers.get('Content-Type').split(';')[0]
         if ct in mimelist:
             body = cherrypy.response.collapse_body()
             debuginfo = '\n'
             
-            logAsComment = cherrypy.config.get('logDebugInfoFilter.logAsComment', False)
+            logAsComment = cherrypy.config.get('log_debug_info_filter.log_as_comment', False)
             if logAsComment:
                 debuginfo += '<!-- '
             else:
                 debuginfo += "<br/><br/>"
             logList = []
             
-            if cherrypy.config.get('logDebugInfoFilter.logBuildTime', True):
+            if cherrypy.config.get('log_debug_info_filter.log_build_time', True):
                 logList.append("Build time: %.03fs" % (
                     time.time() - cherrypy.request.startBuilTime))
             
-            if cherrypy.config.get('logDebugInfoFilter.logPageSize', True):
+            if cherrypy.config.get('log_debug_info_filter.log_page_size', True):
                 logList.append("Page size: %.02fKB" % (
                     len(body)/float(1024)))
             ''' 
             # this is not compatible with the session filter
-            if (cherrypy.config.get('logDebugInfoFilter.logSessionSize', True)
+            if (cherrypy.config.get('log_debug_info_filter.log_session_size', True)
                 and cherrypy.config.get('session.storageType')):
                 # Pickle session data to get its size
                 try:

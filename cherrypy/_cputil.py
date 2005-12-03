@@ -54,10 +54,10 @@ def get_object_trail(objectpath=None):
     
     return objectTrail
 
-def getSpecialAttribute(name):
+def get_special_attribute(name, alternate_name = None):
     """Return the special attribute. A special attribute is one that
     applies to all of the children from where it is defined, such as
-    _cpFilterList."""
+    _cp_filters."""
     
     # First, we look in the right-most object to see if this special
     # attribute is implemented. If not, then we try the previous object,
@@ -73,20 +73,22 @@ def getSpecialAttribute(name):
     try:
         return globals()[name]
     except KeyError:
+        if alternate_name:
+            return get_special_attribute(alternate_name)
         msg = "Special attribute %s could not be found" % repr(name)
         raise cherrypy.HTTPError(500, msg)
 
 def _cpGlobalHandler():
     """Default handler for a Request-URI of '*'."""
     response = cherrypy.response
-    response.headerMap['Content-Type'] = 'text/plain'
+    response.headers['Content-Type'] = 'text/plain'
     
     # OPTIONS is defined in HTTP 1.1 and greater
     request = cherrypy.request
     if request.method == 'OPTIONS' and request.version >= 1.1:
-        response.headerMap['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
+        response.headers['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
     else:
-        response.headerMap['Allow'] = 'HEAD, GET, POST'
+        response.headers['Allow'] = 'HEAD, GET, POST'
     return ""
 _cpGlobalHandler.exposed = True
 
@@ -96,7 +98,7 @@ def logtime():
     return '%02d/%s/%04d:%02d:%02d:%02d' % (
         now.day, month, now.year, now.hour, now.minute, now.second)
 
-def _cpLogAccess():
+def _cp_log_access():
     """ Default method for logging access """
     
     tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s'
@@ -106,13 +108,13 @@ def _cpLogAccess():
                 't': logtime(),
                 'r': cherrypy.request.requestLine,
                 's': cherrypy.response.status.split(" ", 1)[0],
-                'b': cherrypy.response.headerMap.get('Content-Length', '') or "-",
+                'b': cherrypy.response.headers.get('Content-Length', '') or "-",
                 }
     
-    if cherrypy.config.get('server.logToScreen', True):
+    if cherrypy.config.get('server.log_to_screen', True):
         print s
     
-    fname = cherrypy.config.get('server.logAccessFile', '')
+    fname = cherrypy.config.get('server.log_access_file', '')
     if fname:
         f = open(fname, 'ab')
         f.write(s + '\n')
@@ -121,7 +123,7 @@ def _cpLogAccess():
 
 _log_severity_levels = {0: "INFO", 1: "WARNING", 2: "ERROR"}
 
-def _cpLogMessage(msg, context = '', severity = 0):
+def _cp_log_message(msg, context = '', severity = 0):
     """Default method for logging messages (error log).
     
     This is not just for errors! Applications may call this at any time to
@@ -132,10 +134,10 @@ def _cpLogMessage(msg, context = '', severity = 0):
     
     s = ' '.join((logtime(), context, level, msg))
     
-    if cherrypy.config.get('server.logToScreen', True):
+    if cherrypy.config.get('server.log_to_screen', True):
         print s
     
-    fname = cherrypy.config.get('server.logFile', '')
+    fname = cherrypy.config.get('server.log_file', '')
     #logdir = os.path.dirname(fname)
     #if logdir and not os.path.exists(logdir):
     #    os.makedirs(logdir)
@@ -203,10 +205,10 @@ def getErrorPage(status, **kwargs):
             kwargs[k] = cgi.escape(kwargs[k])
     
     template = _HTTPErrorTemplate
-    errorPageFile = cherrypy.config.get('errorPage.%s' % code, '')
-    if errorPageFile:
+    error_page_file = cherrypy.config.get('error_page.%s' % code, '')
+    if error_page_file:
         try:
-            template = file(errorPageFile, 'rb').read()
+            template = file(error_page_file, 'rb').read()
         except:
             m = kwargs['message']
             if m:
@@ -218,23 +220,23 @@ def getErrorPage(status, **kwargs):
     return template % kwargs
 
 
-def _cpOnHTTPError(status, message):
-    """ Default _cpOnHTTPError method.
+def _cp_on_http_error(status, message):
+    """ Default _cp_on_http_error method.
     
     status should be an int.
     """
     tb = formatExc()
     logmsg = ""
     
-    if cherrypy.config.get('server.logTracebacks', True):
+    if cherrypy.config.get('server.log_tracebacks', True):
         logmsg = tb
-    if cherrypy.config.get('server.logRequestHeaders', True):
-        h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.headers]
+    if cherrypy.config.get('server.log_request_headers', True):
+        h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.header_list]
         logmsg += 'Request Headers:\n' + '\n'.join(h)
     if logmsg:
         cherrypy.log(logmsg, "HTTP")
     
-    if not cherrypy.config.get('server.showTracebacks', False):
+    if not cherrypy.config.get('server.show_tracebacks', False):
         tb = None
     
     response = cherrypy.response
@@ -244,8 +246,8 @@ def _cpOnHTTPError(status, message):
     for key in ["Accept-Ranges", "Age", "ETag", "Location", "Retry-After",
                 "Vary", "Content-Encoding", "Content-Length", "Expires",
                 "Content-Location", "Content-MD5", "Last-Modified"]:
-        if response.headerMap.has_key(key):
-            del response.headerMap[key]
+        if response.headers.has_key(key):
+            del response.headers[key]
     
     if status != 416:
         # A server sending a response with status code 416 (Requested
@@ -254,16 +256,16 @@ def _cpOnHTTPError(status, message):
         # specifies the current length of the selected resource.
         # A response with status code 206 (Partial Content) MUST NOT
         # include a Content-Range field with a byte-range- resp-spec of "*".
-        if response.headerMap.has_key("Content-Range"):
-            del response.headerMap["Content-Range"]
+        if response.headers.has_key("Content-Range"):
+            del response.headers["Content-Range"]
     
     # In all cases, finalize will be called after this method,
     # so don't bother cleaning up response values here.
     response.status = status
     content = getErrorPage(status, traceback=tb, message=message)
     response.body = content
-    response.headerMap['Content-Length'] = len(content)
-    response.headerMap['Content-Type'] = "text/html"
+    response.headers['Content-Length'] = len(content)
+    response.headers['Content-Type'] = "text/html"
     
     be_ie_unfriendly(status)
 
@@ -296,7 +298,17 @@ def be_ie_unfriendly(status):
             # in one chunk or it will still get replaced! Bah.
             content = content + (" " * (s - l))
         response.body = content
-        response.headerMap['Content-Length'] = len(content)
+        response.headers['Content-Length'] = len(content)
+
+def lower_to_camel(s):
+    """Turns lowercase_with_underscore into camelCase."""
+    sp = s.split('_')
+    new_sp = []
+    for i, s in enumerate(sp):
+        if i != 0:
+            s = s[0].upper() + s[1:]
+        new_sp.append(s)
+    return ''.join(new_sp)
 
 def formatExc(exc=None):
     """formatExc(exc=None) -> exc (or sys.exc_info if None), formatted."""
@@ -333,15 +345,15 @@ def bareError(extrabody=None):
              ('Content-Length', str(len(body)))],
             [body])
 
-def _cpOnError():
-    """ Default _cpOnError method """
+def _cp_on_error():
+    """ Default _cp_on_error method """
     # Allow logging of only *unexpected* HTTPError's.
-    if (not cherrypy.config.get('server.logTracebacks', True)
-        and cherrypy.config.get('server.logUnhandledTracebacks', True)):
+    if (not cherrypy.config.get('server.log_tracebacks', True)
+        and cherrypy.config.get('server.log_unhandled_tracebacks', True)):
         cherrypy.log(formatExc())
     
     cherrypy.HTTPError(500).set_response()
 
 
-_cpFilterList = []
+_cp_filters = []
 

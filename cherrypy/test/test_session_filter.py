@@ -17,11 +17,11 @@ class Root:
     
 cherrypy.root = Root()
 cherrypy.config.update({
-        'server.logToScreen': False,
+        'server.log_to_screen': False,
         'server.environment': 'production',
-        'sessionFilter.on': True,
-        'sessionFilter.storageType' : 'file',
-        'sessionFilter.storagePath' : '.',
+        'session_filter.on': True,
+        'session_filter.storage_type' : 'file',
+        'session_filter.storage_path' : '.',
 })
 
 import helper
@@ -36,7 +36,7 @@ class SessionFilterTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
         cherrypy.config.update({
-            'sessionFilter.storageType' : 'file',
+            'session_filter.storage_type' : 'file',
         })
         self.getPage('/testStr')
         self.assertBody('1')

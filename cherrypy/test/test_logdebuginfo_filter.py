@@ -15,15 +15,9 @@ class Root:
 cherrypy.root = Root()
 
 cherrypy.config.update({
-        'session.storageType': 'ram',
-        'session.timeout': 60,
-        'session.cleanUpDelay': 60,
-        'session.cookieName': 'CherryPySession',
-        'session.storageFileDir': '',
-        
-        'server.logToScreen': False,
+        'server.log_to_screen': False,
         'server.environment': 'production',
-        'logDebugInfoFilter.on': True,
+        'log_debug_info_filter.on': True,
 })
 
 
@@ -36,7 +30,7 @@ class LogDebugInfoFilterTest(helper.CPWebCase):
         self.getPage('/')
         self.assertInBody('Build time')
         self.assertInBody('Page size')
-        # not compatible with the sessionFilter
+        # not compatible with the session_filter
         #self.assertInBody('Session data size')
 
     def testBug326(self):
@@ -53,7 +47,7 @@ hello
 """
             cherrypy.config.update({
                 ('%s/bug326' % helper.vroot): {
-                    'server.maxRequestBodySize': 3,
+                    'server.max_request_body_size': 3,
                     'server.environment': 'development',
                 }
             })

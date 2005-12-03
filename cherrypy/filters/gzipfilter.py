@@ -8,8 +8,8 @@ from basefilter import BaseFilter
 class GzipFilter(BaseFilter):
     """Filter that gzips the response."""
     
-    def beforeFinalize(self):
-        if not cherrypy.config.get('gzipFilter.on', False):
+    def before_finalize(self):
+        if not cherrypy.config.get('gzip_filter.on', False):
             return
         
         response = cherrypy.response
@@ -19,18 +19,18 @@ class GzipFilter(BaseFilter):
         
         def zipit():
             # Return a generator that compresses the page
-            varies = response.headerMap.get("Vary", "")
+            varies = response.headers.get("Vary", "")
             varies = [x.strip() for x in varies.split(",") if x.strip()]
             if "Accept-Encoding" not in varies:
                 varies.append("Accept-Encoding")
-            response.headerMap['Vary'] = ", ".join(varies)
+            response.headers['Vary'] = ", ".join(varies)
             
-            response.headerMap['Content-Encoding'] = 'gzip'
-            level = cherrypy.config.get('gzipFilter.compresslevel', 9)
+            response.headers['Content-Encoding'] = 'gzip'
+            level = cherrypy.config.get('gzip_filter.compresslevel', 9)
             response.body = self.zip_body(response.body, level)
         
         from cherrypy.lib import httptools
-        acceptable = cherrypy.request.headerMap.elements('Accept-Encoding')
+        acceptable = cherrypy.request.headers.elements('Accept-Encoding')
         if acceptable is None:
             # If no Accept-Encoding field is present in a request,
             # the server MAY assume that the client will accept any
@@ -41,8 +41,8 @@ class GzipFilter(BaseFilter):
             # to the client.
             return
         
-        ct = response.headerMap.get('Content-Type').split(';')[0]
-        ct = ct in cherrypy.config.get('gzipFilter.mimeTypeList', ['text/html'])
+        ct = response.headers.get('Content-Type').split(';')[0]
+        ct = ct in cherrypy.config.get('gzip_filter.mime_types', ['text/html'])
         for coding in acceptable:
             if coding.value == 'identity' and coding.qvalue != 0:
                 return

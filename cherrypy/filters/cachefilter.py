@@ -87,15 +87,15 @@ class CacheFilter(basefilter.BaseFilter):
     If the page is not in the cache, caches the output.
     """
     
-    CacheClass = property(lambda self: cherrypy.config.get("cacheFilter.cacheClass", MemoryCache))
-    key = property(lambda self: cherrypy.config.get("cacheFilter.key", defaultCacheKey))
-    delay = property(lambda self: cherrypy.config.get("cacheFilter.delay", 600))
-    maxobjsize = property(lambda self: cherrypy.config.get("cacheFilter.maxobjsize", 100000))
-    maxsize = property(lambda self: cherrypy.config.get("cacheFilter.maxsize", 10000000))
-    maxobjects = property(lambda self: cherrypy.config.get("cacheFilter.maxobjects", 1000))
+    CacheClass = property(lambda self: cherrypy.config.get("cache_filter.cacheClass", MemoryCache))
+    key = property(lambda self: cherrypy.config.get("cache_filter.key", defaultCacheKey))
+    delay = property(lambda self: cherrypy.config.get("cache_filter.delay", 600))
+    maxobjsize = property(lambda self: cherrypy.config.get("cache_filter.maxobjsize", 100000))
+    maxsize = property(lambda self: cherrypy.config.get("cache_filter.maxsize", 10000000))
+    maxobjects = property(lambda self: cherrypy.config.get("cache_filter.maxobjects", 1000))
     
-    def beforeMain(self):
-        if not cherrypy.config.get('cacheFilter.on', False):
+    def before_main(self):
+        if not cherrypy.config.get('cache_filter.on', False):
             return
         
         if not hasattr(cherrypy, '_cache'):
@@ -107,7 +107,7 @@ class CacheFilter(basefilter.BaseFilter):
         if cacheData:
             # found a hit! check the if-modified-since request header
             expirationTime, lastModified, obj = cacheData
-            modifiedSince = cherrypy.request.headerMap.get('If-Modified-Since', None)
+            modifiedSince = cherrypy.request.headers.get('If-Modified-Since', None)
             if modifiedSince is not None and modifiedSince == lastModified:
                 cherrypy._cache.totNonModified += 1
                 cherrypy.response.status = "304 Not Modified"
@@ -118,8 +118,8 @@ class CacheFilter(basefilter.BaseFilter):
                 cherrypy.response.body = body
             raise cherrypy.RequestHandled()
     
-    def beforeFinalize(self):
-        if not (cherrypy.config.get('cacheFilter.on', False) and
+    def before_finalize(self):
+        if not (cherrypy.config.get('cache_filter.on', False) and
                 cherrypy.request.cacheable):
             return
         
@@ -131,9 +131,9 @@ class CacheFilter(basefilter.BaseFilter):
                 yield chunk
         cherrypy.response.body = tee(cherrypy.response.body)
     
-    def onEndRequest(self):
+    def on_end_request(self):
         # Close & fix the cache entry after content was fully written
-        if not (cherrypy.config.get('cacheFilter.on', False) and
+        if not (cherrypy.config.get('cache_filter.on', False) and
                 cherrypy.request.cacheable):
             return
         
@@ -142,8 +142,8 @@ class CacheFilter(basefilter.BaseFilter):
         headers = response.headers
         body = ''.join([chunk for chunk in response._cachefilter_tee])
         
-        if response.headerMap.get('Pragma', None) != 'no-cache':
-            lastModified = response.headerMap.get('Last-Modified', None)
+        if response.headers.get('Pragma', None) != 'no-cache':
+            lastModified = response.headers.get('Last-Modified', None)
             # saves the cache data
             cherrypy._cache.put(lastModified, (status, headers, body))
 
@@ -170,8 +170,8 @@ def formatSize(n):
 class CacheStats:
     
     def index(self):
-        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
-        cherrypy.response.headerMap['Pragma'] = 'no-cache'
+        cherrypy.response.headers['Content-Type'] = 'text/plain'
+        cherrypy.response.headers['Pragma'] = 'no-cache'
         cache = cherrypy._cache
         yield "Cache statistics\n"
         yield "Maximum object size: %s\n" % formatSize(cache.maxobjsize)

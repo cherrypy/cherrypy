@@ -25,28 +25,28 @@ class SessionAuthenticateFilter(BaseFilter):
     Filter allows for simple forms based authentication and access control
     """
     
-    def beforeMain(self):
-        if not cherrypy.config.get('sessionAuthenticateFilter.on', False):
+    def before_main(self):
+        if not cherrypy.config.get('session_authenticate_filter.on', False):
             return
         
         
-        checkLoginAndPassword = cherrypy.config.get('sessionAuthenticateFilter.checkLoginAndPassword', defaultCheckLoginAndPassword)
-        loginScreen = cherrypy.config.get('sessionAuthenticateFilter.loginScreen', defaultLoginScreen)
-        notLoggedIn = cherrypy.config.get('sessionAuthenticateFilter.notLoggedIn')
-        loadUserByUsername = cherrypy.config.get('sessionAuthenticateFilter.loadUserByUsername')
-        sessionKey = cherrypy.config.get('sessionAuthenticateFilter.sessionKey', 'username')
+        checkLoginAndPassword = cherrypy.config.get('session_authenticate_filter.check_login_and_password', defaultCheckLoginAndPassword)
+        loginScreen = cherrypy.config.get('session_authenticate_filter.login_screen', defaultLoginScreen)
+        notLoggedIn = cherrypy.config.get('session_authenticate_filter.not_logged_in')
+        loadUserByUsername = cherrypy.config.get('session_authenticate_filter.load_user_by_username')
+        sessionKey = cherrypy.config.get('session_authenticate_filter.session_key', 'username')
 
         if cherrypy.request.path.endswith('loginScreen'):
             return
         elif cherrypy.request.path.endswith('doLogout'):
             cherrypy.session[sessionKey] = None
             cherrypy.request.user = None
-            fromPage = cherrypy.request.paramMap.get('fromPage', '..')
+            fromPage = cherrypy.request.params.get('fromPage', '..')
             raise cherrypy.HTTPRedirect(fromPage)
         elif cherrypy.request.path.endswith('doLogin'):
-            fromPage = cherrypy.request.paramMap.get('fromPage', '..')
-            login = cherrypy.request.paramMap['login']
-            password = cherrypy.request.paramMap['password']
+            fromPage = cherrypy.request.params.get('fromPage', '..')
+            login = cherrypy.request.params['login']
+            password = cherrypy.request.params['password']
             errorMsg = checkLoginAndPassword(login, password)
             if errorMsg:
                 cherrypy.response.body = loginScreen(fromPage, login = login, errorMsg = errorMsg)

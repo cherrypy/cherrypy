@@ -16,10 +16,10 @@ class Root:
 
 cherrypy.root = Root()
 cherrypy.config.update({
-        'server.logToScreen': False,
+        'server.log_to_screen': False,
         'server.environment': 'production',
-        'encodingFilter.on': True,
-        'decodingFilter.on': True
+        'encoding_filter.on': True,
+        'decoding_filter.on': True
 })
 
 
@@ -51,7 +51,7 @@ class DecodingEncodingFilterTest(helper.CPWebCase):
                                       'iso-8859-1;q=1, utf-16;q=0.5')])
         self.assertBody(sing16)
         
-        # The "*" value should default to our defaultEncoding, utf-8
+        # The "*" value should default to our default_encoding, utf-8
         self.getPage('/mao_zedong', [('Accept-Charset', '*;q=1, utf-7;q=.2')])
         self.assertBody("\xe6\xaf\x9b\xe6\xb3\xbd\xe4\xb8\x9c: "
                         "Sing, Little Birdie?")

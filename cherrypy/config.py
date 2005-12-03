@@ -7,53 +7,54 @@ from cherrypy import _cputil
 from cherrypy.lib import autoreload, cptools
 
 
-# This configMap dict holds the settings metadata for all cherrypy objects.
+# This configs dict holds the settings metadata for all cherrypy objects.
 # Keys are URL paths, and values are dicts.
-configMap = {}
+configs = {}
+configMap = configs # Backward compatibility
 
-defaultGlobal = {
-    'server.socketPort': 8080,
-    'server.socketHost': '',
-    'server.socketFile': '',
-    'server.socketQueueSize': 5,
-    'server.protocolVersion': 'HTTP/1.0',
-    'server.logToScreen': True,
-    'server.logTracebacks': True,
-    'server.logFile': '',
-    'server.reverseDNS': False,
-    'server.threadPool': 0,
+default_global = {
+    'server.socket_port': 8080,
+    'server.socket_host': '',
+    'server.socket_file': '',
+    'server.socket_queue_size': 5,
+    'server.protocol_version': 'HTTP/1.0',
+    'server.log_to_screen': True,
+    'server.log_tracebacks': True,
+    'server.log_file': '',
+    'server.reverse_dns': False,
+    'server.thread_pool': 0,
     'server.environment': "development",
     }
 
 environments = {
     "development": {
         'autoreload.on': True,
-        'logDebugInfoFilter.on': True,
-        'server.logFileNotFound': True,
-        'server.showTracebacks': True,
-        'server.logRequestHeaders': True,
+        'log_debug_info_filter.on': True,
+        'server.log_file_not_found': True,
+        'server.show_tracebacks': True,
+        'server.log_request_headers': True,
         },
     "staging": {
         'autoreload.on': False,
-        'logDebugInfoFilter.on': False,
-        'server.logFileNotFound': False,
-        'server.showTracebacks': False,
-        'server.logRequestHeaders': False,
+        'log_debug_info_filter.on': False,
+        'server.log_file_not_found': False,
+        'server.show_tracebacks': False,
+        'server.log_request_headers': False,
         },
     "production": {
         'autoreload.on': False,
-        'logDebugInfoFilter.on': False,
-        'server.logFileNotFound': False,
-        'server.showTracebacks': False,
-        'server.logRequestHeaders': False,
+        'log_debug_info_filter.on': False,
+        'server.log_file_not_found': False,
+        'server.show_tracebacks': False,
+        'server.log_request_headers': False,
         },
     }
 
 def update(updateMap=None, file=None, overwrite=True):
-    """Update configMap from a dictionary or a config file.
+    """Update configs from a dictionary or a config file.
     
     If overwrite is False then the update will not modify values
-    already defined in the configMap.
+    already defined in the configs.
     """
     if updateMap is None:
         updateMap = {}
@@ -64,15 +65,15 @@ def update(updateMap=None, file=None, overwrite=True):
         updateMap = updateMap.copy()
         updateMap.update(dict_from_config_file(file))
     
-    # Load new conf into cherrypy.configMap
+    # Load new conf into cherrypy.configs
     for section, valueMap in updateMap.iteritems():
         # Handle shortcut syntax for "global" section
-        #   example: update({'server.socketPort': 80})
+        #   example: update({'server.socket_port': 80})
         if not isinstance(valueMap, dict):
             valueMap = {section: valueMap}
             section = 'global'
         
-        bucket = configMap.setdefault(section, {})
+        bucket = configs.setdefault(section, {})
         if overwrite:
             bucket.update(valueMap)
         else:
@@ -81,14 +82,14 @@ def update(updateMap=None, file=None, overwrite=True):
 
 def reset(useDefaults=True):
     """Clear configuration and restore defaults"""
-    configMap.clear()
+    configs.clear()
     if useDefaults:
-        update(defaultGlobal)
+        update(default_global)
 reset()
 
-def get(key, defaultValue=None, returnSection=False, path = None):
+def get(key, default_value=None, return_section=False, path = None):
     """Return the configuration value corresponding to key
-    If specified, return defaultValue on lookup failure. If returnSection is
+    If specified, return default_value on lookup failure. If return_section is
     specified, return the path to the value, instead of the value itself.
     """
     # Look, ma, no Python function calls! Uber-fast.
@@ -105,21 +106,33 @@ def get(key, defaultValue=None, returnSection=False, path = None):
             path = "/"
         
         try:
-            result = configMap[path][key]
+            result = configs[path][_cputil.lower_to_camel(key)]
             break
         except KeyError:
+            try:
+                result = configs[path][key]
+                break
+            except KeyError:
+                pass
             pass
         
         try:
             # Check for a server.environment entry at this node.
-            env = configMap[path]["server.environment"]
-            result = environments[env][key]
+            env = configs[path]["server.environment"]
+            # For backward compatibility, check for camelCase key first
+            result = environments[env][_cputil.lower_to_camel(key)]
             break
         except KeyError:
+            try:
+                env = configs[path]["server.environment"]
+                result = environments[env][key]
+                break
+            except KeyError:
+                pass
             pass
         
         if path == "global":
-            result = defaultValue
+            result = default_value
             break
         
         # Move one node up the tree and try again.
@@ -128,7 +141,7 @@ def get(key, defaultValue=None, returnSection=False, path = None):
         else:
             path = path[:path.rfind("/")]
     
-    if returnSection:
+    if return_section:
         return path
     else:
         return result
@@ -140,7 +153,7 @@ def getAll(key):
     # Needed by the session filter
     
     try:
-        results = [('global', configMap['global'][key])]
+        results = [('global', configs['global'][key])]
     except KeyError:
         results = []
     
@@ -154,7 +167,7 @@ def getAll(key):
     for n in xrange(1, len(pathList)):
         path = '/' + '/'.join(pathList[0:n+1])
         try:
-            results.append((path, configMap[path][key]))
+            results.append((path, configs[path][key]))
         except KeyError:
             pass
     
@@ -218,17 +231,17 @@ def outputConfigMap():
     
     serverVars = [
                   'server.environment',
-                  'server.logToScreen',
-                  'server.logFile',
-                  'server.logTracebacks',
-                  'server.logRequestHeaders',
-                  'server.protocolVersion',
-                  'server.socketHost',
-                  'server.socketPort',
-                  'server.socketFile',
-                  'server.reverseDNS',
-                  'server.socketQueueSize',
-                  'server.threadPool',
+                  'server.log_to_screen',
+                  'server.log_file',
+                  'server.log_tracebacks',
+                  'server.log_request_headers',
+                  'server.protocol_version',
+                  'server.socket_host',
+                  'server.socket_port',
+                  'server.socket_file',
+                  'server.reverse_dns',
+                  'server.socket_queue_size',
+                  'server.thread_pool',
                  ]
 
     for var in serverVars:

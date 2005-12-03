@@ -162,6 +162,7 @@ class WebCase(TestCase):
     console_height = 30
     
     def _handlewebError(self, msg):
+        print "******* WEB ERROR:", self.interactive
         if not self.interactive:
             raise self.failureException(msg)
         

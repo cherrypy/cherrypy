@@ -6,7 +6,7 @@
 
   <section id="cherrypy">
 
-    <title>cherrypy.threadData</title>
+    <title>cherrypy.thread_data</title>
 
     <para>This attribute holds attributes that map to this thread 
     only.</para>
@@ -54,7 +54,7 @@
 
     <section>
 
-      <title>cherrypy.request.headerMap</title>
+      <title>cherrypy.request.headers</title>
 
       <para>This attribute is a dictionary containing the received HTTP 
       headers, with automatically titled keys (e.g., 
@@ -65,11 +65,11 @@
 
     <section>
 
-      <title>cherrypy.request.headers</title>
+      <title>cherrypy.request.header_list</title>
 
       <para>This attribute is a list of (header, value) tuples 
       containing the received HTTP headers. In general, you probably 
-      want to use headerMap instead; this is only here in case you need 
+      want to use headers instead; this is only here in case you need 
       to inspect duplicates in the request headers.</para>
 
     </section>
@@ -124,7 +124,7 @@
       then request.rfile will be consumed by CherryPy (and unreadable 
       after that). If the request Content-Type is 
       &quot;application/x-www-form-urlencoded&quot;, then the rfile 
-      will be parsed and placed into request.paramMap; otherwise, it 
+      will be parsed and placed into request.params; otherwise, it 
       will be available in request.body. If 
       cherrypy.request.processRequestBody is False, then the rfile is 
       not consumed, but will be readable by the exposed method.</para>
@@ -180,7 +180,7 @@
 
     <section>
 
-      <title>cherrypy.request.paramMap</title>
+      <title>cherrypy.request.params</title>
 
       <para>This attribute is a dictionary containing the query string 
       and POST arguments of this request.</para>
@@ -193,7 +193,7 @@
 
       <para>This attribute is a string containing the root URL of the 
       server. By default, it is equal to 
-      request.scheme://request.headerMap[&apos;Host&apos;].</para>
+      request.scheme://request.headers[&apos;Host&apos;].</para>
 
     </section>
 
@@ -233,7 +233,7 @@
       <title>cherrypy.request.originalParamMap</title>
 
       <para>This attribute is a string containing the original value of 
-      cherrypy.request.paramMap, in case it is modified by a filter 
+      cherrypy.request.params, in case it is modified by a filter 
       during the request.</para>
 
     </section>
@@ -264,7 +264,7 @@
 
     <section>
 
-      <title>cherrypy.response.headerMap</title>
+      <title>cherrypy.response.headers</title>
 
       <para>This attribute is a dictionary with automatically titled 
       keys (e.g., &quot;Content-Length&quot;). It holds all outgoing 
@@ -274,13 +274,13 @@
 
     <section>
 
-      <title>cherrypy.response.headers</title>
+      <title>cherrypy.response.header_list</title>
 
       <para>This attribute is a list of (header, value) tuples. 
       It&apos;s not available until the response has been finalized; 
       it&apos;s really only there in the extremely rare cases when you 
-      need duplicate response headers. In general, you should use 
-      request.headerMap instead.</para>
+      need duplicate response header_list. In general, you should use 
+      request.headers instead.</para>
 
     </section>
 
@@ -769,8 +769,8 @@
         <title>HeaderMap</title>
 
         <para>A subclass of Python&apos;s builtin <code>dict</code> 
-        class; CherryPy&apos;s default <code>request.headerMap</code> 
-        and <code>response.headerMap</code> objects are instances of 
+        class; CherryPy&apos;s default <code>request.headers</code> 
+        and <code>response.headers</code> objects are instances of 
         this class. The keys are automatically titled 
         (<code>str(key).title()</code>) in order to provide 
         case-insensitive comparisons and avoid duplicates.</para>
@@ -964,7 +964,7 @@ cherrypy.root = Root()</code></programlisting>
 
     <section>
 
-      <title>_cpLogMessage</title>
+      <title>_cp_log_message</title>
 
       <para>Function to log errors into the error.log file. The 
       <code>cherrypy.log</code> function is syntactic sugar for this 
@@ -992,7 +992,7 @@ cherrypy.root = Root()</code></programlisting>
             <para>This hook is being called right after CherryPy has parse the HTTP request headers but before it tries to parse the request body.  If a filter which implements that hook sets cherrypy.request.processRequestBody to False, CherryPy will not parse the request body at all.
             This can be handy when you know your user agent returns the data in a form that the default CherryPy request body parsing function cannot understand. </para>
             <para>For example, assuming your user agent returns you a request body which is an XML string unquoted, you may want a filter to parse that XML string and generates an XML DOM instance. 
-                    Then the filter could add that instance to the cherrypy.request.paramMap which in turns would be passed to your page handler like if it had actually been sent like that through the HTTP request. 
+                    Then the filter could add that instance to the cherrypy.request.params which in turns would be passed to your page handler like if it had actually been sent like that through the HTTP request. 
             Therefore your filter has turned the XML string into an XML DOM instance transparently and makes your life easier. In that case you do not want CherryPy to parse the request body.
                     It could also be used to scan the request body before it is being processed any further and decide to reject it if needed.</para>
             <para>This hook is not called if an error occurs during the process before hand.</para>
@@ -1017,7 +1017,7 @@ cherrypy.root = Root()</code></programlisting>
     <section>
 
       <title>onEndResource</title>
-            <para>This hook is called at the end of the process so that you can finely tweak your HTTP response if needed (eg adding headers to the cherrypy.response.headers list. Note that cherrypy.response.headerMap will not be processed anylonger at that stage.</para>
+            <para>This hook is called at the end of the process so that you can finely tweak your HTTP response if needed (eg adding headers to the cherrypy.response.header_list). Note that cherrypy.response.headers will not be processed any longer at that stage.</para>
             <para>This hook is always called.</para>
     </section>
 

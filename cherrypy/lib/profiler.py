@@ -111,7 +111,7 @@ class Profiler(object):
     
     def report(self, filename):
         import cherrypy
-        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        cherrypy.response.headers['Content-Type'] = 'text/plain'
         return self.stats(filename)
     report.exposed = True
 
@@ -119,8 +119,8 @@ class Profiler(object):
 def serve(path=None, port=8080):
     import cherrypy
     cherrypy.root = Profiler(path)
-    cherrypy.config.update({'server.socketPort': int(port),
-                            'server.threadPool': 10,
+    cherrypy.config.update({'server.socket_port': int(port),
+                            'server.thread_pool': 10,
                             'server.environment': "production",
                             'session.storageType': "ram",
                             })

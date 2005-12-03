@@ -19,10 +19,10 @@ class TutorialTest(helper.CPWebCase):
         else:
             module = __import__(target, globals(), locals(), [''])
         
-        cherrypy.config.update({'server.socketHost': self.HOST,
-                                'server.socketPort': self.PORT,
-                                'server.threadPool': 10,
-                                'server.logToScreen': False,
+        cherrypy.config.update({'server.socket_host': self.HOST,
+                                'server.socket_port': self.PORT,
+                                'server.thread_pool': 10,
+                                'server.log_to_screen': False,
                                 'server.environment': "production",
                                 })
     
@@ -97,7 +97,7 @@ class TutorialTest(helper.CPWebCase):
                          '(<a href="./">back</a>)')
     def test07Sessions(self):
         self.load_tut_module("tut07_sessions")
-        cherrypy.config.update({"sessionFilter.on": True})
+        cherrypy.config.update({"session_filter.on": True})
         
         self.getPage('/')
         self.assertBody("\n            During your current session, you've viewed this"
@@ -156,9 +156,9 @@ hello
         self.assertInBody("""<a href="/error?code=500">""")
         self.assertInBody("""<a href="/messageArg">""")
         
-        tracebacks = cherrypy.config.get('server.showTracebacks')
+        tracebacks = cherrypy.config.get('server.show_tracebacks')
         self.getPage("/toggleTracebacks")
-        self.assertEqual(cherrypy.config.get('server.showTracebacks'), not tracebacks)
+        self.assertEqual(cherrypy.config.get('server.show_tracebacks'), not tracebacks)
         self.assertStatus("302 Found")
         
         self.getPage("/error?code=500")

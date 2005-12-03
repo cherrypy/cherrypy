@@ -33,7 +33,7 @@ class Request(object):
         if not self.closed:
             self.closed = True
             try:
-                applyFilters('onEndRequest')
+                applyFilters('on_end_request', 'onEndRequest')
             except (KeyboardInterrupt, SystemExit):
                 raise
             except:
@@ -57,7 +57,7 @@ class Request(object):
         
         """
         self.requestLine = requestLine.strip()
-        self.headers = list(headers)
+        self.header_list = list(headers)
         self.rfile = rfile
         
         if cherrypy.profiler:
@@ -69,7 +69,8 @@ class Request(object):
     def _run(self):
         
         try:
-            self.headerMap = httptools.HeaderMap()
+            self.headers = httptools.HeaderMap()
+            self.headerMap = self.headers # Backward compatibility
             self.simpleCookie = Cookie.SimpleCookie()
             
             # This has to be done very early in the request process,
@@ -78,20 +79,20 @@ class Request(object):
             self.processRequestLine()
             
             try:
-                applyFilters('onStartResource')
+                applyFilters('on_start_resource', 'onStartResource')
                 
                 try:
                     self.processHeaders()
                     
-                    applyFilters('beforeRequestBody')
+                    applyFilters('before_request_body', 'beforeRequestBody')
                     if self.processRequestBody:
                         self.processBody()
                     
-                    applyFilters('beforeMain')
+                    applyFilters('before_main', 'beforeMain')
                     if self.executeMain:
                         self.main()
                     
-                    applyFilters('beforeFinalize')
+                    applyFilters('before_finalize', 'beforeFinalize')
                     cherrypy.response.finalize()
                 except cherrypy.RequestHandled:
                     pass
@@ -100,10 +101,10 @@ class Request(object):
                     # we don't go through the regular mechanism:
                     # we return the redirect or error page immediately
                     inst.set_response()
-                    applyFilters('beforeFinalize')
+                    applyFilters('before_finalize', 'before_finalize')
                     cherrypy.response.finalize()
             finally:
-                applyFilters('onEndResource')
+                applyFilters('on_end_resource', 'onEndResource')
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -113,7 +114,7 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        _cputil.getSpecialAttribute("_cpLogAccess")()
+        _cputil.get_special_attribute("_cp_log_access", "_cpLogAccess")()
     
     def processRequestLine(self):
         rl = self.requestLine
@@ -148,7 +149,7 @@ class Request(object):
         
         # cherrypy.request.version == request.protocol in a Version instance.
         self.version = httptools.Version.from_http(self.protocol)
-        server_v = cherrypy.config.get("server.protocolVersion", "HTTP/1.0")
+        server_v = cherrypy.config.get("server.protocol_version", "HTTP/1.0")
         server_v = httptools.Version.from_http(server_v)
         
         # cherrypy.response.version should be used to determine whether or
@@ -157,15 +158,16 @@ class Request(object):
     
     def processHeaders(self):
         
-        self.paramMap = httptools.parseQueryString(self.queryString)
+        self.params = httptools.parseQueryString(self.queryString)
+        self.paramMap = self.params # Backward compatibility
         
-        # Process the headers into self.headerMap
-        for name, value in self.headers:
+        # Process the headers into self.headers
+        for name, value in self.header_list:
             value = value.strip()
             # Warning: if there is more than one header entry for cookies (AFAIK,
-            # only Konqueror does that), only the last one will remain in headerMap
+            # only Konqueror does that), only the last one will remain in headers
             # (but they will be correctly stored in request.simpleCookie).
-            self.headerMap[name] = value
+            self.headers[name] = value
             
             # Handle cookies differently because on Konqueror, multiple
             # cookies come on different lines with the same key
@@ -174,22 +176,22 @@ class Request(object):
         
         # Save original values (in case they get modified by filters)
         # This feature is deprecated in 2.2 and will be removed in 2.3.
-        self._originalParamMap = self.paramMap.copy()
+        self._original_params = self.params.copy()
         
         if self.version >= "1.1":
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
             # (Bad Request) status code to any HTTP/1.1 request message
             # which lacks a Host header field.
-            if not self.headerMap.has_key("Host"):
+            if not self.headers.has_key("Host"):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
-        self.base = "%s://%s" % (self.scheme, self.headerMap.get('Host', ''))
+        self.base = "%s://%s" % (self.scheme, self.headers.get('Host', ''))
     
-    def _get_original_param_map(self):
+    def _get_original_params(self):
         # This feature is deprecated in 2.2 and will be removed in 2.3.
-        return self._originalParamMap
-    originalParamMap = property(_get_original_param_map,
-                        doc="Deprecated. A copy of the original paramMap.")
+        return self._original_params
+    original_params = property(_get_original_params,
+                        doc="Deprecated. A copy of the original params.")
     
     def _get_browserUrl(self):
         url = self.base + self.path
@@ -200,10 +202,10 @@ class Request(object):
                           doc="The URL as entered in a browser (read-only).")
     
     def processBody(self):
-        # Create a copy of headerMap with lowercase keys because
+        # Create a copy of headers with lowercase keys because
         # FieldStorage doesn't work otherwise
         lowerHeaderMap = {}
-        for key, value in self.headerMap.items():
+        for key, value in self.headers.items():
             lowerHeaderMap[key.lower()] = value
         
         # FieldStorage only recognizes POST, so fake it.
@@ -221,7 +223,7 @@ class Request(object):
             # request body was a content-type other than form params.
             self.body = forms.file
         else:
-            self.paramMap.update(httptools.paramsFromCGIForm(forms))
+            self.params.update(httptools.paramsFromCGIForm(forms))
     
     def main(self, path=None):
         """Obtain and set cherrypy.response.body from a page handler."""
@@ -238,7 +240,7 @@ class Request(object):
                 # Remove "root" from object_path and join it to get objectPath
                 self.objectPath = '/' + '/'.join(object_path[1:])
                 try:
-                    body = page_handler(*virtual_path, **self.paramMap)
+                    body = page_handler(*virtual_path, **self.params)
                 except Exception, x:
                     x.args = x.args + (page_handler,)
                     raise
@@ -301,7 +303,7 @@ class Request(object):
             # that raises NotFound.
             icofile = os.path.join(os.path.dirname(__file__), "favicon.ico")
             cptools.serveFile(icofile)
-            applyFilters('beforeFinalize')
+            applyFilters('before_finalize', 'beforeFinalize')
             cherrypy.response.finalize()
             raise cherrypy.RequestHandled()
         else:
@@ -372,11 +374,12 @@ class Response(object):
     
     def __init__(self):
         self.status = None
-        self.headers = None
+        self.header_list = None
         self.body = None
         
-        self.headerMap = httptools.HeaderMap()
-        self.headerMap.update({
+        self.headers = httptools.HeaderMap()
+        self.headerMap = self.headers # Backward compatibility
+        self.headers.update({
             "Content-Type": "text/html",
             "Server": "CherryPy/" + cherrypy.__version__,
             "Date": httptools.HTTPDate(),
@@ -391,7 +394,7 @@ class Response(object):
         return newbody
     
     def finalize(self):
-        """Transform headerMap (and cookies) into cherrypy.response.headers."""
+        """Transform headers (and cookies) into cherrypy.response.header_list."""
         
         try:
             code, reason, _ = httptools.validStatus(self.status)
@@ -408,51 +411,51 @@ class Response(object):
         
         if stream:
             try:
-                del self.headerMap['Content-Length']
+                del self.headers['Content-Length']
             except KeyError:
                 pass
         else:
             # Responses which are not streamed should have a Content-Length,
             # but allow user code to set Content-Length if desired.
-            if self.headerMap.get('Content-Length') is None:
+            if self.headers.get('Content-Length') is None:
                 content = self.collapse_body()
-                self.headerMap['Content-Length'] = len(content)
+                self.headers['Content-Length'] = len(content)
         
         # Headers
-        headers = []
-        for key, valueList in self.headerMap.iteritems():
+        header_list = []
+        for key, valueList in self.headers.iteritems():
             order = _header_order_map.get(key, 3)
             if not isinstance(valueList, list):
                 valueList = [valueList]
             for value in valueList:
-                headers.append((order, (key, str(value))))
+                header_list.append((order, (key, str(value))))
         # RFC 2616: '... it is "good practice" to send general-header
         # fields first, followed by request-header or response-header
         # fields, and ending with the entity-header fields.'
-        headers.sort()
-        self.headers = [item[1] for item in headers]
+        header_list.sort()
+        self.header_list = [item[1] for item in header_list]
         
         cookie = self.simpleCookie.output()
         if cookie:
             lines = cookie.split("\n")
             for line in lines:
                 name, value = line.split(": ", 1)
-                self.headers.append((name, value))
+                self.header_list.append((name, value))
     
     dbltrace = "\n===First Error===\n\n%s\n\n===Second Error===\n\n%s\n\n"
     
     def handleError(self, exc):
         """Set status, headers, and body when an unanticipated error occurs."""
         try:
-            applyFilters('beforeErrorResponse')
+            applyFilters('before_error_response', 'beforeErrorResponse')
            
-            # _cpOnError will probably change self.body.
-            # It may also change the headerMap, etc.
-            _cputil.getSpecialAttribute('_cpOnError')()
+            # _cp_on_error will probably change self.body.
+            # It may also change the headers, etc.
+            _cputil.get_special_attribute('_cp_on_error', '_cpOnError')()
             
             self.finalize()
             
-            applyFilters('afterErrorResponse')
+            applyFilters('after_error_response', 'afterErrorResponse')
             return
         except cherrypy.HTTPRedirect, inst:
             try:
@@ -470,9 +473,9 @@ class Response(object):
             # Fall through to the second error handler
             pass
         
-        # Failure in _cpOnError, error filter, or finalize.
+        # Failure in _cp_on_error, error filter, or finalize.
         # Bypass them all.
-        if cherrypy.config.get('server.showTracebacks', False):
+        if cherrypy.config.get('server.show_tracebacks', False):
             body = self.dbltrace % (_cputil.formatExc(exc),
                                     _cputil.formatExc())
         else:
@@ -480,5 +483,5 @@ class Response(object):
         self.setBareError(body)
     
     def setBareError(self, body=None):
-        self.status, self.headers, self.body = _cputil.bareError(body)
+        self.status, self.header_list, self.body = _cputil.bareError(body)
 

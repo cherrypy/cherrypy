@@ -23,7 +23,7 @@ class Root:
 cherrypy.root = Root()
 cherrypy.config.update({
     'global': {
-        'server.logToScreen': False,
+        'server.log_to_screen': False,
         'server.environment': 'production',
     },
 })
@@ -68,8 +68,8 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(cherrypy.server.state, 1)
         
         if self.serverClass:
-            host = cherrypy.config.get('server.socketHost')
-            port = cherrypy.config.get('server.socketPort')
+            host = cherrypy.config.get('server.socket_host')
+            port = cherrypy.config.get('server.socket_port')
             self.assertRaises(IOError, cherrypy._cpserver.check_port, host, port)
         
         # The db_connection should be running now
@@ -88,7 +88,7 @@ class ServerStateTests(helper.CPWebCase):
         # Once the server has stopped, we should get a NotReady error again.
         self.assertRaises(cherrypy.NotReady, self.getPage, "/")
         
-        # Verify that the onStopServer function was called
+        # Verify that the on_stop_server function was called
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
     
@@ -173,10 +173,10 @@ def run(server, conf):
     try:
         global db_connection
         db_connection = Dependency()
-        cherrypy.server.onStartServerList.append(db_connection.start)
-        cherrypy.server.onStopServerList.append(db_connection.stop)
-        cherrypy.server.onStartThreadList.append(db_connection.startthread)
-        cherrypy.server.onStopThreadList.append(db_connection.stopthread)
+        cherrypy.server.on_start_server_list.append(db_connection.start)
+        cherrypy.server.on_stop_server_list.append(db_connection.stop)
+        cherrypy.server.on_start_thread_list.append(db_connection.startthread)
+        cherrypy.server.on_stop_thread_list.append(db_connection.stopthread)
         
         helper.CPTestRunner.run(suite)
     finally:
@@ -184,13 +184,13 @@ def run(server, conf):
 
 
 def run_all(host, port):
-    conf = {'server.socketHost': host,
-            'server.socketPort': port,
-            'server.threadPool': 10,
-            'server.logToScreen': False,
-            'server.logConfigOptions': False,
+    conf = {'server.socket_host': host,
+            'server.socket_port': port,
+            'server.thread_pool': 10,
+            'server.log_to_screen': False,
+            'server.log_config_options': False,
             'server.environment': "production",
-            'server.showTracebacks': True,
+            'server.show_tracebacks': True,
             }
     def _run(server):
         print
@@ -199,19 +199,19 @@ def run_all(host, port):
     _run(None)
     _run("cherrypy._cpwsgi.WSGIServer")
     _run("cherrypy._cphttpserver.PooledThreadServer")
-    conf['server.threadPool'] = 1
+    conf['server.thread_pool'] = 1
     _run("cherrypy._cphttpserver.CherryHTTPServer")
 
 
 def run_localhosts(port):
     for host in ("", "127.0.0.1", "localhost"):
-        conf = {'server.socketHost': host,
-                'server.socketPort': port,
-                'server.threadPool': 10,
-                'server.logToScreen': False,
-                'server.logConfigOptions': False,
+        conf = {'server.socket_host': host,
+                'server.socket_port': port,
+                'server.thread_pool': 10,
+                'server.log_to_screen': False,
+                'server.log_config_options': False,
                 'server.environment': "production",
-                'server.showTracebacks': True,
+                'server.show_tracebacks': True,
                 }
         def _run(server):
             print
@@ -219,7 +219,7 @@ def run_localhosts(port):
             run(server, conf)
         _run("cherrypy._cpwsgi.WSGIServer")
         _run("cherrypy._cphttpserver.PooledThreadServer")
-        conf['server.threadPool'] = 1
+        conf['server.thread_pool'] = 1
         _run("cherrypy._cphttpserver.CherryHTTPServer")
 
 

@@ -345,8 +345,8 @@ def serve(path=localFile, port=8080):
     
     import cherrypy
     cherrypy.root = CoverStats()
-    cherrypy.config.update({'server.socketPort': port,
-                            'server.threadPool': 10,
+    cherrypy.config.update({'server.socket_port': port,
+                            'server.thread_pool': 10,
                             'server.environment': "production",
                             })
     cherrypy.server.start()

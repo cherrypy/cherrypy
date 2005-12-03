@@ -20,11 +20,11 @@ class RequestHandled(Exception):
 class InternalRedirect(Exception):
     """Exception raised when processing should be handled by a different path.
     
-    If you supply 'params', it will be used to re-populate paramMap.
+    If you supply 'params', it will be used to re-populate params.
     If 'params' is a dict, it will be used directly.
     If 'params' is a string, it will be converted to a dict using cgi.parse_qs.
     
-    If you omit 'params', the paramMap from the original request will
+    If you omit 'params', the params from the original request will
     remain in effect, including any POST parameters.
     """
     
@@ -44,10 +44,10 @@ class InternalRedirect(Exception):
                 for key, val in pm.items():
                     if len(val) == 1:
                         pm[key] = val[0]
-                request.paramMap = pm
+                request.params = pm
             else:
                 request.queryString = urllib.urlencode(params)
-                request.paramMap = params.copy()
+                request.params = params.copy()
         
         Exception.__init__(self, path, params)
 
@@ -100,12 +100,12 @@ class HTTPRedirect(Exception):
         import cherrypy
         response = cherrypy.response
         response.status = status = self.status
-        response.headerMap['Content-Type'] = "text/html"
+        response.headers['Content-Type'] = "text/html"
         
         if status in (300, 301, 302, 303, 307):
             # "The ... URI SHOULD be given by the Location field
             # in the response."
-            response.headerMap['Location'] = self.urls[0]
+            response.headers['Location'] = self.urls[0]
             
             # "Unless the request method was HEAD, the entity of the response
             # SHOULD contain a short hypertext note with a hyperlink to the
@@ -128,7 +128,7 @@ class HTTPRedirect(Exception):
         elif status == 305:
             # Use Proxy.
             # self.urls[0] should be the URI of the proxy.
-            response.headerMap['Location'] = self.urls[0]
+            response.headers['Location'] = self.urls[0]
             response.body = None
         else:
             raise ValueError("The %s status code is unknown." % status)
@@ -151,7 +151,7 @@ class HTTPError(Error):
     
     def set_response(self):
         import cherrypy
-        handler = cherrypy._cputil.getSpecialAttribute("_cpOnHTTPError")
+        handler = cherrypy._cputil.get_special_attribute("_cp_on_http_error", "_cpOnHTTPError")
         handler(self.status, self.message)
 
 

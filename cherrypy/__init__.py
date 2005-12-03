@@ -47,15 +47,16 @@ class _ThreadLocalProxy:
 request = _ThreadLocalProxy('request')
 response = _ThreadLocalProxy('response')
 
-# Create threadData object as a thread-specific all-purpose storage
-threadData = local()
+# Create thread_data object as a thread-specific all-purpose storage
+thread_data = local()
+threadData = thread_data # Backward compatibility
 
 # Create variables needed for session (see lib/sessionfilter.py for more info)
 from filters import sessionfilter
 session = sessionfilter.SessionWrapper()
-_sessionDataHolder = {} # Needed for RAM sessions only
-_sessionLockDict = {} # Needed for RAM sessions only
-_sessionLastCleanUpTime = datetime.datetime.now()
+_session_data_holder = {} # Needed for RAM sessions only
+_session_lock_dict = {} # Needed for RAM sessions only
+_session_last_clean_up_time = datetime.datetime.now()
 
 def expose(func=None, alias=None):
     """Expose the function, optionally providing an alias or set of aliases."""
@@ -64,13 +65,13 @@ def expose(func=None, alias=None):
         func.exposed = True
         if alias is not None:
             if isinstance(alias, basestring):
-                parentDict[alias] = func
+                parents[alias] = func
             else:
                 for a in alias:
-                    parentDict[a] = func
+                    parents[a] = func
         return func
     
-    parentDict = sys._getframe(1).f_locals
+    parents = sys._getframe(1).f_locals
     if isinstance(func, (types.FunctionType, types.MethodType)):
         # expose is being called directly, before the method has been bound
         return expose_(func)
@@ -85,6 +86,6 @@ def log(msg, context='', severity=0):
     # Load _cputil lazily to avoid circular references, and
     # to allow profiler and coverage tools to work on it.
     import _cputil
-    logfunc = _cputil.getSpecialAttribute('_cpLogMessage')
+    logfunc = _cputil.get_special_attribute('_cp_log_message', '_cpLogMessage')
     logfunc(msg, context, severity)
 

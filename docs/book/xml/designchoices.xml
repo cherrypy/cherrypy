@@ -43,7 +43,7 @@
             are completely represented in the <code>cherrypy.request</code> and
             <code>.response</code> objects. At the lowest level, a developer should be able to
             generate any valid HTTP response message by modifying
-            <code>cherrypy.response.status</code>, <code>.headerMap</code>, and/or
+            <code>cherrypy.response.status</code>, <code>.headers</code>, and/or
             <code>.body</code>.</para>
             <section>
                 <title>How CherryPy relates to REST (REpresentational State Transfer)</title>

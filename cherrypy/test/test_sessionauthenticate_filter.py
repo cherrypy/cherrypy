@@ -11,13 +11,13 @@ class Test:
 cherrypy.root = Test()
 
 cherrypy.config.update({
-        'server.logToScreen': False,
+        'server.log_to_screen': False,
         'server.environment': 'production',
-        'sessionFilter.on': True,
+        'session_filter.on': True,
 })
 
 cherrypy.config.update({'/':
-                        {'sessionAuthenticateFilter.on':True,
+                        {'session_authenticate_filter.on':True,
                          }
                         })
 import helper
@@ -25,7 +25,7 @@ import helper
 class SessionAuthenticateFilterTest(helper.CPWebCase):
     
     def testSessionAuthenticateFilter(self):
-        protocol = cherrypy.config.get('server.protocolVersion')
+        protocol = cherrypy.config.get('server.protocol_version')
         # request a page and check for login form
         self.getPage('/')
         self.assertInBody('<form method="post" action="doLogin">')

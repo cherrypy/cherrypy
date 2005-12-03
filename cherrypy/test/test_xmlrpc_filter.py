@@ -58,13 +58,13 @@ cherrypy.root.xmlrpc = XmlRpc()
 import helper
 
 cherrypy.config.update({
-    'global': {'server.logToScreen': False,
+    'global': {'server.log_to_screen': False,
                'server.environment': 'production',
-               'server.showTracebacks': True,
-               'server.socketHost': helper.CPWebCase.HOST,
-               'server.socketPort': helper.CPWebCase.PORT,
+               'server.show_tracebacks': True,
+               'server.socket_host': helper.CPWebCase.HOST,
+               'server.socket_port': helper.CPWebCase.PORT,
                },
-    '/xmlrpc': {'xmlRpcFilter.on':True},
+    '/xmlrpc': {'xmlrpc_filter.on':True},
     })
 
 

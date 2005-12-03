@@ -10,22 +10,22 @@ class Root: pass
 cherrypy.root = Root()
 cherrypy.config.update({
     'global': {
-        'staticFilter.on': False,
-        'server.logToScreen': False,
+        'static_filter.on': False,
+        'server.log_to_screen': False,
         'server.environment': 'production',
     },
     '/static': {
-        'staticFilter.on': True,
-        'staticFilter.dir': 'static',
+        'static_filter.on': True,
+        'static_filter.dir': 'static',
     },
     '/style.css': {
-        'staticFilter.on': True,
-        'staticFilter.file': 'style.css',
+        'static_filter.on': True,
+        'static_filter.file': 'style.css',
     },
     '/docroot': {
-        'staticFilter.on': True,
-        'staticFilter.root': os.path.join(os.getcwd(), os.path.dirname(__file__)),
-        'staticFilter.dir': 'static',
+        'static_filter.on': True,
+        'static_filter.root': os.path.join(os.getcwd(), os.path.dirname(__file__)),
+        'static_filter.dir': 'static',
     },
 })
 
@@ -40,7 +40,7 @@ class StaticFilterTest(helper.CPWebCase):
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
-        # Using a staticFilter.root value...
+        # Using a static_filter.root value...
         self.getPage("/docroot/index.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')

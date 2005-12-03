@@ -17,8 +17,8 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
     """CherryPy HTTP request handler"""
     
     def address_string(self):
-        """ Try to do a reverse DNS based on server.reverseDNS in the config file """
-        if cherrypy.config.get('server.reverseDNS'):
+        """ Try to do a reverse DNS based on server.reverse_dns in the config file """
+        if cherrypy.config.get('server.reverse_dns'):
             return BaseHTTPRequestHandler.address_string(self)
         else:
             return self.client_address[0]
@@ -41,7 +41,7 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
     
     def parse_request(self):
         # Extended to provide header and body length limits.
-        mhs = int(cherrypy.config.get('server.maxRequestHeaderSize',
+        mhs = int(cherrypy.config.get('server.max_request_header_size',
                                       500 * 1024))
         self.rfile = httptools.SizeCheckWrapper(self.rfile, mhs)
         try:
@@ -59,7 +59,7 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
                 path = self.path
                 if path == "*":
                     path = "global"
-                mbs = int(cherrypy.config.get('server.maxRequestBodySize',
+                mbs = int(cherrypy.config.get('server.max_request_body_size',
                                               100 * 1024 * 1024, path=path))
                 self.rfile.maxlen = mbs
         return presult
@@ -78,7 +78,7 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
         try:
             request = cherrypy.server.request(self.client_address,
                                               self.address_string(), "http")
-            request.multithread = cherrypy.config.get("server.threadPool") > 1
+            request.multithread = cherrypy.config.get("server.thread_pool") > 1
             request.multiprocess = False
             response = request.run(self.raw_requestline, self._headerlist(),
                                    self.rfile)
@@ -89,7 +89,7 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
         except:
             tb = _cputil.formatExc()
             cherrypy.log(tb)
-            if not cherrypy.config.get("server.showTracebacks", False):
+            if not cherrypy.config.get("server.show_tracebacks", False):
                 tb = ""
             s, h, b = _cputil.bareError(tb)
         
@@ -174,13 +174,13 @@ class CherryHTTPServer(SocketServer.BaseServer):
         # but we have to in order to implement SSL and IPv6 support!
         
         # Set protocol_version
-        httpproto = cherrypy.config.get('server.protocolVersion') or "HTTP/1.0"
+        httpproto = cherrypy.config.get('server.protocol_version') or "HTTP/1.0"
         self.RequestHandlerClass.protocol_version = httpproto
         
-        self.request_queue_size = cherrypy.config.get('server.socketQueueSize')
+        self.request_queue_size = cherrypy.config.get('server.socket_queue_size')
         
         # Select the appropriate server based on config options
-        sockFile = cherrypy.config.get('server.socketFile')
+        sockFile = cherrypy.config.get('server.socket_file')
         if sockFile:
             # AF_UNIX socket
             self.address_family = socket.AF_UNIX
@@ -198,8 +198,8 @@ class CherryHTTPServer(SocketServer.BaseServer):
             self.server_bind()
         else:
             # AF_INET or AF_INET6 socket
-            host = cherrypy.config.get('server.socketHost')
-            port = cherrypy.config.get('server.socketPort')
+            host = cherrypy.config.get('server.socket_host')
+            port = cherrypy.config.get('server.socket_port')
             self.server_address = (host, port)
             
             try:
@@ -306,7 +306,7 @@ class PooledThreadServer(CherryHTTPServer):
        requests (i.e. you don't have to bother with Deferreds)."""
     
     def __init__(self):
-        self.numThreads = cherrypy.config.get('server.threadPool')
+        self.numThreads = cherrypy.config.get('server.thread_pool')
         self.ThreadClass = ServerThread
         self.requestQueue = Queue.Queue()
         self.workerThreads = []
@@ -391,7 +391,7 @@ def embedded_server(handler=None):
     """Selects and instantiates the appropriate server."""
     
     # Select the appropriate server based on config options
-    if cherrypy.config.get('server.threadPool', 1) > 1:
+    if cherrypy.config.get('server.thread_pool', 1) > 1:
         ServerClass = PooledThreadServer
     else:
         ServerClass = CherryHTTPServer

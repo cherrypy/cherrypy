@@ -35,7 +35,7 @@ class EncodingFilter(BaseFilter):
         
         failmsg = "The response could not be encoded with %s"
         
-        enc = conf('encodingFilter.encoding', None)
+        enc = conf('encoding_filter.encoding', None)
         if enc is not None:
             # If specified, force this encoding to be used, or fail.
             if encode_body(enc):
@@ -45,9 +45,9 @@ class EncodingFilter(BaseFilter):
         
         # Parse the Accept_Charset request header, and try to provide one
         # of the requested charsets (in order of user preference).
-        default_enc = conf('encodingFilter.defaultEncoding', 'utf-8')
+        default_enc = conf('encoding_filter.default_encoding', 'utf-8')
         
-        encs = cherrypy.request.headerMap.elements('Accept-Charset')
+        encs = cherrypy.request.headers.elements('Accept-Charset')
         if encs is None:
             # Any character-set is acceptable.
             if encode_body(default_enc):
@@ -80,16 +80,16 @@ class EncodingFilter(BaseFilter):
         # No suitable encoding found.
         raise cherrypy.HTTPError(406)
     
-    def beforeFinalize(self):
+    def before_finalize(self):
         conf = cherrypy.config.get
-        if not conf('encodingFilter.on', False):
+        if not conf('encoding_filter.on', False):
             return
         
-        ct = cherrypy.response.headerMap.elements("Content-Type")
+        ct = cherrypy.response.headers.elements("Content-Type")
         if ct is not None:
             ct = ct[0]
             if ct.value.lower().startswith("text/"):
                 # Set "charset=..." param on response Content-Type header
                 ct.params['charset'] = self.find_acceptable_charset()
-                cherrypy.response.headerMap["Content-Type"] = str(ct)
+                cherrypy.response.headers["Content-Type"] = str(ct)
 

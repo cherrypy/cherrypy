@@ -37,10 +37,10 @@ for _x in dir(cherrypy):
 
 
 def onerror():
-    """Assign to _cpOnError to enable webtest server-side debugging."""
+    """Assign to _cp_on_error to enable webtest server-side debugging."""
     handled = webtest.server_error()
     if not handled:
-        cherrypy._cputil._cpOnError()
+        cherrypy._cputil._cp_on_error()
 
 
 class VirtualRootFilter:
@@ -48,7 +48,7 @@ class VirtualRootFilter:
     def __init__(self, prefix):
         self.prefix = prefix
     
-    def onStartResource(self):
+    def on_start_resource(self):
         path = cherrypy.request.objectPath
         if path.startswith(self.prefix):
             cherrypy.request.objectPath = path[len(self.prefix):]
@@ -77,7 +77,7 @@ class CPWebCase(webtest.WebCase):
         response = request.run(requestLine, headers, body)
         
         self.status = response.status
-        self.headers = response.headers
+        self.headers = response.header_list
         
         # Build a list of request cookies from the previous response cookies.
         self.cookies = [('Cookie', v) for k, v in self.headers
@@ -116,14 +116,14 @@ class CPWebCase(webtest.WebCase):
         # Install a custom error handler, so errors in the server will:
         # 1) show server tracebacks in the test output, and
         # 2) stop the HTTP request (if any) and ignore further assertions.
-        cherrypy.root._cpOnError = onerror
+        cherrypy.root._cp_on_error = onerror
         
         if vroot:
             if url != "*":
                 url = vroot + url
-            filters = getattr(cherrypy.root, "_cpFilterList", None)
+            filters = getattr(cherrypy.root, "_cp_filters", None)
             if filters is None:
-                cherrypy.root._cpFilterList = filters = []
+                cherrypy.root._cp_filters = filters = []
             if test_vrf not in filters:
                 filters.append(test_vrf)
         

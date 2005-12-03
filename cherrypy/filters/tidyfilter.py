@@ -16,22 +16,22 @@ class TidyFilter(BaseFilter):
     server would also crash)
     """
     
-    def beforeFinalize(self):
-        if not cherrypy.config.get('tidyFilter.on', False):
+    def before_finalize(self):
+        if not cherrypy.config.get('tidy_filter.on', False):
             return
         
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
         originalBody = cherrypy.response.collapse_body()
         
-        fct = cherrypy.response.headerMap.get('Content-Type', '')
+        fct = cherrypy.response.headers.get('Content-Type', '')
         ct = fct.split(';')[0]
         encoding = ''
         i = fct.find('charset=')
         if i != -1:
             encoding = fct[i+8:]
         if ct == 'text/html':
-            tmpdir = cherrypy.config.get('tidyFilter.tmpDir')
+            tmpdir = cherrypy.config.get('tidy_filter.tmp_dir')
             pageFile = os.path.join(tmpdir, 'page.html')
             outFile = os.path.join(tmpdir, 'tidy.out')
             errFile = os.path.join(tmpdir, 'tidy.err')
@@ -43,10 +43,10 @@ class TidyFilter(BaseFilter):
                 tidyEncoding = '-' + tidyEncoding
             
             strictXml = ""
-            if cherrypy.config.get('tidyFilter.strictXml', False):
+            if cherrypy.config.get('tidy_filter.strict_xml', False):
                 strictXml = ' -xml'
             os.system('"%s" %s%s -f %s -o %s %s' %
-                      (cherrypy.config.get('tidyFilter.tidyPath'), tidyEncoding,
+                      (cherrypy.config.get('tidy_filter.tidy_path'), tidyEncoding,
                        strictXml, errFile, outFile, pageFile))
             f = open(errFile, 'rb')
             err = f.read()
@@ -57,7 +57,7 @@ class TidyFilter(BaseFilter):
             for err in errList:
                 if (err.find('Warning') != -1 or err.find('Error') != -1):
                     ignore = 0
-                    for errIgn in cherrypy.config.get('encodingFilter.errorsToIgnore', []):
+                    for errIgn in cherrypy.config.get('tidy_filter.errors_to_ignore', []):
                         if err.find(errIgn) != -1:
                             ignore = 1
                             break

@@ -4,12 +4,12 @@ from basefilter import BaseFilter
 class DecodingFilter(BaseFilter):
     """Automatically decodes request parameters (except uploads)."""
     
-    def beforeMain(self):
-        if not cherrypy.config.get('decodingFilter.on', False):
+    def before_main(self):
+        if not cherrypy.config.get('decoding_filter.on', False):
             return
         
-        enc = cherrypy.config.get('decodingFilter.encoding', 'utf-8')
-        for key, value in cherrypy.request.paramMap.items():
+        enc = cherrypy.config.get('decoding_filter.encoding', 'utf-8')
+        for key, value in cherrypy.request.params.items():
             if hasattr(value, 'file'):
                 # This is a file being uploaded: skip it
                 continue
@@ -19,5 +19,5 @@ class DecodingFilter(BaseFilter):
             else:
                 # value is a regular string: decode it
                 newValue = value.decode(enc)
-            cherrypy.request.paramMap[key] = newValue
+            cherrypy.request.params[key] = newValue
 

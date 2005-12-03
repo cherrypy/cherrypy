@@ -8,30 +8,30 @@ class NsgmlsFilter(BaseFilter):
     """Filter that runs the response through Nsgmls.
     """
     
-    def beforeFinalize(self):
-        if not cherrypy.config.get('nsgmlsFilter.on', False):
+    def before_finalize(self):
+        if not cherrypy.config.get('nsgmls_filter.on', False):
             return
         
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
         originalBody = cherrypy.response.collapse_body()
         
-        fct = cherrypy.response.headerMap.get('Content-Type', '')
+        fct = cherrypy.response.headers.get('Content-Type', '')
         ct = fct.split(';')[0]
         encoding = ''
         i = fct.find('charset=')
         if i != -1:
             encoding = fct[i+8:]
         if ct == 'text/html':
-            tmpdir = cherrypy.config.get('nsgmlsFilter.tmpDir')
+            tmpdir = cherrypy.config.get('nsgmls_filter.tmp_dir')
             pageFile = os.path.join(tmpdir, 'page.html')
             errFile = os.path.join(tmpdir, 'nsgmls.err')
             f = open(pageFile, 'wb')
             f.write(originalBody)
             f.close()
             nsgmlsEncoding = encoding.replace('-', '')
-            nsgmlsPath = cherrypy.config.get('nsgmlsFilter.nsgmlsPath')
-            catalogPath = cherrypy.config.get('nsgmlsFilter.catalogPath')
+            nsgmlsPath = cherrypy.config.get('nsgmls_filter.nsgmls_path')
+            catalogPath = cherrypy.config.get('nsgmls_filter.catalog_path')
             command = '%s -c%s -f%s -s -E10 %s' % (
                 nsgmlsPath, catalogPath, errFile, pageFile)
             command = command.replace('\\', '/')
@@ -43,7 +43,7 @@ class NsgmlsFilter(BaseFilter):
             newErrList = []
             for err in errList:
                 ignore = False
-                for errIgn in cherrypy.config.get('nsgmlsFilter.errorsToIgnore', []):
+                for errIgn in cherrypy.config.get('nsgmls_filter.errors_to_ignore', []):
                     if err.find(errIgn) != -1:
                         ignore = True
                         break

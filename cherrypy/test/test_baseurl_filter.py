@@ -12,9 +12,9 @@ class Root:
 cherrypy.root = Root()
 cherrypy.config.update({
         'server.environment': 'production',
-        'server.logToScreen': False,
-        'baseUrlFilter.on': True,
-        'baseUrlFilter.baseUrl': 'http://www.mydomain.com'
+        'server.log_to_screen': False,
+        'base_url_filter.on': True,
+        'base_url_filter.base_url': 'http://www.mydomain.com'
 })
 
 import helper

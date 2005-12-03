@@ -83,7 +83,7 @@ class Status(Test):
 class Redirect(Test):
     
     class Error:
-        def _cpOnError(self):
+        def _cp_on_error(self):
             raise cherrypy.HTTPRedirect("/errpage")
         
         def index(self):
@@ -178,7 +178,7 @@ class Error(Test):
 class Ranges(Test):
     
     def get_ranges(self):
-        h = cherrypy.request.headerMap.get('Range')
+        h = cherrypy.request.headers.get('Range')
         return repr(httptools.getRanges(h, 8))
     
     def slice_file(self):
@@ -189,7 +189,7 @@ class Ranges(Test):
 class Expect(Test):
     
     def expectation_failed(self):
-        expect = cherrypy.request.headerMap.elements("Expect")
+        expect = cherrypy.request.headers.elements("Expect")
         if expect and expect[0].value != '100-continue':
             raise cherrypy.HTTPError(400)
         raise cherrypy.HTTPError(417, 'Expectation Failed')
@@ -203,7 +203,7 @@ class Headers(Test):
         # header fields, one in lowercase, the other in mixed-case."
         
         # Set the most common headers
-        hMap = cherrypy.response.headerMap
+        hMap = cherrypy.response.headers
         hMap['content-type'] = "text/html"
         hMap['content-length'] = 18
         hMap['server'] = 'CherryPy headertest'
@@ -220,7 +220,7 @@ class Headers(Test):
 class HeaderElements(Test):
     
     def get_elements(self, headername):
-        e = cherrypy.request.headerMap.elements(headername)
+        e = cherrypy.request.headers.elements(headername)
         return "\n".join([str(x) for x in e])
 
 
@@ -314,7 +314,7 @@ class NadsatFilter:
                 yield chunk
         cherrypy.response.body = nadsat_it_up(cherrypy.response.body)
     
-    def onEndRequest(self):
+    def on_end_request(self):
         # This runs after the request has been completely written out.
         cherrypy.response.body = "razdrez"
         self.ended = True
@@ -323,7 +323,7 @@ _nf = NadsatFilter()
 
 class CPFilterList(Test):
     
-    _cpFilterList = [_nf]
+    _cp_filters = [_nf]
     
     def index(self):
         return "A good piece of cherry pie"
@@ -336,40 +336,40 @@ class CPFilterList(Test):
         yield "confidential"
 
 
-logFile = os.path.join(localDir, "error.log")
-logAccessFile = os.path.join(localDir, "access.log")
+log_file = os.path.join(localDir, "error.log")
+log_access_file = os.path.join(localDir, "access.log")
 
 cherrypy.config.update({
-    'global': {'server.logToScreen': False,
+    'global': {'server.log_to_screen': False,
                'server.environment': 'production',
-               'server.showTracebacks': True,
+               'server.show_tracebacks': True,
                },
     '/flatten': {
-        'server.logFile': logFile,
-        'server.logAccessFile': logAccessFile,
+        'server.log_file': log_file,
+        'server.log_access_file': log_access_file,
     },
     '/params': {
-        'server.logFile': logFile,
+        'server.log_file': log_file,
     },
     '/error': {
-        'server.logFile': logFile,
-        'server.logTracebacks': True,
+        'server.log_file': log_file,
+        'server.log_tracebacks': True,
     },
     '/error/page_streamed': {
         'streamResponse': True,
     },
     '/error/cause_err_in_finalize': {
-        'server.showTracebacks': False,
+        'server.show_tracebacks': False,
     },
     '/error/custom': {
-        'errorPage.404': os.path.join(localDir, "static/index.html"),
+        'error_page.404': os.path.join(localDir, "static/index.html"),
     },
     '/error/noexist': {
-        'errorPage.404': "nonexistent.html",
+        'error_page.404': "nonexistent.html",
     },
     '/error/log_unhandled': {
-        'server.logTracebacks': False,
-        'server.logUnhandledTracebacks': True,
+        'server.log_tracebacks': False,
+        'server.log_unhandled_tracebacks': True,
     },
     '/cpfilterlist/errinstream': {
         'streamResponse': True,
@@ -435,8 +435,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertErrorPage(500, msg)
     
     def testLogging(self):
-        open(logFile, "wb").write("")
-        open(logAccessFile, "wb").write("")
+        open(log_file, "wb").write("")
+        open(log_access_file, "wb").write("")
         
         self.getPage("/flatten/as_string")
         self.assertBody('content')
@@ -446,7 +446,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('content')
         self.assertStatus('200 OK')
         
-        data = open(logAccessFile, "rb").readlines()
+        data = open(log_access_file, "rb").readlines()
         self.assertEqual(data[0][:15], '127.0.0.1 - - [')
         haslength = False
         for k, v in self.headers:
@@ -471,7 +471,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 -\n'
                                           % helper.vroot))
         
-        data = open(logFile, "rb").readlines()
+        data = open(log_file, "rb").readlines()
         self.assertEqual(data, [])
         
         ignore = helper.webtest.ignored_exceptions
@@ -480,15 +480,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             # Test that tracebacks get written to the error log.
             self.getPage("/error/page_method")
             self.assertInBody("raise ValueError()")
-            data = open(logFile, "rb").readlines()
+            data = open(log_file, "rb").readlines()
             self.assertEqual(data[0][-41:], ' INFO Traceback (most recent call last):\n')
             self.assertEqual(data[6], '    raise ValueError()\n')
             
             # Test that unhandled tracebacks get written to the error log
-            # if logTracebacks is False but logUnhandledTracebacks is True.
+            # if log_tracebacks is False but log_unhandled_tracebacks is True.
             self.getPage("/error/log_unhandled")
             self.assertInBody("raise ValueError()")
-            data = open(logFile, "rb").readlines()
+            data = open(log_file, "rb").readlines()
             self.assertEqual(data[9][-41:], ' INFO Traceback (most recent call last):\n')
             self.assertEqual(data[15], '    raise ValueError()\n')
             # Each error should write only one traceback (9 lines each).
@@ -572,7 +572,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # Make sure str(HTTPRedirect()) works.
         self.getPage("/redirect/stringify")
         self.assertStatus('200 OK')
-        protocol = cherrypy.config.get('server.protocolVersion')
+        protocol = cherrypy.config.get('server.protocol_version')
         if protocol == "HTTP/1.1":
             self.assertBody("(['http://127.0.0.1:8000/'], 303)")
         else:
@@ -580,9 +580,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testCPFilterList(self):
         self.getPage("/cpfilterlist/")
-        # If body is "razdrez", then onEndRequest is being called too early.
+        # If body is "razdrez", then on_end_request is being called too early.
         self.assertBody("A horrorshow lomtick of cherry pie")
-        # If this fails, then onEndRequest isn't being called at all.
+        # If this fails, then on_end_request isn't being called at all.
         self.assertEqual(_nf.ended, True)
         
         ignore = helper.webtest.ignored_exceptions
@@ -590,12 +590,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         try:
             valerr = '\n    raise ValueError()\nValueError'
             self.getPage("/cpfilterlist/err")
-            # If body is "razdrez", then onEndRequest is being called too early.
+            # If body is "razdrez", then on_end_request is being called too early.
             self.assertErrorPage(500, pattern=valerr)
-            # If this fails, then onEndRequest isn't being called at all.
+            # If this fails, then on_end_request isn't being called at all.
             self.assertEqual(_nf.ended, True)
             
-            # If body is "razdrez", then onEndRequest is being called too early.
+            # If body is "razdrez", then on_end_request is being called too early.
             if cherrypy.server.httpserver is None:
                 self.assertRaises(ValueError, self.getPage,
                                   "/cpfilterlist/errinstream")
@@ -605,7 +605,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 # started, the status should not change to an error status.
                 self.assertStatus("200 OK")
                 self.assertBody("Unrecoverable error in the server.")
-            # If this fails, then onEndRequest isn't being called at all.
+            # If this fails, then on_end_request isn't being called at all.
             self.assertEqual(_nf.ended, True)
         finally:
             ignore.pop()
@@ -667,7 +667,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertInBody(msg)
     
     def testRanges(self):
-        protocol = cherrypy.config.get('server.protocolVersion')
+        protocol = cherrypy.config.get('server.protocol_version')
         if protocol == "HTTP/1.1":
             self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
             self.assertBody("[(3, 7)]")
@@ -869,11 +869,11 @@ llo,
         
         httpcls = cherrypy.server.httpserverclass
         if httpcls:
-            cherrypy.config.update({'server.maxRequestHeaderSize': 10})
+            cherrypy.config.update({'server.max_request_header_size': 10})
             self.getPage("/maxrequestsize/index")
             self.assertStatus("413 Request Entity Too Large")
             self.assertInBody("Request Entity Too Large")
-            cherrypy.config.update({'server.maxRequestHeaderSize': 0})
+            cherrypy.config.update({'server.max_request_header_size': 0})
         
         # Test upload
         h = [("Content-type", "multipart/form-data; boundary=x"),
@@ -891,7 +891,7 @@ hello
         httpcls = cherrypy.server.httpserverclass
         if httpcls:
             cherrypy.config.update({
-                '%s/maxrequestsize' % helper.vroot: {'server.maxRequestBodySize': 3}})
+                '%s/maxrequestsize' % helper.vroot: {'server.max_request_body_size': 3}})
             self.getPage('/maxrequestsize/upload', h, "POST", b)
             self.assertStatus("413 Request Entity Too Large")
             self.assertInBody("Request Entity Too Large")

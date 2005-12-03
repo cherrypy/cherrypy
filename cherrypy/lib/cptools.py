@@ -81,8 +81,8 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     # That is, CherryPy should not guess where the application root is
     # any further than trying cherrypy.root.__module__, and it certainly
     # should *not* use cwd (since CP may be invoked from a variety of
-    # paths). If using staticFilter, you can make your relative paths
-    # become absolute by supplying a value for "staticFilter.root".
+    # paths). If using static_filter, you can make your relative paths
+    # become absolute by supplying a value for "static_filter.root".
     if not os.path.isabs(path):
         root = os.path.dirname(sys.modules[cherrypy.root.__module__].__file__)
         path = os.path.join(root, path)
@@ -90,7 +90,7 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     try:
         stat = os.stat(path)
     except OSError:
-        if cherrypy.config.get('server.logFileNotFound', False):
+        if cherrypy.config.get('server.log_file_not_found', False):
             cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
         raise cherrypy.NotFound()
     
@@ -101,23 +101,23 @@ def serveFile(path, contentType=None, disposition=None, name=None):
         if i != -1:
             ext = path[i:]
         contentType = mimetypes.types_map.get(ext, "text/plain")
-    response.headerMap['Content-Type'] = contentType
+    response.headers['Content-Type'] = contentType
     
     strModifTime = httptools.HTTPDate(time.gmtime(stat.st_mtime))
-    if cherrypy.request.headerMap.has_key('If-Modified-Since'):
-        if cherrypy.request.headerMap['If-Modified-Since'] == strModifTime:
+    if cherrypy.request.headers.has_key('If-Modified-Since'):
+        if cherrypy.request.headers['If-Modified-Since'] == strModifTime:
             response.status = "304 Not Modified"
             response.body = None
             if getattr(cherrypy, "debug", None):
                 cherrypy.log("    Found file (304 Not Modified): %s" % path, "DEBUG")
             return []
-    response.headerMap['Last-Modified'] = strModifTime
+    response.headers['Last-Modified'] = strModifTime
     
     if disposition is not None:
         if name is None:
             name = os.path.basename(path)
         cd = "%s; filename=%s" % (disposition, name)
-        response.headerMap["Content-Disposition"] = cd
+        response.headers["Content-Disposition"] = cd
     
     # Set Content-Length and use an iterable (file object)
     #   this way CP won't load the whole file in memory
@@ -128,10 +128,10 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
     if cherrypy.response.version >= "1.1":
-        response.headerMap["Accept-Ranges"] = "bytes"
-        r = httptools.getRanges(cherrypy.request.headerMap.get('Range'), c_len)
+        response.headers["Accept-Ranges"] = "bytes"
+        r = httptools.getRanges(cherrypy.request.headers.get('Range'), c_len)
         if r == []:
-            response.headerMap['Content-Range'] = "bytes */%s" % c_len
+            response.headers['Content-Range'] = "bytes */%s" % c_len
             message = "Invalid Range (first-byte-pos greater than Content-Length)"
             raise cherrypy.HTTPError(416, message)
         if r:
@@ -140,9 +140,9 @@ def serveFile(path, contentType=None, disposition=None, name=None):
                 start, stop = r[0]
                 r_len = stop - start
                 response.status = "206 Partial Content"
-                response.headerMap['Content-Range'] = ("bytes %s-%s/%s" %
+                response.headers['Content-Range'] = ("bytes %s-%s/%s" %
                                                        (start, stop - 1, c_len))
-                response.headerMap['Content-Length'] = r_len
+                response.headers['Content-Length'] = r_len
                 bodyfile.seek(start)
                 response.body = bodyfile.read(r_len)
             else:
@@ -150,8 +150,8 @@ def serveFile(path, contentType=None, disposition=None, name=None):
                 response.status = "206 Partial Content"
                 boundary = mimetools.choose_boundary()
                 ct = "multipart/byteranges; boundary=%s" % boundary
-                response.headerMap['Content-Type'] = ct
-##                del response.headerMap['Content-Length']
+                response.headers['Content-Type'] = ct
+##                del response.headers['Content-Length']
                 
                 def fileRanges():
                     for start, stop in r:
@@ -166,10 +166,10 @@ def serveFile(path, contentType=None, disposition=None, name=None):
                     yield "--" + boundary
                 response.body = fileRanges()
         else:
-            response.headerMap['Content-Length'] = c_len
+            response.headers['Content-Length'] = c_len
             response.body = bodyfile
     else:
-        response.headerMap['Content-Length'] = c_len
+        response.headers['Content-Length'] = c_len
         response.body = bodyfile
     return response.body
 

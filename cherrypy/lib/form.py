@@ -27,7 +27,7 @@ class FormField:
     def render(self, leaveValues):
         if leaveValues:
             if self.typ !='submit':
-                self.currentValue = cherrypy.request.paramMap.get(self.name, "")
+                self.currentValue = cherrypy.request.params.get(self.name, "")
             else:
                 self.currentValue = self.defaultValue
         else:
@@ -80,13 +80,13 @@ class Form:
         # Validate mandatory fields
         for field in self.fieldList:
             if (field.isField and field.mandatory
-                and not cherrypy.request.paramMap.get(field.name)):
+                and not cherrypy.request.params.get(field.name)):
                 field.errorMessage = "Missing"
         
         # Validate fields one by one
         for field in self.fieldList:
             if field.isField and field.validate and not field.errorMessage:
-                value = cherrypy.request.paramMap.get(field.name, "")
+                value = cherrypy.request.params.get(field.name, "")
                 field.errorMessage = field.validate(value)
 
         # Validate all fields together (ie: check that passwords match)

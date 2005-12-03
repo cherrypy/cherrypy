@@ -235,17 +235,17 @@ class TestHarness(object):
         print
         
         if conf is None:
-            conf = {'server.socketHost': '127.0.0.1',
-                    'server.socketPort': self.PORT,
-                    'server.threadPool': 10,
-                    'server.logToScreen': False,
+            conf = {'server.socket_host': '127.0.0.1',
+                    'server.socket_port': self.PORT,
+                    'server.thread_pool': 10,
+                    'server.log_to_screen': False,
                     'server.environment': "production",
-                    'server.showTracebacks': True,
+                    'server.show_tracebacks': True,
                     }
         elif isinstance(conf, basestring):
             conf = cherrypy.config.dict_from_config_file(conf)
         
-        conf['server.protocolVersion'] = self.protocol
+        conf['server.protocol_version'] = self.protocol
         
         if self.profile:
             conf['profiling.on'] = True

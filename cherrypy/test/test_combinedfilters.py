@@ -15,10 +15,10 @@ class Root:
 
 cherrypy.root = Root()
 cherrypy.config.update({
-        'server.logToScreen': False,
+        'server.log_to_screen': False,
         'server.environment': 'production',
-        'gzipFilter.on': True,
-        'encodingFilter.on': True,
+        'gzip_filter.on': True,
+        'encoding_filter.on': True,
 })
 
 import helper

@@ -25,10 +25,10 @@ class Root:
 
 cherrypy.root = Root()
 cherrypy.config.update({
-    'global': {'server.logToScreen': False,
+    'global': {'server.log_to_screen': False,
                'server.environment': 'production',
-               'server.showTracebacks': True,
-               'gzipFilter.on': True,
+               'server.show_tracebacks': True,
+               'gzip_filter.on': True,
                },
     '/noshow_stream': {'streamResponse': True},
 })

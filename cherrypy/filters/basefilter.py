@@ -6,35 +6,35 @@ class BaseFilter(object):
     override some of the methods to add some side-effects.
     """
     
-    def onStartResource(self):
+    def on_start_resource(self):
         """Called before any request processing has been done"""
         pass
     
-    def beforeRequestBody(self):
+    def before_request_body(self):
         """Called after the request header has been read/parsed"""
         pass
     
-    def beforeMain(self):
+    def before_main(self):
         """ Called after the request body has been read/parsed"""
         pass
     
-    def beforeFinalize(self):
+    def before_finalize(self):
         """Called before final output processing"""
         pass
     
-    def beforeErrorResponse(self):
-        """Called before _cpOnError and/or finalizing output"""
+    def before_error_response(self):
+        """Called before _cp_on_error and/or finalizing output"""
         pass
     
-    def afterErrorResponse(self):
-        """Called after _cpOnError and finalize"""
+    def after_error_response(self):
+        """Called after _cp_on_error and finalize"""
         pass
     
-    def onEndResource(self):
+    def on_end_resource(self):
         """Called after finalizing the output (status, header, and body)"""
         pass
     
-    def onEndRequest(self):
+    def on_end_request(self):
         """Called when the server closes the request."""
         pass
 

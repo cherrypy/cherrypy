@@ -15,7 +15,7 @@ class HTTPErrorDemo(object):
     
     def index(self):
         # display some links that will result in errors
-        tracebacks = cherrypy.config.get('server.showTracebacks')
+        tracebacks = cherrypy.config.get('server.show_tracebacks')
         if tracebacks:
             trace = 'off'
         else:
@@ -41,8 +41,8 @@ class HTTPErrorDemo(object):
     
     def toggleTracebacks(self):
         # simple function to toggle tracebacks on and off 
-        tracebacks = cherrypy.config.get('server.showTracebacks')
-        cherrypy.config.update({'server.showTracebacks': not tracebacks})
+        tracebacks = cherrypy.config.get('server.show_tracebacks')
+        cherrypy.config.update({'server.show_tracebacks': not tracebacks})
         
         # redirect back to the index
         raise cherrypy.HTTPRedirect('/')
@@ -67,7 +67,7 @@ cherrypy.root = HTTPErrorDemo()
 import os
 localDir = os.path.dirname(__file__)
 curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
-cherrypy.config.update({'errorPage.403' : os.path.join(curpath, "custom_error.html")})
+cherrypy.config.update({'error_page.403' : os.path.join(curpath, "custom_error.html")})
 
 
 if __name__ == '__main__':
