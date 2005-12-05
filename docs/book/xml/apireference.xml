@@ -388,8 +388,8 @@
           <para><code>cherrypy._cphttpserver.embedded_server</code>: 
           use this to automatically select between the CherryHTTPServer 
           and the PooledThreadServer based on the value of 
-          config.get(&quot;server.threadPool&quot;) and 
-          config.get(&quot;server.socketFile&quot;).</para>
+          config.get(&quot;server.thread_pool&quot;) and 
+          config.get(&quot;server.socket_file&quot;).</para>
 
         </listitem>
 
@@ -547,7 +547,7 @@
 
     <section>
 
-      <title>cherrypy.server.onStartServerList</title>
+      <title>cherrypy.server.on_start_server_list</title>
 
       <para>A list of functions that will be called when the server 
       starts.</para>
@@ -556,7 +556,7 @@
 
     <section>
 
-      <title>cherrypy.server.onStopServerList</title>
+      <title>cherrypy.server.on_stop_server_list</title>
 
       <para>A list of functions that will be called when the server 
       stops.</para>
@@ -565,13 +565,13 @@
 
     <section>
 
-      <title>cherrypy.server.onStartThreadList</title>
+      <title>cherrypy.server.on_start_thread_list</title>
 
       <para>A list of functions that will be called when each request 
       thread is started. Note that such threads do not need to be 
       started or controlled by CherryPy; for example, when using 
       CherryPy with mod_python, Apache will start and stop the request 
-      threads. Nevertheless, CherryPy will run the onStartThreadList 
+      threads. Nevertheless, CherryPy will run the on_start_thread_list 
       functions upon the first request using each distinct 
       thread.</para>
 
@@ -579,7 +579,7 @@
 
     <section>
 
-      <title>cherrypy.server.onStopThreadList</title>
+      <title>cherrypy.server.on_stop_thread_list</title>
 
       <para>A list of functions that will be called when each request 
       thread is stopped.</para>
@@ -766,7 +766,7 @@
 
       <section>
 
-        <title>HeaderMap</title>
+        <title>headers</title>
 
         <para>A subclass of Python&apos;s builtin <code>dict</code> 
         class; CherryPy&apos;s default <code>request.headers</code> 
@@ -925,9 +925,9 @@ cherrypy.root = Root()</code></programlisting>
 
     <section>
 
-      <title>_cpOnError</title>
+      <title>_cp_on_error</title>
 
-      <para>_cpOnError is a function for handling unanticipated 
+      <para>_cp_on_error is a function for handling unanticipated 
       exceptions, whether raised by CherryPy itself, or in user 
       applications. The default simply responds as if HTTPError(500) 
       had been raised.</para>
@@ -936,26 +936,26 @@ cherrypy.root = Root()</code></programlisting>
 
     <section>
 
-      <title>_cpOnHTTPError</title>
+      <title>_cp_on_http_error</title>
 
-      <para>_cpOnHTTPError handles HTTPError responses, setting 
+      <para>_cp_on_http_error handles HTTPError responses, setting 
       cherrypy.response.status, headers, and body.</para>
 
     </section>
 
     <section>
 
-      <title>_cpFilterList</title>
+      <title>_cp_filters</title>
 
       <para>User defined filters are enabled using the class attribute 
-      _cpFilterList. Any filter instances placed in _cpFilterList will 
+      _cp_filters. Any filter instances placed in _cp_filters will 
       be applied to all methods of the class.</para>
 
     </section>
 
     <section>
 
-      <title>_cpLogAccess</title>
+      <title>_cp_log_access</title>
 
       <para>Function to log HTTP requests into the access.log 
       file.</para>
@@ -981,14 +981,14 @@ cherrypy.root = Root()</code></programlisting>
         CherryPy will go through all the filters which are on (buil-in and user defined) for that requested path and call all hooks that are implemented by each filter.</para>
     <section>
 
-      <title>onStartResource</title>
+      <title>on_start_resource</title>
             <para>This hook is being called righ at the beginning of the request process. The only work CherryPy has done when this hook is called is to parse the first line of the HTTP request. This is needed so that filters have access to the object path translated from the path specified in the HTTP request.</para>
             <para>This hook is always called.</para>
     </section>
 
     <section>
 
-      <title>beforeRequestBody</title>
+      <title>before_request_body</title>
             <para>This hook is being called right after CherryPy has parse the HTTP request headers but before it tries to parse the request body.  If a filter which implements that hook sets cherrypy.request.processRequestBody to False, CherryPy will not parse the request body at all.
             This can be handy when you know your user agent returns the data in a form that the default CherryPy request body parsing function cannot understand. </para>
             <para>For example, assuming your user agent returns you a request body which is an XML string unquoted, you may want a filter to parse that XML string and generates an XML DOM instance. 
@@ -1000,7 +1000,7 @@ cherrypy.root = Root()</code></programlisting>
 
     <section>
 
-      <title>beforeMain</title>
+      <title>before_main</title>
         <para>This hook is called right before your page handler (exposed callable) is being called by CherryPy. 
                 It can be handy if considering HTTP request headers or body you may want not to call the page handler at all, then you would have to set cherrypy.request.executeMain to False.</para>
             <para>This hook is not called if an error occurs during the process before hand.</para>
@@ -1008,29 +1008,29 @@ cherrypy.root = Root()</code></programlisting>
 
     <section>
 
-      <title>beforeFinalize</title>
-        <para>This hook is called right after the page handler has been processed (depending on the beforeMain hook behavior) and before CherryPy formats the final respone object.
+      <title>before_finalize</title>
+        <para>This hook is called right after the page handler has been processed (depending on the before_main hook behavior) and before CherryPy formats the final respone object.
                 It helps you for example to check for what could have been returned by your page handler and change some headers of needed.</para>
             <para>This hook is not called if an error occurs during the process before hand.</para>
     </section>
 
     <section>
 
-      <title>onEndResource</title>
+      <title>on_end_resource</title>
             <para>This hook is called at the end of the process so that you can finely tweak your HTTP response if needed (eg adding headers to the cherrypy.response.header_list). Note that cherrypy.response.headers will not be processed any longer at that stage.</para>
             <para>This hook is always called.</para>
     </section>
 
     <section>
 
-      <title>beforeErrorResponse</title>
-            <para>This hook is called when an error has occured during the request processing. It allows you to called code before the _cpOnError handler is being called as well as the response finalizing stage.</para>
+      <title>before_error_response</title>
+            <para>This hook is called when an error has occured during the request processing. It allows you to called code before the _cp_on_error handler is being called as well as the response finalizing stage.</para>
     </section>
 
     <section>
 
-      <title>afterErrorResponse</title>
-            <para>This hook is called when an error has occured during the request processing. It allows you to call code after the _cpOnError handler is being called as well as the response finalizing stage.</para>
+      <title>after_error_response</title>
+            <para>This hook is called when an error has occured during the request processing. It allows you to call code after the _cp_on_error handler is being called as well as the response finalizing stage.</para>
     </section>
 
   </section>

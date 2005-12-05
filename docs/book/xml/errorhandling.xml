@@ -21,14 +21,14 @@
 
       <listitem>
 
-        <para><code>beforeErrorResponse</code> filter methods are 
+        <para><code>before_error_response</code> filter methods are 
         called</para>
 
       </listitem>
 
       <listitem>
 
-        <para>a <code>_cpOnError</code> method is called</para>
+        <para>a <code>_cp_on_error</code> method is called</para>
 
       </listitem>
 
@@ -40,7 +40,7 @@
 
       <listitem>
 
-        <para><code>afterErrorResponse</code> filter methods are 
+        <para><code>after_error_response</code> filter methods are 
         called</para>
 
       </listitem>
@@ -48,25 +48,25 @@
     </itemizedlist>
 
     <para>The error response filter methods are defined by each filter; 
-    they cannot prevent the call to <code>_cpOnError</code> (unless 
-    <code>beforeErrorResponse</code> raises an exception, including 
+    they cannot prevent the call to <code>_cp_on_error</code> (unless 
+    <code>before_error_response</code> raises an exception, including 
     HTTPRedirect).</para>
 
-    <para>The <code>_cpOnError</code> function is a CherryPy 
+    <para>The <code>_cp_on_error</code> function is a CherryPy 
     &quot;special attribute&quot;; that is, you can define your own 
-    <code>_cpOnError</code> method for any branch in your 
+    <code>_cp_on_error</code> method for any branch in your 
     <code>cherrypy.root</code> object tree, and it will be invoked for 
     all child handlers. For example:</para>
 
     <example>
 
-      <title>A custom <code>_cpOnError</code> method</title>
+      <title>A custom <code>_cp_on_error</code> method</title>
 
       <programlisting>import cherrypy
 
 class Root:
     
-    def _cpOnError(self):
+    def _cp_on_error(self):
         cherrypy.response.body = (&quot;We apologise for the fault in the website. &quot;
                                   &quot;Those responsible have been sacked.&quot;)
     
@@ -75,7 +75,7 @@ class Root:
     index.exposed = True</programlisting>
     </example>
 
-    <para>The default <code>_cpOnError</code> function simply responds 
+    <para>The default <code>_cp_on_error</code> function simply responds 
     as if an HTTPError 500 had been raised (see the next 
     section).</para>
 
@@ -84,7 +84,7 @@ class Root:
     error occurs during the handling of an initial error, then CherryPy 
     punts, returning a bare-bones, <code>text/plain</code> error 
     response (containing both tracebacks if 
-    <code>server.showTracebacks</code> is True).</para>
+    <code>server.show_tracebacks</code> is True).</para>
 
   </section>
 
@@ -93,10 +93,10 @@ class Root:
     <title>HTTPError</title>
 
     <para>HTTPError exceptions do not result in calls to 
-    <code>_cpOnError</code>. Instead, they have their own 
-    <code>_cpOnHTTPError</code> function. Like <code>_cpOnError</code>, 
+    <code>_cp_on_error</code>. Instead, they have their own 
+    <code>_cp_on_http_error</code> function. Like <code>_cp_on_error</code>, 
     this is a &quot;special attribute&quot; and can be overridden by 
-    cherrypy.root objects. The default <code>_cpOnHTTPError</code> 
+    cherrypy.root objects. The default <code>_cp_on_http_error</code> 
     handler sets the HTTP response to a pretty HTML error page.</para>
 
   </section>

@@ -20,26 +20,26 @@
         <programlisting linenumbering="numbered">
             # The configuration file called myconfigfile.conf
             [global]
-            server.socketPort=8080
-            server.socketHost=""
-            server.socketFile=""
-            server.socketQueueSize=5
-            server.protocolVersion="HTTP/1.0"
-            server.logToScreen=True
-            server.logFile=""
-            server.reverseDNS=False
-            server.threadPool=10
+            server.socket_port=8080
+            server.socket_host=""
+            server.socket_file=""
+            server.socket_queue_size=5
+            server.protocol_version="HTTP/1.0"
+            server.log_to_screen=True
+            server.log_file=""
+            server.reverse_dns=False
+            server.thread_pool=10
             server.environment="development"
             
             [/service/xmlrpc]
-            xmlRpcFilter.on = True
+            xmlrpc_filter.on = True
             
             [/admin]
-            sessionAuthenticateFilter.on=True
+            session_authenticate_filter.on=True
             
             [/css/default.css]
-            staticFilter.on = True
-            staticFilter.file = "data/css/default.css"
+            static_filter.on = True
+            static_filter.file = "data/css/default.css"
             
             # From your script...
             cherrypy.config.update(file="myconfigfile.conf") 
@@ -52,26 +52,26 @@
         <programlisting linenumbering="numbered">
       settings = { 
          'global': {
-            'server.socketPort' : 8080,
-            'server.socketHost': "",
-            'server.socketFile': "",
-            'server.socketQueueSize': 5,
-            'server.protocolVersion': "HTTP/1.0",
-            'server.logToScreen': True,
-            'server.logFile': "",
-            'server.reverseDNS': False,
-            'server.threadPool': 10,
+            'server.socket_port' : 8080,
+            'server.socket_host': "",
+            'server.socket_file': "",
+            'server.socket_queue_size': 5,
+            'server.protocol_version': "HTTP/1.0",
+            'server.log_to_screen': True,
+            'server.log_file': "",
+            'server.reverse_dns': False,
+            'server.thread_pool': 10,
             'server.environment': "development"
          },
          '/service/xmlrpc' : {
-            'xmlRpcFilter.on': True
+            'xmlrpc_filter.on': True
          },
          '/admin': {
-            'sessionAuthenticateFilter.on' :True
+            'session_authenticate_filter.on' :True
          },
          '/css/default.css': {
-            'staticFilter.on': True,
-            'staticFilter.file': "data/css/default.css"
+            'static_filter.on': True,
+            'static_filter.file': "data/css/default.css"
          }
       }
       cherrypy.config.update(settings)
@@ -108,10 +108,10 @@
                     <para>development</para>
                     <itemizedlist>
                         <listitem>
-                            <para>logDebugInfoFilter is enabled</para>
+                            <para>log_debug_info_filter is enabled</para>
                         </listitem>
                         <listitem>
-                            <para>HTTPErrors (and therefore the default _cpOnError) display
+                            <para>HTTPErrors (and therefore the default _cp_on_error) display
                             tracebacks in the browser if errors occur</para>
                         </listitem>
                         <listitem>
@@ -126,7 +126,7 @@
                     <para>production</para>
                     <itemizedlist>
                         <listitem>
-                            <para>logDebugInfoFilter is disabled</para>
+                            <para>log_debug_info_filter is disabled</para>
                         </listitem>
                         <listitem>
                             <para>tracebacks are logged, but are not displayed in the browser</para>

@@ -9,10 +9,10 @@
         <para>The baseurlfilter has the following configuration options</para>
         <itemizedlist>
             <listitem>
-                <para>baseUrlFilter.baseUrl</para>
+                <para>base_url_filter.base_url</para>
             </listitem>
             <listitem>
-                <para>baseUrlFilter.useXForwardedHost</para>
+                <para>base_url_filter.use_x_forwarded_host</para>
             </listitem>
         </itemizedlist>
     </section>
@@ -27,7 +27,7 @@
         <para>The decodingfilter has the following configuration options:</para>
         <itemizedlist>
             <listitem>
-                <para>decodingFilter.encoding</para>
+                <para>decoding_filter.encoding</para>
             </listitem>
         </itemizedlist>
     </section>
@@ -37,11 +37,11 @@
         <para>The encodingfilter has the following configuration options:</para>
         <itemizedlist>
             <listitem>
-                <para>encodingFilter.encoding: Force all text responses to be encoded with this
+                <para>encoding_filter.encoding: Force all text responses to be encoded with this
                 encoding.</para>
             </listitem>
             <listitem>
-                <para>encodingFilter.defaultEncoding: Default all text responses to this encoding (if
+                <para>encoding_filter.default_encoding: Default all text responses to this encoding (if
                 the user-agent does not request otherwise).</para>
             </listitem>
         </itemizedlist>
@@ -59,16 +59,16 @@
         <para>The logdebuginfofilter has the following configuration options:</para>
         <itemizedlist>
             <listitem>
-                <para>logDebugInfoFilter.mimeTypeList, ['text/html']</para>
+                <para>log_debug_info_filter.mime_types, ['text/html']</para>
             </listitem>
             <listitem>
-                <para>logDebugInfoFilter.logAsComment, False</para>
+                <para>log_debug_info_filter.log_as_comment, False</para>
             </listitem>
             <listitem>
-                <para>logDebugInfoFilter.logBuildTime, True</para>
+                <para>log_debug_info_filter.log_build_time, True</para>
             </listitem>
             <listitem>
-                <para>logDebugInfoFilter.logPageSize, True</para>
+                <para>log_debug_info_filter.log_page_size, True</para>
             </listitem>
         </itemizedlist>
     </section>
@@ -78,13 +78,13 @@
         <para>The staticfilter has the following configuration options:</para>
         <itemizedlist>
             <listitem>
-                <para>staticFilter.file</para>
+                <para>static_filter.file</para>
             </listitem>
             <listitem>
-                <para>staticFilter.dir</para>
+                <para>static_filter.dir</para>
             </listitem>
             <listitem>
-                <para>staticFilter.root</para>
+                <para>static_filter.root</para>
             </listitem>
         </itemizedlist>
     </section>
@@ -101,13 +101,13 @@
         <para>The tidyfilter has the following configuration options:</para>
         <itemizedlist>
             <listitem>
-                <para>tidyFilter.tmpDir</para>
+                <para>tidy_filter.tmp_dir</para>
             </listitem>
             <listitem>
-                <para>tidyFilter.strictXml, False</para>
+                <para>tidy_filter.strict_xml, False</para>
             </listitem>
             <listitem>
-                <para>tidyFilter.tidyPath</para>
+                <para>tidy_filter.tidy_path</para>
             </listitem>
         </itemizedlist>
     </section>
@@ -118,17 +118,17 @@
         <para>The virtualhostfilter has the following configuration options:</para>
         <itemizedlist>
             <listitem>
-                <para>virtualHostFilter.prefix, '/'</para>
+                <para>virtual_host_filter.prefix, '/'</para>
             </listitem>
         </itemizedlist>
     </section>
     <section id="xmlrpcfilter">
         <title>xmlrpcfilter</title>
         <para>The xmlrpcfilter converts XMLRPC to the CherryPy2 object system and vice-versa.</para>
-        <para>PLEASE NOTE: beforeRequestBody: Unmarshalls the posted data to a methodname and
+        <para>PLEASE NOTE: before_request_body: Unmarshalls the posted data to a methodname and
         parameters. - These are stored in cherrypy.request.rpcMethod and .rpcParams - The method is
         also stored in cherrypy.request.path, so CP2 will find the right method to call for you,
-        based on the root's position. beforeFinalize: Marshalls cherrypy.response.body to xmlrpc. -
+        based on the root's position. before_finalize: Marshalls cherrypy.response.body to xmlrpc. -
         Until resolved: cherrypy.response.body must be a python source string; this string is
         'eval'ed to return the results. This will be resolved in the future. - Content-Type and
         Content-Length are set according to the new (marshalled) data</para>

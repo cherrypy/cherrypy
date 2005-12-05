@@ -26,9 +26,9 @@
     <title>Turning on a default filter</title>
     <programlisting linenumbering="numbered">
         [/entries/view]
-        tidyFilter.on = True
-        tidyFilter.tmpDir = "/tmp"
-        tidyFilter.strictXml = True
+        tidy_filter.on = True
+        tidy_filter.tmp_dir = "/tmp"
+        tidy_filter.strict_xml = True
       </programlisting>
   </example>
   <para>On the first line we define that the tidy filter will be used by the
@@ -38,7 +38,7 @@
   <para>CherryPy lets you write your own filters as we will see in the
   developer reference chapter. However, the way to use them is different from
   the default filters. You do not declare custom filters within the
-  configuration file; instead, use the <code>_cpFilterList</code> attribute in
+  configuration file; instead, use the <code>_cp_filters</code> attribute in
   your source code:</para>
   <example>
     <title>Using a non default filter</title>
@@ -47,7 +47,7 @@
         from myfiltermodule import MyFilterClass
         
         class Entry:
-          _cpFilterList = [ MyFilterClass() ]
+          _cp_filters = [ MyFilterClass() ]
           def view(self, id): 
             # do suff...
           view.exposed = True
@@ -61,7 +61,7 @@
   </example>
   <para>As all objects below <code>cherrypy.root.entries</code> will inherit
   the filter, there is no need to re-specify it in each
-  <code>_cpFilterList</code> underneath.</para>
+  <code>_cp_filters</code> underneath.</para>
   <para>Keep in mind that the user-defined filters are called in the order you
   add them to the list.</para>
 </section>

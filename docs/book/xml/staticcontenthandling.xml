@@ -4,7 +4,7 @@
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xml:id="globaloverviewcherrypy">
   <title>Static content handling</title>
-  <para>Static content is now handled by a filter called "staticFilter" that
+  <para>Static content is now handled by a filter called "static_filter" that
   can easily be enabled and configured in your config file. For instance, if
   you wanted to serve <code>/style.css</code> from
   <filename>/home/site/style.css</filename> and <code>/static/*</code> from
@@ -14,18 +14,18 @@
     <title>Static filter configuration</title>
     <programlisting>
             [global]
-            staticFilter.root = "/home/site"
+            static_filter.root = "/home/site"
             
             [/style.css]
-            staticFilter.on = True
-            staticFilter.file = "style.css"
+            static_filter.on = True
+            static_filter.file = "style.css"
             
             [/static]
-            staticFilter.on = True
-            staticFilter.dir = "static"
+            static_filter.on = True
+            static_filter.dir = "static"
         </programlisting>
   </example>
-  <para>The <code>staticFilter.root</code> entry can be either absolute or
+  <para>The <code>static_filter.root</code> entry can be either absolute or
   relative. If absolute, static content is sought within that absolute path.
   Since CherryPy cannot guess where your application root is located, relative
   paths are assumed to be relative to the directory where your
