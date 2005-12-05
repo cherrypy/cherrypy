@@ -379,8 +379,9 @@ class Response(object):
         
         self.headers = httptools.HeaderMap()
         self.headerMap = self.headers # Backward compatibility
+        content_type = cherrypy.config.get('server.default_content_type', 'text/html')
         self.headers.update({
-            "Content-Type": "text/html",
+            "Content-Type": content_type,
             "Server": "CherryPy/" + cherrypy.__version__,
             "Date": httptools.HTTPDate(),
             "Set-Cookie": [],

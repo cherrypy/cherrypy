@@ -903,6 +903,13 @@ hello
             results.append(self.body)
         self.assertEqual(results, ["None"] * 20)
 
+    def testDefaultContentType(self):
+        self.getPage('/')
+        self.assertHeader('Content-Type', 'text/html')
+        
+        cherrypy.config.update({'server.default_content_type': 'text/plain'})
+        self.getPage('/')
+        self.assertHeader('Content-Type', 'text/plain')
 
 if __name__ == '__main__':
     helper.testmain()

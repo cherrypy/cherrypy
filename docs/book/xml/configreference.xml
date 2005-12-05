@@ -25,6 +25,9 @@
       <listitem>
         <para><option>[global] server.max_request_header_size</option>: maximum acceptable size of a request header, in bytes (defaults to 500KB). If a longer request arrives, the server will interrupt it and return a 413 error. This setting is global (ie: doesn't depend on the path). Set it to zero to remove the limit</para>
       </listitem>
+            <listitem>
+                    <para><option>[global] server.default_content_type</option>: default content type to be used for all responses (default to text/html). This setting is global (ie: doesn't depend on the path).</para>
+            </listitem>
       <listitem>
         <para><option>[/path] server.max_request_body_size</option>: maximum acceptable size of a request body, in bytes (defaults to 100MB). If a longer request body arrives, the server will interrupt it and return a 413 error. This setting can be configured per path. This is useful to limit the size of uploaded files. Set it to zero to remove the limit</para>
       </listitem>
