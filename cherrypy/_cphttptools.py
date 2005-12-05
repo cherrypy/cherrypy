@@ -33,7 +33,7 @@ class Request(object):
         if not self.closed:
             self.closed = True
             try:
-                applyFilters('on_end_request', 'onEndRequest')
+                applyFilters('on_end_request')
             except (KeyboardInterrupt, SystemExit):
                 raise
             except:
@@ -79,20 +79,20 @@ class Request(object):
             self.processRequestLine()
             
             try:
-                applyFilters('on_start_resource', 'onStartResource')
+                applyFilters('on_start_resource')
                 
                 try:
                     self.processHeaders()
                     
-                    applyFilters('before_request_body', 'beforeRequestBody')
+                    applyFilters('before_request_body')
                     if self.processRequestBody:
                         self.processBody()
                     
-                    applyFilters('before_main', 'beforeMain')
+                    applyFilters('before_main')
                     if self.executeMain:
                         self.main()
                     
-                    applyFilters('before_finalize', 'beforeFinalize')
+                    applyFilters('before_finalize')
                     cherrypy.response.finalize()
                 except cherrypy.RequestHandled:
                     pass
@@ -101,10 +101,10 @@ class Request(object):
                     # we don't go through the regular mechanism:
                     # we return the redirect or error page immediately
                     inst.set_response()
-                    applyFilters('before_finalize', 'before_finalize')
+                    applyFilters('before_finalize')
                     cherrypy.response.finalize()
             finally:
-                applyFilters('on_end_resource', 'onEndResource')
+                applyFilters('on_end_resource')
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -303,7 +303,7 @@ class Request(object):
             # that raises NotFound.
             icofile = os.path.join(os.path.dirname(__file__), "favicon.ico")
             cptools.serveFile(icofile)
-            applyFilters('before_finalize', 'beforeFinalize')
+            applyFilters('before_finalize')
             cherrypy.response.finalize()
             raise cherrypy.RequestHandled()
         else:
@@ -447,7 +447,7 @@ class Response(object):
     def handleError(self, exc):
         """Set status, headers, and body when an unanticipated error occurs."""
         try:
-            applyFilters('before_error_response', 'beforeErrorResponse')
+            applyFilters('before_error_response')
            
             # _cp_on_error will probably change self.body.
             # It may also change the headers, etc.
@@ -455,7 +455,7 @@ class Response(object):
             
             self.finalize()
             
-            applyFilters('after_error_response', 'afterErrorResponse')
+            applyFilters('after_error_response')
             return
         except cherrypy.HTTPRedirect, inst:
             try:

@@ -27,15 +27,20 @@ _output_order = [
     'CacheFilter',
 ]
 
-_input_methods = ['on_start_resource', 'onStartResource',
-        'before_request_body', 'beforeRequestBody',
-        'before_main', 'beforeMain']
-_output_methods = ['before_finalize', 'beforeFinalize',
-        'on_end_resource', 'onEndResource',
-        'on_end_request', 'onEndRequest',
-        'before_error_response', 'beforeErrorResponse',
-        'after_error_response', 'afterErrorResponse']
+_input_methods = ['on_start_resource', 'before_request_body', 'before_main']
+_output_methods = ['before_finalize', 'on_end_resource', 'on_end_request',
+        'before_error_response', 'after_error_response']
 
+backward_compatibility_dict = {
+    'on_start_resource': 'onStartResource',
+    'before_request_body': 'beforeRequestBody',
+    'before_main': 'beforeMain',
+    'before_finalize': 'beforeFinalize',
+    'on_end_resource': 'onEndResource',
+    'on_end_request': 'onEndRequest',
+    'before_error_response': 'beforeErrorResponse',
+    'after_error_response': 'afterErrorResponse'
+}
 
 def init():
     """Initialize the filters."""
@@ -98,17 +103,18 @@ def init():
 _filterhooks = {}
 
 
-def applyFilters(method_name, alternate_method_name = None):
+def applyFilters(method_name):
     """Execute the given method for all registered filters."""
     special_methods = []
     for f in _cputil.get_special_attribute("_cp_filters", "_cpFilterList"):
-        method = getattr(f, method_name, None)
-        if (method is None) and alternate_method_name:
-            # alternate_method_name is for backward compatibility
-            method = getattr(f, alternate_method_name, None)
+        # Try old name first
+        old_method_name = backward_compatibility_dict.get(method_name)
+        method = getattr(f, old_method_name, None)
+        if (method is None):
+            method = getattr(f, method_name, None)
         if method:
             special_methods.append(method)
-    
+
     if method_name in _input_methods:
         # Run special filters after defaults.
         for method in _filterhooks[method_name] + special_methods:
