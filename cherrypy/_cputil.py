@@ -354,6 +354,21 @@ def _cp_on_error():
     
     cherrypy.HTTPError(500).set_response()
 
+def headers(headers):
+    """ Provides a simple way to add specific headers to page handler
+    Any previously set headers provided in the list of tuples will be changed
+    
+    headers - a list of tuple : (header_name, header_value)
+    """
+    def wrapper(func):
+        def inner(*args):
+            for item in headers:
+                headername = item[0]
+                headervalue = item[1]
+                cherrypy.response.headerMap[headername] = headervalue
+            return func(*args)
+        return inner
+    return wrapper
 
 _cp_filters = []
 

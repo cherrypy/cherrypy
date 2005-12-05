@@ -320,6 +320,7 @@ def run():
         'test_decodingencoding_filter',
         'test_gzip_filter',
         'test_logdebuginfo_filter',
+        'test_response_headers_filter',
         'test_objectmapping',
         'test_static_filter',
         'test_tutorials',

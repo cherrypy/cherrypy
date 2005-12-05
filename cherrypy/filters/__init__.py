@@ -17,6 +17,7 @@ _input_order = [
 ]
 
 _output_order = [
+    'ResponseHeadersFilter',
     'XmlRpcFilter',
     'EncodingFilter',
     'TidyFilter',
@@ -49,7 +50,7 @@ def init():
         decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
         staticfilter, nsgmlsfilter, tidyfilter, \
         xmlrpcfilter, sessionauthenticatefilter, \
-        sessionfilter
+        sessionfilter, responseheadersfilter
     
     classMap = {
         'BaseUrlFilter'      : baseurlfilter.BaseUrlFilter,
@@ -59,6 +60,8 @@ def init():
         'GzipFilter'         : gzipfilter.GzipFilter,
         'LogDebugInfoFilter' : logdebuginfofilter.LogDebugInfoFilter,
         'NsgmlsFilter'       : nsgmlsfilter.NsgmlsFilter,
+        'ResponseHeadersFilter':
+                    responseheadersfilter.ResponseHeadersFilter,
         'SessionAuthenticateFilter':
                     sessionauthenticatefilter.SessionAuthenticateFilter,
         'SessionFilter'      : sessionfilter.SessionFilter,
