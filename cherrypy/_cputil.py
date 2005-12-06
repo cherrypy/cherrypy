@@ -54,7 +54,7 @@ def get_object_trail(objectpath=None):
     
     return objectTrail
 
-def get_special_attribute(name, alternate_name = None):
+def get_special_attribute(name, old_name = None):
     """Return the special attribute. A special attribute is one that
     applies to all of the children from where it is defined, such as
     _cp_filters."""
@@ -71,10 +71,13 @@ def get_special_attribute(name, alternate_name = None):
             return getattr(obj, name)
     
     try:
-        return globals()[name]
+        if old_name:
+            return globals()[old_name]
+        else:
+            return globals()[name]
     except KeyError:
-        if alternate_name:
-            return get_special_attribute(alternate_name)
+        if old_name:
+            return get_special_attribute(name)
         msg = "Special attribute %s could not be found" % repr(name)
         raise cherrypy.HTTPError(500, msg)
 
