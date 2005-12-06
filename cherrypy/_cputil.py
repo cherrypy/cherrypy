@@ -67,7 +67,9 @@ def get_special_attribute(name, old_name = None):
     objectList = get_object_trail()
     objectList.reverse()
     for objname, obj in objectList:
-        if hasattr(obj, name):
+        if old_name and hasattr(obj, old_name):
+            return getattr(obj, old_name)
+        elif hasattr(obj, name):
             return getattr(obj, name)
     
     try:
