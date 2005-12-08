@@ -1,3 +1,7 @@
+2005-12-05:
+    * Added support for specifying the Content-Type to be used by defaults
+    * Added a response headers filter to specify HTTP headers
+
 2005-12-03:
     * Huge change: switching to lowercase_with_underscore names everywhere ... CP keeps backward compatibility though (remi)
 
