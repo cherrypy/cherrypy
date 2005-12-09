@@ -6,7 +6,7 @@ def defaultLoginScreen(fromPage, login = '', errorMsg = ''):
     return """
     <html><body>
         Message: %s
-        <form method="post" action="doLogin">
+        <form method="post" action="do_login">
             Login: <input type="text" name="login" value="%s" size="10"/><br/>
             Password: <input type="password" name="password" size="10"/><br/>
             <input type="hidden" name="fromPage" value="%s"/><br/>
@@ -38,12 +38,12 @@ class SessionAuthenticateFilter(BaseFilter):
 
         if cherrypy.request.path.endswith('loginScreen'):
             return
-        elif cherrypy.request.path.endswith('doLogout'):
+        elif cherrypy.request.path.endswith('do_logout'):
             cherrypy.session[sessionKey] = None
             cherrypy.request.user = None
             fromPage = cherrypy.request.params.get('fromPage', '..')
             raise cherrypy.HTTPRedirect(fromPage)
-        elif cherrypy.request.path.endswith('doLogin'):
+        elif cherrypy.request.path.endswith('do_login'):
             fromPage = cherrypy.request.params.get('fromPage', '..')
             login = cherrypy.request.params['login']
             password = cherrypy.request.params['password']
