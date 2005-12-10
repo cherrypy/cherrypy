@@ -2,18 +2,18 @@ import cherrypy
 from basefilter import BaseFilter
 
 
-def defaultLoginScreen(fromPage, login = '', errorMsg = ''):
+def defaultLoginScreen(from_page, login = '', errorMsg = ''):
     return """
     <html><body>
         Message: %s
         <form method="post" action="do_login">
             Login: <input type="text" name="login" value="%s" size="10"/><br/>
             Password: <input type="password" name="password" size="10"/><br/>
-            <input type="hidden" name="fromPage" value="%s"/><br/>
+            <input type="hidden" name="from_page" value="%s"/><br/>
             <input type="submit"/>
         </form>
     </body></html>
-    """ % (errorMsg, login, fromPage)
+    """ % (errorMsg, login, from_page)
 
 def defaultCheckLoginAndPassword(login, password):
     # Dummy checkLoginAndPassword function
@@ -41,21 +41,21 @@ class SessionAuthenticateFilter(BaseFilter):
         elif cherrypy.request.path.endswith('do_logout'):
             cherrypy.session[sessionKey] = None
             cherrypy.request.user = None
-            fromPage = cherrypy.request.params.get('fromPage', '..')
-            raise cherrypy.HTTPRedirect(fromPage)
+            from_page = cherrypy.request.params.get('from_page', '..')
+            raise cherrypy.HTTPRedirect(from_page)
         elif cherrypy.request.path.endswith('do_login'):
-            fromPage = cherrypy.request.params.get('fromPage', '..')
+            from_page = cherrypy.request.params.get('from_page', '..')
             login = cherrypy.request.params['login']
             password = cherrypy.request.params['password']
             errorMsg = checkLoginAndPassword(login, password)
             if errorMsg:
-                cherrypy.response.body = loginScreen(fromPage, login = login, errorMsg = errorMsg)
+                cherrypy.response.body = loginScreen(from_page, login = login, errorMsg = errorMsg)
                 cherrypy.request.executeMain = False
             else:
                 cherrypy.session[sessionKey] = login
-                if not fromPage:
-                    fromPage = '/'
-                raise cherrypy.HTTPRedirect(fromPage)
+                if not from_page:
+                    from_page = '/'
+                raise cherrypy.HTTPRedirect(from_page)
             return
 
         # Check if user is logged in
@@ -64,7 +64,7 @@ class SessionAuthenticateFilter(BaseFilter):
             #   is OK can handle it
             notLoggedIn()
         if not cherrypy.session.get(sessionKey):
-            cherrypy.response.body = loginScreen(cherrypy.request.browserUrl)
+            cherrypy.response.body = loginScreen(cherrypy.request.browser_url)
             cherrypy.request.executeMain = False
             return
         

@@ -193,13 +193,14 @@ class Request(object):
     original_params = property(_get_original_params,
                         doc="Deprecated. A copy of the original params.")
     
-    def _get_browserUrl(self):
+    def _get_browser_url(self):
         url = self.base + self.path
         if self.queryString:
             url += '?' + self.queryString
         return url
-    browserUrl = property(_get_browserUrl,
+    browser_url = property(_get_browser_url,
                           doc="The URL as entered in a browser (read-only).")
+    browserUrl = browser_url # Backward compatibility
     
     def processBody(self):
         # Create a copy of headers with lowercase keys because
@@ -289,7 +290,7 @@ class Request(object):
                     # We found the extra ".index". Check if the original path
                     # had a trailing slash (otherwise, do a redirect).
                     if not objectpath.endswith('/'):
-                        atoms = self.browserUrl.split("?", 1)
+                        atoms = self.browser_url.split("?", 1)
                         newUrl = atoms.pop(0) + '/'
                         if atoms:
                             newUrl += "?" + atoms[0]

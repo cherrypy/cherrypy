@@ -75,8 +75,8 @@ class HTTPRedirect(Exception):
             #  1. a complete URL with host (e.g. "http://www.dummy.biz/test")
             #  2. a URL relative to root (e.g. "/dummy")
             #  3. a URL relative to the current path
-            # Note that any querystring in browserUrl will be discarded.
-            url = urlparse.urljoin(cherrypy.request.browserUrl, url)
+            # Note that any querystring in browser_url will be discarded.
+            url = urlparse.urljoin(cherrypy.request.browser_url, url)
             abs_urls.append(url)
         self.urls = abs_urls
         

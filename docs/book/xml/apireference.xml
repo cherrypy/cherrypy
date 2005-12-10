@@ -199,7 +199,7 @@
 
     <section>
 
-      <title>cherrypy.request.browserUrl</title>
+      <title>cherrypy.request.browser_url</title>
 
       <para>This attribute is a string containing the URL the client 
       requested. By default, it is equal to <code>request.base + 

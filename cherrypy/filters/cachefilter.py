@@ -7,7 +7,7 @@ import cherrypy
 import basefilter
 
 def defaultCacheKey():
-    return cherrypy.request.browserUrl
+    return cherrypy.request.browser_url
 
 
 class MemoryCache:
