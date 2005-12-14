@@ -35,10 +35,10 @@ class Server(object):
         self.on_stop_thread_list = []
 
         # Backward compatibility:
-        self.onStopServerList = self.on_stop_server_list
-        self.onStartThreadList = self.on_start_thread_list
-        self.onStartServerList = self.on_start_server_list
-        self.onStopThreadList = self.on_stop_thread_list
+        self.onStopServerList = []
+        self.onStartThreadList = []
+        self.onStartServerList = []
+        self.onStopThreadList = []
     
     def start(self, initOnly=False, serverClass=_missing):
         """Main function. MUST be called from the main thread.
@@ -93,7 +93,7 @@ class Server(object):
         try:
             configure()
             
-            for func in cherrypy.server.on_start_server_list:
+            for func in cherrypy.server.on_start_server_list + cherrypy.server.onStartServerList:
                 func()
             self.start_http_server()
             self.state = STARTED
@@ -186,7 +186,7 @@ class Server(object):
             i = len(seen_threads) + 1
             seen_threads[threadID] = i
             
-            for func in self.on_start_thread_list:
+            for func in self.on_start_thread_list + self.onStartThreadList:
                 func(i)
         
         r = _cphttptools.Request(clientAddress[0], clientAddress[1],
@@ -200,11 +200,11 @@ class Server(object):
         self.stop_http_server()
         
         for thread_ident, i in seen_threads.iteritems():
-            for func in self.on_stop_thread_list:
+            for func in self.on_stop_thread_list + self.onStopThreadList:
                 func(i)
         seen_threads.clear()
         
-        for func in self.on_stop_server_list:
+        for func in self.on_stop_server_list + self.onStopServerList:
             func()
         
         self.state = STOPPED
@@ -226,7 +226,7 @@ class Server(object):
     def restart(self):
         """Restart, including any HTTP servers."""
         self.stop()
-        for func in self.on_start_server_list:
+        for func in self.on_start_server_list + self.onStartServerList:
             func()
         self.start_http_server()
         self.state = STARTED
