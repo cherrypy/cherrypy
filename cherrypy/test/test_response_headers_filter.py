@@ -5,12 +5,12 @@ import cherrypy
 from cherrypy._cputil import headers
 
 class Root:
-    @headers([("Content-Language", "en-GB"),
-              ('Content-Type', 'text/plain')])
     def index(self):
         yield "Hello, world"
+    index = headers([("Content-Language", "en-GB"),
+                     ('Content-Type', 'text/plain')])(index)
     index.exposed = True
-
+    
     def other(self):
         return "salut"
     other.exposed = True
