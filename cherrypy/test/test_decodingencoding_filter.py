@@ -59,7 +59,9 @@ class DecodingEncodingFilterTest(helper.CPWebCase):
         # Only allow iso-8859-1, which should fail and raise 406.
         self.getPage('/mao_zedong', [('Accept-Charset', 'iso-8859-1, *;q=0')])
         self.assertStatus("406 Not Acceptable")
-        self.assertErrorPage(406)
+        self.assertInBody("Your client sent this Accept-Charset header: "
+                          "iso-8859-1, *;q=0. We tried these charsets: "
+                          "iso-8859-1.")
 
 
 if __name__ == "__main__":
