@@ -82,7 +82,7 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
             request.multiprocess = False
             response = request.run(self.raw_requestline, self._headerlist(),
                                    self.rfile)
-            s, h, b = response.status, response.headers, response.body
+            s, h, b = response.status, response.header_list, response.body
             exc = None
         except (KeyboardInterrupt, SystemExit):
             raise
