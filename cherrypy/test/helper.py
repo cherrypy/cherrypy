@@ -117,6 +117,8 @@ class CPWebCase(webtest.WebCase):
         # 1) show server tracebacks in the test output, and
         # 2) stop the HTTP request (if any) and ignore further assertions.
         cherrypy.root._cp_on_error = onerror
+        # Backward compatibility:
+        cherrypy.root._cpOnError = onerror
         
         if vroot:
             if url != "*":

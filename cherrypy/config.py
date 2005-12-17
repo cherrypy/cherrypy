@@ -92,8 +92,7 @@ def get(key, default_value=None, return_section=False, path = None):
     If specified, return default_value on lookup failure. If return_section is
     specified, return the path to the value, instead of the value itself.
     """
-    # Look, ma, no Python function calls! Uber-fast.
-
+    
     if path is None:
         try:
             path = cherrypy.request.objectPath
