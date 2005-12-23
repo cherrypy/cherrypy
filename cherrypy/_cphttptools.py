@@ -88,9 +88,15 @@ class Request(object):
                     if self.processRequestBody:
                         self.processBody()
                     
-                    applyFilters('before_main')
-                    if self.executeMain:
-                        self.main()
+                    # Loop to allow for InternalRedirect.
+                    while True:
+                        try:
+                            applyFilters('before_main')
+                            if self.executeMain:
+                                self.main()
+                            break
+                        except cherrypy.InternalRedirect, ir:
+                            self.objectPath = ir.path
                     
                     applyFilters('before_finalize')
                     cherrypy.response.finalize()
@@ -231,25 +237,19 @@ class Request(object):
         if path is None:
             path = self.objectPath
         
-        while True:
-            try:
-                page_handler, object_path, virtual_path = self.mapPathToObject(path)
-                
-                # Decode any leftover %2F in the virtual_path atoms.
-                virtual_path = [x.replace("%2F", "/") for x in virtual_path]
-                
-                # Remove "root" from object_path and join it to get objectPath
-                self.objectPath = '/' + '/'.join(object_path[1:])
-                try:
-                    body = page_handler(*virtual_path, **self.params)
-                except Exception, x:
-                    x.args = x.args + (page_handler,)
-                    raise
-                cherrypy.response.body = body
-                return
-            except cherrypy.InternalRedirect, x:
-                # Try again with the new path
-                path = x.path
+        page_handler, object_path, virtual_path = self.mapPathToObject(path)
+        
+        # Decode any leftover %2F in the virtual_path atoms.
+        virtual_path = [x.replace("%2F", "/") for x in virtual_path]
+        
+        # Remove "root" from object_path and join it to get objectPath
+        self.objectPath = '/' + '/'.join(object_path[1:])
+        try:
+            body = page_handler(*virtual_path, **self.params)
+        except Exception, x:
+            x.args = x.args + (page_handler,)
+            raise
+        cherrypy.response.body = body
     
     def mapPathToObject(self, objectpath):
         """For path, return the corresponding exposed callable (or raise NotFound).

@@ -103,10 +103,25 @@ class Redirect(Test):
     def proxy(self):
         raise cherrypy.HTTPRedirect("proxy", 305)
     
-    def internal(self):
+    def stringify(self):
+        return str(cherrypy.HTTPRedirect("/"))
+
+
+class LoginFilter:
+    
+    def before_main(self):
+        if cherrypy.config.get("auth.on", False):
+            if not getattr(cherrypy.request, "login", None):
+                raise cherrypy.InternalRedirect("/internalredirect/login")
+
+class InternalRedirect(Test):
+    
+    _cp_filters = [LoginFilter()]
+    
+    def index(self):
         raise cherrypy.InternalRedirect("/")
     
-    def internal2(self, user_id):
+    def petshop(self, user_id):
         if user_id == "parrot":
             # Trade it for a slug when redirecting
             raise cherrypy.InternalRedirect('/image/getImagesByUser',
@@ -118,8 +133,11 @@ class Redirect(Test):
         else:
             raise cherrypy.InternalRedirect('/image/getImagesByUser')
     
-    def stringify(self):
-        return str(cherrypy.HTTPRedirect("/"))
+    def secure(self):
+        return "Welcome!"
+    
+    def login(self):
+        return "Please log in"
 
 
 class Image(Test):
@@ -305,7 +323,7 @@ class ThreadLocal(Test):
 
 class NadsatFilter:
     
-    def beforeFinalize(self):
+    def before_finalize(self):
         self.ended = False
         def nadsat_it_up(body):
             for chunk in body:
@@ -350,6 +368,9 @@ cherrypy.config.update({
     },
     '/params': {
         'server.log_file': log_file,
+    },
+    '/internalredirect/secure': {
+        'auth.on': True,
     },
     '/error': {
         'server.log_file': log_file,
@@ -548,20 +569,24 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus('305 Use Proxy')
         
         # InternalRedirect
-        self.getPage("/redirect/internal")
+        self.getPage("/internalredirect/")
         self.assertBody('hello')
         self.assertStatus('200 OK')
         
-        self.getPage("/redirect/internal2?user_id=Sir-not-appearing-in-this-film")
+        self.getPage("/internalredirect/petshop?user_id=Sir-not-appearing-in-this-film")
         self.assertBody('0 images for Sir-not-appearing-in-this-film')
         self.assertStatus('200 OK')
         
-        self.getPage("/redirect/internal2?user_id=parrot")
+        self.getPage("/internalredirect/petshop?user_id=parrot")
         self.assertBody('0 images for slug')
         self.assertStatus('200 OK')
         
-        self.getPage("/redirect/internal2?user_id=terrier")
+        self.getPage("/internalredirect/petshop?user_id=terrier")
         self.assertBody('0 images for fish')
+        self.assertStatus('200 OK')
+        
+        self.getPage("/internalredirect/secure")
+        self.assertBody('Please log in')
         self.assertStatus('200 OK')
         
         # HTTPRedirect on error
