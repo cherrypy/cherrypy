@@ -41,7 +41,17 @@ def new_func_strip_path(func_name):
 import pstats
 pstats.func_strip_path = new_func_strip_path
 
-import profile
+try:
+    import profile
+except ImportError:
+    profile = None
+    import warnings
+    msg = ("Your installation of Python doesn't have a profile module. "
+           "If you're on Debian, you can apt-get python2.4-profiler from "
+           "non-free in a separate step. See http://www.cherrypy.org/wiki/"
+           "ProfilingOnDebian for details.")
+    warnings.warn(msg)
+
 import os, os.path
 import sys
 
