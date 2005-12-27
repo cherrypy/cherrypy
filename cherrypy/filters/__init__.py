@@ -7,6 +7,7 @@ _input_order = [
     'CacheFilter',
     'LogDebugInfoFilter',
     'BaseUrlFilter',
+    'VirtualHostFilter',
     'DecodingFilter',
     'SessionFilter',
     'SessionAuthenticateFilter',
@@ -48,9 +49,9 @@ def init():
     
     from cherrypy.filters import baseurlfilter, cachefilter, \
         decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
-        staticfilter, nsgmlsfilter, tidyfilter, \
-        xmlrpcfilter, sessionauthenticatefilter, \
-        sessionfilter, responseheadersfilter
+        staticfilter, nsgmlsfilter, tidyfilter, xmlrpcfilter, \
+        sessionauthenticatefilter, sessionfilter, \
+        responseheadersfilter, virtualhostfilter
     
     classMap = {
         'BaseUrlFilter'      : baseurlfilter.BaseUrlFilter,
@@ -67,6 +68,7 @@ def init():
         'SessionFilter'      : sessionfilter.SessionFilter,
         'StaticFilter'       : staticfilter.StaticFilter,
         'TidyFilter'         : tidyfilter.TidyFilter,
+        'VirtualHostFilter'  : virtualhostfilter.VirtualHostFilter,
         'XmlRpcFilter'       : xmlrpcfilter.XmlRpcFilter,
     }
     
