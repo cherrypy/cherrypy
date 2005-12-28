@@ -1,6 +1,7 @@
 """Create and manage the CherryPy server."""
 
 import cgi
+import sys
 import threading
 import time
 import warnings
@@ -110,6 +111,11 @@ class Server(object):
         except SystemExit:
             cherrypy.log("SystemExit raised: shutting down server", "HTTP")
             self.stop()
+        except:
+            # Don't bother logging, since we're going to re-raise.
+            self.interrupt = sys.exc_info()[1]
+            self.stop()
+            raise
     
     def start_http_server(self, blocking=True):
         """Start the requested HTTP server."""
@@ -232,13 +238,18 @@ class Server(object):
         self.state = STARTED
     
     def wait(self):
-        """Block the caller until ready to receive requests."""
+        """Block the caller until ready to receive requests (or error)."""
         while not self.ready:
             time.sleep(.1)
+            if self.interrupt:
+                # Something went wrong in server.start,
+                # possibly in another thread. Stop this thread.
+                raise cherrypy.NotReady("The CherryPy server errored", "HTTP")
     
     def _is_ready(self):
         return bool(self.state == STARTED)
-    ready = property(_is_ready, doc="Return True if the server is ready to receive requests, False otherwise.")
+    ready = property(_is_ready, doc="Return True if the server is ready to"
+                                    " receive requests, False otherwise.")
     
     def start_with_callback(self, func, args=None, kwargs=None,
                             serverClass=_missing):
