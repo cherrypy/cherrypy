@@ -25,7 +25,7 @@ class TestHarness(object):
                          'native': (1, "Native HTTP Server",
                                     "cherrypy._cphttpserver.embedded_server"),
                          'wsgi': (2, "Native WSGI Server",
-                                  "cherrypy._cpwsgi.WSGIServer"),
+                                  "cherrypy.test.helper.TestWSGI"),
                          }
     default_server = "wsgi"
     

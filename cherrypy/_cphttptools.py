@@ -114,6 +114,8 @@ class Request(object):
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
+            if cherrypy.config.get("server.throw_errors", False):
+                raise
             cherrypy.response.handleError(sys.exc_info())
         
         if self.method == "HEAD":

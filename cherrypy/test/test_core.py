@@ -191,6 +191,10 @@ class Error(Test):
     
     def log_unhandled(self):
         raise ValueError()
+    
+    def rethrow(self):
+        """Test that an error raised here will be thrown out to the server."""
+        raise ValueError()
 
 
 class Ranges(Test):
@@ -391,6 +395,9 @@ cherrypy.config.update({
     '/error/log_unhandled': {
         'server.log_tracebacks': False,
         'server.log_unhandled_tracebacks': True,
+    },
+    '/error/rethrow': {
+        'server.throw_errors': True,
     },
     '/cpfilterlist/errinstream': {
         'streamResponse': True,
@@ -690,6 +697,14 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                "In addition, the custom error page failed:\n<br />"
                "[Errno 2] No such file or directory: 'nonexistent.html'")
         self.assertInBody(msg)
+        
+        # Test server.throw_errors (ticket #186).
+        httpcls = cherrypy.server.httpserverclass
+        if httpcls:
+            self.getPage("/error/rethrow")
+            self.assertBody("THROWN ERROR: ValueError")
+        else:
+            self.assertRaises(ValueError, self.getPage, "/error/rethrow")
     
     def testRanges(self):
         protocol = cherrypy.config.get('server.protocol_version')

@@ -28,6 +28,7 @@ import time
 import types
 
 import cherrypy
+from cherrypy import _cpwsgi
 import webtest
 
 for _x in dir(cherrypy):
@@ -55,6 +56,31 @@ class VirtualRootFilter:
 vroot = ""
 ##vroot = "/vpath"
 test_vrf = VirtualRootFilter(vroot)
+
+
+def error_middleware(environ, start_response):
+    started = [False]
+    def start(s, h, exc=None):
+        started[0] = True
+        start_response(s, h, exc)
+    
+    try:
+        for chunk in _cpwsgi.wsgiApp(environ, start):
+            yield chunk
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except Exception, x:
+        # We should only reach this point if server.throw_errors is True.
+        if not started[0]:
+            start_response("500 Server Error", [])
+        yield "THROWN ERROR: %s" % x.__class__.__name__
+
+
+class TestWSGI(_cpwsgi.WSGIServer):
+    """Wrapper for WSGI server so we can test thrown errors."""
+    
+    def __init__(self):
+        _cpwsgi.WSGIServer.__init__(self, error_middleware)
 
 
 class CPWebCase(webtest.WebCase):

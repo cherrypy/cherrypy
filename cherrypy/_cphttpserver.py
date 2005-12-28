@@ -5,6 +5,7 @@ import os
 import Queue
 import socket
 import SocketServer
+import sys
 import threading
 import time
 
@@ -89,9 +90,16 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
         except:
             tb = _cputil.formatExc()
             cherrypy.log(tb)
-            if not cherrypy.config.get("server.show_tracebacks", False):
-                tb = ""
-            s, h, b = _cputil.bareError(tb)
+            if cherrypy.config.get("server.throw_errors", False):
+                msg = "THROWN ERROR: %s" % sys.exc_info()[0].__name__
+                s = "500 Internal Server Error"
+                h = [('Content-Type', 'text/plain'),
+                     ('Content-Length', str(len(msg)))]
+                b = [msg]
+            else:
+                if not cherrypy.config.get("server.show_tracebacks", False):
+                    tb = ""
+                s, h, b = _cputil.bareError(tb)
         
         try:
             wfile = self.wfile

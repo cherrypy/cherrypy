@@ -77,6 +77,8 @@ def wsgiApp(environ, start_response):
     except (KeyboardInterrupt, SystemExit):
         raise
     except:
+        if cherrypy.config.get("server.throw_errors", False):
+            raise
         tb = _cputil.formatExc()
         cherrypy.log(tb)
         if not cherrypy.config.get("server.show_tracebacks", False):
@@ -169,7 +171,7 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     
     RequestHandlerClass = CPHTTPRequest
     
-    def __init__(self):
+    def __init__(self, app=wsgiApp):
         conf = cherrypy.config.get
         
         sockFile = cherrypy.config.get('server.socket_file')
@@ -179,7 +181,7 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
             bind_addr = (conf("server.socket_host"), conf("server.socket_port"))
         
         s = _cpwsgiserver.CherryPyWSGIServer
-        s.__init__(self, bind_addr, wsgiApp,
+        s.__init__(self, bind_addr, app,
                    conf("server.thread_pool"),
                    conf("server.socket_host"),
                    request_queue_size = conf('server.socket_queue_size'),
