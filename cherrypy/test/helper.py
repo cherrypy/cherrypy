@@ -237,7 +237,6 @@ def testmain(server=None, conf=None):
     cherrypy.server.start_with_callback(_test_main_thread, serverClass=server)
 
 def _test_main_thread():
-    cherrypy.server.wait()
     try:
         webtest.main()
     finally:
