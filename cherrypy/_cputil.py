@@ -17,7 +17,7 @@ def get_object_trail(objectpath=None):
     
     if objectpath is None:
         try:
-            objectpath = cherrypy.request.objectPath
+            objectpath = cherrypy.request.object_path
         except AttributeError:
             pass
     

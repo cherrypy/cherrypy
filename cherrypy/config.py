@@ -95,9 +95,9 @@ def get(key, default_value=None, return_section=False, path = None):
     
     if path is None:
         try:
-            path = cherrypy.request.objectPath
+            path = cherrypy.request.object_path
         except AttributeError:
-            # There's no request.objectPath yet, so use the global settings.
+            # There's no request.object_path yet, so use the global settings.
             path = "global"
     
     while True:
@@ -157,7 +157,7 @@ def getAll(key):
         results = []
     
     try:
-        path = cherrypy.request.objectPath
+        path = cherrypy.request.object_path
     except AttributeError:
         return results
     

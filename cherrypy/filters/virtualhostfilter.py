@@ -30,10 +30,10 @@ class VirtualHostFilter(BaseFilter):
             return
         
         domain = cherrypy.request.headers.get('Host', '')
-        if cherrypy.config.get("virtual_host_filter.useXForwardedHost", True):
+        if cherrypy.config.get("virtual_host_filter.use_x_forwarded_host", True):
             domain = cherrypy.request.headers.get("X-Forwarded-Host", domain)
         
         prefix = cherrypy.config.get("virtual_host_filter." + domain, "")
         if prefix:
-            cherrypy.request.objectPath = prefix + "/" + cherrypy.request.objectPath
+            cherrypy.request.object_path = prefix + "/" + cherrypy.request.object_path
 

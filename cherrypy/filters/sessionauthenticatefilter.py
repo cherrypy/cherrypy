@@ -26,6 +26,9 @@ class SessionAuthenticateFilter(BaseFilter):
     """
     
     def before_main(self):
+        cherrypy.request.user = None
+        cherrypy.thread_data.user = None
+
         conf = cherrypy.config.get
         if ((not conf('session_authenticate_filter.on', False))
               or conf('static_filter.on', False)):
@@ -42,6 +45,7 @@ class SessionAuthenticateFilter(BaseFilter):
         elif cherrypy.request.path.endswith('do_logout'):
             cherrypy.session[session_key] = None
             cherrypy.request.user = None
+            cherrypy.thread_data.user = None
             from_page = cherrypy.request.params.get('from_page', '..')
             raise cherrypy.HTTPRedirect(from_page)
         elif cherrypy.request.path.endswith('do_login'):
@@ -51,7 +55,7 @@ class SessionAuthenticateFilter(BaseFilter):
             error_msg = check_login_and_password(login, password)
             if error_msg:
                 cherrypy.response.body = login_screen(from_page, login = login, error_msg = error_msg)
-                cherrypy.request.executeMain = False
+                cherrypy.request.execute_main = False
             else:
                 cherrypy.session[session_key] = login
                 if not from_page:
@@ -60,17 +64,18 @@ class SessionAuthenticateFilter(BaseFilter):
             return
 
         # Check if user is logged in
+        temp_user = None
         if (not cherrypy.session.get(session_key)) and not_logged_in:
             # Call not_logged_in so that applications where anynymous user
             #   is OK can handle it
-            not_logged_in()
-        if not cherrypy.session.get(session_key):
+            temp_user = not_logged_in()
+        if (not cherrypy.session.get(session_key)) and not temp_user:
             cherrypy.response.body = login_screen(cherrypy.request.browser_url)
-            cherrypy.request.executeMain = False
+            cherrypy.request.execute_main = False
             return
         
         # Everything is OK: user is logged in
-        if load_user_by_username:
-            username = cherrypy.session[session_key]
+        if load_user_by_username and not cherrypy.thread_data.user:
+            username = temp_user or cherrypy.session[session_key]
             cherrypy.request.user = load_user_by_username(username)
             cherrypy.thread_data.user = load_user_by_username(username)

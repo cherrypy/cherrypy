@@ -95,7 +95,7 @@ class XmlRpcFilter(BaseFilter):
     before_request_body:
         Unmarshalls the posted data to a methodname and parameters.
         - These are stored in cherrypy.request.rpcMethod and .rpcParams
-        - The method is also stored in cherrypy.request.objectPath,
+        - The method is also stored in cherrypy.request.object_path,
           so CP2 will find the right method to call for you,
           based on the root's position.
     before_main:
@@ -138,12 +138,12 @@ class XmlRpcFilter(BaseFilter):
         # - 'RPC2' + method >> method
         # - 'someurl' + method >> someurl.method
         # - 'someurl/someother' + method >> someurl.someother.method
-        if not request.objectPath.endswith('/'):
-            request.objectPath += '/'
-        if request.objectPath.startswith('/RPC2/'):
+        if not request.object_path.endswith('/'):
+            request.object_path += '/'
+        if request.object_path.startswith('/RPC2/'):
             # strip the first /rpc2
-            request.objectPath = request.objectPath[5:]
-        request.objectPath += str(method).replace('.', '/')
+            request.object_path = request.object_path[5:]
+        request.object_path += str(method).replace('.', '/')
         request.paramList = list(params)
     
     def before_main(self):
@@ -158,7 +158,7 @@ class XmlRpcFilter(BaseFilter):
             or not getattr(cherrypy.request, 'is_rpc', False)):
             return
         
-        path = cherrypy.request.objectPath
+        path = cherrypy.request.object_path
         while True:
             try:
                 page_handler, object_path, virtual_path = cherrypy.request.mapPathToObject(path)
@@ -166,8 +166,8 @@ class XmlRpcFilter(BaseFilter):
                 # Decode any leftover %2F in the virtual_path atoms.
                 virtual_path = [x.replace("%2F", "/") for x in virtual_path]
                 
-                # Remove "root" from object_path and join it to get objectPath
-                self.objectPath = '/' + '/'.join(object_path[1:])
+                # Remove "root" from object_path and join it to get object_path
+                self.object_path = '/' + '/'.join(object_path[1:])
                 args = virtual_path + cherrypy.request.paramList
                 body = page_handler(*args, **cherrypy.request.params)
                 break
@@ -182,7 +182,7 @@ class XmlRpcFilter(BaseFilter):
         body = xmlrpclib.dumps((body,), methodresponse=1,
                                encoding=encoding, allow_none=0)
         self.respond(body)
-        cherrypy.request.executeMain = False
+        cherrypy.request.execute_main = False
     
     def after_error_response(self):
         if (not cherrypy.config.get('xmlrpc_filter.on', False)

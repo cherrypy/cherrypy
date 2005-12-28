@@ -15,7 +15,7 @@ class StaticFilter(BaseFilter):
             return
         
         request = cherrypy.request
-        path = request.objectPath
+        path = request.object_path
         
         regex = config.get('static_filter.match', '')
         if regex:
@@ -43,7 +43,7 @@ class StaticFilter(BaseFilter):
 
         try:        
             cptools.serveFile(filename)
-            request.executeMain = False
+            request.execute_main = False
         except cherrypy.NotFound:
             # if we didn't find the static file, continue
             # handling the request. we might find a dynamic

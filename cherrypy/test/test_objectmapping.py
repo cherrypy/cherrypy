@@ -56,7 +56,7 @@ class Dir1:
     index.exposed = True
     
     def myMethod(self):
-        return "myMethod from dir1, object Path is:" + repr(cherrypy.request.objectPath)
+        return "myMethod from dir1, object Path is:" + repr(cherrypy.request.object_path)
     myMethod.exposed = True
     
     def default(self, *params):

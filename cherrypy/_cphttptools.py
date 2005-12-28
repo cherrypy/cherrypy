@@ -26,7 +26,7 @@ class Request(object):
         self.remotePort = remotePort
         self.remoteHost = remoteHost
         self.scheme = scheme
-        self.executeMain = True
+        self.execute_main = True
         self.closed = False
     
     def close(self):
@@ -74,7 +74,7 @@ class Request(object):
             self.simpleCookie = Cookie.SimpleCookie()
             
             # This has to be done very early in the request process,
-            # because request.objectPath is used for config lookups
+            # because request.object_path is used for config lookups
             # right away.
             self.processRequestLine()
             
@@ -92,11 +92,11 @@ class Request(object):
                     while True:
                         try:
                             applyFilters('before_main')
-                            if self.executeMain:
+                            if self.execute_main:
                                 self.main()
                             break
                         except cherrypy.InternalRedirect, ir:
-                            self.objectPath = ir.path
+                            self.object_path = ir.path
                     
                     applyFilters('before_finalize')
                     cherrypy.response.finalize()
@@ -137,9 +137,9 @@ class Request(object):
         self.queryString = qs
         self.protocol = proto
         
-        # Change objectPath in filters to change
+        # Change object_path in filters to change
         # the object that will get rendered
-        self.objectPath = path
+        self.object_path = path
         
         # Compare request and server HTTP versions, in case our server does
         # not support the requested version. We can't tell the server what
@@ -237,15 +237,15 @@ class Request(object):
     def main(self, path=None):
         """Obtain and set cherrypy.response.body from a page handler."""
         if path is None:
-            path = self.objectPath
+            path = self.object_path
         
         page_handler, object_path, virtual_path = self.mapPathToObject(path)
         
         # Decode any leftover %2F in the virtual_path atoms.
         virtual_path = [x.replace("%2F", "/") for x in virtual_path]
         
-        # Remove "root" from object_path and join it to get objectPath
-        self.objectPath = '/' + '/'.join(object_path[1:])
+        # Remove "root" from object_path and join it to get object_path
+        self.object_path = '/' + '/'.join(object_path[1:])
         try:
             body = page_handler(*virtual_path, **self.params)
         except Exception, x:

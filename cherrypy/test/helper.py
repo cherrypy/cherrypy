@@ -50,9 +50,9 @@ class VirtualRootFilter:
         self.prefix = prefix
     
     def on_start_resource(self):
-        path = cherrypy.request.objectPath
+        path = cherrypy.request.object_path
         if path.startswith(self.prefix):
-            cherrypy.request.objectPath = path[len(self.prefix):]
+            cherrypy.request.object_path = path[len(self.prefix):]
 vroot = ""
 ##vroot = "/vpath"
 test_vrf = VirtualRootFilter(vroot)
