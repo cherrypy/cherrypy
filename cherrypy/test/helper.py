@@ -238,8 +238,6 @@ def testmain(server=None, conf=None):
 
 def _test_main_thread():
     cherrypy.server.wait()
-    from cherrypy import filters
-    filters.init()
     try:
         webtest.main()
     finally:
