@@ -37,7 +37,7 @@ class Request(object):
             except (KeyboardInterrupt, SystemExit):
                 raise
             except:
-                cherrypy.log(_cputil.formatExc())
+                cherrypy.log(traceback=True)
     
     def run(self, requestLine, headers, rfile):
         """Process the Request.

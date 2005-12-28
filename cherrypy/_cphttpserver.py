@@ -49,8 +49,7 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
             presult = BaseHTTPRequestHandler.parse_request(self)
         except httptools.MaxSizeExceeded:
             self.send_error(413, "Request Entity Too Large")
-            tb = _cputil.formatExc()
-            cherrypy.log(tb)
+            cherrypy.log(traceback=True)
             return False
         else:
             if presult:
@@ -140,16 +139,16 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
                 if request:
                     request.close()
             except:
-                cherrypy.log(_cputil.formatExc())
+                cherrypy.log(traceback=True)
             raise ex
         except:
-            tb = _cputil.formatExc()
+            cherrypy.log(traceback=True)
             try:
                 if request:
                     request.close()
             except:
-                cherrypy.log(_cputil.formatExc())
-            cherrypy.log(tb)
+                cherrypy.log(traceback=True)
+            
             s, h, b = _cputil.bareError()
             # CherryPy test suite expects bareError body to be output,
             # so don't call start_response (which, according to PEP 333,
@@ -285,7 +284,7 @@ class CherryHTTPServer(SocketServer.BaseServer):
             self.close_request(request)
     
     def handle_error(self, request, client_address):
-        cherrypy.log(_cputil.formatExc())
+        cherrypy.log(traceback=True)
     
     def serve_forever(self):
         """Override serve_forever to handle shutdown."""
@@ -388,7 +387,7 @@ class ServerThread(threading.Thread):
                     except (KeyboardInterrupt, SystemExit):
                         raise
                     except:
-                        cherrypy.log(_cputil.formatExc())
+                        cherrypy.log(traceback=True)
                 finally:
                     request.close()
         except (KeyboardInterrupt, SystemExit), exc:

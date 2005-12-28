@@ -355,7 +355,7 @@ def _cp_on_error():
     # Allow logging of only *unexpected* HTTPError's.
     if (not cherrypy.config.get('server.log_tracebacks', True)
         and cherrypy.config.get('server.log_unhandled_tracebacks', True)):
-        cherrypy.log(formatExc())
+        cherrypy.log(traceback=True)
     
     cherrypy.HTTPError(500).set_response()
 

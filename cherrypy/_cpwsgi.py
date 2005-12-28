@@ -101,16 +101,15 @@ def wsgiApp(environ, start_response):
             if request:
                 request.close()
         except:
-            cherrypy.log(_cputil.formatExc())
+            cherrypy.log(traceback=True)
         raise ex
     except:
-        tb = _cputil.formatExc()
+        cherrypy.log(traceback=True)
         try:
             if request:
                 request.close()
         except:
-            cherrypy.log(_cputil.formatExc())
-        cherrypy.log(tb)
+            cherrypy.log(traceback=True)
         s, h, b = _cputil.bareError()
         # CherryPy test suite expects bareError body to be output,
         # so don't call start_response (which, according to PEP 333,
@@ -142,8 +141,7 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
             self.wfile.flush()
             self.ready = False
             
-            tb = _cputil.formatExc()
-            cherrypy.log(tb)
+            cherrypy.log(traceback=True)
         else:
             if self.ready:
                 # Request header is parsed
