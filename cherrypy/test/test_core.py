@@ -325,39 +325,6 @@ class ThreadLocal(Test):
         return existing
 
 
-class NadsatFilter:
-    
-    def before_finalize(self):
-        self.ended = False
-        def nadsat_it_up(body):
-            for chunk in body:
-                chunk = chunk.replace("good", "horrorshow")
-                chunk = chunk.replace("piece", "lomtick")
-                yield chunk
-        cherrypy.response.body = nadsat_it_up(cherrypy.response.body)
-    
-    def on_end_request(self):
-        # This runs after the request has been completely written out.
-        cherrypy.response.body = "razdrez"
-        self.ended = True
-
-_nf = NadsatFilter()
-
-class CPFilterList(Test):
-    
-    _cp_filters = [_nf]
-    
-    def index(self):
-        return "A good piece of cherry pie"
-    
-    def err(self):
-        raise ValueError()
-    
-    def errinstream(self):
-        raise ValueError()
-        yield "confidential"
-
-
 log_file = os.path.join(localDir, "error.log")
 log_access_file = os.path.join(localDir, "access.log")
 
@@ -398,9 +365,6 @@ cherrypy.config.update({
     },
     '/error/rethrow': {
         'server.throw_errors': True,
-    },
-    '/cpfilterlist/errinstream': {
-        'streamResponse': True,
     },
 })
 
@@ -609,38 +573,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertBody("(['http://127.0.0.1:8000/'], 303)")
         else:
             self.assertBody("(['http://127.0.0.1:8000/'], 302)")
-    
-    def testCPFilterList(self):
-        self.getPage("/cpfilterlist/")
-        # If body is "razdrez", then on_end_request is being called too early.
-        self.assertBody("A horrorshow lomtick of cherry pie")
-        # If this fails, then on_end_request isn't being called at all.
-        self.assertEqual(_nf.ended, True)
-        
-        ignore = helper.webtest.ignored_exceptions
-        ignore.append(ValueError)
-        try:
-            valerr = '\n    raise ValueError()\nValueError'
-            self.getPage("/cpfilterlist/err")
-            # If body is "razdrez", then on_end_request is being called too early.
-            self.assertErrorPage(500, pattern=valerr)
-            # If this fails, then on_end_request isn't being called at all.
-            self.assertEqual(_nf.ended, True)
-            
-            # If body is "razdrez", then on_end_request is being called too early.
-            if cherrypy.server.httpserver is None:
-                self.assertRaises(ValueError, self.getPage,
-                                  "/cpfilterlist/errinstream")
-            else:
-                self.getPage("/cpfilterlist/errinstream")
-                # Because this error is raised after the response body has
-                # started, the status should not change to an error status.
-                self.assertStatus("200 OK")
-                self.assertBody("Unrecoverable error in the server.")
-            # If this fails, then on_end_request isn't being called at all.
-            self.assertEqual(_nf.ended, True)
-        finally:
-            ignore.pop()
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",

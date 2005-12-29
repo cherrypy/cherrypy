@@ -1,32 +1,32 @@
 import cherrypy
 from cherrypy import _cputil
 
+
 # These are in order for a reason!
-# They must be strings matching keys in classMap
 _input_order = [
-    'CacheFilter',
-    'LogDebugInfoFilter',
-    'BaseUrlFilter',
-    'VirtualHostFilter',
-    'DecodingFilter',
-    'SessionFilter',
-    'SessionAuthenticateFilter',
-    'StaticFilter',
-    'NsgmlsFilter',
-    'TidyFilter',
-    'XmlRpcFilter',
+    "cherrypy.filters.cachefilter.CacheFilter",
+    "cherrypy.filters.logdebuginfofilter.LogDebugInfoFilter",
+    "cherrypy.filters.baseurlfilter.BaseUrlFilter",
+    "cherrypy.filters.virtualhostfilter.VirtualHostFilter",
+    "cherrypy.filters.decodingfilter.DecodingFilter",
+    "cherrypy.filters.sessionfilter.SessionFilter",
+    "cherrypy.filters.sessionauthenticatefilter.SessionAuthenticateFilter",
+    "cherrypy.filters.staticfilter.StaticFilter",
+    "cherrypy.filters.nsgmlsfilter.NsgmlsFilter",
+    "cherrypy.filters.tidyfilter.TidyFilter",
+    "cherrypy.filters.xmlrpcfilter.XmlRpcFilter",
 ]
 
 _output_order = [
-    'ResponseHeadersFilter',
-    'XmlRpcFilter',
-    'EncodingFilter',
-    'TidyFilter',
-    'NsgmlsFilter',
-    'LogDebugInfoFilter',
-    'GzipFilter',
-    'SessionFilter',
-    'CacheFilter',
+    "cherrypy.filters.responseheadersfilter.ResponseHeadersFilter",
+    "cherrypy.filters.xmlrpcfilter.XmlRpcFilter",
+    "cherrypy.filters.encodingfilter.EncodingFilter",
+    "cherrypy.filters.tidyfilter.TidyFilter",
+    "cherrypy.filters.nsgmlsfilter.NsgmlsFilter",
+    "cherrypy.filters.logdebuginfofilter.LogDebugInfoFilter",
+    "cherrypy.filters.gzipfilter.GzipFilter",
+    "cherrypy.filters.sessionfilter.SessionFilter",
+    "cherrypy.filters.cachefilter.CacheFilter",
 ]
 
 _input_methods = ['on_start_resource', 'before_request_body', 'before_main']
@@ -44,49 +44,28 @@ backward_compatibility_dict = {
     'after_error_response': 'afterErrorResponse'
 }
 
+
 def init():
     """Initialize the filters."""
-    
-    from cherrypy.filters import baseurlfilter, cachefilter, \
-        decodingfilter, encodingfilter, gzipfilter, logdebuginfofilter, \
-        staticfilter, nsgmlsfilter, tidyfilter, xmlrpcfilter, \
-        sessionauthenticatefilter, sessionfilter, \
-        responseheadersfilter, virtualhostfilter
-    
-    classMap = {
-        'BaseUrlFilter'      : baseurlfilter.BaseUrlFilter,
-        'CacheFilter'        : cachefilter.CacheFilter,
-        'DecodingFilter'     : decodingfilter.DecodingFilter,
-        'EncodingFilter'     : encodingfilter.EncodingFilter,
-        'GzipFilter'         : gzipfilter.GzipFilter,
-        'LogDebugInfoFilter' : logdebuginfofilter.LogDebugInfoFilter,
-        'NsgmlsFilter'       : nsgmlsfilter.NsgmlsFilter,
-        'ResponseHeadersFilter':
-                    responseheadersfilter.ResponseHeadersFilter,
-        'SessionAuthenticateFilter':
-                    sessionauthenticatefilter.SessionAuthenticateFilter,
-        'SessionFilter'      : sessionfilter.SessionFilter,
-        'StaticFilter'       : staticfilter.StaticFilter,
-        'TidyFilter'         : tidyfilter.TidyFilter,
-        'VirtualHostFilter'  : virtualhostfilter.VirtualHostFilter,
-        'XmlRpcFilter'       : xmlrpcfilter.XmlRpcFilter,
-    }
+    from cherrypy.lib import cptools
     
     instances = {}
     inputs, outputs = [], []
     
     conf = cherrypy.config.get
     
-    for name in _input_order + conf('server.inputFilters', []):
-        f = instances.get(name)
+    for clsname in _input_order + conf('server.inputFilters', []):
+        f = instances.get(clsname)
         if f is None:
-            f = instances[name] = classMap[name]()
+            cls = cptools.attributes(clsname)
+            f = instances[clsname] = cls()
         inputs.append(f)
     
-    for name in conf('server.outputFilters', []) + _output_order:
-        f = instances.get(name)
+    for clsname in conf('server.outputFilters', []) + _output_order:
+        f = instances.get(clsname)
         if f is None:
-            f = instances[name] = classMap[name]()
+            cls = cptools.attributes(clsname)
+            f = instances[clsname] = cls()
         outputs.append(f)
     
     # Transform the instance lists into a dict of methods

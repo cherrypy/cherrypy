@@ -317,6 +317,7 @@ def run():
         'test_combinedfilters',
         'test_config',
         'test_core',
+        'test_custom_filters',
         'test_decodingencoding_filter',
         'test_gzip_filter',
         'test_logdebuginfo_filter',
