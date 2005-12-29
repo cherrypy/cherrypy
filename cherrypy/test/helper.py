@@ -216,14 +216,11 @@ def run_test_suite(moduleNames, server, conf):
                                         serverClass=server)
 
 def _run_test_suite_thread(moduleNames, conf):
-    cherrypy.server.wait()
     for testmod in moduleNames:
         # Must run each module in a separate suite,
         # because each module uses/overwrites cherrypy globals.
         cherrypy.config.reset()
         setConfig(conf)
-        from cherrypy import filters
-        filters.init()
         
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)
