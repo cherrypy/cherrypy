@@ -415,10 +415,8 @@ class MaxSizeExceeded(Exception):
     pass
 
 class SizeCheckWrapper(object):
-    """ Wrapper around an rfile object. For each data reading method,
-        it reads the data but it checks that the size of the data doesn't
-        exceed a certain limit
-    """
+    """Wraps a file-like object, raising MaxSizeExceeded if too large."""
+    
     def __init__(self, rfile, maxlen):
         self.rfile = rfile
         self.maxlen = maxlen
@@ -440,7 +438,7 @@ class SizeCheckWrapper(object):
             self.bytes_read += len(data)
             self._check_length()
             return data
-
+        
         # User didn't specify a size ...
         # We read the line in chunks to make sure it's not a 100MB line !
         res = []
@@ -449,7 +447,8 @@ class SizeCheckWrapper(object):
             self.bytes_read += len(data)
             self._check_length()
             res.append(data)
-            if len(data) < 256:
+            # See http://www.cherrypy.org/ticket/421
+            if len(data) < 256 or data[-1:] == "\n":
                 return ''.join(res)
     
     def close(self):

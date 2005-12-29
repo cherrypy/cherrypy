@@ -570,9 +570,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus('200 OK')
         protocol = cherrypy.config.get('server.protocol_version')
         if protocol == "HTTP/1.1":
-            self.assertBody("(['http://127.0.0.1:8000/'], 303)")
+            self.assertBody("(['http://127.0.0.1:%s/'], 303)" % self.PORT)
         else:
-            self.assertBody("(['http://127.0.0.1:8000/'], 302)")
+            self.assertBody("(['http://127.0.0.1:%s/'], 302)" % self.PORT)
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
@@ -834,7 +834,7 @@ llo,
                       ])
         self.assertHeader('Set-Cookie', 'First=Dinsdale;')
         self.assertHeader('Set-Cookie', 'Last=Piranha;')
-
+    
     def testMaxRequestSize(self):
         self.getPage("/maxrequestsize/index")
         self.assertBody("OK")
@@ -846,6 +846,14 @@ llo,
             self.assertStatus("413 Request Entity Too Large")
             self.assertInBody("Request Entity Too Large")
             cherrypy.config.update({'server.max_request_header_size': 0})
+            
+            # Test for http://www.cherrypy.org/ticket/421
+            # (Incorrect border condition in readline of SizeCheckWrapper).
+            # This hangs in rev 891 and earlier.
+            lines256 = "x" * 248
+            self.getPage("/maxrequestsize/index",
+                         headers=[('Host', '127.0.0.1:%s' % self.PORT),
+                                  ('From', lines256)])
         
         # Test upload
         h = [("Content-type", "multipart/form-data; boundary=x"),
