@@ -1,6 +1,7 @@
 """Configuration system for CherryPy."""
 
 import ConfigParser
+import os
 
 import cherrypy
 from cherrypy import _cputil
@@ -24,6 +25,10 @@ default_global = {
     'server.reverse_dns': False,
     'server.thread_pool': 0,
     'server.environment': "development",
+
+    '/favicon.ico': {
+        'static_filter.on': True,
+        'static_filter.file': os.path.join(os.path.dirname(__file__), "favicon.ico"),}
     }
 
 environments = {

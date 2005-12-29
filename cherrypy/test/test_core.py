@@ -821,7 +821,7 @@ llo,
         self.getPage("/favicon.ico")
         self.assertBody(data)
         
-        self.getPage("/redirect/favicon.ico")
+        self.getPage("/favicon.ico")
         self.assertBody(data)
     
     def testCookies(self):

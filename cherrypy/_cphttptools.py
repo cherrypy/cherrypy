@@ -299,20 +299,8 @@ class Request(object):
                         raise cherrypy.HTTPRedirect(newUrl)
                 return candidate, names[:i+1], names[i+1:-1]
         
-        # Not found at any node
-        if objectpath.endswith("favicon.ico"):
-            # Use CherryPy's default favicon.ico. If developers really,
-            # really want no favicon, they can make a dummy method
-            # that raises NotFound.
-            icofile = os.path.join(os.path.dirname(__file__), "favicon.ico")
-            cptools.serveFile(icofile)
-            applyFilters('before_finalize')
-            cherrypy.response.finalize()
-            raise cherrypy.RequestHandled()
-        else:
-            # We didn't find anything
-            raise cherrypy.NotFound(objectpath)
-
+        # We didn't find anything
+        raise cherrypy.NotFound(objectpath)
 
 general_header_fields = ["Cache-Control", "Connection", "Date", "Pragma",
                          "Trailer", "Transfer-Encoding", "Upgrade", "Via",
