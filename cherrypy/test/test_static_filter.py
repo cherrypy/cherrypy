@@ -7,7 +7,16 @@ import os
 
 class Root: pass
 
+class Static:
+    
+    def dynamic(self):
+        return "This is a DYNAMIC page"
+    dynamic.exposed = True
+
+
 cherrypy.root = Root()
+cherrypy.root.static = Static()
+
 cherrypy.config.update({
     'global': {
         'static_filter.on': False,
@@ -69,6 +78,11 @@ class StaticFilterTest(helper.CPWebCase):
             self.assertErrorPage(500)
         finally:
             ignore.pop()
+        
+        # Test that NotFound will then try dynamic handlers (see [878]).
+        self.getPage("/static/dynamic")
+        self.assertBody("This is a DYNAMIC page")
+
 
 if __name__ == "__main__":
     helper.testmain()

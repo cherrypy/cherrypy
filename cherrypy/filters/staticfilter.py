@@ -40,8 +40,8 @@ class StaticFilter(BaseFilter):
             root = config.get('static_filter.root', '').rstrip(r"\/")
             if root:
                 filename = os.path.join(root, filename)
-
-        try:        
+        
+        try:
             cptools.serveFile(filename)
             request.execute_main = False
         except cherrypy.NotFound:
@@ -49,4 +49,4 @@ class StaticFilter(BaseFilter):
             # handling the request. we might find a dynamic
             # handler instead.
             pass
-        
+
