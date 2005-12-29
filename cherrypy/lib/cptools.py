@@ -94,6 +94,10 @@ def serveFile(path, contentType=None, disposition=None, name=None):
             cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
         raise cherrypy.NotFound()
     
+    if os.path.isdir(path):
+        # Let the caller deal with it as they like.
+        raise cherrypy.NotFound()
+    
     if contentType is None:
         # Set content-type based on filename extension
         ext = ""

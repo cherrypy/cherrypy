@@ -33,9 +33,12 @@ class StaticFilter(BaseFilter):
             extraPath = path[len(section) + 1:]
             extraPath = extraPath.lstrip(r"\/")
             extraPath = urllib.unquote(extraPath)
+            # If extraPath is "", filename will end in a slash
             filename = os.path.join(staticDir, extraPath)
         
         # If filename is relative, make absolute using "root".
+        # Note that, if "root" isn't defined, we still may send
+        # a relative path to serveFile.
         if not os.path.isabs(filename):
             root = config.get('static_filter.root', '').rstrip(r"\/")
             if root:
@@ -45,8 +48,16 @@ class StaticFilter(BaseFilter):
             cptools.serveFile(filename)
             request.execute_main = False
         except cherrypy.NotFound:
-            # if we didn't find the static file, continue
-            # handling the request. we might find a dynamic
-            # handler instead.
-            pass
+            # If we didn't find the static file, continue handling the
+            # request. We might find a dynamic handler instead.
+            
+            # But first check for an index file if a folder was requested.
+            if filename[-1:] in ("/", "\\"):
+                idx = config.get('static_filter.index', '')
+                if idx:
+                    try:
+                        cptools.serveFile(os.path.join(filename, idx))
+                        request.execute_main = False
+                    except cherrypy.NotFound:
+                        pass
 

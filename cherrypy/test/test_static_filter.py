@@ -1,13 +1,21 @@
 import test
 test.prefer_parent_path()
 
-import cherrypy
 import os
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+
+import cherrypy
+from cherrypy.lib import cptools
 
 
-class Root: pass
+class Root:
+    pass
 
 class Static:
+    
+    def index(self):
+        return 'You want the Baron? You can have the Baron!'
+    index.exposed = True
     
     def dynamic(self):
         return "This is a DYNAMIC page"
@@ -33,8 +41,9 @@ cherrypy.config.update({
     },
     '/docroot': {
         'static_filter.on': True,
-        'static_filter.root': os.path.join(os.getcwd(), os.path.dirname(__file__)),
+        'static_filter.root': curdir,
         'static_filter.dir': 'static',
+        'static_filter.index': 'index.html',
     },
 })
 
@@ -70,18 +79,26 @@ class StaticFilterTest(helper.CPWebCase):
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
         
-        # Check a directory (should currently fail--no provision for it)
-        ignore = helper.webtest.ignored_exceptions
-        ignore.append(IOError)
-        try:
-            self.getPage("/static/")
-            self.assertErrorPage(500)
-        finally:
-            ignore.pop()
-        
         # Test that NotFound will then try dynamic handlers (see [878]).
         self.getPage("/static/dynamic")
         self.assertBody("This is a DYNAMIC page")
+        
+        # Check a directory via fall-through to dynamic handler.
+        self.getPage("/static/")
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('You want the Baron? You can have the Baron!')
+        
+        # Check a directory via "static_filter.index".
+        self.getPage("/docroot/")
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello, world\r\n')
+        # The same page should be returned even if redirected.
+        self.getPage("/docroot")
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello, world\r\n')
 
 
 if __name__ == "__main__":
