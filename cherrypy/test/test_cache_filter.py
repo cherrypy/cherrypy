@@ -28,9 +28,12 @@ import helper
 class CacheFilterTest(helper.CPWebCase):
     
     def testCaching(self):
-        for trial in xrange(1): # TODO TODO
+        # force the cache to be cleared between different tests
+        cherrypy._clear_cache = True
+        for trial in xrange(10):
+            trial = trial + 1
             self.getPage("/")
-            self.assertBody('visit #1')
+            self.assertBody('visit #%d' % trial)
 
 if __name__ == '__main__':
     helper.testmain()

@@ -30,6 +30,16 @@ class MemoryCache:
         self.totExpires = 0
         self.totNonModified = 0
 
+    def clear(self):
+        """Simply reset the cache to its initial state, all cleared of its values"""
+        self.cache.clear()
+        self.totPuts = 0
+        self.totGets = 0
+        self.totHits = 0
+        self.totExpires = 0
+        self.totNonModified = 0
+        self.cursize = 0
+
     def expireCache(self):
         while True:
             expirationTime, objSize, objKey = self.expirationQueue.get(block=True, timeout=None)
@@ -101,6 +111,9 @@ class CacheFilter(basefilter.BaseFilter):
         if not hasattr(cherrypy, '_cache'):
             cherrypy._cache = self.CacheClass(self.key, self.delay,
                 self.maxobjsize, self.maxsize, self.maxobjects)
+        
+        if hasattr(cherrypy, '_clear_cache') and cherrypy._clear_cache == True:
+            cherrypy._cache.clear()
         
         cacheData = cherrypy._cache.get()
         cherrypy.request.cacheable = not cacheData
