@@ -45,6 +45,10 @@ cherrypy.config.update({
         'static_filter.dir': 'static',
         'static_filter.index': 'index.html',
     },
+    '/error': {
+        'static_filter.on': True,
+        'server.show_tracebacks': True,
+    },
 })
 
 import helper
@@ -99,6 +103,13 @@ class StaticFilterTest(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
+        
+        # Check that we get a WrongConfigValue error if no .file or .dir
+        self.getPage("/error/thing.html")
+        self.assertErrorPage(500)
+        self.assertInBody("WrongConfigValue: StaticFilter requires either "
+                          "static_filter.file or static_filter.dir "
+                          "(/error/thing.html)")
 
 
 if __name__ == "__main__":

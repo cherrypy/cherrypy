@@ -26,6 +26,10 @@ class StaticFilter(BaseFilter):
         filename = config.get('static_filter.file')
         if not filename:
             staticDir = config.get('static_filter.dir')
+            if not staticDir:
+                msg = ("StaticFilter requires either static_filter.file "
+                       "or static_filter.dir (%s)" % request.path)
+                raise cherrypy.WrongConfigValue(msg)
             section = config.get('static_filter.dir', return_section=True)
             if section == 'global':
                 section = "/"
