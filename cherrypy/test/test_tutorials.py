@@ -163,7 +163,8 @@ hello
         
         self.getPage("/error?code=500")
         self.assertStatus("500 Internal error")
-        self.assertInBody("Server got itself in trouble")
+        self.assertInBody("The server encountered an unexpected condition "
+                          "which prevented it from fulfilling the request.")
         
         self.getPage("/error?code=403")
         self.assertStatus("403 Forbidden")

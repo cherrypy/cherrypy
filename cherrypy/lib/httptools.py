@@ -9,6 +9,12 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
 responseCodes = BaseHTTPRequestHandler.responses.copy()
 
+# From http://www.cherrypy.org/ticket/361
+responseCodes[500] = ('Internal error',
+                      'The server encountered an unexpected condition '
+                      'which prevented it from fulfilling the request.')
+
+
 import cgi
 import re
 import time
