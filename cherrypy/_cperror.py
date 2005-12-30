@@ -10,7 +10,7 @@ class NotReady(Error):
     pass
 
 class WrongConfigValue(Error):
-    """ Happens when unrepr can't parse a config value """
+    """ Happens when a config value can't be parsed, or is otherwise illegal. """
     pass
 
 class RequestHandled(Exception):

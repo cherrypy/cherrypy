@@ -162,6 +162,14 @@ class ServerStateTests(helper.CPWebCase):
             self.assertRaises(cherrypy.NotReady, self.getPage, "/")
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
+    
+    def test_3_ConfigErrors(self):
+        cherrypy.config.update({'server.environment': 'destruction'})
+        try:
+            self.assertRaises(cherrypy.WrongConfigValue,
+                              cherrypy.server.start, True, self.serverClass)
+        finally:
+            cherrypy.server.stop()
 
 
 db_connection = None

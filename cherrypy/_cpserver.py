@@ -64,6 +64,10 @@ class Server(object):
         self.blocking = not initOnly
         self.httpserverclass = serverClass
         
+        # Hmmm...we *could* check config in _start instead, but I think
+        # most people would like CP to fail before autoreload kicks in.
+        check_config()
+        
         # Autoreload, but check serverClass. If None, we're not starting
         # our own webserver, and therefore could do Very Bad Things when
         # autoreload calls sys.exit.
@@ -266,6 +270,15 @@ class Server(object):
         threading.Thread(target=_callback, args=args, kwargs=kwargs).start()
         
         self.start(serverClass=serverClass)
+
+
+def check_config():
+    err = cherrypy.WrongConfigValue
+    for name, section in cherrypy.config.configs.iteritems():
+        for k, v in section.iteritems():
+            if k == "server.environment":
+                if v and v not in cherrypy.config.environments:
+                    raise err("'%s' is not a registered environment." % v)
 
 
 def configure():
