@@ -25,7 +25,10 @@ Global variables (RAM backend only):
 
 import datetime
 import os
-import pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import random
 import sha
 import time
