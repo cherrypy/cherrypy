@@ -60,19 +60,26 @@ class Request(object):
         self.header_list = list(headers)
         self.rfile = rfile
         
+        self.headers = httptools.HeaderMap()
+        self.headerMap = self.headers # Backward compatibility
+        self.simpleCookie = Cookie.SimpleCookie()
+        
         if cherrypy.profiler:
             cherrypy.profiler.run(self._run)
         else:
             self._run()
+        
+        if self.method == "HEAD":
+            # HEAD requests MUST NOT return a message-body in the response.
+            cherrypy.response.body = []
+        
+        _cputil.get_special_attribute("_cp_log_access", "_cpLogAccess")()
+        
         return cherrypy.response
     
     def _run(self):
         
         try:
-            self.headers = httptools.HeaderMap()
-            self.headerMap = self.headers # Backward compatibility
-            self.simpleCookie = Cookie.SimpleCookie()
-            
             # This has to be done very early in the request process,
             # because request.object_path is used for config lookups
             # right away.
@@ -117,12 +124,6 @@ class Request(object):
             if cherrypy.config.get("server.throw_errors", False):
                 raise
             cherrypy.response.handleError(sys.exc_info())
-        
-        if self.method == "HEAD":
-            # HEAD requests MUST NOT return a message-body in the response.
-            cherrypy.response.body = []
-        
-        _cputil.get_special_attribute("_cp_log_access", "_cpLogAccess")()
     
     def processRequestLine(self):
         rl = self.requestLine

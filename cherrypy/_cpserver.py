@@ -22,6 +22,8 @@ _missing = object()
 
 class Server(object):
     
+    request_class = _cphttptools.Request
+    
     def __init__(self):
         self.state = STOPPED
         
@@ -199,8 +201,8 @@ class Server(object):
             for func in self.on_start_thread_list + self.onStartThreadList:
                 func(i)
         
-        r = _cphttptools.Request(clientAddress[0], clientAddress[1],
-                                 remoteHost, scheme)
+        r = self.request_class(clientAddress[0], clientAddress[1],
+                              remoteHost, scheme)
         cherrypy.serving.request = r
         cherrypy.serving.response = _cphttptools.Response()
         return r
