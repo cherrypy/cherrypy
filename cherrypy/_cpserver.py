@@ -15,8 +15,6 @@ STOPPED = 0
 STARTING = None
 STARTED = 1
 
-seen_threads = {}
-
 _missing = object()
 
 
@@ -26,6 +24,7 @@ class Server(object):
     
     def __init__(self):
         self.state = STOPPED
+        self.seen_threads = {}
         
         self.httpserver = None
         self.httpserverclass = None
@@ -189,14 +188,14 @@ class Server(object):
             raise cherrypy.NotReady("The CherryPy server could not start.")
         
         threadID = threading._get_ident()
-        if threadID not in seen_threads:
+        if threadID not in self.seen_threads:
             
             if cherrypy.codecoverage:
                 from cherrypy.lib import covercp
                 covercp.start()
             
-            i = len(seen_threads) + 1
-            seen_threads[threadID] = i
+            i = len(self.seen_threads) + 1
+            self.seen_threads[threadID] = i
             
             for func in self.on_start_thread_list + self.onStartThreadList:
                 func(i)
@@ -211,10 +210,10 @@ class Server(object):
         """Stop, including any HTTP servers."""
         self.stop_http_server()
         
-        for thread_ident, i in seen_threads.iteritems():
+        for thread_ident, i in self.seen_threads.iteritems():
             for func in self.on_stop_thread_list + self.onStopThreadList:
                 func(i)
-        seen_threads.clear()
+        self.seen_threads.clear()
         
         for func in self.on_stop_server_list + self.onStopServerList:
             func()
