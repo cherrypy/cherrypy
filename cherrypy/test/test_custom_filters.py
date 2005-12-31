@@ -96,8 +96,8 @@ class CPFilterList(Test):
 cherrypy.config.update({
     'global': {
         # METHOD TWO:
-        # Declare a classname in server.inputFilters.
-        'server.inputFilters': ["cherrypy.test.test_custom_filters.AccessFilter"],
+        # Declare a classname in server.input_filters.
+        'server.input_filters': ["cherrypy.test.test_custom_filters.AccessFilter"],
         'server.log_to_screen': False,
         'server.environment': 'production',
         'server.show_tracebacks': True,
@@ -115,8 +115,10 @@ cherrypy.config.update({
 })
 
 # METHOD THREE:
-# Append a classname to the filters._output_order chain directly.
-filters._output_order.insert(0, "cherrypy.test.test_custom_filters.Numerify")
+# Insert a class directly into the filters.output_filters chain.
+# You can also insert a string, but we're effectively testing
+# using-a-string via the config file.
+filters.output_filters.insert(0, Numerify)
 
 # We have to call filters.init() here (if we want methods #2 and #3
 # to work), because the test suite may already have run server.start()

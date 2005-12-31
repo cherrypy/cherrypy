@@ -3,7 +3,10 @@ from cherrypy import _cputil
 
 
 # These are in order for a reason!
-_input_order = [
+# Entries in the input_filters and output_filters lists
+# may be either a class, or the full package name of a class.
+
+input_filters = [
     "cherrypy.filters.cachefilter.CacheFilter",
     "cherrypy.filters.logdebuginfofilter.LogDebugInfoFilter",
     "cherrypy.filters.baseurlfilter.BaseUrlFilter",
@@ -17,7 +20,7 @@ _input_order = [
     "cherrypy.filters.xmlrpcfilter.XmlRpcFilter",
 ]
 
-_output_order = [
+output_filters = [
     "cherrypy.filters.responseheadersfilter.ResponseHeadersFilter",
     "cherrypy.filters.xmlrpcfilter.XmlRpcFilter",
     "cherrypy.filters.encodingfilter.EncodingFilter",
@@ -54,18 +57,22 @@ def init():
     
     conf = cherrypy.config.get
     
-    for clsname in _input_order + conf('server.inputFilters', []):
-        f = instances.get(clsname)
+    for filtercls in input_filters + conf('server.input_filters', []):
+        if isinstance(filtercls, basestring):
+            filtercls = cptools.attributes(filtercls)
+        
+        f = instances.get(filtercls)
         if f is None:
-            cls = cptools.attributes(clsname)
-            f = instances[clsname] = cls()
+            f = instances[filtercls] = filtercls()
         inputs.append(f)
     
-    for clsname in conf('server.outputFilters', []) + _output_order:
-        f = instances.get(clsname)
+    for filtercls in conf('server.output_filters', []) + output_filters:
+        if isinstance(filtercls, basestring):
+            filtercls = cptools.attributes(filtercls)
+        
+        f = instances.get(filtercls)
         if f is None:
-            cls = cptools.attributes(clsname)
-            f = instances[clsname] = cls()
+            f = instances[filtercls] = filtercls()
         outputs.append(f)
     
     # Transform the instance lists into a dict of methods
