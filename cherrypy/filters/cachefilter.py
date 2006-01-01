@@ -6,40 +6,43 @@ import time
 import cherrypy
 import basefilter
 
-def defaultCacheKey():
-    return cherrypy.request.browser_url
-
 
 class MemoryCache:
-
-    def __init__(self, key, delay, maxobjsize, maxsize, maxobjects):
-        self.key = key
-        self.delay = delay
-        self.maxobjsize = maxobjsize
-        self.maxsize = maxsize
-        self.maxobjects = maxobjects
-        self.cursize = 0
-        self.cache = {}
+    
+    def __init__(self):
+        self.clear()
         self.expirationQueue = Queue.Queue()
-        self.expirationThread = threading.Thread(target=self.expireCache, name='expireCache')
-        self.expirationThread.setDaemon(True)
-        self.expirationThread.start()
-        self.totPuts = 0
-        self.totGets = 0
-        self.totHits = 0
-        self.totExpires = 0
-        self.totNonModified = 0
-
+        t = self.expirationThread = threading.Thread(target=self.expireCache,
+                                                     name='expireCache')
+        t.setDaemon(True)
+        t.start()
+    
     def clear(self):
-        """Simply reset the cache to its initial state, all cleared of its values"""
-        self.cache.clear()
+        """Reset the cache to its initial, empty state."""
+        self.cache = {}
         self.totPuts = 0
         self.totGets = 0
         self.totHits = 0
         self.totExpires = 0
         self.totNonModified = 0
         self.cursize = 0
-
+    
+    def _key(self):
+        return cherrypy.config.get("cache_filter.key", cherrypy.request.browser_url)
+    key = property(_key)
+    
+    def _maxobjsize(self):
+        return cherrypy.config.get("cache_filter.maxobjsize", 100000)
+    maxobjsize = property(_maxobjsize)
+    
+    def _maxsize(self):
+        return cherrypy.config.get("cache_filter.maxsize", 10000000)
+    maxsize = property(_maxsize)
+    
+    def _maxobjects(self):
+        return cherrypy.config.get("cache_filter.maxobjects", 1000)
+    maxobjects = property(_maxobjects)
+    
     def expireCache(self):
         while True:
             expirationTime, objSize, objKey = self.expirationQueue.get(block=True, timeout=None)
@@ -56,7 +59,7 @@ class MemoryCache:
             except KeyError:
                 # the key may have been deleted elsewhere
                 pass
-
+    
     def get(self):
         """
         If the content is in the cache, returns a tuple containing the 
@@ -64,32 +67,33 @@ class MemoryCache:
         (rendered as a string); returns None if the key is not found.
         """
         self.totGets += 1
-        cacheItem = self.cache.get(self.key(), None)
+        cacheItem = self.cache.get(self.key, None)
         if cacheItem:
             self.totHits += 1
             return cacheItem
         else:
             return None
-        
+    
     def put(self, lastModified, obj):
         # Size check no longer includes header length
         objSize = len(obj[2])
         totalSize = self.cursize + objSize
+        
         # checks if there's space for the object
         if ((objSize < self.maxobjsize) and 
             (totalSize < self.maxsize) and 
             (len(self.cache) < self.maxobjects)):
             # add to the expirationQueue & cache
             try:
-                expirationTime = time.time() + self.delay
-                objKey = self.key()
+                expirationTime = time.time() + cherrypy.config.get("cache_filter.delay", 600)
+                objKey = self.key
                 self.expirationQueue.put((expirationTime, objSize, objKey))
+                self.cache[objKey] = (expirationTime, lastModified, obj)
                 self.totPuts += 1
                 self.cursize += objSize
             except Queue.Full:
                 # can't add because the queue is full
                 return
-            self.cache[objKey] = (expirationTime, lastModified, obj)
 
 
 class CacheFilter(basefilter.BaseFilter):
@@ -97,26 +101,18 @@ class CacheFilter(basefilter.BaseFilter):
     If the page is not in the cache, caches the output.
     """
     
-    CacheClass = property(lambda self: cherrypy.config.get("cache_filter.cacheClass", MemoryCache))
-    key = property(lambda self: cherrypy.config.get("cache_filter.key", defaultCacheKey))
-    delay = property(lambda self: cherrypy.config.get("cache_filter.delay", 600))
-    maxobjsize = property(lambda self: cherrypy.config.get("cache_filter.maxobjsize", 100000))
-    maxsize = property(lambda self: cherrypy.config.get("cache_filter.maxsize", 10000000))
-    maxobjects = property(lambda self: cherrypy.config.get("cache_filter.maxobjects", 1000))
+    def __init__(self):
+        cache_class = cherrypy.config.get("cache_filter.cacheClass", MemoryCache)
+        cherrypy._cache = cache_class()
+    
+    def on_start_resource(self):
+        cherrypy.request.cacheable = False
     
     def before_main(self):
         if not cherrypy.config.get('cache_filter.on', False):
             return
         
-        if not hasattr(cherrypy, '_cache'):
-            cherrypy._cache = self.CacheClass(self.key, self.delay,
-                self.maxobjsize, self.maxsize, self.maxobjects)
-        
-        if hasattr(cherrypy, '_clear_cache') and cherrypy._clear_cache == True:
-            cherrypy._cache.clear()
-        
         cacheData = cherrypy._cache.get()
-        cherrypy.request.cacheable = not cacheData
         if cacheData:
             # found a hit! check the if-modified-since request header
             expirationTime, lastModified, obj = cacheData
@@ -127,13 +123,14 @@ class CacheFilter(basefilter.BaseFilter):
                 cherrypy.response.body = None
             else:
                 # serve it & get out from the request
-                cherrypy.response.status, cherrypy.response.headers, body = obj
+                cherrypy.response.status, cherrypy.response.header_list, body = obj
                 cherrypy.response.body = body
             raise cherrypy.RequestHandled()
+        else:
+            cherrypy.request.cacheable = True
     
     def before_finalize(self):
-        if not (cherrypy.config.get('cache_filter.on', False) and
-                cherrypy.request.cacheable):
+        if not cherrypy.request.cacheable:
             return
         
         cherrypy.response._cachefilter_tee = []
@@ -146,19 +143,17 @@ class CacheFilter(basefilter.BaseFilter):
     
     def on_end_request(self):
         # Close & fix the cache entry after content was fully written
-        if not (cherrypy.config.get('cache_filter.on', False) and
-                cherrypy.request.cacheable):
+        if not cherrypy.request.cacheable:
             return
         
         response = cherrypy.response
-        status = response.status
-        headers = response.headers
-        body = ''.join([chunk for chunk in response._cachefilter_tee])
-        
         if response.headers.get('Pragma', None) != 'no-cache':
             lastModified = response.headers.get('Last-Modified', None)
-            # saves the cache data
-            cherrypy._cache.put(lastModified, (status, headers, body))
+            # save the cache data
+            body = ''.join([chunk for chunk in response._cachefilter_tee])
+            cherrypy._cache.put(lastModified, (response.status,
+                                               response.header_list,
+                                               body))
 
 
 def percentual(n,d):

@@ -10,9 +10,9 @@ class Root:
         cherrypy.counter = 0
     
     def index(self):
-        counter = cherrypy.counter + 1
-        cherrypy.counter = counter
-        return "visit #%s" % counter
+        cherrypy.counter += 1
+        msg = "visit #%s" % cherrypy.counter
+        return msg
     index.exposed = True
 
 cherrypy.root = Root()
@@ -28,12 +28,11 @@ import helper
 class CacheFilterTest(helper.CPWebCase):
     
     def testCaching(self):
-        # force the cache to be cleared between different tests
-        cherrypy._clear_cache = True
         for trial in xrange(10):
-            trial = trial + 1
             self.getPage("/")
-            self.assertBody('visit #%d' % trial)
+            # The response should be the same every time!
+            self.assertBody('visit #1')
 
 if __name__ == '__main__':
     helper.testmain()
+
