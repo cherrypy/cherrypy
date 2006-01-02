@@ -34,10 +34,12 @@ cherrypy.config.update({
     '/static': {
         'static_filter.on': True,
         'static_filter.dir': 'static',
+        'static_filter.root': curdir,
     },
     '/style.css': {
         'static_filter.on': True,
         'static_filter.file': 'style.css',
+        'static_filter.root': curdir,
     },
     '/docroot': {
         'static_filter.on': True,
@@ -56,13 +58,12 @@ import helper
 class StaticFilterTest(helper.CPWebCase):
     
     def testStaticFilter(self):
-        # This should resolve relative to cherrypy.root.__module__.
         self.getPage("/static/index.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
-        # Using a static_filter.root value...
+        # Using a static_filter.root value in a subdir...
         self.getPage("/docroot/index.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
