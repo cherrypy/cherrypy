@@ -14,8 +14,16 @@ class Root:
     def other(self):
         return "salut"
     other.exposed = True
-    
+
 cherrypy.root = Root()
+cherrypy.config.update({
+    '/other': {
+        'response_headers_filter.on': True,
+        'response_headers_filter.headers': [("Content-Language", "fr"),
+                                            ('Content-Type', 'text/plain')]
+        },
+    })
+
 
 import helper
 
@@ -27,11 +35,6 @@ class ResponseHeadersFilterTest(helper.CPWebCase):
         self.assertHeader('Content-Type', 'text/plain')
 
     def testResponseHeadersFilter(self):
-        cherrypy.config.update({'/other': {
-            'response_headers_filter.on': True,
-            'response_headers_filter.headers': [("Content-Language", "fr"),
-                                                ('Content-Type', 'text/plain')]
-        }})
         self.getPage('/other')
         self.assertHeader("Content-Language", "fr")
         # the filter should only change headers that have not been set yet

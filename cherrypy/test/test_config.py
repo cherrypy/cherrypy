@@ -5,6 +5,7 @@ test.prefer_parent_path()
 import StringIO
 import cherrypy
 
+
 class Root:
     def index(self, key):
         return cherrypy.config.get(key, "None")
@@ -25,9 +26,10 @@ class Env:
     index.exposed = True
     prod = index
 
-cherrypy.root = Root()
+
+cherrypy.tree.mount(Root())
 cherrypy.root.foo = Foo()
-cherrypy.root.env = Env()
+
 cherrypy.config.update({
     'global': {'server.log_to_screen': False,
                'server.environment': 'production',
@@ -45,9 +47,12 @@ cherrypy.config.update({
         'foo': 'this3',
         'bax': 'this4',
         },
-    '/env': {'server.environment': 'development'},
-    '/env/prod': {'server.environment': 'production'},
 })
+
+_env_conf = {'/': {'server.environment': 'development'},
+             '/prod': {'server.environment': 'production'},
+             }
+cherrypy.tree.mount(Env(), "/env", _env_conf)
 
 # Shortcut syntax--should get put in the "global" bucket
 cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
@@ -68,6 +73,8 @@ class ConfigTests(helper.CPWebCase):
             ('/foo/',    'bax', 'None'),
             ('/foo/bar', 'baz', 'that2'),
             ('/foo/nex', 'baz', 'that2'),
+            # If 'foo' == 'this', then the mount point '/env' leaks into '/'.
+            ('/env/prod','foo', 'None'),
         ]
         for path, key, expected in tests:
             self.getPage(path + "?key=" + key)
@@ -84,7 +91,8 @@ server.environment = production
         for key, val in cherrypy.config.environments['development'].iteritems():
             self.getPage("/env/?key=" + key)
             # The dev environment will have logdebuginfo data
-            self.assertEqual(self.body.split("\n")[0], str(val))
+            data = self.body.split("\n")[0]
+            self.assertEqual(data, str(val))
         for key, val in cherrypy.config.environments['production'].iteritems():
             self.getPage("/env/prod/?key=" + key)
             self.assertBody(str(val))

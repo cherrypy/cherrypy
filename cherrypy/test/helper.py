@@ -29,6 +29,7 @@ import types
 
 import cherrypy
 from cherrypy import _cpwsgi
+from cherrypy.lib import httptools
 import webtest
 
 for _x in dir(cherrypy):
@@ -42,20 +43,6 @@ def onerror():
     handled = webtest.server_error()
     if not handled:
         cherrypy._cputil._cp_on_error()
-
-
-class VirtualRootFilter:
-    
-    def __init__(self, prefix):
-        self.prefix = prefix
-    
-    def on_start_resource(self):
-        path = cherrypy.request.object_path
-        if path.startswith(self.prefix):
-            cherrypy.request.object_path = path[len(self.prefix):]
-vroot = ""
-##vroot = "/vpath"
-test_vrf = VirtualRootFilter(vroot)
 
 
 def error_middleware(environ, start_response):
@@ -84,6 +71,11 @@ class TestWSGI(_cpwsgi.WSGIServer):
 
 
 class CPWebCase(webtest.WebCase):
+    
+    mount_point = ""
+    
+    def prefix(self):
+        return self.mount_point.rstrip("/")
     
     def exit(self):
         sys.exit()
@@ -146,14 +138,8 @@ class CPWebCase(webtest.WebCase):
         # Backward compatibility:
         cherrypy.root._cpOnError = onerror
         
-        if vroot:
-            if url != "*":
-                url = vroot + url
-            filters = getattr(cherrypy.root, "_cp_filters", None)
-            if filters is None:
-                cherrypy.root._cp_filters = filters = []
-            if test_vrf not in filters:
-                filters.append(test_vrf)
+        if self.mount_point:
+            url = httptools.urljoin(self.mount_point, url)
         
         if cherrypy.server.httpserver is None:
             self._getRequest(url, headers, method, body)
@@ -219,6 +205,7 @@ def _run_test_suite_thread(moduleNames, conf):
     for testmod in moduleNames:
         # Must run each module in a separate suite,
         # because each module uses/overwrites cherrypy globals.
+        cherrypy.root = None
         cherrypy.config.reset()
         setConfig(conf)
         

@@ -22,6 +22,13 @@ import urllib
 from urlparse import urlparse
 
 
+def urljoin(*atoms):
+    url = "/".join(atoms)
+    while "//" in url:
+        url = url.replace("//", "/")
+    return url
+
+
 weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']

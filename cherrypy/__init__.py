@@ -8,6 +8,13 @@ import types
 
 from _cperror import *
 import config
+
+import _cptree
+tree = _cptree.Tree()
+
+# Legacy code may clobber this.
+root = None
+
 import _cpserver
 server = _cpserver.Server()
 

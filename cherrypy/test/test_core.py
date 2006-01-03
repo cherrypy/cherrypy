@@ -446,10 +446,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 haslength = True
         if haslength:
             self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7\n'
-                                          % helper.vroot))
+                                          % self.prefix()))
         else:
             self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 -\n'
-                                          % helper.vroot))
+                                          % self.prefix()))
         
         self.assertEqual(data[1][:15], '127.0.0.1 - - [')
         haslength = False
@@ -458,10 +458,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 haslength = True
         if haslength:
             self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 7\n'
-                                          % helper.vroot))
+                                          % self.prefix()))
         else:
             self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 -\n'
-                                          % helper.vroot))
+                                          % self.prefix()))
         
         data = open(log_file, "rb").readlines()
         self.assertEqual(data, [])
@@ -500,16 +500,16 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(('302 Found', '303 See Other'))
         self.assertInBody("<a href='http://127.0.0.1:%s%s/redirect/?id=3'>"
                           "http://127.0.0.1:%s%s/redirect/?id=3</a>" %
-                          (self.PORT, helper.vroot, self.PORT, helper.vroot))
+                          (self.PORT, self.prefix(), self.PORT, self.prefix()))
         
-        if helper.vroot:
+        if self.prefix():
             # Corner case: the "trailing slash" redirect could be tricky if
             # we're using a virtual root and the URI is "/vroot" (no slash).
             self.getPage("")
             self.assertStatus(('302 Found', '303 See Other'))
             self.assertInBody("<a href='http://127.0.0.1:%s%s/'>"
                               "http://127.0.0.1:%s%s/</a>" %
-                              (self.PORT, helper.vroot, self.PORT, helper.vroot))
+                              (self.PORT, self.prefix(), self.PORT, self.prefix()))
         
         self.getPage("/redirect/by_code?code=300")
         self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
@@ -871,7 +871,7 @@ hello
         httpcls = cherrypy.server.httpserverclass
         if httpcls:
             cherrypy.config.update({
-                '%s/maxrequestsize' % helper.vroot: {'server.max_request_body_size': 3}})
+                '%s/maxrequestsize' % self.prefix(): {'server.max_request_body_size': 3}})
             self.getPage('/maxrequestsize/upload', h, "POST", b)
             self.assertStatus("413 Request Entity Too Large")
             self.assertInBody("Request Entity Too Large")

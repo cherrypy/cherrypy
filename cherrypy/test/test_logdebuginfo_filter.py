@@ -46,7 +46,7 @@ hello
 --x--
 """
             cherrypy.config.update({
-                ('%s/bug326' % helper.vroot): {
+                ('%s/bug326' % self.prefix): {
                     'server.max_request_body_size': 3,
                     'server.environment': 'development',
                 }

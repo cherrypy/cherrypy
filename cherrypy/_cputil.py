@@ -61,9 +61,9 @@ def get_special_attribute(name, old_name = None):
     
     # First, we look in the right-most object to see if this special
     # attribute is implemented. If not, then we try the previous object,
-    # and so on until we reach cherrypy.root. If it's still not there,
-    # we use the implementation from this module.
-    
+    # and so on until we reach cherrypy.root, or a mount point.
+    # If it's still not there, we use the implementation from this module.
+    mounted_app_roots = cherrypy.tree.mount_points.values()
     objectList = get_object_trail()
     objectList.reverse()
     for objname, obj in objectList:
@@ -71,6 +71,8 @@ def get_special_attribute(name, old_name = None):
             return getattr(obj, old_name)
         elif hasattr(obj, name):
             return getattr(obj, name)
+        if obj in mounted_app_roots:
+            break
     
     try:
         if old_name:

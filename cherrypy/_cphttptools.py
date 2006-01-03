@@ -274,7 +274,8 @@ class Request(object):
         objectTrail = _cputil.get_object_trail(objectpath)
         names = [name for name, candidate in objectTrail]
         
-        # Try successive objects
+        # Try successive objects (reverse order)
+        mounted_app_roots = cherrypy.tree.mount_points.values()
         for i in xrange(len(objectTrail) - 1, -1, -1):
             
             name, candidate = objectTrail[i]
@@ -299,6 +300,9 @@ class Request(object):
                             newUrl += "?" + atoms[0]
                         raise cherrypy.HTTPRedirect(newUrl)
                 return candidate, names[:i+1], names[i+1:-1]
+            
+            if candidate in mounted_app_roots:
+                break
         
         # We didn't find anything
         raise cherrypy.NotFound(objectpath)

@@ -24,7 +24,7 @@ class BaseUrlFilterTest(helper.CPWebCase):
     def testBaseUrlFilter(self):
         self.getPage("/")
         self.assertHeader('Location',
-                          "http://www.mydomain.com%s/dummy" % helper.vroot)
+                          "http://www.mydomain.com%s/dummy" % self.prefix())
 
 
 if __name__ == '__main__':

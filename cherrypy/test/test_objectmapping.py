@@ -87,17 +87,29 @@ class Dir4:
     def index(self):
         return "index for dir4, not exposed"
 
-cherrypy.root = Root()
-cherrypy.root.exposing = Exposing()
-cherrypy.root.exposingnew = ExposingNewStyle()
-cherrypy.root.dir1 = Dir1()
-cherrypy.root.dir1.dir2 = Dir2()
-cherrypy.root.dir1.dir2.dir3 = Dir3()
-cherrypy.root.dir1.dir2.dir3.dir4 = Dir4()
+Root.exposing = Exposing()
+Root.exposingnew = ExposingNewStyle()
+Root.dir1 = Dir1()
+Root.dir1.dir2 = Dir2()
+Root.dir1.dir2.dir3 = Dir3()
+Root.dir1.dir2.dir3.dir4 = Dir4()
+
+mount_points = ["/", "/users/fred/blog", "/corp/blog"]
+for url in mount_points:
+    cherrypy.tree.mount(Root(), url)
+
 cherrypy.config.update({
         'server.log_to_screen': False,
         'server.environment': "production",
 })
+
+
+class Isolated:
+    def index(self):
+        return "made it!"
+    index.exposed = True
+
+cherrypy.tree.mount(Isolated(), "/isolated")
 
 
 import helper
@@ -105,50 +117,72 @@ import helper
 class ObjectMappingTest(helper.CPWebCase):
     
     def testObjectMapping(self):
-        self.getPage('/')
-        self.assertBody('world')
+        def run():
+            prefix = self.mount_point
+            if prefix == "/":
+                prefix = ""
+            
+            self.getPage('/')
+            self.assertBody('world')
+            
+            self.getPage("/dir1/myMethod")
+            self.assertBody("myMethod from dir1, object Path is:'%s/dir1/myMethod'"
+                            % prefix)
+            
+            self.getPage("/this/method/does/not/exist")
+            self.assertBody("default:('this', 'method', 'does', 'not', 'exist')")
+            
+            self.getPage("/extra/too/much")
+            self.assertBody("('too', 'much')")
+            
+            self.getPage("/other")
+            self.assertBody('other')
+            
+            self.getPage("/notExposed")
+            self.assertBody("default:('notExposed',)")
+            
+            self.getPage("/dir1/dir2/")
+            self.assertBody('index for dir2, path is:%s/dir1/dir2/'
+                            % prefix)
+            
+            self.getPage("/dir1/dir2")
+            self.assert_(self.status in ('302 Found', '303 See Other'))
+            self.assertHeader('Location', 'http://%s:%s%s/dir1/dir2/'
+                              % (self.HOST, self.PORT, prefix))
+            
+            self.getPage("/dir1/dir2/dir3/dir4/index")
+            self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
+            
+            self.getPage("/redirect")
+            self.assertStatus('302 Found')
+            self.assertHeader('Location', 'http://%s:%s%s/dir1/'
+                              % (self.HOST, self.PORT, prefix))
+            
+            # Test that we can use URL's which aren't all valid Python identifiers
+            # This should also test the %XX-unquoting of URL's.
+            self.getPage("/Von%20B%fclow?ID=14")
+            self.assertBody("ID is 14")
+            
+            # Test that %2F in the path doesn't get unquoted too early;
+            # that is, it should not be used to separate path components.
+            # See ticket #393.
+            self.getPage("/page%2Fname")
+            self.assertBody("default:('page/name',)")
         
-        self.getPage("/dir1/myMethod")
-        self.assertBody("myMethod from dir1, object Path is:'/dir1/myMethod'")
+        for url in mount_points:
+            self.mount_point = url
+            run()
         
-        self.getPage("/this/method/does/not/exist")
-        self.assertBody("default:('this', 'method', 'does', 'not', 'exist')")
+        self.mount_point = ""
         
-        self.getPage("/extra/too/much")
-        self.assertBody("('too', 'much')")
-        
-        self.getPage("/other")
-        self.assertBody('other')
-        
-        self.getPage("/notExposed")
-        self.assertBody("default:('notExposed',)")
-        
-        self.getPage("/dir1/dir2/")
-        self.assertBody('index for dir2, path is:%s/dir1/dir2/' % helper.vroot)
-        
-        self.getPage("/dir1/dir2")
-        self.assert_(self.status in ('302 Found', '303 See Other'))
-        self.assertHeader('Location', 'http://%s:%s%s/dir1/dir2/'
-                          % (self.HOST, self.PORT, helper.vroot))
-        
-        self.getPage("/dir1/dir2/dir3/dir4/index")
-        self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
-        
-        self.getPage("/redirect")
-        self.assertStatus('302 Found')
-        self.assertHeader('Location', 'http://%s:%s%s/dir1/'
-                          % (self.HOST, self.PORT, helper.vroot))
-        
-        # Test that we can use URL's which aren't all valid Python identifiers
-        # This should also test the %XX-unquoting of URL's.
-        self.getPage("/Von%20B%fclow?ID=14")
-        self.assertBody("ID is 14")
-        
-        # Test that %2F in the path doesn't get unquoted too early;
-        # that is, it should not be used to separate path components.
-        # See ticket #393.
-        self.getPage("/page%2Fname")
-        self.assertBody("default:('page/name',)")
+        # Test that the "isolated" app doesn't leak url's into the root app.
+        # If it did leak, Root.default() would answer with
+        #   "default:('isolated', 'doesnt', 'exist')".
+        self.getPage("/isolated/")
+        self.assertStatus("200 OK")
+        self.assertBody("made it!")
+        self.getPage("/isolated/doesnt/exist")
+        self.assertStatus("404 Not Found")
     
     def testPositionalParams(self):
         self.getPage("/dir1/dir2/posparam/18/24/hut/hike")

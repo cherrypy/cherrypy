@@ -5,7 +5,7 @@ import os
 
 import cherrypy
 from cherrypy import _cputil
-from cherrypy.lib import autoreload, cptools
+from cherrypy.lib import autoreload, cptools, httptools
 
 
 # This configs dict holds the settings metadata for all cherrypy objects.
@@ -55,7 +55,7 @@ environments = {
         },
     }
 
-def update(updateMap=None, file=None, overwrite=True):
+def update(updateMap=None, file=None, overwrite=True, baseurl=""):
     """Update configs from a dictionary or a config file.
     
     If overwrite is False then the update will not modify values
@@ -77,6 +77,12 @@ def update(updateMap=None, file=None, overwrite=True):
         if not isinstance(valueMap, dict):
             valueMap = {section: valueMap}
             section = 'global'
+        
+        if baseurl and section.startswith("/"):
+            if section == "/":
+                section = baseurl
+            else:
+                section = httptools.urljoin(baseurl, section)
         
         bucket = configs.setdefault(section, {})
         if overwrite:
@@ -141,6 +147,10 @@ def get(key, default_value=None, return_section=False, path = None):
         
         # Move one node up the tree and try again.
         if path == "/":
+            path = "global"
+        elif path in cherrypy.tree.mount_points:
+            # We've reached the mount point for an application,
+            # and should skip the rest of the tree (up to "global").
             path = "global"
         else:
             path = path[:path.rfind("/")]
