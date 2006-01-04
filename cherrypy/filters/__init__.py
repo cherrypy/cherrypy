@@ -94,7 +94,7 @@ def init():
 _filterhooks = {}
 
 
-def applyFilters(method_name):
+def applyFilters(method_name, failsafe=False):
     """Execute the given method for all registered filters."""
     special_methods = []
     for f in _cputil.get_special_attribute("_cp_filters", "_cpFilterList"):
@@ -105,12 +105,28 @@ def applyFilters(method_name):
             method = getattr(f, method_name, None)
         if method:
             special_methods.append(method)
-
+    
     if method_name in _input_methods:
         # Run special filters after defaults.
-        for method in _filterhooks[method_name] + special_methods:
-            method()
+        methods = _filterhooks[method_name] + special_methods
     else:
         # Run special filters before defaults.
-        for method in special_methods + _filterhooks[method_name]:
+        methods = special_methods + _filterhooks[method_name]
+
+    for method in methods:
+        # The on_start_resource, on_end_resource, and on_end_request methods
+        # are guaranteed to run even if other methods of the same name fail.
+        # We will still log the failure, but proceed on to the next method.
+        # The only way to stop all processing from one of these methods is
+        # to raise SystemExit and stop the whole server. So, trap your own
+        # errors in these methods!
+        if failsafe:
+            try:
+                method()
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except:
+                cherrypy.log(traceback=True)
+        else:
             method()
+

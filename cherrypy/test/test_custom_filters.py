@@ -11,13 +11,18 @@ from cherrypy.filters.basefilter import BaseFilter
 
 class Numerify(BaseFilter):
     
+    def on_start_resource(self):
+        m = cherrypy.config.get("numerify_filter.map", {})
+        cherrypy.request.numerify_map = m.items()
+    
     def before_finalize(self):
         if not cherrypy.config.get("numerify_filter.on", False):
             return
         
         def number_it(body):
             for chunk in body:
-                chunk = chunk.replace("pie", "3.14159")
+                for k, v in cherrypy.request.numerify_map:
+                    chunk = chunk.replace(k, v)
                 yield chunk
         cherrypy.response.body = number_it(cherrypy.response.body)
 
@@ -91,6 +96,9 @@ class CPFilterList(Test):
     
     def restricted(self):
         return "Welcome!"
+    
+    def err_in_onstart(self):
+        return "success!"
 
 
 cherrypy.config.update({
@@ -104,6 +112,7 @@ cherrypy.config.update({
     },
     '/cpfilterlist': {
         'numerify_filter.on': True,
+        'numerify_filter.map': {"pie": "3.14159"}
     },
     '/cpfilterlist/restricted': {
         'access_filter.on': True,
@@ -112,12 +121,17 @@ cherrypy.config.update({
     '/cpfilterlist/errinstream': {
         'streamResponse': True,
     },
+    '/cpfilterlist/err_in_onstart': {
+        # Because this isn't a dict, on_start_resource will error.
+        'numerify_filter.map': "pie->3.14159"
+    },
 })
 
 # METHOD THREE:
 # Insert a class directly into the filters.output_filters chain.
 # You can also insert a string, but we're effectively testing
 # using-a-string via the config file.
+filters.input_filters.insert(0, Numerify)
 filters.output_filters.insert(0, Numerify)
 
 # We have to call filters.init() here (if we want methods #2 and #3
@@ -168,6 +182,23 @@ class FilterTests(helper.CPWebCase):
         # Test the config method.
         self.getPage("/cpfilterlist/restricted")
         self.assertErrorPage(401)
+    
+    def testGuaranteedFilters(self):
+        # The on_start_resource and on_end_request filter methods are all
+        # guaranteed to run, even if there are failures in other on_start
+        # or on_end methods. This is NOT true of the other filter methods.
+        # Here, we have set up a failure in NumerifyFilter.on_start_resource,
+        # but because that failure is logged and passed over, the error
+        # page we obtain in the user agent should be from before_finalize.
+        ignore = helper.webtest.ignored_exceptions
+        ignore.append(AttributeError)
+        try:
+            self.getPage("/cpfilterlist/err_in_onstart")
+            self.assertErrorPage(500)
+            self.assertInBody("AttributeError: 'Request' object has no "
+                              "attribute 'numerify_map'")
+        finally:
+            ignore.pop()
 
 
 if __name__ == '__main__':

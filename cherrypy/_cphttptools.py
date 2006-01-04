@@ -32,12 +32,7 @@ class Request(object):
     def close(self):
         if not self.closed:
             self.closed = True
-            try:
-                applyFilters('on_end_request')
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                cherrypy.log(traceback=True)
+            applyFilters('on_end_request', failsafe=True)
     
     def run(self, requestLine, headers, rfile):
         """Process the Request.
@@ -86,7 +81,7 @@ class Request(object):
             self.processRequestLine()
             
             try:
-                applyFilters('on_start_resource')
+                applyFilters('on_start_resource', failsafe=True)
                 
                 try:
                     self.processHeaders()
@@ -117,7 +112,7 @@ class Request(object):
                     applyFilters('before_finalize')
                     cherrypy.response.finalize()
             finally:
-                applyFilters('on_end_resource')
+                applyFilters('on_end_resource', failsafe=True)
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
