@@ -26,7 +26,7 @@ class Tree:
         if point:
             node = cherrypy.root
             if node is None:
-                node = Root()
+                node = cherrypy.root = Root()
             atoms = point.split("/")
             tail = atoms.pop()
             for atom in atoms:
