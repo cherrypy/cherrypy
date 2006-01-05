@@ -812,14 +812,11 @@ llo,
         self.assertStatus('200 OK')
     
     def testFavicon(self):
-        # Calls to favicon.ico are special-cased in _cphttptools.
+        # Calls to favicon.ico are special-cased in config.py.
         icofilename = os.path.join(localDir, "../favicon.ico")
         icofile = open(icofilename, "rb")
         data = icofile.read()
         icofile.close()
-        
-        self.getPage("/favicon.ico")
-        self.assertBody(data)
         
         self.getPage("/favicon.ico")
         self.assertBody(data)
