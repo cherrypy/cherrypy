@@ -78,4 +78,4 @@ class SessionAuthenticateFilter(BaseFilter):
         if load_user_by_username and not cherrypy.thread_data.user:
             username = temp_user or cherrypy.session[session_key]
             cherrypy.request.user = load_user_by_username(username)
-            cherrypy.thread_data.user = load_user_by_username(username)
+            cherrypy.thread_data.user = cherrypy.request.user
