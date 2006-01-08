@@ -107,7 +107,7 @@ class CPWebCase(webtest.WebCase):
                 self.body.append(chunk)
             request.close()
         except Exception, ex:
-            if cherrypy.config.get("streamResponse", False):
+            if cherrypy.config.get("stream_response", False):
                 try:
                     request.close()
                 except:

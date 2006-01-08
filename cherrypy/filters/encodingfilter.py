@@ -49,7 +49,7 @@ def find_acceptable_charset():
     
     attempted_charsets = []
     
-    stream = conf("streamResponse", False)
+    stream = conf("stream_response", False)
     if stream:
         encode = encode_stream
     else:

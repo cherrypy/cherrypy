@@ -30,7 +30,7 @@ cherrypy.config.update({
                'server.show_tracebacks': True,
                'gzip_filter.on': True,
                },
-    '/noshow_stream': {'streamResponse': True},
+    '/noshow_stream': {'stream_response': True},
 })
 
 

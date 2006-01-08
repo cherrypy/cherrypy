@@ -348,7 +348,7 @@ cherrypy.config.update({
         'server.log_tracebacks': True,
     },
     '/error/page_streamed': {
-        'streamResponse': True,
+        'stream_response': True,
     },
     '/error/cause_err_in_finalize': {
         'server.show_tracebacks': False,
@@ -597,7 +597,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertErrorPage(500, pattern=valerr)
             
             import cherrypy
-            # streamResponse should be True for this path.
+            # stream_response should be True for this path.
             if cherrypy.server.httpserver is None:
                 self.assertRaises(ValueError, self.getPage,
                                   "/error/page_streamed")

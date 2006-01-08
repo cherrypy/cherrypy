@@ -119,7 +119,7 @@ cherrypy.config.update({
         'server.show_tracebacks': False,
     },
     '/cpfilterlist/errinstream': {
-        'streamResponse': True,
+        'stream_response': True,
     },
     '/cpfilterlist/err_in_onstart': {
         # Because this isn't a dict, on_start_resource will error.

@@ -395,7 +395,7 @@ class Response(object):
         
         self.status = "%s %s" % (code, reason)
         
-        stream = cherrypy.config.get("streamResponse", False)
+        stream = cherrypy.config.get("stream_response", False)
         # OPTIONS requests MUST include a Content-Length of 0 if no body.
         # Just punt and figure Content-Length for all OPTIONS requests.
         if cherrypy.request.method == "OPTIONS":
