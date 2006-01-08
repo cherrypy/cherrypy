@@ -42,7 +42,7 @@ class DecodingFilter(BaseFilter):
             if hasattr(value, 'file'):
                 # This is a file being uploaded: skip it
                 decodedParams[key] = value
-            if isinstance(value, list):
+            elif isinstance(value, list):
                 # value is a list: decode each element
                 decodedParams[key] = [v.decode(enc) for v in value]
             else:
