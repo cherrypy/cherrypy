@@ -23,8 +23,11 @@ class StaticFilter(BaseFilter):
             if not re.search(regex, path):
                 return
         
+        root = config.get('static_filter.root', '').rstrip(r"\/")
         filename = config.get('static_filter.file')
-        if not filename:
+        if filename:
+            staticDir = None
+        else:
             staticDir = config.get('static_filter.dir')
             if not staticDir:
                 msg = ("StaticFilter requires either static_filter.file "
@@ -38,22 +41,29 @@ class StaticFilter(BaseFilter):
             extraPath = extraPath.lstrip(r"\/")
             extraPath = urllib.unquote(extraPath)
             # If extraPath is "", filename will end in a slash
-            if '..' in extraPath:
-                # Disallow '..' (security flaw)
-                raise cherrypy.HTTPError(403) # Forbidden
             filename = os.path.join(staticDir, extraPath)
         
         # If filename is relative, make absolute using "root".
         # Note that, if "root" isn't defined, we still may send
         # a relative path to serveFile.
         if not os.path.isabs(filename):
-            root = config.get('static_filter.root', '').rstrip(r"\/")
             if not root:
                 msg = ("StaticFilter requires an absolute final path. "
                        "Make static_filter.dir, .file, or .root absolute.")
                 raise cherrypy.WrongConfigValue(msg)
             filename = os.path.join(root, filename)
         
+        # If we used static_filter.dir, then there's a chance that the
+        # extraPath pulled from the URL might have ".." or similar uplevel
+        # attacks in it. Check that the final file is a child of staticDir.
+        # Note that we do not check static_filter.file--that can point
+        # anywhere (since it does not use the request URL).
+        if staticDir:
+            if not os.path.isabs(staticDir):
+                staticDir = os.path.join(root, staticDir)
+            if not os.path.normpath(filename).startswith(os.path.normpath(staticDir)):
+                raise cherrypy.HTTPError(403) # Forbidden
+            
         try:
             cptools.serveFile(filename)
             request.execute_main = False
