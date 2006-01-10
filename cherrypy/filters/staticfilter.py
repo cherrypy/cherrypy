@@ -38,6 +38,9 @@ class StaticFilter(BaseFilter):
             extraPath = extraPath.lstrip(r"\/")
             extraPath = urllib.unquote(extraPath)
             # If extraPath is "", filename will end in a slash
+            if '..' in extraPath:
+                # Disallow '..' (secutiry flaw)
+                raise cherrypy.HTTPError(403) # Forbidden
             filename = os.path.join(staticDir, extraPath)
         
         # If filename is relative, make absolute using "root".

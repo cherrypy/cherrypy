@@ -154,12 +154,13 @@ def _cp_log_message(msg, context = '', severity = 0):
         f.close()
 
 
-_HTTPErrorTemplate = '''<html>
+_HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
     <title>%(status)s</title>
     <style type="text/css">
-    #poweredBy {
+    #powered_by {
         margin-top: 20px;
         border-top: 2px solid black;
         font-style: italic;
@@ -174,7 +175,7 @@ _HTTPErrorTemplate = '''<html>
         <h2>%(status)s</h2>
         <p>%(message)s</p>
         <pre id="traceback">%(traceback)s</pre>
-    <div id="poweredBy">
+    <div id="powered_by">
     <span>Powered by <a href="http://www.cherrypy.org">CherryPy %(version)s</a></span>
     </div>
     </body>
