@@ -39,7 +39,7 @@ class StaticFilter(BaseFilter):
             extraPath = urllib.unquote(extraPath)
             # If extraPath is "", filename will end in a slash
             if '..' in extraPath:
-                # Disallow '..' (secutiry flaw)
+                # Disallow '..' (security flaw)
                 raise cherrypy.HTTPError(403) # Forbidden
             filename = os.path.join(staticDir, extraPath)
         
@@ -48,8 +48,11 @@ class StaticFilter(BaseFilter):
         # a relative path to serveFile.
         if not os.path.isabs(filename):
             root = config.get('static_filter.root', '').rstrip(r"\/")
-            if root:
-                filename = os.path.join(root, filename)
+            if not root:
+                msg = ("StaticFilter requires an absolute final path. "
+                       "Make static_filter.dir, .file, or .root absolute.")
+                raise cherrypy.WrongConfigValue(msg)
+            filename = os.path.join(root, filename)
         
         try:
             cptools.serveFile(filename)

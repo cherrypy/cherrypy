@@ -111,6 +111,10 @@ class StaticFilterTest(helper.CPWebCase):
         self.assertInBody("WrongConfigValue: StaticFilter requires either "
                           "static_filter.file or static_filter.dir "
                           "(/error/thing.html)")
+        
+        # Test up-level security
+        self.getPage("/static/../style.css")
+        self.assertStatus('403 Forbidden')
 
 
 if __name__ == "__main__":
