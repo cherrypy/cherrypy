@@ -69,9 +69,13 @@ class Dir2:
         return "index for dir2, path is:" + cherrypy.request.path
     index.exposed = True
     
-    def method(self):
-        return "method for dir2"
-    method.exposed = True
+    def mount_point(self):
+        return cherrypy.tree.mount_point()
+    mount_point.exposed = True
+    
+    def tree_url(self):
+        return cherrypy.tree.url("/extra")
+    tree_url.exposed = True
     
     def posparam(self, *vpath):
         return "/".join(vpath)
@@ -117,8 +121,8 @@ import helper
 class ObjectMappingTest(helper.CPWebCase):
     
     def testObjectMapping(self):
-        def run():
-            prefix = self.mount_point
+        for url in mount_points:
+            prefix = self.mount_point = url
             if prefix == "/":
                 prefix = ""
             
@@ -168,10 +172,11 @@ class ObjectMappingTest(helper.CPWebCase):
             # See ticket #393.
             self.getPage("/page%2Fname")
             self.assertBody("default:('page/name',)")
-        
-        for url in mount_points:
-            self.mount_point = url
-            run()
+            
+            self.getPage("/dir1/dir2/mount_point")
+            self.assertBody(url)
+            self.getPage("/dir1/dir2/tree_url")
+            self.assertBody(prefix + "/extra")
         
         self.mount_point = ""
         

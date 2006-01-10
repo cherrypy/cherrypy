@@ -50,4 +50,43 @@ class Tree:
                 cherrypy.config.update(updateMap=conf, baseurl=baseurl)
             else:
                 cherrypy.config.update(file=conf, baseurl=baseurl)
+    
+    def mount_point(self, path=None):
+        """The 'root path' of the app which governs the given path, or None.
+        
+        If path is None, cherrypy.request.object_path is used.
+        """
+        
+        if path is None:
+            try:
+                import cherrypy
+                path = cherrypy.request.object_path
+            except AttributeError:
+                return None
+        
+        while path:
+            if path in self.mount_points:
+                return path
+            
+            # Move one node up the tree and try again.
+            if path == "/":
+                break
+            path = path[:path.rfind("/")] or "/"
+        
+        return None
+    
+    def url(self, path, mount_point=None):
+        """Return 'path', prefixed with mount_point.
+        
+        If mount_point is None, cherrypy.request.object_path will be used
+        to find a mount point.
+        """
+        
+        if mount_point is None:
+            mount_point = self.mount_point()
+            if mount_point is None:
+                return path
+        
+        from cherrypy.lib import httptools
+        return httptools.urljoin(mount_point, path)
 
