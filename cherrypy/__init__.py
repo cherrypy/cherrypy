@@ -3,6 +3,7 @@
 __version__ = '2.2.0-beta'
 
 import datetime
+import os.path
 import sys
 import types
 
@@ -100,3 +101,5 @@ def log(msg='', context='', severity=0, traceback=False):
     
     logfunc(msg, context, severity)
 
+def url(u):
+    return request.app_path + u
