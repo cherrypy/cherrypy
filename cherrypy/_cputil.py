@@ -323,7 +323,12 @@ def formatExc(exc=None):
     
     if exc == (None, None, None):
         return ""
-    return "".join(traceback.format_exception(*exc))
+    args = exc[1].args
+    page_handler = args[-1]
+    page_handler_str = 'Page handler: %s\n' % repr(page_handler)
+    args = args[:-1]
+    exc[1].args = args
+    return page_handler_str + "".join(traceback.format_exception(*exc))
 
 def bareError(extrabody=None):
     """Produce status, headers, body for a critical error.
