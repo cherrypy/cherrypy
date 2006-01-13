@@ -65,7 +65,13 @@ class StaticFilter(BaseFilter):
                 raise cherrypy.HTTPError(403) # Forbidden
             
         try:
-            cptools.serveFile(filename)
+            # you can set the content types for a complete directory per extension
+            content_types = config.get('static_filter.content_types', None)
+            content_type = None
+            if content_types:
+                root, ext = os.path.splitext(filename)
+                content_type = content_types.get(ext[1:], None)
+            cptools.serveFile(filename, contentType=content_type)
             request.execute_main = False
         except cherrypy.NotFound:
             # If we didn't find the static file, continue handling the
@@ -80,4 +86,3 @@ class StaticFilter(BaseFilter):
                         request.execute_main = False
                     except cherrypy.NotFound:
                         pass
-
