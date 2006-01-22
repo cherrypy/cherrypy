@@ -1,5 +1,5 @@
 import warnings
-warnings.warn("cherrypy.lib.filter has been superseded by cherrypy.filters and will be removed in CP 2.3")
+warnings.warn("cherrypy.lib.filter has been superseded by cherrypy.filters and will be removed in CP 2.3", DeprecationWarning, stacklevel = 2)
 
 from cherrypy.filters import *
 
