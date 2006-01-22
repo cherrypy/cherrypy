@@ -264,11 +264,9 @@ class FileStorage:
         for fname in os.listdir(storagePath):
             if (fname.startswith(self.SESSION_PREFIX)
                 and not fname.endswith(self.LOCK_SUFFIX)):
-                # We have a session file: lock it, load it and check
-                #   if it's expired
+                # We have a session file: try to load it and check
+                #   if it's expired. If it fails, nevermind.
                 filePath = os.path.join(storagePath, fname)
-                lockFilePath = filePath + self.LOCK_SUFFIX
-                self._lockFile(lockFilePath)
                 try:
                     f = open(filePath, "rb")
                     data, expirationTime = pickle.load(f)
@@ -278,10 +276,9 @@ class FileStorage:
                         id = fname[len(self.SESSION_PREFIX):]
                         sess.onDeleteSession(data)
                         os.unlink(filePath)
-                except IOError:
+                except:
                     # We can't access the file ... nevermind
                     pass
-                self._unlockFile(lockFilePath)
     
     def _getFilePath(self, id):
         storagePath = cherrypy.config.get('session_filter.storage_path')
