@@ -55,11 +55,13 @@ class SessionNotEnabledError(Exception):
 
 
 class SessionFilter(basefilter.BaseFilter):
+
+    def on_start_resource(self):
+        cherrypy.request._session = EmptyClass()
     
     def before_request_body(self):
         conf = cherrypy.config.get
         
-        cherrypy.request._session = EmptyClass()
         sess = cherrypy.request._session
         now = datetime.datetime.now()
         # Dont enable session if session_filter is off or if this is a
