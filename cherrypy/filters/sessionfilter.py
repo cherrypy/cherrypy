@@ -77,14 +77,27 @@ class SessionFilter(basefilter.BaseFilter):
         sess.sessionTimeout = conf('session_filter.timeout', 60)
         sess.sessionLocking = conf('session_filter.locking', 'explicit')
         sess.onCreateSession = conf('session_filter.on_create_session',
-                                    lambda data: None)
+                lambda data: None)
         sess.onDeleteSession = conf('session_filter.on_delete_session',
-                                    lambda data: None)
+                lambda data: None)
+        sess.generate_session_id = conf('session_filter.on_delete_session',
+                generate_session_id)
         
         cleanUpDelay = conf('session_filter.clean_up_delay', 5)
         cleanUpDelay = datetime.timedelta(seconds = cleanUpDelay * 60)
         
         cookieName = conf('session_filter.cookie_name', 'sessionID')
+        cookieDomain = conf('session_filter.cookie_domain', None)
+        cookieSecure = conf('session_filter.cookie_secure', False)
+        cookiePath = conf('session_filter.cookie_path', None)
+
+        if cookiePath is None:
+            cookiePathHeader = conf('session_filter.cookie_path_from_header', None)
+            if cookiePathHeader is not None:
+                cookiePath = cherrypy.request.headerMap.get(cookiePathHeader, None)
+            if cookiePath is None:
+                cookiePath = '/'
+
         sess.deadlockTimeout = conf('session_filter.deadlock_timeout', 30)
         
         storage = conf('session_filter.storage_type', 'Ram')
@@ -122,15 +135,19 @@ class SessionFilter(basefilter.BaseFilter):
                 sess.sessionData = data[0]
         else:
             # No sessionID yet
-            sess.sessionID = generateSessionID()
+            sess.sessionID = sess.generate_session_id()
             sess.sessionData = {'_id': sess.sessionID}
             sess.onCreateSession(sess.sessionData)
         # Set response cookie
         cookie = cherrypy.response.simpleCookie
         cookie[cookieName] = sess.sessionID
-        cookie[cookieName]['path'] = '/'
+        cookie[cookieName]['path'] = cookiePath
         cookie[cookieName]['max-age'] = sess.sessionTimeout * 60
         cookie[cookieName]['version'] = 1
+        if cookieDomain is not None:
+            cookie[cookieName]['domain'] = cookieDomain
+        if cookieSecure is True:
+            cookie[cookieName]['secure'] = 1
     
     def before_finalize(self):
         def saveData(body, sess):
@@ -375,7 +392,7 @@ class PostgreSQLStorage:
             (now,))
 
 
-def generateSessionID():
+def generate_session_id():
     """ Return a new sessionID """
     return sha.new('%s' % random.random()).hexdigest()
 
