@@ -3,6 +3,9 @@ test.prefer_parent_path()
 
 import cherrypy
 europoundUnicode = u'\x80\xa3'
+sing = u"\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?"
+sing8 = sing.encode('utf-8')
+sing16 = sing.encode('utf-16')
 
 class Root:
     def index(self, param):
@@ -11,7 +14,7 @@ class Root:
     index.exposed = True
     
     def mao_zedong(self):
-        return u"\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?"
+        return sing
     mao_zedong.exposed = True
 
 cherrypy.root = Root()
@@ -35,13 +38,9 @@ class DecodingEncodingFilterTest(helper.CPWebCase):
         
         # Default encoding should be utf-8
         self.getPage('/mao_zedong')
-        self.assertBody("\xe6\xaf\x9b\xe6\xb3\xbd\xe4\xb8\x9c: "
-                        "Sing, Little Birdie?")
+        self.assertBody(sing8)
         
         # Ask for utf-16.
-        sing16 = ('\xff\xfe\xdbk\xfdl\x1cN:\x00 \x00S\x00i\x00n\x00g\x00,\x00 '
-                  '\x00L\x00i\x00t\x00t\x00l\x00e\x00 '
-                  '\x00B\x00i\x00r\x00d\x00i\x00e\x00?\x00')
         self.getPage('/mao_zedong', [('Accept-Charset', 'utf-16')])
         self.assertBody(sing16)
         
@@ -53,8 +52,7 @@ class DecodingEncodingFilterTest(helper.CPWebCase):
         
         # The "*" value should default to our default_encoding, utf-8
         self.getPage('/mao_zedong', [('Accept-Charset', '*;q=1, utf-7;q=.2')])
-        self.assertBody("\xe6\xaf\x9b\xe6\xb3\xbd\xe4\xb8\x9c: "
-                        "Sing, Little Birdie?")
+        self.assertBody(sing8)
         
         # Only allow iso-8859-1, which should fail and raise 406.
         self.getPage('/mao_zedong', [('Accept-Charset', 'iso-8859-1, *;q=0')])
