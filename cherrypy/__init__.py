@@ -3,7 +3,6 @@
 __version__ = '2.2.0beta'
 
 import datetime
-import os.path
 import sys
 import types
 
@@ -100,6 +99,3 @@ def log(msg='', context='', severity=0, traceback=False):
         msg += _cputil.formatExc()
     
     logfunc(msg, context, severity)
-
-def url(u):
-    return request.app_path + u

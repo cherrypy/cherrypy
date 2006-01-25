@@ -269,15 +269,6 @@ class Request(object):
         objectTrail = _cputil.get_object_trail(objectpath)
         names = [name for name, candidate in objectTrail]
         
-        # Try to get app_path:
-        current_objectpath = objectpath
-        for i in xrange(len(objectTrail) - 1, -1, -1):
-            name, candidate = objectTrail[i]
-            if getattr(candidate, 'is_app_root', False):
-                cherrypy.request.app_path = current_objectpath
-                break
-            current_objectpath = os.path.dirname(current_objectpath)
-
         # Try successive objects (reverse order)
         mounted_app_roots = cherrypy.tree.mount_points.values()
         for i in xrange(len(objectTrail) - 1, -1, -1):
