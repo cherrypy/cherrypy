@@ -232,8 +232,13 @@ class RamStorage:
             if expirationTime < now:
                 toBeDeleted.append(id)
         for id in toBeDeleted:
-            sess.onDeleteSession(cherrypy._session_data_holder[id])
-            del cherrypy._session_data_holder[id]
+            try:
+                del cherrypy._session_data_holder[id]
+                sess.onDeleteSession(cherrypy._session_data_holder[id])
+            except KeyError:
+                # The session probably got deleted by a concurrent thread
+                #   Safe to ignore this case
+                pass
 
 
 class FileStorage:
