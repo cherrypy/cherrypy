@@ -18,9 +18,19 @@ class Tree:
     def __init__(self):
         self.mount_points = {}
     
-    def mount(self, app_root, baseurl="/", conf=None):
+    def mount(self, app_root, baseurl=None, conf=None):
         """Mount the given app_root at the given baseurl (relative to root)."""
         import cherrypy
+        
+        if conf and not isinstance(conf, dict):
+            conf = cherrypy.config.dict_from_config_file(conf)
+        
+        if baseurl is None:
+            baseurl = "/"
+            if conf:
+                conf_pt = conf.get("global", {}).get("mount_point")
+                if conf_pt:
+                    baseurl = conf_pt
         
         point = baseurl.lstrip("/")
         if point:
@@ -46,10 +56,7 @@ class Tree:
         self.mount_points[baseurl] = app_root
         
         if conf is not None:
-            if isinstance(conf, dict):
-                cherrypy.config.update(updateMap=conf, baseurl=baseurl)
-            else:
-                cherrypy.config.update(file=conf, baseurl=baseurl)
+            cherrypy.config.update(updateMap=conf, baseurl=baseurl)
     
     def mount_point(self, path=None):
         """The 'root path' of the app which governs the given path, or None.
