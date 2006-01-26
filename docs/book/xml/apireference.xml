@@ -47,7 +47,7 @@
             example, "GET /path/page HTTP/1.1".</para>
         </section>
         <section>
-            <title>cherrypy.request.simpleCookie</title>
+            <title>cherrypy.request.simple_cookie</title>
             <para>This attribute is a SimpleCookie instance from the standard library's Cookie module
             which contains the incoming cookie values from the client.</para>
         </section>
@@ -155,7 +155,7 @@
             instead.</para>
         </section>
         <section>
-            <title>cherrypy.response.simpleCookie</title>
+            <title>cherrypy.response.simple_cookie</title>
             <para>This attribute is a SimpleCookie instance from the standard library's Cookie
             module. It contains the outgoing cookie values.</para>
         </section>

@@ -117,9 +117,9 @@ class SessionFilter(basefilter.BaseFilter):
             sess.session_storage.clean_up()
         
         # Check if request came with a session ID
-        if cookie_name in cherrypy.request.simpleCookie:
+        if cookie_name in cherrypy.request.simple_cookie:
             # It did: we mark the data as needing to be loaded
-            sess.session_id = cherrypy.request.simpleCookie[cookie_name].value
+            sess.session_id = cherrypy.request.simple_cookie[cookie_name].value
             
             # If using implicit locking, acquire lock
             if sess.session_locking == 'implicit':
@@ -134,7 +134,7 @@ class SessionFilter(basefilter.BaseFilter):
             sess.session_data = {'_id': sess.session_id}
             sess.on_create_session(sess.session_data)
         # Set response cookie
-        cookie = cherrypy.response.simpleCookie
+        cookie = cherrypy.response.simple_cookie
         cookie[cookie_name] = sess.session_id
         cookie[cookie_name]['path'] = cookie_path
         cookie[cookie_name]['max-age'] = sess.session_timeout * 60

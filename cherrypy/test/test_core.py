@@ -300,13 +300,13 @@ cherrypy.root.divorce = Divorce()
 class Cookies(Test):
     
     def single(self, name):
-        cookie = cherrypy.request.simpleCookie[name]
-        cherrypy.response.simpleCookie[name] = cookie.value
+        cookie = cherrypy.request.simple_cookie[name]
+        cherrypy.response.simple_cookie[name] = cookie.value
     
     def multiple(self, names):
         for name in names:
-            cookie = cherrypy.request.simpleCookie[name]
-            cherrypy.response.simpleCookie[name] = cookie.value
+            cookie = cherrypy.request.simple_cookie[name]
+            cherrypy.response.simple_cookie[name] = cookie.value
 
 class MaxRequestSize(Test):
     

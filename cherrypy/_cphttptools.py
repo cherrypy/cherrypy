@@ -57,7 +57,8 @@ class Request(object):
         
         self.headers = httptools.HeaderMap()
         self.headerMap = self.headers # Backward compatibility
-        self.simpleCookie = Cookie.SimpleCookie()
+        self.simple_cookie = Cookie.SimpleCookie()
+        self.simpleCookie = self.simple_cookie # Backward compatibility
         
         if cherrypy.profiler:
             cherrypy.profiler.run(self._run)
@@ -170,13 +171,13 @@ class Request(object):
             value = value.strip()
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headers
-            # (but they will be correctly stored in request.simpleCookie).
+            # (but they will be correctly stored in request.simple_cookie).
             self.headers[name] = value
             
             # Handle cookies differently because on Konqueror, multiple
             # cookies come on different lines with the same key
             if name.title() == 'Cookie':
-                self.simpleCookie.load(value)
+                self.simple_cookie.load(value)
         
         # Save original values (in case they get modified by filters)
         # This feature is deprecated in 2.2 and will be removed in 2.3.
@@ -378,7 +379,8 @@ class Response(object):
             "Set-Cookie": [],
             "Content-Length": None
         })
-        self.simpleCookie = Cookie.SimpleCookie()
+        self.simple_cookie = Cookie.SimpleCookie()
+        self.simpleCookie = self.simple_cookie # Backward compatibility
     
     def collapse_body(self):
         newbody = ''.join([chunk for chunk in self.body])
@@ -427,7 +429,7 @@ class Response(object):
         header_list.sort()
         self.header_list = [item[1] for item in header_list]
         
-        cookie = self.simpleCookie.output()
+        cookie = self.simple_cookie.output()
         if cookie:
             lines = cookie.split("\n")
             for line in lines:
