@@ -172,13 +172,26 @@
     <para>In that case, we need to make sure that access to the session data
     is serialized. This way, threads can't both modify the data at the same
     time and leave it in an inconsistent state.</para>
-    <para>You can easily make CherryPy serialize access to the session data by setting the <option>session_filter.locking</option> config option to <literal>implicit</literal> (the default is <literal>explicit</literal>, which means that CherryPy won't do any locking for you). In the <literal>implicit</literal> mode,
-    if a browser makes a second request while a first request is still being
-    handled by the server, the second request will block while the first
-    request is accessing the data. As soon as the first request is finished
-    then the second request will be able to access it.</para>
-    <para>This means that the second request will block until the first
-    request is finished.</para>
+    <para>What you need to do is call "cherrypy.session.acquire_lock()" in methods that update the session data. (Method that only read it don't need that call). The lock will be automatically released when the request is over. Here is a sample code that does it:
+    <screen>
+            class Root:
+                def increment_counter(self):
+                    # We call acquire_lock at the beginning
+                    #   of the method
+                    cherrypy.session.acquire_lock()
+                    c = cherrypy.session.get('counter', 0) + 1
+                    cherrypy.session['counter'] = c
+                    return str(c)
+                increment_counter.exposed = True
+
+                def read_counter(self):
+                    # No need to call acquire_lock
+                    #   because we're only reading
+                    #   the session data
+                    c = cherrypy.session.get('counter', 0) + 1
+                    return str(c)
+                read_counter.exposed = True
+            </screen></para>
   </section>
   <section id="callbacks">
     <title>Being notified when sessions are created/deleted</title>
