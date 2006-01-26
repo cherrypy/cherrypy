@@ -13,7 +13,7 @@ class DecodingFilter(BaseFilter):
         enc = conf('decoding_filter.encoding', None)
         if not enc:
             ct = cherrypy.request.headers.elements("Content-Type")
-            if ct is not None:
+            if ct:
                 ct = ct[0]
                 enc = ct.params.get("charset", None)
                 if (not enc) and ct.value.lower().startswith("text/"):

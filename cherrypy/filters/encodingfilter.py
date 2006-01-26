@@ -11,7 +11,7 @@ class EncodingFilter(BaseFilter):
             return
         
         ct = cherrypy.response.headers.elements("Content-Type")
-        if ct is not None:
+        if ct:
             ct = ct[0]
             if ct.value.lower().startswith("text/"):
                 # Set "charset=..." param on response Content-Type header
@@ -71,7 +71,7 @@ def find_acceptable_charset():
     default_enc = conf('encoding_filter.default_encoding', 'utf-8')
     
     encs = cherrypy.request.headerMap.elements('Accept-Charset')
-    if encs is None:
+    if not encs:
         # Any character-set is acceptable.
         charsets = []
         if encode(default_enc):

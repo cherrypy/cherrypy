@@ -31,7 +31,7 @@ class GzipFilter(BaseFilter):
         
         from cherrypy.lib import httptools
         acceptable = cherrypy.request.headers.elements('Accept-Encoding')
-        if acceptable is None:
+        if not acceptable:
             # If no Accept-Encoding field is present in a request,
             # the server MAY assume that the client will accept any
             # content coding. In this case, if "identity" is one of
