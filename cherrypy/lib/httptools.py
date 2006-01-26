@@ -420,7 +420,7 @@ class HeaderMap(dict):
         """Return a list of HeaderElements for the given header (or None)."""
         h = self.get(key)
         if h is None:
-            return None
+            return []
         return header_elements(key, h)
 
 
