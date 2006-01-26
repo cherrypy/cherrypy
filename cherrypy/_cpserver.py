@@ -42,37 +42,45 @@ class Server(object):
         self.onStartServerList = []
         self.onStopThreadList = []
     
-    def start(self, initOnly=False, serverClass=_missing):
+    def start(self, init_only = False, server_class = _missing,
+                initOnly = None, serverClass = None):
         """Main function. MUST be called from the main thread.
         
         Set initOnly to True to keep this function from blocking.
         Set serverClass to None to skip starting any HTTP server.
         """
+        
+        # Read old variable names for backward compatibility
+        if initOnly is not None:
+            init_only = initOnly
+        if serverClass is not None:
+            server_class = serverClass
+
         self.state = STARTING
         self.interrupt = None
         
         conf = cherrypy.config.get
         
-        if serverClass is _missing:
-            serverClass = conf("server.class", _missing)
-        if serverClass is _missing:
+        if server_class is _missing:
+            server_class = conf("server.class", _missing)
+        if server_class is _missing:
             import _cpwsgi
-            serverClass = _cpwsgi.WSGIServer
-        elif serverClass and isinstance(serverClass, basestring):
+            server_class = _cpwsgi.WSGIServer
+        elif server_class and isinstance(server_class, basestring):
             # Dynamically load the class from the given string
-            serverClass = cptools.attributes(serverClass)
+            server_class = cptools.attributes(server_class)
         
-        self.blocking = not initOnly
-        self.httpserverclass = serverClass
+        self.blocking = not init_only
+        self.httpserverclass = server_class
         
         # Hmmm...we *could* check config in _start instead, but I think
         # most people would like CP to fail before autoreload kicks in.
         check_config()
         
-        # Autoreload, but check serverClass. If None, we're not starting
+        # Autoreload, but check server_class. If None, we're not starting
         # our own webserver, and therefore could do Very Bad Things when
         # autoreload calls sys.exit.
-        if serverClass is not None:
+        if server_class is not None:
             if conf('autoreload.on', False):
                 try:
                     freq = conf('autoreload.frequency', 1)
@@ -257,8 +265,13 @@ class Server(object):
                                     " receive requests, False otherwise.")
     
     def start_with_callback(self, func, args=None, kwargs=None,
-                            serverClass=_missing):
+                            server_class = _missing, serverClass = None):
         """Start, then callback the given func in a new thread."""
+
+        # Read old name for backward compatibility
+        if serverClass is not None:
+            server_class = None
+
         if args is None:
             args = ()
         if kwargs is None:
@@ -270,7 +283,7 @@ class Server(object):
             func(*args, **kwargs)
         threading.Thread(target=_callback, args=args, kwargs=kwargs).start()
         
-        self.start(serverClass=serverClass)
+        self.start(server_class = server_class)
 
 
 def check_config():

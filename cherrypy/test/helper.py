@@ -198,8 +198,7 @@ def run_test_suite(moduleNames, server, conf):
     """
     setConfig(conf)
     cherrypy.server.start_with_callback(_run_test_suite_thread,
-                                        args=(moduleNames, conf),
-                                        serverClass=server)
+            args = (moduleNames, conf), server_class = server)
 
 def _run_test_suite_thread(moduleNames, conf):
     for testmod in moduleNames:
@@ -218,7 +217,8 @@ def testmain(server=None, conf=None):
     if conf is None:
         conf = {}
     setConfig(conf)
-    cherrypy.server.start_with_callback(_test_main_thread, serverClass=server)
+    cherrypy.server.start_with_callback(_test_main_thread,
+            server_class = server)
 
 def _test_main_thread():
     try:

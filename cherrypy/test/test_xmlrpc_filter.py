@@ -136,6 +136,6 @@ class XmlRpcFilterTest(helper.CPWebCase):
 
 if __name__ == '__main__':
     from cherrypy import _cpwsgi
-    serverClass = _cpwsgi.WSGIServer
-    helper.testmain(serverClass)
+    server_class = _cpwsgi.WSGIServer
+    helper.testmain(server_class)
 

@@ -185,15 +185,15 @@
     <section id="cherrypyserver">
         <title>cherrypy.server</title>
         <section>
-            <title>cherrypy.server.start(initOnly=False, serverClass=_missing)</title>
+            <title>cherrypy.server.start(init_only = False, server_class = _missing)</title>
             <para>Start the CherryPy Server. Simple websites may call this without any arguments, to
-            run the default server. If initOnly is False (the default), this function will block
+            run the default server. If init_only is False (the default), this function will block
             until KeyboardInterrupt or SystemExit is raised, so that the process will persist. When
             using one of the built-in HTTP servers, you should leave this set to False. You should
             only set it to True if you're running CherryPy as an extension to another HTTP server
             (for example, when using Apache and mod_python with CherryPy), in which case the foreign
             HTTP server should do its own process-management.</para>
-            <para>Use the serverClass argument to specify that you wish to use an HTTP server other
+            <para>Use the server_class argument to specify that you wish to use an HTTP server other
             than the default, built-in WSGIServer. If missing, config.get("server.class") will be
             checked for an alternate value; otherwise, the default is used. Possible alternate values
             (you may pass the class names as a string if you wish):</para>
@@ -216,7 +216,7 @@
                 </listitem>
                 <listitem>
                     <para><code>None</code>: this will not load any HTTP server. Note that this is
-                    not the default; the default (if serverClass is not given) is to load the
+                    not the default; the default (if server_class is not given) is to load the
                     WSGIServer.</para>
                 </listitem>
                 <listitem>
@@ -224,14 +224,14 @@
                 </listitem>
             </itemizedlist>
             <para>You <emphasis>must</emphasis> call this function from Python's main thread, and set
-            initOnly to False, if you want CherryPy to shut down when KeyboardInterrupt or SystemExit
+            init_only to False, if you want CherryPy to shut down when KeyboardInterrupt or SystemExit
             are raised (including Ctrl-C). The only time you might want to do otherwise is if you run
             CherryPy as a Windows service, or as an extension to, say, mod_python, and even then, you
             might want to anyway.</para>
         </section>
         <section>
             <title>cherrypy.server.blocking</title>
-            <para>If the "initOnly" argument to server.start is True, this will be False, and
+            <para>If the "init_only" argument to server.start is True, this will be False, and
             vice-versa.</para>
         </section>
         <section>
@@ -273,7 +273,7 @@
         </section>
         <section>
             <title>cherrypy.server.start_with_callback(func, args=(), kwargs={},
-            serverClass=_missing)</title>
+            server_class = _missing)</title>
             <para>Since server.start usually blocks, use this to easily run another function in a new
             thread. It starts the new thread and then runs server.start. The new thread automatically
             waits for the server to finish its startup procedure.</para>
