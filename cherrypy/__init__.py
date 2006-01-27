@@ -15,6 +15,8 @@ tree = _cptree.Tree()
 # Legacy code may clobber this.
 root = None
 
+lowercase_api = False
+
 import _cpserver
 server = _cpserver.Server()
 

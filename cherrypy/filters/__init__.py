@@ -98,13 +98,19 @@ def applyFilters(method_name, failsafe=False):
     """Execute the given method for all registered filters."""
     special_methods = []
     for f in _cputil.get_special_attribute("_cp_filters", "_cpFilterList"):
-        # Try old name first
-        old_method_name = backward_compatibility_dict.get(method_name)
-        method = getattr(f, old_method_name, None)
-        if (method is None):
+        if cherrypy.lowercase_api is False:
+            # Try old name first
+            old_method_name = backward_compatibility_dict.get(method_name)
+            method = getattr(f, old_method_name, None)
+            if (method is None):
+                method = getattr(f, method_name, None)
+            if method:
+                special_methods.append(method)
+        else:
+            # We know for sure that user uses the new lowercase API
             method = getattr(f, method_name, None)
-        if method:
-            special_methods.append(method)
+            if method:
+                special_methods.append(method)
     
     if method_name in _input_methods:
         # Run special filters after defaults.

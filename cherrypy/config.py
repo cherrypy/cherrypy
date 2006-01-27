@@ -115,24 +115,41 @@ def get(key, default_value=None, return_section=False, path = None):
         if path == "":
             path = "/"
         
-        try:
-            result = configs[path][_cputil.lower_to_camel(key)]
-            break
-        except KeyError:
+        if cherrypy.lowercase_api is False:
+            # We don't know for sure if user uses the new lowercase API
+            try:
+                result = configs[path][_cputil.lower_to_camel(key)]
+                break
+            except KeyError:
+                try:
+                    result = configs[path][key]
+                    break
+                except KeyError:
+                    pass
+                pass
+            
+            try:
+                # Check for a server.environment entry at this node.
+                env = configs[path]["server.environment"]
+                # For backward compatibility, check for camelCase key first
+                result = environments[env][_cputil.lower_to_camel(key)]
+                break
+            except KeyError:
+                try:
+                    env = configs[path]["server.environment"]
+                    result = environments[env][key]
+                    break
+                except KeyError:
+                    pass
+                pass
+        else:
+            # We know for sure that user uses the new lowercase api
             try:
                 result = configs[path][key]
                 break
             except KeyError:
                 pass
-            pass
-        
-        try:
-            # Check for a server.environment entry at this node.
-            env = configs[path]["server.environment"]
-            # For backward compatibility, check for camelCase key first
-            result = environments[env][_cputil.lower_to_camel(key)]
-            break
-        except KeyError:
+            
             try:
                 env = configs[path]["server.environment"]
                 result = environments[env][key]
@@ -140,7 +157,7 @@ def get(key, default_value=None, return_section=False, path = None):
             except KeyError:
                 pass
             pass
-        
+
         if path == "global":
             result = default_value
             break
