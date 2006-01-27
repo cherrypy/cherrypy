@@ -1,3 +1,9 @@
+2006-01-27:
+    * CherryPy-2.2.0beta released
+    * Lots of improvements to sessionfilter
+    * Added cherrypy.lower_api switch (people get a speed boost if they
+    *   set it to True)
+
 2005-12-05:
     * Added support for specifying the Content-Type to be used by defaults
     * Added a response headers filter to specify HTTP headers
