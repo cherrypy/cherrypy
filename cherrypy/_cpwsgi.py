@@ -69,6 +69,7 @@ def wsgiApp(environ, start_response):
         request.login = (env('LOGON_USER') or env('REMOTE_USER') or None)
         request.multithread = environ['wsgi.multithread']
         request.multiprocess = environ['wsgi.multiprocess']
+        request.wsgi_environ = environ
         response = request.run(requestLine(environ),
                                translate_headers(environ),
                                environ['wsgi.input'])
