@@ -88,6 +88,10 @@
             cherrypy.request.version &gt;= "1.1": do_http_1_1_thing</code>.</para>
         </section>
         <section>
+            <title>cherrypy.request.wsgi_environ</title>
+            <para>This attribute is a dictionary containing the WSGI environment for the request.  In non-WSGI settings, it is set to False.</para>
+        </section>
+        <section>
             <title>cherrypy.request.queryString</title>
             <para>This attribute is a string containing the query string of the request (the part of
             the URL following '?').</para>
