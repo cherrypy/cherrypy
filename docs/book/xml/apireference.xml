@@ -89,7 +89,7 @@
         </section>
         <section>
             <title>cherrypy.request.wsgi_environ</title>
-            <para>This attribute is a dictionary containing the WSGI environment for the request.  In non-WSGI settings, it is set to False.</para>
+            <para>This attribute is a dictionary containing the WSGI environment for the request.  In non-WSGI settings (i.e., running under _cphttpserver), it is an empty dictionary.</para>
         </section>
         <section>
             <title>cherrypy.request.queryString</title>
