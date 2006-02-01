@@ -42,8 +42,7 @@ class Server(object):
         self.onStartServerList = []
         self.onStopThreadList = []
     
-    def start(self, init_only = False, server_class = _missing,
-                initOnly = None, serverClass = None):
+    def start(self, init_only = False, server_class = _missing, **kwargs):
         """Main function. MUST be called from the main thread.
         
         Set initOnly to True to keep this function from blocking.
@@ -51,11 +50,12 @@ class Server(object):
         """
         
         # Read old variable names for backward compatibility
-        if initOnly is not None:
-            init_only = initOnly
-        if serverClass is not None:
-            server_class = serverClass
-
+        if 'initOnly' in kwargs:
+            init_only = kwargs['initOnly']
+        if 'serverClass' in kwargs:
+            server_class = kwargs['serverClass']
+        cherrypy.log("%s %s" % (init_only, server_class))
+        
         self.state = STARTING
         self.interrupt = None
         
