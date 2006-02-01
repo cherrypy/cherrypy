@@ -54,7 +54,6 @@ class Server(object):
             init_only = kwargs['initOnly']
         if 'serverClass' in kwargs:
             server_class = kwargs['serverClass']
-        cherrypy.log("%s %s" % (init_only, server_class))
         
         self.state = STARTING
         self.interrupt = None
