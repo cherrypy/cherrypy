@@ -27,6 +27,10 @@ class Root:
     
     def notExposed(self):
         return "not exposed"
+    
+    def confvalue(self):
+        return cherrypy.config.get("user")
+    confvalue.exposed = True
 
 def mapped_func(self, ID=None):
     return "ID is %s" % ID
@@ -100,11 +104,12 @@ Root.dir1.dir2.dir3.dir4 = Dir4()
 
 mount_points = ["/", "/users/fred/blog", "/corp/blog"]
 for url in mount_points:
-    cherrypy.tree.mount(Root(), url)
+    conf = {'user': url.split("/")[-2]}
+    cherrypy.tree.mount(Root(), url, {'/': conf})
 
 cherrypy.config.update({
-        'server.log_to_screen': False,
-        'server.environment': "production",
+    'server.log_to_screen': False,
+    'server.environment': "production",
 })
 
 
@@ -177,6 +182,10 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertBody(url)
             self.getPage("/dir1/dir2/tree_url")
             self.assertBody(prefix + "/extra")
+            
+            # Test that configs don't overwrite each other from diferent apps
+            self.getPage("/confvalue")
+            self.assertBody(url.split("/")[-2])
         
         self.mount_point = ""
         
