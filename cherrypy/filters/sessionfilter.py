@@ -255,7 +255,7 @@ class FileStorage:
             data = pickle.load(f)
             f.close()
             return data
-        except IOError, EOFError:
+        except (IOError, EOFError):
             return None
     
     def save(self, id, data, expiration_time):
