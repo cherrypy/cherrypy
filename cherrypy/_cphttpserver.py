@@ -80,7 +80,6 @@ class CherryHTTPRequestHandler(BaseHTTPRequestHandler):
                                               self.address_string(), "http")
             request.multithread = cherrypy.config.get("server.thread_pool") > 1
             request.multiprocess = False
-            request.wsgi_environ = {}
             response = request.run(self.raw_requestline, self._headerlist(),
                                    self.rfile)
             s, h, b = response.status, response.header_list, response.body

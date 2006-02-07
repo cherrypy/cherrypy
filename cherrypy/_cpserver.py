@@ -7,7 +7,7 @@ import time
 import warnings
 
 import cherrypy
-from cherrypy import _cphttptools, filters
+from cherrypy import _cphttptools, filters, _cpwsgi
 from cherrypy.lib import autoreload, profiler, cptools
 
 # Use a flag to indicate the state of the application server.
@@ -41,7 +41,9 @@ class Server(object):
         self.onStartThreadList = []
         self.onStartServerList = []
         self.onStopThreadList = []
-    
+
+        self.wsgi_app = _cpwsgi.wsgiApp
+        
     def start(self, init_only = False, server_class = _missing, **kwargs):
         """Main function. MUST be called from the main thread.
         
@@ -153,7 +155,11 @@ class Server(object):
             on_what = "socket file: %s" % cherrypy.config.get('server.socket_file')
         
         # Instantiate the server.
-        self.httpserver = self.httpserverclass()
+        if self.httpserverclass == _cpwsgi.WSGIServer:
+            self.httpserver = self.httpserverclass(self.wsgi_app)
+            
+        else:
+            self.httpserver = self.httpserverclass()
         
         # HTTP servers MUST be started in a new thread, so that the
         # main thread persists to receive KeyboardInterrupt's. This

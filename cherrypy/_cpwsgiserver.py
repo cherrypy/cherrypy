@@ -64,11 +64,8 @@ class HTTPRequest(object):
         else:
             qs = ""
         self.environ["REQUEST_METHOD"] = method
-        if path == "*":
-            self.environ["SCRIPT_NAME"] = path
-        else:
-            self.environ["SCRIPT_NAME"] = path[1:]
-        self.environ["PATH_INFO"] = ""
+        self.environ["SCRIPT_NAME"] = ""
+        self.environ["PATH_INFO"] = path
         self.environ["QUERY_STRING"] = qs
         self.environ["SERVER_PROTOCOL"] = version
         self.environ["SERVER_NAME"] = self.server.server_name

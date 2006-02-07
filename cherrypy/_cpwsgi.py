@@ -148,11 +148,11 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
                 # Request header is parsed
                 # We prepare the SizeCheckWrapper for the request body
                 self.rfile.bytes_read = 0
-                path = self.environ["SCRIPT_NAME"]
+                script_name = self.environ.get('SCRIPT_NAME', '')
+                path_info = self.environ.get('PATH_INFO', '')
+                path = (script_name + path_info)
                 if path == "*":
                     path = "global"
-                else:
-                    path = "/" + path
                 mbs = int(cherrypy.config.get('server.max_request_body_size',
                                               100 * 1024 * 1024, path=path))
                 self.rfile.maxlen = mbs
