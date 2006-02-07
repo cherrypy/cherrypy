@@ -303,25 +303,6 @@ class Request(object):
         # We didn't find anything
         raise cherrypy.NotFound(objectpath)
 
-general_header_fields = ["Cache-Control", "Connection", "Date", "Pragma",
-                         "Trailer", "Transfer-Encoding", "Upgrade", "Via",
-                         "Warning"]
-response_header_fields = ["Accept-Ranges", "Age", "ETag", "Location",
-                          "Proxy-Authenticate", "Retry-After", "Server",
-                          "Vary", "WWW-Authenticate"]
-entity_header_fields = ["Allow", "Content-Encoding", "Content-Language",
-                        "Content-Length", "Content-Location", "Content-MD5",
-                        "Content-Range", "Content-Type", "Expires",
-                        "Last-Modified"]
-
-_header_order_map = {}
-for _ in general_header_fields:
-    _header_order_map[_] = 0
-for _ in response_header_fields:
-    _header_order_map[_] = 1
-for _ in entity_header_fields:
-    _header_order_map[_] = 2
-
 
 class Body(object):
     """The body of the HTTP response (the response entity)."""
@@ -415,24 +396,12 @@ class Response(object):
                 content = self.collapse_body()
                 self.headers['Content-Length'] = len(content)
         
-        # Headers
-        header_list = []
-        for key, valueList in self.headers.iteritems():
-            order = _header_order_map.get(key, 3)
-            if not isinstance(valueList, list):
-                valueList = [valueList]
-            for value in valueList:
-                header_list.append((order, (key, str(value))))
-        # RFC 2616: '... it is "good practice" to send general-header
-        # fields first, followed by request-header or response-header
-        # fields, and ending with the entity-header fields.'
-        header_list.sort()
-        self.header_list = [item[1] for item in header_list]
+        # Transform our header dict into a sorted list of tuples.
+        self.header_list = self.headers.sorted_list()
         
         cookie = self.simple_cookie.output()
         if cookie:
-            lines = cookie.split("\n")
-            for line in lines:
+            for line in cookie.split("\n"):
                 name, value = line.split(": ", 1)
                 self.header_list.append((name, value))
     

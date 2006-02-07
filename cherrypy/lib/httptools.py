@@ -422,6 +422,44 @@ class HeaderMap(dict):
         if h is None:
             return []
         return header_elements(key, h)
+    
+    general_fields = ["Cache-Control", "Connection", "Date", "Pragma",
+                      "Trailer", "Transfer-Encoding", "Upgrade", "Via",
+                      "Warning"]
+    response_fields = ["Accept-Ranges", "Age", "ETag", "Location",
+                       "Proxy-Authenticate", "Retry-After", "Server",
+                       "Vary", "WWW-Authenticate"]
+    entity_fields = ["Allow", "Content-Encoding", "Content-Language",
+                     "Content-Length", "Content-Location", "Content-MD5",
+                     "Content-Range", "Content-Type", "Expires",
+                     "Last-Modified"]
+    
+    order_map = {}
+    for _ in general_fields:
+        order_map[_] = 0
+    for _ in response_fields:
+        order_map[_] = 1
+    for _ in entity_fields:
+        order_map[_] = 2
+    
+    def sorted_list(self):
+        """Transform self into a sorted list of (name, value) tuples.
+        
+        From http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+            '... it is "good practice" to send general-header fields first,
+            followed by request-header or response-header fields, and ending
+            with the entity-header fields.'
+        """
+        
+        header_list = []
+        for key, valueList in self.iteritems():
+            order = self.order_map.get(key, 3)
+            if not isinstance(valueList, list):
+                valueList = [valueList]
+            for value in valueList:
+                header_list.append((order, (key, str(value))))
+        header_list.sort()
+        return [item[1] for item in header_list]
 
 
 class MaxSizeExceeded(Exception):
@@ -481,3 +519,4 @@ class SizeCheckWrapper(object):
 ##        except:
 ##            raise StopIteration()
         return data
+
