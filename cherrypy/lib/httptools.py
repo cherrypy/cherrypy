@@ -502,6 +502,19 @@ class SizeCheckWrapper(object):
             if len(data) < 256 or data[-1:] == "\n":
                 return ''.join(res)
     
+    def readlines(self, sizehint = 0):
+        # Shamelessly stolen from StringIO
+        total = 0
+        lines = []
+        line = self.readline()
+        while line:
+            lines.append(line)
+            total += len(line)
+            if 0 < sizehint <= total:
+                break
+            line = self.readline()
+        return lines
+    
     def close(self):
         self.rfile.close()
     
