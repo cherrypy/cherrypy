@@ -63,10 +63,7 @@ class SessionFilter(basefilter.BaseFilter):
         conf = cherrypy.config.get
         
         sess = cherrypy.request._session
-        # Dont enable session if session_filter is off or if this is a
-        #   request for static data
-        if ((not conf('session_filter.on', False))
-              or conf('static_filter.on', False)):
+        if not conf('session_filter.on', False):
             sess.session_storage = None
             return
 

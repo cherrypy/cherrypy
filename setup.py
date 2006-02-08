@@ -22,7 +22,8 @@ version = "2.2.0beta"
 desc = "Object-Oriented web development framework"
 long_desc = "CherryPy is a pythonic, object-oriented web development framework"
 classifiers=[
-    "Development Status :: Stable",
+    #"Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: Freely Distributable",
     "Programming Language :: Python",
