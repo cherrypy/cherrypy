@@ -77,7 +77,7 @@ class SessionFilter(basefilter.BaseFilter):
                 lambda data: None)
         sess.on_delete_session = conf('session_filter.on_delete_session',
                 lambda data: None)
-        sess.generate_session_id = conf('session_filter.on_delete_session',
+        sess.generate_session_id = conf('session_filter.generate_session_id',
                 generate_session_id)
         
         clean_up_delay = conf('session_filter.clean_up_delay', 5)
