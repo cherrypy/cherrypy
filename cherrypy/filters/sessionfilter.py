@@ -134,8 +134,16 @@ class SessionFilter(basefilter.BaseFilter):
         cookie = cherrypy.response.simple_cookie
         cookie[cookie_name] = sess.session_id
         cookie[cookie_name]['path'] = cookie_path
-        cookie[cookie_name]['max-age'] = sess.session_timeout * 60
-        cookie[cookie_name]['version'] = 1
+        # We'd like to use the "max-age" param as
+        #   http://www.faqs.org/rfcs/rfc2109.html indicates but IE doesn't
+        #   save it to disk and the session is lost if people close
+        #   the browser
+        #   So we have to use the old "expires" ... sigh ...
+        #cookie[cookie_name]['max-age'] = sess.session_timeout * 60
+        gmt_expiration_time = time.gmtime(time.time() +
+                (sess.session_timeout * 60))
+        cookie[cookie_name]['expires'] = time.strftime(
+                "%a, %d-%b-%Y %H:%M:%S GMT", gmt_expiration_time)
         if cookie_domain is not None:
             cookie[cookie_name]['domain'] = cookie_domain
         if cookie_secure is True:
