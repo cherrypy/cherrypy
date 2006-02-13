@@ -164,13 +164,13 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     
     _cpwsgiserver has been designed to not reference CherryPy in any way,
     so that it can be used in other frameworks and applications. Therefore,
-    we wrap it here.
+    we wrap it here, so we can set our own mount points from cherrypy.tree.
     
     """
     
     RequestHandlerClass = CPHTTPRequest
     
-    def __init__(self, app=wsgiApp):
+    def __init__(self):
         conf = cherrypy.config.get
         
         sockFile = cherrypy.config.get('server.socket_file')
@@ -179,8 +179,14 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
         else:
             bind_addr = (conf("server.socket_host"), conf("server.socket_port"))
         
+        pts = cherrypy.tree.mount_points
+        if pts:
+            apps = [(base, wsgiApp) for base in pts.keys()]
+        else:
+            apps = [("", wsgiApp)]
+        
         s = _cpwsgiserver.CherryPyWSGIServer
-        s.__init__(self, bind_addr, app,
+        s.__init__(self, bind_addr, apps,
                    conf("server.thread_pool"),
                    conf("server.socket_host"),
                    request_queue_size = conf('server.socket_queue_size'),

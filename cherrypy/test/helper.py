@@ -67,7 +67,9 @@ class TestWSGI(_cpwsgi.WSGIServer):
     """Wrapper for WSGI server so we can test thrown errors."""
     
     def __init__(self):
-        _cpwsgi.WSGIServer.__init__(self, error_middleware)
+        _cpwsgi.WSGIServer.__init__(self)
+        self.mount_points = [(base, error_middleware)
+                             for base, wsgiapp in self.mount_points]
 
 
 class CPWebCase(webtest.WebCase):

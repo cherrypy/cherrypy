@@ -64,8 +64,24 @@ class HTTPRequest(object):
         else:
             qs = ""
         self.environ["REQUEST_METHOD"] = method
-        self.environ["SCRIPT_NAME"] = ""
-        self.environ["PATH_INFO"] = path
+        
+        for mount_point, wsgi_app in self.server.mount_points:
+            # The mount_points list should be sorted by length, descending.
+            if path.startswith(mount_point):
+                self.environ["SCRIPT_NAME"] = mount_point
+                self.environ["PATH_INFO"] = path[len(mount_point):]
+                self.wsgi_app = wsgi_app
+                break
+        else:
+            msg = "Not Found"
+            proto = self.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
+            self.wfile.write("%s 404 %s\r\n" % (proto, msg))
+            self.wfile.write("Content-Length: %s\r\n\r\n" % len(msg))
+            self.wfile.write(msg)
+            self.wfile.flush()
+            self.ready = False
+            return
+        
         self.environ["QUERY_STRING"] = qs
         self.environ["SERVER_PROTOCOL"] = version
         self.environ["SERVER_NAME"] = self.server.server_name
@@ -160,8 +176,8 @@ class WorkerThread(threading.Thread):
                     try:
                         request.parse_request()
                         if request.ready:
-                            response = self.server.wsgi_app(request.environ,
-                                                            request.start_response)
+                            response = request.wsgi_app(request.environ,
+                                                        request.start_response)
                             for line in response:
                                 request.write(line)
                     except socket.error, e:
@@ -191,7 +207,19 @@ class CherryPyWSGIServer(object):
         be careful w/ max
         '''
         self.requests = Queue.Queue(max)
-        self.wsgi_app = wsgi_app
+        
+        if callable(wsgi_app):
+            # We've been handed a single wsgi_app, in CP-2.1 style.
+            # Assume it's mounted at "".
+            self.mount_points = [("", wsgi_app)]
+        else:
+            # We've been handed a list of (mount_point, wsgi_app) tuples,
+            # so that the server can call different wsgi_apps, and also
+            # correctly set SCRIPT_NAME.
+            self.mount_points = wsgi_app
+        self.mount_points.sort()
+        self.mount_points.reverse()
+        
         self.bind_addr = bind_addr
         self.numthreads = numthreads or 1
         if not server_name:
@@ -286,7 +314,9 @@ class CherryPyWSGIServer(object):
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         self.ready = False
-        self.socket.close()
+        s = getattr(self, "socket", None)
+        if s and hasattr(s, "close"):
+            s.close()
         
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
