@@ -155,11 +155,7 @@ class Server(object):
             on_what = "socket file: %s" % cherrypy.config.get('server.socket_file')
         
         # Instantiate the server.
-        if self.httpserverclass == _cpwsgi.WSGIServer:
-            self.httpserver = self.httpserverclass(self.wsgi_app)
-            
-        else:
-            self.httpserver = self.httpserverclass()
+        self.httpserver = self.httpserverclass()
         
         # HTTP servers MUST be started in a new thread, so that the
         # main thread persists to receive KeyboardInterrupt's. This
