@@ -631,8 +631,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertInBody(msg)
         
         # Test server.throw_errors (ticket #186).
-        httpcls = cherrypy.server.httpserverclass
-        if httpcls:
+        s = cherrypy.server.httpserver
+        if s:
             self.getPage("/error/rethrow")
             self.assertBody("THROWN ERROR: ValueError")
         else:
@@ -836,8 +836,8 @@ llo,
         self.getPage("/maxrequestsize/index")
         self.assertBody("OK")
         
-        httpcls = cherrypy.server.httpserverclass
-        if httpcls:
+        s = cherrypy.server.httpserver
+        if s:
             cherrypy.config.update({'server.max_request_header_size': 10})
             self.getPage("/maxrequestsize/index")
             self.assertStatus("413 Request Entity Too Large")
@@ -865,8 +865,8 @@ hello
         self.getPage('/maxrequestsize/upload', h, "POST", b)
         self.assertBody('Size: 5')
         
-        httpcls = cherrypy.server.httpserverclass
-        if httpcls:
+        s = cherrypy.server.httpserver
+        if s:
             cherrypy.config.update({
                 '%s/maxrequestsize' % self.prefix(): {'server.max_request_body_size': 3}})
             self.getPage('/maxrequestsize/upload', h, "POST", b)

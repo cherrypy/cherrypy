@@ -34,8 +34,9 @@ class LogDebugInfoFilterTest(helper.CPWebCase):
         #self.assertInBody('Session data size')
 
     def testBug326(self):
-        httpcls = cherrypy.server.httpserverclass
-        if httpcls and httpcls.__name__ == "WSGIServer":
+        from cherrypy import _cpwsgi
+        s = cherrypy.server.httpserver
+        if s and isinstance(s, _cpwsgi.WSGIServer):
             h = [("Content-type", "multipart/form-data; boundary=x"),
                  ("Content-Length", "110")]
             b = """--x
@@ -46,7 +47,7 @@ hello
 --x--
 """
             cherrypy.config.update({
-                ('%s/bug326' % self.prefix): {
+                ('%s/bug326' % self.prefix()): {
                     'server.max_request_body_size': 3,
                     'server.environment': 'development',
                 }

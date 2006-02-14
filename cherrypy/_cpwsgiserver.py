@@ -66,6 +66,13 @@ class HTTPRequest(object):
         self.environ["REQUEST_METHOD"] = method
         
         for mount_point, wsgi_app in self.server.mount_points:
+            if path == "*":
+                # This means, of course, that the first wsgi_app will
+                # always handle a URI of "*".
+                self.environ["SCRIPT_NAME"] = ""
+                self.environ["PATH_INFO"] = "*"
+                self.wsgi_app = wsgi_app
+                break
             # The mount_points list should be sorted by length, descending.
             if path.startswith(mount_point):
                 self.environ["SCRIPT_NAME"] = mount_point

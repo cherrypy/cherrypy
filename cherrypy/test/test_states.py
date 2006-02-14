@@ -54,9 +54,10 @@ import helper
 class ServerStateTests(helper.CPWebCase):
     
     def test_0_NormalStateFlow(self):
-        # Without having called "cherrypy.server.start()", we should
-        # get a NotReady error
-        self.assertRaises(cherrypy.NotReady, self.getPage, "/")
+        if not self.server_class:
+            # Without having called "cherrypy.server.start()", we should
+            # get a NotReady error
+            self.assertRaises(cherrypy.NotReady, self.getPage, "/")
         
         # And our db_connection should not be running
         self.assertEqual(db_connection.running, False)
@@ -85,12 +86,15 @@ class ServerStateTests(helper.CPWebCase):
         cherrypy.server.stop()
         self.assertEqual(cherrypy.server.state, 0)
         
-        # Once the server has stopped, we should get a NotReady error again.
-        self.assertRaises(cherrypy.NotReady, self.getPage, "/")
-        
         # Verify that the on_stop_server function was called
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
+        
+        if not self.server_class:
+            # Once the server has stopped, we should get a NotReady
+            # error again. (If we were running an HTTP server,
+            # then the connection should not even be processed).
+            self.assertRaises(cherrypy.NotReady, self.getPage, "/")
     
     def test_1_Restart(self):
         cherrypy.server.start(True, self.server_class)
@@ -139,9 +143,7 @@ class ServerStateTests(helper.CPWebCase):
             # We must start the server in this, the main thread
             cherrypy.server.start(False, self.server_class)
             # Time passes...
-            self.assertEqual(cherrypy.server.httpserver, None)
             self.assertEqual(cherrypy.server.state, 0)
-            self.assertRaises(cherrypy.NotReady, self.getPage, "/")
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
             
@@ -157,20 +159,9 @@ class ServerStateTests(helper.CPWebCase):
             
             cherrypy.server.start(False, self.server_class)
             # Time passes...
-            self.assertEqual(cherrypy.server.httpserver, None)
             self.assertEqual(cherrypy.server.state, 0)
-            self.assertRaises(cherrypy.NotReady, self.getPage, "/")
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
-    
-    def test_3_ConfigErrors(self):
-        cherrypy.config.update({'server.environment': 'destruction'})
-        
-        try:
-            self.assertRaises(cherrypy.WrongConfigValue,
-                    cherrypy.server.start, True, self.server_class)
-        finally:
-            cherrypy.server.stop()
 
 
 db_connection = None

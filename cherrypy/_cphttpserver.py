@@ -185,6 +185,9 @@ class CherryHTTPServer(SocketServer.BaseServer):
         self.RequestHandlerClass.protocol_version = httpproto
         
         self.request_queue_size = cherrypy.config.get('server.socket_queue_size')
+    
+    def server_bind(self):
+        """Called by constructor to bind the socket."""
         
         # Select the appropriate server based on config options
         sockFile = cherrypy.config.get('server.socket_file')
@@ -202,7 +205,7 @@ class CherryHTTPServer(SocketServer.BaseServer):
             
             self.server_address = sockFile
             self.socket = socket.socket(self.address_family, self.socket_type)
-            self.server_bind()
+            self._server_bind()
         else:
             # AF_INET or AF_INET6 socket
             host = cherrypy.config.get('server.socket_host')
@@ -216,8 +219,7 @@ class CherryHTTPServer(SocketServer.BaseServer):
                 # Probably a DNS issue.
                 # Must...refuse...temptation..to..guess...
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                self.socket.bind(self.server_address)
+                self._server_bind()
             else:
                 # Get the correct address family for our host (allows IPv6 addresses)
                 for res in info:
@@ -226,7 +228,7 @@ class CherryHTTPServer(SocketServer.BaseServer):
                     self.socket_type = socktype
                     try:
                         self.socket = socket.socket(af, socktype, proto)
-                        self.server_bind()
+                        self._server_bind()
                     except socket.error, msg:
                         if self.socket:
                             self.socket.close()
@@ -235,19 +237,16 @@ class CherryHTTPServer(SocketServer.BaseServer):
                     break
                 if not self.socket:
                     raise socket.error, msg
-        
-        self.server_activate()
+    
+    def _server_bind(self):
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
     
     def server_activate(self):
         """Override server_activate to set timeout on our listener socket"""
         self.socket.settimeout(1)
         self.socket.listen(self.request_queue_size)
-    
-    def server_bind(self):
-        """Called by constructor to bind the socket."""
-        if self.allow_reuse_address:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)
     
     def close_request(self, request):
         """Called to clean up an individual request."""
@@ -294,7 +293,11 @@ class CherryHTTPServer(SocketServer.BaseServer):
                 raise self.interrupt
             self.handle_request()
         self.server_close()
-    start = serve_forever
+    
+    def start(self):
+        self.server_bind()
+        self.server_activate()
+        self.serve_forever()
     
     def server_close(self):
         self.ready = False
@@ -345,7 +348,6 @@ class PooledThreadServer(CherryHTTPServer):
                 time.sleep(.1)
         
         CherryHTTPServer.serve_forever(self)
-    start = serve_forever
     
     def server_close(self):
         """Gracefully shutdown a server that is serve_forever()ing."""
