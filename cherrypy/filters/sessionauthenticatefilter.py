@@ -39,13 +39,18 @@ class SessionAuthenticateFilter(BaseFilter):
         not_logged_in = cherrypy.config.get('session_authenticate_filter.not_logged_in')
         load_user_by_username = cherrypy.config.get('session_authenticate_filter.load_user_by_username')
         session_key = cherrypy.config.get('session_authenticate_filter.session_key', 'username')
+        on_login = cherrypy.config.get('session_authenticate_filter.on_login', None)
+        on_logout = cherrypy.config.get('session_authenticate_filter.on_logout', None)
 
         if cherrypy.request.path.endswith('login_screen'):
             return
         elif cherrypy.request.path.endswith('do_logout'):
+            login = cherrypy.session[session_key]
             cherrypy.session[session_key] = None
             cherrypy.request.user = None
             cherrypy.thread_data.user = None
+            if on_logout:
+                on_logout(login)
             from_page = cherrypy.request.params.get('from_page', '..')
             raise cherrypy.HTTPRedirect(from_page)
         elif cherrypy.request.path.endswith('do_login'):
@@ -58,6 +63,8 @@ class SessionAuthenticateFilter(BaseFilter):
                 cherrypy.request.execute_main = False
             else:
                 cherrypy.session[session_key] = login
+                if on_login:
+                    on_login(login)
                 if not from_page:
                     from_page = '/'
                 raise cherrypy.HTTPRedirect(from_page)
