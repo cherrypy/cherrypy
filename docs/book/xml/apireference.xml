@@ -89,7 +89,8 @@
         </section>
         <section>
             <title>cherrypy.request.wsgi_environ</title>
-            <para>This attribute is a dictionary containing the WSGI environment for the request.  In non-WSGI settings (i.e., running under _cphttpserver), it is an empty dictionary.</para>
+            <para>This attribute is a dictionary containing the WSGI environment for the request. In
+            non-WSGI settings (i.e., running under _cphttpserver), it is absent.</para>
         </section>
         <section>
             <title>cherrypy.request.queryString</title>
@@ -228,10 +229,10 @@
                 </listitem>
             </itemizedlist>
             <para>You <emphasis>must</emphasis> call this function from Python's main thread, and set
-            init_only to False, if you want CherryPy to shut down when KeyboardInterrupt or SystemExit
-            are raised (including Ctrl-C). The only time you might want to do otherwise is if you run
-            CherryPy as a Windows service, or as an extension to, say, mod_python, and even then, you
-            might want to anyway.</para>
+            init_only to False, if you want CherryPy to shut down when KeyboardInterrupt or
+            SystemExit are raised (including Ctrl-C). The only time you might want to do otherwise is
+            if you run CherryPy as a Windows service, or as an extension to, say, mod_python, and
+            even then, you might want to anyway.</para>
         </section>
         <section>
             <title>cherrypy.server.blocking</title>
@@ -276,8 +277,8 @@
             server to be ready to receive requests.</para>
         </section>
         <section>
-            <title>cherrypy.server.start_with_callback(func, args=(), kwargs={},
-            server_class = _missing)</title>
+            <title>cherrypy.server.start_with_callback(func, args=(), kwargs={}, server_class =
+            _missing)</title>
             <para>Since server.start usually blocks, use this to easily run another function in a new
             thread. It starts the new thread and then runs server.start. The new thread automatically
             waits for the server to finish its startup procedure.</para>
@@ -347,6 +348,48 @@
         <section>
             <title>cherrypy.config.environments</title>
             <para>Dict containing config defaults for each named server.environment.</para>
+        </section>
+    </section>
+    <section>
+        <title>cherrypy.tree</title>
+        <para>The Tree class is used to keep track of where applications are mounted. To "mount" an
+        application means to have its root respond to a URL other than "/". By using
+        <code>cherrypy.tree</code>, you can easily mount applications and remember where you mounted
+        them!</para>
+        <section>
+            <title>cherrypy.tree.mount(app_root, baseurl=None, conf=None)</title>
+            <para>Function to mount a tree of objects at the given baseurl, using the given
+            configuration dict or filename. If baseurl is None or missing, it is assumed to be "/"
+            unless the config specifies <code>[global] mount_point = "/path/to/approot"</code>. If
+            conf is not None, then each of its sections (which should be a relative URL, like
+            "/skins/deepblue/main") will be prefixed with the baseurl, so that config lookups are
+            also "mounted" at the base URL.</para>
+            <para>Note that, by using tree.mount, your approot may not be found at cherrypy.root;
+            there may be several "dummy" objects placed in-between cherrypy.root and your
+            application's root instance.</para>
+        </section>
+        <section>
+            <title>cherrypy.tree.mount_points</title>
+            <para>A dict of the form {baseurl: approot-instance}.</para>
+        </section>
+        <section>
+            <title>cherrypy.tree.mount_point(path=None)</title>
+            <para>A method which finds the appropriate baseurl for a given path. If path is None or
+            missing, cherrypy.request.object_path is used. If multiple applications "contain" the
+            given path, the longer baseurl is returned. That is, if App1 is mounted at "/" and App2
+            is mounted at "/path/to/app", then
+            <code>cherrypy.tree.mount_point("/path/to/app/main")</code> will return
+            "/path/to/app".</para>
+            <para>Once you have obtained the baseurl using mount_point, you can obtain a reference to
+            the application root object by looking up
+            <code>cherrypy.tree.mount_points[baseurl]</code>.</para>
+        </section>
+        <section>
+            <title>cherrypy.tree.url(path, mount_point=None)</title>
+            <para>Prefixes the given path with the given mount_point, which isn't very exciting
+            unless mount_point is None or missing, in which case, cherrypy.request.object_path will
+            be used to find the current mount_point and prefix <emphasis>that</emphasis> to the given
+            path.</para>
         </section>
     </section>
     <section id="exceptions">
