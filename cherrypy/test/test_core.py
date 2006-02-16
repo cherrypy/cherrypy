@@ -887,6 +887,10 @@ hello
         cherrypy.config.update({'server.default_content_type': 'text/plain'})
         self.getPage('/')
         self.assertHeader('Content-Type', 'text/plain')
+    
+    def testTreeBackwardCompatibility(self):
+        self.assertEqual(cherrypy.tree.mount_points, {"/": cherrypy.root})
+
 
 if __name__ == '__main__':
     helper.testmain()

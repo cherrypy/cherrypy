@@ -16,7 +16,18 @@ class Tree:
     """
     
     def __init__(self):
-        self.mount_points = {}
+        self._mount_points = {}
+    
+    def _get_mount_points(self):
+        m = self._mount_points
+        if "/" not in m:
+            import cherrypy
+            if not isinstance(cherrypy.root, Root):
+                m["/"] = cherrypy.root
+        return m
+    def _set_mount_points(self, newvalue):
+        self._mount_points = newvalue
+    mount_points = property(_get_mount_points, _set_mount_points)
     
     def mount(self, app_root, baseurl=None, conf=None):
         """Mount the given app_root at the given baseurl (relative to root)."""

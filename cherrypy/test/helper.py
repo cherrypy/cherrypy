@@ -207,6 +207,7 @@ def _run_test_suite_thread(moduleNames, conf):
         # Must run each module in a separate suite,
         # because each module uses/overwrites cherrypy globals.
         cherrypy.root = None
+        cherrypy.tree = cherrypy._cptree.Tree()
         cherrypy.config.reset()
         setConfig(conf)
         
