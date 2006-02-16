@@ -39,14 +39,16 @@ class InternalRedirect(Exception):
         
         if params is not None:
             if isinstance(params, basestring):
-                request.queryString = params
+                request.query_string = params
+                request.queryString = request.query_string # Backward compatibility
                 pm = cgi.parse_qs(params, keep_blank_values=True)
                 for key, val in pm.items():
                     if len(val) == 1:
                         pm[key] = val[0]
                 request.params = pm
             else:
-                request.queryString = urllib.urlencode(params)
+                request.query_string = urllib.urlencode(params)
+                request.queryString = request.query_string
                 request.params = params.copy()
         
         Exception.__init__(self, path, params)

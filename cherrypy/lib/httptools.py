@@ -334,15 +334,15 @@ def parseRequestLine(requestLine):
     
     return method, path, qs, protocol
 
-def parseQueryString(queryString, keep_blank_values=True):
-    """Build a paramMap dictionary from a queryString."""
-    if re.match(r"[0-9]+,[0-9]+", queryString):
+def parseQueryString(query_string, keep_blank_values=True):
+    """Build a paramMap dictionary from a query_string."""
+    if re.match(r"[0-9]+,[0-9]+", query_string):
         # Server-side image map. Map the coords to 'x' and 'y'
         # (like CGI::Request does).
-        pm = queryString.split(",")
+        pm = query_string.split(",")
         pm = {'x': int(pm[0]), 'y': int(pm[1])}
     else:
-        pm = cgi.parse_qs(queryString, keep_blank_values)
+        pm = cgi.parse_qs(query_string, keep_blank_values)
         for key, val in pm.items():
             if len(val) == 1:
                 pm[key] = val[0]

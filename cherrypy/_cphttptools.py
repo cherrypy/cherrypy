@@ -131,7 +131,8 @@ class Request(object):
         self.processRequestBody = method in ("POST", "PUT")
         
         self.path = path
-        self.queryString = qs
+        self.query_string = qs
+        self.queryString = qs # Backward compatibility
         self.protocol = proto
         
         # Change object_path in filters to change
@@ -163,7 +164,7 @@ class Request(object):
     
     def processHeaders(self):
         
-        self.params = httptools.parseQueryString(self.queryString)
+        self.params = httptools.parseQueryString(self.query_string)
         self.paramMap = self.params # Backward compatibility
         
         # Process the headers into self.headers
@@ -200,8 +201,8 @@ class Request(object):
     
     def _get_browser_url(self):
         url = self.base + self.path
-        if self.queryString:
-            url += '?' + self.queryString
+        if self.query_string:
+            url += '?' + self.query_string
         return url
     browser_url = property(_get_browser_url,
                           doc="The URL as entered in a browser (read-only).")

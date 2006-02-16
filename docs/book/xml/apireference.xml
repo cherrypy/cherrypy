@@ -93,7 +93,7 @@
             non-WSGI settings (i.e., running under _cphttpserver), it is absent.</para>
         </section>
         <section>
-            <title>cherrypy.request.queryString</title>
+            <title>cherrypy.request.query_string</title>
             <para>This attribute is a string containing the query string of the request (the part of
             the URL following '?').</para>
         </section>
@@ -471,7 +471,7 @@
                 requestLine. The default Request processor calls this function.</para>
             </section>
             <section>
-                <title>parseQueryString(queryString, keep_blank_values=True)</title>
+                <title>parseQueryString(query_string, keep_blank_values=True)</title>
                 <para>Returns a dict of <code>{'key': 'value'}</code> pairs from an HTTP "key=value"
                 query string. Also handles server-side image map query strings. The default Request
                 processor calls this function.</para>
