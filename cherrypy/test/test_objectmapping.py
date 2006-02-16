@@ -10,7 +10,7 @@ class Root:
     index.exposed = True
     
     def default(self, *params):
-        return "default:"+repr(params)
+        return "default:" + repr(params)
     default.exposed = True
     
     def other(self):
@@ -95,12 +95,20 @@ class Dir4:
     def index(self):
         return "index for dir4, not exposed"
 
+class DefNoIndex:
+    def default(self, *args):
+        return "defnoindex:" + repr(args)
+    default.exposed = True
+
+
 Root.exposing = Exposing()
 Root.exposingnew = ExposingNewStyle()
 Root.dir1 = Dir1()
 Root.dir1.dir2 = Dir2()
 Root.dir1.dir2.dir3 = Dir3()
 Root.dir1.dir2.dir3.dir4 = Dir4()
+Root.defnoindex = DefNoIndex()
+
 
 mount_points = ["/", "/users/fred/blog", "/corp/blog"]
 for url in mount_points:
@@ -161,6 +169,12 @@ class ObjectMappingTest(helper.CPWebCase):
             
             self.getPage("/dir1/dir2/dir3/dir4/index")
             self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
+            
+            # Test *vpath when default() is defined but not index()
+            self.getPage("/defnoindex")
+            self.assertBody("defnoindex:()")
+            self.getPage("/defnoindex/")
+            self.assertBody("defnoindex:()")
             
             self.getPage("/redirect")
             self.assertStatus('302 Found')
