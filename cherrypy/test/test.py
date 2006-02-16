@@ -22,9 +22,7 @@ class TestHarness(object):
     
     # The first server in the list is the default server.
     available_servers = {'serverless': (0, "Serverless", None),
-                         'native': (1, "Native HTTP Server",
-                                    "cherrypy._cphttpserver.embedded_server"),
-                         'wsgi': (2, "Native WSGI Server",
+                         'wsgi': (1, "Native WSGI Server",
                                   "cherrypy.test.helper.TestWSGI"),
                          }
     default_server = "wsgi"

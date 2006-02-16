@@ -1,8 +1,14 @@
+2006-02-16:
+    * Removed _cphttpserver, the native HTTP server that was deprecated in CP 2.1 (fumanchu)
+
 2006-01-27:
     * CherryPy-2.2.0beta released
     * Lots of improvements to sessionfilter
     * Added cherrypy.lower_api switch (people get a speed boost if they
     *   set it to True)
+
+2006-01-02:
+    * New _cptree module, with strong encouragement to call tree.mount(Root()[, baseurl]) instead of cherrypy.root = Root().
 
 2005-12-05:
     * Added support for specifying the Content-Type to be used by defaults

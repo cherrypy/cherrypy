@@ -90,7 +90,7 @@
         <section>
             <title>cherrypy.request.wsgi_environ</title>
             <para>This attribute is a dictionary containing the WSGI environment for the request. In
-            non-WSGI settings (i.e., running under _cphttpserver), it is absent.</para>
+            non-WSGI settings (i.e., custom HTTP servers), it is absent.</para>
         </section>
         <section>
             <title>cherrypy.request.query_string</title>
@@ -203,22 +203,6 @@
             checked for an alternate value; otherwise, the default is used. Possible alternate values
             (you may pass the class names as a string if you wish):</para>
             <itemizedlist>
-                <listitem>
-                    <para><code>cherrypy._cphttpserver.CherryHTTPServer</code>: this will load the
-                    old, single-threaded built-in HTTP server. This server is deprecated and will
-                    probably be removed in CherryPy 2.2.</para>
-                </listitem>
-                <listitem>
-                    <para><code>cherrypy._cphttpserver.PooledThreadServer</code>: this will load the
-                    old, multi-threaded built-in HTTP server. This server is deprecated and will
-                    probably be removed in CherryPy 2.2.</para>
-                </listitem>
-                <listitem>
-                    <para><code>cherrypy._cphttpserver.embedded_server</code>: use this to
-                    automatically select between the CherryHTTPServer and the PooledThreadServer
-                    based on the value of config.get("server.thread_pool") and
-                    config.get("server.socket_file").</para>
-                </listitem>
                 <listitem>
                     <para><code>None</code>: this will not load any HTTP server. Note that this is
                     not the default; the default (if server_class is not given) is to load the

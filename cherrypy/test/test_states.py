@@ -198,9 +198,6 @@ def run_all(host, port):
         run(server, conf)
     _run(None)
     _run("cherrypy._cpwsgi.WSGIServer")
-    _run("cherrypy._cphttpserver.PooledThreadServer")
-    conf['server.thread_pool'] = 1
-    _run("cherrypy._cphttpserver.CherryHTTPServer")
 
 
 def run_localhosts(port):
@@ -218,9 +215,6 @@ def run_localhosts(port):
             print "Testing %s on %s:%s..." % (server or "serverless", host, port)
             run(server, conf)
         _run("cherrypy._cpwsgi.WSGIServer")
-        _run("cherrypy._cphttpserver.PooledThreadServer")
-        conf['server.thread_pool'] = 1
-        _run("cherrypy._cphttpserver.CherryHTTPServer")
 
 
 if __name__ == "__main__":
