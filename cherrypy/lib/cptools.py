@@ -3,6 +3,7 @@
 import inspect
 import mimetools
 import mimetypes
+mimetypes.init()
 mimetypes.types_map['.dwg']='image/x-dwg'
 mimetypes.types_map['.ico']='image/x-icon'
 
