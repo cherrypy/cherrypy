@@ -120,6 +120,7 @@ class Engine(object):
         except SystemExit:
             cherrypy.log("SystemExit raised: shutting down app server", "ENGINE")
             self.stop()
+            raise
         except:
             # Don't bother logging, since we're going to re-raise.
             self.interrupt = sys.exc_info()[1]
