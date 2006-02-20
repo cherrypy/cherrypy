@@ -104,9 +104,13 @@ class Server(Engine):
         def _start_http():
             try:
                 self.httpserver.start()
-            except (KeyboardInterrupt, SystemExit), exc:
+            except KeyboardInterrupt, exc:
                 self.interrupt = exc
                 self.stop()
+            except SystemExit, exc:
+                self.interrupt = exc
+                self.stop()
+                raise
         threading.Thread(target=_start_http).start()
         
         if blocking:

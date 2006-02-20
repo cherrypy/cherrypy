@@ -45,11 +45,11 @@ class SessionAuthenticateFilter(BaseFilter):
         if cherrypy.request.path.endswith('login_screen'):
             return
         elif cherrypy.request.path.endswith('do_logout'):
-            login = cherrypy.session[session_key]
+            login = cherrypy.session.get('session_key')
             cherrypy.session[session_key] = None
             cherrypy.request.user = None
             cherrypy.thread_data.user = None
-            if on_logout:
+            if login and on_logout:
                 on_logout(login)
             from_page = cherrypy.request.params.get('from_page', '..')
             raise cherrypy.HTTPRedirect(from_page)
