@@ -108,9 +108,10 @@ class SessionFilter(basefilter.BaseFilter):
         else:
             sess.session_storage = sess.session_storage()
         
+        now = datetime.datetime.now()
         # Check if we need to clean up old sessions
-        if cherrypy._session_last_clean_up_time + clean_up_delay < \
-                datetime.datetime.now():
+        if cherrypy._session_last_clean_up_time + clean_up_delay < now:
+            cherrypy._session_last_clean_up_time = now
             sess.session_storage.clean_up()
         
         # Check if request came with a session ID
