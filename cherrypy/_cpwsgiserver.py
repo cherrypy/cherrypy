@@ -294,6 +294,7 @@ class CherryPyWSGIServer(object):
         for i in xrange(self.numthreads):
             self._workerThreads.append(WorkerThread(self))
         for worker in self._workerThreads:
+            worker.setName("CP WSGIServer " + worker.getName())
             worker.start()
         for worker in self._workerThreads:
             while not worker.ready:

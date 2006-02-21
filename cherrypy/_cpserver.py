@@ -111,7 +111,9 @@ class Server(Engine):
                 self.interrupt = exc
                 self.stop()
                 raise
-        threading.Thread(target=_start_http).start()
+        t = threading.Thread(target=_start_http)
+        t.setName("CPHTTPServer " + t.getName())
+        t.start()
         
         if blocking:
             self.wait_for_http_ready()
@@ -182,7 +184,9 @@ class Server(Engine):
         def _callback(func, *args, **kwargs):
             self.wait()
             func(*args, **kwargs)
-        threading.Thread(target=_callback, args=args, kwargs=kwargs).start()
+        t = threading.Thread(target=_callback, args=args, kwargs=kwargs)
+        t.setName("CPServer Callback " + t.getName())
+        t.start()
         
         self.start(server_class = server_class)
 
@@ -215,7 +219,7 @@ def check_port(host, port):
             raise IOError("Port %s is in use on %s; perhaps the previous "
                           "server did not shut down properly." %
                           (repr(port), repr(host)))
-        except socket.error, msg:
+        except socket.error:
             if s:
                 s.close()
 
