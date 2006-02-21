@@ -32,6 +32,7 @@ except ImportError:
 import random
 import sha
 import time
+import thread
 import threading
 import types
 
@@ -112,7 +113,9 @@ class SessionFilter(basefilter.BaseFilter):
         # Check if we need to clean up old sessions
         if cherrypy._session_last_clean_up_time + clean_up_delay < now:
             cherrypy._session_last_clean_up_time = now
-            sess.session_storage.clean_up()
+            # Run clean_up function in other thread to avoid blocking
+            #   this request
+            thread.start_new_thread(sess.session_storage.clean_up, (sess,))
         
         # Check if request came with a session ID
         if cookie_name in cherrypy.request.simple_cookie:
@@ -230,8 +233,7 @@ class RamStorage:
         cherrypy._session_lock_dict[id].release()
         sess.locked = False
     
-    def clean_up(self):
-        sess = cherrypy.request._session
+    def clean_up(self, sess):
         to_be_deleted = []
         now = datetime.datetime.now()
         for id, (data, expiration_time) in cherrypy._session_data_holder.iteritems():
@@ -284,8 +286,7 @@ class FileStorage:
         self._unlockFile(lockFilePath)
         sess.locked = False
     
-    def clean_up(self):
-        sess = cherrypy.request._session
+    def clean_up(self, sess):
         storagePath = cherrypy.config.get('session_filter.storage_path')
         now = datetime.datetime.now()
         # Iterate over all files in the dir/ and exclude non session files
@@ -390,8 +391,7 @@ class PostgreSQLStorage:
         self.cursor.close()
         self.cursor = None
     
-    def clean_up(self):
-        sess = cherrypy.request._session
+    def clean_up(self, sess):
         now = datetime.datetime.now()
         self.cursor.execute(
             'select data from session where expiration_time < %s',
