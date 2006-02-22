@@ -108,9 +108,9 @@ class Engine(object):
         self.state = STARTED
     
     def block(self):
-        """Block forever (wait for KeyboardInterrupt or SystemExit)."""
+        """Block forever (wait for stop(), KeyboardInterrupt or SystemExit)."""
         try:
-            while True:
+            while self.state != STOPPED:
                 time.sleep(.1)
                 if self.interrupt:
                     raise self.interrupt

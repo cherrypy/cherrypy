@@ -127,7 +127,9 @@ class Server(Engine):
     
     def wait_for_http_ready(self):
         if self.httpserver:
-            while not getattr(self.httpserver, "ready", True) and not self.interrupt:
+            while (not getattr(self.httpserver, "ready", True)
+                   and not self.interrupt
+                   and self.state != STOPPED):
                 time.sleep(.1)
             
             # Wait for port to be occupied

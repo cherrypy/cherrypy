@@ -95,6 +95,14 @@ class ServerStateTests(helper.CPWebCase):
             # error again. (If we were running an HTTP server,
             # then the connection should not even be processed).
             self.assertRaises(cherrypy.NotReady, self.getPage, "/")
+        
+        # Block the main thread now and verify that stop() works.
+        def stoptest():
+            self.getPage("/")
+            self.assertBody("Hello World")
+            cherrypy.server.stop()
+        cherrypy.server.start_with_callback(stoptest, server_class=self.server_class)
+        self.assertEqual(cherrypy.server.state, 0)
     
     def test_1_Restart(self):
         cherrypy.server.start(True, self.server_class)
