@@ -54,6 +54,12 @@ class SessionNotEnabledError(Exception):
     """ User forgot to set session_filter.on to True """
     pass
 
+class SessionStoragePathNotConfiguredError(Exception):
+    """
+    User set storage_type to file but forgot to set the storage_path
+    """
+    pass
+
 
 class SessionFilter(basefilter.BaseFilter):
 
@@ -287,16 +293,16 @@ class FileStorage:
         sess.locked = False
     
     def clean_up(self, sess):
-        storagePath = cherrypy.config.get('session_filter.storage_path')
+        storage_path = cherrypy.config.get('session_filter.storage_path')
         now = datetime.datetime.now()
         # Iterate over all files in the dir/ and exclude non session files
         #   and lock files
-        for fname in os.listdir(storagePath):
+        for fname in os.listdir(storage_path):
             if (fname.startswith(self.SESSION_PREFIX)
                 and not fname.endswith(self.LOCK_SUFFIX)):
                 # We have a session file: try to load it and check
                 #   if it's expired. If it fails, nevermind.
-                filePath = os.path.join(storagePath, fname)
+                filePath = os.path.join(storage_path, fname)
                 try:
                     f = open(filePath, "rb")
                     data, expiration_time = pickle.load(f)
@@ -311,9 +317,11 @@ class FileStorage:
                     pass
     
     def _getFilePath(self, id):
-        storagePath = cherrypy.config.get('session_filter.storage_path')
+        storage_path = cherrypy.config.get('session_filter.storage_path')
+        if storage_path is None:
+            raise SessionStoragePathNotConfiguredError()
         fileName = self.SESSION_PREFIX + id
-        filePath = os.path.join(storagePath, fileName)
+        filePath = os.path.join(storage_path, fileName)
         return filePath
     
     def _lockFile(self, path):
