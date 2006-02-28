@@ -86,6 +86,10 @@
         linkend="callbacks" />.</para>
       </listitem>
       <listitem>
+        <para><option>session_filter.on_renew_session</option>: See <xref
+        linkend="callbacks" />.</para>
+      </listitem>
+      <listitem>
         <para><option>session_filter.on_delete_session</option>: See <xref
         linkend="callbacks" />.</para>
       </listitem>
@@ -197,8 +201,9 @@
     <title>Being notified when sessions are created/deleted</title>
     <para>It is possible to configure the <literal>session_filter</literal> so
     that it calls some special callback functions from your code when sessions
-    are being created/deleted. To do so you have to set the
-    <literal>session_filter.on_create_session</literal> and
+    are being created/renewed/deleted. To do so you have to set the
+    <literal>session_filter.on_create_session</literal>,
+    <literal>session_filter.on_renew_session</literal>, and
     <literal>session_filter.on_delete_session</literal> config options. When a
     session is created/deleted, CherryPy will call these functions and pass
     them the session data.</para>

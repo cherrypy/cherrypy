@@ -82,6 +82,8 @@ class SessionFilter(basefilter.BaseFilter):
         sess.session_locking = conf('session_filter.locking', 'explicit')
         sess.on_create_session = conf('session_filter.on_create_session',
                 lambda data: None)
+        sess.on_renew_session = conf('session_filter.on_renew_session',
+                lambda data: None)
         sess.on_delete_session = conf('session_filter.on_delete_session',
                 lambda data: None)
         sess.generate_session_id = conf('session_filter.generate_session_id',
@@ -263,9 +265,9 @@ class FileStorage:
     LOCK_SUFFIX = '.lock'
     
     def load(self, id):
-        filePath = self._getFilePath(id)
+        file_path = self._get_file_path(id)
         try:
-            f = open(filePath, "rb")
+            f = open(file_path, "rb")
             data = pickle.load(f)
             f.close()
             return data
@@ -273,23 +275,23 @@ class FileStorage:
             return None
     
     def save(self, id, data, expiration_time):
-        filePath = self._getFilePath(id)
-        f = open(filePath, "wb")
+        file_path = self._get_file_path(id)
+        f = open(file_path, "wb")
         pickle.dump((data, expiration_time), f)
         f.close()
     
     def acquire_lock(self):
         sess = cherrypy.request._session
-        filePath = self._getFilePath(cherrypy.session.id)
-        lockFilePath = filePath + self.LOCK_SUFFIX
-        self._lockFile(lockFilePath)
+        file_path = self._get_file_path(cherrypy.session.id)
+        lock_file_path = file_path + self.LOCK_SUFFIX
+        self._lock_file(lock_file_path)
         sess.locked = True
     
     def release_lock(self):
         sess = cherrypy.request._session
-        filePath = self._getFilePath(cherrypy.session.id)
-        lockFilePath = filePath + self.LOCK_SUFFIX
-        self._unlockFile(lockFilePath)
+        file_path = self._get_file_path(cherrypy.session.id)
+        lock_file_path = file_path + self.LOCK_SUFFIX
+        self._unlock_file(lock_file_path)
         sess.locked = False
     
     def clean_up(self, sess):
@@ -302,29 +304,29 @@ class FileStorage:
                 and not fname.endswith(self.LOCK_SUFFIX)):
                 # We have a session file: try to load it and check
                 #   if it's expired. If it fails, nevermind.
-                filePath = os.path.join(storage_path, fname)
+                file_path = os.path.join(storage_path, fname)
                 try:
-                    f = open(filePath, "rb")
+                    f = open(file_path, "rb")
                     data, expiration_time = pickle.load(f)
                     f.close()
                     if expiration_time < now:
                         # Session expired: deleting it
                         id = fname[len(self.SESSION_PREFIX):]
                         sess.on_delete_session(data)
-                        os.unlink(filePath)
+                        os.unlink(file_path)
                 except:
                     # We can't access the file ... nevermind
                     pass
     
-    def _getFilePath(self, id):
+    def _get_file_path(self, id):
         storage_path = cherrypy.config.get('session_filter.storage_path')
         if storage_path is None:
             raise SessionStoragePathNotConfiguredError()
         fileName = self.SESSION_PREFIX + id
-        filePath = os.path.join(storage_path, fileName)
-        return filePath
+        file_path = os.path.join(storage_path, fileName)
+        return file_path
     
-    def _lockFile(self, path):
+    def _lock_file(self, path):
         sess = cherrypy.request._session
         startTime = time.time()
         while True:
@@ -338,7 +340,7 @@ class FileStorage:
                 os.close(lockfd) 
                 break
     
-    def _unlockFile(self, path):
+    def _unlock_file(self, path):
         os.unlink(path)
 
 
@@ -445,6 +447,8 @@ class SessionWrapper:
                 # Expired session:
                 # flush session data (but keep the same session_id)
                 sess.session_data = {'_id': sess.session_id}
+                if not (data is None):
+                    sess.on_renew_session(sess.session_data)
             else:
                 sess.session_data = data[0]
             sess.to_be_loaded = False
