@@ -42,7 +42,7 @@ class GzipFilter(BaseFilter):
             return
         
         ct = response.headers.get('Content-Type').split(';')[0]
-        ct = ct in cherrypy.config.get('gzip_filter.mime_types', ['text/html'])
+        ct = ct in cherrypy.config.get('gzip_filter.mime_types', ['text/html', 'text/plain'])
         for coding in acceptable:
             if coding.value == 'identity' and coding.qvalue != 0:
                 return
@@ -51,7 +51,7 @@ class GzipFilter(BaseFilter):
                     return
                 if ct:
                     zipit()
-                    return
+                return
         cherrypy.HTTPError(406, "identity, gzip").set_response()
     
     def write_gzip_header(self):
