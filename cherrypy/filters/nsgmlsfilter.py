@@ -14,7 +14,7 @@ class NsgmlsFilter(BaseFilter):
         
         # the tidy filter, by its very nature it's not generator friendly, 
         # so we just collect the body and work with it.
-        originalBody = cherrypy.response.collapse_body()
+        original_body = cherrypy.response.collapse_body()
         
         fct = cherrypy.response.headers.get('Content-Type', '')
         ct = fct.split(';')[0]
@@ -23,39 +23,50 @@ class NsgmlsFilter(BaseFilter):
         if i != -1:
             encoding = fct[i+8:]
         if ct == 'text/html':
+            # Remove bits of Javascript (nsgmls doesn't seem to handle
+            #   them correctly (for instance, if <a appears in your
+            #   Javascript code nsgmls complains about it)
+            while True:
+                i = original_body.find('<script')
+                if i == -1:
+                    break
+                j = original_body.find('</script>', i)
+                if j == -1:
+                    break
+                original_body = original_body[:i] + original_body[j+9:]
+
             tmpdir = cherrypy.config.get('nsgmls_filter.tmp_dir')
-            pageFile = os.path.join(tmpdir, 'page.html')
-            errFile = os.path.join(tmpdir, 'nsgmls.err')
-            f = open(pageFile, 'wb')
-            f.write(originalBody)
+            page_file = os.path.join(tmpdir, 'page.html')
+            err_file = os.path.join(tmpdir, 'nsgmls.err')
+            f = open(page_file, 'wb')
+            f.write(original_body)
             f.close()
-            nsgmlsEncoding = encoding.replace('-', '')
-            nsgmlsPath = cherrypy.config.get('nsgmls_filter.nsgmls_path')
-            catalogPath = cherrypy.config.get('nsgmls_filter.catalog_path')
+            nsgmls_path = cherrypy.config.get('nsgmls_filter.nsgmls_path')
+            catalog_path = cherrypy.config.get('nsgmls_filter.catalog_path')
             command = '%s -c%s -f%s -s -E10 %s' % (
-                nsgmlsPath, catalogPath, errFile, pageFile)
+                nsgmls_path, catalog_path, err_file, page_file)
             command = command.replace('\\', '/')
             os.system(command)
-            f = open(errFile, 'rb')
+            f = open(err_file, 'rb')
             err = f.read()
             f.close()
-            errList = err.splitlines()
-            newErrList = []
-            for err in errList:
+            errs = err.splitlines()
+            new_errs = []
+            for err in errs:
                 ignore = False
-                for errIgn in cherrypy.config.get('nsgmls_filter.errors_to_ignore', []):
-                    if err.find(errIgn) != -1:
+                for err_ign in cherrypy.config.get('nsgmls_filter.errors_to_ignore', []):
+                    if err.find(err_ign) != -1:
                         ignore = True
                         break
                 if not ignore:
-                    newErrList.append(err)
-            if newErrList:
-                newBody = "Wrong HTML:<br />" + cgi.escape('\n'.join(newErrList)).replace('\n','<br />')
-                newBody += '<br /><br />'
+                    new_errs.append(err)
+            if new_errs:
+                new_body = "Wrong HTML:<br />" + cgi.escape('\n'.join(new_errs)).replace('\n','<br />')
+                new_body += '<br /><br />'
                 i = 0
-                for line in originalBody.splitlines():
+                for line in original_body.splitlines():
                     i += 1
-                    newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
+                    new_body += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                 
-                cherrypy.response.body = newBody
+                cherrypy.response.body = new_body
 
