@@ -36,6 +36,10 @@ _input_methods = ['on_start_resource', 'before_request_body', 'before_main']
 _output_methods = ['before_finalize', 'on_end_resource', 'on_end_request',
         'before_error_response', 'after_error_response']
 
+_old_input_methods = ['onStartResource', 'beforeRequestBody', 'beforeMain']
+_old_output_methods = ['beforeFinalize', 'onEndResource', 'onEndRequest',
+        'beforeErrorResponse', 'afterErrorResponse']
+
 backward_compatibility_dict = {
     'on_start_resource': 'onStartResource',
     'before_request_body': 'beforeRequestBody',
@@ -76,19 +80,29 @@ def init():
         outputs.append(f)
     
     # Transform the instance lists into a dict of methods
+    # in 2.2 we check the old camelCase filter names first
+    # to provide backward compatibility with 2.1
     _filterhooks.clear()
-    for name in _input_methods:
-        _filterhooks[name] = []
+    for old_name, new_name in zip(_old_input_methods, _input_methods):
+        _filterhooks[new_name] = []
         for f in inputs:
-            method = getattr(f, name, None)
+            method = getattr(f, old_name, None)
             if method:
-                _filterhooks[name].append(method)
-    for name in _output_methods:
-        _filterhooks[name] = []
+                _filterhooks[new_name].append(method)
+            else:
+                method = getattr(f, new_name, None)
+                if method:
+                    _filterhooks[new_name].append(method)
+    for old_name, new_name in zip(_old_output_methods, _output_methods):
+        _filterhooks[new_name] = []
         for f in outputs:
-            method = getattr(f, name, None)
+            method = getattr(f, old_name, None)
             if method:
-                _filterhooks[name].append(method)
+                _filterhooks[new_name].append(method)
+            else:
+                method = getattr(f, new_name, None)
+                if method:
+                    _filterhooks[new_name].append(method)
 
 
 _filterhooks = {}
