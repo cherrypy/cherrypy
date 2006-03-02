@@ -147,20 +147,26 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
         else:
             if self.ready:
                 # Request header is parsed
-                # We prepare the SizeCheckWrapper for the request body
                 script_name = self.environ.get('SCRIPT_NAME', '')
                 path_info = self.environ.get('PATH_INFO', '')
                 path = (script_name + path_info)
                 if path == "*":
                     path = "global"
+                
+                # Prepare the SizeCheckWrapper for the request body
                 mbs = int(cherrypy.config.get('server.max_request_body_size',
                                               100 * 1024 * 1024, path=path))
-                if mbs > 0:
-                    if isinstance(self.rfile, httptools.SizeCheckWrapper):
+                if isinstance(self.rfile, httptools.SizeCheckWrapper):
+                    if mbs > 0:
                         self.rfile.bytes_read = 0
                         self.rfile.maxlen = mbs
                     else:
+                        # Unwrap the rfile
+                        self.rfile = self.rfile.rfile
+                else:
+                    if mbs > 0:
                         self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
+                self.environ["wsgi.input"] = self.rfile
 
 
 class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):

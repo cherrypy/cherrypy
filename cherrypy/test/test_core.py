@@ -868,7 +868,8 @@ hello
         s = cherrypy.server.httpserver
         if s:
             cherrypy.config.update({
-                '%s/maxrequestsize' % self.prefix(): {'server.max_request_body_size': 3}})
+                '%s/maxrequestsize' % self.prefix(): {
+                    'server.max_request_body_size': 3}})
             self.getPage('/maxrequestsize/upload', h, "POST", b)
             self.assertStatus("413 Request Entity Too Large")
             self.assertInBody("Request Entity Too Large")
