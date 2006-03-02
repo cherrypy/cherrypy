@@ -20,6 +20,7 @@ class Engine(object):
     """The application server engine, connecting HTTP servers to Requests."""
     
     request_class = _cphttptools.Request
+    response_class = _cphttptools.Response
     
     def __init__(self):
         self.state = STOPPED
@@ -186,6 +187,6 @@ class Engine(object):
         r = self.request_class(clientAddress[0], clientAddress[1],
                                remoteHost, scheme)
         cherrypy.serving.request = r
-        cherrypy.serving.response = _cphttptools.Response()
+        cherrypy.serving.response = self.response_class()
         return r
 

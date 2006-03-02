@@ -9,6 +9,7 @@ import time
 import traceback
 
 import cherrypy
+from cherrypy.lib import httptools
 
 
 MOUNT_POINT = "/cpbench/users/rdelon/apps/blog"
@@ -211,12 +212,46 @@ def run_standard_benchmarks():
     print_chart(size_chart())
 
 
+class NullRequest:
+    """A null HTTP request class, returning 204 and an empty body."""
+    
+    def __init__(self, remoteAddr, remotePort, remoteHost, scheme="http"):
+        pass
+    
+    def close(self):
+        pass
+    
+    def run(self, requestLine, headers, rfile):
+        cherrypy.response.status = "204 No Content"
+        cherrypy.response.header_list = [("Content-Type", 'text/html'),
+                                         ("Server", "Null CherryPy"),
+                                         ("Date", httptools.HTTPDate()),
+                                         ("Content-Length", "0"),
+                                         ]
+        cherrypy.response.body = [""]
+        return cherrypy.response
+
+
+class NullResponse:
+    pass
+
+
 started = False
 def startup(req=None):
     """Start the CherryPy app server in 'serverless' mode (for WSGI)."""
     global started
     if not started:
         started = True
+        cherrypy.server.start(init_only=True, server_class=None)
+    return 0 # apache.OK
+
+def startup_null(req=None):
+    """Start the CherryPy app server in NULL 'serverless' mode (for WSGI)."""
+    global started
+    if not started:
+        started = True
+        cherrypy.server.request_class = NullRequest
+        cherrypy.server.response_class = NullResponse
         cherrypy.server.start(init_only=True, server_class=None)
     return 0 # apache.OK
 
@@ -241,10 +276,18 @@ if __name__ == '__main__':
     if "-modpython" in sys.argv:
         try:
             mpconf = os.path.join(curdir, "bench_mp.conf")
-            read_process("apache", "-k start -f %s" % mpconf)
+            if "-null" in sys.argv:
+                # Pass the null option through Apache
+                read_process("apache", "-k start -D nullreq -f %s" % mpconf)
+            else:
+                read_process("apache", "-k start -f %s" % mpconf)
             run()
         finally:
             os.popen("apache -k stop")
     else:
+        if "-null" in sys.argv:
+            cherrypy.server.request_class = NullRequest
+            cherrypy.server.response_class = NullResponse
+        
         # This will block
         cherrypy.server.start_with_callback(run)
