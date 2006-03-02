@@ -11,6 +11,13 @@ import traceback
 import cherrypy
 
 
+MOUNT_POINT = "/cpbench/users/rdelon/apps/blog"
+
+__all__ = ['ABSession', 'Root', 'print_chart', 'read_process',
+           'run_standard_benchmarks', 'safe_threads',
+           'size_chart', 'startup', 'thread_chart',
+           ]
+
 size_cache = {}
 
 class Root:
@@ -21,24 +28,40 @@ class Root:
     def sizer(self, size):
         resp = size_cache.get(size, None)
         if resp is None:
-            size_cache[size] = resp = "X" * size
+            size_cache[size] = resp = "X" * int(size)
         return resp
     sizer.exposed = True
 
 
-cherrypy.tree.mount(Root())
-cherrypy.lowercase_api = True
-cherrypy.config.update({
+conf = {
     'global': {
         'server.log_to_screen': False,
+##        'server.log_file': os.path.join(curdir, "bench.log"),
         'server.environment': 'production',
+        'server.socket_host': 'localhost',
+        'server.socket_port': 8080,
         },
     '/static': {
         'static_filter.on': True,
         'static_filter.dir': 'static',
         'static_filter.root': curdir,
         },
-    })
+    }
+cherrypy.tree.mount(Root(), MOUNT_POINT, conf)
+cherrypy.lowercase_api = True
+
+
+def read_process(cmd, args=""):
+    pipein, pipeout = os.popen4("%s %s" % (cmd, args))
+    output = pipeout.read()
+    if (# Windows
+        output.startswith("'%s' is not recognized" % cmd)
+        # bash
+        or re.match(r"bash: .*: No such file", output)
+        ):
+        raise IOError('%s must be on your system path.' % cmd)
+    pipeout.close()
+    return output
 
 
 class ABSession:
@@ -113,31 +136,21 @@ Finished 1000 requests
                        r'^Transfer rate:\s*([0-9.]+)'),
                       ]
     
-    def __init__(self, path="/", requests=1000, concurrency=10):
+    def __init__(self, path=MOUNT_POINT + "/", requests=1000, concurrency=10):
         self.path = path
         self.requests = requests
         self.concurrency = concurrency
     
-    def cmd(self):
+    def args(self):
         port = cherrypy.config.get('server.socket_port')
         assert self.concurrency > 0
         assert self.requests > 0
-        return ("ab -n %s -c %s http://localhost:%s%s" %
+        return ("-n %s -c %s http://localhost:%s%s" %
                 (self.requests, self.concurrency, port, self.path))
     
     def run(self):
-        pipein, pipeout = os.popen4(self.cmd())
-        self.output = pipeout.read()
-        if (# Windows
-            self.output.startswith("'ab' is not recognized")
-            # bash
-            or re.match(r"bash: .*: No such file", self.output)
-            ):
-            raise IOError('The Apache benchmark tool "ab" must be '
-                          'on your system path.')
-        pipeout.close()
-        
-        # Parse output, setting attribute on self
+        # Parse output of ab, setting attributes on self
+        self.output = read_process("ab", self.args())
         for attr, name, pattern in self.parse_patterns:
             val = re.search(pattern, self.output, re.MULTILINE)
             if val:
@@ -151,7 +164,7 @@ if sys.platform in ("win32",):
     safe_threads = (10, 20, 30, 40, 50)
 
 
-def thread_chart(path="/", concurrency=safe_threads):
+def thread_chart(path=MOUNT_POINT + "/", concurrency=safe_threads):
     sess = ABSession(path)
     attrs, names, patterns = zip(*sess.parse_patterns)
     rows = [('threads',) + names]
@@ -167,7 +180,7 @@ def size_chart(sizes=(1, 10, 50, 100, 100000, 100000000),
     attrs, names, patterns = zip(*sess.parse_patterns)
     rows = [('bytes',) + names]
     for sz in sizes:
-        sess.path = "/sizer?size=%s" % sz
+        sess.path = "%s/sizer?size=%s" % (MOUNT_POINT, sz)
         sess.run()
         rows.append([sz] + [getattr(sess, attr) for attr in attrs])
     return rows
@@ -184,27 +197,54 @@ def print_chart(rows):
     print
 
 
-if __name__ == '__main__':
-    def run_standard_benchmarks():
-        end = time.time() - start
-        print "Started in %s seconds" % end
-        try:
-            print
-            print "Thread Chart (1000 requests, 14 byte response body):"
-            print_chart(thread_chart())
-            
-            print
-            print "Thread Chart (1000 requests, 14 bytes via static_filter):"
-            print_chart(thread_chart("/static/index.html"))
-            
-            print
-            print "Size Chart (1000 requests, 50 threads):"
-            print_chart(size_chart())
-        finally:
-            cherrypy.server.stop()
+def run_standard_benchmarks():
+    print
+    print "Thread Chart (1000 requests, 14 byte response body):"
+    print_chart(thread_chart())
     
-    print "Starting CherryPy HTTP server..."
+    print
+    print "Thread Chart (1000 requests, 14 bytes via static_filter):"
+    print_chart(thread_chart("%s/static/index.html" % MOUNT_POINT))
+    
+    print
+    print "Size Chart (1000 requests, 50 threads):"
+    print_chart(size_chart())
+
+
+started = False
+def startup(req=None):
+    """Start the CherryPy app server in 'serverless' mode (for WSGI)."""
+    global started
+    if not started:
+        started = True
+        cherrypy.server.start(init_only=True, server_class=None)
+    return 0 # apache.OK
+
+
+if __name__ == '__main__':
+    if "-notests" in sys.argv:
+        # Return without stopping the server, so that the pages
+        # can be tested from a standard web browser.
+        run = lambda x: x
+    else:
+        def run():
+            end = time.time() - start
+            print "Started in %s seconds" % end
+            try:
+                run_standard_benchmarks()
+            finally:
+                cherrypy.server.stop()
+    
+    print "Starting CherryPy app server..."
     start = time.time()
     
-    # This will block
-    cherrypy.server.start_with_callback(run_standard_benchmarks)
+    if "-modpython" in sys.argv:
+        try:
+            mpconf = os.path.join(curdir, "bench_mp.conf")
+            read_process("apache", "-k start -f %s" % mpconf)
+            run()
+        finally:
+            os.popen("apache -k stop")
+    else:
+        # This will block
+        cherrypy.server.start_with_callback(run)
