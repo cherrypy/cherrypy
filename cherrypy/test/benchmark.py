@@ -14,9 +14,9 @@ from cherrypy.lib import httptools
 
 MOUNT_POINT = "/cpbench/users/rdelon/apps/blog"
 
-__all__ = ['ABSession', 'Root', 'print_chart', 'read_process',
+__all__ = ['ABSession', 'Root', 'print_report', 'read_process',
            'run_standard_benchmarks', 'safe_threads',
-           'size_chart', 'startup', 'thread_chart',
+           'size_report', 'startup', 'thread_report',
            ]
 
 size_cache = {}
@@ -169,7 +169,7 @@ if sys.platform in ("win32",):
     safe_threads = (10, 20, 30, 40, 50)
 
 
-def thread_chart(path=MOUNT_POINT + "/", concurrency=safe_threads):
+def thread_report(path=MOUNT_POINT + "/", concurrency=safe_threads):
     sess = ABSession(path)
     attrs, names, patterns = zip(*sess.parse_patterns)
     rows = [('threads',) + names]
@@ -179,7 +179,7 @@ def thread_chart(path=MOUNT_POINT + "/", concurrency=safe_threads):
         rows.append([c] + [getattr(sess, attr) for attr in attrs])
     return rows
 
-def size_chart(sizes=(1, 10, 50, 100, 100000, 100000000),
+def size_report(sizes=(1, 10, 50, 100, 100000, 100000000),
                concurrency=50):
     sess = ABSession(concurrency=concurrency)
     attrs, names, patterns = zip(*sess.parse_patterns)
@@ -190,7 +190,7 @@ def size_chart(sizes=(1, 10, 50, 100, 100000, 100000000),
         rows.append([sz] + [getattr(sess, attr) for attr in attrs])
     return rows
 
-def print_chart(rows):
+def print_report(rows):
     widths = []
     for i in range(len(rows[0])):
         lengths = [len(str(row[i])) for row in rows]
@@ -204,16 +204,16 @@ def print_chart(rows):
 
 def run_standard_benchmarks():
     print
-    print "Thread Chart (1000 requests, 14 byte response body):"
-    print_chart(thread_chart())
+    print "Thread Report (1000 requests, 14 byte response body):"
+    print_report(thread_report())
     
     print
-    print "Thread Chart (1000 requests, 14 bytes via static_filter):"
-    print_chart(thread_chart("%s/static/index.html" % MOUNT_POINT))
+    print "Thread Report (1000 requests, 14 bytes via static_filter):"
+    print_report(thread_report("%s/static/index.html" % MOUNT_POINT))
     
     print
-    print "Size Chart (1000 requests, 50 threads):"
-    print_chart(size_chart())
+    print "Size Report (1000 requests, 50 threads):"
+    print_report(size_report())
 
 
 class NullRequest:
