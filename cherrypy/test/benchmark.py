@@ -56,14 +56,14 @@ cherrypy.lowercase_api = True
 
 def read_process(cmd, args=""):
     pipein, pipeout = os.popen4("%s %s" % (cmd, args))
-    output = pipeout.read()
-    if (# Windows
-        output.startswith("'%s' is not recognized" % cmd)
-        # bash
-        or re.match(r"bash: .*: (No such file|command not found)", output)
-        ):
-        raise IOError('%s must be on your system path.' % cmd)
-    pipeout.close()
+    try:
+        firstline = pipeout.readline()
+        if (re.search(r"(not recognized|No such file|not found)", firstline,
+                      re.IGNORECASE)):
+            raise IOError('%s must be on your system path.' % cmd)
+        output = firstline + pipeout.read()
+    finally:
+        pipeout.close()
     return output
 
 
