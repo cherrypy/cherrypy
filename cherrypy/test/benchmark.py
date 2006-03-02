@@ -27,6 +27,7 @@ class Root:
 
 
 cherrypy.tree.mount(Root())
+cherrypy.lowercase_api = True
 cherrypy.config.update({
     'global': {
         'server.log_to_screen': False,
