@@ -23,7 +23,7 @@ size_cache = {}
 
 class Root:
     def index(self):
-        return r"Hello, world\r\n"
+        return "Hello, world\r\n"
     index.exposed = True
     
     def sizer(self, size):
@@ -41,6 +41,8 @@ conf = {
         'server.environment': 'production',
         'server.socket_host': 'localhost',
         'server.socket_port': 8080,
+        'server.max_request_header_size': 0,
+        'server.max_request_body_size': 0,
         },
     '/static': {
         'static_filter.on': True,
@@ -260,7 +262,7 @@ if __name__ == '__main__':
     if "-notests" in sys.argv:
         # Return without stopping the server, so that the pages
         # can be tested from a standard web browser.
-        run = lambda x: x
+        run = lambda: None
     else:
         def run():
             end = time.time() - start
