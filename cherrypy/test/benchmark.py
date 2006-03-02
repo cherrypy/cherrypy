@@ -60,7 +60,7 @@ def read_process(cmd, args=""):
     if (# Windows
         output.startswith("'%s' is not recognized" % cmd)
         # bash
-        or re.match(r"bash: .*: No such file", output)
+        or re.match(r"bash: .*: (No such file|command not found)", output)
         ):
         raise IOError('%s must be on your system path.' % cmd)
     pipeout.close()
@@ -159,6 +159,8 @@ Finished 1000 requests
             if val:
                 val = val.group(1)
                 setattr(self, attr, val)
+            else:
+                setattr(self, attr, None)
 
 
 safe_threads = (25, 50, 100, 200, 400)
