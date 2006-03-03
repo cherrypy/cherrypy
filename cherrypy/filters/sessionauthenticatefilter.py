@@ -45,7 +45,7 @@ class SessionAuthenticateFilter(BaseFilter):
         if cherrypy.request.path.endswith('login_screen'):
             return
         elif cherrypy.request.path.endswith('do_logout'):
-            login = cherrypy.session.get('session_key')
+            login = cherrypy.session.get(session_key)
             cherrypy.session[session_key] = None
             cherrypy.request.user = None
             cherrypy.thread_data.user = None
