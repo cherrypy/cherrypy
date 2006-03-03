@@ -23,7 +23,7 @@ default_global = {
     'server.log_tracebacks': True,
     'server.log_file': '',
     'server.reverse_dns': False,
-    'server.thread_pool': 0,
+    'server.thread_pool': 10,
     'server.environment': "development",
     
     '/favicon.ico': {

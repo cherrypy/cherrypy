@@ -67,7 +67,7 @@
 ##    cherrypy.root = Root()
 ##    cherrypy.config.update({'xmlrpc_filter.on': True,
 ##                            'socket_port': 9001,
-##                            'thread_pool':0,
+##                            'thread_pool':10,
 ##                            'socket_queue_size':10 })
 ##    if __name__=='__main__':
 ##        cherrypy.server.start()

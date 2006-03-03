@@ -204,15 +204,18 @@ def print_report(rows):
 
 def run_standard_benchmarks():
     print
-    print "Thread Report (1000 requests, 14 byte response body):"
+    print ("Client Thread Report (1000 requests, 14 byte response body, "
+           "%s server threads):" % cherrypy.config.get('server.thread_pool'))
     print_report(thread_report())
     
     print
-    print "Thread Report (1000 requests, 14 bytes via static_filter):"
+    print ("Client Thread Report (1000 requests, 14 bytes via static_filter, "
+           "%s server threads):" % cherrypy.config.get('server.thread_pool'))
     print_report(thread_report("%s/static/index.html" % MOUNT_POINT))
     
     print
-    print "Size Report (1000 requests, 50 threads):"
+    print ("Size Report (1000 requests, 50 client threads, "
+           "%s server threads):" % cherrypy.config.get('server.thread_pool'))
     print_report(size_report())
 
 
