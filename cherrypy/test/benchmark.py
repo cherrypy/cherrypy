@@ -1,5 +1,27 @@
-"""Benchmark tool for CherryPy."""
+"""CherryPy Benchmark Tool
 
+    Usage:
+        benchmark.py --null --notests --help --modpython --ab=path --apache=path
+    
+    --null:        use a null Request object (to bench the HTTP server only)
+    --notests:     start the server but don't run the tests; this allows
+                   you to check the tested pages with a browser
+    --help:        show this help message
+    --modpython:   start up apache on 8080 (with a custom modpython
+                   config) and run the tests
+    --ab=path:     Use the ab script/executable at 'path' (see below)
+    --apache=path: Use the apache script/exe at 'path' (see below)
+    
+    To run the benchmarks, the Apache Benchmark tool "ab" must either be on
+    your system path, or specified via the --ab=path option.
+    
+    To run the modpython tests, the "apache" executable or script must be
+    on your system path, or provided via the --apache=path option. On some
+    platforms, "apache" may be called "apachectl" or "apache2ctl"--create
+    a symlink to them if needed.
+"""
+
+import getopt
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
@@ -12,6 +34,8 @@ import cherrypy
 from cherrypy.lib import httptools
 
 
+AB_PATH = ""
+APACHE_PATH = ""
 MOUNT_POINT = "/cpbench/users/rdelon/apps/blog"
 
 __all__ = ['ABSession', 'Root', 'print_report', 'read_process',
@@ -52,6 +76,30 @@ conf = {
     }
 cherrypy.tree.mount(Root(), MOUNT_POINT, conf)
 cherrypy.lowercase_api = True
+
+
+class NullRequest:
+    """A null HTTP request class, returning 204 and an empty body."""
+    
+    def __init__(self, remoteAddr, remotePort, remoteHost, scheme="http"):
+        pass
+    
+    def close(self):
+        pass
+    
+    def run(self, requestLine, headers, rfile):
+        cherrypy.response.status = "204 No Content"
+        cherrypy.response.header_list = [("Content-Type", 'text/html'),
+                                         ("Server", "Null CherryPy"),
+                                         ("Date", httptools.HTTPDate()),
+                                         ("Content-Length", "0"),
+                                         ]
+        cherrypy.response.body = [""]
+        return cherrypy.response
+
+
+class NullResponse:
+    pass
 
 
 def read_process(cmd, args=""):
@@ -153,7 +201,7 @@ Finished 1000 requests
     
     def run(self):
         # Parse output of ab, setting attributes on self
-        self.output = read_process("ab", self.args())
+        self.output = read_process(AB_PATH or "ab", self.args())
         for attr, name, pattern in self.parse_patterns:
             val = re.search(pattern, self.output, re.MULTILINE)
             if val:
@@ -219,30 +267,6 @@ def run_standard_benchmarks():
     print_report(size_report())
 
 
-class NullRequest:
-    """A null HTTP request class, returning 204 and an empty body."""
-    
-    def __init__(self, remoteAddr, remotePort, remoteHost, scheme="http"):
-        pass
-    
-    def close(self):
-        pass
-    
-    def run(self, requestLine, headers, rfile):
-        cherrypy.response.status = "204 No Content"
-        cherrypy.response.header_list = [("Content-Type", 'text/html'),
-                                         ("Server", "Null CherryPy"),
-                                         ("Date", httptools.HTTPDate()),
-                                         ("Content-Length", "0"),
-                                         ]
-        cherrypy.response.body = [""]
-        return cherrypy.response
-
-
-class NullResponse:
-    pass
-
-
 started = False
 def startup(req=None):
     """Start the CherryPy app server in 'serverless' mode (for WSGI)."""
@@ -252,26 +276,99 @@ def startup(req=None):
         cherrypy.server.start(init_only=True, server_class=None)
     return 0 # apache.OK
 
-def startup_null(req=None):
-    """Start the CherryPy app server in NULL 'serverless' mode (for WSGI)."""
+
+
+#                         modpython and other WSGI                         #
+
+def startup_modpython(req=None):
+    """Start the CherryPy app server in 'serverless' mode (for WSGI)."""
     global started
     if not started:
         started = True
-        cherrypy.server.request_class = NullRequest
-        cherrypy.server.response_class = NullResponse
+        if req.get_options().has_key("nullreq"):
+            cherrypy.server.request_class = NullRequest
+            cherrypy.server.response_class = NullResponse
+        ab_opt = req.get_options().get("ab", "")
+        if ab_opt:
+            global AB_PATH
+            AB_PATH = ab_opt
         cherrypy.server.start(init_only=True, server_class=None)
-    return 0 # apache.OK
+    
+    import modpython_gateway
+    return modpython_gateway.handler(req)
+
+mp_conf_template = """
+# Apache2 server configuration file for benchmarking CherryPy with mod_python.
+
+DocumentRoot "/"
+Listen 8080
+LoadModule python_module modules/mod_python.so
+
+<Location />
+    SetHandler python-program
+    PythonHandler cherrypy.test.benchmark::startup_modpython
+    PythonOption application cherrypy._cpwsgi::wsgiApp
+    PythonDebug On
+%s%s
+</Location>
+"""
+
+def run_modpython():
+    # Pass the null and ab=path options through Apache
+    nullreq_opt = ""
+    if "--null" in opts:
+        nullreq_opt = "    PythonOption nullreq\n"
+    
+    ab_opt = ""
+    if "--ab" in opts:
+        ab_opt = "    PythonOption ab %s\n" % opts["--ab"]
+    
+    conf_data = mp_conf_template % (ab_opt, nullreq_opt)
+    mpconf = os.path.join(curdir, "bench_mp.conf")
+    
+    f = open(mpconf, 'wb')
+    try:
+        f.write(conf_data)
+    finally:
+        f.close()
+    
+    apargs = "-k start -f %s" % mpconf
+    try:
+        read_process(APACHE_PATH or "apache", apargs)
+        run()
+    finally:
+        os.popen("apache -k stop")
+
 
 
 if __name__ == '__main__':
-    if "-notests" in sys.argv:
+    longopts = ['modpython', 'null', 'notests', 'help', 'ab=', 'apache=']
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], "", longopts)
+        opts = dict(switches)
+    except getopt.GetoptError:
+        print __doc__
+        sys.exit(2)
+    
+    if "--help" in opts:
+        print __doc__
+        sys.exit(0)
+    
+    if "--ab" in opts:
+        AB_PATH = opts['--ab']
+    
+    if "--notests" in opts:
         # Return without stopping the server, so that the pages
         # can be tested from a standard web browser.
-        run = lambda: None
+        def run():
+            if "--null" in opts:
+                print "Using null Request object"
     else:
         def run():
             end = time.time() - start
             print "Started in %s seconds" % end
+            if "--null" in opts:
+                print "\nUsing null Request object"
             try:
                 run_standard_benchmarks()
             finally:
@@ -280,19 +377,10 @@ if __name__ == '__main__':
     print "Starting CherryPy app server..."
     start = time.time()
     
-    if "-modpython" in sys.argv:
-        try:
-            mpconf = os.path.join(curdir, "bench_mp.conf")
-            if "-null" in sys.argv:
-                # Pass the null option through Apache
-                read_process("apache", "-k start -D nullreq -f %s" % mpconf)
-            else:
-                read_process("apache", "-k start -f %s" % mpconf)
-            run()
-        finally:
-            os.popen("apache -k stop")
+    if "--modpython" in opts:
+        run_modpython()
     else:
-        if "-null" in sys.argv:
+        if "--null" in opts:
             cherrypy.server.request_class = NullRequest
             cherrypy.server.response_class = NullResponse
         
