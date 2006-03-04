@@ -227,7 +227,7 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
             finally:
                 fp.close()
 
-def dict_from_config_file(configFile):
+def dict_from_config_file(configFile, raw=False, vars=None):
     """Convert an INI file to a dictionary"""
     
     # Parse config file
@@ -243,7 +243,7 @@ def dict_from_config_file(configFile):
         if section not in result:
             result[section] = {}
         for option in configParser.options(section):
-            value = configParser.get(section, option)
+            value = configParser.get(section, option, raw, vars)
             try:
                 value = cptools.unrepr(value)
             except Exception, x:
