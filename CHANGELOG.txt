@@ -1,3 +1,7 @@
+2006-03-06:
+    * CherryPy-2.2.0rcs released
+    * Fixed various bugs (including session)
+
 2006-02-16:
     * Removed _cphttpserver, the native HTTP server that was deprecated in CP 2.1 (fumanchu)
 

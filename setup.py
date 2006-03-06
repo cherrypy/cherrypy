@@ -18,7 +18,7 @@ required_python_version = '2.3'
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "2.2.0beta"
+version = "2.2.0rc1"
 desc = "Object-Oriented web development framework"
 long_desc = "CherryPy is a pythonic, object-oriented web development framework"
 classifiers=[
@@ -63,7 +63,6 @@ def main():
         s = "I'm sorry, but %s %s requires Python %s or later."
         print s % (name, version, required_python_version)
         sys.exit(1)
-
     # set default location for "data_files" to platform specific "site-packages"
     # location
     for scheme in INSTALL_SCHEMES.values():

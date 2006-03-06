@@ -203,7 +203,7 @@ class WorkerThread(threading.Thread):
 
 class CherryPyWSGIServer(object):
     
-    version = "CherryPy/2.2.0beta"
+    version = "CherryPy/2.2.0rc1"
     ready = False
     interrupt = None
     RequestHandlerClass = HTTPRequest
