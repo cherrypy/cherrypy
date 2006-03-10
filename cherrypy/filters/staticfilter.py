@@ -26,22 +26,22 @@ class StaticFilter(BaseFilter):
         root = config.get('static_filter.root', '').rstrip(r"\/")
         filename = config.get('static_filter.file')
         if filename:
-            staticDir = None
+            static_dir = None
         else:
-            staticDir = config.get('static_filter.dir')
-            if not staticDir:
+            static_dir = config.get('static_filter.dir')
+            if not static_dir:
                 msg = ("StaticFilter requires either static_filter.file "
                        "or static_filter.dir (%s)" % request.path)
                 raise cherrypy.WrongConfigValue(msg)
-            section = config.get('static_filter.dir', return_section=True)
+            section = config.get('static_filter.dir', return_section = True)
             if section == 'global':
                 section = "/"
             section = section.rstrip(r"\/")
-            extraPath = path[len(section) + 1:]
-            extraPath = extraPath.lstrip(r"\/")
-            extraPath = urllib.unquote(extraPath)
-            # If extraPath is "", filename will end in a slash
-            filename = os.path.join(staticDir, extraPath)
+            extra_path = path[len(section) + 1:]
+            extra_path = extra_path.lstrip(r"\/")
+            extra_path = urllib.unquote(extra_path)
+            # If extra_path is "", filename will end in a slash
+            filename = os.path.join(static_dir, extra_path)
         
         # If filename is relative, make absolute using "root".
         # Note that, if "root" isn't defined, we still may send
@@ -54,14 +54,14 @@ class StaticFilter(BaseFilter):
             filename = os.path.join(root, filename)
         
         # If we used static_filter.dir, then there's a chance that the
-        # extraPath pulled from the URL might have ".." or similar uplevel
-        # attacks in it. Check that the final file is a child of staticDir.
+        # extra_path pulled from the URL might have ".." or similar uplevel
+        # attacks in it. Check that the final file is a child of static_dir.
         # Note that we do not check static_filter.file--that can point
         # anywhere (since it does not use the request URL).
-        if staticDir:
-            if not os.path.isabs(staticDir):
-                staticDir = os.path.join(root, staticDir)
-            if not os.path.normpath(filename).startswith(os.path.normpath(staticDir)):
+        if static_dir:
+            if not os.path.isabs(static_dir):
+                static_dir = os.path.join(root, static_dir)
+            if not os.path.normpath(filename).startswith(os.path.normpath(static_dir)):
                 raise cherrypy.HTTPError(403) # Forbidden
             
         try:
