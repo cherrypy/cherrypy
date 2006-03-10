@@ -327,6 +327,7 @@ def run():
         'test_session_filter',
         'test_sessionauthenticate_filter',
         'test_xmlrpc_filter',
+        'test_wsgiapp_filter',
     ]
     CPTestHarness(testList).run()
     

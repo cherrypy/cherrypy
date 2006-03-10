@@ -18,6 +18,7 @@ input_filters = [
     "cherrypy.filters.nsgmlsfilter.NsgmlsFilter",
     "cherrypy.filters.tidyfilter.TidyFilter",
     "cherrypy.filters.xmlrpcfilter.XmlRpcFilter",
+    "cherrypy.filters.wsgiappfilter.WSGIAppFilter",
 ]
 
 output_filters = [
