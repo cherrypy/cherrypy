@@ -53,6 +53,12 @@ environments = {
         'server.show_tracebacks': False,
         'server.log_request_headers': False,
         },
+    "embedded": {
+        'autoreload.on': False,
+        'server.log_to_screen': False,
+        'server.init_only': True,
+        'server.class': None,
+        },
     }
 
 def update(updateMap=None, file=None, overwrite=True, baseurl=""):

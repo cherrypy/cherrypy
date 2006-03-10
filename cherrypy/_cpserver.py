@@ -44,6 +44,12 @@ class Server(Engine):
             server_class = kwargs['serverClass']
         
         conf = cherrypy.config.get
+        
+        if not init_only:
+            init_only = conf('server.init_only', False)
+        
+        if server is None:
+            server = conf('server.instance', None)
         if server is None:
             if server_class is _missing:
                 server_class = conf("server.class", _missing)
@@ -57,6 +63,8 @@ class Server(Engine):
             if server_class is not None:
                 self.httpserver = server_class()
         else:
+            if isinstance(server, basestring):
+                server = cptools.attributes(server)
             self.httpserverclass = server.__class__
             self.httpserver = server
         

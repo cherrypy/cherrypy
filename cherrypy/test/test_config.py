@@ -25,7 +25,7 @@ class Env:
         return str(cherrypy.config.get(key, "None"))
     index.exposed = True
     prod = index
-
+    embed = index
 
 cherrypy.tree.mount(Root())
 cherrypy.root.foo = Foo()
@@ -51,6 +51,7 @@ cherrypy.config.update({
 
 _env_conf = {'/': {'server.environment': 'development'},
              '/prod': {'server.environment': 'production'},
+             '/embed': {'server.environment': 'embedded'},
              }
 cherrypy.tree.mount(Env(), "/env", _env_conf)
 
@@ -96,6 +97,10 @@ server.environment = production
         for key, val in cherrypy.config.environments['production'].iteritems():
             self.getPage("/env/prod/?key=" + key)
             self.assertBody(str(val))
+        for key, val in cherrypy.config.environments['embedded'].iteritems():
+            self.getPage("/env/embed/?key=" + key)
+            data = self.body.split("\n")[0]
+            self.assertEqual(data, str(val))
 
 
 if __name__ == '__main__':
