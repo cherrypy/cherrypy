@@ -72,6 +72,19 @@
             </listitem>
         </itemizedlist>
     </section>
+    <section id="nsgmlsfilter">
+        <title>nsgmlsfilter</title>
+        <para>The nsgmlsfilter parses and validates SGML responses.</para>
+    </section>
+    <section id="sessionauthfilter">
+        <title>sessionauthenticatefilter</title>
+        <para>The sessionauthenticatefilter provides simple form-based authentication and access
+        control.</para>
+    </section>
+    <section id="sessionfilter">
+        <title>sessionfilter</title>
+        <para> The Session Filter has its own section</para>
+    </section>
     <section id="staticfilter">
         <title>staticfilter</title>
         <para>The static filter allows CherryPy to serve static files.</para>
@@ -87,10 +100,6 @@
                 <para>static_filter.root</para>
             </listitem>
         </itemizedlist>
-    </section>
-    <section id="nsgmlsfilter">
-        <title>nsgmlsfilter</title>
-        <para>The nsgmlsfilter parses and validates SGML responses.</para>
     </section>
     <section id="tidyfilter">
         <title>tidyfilter</title>
@@ -122,6 +131,45 @@
             </listitem>
         </itemizedlist>
     </section>
+    <section id="wsgiappfilter">
+        <title>wsgiappfilter</title>
+        <para>The wsgiappfilter allows the application developer or deployer to mount
+        WSGI compatible applications and middleware to locations on the CherryPy
+        object tree.</para>
+        <para>Applications can be added to the tree in the config file or by using the
+            wsgiappfilter.WSGIApp convenience class to directly mount applications to the
+            CherryPy tree.  You can also instantiate the filter in a class's _cp_filters
+            special attribute.
+        </para>
+        <para>The wsgiappfilter.WSGIApp and WSGIAppFilter class contsructors takes the 
+            following parameters:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>wsgi_app - the WSGI application callable.</para>
+            </listitem>
+            <listitem>
+                <para>env_update - a dictionary of parameters to update the WSGI environment with.</para>
+            </listitem>
+        </itemizedlist>
+        <para>If you are controlling wsgiappfilter through the config system, use the following
+            configuration options:</para>
+        <itemizedlist>
+            <listitem>
+                <para>wsgiapp_filter.on - Default is False.  Set to True to enable the filter.</para>
+            </listitem>
+            <listitem>
+                <para>wsgiapp_filter.app - WSGI application callable or string 'package,module.attr'
+                    that references a WSGI application callable.
+                </para>
+            </listitem>
+            <listitem>
+                <para>wsgiapp_filter.env_update - a dictionary of parameters to update the WSGI
+                    environment with.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </section>
     <section id="xmlrpcfilter">
         <title>xmlrpcfilter</title>
         <para>The xmlrpcfilter converts XMLRPC to the CherryPy2 object system and vice-versa.</para>
@@ -133,14 +181,5 @@
         'eval'ed to return the results. This will be resolved in the future. - Content-Type and
         Content-Length are set according to the new (marshalled) data</para>
         <para>The xmlrpcfilter does not have any configuration options.</para>
-    </section>
-    <section id="sessionauthfilter">
-        <title>sessionauthenticatefilter</title>
-        <para>The sessionauthenticatefilter provides simple form-based authentication and access
-        control.</para>
-    </section>
-    <section id="sessionfilter">
-        <title>sessionfilter</title>
-        <para> The Session Filter has its own section</para>
     </section>
 </section>
