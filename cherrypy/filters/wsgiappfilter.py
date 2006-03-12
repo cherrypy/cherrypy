@@ -200,13 +200,13 @@ if __name__ == '__main__':
             yield '%s: %s\n' % (k,environ[k])
 
     class Root(object):
-        @cherrypy.expose
         def index(self):
             yield "<h1>Hi, from CherryPy!</h1>"
             yield "<a href='app'>A non-CP WSGI app</a><br>"
             yield "<br>"
             yield "SCRIPT_NAME and PATH_INFO get set "
             yield "<a href='app/this/n/that'>properly</a>"
+        index.exposed = True
 
     # mount standard CherryPy app
     cherrypy.root = Root()
