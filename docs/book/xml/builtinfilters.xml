@@ -134,39 +134,22 @@
     <section id="wsgiappfilter">
         <title>wsgiappfilter</title>
         <para>The wsgiappfilter allows the application developer or deployer to mount
-        WSGI compatible applications and middleware to locations on the CherryPy
+        WSGI-compatible applications and middleware to locations on the CherryPy
         object tree.</para>
-        <para>Applications can be added to the tree in the config file or by using the
-            wsgiappfilter.WSGIApp convenience class to directly mount applications to the
-            CherryPy tree.  You can also instantiate the filter in a class's _cp_filters
-            special attribute.
+        <para>Applications can be added to the tree by using the
+            cherrypy.lib.cptools.WSGIApp convenience class to directly mount applications to the
+            CherryPy tree.  You can also add an instance of the filter to a class's _cp_filters
+            list.
         </para>
-        <para>The wsgiappfilter.WSGIApp and WSGIAppFilter class contsructors takes the 
+        <para>The cherrypy.lib.cptools.WSGIApp and WSGIAppFilter class contsructors takes the 
             following parameters:
         </para>
         <itemizedlist>
             <listitem>
-                <para>wsgi_app - the WSGI application callable.</para>
+                <para>wsgi_app (required) - the WSGI application callable.</para>
             </listitem>
             <listitem>
-                <para>env_update - a dictionary of parameters to update the WSGI environment with.</para>
-            </listitem>
-        </itemizedlist>
-        <para>If you are controlling wsgiappfilter through the config system, use the following
-            configuration options:</para>
-        <itemizedlist>
-            <listitem>
-                <para>wsgiapp_filter.on - Default is False.  Set to True to enable the filter.</para>
-            </listitem>
-            <listitem>
-                <para>wsgiapp_filter.app - WSGI application callable or string 'package,module.attr'
-                    that references a WSGI application callable.
-                </para>
-            </listitem>
-            <listitem>
-                <para>wsgiapp_filter.env_update - a dictionary of parameters to update the WSGI
-                    environment with.
-                </para>
+                <para>env_update - a optional dictionary of parameters used to update the WSGI environment.</para>
             </listitem>
         </itemizedlist>
     </section>
