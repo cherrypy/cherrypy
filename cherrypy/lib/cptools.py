@@ -14,6 +14,8 @@ import time
 import cherrypy
 import httptools
 
+from cherrypy.filters.wsgiappfilter import WSGIAppFilter
+
 
 def decorate(func, decorator):
     """
@@ -231,6 +233,19 @@ def attributes(fullAttributeName):
     
     # Return a reference to the attribute.
     return attr
+
+
+class WSGIApp(object):
+    """a convenience class that uses the WSGIAppFilter
+    
+    to easily add a WSGI application to the CP object tree.
+
+    example:
+    cherrypy.tree.mount(SomeRoot(), '/')
+    cherrypy.tree.mount(WSGIApp(other_wsgi_app), '/ext_app')
+    """
+    def __init__(self, app, env_update=None):
+        self._cpFilterList = [WSGIAppFilter(app, env_update)]
 
 
 # public domain "unrepr" implementation, found on the web and then improved.

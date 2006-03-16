@@ -1,4 +1,6 @@
-"""a WSGI application filter for CherryPy"""
+"""a WSGI application filter for CherryPy
+
+also see cherrypy.lib.cptools.WSGIApp"""
 
 # by Christian Wyglendowski
 
@@ -6,12 +8,7 @@ import sys
 
 import cherrypy
 from cherrypy.filters.basefilter import BaseFilter
-from cherrypy.lib import cptools
 from cherrypy._cputil import get_object_trail
-
-
-class NoWSGIEnvironmentError(Exception):
-    pass
 
 
 # is this sufficient for start_response?
@@ -53,7 +50,7 @@ def get_path_components(path):
 def make_environ():
     """grabbed some of below from _cpwsgiserver.py
     
-    for compatibility with the 2.2beta release of CP
+    for hosting WSGI apps in non-WSGI environments (yikes!)
     """
 
     script_name, path_info = get_path_components(cherrypy.request.path)
@@ -91,51 +88,24 @@ def make_environ():
 class WSGIAppFilter(BaseFilter):
     """A filter for running any WSGI middleware/application within CP.
 
-    It can be used through the config system or by adding it to
-    a classes _cp_filters special attribute.  Here are the parameters:
+    Here are the parameters:
 
-    wsgi_app (wsgiapp_filter.app) - any wsgi application callable
-    env_update (wsgiapp_filter.env_update) - a dictionary with
-    arbitrary keys and values to be merged with the WSGI
-    environment dictionary.
+    wsgi_app - any wsgi application callable
+    env_update - a dictionary with arbitrary keys and values to be 
+                 merged with the WSGI environment dictionary.
 
-    Examples:
-
-    # using _cp_filters
+    Example:
+    
     class Whatever:
         _cp_filters = [WSGIAppFilter(some_app)]
-
-    # using a config file
-    [/hosted/app]
-    wsgiapp_filter.on = True
-    wsgiapp_filter.app = 'package.module.wsgi_app_callable'
-    wsgiapp_filter.env_update = {'running_in_cp':True}
     """
 
-    def __init__(self, wsgi_app=None, env_update=None):
+    def __init__(self, wsgi_app, env_update=None):
         self.app = wsgi_app
         self.env_update = env_update or {}
    
     def before_request_body(self):
-        request = cherrypy.request
-        enabled = cherrypy.config.get('wsgiapp_filter.on', False)
-        request.wsgi_app = self.app
-        request.wsgi_env_update = self.env_update
-        request.wsgiapp_filter_on = enabled or bool(self.app)
-
-        if not request.wsgiapp_filter_on:
-            return
-
-        if not request.wsgi_app:
-            app = cherrypy.config.get('wsgiapp_filter.app', None)
-            if app and isinstance(app, basestring):
-                app = cptools.attributes(app)
-            request.wsgi_app = app
         
-        if not request.wsgi_env_update:
-            env_update = cherrypy.config.get('wsgiapp_filter.env_update', {})
-            request.wsgi_env_update = env_update
-
         # keep the request body intact so the wsgi app
         # can have its way with it
         cherrypy.request.processRequestBody = False
@@ -145,10 +115,6 @@ class WSGIAppFilter(BaseFilter):
         """
         
         request = cherrypy.request
-
-        if not request.wsgiapp_filter_on:
-            return
-        
         # if the static filter is on for this path and
         # request.execute_main is False, assume that the
         # static filter has already taken care of this request
@@ -166,24 +132,13 @@ class WSGIAppFilter(BaseFilter):
 
         # update the environ with the dict passed to the filter's
         # constructor
-        environ.update(request.wsgi_env_update)
+        environ.update(self.env_update)
 
         # run the wsgi app and have it set response.body
-        cherrypy.response.body = request.wsgi_app(environ, start_response)
+        cherrypy.response.body = self.app(environ, start_response)
         
         # tell CP not to handle the request further
         request.execute_main = False
-
-
-class WSGIApp(object):
-    """a convenience class used to easily mount a wsgi app.
-
-    example:
-    cherrypy.root = SomeRoot()
-    cherrypy.root.otherapp = WSGIApp(other_wsgi_app)
-    """
-    def __init__(self, app, env_update=None):
-        self._cpFilterList = [WSGIAppFilter(app, env_update)]
 
 
 if __name__ == '__main__':
@@ -208,11 +163,13 @@ if __name__ == '__main__':
             yield "<a href='app/this/n/that'>properly</a>"
         index.exposed = True
 
-    # mount standard CherryPy app
-    cherrypy.root = Root()
-    # mount the WSGI app
-    cherrypy.root.app = WSGIApp(my_app, {'cherrypy.wsgi_filter':True})
+    class HostedWSGI(object):
+        _cp_filters = [WSGIAppFilter(my_app, {'cherrypy.wsgi':True,}),]
 
+    # mount standard CherryPy app
+    cherrypy.tree.mount(Root(), '/')
+    # mount the WSGI app
+    cherrypy.tree.mount(HostedWSGI(), '/app')
 
     cherrypy.server.start()
         

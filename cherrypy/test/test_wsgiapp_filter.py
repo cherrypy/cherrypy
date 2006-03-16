@@ -1,8 +1,12 @@
 import test
 test.prefer_parent_path()
 
+import os
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+
 import cherrypy
-from cherrypy.filters.wsgiappfilter import WSGIAppFilter, WSGIApp
+from cherrypy.filters.wsgiappfilter import WSGIAppFilter
+from cherrypy.lib.cptools import WSGIApp
 
 def test_app(environ, start_response):
     status = '200 OK'
@@ -38,11 +42,12 @@ cherrypy.config.update({
                'server.socket_host': helper.CPWebCase.HOST,
                'server.socket_port': helper.CPWebCase.PORT,
                },
-    '/xmlrpc': {'xmlrpc_filter.on':True},
-    '/hosted/app2': {'wsgiapp_filter.on':True,
-                     'wsgiapp_filter.app': test_app,
-                     'wsgiapp_filter.env_update': {'cp.hosted':True},
-                    },
+    '/hosted/app0/static' : {
+                'static_filter.on':True,
+                'static_filter.root': curdir,
+                'static_filter.dir': 'static',
+               },
+                        
     })
 
 
@@ -65,12 +70,12 @@ This is a wsgi app running within CherryPy!'''
         self.assertHeader("Content-Type", "text/plain")
         self.assertInBody(self.wsgi_output)
 
-    def test_04_from_config_prog(self):
-        self.getPage("/hosted/app2")
-        self.assertHeader("Content-Type", "text/plain")
-        self.assertInBody(self.wsgi_output)
-        self.assertInBody("cp.hosted")
-        
+    def test_04_static_subdir(self):
+        self.getPage("/hosted/app0/static/index.html")
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello, world\r\n')
+
 if __name__ == '__main__':
     from cherrypy import _cpwsgi
     server_class = _cpwsgi.WSGIServer
