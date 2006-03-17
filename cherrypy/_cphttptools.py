@@ -22,9 +22,14 @@ class Request(object):
         remoteHost should be string of the client's IP address.
         scheme should be a string, either "http" or "https".
         """
+        self.remote_addr  = remoteAddr
+        self.remote_port  = remotePort
+        self.remote_host  = remoteHost
+        # backward compatibility
         self.remoteAddr = remoteAddr
         self.remotePort = remotePort
         self.remoteHost = remoteHost
+        
         self.scheme = scheme
         self.execute_main = True
         self.closed = False
