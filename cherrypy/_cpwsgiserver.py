@@ -80,13 +80,7 @@ class HTTPRequest(object):
                 self.wsgi_app = wsgi_app
                 break
         else:
-            msg = "Not Found"
-            proto = self.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
-            self.wfile.write("%s 404 %s\r\n" % (proto, msg))
-            self.wfile.write("Content-Length: %s\r\n\r\n" % len(msg))
-            self.wfile.write(msg)
-            self.wfile.flush()
-            self.ready = False
+            self.abort("404 Not Found")
             return
         
         self.environ["QUERY_STRING"] = qs
@@ -105,11 +99,31 @@ class HTTPRequest(object):
         # then all the http headers
         headers = mimetools.Message(self.rfile)
         self.environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
-        self.environ["CONTENT_LENGTH"] = headers.getheader("Content-length", "")
+        cl = headers.getheader("Content-length")
+        if method in ("POST", "PUT") and cl is None:
+            # No Content-Length header supplied. This will hang
+            # cgi.FieldStorage, since it cannot determine when to
+            # stop reading from the socket. Until we handle chunked
+            # encoding, always respond with 411 Length Required.
+            # See http://www.cherrypy.org/ticket/493.
+            self.abort("411 Length Required")
+            return
+        self.environ["CONTENT_LENGTH"] = cl or ""
+        
         for (k, v) in headers.items():
             envname = "HTTP_" + k.upper().replace("-","_")
             self.environ[envname] = v
         self.ready = True
+    
+    def abort(self, status, msg=""):
+        """Write a simple error message back to the client."""
+        proto = self.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
+        self.wfile.write("%s %s\r\n" % (proto, status))
+        self.wfile.write("Content-Length: %s\r\n\r\n" % len(msg))
+        if msg:
+            self.wfile.write(msg)
+        self.wfile.flush()
+        self.ready = False
     
     def start_response(self, status, headers, exc_info = None):
         if self.started_response:
@@ -209,10 +223,8 @@ class CherryPyWSGIServer(object):
     RequestHandlerClass = HTTPRequest
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-                 max=-1, request_queue_size=5):
-        '''
-        be careful w/ max
-        '''
+                 max=-1, request_queue_size=5, timeout=10):
+        """Be careful w/ max"""
         self.requests = Queue.Queue(max)
         
         if callable(wsgi_app):
@@ -234,6 +246,8 @@ class CherryPyWSGIServer(object):
         self.server_name = server_name
         self.request_queue_size = request_queue_size
         self._workerThreads = []
+        
+        self.timeout = timeout
     
     def start(self):
         """Run the server forever."""
@@ -309,8 +323,8 @@ class CherryPyWSGIServer(object):
     def tick(self):
         try:
             s, addr = self.socket.accept()
-            if hasattr(s, 'setblocking'):
-                s.setblocking(1)
+            if hasattr(s, 'settimeout'):
+                s.settimeout(self.timeout)
             request = self.RequestHandlerClass(s, addr, self)
             self.requests.put(request)
         except socket.timeout:
