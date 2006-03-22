@@ -97,12 +97,14 @@ def wsgiApp(environ, start_response):
             yield chunk
         if request:
             request.close()
+        request = None
     except (KeyboardInterrupt, SystemExit), ex:
         try:
             if request:
                 request.close()
         except:
             cherrypy.log(traceback=True)
+        request = None
         raise ex
     except:
         cherrypy.log(traceback=True)
@@ -111,6 +113,7 @@ def wsgiApp(environ, start_response):
                 request.close()
         except:
             cherrypy.log(traceback=True)
+        request = None
         s, h, b = _cputil.bareError()
         # CherryPy test suite expects bareError body to be output,
         # so don't call start_response (which, according to PEP 333,
