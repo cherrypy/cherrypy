@@ -104,9 +104,9 @@ class CPWebCase(webtest.WebCase):
                         if k.lower() == 'set-cookie']
         
         try:
-            self.body = []
+            newbody = []
             for chunk in response.body:
-                self.body.append(chunk)
+                newbody.append(chunk)
             request.close()
         except Exception, ex:
             if cherrypy.config.get("stream_response", False):
@@ -121,8 +121,8 @@ class CPWebCase(webtest.WebCase):
             # Don't reset status or headers; we're emulating an error which
             # occurs after status and headers have been written to the client.
             for chunk in b:
-                self.body.append(chunk)
-        self.body = "".join(self.body)
+                newbody.append(chunk)
+        self.body = "".join(newbody)
         
         if webtest.ServerError.on:
             self.tearDown()
