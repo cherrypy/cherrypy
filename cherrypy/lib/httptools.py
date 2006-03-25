@@ -369,11 +369,10 @@ def paramsFromCGIForm(form):
     return paramMap
 
 
-class HeaderMap(dict):
-    """A dict subclass for HTTP request and response headers.
+class CaseInsensitiveDict(dict):
+    """A case-insensitive dict subclass.
     
-    Each key is changed on entry to str(key).title(). This allows headers
-    to be case-insensitive and avoid duplicates.
+    Each key is changed on entry to str(key).title().
     """
     
     def __getitem__(self, key):
@@ -385,8 +384,8 @@ class HeaderMap(dict):
     def __delitem__(self, key):
         dict.__delitem__(self, str(key).title())
     
-    def __contains__(self, item):
-        return dict.__contains__(self, str(item).title())
+    def __contains__(self, key):
+        return dict.__contains__(self, str(key).title())
     
     def get(self, key, default=None):
         return dict.get(self, str(key).title(), default)
@@ -415,9 +414,18 @@ class HeaderMap(dict):
     
     def pop(self, key, default):
         return dict.pop(self, str(key).title(), default)
+
+
+class HeaderMap(CaseInsensitiveDict):
+    """A dict subclass for HTTP request and response headers.
+    
+    Each key is changed on entry to str(key).title(). This allows headers
+    to be case-insensitive and avoid duplicates.
+    """
     
     def elements(self, key):
         """Return a list of HeaderElements for the given header (or None)."""
+        key = str(key).title()
         h = self.get(key)
         if h is None:
             return []
