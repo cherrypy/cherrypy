@@ -1,54 +1,50 @@
 import test
 test.prefer_parent_path()
 
-import os
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
-import cherrypy
-from cherrypy.filters.wsgiappfilter import WSGIAppFilter
-from cherrypy.lib.cptools import WSGIApp
+def setup_server():
+    import os
+    curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
-def test_app(environ, start_response):
-    status = '200 OK'
-    response_headers = [('Content-type', 'text/plain')]
-    start_response(status, response_headers)
-    yield 'Hello, world!\n'
-    yield 'This is a wsgi app running within CherryPy!\n\n'
-    keys = environ.keys()
-    keys.sort()
-    for k in keys:
-        yield '%s: %s\n' % (k,environ[k])
+    import cherrypy
+    from cherrypy.filters.wsgiappfilter import WSGIAppFilter
+    from cherrypy.lib.cptools import WSGIApp
 
-class Root:
-    def index(self):
-        return "I'm a regular CherryPy page handler!"
-    index.exposed = True
+    def test_app(environ, start_response):
+        status = '200 OK'
+        response_headers = [('Content-type', 'text/plain')]
+        start_response(status, response_headers)
+        yield 'Hello, world!\n'
+        yield 'This is a wsgi app running within CherryPy!\n\n'
+        keys = environ.keys()
+        keys.sort()
+        for k in keys:
+            yield '%s: %s\n' % (k,environ[k])
 
-
-class HostedWSGI(object):
-    _cp_filters = [WSGIAppFilter(test_app),]
+    class Root:
+        def index(self):
+            return "I'm a regular CherryPy page handler!"
+        index.exposed = True
 
 
-cherrypy.tree.mount(Root(), '')
-cherrypy.tree.mount(HostedWSGI(), '/hosted/app0')
-cherrypy.tree.mount(WSGIApp(test_app), '/hosted/app1')
+    class HostedWSGI(object):
+        _cp_filters = [WSGIAppFilter(test_app),]
+
+
+    conf = {'server.log_to_screen': False,
+            'server.environment': 'production',
+            'server.show_tracebacks': True,
+            }
+    cherrypy.tree.mount(Root(), '/', conf)
+    conf0 = {'/static': {'static_filter.on': True,
+                         'static_filter.root': curdir,
+                         'static_filter.dir': 'static',
+                         }}
+    cherrypy.tree.mount(HostedWSGI(), '/hosted/app0', conf0)
+    cherrypy.tree.mount(WSGIApp(test_app), '/hosted/app1')
+
 
 import helper
-
-cherrypy.config.update({
-    'global': {'server.log_to_screen': False,
-               'server.environment': 'production',
-               'server.show_tracebacks': True,
-               'server.socket_host': helper.CPWebCase.HOST,
-               'server.socket_port': helper.CPWebCase.PORT,
-               },
-    '/hosted/app0/static' : {
-                'static_filter.on':True,
-                'static_filter.root': curdir,
-                'static_filter.dir': 'static',
-               },
-                        
-    })
 
 
 class WSGIAppFilterTest(helper.CPWebCase):
@@ -77,7 +73,6 @@ This is a wsgi app running within CherryPy!'''
         self.assertBody('Hello, world\r\n')
 
 if __name__ == '__main__':
-    from cherrypy import _cpwsgi
-    server_class = _cpwsgi.WSGIServer
-    helper.testmain(server_class)
+    setup_server()
+    helper.testmain()
 

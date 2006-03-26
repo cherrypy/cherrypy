@@ -7,23 +7,25 @@ sing = u"\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?"
 sing8 = sing.encode('utf-8')
 sing16 = sing.encode('utf-16')
 
-class Root:
-    def index(self, param):
-        assert param == europoundUnicode
-        yield europoundUnicode
-    index.exposed = True
-    
-    def mao_zedong(self):
-        return sing
-    mao_zedong.exposed = True
 
-cherrypy.root = Root()
-cherrypy.config.update({
-        'server.log_to_screen': False,
-        'server.environment': 'production',
-        'encoding_filter.on': True,
-        'decoding_filter.on': True
-})
+def setup_server():
+    class Root:
+        def index(self, param):
+            assert param == europoundUnicode
+            yield europoundUnicode
+        index.exposed = True
+        
+        def mao_zedong(self):
+            return sing
+        mao_zedong.exposed = True
+
+    cherrypy.root = Root()
+    cherrypy.config.update({
+            'server.log_to_screen': False,
+            'server.environment': 'production',
+            'encoding_filter.on': True,
+            'decoding_filter.on': True
+    })
 
 
 import helper
@@ -63,4 +65,5 @@ class DecodingEncodingFilterTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
+    setup_server()
     helper.testmain()

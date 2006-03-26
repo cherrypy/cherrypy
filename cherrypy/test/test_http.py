@@ -2,8 +2,7 @@
 
 Some of these tests check timeouts, etcetera, and therefore take a long
 time to run. Therefore, this module should probably not be included in
-the 'comprehensive' test suite (test.py). Note, however, that we default
-to the builtin HTTP server (most tests default to 'serverless').
+the 'comprehensive' test suite (test.py).
 """
 
 import test
@@ -18,19 +17,21 @@ from cherrypy import _cphttptools
 
 data = object()
 
-class Root:
-    def index(self, *args, **kwargs):
-        cherrypy.thread_data.thing = data
-        return "Hello world!"
-    index.exposed = True
-cherrypy.tree.mount(Root())
+def setup_server():
+    class Root:
+        def index(self, *args, **kwargs):
+            cherrypy.thread_data.thing = data
+            return "Hello world!"
+        index.exposed = True
+    cherrypy.tree.mount(Root())
 
-cherrypy.config.update({
-    'global': {'server.log_to_screen': False,
-               'server.environment': 'production',
-               'server.show_tracebacks': True,
-               },
-})
+    cherrypy.config.update({
+        'global': {'server.log_to_screen': False,
+                   'server.environment': 'production',
+                   'server.show_tracebacks': True,
+                   },
+    })
+
 
 import helper
 
@@ -73,4 +74,5 @@ class ReferenceTests(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    helper.testmain(server="cherrypy._cpwsgi.WSGIServer")
+    setup_server()
+    helper.testmain()

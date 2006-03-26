@@ -6,57 +6,67 @@ import StringIO
 import cherrypy
 
 
-class Root:
-    def index(self, key):
-        return cherrypy.config.get(key, "None")
-    index.exposed = True
-    global_ = index
-    xyz = index
+def setup_server():
+    
+    class Root:
+        def index(self, key):
+            return cherrypy.config.get(key, "None")
+        index.exposed = True
+        global_ = index
+        xyz = index
+    
+    class Foo:
+        def index(self, key):
+            return cherrypy.config.get(key, "None")
+        index.exposed = True
+        bar = index
+        nex = index
+    
+    class Env:
+        def index(self, key):
+            return str(cherrypy.config.get(key, "None"))
+        index.exposed = True
+        prod = index
+        embed = index
+        
+        def wrong(self):
+            conf = "\n[global]\nserver.environment = production\n"
+            cherrypy.config.update(file=StringIO.StringIO(conf))
+        wrong.exposed=True
+    
+    cherrypy.tree.mount(Root())
+    cherrypy.root.foo = Foo()
+    
+    cherrypy.config.update({
+        'global': {'server.log_to_screen': False,
+                   'server.environment': 'production',
+                   'server.show_tracebacks': True,
+                   },
+        '/': {
+            'foo': 'this',
+            'bar': 'that',
+            },
+        '/foo': {
+            'foo': 'this2',
+            'baz': 'that2',
+            },
+        '/foo/bar': {
+            'foo': 'this3',
+            'bax': 'this4',
+            },
+    })
 
-class Foo:
-    def index(self, key):
-        return cherrypy.config.get(key, "None")
-    index.exposed = True
-    bar = index
-    nex = index
+    _env_conf = {'/': {'server.environment': 'development'},
+                 '/prod': {'server.environment': 'production'},
+                 '/embed': {'server.environment': 'embedded'},
+                 }
+    cherrypy.tree.mount(Env(), "/env", _env_conf)
 
-class Env:
-    def index(self, key):
-        return str(cherrypy.config.get(key, "None"))
-    index.exposed = True
-    prod = index
-    embed = index
+    # Shortcut syntax--should get put in the "global" bucket
+    cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
 
-cherrypy.tree.mount(Root())
-cherrypy.root.foo = Foo()
 
-cherrypy.config.update({
-    'global': {'server.log_to_screen': False,
-               'server.environment': 'production',
-               'server.show_tracebacks': True,
-               },
-    '/': {
-        'foo': 'this',
-        'bar': 'that',
-        },
-    '/foo': {
-        'foo': 'this2',
-        'baz': 'that2',
-        },
-    '/foo/bar': {
-        'foo': 'this3',
-        'bax': 'this4',
-        },
-})
-
-_env_conf = {'/': {'server.environment': 'development'},
-             '/prod': {'server.environment': 'production'},
-             '/embed': {'server.environment': 'embedded'},
-             }
-cherrypy.tree.mount(Env(), "/env", _env_conf)
-
-# Shortcut syntax--should get put in the "global" bucket
-cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
+#                             Client-side code                             #
 
 import helper
 
@@ -64,7 +74,7 @@ class ConfigTests(helper.CPWebCase):
     
     def testConfig(self):
         tests = [
-            ('*',        'luxuryyacht', 'throatwobblermangrove'),
+##            ('*',        'luxuryyacht', 'throatwobblermangrove'),
             ('/',        'nex', 'None'),
             ('/',        'foo', 'this'),
             ('/',        'bar', 'that'),
@@ -82,11 +92,11 @@ class ConfigTests(helper.CPWebCase):
             self.assertBody(expected)
     
     def testUnrepr(self):
-        self.assertRaises(cherrypy.WrongConfigValue, cherrypy.config.update,
-                          file=StringIO.StringIO("""
-[global]
-server.environment = production
-"""))
+        err = ('WrongConfigValue: ("section: '
+               "'global', option: 'server.environment', value: 'production'"
+               '''", 'UnknownType', ('production',))''')
+        self.getPage("/env/wrong")
+        self.assertErrorPage(500, pattern=err)
     
     def testEnvironments(self):
         for key, val in cherrypy.config.environments['development'].iteritems():
@@ -104,4 +114,5 @@ server.environment = production
 
 
 if __name__ == '__main__':
+    setup_server()
     helper.testmain()

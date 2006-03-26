@@ -17,41 +17,77 @@ import getopt
 
 
 class TestHarness(object):
-    
     """A test harness for the CherryPy framework and CherryPy applications."""
     
-    # The first server in the list is the default server.
-    available_servers = {'serverless': (0, "Serverless", None),
-                         'wsgi': (1, "Native WSGI Server",
-                                  "cherrypy.test.helper.TestWSGI"),
+    def __init__(self, tests=None, server=None, protocol="HTTP/1.1", port=8000):
+        """Constructor to populate the TestHarness instance.
+        
+        tests should be a list of module names (strings).
+        """
+        self.protocol = protocol
+        self.port = port
+        self.server = server
+        self.tests = tests or []
+    
+    def run(self, conf=None):
+        """Run the test harness."""
+        import cherrypy
+        v = sys.version.split()[0]
+        print "Python version used to run this test script:", v
+        print "CherryPy version", cherrypy.__version__
+        print
+        
+        if conf is None:
+            conf = {'server.socket_host': '127.0.0.1',
+                    'server.socket_port': self.port,
+                    'server.thread_pool': 10,
+                    'server.log_to_screen': False,
+                    'server.environment': "production",
+                    'server.show_tracebacks': True,
+                    }
+        elif isinstance(conf, basestring):
+            conf = cherrypy.config.dict_from_config_file(conf)
+        
+        conf['server.protocol_version'] = self.protocol
+        self._run(conf)
+    
+    def _run(self, conf):
+        # helper must be imported lazily so the coverage tool
+        # can run against module-level statements within cherrypy.
+        # Also, we have to do a relative import here, not
+        # "from cherrypy.test import helper", because the latter
+        # would stick a second instance of webtest in sys.modules,
+        # and we wouldn't be able to globally override the port anymore.
+        import helper
+        webtest.WebCase.PORT = self.port
+        print
+        print "Running tests:", self.server
+        helper.run_test_suite(self.tests, self.server, conf)
+
+
+class CommandLineParser(object):
+    available_servers = {'wsgi': "cherrypy._cpwsgi.WSGIServer",
+                         'modpy': "modpy",
                          }
     default_server = "wsgi"
     
-    def __init__(self, available_tests):
+    def __init__(self, available_tests, args=sys.argv[1:]):
         """Constructor to populate the TestHarness instance.
         
         available_tests should be a list of module names (strings).
-        """
-        self.available_tests = available_tests
-        
-        self.cover = False
-        self.profile = False
-        self.protocol = "HTTP/1.0"
-        self.basedir = None
-        self.PORT = 8000
-        
-        self.servers = []
-        self.tests = []
-    
-    def load(self, args=sys.argv[1:]):
-        """Populate a TestHarness from sys.argv.
         
         args defaults to sys.argv[1:], but you can provide a different
             set of args if you like.
         """
+        self.available_tests = available_tests
+        self.cover = False
+        self.profile = False
+        self.server = None
+        self.port = 8080
+        self.protocol = "HTTP/1.1"
         
-        longopts = ['cover', 'profile', '1.1', 'help',
-                    'basedir=', 'all', 'port=']
+        longopts = ['cover', 'profile', '1.1', 'help', 'basedir=', 'port=',
+                    'server=']
         longopts.extend(self.available_servers)
         longopts.extend(self.available_tests)
         try:
@@ -61,12 +97,6 @@ class TestHarness(object):
             self.help()
             sys.exit(2)
         
-        self.cover = False
-        self.profile = False
-        self.protocol = "HTTP/1.0"
-        self.basedir = None
-        
-        self.servers = []
         self.tests = []
         
         for o, a in opts:
@@ -77,19 +107,19 @@ class TestHarness(object):
                 self.cover = True
             elif o == "--profile":
                 self.profile = True
-            elif o == "--1.1":
-                self.protocol = "HTTP/1.1"
+            elif o == "--1.0":
+                self.protocol = "HTTP/1.0"
             elif o == "--basedir":
                 self.basedir = a
-            elif o == "--all":
-                self.servers = self.available_servers.keys()
             elif o == "--port":
-                self.PORT = int(a)
+                self.port = int(a)
+            elif o == "--server":
+                if a in self.available_servers:
+                    a = self.available_servers[a]
+                self.server = a
             else:
                 o = o[2:]
-                if o in self.available_servers and o not in self.servers:
-                    self.servers.append(o)
-                elif o in self.available_tests and o not in self.tests:
+                if o in self.available_tests and o not in self.tests:
                     self.tests.append(o)
         
         if self.cover and self.profile:
@@ -98,8 +128,8 @@ class TestHarness(object):
                    'coverage tool at the same time.')
             sys.exit(2)
         
-        if not self.servers:
-            self.servers = [self.default_server]
+        if not self.server:
+            self.server = self.available_servers[self.default_server]
         
         if not self.tests:
             self.tests = self.available_tests[:]
@@ -109,19 +139,17 @@ class TestHarness(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --servers* --1.1 --cover --basedir=path --profile --tests**
+        test.py --server=* --1.1 --cover --basedir=path --profile --tests**
         
     """
         print '    * servers:'
-        s = [(val, name) for name, val in self.available_servers.iteritems()]
-        s.sort()
-        for val, name in s:
+        for name, val in self.available_servers.iteritems():
             if name == self.default_server:
-                print '        --' + name, '(default)'
+                print '        --%s: %s (default)' % (name, val)
             else:
-                print '        --' + name
+                print '        --%s: %s' % (name, val)
         
-        print """        --all (runs all servers in order)
+        print """
     
     --1.1: use HTTP/1.1 servers instead of default HTTP/1.0
     
@@ -219,36 +247,21 @@ class TestHarness(object):
     
     def run(self, conf=None):
         """Run the test harness."""
-        self.load()
-        
         # Start the coverage tool before importing cherrypy,
         # so module-level global statements are covered.
         if self.cover:
             self.start_coverage()
         
-        import cherrypy
-        v = sys.version.split()[0]
-        print "Python version used to run this test script:", v
-        print "CherryPy version", cherrypy.__version__
-        print
-        
-        if conf is None:
-            conf = {'server.socket_host': '127.0.0.1',
-                    'server.socket_port': self.PORT,
-                    'server.thread_pool': 10,
-                    'server.log_to_screen': False,
-                    'server.environment': "production",
-                    'server.show_tracebacks': True,
-                    }
-        elif isinstance(conf, basestring):
-            conf = cherrypy.config.dict_from_config_file(conf)
-        
-        conf['server.protocol_version'] = self.protocol
-        
         if self.profile:
             conf['profiling.on'] = True
         
-        self._run_all_servers(conf)
+        if self.server == 'modpy':
+            import modpy
+            modpy.ModPythonTestHarness(self.tests, self.server,
+                                       self.protocol, self.port).run(conf)
+        else:
+            TestHarness(self.tests, self.server,
+                        self.protocol, self.port).run(conf)
         
         if self.profile:
             del conf['profiling.on']
@@ -258,43 +271,7 @@ class TestHarness(object):
         
         if self.cover:
             self.stop_coverage()
-    
-    def _run_all_servers(self, conf):
-        # helper must be imported lazily so the coverage tool
-        # can run against module-level statements within cherrypy.
-        # Also, we have to do a relative import here, not
-        # "from cherrypy.test import helper", because the latter
-        # would stick a second instance of webtest in sys.modules,
-        # and we wouldn't be able to globally override the port anymore.
-        import helper
-        s = [self.available_servers[name] for name in self.servers]
-        s.sort()
-        webtest.WebCase.PORT = self.PORT
-        for priority, name, cls in s:
-            print
-            print "Running tests:", name
-            helper.run_test_suite(self.tests, cls, conf)
 
-
-class CPTestHarness(TestHarness):
-    
-    def _run_all_servers(self, conf):
-        # helper must be imported lazily so the coverage tool
-        # can run against module-level statements within cherrypy.
-        # Also, we have to do a relative import here, not
-        # "from cherrypy.test import helper", because the latter
-        # would stick a second instance of webtest in sys.modules,
-        # and we wouldn't be able to globally override the port anymore.
-        import helper, test_states
-        s = [self.available_servers[name] for name in self.servers]
-        s.sort()
-        webtest.WebCase.PORT = self.PORT
-        for priority, name, cls in s:
-            print
-            print "Running tests:", name
-            reload(test_states)
-            test_states.run(cls, conf)
-            helper.run_test_suite(self.tests, cls, conf)
 
 def prefer_parent_path():
     # Place this __file__'s grandparent (../../) at the start of sys.path,
@@ -319,17 +296,18 @@ def run():
         'test_decodingencoding_filter',
         'test_gzip_filter',
         'test_logdebuginfo_filter',
-        'test_response_headers_filter',
         'test_objectmapping',
+        'test_response_headers_filter',
         'test_static_filter',
-        'test_tutorials',
+##        'test_tutorials',
         'test_virtualhost_filter',
         'test_session_filter',
         'test_sessionauthenticate_filter',
+##        'test_states',
         'test_xmlrpc_filter',
         'test_wsgiapp_filter',
     ]
-    CPTestHarness(testList).run()
+    CommandLineParser(testList).run()
     
     print
     raw_input('hit enter')

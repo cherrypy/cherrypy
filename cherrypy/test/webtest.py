@@ -141,13 +141,13 @@ class WebCase(TestCase):
     PORT = 8000
     HTTP_CONN=httplib.HTTPConnection
     
-    def getPage(self, url, headers=None, method="GET", body=None):
+    def getPage(self, url, headers=None, method="GET", body=None, protocol="HTTP/1.1"):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
         
         self.url = url
         result = openURL(url, headers, method, body, self.HOST, self.PORT,
-                         self.HTTP_CONN)
+                         self.HTTP_CONN, protocol)
         self.status, self.headers, self.body = result
         
         # Build a list of request cookies from the previous response cookies.
@@ -248,8 +248,24 @@ class WebCase(TestCase):
                 if msg is None:
                     msg = 'Status (%s) != %s' % (`self.status`, `status`)
                 self._handlewebError(msg)
+        elif isinstance(status, int):
+            code = int(self.status[:3])
+            if code != status:
+                if msg is None:
+                    msg = 'Status (%s) != %s' % (`self.status`, `status`)
+                self._handlewebError(msg)
         else:
-            if not self.status in status:
+            # status is a tuple or list.
+            match = False
+            for s in status:
+                if isinstance(s, basestring):
+                    if self.status == s:
+                        match = True
+                        break
+                elif int(self.status[:3]) == s:
+                    match = True
+                    break
+            if not match:
                 if msg is None:
                     msg = 'Status (%s) not in %s' % (`self.status`, `status`)
                 self._handlewebError(msg)
@@ -338,7 +354,8 @@ def cleanHeaders(headers, method, body, host, port):
 
 
 def openURL(url, headers=None, method="GET", body=None,
-            host="127.0.0.1", port=8000, http_conn=httplib.HTTPConnection):
+            host="127.0.0.1", port=8000, http_conn=httplib.HTTPConnection,
+            protocol="HTTP/1.1"):
     """Open the given HTTP resource and return status, headers, and body."""
     
     headers = cleanHeaders(headers, method, body, host, port)
@@ -349,7 +366,10 @@ def openURL(url, headers=None, method="GET", body=None,
     while trial < 10:
         try:
             conn = http_conn(host, port)
-            conn.putrequest(method.upper(), url)
+            conn._http_vsn_str = protocol
+            conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
+            conn.putrequest(method.upper(), url,
+                            skip_host=True, skip_accept_encoding=True)
             
             for key, value in headers:
                 conn.putheader(key, value)

@@ -3,22 +3,28 @@ test.prefer_parent_path()
 
 import cherrypy
 
-class Root:
-    def index(self):
-        yield "Hello, world"
-    index.exposed = True
 
-    def bug326(self, file):
-        return "OK"
-    bug326.exposed = True
+def setup_server():
+    class Root:
+        def index(self):
+            yield "Hello, world"
+        index.exposed = True
 
-cherrypy.root = Root()
+        def bug326(self, file):
+            return "OK"
+        bug326.exposed = True
 
-cherrypy.config.update({
+    cherrypy.root = Root()
+
+    cherrypy.config.update({
         'server.log_to_screen': False,
         'server.environment': 'production',
         'log_debug_info_filter.on': True,
-})
+        '/bug326': {
+            'server.max_request_body_size': 300,
+            'server.environment': 'development',
+        }
+    })
 
 
 
@@ -34,31 +40,19 @@ class LogDebugInfoFilterTest(helper.CPWebCase):
         #self.assertInBody('Session data size')
 
     def testBug326(self):
-        from cherrypy import _cpwsgi
-        s = cherrypy.server.httpserver
-        if s and isinstance(s, _cpwsgi.WSGIServer):
-            h = [("Content-type", "multipart/form-data; boundary=x"),
-                 ("Content-Length", "110")]
-            b = """--x
+        b = """--x
 Content-Disposition: form-data; name="file"; filename="hello.txt"
 Content-Type: text/plain
 
-hello
+%s
 --x--
-"""
-            cherrypy.config.update({
-                ('%s/bug326' % self.prefix()): {
-                    'server.max_request_body_size': 3,
-                    'server.environment': 'development',
-                }
-            })
-            ignore = helper.webtest.ignored_exceptions
-            ignore.append(AttributeError)
-            try:
-                self.getPage('/bug326', h, "POST", b)
-                self.assertStatus("413 Request Entity Too Large")
-            finally:
-                ignore.pop()
+""" % ("x" * 300)
+        h = [("Content-type", "multipart/form-data; boundary=x"),
+             ("Content-Length", len(b))]
+        self.getPage('/bug326', h, "POST", b)
+        self.assertStatus("413 Request Entity Too Large")
+
 
 if __name__ == "__main__":
+    setup_server()
     helper.testmain()

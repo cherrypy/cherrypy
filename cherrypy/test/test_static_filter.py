@@ -3,55 +3,57 @@ test.prefer_parent_path()
 
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+import threading
 
 import cherrypy
 from cherrypy.lib import cptools
 
 
-class Root:
-    pass
+def setup_server():
+    class Root:
+        pass
 
-class Static:
-    
-    def index(self):
-        return 'You want the Baron? You can have the Baron!'
-    index.exposed = True
-    
-    def dynamic(self):
-        return "This is a DYNAMIC page"
-    dynamic.exposed = True
+    class Static:
+        
+        def index(self):
+            return 'You want the Baron? You can have the Baron!'
+        index.exposed = True
+        
+        def dynamic(self):
+            return "This is a DYNAMIC page"
+        dynamic.exposed = True
 
 
-cherrypy.root = Root()
-cherrypy.root.static = Static()
+    cherrypy.root = Root()
+    cherrypy.root.static = Static()
 
-cherrypy.config.update({
-    'global': {
-        'static_filter.on': False,
-        'server.log_to_screen': False,
-        'server.environment': 'production',
-    },
-    '/static': {
-        'static_filter.on': True,
-        'static_filter.dir': 'static',
-        'static_filter.root': curdir,
-    },
-    '/style.css': {
-        'static_filter.on': True,
-        'static_filter.file': 'style.css',
-        'static_filter.root': curdir,
-    },
-    '/docroot': {
-        'static_filter.on': True,
-        'static_filter.root': curdir,
-        'static_filter.dir': 'static',
-        'static_filter.index': 'index.html',
-    },
-    '/error': {
-        'static_filter.on': True,
-        'server.show_tracebacks': True,
-    },
-})
+    cherrypy.config.update({
+        'global': {
+            'static_filter.on': False,
+            'server.log_to_screen': False,
+            'server.environment': 'production',
+        },
+        '/static': {
+            'static_filter.on': True,
+            'static_filter.dir': 'static',
+            'static_filter.root': curdir,
+        },
+        '/style.css': {
+            'static_filter.on': True,
+            'static_filter.file': 'style.css',
+            'static_filter.root': curdir,
+        },
+        '/docroot': {
+            'static_filter.on': True,
+            'static_filter.root': curdir,
+            'static_filter.dir': 'static',
+            'static_filter.index': 'index.html',
+        },
+        '/error': {
+            'static_filter.on': True,
+            'server.show_tracebacks': True,
+        },
+    })
 
 import helper
 
@@ -113,9 +115,27 @@ class StaticFilterTest(helper.CPWebCase):
                           "(/error/thing.html)")
         
         # Test up-level security
-        self.getPage("/static/../style.css")
-        self.assertStatus('403 Forbidden')
-
+        self.getPage("/static/../../test/style.css")
+        self.assertStatus((400, 403))
+        
+        # Test modified-since on a reasonably-large file
+        self.getPage("/static/dirback.jpg")
+        self.assertStatus("200 OK")
+        ims = ("If-Modified-Since", "Wed, 13 Jul 2005 16:19:55 GMT")
+        self.getPage("/static/dirback.jpg", headers=[ims])
+        self.assertStatus("304 Not Modified")
+##        
+##        # Test lots of requests for the same file (no If-Mod).
+##        ts = []
+##        for x in xrange(500):
+##            t = threading.Thread(target=self.getPage,
+##                                 args=("/static/dirback.jpg",))
+##            ts.append(t)
+##            t.start()
+##        for t in ts:
+##            t.join()
+##
 
 if __name__ == "__main__":
+    setup_server()
     helper.testmain()

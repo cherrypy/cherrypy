@@ -6,20 +6,21 @@ import cherrypy
 
 europoundUnicode = u'\x80\xa3'
 
-class Root:
-    def index(self):
-        yield u"Hello,"
-        yield u"world"
-        yield europoundUnicode
-    index.exposed = True
+def setup_server():
+    class Root:
+        def index(self):
+            yield u"Hello,"
+            yield u"world"
+            yield europoundUnicode
+        index.exposed = True
 
-cherrypy.root = Root()
-cherrypy.config.update({
-        'server.log_to_screen': False,
-        'server.environment': 'production',
-        'gzip_filter.on': True,
-        'encoding_filter.on': True,
-})
+    cherrypy.root = Root()
+    cherrypy.config.update({
+            'server.log_to_screen': False,
+            'server.environment': 'production',
+            'gzip_filter.on': True,
+            'encoding_filter.on': True,
+    })
 
 import helper
 
@@ -37,4 +38,5 @@ class CombinedFiltersTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
+    setup_server()
     helper.testmain()
