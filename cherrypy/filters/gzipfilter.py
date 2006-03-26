@@ -29,7 +29,6 @@ class GzipFilter(BaseFilter):
             level = cherrypy.config.get('gzip_filter.compresslevel', 9)
             response.body = self.zip_body(response.body, level)
         
-        from cherrypy.lib import httptools
         acceptable = cherrypy.request.headers.elements('Accept-Encoding')
         if not acceptable:
             # If no Accept-Encoding field is present in a request,
