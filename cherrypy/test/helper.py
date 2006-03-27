@@ -3,13 +3,14 @@
 The actual script that runs the entire CP test suite is called
 "test.py" (in this folder); test.py calls this module as a library.
 
-Usage:
-    Each individual test_*.py module imports this module (helper),
-    usually to make an instance of CPWebCase, and then call testmain().
-    
-    The CP test suite script (test.py) imports this module and calls
-    run_test_suite, possibly more than once. CP applications may also
-    import test.py (to use TestHarness), which then calls helper.py.
+Usage
+=====
+Each individual test_*.py module imports this module (helper),
+usually to make an instance of CPWebCase, and then call testmain().
+
+The CP test suite script (test.py) imports this module and calls
+run_test_suite, possibly more than once. CP applications may also
+import test.py (to use TestHarness), which then calls helper.py.
 """
 
 # GREAT CARE has been taken to separate this module from test.py,

@@ -253,6 +253,7 @@ class CommandLineParser(object):
             self.start_coverage()
         
         if self.profile:
+            conf = conf or {}
             conf['profiling.on'] = True
         
         if self.server == 'modpy':
