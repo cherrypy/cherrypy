@@ -254,7 +254,8 @@ class Request(object):
         try:
             body = page_handler(*virtual_path, **self.params)
         except Exception, x:
-            x.args = x.args + (page_handler,)
+            if hasattr(x, "args"):
+                x.args = x.args + (page_handler,)
             raise
         cherrypy.response.body = body
     
