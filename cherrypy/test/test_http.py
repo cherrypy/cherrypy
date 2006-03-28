@@ -17,14 +17,25 @@ from cherrypy import _cphttptools
 
 data = object()
 
+def get_instances(cls):
+    return [x for x in gc.get_objects() if isinstance(x, cls)]
+
 def setup_server():
+    
     class Root:
         def index(self, *args, **kwargs):
             cherrypy.thread_data.thing = data
             return "Hello world!"
         index.exposed = True
+        
+        def gc_stats(self):
+            return "%s %s %s %s" % (gc.collect(),
+                                    len(get_instances(_cphttptools.Request)),
+                                    len(get_instances(_cphttptools.Response)),
+                                    len(gc.get_referrers(data)))
+        gc_stats.exposed = True
     cherrypy.tree.mount(Root())
-
+    
     cherrypy.config.update({
         'global': {'server.log_to_screen': False,
                    'server.environment': 'production',
@@ -38,17 +49,12 @@ import helper
 class HTTPTests(helper.CPWebCase):
     
     def test_sockets(self):
-        if cherrypy.server.httpserver:
-            # By not including a Content-Length header, cgi.FieldStorage
-            # will hang. Verify that CP times out the socket and responds
-            # with 411 Length Required.
-            c = httplib.HTTPConnection("localhost:%s" % self.PORT)
-            c.request("POST", "/")
-            self.assertEqual(c.getresponse().status, 411)
-
-
-def get_instances(cls):
-    return [x for x in gc.get_objects() if isinstance(x, cls)]
+        # By not including a Content-Length header, cgi.FieldStorage
+        # will hang. Verify that CP times out the socket and responds
+        # with 411 Length Required.
+        c = httplib.HTTPConnection("localhost:%s" % self.PORT)
+        c.request("POST", "/")
+        self.assertEqual(c.getresponse().status, 411)
 
 
 class ReferenceTests(helper.CPWebCase):
@@ -59,7 +65,7 @@ class ReferenceTests(helper.CPWebCase):
             self.assertBody("Hello world!")
         
         ts = []
-        for _ in range(100):
+        for _ in range(25):
             t = threading.Thread(target=getpage)
             ts.append(t)
             t.start()
@@ -67,10 +73,8 @@ class ReferenceTests(helper.CPWebCase):
         for t in ts:
             t.join()
         
-        self.assertEqual(gc.collect(), 0)
-        self.assertEqual(len(get_instances(_cphttptools.Request)), 0)
-        self.assertEqual(len(get_instances(_cphttptools.Response)), 0)
-        self.assertEqual(len(gc.get_referrers(data)), 1)
+        self.getPage("/gc_stats")
+        self.assertBody("0 1 1 1")
 
 
 if __name__ == '__main__':
