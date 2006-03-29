@@ -202,9 +202,8 @@ def run_all(host, port):
             }
     def _run(server):
         print
-        print "Testing %s on %s:%s..." % (server or "serverless", host, port)
+        print "Testing %s on %s:%s..." % (server, host, port)
         run(server, conf)
-    _run(None)
     _run("cherrypy._cpwsgi.WSGIServer")
 
 
@@ -220,7 +219,7 @@ def run_localhosts(port):
                 }
         def _run(server):
             print
-            print "Testing %s on %s:%s..." % (server or "serverless", host, port)
+            print "Testing %s on %s:%s..." % (server, host, port)
             run(server, conf)
         _run("cherrypy._cpwsgi.WSGIServer")
 
