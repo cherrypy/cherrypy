@@ -296,6 +296,8 @@ class FileStorage:
     
     def clean_up(self, sess):
         storage_path = cherrypy.config.get('session_filter.storage_path')
+        if storage_path is None:
+            return
         now = datetime.datetime.now()
         # Iterate over all files in the dir/ and exclude non session files
         #   and lock files
