@@ -121,7 +121,11 @@ class StaticFilterTest(helper.CPWebCase):
         # Test modified-since on a reasonably-large file
         self.getPage("/static/dirback.jpg")
         self.assertStatus("200 OK")
-        ims = ("If-Modified-Since", "Wed, 13 Jul 2005 16:19:55 GMT")
+        lastmod = ""
+        for k, v in self.headers:
+            if k == 'Last-Modified':
+                lastmod = v
+        ims = ("If-Modified-Since", lastmod)
         self.getPage("/static/dirback.jpg", headers=[ims])
         self.assertStatus("304 Not Modified")
 ##        
