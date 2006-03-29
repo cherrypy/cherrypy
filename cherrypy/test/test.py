@@ -300,7 +300,7 @@ def run():
         'test_objectmapping',
         'test_response_headers_filter',
         'test_static_filter',
-##        'test_tutorials',
+        'test_tutorials',
         'test_virtualhost_filter',
         'test_session_filter',
         'test_sessionauthenticate_filter',

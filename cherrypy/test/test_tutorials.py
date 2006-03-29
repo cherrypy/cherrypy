@@ -7,37 +7,53 @@ import cherrypy
 import helper
 
 
-class TutorialTest(helper.CPWebCase):
+def setup_server():
     
-    def load_tut_module(self, tutorialName):
+    conf = cherrypy.config.configs.copy()
+    
+    def load_tut_module(name):
         """Import or reload tutorial module as needed."""
         cherrypy.config.reset()
+        cherrypy.config.update(conf)
         
-        target = "cherrypy.tutorial." + tutorialName
+        target = "cherrypy.tutorial." + name
         if target in sys.modules:
             module = reload(sys.modules[target])
         else:
             module = __import__(target, globals(), locals(), [''])
-        
-        cherrypy.config.update({'server.socket_host': self.HOST,
-                                'server.socket_port': self.PORT,
-                                'server.thread_pool': 10,
-                                'server.log_to_screen': False,
-                                'server.environment': "production",
-                                })
+        cherrypy.root.load_tut_module = load_tut_module
+        cherrypy.root.sessfilteron = sessfilteron
+        cherrypy.root.traceback_setting = traceback_setting
+    load_tut_module.exposed = True
+    
+    def sessfilteron():
+        cherrypy.config.update({"session_filter.on": True})
+    sessfilteron.exposed = True
+    
+    def traceback_setting():
+        return repr(cherrypy.config.get('server.show_tracebacks'))
+    traceback_setting.exposed = True
+    
+    class Dummy:
+        pass
+    cherrypy.root = Dummy()
+    cherrypy.root.load_tut_module = load_tut_module
+
+
+class TutorialTest(helper.CPWebCase):
     
     def test01HelloWorld(self):
-        self.load_tut_module("tut01_helloworld")
+        self.getPage("/load_tut_module/tut01_helloworld")
         self.getPage("/")
         self.assertBody('Hello world!')
     
     def test02ExposeMethods(self):
-        self.load_tut_module("tut02_expose_methods")
+        self.getPage("/load_tut_module/tut02_expose_methods")
         self.getPage("/showMessage")
         self.assertBody('Hello world!')
     
     def test03GetAndPost(self):
-        self.load_tut_module("tut03_get_and_post")
+        self.getPage("/load_tut_module/tut03_get_and_post")
         
         # Try different GET queries
         self.getPage("/greetUser?name=Bob")
@@ -57,7 +73,7 @@ class TutorialTest(helper.CPWebCase):
         self.assertBody('No, really, enter your name <a href="./">here</a>.')
     
     def test04ComplexSite(self):
-        self.load_tut_module("tut04_complex_site")
+        self.getPage("/load_tut_module/tut04_complex_site")
         msg = '''
             <p>Here are some extra useful links:</p>
             
@@ -71,7 +87,7 @@ class TutorialTest(helper.CPWebCase):
         self.assertBody(msg)
     
     def test05DerivedObjects(self):
-        self.load_tut_module("tut05_derived_objects")
+        self.getPage("/load_tut_module/tut05_derived_objects")
         msg = '''
             <html>
             <head>
@@ -91,13 +107,13 @@ class TutorialTest(helper.CPWebCase):
         self.assertBody(msg)
     
     def test06DefaultMethod(self):
-        self.load_tut_module("tut06_default_method")
+        self.getPage("/load_tut_module/tut06_default_method")
         self.getPage('/hendrik')
         self.assertBody('Hendrik Mans, CherryPy co-developer & crazy German '
                          '(<a href="./">back</a>)')
     def test07Sessions(self):
-        self.load_tut_module("tut07_sessions")
-        cherrypy.config.update({"session_filter.on": True})
+        self.getPage("/load_tut_module/tut07_sessions")
+        self.getPage("/sessfilteron")
         
         self.getPage('/')
         self.assertBody("\n            During your current session, you've viewed this"
@@ -110,7 +126,7 @@ class TutorialTest(helper.CPWebCase):
                          "\n        ")
     
     def test08GeneratorsAndYield(self):
-        self.load_tut_module("tut08_generators_and_yield")
+        self.getPage("/load_tut_module/tut08_generators_and_yield")
         self.getPage('/')
         self.assertBody('<html><body><h2>Generators rule!</h2>'
                          '<h3>List of users:</h3>'
@@ -118,7 +134,7 @@ class TutorialTest(helper.CPWebCase):
                          '</body></html>')
     
     def test09Files(self):
-        self.load_tut_module("tut09_files")
+        self.getPage("/load_tut_module/tut09_files")
         
         # Test upload
         h = [("Content-type", "multipart/form-data; boundary=x"),
@@ -147,7 +163,7 @@ hello
         self.assertEqual(len(self.body), 85698)
     
     def test10HTTPErrors(self):
-        self.load_tut_module("tut10_http_errors")
+        self.getPage("/load_tut_module/tut10_http_errors")
         
         self.getPage("/")
         self.assertInBody("""<a href="toggleTracebacks">""")
@@ -156,24 +172,35 @@ hello
         self.assertInBody("""<a href="/error?code=500">""")
         self.assertInBody("""<a href="/messageArg">""")
         
-        tracebacks = cherrypy.config.get('server.show_tracebacks')
+        self.getPage("/traceback_setting")
+        setting = self.body
         self.getPage("/toggleTracebacks")
-        self.assertEqual(cherrypy.config.get('server.show_tracebacks'), not tracebacks)
-        self.assertStatus("302 Found")
+        self.assertStatus((302, 303))
+        self.getPage("/traceback_setting")
+        self.assertBody(str(not eval(setting)))
         
         self.getPage("/error?code=500")
-        self.assertStatus("500 Internal error")
+        self.assertStatus(500)
         self.assertInBody("The server encountered an unexpected condition "
                           "which prevented it from fulfilling the request.")
         
         self.getPage("/error?code=403")
-        self.assertStatus("403 Forbidden")
+        self.assertStatus(403)
         self.assertInBody("<h2>You can't do that!</h2>")
         
         self.getPage("/messageArg")
-        self.assertStatus("500 Internal error")
+        self.assertStatus(500)
         self.assertInBody("If you construct an HTTPError with a 'message'")
 
 
 if __name__ == "__main__":
+    conf = {'server.socket_host': '127.0.0.1',
+            'server.socket_port': 8080,
+            'server.thread_pool': 10,
+            'server.log_to_screen': False,
+            'server.environment': "production",
+            'server.show_tracebacks': True,
+            }
+    cherrypy.config.update(conf)
+    setup_server()
     helper.testmain()
