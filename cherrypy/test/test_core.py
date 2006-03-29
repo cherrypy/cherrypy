@@ -456,10 +456,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             if k.lower() == 'content-length':
                 haslength = True
         if haslength:
-            self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7\n'
+            self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7 "" ""\n'
                                           % self.prefix()))
         else:
-            self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 -\n'
+            self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 - "" ""\n'
                                           % self.prefix()))
         
         self.assertEqual(data[1][:15], '127.0.0.1 - - [')
@@ -468,10 +468,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             if k.lower() == 'content-length':
                 haslength = True
         if haslength:
-            self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 7\n'
+            self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 7 "" ""\n'
                                           % self.prefix()))
         else:
-            self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 -\n'
+            self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 - "" ""\n'
                                           % self.prefix()))
         
         data = open(log_file, "rb").readlines()
