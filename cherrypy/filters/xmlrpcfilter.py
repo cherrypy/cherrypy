@@ -111,6 +111,7 @@ class XmlRpcFilter(BaseFilter):
         # test if the content-length was sent
         length = cherrypy.request.headers.get('Content-Length') or 0
         ct = cherrypy.request.headers.get('Content-Type') or 'text/xml'
+        ct = ct.split(';')[0]
         return int(length) > 0 and ct.lower() in ['text/xml']
     
     def before_request_body(self):
