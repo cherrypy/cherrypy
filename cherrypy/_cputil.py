@@ -108,7 +108,7 @@ def logtime():
 def _cp_log_access():
     """ Default method for logging access """
     
-    tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s'
+    tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
     s = tmpl % {'h': cherrypy.request.remoteHost,
                 'l': '-',
                 'u': getattr(cherrypy.request, "login", None) or "-",
@@ -116,6 +116,8 @@ def _cp_log_access():
                 'r': cherrypy.request.requestLine,
                 's': cherrypy.response.status.split(" ", 1)[0],
                 'b': cherrypy.response.headers.get('Content-Length', '') or "-",
+                'f': cherrypy.request.headers.get('referer', ''),
+                'a': cherrypy.request.headers.get('user-agent', ''),
                 }
     
     if cherrypy.config.get('server.log_to_screen', True):
