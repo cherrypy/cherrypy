@@ -1,12 +1,15 @@
 """Simple form handling module."""
 
+import warnings
+warnings.warn("cherrypy.lib.form is deprecated and might disappear in future versions of CherryPy", DeprecationWarning, stacklevel = 2)
+
 import cherrypy
 import defaultformmask
 
 
 class FormField:
     
-    def __init__(self, label, name, typ, mask=None, mandatory=0, size=15,
+    def __init__(self, label, name, typ, mask=None, mandatory=0, size='15',
                  optionList=[], defaultValue='', defaultMessage='', validate=None):
         self.isField = 1
         self.label = label
@@ -51,18 +54,31 @@ class Form:
     
     method = "post"
     enctype = ""
-    
+
+    def __init__(self, action = "postForm", method = "post", enctype = "", header = defaultformmask.defaultHeader, footer = defaultformmask.defaultFooter, headerLabel = "", footerLabel = ""):
+        self.action = action
+        self.method = method
+        self.enctype = enctype
+        self.header = header
+        self.footer = footer
+        self.headerLabel = headerLabel
+        self.footerLabel = footerLabel
+
     def formView(self, leaveValues=0):
         if self.enctype:
             enctypeTag = 'enctype="%s"' % self.enctype
         else:
             enctypeTag = ""
         
-        res = ['<form method="%s" %s action="postForm">'
-               % (self.method, enctypeTag)]
+        res = ['<form method="%s" %s action="%s">'
+               % (self.method, enctypeTag, self.action)]
+        res.append(self.header(self.headerLabel))
+
         for field in self.fieldList:
             res.append(field.render(leaveValues))
-        res.append["</form>"]
+
+        res.append(self.footer(self.footerLabel))
+        res.append("</form>")
         
         return "".join(res)
     

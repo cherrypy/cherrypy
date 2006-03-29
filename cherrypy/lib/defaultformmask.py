@@ -1,5 +1,8 @@
 """Default mask for the form.py module"""
 
+import warnings
+warnings.warn("cherrypy.lib.defaultformmask is deprecated and might disappear in future versions of CherryPy", DeprecationWarning, stacklevel = 2)
+
 from xml.sax.saxutils import quoteattr as q
 
 
@@ -59,7 +62,7 @@ def defaultMask(field):
         else:
             vals = [field.currentValue]
         i = '<input name=%s type="hidden" value=%%s />' % q(field.name)
-        return [i % q(v) for v in vals]
+        return ''.join([i % q(v) for v in vals])
     elif field.typ in ('checkbox', 'radio'):
         res.append('<td>')
         for option in field.optionList:
