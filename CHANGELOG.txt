@@ -1,12 +1,21 @@
 2006-03-29:
     * Moved to Combined Log Format 
 
+2006-03-26:
+    * Reorganized all tests to cleanly separate client-side and server-side code
+
 2006-03-06:
     * CherryPy-2.2.0rc1 released
     * Fixed various bugs (including session)
 
+2006-03-01:
+    * New test\benchmark.py tool
+
 2006-02-16:
     * Removed _cphttpserver, the native HTTP server that was deprecated in CP 2.1 (fumanchu)
+
+2006-02-14:
+    * New _cpengine module isolates "app server" from "HTTP server" state-management logic.
 
 2006-01-27:
     * CherryPy-2.2.0beta released
