@@ -124,7 +124,10 @@ def testmain(conf=None, *args, **kwargs):
     if conf is None:
         conf = {}
     setConfig(conf)
-    cherrypy.server.start_with_callback(_test_main_thread, *args, **kwargs)
+    try:
+        cherrypy.server.start_with_callback(_test_main_thread, *args, **kwargs)
+    except KeyboardInterrupt:
+        cherrypy.server.stop()
 
 def _test_main_thread():
     try:
