@@ -1,3 +1,6 @@
+2006-04-03:
+    * CherryPy-2.2.0 released
+
 2006-03-29:
     * Moved to Combined Log Format 
 
