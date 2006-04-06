@@ -39,7 +39,6 @@ class Request(object):
             self.closed = True
             applyFilters('on_end_request', failsafe=True)
             cherrypy.serving.__dict__.clear()
-            cherrypy.thread_data.__dict__.clear()
     
     def run(self, requestLine, headers, rfile):
         """Process the Request.

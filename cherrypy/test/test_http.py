@@ -24,7 +24,7 @@ def setup_server():
     
     class Root:
         def index(self, *args, **kwargs):
-            cherrypy.thread_data.thing = data
+            cherrypy.request.thing = data
             return "Hello world!"
         index.exposed = True
         
