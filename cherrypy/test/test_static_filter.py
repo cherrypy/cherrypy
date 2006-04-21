@@ -29,28 +29,26 @@ def setup_server():
 
     cherrypy.config.update({
         'global': {
-            'static_filter.on': False,
-            'server.log_to_screen': False,
+            'server.log_to_screen': True,
             'server.environment': 'production',
         },
         '/static': {
-            'static_filter.on': True,
-            'static_filter.dir': 'static',
-            'static_filter.root': curdir,
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': 'static',
+            'tools.staticdir.root': curdir,
         },
         '/style.css': {
-            'static_filter.on': True,
-            'static_filter.file': 'style.css',
-            'static_filter.root': curdir,
+            'tools.staticfile.on': True,
+            'tools.staticfile.file': os.path.join(curdir, 'style.css'),
         },
         '/docroot': {
-            'static_filter.on': True,
-            'static_filter.root': curdir,
-            'static_filter.dir': 'static',
-            'static_filter.index': 'index.html',
+            'tools.staticdir.on': True,
+            'tools.staticdir.root': curdir,
+            'tools.staticdir.dir': 'static',
+            'tools.staticdir.index': 'index.html',
         },
         '/error': {
-            'static_filter.on': True,
+            'tools.staticdir.on': True,
             'server.show_tracebacks': True,
         },
     })

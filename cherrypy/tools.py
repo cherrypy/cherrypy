@@ -25,10 +25,10 @@ are generally either modules or instances of the tools.Tool class.
 """
 
 import cherrypy
-from cherrypy.lib import cptools
+from cherrypy.lib import cptools, static
 
 # These modules are themselves Tools
-from cherrypy.lib import caching, staticfile, staticdir
+from cherrypy.lib import caching
 
 
 class Tool(object):
@@ -96,4 +96,6 @@ class MainTool(Tool):
 base_url = Tool('before_request_body', cptools.base_url)
 response_headers = Tool('before_finalize', cptools.response_headers)
 virtual_host = Tool('before_request_body', cptools.virtual_host)
+staticdir = MainTool(static.get_dir)
+staticfile = MainTool(static.get_file)
 
