@@ -30,10 +30,10 @@ def setup_server():
     cherrypy.config.update({
             'server.logToScreen': False,
             'server.environment': 'production',
-            'virtual_host_filter.on': True,
-            'virtual_host_filter.www.mydom2.com': '/mydom2',
-            'virtual_host_filter.www.mydom3.com': '/mydom3',
-            'virtual_host_filter.www.mydom4.com': '/dom4',
+            'tools.virtual_host.on': True,
+            'tools.virtual_host.www.mydom2.com': '/mydom2',
+            'tools.virtual_host.www.mydom3.com': '/mydom3',
+            'tools.virtual_host.www.mydom4.com': '/dom4',
     })
 
 import helper
