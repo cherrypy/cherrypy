@@ -2,6 +2,7 @@
 
 import ConfigParser
 import os
+_favicon_path = os.path.join(os.path.dirname(__file__), "favicon.ico")
 
 import cherrypy
 from cherrypy import _cputil
@@ -11,7 +12,6 @@ from cherrypy.lib import autoreload, cptools, httptools
 # This configs dict holds the settings metadata for all cherrypy objects.
 # Keys are URL paths, and values are dicts.
 configs = {}
-configMap = configs # Backward compatibility
 
 default_global = {
     'server.socket_port': 8080,
@@ -26,29 +26,25 @@ default_global = {
     'server.thread_pool': 10,
     'server.environment': "development",
     
-    '/favicon.ico': {
-        'static_filter.on': True,
-        'static_filter.file': os.path.join(os.path.dirname(__file__), "favicon.ico"),}
+    '/favicon.ico': {'hooks.static.on': True,
+                     'hooks.static.file': _favicon_path},
     }
 
 environments = {
     "development": {
         'autoreload.on': True,
-        'log_debug_info_filter.on': True,
         'server.log_file_not_found': True,
         'server.show_tracebacks': True,
         'server.log_request_headers': True,
         },
     "staging": {
         'autoreload.on': False,
-        'log_debug_info_filter.on': False,
         'server.log_file_not_found': False,
         'server.show_tracebacks': False,
         'server.log_request_headers': False,
         },
     "production": {
         'autoreload.on': False,
-        'log_debug_info_filter.on': False,
         'server.log_file_not_found': False,
         'server.show_tracebacks': False,
         'server.log_request_headers': False,
@@ -121,48 +117,19 @@ def get(key, default_value=None, return_section=False, path = None):
         if path == "":
             path = "/"
         
-        if cherrypy.lowercase_api is False:
-            # We don't know for sure if user uses the new lowercase API
-            try:
-                result = configs[path][_cputil.lower_to_camel(key)]
-                break
-            except KeyError:
-                try:
-                    result = configs[path][key]
-                    break
-                except KeyError:
-                    pass
-                pass
-            
-            try:
-                # Check for a server.environment entry at this node.
-                env = configs[path]["server.environment"]
-                # For backward compatibility, check for camelCase key first
-                result = environments[env][_cputil.lower_to_camel(key)]
-                break
-            except KeyError:
-                try:
-                    env = configs[path]["server.environment"]
-                    result = environments[env][key]
-                    break
-                except KeyError:
-                    pass
-                pass
-        else:
-            # We know for sure that user uses the new lowercase api
-            try:
-                result = configs[path][key]
-                break
-            except KeyError:
-                pass
-            
-            try:
-                env = configs[path]["server.environment"]
-                result = environments[env][key]
-                break
-            except KeyError:
-                pass
+        try:
+            result = configs[path][key]
+            break
+        except KeyError:
             pass
+        
+        try:
+            env = configs[path]["server.environment"]
+            result = environments[env][key]
+            break
+        except KeyError:
+            pass
+        pass
 
         if path == "global":
             result = default_value
@@ -182,33 +149,6 @@ def get(key, default_value=None, return_section=False, path = None):
         return path
     else:
         return result
-
-def getAll(key):
-    """Lookup key in the current node and all of its parent nodes
-    as a list of path, value pairs.
-    """
-    # Needed by the session filter
-    
-    try:
-        results = [('global', configs['global'][key])]
-    except KeyError:
-        results = []
-    
-    try:
-        path = cherrypy.request.object_path
-    except AttributeError:
-        return results
-    
-    pathList = path.split('/')
-    
-    for n in xrange(1, len(pathList)):
-        path = '/' + '/'.join(pathList[0:n+1])
-        try:
-            results.append((path, configs[path][key]))
-        except KeyError:
-            pass
-    
-    return results
 
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):

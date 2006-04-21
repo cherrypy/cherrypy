@@ -14,8 +14,8 @@ def setup_server():
     cherrypy.config.update({
             'server.environment': 'production',
             'server.log_to_screen': False,
-            'base_url_filter.on': True,
-            'base_url_filter.base_url': 'http://www.mydomain.com'
+            'tools.base_url.on': True,
+            'tools.base_url.base': 'http://www.mydomain.com',
     })
 
 

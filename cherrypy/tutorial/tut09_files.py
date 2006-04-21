@@ -24,10 +24,10 @@ First, you can simply return a file-like object from your page handler.
 CherryPy will read the file and serve it as the content (HTTP body)
 of the response. However, that doesn't tell the client that
 the response is a file to be saved, rather than displayed.
-Use cherrypy.lib.cptools.serveFile for that; it takes four
+Use cherrypy.lib.static.serve_file for that; it takes four
 arguments:
 
-serveFile(path, contentType=None, disposition=None, name=None)
+serve_file(path, contentType=None, disposition=None, name=None)
 
 Set "name" to the filename that you expect clients to use when they save
 your file. Note that the "name" argument is ignored if you don't also
@@ -45,7 +45,7 @@ localDir = os.path.dirname(__file__)
 absDir = os.path.join(os.getcwd(), localDir)
 
 import cherrypy
-from cherrypy.lib import cptools
+from cherrypy.lib import static
 
 
 class FileDemo(object):
@@ -86,7 +86,7 @@ class FileDemo(object):
     
     def download(self):
         path = os.path.join(absDir, "pdf_file.pdf")
-        return cptools.serveFile(path, "application/x-download",
+        return static.serve_file(path, "application/x-download",
                                  "attachment", os.path.basename(path))
     download.exposed = True
 

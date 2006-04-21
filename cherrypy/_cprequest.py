@@ -6,38 +6,102 @@ import sys
 import types
 
 import cherrypy
-from cherrypy import _cputil, _cpcgifs
-from cherrypy.filters import applyFilters
+from cherrypy import _cputil, _cpcgifs, tools
 from cherrypy.lib import cptools, httptools
+
+
+class HookMap(object):
+    
+    def __init__(self, points=None, failsafe=None):
+        points = points or []
+        self.callbacks = dict([(point, []) for point in points])
+        self.failsafe = failsafe or []
+    
+    def attach(self, point, callback, conf=None):
+        if conf is None:
+            self.callbacks[point].append(callback)
+        else:
+            def wrapper():
+                callback(**conf)
+            self.callbacks[point].append(wrapper)
+    
+    def populate_from_config(self):
+        configs = cherrypy.config.configs
+        collapsed_map = {}
+        
+        def collect_tools(section):
+            local_conf = configs.get(section, {})
+            for k, v in local_conf.iteritems():
+                atoms = k.split(".")
+                namespace = atoms.pop(0)
+                if namespace == "tools":
+                    toolname = atoms.pop(0)
+                    bucket = collapsed_map.setdefault(toolname, {})
+                    bucket[".".join(atoms)] = v
+        
+        collect_tools("global")
+        path = ""
+        for b in cherrypy.request.object_path.split('/'):
+            path = "/".join((path, b))
+            collect_tools(path)
+        
+        for toolname, conf in collapsed_map.iteritems():
+            if conf.get("on", False):
+                del conf["on"]
+                getattr(tools, toolname).setup(conf)
+    
+    def run(self, point):
+        """Execute all registered callbacks for the given point."""
+        failsafe = point in self.failsafe
+        for callback in self.callbacks[point]:
+            # Some hookpoints guarantee all callbacks are run even if
+            # others at the same hookpoint fail. We will still log the
+            # failure, but proceed on to the next callback. The only way
+            # to stop all processing from one of these callbacks is
+            # to raise SystemExit and stop the whole server. So, trap
+            # your own errors in these callbacks!
+            if failsafe:
+                try:
+                    callback()
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    cherrypy.log(traceback=True)
+            else:
+                callback()
+
 
 
 class Request(object):
     """An HTTP request."""
     
-    def __init__(self, remoteAddr, remotePort, remoteHost, scheme="http"):
+    def __init__(self, remote_addr, remote_port, remote_host, scheme="http"):
         """Populate a new Request object.
         
-        remoteAddr should be the client IP address
-        remotePort should be the client Port
-        remoteHost should be string of the client's IP address.
+        remote_addr should be the client IP address
+        remote_port should be the client Port
+        remote_host should be string of the client's IP address.
         scheme should be a string, either "http" or "https".
         """
-        self.remote_addr  = remoteAddr
-        self.remote_port  = remotePort
-        self.remote_host  = remoteHost
-        # backward compatibility
-        self.remoteAddr = remoteAddr
-        self.remotePort = remotePort
-        self.remoteHost = remoteHost
+        self.remote_addr  = remote_addr
+        self.remote_port  = remote_port
+        self.remote_host  = remote_host
         
         self.scheme = scheme
         self.execute_main = True
         self.closed = False
+        
+        self.hooks = HookMap(['on_start_resource', 'before_request_body',
+                              'before_main', 'before_finalize',
+                              'on_end_resource', 'on_end_request',
+                              'before_error_response', 'after_error_response'])
+        self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
+                               'on_end_request']
     
     def close(self):
         if not self.closed:
             self.closed = True
-            applyFilters('on_end_request', failsafe=True)
+            self.hooks.run('on_end_request')
             cherrypy.serving.__dict__.clear()
     
     def run(self, requestLine, headers, rfile):
@@ -62,9 +126,7 @@ class Request(object):
         self.rfile = rfile
         
         self.headers = httptools.HeaderMap()
-        self.headerMap = self.headers # Backward compatibility
         self.simple_cookie = Cookie.SimpleCookie()
-        self.simpleCookie = self.simple_cookie # Backward compatibility
         
         if cherrypy.profiler:
             cherrypy.profiler.run(self._run)
@@ -86,28 +148,29 @@ class Request(object):
             # because request.object_path is used for config lookups
             # right away.
             self.processRequestLine()
+            self.hooks.populate_from_config()
             
             try:
-                applyFilters('on_start_resource', failsafe=True)
+                self.hooks.run('on_start_resource')
                 
                 try:
                     self.processHeaders()
                     
-                    applyFilters('before_request_body')
+                    self.hooks.run('before_request_body')
                     if self.processRequestBody:
                         self.processBody()
                     
                     # Loop to allow for InternalRedirect.
                     while True:
                         try:
-                            applyFilters('before_main')
+                            self.hooks.run('before_main')
                             if self.execute_main:
                                 self.main()
                             break
                         except cherrypy.InternalRedirect, ir:
                             self.object_path = ir.path
                     
-                    applyFilters('before_finalize')
+                    self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
                 except cherrypy.RequestHandled:
                     pass
@@ -116,10 +179,10 @@ class Request(object):
                     # we don't go through the regular mechanism:
                     # we return the redirect or error page immediately
                     inst.set_response()
-                    applyFilters('before_finalize')
+                    self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
             finally:
-                applyFilters('on_end_resource', failsafe=True)
+                self.hooks.run('on_end_resource')
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -138,11 +201,9 @@ class Request(object):
         
         self.path = path
         self.query_string = qs
-        self.queryString = qs # Backward compatibility
         self.protocol = proto
         
-        # Change object_path in filters to change
-        # the object that will get rendered
+        # Change object_path to change the object that will get rendered
         self.object_path = path
         
         # Compare request and server HTTP versions, in case our server does
@@ -161,17 +222,21 @@ class Request(object):
         
         # cherrypy.request.version == request.protocol in a Version instance.
         self.version = httptools.Version.from_http(self.protocol)
-        server_v = cherrypy.config.get("server.protocol_version", "HTTP/1.0")
-        server_v = httptools.Version.from_http(server_v)
         
         # cherrypy.response.version should be used to determine whether or
         # not to include a given HTTP/1.1 feature in the response content.
+        server_v = cherrypy.config.get("server.protocol_version", "HTTP/1.0")
+        server_v = httptools.Version.from_http(server_v)
         cherrypy.response.version = min(self.version, server_v)
     
+    def main(self, path=None):
+        """Obtain and set cherrypy.response.body from a page handler."""
+        dispatch = cherrypy.config.get("dispatcher") or Dispatcher()
+        handler = dispatch(path)
+        cherrypy.response.body = handler(*self.virtual_path, **self.params)
+    
     def processHeaders(self):
-        
         self.params = httptools.parseQueryString(self.query_string)
-        self.paramMap = self.params # Backward compatibility
         
         # Process the headers into self.headers
         for name, value in self.header_list:
@@ -186,10 +251,6 @@ class Request(object):
             if name.title() == 'Cookie':
                 self.simple_cookie.load(value)
         
-        # Save original values (in case they get modified by filters)
-        # This feature is deprecated in 2.2 and will be removed in 2.3.
-        self._original_params = self.params.copy()
-        
         if self.version >= "1.1":
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
             # (Bad Request) status code to any HTTP/1.1 request message
@@ -199,12 +260,6 @@ class Request(object):
                 raise cherrypy.HTTPError(400, msg)
         self.base = "%s://%s" % (self.scheme, self.headers.get('Host', ''))
     
-    def _get_original_params(self):
-        # This feature is deprecated in 2.2 and will be removed in 2.3.
-        return self._original_params
-    original_params = property(_get_original_params,
-                        doc="Deprecated. A copy of the original params.")
-    
     def _get_browser_url(self):
         url = self.base + self.path
         if self.query_string:
@@ -212,7 +267,6 @@ class Request(object):
         return url
     browser_url = property(_get_browser_url,
                           doc="The URL as entered in a browser (read-only).")
-    browserUrl = browser_url # Backward compatibility
     
     def processBody(self):
         # Create a copy of headers with lowercase keys because
@@ -237,44 +291,27 @@ class Request(object):
             self.body = forms.file
         else:
             self.params.update(httptools.paramsFromCGIForm(forms))
+
+
+class Dispatcher(object):
     
-    def main(self, path=None):
-        """Obtain and set cherrypy.response.body from a page handler."""
+    def __call__(self, path=None):
+        """Find the appropriate page handler."""
+        request = cherrypy.request
         if path is None:
-            path = self.object_path
+            path = request.object_path
         
-        page_handler, object_path, virtual_path = self.mapPathToObject(path)
+        handler, opath, vpath = self.find(request.browser_url, path)
+        
+        # Remove "root" from opath and join it to get object_path
+        request.object_path = '/' + '/'.join(opath[1:])
         
         # Decode any leftover %2F in the virtual_path atoms.
-        virtual_path = [x.replace("%2F", "/") for x in virtual_path]
+        request.virtual_path = [x.replace("%2F", "/") for x in vpath]
         
-        # Remove "root" from object_path and join it to get object_path
-        self.object_path = '/' + '/'.join(object_path[1:])
-        try:
-            body = page_handler(*virtual_path, **self.params)
-        except Exception, x:
-            if hasattr(x, "args"):
-                x.args = x.args + (page_handler,)
-            raise
-        cherrypy.response.body = body
+        return handler
     
-    def mapPathToObject(self, objectpath):
-        """For path, return the corresponding exposed callable (or raise NotFound).
-        
-        path should be a "relative" URL path, like "/app/a/b/c". Leading and
-        trailing slashes are ignored.
-        
-        Traverse path:
-        for /a/b?arg=val, we'll try:
-          root.a.b.index -> redirect to /a/b/?arg=val
-          root.a.b.default(arg='val') -> redirect to /a/b/?arg=val
-          root.a.b(arg='val')
-          root.a.default('b', arg='val')
-          root.default('a', 'b', arg='val')
-        
-        The target method must have an ".exposed = True" attribute.
-        """
-        
+    def find(self, browser_url, objectpath):
         objectTrail = _cputil.get_object_trail(objectpath)
         names = [name for name, candidate in objectTrail]
         
@@ -298,7 +335,7 @@ class Request(object):
                     # We found the extra ".index". Check if the original path
                     # had a trailing slash (otherwise, do a redirect).
                     if not objectpath.endswith('/'):
-                        atoms = self.browser_url.split("?", 1)
+                        atoms = browser_url.split("?", 1)
                         newUrl = atoms.pop(0) + '/'
                         if atoms:
                             newUrl += "?" + atoms[0]
@@ -359,7 +396,6 @@ class Response(object):
         self.body = None
         
         self.headers = httptools.HeaderMap()
-        self.headerMap = self.headers # Backward compatibility
         content_type = cherrypy.config.get('server.default_content_type', 'text/html')
         self.headers.update({
             "Content-Type": content_type,
@@ -369,7 +405,6 @@ class Response(object):
             "Content-Length": None
         })
         self.simple_cookie = Cookie.SimpleCookie()
-        self.simpleCookie = self.simple_cookie # Backward compatibility
     
     def collapse_body(self):
         newbody = ''.join([chunk for chunk in self.body])
@@ -418,15 +453,12 @@ class Response(object):
     def handleError(self, exc):
         """Set status, headers, and body when an unanticipated error occurs."""
         try:
-            applyFilters('before_error_response')
-           
-            # _cp_on_error will probably change self.body.
-            # It may also change the headers, etc.
-            _cputil.get_special_attribute('_cp_on_error', '_cpOnError')()
+            cherrypy.request.hooks.run('before_error_response')
             
+            self.error_response()
             self.finalize()
             
-            applyFilters('after_error_response')
+            cherrypy.request.hooks.run('after_error_response')
             return
         except cherrypy.HTTPRedirect, inst:
             try:
@@ -444,7 +476,7 @@ class Response(object):
             # Fall through to the second error handler
             pass
         
-        # Failure in _cp_on_error, error filter, or finalize.
+        # Failure in self.error_response, error hooks, or finalize.
         # Bypass them all.
         if cherrypy.config.get('server.show_tracebacks', False):
             body = self.dbltrace % (_cputil.formatExc(exc),
@@ -452,6 +484,13 @@ class Response(object):
         else:
             body = ""
         self.setBareError(body)
+    
+    def error_response(self):
+        # Allow logging of only *unexpected* HTTPError's.
+        if (not cherrypy.config.get('server.log_tracebacks', True)
+            and cherrypy.config.get('server.log_unhandled_tracebacks', True)):
+            cherrypy.log(traceback=True)
+        cherrypy.HTTPError(500).set_response()
     
     def setBareError(self, body=None):
         self.status, self.header_list, self.body = _cputil.bareError(body)

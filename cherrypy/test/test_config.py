@@ -101,16 +101,13 @@ class ConfigTests(helper.CPWebCase):
     def testEnvironments(self):
         for key, val in cherrypy.config.environments['development'].iteritems():
             self.getPage("/env/?key=" + key)
-            # The dev environment will have logdebuginfo data
-            data = self.body.split("\n")[0]
-            self.assertEqual(data, str(val))
+            self.assertBody(str(val))
         for key, val in cherrypy.config.environments['production'].iteritems():
             self.getPage("/env/prod/?key=" + key)
             self.assertBody(str(val))
         for key, val in cherrypy.config.environments['embedded'].iteritems():
             self.getPage("/env/embed/?key=" + key)
-            data = self.body.split("\n")[0]
-            self.assertEqual(data, str(val))
+            self.assertBody(str(val))
 
 
 if __name__ == '__main__':

@@ -4,9 +4,7 @@ import threading
 import time
 
 import cherrypy
-from cherrypy import _cphttptools
 from cherrypy.lib import cptools
-
 from cherrypy._cpengine import Engine, STOPPED, STARTING, STARTED
 
 _missing = object()
@@ -20,15 +18,6 @@ class Server(Engine):
         self.blocking = True
         
         self.httpserver = None
-        # Starting in 2.2, the "httpserverclass" attr is essentially dead;
-        # no CP code uses it. Inspect "httpserver" instead.
-        self.httpserverclass = None
-        
-        # Backward compatibility:
-        self.onStopServerList = self.on_stop_server_list
-        self.onStartThreadList = self.on_start_thread_list
-        self.onStartServerList = self.on_start_server_list
-        self.onStopThreadList = self.on_stop_thread_list
     
     def start(self, init_only=False, server_class=_missing, server=None, **kwargs):
         """Main function. MUST be called from the main thread.
@@ -36,12 +25,6 @@ class Server(Engine):
         Set initOnly to True to keep this function from blocking.
         Set serverClass and server to None to skip starting any HTTP server.
         """
-        
-        # Read old variable names for backward compatibility
-        if 'initOnly' in kwargs:
-            init_only = kwargs['initOnly']
-        if 'serverClass' in kwargs:
-            server_class = kwargs['serverClass']
         
         conf = cherrypy.config.get
         
@@ -59,13 +42,11 @@ class Server(Engine):
             elif server_class and isinstance(server_class, basestring):
                 # Dynamically load the class from the given string
                 server_class = cptools.attributes(server_class)
-            self.httpserverclass = server_class
             if server_class is not None:
                 self.httpserver = server_class()
         else:
             if isinstance(server, basestring):
                 server = cptools.attributes(server)
-            self.httpserverclass = server.__class__
             self.httpserver = server
         
         self.blocking = not init_only
@@ -180,10 +161,6 @@ class Server(Engine):
     def start_with_callback(self, func, args=None, kwargs=None,
                             server_class = _missing, serverClass = None):
         """Start, then callback the given func in a new thread."""
-        
-        # Read old name for backward compatibility
-        if serverClass is not None:
-            server_class = None
         
         if args is None:
             args = ()

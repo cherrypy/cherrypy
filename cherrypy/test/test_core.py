@@ -4,7 +4,7 @@ import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy.lib import cptools, httptools
+from cherrypy.lib import cptools, httptools, static
 import types
 
 import os
@@ -225,7 +225,7 @@ def setup_server():
         
         def slice_file(self):
             path = os.path.join(os.getcwd(), os.path.dirname(__file__))
-            return cptools.serveFile(os.path.join(path, "static/index.html"))
+            return static.serve_file(os.path.join(path, "static/index.html"))
 
 
     class Expect(Test):

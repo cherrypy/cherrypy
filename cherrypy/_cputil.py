@@ -106,10 +106,10 @@ def logtime():
         now.day, month, now.year, now.hour, now.minute, now.second)
 
 def _cp_log_access():
-    """ Default method for logging access """
+    """Default method for logging access"""
     
     tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-    s = tmpl % {'h': cherrypy.request.remoteHost,
+    s = tmpl % {'h': cherrypy.request.remote_host,
                 'l': '-',
                 'u': getattr(cherrypy.request, "login", None) or "-",
                 't': logtime(),
@@ -229,7 +229,7 @@ def getErrorPage(status, **kwargs):
 
 
 def _cp_on_http_error(status, message):
-    """ Default _cp_on_http_error method.
+    """Default _cp_on_http_error method.
     
     status should be an int.
     """
@@ -361,15 +361,6 @@ def bareError(extrabody=None):
              ('Content-Length', str(len(body)))],
             [body])
 
-def _cp_on_error():
-    """ Default _cp_on_error method """
-    # Allow logging of only *unexpected* HTTPError's.
-    if (not cherrypy.config.get('server.log_tracebacks', True)
-        and cherrypy.config.get('server.log_unhandled_tracebacks', True)):
-        cherrypy.log(traceback=True)
-    
-    cherrypy.HTTPError(500).set_response()
-
 def headers(headers):
     """ Provides a simple way to add specific headers to page handler
     Any previously set headers provided in the list of tuples will be changed
@@ -385,6 +376,4 @@ def headers(headers):
             return func(*args)
         return inner
     return wrapper
-
-_cp_filters = []
 

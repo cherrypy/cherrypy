@@ -7,7 +7,7 @@ import time
 import warnings
 
 import cherrypy
-from cherrypy import _cphttptools, filters
+from cherrypy import _cprequest
 from cherrypy.lib import autoreload, profiler, cptools
 
 # Use a flag to indicate the state of the application server.
@@ -19,8 +19,8 @@ STARTED = 1
 class Engine(object):
     """The application server engine, connecting HTTP servers to Requests."""
     
-    request_class = _cphttptools.Request
-    response_class = _cphttptools.Response
+    request_class = _cprequest.Request
+    response_class = _cprequest.Response
     
     def __init__(self):
         self.state = STOPPED
@@ -73,7 +73,7 @@ class Engine(object):
             cherrypy.profiler = None
         
         # Initialize the built in filters
-        filters.init()
+##        filters.init()
     
     def start(self):
         """Start the application server engine."""
@@ -159,11 +159,11 @@ class Engine(object):
     ready = property(_is_ready, doc="Return True if the server is ready to"
                                     " receive requests, False otherwise.")
     
-    def request(self, clientAddress, remoteHost, scheme="http"):
+    def request(self, clientAddress, remote_host, scheme="http"):
         """Obtain an HTTP Request object.
         
         clientAddress: the (IP address, port) of the client
-        remoteHost: the IP address of the client
+        remote_host: the IP address of the client
         scheme: either "http" or "https"; defaults to "http"
         """
         if self.state == STOPPED:
@@ -185,7 +185,7 @@ class Engine(object):
                 func(i)
         
         r = self.request_class(clientAddress[0], clientAddress[1],
-                               remoteHost, scheme)
+                               remote_host, scheme)
         cherrypy.serving.request = r
         cherrypy.serving.response = self.response_class()
         return r

@@ -1,0 +1,146 @@
+import mimetools
+import mimetypes
+mimetypes.init()
+mimetypes.types_map['.dwg']='image/x-dwg'
+mimetypes.types_map['.ico']='image/x-icon'
+
+import os
+
+import cherrypy
+from cherrypy.lib import httptools
+
+
+def modified_since(path, stat=None):
+    """Check whether a file has been modified since the date
+    provided in 'If-Modified-Since'
+    It doesn't check if the file exists or not
+    Return True if has been modified, False otherwise
+    """
+    # serve_file already creates a stat object so let's not
+    # waste our energy to do it again
+    if not stat:
+        try:
+            stat = os.stat(path)
+        except OSError:
+            if cherrypy.config.get('server.log_file_not_found', False):
+                cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
+            raise cherrypy.NotFound()
+    
+    response = cherrypy.response
+    strModifTime = httptools.HTTPDate(time.gmtime(stat.st_mtime))
+    if cherrypy.request.headers.has_key('If-Modified-Since'):
+        if cherrypy.request.headers['If-Modified-Since'] == strModifTime:
+            response.status = "304 Not Modified"
+            response.body = None
+            if getattr(cherrypy, "debug", None):
+                cherrypy.log("    Found file (304 Not Modified): %s" % path, "DEBUG")
+            return False
+    response.headers['Last-Modified'] = strModifTime
+    return True
+
+
+def serve_file(path, contentType=None, disposition=None, name=None):
+    """Set status, headers, and body in order to serve the given file.
+    
+    The Content-Type header will be set to the contentType arg, if provided.
+    If not provided, the Content-Type will be guessed by its extension.
+    
+    If disposition is not None, the Content-Disposition header will be set
+    to "<disposition>; filename=<name>". If name is None, it will be set
+    to the basename of path. If disposition is None, no Content-Disposition
+    header will be written.
+    """
+    
+    response = cherrypy.response
+    
+    # If path is relative, users should fix it by making path absolute.
+    # That is, CherryPy should not guess where the application root is.
+    # It certainly should *not* use cwd (since CP may be invoked from a
+    # variety of paths). If using static_filter, you can make your relative
+    # paths become absolute by supplying a value for "static_filter.root".
+    if not os.path.isabs(path):
+        raise ValueError("'%s' is not an absolute path." % path)
+    
+    try:
+        stat = os.stat(path)
+    except OSError:
+        if cherrypy.config.get('server.log_file_not_found', False):
+            cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
+        raise cherrypy.NotFound()
+    
+    if os.path.isdir(path):
+        # Let the caller deal with it as they like.
+        raise cherrypy.NotFound()
+    
+    if contentType is None:
+        # Set content-type based on filename extension
+        ext = ""
+        i = path.rfind('.')
+        if i != -1:
+            ext = path[i:].lower()
+        contentType = mimetypes.types_map.get(ext, "text/plain")
+    response.headers['Content-Type'] = contentType
+    
+    if not modified_since(path, stat):
+        return []
+    
+    if disposition is not None:
+        if name is None:
+            name = os.path.basename(path)
+        cd = "%s; filename=%s" % (disposition, name)
+        response.headers["Content-Disposition"] = cd
+    
+    # Set Content-Length and use an iterable (file object)
+    #   this way CP won't load the whole file in memory
+    c_len = stat.st_size
+    bodyfile = open(path, 'rb')
+    if getattr(cherrypy, "debug", None):
+        cherrypy.log("    Found file: %s" % path, "DEBUG")
+    
+    # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
+    if cherrypy.response.version >= "1.1":
+        response.headers["Accept-Ranges"] = "bytes"
+        r = httptools.getRanges(cherrypy.request.headers.get('Range'), c_len)
+        if r == []:
+            response.headers['Content-Range'] = "bytes */%s" % c_len
+            message = "Invalid Range (first-byte-pos greater than Content-Length)"
+            raise cherrypy.HTTPError(416, message)
+        if r:
+            if len(r) == 1:
+                # Return a single-part response.
+                start, stop = r[0]
+                r_len = stop - start
+                response.status = "206 Partial Content"
+                response.headers['Content-Range'] = ("bytes %s-%s/%s" %
+                                                       (start, stop - 1, c_len))
+                response.headers['Content-Length'] = r_len
+                bodyfile.seek(start)
+                response.body = bodyfile.read(r_len)
+            else:
+                # Return a multipart/byteranges response.
+                response.status = "206 Partial Content"
+                boundary = mimetools.choose_boundary()
+                ct = "multipart/byteranges; boundary=%s" % boundary
+                response.headers['Content-Type'] = ct
+##                del response.headers['Content-Length']
+                
+                def fileRanges():
+                    for start, stop in r:
+                        yield "--" + boundary
+                        yield "\nContent-type: %s" % contentType
+                        yield ("\nContent-range: bytes %s-%s/%s\n\n"
+                               % (start, stop - 1, c_len))
+                        bodyfile.seek(start)
+                        yield bodyfile.read((stop + 1) - start)
+                        yield "\n"
+                    # Final boundary
+                    yield "--" + boundary
+                response.body = fileRanges()
+        else:
+            response.headers['Content-Length'] = c_len
+            response.body = bodyfile
+    else:
+        response.headers['Content-Length'] = c_len
+        response.body = bodyfile
+    return response.body
+

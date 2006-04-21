@@ -75,13 +75,12 @@ conf = {
         },
     }
 cherrypy.tree.mount(Root(), MOUNT_POINT, conf)
-cherrypy.lowercase_api = True
 
 
 class NullRequest:
     """A null HTTP request class, returning 204 and an empty body."""
     
-    def __init__(self, remoteAddr, remotePort, remoteHost, scheme="http"):
+    def __init__(self, remote_addr, remote_port, remote_host, scheme="http"):
         pass
     
     def close(self):
@@ -136,7 +135,7 @@ Completed 800 requests
 Completed 900 requests
 
 
-Server Software:        CherryPy/2.2.0beta
+Server Software:        CherryPy/3.0.0alpha
 Server Hostname:        localhost
 Server Port:            8080
 

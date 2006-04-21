@@ -1,20 +1,12 @@
 """Tools which both CherryPy and application developers may invoke."""
 
 import inspect
-import mimetools
-import mimetypes
-mimetypes.init()
-mimetypes.types_map['.dwg']='image/x-dwg'
-mimetypes.types_map['.ico']='image/x-icon'
-
 import os
 import sys
 import time
 
 import cherrypy
-import httptools
 
-from cherrypy.filters.wsgiappfilter import WSGIAppFilter
 
 
 def decorate(func, decorator):
@@ -63,138 +55,6 @@ class ExposeItems:
     def __getattr__(self, key):
         return self.items[key]
 
-def modified_since(path, stat=None):
-    """Check whether a file has been modified since the date
-    provided in 'If-Modified-Since'
-    It doesn't check if the file exists or not
-    Return True if has been modified, False otherwise
-    """
-    # serveFile already creates a stat object so let's not
-    # waste our energy to do it again
-    if not stat:
-        try:
-            stat = os.stat(path)
-        except OSError:
-            if cherrypy.config.get('server.log_file_not_found', False):
-                cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
-            raise cherrypy.NotFound()
-    
-    response = cherrypy.response
-    strModifTime = httptools.HTTPDate(time.gmtime(stat.st_mtime))
-    if cherrypy.request.headers.has_key('If-Modified-Since'):
-        if cherrypy.request.headers['If-Modified-Since'] == strModifTime:
-            response.status = "304 Not Modified"
-            response.body = None
-            if getattr(cherrypy, "debug", None):
-                cherrypy.log("    Found file (304 Not Modified): %s" % path, "DEBUG")
-            return False
-    response.headers['Last-Modified'] = strModifTime
-    return True
-    
-def serveFile(path, contentType=None, disposition=None, name=None):
-    """Set status, headers, and body in order to serve the given file.
-    
-    The Content-Type header will be set to the contentType arg, if provided.
-    If not provided, the Content-Type will be guessed by its extension.
-    
-    If disposition is not None, the Content-Disposition header will be set
-    to "<disposition>; filename=<name>". If name is None, it will be set
-    to the basename of path. If disposition is None, no Content-Disposition
-    header will be written.
-    """
-    
-    response = cherrypy.response
-    
-    # If path is relative, users should fix it by making path absolute.
-    # That is, CherryPy should not guess where the application root is.
-    # It certainly should *not* use cwd (since CP may be invoked from a
-    # variety of paths). If using static_filter, you can make your relative
-    # paths become absolute by supplying a value for "static_filter.root".
-    if not os.path.isabs(path):
-        raise ValueError("'%s' is not an absolute path." % path)
-    
-    try:
-        stat = os.stat(path)
-    except OSError:
-        if cherrypy.config.get('server.log_file_not_found', False):
-            cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
-        raise cherrypy.NotFound()
-    
-    if os.path.isdir(path):
-        # Let the caller deal with it as they like.
-        raise cherrypy.NotFound()
-    
-    if contentType is None:
-        # Set content-type based on filename extension
-        ext = ""
-        i = path.rfind('.')
-        if i != -1:
-            ext = path[i:].lower()
-        contentType = mimetypes.types_map.get(ext, "text/plain")
-    response.headers['Content-Type'] = contentType
-    
-    if not modified_since(path, stat):
-        return []
-    
-    if disposition is not None:
-        if name is None:
-            name = os.path.basename(path)
-        cd = "%s; filename=%s" % (disposition, name)
-        response.headers["Content-Disposition"] = cd
-    
-    # Set Content-Length and use an iterable (file object)
-    #   this way CP won't load the whole file in memory
-    c_len = stat.st_size
-    bodyfile = open(path, 'rb')
-    if getattr(cherrypy, "debug", None):
-        cherrypy.log("    Found file: %s" % path, "DEBUG")
-    
-    # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
-    if cherrypy.response.version >= "1.1":
-        response.headers["Accept-Ranges"] = "bytes"
-        r = httptools.getRanges(cherrypy.request.headers.get('Range'), c_len)
-        if r == []:
-            response.headers['Content-Range'] = "bytes */%s" % c_len
-            message = "Invalid Range (first-byte-pos greater than Content-Length)"
-            raise cherrypy.HTTPError(416, message)
-        if r:
-            if len(r) == 1:
-                # Return a single-part response.
-                start, stop = r[0]
-                r_len = stop - start
-                response.status = "206 Partial Content"
-                response.headers['Content-Range'] = ("bytes %s-%s/%s" %
-                                                       (start, stop - 1, c_len))
-                response.headers['Content-Length'] = r_len
-                bodyfile.seek(start)
-                response.body = bodyfile.read(r_len)
-            else:
-                # Return a multipart/byteranges response.
-                response.status = "206 Partial Content"
-                boundary = mimetools.choose_boundary()
-                ct = "multipart/byteranges; boundary=%s" % boundary
-                response.headers['Content-Type'] = ct
-##                del response.headers['Content-Length']
-                
-                def fileRanges():
-                    for start, stop in r:
-                        yield "--" + boundary
-                        yield "\nContent-type: %s" % contentType
-                        yield ("\nContent-range: bytes %s-%s/%s\n\n"
-                               % (start, stop - 1, c_len))
-                        bodyfile.seek(start)
-                        yield bodyfile.read((stop + 1) - start)
-                        yield "\n"
-                    # Final boundary
-                    yield "--" + boundary
-                response.body = fileRanges()
-        else:
-            response.headers['Content-Length'] = c_len
-            response.body = bodyfile
-    else:
-        response.headers['Content-Length'] = c_len
-        response.body = bodyfile
-    return response.body
 
 def fileGenerator(input, chunkSize=65536):
     """Yield the given input (a file object) in chunks (default 64k)."""
@@ -203,6 +63,7 @@ def fileGenerator(input, chunkSize=65536):
         yield chunk
         chunk = input.read(chunkSize)
     input.close()
+
 
 def modules(modulePath):
     """Load a module and retrieve a reference to that module."""
@@ -233,19 +94,6 @@ def attributes(fullAttributeName):
     
     # Return a reference to the attribute.
     return attr
-
-
-class WSGIApp(object):
-    """a convenience class that uses the WSGIAppFilter
-    
-    to easily add a WSGI application to the CP object tree.
-
-    example:
-    cherrypy.tree.mount(SomeRoot(), '/')
-    cherrypy.tree.mount(WSGIApp(other_wsgi_app), '/ext_app')
-    """
-    def __init__(self, app, env_update=None):
-        self._cpFilterList = [WSGIAppFilter(app, env_update)]
 
 
 # public domain "unrepr" implementation, found on the web and then improved.
@@ -327,4 +175,143 @@ def unrepr(s):
     if not s:
         return s
     return Builder().build(getObj(s))
+
+
+# Old filter code
+
+def base_url(base=None, use_x_forwarded_host=True):
+    """Change the base URL.
+    
+    Useful when running a CP server behind Apache.
+    """
+    
+    request = cherrypy.request
+    
+    if base is None:
+        port = str(cherrypy.config.get('server.socket_port', '80'))
+        if port == "80":
+            base = 'http://localhost'
+        else:
+            base = 'http://localhost:%s' % port
+    
+    if use_x_forwarded_host:
+        base = request.headers.get("X-Forwarded-Host", base)
+    
+    if base.find("://") == -1:
+        # add http:// or https:// if needed
+        base = request.base[:request.base.find("://") + 3] + base
+    
+    request.base = base
+
+
+def response_headers(headers=None):
+    """Set headers on the response."""
+    for name, value in headers or []:
+        if name not in cherrypy.response.headerMap:
+            cherrypy.response.headerMap[name] = value
+
+
+class SessionAuthenticator:
+    
+    login_screen = """<html><body>
+    Message: %(error_msg)s
+    <form method="post" action="do_login">
+        Login: <input type="text" name="login" value="%(login)s" size="10" /><br />
+        Password: <input type="password" name="password" size="10" /><br />
+        <input type="hidden" name="from_page" value="%(from_page)s" /><br />
+        <input type="submit" />
+    </form>
+</body></html>"""
+    
+    def __call__(check_login_and_password, not_logged_in,
+                 load_user_by_username, session_key = 'username',
+                 on_login = None, on_logout = None,
+                 login_screen = None):
+        
+        if login_screen is None:
+            login_screen = self.login_screen
+        
+        cherrypy.request.user = None
+        cherrypy.thread_data.user = None
+        
+        conf = cherrypy.config.get
+        if conf('static_filter.on', False):
+            return
+        if cherrypy.request.path.endswith('login_screen'):
+            return
+        elif cherrypy.request.path.endswith('do_logout'):
+            login = cherrypy.session.get(session_key)
+            cherrypy.session[session_key] = None
+            cherrypy.request.user = None
+            cherrypy.thread_data.user = None
+            if login and on_logout:
+                on_logout(login)
+            from_page = cherrypy.request.params.get('from_page', '..')
+            raise cherrypy.HTTPRedirect(from_page)
+        elif cherrypy.request.path.endswith('do_login'):
+            from_page = cherrypy.request.params.get('from_page', '..')
+            login = cherrypy.request.params['login']
+            password = cherrypy.request.params['password']
+            error_msg = check_login_and_password(login, password)
+            if error_msg:
+                kw = {"from_page": from_page,
+                      "login": login, "error_msg": error_msg}
+                cherrypy.response.body = login_screen % kw
+                cherrypy.request.execute_main = False
+            else:
+                cherrypy.session[session_key] = login
+                if on_login:
+                    on_login(login)
+                if not from_page:
+                    from_page = '/'
+                raise cherrypy.HTTPRedirect(from_page)
+            return
+
+        # Check if user is logged in
+        temp_user = None
+        if (not cherrypy.session.get(session_key)) and not_logged_in:
+            # Call not_logged_in so that applications where anynymous user
+            #   is OK can handle it
+            temp_user = not_logged_in()
+        if (not cherrypy.session.get(session_key)) and not temp_user:
+            kw = {"from_page": cherrypy.request.browser_url,
+                  "login": "", "error_msg": ""}
+            cherrypy.response.body = login_screen % kw
+            cherrypy.request.execute_main = False
+            return
+        
+        # Everything is OK: user is logged in
+        if load_user_by_username and not cherrypy.thread_data.user:
+            username = temp_user or cherrypy.session[session_key]
+            cherrypy.request.user = load_user_by_username(username)
+            cherrypy.thread_data.user = cherrypy.request.user
+
+
+def virtual_host(use_x_forwarded_host=True, **domains):
+    """Change the object_path based on the Host.
+    
+    Useful when running multiple sites within one CP server.
+    
+    From http://groups.google.com/group/cherrypy-users/browse_thread/thread/f393540fe278e54d:
+    
+    For various reasons I need several domains to point to different parts of a
+    single website structure as well as to their own "homepage"   EG
+    
+    http://www.mydom1.com  ->  root
+    http://www.mydom2.com  ->  root/mydom2/
+    http://www.mydom3.com  ->  root/mydom3/
+    http://www.mydom4.com  ->  under construction page
+    
+    but also to have  http://www.mydom1.com/mydom2/  etc to be valid pages in
+    their own right.
+    """
+    
+    domain = cherrypy.request.headers.get('Host', '')
+    if use_x_forwarded_host:
+        domain = cherrypy.request.headers.get("X-Forwarded-Host", domain)
+    
+    prefix = domains.get(domain, "")
+    if prefix:
+        cherrypy.request.object_path = prefix + "/" + cherrypy.request.object_path
+
 

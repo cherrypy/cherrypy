@@ -1,6 +1,6 @@
 """Global module that all modules developing with CherryPy should import."""
 
-__version__ = '2.2.0'
+__version__ = '3.0.0alpha'
 
 import datetime
 import sys
@@ -8,14 +8,13 @@ import types
 
 from _cperror import *
 import config
+import tools
 
 import _cptree
 tree = _cptree.Tree()
 
 # Legacy code may clobber this.
 root = None
-
-lowercase_api = False
 
 import _cpserver
 server = _cpserver.Server()
@@ -58,14 +57,13 @@ response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
 thread_data = local()
-threadData = thread_data # Backward compatibility
 
-# Create variables needed for session (see lib/sessionfilter.py for more info)
-from filters import sessionfilter
-session = sessionfilter.SessionWrapper()
-_session_data_holder = {} # Needed for RAM sessions only
-_session_lock_dict = {} # Needed for RAM sessions only
-_session_last_clean_up_time = datetime.datetime.now()
+### Create variables needed for session (see lib/sessionfilter.py for more info)
+##from filters import sessionfilter
+##session = sessionfilter.SessionWrapper()
+##_session_data_holder = {} # Needed for RAM sessions only
+##_session_lock_dict = {} # Needed for RAM sessions only
+##_session_last_clean_up_time = datetime.datetime.now()
 
 def expose(func=None, alias=None):
     """Expose the function, optionally providing an alias or set of aliases."""
@@ -101,3 +99,4 @@ def log(msg='', context='', severity=0, traceback=False):
         msg += _cputil.formatExc()
     
     logfunc(msg, context, severity)
+
