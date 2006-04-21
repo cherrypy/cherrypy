@@ -102,7 +102,7 @@ def find_acceptable_charset(encoding=None, default_encoding='utf-8'):
     
     # Parse the Accept_Charset request header, and try to provide one
     # of the requested charsets (in order of user preference).
-    encs = cherrypy.request.headerMap.elements('Accept-Charset')
+    encs = cherrypy.request.headers.elements('Accept-Charset')
     if not encs:
         # Any character-set is acceptable.
         charsets = []

@@ -47,6 +47,10 @@ class Tool(object):
         def wrapper(*a, **kw):
             self.callable(*args, **kwargs)
             f(*a, **kw)
+        missing = object()
+        exposed = getattr(f, "exposed", missing)
+        if exposed is not missing:
+            wrapper.exposed = exposed
         return wrapper
     
     def setup(self, conf):
@@ -74,6 +78,10 @@ class MainTool(Tool):
             handled = self.callable(*args, **kwargs)
             if not handled:
                 f(*a, **kw)
+        missing = object()
+        exposed = getattr(f, "exposed", missing)
+        if exposed is not missing:
+            wrapper.exposed = exposed
         return wrapper
     
     def setup(self, conf):

@@ -87,7 +87,7 @@ class Session:
         if cookie_path is None:
             cookie_path_header = conf('session_filter.cookie_path_from_header', None)
             if cookie_path_header is not None:
-                cookie_path = cherrypy.request.headerMap.get(cookie_path_header, None)
+                cookie_path = cherrypy.request.headers.get(cookie_path_header, None)
             if cookie_path is None:
                 cookie_path = '/'
         if cookie_name in cherrypy.request.simple_cookie:

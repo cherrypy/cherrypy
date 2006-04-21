@@ -2,15 +2,16 @@ import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy._cputil import headers
+from cherrypy.tools import response_headers
+headers = response_headers.wrap
 
 
 def setup_server():
     class Root:
         def index(self):
             yield "Hello, world"
-        index = headers([("Content-Language", "en-GB"),
-                         ('Content-Type', 'text/plain')])(index)
+        index = headers(index, [("Content-Language", "en-GB"),
+                                ('Content-Type', 'text/plain')])
         index.exposed = True
         
         def other(self):
@@ -20,9 +21,9 @@ def setup_server():
     cherrypy.root = Root()
     cherrypy.config.update({
         '/other': {
-            'response_headers_filter.on': True,
-            'response_headers_filter.headers': [("Content-Language", "fr"),
-                                                ('Content-Type', 'text/plain')]
+            'tools.response_headers.on': True,
+            'tools.response_headers.headers': [("Content-Language", "fr"),
+                                               ('Content-Type', 'text/plain')]
             },
         })
 

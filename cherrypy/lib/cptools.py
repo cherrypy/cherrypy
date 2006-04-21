@@ -207,8 +207,8 @@ def base_url(base=None, use_x_forwarded_host=True):
 def response_headers(headers=None):
     """Set headers on the response."""
     for name, value in headers or []:
-        if name not in cherrypy.response.headerMap:
-            cherrypy.response.headerMap[name] = value
+        if name not in cherrypy.response.headers:
+            cherrypy.response.headers[name] = value
 
 
 class SessionAuthenticator:
