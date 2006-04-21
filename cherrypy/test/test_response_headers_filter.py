@@ -22,8 +22,9 @@ def setup_server():
     cherrypy.config.update({
         '/other': {
             'tools.response_headers.on': True,
+            'tools.response_headers.force': False,
             'tools.response_headers.headers': [("Content-Language", "fr"),
-                                               ('Content-Type', 'text/plain')]
+                                               ('Content-Type', 'text/plain')],
             },
         })
 
@@ -40,7 +41,8 @@ class ResponseHeadersFilterTest(helper.CPWebCase):
     def testResponseHeadersFilter(self):
         self.getPage('/other')
         self.assertHeader("Content-Language", "fr")
-        # the filter should only change headers that have not been set yet
+        # Since 'force' is False, the filter should only change headers
+        # that have not been set yet.
         # Content-Type should have been set when the response object
         # was created (default to text/html)
         self.assertHeader('Content-Type', 'text/html')
