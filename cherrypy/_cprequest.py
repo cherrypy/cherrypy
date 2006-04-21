@@ -42,6 +42,8 @@ class HookMap(object):
         collect_tools("global")
         path = ""
         for b in cherrypy.request.object_path.split('/'):
+            if path == "/":
+                path = ""
             path = "/".join((path, b))
             collect_tools(path)
         
