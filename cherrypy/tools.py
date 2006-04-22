@@ -38,16 +38,19 @@ class Tool(object):
     def __call__(self, *args, **kwargs):
         self.callable(*args, **kwargs)
     
-    def wrap(self, f, *args, **kwargs):
-        """Decorator for this tool."""
-        def wrapper(*a, **kw):
-            self.callable(*args, **kwargs)
-            f(*a, **kw)
-        missing = object()
-        exposed = getattr(f, "exposed", missing)
-        if exposed is not missing:
-            wrapper.exposed = exposed
-        return wrapper
+    def wrap(self, *args, **kwargs):
+        """Make a decorator for this tool."""
+        def deco(f):
+            def wrapper(*a, **kw):
+                print args, kwargs
+                handled = self.callable(*args, **kwargs)
+                return f(*a, **kw)
+            missing = object()
+            exposed = getattr(f, "exposed", missing)
+            if exposed is not missing:
+                wrapper.exposed = exposed
+            return wrapper
+        return deco
     
     def setup(self, conf):
         """Hook this tool into cherrypy.request using the given conf."""
@@ -68,17 +71,20 @@ class MainTool(Tool):
     def __call__(self, *args, **kwargs):
         self.callable(*args, **kwargs)
     
-    def wrap(self, f, *args, **kwargs):
-        """Decorator for this tool."""
-        def wrapper(*a, **kw):
-            handled = self.callable(*args, **kwargs)
-            if not handled:
-                f(*a, **kw)
-        missing = object()
-        exposed = getattr(f, "exposed", missing)
-        if exposed is not missing:
-            wrapper.exposed = exposed
-        return wrapper
+    def wrap(self, *args, **kwargs):
+        """Make a decorator for this tool."""
+        def deco(f):
+            def wrapper(*a, **kw):
+                print args, kwargs
+                handled = self.callable(*args, **kwargs)
+                if not handled:
+                    return f(*a, **kw)
+            missing = object()
+            exposed = getattr(f, "exposed", missing)
+            if exposed is not missing:
+                wrapper.exposed = exposed
+            return wrapper
+        return deco
     
     def setup(self, conf):
         """Hook this tool into cherrypy.request using the given conf."""
