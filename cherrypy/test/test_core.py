@@ -350,7 +350,7 @@ def setup_server():
             'server.log_file': log_file,
         },
         '/internalredirect/secure': {
-            'auth.on': True,
+            'tools.auth.on': True,
         },
         '/error': {
             'server.log_file': log_file,

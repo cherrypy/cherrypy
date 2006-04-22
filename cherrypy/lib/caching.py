@@ -1,6 +1,5 @@
-
-import threading
 import Queue
+import threading
 import time
 
 import cherrypy
@@ -104,20 +103,17 @@ def get():
     cacheData = cherrypy._cache.get()
     cherrypy.request.cached = c = bool(cacheData)
     if c:
-        serve_cache(cacheData)
+        expirationTime, lastModified, obj = cacheData
+        modifiedSince = cherrypy.request.headers.get('If-Modified-Since', None)
+        if modifiedSince is not None and modifiedSince == lastModified:
+            cherrypy._cache.totNonModified += 1
+            cherrypy.response.status = "304 Not Modified"
+            cherrypy.response.body = None
+        else:
+            # serve it & get out from the request
+            cherrypy.response.status, cherrypy.response.header_list, body = obj
+            cherrypy.response.body = body
     return c
-
-def serve_cache(cacheData):
-    expirationTime, lastModified, obj = cacheData
-    modifiedSince = cherrypy.request.headers.get('If-Modified-Since', None)
-    if modifiedSince is not None and modifiedSince == lastModified:
-        cherrypy._cache.totNonModified += 1
-        cherrypy.response.status = "304 Not Modified"
-        cherrypy.response.body = None
-    else:
-        # serve it & get out from the request
-        cherrypy.response.status, cherrypy.response.header_list, body = obj
-        cherrypy.response.body = body
 
 def tee_output():
     if cherrypy.request.cached:

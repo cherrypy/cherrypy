@@ -100,7 +100,7 @@ def reset(useDefaults=True):
         update(default_global)
 reset()
 
-def get(key, default_value=None, return_section=False, path = None):
+def get(key, default_value=None, return_section=False, path=None):
     """Return the configuration value corresponding to key
     If specified, return default_value on lookup failure. If return_section is
     specified, return the path to the value, instead of the value itself.
