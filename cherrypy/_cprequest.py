@@ -304,8 +304,8 @@ class Dispatcher(object):
         request = cherrypy.request
         handler, opath, vpath = self.find(request.browser_url, path)
         
-        # Remove "root" from opath and join it to get object_path
-        request.object_path = '/' + '/'.join(opath[1:])
+        # Remove "root" from opath and join it to get found_object_path
+        request.found_object_path = '/' + '/'.join(opath[1:])
         
         # Decode any leftover %2F in the virtual_path atoms.
         request.virtual_path = [x.replace("%2F", "/") for x in vpath]

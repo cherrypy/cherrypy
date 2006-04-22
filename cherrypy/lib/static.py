@@ -171,7 +171,7 @@ def get_dir(section, dir, root="", match="", content_types=None, index=""):
     # If dir is relative, make absolute using "root".
     if not os.path.isabs(dir):
         if not root:
-            msg = "Static tool requires an absolute dir or root."
+            msg = "Static dir requires an absolute dir (or root)."
             raise cherrypy.WrongConfigValue(msg)
         dir = os.path.join(root, dir)
     
