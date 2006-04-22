@@ -23,8 +23,8 @@ def setup_server():
     cherrypy.config.update({
             'server.log_to_screen': False,
             'server.environment': 'production',
-            'encoding_filter.on': True,
-            'decoding_filter.on': True
+            'tools.encode.on': True,
+            'tools.decode.on': True,
     })
 
 

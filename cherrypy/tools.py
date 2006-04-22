@@ -3,9 +3,9 @@
 Tools are usually designed to be used in a variety of ways (although some
 may only offer one if they choose):
     
-    Library calls: all tools expose various callables that can be used
-        wherever needed. The arguments are straightforward and should be
-        detailed within the docstring.
+    Library calls: all tools are callables that can be used wherever needed.
+        The arguments are straightforward and should be detailed within the
+        docstring.
     
     Function decorators: if the tool exposes a "wrap" callable, that
         is assumed to be a decorator for use in wrapping individual
@@ -25,7 +25,7 @@ are generally either modules or instances of the tools.Tool class.
 """
 
 import cherrypy
-from cherrypy.lib import cptools, static
+from cherrypy.lib import cptools, encodings, static
 
 # These modules are themselves Tools
 from cherrypy.lib import caching
@@ -96,6 +96,11 @@ class MainTool(Tool):
 base_url = Tool('before_request_body', cptools.base_url)
 response_headers = Tool('before_finalize', cptools.response_headers)
 virtual_host = Tool('before_request_body', cptools.virtual_host)
+
+decode = Tool('before_main', encodings.decode)
+encode = Tool('before_finalize', encodings.encode)
+gzip = Tool('before_finalize', encodings.gzip)
+
 staticdir = MainTool(static.get_dir)
 staticfile = MainTool(static.get_file)
 

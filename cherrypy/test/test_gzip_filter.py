@@ -29,7 +29,7 @@ def setup_server():
         'global': {'server.log_to_screen': False,
                    'server.environment': 'production',
                    'server.show_tracebacks': True,
-                   'gzip_filter.on': True,
+                   'tools.gzip.on': True,
                    },
         '/noshow_stream': {'stream_response': True},
     })
