@@ -29,7 +29,7 @@ def setup_server():
 
     cherrypy.config.update({
         'global': {
-            'server.log_to_screen': True,
+            'server.log_to_screen': False,
             'server.environment': 'production',
         },
         '/static': {
@@ -39,7 +39,7 @@ def setup_server():
         },
         '/style.css': {
             'tools.staticfile.on': True,
-            'tools.staticfile.file': os.path.join(curdir, 'style.css'),
+            'tools.staticfile.filename': os.path.join(curdir, 'style.css'),
         },
         '/docroot': {
             'tools.staticdir.on': True,
@@ -105,12 +105,11 @@ class StaticFilterTest(helper.CPWebCase):
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
-        # Check that we get a WrongConfigValue error if no .file or .dir
+        # Check that we get an error if no .file or .dir
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
-        self.assertInBody("WrongConfigValue: StaticFilter requires either "
-                          "static_filter.file or static_filter.dir "
-                          "(/error/thing.html)")
+        self.assertInBody("TypeError: get_dir() takes at least 2 "
+                          "non-keyword arguments (1 given)")
         
         # Test up-level security
         self.getPage("/static/../../test/style.css")

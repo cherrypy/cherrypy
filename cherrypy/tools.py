@@ -25,10 +25,6 @@ are generally either modules or instances of the tools.Tool class.
 """
 
 import cherrypy
-from cherrypy.lib import cptools, encodings, static
-
-# These modules are themselves Tools
-from cherrypy.lib import caching, xmlrpc
 
 
 class Tool(object):
@@ -93,6 +89,10 @@ class MainTool(Tool):
         cherrypy.request.hooks.attach(self.point, wrapper)
 
 
+#                              Builtin tools                              #
+
+from cherrypy.lib import cptools, encodings, static
+
 base_url = Tool('before_request_body', cptools.base_url)
 response_headers = Tool('before_finalize', cptools.response_headers)
 virtual_host = Tool('before_request_body', cptools.virtual_host)
@@ -101,6 +101,19 @@ decode = Tool('before_main', encodings.decode)
 encode = Tool('before_finalize', encodings.encode)
 gzip = Tool('before_finalize', encodings.gzip)
 
-staticdir = MainTool(static.get_dir)
+class _StaticDirTool(MainTool):
+    def setup(self, conf):
+        """Hook this tool into cherrypy.request using the given conf."""
+        section = cherrypy.config.get('tools.staticdir.dir', return_section=True)
+        conf['section'] = section
+        def wrapper():
+            if self.callable(**conf):
+                cherrypy.request.execute_main = False
+        # Don't pass conf (or our wrapper will get wrapped!)
+        cherrypy.request.hooks.attach(self.point, wrapper)
+
+staticdir = _StaticDirTool(static.get_dir)
 staticfile = MainTool(static.get_file)
 
+# These modules are themselves Tools
+from cherrypy.lib import caching, xmlrpc

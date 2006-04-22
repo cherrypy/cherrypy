@@ -59,8 +59,8 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     # If path is relative, users should fix it by making path absolute.
     # That is, CherryPy should not guess where the application root is.
     # It certainly should *not* use cwd (since CP may be invoked from a
-    # variety of paths). If using static_filter, you can make your relative
-    # paths become absolute by supplying a value for "static_filter.root".
+    # variety of paths). If using tools.static, you can make your relative
+    # paths become absolute by supplying a value for "tools.static.root".
     if not os.path.isabs(path):
         raise ValueError("'%s' is not an absolute path." % path)
     
@@ -148,74 +148,14 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     return response.body
 
 
-def get_dir(root, dir, match="", content_types=None, index=""):
-    request = cherrypy.request
-    path = request.object_path
-    
-    if match and not re.search(match, path):
-        return False
-    
-    if root == 'global':
-        root = "/"
-    root = root.rstrip(r"\/")
-    
-    branch = urllib.unquote(path[len(root) + 1:].lstrip(r"\/"))
-    
-    # If branch is "", file will end in a slash
-    file = os.path.join(dir, branch)
-    
-    # There's a chance that the branch pulled from the URL might
-    # have ".." or similar uplevel attacks in it. Check that the final
-    # file is a child of dir.
-    if not os.path.normpath(file).startswith(os.path.normpath(dir)):
-        raise cherrypy.HTTPError(403) # Forbidden
-    
-    if not os.path.isabs(file):
-        msg = "static directory requires an absolute path (got '%s')." % file
-        raise cherrypy.WrongConfigValue(msg)
-    
-    def attempt(fname):
+
+def _attempt(filename, content_types):
+    try:
         # you can set the content types for a
         # complete directory per extension
         content_type = None
         if content_types:
-            r, ext = os.path.splitext(fname)
-            content_type = content_types.get(ext[1:], None)
-        serve_file(fname, contentType=content_type)
-    
-    try:
-        attempt(file)
-        return True
-    except cherrypy.NotFound:
-        # If we didn't find the static file, continue handling the
-        # request. We might find a dynamic handler instead.
-        
-        # But first check for an index file if a folder was requested.
-        if index and file[-1] in (r"\/"):
-            try:
-                attempt(os.path.join(file, index))
-                return True
-            except cherrypy.NotFound:
-                pass
-    return False
-
-
-def get_file(filename, match="", content_types=None):
-    if not os.path.isabs(filename):
-        msg = "static file requires an absolute path."
-        raise cherrypy.WrongConfigValue(msg)
-    
-    request = cherrypy.request
-    path = request.object_path
-    
-    if match and not re.search(match, path):
-        return False
-    
-    try:
-        # you can set the content types for a complete directory per extension
-        content_type = None
-        if content_types:
-            root, ext = os.path.splitext(filename)
+            r, ext = os.path.splitext(filename)
             content_type = content_types.get(ext[1:], None)
         serve_file(filename, contentType=content_type)
         return True
@@ -223,3 +163,51 @@ def get_file(filename, match="", content_types=None):
         # If we didn't find the static file, continue handling the
         # request. We might find a dynamic handler instead.
         return False
+
+def get_dir(section, dir, root="", match="", content_types=None, index=""):
+    if match and not re.search(match, cherrypy.request.object_path):
+        return False
+    
+    # If dir is relative, make absolute using "root".
+    if not os.path.isabs(dir):
+        if not root:
+            msg = "Static tool requires an absolute dir or root."
+            raise cherrypy.WrongConfigValue(msg)
+        dir = os.path.join(root, dir)
+    
+    # Determine where we are in the object tree relative to 'section'
+    # (where the static tool was defined).
+    if section == 'global':
+        section = "/"
+    section = section.rstrip(r"\/")
+    branch = cherrypy.request.object_path[len(section) + 1:]
+    branch = urllib.unquote(branch.lstrip(r"\/"))
+    
+    # If branch is "", filename will end in a slash
+    filename = os.path.join(dir, branch)
+    
+    # There's a chance that the branch pulled from the URL might
+    # have ".." or similar uplevel attacks in it. Check that the final
+    # filename is a child of dir.
+    if not os.path.normpath(filename).startswith(os.path.normpath(dir)):
+        raise cherrypy.HTTPError(403) # Forbidden
+    
+    handled = _attempt(filename, content_types)
+    if not handled:
+        # Check for an index file if a folder was requested.
+        if index and filename[-1] in (r"\/"):
+            handled = _attempt(os.path.join(filename, index), content_types)
+    return handled
+
+def get_file(filename, root=None, match="", content_types=None):
+    if match and not re.search(match, cherrypy.request.object_path):
+        return False
+    
+    # If filename is relative, make absolute using "root".
+    if not os.path.isabs(filename):
+        if not root:
+            msg = "Static tool requires an absolute filename (got '%s')." % filename
+            raise cherrypy.WrongConfigValue(msg)
+        filename = os.path.join(root, filename)
+    
+    return _attempt(filename, content_types)
