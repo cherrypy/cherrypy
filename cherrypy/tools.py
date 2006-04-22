@@ -28,7 +28,7 @@ import cherrypy
 from cherrypy.lib import cptools, encodings, static
 
 # These modules are themselves Tools
-from cherrypy.lib import caching
+from cherrypy.lib import caching, xmlrpc
 
 
 class Tool(object):

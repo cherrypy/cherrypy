@@ -233,6 +233,8 @@ class Request(object):
     
     def main(self, path=None):
         """Obtain and set cherrypy.response.body from a page handler."""
+        if path is None:
+            path = self.object_path
         dispatch = cherrypy.config.get("dispatcher") or Dispatcher()
         handler = dispatch(path)
         cherrypy.response.body = handler(*self.virtual_path, **self.params)
@@ -297,12 +299,9 @@ class Request(object):
 
 class Dispatcher(object):
     
-    def __call__(self, path=None):
+    def __call__(self, path):
         """Find the appropriate page handler."""
         request = cherrypy.request
-        if path is None:
-            path = request.object_path
-        
         handler, opath, vpath = self.find(request.browser_url, path)
         
         # Remove "root" from opath and join it to get object_path

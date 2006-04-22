@@ -59,7 +59,7 @@ def setup_server():
         'server.log_to_screen': False,
         'server.environment': 'production',
         'server.show_tracebacks': True,
-        '/xmlrpc': {'xmlrpc_filter.on': True},
+        '/xmlrpc': {'tools.xmlrpc.on': True},
         })
 
 

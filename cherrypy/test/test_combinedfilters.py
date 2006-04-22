@@ -18,8 +18,8 @@ def setup_server():
     cherrypy.config.update({
             'server.log_to_screen': False,
             'server.environment': 'production',
-            'gzip_filter.on': True,
-            'encoding_filter.on': True,
+            'tools.gzip.on': True,
+            'tools.encode.on': True,
     })
 
 import helper

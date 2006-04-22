@@ -26,8 +26,8 @@ default_global = {
     'server.thread_pool': 10,
     'server.environment': "development",
     
-    '/favicon.ico': {'hooks.static.on': True,
-                     'hooks.static.file': _favicon_path},
+    '/favicon.ico': {'tools.staticfile.on': True,
+                     'tools.staticfile.filename': _favicon_path},
     }
 
 environments = {

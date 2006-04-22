@@ -2,7 +2,6 @@ import sys
 import xmlrpclib
 
 import cherrypy
-from cherrypy import _cprequest
 
 
 def process_body():
@@ -35,9 +34,11 @@ def main(encoding='utf-8', allow_none=0):
     Python's None value cannot be used in standard XML-RPC; to allow
     using it via an extension, provide a true value for allow_none.
     """
+    from cherrypy import _cprequest
     dispatch = cherrypy.config.get("dispatcher") or _cprequest.Dispatcher()
-    handler = dispatch(path)
+    
     request = cherrypy.request
+    handler = dispatch(request.object_path)
     body = handler(*(request.virtual_path + request.paramList),
                    **request.params)
     respond(xmlrpclib.dumps((body,), methodresponse=1,
@@ -61,6 +62,9 @@ def respond(body):
 
 def setup(conf):
     """Hook this tool into cherrypy.request using the given conf."""
-    cherrypy.request.hooks.attach('before_process_body', process_body, conf)
-    cherrypy.request.hooks.attach_main(main, conf)
+    cherrypy.request.hooks.attach('before_request_body', process_body, conf)
+    def wrapper():
+        if main(**conf):
+            cherrypy.request.execute_main = False
+    cherrypy.request.hooks.attach('before_main', wrapper)
     cherrypy.request.hooks.attach('after_error_response', error_response, conf)

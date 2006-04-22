@@ -6,6 +6,7 @@ mimetypes.types_map['.ico']='image/x-icon'
 
 import os
 import re
+import time
 import urllib
 
 import cherrypy
