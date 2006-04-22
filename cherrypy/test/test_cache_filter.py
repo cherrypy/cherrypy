@@ -20,7 +20,7 @@ def setup_server():
     cherrypy.config.update({
             'server.log_to_screen': False,
             'server.environment': 'production',
-            'cache_filter.on': True,
+            'tools.caching.on': True,
     })
 
 

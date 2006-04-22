@@ -95,8 +95,9 @@ class MemoryCache:
                 return
 
 
-def init():
-    cache_class = cherrypy.config.get("hooks.cache.class", MemoryCache)
+def init(cache_class=None):
+    if cache_class is None:
+        cache_class = MemoryCache
     cherrypy._cache = cache_class()
 
 def get():
@@ -151,6 +152,8 @@ def wrap(f):
 
 def setup(conf):
     """Hook caching into cherrypy.request using the given conf."""
+    if not getattr(cherrypy, "_cache", None):
+        init(conf.get("class", None))
     def wrapper():
         if get():
             cherrypy.request.execute_main = False
