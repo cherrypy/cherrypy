@@ -235,8 +235,8 @@ class Request(object):
         """Obtain and set cherrypy.response.body from a page handler."""
         if path is None:
             path = self.object_path
-        dispatch = cherrypy.config.get("dispatcher") or Dispatcher()
-        handler = dispatch(path)
+        _dispatch = cherrypy.config.get("dispatcher") or dispatch
+        handler = _dispatch(path)
         cherrypy.response.body = handler(*self.virtual_path, **self.params)
     
     def processHeaders(self):
@@ -297,57 +297,55 @@ class Request(object):
             self.params.update(httptools.paramsFromCGIForm(forms))
 
 
-class Dispatcher(object):
+def dispatch(path):
+    """Find the appropriate page handler."""
+    request = cherrypy.request
+    handler, opath, vpath = find(request.browser_url, path)
     
-    def __call__(self, path):
-        """Find the appropriate page handler."""
-        request = cherrypy.request
-        handler, opath, vpath = self.find(request.browser_url, path)
-        
-        # Remove "root" from opath and join it to get found_object_path
-        request.found_object_path = '/' + '/'.join(opath[1:])
-        
-        # Decode any leftover %2F in the virtual_path atoms.
-        request.virtual_path = [x.replace("%2F", "/") for x in vpath]
-        
-        return handler
+    # Remove "root" from opath and join it to get found_object_path
+    request.found_object_path = '/' + '/'.join(opath[1:])
     
-    def find(self, browser_url, objectpath):
-        objectTrail = _cputil.get_object_trail(objectpath)
-        names = [name for name, candidate in objectTrail]
+    # Decode any leftover %2F in the virtual_path atoms.
+    request.virtual_path = [x.replace("%2F", "/") for x in vpath]
+    
+    return handler
+
+def find(browser_url, objectpath):
+    objectTrail = _cputil.get_object_trail(objectpath)
+    names = [name for name, candidate in objectTrail]
+    
+    # Try successive objects (reverse order)
+    mounted_app_roots = cherrypy.tree.mount_points.values()
+    for i in xrange(len(objectTrail) - 1, -1, -1):
         
-        # Try successive objects (reverse order)
-        mounted_app_roots = cherrypy.tree.mount_points.values()
-        for i in xrange(len(objectTrail) - 1, -1, -1):
-            
-            name, candidate = objectTrail[i]
-            
-            # Try a "default" method on the current leaf.
-            defhandler = getattr(candidate, "default", None)
-            if callable(defhandler) and getattr(defhandler, 'exposed', False):
-                return defhandler, names[:i+1] + ["default"], names[i+1:-1]
-            
-            # Uncomment the next line to restrict positional params to "default".
-            # if i < len(objectTrail) - 2: continue
-            
-            # Try the current leaf.
-            if callable(candidate) and getattr(candidate, 'exposed', False):
-                if i == len(objectTrail) - 1:
-                    # We found the extra ".index". Check if the original path
-                    # had a trailing slash (otherwise, do a redirect).
-                    if not objectpath.endswith('/'):
-                        atoms = browser_url.split("?", 1)
-                        newUrl = atoms.pop(0) + '/'
-                        if atoms:
-                            newUrl += "?" + atoms[0]
-                        raise cherrypy.HTTPRedirect(newUrl)
-                return candidate, names[:i+1], names[i+1:-1]
-            
-            if candidate in mounted_app_roots:
-                break
+        name, candidate = objectTrail[i]
         
-        # We didn't find anything
-        raise cherrypy.NotFound(objectpath)
+        # Try a "default" method on the current leaf.
+        defhandler = getattr(candidate, "default", None)
+        if callable(defhandler) and getattr(defhandler, 'exposed', False):
+            return defhandler, names[:i+1] + ["default"], names[i+1:-1]
+        
+        # Uncomment the next line to restrict positional params to "default".
+        # if i < len(objectTrail) - 2: continue
+        
+        # Try the current leaf.
+        if callable(candidate) and getattr(candidate, 'exposed', False):
+            if i == len(objectTrail) - 1:
+                # We found the extra ".index". Check if the original path
+                # had a trailing slash (otherwise, do a redirect).
+                if not objectpath.endswith('/'):
+                    atoms = browser_url.split("?", 1)
+                    newUrl = atoms.pop(0) + '/'
+                    if atoms:
+                        newUrl += "?" + atoms[0]
+                    raise cherrypy.HTTPRedirect(newUrl)
+            return candidate, names[:i+1], names[i+1:-1]
+        
+        if candidate in mounted_app_roots:
+            break
+    
+    # We didn't find anything
+    raise cherrypy.NotFound(objectpath)
 
 
 class Body(object):
