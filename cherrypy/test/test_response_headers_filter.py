@@ -10,8 +10,8 @@ def setup_server():
     class Root:
         def index(self):
             yield "Hello, world"
-        index = headers(index, [("Content-Language", "en-GB"),
-                                ('Content-Type', 'text/plain')])
+        index = headers([("Content-Language", "en-GB"),
+                         ('Content-Type', 'text/plain')])(index)
         index.exposed = True
         
         def other(self):
