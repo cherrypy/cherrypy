@@ -1,3 +1,6 @@
+2006-04-24:
+    * CherryPy-2.2.1 released (thread_data bug fix)
+
 2006-04-03:
     * CherryPy-2.2.0 released
 
