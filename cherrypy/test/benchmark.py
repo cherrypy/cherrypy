@@ -69,9 +69,9 @@ conf = {
         'server.max_request_body_size': 0,
         },
     '/static': {
-        'static_filter.on': True,
-        'static_filter.dir': 'static',
-        'static_filter.root': curdir,
+        'tools.staticdir.on': True,
+        'tools.staticdir.dir': 'static',
+        'tools.staticdir.root': curdir,
         },
     }
 cherrypy.tree.mount(Root(), MOUNT_POINT, conf)
@@ -256,7 +256,7 @@ def run_standard_benchmarks():
     print_report(thread_report())
     
     print
-    print ("Client Thread Report (1000 requests, 14 bytes via static_filter, "
+    print ("Client Thread Report (1000 requests, 14 bytes via staticdir, "
            "%s server threads):" % cherrypy.config.get('server.thread_pool'))
     print_report(thread_report("%s/static/index.html" % MOUNT_POINT))
     

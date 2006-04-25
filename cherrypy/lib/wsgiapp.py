@@ -1,4 +1,4 @@
-"""a WSGI application filter for CherryPy"""
+"""a WSGI application tool for CherryPy"""
 
 import sys
 

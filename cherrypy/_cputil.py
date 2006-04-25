@@ -57,7 +57,7 @@ def get_object_trail(objectpath=None):
 def get_special_attribute(name, old_name = None):
     """Return the special attribute. A special attribute is one that
     applies to all of the children from where it is defined, such as
-    _cp_filters."""
+    _cp_on_error."""
     
     # First, we look in the right-most object to see if this special
     # attribute is implemented. If not, then we try the previous object,

@@ -72,9 +72,6 @@ class Engine(object):
         else:
             cherrypy.profiler = None
         
-        # Initialize the built in filters
-##        filters.init()
-    
     def start(self):
         """Start the application server engine."""
         self.state = STARTING

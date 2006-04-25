@@ -14,7 +14,7 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
     stable and it crashes on some HTML pages (which means that the
     server would also crash)
     """
-    # the tidy filter, by its very nature it's not generator friendly, 
+    # the tidy tool, by its very nature it's not generator friendly, 
     # so we just collapse the body and work with it.
     originalBody = cherrypy.response.collapse_body()
     
@@ -93,7 +93,7 @@ def wrong_content(header, body, content_type="HTML"):
 
 
 def nsgmls(temp_dir, nsgmls_path, catalog_path, errors_to_ignore=None):
-    # the tidy filter, by its very nature it's not generator friendly, 
+    # the tidy tool, by its very nature it's not generator friendly, 
     # so we just collect the body and work with it.
     original_body = cherrypy.response.collapse_body()
     
