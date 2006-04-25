@@ -150,6 +150,25 @@ def get(key, default_value=None, return_section=False, path=None):
     else:
         return result
 
+def current_config(path=None):
+    """Return all configs in effect for the given path in a single dict."""
+    if path is None:
+        try:
+            path = cherrypy.request.object_path
+        except AttributeError:
+            # There's no request.object_path yet, so use the global settings.
+            path = "global"
+    
+    result = {}
+    result.update(configs.get("global", {}))
+    curpath = ""
+    for b in path.split('/'):
+        if curpath == "/":
+            curpath = ""
+        curpath = "/".join((curpath, b))
+        result.update(configs.get(curpath, {}))
+    return result
+
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
     """Sub-class of ConfigParser that keeps the case of options and that raises

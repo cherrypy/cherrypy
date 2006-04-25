@@ -139,7 +139,7 @@ class CommandLineParser(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server=* --1.1 --cover --basedir=path --profile --tests**
+        test.py --server=* --1.0 --cover --basedir=path --profile --tests**
         
     """
         print '    * servers:'
@@ -151,7 +151,7 @@ class CommandLineParser(object):
         
         print """
     
-    --1.1: use HTTP/1.1 servers instead of default HTTP/1.0
+    --1.0: use HTTP/1.0 servers instead of default HTTP/1.1
     
     --cover: turn on code-coverage tool
     --basedir=path: display coverage stats for some path other than cherrypy.

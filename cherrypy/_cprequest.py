@@ -10,70 +10,6 @@ from cherrypy import _cputil, _cpcgifs, tools
 from cherrypy.lib import cptools, httptools
 
 
-class HookMap(object):
-    
-    def __init__(self, points=None, failsafe=None):
-        points = points or []
-        self.callbacks = dict([(point, []) for point in points])
-        self.failsafe = failsafe or []
-    
-    def attach(self, point, callback, conf=None):
-        if conf is None:
-            self.callbacks[point].append(callback)
-        else:
-            def wrapper():
-                callback(**conf)
-            self.callbacks[point].append(wrapper)
-    
-    def populate_from_config(self):
-        configs = cherrypy.config.configs
-        collapsed_map = {}
-        
-        def collect_tools(section):
-            local_conf = configs.get(section, {})
-            for k, v in local_conf.iteritems():
-                atoms = k.split(".")
-                namespace = atoms.pop(0)
-                if namespace == "tools":
-                    toolname = atoms.pop(0)
-                    bucket = collapsed_map.setdefault(toolname, {})
-                    bucket[".".join(atoms)] = v
-        
-        collect_tools("global")
-        path = ""
-        for b in cherrypy.request.object_path.split('/'):
-            if path == "/":
-                path = ""
-            path = "/".join((path, b))
-            collect_tools(path)
-        
-        for toolname, conf in collapsed_map.iteritems():
-            if conf.get("on", False):
-                del conf["on"]
-                getattr(tools, toolname).setup(conf)
-    
-    def run(self, point):
-        """Execute all registered callbacks for the given point."""
-        failsafe = point in self.failsafe
-        for callback in self.callbacks[point]:
-            # Some hookpoints guarantee all callbacks are run even if
-            # others at the same hookpoint fail. We will still log the
-            # failure, but proceed on to the next callback. The only way
-            # to stop all processing from one of these callbacks is
-            # to raise SystemExit and stop the whole server. So, trap
-            # your own errors in these callbacks!
-            if failsafe:
-                try:
-                    callback()
-                except (KeyboardInterrupt, SystemExit):
-                    raise
-                except:
-                    cherrypy.log(traceback=True)
-            else:
-                callback()
-
-
-
 class Request(object):
     """An HTTP request."""
     
@@ -93,10 +29,11 @@ class Request(object):
         self.execute_main = True
         self.closed = False
         
-        self.hooks = HookMap(['on_start_resource', 'before_request_body',
-                              'before_main', 'before_finalize',
-                              'on_end_resource', 'on_end_request',
-                              'before_error_response', 'after_error_response'])
+        pts = ['on_start_resource', 'before_request_body',
+               'before_main', 'before_finalize',
+               'on_end_resource', 'on_end_request',
+               'before_error_response', 'after_error_response']
+        self.hooks = tools.HookMap(pts)
         self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
                                'on_end_request']
     
@@ -150,7 +87,7 @@ class Request(object):
             # because request.object_path is used for config lookups
             # right away.
             self.processRequestLine()
-            self.hooks.populate_from_config()
+            self.hooks.setup()
             
             try:
                 self.hooks.run('on_start_resource')
@@ -485,11 +422,9 @@ class Response(object):
         self.setBareError(body)
     
     def error_response(self):
-        # Allow logging of only *unexpected* HTTPError's.
-        if (not cherrypy.config.get('server.log_tracebacks', True)
-            and cherrypy.config.get('server.log_unhandled_tracebacks', True)):
-            cherrypy.log(traceback=True)
-        cherrypy.HTTPError(500).set_response()
+        # _cp_on_error will probably change self.body.
+        # It may also change the headers, etc.
+        _cputil.get_special_attribute('_cp_on_error', '_cpOnError')()
     
     def setBareError(self, body=None):
         self.status, self.header_list, self.body = _cputil.bareError(body)

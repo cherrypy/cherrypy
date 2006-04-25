@@ -222,8 +222,8 @@ Message: %(error_msg)s
 </body></html>"""
 
 def session_auth(check_login_and_password=None, not_logged_in=None,
-                 load_user_by_username=None, session_key = 'username',
-                 on_login = None, on_logout = None, login_screen = None):
+                 load_user_by_username=None, session_key='username',
+                 on_login=None, on_logout=None, login_screen=None):
     
     if login_screen is None:
         login_screen = _login_screen

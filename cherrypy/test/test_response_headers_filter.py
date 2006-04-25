@@ -17,7 +17,7 @@ def setup_server():
         def other(self):
             return "salut"
         other.exposed = True
-
+    
     cherrypy.root = Root()
     cherrypy.config.update({
         '/other': {

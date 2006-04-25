@@ -227,6 +227,14 @@ def getErrorPage(status, **kwargs):
     
     return template % kwargs
 
+def _cp_on_error():
+    """ Default _cp_on_error method """
+    # Allow logging of only *unexpected* HTTPError's.
+    if (not cherrypy.config.get('server.log_tracebacks', True)
+        and cherrypy.config.get('server.log_unhandled_tracebacks', True)):
+        cherrypy.log(traceback=True)
+    
+    cherrypy.HTTPError(500).set_response()
 
 def _cp_on_http_error(status, message):
     """Default _cp_on_http_error method.

@@ -85,6 +85,7 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     response.headers['Content-Type'] = contentType
     
     if not modified_since(path, stat):
+        response.body = []
         return []
     
     if disposition is not None:

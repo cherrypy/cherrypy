@@ -4,7 +4,8 @@ import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy.lib import cptools, httptools, static
+from cherrypy import tools
+from cherrypy.lib import httptools, static
 import types
 
 import os
@@ -125,18 +126,14 @@ def setup_server():
         
         def stringify(self):
             return str(cherrypy.HTTPRedirect("/"))
-
-
-    class LoginFilter:
-        
-        def before_main(self):
-            if cherrypy.config.get("auth.on", False):
-                if not getattr(cherrypy.request, "login", None):
-                    raise cherrypy.InternalRedirect("/internalredirect/login")
-
+    
+    
+    def login_redir():
+        if not getattr(cherrypy.request, "login", None):
+            raise cherrypy.InternalRedirect("/internalredirect/login")
+    tools.login_redir = tools.Tool('before_main', login_redir)
+    
     class InternalRedirect(Test):
-        
-        _cp_filters = [LoginFilter()]
         
         def index(self):
             raise cherrypy.InternalRedirect("/")
@@ -153,6 +150,7 @@ def setup_server():
             else:
                 raise cherrypy.InternalRedirect('/image/getImagesByUser')
         
+        @tools.login_redir.wrap()
         def secure(self):
             return "Welcome!"
         
@@ -334,9 +332,15 @@ def setup_server():
             cherrypy.request.asdf = "rassfrassin"
             return existing
     
+    def check(login, password):
+        # Dummy check_login_and_password function
+        if login != 'login' or password != 'password':
+            return u'Wrong login/password'
+    
     cherrypy.config.update({
         'global': {
             'server.log_to_screen': False,
+            'server.protocol_version': "HTTP/1.1",
             'server.environment': 'production',
             'server.show_tracebacks': True,
             'server.max_request_body_size': 200,
@@ -348,9 +352,6 @@ def setup_server():
         },
         '/params': {
             'server.log_file': log_file,
-        },
-        '/internalredirect/secure': {
-            'tools.auth.on': True,
         },
         '/error': {
             'server.log_file': log_file,

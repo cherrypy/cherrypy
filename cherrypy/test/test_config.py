@@ -94,7 +94,7 @@ class ConfigTests(helper.CPWebCase):
     def testUnrepr(self):
         err = ('WrongConfigValue: ("section: '
                "'global', option: 'server.environment', value: 'production'"
-               '''", 'UnknownType', ('production',))''')
+               '''", 'UnknownType')''')
         self.getPage("/env/wrong")
         self.assertErrorPage(500, pattern=err)
     
