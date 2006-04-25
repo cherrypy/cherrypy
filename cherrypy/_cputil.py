@@ -8,9 +8,9 @@ import traceback
 import cherrypy
 from cherrypy.lib import httptools
 
-def get_object_trail(objectpath=None):
-    """
-    List of (name, object) pairs, from cherrypy.root to the current object.
+
+def get_object_trail(objectpath=None, root=None):
+    """List of (name, object) pairs, from root (cherrypy.root) down objectpath.
     
     If any named objects are unreachable, (name, None) pairs are used.
     """
@@ -38,10 +38,15 @@ def get_object_trail(objectpath=None):
         gh = getattr(root, 'global_', _cpGlobalHandler)
         return [('root', cherrypy.root), ('global_', gh), ('index', None)]
     
-    nameList = ['root'] + nameList + ['index']
+    if root is None:
+        root = getattr(cherrypy, 'root', None)
+        if root is None:
+            return [('root', None), ('index', None)]
+    
+    nameList.append('index')
     
     # Convert the list of names into a list of objects
-    node = cherrypy
+    node = root
     objectTrail = []
     for name in nameList:
         # maps virtual names to Python identifiers (replaces '.' with '_')
