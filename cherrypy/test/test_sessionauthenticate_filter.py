@@ -11,11 +11,19 @@ def setup_server():
     
     cherrypy.root = Test()
     
+    def check(login, password):
+        # Dummy check_login_and_password function
+        if login != 'login' or password != 'password':
+            return u'Wrong login/password'
+    
     cherrypy.config.update({
             'server.log_to_screen': False,
             'server.environment': 'production',
-            'session_filter.on': True,
-            '/': {'session_authenticate_filter.on':True},
+            'tools.sessions.on': True,
+            '/': {
+                'tools.session_auth.on': True,
+                'tools.session_auth.check_login_and_password': check,
+                },
             })
 
 

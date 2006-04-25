@@ -211,81 +211,81 @@ def response_headers(headers=None, force=True):
             cherrypy.response.headers[name] = value
 
 
-class SessionAuthenticator:
-    
-    login_screen = """<html><body>
-    Message: %(error_msg)s
-    <form method="post" action="do_login">
-        Login: <input type="text" name="login" value="%(login)s" size="10" /><br />
-        Password: <input type="password" name="password" size="10" /><br />
-        <input type="hidden" name="from_page" value="%(from_page)s" /><br />
-        <input type="submit" />
-    </form>
+_login_screen = """<html><body>
+Message: %(error_msg)s
+<form method="post" action="do_login">
+    Login: <input type="text" name="login" value="%(login)s" size="10" /><br />
+    Password: <input type="password" name="password" size="10" /><br />
+    <input type="hidden" name="from_page" value="%(from_page)s" /><br />
+    <input type="submit" />
+</form>
 </body></html>"""
+
+def session_auth(check_login_and_password=None, not_logged_in=None,
+                 load_user_by_username=None, session_key = 'username',
+                 on_login = None, on_logout = None, login_screen = None):
     
-    def __call__(check_login_and_password, not_logged_in,
-                 load_user_by_username, session_key = 'username',
-                 on_login = None, on_logout = None,
-                 login_screen = None):
-        
-        if login_screen is None:
-            login_screen = self.login_screen
-        
-        cherrypy.request.user = None
-        cherrypy.thread_data.user = None
-        
-        conf = cherrypy.config.get
-        if conf('static_filter.on', False):
-            return
-        if cherrypy.request.path.endswith('login_screen'):
-            return
-        elif cherrypy.request.path.endswith('do_logout'):
-            login = cherrypy.session.get(session_key)
-            cherrypy.session[session_key] = None
-            cherrypy.request.user = None
-            cherrypy.thread_data.user = None
-            if login and on_logout:
-                on_logout(login)
-            from_page = cherrypy.request.params.get('from_page', '..')
-            raise cherrypy.HTTPRedirect(from_page)
-        elif cherrypy.request.path.endswith('do_login'):
-            from_page = cherrypy.request.params.get('from_page', '..')
-            login = cherrypy.request.params['login']
-            password = cherrypy.request.params['password']
-            error_msg = check_login_and_password(login, password)
-            if error_msg:
-                kw = {"from_page": from_page,
-                      "login": login, "error_msg": error_msg}
-                cherrypy.response.body = login_screen % kw
-                cherrypy.request.execute_main = False
-            else:
-                cherrypy.session[session_key] = login
-                if on_login:
-                    on_login(login)
-                if not from_page:
-                    from_page = '/'
-                raise cherrypy.HTTPRedirect(from_page)
-            return
-
-        # Check if user is logged in
-        temp_user = None
-        if (not cherrypy.session.get(session_key)) and not_logged_in:
-            # Call not_logged_in so that applications where anynymous user
-            #   is OK can handle it
-            temp_user = not_logged_in()
-        if (not cherrypy.session.get(session_key)) and not temp_user:
-            kw = {"from_page": cherrypy.request.browser_url,
-                  "login": "", "error_msg": ""}
+    if login_screen is None:
+        login_screen = _login_screen
+    
+    request = cherrypy.request
+    tdata = cherrypy.thread_data
+    sess = getattr(cherrypy, "session", None)
+    if sess is None:
+        # Shouldn't this raise an error (if the session filter isn't enabled)?
+        return False
+    
+    request.user = None
+    tdata.user = None
+    
+##    conf = cherrypy.config.get
+##    if conf('static_filter.on', False):
+##        return
+    if request.path.endswith('login_screen'):
+        return False
+    elif request.path.endswith('do_logout'):
+        login = sess.get(session_key)
+        sess[session_key] = None
+        request.user = None
+        tdata.user = None
+        if login and on_logout:
+            on_logout(login)
+        from_page = request.params.get('from_page', '..')
+        raise cherrypy.HTTPRedirect(from_page)
+    elif request.path.endswith('do_login'):
+        from_page = request.params.get('from_page', '..')
+        login = request.params['login']
+        password = request.params['password']
+        error_msg = check_login_and_password(login, password)
+        if error_msg:
+            kw = {"from_page": from_page,
+                  "login": login, "error_msg": error_msg}
             cherrypy.response.body = login_screen % kw
-            cherrypy.request.execute_main = False
-            return
+            return True
         
-        # Everything is OK: user is logged in
-        if load_user_by_username and not cherrypy.thread_data.user:
-            username = temp_user or cherrypy.session[session_key]
-            cherrypy.request.user = load_user_by_username(username)
-            cherrypy.thread_data.user = cherrypy.request.user
-
+        sess[session_key] = login
+        if on_login:
+            on_login(login)
+        raise cherrypy.HTTPRedirect(from_page or "/")
+    
+    # Check if user is logged in
+    temp_user = None
+    if (not sess.get(session_key)) and not_logged_in:
+        # Call not_logged_in so that applications where anonymous user
+        #   is OK can handle it
+        temp_user = not_logged_in()
+    if (not sess.get(session_key)) and not temp_user:
+        kw = {"from_page": request.browser_url, "login": "", "error_msg": ""}
+        cherrypy.response.body = login_screen % kw
+        return True
+    
+    # Everything is OK: user is logged in
+    if load_user_by_username and not tdata.user:
+        username = temp_user or sess[session_key]
+        request.user = load_user_by_username(username)
+        tdata.user = request.user
+    
+    return False
 
 def virtual_host(use_x_forwarded_host=True, **domains):
     """Change the object_path based on the Host.
