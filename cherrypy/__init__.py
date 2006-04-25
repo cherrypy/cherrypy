@@ -58,13 +58,6 @@ response = _ThreadLocalProxy('response')
 # Create thread_data object as a thread-specific all-purpose storage
 thread_data = local()
 
-### Create variables needed for session (see lib/sessionfilter.py for more info)
-##from filters import sessionfilter
-##session = sessionfilter.SessionWrapper()
-##_session_data_holder = {} # Needed for RAM sessions only
-##_session_lock_dict = {} # Needed for RAM sessions only
-##_session_last_clean_up_time = datetime.datetime.now()
-
 def expose(func=None, alias=None):
     """Expose the function, optionally providing an alias or set of aliases."""
     

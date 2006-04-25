@@ -125,6 +125,7 @@ class MainTool(Tool):
 #                              Builtin tools                              #
 
 from cherrypy.lib import cptools
+session_auth = MainTool(cptools.session_auth)
 base_url = Tool('before_request_body', cptools.base_url)
 response_headers = Tool('before_finalize', cptools.response_headers)
 virtual_host = Tool('before_request_body', cptools.virtual_host)
@@ -152,4 +153,4 @@ staticfile = MainTool(static.get_file)
 del static
 
 # These modules are themselves Tools
-from cherrypy.lib import caching, xmlrpc
+from cherrypy.lib import caching, sessions, xmlrpc

@@ -6,8 +6,8 @@ polluting cherrypy.request we use a Session object bound to
 cherrypy.request._session to store these variables.
 
 Global variables (RAM backend only):
-    - cherrypy._session_lock_dict: dictionary containing the locks for all session_id
-    - cherrypy._session_data_holder: dictionary containing the data for all sessions
+    - _session_lock_dict: dictionary containing the locks for all session_id
+    - _session_data_holder: dictionary containing the data for all sessions
 
 """
 
@@ -26,11 +26,17 @@ import types
 
 import cherrypy
 
+_session_last_clean_up_time = datetime.datetime.now()
+_session_data_holder = {} # Needed for RAM sessions only
+_session_lock_dict = {} # Needed for RAM sessions only
+
 
 def generate_id():
     """Return a new session id"""
     return sha.new('%s' % random.random()).hexdigest()
 
+
+def noop(data): pass
 
 class Session:
     """A CherryPy Session object (one per request).
@@ -43,56 +49,59 @@ class Session:
     expiration_time: date/time when the current session will expire
     """
     
+    timeout = 60
+    locking = 'explicit'
+    deadlock_timeout = 30
+    clean_up_delay = 5
+    storage_type = 'Ram'
+    storage_class = None
+    cookie_name = 'session_id'
+    cookie_domain = None
+    cookie_secure = False
+    cookie_path = None
+    cookie_path_from_header = None
+    
     def __init__(self):
-        conf = cherrypy.config.get
-        
         self.storage = None
         self.locked = False
-        self.loaded = True
+        self.loaded = False
+        self.saved = False
         
-        self.timeout = conf('session_filter.timeout', 60)
-        self.locking = conf('session_filter.locking', 'explicit')
-        self.on_create = conf('session_filter.on_create', lambda data: None)
-        self.on_renew = conf('session_filter.on_renew', lambda data: None)
-        self.on_delete = conf('session_filter.on_delete', lambda data: None)
-        gen_id = conf('session_filter.generate_id', generate_id)
-        self.deadlock_timeout = conf('session_filter.deadlock_timeout', 30)
-        
-        clean_up_delay = conf('session_filter.clean_up_delay', 5)
-        clean_up_delay = datetime.timedelta(seconds = clean_up_delay * 60)
-        
-        storage = conf('session_filter.storage_type', 'Ram').title()
+        self.generate_id = generate_id
+        self.on_create = noop
+        self.on_renew = noop
+        self.on_delete = noop
+    
+    def load(self):
+        clean_up_delay = datetime.timedelta(seconds = self.clean_up_delay * 60)
         
         # People can set their own custom class
-        #   through session_filter.storage_class
-        cls = conf('session_filter.storage_class', None)
-        if cls is None:
-            cls = globals()[storage + 'Storage']
-        self.storage = cls()
+        #   through tools.sessions.storage_class
+        if self.storage_class is None:
+            self.storage_class = globals()[self.storage_type.title() + 'Storage']
+        self.storage = self.storage_class()
         
         now = datetime.datetime.now()
         # Check if we need to clean up old sessions
-        if cherrypy._session_last_clean_up_time + clean_up_delay < now:
-            cherrypy._session_last_clean_up_time = now
+        global _session_last_clean_up_time
+        if _session_last_clean_up_time + clean_up_delay < now:
+            _session_last_clean_up_time = now
             # Run clean_up in other thread to avoid blocking this request
             thread.start_new_thread(self.storage.clean_up, (self,))
         
         self.data = {}
         
+        if self.cookie_path is None:
+            if self.cookie_path_from_header is not None:
+                geth = cherrypy.request.headers.get
+                self.cookie_path = geth(self.cookie_path_from_header, None)
+            if self.cookie_path is None:
+                self.cookie_path = '/'
+        
         # Check if request came with a session ID
-        cookie_name = conf('session_filter.cookie_name', 'session_id')
-        cookie_domain = conf('session_filter.cookie_domain', None)
-        cookie_secure = conf('session_filter.cookie_secure', False)
-        cookie_path = conf('session_filter.cookie_path', None)
-        if cookie_path is None:
-            cookie_path_header = conf('session_filter.cookie_path_from_header', None)
-            if cookie_path_header is not None:
-                cookie_path = cherrypy.request.headers.get(cookie_path_header, None)
-            if cookie_path is None:
-                cookie_path = '/'
-        if cookie_name in cherrypy.request.simple_cookie:
+        if self.cookie_name in cherrypy.request.simple_cookie:
             # It did: we mark the data as needing to be loaded
-            self.id = cherrypy.request.simple_cookie[cookie_name].value
+            self.id = cherrypy.request.simple_cookie[self.cookie_name].value
             
             # If using implicit locking, acquire lock
             if self.locking == 'implicit':
@@ -100,14 +109,14 @@ class Session:
                 self.storage.acquire_lock()
         else:
             # No id yet
-            self.id = gen_id()
+            self.id = self.generate_id()
             self.data['_id'] =  self.id
             self.on_create(self.data)
         
         # Set response cookie
         cookie = cherrypy.response.simple_cookie
-        cookie[cookie_name] = self.id
-        cookie[cookie_name]['path'] = cookie_path
+        cookie[self.cookie_name] = self.id
+        cookie[self.cookie_name]['path'] = self.cookie_path
         # We'd like to use the "max-age" param as
         #   http://www.faqs.org/rfcs/rfc2109.html indicates but IE doesn't
         #   save it to disk and the session is lost if people close
@@ -115,12 +124,12 @@ class Session:
         #   So we have to use the old "expires" ... sigh ...
         #cookie[cookie_name]['max-age'] = self.timeout * 60
         gmt_expiration_time = time.gmtime(time.time() + (self.timeout * 60))
-        cookie[cookie_name]['expires'] = time.strftime(
+        cookie[self.cookie_name]['expires'] = time.strftime(
                 "%a, %d-%b-%Y %H:%M:%S GMT", gmt_expiration_time)
-        if cookie_domain is not None:
-            cookie[cookie_name]['domain'] = cookie_domain
-        if cookie_secure is True:
-            cookie[cookie_name]['secure'] = 1
+        if self.cookie_domain is not None:
+            cookie[self.cookie_name]['domain'] = self.cookie_domain
+        if self.cookie_secure is True:
+            cookie[self.cookie_name]['secure'] = 1
     
     def save(self):
         """Save session data"""
@@ -134,6 +143,8 @@ class Session:
         if self.locked:
             # Always release the lock if the user didn't release it
             self.storage.release_lock()
+        
+        self.saved = True
 
 
 class SessionDeadlockError(Exception):
@@ -142,62 +153,30 @@ class SessionDeadlockError(Exception):
 
 
 class SessionNotEnabledError(Exception):
-    """User forgot to set session_filter.on to True"""
+    """User forgot to set tools.sessions.on to True"""
     pass
 
-class SessionStoragePathNotConfiguredError(Exception):
+class SessionStoragePathError(Exception):
     """User set storage_type to file but forgot to set the storage_path"""
     pass
-
-
-class SessionFilter(basefilter.BaseFilter):
-    
-    def before_request_body(self):
-        if cherrypy.config.get('session_filter.on', False):
-            cherrypy.request._session = Session()
-    
-    def before_finalize(self):
-        sess = getattr(cherrypy.request, "_session", None)
-        if sess:
-            # Make a wrapper around the body in order to save the session
-            #   either before or after the body is returned
-            def save_session_data(body, sess):
-                if isinstance(body, types.GeneratorType):
-                    for line in body:
-                        yield line
-                    sess.save()
-                else:
-                    sess.save()
-                    for line in body:
-                        yield line
-            cherrypy.response.body = save_session_data(cherrypy.response.body, sess)
-    
-    def on_end_request(self):
-        sess = getattr(cherrypy.request, "_session", None)
-        if sess:
-            if sess.locked:
-                # If the session is still locked we release the lock
-                sess.storage.release_lock()
-            if sess.storage:
-                sess.storage = None
 
 
 class RamStorage:
     """ Implementation of the RAM backend for sessions """
     
     def load(self, id):
-        return cherrypy._session_data_holder.get(id)
+        return _session_data_holder.get(id)
     
     def save(self, id, data, expiration_time):
-        cherrypy._session_data_holder[id] = (data, expiration_time)
+        _session_data_holder[id] = (data, expiration_time)
     
     def acquire_lock(self):
         sess = cherrypy.request._session
         id = cherrypy.session.id
-        lock = cherrypy._session_lock_dict.get(id)
+        lock = _session_lock_dict.get(id)
         if lock is None:
             lock = threading.Lock()
-            cherrypy._session_lock_dict[id] = lock
+            _session_lock_dict[id] = lock
         startTime = time.time()
         while True:
             if lock.acquire(False):
@@ -208,21 +187,19 @@ class RamStorage:
         sess.locked = True
     
     def release_lock(self):
-        sess = cherrypy.request._session
-        id = cherrypy.session['_id']
-        cherrypy._session_lock_dict[id].release()
-        sess.locked = False
+        _session_lock_dict[cherrypy.session['_id']].release()
+        cherrypy.request._session.locked = False
     
     def clean_up(self, sess):
         to_be_deleted = []
         now = datetime.datetime.now()
-        for id, (data, expiration_time) in cherrypy._session_data_holder.iteritems():
+        for id, (data, expiration_time) in _session_data_holder.iteritems():
             if expiration_time < now:
                 to_be_deleted.append(id)
         for id in to_be_deleted:
             try:
-                deleted_session = cherrypy._session_data_holder[id]
-                del cherrypy._session_data_holder[id]
+                deleted_session = _session_data_holder[id]
+                del _session_data_holder[id]
                 sess.on_delete(deleted_session)
             except KeyError:
                 # The session probably got deleted by a concurrent thread
@@ -253,21 +230,17 @@ class FileStorage:
         f.close()
     
     def acquire_lock(self):
-        sess = cherrypy.request._session
         file_path = self._get_file_path(cherrypy.session.id)
-        lock_file_path = file_path + self.LOCK_SUFFIX
-        self._lock_file(lock_file_path)
-        sess.locked = True
+        self._lock_file(file_path + self.LOCK_SUFFIX)
+        cherrypy.request._session.locked = True
     
     def release_lock(self):
-        sess = cherrypy.request._session
         file_path = self._get_file_path(cherrypy.session.id)
-        lock_file_path = file_path + self.LOCK_SUFFIX
-        self._unlock_file(lock_file_path)
-        sess.locked = False
+        self._unlock_file(file_path + self.LOCK_SUFFIX)
+        cherrypy.request._session.locked = False
     
     def clean_up(self, sess):
-        storage_path = cherrypy.config.get('session_filter.storage_path')
+        storage_path = getattr(sess, "storage_path")
         if storage_path is None:
             return
         now = datetime.datetime.now()
@@ -293,21 +266,21 @@ class FileStorage:
                     pass
     
     def _get_file_path(self, id):
-        storage_path = cherrypy.config.get('session_filter.storage_path')
+        storage_path = getattr(cherrypy.request._session, "storage_path")
         if storage_path is None:
-            raise SessionStoragePathNotConfiguredError()
+            raise SessionStoragePathError()
         fileName = self.SESSION_PREFIX + id
         file_path = os.path.join(storage_path, fileName)
         return file_path
     
     def _lock_file(self, path):
-        sess = cherrypy.request._session
+        timeout = cherrypy.request._session.deadlock_timeout
         startTime = time.time()
         while True:
             try:
                 lockfd = os.open(path, os.O_CREAT|os.O_WRONLY|os.O_EXCL)
             except OSError:
-                if time.time() - startTime > sess.deadlock_timeout:
+                if time.time() - startTime > timeout:
                     raise SessionDeadlockError()
                 time.sleep(0.5)
             else:
@@ -330,7 +303,7 @@ class PostgreSQLStorage:
     """
     
     def __init__(self):
-        self.db = cherrypy.config.get('session_filter.get_db')()
+        self.db = cherrypy.request._session.get_db()
         self.cursor = self.db.cursor()
     
     def __del__(self):
@@ -406,7 +379,7 @@ class SessionWrapper:
             return sess.storage.release_lock
         elif name == 'id':
             return sess.id
-
+        
         if not sess.loaded:
             data = sess.storage.load(sess.id)
             # data is either None or a tuple (session_data, expiration_time)
@@ -422,3 +395,50 @@ class SessionWrapper:
 
         return getattr(sess.data, name)
 
+
+# The actual hook functions
+
+def save():
+    # Save the session either before or after the body is returned
+    if not isinstance(cherrypy.response.body, types.GeneratorType):
+        cherrypy.request._session.save()
+
+def cleanup():
+    sess = cherrypy.request._session
+    if not sess.saved:
+        sess.save()
+    
+    if sess.locked:
+        # If the session is still locked we release the lock
+        sess.storage.release_lock()
+    if sess.storage:
+        sess.storage = None
+
+def wrap(*args, **kwargs):
+    """Make a decorator for this tool."""
+    def deco(f):
+        def wrapper(*a, **kw):
+            return f(*a, **kw)
+            save(*args, **kwargs)
+            cherrypy.request.hooks.attach('on_end_request', cleanup)
+        return wrapper
+    return deco
+
+def setup(conf):
+    """Hook this tool into cherrypy.request using the given conf.
+    
+    The standard CherryPy request object will automatically call this
+    method when the tool is "turned on" in config.
+    """
+    def wrapper():
+        s = cherrypy.request._session = Session()
+        for k, v in conf.iteritems():
+            setattr(s, str(k), v)
+        s.load()
+        
+        if not hasattr(cherrypy, "session"):
+            cherrypy.session = SessionWrapper()
+    
+    cherrypy.request.hooks.attach('before_request_body', wrapper)
+    cherrypy.request.hooks.attach('before_finalize', save)
+    cherrypy.request.hooks.attach('on_end_request', cleanup)

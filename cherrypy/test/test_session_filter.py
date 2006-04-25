@@ -19,16 +19,16 @@ def setup_server():
         testStr.exposed = True
         
         def setsessiontype(self, newtype):
-            cherrypy.config.update({'session_filter.storage_type': newtype})
+            cherrypy.config.update({'tools.sessions.storage_type': newtype})
         setsessiontype.exposed = True
         
     cherrypy.root = Root()
     cherrypy.config.update({
             'server.log_to_screen': False,
             'server.environment': 'production',
-            'session_filter.on': True,
-            'session_filter.storage_type' : 'file',
-            'session_filter.storage_path' : '.',
+            'tools.sessions.on': True,
+            'tools.sessions.storage_type' : 'file',
+            'tools.sessions.storage_path' : '.',
     })
 
 import helper
