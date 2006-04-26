@@ -398,15 +398,25 @@ class SessionWrapper:
 # The actual hook functions
 
 def save():
-    # Save the session either before or after the body is returned
-    if not isinstance(cherrypy.response.body, types.GeneratorType):
+    def wrap_body(body):
+        # If the body is a generator, we have to save the data
+        #   *after* the generator has been consumed
+        if isinstance(body, types.GeneratorType):
+            for line in body:
+                yield line
+        
+        # Save session data
         cherrypy.request._session.save()
+        
+        # If the body is not a generator, we save the data
+        #   before the body is returned
+        if not isinstance(body, types.GeneratorType):
+            for line in body:
+                yield line
+    cherrypy.response.body = wrap_body(cherrypy.response.body)
 
 def cleanup():
     sess = cherrypy.request._session
-    if not sess.saved:
-        sess.save()
-    
     if sess.locked:
         # If the session is still locked we release the lock
         sess.storage.release_lock()
