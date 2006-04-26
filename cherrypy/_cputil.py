@@ -59,6 +59,61 @@ def get_object_trail(objectpath=None, root=None):
     
     return objectTrail
 
+def dispatch(path):
+    """Find and run the appropriate page handler."""
+    request = cherrypy.request
+    handler, opath, vpath = find_handler(path)
+    
+    # Remove "root" from opath and join it to get found_object_path
+    # There are no consumers of this info right now, so this block
+    # may disappear soon.
+    if opath and opath[0] == "root":
+        opath.pop(0)
+    request.found_object_path = '/' + '/'.join(opath)
+    
+    # Decode any leftover %2F in the virtual_path atoms.
+    vpath = [x.replace("%2F", "/") for x in vpath]
+    cherrypy.response.body = handler(*vpath, **request.params)
+
+def find_handler(objectpath):
+    """Find the appropriate page handler for the given path."""
+    objectTrail = get_object_trail(objectpath)
+    names = [name for name, candidate in objectTrail]
+    
+    # Try successive objects (reverse order)
+    mounted_app_roots = cherrypy.tree.mount_points.values()
+    for i in xrange(len(objectTrail) - 1, -1, -1):
+        
+        name, candidate = objectTrail[i]
+        
+        # Try a "default" method on the current leaf.
+        defhandler = getattr(candidate, "default", None)
+        if callable(defhandler) and getattr(defhandler, 'exposed', False):
+            return defhandler, names[:i+1] + ["default"], names[i+1:-1]
+        
+        # Uncomment the next line to restrict positional params to "default".
+        # if i < len(objectTrail) - 2: continue
+        
+        # Try the current leaf.
+        if callable(candidate) and getattr(candidate, 'exposed', False):
+            if i == len(objectTrail) - 1:
+                # We found the extra ".index". Check if the original path
+                # had a trailing slash (otherwise, do a redirect).
+                if not objectpath.endswith('/'):
+                    atoms = cherrypy.request.browser_url.split("?", 1)
+                    newUrl = atoms.pop(0) + '/'
+                    if atoms:
+                        newUrl += "?" + atoms[0]
+                    raise cherrypy.HTTPRedirect(newUrl)
+            return candidate, names[:i+1], names[i+1:-1]
+        
+        if candidate in mounted_app_roots:
+            break
+    
+    # We didn't find anything
+    raise cherrypy.NotFound(objectpath)
+
+
 def get_special_attribute(name):
     """Return the special attribute. A special attribute is one that
     applies to all of the children from where it is defined, such as
