@@ -76,7 +76,7 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        _cputil.get_special_attribute("_cp_log_access", "_cpLogAccess")()
+        _cputil.get_special_attribute("_cp_log_access")()
         
         return cherrypy.response
     
@@ -173,8 +173,7 @@ class Request(object):
         if path is None:
             path = self.object_path
         _dispatch = cherrypy.config.get("dispatcher") or dispatch
-        handler = _dispatch(path)
-        cherrypy.response.body = handler(*self.virtual_path, **self.params)
+        _dispatch(path)
     
     def processHeaders(self):
         self.params = httptools.parseQueryString(self.query_string)
@@ -235,19 +234,22 @@ class Request(object):
 
 
 def dispatch(path):
-    """Find the appropriate page handler."""
+    """Find and run the appropriate page handler."""
     request = cherrypy.request
-    handler, opath, vpath = find(request.browser_url, path)
+    handler, opath, vpath = find(path)
     
     # Remove "root" from opath and join it to get found_object_path
-    request.found_object_path = '/' + '/'.join(opath[1:])
+    # There are no consumers of this info right now, so this block
+    # may disappear soon.
+    if opath and opath[0] == "root":
+        opath.pop(0)
+    request.found_object_path = '/' + '/'.join(opath)
     
     # Decode any leftover %2F in the virtual_path atoms.
-    request.virtual_path = [x.replace("%2F", "/") for x in vpath]
-    
-    return handler
+    vpath = [x.replace("%2F", "/") for x in vpath]
+    cherrypy.response.body = handler(*vpath, **request.params)
 
-def find(browser_url, objectpath):
+def find(objectpath):
     objectTrail = _cputil.get_object_trail(objectpath)
     names = [name for name, candidate in objectTrail]
     
@@ -271,7 +273,7 @@ def find(browser_url, objectpath):
                 # We found the extra ".index". Check if the original path
                 # had a trailing slash (otherwise, do a redirect).
                 if not objectpath.endswith('/'):
-                    atoms = browser_url.split("?", 1)
+                    atoms = cherrypy.request.browser_url.split("?", 1)
                     newUrl = atoms.pop(0) + '/'
                     if atoms:
                         newUrl += "?" + atoms[0]
@@ -391,7 +393,7 @@ class Response(object):
         try:
             cherrypy.request.hooks.run('before_error_response')
             
-            self.error_response()
+            _cputil.get_special_attribute('_cp_on_error')()
             self.finalize()
             
             cherrypy.request.hooks.run('after_error_response')
@@ -412,7 +414,7 @@ class Response(object):
             # Fall through to the second error handler
             pass
         
-        # Failure in self.error_response, error hooks, or finalize.
+        # Failure in error hooks or finalize.
         # Bypass them all.
         if cherrypy.config.get('server.show_tracebacks', False):
             body = self.dbltrace % (_cputil.formatExc(exc),
@@ -420,11 +422,6 @@ class Response(object):
         else:
             body = ""
         self.setBareError(body)
-    
-    def error_response(self):
-        # _cp_on_error will probably change self.body.
-        # It may also change the headers, etc.
-        _cputil.get_special_attribute('_cp_on_error', '_cpOnError')()
     
     def setBareError(self, body=None):
         self.status, self.header_list, self.body = _cputil.bareError(body)

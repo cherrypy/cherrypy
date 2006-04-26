@@ -486,17 +486,16 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertInBody("raise ValueError()")
             data = open(log_file, "rb").readlines()
             self.assertEqual(data[0][-41:], ' INFO Traceback (most recent call last):\n')
-            self.assertEqual(data[6], '    raise ValueError()\n')
+            self.assertEqual(data[-3], '    raise ValueError()\n')
             
             # Test that unhandled tracebacks get written to the error log
             # if log_tracebacks is False but log_unhandled_tracebacks is True.
             self.getPage("/error/log_unhandled")
             self.assertInBody("raise ValueError()")
             data = open(log_file, "rb").readlines()
-            self.assertEqual(data[9][-41:], ' INFO Traceback (most recent call last):\n')
-            self.assertEqual(data[15], '    raise ValueError()\n')
-            # Each error should write only one traceback (9 lines each).
-            self.assertEqual(len(data), 18)
+            self.assertEqual(data[-3], '    raise ValueError()\n')
+            # Each error should write only one traceback (11 lines each).
+            self.assertEqual(len(data), 22)
         finally:
             ignore.pop()
     
