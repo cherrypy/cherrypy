@@ -72,9 +72,7 @@ class Session:
         self.on_renew = noop
         self.on_delete = noop
     
-    def load(self):
-        clean_up_delay = datetime.timedelta(seconds = self.clean_up_delay * 60)
-        
+    def init(self):
         # People can set their own custom class
         #   through tools.sessions.storage_class
         if self.storage_class is None:
@@ -84,6 +82,7 @@ class Session:
         now = datetime.datetime.now()
         # Check if we need to clean up old sessions
         global _session_last_clean_up_time
+        clean_up_delay = datetime.timedelta(seconds = self.clean_up_delay * 60)
         if _session_last_clean_up_time + clean_up_delay < now:
             _session_last_clean_up_time = now
             # Run clean_up in other thread to avoid blocking this request
@@ -418,9 +417,10 @@ def wrap(*args, **kwargs):
     """Make a decorator for this tool."""
     def deco(f):
         def wrapper(*a, **kw):
-            return f(*a, **kw)
+            result = f(*a, **kw)
             save(*args, **kwargs)
             cherrypy.request.hooks.attach('on_end_request', cleanup)
+            return result
         return wrapper
     return deco
 
@@ -434,7 +434,7 @@ def setup(conf):
         s = cherrypy.request._session = Session()
         for k, v in conf.iteritems():
             setattr(s, str(k), v)
-        s.load()
+        s.init()
         
         if not hasattr(cherrypy, "session"):
             cherrypy.session = SessionWrapper()
