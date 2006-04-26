@@ -36,7 +36,8 @@ class HookMap(object):
         self.failsafe = failsafe or []
     
     def attach(self, point, callback, conf=None):
-        if conf is None:
+        if not conf:
+            # No point adding a wrapper if there's no conf
             self.callbacks[point].append(callback)
         else:
             def wrapper():
@@ -51,14 +52,13 @@ class HookMap(object):
                 del conf["on"]
                 g[toolname].setup(conf)
         
-        # Run _cp_setup functions
+        # Run _cp_tools setup functions
         mounted_app_roots = cherrypy.tree.mount_points.values()
         objectList = _cputil.get_object_trail()
         objectList.reverse()
         for objname, obj in objectList:
-            s = getattr(obj, "_cp_setup", None)
-            if s:
-                s()
+            for tool in getattr(obj, "_cp_tools", []):
+                tool.setup()
             if obj in mounted_app_roots:
                 break
     
@@ -113,11 +113,6 @@ class Tool(object):
         self.name = name
         # TODO: add an attribute to self for each arg
         # in inspect.getargspec(callable)
-        
-        class ToolMixin(object):
-            def _cp_setup(me):
-                self.setup(None)
-        self.Mixin = ToolMixin
     
     def __call__(self, *args, **kwargs):
         return self.callable(*args, **kwargs)
@@ -139,7 +134,7 @@ class Tool(object):
             return wrapper
         return deco
     
-    def setup(self, conf):
+    def setup(self, conf=None):
         """Hook this tool into cherrypy.request using the given conf.
         
         The standard CherryPy request object will automatically call this
@@ -156,11 +151,7 @@ class MainTool(Tool):
     """
     
     def __init__(self, callable, name=None):
-        self.point = 'before_main'
-        self.callable = callable
-        if name is None:
-            name = callable.__name__
-        self.name = name
+        Tool.__init__(self, 'before_main', callable, name)
     
     def handler(self, *args, **kwargs):
         """Use this tool as a CherryPy page handler.
@@ -197,12 +188,13 @@ class MainTool(Tool):
             return wrapper
         return deco
     
-    def setup(self, conf):
+    def setup(self, conf=None):
         """Hook this tool into cherrypy.request using the given conf.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
+        conf = conf or {}
         def wrapper():
             if self.callable(**conf):
                 cherrypy.request.dispatch = None
@@ -227,16 +219,13 @@ del encodings
 
 from cherrypy.lib import static
 class _StaticDirTool(MainTool):
-    def setup(self, conf):
+    def setup(self, conf=None):
         """Hook this tool into cherrypy.request using the given conf."""
         # Stick the section where "dir" was defined into the params
+        conf = conf or {}
         conf['section'] = cherrypy.config.get('tools.staticdir.dir',
                                               return_section=True)
-        def wrapper():
-            if self.callable(**conf):
-                cherrypy.request.dispatch = None
-        # Don't pass conf (or our wrapper will get wrapped!)
-        cherrypy.request.hooks.attach(self.point, wrapper)
+        MainTool.setup(self, conf)
 staticdir = _StaticDirTool(static.staticdir)
 staticfile = MainTool(static.staticfile)
 del static
@@ -266,12 +255,13 @@ class _SessionTool(Tool):
             return wrapper
         return deco
     
-    def setup(self, conf):
+    def setup(self, conf=None):
         """Hook this tool into cherrypy.request using the given conf.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
+        conf = conf or {}
         def init():
             s = cherrypy.request._session = _sessions.Session()
             for k, v in conf.iteritems():
@@ -280,8 +270,8 @@ class _SessionTool(Tool):
             
             if not hasattr(cherrypy, "session"):
                 cherrypy.session = _sessions.SessionWrapper()
+        # init must be bound after headers are read
         cherrypy.request.hooks.attach('before_request_body', init)
-        
         cherrypy.request.hooks.attach('before_finalize', _sessions.save)
         cherrypy.request.hooks.attach('on_end_request', _sessions.cleanup)
 sessions = _SessionTool()
@@ -307,8 +297,7 @@ class _XMLRPCTool(object):
         rpcparams, rpcmethod = _xmlrpc.process_body()
         path = _xmlrpc.patched_path(path, rpcmethod)
         
-        from cherrypy import _cprequest
-        handler, opath, vpath = _cprequest.find_handler(path)
+        handler, opath, vpath = _cputil.find_handler(path)
         
         # Decode any leftover %2F in the virtual_path atoms.
         vpath = tuple([x.replace("%2F", "/") for x in vpath])
@@ -319,7 +308,7 @@ class _XMLRPCTool(object):
                         conf.get('encoding', 'utf-8'),
                         conf.get('allow_none', 0))
     
-    def setup(self, conf):
+    def setup(self, conf=None):
         """Hook this tool into cherrypy.request using the given conf."""
         cherrypy.request.dispatch = self.dispatch
 xmlrpc = _XMLRPCTool()

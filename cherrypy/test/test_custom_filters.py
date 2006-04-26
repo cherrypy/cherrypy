@@ -38,10 +38,6 @@ def setup_server():
         def __init__(self):
             self.counter = 0
             self.ended = {}
-            class ToolMixin(object):
-                def _cp_setup(me):
-                    self.setup(None)
-            self.Mixin = ToolMixin
         
         def nadsat(self):
             def nadsat_it_up(body):
@@ -56,7 +52,7 @@ def setup_server():
             cherrypy.response.body = "razdrez"
             self.ended[cherrypy.request.counter] = True
         
-        def setup(self, conf):
+        def setup(self, conf=None):
             cherrypy.request.counter = self.counter = self.counter + 1
             self.ended[cherrypy.request.counter] = False
             cherrypy.request.hooks.callbacks['before_finalize'].insert(0, self.nadsat)
@@ -85,8 +81,10 @@ def setup_server():
     
     
     # METHOD ONE:
-    # Use tool.Mixin
-    class CPFilterList(Test, tools.nadsat.Mixin):
+    # Use _cp_tools
+    class Demo(Test):
+        
+        _cp_tools = [tools.nadsat]
         
         def index(self):
             return "A good piece of cherry pie"
@@ -118,17 +116,17 @@ def setup_server():
         },
         # METHOD THREE:
         # Do it all in config
-        '/cpfilterlist': {
+        '/demo': {
             'tools.numerify.on': True,
             'tools.numerify.map': {"pie": "3.14159"},
         },
-        '/cpfilterlist/restricted': {
+        '/demo/restricted': {
             'server.show_tracebacks': False,
         },
-        '/cpfilterlist/errinstream': {
+        '/demo/errinstream': {
             'stream_response': True,
         },
-        '/cpfilterlist/err_in_onstart': {
+        '/demo/err_in_onstart': {
             # Because this isn't a dict, on_start_resource will error.
             'tools.numerify.map': "pie->3.14159"
         },
@@ -142,34 +140,34 @@ import helper
 
 class FilterTests(helper.CPWebCase):
     
-    def testCPFilterList(self):
-##        self.getPage("/cpfilterlist/")
-##        # If body is "razdrez", then on_end_request is being called too early.
-##        self.assertBody("A horrorshow lomtick of cherry 3.14159")
-##        # If this fails, then on_end_request isn't being called at all.
-##        self.getPage("/cpfilterlist/ended/1")
-##        self.assertBody("True")
-##        
-##        valerr = '\n    raise ValueError()\nValueError'
-##        self.getPage("/cpfilterlist/err")
-##        # If body is "razdrez", then on_end_request is being called too early.
-##        self.assertErrorPage(500, pattern=valerr)
-##        # If this fails, then on_end_request isn't being called at all.
-##        self.getPage("/cpfilterlist/ended/3")
-##        self.assertBody("True")
-##        
-##        # If body is "razdrez", then on_end_request is being called too early.
-##        self.getPage("/cpfilterlist/errinstream")
-##        # Because this error is raised after the response body has
-##        # started, the status should not change to an error status.
-##        self.assertStatus("200 OK")
-##        self.assertBody("Unrecoverable error in the server.")
-##        # If this fails, then on_end_request isn't being called at all.
-##        self.getPage("/cpfilterlist/ended/5")
-##        self.assertBody("True")
-##        
+    def testDemo(self):
+        self.getPage("/demo/")
+        # If body is "razdrez", then on_end_request is being called too early.
+        self.assertBody("A horrorshow lomtick of cherry 3.14159")
+        # If this fails, then on_end_request isn't being called at all.
+        self.getPage("/demo/ended/1")
+        self.assertBody("True")
+        
+        valerr = '\n    raise ValueError()\nValueError'
+        self.getPage("/demo/err")
+        # If body is "razdrez", then on_end_request is being called too early.
+        self.assertErrorPage(500, pattern=valerr)
+        # If this fails, then on_end_request isn't being called at all.
+        self.getPage("/demo/ended/3")
+        self.assertBody("True")
+        
+        # If body is "razdrez", then on_end_request is being called too early.
+        self.getPage("/demo/errinstream")
+        # Because this error is raised after the response body has
+        # started, the status should not change to an error status.
+        self.assertStatus("200 OK")
+        self.assertBody("Unrecoverable error in the server.")
+        # If this fails, then on_end_request isn't being called at all.
+        self.getPage("/demo/ended/5")
+        self.assertBody("True")
+        
         # Test the decorator technique.
-        self.getPage("/cpfilterlist/restricted")
+        self.getPage("/demo/restricted")
         self.assertErrorPage(401)
     
     def testGuaranteedFilters(self):
@@ -179,7 +177,7 @@ class FilterTests(helper.CPWebCase):
         # Here, we have set up a failure in NumerifyFilter.on_start_resource,
         # but because that failure is logged and passed over, the error
         # page we obtain in the user agent should be from before_finalize.
-        self.getPage("/cpfilterlist/err_in_onstart")
+        self.getPage("/demo/err_in_onstart")
         self.assertErrorPage(500)
         self.assertInBody("AttributeError: 'Request' object has no "
                           "attribute 'numerify_map'")
