@@ -62,7 +62,7 @@ class HookMap(object):
             if obj in mounted_app_roots:
                 break
     
-    def run(self, point):
+    def run(self, point, *args, **kwargs):
         """Execute all registered callbacks for the given point."""
         failsafe = point in self.failsafe
         for callback in self.callbacks[point]:
@@ -74,13 +74,13 @@ class HookMap(object):
             # your own errors in these callbacks!
             if failsafe:
                 try:
-                    callback()
+                    callback(*args, **kwargs)
                 except (KeyboardInterrupt, SystemExit):
                     raise
                 except:
                     cherrypy.log(traceback=True)
             else:
-                callback()
+                callback(*args, **kwargs)
 
 def tool_config():
     """Return all 'tools.*' config entries as a {toolname: {k: v}} dict."""
@@ -113,11 +113,11 @@ class Tool(object):
         self.name = name
         # TODO: add an attribute to self for each arg
         # in inspect.getargspec(callable)
-##        
-##        class ToolMixin(object):
-##            def _cp_setup(me):
-##                self.setup(None)
-##        self.Mixin = ToolMixin
+        
+        class ToolMixin(object):
+            def _cp_setup(me):
+                self.setup(None)
+        self.Mixin = ToolMixin
     
     def __call__(self, *args, **kwargs):
         return self.callable(*args, **kwargs)
@@ -280,7 +280,7 @@ class _SessionTool(Tool):
             
             if not hasattr(cherrypy, "session"):
                 cherrypy.session = _sessions.SessionWrapper()
-        cherrypy.request.hooks.attach('before_request_body', init)
+        cherrypy.request.hooks.attach('on_start_resource', init)
         
         cherrypy.request.hooks.attach('before_finalize', _sessions.save)
         cherrypy.request.hooks.attach('on_end_request', _sessions.cleanup)
