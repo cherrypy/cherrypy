@@ -47,7 +47,7 @@ def get_object_trail(objectpath=None, root=None):
     
     # Convert the list of names into a list of objects
     node = root
-    objectTrail = []
+    objectTrail = [('root', root)]
     for name in nameList:
         # maps virtual names to Python identifiers (replaces '.' with '_')
         objname = name.replace('.', '_')

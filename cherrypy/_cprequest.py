@@ -229,7 +229,7 @@ class Request(object):
 def dispatch(path):
     """Find and run the appropriate page handler."""
     request = cherrypy.request
-    handler, opath, vpath = find(path)
+    handler, opath, vpath = find_handler(path)
     
     # Remove "root" from opath and join it to get found_object_path
     # There are no consumers of this info right now, so this block
@@ -242,7 +242,8 @@ def dispatch(path):
     vpath = [x.replace("%2F", "/") for x in vpath]
     cherrypy.response.body = handler(*vpath, **request.params)
 
-def find(objectpath):
+def find_handler(objectpath):
+    """Find the appropriate page handler for the given path."""
     objectTrail = _cputil.get_object_trail(objectpath)
     names = [name for name, candidate in objectTrail]
     

@@ -108,7 +108,7 @@ class StaticFilterTest(helper.CPWebCase):
         # Check that we get an error if no .file or .dir
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
-        self.assertInBody("TypeError: get_dir() takes at least 2 "
+        self.assertInBody("TypeError: staticdir() takes at least 2 "
                           "non-keyword arguments (1 given)")
         
         # Test up-level security

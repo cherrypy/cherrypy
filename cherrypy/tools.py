@@ -280,7 +280,7 @@ class _SessionTool(Tool):
             
             if not hasattr(cherrypy, "session"):
                 cherrypy.session = _sessions.SessionWrapper()
-        cherrypy.request.hooks.attach('on_start_resource', init)
+        cherrypy.request.hooks.attach('before_request_body', init)
         
         cherrypy.request.hooks.attach('before_finalize', _sessions.save)
         cherrypy.request.hooks.attach('on_end_request', _sessions.cleanup)
@@ -301,18 +301,18 @@ class _XMLRPCTool(object):
             [/rpc]
             dispatch = tools.xmlrpc.dispatch
         """
+        request = cherrypy.request
         request.hooks.attach('after_error_response', _xmlrpc.wrap_error)
         
         rpcparams, rpcmethod = _xmlrpc.process_body()
         path = _xmlrpc.patched_path(path, rpcmethod)
         
         from cherrypy import _cprequest
-        handler, opath, vpath = _cprequest.find(path)
+        handler, opath, vpath = _cprequest.find_handler(path)
         
         # Decode any leftover %2F in the virtual_path atoms.
         vpath = tuple([x.replace("%2F", "/") for x in vpath])
         
-        request = cherrypy.request
         body = handler(*(vpath + rpcparams), **request.params)
         conf = tool_config().get("xmlrpc", {})
         _xmlrpc.respond(body,
