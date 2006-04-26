@@ -86,7 +86,7 @@ def log(msg='', context='', severity=0, traceback=False):
     # Load _cputil lazily to avoid circular references, and
     # to allow profiler and coverage tools to work on it.
     import _cputil
-    logfunc = _cputil.get_special_attribute('_cp_log_message', '_cpLogMessage')
+    logfunc = _cputil.get_special_attribute('_cp_log_message')
     
     if traceback:
         msg += _cputil.formatExc()

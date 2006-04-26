@@ -59,7 +59,7 @@ def get_object_trail(objectpath=None, root=None):
     
     return objectTrail
 
-def get_special_attribute(name, old_name = None):
+def get_special_attribute(name):
     """Return the special attribute. A special attribute is one that
     applies to all of the children from where it is defined, such as
     _cp_on_error."""
@@ -72,21 +72,14 @@ def get_special_attribute(name, old_name = None):
     objectList = get_object_trail()
     objectList.reverse()
     for objname, obj in objectList:
-        if old_name and hasattr(obj, old_name):
-            return getattr(obj, old_name)
-        elif hasattr(obj, name):
+        if hasattr(obj, name):
             return getattr(obj, name)
         if obj in mounted_app_roots:
             break
     
     try:
-        if old_name:
-            return globals()[old_name]
-        else:
-            return globals()[name]
+        return globals()[name]
     except KeyError:
-        if old_name:
-            return get_special_attribute(name)
         msg = "Special attribute %s could not be found" % repr(name)
         raise cherrypy.HTTPError(500, msg)
 
@@ -238,7 +231,6 @@ def _cp_on_error():
     if (not cherrypy.config.get('server.log_tracebacks', True)
         and cherrypy.config.get('server.log_unhandled_tracebacks', True)):
         cherrypy.log(traceback=True)
-    
     cherrypy.HTTPError(500).set_response()
 
 def _cp_on_http_error(status, message):

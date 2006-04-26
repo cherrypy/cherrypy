@@ -152,7 +152,7 @@ class HTTPError(Error):
     
     def set_response(self):
         import cherrypy
-        handler = cherrypy._cputil.get_special_attribute("_cp_on_http_error", "_cpOnHTTPError")
+        handler = cherrypy._cputil.get_special_attribute("_cp_on_http_error")
         handler(self.status, self.message)
 
 
