@@ -413,32 +413,3 @@ def cleanup():
     if sess.storage:
         sess.storage = None
 
-def wrap(*args, **kwargs):
-    """Make a decorator for this tool."""
-    def deco(f):
-        def wrapper(*a, **kw):
-            result = f(*a, **kw)
-            save(*args, **kwargs)
-            cherrypy.request.hooks.attach('on_end_request', cleanup)
-            return result
-        return wrapper
-    return deco
-
-def setup(conf):
-    """Hook this tool into cherrypy.request using the given conf.
-    
-    The standard CherryPy request object will automatically call this
-    method when the tool is "turned on" in config.
-    """
-    def wrapper():
-        s = cherrypy.request._session = Session()
-        for k, v in conf.iteritems():
-            setattr(s, str(k), v)
-        s.init()
-        
-        if not hasattr(cherrypy, "session"):
-            cherrypy.session = SessionWrapper()
-    
-    cherrypy.request.hooks.attach('before_request_body', wrapper)
-    cherrypy.request.hooks.attach('before_finalize', save)
-    cherrypy.request.hooks.attach('on_end_request', cleanup)

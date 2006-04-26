@@ -26,7 +26,6 @@ class Request(object):
         self.remote_host  = remote_host
         
         self.scheme = scheme
-        self.execute_main = True
         self.closed = False
         
         pts = ['on_start_resource', 'before_request_body',
@@ -87,6 +86,7 @@ class Request(object):
             # because request.object_path is used for config lookups
             # right away.
             self.processRequestLine()
+            self.dispatch = cherrypy.config.get("dispatch") or dispatch
             self.hooks.setup()
             
             try:
@@ -103,8 +103,8 @@ class Request(object):
                     while True:
                         try:
                             self.hooks.run('before_main')
-                            if self.execute_main:
-                                self.main()
+                            if self.dispatch:
+                                self.dispatch(self.object_path)
                             break
                         except cherrypy.InternalRedirect, ir:
                             self.object_path = ir.path
@@ -167,13 +167,6 @@ class Request(object):
         server_v = cherrypy.config.get("server.protocol_version", "HTTP/1.0")
         server_v = httptools.Version.from_http(server_v)
         cherrypy.response.version = min(self.version, server_v)
-    
-    def main(self, path=None):
-        """Obtain and set cherrypy.response.body from a page handler."""
-        if path is None:
-            path = self.object_path
-        _dispatch = cherrypy.config.get("dispatcher") or dispatch
-        _dispatch(path)
     
     def processHeaders(self):
         self.params = httptools.parseQueryString(self.query_string)

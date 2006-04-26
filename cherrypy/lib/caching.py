@@ -141,6 +141,8 @@ def tee_output():
 def wrap(f):
     """Caching decorator."""
     def wrapper(*a, **kw):
+        # There's are no parameters to get(), so there's no need
+        # to merge values from config.
         if not get():
             f(*a, **kw)
             tee_output()
@@ -152,7 +154,7 @@ def setup(conf):
         init(conf.get("class", None))
     def wrapper():
         if get():
-            cherrypy.request.execute_main = False
+            cherrypy.request.dispatch = None
         else:
             # Note the devious technique here of adding hooks on the fly
             cherrypy.request.hooks.attach('before_finalize', tee_output)

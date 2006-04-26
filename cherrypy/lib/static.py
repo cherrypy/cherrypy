@@ -165,7 +165,7 @@ def _attempt(filename, content_types):
         # request. We might find a dynamic handler instead.
         return False
 
-def get_dir(section, dir, root="", match="", content_types=None, index=""):
+def staticdir(section, dir, root="", match="", content_types=None, index=""):
     if match and not re.search(match, cherrypy.request.object_path):
         return False
     
@@ -200,7 +200,7 @@ def get_dir(section, dir, root="", match="", content_types=None, index=""):
             handled = _attempt(os.path.join(filename, index), content_types)
     return handled
 
-def get_file(filename, root=None, match="", content_types=None):
+def staticfile(filename, root=None, match="", content_types=None):
     if match and not re.search(match, cherrypy.request.object_path):
         return False
     

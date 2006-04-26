@@ -5,51 +5,25 @@ import cherrypy
 
 
 def process_body():
-    request = cherrypy.request
-    
-    cl = int(request.headers.get('Content-Length') or 0)
-    data = request.rfile.read(cl)
+    """Return (params, method) from request body."""
     try:
-        params, method = xmlrpclib.loads(data)
+        return xmlrpclib.loads(cherrypy.request.body.read())
     except Exception:
-        params, method = ('ERROR PARAMS', ), 'ERRORMETHOD'
-    request.rpcMethod, request.rpcParams = method, params
-    
-    # patch the path. there are only a few options:
-    # - 'RPC2' + method >> method
-    # - 'someurl' + method >> someurl.method
-    # - 'someurl/someother' + method >> someurl.someother.method
-    if not request.object_path.endswith('/'):
-        request.object_path += '/'
-    if request.object_path.startswith('/RPC2/'):
+        return ('ERROR PARAMS', ), 'ERRORMETHOD'
+
+
+def patched_path(path, method):
+    """Return 'path' with the rpcMethod appended."""
+    if not path.endswith('/'):
+        path += '/'
+    if path.startswith('/RPC2/'):
         # strip the first /rpc2
-        request.object_path = request.object_path[5:]
-    request.object_path += str(method).replace('.', '/')
-    request.paramList = list(params)
-    request.processRequestBody = False
+        path = path[5:]
+    path += str(method).replace('.', '/')
+    return path
 
-def main(encoding='utf-8', allow_none=0):
-    """Obtain and set cherrypy.response.body from a page handler.
-    
-    Python's None value cannot be used in standard XML-RPC; to allow
-    using it via an extension, provide a true value for allow_none.
-    """
-    from cherrypy import _cprequest
-    dispatch = cherrypy.config.get("dispatcher") or _cprequest.Dispatcher()
-    
-    request = cherrypy.request
-    handler = dispatch(request.object_path)
-    body = handler(*(request.virtual_path + request.paramList),
-                   **request.params)
-    respond(xmlrpclib.dumps((body,), methodresponse=1,
-                            encoding=encoding, allow_none=allow_none))
-    return True
 
-def error_response():
-    body = str(sys.exc_info()[1])
-    respond(xmlrpclib.dumps(xmlrpclib.Fault(1, body)))
-
-def respond(body):
+def _set_response(body):
     # The XML-RPC spec (http://www.xmlrpc.com/spec) says:
     # "Unless there's a lower-level error, always return 200 OK."
     # Since Python's xmlrpclib interprets a non-200 response
@@ -60,11 +34,13 @@ def respond(body):
     response.headers['Content-Type'] = 'text/xml'
     response.headers['Content-Length'] = len(body)
 
-def setup(conf):
-    """Hook this tool into cherrypy.request using the given conf."""
-    cherrypy.request.hooks.attach('before_request_body', process_body, conf)
-    def wrapper():
-        if main(**conf):
-            cherrypy.request.execute_main = False
-    cherrypy.request.hooks.attach('before_main', wrapper)
-    cherrypy.request.hooks.attach('after_error_response', error_response, conf)
+
+def respond(body, encoding='utf-8', allow_none=0):
+    _set_response(xmlrpclib.dumps((body,), methodresponse=1,
+                                  encoding=encoding,
+                                  allow_none=allow_none))
+
+def wrap_error():
+    body = str(sys.exc_info()[1])
+    _set_response(xmlrpclib.dumps(xmlrpclib.Fault(1, body)))
+

@@ -494,8 +494,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertInBody("raise ValueError()")
             data = open(log_file, "rb").readlines()
             self.assertEqual(data[-3], '    raise ValueError()\n')
-            # Each error should write only one traceback (11 lines each).
-            self.assertEqual(len(data), 22)
+            # Each error should write only one traceback (9 lines each).
+            self.assertEqual(len(data), 18)
         finally:
             ignore.pop()
     
