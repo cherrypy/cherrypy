@@ -86,7 +86,7 @@ class NullRequest:
     def close(self):
         pass
     
-    def run(self, requestLine, headers, rfile):
+    def run(self, request_line, headers, rfile):
         cherrypy.response.status = "204 No Content"
         cherrypy.response.header_list = [("Content-Type", 'text/html'),
                                          ("Server", "Null CherryPy"),

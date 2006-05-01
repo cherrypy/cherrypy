@@ -361,8 +361,8 @@ class PostgreSQLStorage:
 
 
 # Users access sessions through cherrypy.session, but we want this
-#   to be thread-specific so we use a special wrapper that forwards
-#   calls to cherrypy.session to a thread-specific dictionary called
+#   to be thread-specific so we use a wrapper that forwards calls
+#   to cherrypy.session to a thread-specific dictionary called
 #   cherrypy.request._session.data
 class SessionWrapper:
     

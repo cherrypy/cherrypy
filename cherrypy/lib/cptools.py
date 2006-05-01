@@ -8,7 +8,6 @@ import time
 import cherrypy
 
 
-
 def decorate(func, decorator):
     """
     Return the decorated func. This will automatically copy all
@@ -314,4 +313,16 @@ def virtual_host(use_x_forwarded_host=True, **domains):
     if prefix:
         cherrypy.request.object_path = prefix + "/" + cherrypy.request.object_path
 
+def log_traceback():
+    """Write the last error's traceback to the cherrypy error log."""
+    from cherrypy import _cperror
+    cherrypy.log(_cperror.format_exc(), "HTTP")
 
+def log_request_headers():
+    """Write the last error's traceback to the cherrypy error log."""
+    h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.header_list]
+    cherrypy.log('\nRequest Headers:\n' + '\n'.join(h), "HTTP")
+
+def redirect(url=''):
+    """Raise cherrypy.HTTPRedirect to the given url."""
+    raise cherrypy.HTTPRedirect(url)

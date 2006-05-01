@@ -116,8 +116,7 @@ def find_handler(objectpath):
 
 def get_special_attribute(name):
     """Return the special attribute. A special attribute is one that
-    applies to all of the children from where it is defined, such as
-    _cp_on_error."""
+    applies to all of the children from where it is defined."""
     
     # First, we look in the right-most object to see if this special
     # attribute is implemented. If not, then we try the previous object,
@@ -152,25 +151,27 @@ def _cpGlobalHandler():
     return ""
 _cpGlobalHandler.exposed = True
 
+
 def logtime():
     now = datetime.datetime.now()
     month = httptools.monthname[now.month][:3].capitalize()
     return '%02d/%s/%04d:%02d:%02d:%02d' % (
         now.day, month, now.year, now.hour, now.minute, now.second)
 
-def _cp_log_access():
+def log_access():
     """Default method for logging access"""
+    request = cherrypy.request
     
     tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-    s = tmpl % {'h': cherrypy.request.remote_host,
+    s = tmpl % {'h': request.remote_host,
                 'l': '-',
-                'u': getattr(cherrypy.request, "login", None) or "-",
+                'u': getattr(request, "login", None) or "-",
                 't': logtime(),
-                'r': cherrypy.request.requestLine,
+                'r': request.request_line,
                 's': cherrypy.response.status.split(" ", 1)[0],
                 'b': cherrypy.response.headers.get('Content-Length', '') or "-",
-                'f': cherrypy.request.headers.get('referer', ''),
-                'a': cherrypy.request.headers.get('user-agent', ''),
+                'f': request.headers.get('referer', ''),
+                'a': request.headers.get('user-agent', ''),
                 }
     
     if cherrypy.config.get('server.log_to_screen', True):
@@ -181,7 +182,6 @@ def _cp_log_access():
         f = open(fname, 'ab')
         f.write(s + '\n')
         f.close()
-
 
 _log_severity_levels = {0: "INFO", 1: "WARNING", 2: "ERROR"}
 
@@ -207,217 +207,4 @@ def _cp_log_message(msg, context = '', severity = 0):
         f = open(fname, 'ab')
         f.write(s + '\n')
         f.close()
-
-
-_HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
-    <title>%(status)s</title>
-    <style type="text/css">
-    #powered_by {
-        margin-top: 20px;
-        border-top: 2px solid black;
-        font-style: italic;
-    }
-
-    #traceback {
-        color: red;
-    }
-    </style>
-</head>
-    <body>
-        <h2>%(status)s</h2>
-        <p>%(message)s</p>
-        <pre id="traceback">%(traceback)s</pre>
-    <div id="powered_by">
-    <span>Powered by <a href="http://www.cherrypy.org">CherryPy %(version)s</a></span>
-    </div>
-    </body>
-</html>
-'''
-
-def getErrorPage(status, **kwargs):
-    """Return an HTML page, containing a pretty error response.
-    
-    status should be an int or a str.
-    kwargs will be interpolated into the page template.
-    """
-    
-    try:
-        code, reason, message = httptools.validStatus(status)
-    except ValueError, x:
-        raise cherrypy.HTTPError(500, x.args[0])
-    
-    # We can't use setdefault here, because some
-    # callers send None for kwarg values.
-    if kwargs.get('status') is None:
-        kwargs['status'] = "%s %s" % (code, reason)
-    if kwargs.get('message') is None:
-        kwargs['message'] = message
-    if kwargs.get('traceback') is None:
-        kwargs['traceback'] = ''
-    if kwargs.get('version') is None:
-        kwargs['version'] = cherrypy.__version__
-    for k, v in kwargs.iteritems():
-        if v is None:
-            kwargs[k] = ""
-        else:
-            kwargs[k] = cgi.escape(kwargs[k])
-    
-    template = _HTTPErrorTemplate
-    error_page_file = cherrypy.config.get('error_page.%s' % code, '')
-    if error_page_file:
-        try:
-            template = file(error_page_file, 'rb').read()
-        except:
-            m = kwargs['message']
-            if m:
-                m += "<br />"
-            m += ("In addition, the custom error page "
-                  "failed:\n<br />%s" % (sys.exc_info()[1]))
-            kwargs['message'] = m
-    
-    return template % kwargs
-
-def _cp_on_error():
-    """ Default _cp_on_error method """
-    # Allow logging of only *unexpected* HTTPError's.
-    if (not cherrypy.config.get('server.log_tracebacks', True)
-        and cherrypy.config.get('server.log_unhandled_tracebacks', True)):
-        cherrypy.log(traceback=True)
-    cherrypy.HTTPError(500).set_response()
-
-def _cp_on_http_error(status, message):
-    """Default _cp_on_http_error method.
-    
-    status should be an int.
-    """
-    tb = formatExc()
-    logmsg = ""
-    
-    if cherrypy.config.get('server.log_tracebacks', True):
-        logmsg = tb
-    if cherrypy.config.get('server.log_request_headers', True):
-        h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.header_list]
-        logmsg += 'Request Headers:\n' + '\n'.join(h)
-    if logmsg:
-        cherrypy.log(logmsg, "HTTP")
-    
-    if not cherrypy.config.get('server.show_tracebacks', False):
-        tb = None
-    
-    response = cherrypy.response
-    
-    # Remove headers which applied to the original content,
-    # but do not apply to the error page.
-    for key in ["Accept-Ranges", "Age", "ETag", "Location", "Retry-After",
-                "Vary", "Content-Encoding", "Content-Length", "Expires",
-                "Content-Location", "Content-MD5", "Last-Modified"]:
-        if response.headers.has_key(key):
-            del response.headers[key]
-    
-    if status != 416:
-        # A server sending a response with status code 416 (Requested
-        # range not satisfiable) SHOULD include a Content-Range field
-        # with a byte-range- resp-spec of "*". The instance-length
-        # specifies the current length of the selected resource.
-        # A response with status code 206 (Partial Content) MUST NOT
-        # include a Content-Range field with a byte-range- resp-spec of "*".
-        if response.headers.has_key("Content-Range"):
-            del response.headers["Content-Range"]
-    
-    # In all cases, finalize will be called after this method,
-    # so don't bother cleaning up response values here.
-    response.status = status
-    content = getErrorPage(status, traceback=tb, message=message)
-    response.body = content
-    response.headers['Content-Length'] = len(content)
-    response.headers['Content-Type'] = "text/html"
-    
-    be_ie_unfriendly(status)
-
-
-_ie_friendly_error_sizes = {
-    400: 512, 403: 256, 404: 512, 405: 256,
-    406: 512, 408: 512, 409: 512, 410: 256,
-    500: 512, 501: 512, 505: 512,
-    }
-
-
-def be_ie_unfriendly(status):
-    
-    response = cherrypy.response
-    
-    # For some statuses, Internet Explorer 5+ shows "friendly error
-    # messages" instead of our response.body if the body is smaller
-    # than a given size. Fix this by returning a body over that size
-    # (by adding whitespace).
-    # See http://support.microsoft.com/kb/q218155/
-    s = _ie_friendly_error_sizes.get(status, 0)
-    if s:
-        s += 1
-        # Since we are issuing an HTTP error status, we assume that
-        # the entity is short, and we should just collapse it.
-        content = response.collapse_body()
-        l = len(content)
-        if l and l < s:
-            # IN ADDITION: the response must be written to IE
-            # in one chunk or it will still get replaced! Bah.
-            content = content + (" " * (s - l))
-        response.body = content
-        response.headers['Content-Length'] = len(content)
-
-def lower_to_camel(s):
-    """Turns lowercase_with_underscore into camelCase."""
-    sp = s.split('_')
-    new_sp = []
-    for i, s in enumerate(sp):
-        if i != 0:
-            s = s[0].upper() + s[1:]
-        new_sp.append(s)
-    return ''.join(new_sp)
-
-def formatExc(exc=None):
-    """formatExc(exc=None) -> exc (or sys.exc_info if None), formatted."""
-    if exc is None:
-        exc = sys.exc_info()
-    
-    if exc == (None, None, None):
-        return ""
-    
-    page_handler_str = ""
-    args = list(getattr(exc[1], "args", []))
-    if args:
-        if len(args) > 1:
-            page_handler = args.pop()
-            page_handler_str = 'Page handler: %s\n' % repr(page_handler)
-            exc[1].args = tuple(args)
-    return page_handler_str + "".join(traceback.format_exception(*exc))
-
-def bareError(extrabody=None):
-    """Produce status, headers, body for a critical error.
-    
-    Returns a triple without calling any other questionable functions,
-    so it should be as error-free as possible. Call it from an HTTP server
-    if you get errors after Request() is done.
-    
-    If extrabody is None, a friendly but rather unhelpful error message
-    is set in the body. If extrabody is a string, it will be appended
-    as-is to the body.
-    """
-    
-    # The whole point of this function is to be a last line-of-defense
-    # in handling errors. That is, it must not raise any errors itself;
-    # it cannot be allowed to fail. Therefore, don't add to it!
-    # In particular, don't call any other CP functions.
-    
-    body = "Unrecoverable error in the server."
-    if extrabody is not None:
-        body += "\n" + extrabody
-    
-    return ("500 Internal Server Error",
-            [('Content-Type', 'text/plain'),
-             ('Content-Length', str(len(body)))],
-            [body])
 

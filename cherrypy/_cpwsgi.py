@@ -3,10 +3,11 @@
 import sys
 import cherrypy
 from cherrypy import _cputil, _cpwsgiserver
+from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httptools
 
 
-def requestLine(environ):
+def request_line(environ):
     """Rebuild first line of the request (e.g. "GET /path HTTP/1.0")."""
     
     resource = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
@@ -70,7 +71,7 @@ def wsgiApp(environ, start_response):
         request.multithread = environ['wsgi.multithread']
         request.multiprocess = environ['wsgi.multiprocess']
         request.wsgi_environ = environ
-        response = request.run(requestLine(environ),
+        response = request.run(request_line(environ),
                                translate_headers(environ),
                                environ['wsgi.input'])
         s, h, b = response.status, response.header_list, response.body
@@ -80,11 +81,11 @@ def wsgiApp(environ, start_response):
     except:
         if cherrypy.config.get("server.throw_errors", False):
             raise
-        tb = _cputil.formatExc()
+        tb = format_exc()
         cherrypy.log(tb)
         if not cherrypy.config.get("server.show_tracebacks", False):
             tb = ""
-        s, h, b = _cputil.bareError(tb)
+        s, h, b = bare_error(tb)
         exc = sys.exc_info()
     
     try:
@@ -114,8 +115,8 @@ def wsgiApp(environ, start_response):
         except:
             cherrypy.log(traceback=True)
         request = None
-        s, h, b = _cputil.bareError()
-        # CherryPy test suite expects bareError body to be output,
+        s, h, b = bare_error()
+        # CherryPy test suite expects bare_error body to be output,
         # so don't call start_response (which, according to PEP 333,
         # may raise its own error at that point).
         for chunk in b:

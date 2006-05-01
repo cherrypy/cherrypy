@@ -38,6 +38,7 @@ def setup_server():
         def __init__(self):
             self.counter = 0
             self.ended = {}
+            self.name = "nadsat"
         
         def nadsat(self):
             def nadsat_it_up(body):

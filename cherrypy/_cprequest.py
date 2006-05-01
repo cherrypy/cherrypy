@@ -6,7 +6,7 @@ import sys
 import types
 
 import cherrypy
-from cherrypy import _cputil, _cpcgifs, tools
+from cherrypy import _cperror, _cputil, _cpcgifs, tools
 from cherrypy.lib import cptools, httptools
 
 
@@ -21,9 +21,9 @@ class Request(object):
         remote_host should be string of the client's IP address.
         scheme should be a string, either "http" or "https".
         """
-        self.remote_addr  = remote_addr
-        self.remote_port  = remote_port
-        self.remote_host  = remote_host
+        self.remote_addr = remote_addr
+        self.remote_port = remote_port
+        self.remote_host = remote_host
         
         self.scheme = scheme
         self.closed = False
@@ -42,10 +42,10 @@ class Request(object):
             self.hooks.run('on_end_request')
             cherrypy.serving.__dict__.clear()
     
-    def run(self, requestLine, headers, rfile):
+    def run(self, request_line, headers, rfile):
         """Process the Request.
         
-        requestLine should be of the form "GET /path HTTP/1.0".
+        request_line should be of the form "GET /path HTTP/1.0".
         headers should be a list of (name, value) tuples.
         rfile should be a file-like object containing the HTTP request
             entity.
@@ -59,10 +59,12 @@ class Request(object):
         attributes to build the outbound stream.
         
         """
-        self.requestLine = requestLine.strip()
+        self.log_access = _cputil.log_access
+        self.error_response = cherrypy.HTTPError(500).set_response
+        
+        self.request_line = request_line.strip()
         self.header_list = list(headers)
         self.rfile = rfile
-        
         self.headers = httptools.HeaderMap()
         self.simple_cookie = Cookie.SimpleCookie()
         
@@ -75,29 +77,30 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        _cputil.get_special_attribute("_cp_log_access")()
+        self.log_access()
         
         return cherrypy.response
     
     def _run(self):
+        conf = cherrypy.config.get
         
         try:
             # This has to be done very early in the request process,
             # because request.object_path is used for config lookups
             # right away.
-            self.processRequestLine()
-            self.dispatch = cherrypy.config.get("dispatch") or _cputil.dispatch
+            self.process_request_line()
+            self.dispatch = conf("dispatch") or _cputil.dispatch
             self.hooks.setup()
             
             try:
                 self.hooks.run('on_start_resource')
                 
                 try:
-                    self.processHeaders()
+                    self.process_headers()
                     
                     self.hooks.run('before_request_body')
-                    if self.processRequestBody:
-                        self.processBody()
+                    if self.process_request_body:
+                        self.process_body()
                     
                     # Loop to allow for InternalRedirect.
                     while True:
@@ -111,8 +114,6 @@ class Request(object):
                     
                     self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
-                except cherrypy.RequestHandled:
-                    pass
                 except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
                     # For an HTTPRedirect or HTTPError (including NotFound),
                     # we don't go through the regular mechanism:
@@ -125,18 +126,19 @@ class Request(object):
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            if cherrypy.config.get("server.throw_errors", False):
+            if conf("server.throw_errors", False):
                 raise
-            cherrypy.response.handleError(sys.exc_info())
+            self.handle_error(sys.exc_info())
     
-    def processRequestLine(self):
-        rl = self.requestLine
-        method, path, qs, proto = httptools.parseRequestLine(rl)
+    def process_request_line(self):
+        """Parse the first line (e.g. "GET /path HTTP/1.1") of the request."""
+        rl = self.request_line
+        method, path, qs, proto = httptools.parse_request_line(rl)
         if path == "*":
             path = "global"
         
         self.method = method
-        self.processRequestBody = method in ("POST", "PUT")
+        self.process_request_body = method in ("POST", "PUT")
         
         self.path = path
         self.query_string = qs
@@ -168,7 +170,7 @@ class Request(object):
         server_v = httptools.Version.from_http(server_v)
         cherrypy.response.version = min(self.version, server_v)
     
-    def processHeaders(self):
+    def process_headers(self):
         self.params = httptools.parseQueryString(self.query_string)
         
         # Process the headers into self.headers
@@ -201,7 +203,8 @@ class Request(object):
     browser_url = property(_get_browser_url,
                           doc="The URL as entered in a browser (read-only).")
     
-    def processBody(self):
+    def process_body(self):
+        """Convert request.rfile into request.params (or request.body)."""
         # Create a copy of headers with lowercase keys because
         # FieldStorage doesn't work otherwise
         lowerHeaderMap = {}
@@ -224,6 +227,42 @@ class Request(object):
             self.body = forms.file
         else:
             self.params.update(httptools.paramsFromCGIForm(forms))
+    
+    def handle_error(self, exc):
+        response = cherrypy.response
+        try:
+            self.hooks.run("before_error_response")
+            if self.error_response:
+                self.error_response()
+            self.hooks.run("after_error_response")
+            response.finalize()
+            return
+        except cherrypy.HTTPRedirect, inst:
+            try:
+                inst.set_response()
+                response.finalize()
+                return
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except:
+                # Fall through to the second error handler
+                pass
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            # Fall through to the second error handler
+            pass
+        
+        # Failure in error handler or finalize. Bypass them.
+        if cherrypy.config.get('server.show_tracebacks', False):
+            dbltrace = ("\n===First Error===\n\n%s"
+                        "\n\n===Second Error===\n\n%s\n\n")
+            body = dbltrace % (_cperror.format_exc(exc),
+                               _cperror.format_exc())
+        else:
+            body = ""
+        r = _cperror.bare_error(body)
+        response.status, response.header_list, response.body = r
 
 
 class Body(object):
@@ -324,44 +363,3 @@ class Response(object):
             for line in cookie.split("\n"):
                 name, value = line.split(": ", 1)
                 self.header_list.append((name, value))
-    
-    dbltrace = "\n===First Error===\n\n%s\n\n===Second Error===\n\n%s\n\n"
-    
-    def handleError(self, exc):
-        """Set status, headers, and body when an unanticipated error occurs."""
-        try:
-            cherrypy.request.hooks.run('before_error_response')
-            
-            _cputil.get_special_attribute('_cp_on_error')()
-            self.finalize()
-            
-            cherrypy.request.hooks.run('after_error_response')
-            return
-        except cherrypy.HTTPRedirect, inst:
-            try:
-                inst.set_response()
-                self.finalize()
-                return
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                # Fall through to the second error handler
-                pass
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            # Fall through to the second error handler
-            pass
-        
-        # Failure in error hooks or finalize.
-        # Bypass them all.
-        if cherrypy.config.get('server.show_tracebacks', False):
-            body = self.dbltrace % (_cputil.formatExc(exc),
-                                    _cputil.formatExc())
-        else:
-            body = ""
-        self.setBareError(body)
-    
-    def setBareError(self, body=None):
-        self.status, self.header_list, self.body = _cputil.bareError(body)
-

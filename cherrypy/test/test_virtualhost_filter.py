@@ -28,7 +28,7 @@ def setup_server():
     cherrypy.root.mydom3 = VHost("Domain 3")
 
     cherrypy.config.update({
-            'server.logToScreen': False,
+            'server.log_to_screen': False,
             'server.environment': 'production',
             'tools.virtual_host.on': True,
             'tools.virtual_host.www.mydom2.com': '/mydom2',

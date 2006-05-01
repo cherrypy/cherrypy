@@ -40,7 +40,7 @@ def respond(body, encoding='utf-8', allow_none=0):
                                   encoding=encoding,
                                   allow_none=allow_none))
 
-def wrap_error():
+def on_error():
     body = str(sys.exc_info()[1])
     _set_response(xmlrpclib.dumps(xmlrpclib.Fault(1, body)))
 

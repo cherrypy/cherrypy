@@ -54,7 +54,7 @@ class CPWebCase(webtest.WebCase):
         """
         
         # This will never contain a traceback:
-        page = cherrypy._cputil.getErrorPage(status, message=message)
+        page = cherrypy._cperror.get_error_page(status, message=message)
         
         # First, test the response body without checking the traceback.
         # Stick a match-all group (.*) in to grab the traceback.

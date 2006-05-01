@@ -91,7 +91,7 @@ def WSGIAppRequestFactory(wsgi_app, env_update=None):
     class WSGIAppRequest(_cphttptools.Request):
         """A custom Request object for running a WSGI app within CP."""
        
-        def processBody(self):
+        def process_body(self):
             pass
         
         def main(self, *args, **kwargs):

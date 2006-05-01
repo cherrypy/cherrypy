@@ -1,6 +1,13 @@
 """Error classes for CherryPy."""
 
+import cgi
+import sys
+import traceback
 import urllib
+import urlparse
+
+from cherrypy.lib import httptools
+
 
 class Error(Exception):
     pass
@@ -11,10 +18,6 @@ class NotReady(Error):
 
 class WrongConfigValue(Error):
     """ Happens when a config value can't be parsed, or is otherwise illegal. """
-    pass
-
-class RequestHandled(Exception):
-    """Exception raised when no further request handling should occur."""
     pass
 
 class InternalRedirect(Exception):
@@ -30,7 +33,6 @@ class InternalRedirect(Exception):
     
     def __init__(self, path, params=None):
         import cherrypy
-        import cgi
         request = cherrypy.request
         
         # Set a 'path' member attribute so that code which traps this
@@ -47,7 +49,6 @@ class InternalRedirect(Exception):
                 request.params = pm
             else:
                 request.query_string = urllib.urlencode(params)
-                request.queryString = request.query_string
                 request.params = params.copy()
         
         Exception.__init__(self, path, params)
@@ -64,7 +65,6 @@ class HTTPRedirect(Exception):
     """
     
     def __init__(self, urls, status=None):
-        import urlparse
         import cherrypy
         
         if isinstance(urls, basestring):
@@ -151,9 +151,42 @@ class HTTPError(Error):
         Error.__init__(self, status, message)
     
     def set_response(self):
+        """Set cherrypy.response status, headers, and body."""
         import cherrypy
-        handler = cherrypy._cputil.get_special_attribute("_cp_on_http_error")
-        handler(self.status, self.message)
+        
+        response = cherrypy.response
+        
+        # Remove headers which applied to the original content,
+        # but do not apply to the error page.
+        for key in ["Accept-Ranges", "Age", "ETag", "Location", "Retry-After",
+                    "Vary", "Content-Encoding", "Content-Length", "Expires",
+                    "Content-Location", "Content-MD5", "Last-Modified"]:
+            if response.headers.has_key(key):
+                del response.headers[key]
+        
+        if self.status != 416:
+            # A server sending a response with status code 416 (Requested
+            # range not satisfiable) SHOULD include a Content-Range field
+            # with a byte-range- resp-spec of "*". The instance-length
+            # specifies the current length of the selected resource.
+            # A response with status code 206 (Partial Content) MUST NOT
+            # include a Content-Range field with a byte-range- resp-spec of "*".
+            if response.headers.has_key("Content-Range"):
+                del response.headers["Content-Range"]
+        
+        # In all cases, finalize will be called after this method,
+        # so don't bother cleaning up response values here.
+        response.status = self.status
+        tb = None
+        if cherrypy.config.get('server.show_tracebacks', False):
+            tb = format_exc()
+        content = get_error_page(self.status, traceback=tb,
+                                 message=self.message)
+        response.body = content
+        response.headers['Content-Length'] = len(content)
+        response.headers['Content-Type'] = "text/html"
+        
+        be_ie_unfriendly(self.status)
 
 
 class NotFound(HTTPError):
@@ -167,9 +200,141 @@ class NotFound(HTTPError):
         HTTPError.__init__(self, 404, "The path %s was not found." % repr(path))
 
 
-class InternalError(HTTPError):
-    """ Error that should never happen """
+_HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+    <title>%(status)s</title>
+    <style type="text/css">
+    #powered_by {
+        margin-top: 20px;
+        border-top: 2px solid black;
+        font-style: italic;
+    }
+
+    #traceback {
+        color: red;
+    }
+    </style>
+</head>
+    <body>
+        <h2>%(status)s</h2>
+        <p>%(message)s</p>
+        <pre id="traceback">%(traceback)s</pre>
+    <div id="powered_by">
+    <span>Powered by <a href="http://www.cherrypy.org">CherryPy %(version)s</a></span>
+    </div>
+    </body>
+</html>
+'''
+
+def get_error_page(status, **kwargs):
+    """Return an HTML page, containing a pretty error response.
     
-    def __init__(self, message=None):
-        HTTPError.__init__(self, 500, message)
+    status should be an int or a str.
+    kwargs will be interpolated into the page template.
+    """
+    import cherrypy
+    
+    try:
+        code, reason, message = httptools.validStatus(status)
+    except ValueError, x:
+        raise cherrypy.HTTPError(500, x.args[0])
+    
+    # We can't use setdefault here, because some
+    # callers send None for kwarg values.
+    if kwargs.get('status') is None:
+        kwargs['status'] = "%s %s" % (code, reason)
+    if kwargs.get('message') is None:
+        kwargs['message'] = message
+    if kwargs.get('traceback') is None:
+        kwargs['traceback'] = ''
+    if kwargs.get('version') is None:
+        kwargs['version'] = cherrypy.__version__
+    for k, v in kwargs.iteritems():
+        if v is None:
+            kwargs[k] = ""
+        else:
+            kwargs[k] = cgi.escape(kwargs[k])
+    
+    template = _HTTPErrorTemplate
+    error_page_file = cherrypy.config.get('error_page.%s' % code, '')
+    if error_page_file:
+        try:
+            template = file(error_page_file, 'rb').read()
+        except:
+            m = kwargs['message']
+            if m:
+                m += "<br />"
+            m += ("In addition, the custom error page "
+                  "failed:\n<br />%s" % (sys.exc_info()[1]))
+            kwargs['message'] = m
+    
+    return template % kwargs
+
+
+_ie_friendly_error_sizes = {
+    400: 512, 403: 256, 404: 512, 405: 256,
+    406: 512, 408: 512, 409: 512, 410: 256,
+    500: 512, 501: 512, 505: 512,
+    }
+
+
+def be_ie_unfriendly(status):
+    import cherrypy
+    response = cherrypy.response
+    
+    # For some statuses, Internet Explorer 5+ shows "friendly error
+    # messages" instead of our response.body if the body is smaller
+    # than a given size. Fix this by returning a body over that size
+    # (by adding whitespace).
+    # See http://support.microsoft.com/kb/q218155/
+    s = _ie_friendly_error_sizes.get(status, 0)
+    if s:
+        s += 1
+        # Since we are issuing an HTTP error status, we assume that
+        # the entity is short, and we should just collapse it.
+        content = response.collapse_body()
+        l = len(content)
+        if l and l < s:
+            # IN ADDITION: the response must be written to IE
+            # in one chunk or it will still get replaced! Bah.
+            content = content + (" " * (s - l))
+        response.body = content
+        response.headers['Content-Length'] = len(content)
+
+
+def format_exc(exc=None):
+    """format_exc(exc=None) -> exc (or sys.exc_info if None), formatted."""
+    if exc is None:
+        exc = sys.exc_info()
+    if exc == (None, None, None):
+        return ""
+    return "".join(traceback.format_exception(*exc))
+
+def bare_error(extrabody=None):
+    """Produce status, headers, body for a critical error.
+    
+    Returns a triple without calling any other questionable functions,
+    so it should be as error-free as possible. Call it from an HTTP server
+    if you get errors outside of the request.
+    
+    If extrabody is None, a friendly but rather unhelpful error message
+    is set in the body. If extrabody is a string, it will be appended
+    as-is to the body.
+    """
+    
+    # The whole point of this function is to be a last line-of-defense
+    # in handling errors. That is, it must not raise any errors itself;
+    # it cannot be allowed to fail. Therefore, don't add to it!
+    # In particular, don't call any other CP functions.
+    
+    body = "Unrecoverable error in the server."
+    if extrabody is not None:
+        body += "\n" + extrabody
+    
+    return ("500 Internal Server Error",
+            [('Content-Type', 'text/plain'),
+             ('Content-Length', str(len(body)))],
+            [body])
 

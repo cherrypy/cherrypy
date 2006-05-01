@@ -303,9 +303,9 @@ def validStatus(status):
     
     return code, reason, message
 
-def parseRequestLine(requestLine):
-    """Return (method, path, querystring, protocol) from a requestLine."""
-    method, path, protocol = requestLine.split()
+def parse_request_line(request_line):
+    """Return (method, path, querystring, protocol) from a request_line."""
+    method, path, protocol = request_line.split()
     
     # path may be an abs_path (including "http://host.domain.tld");
     # Ignore scheme, location, and fragments (so config lookups work).

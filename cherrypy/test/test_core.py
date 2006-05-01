@@ -104,8 +104,7 @@ def setup_server():
     class Redirect(Test):
         
         class Error:
-            def _cp_on_error(self):
-                raise cherrypy.HTTPRedirect("/errpage")
+            _cp_tools = [tools.ErrorRedirect("/errpage")]
             
             def index(self):
                 raise NameError()
@@ -206,9 +205,6 @@ def setup_server():
         def cause_err_in_finalize(self):
             # Since status must start with an int, this should error.
             cherrypy.response.status = "ZOO OK"
-        
-        def log_unhandled(self):
-            raise ValueError()
         
         def rethrow(self):
             """Test that an error raised here will be thrown out to the server."""
@@ -355,7 +351,7 @@ def setup_server():
         },
         '/error': {
             'server.log_file': log_file,
-            'server.log_tracebacks': True,
+            'tools.log_tracebacks.on': True,
         },
         '/error/page_streamed': {
             'stream_response': True,
@@ -368,10 +364,6 @@ def setup_server():
         },
         '/error/noexist': {
             'error_page.404': "nonexistent.html",
-        },
-        '/error/log_unhandled': {
-            'server.log_tracebacks': False,
-            'server.log_unhandled_tracebacks': True,
         },
         '/error/rethrow': {
             'server.throw_errors': True,
@@ -487,15 +479,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             data = open(log_file, "rb").readlines()
             self.assertEqual(data[0][-41:], ' INFO Traceback (most recent call last):\n')
             self.assertEqual(data[-3], '    raise ValueError()\n')
-            
-            # Test that unhandled tracebacks get written to the error log
-            # if log_tracebacks is False but log_unhandled_tracebacks is True.
-            self.getPage("/error/log_unhandled")
-            self.assertInBody("raise ValueError()")
-            data = open(log_file, "rb").readlines()
-            self.assertEqual(data[-3], '    raise ValueError()\n')
-            # Each error should write only one traceback (9 lines each).
-            self.assertEqual(len(data), 18)
         finally:
             ignore.pop()
     
@@ -814,7 +797,7 @@ llo,
         self.assertStatus(200)
     
     def testFavicon(self):
-        # Calls to favicon.ico are special-cased in config.py.
+        # favicon.ico is served by staticfile by default (see config.py)
         icofilename = os.path.join(localDir, "../favicon.ico")
         icofile = open(icofilename, "rb")
         data = icofile.read()
