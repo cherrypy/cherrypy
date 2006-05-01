@@ -24,9 +24,9 @@ def setup_server():
         cherrypy.response.body = number_it(cherrypy.response.body)
     
     class NumTool(tools.Tool):
-        def setup(self, conf):
+        def setup(self):
             def makemap():
-                m = conf.get("map", {})
+                m = self.merged_args().get("map", {})
                 cherrypy.request.numerify_map = m.items()
             cherrypy.request.hooks.attach('on_start_resource', makemap)
             cherrypy.request.hooks.attach(self.point, self.callable)
@@ -53,7 +53,7 @@ def setup_server():
             cherrypy.response.body = "razdrez"
             self.ended[cherrypy.request.counter] = True
         
-        def setup(self, conf=None):
+        def setup(self):
             cherrypy.request.counter = self.counter = self.counter + 1
             self.ended[cherrypy.request.counter] = False
             cherrypy.request.hooks.callbacks['before_finalize'].insert(0, self.nadsat)
@@ -82,10 +82,10 @@ def setup_server():
     
     
     # METHOD ONE:
-    # Use _cp_tools
+    # Use _cp_config
     class Demo(Test):
         
-        _cp_tools = [tools.nadsat]
+        _cp_config = {"tools.nadsat.on": True}
         
         def index(self):
             return "A good piece of cherry pie"

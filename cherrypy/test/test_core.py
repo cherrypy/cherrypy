@@ -104,7 +104,9 @@ def setup_server():
     class Redirect(Test):
         
         class Error:
-            _cp_tools = [tools.ErrorRedirect("/errpage")]
+            _cp_config = {"tools.err_redirect.on": True,
+                          "tools.err_redirect.url": "/errpage",
+                          }
             
             def index(self):
                 raise NameError()

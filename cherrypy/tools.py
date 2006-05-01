@@ -46,44 +46,11 @@ class HookMap(object):
     
     def setup(self):
         """Run tool.setup(conf) for each tool specified in current config."""
-        toolconf = tool_config()
-        
         g = globals()
-        for toolname, conf in toolconf.iteritems():
+        for toolname, conf in cherrypy.request.toolmap.iteritems():
             if conf.get("on", False):
-                del conf["on"]
-                tool = g.get(toolname)
-                if tool:
-                    tool.setup(conf)
-        
-        # Run _cp_tools setup functions. They should be run
-        # in order: first from root to leaf, then in the order
-        # given within each _cp_tools list. However, if the
-        # same tool is mentioned twice, the one farthest from
-        # the root should be used. This allows a leaf node to
-        # override parent nodes and order.
-        mounted_app_roots = cherrypy.tree.mount_points.values()
-        objectList = _cputil.get_object_trail()
-        objectList.reverse()
-        
-        # Collect toolsets (up to the app root).
-        toolsets = []
-        for objname, obj in objectList:
-            toolset = getattr(obj, "_cp_tools", [])
-            if toolset:
-                toolsets.append(toolset)
-            if obj in mounted_app_roots:
-                break
-        
-        # Now reverse (and de-dupe) the tool list, and call each setup
-        toolsets.reverse()
-        seen = {}
-        for toolset in toolsets:
-            for tool in toolset:
-                obj_id = id(tool)
-                if obj_id not in seen:
-                    seen[obj_id] = None
-                    tool.setup(toolconf.get(tool.name, {}))
+                tool = g[toolname]
+                tool.setup()
     
     def run(self, point, *args, **kwargs):
         """Execute all registered callbacks for the given point."""
@@ -105,28 +72,9 @@ class HookMap(object):
             else:
                 callback(*args, **kwargs)
 
-def tool_config():
-    """Return all 'tools.*' config entries as a {toolname: {k: v}} dict."""
-    toolmap = {}
-    for k, v in cherrypy.config.current_config().iteritems():
-        atoms = k.split(".")
-        namespace = atoms.pop(0)
-        if namespace == "tools":
-            toolname = atoms.pop(0)
-            bucket = toolmap.setdefault(toolname, {})
-            bucket[".".join(atoms)] = v
-    return toolmap
-
-def merged_config(toolname, d):
-    """Merge arguments from tool config into another dict."""
-    mergedkw = d.copy()
-    mergedkw.update(tool_config().get(toolname, {}))
-    if "on" in mergedkw:
-        del mergedkw["on"]
-    return mergedkw
-
 
 class Tool(object):
+    """A registered function for use with CherryPy request-processing hooks."""
     
     def __init__(self, point, callable, name=None):
         self.point = point
@@ -140,6 +88,13 @@ class Tool(object):
     def __call__(self, *args, **kwargs):
         return self.callable(*args, **kwargs)
     
+    def merged_args(self, d=None):
+        conf = cherrypy.request.toolmap.get(self.name, {}).copy()
+        conf.update(d or {})
+        if "on" in conf:
+            del conf["on"]
+        return conf
+    
     def wrap(self, *args, **kwargs):
         """Make a decorator for this tool.
         
@@ -152,17 +107,18 @@ class Tool(object):
         """
         def deco(f):
             def wrapper(*a, **kw):
-                self.callable(*args, **merged_config(self.name, kwargs))
+                self.callable(*args, **self.merged_args(kwargs))
                 return f(*a, **kw)
             return wrapper
         return deco
     
-    def setup(self, conf=None):
-        """Hook this tool into cherrypy.request using the given conf.
+    def setup(self):
+        """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
+        conf = self.merged_args()
         cherrypy.request.hooks.attach(self.point, self.callable, conf)
 
 
@@ -184,7 +140,7 @@ class MainTool(Tool):
                                     section="/nav", dir="nav", root=absDir)
         """
         def wrapper(*a, **kw):
-            handled = self.callable(*args, **merged_config(self.name, kwargs))
+            handled = self.callable(*args, **self.merged_args(kwargs))
             if not handled:
                 raise cherrypy.NotFound()
             return cherrypy.response.body
@@ -203,7 +159,7 @@ class MainTool(Tool):
         """
         def deco(f):
             def wrapper(*a, **kw):
-                handled = self.callable(*args, **merged_config(self.name, kwargs))
+                handled = self.callable(*args, **self.merged_args(kwargs))
                 if handled:
                     return cherrypy.response.body
                 else:
@@ -211,15 +167,14 @@ class MainTool(Tool):
             return wrapper
         return deco
     
-    def setup(self, conf=None):
-        """Hook this tool into cherrypy.request using the given conf.
+    def setup(self):
+        """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        conf = conf or {}
         def wrapper():
-            if self.callable(**conf):
+            if self.callable(**self.merged_args()):
                 cherrypy.request.dispatch = None
         # Don't pass conf (or our wrapper will get wrapped!)
         cherrypy.request.hooks.attach(self.point, wrapper)
@@ -231,14 +186,14 @@ class ErrorTool(Tool):
     def __init__(self, callable, name=None):
         Tool.__init__(self, None, callable, name)
     
-    def setup(self, conf=None):
-        """Hook this tool into cherrypy.request using the given conf.
+    def setup(self):
+        """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
         def wrapper():
-            self.callable(**conf)
+            self.callable(**self.merged_args())
         cherrypy.request.error_response = wrapper
 
 
@@ -252,27 +207,7 @@ response_headers = Tool('before_finalize', cptools.response_headers)
 virtual_host = Tool('before_request_body', cptools.virtual_host)
 log_tracebacks = Tool('before_error_response', cptools.log_traceback)
 log_headers = Tool('before_error_response', cptools.log_request_headers)
-
-_redirect = cptools.redirect
-class ErrorRedirect(Tool):
-    """Tool to redirect on error."""
-    
-    def __init__(self, url):
-        Tool.__init__(self, None, _redirect, "ErrorRedirect")
-        self.url = url
-    
-    def setup(self, conf=None):
-        """Hook this tool into cherrypy.request using the given conf.
-        
-        The standard CherryPy request object will automatically call this
-        method when the tool is "turned on" in config.
-        """
-        c = {'url': self.url}
-        c.update(conf or {})
-        def wrapper():
-            self.callable(**c)
-        cherrypy.request.error_response = wrapper
-
+err_redirect = ErrorTool(cptools.redirect, 'err_redirect')
 del cptools
 
 from cherrypy.lib import encodings
@@ -283,13 +218,16 @@ del encodings
 
 from cherrypy.lib import static
 class _StaticDirTool(MainTool):
-    def setup(self, conf=None):
+    def setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
-        # Stick the section where "dir" was defined into the params
-        conf = conf or {}
-        conf['section'] = cherrypy.config.get('tools.staticdir.dir',
-                                              return_section=True)
-        MainTool.setup(self, conf)
+        # Stick the section where "dir" was defined into the params.
+        conf = self.merged_args()
+        conf['section'] = cherrypy.config.request_config_section('tools.staticdir.dir')
+        def wrapper():
+            if self.callable(**conf):
+                cherrypy.request.dispatch = None
+        # Don't pass conf (or our wrapper will get wrapped!)
+        cherrypy.request.hooks.attach(self.point, wrapper)
 staticdir = _StaticDirTool(static.staticdir)
 staticfile = MainTool(static.staticfile)
 del static
@@ -305,8 +243,11 @@ class _SessionTool(Tool):
         """Make a decorator for this tool."""
         def deco(f):
             def wrapper(*a, **kw):
+                conf = cherrypy.request.toolmap.get(self.name, {}).copy()
+                conf.update(kwargs)
+                
                 s = cherrypy.request._session = _sessions.Session()
-                for k, v in merged_config(self.name, kwargs).iteritems():
+                for k, v in conf.iteritems():
                     setattr(s, str(k), v)
                 s.init()
                 if not hasattr(cherrypy, "session"):
@@ -319,14 +260,15 @@ class _SessionTool(Tool):
             return wrapper
         return deco
     
-    def setup(self, conf=None):
+    def setup(self):
         """Hook this tool into cherrypy.request using the given conf.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        conf = conf or {}
         def init():
+            conf = cherrypy.request.toolmap.get(self.name, {})
+            
             s = cherrypy.request._session = _sessions.Session()
             for k, v in conf.iteritems():
                 setattr(s, str(k), v)
@@ -367,12 +309,12 @@ class _XMLRPCTool(object):
         vpath = tuple([x.replace("%2F", "/") for x in vpath])
         
         body = handler(*(vpath + rpcparams), **request.params)
-        conf = tool_config().get("xmlrpc", {})
+        conf = cherrypy.request.toolmap.get("xmlrpc", {})
         _xmlrpc.respond(body,
                         conf.get('encoding', 'utf-8'),
                         conf.get('allow_none', 0))
     
-    def setup(self, conf=None):
+    def setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
         cherrypy.request.dispatch = self.dispatch
         cherrypy.request.error_response = _xmlrpc.on_error

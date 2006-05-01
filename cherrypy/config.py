@@ -150,24 +150,80 @@ def get(key, default_value=None, return_section=False, path=None):
     else:
         return result
 
-def current_config(path=None):
-    """Return all configs in effect for the given path in a single dict."""
-    if path is None:
-        try:
-            path = cherrypy.request.object_path
-        except AttributeError:
-            # There's no request.object_path yet, so use the global settings.
-            path = "global"
+def request_config():
+    """Return all configs in effect for the current request in a single dict."""
+    path = cherrypy.request.object_path
+    mounted_app_roots = cherrypy.tree.mount_points.values()
     
-    result = {}
-    result.update(configs.get("global", {}))
+    # Convert the path into a list of names
+    if (not path) or path == "*":
+        nameList = []
+    else:
+        nameList = path.strip('/').split('/')
+    nameList.append('index')
+    
     curpath = ""
-    for b in path.split('/'):
-        if curpath == "/":
-            curpath = ""
-        curpath = "/".join((curpath, b))
-        result.update(configs.get(curpath, {}))
-    return result
+    node = cherrypy.root
+    conf = getattr(node, "_cp_config", {}).copy()
+    conf.update(configs.get("/", {}))
+    for name in nameList:
+        # Get _cp_config attached to each node on the cherrypy tree.
+        objname = name.replace('.', '_')
+        node = getattr(node, objname, None)
+        if node is not None:
+            if node in mounted_app_roots:
+                # Dump and start over. This inefficiency should disappear
+                # once we make cherrypy.localroot (specific to each request).
+                conf = {}
+            conf.update(getattr(node, "_cp_config", {}))
+        
+        # Get values from cherrypy.config for this path.
+        curpath = "/".join((curpath, name))
+        conf.update(configs.get(curpath, {}))
+    
+    base = configs.get("global", {}).copy()
+    base.update(conf)
+    return base
+
+
+def request_config_section(key):
+    """Return the (longest) path where the given key is defined (or None)."""
+    path = cherrypy.request.object_path
+    mounted_app_roots = cherrypy.tree.mount_points.values()
+    
+    # Convert the path into a list of names
+    if (not path) or path == "*":
+        nameList = []
+    else:
+        nameList = path.strip('/').split('/')
+    nameList.append('index')
+    
+    foundpath = None
+    
+    curpath = ""
+    node = cherrypy.root
+    if key in getattr(node, "_cp_config", {}) or key in configs.get("/", {}):
+        foundpath = "/"
+    for name in nameList:
+        # Get _cp_config attached to each node on the cherrypy tree.
+        objname = name.replace('.', '_')
+        node = getattr(node, objname, None)
+        if node is not None:
+            if node in mounted_app_roots:
+                # Dump and start over. This inefficiency should disappear
+                # once we make cherrypy.localroot (specific to each request).
+                foundpath = None
+            if key in getattr(node, "_cp_config", {}):
+                foundpath = curpath or "/"
+        
+        # Get values from cherrypy.config for this path.
+        curpath = "/".join((curpath, name))
+        if key in configs.get(curpath, {}):
+            foundpath = curpath
+    
+    if foundpath is None:
+        foundpath = configs.get("global", {}).get(key)
+    return foundpath
 
 
 class CaseSensitiveConfigParser(ConfigParser.ConfigParser):

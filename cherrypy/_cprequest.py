@@ -82,14 +82,12 @@ class Request(object):
         return cherrypy.response
     
     def _run(self):
-        conf = cherrypy.config.get
-        
         try:
             # This has to be done very early in the request process,
             # because request.object_path is used for config lookups
             # right away.
             self.process_request_line()
-            self.dispatch = conf("dispatch") or _cputil.dispatch
+            self.dispatch = self.config.get("dispatch") or _cputil.dispatch
             self.hooks.setup()
             
             try:
@@ -126,9 +124,27 @@ class Request(object):
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            if conf("server.throw_errors", False):
+            if cherrypy.config.get("server.throw_errors", False):
                 raise
             self.handle_error(sys.exc_info())
+    
+    def _get_object_path(self):
+        return self._object_path
+    def _set_object_path(self, value):
+        self._object_path = value
+        self.config = cherrypy.config.request_config()
+        
+        # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
+        self.toolmap = {}
+        for k, v in self.config.iteritems():
+            atoms = k.split(".")
+            namespace = atoms.pop(0)
+            if namespace == "tools":
+                toolname = atoms.pop(0)
+                bucket = self.toolmap.setdefault(toolname, {})
+                bucket[".".join(atoms)] = v
+    object_path = property(_get_object_path, _set_object_path,
+                           doc="The path to the rendered resource.")
     
     def process_request_line(self):
         """Parse the first line (e.g. "GET /path HTTP/1.1") of the request."""

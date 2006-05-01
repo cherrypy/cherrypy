@@ -26,19 +26,19 @@ class MemoryCache:
         self.cursize = 0
     
     def _key(self):
-        return cherrypy.config.get("hooks.cache.key", cherrypy.request.browser_url)
+        return cherrypy.request.config.get("tools.caching.key", cherrypy.request.browser_url)
     key = property(_key)
     
     def _maxobjsize(self):
-        return cherrypy.config.get("hooks.cache.maxobjsize", 100000)
+        return cherrypy.request.config.get("tools.caching.maxobjsize", 100000)
     maxobjsize = property(_maxobjsize)
     
     def _maxsize(self):
-        return cherrypy.config.get("hooks.cache.maxsize", 10000000)
+        return cherrypy.request.config.get("tools.caching.maxsize", 10000000)
     maxsize = property(_maxsize)
     
     def _maxobjects(self):
-        return cherrypy.config.get("hooks.cache.maxobjects", 1000)
+        return cherrypy.request.config.get("tools.caching.maxobjects", 1000)
     maxobjects = property(_maxobjects)
     
     def expireCache(self):
@@ -83,7 +83,7 @@ class MemoryCache:
             (len(self.cache) < self.maxobjects)):
             # add to the expirationQueue & cache
             try:
-                expirationTime = time.time() + cherrypy.config.get("hooks.cache.delay", 600)
+                expirationTime = time.time() + cherrypy.request.config.get("tools.caching.delay", 600)
                 objKey = self.key
                 self.expirationQueue.put((expirationTime, objSize, objKey))
                 self.cache[objKey] = (expirationTime, lastModified, obj)
@@ -148,8 +148,9 @@ def wrap(f):
             tee_output()
     return wrapper
 
-def setup(conf):
+def setup():
     """Hook caching into cherrypy.request using the given conf."""
+    conf = cherrypy.request.toolmap.get("caching", {})
     if not getattr(cherrypy, "_cache", None):
         init(conf.get("class", None))
     def wrapper():
