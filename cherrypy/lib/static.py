@@ -148,6 +148,10 @@ def serve_file(path, contentType=None, disposition=None, name=None):
         response.body = bodyfile
     return response.body
 
+def serve_download(path, name=None):
+    """Serve 'path' as an application/x-download attachment."""
+    # This is such a common idiom I felt it deserved its own wrapper.
+    return serve_file(path, "application/x-download", "attachment", name)
 
 
 def _attempt(filename, content_types):
