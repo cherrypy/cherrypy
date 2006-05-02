@@ -109,7 +109,7 @@ class StaticFilterTest(helper.CPWebCase):
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
         self.assertInBody("TypeError: staticdir() takes at least 2 "
-                          "non-keyword arguments (1 given)")
+                          "arguments (1 given)")
         
         # Test up-level security
         self.getPage("/static/../../test/style.css")
