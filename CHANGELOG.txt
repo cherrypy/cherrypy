@@ -1,3 +1,6 @@
+2006-04-19:
+    * Development begins on CherryPy 3, with many backward-incompatible changes.
+
 2006-04-03:
     * CherryPy-2.2.0 released
 
