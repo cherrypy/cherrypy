@@ -65,10 +65,10 @@ def expose(func=None, alias=None):
         func.exposed = True
         if alias is not None:
             if isinstance(alias, basestring):
-                parents[alias] = func
+                parents[alias.replace(".", "_")] = func
             else:
                 for a in alias:
-                    parents[a] = func
+                    parents[a.replace(".", "_")] = func
         return func
     
     parents = sys._getframe(1).f_locals
