@@ -49,16 +49,16 @@ def decode_params(encoding):
 
 # Encoding
 
-def encode(encoding=None):
+def encode(encoding=None, errors='strict'):
     ct = cherrypy.response.headers.elements("Content-Type")
     if ct:
         ct = ct[0]
         if ct.value.lower().startswith("text/"):
             # Set "charset=..." param on response Content-Type header
-            ct.params['charset'] = find_acceptable_charset(encoding)
+            ct.params['charset'] = find_acceptable_charset(encoding, errors=errors)
             cherrypy.response.headers["Content-Type"] = str(ct)
 
-def encode_stream(encoding):
+def encode_stream(encoding, errors='strict'):
     """Encode a streaming response body.
     
     Use a generator wrapper, and just pray it works as the stream is
@@ -66,23 +66,23 @@ def encode_stream(encoding):
     """
     def encoder(body):
         for line in body:
-            yield line.encode(encoding)
+            yield line.encode(encoding, errors)
     cherrypy.response.body = encoder(cherrypy.response.body)
     return True
 
-def encode_string(encoding):
+def encode_string(encoding, errors='strict'):
     """Encode a buffered response body."""
     try:
         body = []
         for chunk in cherrypy.response.body:
-            body.append(chunk.encode(encoding))
+            body.append(chunk.encode(encoding, errors))
         cherrypy.response.body = body
     except UnicodeError:
         return False
     else:
         return True
 
-def find_acceptable_charset(encoding=None, default_encoding='utf-8'):
+def find_acceptable_charset(encoding=None, default_encoding='utf-8', errors='strict'):
     response = cherrypy.response
     
     attempted_charsets = []
@@ -98,7 +98,7 @@ def find_acceptable_charset(encoding=None, default_encoding='utf-8'):
     
     if encoding is not None:
         # If specified, force this encoding to be used, or fail.
-        if encoder(encoding):
+        if encoder(encoding, errors):
             return encoding
         else:
             raise cherrypy.HTTPError(500, failmsg % encoding)
@@ -109,7 +109,7 @@ def find_acceptable_charset(encoding=None, default_encoding='utf-8'):
     if not encs:
         # Any character-set is acceptable.
         charsets = []
-        if encoder(default_encoding):
+        if encoder(default_encoding, errors):
             return default_encoding
         else:
             raise cherrypy.HTTPError(500, failmsg % default_encoding)
@@ -123,7 +123,7 @@ def find_acceptable_charset(encoding=None, default_encoding='utf-8'):
             iso = 'iso-8859-1'
             if iso not in charsets:
                 attempted_charsets.append(iso)
-                if encoder(iso):
+                if encoder(iso, errors):
                     return iso
         
         for element in encs:
@@ -132,13 +132,13 @@ def find_acceptable_charset(encoding=None, default_encoding='utf-8'):
                     # Matches any charset. Try our default.
                     if default_encoding not in attempted_charsets:
                         attempted_charsets.append(default_encoding)
-                        if encoder(default_encoding):
+                        if encoder(default_encoding, errors):
                             return default_encoding
                 else:
                     encoding = element.value
                     if encoding not in attempted_charsets:
                         attempted_charsets.append(encoding)
-                        if encoder(encoding):
+                        if encoder(encoding, errors):
                             return encoding
     
     # No suitable encoding found.
