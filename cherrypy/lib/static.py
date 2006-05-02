@@ -33,10 +33,6 @@ def modified_since(path, stat=None):
     strModifTime = httptools.HTTPDate(time.gmtime(stat.st_mtime))
     if cherrypy.request.headers.has_key('If-Modified-Since'):
         if cherrypy.request.headers['If-Modified-Since'] == strModifTime:
-            response.status = "304 Not Modified"
-            response.body = None
-            if getattr(cherrypy, "debug", None):
-                cherrypy.log("    Found file (304 Not Modified): %s" % path, "DEBUG")
             return False
     response.headers['Last-Modified'] = strModifTime
     return True
@@ -85,7 +81,10 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     response.headers['Content-Type'] = contentType
     
     if not modified_since(path, stat):
+        response.status = "304 Not Modified"
         response.body = []
+        if getattr(cherrypy, "debug", None):
+            cherrypy.log("    Found file (304 Not Modified): %s" % path, "DEBUG")
         return []
     
     if disposition is not None:

@@ -101,9 +101,9 @@ class HTTPRedirect(Exception):
         import cherrypy
         response = cherrypy.response
         response.status = status = self.status
-        response.headers['Content-Type'] = "text/html"
         
         if status in (300, 301, 302, 303, 307):
+            response.headers['Content-Type'] = "text/html"
             # "The ... URI SHOULD be given by the Location field
             # in the response."
             response.headers['Location'] = self.urls[0]

@@ -104,14 +104,18 @@ def get():
     cherrypy.request.cached = c = bool(cacheData)
     if c:
         expirationTime, lastModified, obj = cacheData
+        s, h, b = obj
         modifiedSince = cherrypy.request.headers.get('If-Modified-Since', None)
         if modifiedSince is not None and modifiedSince == lastModified:
             cherrypy._cache.totNonModified += 1
             cherrypy.response.status = "304 Not Modified"
+            ct = h.get("Content-Type")
+            if ct:
+                cherrypy.response.header_list["Content-Type"] = ct
             cherrypy.response.body = None
         else:
             # serve it & get out from the request
-            cherrypy.response.status, cherrypy.response.header_list, body = obj
+            cherrypy.response.status, cherrypy.response.header_list, body = s, h, b
             cherrypy.response.body = body
     return c
 
