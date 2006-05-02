@@ -94,7 +94,8 @@ def wsgiApp(environ, start_response):
             # WSGI requires all data to be of type "str". This coercion should
             # not take any time at all if chunk is already of type "str".
             # If it's unicode, it could be a big performance hit (x ~500).
-            chunk = str(chunk)
+            if not isinstance(chunk, str):
+                chunk = chunk.encode("ISO-8859-1")
             yield chunk
         if request:
             request.close()
@@ -120,7 +121,9 @@ def wsgiApp(environ, start_response):
         # so don't call start_response (which, according to PEP 333,
         # may raise its own error at that point).
         for chunk in b:
-            yield str(chunk)
+            if not isinstance(chunk, str):
+                chunk = chunk.encode("ISO-8859-1")
+            yield chunk
 
 
 # Server components.
