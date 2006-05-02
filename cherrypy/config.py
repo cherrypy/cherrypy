@@ -205,6 +205,8 @@ def request_config_section(key):
     if key in getattr(node, "_cp_config", {}) or key in configs.get("/", {}):
         foundpath = "/"
     for name in nameList:
+        curpath = "/".join((curpath, name))
+        
         # Get _cp_config attached to each node on the cherrypy tree.
         objname = name.replace('.', '_')
         node = getattr(node, objname, None)
@@ -217,7 +219,6 @@ def request_config_section(key):
                 foundpath = curpath or "/"
         
         # Get values from cherrypy.config for this path.
-        curpath = "/".join((curpath, name))
         if key in configs.get(curpath, {}):
             foundpath = curpath
     

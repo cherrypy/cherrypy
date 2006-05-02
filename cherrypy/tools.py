@@ -222,9 +222,9 @@ class _StaticDirTool(MainTool):
         """Hook this tool into cherrypy.request using the given conf."""
         # Stick the section where "dir" was defined into the params.
         conf = self.merged_args()
-        conf['section'] = cherrypy.config.request_config_section('tools.staticdir.dir')
+        section = cherrypy.config.request_config_section('tools.staticdir.dir')
         def wrapper():
-            if self.callable(**conf):
+            if self.callable(section, **conf):
                 cherrypy.request.dispatch = None
         # Don't pass conf (or our wrapper will get wrapped!)
         cherrypy.request.hooks.attach(self.point, wrapper)
