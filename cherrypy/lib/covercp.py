@@ -350,6 +350,7 @@ def serve(path=localFile, port=8080):
                             'server.environment': "production",
                             })
     cherrypy.server.start()
+    cherrypy.engine.start()
 
 if __name__ == "__main__":
     serve(*tuple(sys.argv[1:]))

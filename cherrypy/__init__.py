@@ -13,9 +13,10 @@ import tools
 import _cptree
 tree = _cptree.Tree()
 
-# Legacy code may clobber this.
 root = None
 
+import _cpengine
+engine = _cpengine.Engine()
 import _cpserver
 server = _cpserver.Server()
 

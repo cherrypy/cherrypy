@@ -1,153 +1,94 @@
-"""Create and manage the CherryPy server."""
+"""Manage an HTTP server with CherryPy."""
 
 import threading
 import time
 
 import cherrypy
 from cherrypy.lib import cptools
-from cherrypy._cpengine import Engine, STOPPED, STARTING, STARTED
-
-_missing = object()
 
 
-class Server(Engine):
+class Server(object):
+    """Manager for an HTTP server."""
     
     def __init__(self):
-        Engine.__init__(self)
-        self._is_setup = False
-        self.blocking = True
-        
         self.httpserver = None
+        self.interrupt = None
     
-    def start(self, init_only=False, server_class=_missing, server=None, **kwargs):
-        """Main function. MUST be called from the main thread.
-        
-        Set initOnly to True to keep this function from blocking.
-        Set serverClass and server to None to skip starting any HTTP server.
-        """
-        
+    def start(self, server=None):
+        """Main function. MUST be called from the main thread."""
         conf = cherrypy.config.get
-        
-        if not init_only:
-            init_only = conf('server.init_only', False)
-        
         if server is None:
             server = conf('server.instance', None)
         if server is None:
-            if server_class is _missing:
-                server_class = conf("server.class", _missing)
-            if server_class is _missing:
-                import _cpwsgi
-                server_class = _cpwsgi.WSGIServer
-            elif server_class and isinstance(server_class, basestring):
-                # Dynamically load the class from the given string
-                server_class = cptools.attributes(server_class)
-            if server_class is not None:
-                self.httpserver = server_class()
-        else:
-            if isinstance(server, basestring):
-                server = cptools.attributes(server)
-            self.httpserver = server
+            import _cpwsgi
+            server = _cpwsgi.WSGIServer()
+        if isinstance(server, basestring):
+            server = cptools.attributes(server)()
+        self.httpserver = server
         
-        self.blocking = not init_only
-        Engine.start(self)
-    
-    def _start(self):
-        if not self._is_setup:
-            self.setup()
-            self._is_setup = True
-        Engine._start(self)
-        self.start_http_server()
-        if self.blocking:
-            self.block()
-    
-    def restart(self):
-        """Restart the application server engine."""
-        self.stop()
-        self.state = STARTING
-        self.interrupt = None
-        self._start()
-    
-    def start_http_server(self, blocking=True):
-        """Start the requested HTTP server."""
-        if not self.httpserver:
-            return
-        
-        if cherrypy.config.get('server.socket_port'):
-            host = cherrypy.config.get('server.socket_host')
-            port = cherrypy.config.get('server.socket_port')
-            
+        if conf('server.socket_port'):
+            host = conf('server.socket_host')
+            port = conf('server.socket_port')
             wait_for_free_port(host, port)
-            
             if not host:
                 host = 'localhost'
             on_what = "http://%s:%s/" % (host, port)
         else:
-            on_what = "socket file: %s" % cherrypy.config.get('server.socket_file')
+            on_what = "socket file: %s" % conf('server.socket_file')
         
         # HTTP servers MUST be started in a new thread, so that the
         # main thread persists to receive KeyboardInterrupt's. If an
-        # exception is raised in the http server's main thread then it's
-        # trapped here, and the CherryPy app server is shut down (via
-        # self.interrupt).
+        # exception is raised in the http server's thread then it's
+        # trapped here, and the http server and engine are shut down.
         def _start_http():
             try:
                 self.httpserver.start()
             except KeyboardInterrupt, exc:
+                cherrypy.log("<Ctrl-C> hit: shutting down HTTP server", "SERVER")
                 self.interrupt = exc
                 self.stop()
+                cherrypy.engine.stop()
             except SystemExit, exc:
+                cherrypy.log("SystemExit raised: shutting down HTTP server", "SERVER")
                 self.interrupt = exc
                 self.stop()
+                cherrypy.engine.stop()
                 raise
         t = threading.Thread(target=_start_http)
         t.setName("CPHTTPServer " + t.getName())
         t.start()
         
-        if blocking:
-            self.wait_for_http_ready()
-        
+        self.wait()
         cherrypy.log("Serving HTTP on %s" % on_what, 'HTTP')
     
     def wait(self):
-        """Block the caller until ready to receive requests (or error)."""
-        Engine.wait(self)
-        self.wait_for_http_ready()
-    
-    def wait_for_http_ready(self):
-        if self.httpserver:
-            while (not getattr(self.httpserver, "ready", True)
-                   and not self.interrupt
-                   and self.state != STOPPED):
-                time.sleep(.1)
+        """Wait until the HTTP server is ready to receive requests."""
+        while (not getattr(self.httpserver, "ready", True)
+               and not self.interrupt):
+            time.sleep(.1)
+        
+        # Wait for port to be occupied
+        if cherrypy.config.get('server.socket_port'):
+            host = cherrypy.config.get('server.socket_host')
+            port = cherrypy.config.get('server.socket_port')
+            if not host:
+                host = 'localhost'
             
-            # Wait for port to be occupied
-            if cherrypy.config.get('server.socket_port'):
-                host = cherrypy.config.get('server.socket_host')
-                port = cherrypy.config.get('server.socket_port')
-                if not host:
-                    host = 'localhost'
-                
-                for trial in xrange(50):
-                    if self.interrupt:
-                        break
-                    try:
-                        check_port(host, port)
-                    except IOError:
-                        break
-                    else:
-                        time.sleep(.1)
+            for trial in xrange(50):
+                if self.interrupt:
+                    break
+                try:
+                    check_port(host, port)
+                except IOError:
+                    break
                 else:
-                    cherrypy.log("Port %s not bound on %s" %
-                                 (repr(port), repr(host)), 'HTTP')
-                    raise cherrypy.NotReady("Port not bound.")
+                    time.sleep(.1)
+            else:
+                cherrypy.log("Port %s not bound on %s" %
+                             (repr(port), repr(host)), 'HTTP')
+                raise cherrypy.NotReady("Port not bound.")
     
     def stop(self):
-        """Stop, including any HTTP servers."""
-        self.stop_http_server()
-        Engine.stop(self)
-    
-    def stop_http_server(self):
         """Stop the HTTP server."""
         try:
             httpstop = self.httpserver.stop
@@ -158,24 +99,11 @@ class Server(Engine):
             httpstop()
             cherrypy.log("HTTP Server shut down", "HTTP")
     
-    def start_with_callback(self, func, args=None, kwargs=None,
-                            server_class = _missing, serverClass = None):
-        """Start, then callback the given func in a new thread."""
-        
-        if args is None:
-            args = ()
-        if kwargs is None:
-            kwargs = {}
-        args = (func,) + args
-        
-        def _callback(func, *args, **kwargs):
-            self.wait()
-            func(*args, **kwargs)
-        t = threading.Thread(target=_callback, args=args, kwargs=kwargs)
-        t.setName("CPServer Callback " + t.getName())
-        t.start()
-        
-        self.start(server_class = server_class)
+    def restart(self):
+        """Restart the HTTP server."""
+        self.stop()
+        self.interrupt = None
+        self.start()
 
 
 def check_port(host, port):

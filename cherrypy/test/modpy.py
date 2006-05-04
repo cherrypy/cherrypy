@@ -85,7 +85,7 @@ def handler(req):
             "server.environment": "production",
             })
         m.setup_server()
-        cherrypy.server.start(init_only=True, server_class=None, server=None)
+        cherrypy.engine.start(blocking=False)
     from mod_python import apache
     return apache.OK
 

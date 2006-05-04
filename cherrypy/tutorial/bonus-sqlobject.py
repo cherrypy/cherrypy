@@ -167,3 +167,4 @@ print "If you're running this application for the first time, please go to http:
 
 cherrypy.root = ContactManager()
 cherrypy.server.start()
+cherrypy.engine.start()

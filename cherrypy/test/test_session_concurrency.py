@@ -76,7 +76,8 @@ def run_client(cookie, request_count, data_dict, index):
     data_dict[index] = int(data)
 
 # Start server
-thread.start_new_thread(cherrypy.server.start, ())
+cherrypy.server.start()
+thread.start_new_thread(cherrypy.engine.start, ())
 
 # Start client
 time.sleep(2)
@@ -107,6 +108,7 @@ while True:
     time.sleep(1)
 
 cherrypy.server.stop()
+cherrypy.engine.stop()
 
 m = max(data_dict.values())
 expected_m = 1 + (client_thread_count * request_count)

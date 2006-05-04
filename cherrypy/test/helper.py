@@ -98,9 +98,9 @@ def run_test_suite(moduleNames, server, conf):
     of test modules. The config, however, is reset for each module.
     """
     setConfig(conf)
-    cherrypy.server.start_with_callback(_run_test_suite_thread,
-                                        args = (moduleNames, conf),
-                                        server_class = server)
+    cherrypy.server.start(server)
+    cherrypy.engine.start_with_callback(_run_test_suite_thread,
+                                        args=(moduleNames, conf))
 
 def _run_test_suite_thread(moduleNames, conf):
     for testmod in moduleNames:
@@ -125,9 +125,11 @@ def testmain(conf=None, *args, **kwargs):
         conf = {}
     setConfig(conf)
     try:
-        cherrypy.server.start_with_callback(_test_main_thread, *args, **kwargs)
+        cherrypy.server.start()
+        cherrypy.engine.start_with_callback(_test_main_thread, *args, **kwargs)
     except KeyboardInterrupt:
         cherrypy.server.stop()
+        cherrypy.engine.stop()
 
 def _test_main_thread():
     try:

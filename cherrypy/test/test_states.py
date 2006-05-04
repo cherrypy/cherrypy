@@ -16,7 +16,7 @@ class Root:
     ctrlc.exposed = True
     
     def restart(self):
-        cherrypy.server.restart()
+        cherrypy.engine.restart()
         return "app was restarted succesfully"
     restart.exposed = True
 
@@ -55,7 +55,7 @@ class ServerStateTests(helper.CPWebCase):
     
     def test_0_NormalStateFlow(self):
         if not self.server_class:
-            # Without having called "cherrypy.server.start()", we should
+            # Without having called "cherrypy.engine.start()", we should
             # get a NotReady error
             self.assertRaises(cherrypy.NotReady, self.getPage, "/")
         
@@ -65,8 +65,9 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(len(db_connection.threads), 0)
         
         # Test server start
-        cherrypy.server.start(True, self.server_class)
-        self.assertEqual(cherrypy.server.state, 1)
+        cherrypy.server.start(self.server_class)
+        cherrypy.engine.start(blocking=False)
+        self.assertEqual(cherrypy.engine.state, 1)
         
         if self.server_class:
             host = cherrypy.config.get('server.socket_host')
@@ -82,11 +83,11 @@ class ServerStateTests(helper.CPWebCase):
         self.assertBody("Hello World")
         self.assertEqual(len(db_connection.threads), 1)
         
-        # Test server stop
-        cherrypy.server.stop()
-        self.assertEqual(cherrypy.server.state, 0)
+        # Test engine stop
+        cherrypy.engine.stop()
+        self.assertEqual(cherrypy.engine.state, 0)
         
-        # Verify that the on_stop_server function was called
+        # Verify that the on_stop_engine function was called
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
         
@@ -100,12 +101,14 @@ class ServerStateTests(helper.CPWebCase):
         def stoptest():
             self.getPage("/")
             self.assertBody("Hello World")
-            cherrypy.server.stop()
-        cherrypy.server.start_with_callback(stoptest, server_class=self.server_class)
-        self.assertEqual(cherrypy.server.state, 0)
+            cherrypy.engine.stop()
+        cherrypy.engine.start_with_callback(stoptest)
+        self.assertEqual(cherrypy.engine.state, 0)
+        cherrypy.server.stop()
     
     def test_1_Restart(self):
-        cherrypy.server.start(True, self.server_class)
+        cherrypy.server.start(self.server_class)
+        cherrypy.engine.start(blocking=False)
         
         # The db_connection should be running now
         self.assertEqual(db_connection.running, True)
@@ -116,8 +119,8 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(len(db_connection.threads), 1)
         
         # Test server restart from this thread
-        cherrypy.server.restart()
-        self.assertEqual(cherrypy.server.state, 1)
+        cherrypy.engine.restart()
+        self.assertEqual(cherrypy.engine.state, 1)
         self.getPage("/")
         self.assertBody("Hello World")
         self.assertEqual(db_connection.running, True)
@@ -126,7 +129,7 @@ class ServerStateTests(helper.CPWebCase):
         
         # Test server restart from inside a page handler
         self.getPage("/restart")
-        self.assertEqual(cherrypy.server.state, 1)
+        self.assertEqual(cherrypy.engine.state, 1)
         self.assertBody("app was restarted succesfully")
         self.assertEqual(db_connection.running, True)
         self.assertEqual(db_connection.startcount, sc + 2)
@@ -134,10 +137,11 @@ class ServerStateTests(helper.CPWebCase):
         # Note that the "/restart" request has been flushed.
         self.assertEqual(len(db_connection.threads), 0)
         
-        cherrypy.server.stop()
-        self.assertEqual(cherrypy.server.state, 0)
+        cherrypy.engine.stop()
+        self.assertEqual(cherrypy.engine.state, 0)
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
+        cherrypy.server.stop()
     
     def test_2_KeyboardInterrupt(self):
         if self.server_class:
@@ -149,9 +153,8 @@ class ServerStateTests(helper.CPWebCase):
             threading.Thread(target=interrupt).start()
             
             # We must start the server in this, the main thread
-            cherrypy.server.start(False, self.server_class)
+            cherrypy.server.start(self.server_class)
             # Time passes...
-            self.assertEqual(cherrypy.server.state, 0)
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
             
@@ -165,9 +168,8 @@ class ServerStateTests(helper.CPWebCase):
                 self.assertRaises(BadStatusLine, self.getPage, "/ctrlc")
             threading.Thread(target=interrupt).start()
             
-            cherrypy.server.start(False, self.server_class)
+            cherrypy.server.start(self.server_class)
             # Time passes...
-            self.assertEqual(cherrypy.server.state, 0)
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
 
@@ -181,14 +183,15 @@ def run(server, conf):
     try:
         global db_connection
         db_connection = Dependency()
-        cherrypy.server.on_start_server_list.append(db_connection.start)
-        cherrypy.server.on_stop_server_list.append(db_connection.stop)
-        cherrypy.server.on_start_thread_list.append(db_connection.startthread)
-        cherrypy.server.on_stop_thread_list.append(db_connection.stopthread)
+        cherrypy.engine.on_start_engine_list.append(db_connection.start)
+        cherrypy.engine.on_stop_engine_list.append(db_connection.stop)
+        cherrypy.engine.on_start_thread_list.append(db_connection.startthread)
+        cherrypy.engine.on_stop_thread_list.append(db_connection.stopthread)
         
         helper.CPTestRunner.run(suite)
     finally:
         cherrypy.server.stop()
+        cherrypy.engine.stop()
 
 
 def run_all(host, port):

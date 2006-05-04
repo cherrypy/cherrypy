@@ -136,6 +136,7 @@ def serve(path=None, port=8080):
                             'session.storageType': "ram",
                             })
     cherrypy.server.start()
+    cherrypy.engine.start()
 
 
 if __name__ == "__main__":

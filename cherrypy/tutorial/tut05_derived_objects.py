@@ -75,4 +75,5 @@ cherrypy.root = HomePage()
 if __name__ == '__main__':
     cherrypy.config.update(file = 'tutorial.conf')
     cherrypy.server.start()
+    cherrypy.engine.start()
 

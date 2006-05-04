@@ -268,11 +268,11 @@ def run_standard_benchmarks():
 
 started = False
 def startup(req=None):
-    """Start the CherryPy app server in 'serverless' mode (for WSGI)."""
+    """Start the CherryPy app engine with no server (for WSGI)."""
     global started
     if not started:
         started = True
-        cherrypy.server.start(init_only=True, server_class=None)
+        cherrypy.engine.start(blocking=False)
     return 0 # apache.OK
 
 
@@ -291,7 +291,7 @@ def startup_modpython(req=None):
         if ab_opt:
             global AB_PATH
             AB_PATH = ab_opt
-        cherrypy.server.start(init_only=True, server_class=None)
+        cherrypy.engine.start(blocking=False)
     
     import modpython_gateway
     return modpython_gateway.handler(req)
@@ -383,5 +383,6 @@ if __name__ == '__main__':
             cherrypy.server.request_class = NullRequest
             cherrypy.server.response_class = NullResponse
         
+        cherrypy.server.start()
         # This will block
-        cherrypy.server.start_with_callback(run)
+        cherrypy.engine.start_with_callback(run)
