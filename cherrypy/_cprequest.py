@@ -7,7 +7,7 @@ import types
 
 import cherrypy
 from cherrypy import _cperror, _cputil, _cpcgifs, tools
-from cherrypy.lib import cptools, httptools
+from cherrypy.lib import cptools, httptools, profiler
 
 
 class Request(object):
@@ -68,7 +68,13 @@ class Request(object):
         self.headers = httptools.HeaderMap()
         self.simple_cookie = Cookie.SimpleCookie()
         
-        if cherrypy.profiler:
+        # Set up the profiler if requested.
+        conf = cherrypy.config.get
+        if conf("profiling.on", False):
+            p = getattr(cherrypy, "profiler", None)
+            if p is None:
+                ppath = conf("profiling.path", "")
+                p = cherrypy.profiler = profiler.Profiler(ppath)
             cherrypy.profiler.run(self._run)
         else:
             self._run()

@@ -7,7 +7,7 @@ import time
 
 import cherrypy
 from cherrypy import _cprequest
-from cherrypy.lib import autoreload, profiler, cptools
+from cherrypy.lib import autoreload, cptools
 
 # Use a flag to indicate the state of the application engine.
 STOPPED = 0
@@ -46,13 +46,6 @@ class Engine(object):
         if cherrypy.codecoverage:
             from cherrypy.lib import covercp
             covercp.start()
-        
-        # Set up the profiler if requested.
-        if conf("profiling.on", False):
-            ppath = conf("profiling.path", "")
-            cherrypy.profiler = profiler.Profiler(ppath)
-        else:
-            cherrypy.profiler = None
         
         # Autoreload. Note that, if we're not starting our own HTTP server,
         # autoreload could do Very Bad Things when it calls sys.exit, but
