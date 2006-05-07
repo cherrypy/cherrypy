@@ -59,7 +59,6 @@ class Request(object):
         attributes to build the outbound stream.
         
         """
-        self.log_access = _cputil.log_access
         self.error_response = cherrypy.HTTPError(500).set_response
         
         self.request_line = request_line.strip()
@@ -83,7 +82,9 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        self.log_access()
+        log_access = cherrypy.config.get("log_access", _cputil.log_access)
+        if log_access:
+            log_access()
         
         return cherrypy.response
     

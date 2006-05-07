@@ -3,8 +3,7 @@
 import ConfigParser
 
 import cherrypy
-from cherrypy import _cputil
-from cherrypy.lib import autoreload, cptools, httptools
+from cherrypy.lib import autoreload, cptools
 
 environments = {
     "development": {

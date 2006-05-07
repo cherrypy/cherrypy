@@ -2,7 +2,7 @@
 
 import sys
 import cherrypy
-from cherrypy import _cputil, _cpwsgiserver
+from cherrypy import _cpwsgiserver
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httptools
 
