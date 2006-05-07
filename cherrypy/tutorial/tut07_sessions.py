@@ -12,6 +12,9 @@ import cherrypy
 
 
 class HitCounter:
+    
+    _cp_config = {'tools.sessions.on': True}
+    
     def index(self):
         # Increase the silly hit counter
         count = cherrypy.session.get('count', 0) + 1
@@ -27,11 +30,11 @@ class HitCounter:
     index.exposed = True
 
 
-cherrypy.root = HitCounter()
-cherrypy.config.update({'tools.sessions.on': True})
+cherrypy.tree.mount(HitCounter())
+
 
 if __name__ == '__main__':
-    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
     cherrypy.server.start()
     cherrypy.engine.start()
 

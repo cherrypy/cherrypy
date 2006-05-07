@@ -74,9 +74,10 @@ class ExtraLinksPage:
 
 
 # Of course we can also mount request handler objects right here!
-cherrypy.root = HomePage()
-cherrypy.root.joke = JokePage()
-cherrypy.root.links = LinksPage()
+root = HomePage()
+root.joke = JokePage()
+root.links = LinksPage()
+cherrypy.tree.mount(root)
 
 # Remember, we don't need to mount ExtraLinksPage here, because
 # LinksPage does that itself on initialization. In fact, there is
@@ -85,7 +86,7 @@ cherrypy.root.links = LinksPage()
 
 
 if __name__ == '__main__':
-    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
     cherrypy.server.start()
     cherrypy.engine.start()
 

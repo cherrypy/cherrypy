@@ -29,10 +29,10 @@ import webtest
 
 class CPWebCase(webtest.WebCase):
     
-    mount_point = ""
+    script_name = ""
     
     def prefix(self):
-        return self.mount_point.rstrip("/")
+        return self.script_name.rstrip("/")
     
     def exit(self):
         sys.exit()
@@ -42,18 +42,17 @@ class CPWebCase(webtest.WebCase):
     
     def getPage(self, url, headers=None, method="GET", body=None, protocol="HTTP/1.1"):
         """Open the url. Return status, headers, body."""
-        if self.mount_point:
-            url = httptools.urljoin(self.mount_point, url)
-        
+        if self.script_name:
+            url = httptools.urljoin(self.script_name, url)
         webtest.WebCase.getPage(self, url, headers, method, body, protocol)
     
     def assertErrorPage(self, status, message=None, pattern=''):
-        """ Compare the response body with a built in error page.
-            The function will optionally look for the regexp pattern, 
-            within the exception embedded in the error page.
-        """
+        """Compare the response body with a built in error page.
         
-        # This will never contain a traceback:
+        The function will optionally look for the regexp pattern,
+        within the exception embedded in the error page."""
+        
+        # This will never contain a traceback
         page = cherrypy._cperror.get_error_page(status, message=message)
         
         # First, test the response body without checking the traceback.
@@ -61,8 +60,7 @@ class CPWebCase(webtest.WebCase):
         esc = re.escape
         epage = esc(page)
         epage = epage.replace(esc('<pre id="traceback"></pre>'),
-                              esc('<pre id="traceback">')
-                              + '(.*)' + esc('</pre>'))
+                              esc('<pre id="traceback">') + '(.*)' + esc('</pre>'))
         m = re.match(epage, self.body, re.DOTALL)
         if not m:
             self._handlewebError('Error page does not match\n' + page)
@@ -83,10 +81,10 @@ CPTestLoader = webtest.ReloadingTestLoader()
 CPTestRunner = webtest.TerseTestRunner(verbosity=2)
 
 def setConfig(conf):
-    """Set the config using a copy of conf."""
+    """Set the global config using a copy of conf."""
     if isinstance(conf, basestring):
         # assume it's a filename
-        cherrypy.config.update(file=conf)
+        cherrypy.config.update(conf)
     else:
         cherrypy.config.update(conf.copy())
 
@@ -97,16 +95,17 @@ def run_test_suite(moduleNames, server, conf):
     The server is started and stopped once, regardless of the number
     of test modules. The config, however, is reset for each module.
     """
+    cherrypy.config.reset()
     setConfig(conf)
     cherrypy.server.start(server)
     cherrypy.engine.start_with_callback(_run_test_suite_thread,
                                         args=(moduleNames, conf))
 
 def _run_test_suite_thread(moduleNames, conf):
+    from cherrypy import _cpwsgi
     for testmod in moduleNames:
         # Must run each module in a separate suite,
         # because each module uses/overwrites cherrypy globals.
-        cherrypy.root = None
         cherrypy.tree = cherrypy._cptree.Tree()
         cherrypy.config.reset()
         setConfig(conf)
@@ -115,18 +114,29 @@ def _run_test_suite_thread(moduleNames, conf):
         setup = getattr(m, "setup_server", None)
         if setup:
             setup()
+        # The setup functions probably mounted new apps.
+        # Tell our server about them.
+        apps = []
+        for base in cherrypy.tree.apps:
+            if base == "/":
+                base = ""
+            apps.append((base, _cpwsgi.wsgiApp))
+        apps.sort()
+        apps.reverse()
+        cherrypy.server.httpserver.mount_points = apps
+        
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)
     thread.interrupt_main()
 
-def testmain(conf=None, *args, **kwargs):
+def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
     if conf is None:
         conf = {}
     setConfig(conf)
     try:
         cherrypy.server.start()
-        cherrypy.engine.start_with_callback(_test_main_thread, *args, **kwargs)
+        cherrypy.engine.start_with_callback(_test_main_thread)
     except KeyboardInterrupt:
         cherrypy.server.stop()
         cherrypy.engine.stop()

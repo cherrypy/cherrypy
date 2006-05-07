@@ -169,7 +169,7 @@ def _attempt(filename, content_types):
         return False
 
 def staticdir(section, dir, root="", match="", content_types=None, index=""):
-    if match and not re.search(match, cherrypy.request.object_path):
+    if match and not re.search(match, cherrypy.request.path_info):
         return False
     
     # If dir is relative, make absolute using "root".
@@ -184,7 +184,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     if section == 'global':
         section = "/"
     section = section.rstrip(r"\/")
-    branch = cherrypy.request.object_path[len(section) + 1:]
+    branch = cherrypy.request.path_info[len(section) + 1:]
     branch = urllib.unquote(branch.lstrip(r"\/"))
     
     # If branch is "", filename will end in a slash
@@ -204,7 +204,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     return handled
 
 def staticfile(filename, root=None, match="", content_types=None):
-    if match and not re.search(match, cherrypy.request.object_path):
+    if match and not re.search(match, cherrypy.request.path_info):
         return False
     
     # If filename is relative, make absolute using "root".

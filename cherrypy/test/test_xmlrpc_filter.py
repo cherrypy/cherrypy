@@ -13,6 +13,9 @@ def setup_server():
 
 
     class XmlRpc:
+        
+        _cp_config = {'tools.xmlrpc.on': True}
+        
         def return_single_item_list(self):
             return [42]
         return_single_item_list.exposed = True
@@ -53,13 +56,13 @@ def setup_server():
             return num * 2
         test_argument_passing.exposed = True
 
-    cherrypy.root = Root()
-    cherrypy.root.xmlrpc = XmlRpc()
+    root = Root()
+    root.xmlrpc = XmlRpc()
+    cherrypy.tree.mount(root)
     cherrypy.config.update({
         'log_to_screen': False,
         'environment': 'production',
         'show_tracebacks': True,
-        '/xmlrpc': {'tools.xmlrpc.on': True},
         })
 
 

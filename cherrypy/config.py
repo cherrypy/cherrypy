@@ -1,34 +1,10 @@
 """Configuration system for CherryPy."""
 
 import ConfigParser
-import os
-_favicon_path = os.path.join(os.path.dirname(__file__), "favicon.ico")
 
 import cherrypy
 from cherrypy import _cputil
 from cherrypy.lib import autoreload, cptools, httptools
-
-
-# This configs dict holds the settings metadata for all cherrypy objects.
-# Keys are URL paths, and values are dicts.
-configs = {}
-
-default_global = {
-    'server.socket_port': 8080,
-    'server.socket_host': '',
-    'server.socket_file': '',
-    'server.socket_queue_size': 5,
-    'server.protocol_version': 'HTTP/1.0',
-    'log_to_screen': True,
-    'log_file': '',
-    'tools.log_tracebacks.on': True,
-    'server.reverse_dns': False,
-    'server.thread_pool': 10,
-    'environment': "development",
-    
-    '/favicon.ico': {'tools.staticfile.on': True,
-                     'tools.staticfile.filename': _favicon_path},
-    }
 
 environments = {
     "development": {
@@ -52,147 +28,125 @@ environments = {
     "embedded": {
         'autoreload.on': False,
         'log_to_screen': False,
-        'server.init_only': True,
         'server.class': None,
         },
     }
 
-def update(updateMap=None, file=None, overwrite=True, baseurl=""):
-    """Update configs from a dictionary or a config file.
+def merge(base, other):
+    """Merge one config (from a dict, file, or filename) into another."""
+    if isinstance(other, basestring):
+        if other not in autoreload.reloadFiles:
+            autoreload.reloadFiles.append(other)
+        other = dict_from_config_file(other)
+    elif hasattr(other, 'read'):
+        other = dict_from_config_file(other)
     
-    If overwrite is False then the update will not modify values
-    already defined in the configs.
-    """
-    if updateMap is None:
-        updateMap = {}
-    
-    if file:
-        if file not in autoreload.reloadFiles:
-            autoreload.reloadFiles.append(file)
-        updateMap = updateMap.copy()
-        updateMap.update(dict_from_config_file(file))
-    
-    # Load new conf into cherrypy.configs
-    for section, valueMap in updateMap.iteritems():
-        # Handle shortcut syntax for "global" section
-        #   example: update({'server.socket_port': 80})
-        if not isinstance(valueMap, dict):
-            valueMap = {section: valueMap}
-            section = 'global'
-        
-        if baseurl and section.startswith("/"):
-            if section == "/":
-                section = baseurl
-            else:
-                section = httptools.urljoin(baseurl, section)
-        
-        bucket = configs.setdefault(section, {})
-        if overwrite:
-            bucket.update(valueMap)
-        else:
-            for key, value in valueMap.iteritems():
-                bucket.setdefault(key, value)
+    # Load other into base
+    for section, value_map in other.iteritems():
+        base.setdefault(section, {}).update(value_map)
 
-def reset(useDefaults=True):
-    """Clear configuration and restore defaults"""
-    configs.clear()
-    if useDefaults:
-        update(default_global)
-reset()
 
-def get(key, default_value=None, return_section=False, path=None):
-    """Return the configuration value corresponding to key
-    If specified, return default_value on lookup failure. If return_section is
-    specified, return the path to the value, instead of the value itself.
-    """
+default_conf = {
+    'server.socket_port': 8080,
+    'server.socket_host': '',
+    'server.socket_file': '',
+    'server.socket_queue_size': 5,
+    'server.protocol_version': 'HTTP/1.0',
+    'server.reverse_dns': False,
+    'server.thread_pool': 10,
+    'log_to_screen': True,
+    'log_file': '',
+    'tools.log_tracebacks.on': True,
+    'environment': "development",
+    }
+
+globalconf = default_conf.copy()
+
+def reset():
+    globalconf.clear()
+    globalconf.update(default_conf)
+
+def update(conf):
+    """Update globalconf from a dict, file or filename."""
+    if isinstance(conf, basestring):
+        if conf not in autoreload.reloadFiles:
+            autoreload.reloadFiles.append(conf)
+        conf = dict_from_config_file(conf)
+    elif hasattr(conf, 'read'):
+        conf = dict_from_config_file(conf)
+    if isinstance(conf.get("global", None), dict):
+        conf = conf["global"]
+    globalconf.update(conf)
+
+
+def get(key, default=None):
+    """Return the config value corresponding to key, or default."""
     
-    if path is None:
-        try:
-            path = cherrypy.request.object_path
-        except AttributeError:
-            # There's no request.object_path yet, so use the global settings.
-            path = "global"
+    try:
+        conf = cherrypy.request.config
+    except AttributeError:
+        # There's no request, so just use globalconf.
+        conf = globalconf
     
-    while True:
-        if path == "":
-            path = "/"
-        
+    try:
+        return conf[key]
+    except KeyError:
         try:
-            result = configs[path][key]
-            break
+            env = conf["environment"]
+            return environments[env][key]
         except KeyError:
-            pass
-        
-        try:
-            env = configs[path]["environment"]
-            result = environments[env][key]
-            break
-        except KeyError:
-            pass
-        pass
-
-        if path == "global":
-            result = default_value
-            break
-        
-        # Move one node up the tree and try again.
-        if path == "/":
-            path = "global"
-        elif path in cherrypy.tree.mount_points:
-            # We've reached the mount point for an application,
-            # and should skip the rest of the tree (up to "global").
-            path = "global"
-        else:
-            path = path[:path.rfind("/")]
-    
-    if return_section:
-        return path
-    else:
-        return result
+            return default
 
 def request_config():
     """Return all configs in effect for the current request in a single dict."""
-    path = cherrypy.request.object_path
-    mounted_app_roots = cherrypy.tree.mount_points.values()
+    path = cherrypy.request.path_info
+    app = cherrypy.request.app
     
     # Convert the path into a list of names
-    if (not path) or path == "*":
+    if (not path) or path == "/":
         nameList = []
     else:
         nameList = path.strip('/').split('/')
     nameList.append('index')
     
     curpath = ""
-    node = cherrypy.root
+    node = app.root
     conf = getattr(node, "_cp_config", {}).copy()
-    conf.update(configs.get("/", {}))
+    conf.update(app.conf.get("/", {}))
     for name in nameList:
-        # Get _cp_config attached to each node on the cherrypy tree.
+        # Get _cp_config attached to each node on this app's tree.
         objname = name.replace('.', '_')
         node = getattr(node, objname, None)
-        if node is not None:
-            if node in mounted_app_roots:
-                # Dump and start over. This inefficiency should disappear
-                # once we make cherrypy.localroot (specific to each request).
-                conf = {}
-            conf.update(getattr(node, "_cp_config", {}))
+        nodeconf = getattr(node, "_cp_config", {})
         
-        # Get values from cherrypy.config for this path.
+        # Get values from app.config for this path.
         curpath = "/".join((curpath, name))
-        conf.update(configs.get(curpath, {}))
+        nodeconf.update(app.conf.get(curpath, {}))
+        
+        # Resolve "environment" entries. This must be done node-by-node
+        # so that a child's "environment" can override concrete settings
+        # of a parent. However, concrete settings in this node will
+        # override "environment" settings in the same node.
+        env = nodeconf.get("environment")
+        if env:
+            for k, v in environments[env].iteritems():
+                if k not in nodeconf:
+                    nodeconf[k] = v
+        
+        conf.update(nodeconf)
     
-    base = configs.get("global", {}).copy()
+    base = globalconf.copy()
     base.update(conf)
     return base
 
 
 def request_config_section(key):
     """Return the (longest) path where the given key is defined (or None)."""
-    path = cherrypy.request.object_path
-    mounted_app_roots = cherrypy.tree.mount_points.values()
+    path = cherrypy.request.path_info
+    app = cherrypy.request.app
     
     # Convert the path into a list of names
-    if (not path) or path == "*":
+    if (not path):
         nameList = []
     else:
         nameList = path.strip('/').split('/')
@@ -201,29 +155,26 @@ def request_config_section(key):
     foundpath = None
     
     curpath = ""
-    node = cherrypy.root
-    if key in getattr(node, "_cp_config", {}) or key in configs.get("/", {}):
+    node = app.root
+    if key in getattr(node, "_cp_config", {}) or key in app.conf.get("/", {}):
         foundpath = "/"
     for name in nameList:
         curpath = "/".join((curpath, name))
         
-        # Get _cp_config attached to each node on the cherrypy tree.
+        # Get _cp_config attached to each node on this app's tree.
         objname = name.replace('.', '_')
         node = getattr(node, objname, None)
         if node is not None:
-            if node in mounted_app_roots:
-                # Dump and start over. This inefficiency should disappear
-                # once we make cherrypy.localroot (specific to each request).
-                foundpath = None
             if key in getattr(node, "_cp_config", {}):
-                foundpath = curpath or "/"
+                foundpath = curpath
+                break
         
         # Get values from cherrypy.config for this path.
-        if key in configs.get(curpath, {}):
+        if key in app.conf.get(curpath, {}):
             foundpath = curpath
     
     if foundpath is None:
-        foundpath = configs.get("global", {}).get(key)
+        foundpath = globalconf.get(key)
     return foundpath
 
 
@@ -249,15 +200,15 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
             finally:
                 fp.close()
 
-def dict_from_config_file(configFile, raw=False, vars=None):
+def dict_from_config_file(config_file, raw=False, vars=None):
     """Convert an INI file to a dictionary"""
     
     # Parse config file
     configParser = CaseSensitiveConfigParser()
-    if hasattr(configFile, 'read'):
-        configParser.readfp(configFile)
+    if hasattr(config_file, 'read'):
+        configParser.readfp(config_file)
     else:
-        configParser.read(configFile)
+        configParser.read(config_file)
     
     # Load INI file into a dict
     result = {}
@@ -278,8 +229,8 @@ def dict_from_config_file(configFile, raw=False, vars=None):
     return result
 
 
-def outputConfigMap():
-    """Log server configuration parameters"""
+def output_config_map():
+    """Log engine configuration parameters."""
     cherrypy.log("Server parameters:", 'CONFIG')
     
     serverVars = [
@@ -294,7 +245,7 @@ def outputConfigMap():
                   'server.socket_queue_size',
                   'server.thread_pool',
                  ]
-
+    
     for var in serverVars:
         cherrypy.log("  %s: %s" % (var, get(var)), 'CONFIG')
 

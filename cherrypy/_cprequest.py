@@ -24,8 +24,8 @@ class Request(object):
         self.remote_addr = remote_addr
         self.remote_port = remote_port
         self.remote_host = remote_host
-        
         self.scheme = scheme
+        
         self.closed = False
         
         pts = ['on_start_resource', 'before_request_body',
@@ -84,7 +84,7 @@ class Request(object):
     def _run(self):
         try:
             # This has to be done very early in the request process,
-            # because request.object_path is used for config lookups
+            # because request.path_info is used for config lookups
             # right away.
             self.process_request_line()
             self.dispatch = self.config.get("dispatch") or _cputil.dispatch
@@ -96,6 +96,12 @@ class Request(object):
                 try:
                     self.process_headers()
                     
+                    # Prepare the SizeCheckWrapper for the request body
+                    mbs = int(self.config.get('server.max_request_body_size',
+                                              100 * 1024 * 1024))
+                    if mbs > 0:
+                        self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
+                    
                     self.hooks.run('before_request_body')
                     if self.process_request_body:
                         self.process_body()
@@ -105,10 +111,10 @@ class Request(object):
                         try:
                             self.hooks.run('before_main')
                             if self.dispatch:
-                                self.dispatch(self.object_path)
+                                self.dispatch(self.path_info)
                             break
                         except cherrypy.InternalRedirect, ir:
-                            self.object_path = ir.path
+                            self.path_info = ir.path
                     
                     self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
@@ -128,10 +134,10 @@ class Request(object):
                 raise
             self.handle_error(sys.exc_info())
     
-    def _get_object_path(self):
-        return self._object_path
-    def _set_object_path(self, value):
-        self._object_path = value
+    def _get_path_info(self):
+        return self._path_info
+    def _set_path_info(self, value):
+        self._path_info = value
         self.config = cherrypy.config.request_config()
         
         # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
@@ -143,7 +149,7 @@ class Request(object):
                 toolname = atoms.pop(0)
                 bucket = self.toolmap.setdefault(toolname, {})
                 bucket[".".join(atoms)] = v
-    object_path = property(_get_object_path, _set_object_path,
+    path_info = property(_get_path_info, _set_path_info,
                            doc="The path to the rendered resource.")
     
     def process_request_line(self):
@@ -159,9 +165,6 @@ class Request(object):
         self.path = path
         self.query_string = qs
         self.protocol = proto
-        
-        # Change object_path to change the object that will get rendered
-        self.object_path = path
         
         # Compare request and server HTTP versions, in case our server does
         # not support the requested version. We can't tell the server what
@@ -182,9 +185,15 @@ class Request(object):
         
         # cherrypy.response.version should be used to determine whether or
         # not to include a given HTTP/1.1 feature in the response content.
-        server_v = cherrypy.config.get("server.protocol_version", "HTTP/1.0")
+        server_v = cherrypy.config.get('server.protocol_version', 'HTTP/1.0')
         server_v = httptools.Version.from_http(server_v)
         cherrypy.response.version = min(self.version, server_v)
+        
+        # Change path_info to change the object that will get rendered.
+        # path_info should be the path from the app root to the handler.
+        self.script_name = r = cherrypy.tree.script_name(path)
+        self.app = cherrypy.tree.apps[r]
+        self.path_info = path[len(r.rstrip("/")):]
     
     def process_headers(self):
         self.params = httptools.parseQueryString(self.query_string)

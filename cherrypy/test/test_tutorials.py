@@ -9,7 +9,7 @@ import helper
 
 def setup_server():
     
-    conf = cherrypy.config.configs.copy()
+    conf = cherrypy.config.globalconf.copy()
     
     def load_tut_module(name):
         """Import or reload tutorial module as needed."""
@@ -21,9 +21,12 @@ def setup_server():
             module = reload(sys.modules[target])
         else:
             module = __import__(target, globals(), locals(), [''])
-        cherrypy.root.load_tut_module = load_tut_module
-        cherrypy.root.sessfilteron = sessfilteron
-        cherrypy.root.traceback_setting = traceback_setting
+        # The above import will probably mount a new app at "/".
+        app = cherrypy.tree.apps["/"]
+        
+        app.root.load_tut_module = load_tut_module
+        app.root.sessfilteron = sessfilteron
+        app.root.traceback_setting = traceback_setting
     load_tut_module.exposed = True
     
     def sessfilteron():
@@ -36,8 +39,9 @@ def setup_server():
     
     class Dummy:
         pass
-    cherrypy.root = Dummy()
-    cherrypy.root.load_tut_module = load_tut_module
+    root = Dummy()
+    root.load_tut_module = load_tut_module
+    cherrypy.tree.mount(root)
 
 
 class TutorialTest(helper.CPWebCase):
@@ -110,7 +114,7 @@ class TutorialTest(helper.CPWebCase):
         self.getPage("/load_tut_module/tut06_default_method")
         self.getPage('/hendrik')
         self.assertBody('Hendrik Mans, CherryPy co-developer & crazy German '
-                         '(<a href="./">back</a>)')
+                        '(<a href="./">back</a>)')
     def test07Sessions(self):
         self.getPage("/load_tut_module/tut07_sessions")
         self.getPage("/sessfilteron")

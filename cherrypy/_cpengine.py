@@ -41,23 +41,11 @@ class Engine(object):
         
         # Output config options to log
         if conf("log_config_options", True):
-            cherrypy.config.outputConfigMap()
-        
-        # Hmmm...we *could* check config in _start instead, but I think
-        # most people would like CP to fail before autoreload kicks in.
-        err = cherrypy.WrongConfigValue
-        for name, section in cherrypy.config.configs.iteritems():
-            for k, v in section.iteritems():
-                if k == "environment":
-                    if v and v not in cherrypy.config.environments:
-                        raise err("'%s' is not a registered environment." % v)
+            cherrypy.config.output_config_map()
         
         if cherrypy.codecoverage:
             from cherrypy.lib import covercp
             covercp.start()
-        
-        # set cgi.maxlen which will limit the size of POST request bodies
-        cgi.maxlen = conf('server.max_request_size')
         
         # Set up the profiler if requested.
         if conf("profiling.on", False):

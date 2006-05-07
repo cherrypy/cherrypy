@@ -7,6 +7,9 @@ import time
 
 def setup_server():
     class Root:
+        
+        _cp_config = {'tools.caching.on': True}
+        
         def __init__(self):
             cherrypy.counter = 0
         
@@ -15,12 +18,11 @@ def setup_server():
             msg = "visit #%s" % cherrypy.counter
             return msg
         index.exposed = True
-
-    cherrypy.root = Root()
+    
+    cherrypy.tree.mount(Root())
     cherrypy.config.update({
-            'log_to_screen': False,
-            'environment': 'production',
-            'tools.caching.on': True,
+        'log_to_screen': False,
+        'environment': 'production',
     })
 
 

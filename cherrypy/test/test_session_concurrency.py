@@ -42,6 +42,12 @@ except IndexError:
 
 # Server code
 class Root:
+    
+    _cp_config = {'session_filter.on': True,
+                  'session_filter.storage_type': storage_type,
+                  'session_filter.storage_path': storage_path,
+                  }
+    
     def index(self):
         # If you remove the "acquire_lock" call the assert at the end
         #   of this script will fail
@@ -56,11 +62,8 @@ cherrypy.config.update({
     'environment': 'production',
     'log_to_screen': False,
     'server.thread_pool': server_thread_count,
-    'session_filter.on': True,
-    'session_filter.storage_type': storage_type,
-    'session_filter.storage_path': storage_path,
 })
-cherrypy.root = Root()
+cherrypy.tree.mount(Root())
 
 # Client code
 def run_client(cookie, request_count, data_dict, index):

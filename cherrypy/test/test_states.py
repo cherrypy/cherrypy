@@ -20,13 +20,11 @@ class Root:
         return "app was restarted succesfully"
     restart.exposed = True
 
-cherrypy.root = Root()
+cherrypy.tree.mount(Root())
 cherrypy.config.update({
-    'global': {
-        'log_to_screen': False,
-        'environment': 'production',
-    },
-})
+    'log_to_screen': False,
+    'environment': 'production',
+    })
 
 class Dependency:
     

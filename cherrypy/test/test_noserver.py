@@ -23,9 +23,9 @@ class HelloWorld:
     index.exposed = True
     wsgi_asp = index
 
-cherrypy.root = HelloWorld()
-cherrypy.root.test = HelloWorld()
-
+root = HelloWorld()
+root.test = HelloWorld()
+cherrypy.tree.mount(root)
 cherrypy.config.update({"environment": "production"})
 cherrypy.engine.start()
 

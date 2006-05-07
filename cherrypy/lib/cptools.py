@@ -45,8 +45,8 @@ class ExposeItems:
     
     from cherrypy.lib.cptools import ExposeItems
     ...
-    cherrypy.root.foo = ExposeItems(mylist)
-    cherrypy.root.bar = ExposeItems(mydict)
+    root.foo = ExposeItems(mylist)
+    root.bar = ExposeItems(mydict)
     """
     exposed = True
     def __init__(self, items):
@@ -287,7 +287,7 @@ def session_auth(check_login_and_password=None, not_logged_in=None,
     return False
 
 def virtual_host(use_x_forwarded_host=True, **domains):
-    """Change the object_path based on the Host.
+    """Change the path_info based on the Host.
     
     Useful when running multiple sites within one CP server.
     
@@ -311,7 +311,7 @@ def virtual_host(use_x_forwarded_host=True, **domains):
     
     prefix = domains.get(domain, "")
     if prefix:
-        cherrypy.request.object_path = prefix + "/" + cherrypy.request.object_path
+        cherrypy.request.path_info = prefix + "/" + cherrypy.request.path_info
 
 def log_traceback():
     """Write the last error's traceback to the cherrypy error log."""

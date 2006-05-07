@@ -6,6 +6,12 @@ import cherrypy, os
 
 def setup_server():
     class Root:
+        
+        _cp_config = {'tools.sessions.on': True,
+                      'tools.sessions.storage_type' : 'file',
+                      'tools.sessions.storage_path' : '.',
+                      }
+        
         def testGen(self):
             counter = cherrypy.session.get('counter', 0) + 1
             cherrypy.session['counter'] = counter
@@ -22,13 +28,10 @@ def setup_server():
             cherrypy.config.update({'tools.sessions.storage_type': newtype})
         setsessiontype.exposed = True
         
-    cherrypy.root = Root()
+    cherrypy.tree.mount(Root())
     cherrypy.config.update({
             'log_to_screen': False,
             'environment': 'production',
-            'tools.sessions.on': True,
-            'tools.sessions.storage_type' : 'file',
-            'tools.sessions.storage_path' : '.',
     })
 
 import helper

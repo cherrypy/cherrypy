@@ -91,11 +91,10 @@ class FileDemo(object):
     download.exposed = True
 
 
-cherrypy.root = FileDemo()
+cherrypy.tree.mount(FileDemo())
 
 if __name__ == '__main__':
-    # Use the configuration file tutorial.conf.
-    cherrypy.config.update(file = 'tutorial.conf')
     # Start the CherryPy server.
+    cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
     cherrypy.server.start()
     cherrypy.engine.start()

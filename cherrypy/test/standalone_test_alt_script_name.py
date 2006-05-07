@@ -67,7 +67,7 @@ class Dir1:
     index.exposed = True
     
     def myMethod(self):
-        return "myMethod from dir1, object Path is:" + repr(cherrypy.request.object_path)
+        return "myMethod from dir1, path_info is:" + repr(cherrypy.request.path_info)
     myMethod.exposed = True
     
     def default(self, *params):
@@ -80,9 +80,9 @@ class Dir2:
         return "index for dir2, path is:" + cherrypy.request.path
     index.exposed = True
     
-    def mount_point(self):
-        return cherrypy.tree.mount_point()
-    mount_point.exposed = True
+    def script_name(self):
+        return cherrypy.tree.script_name()
+    script_name.exposed = True
     
     def tree_url(self):
         return cherrypy.tree.url("/extra")
@@ -109,8 +109,8 @@ Root.dir1.dir2 = Dir2()
 Root.dir1.dir2.dir3 = Dir3()
 Root.dir1.dir2.dir3.dir4 = Dir4()
 
-mount_points = ["/apps", "/apps/users/fred/blog", "/apps/corp/blog"]
-for url in mount_points:
+script_names = ["/apps", "/apps/users/fred/blog", "/apps/corp/blog"]
+for url in script_names:
     conf = {'user': url.split("/")[-2]}
     cherrypy.tree.mount(Root(), url, {'/': conf})
 
@@ -162,13 +162,13 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage('/missing')
         self.assertStatus('404 Not Found')
 
-        self.mount_point = mp
+        self.script_name = mp
         self.getPage('/script_name')
         self.assertBody(mp)
 
     def testObjectMapping(self):
-        for url in mount_points:
-            prefix = self.mount_point = url
+        for url in script_names:
+            prefix = self.script_name = url
             if prefix == "/":
                 prefix = ""
             
@@ -176,7 +176,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertBody('world')
             
             self.getPage("/dir1/myMethod")
-            self.assertBody("myMethod from dir1, object Path is:'%s/dir1/myMethod'"
+            self.assertBody("myMethod from dir1, path_info is:'%s/dir1/myMethod'"
                             % prefix)
             
             self.getPage("/this/method/does/not/exist")
@@ -219,7 +219,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage("/page%2Fname")
             self.assertBody("default:('page/name',)")
             
-            self.getPage("/dir1/dir2/mount_point")
+            self.getPage("/dir1/dir2/script_name")
             self.assertBody(url)
             self.getPage("/dir1/dir2/tree_url")
             self.assertBody(prefix + "/extra")
@@ -228,7 +228,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage("/confvalue")
             self.assertBody(url.split("/")[-2])
         
-        self.mount_point = mp
+        self.script_name = mp
         
         # Test that the "isolated" app doesn't leak url's into the root app.
         # If it did leak, Root.default() would answer with
@@ -240,7 +240,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertStatus("404 Not Found")
     
     def testPositionalParams(self):
-        self.mount_point = mp
+        self.script_name = mp
 
         self.getPage("/dir1/dir2/posparam/18/24/hut/hike")
         self.assertBody("18/24/hut/hike")
@@ -251,7 +251,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertBody("default for dir1, param is:('dir2', '5', '3', 'sir')")
     
     def testExpose(self):
-        self.mount_point = mp
+        self.script_name = mp
         
         # Test the cherrypy.expose function/decorator
         self.getPage("/exposing/base")

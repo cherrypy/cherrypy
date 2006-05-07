@@ -23,10 +23,11 @@ def setup_server():
         index.exposed = True
 
 
-    cherrypy.root = Root()
-    cherrypy.root.mydom2 = VHost("Domain 2")
-    cherrypy.root.mydom3 = VHost("Domain 3")
-
+    root = Root()
+    root.mydom2 = VHost("Domain 2")
+    root.mydom3 = VHost("Domain 3")
+    cherrypy.tree.mount(root)
+    
     cherrypy.config.update({
             'log_to_screen': False,
             'environment': 'production',

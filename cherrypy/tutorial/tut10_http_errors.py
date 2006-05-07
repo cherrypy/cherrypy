@@ -8,10 +8,17 @@ logged, displayed, and formatted.
 
 """
 
+import os
+localDir = os.path.dirname(__file__)
+curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
+
 import cherrypy
 
 
 class HTTPErrorDemo(object):
+    
+    # Set a custom response for 403 errors.
+    _cp_config = {'error_page.403' : os.path.join(curpath, "custom_error.html")}
     
     def index(self):
         # display some links that will result in errors
@@ -61,18 +68,11 @@ class HTTPErrorDemo(object):
     messageArg.exposed = True
 
 
-cherrypy.root = HTTPErrorDemo()
-
-# Set a custom response for 403 errors.
-import os
-localDir = os.path.dirname(__file__)
-curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
-cherrypy.config.update({'error_page.403' : os.path.join(curpath, "custom_error.html")})
+cherrypy.tree.mount(HTTPErrorDemo())
 
 
 if __name__ == '__main__':
-    # Use the configuration file tutorial.conf.
-    cherrypy.config.update(file = 'tutorial.conf')
     # Start the CherryPy server.
+    cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
     cherrypy.server.start()
     cherrypy.engine.start()

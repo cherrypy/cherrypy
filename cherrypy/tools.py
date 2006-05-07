@@ -136,8 +136,9 @@ class MainTool(Tool):
         """Use this tool as a CherryPy page handler.
         
         For example:
-            cherrypy.root.nav = tools.staticdir.handler(
-                                    section="/nav", dir="nav", root=absDir)
+            class Root:
+                nav = tools.staticdir.handler(section="/nav", dir="nav",
+                                              root=absDir)
         """
         def wrapper(*a, **kw):
             handled = self.callable(*args, **self.merged_args(kwargs))
@@ -319,6 +320,33 @@ class _XMLRPCTool(object):
         cherrypy.request.dispatch = self.dispatch
         cherrypy.request.error_response = _xmlrpc.on_error
 xmlrpc = _XMLRPCTool()
+
+from cherrypy.lib import wsgiapp as _wsgiapp
+class _WSGIAppTool(MainTool):
+    """A filter for running any WSGI middleware/application within CP.
+
+    Here are the parameters:
+
+    wsgi_app - any wsgi application callable
+    env_update - a dictionary with arbitrary keys and values to be
+                 merged with the WSGI environment dictionary.
+
+    Example:
+    
+    class Whatever:
+        _cp_config = {'tools.wsgiapp.on': True,
+                      'tools.wsgiapp.app': some_app,
+                      'tools.wsgiapp.env': app_environ,
+                      }
+    """
+    
+    def setup(self):
+        # Keep request body intact so the wsgi app can have its way with it.
+        cherrypy.request.process_request_body = False
+        MainTool.setup(self)
+wsgiapp = _WSGIAppTool(_wsgiapp.run, "wsgiapp")
+del _wsgiapp
+
 
 # These modules are themselves Tools
 from cherrypy.lib import caching

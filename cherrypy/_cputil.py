@@ -9,55 +9,48 @@ import cherrypy
 from cherrypy.lib import httptools
 
 
-def get_object_trail(objectpath=None, root=None):
-    """List of (name, object) pairs, from root (cherrypy.root) down objectpath.
+def get_object_trail(path=None, root=None):
+    """List of (name, object) pairs, from root (app.root) down path.
     
     If any named objects are unreachable, (name, None) pairs are used.
     """
     
-    if objectpath is None:
+    if path is None:
         try:
-            objectpath = cherrypy.request.object_path
+            path = cherrypy.request.path_info
         except AttributeError:
             pass
     
-    if objectpath is not None:
-        objectpath = objectpath.strip('/')
+    if path is not None:
+        path = path.strip('/')
     
-    # Convert the objectpath into a list of names
-    if not objectpath:
+    # Convert the path into a list of names
+    if not path:
         nameList = []
     else:
-        nameList = objectpath.split('/')
-    
-    if nameList == ['global']:
-        # Special-case a Request-URI of * to allow for our default handler.
-        root = getattr(cherrypy, 'root', None)
-        if root is None:
-            return [('root', None), ('global_', None), ('index', None)]
-        gh = getattr(root, 'global_', _cpGlobalHandler)
-        return [('root', cherrypy.root), ('global_', gh), ('index', None)]
+        nameList = path.split('/')
     
     if root is None:
-        root = getattr(cherrypy, 'root', None)
-        if root is None:
+        try:
+            root = cherrypy.request.app.root
+        except AttributeError:
             return [('root', None), ('index', None)]
     
     nameList.append('index')
     
     # Convert the list of names into a list of objects
     node = root
-    objectTrail = [('root', root)]
+    object_trail = [('root', root)]
     for name in nameList:
         # maps virtual names to Python identifiers (replaces '.' with '_')
         objname = name.replace('.', '_')
         node = getattr(node, objname, None)
         if node is None:
-            objectTrail.append((name, node))
+            object_trail.append((name, node))
         else:
-            objectTrail.append((objname, node))
+            object_trail.append((objname, node))
     
-    return objectTrail
+    return object_trail
 
 def dispatch(path):
     """Find and run the appropriate page handler."""
@@ -75,16 +68,15 @@ def dispatch(path):
     vpath = [x.replace("%2F", "/") for x in vpath]
     cherrypy.response.body = handler(*vpath, **request.params)
 
-def find_handler(objectpath):
+def find_handler(path):
     """Find the appropriate page handler for the given path."""
-    objectTrail = get_object_trail(objectpath)
-    names = [name for name, candidate in objectTrail]
+    object_trail = get_object_trail(path)
+    names = [name for name, candidate in object_trail]
     
     # Try successive objects (reverse order)
-    mounted_app_roots = cherrypy.tree.mount_points.values()
-    for i in xrange(len(objectTrail) - 1, -1, -1):
+    for i in xrange(len(object_trail) - 1, -1, -1):
         
-        name, candidate = objectTrail[i]
+        name, candidate = object_trail[i]
         
         # Try a "default" method on the current leaf.
         defhandler = getattr(candidate, "default", None)
@@ -92,26 +84,23 @@ def find_handler(objectpath):
             return defhandler, names[:i+1] + ["default"], names[i+1:-1]
         
         # Uncomment the next line to restrict positional params to "default".
-        # if i < len(objectTrail) - 2: continue
+        # if i < len(object_trail) - 2: continue
         
         # Try the current leaf.
         if callable(candidate) and getattr(candidate, 'exposed', False):
-            if i == len(objectTrail) - 1:
+            if i == len(object_trail) - 1:
                 # We found the extra ".index". Check if the original path
                 # had a trailing slash (otherwise, do a redirect).
-                if not objectpath.endswith('/'):
+                if not path.endswith('/'):
                     atoms = cherrypy.request.browser_url.split("?", 1)
                     newUrl = atoms.pop(0) + '/'
                     if atoms:
                         newUrl += "?" + atoms[0]
                     raise cherrypy.HTTPRedirect(newUrl)
             return candidate, names[:i+1], names[i+1:-1]
-        
-        if candidate in mounted_app_roots:
-            break
     
     # We didn't find anything
-    raise cherrypy.NotFound(objectpath)
+    raise cherrypy.NotFound(path)
 
 
 def get_special_attribute(name):
@@ -120,37 +109,19 @@ def get_special_attribute(name):
     
     # First, we look in the right-most object to see if this special
     # attribute is implemented. If not, then we try the previous object,
-    # and so on until we reach cherrypy.root, or a mount point.
+    # and so on until we reach app.root (a mount point).
     # If it's still not there, we use the implementation from this module.
-    mounted_app_roots = cherrypy.tree.mount_points.values()
     objectList = get_object_trail()
     objectList.reverse()
     for objname, obj in objectList:
         if hasattr(obj, name):
             return getattr(obj, name)
-        if obj in mounted_app_roots:
-            break
     
     try:
         return globals()[name]
     except KeyError:
         msg = "Special attribute %s could not be found" % repr(name)
         raise cherrypy.HTTPError(500, msg)
-
-def _cpGlobalHandler():
-    """Default handler for a Request-URI of '*'."""
-    response = cherrypy.response
-    response.headers['Content-Type'] = 'text/plain'
-    
-    # OPTIONS is defined in HTTP 1.1 and greater
-    request = cherrypy.request
-    if request.method == 'OPTIONS' and request.version >= 1.1:
-        response.headers['Allow'] = 'HEAD, GET, POST, PUT, OPTIONS'
-    else:
-        response.headers['Allow'] = 'HEAD, GET, POST'
-    return ""
-_cpGlobalHandler.exposed = True
-
 
 def logtime():
     now = datetime.datetime.now()

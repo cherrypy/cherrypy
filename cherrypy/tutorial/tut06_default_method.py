@@ -50,11 +50,11 @@ class UsersPage:
     default.exposed = True
 
 
-cherrypy.root = UsersPage()
+cherrypy.tree.mount(UsersPage())
 
 
 if __name__ == '__main__':
-    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
     cherrypy.server.start()
     cherrypy.engine.start()
 

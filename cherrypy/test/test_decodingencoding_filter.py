@@ -19,7 +19,7 @@ def setup_server():
             return sing
         mao_zedong.exposed = True
 
-    cherrypy.root = Root()
+    cherrypy.tree.mount(Root())
     cherrypy.config.update({
             'log_to_screen': False,
             'environment': 'production',

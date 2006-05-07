@@ -17,16 +17,14 @@ def setup_server():
         def other(self):
             return "salut"
         other.exposed = True
-    
-    cherrypy.root = Root()
-    cherrypy.config.update({
-        '/other': {
+        other._cp_config = {
             'tools.response_headers.on': True,
             'tools.response_headers.force': False,
             'tools.response_headers.headers': [("Content-Language", "fr"),
                                                ('Content-Type', 'text/plain')],
-            },
-        })
+            }
+    
+    cherrypy.tree.mount(Root())
 
 
 import helper

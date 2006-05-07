@@ -9,6 +9,10 @@ import cherrypy
 def setup_server():
     
     class Root:
+        
+        _cp_config = {'foo': 'this',
+                      'bar': 'that'}
+        
         def index(self, key):
             return cherrypy.config.get(key, "None")
         index.exposed = True
@@ -16,52 +20,43 @@ def setup_server():
         xyz = index
     
     class Foo:
+        
+        _cp_config = {'foo': 'this2',
+                      'baz': 'that2'}
+        
         def index(self, key):
             return cherrypy.config.get(key, "None")
         index.exposed = True
-        bar = index
         nex = index
+        
+        def bar(self, key):
+            return cherrypy.config.get(key, "None")
+        bar.exposed = True
+        bar._cp_config = {'foo': 'this3', 'bax': 'this4'}
     
     class Env:
+        
         def index(self, key):
             return str(cherrypy.config.get(key, "None"))
         index.exposed = True
         prod = index
         embed = index
-        
-        def wrong(self):
-            conf = "\n[global]\nenvironment = production\n"
-            cherrypy.config.update(file=StringIO.StringIO(conf))
-        wrong.exposed=True
     
-    cherrypy.tree.mount(Root())
-    cherrypy.root.foo = Foo()
+    root = Root()
+    root.foo = Foo()
+    cherrypy.tree.mount(root)
     
-    cherrypy.config.update({
-        'global': {'log_to_screen': False,
-                   'environment': 'production',
-                   'show_tracebacks': True,
-                   },
-        '/': {
-            'foo': 'this',
-            'bar': 'that',
-            },
-        '/foo': {
-            'foo': 'this2',
-            'baz': 'that2',
-            },
-        '/foo/bar': {
-            'foo': 'this3',
-            'bax': 'this4',
-            },
-    })
-
+    cherrypy.config.update({'log_to_screen': False,
+                            'environment': 'production',
+                            'show_tracebacks': True,
+                            })
+    
     _env_conf = {'/': {'environment': 'development'},
                  '/prod': {'environment': 'production'},
                  '/embed': {'environment': 'embedded'},
                  }
     cherrypy.tree.mount(Env(), "/env", _env_conf)
-
+    
     # Shortcut syntax--should get put in the "global" bucket
     cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
 
@@ -74,7 +69,6 @@ class ConfigTests(helper.CPWebCase):
     
     def testConfig(self):
         tests = [
-            ('*',        'luxuryyacht', 'throatwobblermangrove'),
             ('/',        'nex', 'None'),
             ('/',        'foo', 'this'),
             ('/',        'bar', 'that'),
@@ -90,13 +84,6 @@ class ConfigTests(helper.CPWebCase):
         for path, key, expected in tests:
             self.getPage(path + "?key=" + key)
             self.assertBody(expected)
-    
-    def testUnrepr(self):
-        err = ('WrongConfigValue: ("section: '
-               "'global', option: 'environment', value: 'production'"
-               '''", 'UnknownType', ('production',))''')
-        self.getPage("/env/wrong")
-        self.assertErrorPage(500, pattern=err)
     
     def testEnvironments(self):
         for key, val in cherrypy.config.environments['development'].iteritems():

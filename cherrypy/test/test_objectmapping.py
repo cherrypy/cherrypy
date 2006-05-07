@@ -4,7 +4,7 @@ test.prefer_parent_path()
 import cherrypy
 
 
-mount_points = ["/", "/users/fred/blog", "/corp/blog"]
+script_names = ["/", "/users/fred/blog", "/corp/blog"]
 
 def setup_server():
     class Root:
@@ -34,36 +34,35 @@ def setup_server():
         def confvalue(self):
             return cherrypy.config.get("user")
         confvalue.exposed = True
-
+    
     def mapped_func(self, ID=None):
         return "ID is %s" % ID
     mapped_func.exposed = True
     setattr(Root, "Von B\xfclow", mapped_func)
-
-
+    
+    
     class Exposing:
         def base(self):
             return "expose works!"
         cherrypy.expose(base)
         cherrypy.expose(base, "1")
         cherrypy.expose(base, "2")
-
+    
     class ExposingNewStyle(object):
         def base(self):
             return "expose works!"
         cherrypy.expose(base)
         cherrypy.expose(base, "1")
         cherrypy.expose(base, "2")
-
-
-
+    
+    
     class Dir1:
         def index(self):
             return "index for dir1"
         index.exposed = True
         
         def myMethod(self):
-            return "myMethod from dir1, object Path is:" + repr(cherrypy.request.object_path)
+            return "myMethod from dir1, path_info is:" + repr(cherrypy.request.path_info)
         myMethod.exposed = True
         
         def default(self, *params):
@@ -76,9 +75,9 @@ def setup_server():
             return "index for dir2, path is:" + cherrypy.request.path
         index.exposed = True
         
-        def mount_point(self):
-            return cherrypy.tree.mount_point()
-        mount_point.exposed = True
+        def script_name(self):
+            return cherrypy.tree.script_name()
+        script_name.exposed = True
         
         def tree_url(self):
             return cherrypy.tree.url("/extra")
@@ -87,23 +86,23 @@ def setup_server():
         def posparam(self, *vpath):
             return "/".join(vpath)
         posparam.exposed = True
-
-
+    
+    
     class Dir3:
         def default(self):
             return "default for dir3, not exposed"
-
-
+    
+    
     class Dir4:
         def index(self):
             return "index for dir4, not exposed"
-
+    
     class DefNoIndex:
         def default(self, *args):
             return "defnoindex:" + repr(args)
         default.exposed = True
-
-
+    
+    
     Root.exposing = Exposing()
     Root.exposingnew = ExposingNewStyle()
     Root.dir1 = Dir1()
@@ -111,23 +110,23 @@ def setup_server():
     Root.dir1.dir2.dir3 = Dir3()
     Root.dir1.dir2.dir3.dir4 = Dir4()
     Root.defnoindex = DefNoIndex()
-
-
-    for url in mount_points:
+    
+    
+    for url in script_names:
         conf = {'user': url.split("/")[-2]}
         cherrypy.tree.mount(Root(), url, {'/': conf})
-
+    
     cherrypy.config.update({
         'log_to_screen': False,
         'environment': "production",
     })
-
-
+    
+    
     class Isolated:
         def index(self):
             return "made it!"
         index.exposed = True
-
+    
     cherrypy.tree.mount(Isolated(), "/isolated")
 
 
@@ -136,8 +135,8 @@ import helper
 class ObjectMappingTest(helper.CPWebCase):
     
     def testObjectMapping(self):
-        for url in mount_points:
-            prefix = self.mount_point = url
+        for url in script_names:
+            prefix = self.script_name = url
             if prefix == "/":
                 prefix = ""
             
@@ -145,8 +144,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertBody('world')
             
             self.getPage("/dir1/myMethod")
-            self.assertBody("myMethod from dir1, object Path is:'%s/dir1/myMethod'"
-                            % prefix)
+            self.assertBody("myMethod from dir1, path_info is:'/dir1/myMethod'")
             
             self.getPage("/this/method/does/not/exist")
             self.assertBody("default:('this', 'method', 'does', 'not', 'exist')")
@@ -161,8 +159,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertBody("default:('notExposed',)")
             
             self.getPage("/dir1/dir2/")
-            self.assertBody('index for dir2, path is:%s/dir1/dir2/'
-                            % prefix)
+            self.assertBody('index for dir2, path is:%s/dir1/dir2/' % prefix)
             
             self.getPage("/dir1/dir2")
             self.assert_(self.status in ('302 Found', '303 See Other'))
@@ -194,7 +191,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage("/page%2Fname")
             self.assertBody("default:('page/name',)")
             
-            self.getPage("/dir1/dir2/mount_point")
+            self.getPage("/dir1/dir2/script_name")
             self.assertBody(url)
             self.getPage("/dir1/dir2/tree_url")
             self.assertBody(prefix + "/extra")
@@ -203,7 +200,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage("/confvalue")
             self.assertBody(url.split("/")[-2])
         
-        self.mount_point = ""
+        self.script_name = ""
         
         # Test that the "isolated" app doesn't leak url's into the root app.
         # If it did leak, Root.default() would answer with

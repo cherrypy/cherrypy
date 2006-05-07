@@ -23,15 +23,15 @@ def setup_server():
             raise IndexError()
             yield "Here be dragons"
         noshow_stream.exposed = True
-
-    cherrypy.root = Root()
+        noshow_stream._cp_config = {'stream_response': True}
+    
+    cherrypy.tree.mount(Root())
     cherrypy.config.update({
         'global': {'log_to_screen': False,
                    'environment': 'production',
                    'show_tracebacks': True,
                    'tools.gzip.on': True,
                    },
-        '/noshow_stream': {'stream_response': True},
     })
 
 

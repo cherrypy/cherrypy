@@ -1,89 +1,50 @@
 
-class Root:
-    pass
-
-class Branch:
-    pass
+class Application:
+    
+    def __init__(self, root, conf):
+        self.root = root
+        self.conf = conf
 
 
 class Tree:
-    """A scaffold for cherrypy.root.
-    
-    This class works together with cherrypy.root, providing helper methods
-    for mounting applications at diverse points. "Trellis" would be a more
-    accurate name (but too hard to remember, and perhaps in CP 3.0 this
-    class will become cherrypy.root).
-    """
+    """A registry of mounted applications at diverse points."""
     
     def __init__(self):
-        self._mount_points = {}
+        self.apps = {}
     
-    def _get_mount_points(self):
-        m = self._mount_points
-        if "/" not in m:
-            import cherrypy
-            if cherrypy.root is not None and not isinstance(cherrypy.root, Root):
-                m["/"] = cherrypy.root
-        return m
-    def _set_mount_points(self, newvalue):
-        self._mount_points = newvalue
-    mount_points = property(_get_mount_points, _set_mount_points)
-    
-    def mount(self, app_root, baseurl=None, conf=None):
-        """Mount the given app_root at the given baseurl (relative to root)."""
+    def mount(self, root, script_name=None, conf=None):
+        """Mount the given application root object at the given script_name."""
         import cherrypy
         
         if conf and not isinstance(conf, dict):
             conf = cherrypy.config.dict_from_config_file(conf)
+        elif conf is None:
+            conf = {}
         
-        if baseurl is None:
-            baseurl = "/"
+        if script_name is None:
+            script_name = "/"
             if conf:
-                conf_pt = conf.get("global", {}).get("mount_point")
+                conf_pt = conf.get("global", {}).get("script_name")
                 if conf_pt:
-                    baseurl = conf_pt
+                    script_name = conf_pt
         
-        point = baseurl.lstrip("/")
-        if point:
-            node = cherrypy.root
-            if node is None:
-                node = cherrypy.root = Root()
-            atoms = point.split("/")
-            tail = atoms.pop()
-            for atom in atoms:
-                if not hasattr(node, atom):
-                    setattr(node, atom, Branch())
-                node = getattr(node, atom)
-            if hasattr(node, tail):
-                raise ValueError("The url '%s' is already mounted." % baseurl)
-        else:
-            # Mount the app_root at cherrypy.root.
-            if cherrypy.root is not None:
-                raise ValueError("The url '%s' is already mounted." % baseurl)
-            node = cherrypy
-            tail = "root"
-        
-        setattr(node, tail, app_root)
-        self.mount_points[baseurl] = app_root
-        
-        if conf is not None:
-            cherrypy.config.update(updateMap=conf, baseurl=baseurl)
+        self.apps[script_name] = Application(root, conf)
     
-    def mount_point(self, path=None):
-        """The 'root path' of the app which governs the given path, or None.
+    def script_name(self, path=None):
+        """The script_name of the app at the given path, or None.
         
-        If path is None, cherrypy.request.object_path is used.
+        If path is None, cherrypy.request.path is used.
         """
         
         if path is None:
             try:
                 import cherrypy
-                path = cherrypy.request.object_path
+                path = cherrypy.request.path
             except AttributeError:
                 return None
         
         while path:
-            if path in self.mount_points:
+            if path in self.apps:
                 return path
             
             # Move one node up the tree and try again.
@@ -93,18 +54,18 @@ class Tree:
         
         return None
     
-    def url(self, path, mount_point=None):
-        """Return 'path', prefixed with mount_point.
+    def url(self, path, script_name=None):
+        """Return 'path', prefixed with script_name.
         
-        If mount_point is None, cherrypy.request.object_path will be used
-        to find a mount point.
+        If script_name is None, cherrypy.request.path will be used
+        to find a script_name.
         """
         
-        if mount_point is None:
-            mount_point = self.mount_point()
-            if mount_point is None:
+        if script_name is None:
+            script_name = self.script_name()
+            if script_name is None:
                 return path
         
         from cherrypy.lib import httptools
-        return httptools.urljoin(mount_point, path)
+        return httptools.urljoin(script_name, path)
 

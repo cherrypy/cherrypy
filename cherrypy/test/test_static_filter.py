@@ -24,14 +24,10 @@ def setup_server():
         dynamic.exposed = True
 
 
-    cherrypy.root = Root()
-    cherrypy.root.static = Static()
-
-    cherrypy.config.update({
-        'global': {
-            'log_to_screen': False,
-            'environment': 'production',
-        },
+    root = Root()
+    root.static = Static()
+    
+    conf = {
         '/static': {
             'tools.staticdir.on': True,
             'tools.staticdir.dir': 'static',
@@ -51,7 +47,14 @@ def setup_server():
             'tools.staticdir.on': True,
             'show_tracebacks': True,
         },
-    })
+        }
+    
+    cherrypy.tree.mount(root, conf=conf)
+    
+    cherrypy.config.update({
+        'log_to_screen': False,
+        'environment': 'production',
+        })
 
 import helper
 

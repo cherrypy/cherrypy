@@ -4,26 +4,27 @@ test.prefer_parent_path()
 import cherrypy
 
 def setup_server():
-    class Test:
-        def index(self):
-            return "Hi, you are logged in"
-        index.exposed = True
-    
-    cherrypy.root = Test()
     
     def check(login, password):
         # Dummy check_login_and_password function
         if login != 'login' or password != 'password':
             return u'Wrong login/password'
     
+    class Test:
+        
+        _cp_config = {'tools.sessions.on': True,
+                      'tools.session_auth.on': True,
+                      'tools.session_auth.check_login_and_password': check,
+                      }
+        
+        def index(self):
+            return "Hi, you are logged in"
+        index.exposed = True
+    
+    cherrypy.tree.mount(Test())
     cherrypy.config.update({
             'log_to_screen': False,
             'environment': 'production',
-            'tools.sessions.on': True,
-            '/': {
-                'tools.session_auth.on': True,
-                'tools.session_auth.check_login_and_password': check,
-                },
             })
 
 

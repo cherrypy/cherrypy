@@ -160,19 +160,9 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
                 if path == "*":
                     path = "global"
                 
-                # Prepare the SizeCheckWrapper for the request body
-                mbs = int(cherrypy.config.get('server.max_request_body_size',
-                                              100 * 1024 * 1024, path=path))
                 if isinstance(self.rfile, httptools.SizeCheckWrapper):
-                    if mbs > 0:
-                        self.rfile.bytes_read = 0
-                        self.rfile.maxlen = mbs
-                    else:
-                        # Unwrap the rfile
-                        self.rfile = self.rfile.rfile
-                else:
-                    if mbs > 0:
-                        self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
+                    # Unwrap the rfile
+                    self.rfile = self.rfile.rfile
                 self.environ["wsgi.input"] = self.rfile
 
 
@@ -191,22 +181,22 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     def __init__(self):
         conf = cherrypy.config.get
         
-        sockFile = cherrypy.config.get('server.socket_file')
+        sockFile = conf('server.socket_file')
         if sockFile:
             bind_addr = sockFile
         else:
-            bind_addr = (conf("server.socket_host"), conf("server.socket_port"))
+            bind_addr = (conf('server.socket_host'), conf('server.socket_port'))
         
-        pts = cherrypy.tree.mount_points
-        if pts:
-            apps = [(base, wsgiApp) for base in pts.keys()]
-        else:
-            apps = [("", wsgiApp)]
+        apps = []
+        for base in cherrypy.tree.apps:
+            if base == "/":
+                base = ""
+            apps.append((base, wsgiApp))
         
         s = _cpwsgiserver.CherryPyWSGIServer
         s.__init__(self, bind_addr, apps,
-                   conf("server.thread_pool"),
-                   conf("server.socket_host"),
+                   conf('server.thread_pool'),
+                   conf('server.socket_host'),
                    request_queue_size = conf('server.socket_queue_size'),
                    )
 

@@ -12,8 +12,6 @@ import tools
 import _cptree
 tree = _cptree.Tree()
 
-root = None
-
 import _cpengine
 engine = _cpengine.Engine()
 import _cpserver

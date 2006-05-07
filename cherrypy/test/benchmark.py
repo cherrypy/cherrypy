@@ -36,7 +36,7 @@ from cherrypy.lib import httptools
 
 AB_PATH = ""
 APACHE_PATH = ""
-MOUNT_POINT = "/cpbench/users/rdelon/apps/blog"
+SCRIPT_NAME = "/cpbench/users/rdelon/apps/blog"
 
 __all__ = ['ABSession', 'Root', 'print_report', 'read_process',
            'run_standard_benchmarks', 'safe_threads',
@@ -74,7 +74,7 @@ conf = {
         'tools.staticdir.root': curdir,
         },
     }
-cherrypy.tree.mount(Root(), MOUNT_POINT, conf)
+cherrypy.tree.mount(Root(), SCRIPT_NAME, conf)
 
 
 class NullRequest:
@@ -186,7 +186,7 @@ Finished 1000 requests
                        r'^Transfer rate:\s*([0-9.]+)'),
                       ]
     
-    def __init__(self, path=MOUNT_POINT + "/", requests=1000, concurrency=10):
+    def __init__(self, path=SCRIPT_NAME + "/", requests=1000, concurrency=10):
         self.path = path
         self.requests = requests
         self.concurrency = concurrency
@@ -216,7 +216,7 @@ if sys.platform in ("win32",):
     safe_threads = (10, 20, 30, 40, 50)
 
 
-def thread_report(path=MOUNT_POINT + "/", concurrency=safe_threads):
+def thread_report(path=SCRIPT_NAME + "/", concurrency=safe_threads):
     sess = ABSession(path)
     attrs, names, patterns = zip(*sess.parse_patterns)
     rows = [('threads',) + names]
@@ -232,7 +232,7 @@ def size_report(sizes=(1, 10, 50, 100, 100000, 100000000),
     attrs, names, patterns = zip(*sess.parse_patterns)
     rows = [('bytes',) + names]
     for sz in sizes:
-        sess.path = "%s/sizer?size=%s" % (MOUNT_POINT, sz)
+        sess.path = "%s/sizer?size=%s" % (SCRIPT_NAME, sz)
         sess.run()
         rows.append([sz] + [getattr(sess, attr) for attr in attrs])
     return rows
@@ -258,7 +258,7 @@ def run_standard_benchmarks():
     print
     print ("Client Thread Report (1000 requests, 14 bytes via staticdir, "
            "%s server threads):" % cherrypy.config.get('server.thread_pool'))
-    print_report(thread_report("%s/static/index.html" % MOUNT_POINT))
+    print_report(thread_report("%s/static/index.html" % SCRIPT_NAME))
     
     print
     print ("Size Report (1000 requests, 50 client threads, "

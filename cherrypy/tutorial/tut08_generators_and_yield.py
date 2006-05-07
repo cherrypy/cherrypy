@@ -32,11 +32,11 @@ class GeneratorDemo:
         yield self.footer()
     index.exposed = True
 
-cherrypy.root = GeneratorDemo()
+cherrypy.tree.mount(GeneratorDemo())
 
 
 if __name__ == '__main__':
-    cherrypy.config.update(file = 'tutorial.conf')
+    cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
     cherrypy.server.start()
     cherrypy.engine.start()
 

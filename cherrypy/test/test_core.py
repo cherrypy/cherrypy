@@ -12,6 +12,7 @@ import os
 localDir = os.path.dirname(__file__)
 log_file = os.path.join(localDir, "error.log")
 log_access_file = os.path.join(localDir, "access.log")
+favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
                         "TRACE", "CONNECT")
@@ -23,6 +24,8 @@ def setup_server():
         def index(self):
             return "hello"
         index.exposed = True
+        
+        favicon_ico = tools.staticfile.handler(filename=favicon_path)
         
         def andnow(self):
             return "the larch"
@@ -45,24 +48,26 @@ def setup_server():
             return "Size: %s" % len(file.file.read())
         upload.exposed = True
     
-    cherrypy.root = Root()
+    root = Root()
 
 
     class TestType(type):
         """Metaclass which automatically exposes all functions in each subclass,
-        and adds an instance of the subclass as an attribute of cherrypy.root.
+        and adds an instance of the subclass as an attribute of root.
         """
         def __init__(cls, name, bases, dct):
             type.__init__(name, bases, dct)
             for value in dct.itervalues():
                 if isinstance(value, types.FunctionType):
                     value.exposed = True
-            setattr(cherrypy.root, name.lower(), cls())
+            setattr(root, name.lower(), cls())
     class Test(object):
         __metaclass__ = TestType
 
 
     class Params(Test):
+        
+        _cp_config = {'log_file': log_file}
         
         def index(self, thing):
             return repr(thing)
@@ -167,6 +172,8 @@ def setup_server():
 
     class Flatten(Test):
         
+        _cp_config = {'log_file': log_file, 'log_access_file': log_access_file,}
+        
         def as_string(self):
             return "content"
         
@@ -186,11 +193,15 @@ def setup_server():
 
     class Error(Test):
         
+        _cp_config = {'log_file': log_file, 'tools.log_tracebacks.on': True}
+        
         def custom(self):
             raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
+        custom._cp_config = {'error_page.404': os.path.join(localDir, "static/index.html")}
         
         def noexist(self):
             raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
+        noexist._cp_config = {'error_page.404': "nonexistent.html"}
         
         def page_method(self):
             raise ValueError()
@@ -199,20 +210,26 @@ def setup_server():
             yield "howdy"
             raise ValueError()
         
+        # We support Python 2.3, but the @-deco syntax would look like this:
+        # @cherrypy.set_config(stream_response=True)
         def page_streamed(self):
             yield "word up"
             raise ValueError()
             yield "very oops"
+        page_streamed = cherrypy.set_config(stream_response=True)(page_streamed)
+        assert(page_streamed._cp_config == {'stream_response': True})
         
         def cause_err_in_finalize(self):
             # Since status must start with an int, this should error.
             cherrypy.response.status = "ZOO OK"
+        cause_err_in_finalize._cp_config = {'show_tracebacks': False}
         
         def rethrow(self):
             """Test that an error raised here will be thrown out to the server."""
             raise ValueError()
-
-
+        rethrow._cp_config = {'throw_errors': True}
+    
+    
     class Ranges(Test):
         
         def get_ranges(self):
@@ -308,7 +325,7 @@ def setup_server():
                     (ID, self.documents.get(ID, "empty")))
         get.exposed = True
 
-    cherrypy.root.divorce = Divorce()
+    root.divorce = Divorce()
 
 
     class Cookies(Test):
@@ -336,41 +353,14 @@ def setup_server():
             return u'Wrong login/password'
     
     cherrypy.config.update({
-        'global': {
-            'log_to_screen': False,
-            'server.protocol_version': "HTTP/1.1",
-            'environment': 'production',
-            'show_tracebacks': True,
-            'server.max_request_body_size': 200,
-            'server.max_request_header_size': 500,
-        },
-        '/flatten': {
-            'log_file': log_file,
-            'log_access_file': log_access_file,
-        },
-        '/params': {
-            'log_file': log_file,
-        },
-        '/error': {
-            'log_file': log_file,
-            'tools.log_tracebacks.on': True,
-        },
-        '/error/page_streamed': {
-            'stream_response': True,
-        },
-        '/error/cause_err_in_finalize': {
-            'show_tracebacks': False,
-        },
-        '/error/custom': {
-            'error_page.404': os.path.join(localDir, "static/index.html"),
-        },
-        '/error/noexist': {
-            'error_page.404': "nonexistent.html",
-        },
-        '/error/rethrow': {
-            'throw_errors': True,
-        },
-    })
+        'log_to_screen': False,
+        'server.protocol_version': "HTTP/1.1",
+        'environment': 'production',
+        'show_tracebacks': True,
+        'server.max_request_body_size': 200,
+        'server.max_request_header_size': 500,
+        })
+    cherrypy.tree.mount(root)
 
 
 #                             Client-side code                             #
@@ -773,20 +763,6 @@ llo,
         self.getPage("/method/", method="SEARCH")
         self.assertStatus(501)
         
-        # Request the OPTIONS method with a Request-URI of "*".
-        self.getPage("*", method="OPTIONS")
-        self.assertStatus(200)
-        # Content-Length header required for OPTIONS with no response body.
-        # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.2
-        self.assertHeader("Content-Length", "0")
-        
-        # Now be really dastardly and delete our custom global_ handler,
-        # to see if the default one works.
-        self.getPage("/delglobal")
-        self.getPage("*", method="OPTIONS")
-        self.assertStatus(200)
-        self.assertHeader("Allow", 'HEAD, GET, POST, PUT, OPTIONS')
-        
         # For method dispatchers: make sure that an HTTP method doesn't
         # collide with a virtual path atom. If you build HTTP-method
         # dispatching into the core, rewrite these handlers to use
@@ -799,7 +775,7 @@ llo,
         self.assertStatus(200)
     
     def testFavicon(self):
-        # favicon.ico is served by staticfile by default (see config.py)
+        # favicon.ico is served by staticfile.
         icofilename = os.path.join(localDir, "../favicon.ico")
         icofile = open(icofilename, "rb")
         data = icofile.read()

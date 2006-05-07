@@ -64,19 +64,19 @@ def setup_server():
         def index(self):
             return "Howdy earth!"
         index.exposed = True
-    cherrypy.root = Root()
+    root = Root()
     
     
     class TestType(type):
         """Metaclass which automatically exposes all functions in each subclass,
-        and adds an instance of the subclass as an attribute of cherrypy.root.
+        and adds an instance of the subclass as an attribute of root.
         """
         def __init__(cls, name, bases, dct):
             type.__init__(name, bases, dct)
             for value in dct.itervalues():
                 if isinstance(value, types.FunctionType):
                     value.exposed = True
-            setattr(cherrypy.root, name.lower(), cls())
+            setattr(root, name.lower(), cls())
     class Test(object):
         __metaclass__ = TestType
     
@@ -109,12 +109,12 @@ def setup_server():
             return "success!"
     
     
-    cherrypy.config.update({
-        'global': {
-            'log_to_screen': False,
-            'environment': 'production',
-            'show_tracebacks': True,
-        },
+    cherrypy.config.update({'log_to_screen': False,
+                            'environment': 'production',
+                            'show_tracebacks': True,
+                            })
+    
+    conf = {
         # METHOD THREE:
         # Do it all in config
         '/demo': {
@@ -131,7 +131,8 @@ def setup_server():
             # Because this isn't a dict, on_start_resource will error.
             'tools.numerify.map': "pie->3.14159"
         },
-    })
+    }
+    cherrypy.tree.mount(root, conf=conf)
 
 
 #                             Client-side code                             #
