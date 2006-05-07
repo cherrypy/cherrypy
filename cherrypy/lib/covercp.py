@@ -344,7 +344,7 @@ def serve(path=localFile, port=8080):
     coverage.cache_default = path
     
     import cherrypy
-    cherrypy.root = CoverStats()
+    cherrypy.tree.mount(CoverStats())
     cherrypy.config.update({'server.socket_port': port,
                             'server.thread_pool': 10,
                             'environment': "production",

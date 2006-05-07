@@ -17,7 +17,7 @@ You can profile any of your pages as follows:
         def _index(self):
             return "Hello, world!"
     
-    cherrypy.root = Root()
+    cherrypy.tree.mount(Root())
 
 
 CherryPy developers
@@ -129,11 +129,10 @@ class Profiler(object):
 
 def serve(path=None, port=8080):
     import cherrypy
-    cherrypy.root = Profiler(path)
+    cherrypy.tree.mount(Profiler(path))
     cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
                             'environment': "production",
-                            'session.storageType': "ram",
                             })
     cherrypy.server.start()
     cherrypy.engine.start()
