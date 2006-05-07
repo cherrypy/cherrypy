@@ -178,7 +178,7 @@ class HTTPError(Error):
         # so don't bother cleaning up response values here.
         response.status = self.status
         tb = None
-        if cherrypy.config.get('server.show_tracebacks', False):
+        if cherrypy.config.get('show_tracebacks', False):
             tb = format_exc()
         content = get_error_page(self.status, traceback=tb,
                                  message=self.message)

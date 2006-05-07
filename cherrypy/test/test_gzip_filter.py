@@ -26,9 +26,9 @@ def setup_server():
 
     cherrypy.root = Root()
     cherrypy.config.update({
-        'global': {'server.log_to_screen': False,
-                   'server.environment': 'production',
-                   'server.show_tracebacks': True,
+        'global': {'log_to_screen': False,
+                   'environment': 'production',
+                   'show_tracebacks': True,
                    'tools.gzip.on': True,
                    },
         '/noshow_stream': {'stream_response': True},

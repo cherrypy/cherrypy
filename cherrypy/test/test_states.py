@@ -23,8 +23,8 @@ class Root:
 cherrypy.root = Root()
 cherrypy.config.update({
     'global': {
-        'server.log_to_screen': False,
-        'server.environment': 'production',
+        'log_to_screen': False,
+        'environment': 'production',
     },
 })
 
@@ -198,10 +198,10 @@ def run_all(host, port):
     conf = {'server.socket_host': host,
             'server.socket_port': port,
             'server.thread_pool': 10,
-            'server.log_to_screen': False,
-            'server.log_config_options': False,
-            'server.environment': "production",
-            'server.show_tracebacks': True,
+            'log_to_screen': False,
+            'log_config_options': False,
+            'environment': "production",
+            'show_tracebacks': True,
             }
     def _run(server):
         print
@@ -215,10 +215,10 @@ def run_localhosts(port):
         conf = {'server.socket_host': host,
                 'server.socket_port': port,
                 'server.thread_pool': 10,
-                'server.log_to_screen': False,
-                'server.log_config_options': False,
-                'server.environment': "production",
-                'server.show_tracebacks': True,
+                'log_to_screen': False,
+                'log_config_options': False,
+                'environment': "production",
+                'show_tracebacks': True,
                 }
         def _run(server):
             print

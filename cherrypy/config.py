@@ -19,12 +19,12 @@ default_global = {
     'server.socket_file': '',
     'server.socket_queue_size': 5,
     'server.protocol_version': 'HTTP/1.0',
-    'server.log_to_screen': True,
-    'server.log_file': '',
+    'log_to_screen': True,
+    'log_file': '',
     'tools.log_tracebacks.on': True,
     'server.reverse_dns': False,
     'server.thread_pool': 10,
-    'server.environment': "development",
+    'environment': "development",
     
     '/favicon.ico': {'tools.staticfile.on': True,
                      'tools.staticfile.filename': _favicon_path},
@@ -33,25 +33,25 @@ default_global = {
 environments = {
     "development": {
         'autoreload.on': True,
-        'server.log_file_not_found': True,
-        'server.show_tracebacks': True,
-        'server.log_request_headers': True,
+        'log_file_not_found': True,
+        'show_tracebacks': True,
+        'log_request_headers': True,
         },
     "staging": {
         'autoreload.on': False,
-        'server.log_file_not_found': False,
-        'server.show_tracebacks': False,
-        'server.log_request_headers': False,
+        'log_file_not_found': False,
+        'show_tracebacks': False,
+        'log_request_headers': False,
         },
     "production": {
         'autoreload.on': False,
-        'server.log_file_not_found': False,
-        'server.show_tracebacks': False,
-        'server.log_request_headers': False,
+        'log_file_not_found': False,
+        'show_tracebacks': False,
+        'log_request_headers': False,
         },
     "embedded": {
         'autoreload.on': False,
-        'server.log_to_screen': False,
+        'log_to_screen': False,
         'server.init_only': True,
         'server.class': None,
         },
@@ -124,7 +124,7 @@ def get(key, default_value=None, return_section=False, path=None):
             pass
         
         try:
-            env = configs[path]["server.environment"]
+            env = configs[path]["environment"]
             result = environments[env][key]
             break
         except KeyError:
@@ -283,9 +283,9 @@ def outputConfigMap():
     cherrypy.log("Server parameters:", 'CONFIG')
     
     serverVars = [
-                  'server.environment',
-                  'server.log_to_screen',
-                  'server.log_file',
+                  'environment',
+                  'log_to_screen',
+                  'log_file',
                   'server.protocol_version',
                   'server.socket_host',
                   'server.socket_port',

@@ -31,9 +31,9 @@ def setup_server():
         _cp_filters = [WSGIAppFilter(test_app),]
 
 
-    conf = {'server.log_to_screen': False,
-            'server.environment': 'production',
-            'server.show_tracebacks': True,
+    conf = {'log_to_screen': False,
+            'environment': 'production',
+            'show_tracebacks': True,
             }
     cherrypy.tree.mount(Root(), '/', conf)
     conf0 = {'/static': {'static_filter.on': True,

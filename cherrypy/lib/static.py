@@ -25,7 +25,7 @@ def modified_since(path, stat=None):
         try:
             stat = os.stat(path)
         except OSError:
-            if cherrypy.config.get('server.log_file_not_found', False):
+            if cherrypy.config.get('log_file_not_found', False):
                 cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
             raise cherrypy.NotFound()
     
@@ -63,7 +63,7 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     try:
         stat = os.stat(path)
     except OSError:
-        if cherrypy.config.get('server.log_file_not_found', False):
+        if cherrypy.config.get('log_file_not_found', False):
             cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
         raise cherrypy.NotFound()
     

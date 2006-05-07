@@ -17,8 +17,8 @@ def setup_server():
             return u'Wrong login/password'
     
     cherrypy.config.update({
-            'server.log_to_screen': False,
-            'server.environment': 'production',
+            'log_to_screen': False,
+            'environment': 'production',
             'tools.sessions.on': True,
             '/': {
                 'tools.session_auth.on': True,

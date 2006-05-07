@@ -12,8 +12,8 @@ def setup_server():
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
-            'server.environment': 'production',
-            'server.log_to_screen': False,
+            'environment': 'production',
+            'log_to_screen': False,
             'tools.base_url.on': True,
             'tools.base_url.base': 'http://www.mydomain.com',
     })

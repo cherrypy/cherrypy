@@ -55,7 +55,7 @@ def wsgiApp(environ, start_response):
     """The WSGI 'application object' for CherryPy."""
     
     # Trap screen output from BaseHTTPRequestHandler.log_message()
-    if not cherrypy.config.get('server.log_to_screen'):
+    if not cherrypy.config.get('log_to_screen'):
         sys.stderr = NullWriter()
     
     request = None
@@ -79,11 +79,11 @@ def wsgiApp(environ, start_response):
     except (KeyboardInterrupt, SystemExit):
         raise
     except:
-        if cherrypy.config.get("server.throw_errors", False):
+        if cherrypy.config.get("throw_errors", False):
             raise
         tb = format_exc()
         cherrypy.log(tb)
-        if not cherrypy.config.get("server.show_tracebacks", False):
+        if not cherrypy.config.get("show_tracebacks", False):
             tb = ""
         s, h, b = bare_error(tb)
         exc = sys.exc_info()

@@ -41,9 +41,9 @@ class TestHarness(object):
             conf = {'server.socket_host': '127.0.0.1',
                     'server.socket_port': self.port,
                     'server.thread_pool': 10,
-                    'server.log_to_screen': False,
-                    'server.environment': "production",
-                    'server.show_tracebacks': True,
+                    'log_to_screen': False,
+                    'environment': "production",
+                    'show_tracebacks': True,
                     }
         elif isinstance(conf, basestring):
             conf = cherrypy.config.dict_from_config_file(conf)

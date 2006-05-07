@@ -26,6 +26,6 @@ class HelloWorld:
 cherrypy.root = HelloWorld()
 cherrypy.root.test = HelloWorld()
 
-cherrypy.config.update({"server.environment": "production"})
+cherrypy.config.update({"environment": "production"})
 cherrypy.engine.start()
 

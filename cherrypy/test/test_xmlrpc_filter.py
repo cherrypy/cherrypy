@@ -56,9 +56,9 @@ def setup_server():
     cherrypy.root = Root()
     cherrypy.root.xmlrpc = XmlRpc()
     cherrypy.config.update({
-        'server.log_to_screen': False,
-        'server.environment': 'production',
-        'server.show_tracebacks': True,
+        'log_to_screen': False,
+        'environment': 'production',
+        'show_tracebacks': True,
         '/xmlrpc': {'tools.xmlrpc.on': True},
         })
 

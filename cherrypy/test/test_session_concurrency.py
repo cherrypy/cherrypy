@@ -53,8 +53,8 @@ class Root:
     index.exposed = True
 
 cherrypy.config.update({
-    'server.environment': 'production',
-    'server.log_to_screen': False,
+    'environment': 'production',
+    'log_to_screen': False,
     'server.thread_pool': server_thread_count,
     'session_filter.on': True,
     'session_filter.storage_type': storage_type,

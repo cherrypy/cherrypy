@@ -174,10 +174,10 @@ def log_access():
                 'a': request.headers.get('user-agent', ''),
                 }
     
-    if cherrypy.config.get('server.log_to_screen', True):
+    if cherrypy.config.get('log_to_screen', True):
         print s
     
-    fname = cherrypy.config.get('server.log_access_file', '')
+    fname = cherrypy.config.get('log_access_file', '')
     if fname:
         f = open(fname, 'ab')
         f.write(s + '\n')
@@ -196,10 +196,10 @@ def _cp_log_message(msg, context = '', severity = 0):
     
     s = ' '.join((logtime(), context, level, msg))
     
-    if cherrypy.config.get('server.log_to_screen', True):
+    if cherrypy.config.get('log_to_screen', True):
         print s
     
-    fname = cherrypy.config.get('server.log_file', '')
+    fname = cherrypy.config.get('log_file', '')
     #logdir = os.path.dirname(fname)
     #if logdir and not os.path.exists(logdir):
     #    os.makedirs(logdir)

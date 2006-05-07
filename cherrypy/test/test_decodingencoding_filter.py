@@ -21,8 +21,8 @@ def setup_server():
 
     cherrypy.root = Root()
     cherrypy.config.update({
-            'server.log_to_screen': False,
-            'server.environment': 'production',
+            'log_to_screen': False,
+            'environment': 'production',
             'tools.encode.on': True,
             'tools.decode.on': True,
     })

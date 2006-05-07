@@ -81,8 +81,8 @@ def handler(req):
         m = __import__(('cherrypy.test.%s' % testmod), globals(), locals(), [''])
         import cherrypy
         cherrypy.config.update({
-            "server.log_file": os.path.join(curdir, "test.log"),
-            "server.environment": "production",
+            "log_file": os.path.join(curdir, "test.log"),
+            "environment": "production",
             })
         m.setup_server()
         cherrypy.engine.start(blocking=False)

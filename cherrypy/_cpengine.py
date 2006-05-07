@@ -40,7 +40,7 @@ class Engine(object):
         conf = cherrypy.config.get
         
         # Output config options to log
-        if conf("server.log_config_options", True):
+        if conf("log_config_options", True):
             cherrypy.config.outputConfigMap()
         
         # Hmmm...we *could* check config in _start instead, but I think
@@ -48,7 +48,7 @@ class Engine(object):
         err = cherrypy.WrongConfigValue
         for name, section in cherrypy.config.configs.iteritems():
             for k, v in section.iteritems():
-                if k == "server.environment":
+                if k == "environment":
                     if v and v not in cherrypy.config.environments:
                         raise err("'%s' is not a registered environment." % v)
         

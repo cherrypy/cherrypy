@@ -24,8 +24,8 @@ def setup_server():
         
     cherrypy.root = Root()
     cherrypy.config.update({
-            'server.log_to_screen': False,
-            'server.environment': 'production',
+            'log_to_screen': False,
+            'environment': 'production',
             'tools.sessions.on': True,
             'tools.sessions.storage_type' : 'file',
             'tools.sessions.storage_path' : '.',

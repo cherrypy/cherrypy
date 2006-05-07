@@ -30,7 +30,7 @@ def setup_server():
         embed = index
         
         def wrong(self):
-            conf = "\n[global]\nserver.environment = production\n"
+            conf = "\n[global]\nenvironment = production\n"
             cherrypy.config.update(file=StringIO.StringIO(conf))
         wrong.exposed=True
     
@@ -38,9 +38,9 @@ def setup_server():
     cherrypy.root.foo = Foo()
     
     cherrypy.config.update({
-        'global': {'server.log_to_screen': False,
-                   'server.environment': 'production',
-                   'server.show_tracebacks': True,
+        'global': {'log_to_screen': False,
+                   'environment': 'production',
+                   'show_tracebacks': True,
                    },
         '/': {
             'foo': 'this',
@@ -56,9 +56,9 @@ def setup_server():
             },
     })
 
-    _env_conf = {'/': {'server.environment': 'development'},
-                 '/prod': {'server.environment': 'production'},
-                 '/embed': {'server.environment': 'embedded'},
+    _env_conf = {'/': {'environment': 'development'},
+                 '/prod': {'environment': 'production'},
+                 '/embed': {'environment': 'embedded'},
                  }
     cherrypy.tree.mount(Env(), "/env", _env_conf)
 
@@ -93,7 +93,7 @@ class ConfigTests(helper.CPWebCase):
     
     def testUnrepr(self):
         err = ('WrongConfigValue: ("section: '
-               "'global', option: 'server.environment', value: 'production'"
+               "'global', option: 'environment', value: 'production'"
                '''", 'UnknownType', ('production',))''')
         self.getPage("/env/wrong")
         self.assertErrorPage(500, pattern=err)

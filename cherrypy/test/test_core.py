@@ -38,7 +38,7 @@ def setup_server():
         
         def defct(self, newct):
             newct = "text/%s" % newct
-            cherrypy.config.update({'server.default_content_type': newct})
+            cherrypy.config.update({'default_content_type': newct})
         defct.exposed = True
         
         def upload(self, file):
@@ -337,29 +337,29 @@ def setup_server():
     
     cherrypy.config.update({
         'global': {
-            'server.log_to_screen': False,
+            'log_to_screen': False,
             'server.protocol_version': "HTTP/1.1",
-            'server.environment': 'production',
-            'server.show_tracebacks': True,
+            'environment': 'production',
+            'show_tracebacks': True,
             'server.max_request_body_size': 200,
             'server.max_request_header_size': 500,
         },
         '/flatten': {
-            'server.log_file': log_file,
-            'server.log_access_file': log_access_file,
+            'log_file': log_file,
+            'log_access_file': log_access_file,
         },
         '/params': {
-            'server.log_file': log_file,
+            'log_file': log_file,
         },
         '/error': {
-            'server.log_file': log_file,
+            'log_file': log_file,
             'tools.log_tracebacks.on': True,
         },
         '/error/page_streamed': {
             'stream_response': True,
         },
         '/error/cause_err_in_finalize': {
-            'server.show_tracebacks': False,
+            'show_tracebacks': False,
         },
         '/error/custom': {
             'error_page.404': os.path.join(localDir, "static/index.html"),
@@ -368,7 +368,7 @@ def setup_server():
             'error_page.404': "nonexistent.html",
         },
         '/error/rethrow': {
-            'server.throw_errors': True,
+            'throw_errors': True,
         },
     })
 
@@ -619,7 +619,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                "[Errno 2] No such file or directory: 'nonexistent.html'")
         self.assertInBody(msg)
 ##        
-##        # Test server.throw_errors (ticket #186).
+##        # Test throw_errors (ticket #186).
 ##        self.getPage("/error/rethrow")
 ##        self.assertBody("THROWN ERROR: ValueError")
     

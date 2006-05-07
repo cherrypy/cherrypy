@@ -124,7 +124,7 @@ class Request(object):
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            if cherrypy.config.get("server.throw_errors", False):
+            if cherrypy.config.get("throw_errors", False):
                 raise
             self.handle_error(sys.exc_info())
     
@@ -270,7 +270,7 @@ class Request(object):
             pass
         
         # Failure in error handler or finalize. Bypass them.
-        if cherrypy.config.get('server.show_tracebacks', False):
+        if cherrypy.config.get('show_tracebacks', False):
             dbltrace = ("\n===First Error===\n\n%s"
                         "\n\n===Second Error===\n\n%s\n\n")
             body = dbltrace % (_cperror.format_exc(exc),
@@ -328,7 +328,7 @@ class Response(object):
         self.body = None
         
         self.headers = httptools.HeaderMap()
-        content_type = cherrypy.config.get('server.default_content_type', 'text/html')
+        content_type = cherrypy.config.get('default_content_type', 'text/html')
         self.headers.update({
             "Content-Type": content_type,
             "Server": "CherryPy/" + cherrypy.__version__,

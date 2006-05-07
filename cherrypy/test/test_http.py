@@ -37,9 +37,9 @@ def setup_server():
     cherrypy.tree.mount(Root())
     
     cherrypy.config.update({
-        'global': {'server.log_to_screen': False,
-                   'server.environment': 'production',
-                   'server.show_tracebacks': True,
+        'global': {'log_to_screen': False,
+                   'environment': 'production',
+                   'show_tracebacks': True,
                    },
     })
 

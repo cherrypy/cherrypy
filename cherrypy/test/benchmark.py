@@ -60,9 +60,9 @@ class Root:
 
 conf = {
     'global': {
-        'server.log_to_screen': False,
-##        'server.log_file': os.path.join(curdir, "bench.log"),
-        'server.environment': 'production',
+        'log_to_screen': False,
+##        'log_file': os.path.join(curdir, "bench.log"),
+        'environment': 'production',
         'server.socket_host': 'localhost',
         'server.socket_port': 8080,
         'server.max_request_header_size': 0,

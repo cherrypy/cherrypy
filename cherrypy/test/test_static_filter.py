@@ -29,8 +29,8 @@ def setup_server():
 
     cherrypy.config.update({
         'global': {
-            'server.log_to_screen': False,
-            'server.environment': 'production',
+            'log_to_screen': False,
+            'environment': 'production',
         },
         '/static': {
             'tools.staticdir.on': True,
@@ -49,7 +49,7 @@ def setup_server():
         },
         '/error': {
             'tools.staticdir.on': True,
-            'server.show_tracebacks': True,
+            'show_tracebacks': True,
         },
     })
 

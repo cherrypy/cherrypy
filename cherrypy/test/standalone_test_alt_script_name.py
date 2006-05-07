@@ -115,8 +115,8 @@ for url in mount_points:
     cherrypy.tree.mount(Root(), url, {'/': conf})
 
 cherrypy.config.update({
-    'server.log_to_screen': False,
-    'server.environment': "production",
+    'log_to_screen': False,
+    'environment': "production",
 })
 
 

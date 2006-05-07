@@ -111,9 +111,9 @@ def setup_server():
     
     cherrypy.config.update({
         'global': {
-            'server.log_to_screen': False,
-            'server.environment': 'production',
-            'server.show_tracebacks': True,
+            'log_to_screen': False,
+            'environment': 'production',
+            'show_tracebacks': True,
         },
         # METHOD THREE:
         # Do it all in config
@@ -122,7 +122,7 @@ def setup_server():
             'tools.numerify.map': {"pie": "3.14159"},
         },
         '/demo/restricted': {
-            'server.show_tracebacks': False,
+            'show_tracebacks': False,
         },
         '/demo/errinstream': {
             'stream_response': True,

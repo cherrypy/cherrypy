@@ -67,7 +67,7 @@ def make_environ():
     environ["SERVER_PROTOCOL"] = cherrypy.request.version
     server_name = getattr(cherrypy.server.httpserver, 'server_name', "None")
     environ["SERVER_NAME"] = server_name 
-    environ["SERVER_PORT"] = cherrypy.config.get('server.socketPort')
+    environ["SERVER_PORT"] = cherrypy.config.get('server.socket_port')
     environ["REMOTE_HOST"] = cherrypy.request.remote_host
     environ["REMOTE_ADDR"] = cherrypy.request.remote_addr
     environ["REMOTE_PORT"] = cherrypy.request.remote_port
