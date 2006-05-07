@@ -103,26 +103,6 @@ def find_handler(path):
     raise cherrypy.NotFound(path)
 
 
-def get_special_attribute(name):
-    """Return the special attribute. A special attribute is one that
-    applies to all of the children from where it is defined."""
-    
-    # First, we look in the right-most object to see if this special
-    # attribute is implemented. If not, then we try the previous object,
-    # and so on until we reach app.root (a mount point).
-    # If it's still not there, we use the implementation from this module.
-    objectList = get_object_trail()
-    objectList.reverse()
-    for objname, obj in objectList:
-        if hasattr(obj, name):
-            return getattr(obj, name)
-    
-    try:
-        return globals()[name]
-    except KeyError:
-        msg = "Special attribute %s could not be found" % repr(name)
-        raise cherrypy.HTTPError(500, msg)
-
 def logtime():
     now = datetime.datetime.now()
     month = httptools.monthname[now.month][:3].capitalize()
@@ -156,7 +136,7 @@ def log_access():
 
 _log_severity_levels = {0: "INFO", 1: "WARNING", 2: "ERROR"}
 
-def _cp_log_message(msg, context = '', severity = 0):
+def log(msg, context = '', severity = 0):
     """Default method for logging messages (error log).
     
     This is not just for errors! Applications may call this at any time to
