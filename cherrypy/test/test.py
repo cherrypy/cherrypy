@@ -37,19 +37,19 @@ class TestHarness(object):
         print "CherryPy version", cherrypy.__version__
         print
         
-        if conf is None:
-            conf = {'server.socket_host': '127.0.0.1',
+        if isinstance(conf, basestring):
+            conf = cherrypy.config.dict_from_config_file(conf)
+        baseconf = {'server.socket_host': '127.0.0.1',
                     'server.socket_port': self.port,
                     'server.thread_pool': 10,
                     'log_to_screen': False,
                     'environment': "production",
                     'show_tracebacks': True,
                     }
-        elif isinstance(conf, basestring):
-            conf = cherrypy.config.dict_from_config_file(conf)
+        baseconf.update(conf or {})
         
-        conf['server.protocol_version'] = self.protocol
-        self._run(conf)
+        baseconf['server.protocol_version'] = self.protocol
+        self._run(baseconf)
     
     def _run(self, conf):
         # helper must be imported lazily so the coverage tool
