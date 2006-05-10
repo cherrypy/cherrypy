@@ -58,23 +58,24 @@ class Root:
     sizer.exposed = True
 
 
-conf = {
-    'global': {
-        'log_to_screen': False,
-##        'log_file': os.path.join(curdir, "bench.log"),
-        'environment': 'production',
-        'server.socket_host': 'localhost',
-        'server.socket_port': 8080,
-        'server.max_request_header_size': 0,
-        'server.max_request_body_size': 0,
-        },
+cherrypy.config.update({
+    'log_to_screen': False,
+##    'log_file': os.path.join(curdir, "bench.log"),
+    'environment': 'production',
+    'server.socket_host': 'localhost',
+    'server.socket_port': 8080,
+    'server.max_request_header_size': 0,
+    'server.max_request_body_size': 0,
+    })
+
+appconf = {
     '/static': {
         'tools.staticdir.on': True,
         'tools.staticdir.dir': 'static',
         'tools.staticdir.root': curdir,
         },
     }
-cherrypy.tree.mount(Root(), SCRIPT_NAME, conf)
+cherrypy.tree.mount(Root(), SCRIPT_NAME, appconf)
 
 
 class NullRequest:
