@@ -318,8 +318,15 @@ class _XMLRPCTool(object):
     
     def setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
-        cherrypy.request.path_info = _xmlrpc.patched_path(cherrypy.request.path_info)
-        cherrypy.request.error_response = _xmlrpc.on_error
+        request = cherrypy.request
+        if hasattr(request, 'xmlrpc'):
+            return
+        request.xmlrpc = True
+        request.error_response = _xmlrpc.on_error
+        path_info = request.path_info
+        ppath = _xmlrpc.patched_path(path_info)
+        if ppath != path_info:
+            raise cherrypy.InternalRedirect(ppath)
 xmlrpc = _XMLRPCTool()
 
 from cherrypy.lib import wsgiapp as _wsgiapp
