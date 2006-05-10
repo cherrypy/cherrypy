@@ -6,7 +6,7 @@ import sys
 import types
 
 import cherrypy
-from cherrypy import _cperror, _cputil, _cpcgifs, tools
+from cherrypy import _cputil, _cpcgifs, tools
 from cherrypy.lib import cptools, httptools, profiler
 
 
@@ -66,6 +66,7 @@ class Request(object):
         self.rfile = rfile
         self.headers = httptools.HeaderMap()
         self.simple_cookie = Cookie.SimpleCookie()
+        self.handler = None
         
         # Set up the profiler if requested.
         conf = cherrypy.config.get
@@ -82,7 +83,7 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        log_access = cherrypy.config.get("log_access", _cputil.log_access)
+        log_access = cherrypy.config.get("log_access", cherrypy.log_access)
         if log_access:
             log_access()
         
@@ -90,50 +91,25 @@ class Request(object):
     
     def _run(self):
         try:
-            # This has to be done very early in the request process,
-            # because request.path_info is used for config lookups
-            # right away.
             self.process_request_line()
-            self.dispatch = self.config.get("dispatch") or _cputil.dispatch
-            self.hooks.setup()
             
-            try:
-                self.hooks.run('on_start_resource')
-                
+            # Get the 'Host' header, so we can do HTTPRedirects properly.
+            self.process_headers()
+            
+            # path_info should be the path from the app
+            # root (script_name) to the handler.
+            self.script_name = r = cherrypy.tree.script_name(self.path)
+            self.app = cherrypy.tree.apps[r]
+            self.path_info = self.path[len(r.rstrip("/")):]
+            
+            # Loop to allow for InternalRedirect.
+            pi = self.path_info
+            while True:
                 try:
-                    self.process_headers()
-                    
-                    # Prepare the SizeCheckWrapper for the request body
-                    mbs = int(self.config.get('server.max_request_body_size',
-                                              100 * 1024 * 1024))
-                    if mbs > 0:
-                        self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
-                    
-                    self.hooks.run('before_request_body')
-                    if self.process_request_body:
-                        self.process_body()
-                    
-                    # Loop to allow for InternalRedirect.
-                    while True:
-                        try:
-                            self.hooks.run('before_main')
-                            if self.dispatch:
-                                self.dispatch(self.path_info)
-                            break
-                        except cherrypy.InternalRedirect, ir:
-                            self.path_info = ir.path
-                    
-                    self.hooks.run('before_finalize')
-                    cherrypy.response.finalize()
-                except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
-                    # For an HTTPRedirect or HTTPError (including NotFound),
-                    # we don't go through the regular mechanism:
-                    # we return the redirect or error page immediately
-                    inst.set_response()
-                    self.hooks.run('before_finalize')
-                    cherrypy.response.finalize()
-            finally:
-                self.hooks.run('on_end_resource')
+                    self.respond(pi)
+                    break
+                except cherrypy.InternalRedirect, ir:
+                    pi = ir.path
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -141,23 +117,41 @@ class Request(object):
                 raise
             self.handle_error(sys.exc_info())
     
-    def _get_path_info(self):
-        return self._path_info
-    def _set_path_info(self, value):
-        self._path_info = value
-        self.config = cherrypy.config.request_config()
-        
-        # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
-        self.toolmap = {}
-        for k, v in self.config.iteritems():
-            atoms = k.split(".")
-            namespace = atoms.pop(0)
-            if namespace == "tools":
-                toolname = atoms.pop(0)
-                bucket = self.toolmap.setdefault(toolname, {})
-                bucket[".".join(atoms)] = v
-    path_info = property(_get_path_info, _set_path_info,
-                           doc="The path to the rendered resource.")
+    def respond(self, path_info):
+        """Generate a response for the resource at self.path_info."""
+        try:
+            try:
+                self.get_resource(path_info)
+                self.hooks.setup()
+                self.hooks.run('on_start_resource')
+                
+                if self.process_request_body:
+                    # Prepare the SizeCheckWrapper for the request body
+                    mbs = int(self.config.get('server.max_request_body_size',
+                                              100 * 1024 * 1024))
+                    if mbs > 0:
+                        self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
+                
+                self.hooks.run('before_request_body')
+                if self.process_request_body:
+                    self.process_body()
+                    # Guard against re-reading body on InternalRedirect
+                    self.process_request_body = False
+                
+                self.hooks.run('before_main')
+                if self.handler:
+                    self.handler()
+                self.hooks.run('before_finalize')
+                cherrypy.response.finalize()
+            except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
+                # For an HTTPRedirect or HTTPError (including NotFound),
+                # we don't go through the regular mechanism:
+                # we return the redirect or error page immediately
+                inst.set_response()
+                self.hooks.run('before_finalize')
+                cherrypy.response.finalize()
+        finally:
+            self.hooks.run('on_end_resource')
     
     def process_request_line(self):
         """Parse the first line (e.g. "GET /path HTTP/1.1") of the request."""
@@ -195,12 +189,6 @@ class Request(object):
         server_v = cherrypy.config.get('server.protocol_version', 'HTTP/1.0')
         server_v = httptools.Version.from_http(server_v)
         cherrypy.response.version = min(self.version, server_v)
-        
-        # Change path_info to change the object that will get rendered.
-        # path_info should be the path from the app root to the handler.
-        self.script_name = r = cherrypy.tree.script_name(path)
-        self.app = cherrypy.tree.apps[r]
-        self.path_info = path[len(r.rstrip("/")):]
     
     def process_headers(self):
         self.params = httptools.parseQueryString(self.query_string)
@@ -226,6 +214,47 @@ class Request(object):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
         self.base = "%s://%s" % (self.scheme, self.headers.get('Host', ''))
+    
+    def get_resource(self, path):
+        dispatch = _cputil.dispatch
+        # First, see if there is a custom dispatch at this URI. Custom
+        # dispatchers can only be specified in app.conf, not in _cp_config
+        # (since custom dispatchers may not even have an app.root).
+        trail = path
+        while trail:
+            nodeconf = self.app.conf.get(trail, {})
+            d = nodeconf.get("dispatch")
+            if d:
+                dispatch = d
+                break
+            
+            env = nodeconf.get("environment")
+            if env:
+                d = cherrypy.config.environments[env].get("dispatch")
+                if d:
+                    dispatch = d
+                    break
+            
+            lastslash = trail.rfind("/")
+            if lastslash == -1:
+                break
+            elif lastslash == 0 and trail != "/":
+                trail = "/"
+            else:
+                trail = trail[:lastslash]
+        
+        # dispatch() should set self.handler and self.config
+        dispatch(path)
+        
+        # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
+        self.toolmap = {}
+        for k, v in self.config.iteritems():
+            atoms = k.split(".")
+            namespace = atoms.pop(0)
+            if namespace == "tools":
+                toolname = atoms.pop(0)
+                bucket = self.toolmap.setdefault(toolname, {})
+                bucket[".".join(atoms)] = v
     
     def _get_browser_url(self):
         url = self.base + self.path
@@ -289,11 +318,11 @@ class Request(object):
         if cherrypy.config.get('show_tracebacks', False):
             dbltrace = ("\n===First Error===\n\n%s"
                         "\n\n===Second Error===\n\n%s\n\n")
-            body = dbltrace % (_cperror.format_exc(exc),
-                               _cperror.format_exc())
+            body = dbltrace % (cherrypy.format_exc(exc),
+                               cherrypy.format_exc())
         else:
             body = ""
-        r = _cperror.bare_error(body)
+        r = cherrypy.bare_error(body)
         response.status, response.header_list, response.body = r
 
 

@@ -410,7 +410,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         self.getPage("/status/illegal")
         self.assertStatus(500)
-        msg = "Illegal response status from server (out of range)."
+        msg = "Illegal response status from server (781 is out of range)."
         self.assertErrorPage(500, msg)
         
         self.getPage("/status/unknown")
@@ -419,7 +419,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         self.getPage("/status/bad")
         self.assertStatus(500)
-        msg = "Illegal response status from server (non-numeric)."
+        msg = "Illegal response status from server ('error' is non-numeric)."
         self.assertErrorPage(500, msg)
     
     def testLogging(self):
@@ -589,7 +589,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             
             # No traceback should be present
             self.getPage("/error/cause_err_in_finalize")
-            msg = "Illegal response status from server (non-numeric)."
+            msg = "Illegal response status from server ('ZOO' is non-numeric)."
             self.assertErrorPage(500, msg, None)
         finally:
             ignore.pop()

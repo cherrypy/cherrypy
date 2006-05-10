@@ -6,6 +6,7 @@ import sys
 import time
 
 import cherrypy
+import httptools
 
 
 def decorate(func, decorator):
@@ -287,7 +288,7 @@ def session_auth(check_login_and_password=None, not_logged_in=None,
     return False
 
 def virtual_host(use_x_forwarded_host=True, **domains):
-    """Change the path_info based on the Host.
+    """Redirect internally based on the Host header.
     
     Useful when running multiple sites within one CP server.
     
@@ -304,14 +305,16 @@ def virtual_host(use_x_forwarded_host=True, **domains):
     but also to have  http://www.mydom1.com/mydom2/  etc to be valid pages in
     their own right.
     """
+    if hasattr(cherrypy.request, "virtual_prefix"):
+        return
     
     domain = cherrypy.request.headers.get('Host', '')
     if use_x_forwarded_host:
         domain = cherrypy.request.headers.get("X-Forwarded-Host", domain)
     
-    prefix = domains.get(domain, "")
+    cherrypy.request.virtual_prefix = prefix = domains.get(domain, "")
     if prefix:
-        cherrypy.request.path_info = prefix + "/" + cherrypy.request.path_info
+        raise cherrypy.InternalRedirect(httptools.urljoin(prefix, cherrypy.request.path_info))
 
 def log_traceback():
     """Write the last error's traceback to the cherrypy error log."""

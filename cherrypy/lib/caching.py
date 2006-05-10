@@ -159,7 +159,7 @@ def setup():
         init(conf.get("class", None))
     def wrapper():
         if get():
-            cherrypy.request.dispatch = None
+            cherrypy.request.handler = None
         else:
             # Note the devious technique here of adding hooks on the fly
             cherrypy.request.hooks.attach('before_finalize', tee_output)

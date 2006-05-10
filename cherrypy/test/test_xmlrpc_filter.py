@@ -5,16 +5,15 @@ import xmlrpclib
 
 def setup_server():
     import cherrypy
-
+    from cherrypy import tools
+    
     class Root:
         def index(self):
             return "I'm a standard index!"
         index.exposed = True
 
 
-    class XmlRpc:
-        
-        _cp_config = {'tools.xmlrpc.on': True}
+    class XmlRpc(tools.XMLRPCController):
         
         def return_single_item_list(self):
             return [42]

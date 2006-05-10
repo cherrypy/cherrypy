@@ -227,7 +227,7 @@ def thread_report(path=SCRIPT_NAME + "/", concurrency=safe_threads):
         rows.append([c] + [getattr(sess, attr) for attr in attrs])
     return rows
 
-def size_report(sizes=(1, 10, 50, 100, 100000, 100000000),
+def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
                concurrency=50):
     sess = ABSession(concurrency=concurrency)
     attrs, names, patterns = zip(*sess.parse_patterns)

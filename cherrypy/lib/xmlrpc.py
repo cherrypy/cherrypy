@@ -12,14 +12,13 @@ def process_body():
         return ('ERROR PARAMS', ), 'ERRORMETHOD'
 
 
-def patched_path(path, method):
-    """Return 'path' with the rpcMethod appended."""
+def patched_path(path):
+    """Return 'path', doctored for RPC."""
     if not path.endswith('/'):
         path += '/'
     if path.startswith('/RPC2/'):
         # strip the first /rpc2
         path = path[5:]
-    path += str(method).replace('.', '/')
     return path
 
 

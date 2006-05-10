@@ -176,7 +176,7 @@ class MainTool(Tool):
         """
         def wrapper():
             if self.callable(**self.merged_args()):
-                cherrypy.request.dispatch = None
+                cherrypy.request.handler = None
         # Don't pass conf (or our wrapper will get wrapped!)
         cherrypy.request.hooks.attach(self.point, wrapper)
 
@@ -205,6 +205,8 @@ from cherrypy.lib import cptools
 session_auth = MainTool(cptools.session_auth)
 base_url = Tool('before_request_body', cptools.base_url)
 response_headers = Tool('before_finalize', cptools.response_headers)
+# We can't call virtual_host in on_start_resource,
+# because it's failsafe and the redirect would be swallowed.
 virtual_host = Tool('before_request_body', cptools.virtual_host)
 log_tracebacks = Tool('before_error_response', cptools.log_traceback)
 log_headers = Tool('before_error_response', cptools.log_request_headers)
@@ -221,12 +223,10 @@ from cherrypy.lib import static
 class _StaticDirTool(MainTool):
     def setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
-        # Stick the section where "dir" was defined into the params.
         conf = self.merged_args()
-        section = cherrypy.config.request_config_section('tools.staticdir.dir')
         def wrapper():
-            if self.callable(section, **conf):
-                cherrypy.request.dispatch = None
+            if self.callable(**conf):
+                cherrypy.request.handler = None
         # Don't pass conf (or our wrapper will get wrapped!)
         cherrypy.request.hooks.attach(self.point, wrapper)
 staticdir = _StaticDirTool(static.staticdir)
@@ -284,6 +284,31 @@ class _SessionTool(Tool):
 sessions = _SessionTool()
 
 from cherrypy.lib import xmlrpc as _xmlrpc
+class XMLRPCController(object):
+    
+    _cp_config = {'tools.xmlrpc.on': True}
+    
+    def __call__(self, *vpath, **params):
+        rpcparams, rpcmethod = _xmlrpc.process_body()
+        
+        subhandler = self
+        for attr in str(rpcmethod).split('.'):
+            subhandler = getattr(subhandler, attr, None)
+            if subhandler is None:
+                raise cherrypy.NotFound()
+        if not getattr(subhandler, "exposed", False):
+            raise cherrypy.NotFound()
+        
+        body = subhandler(*(vpath + rpcparams), **params)
+        conf = cherrypy.request.toolmap.get("xmlrpc", {})
+        _xmlrpc.respond(body,
+                        conf.get('encoding', 'utf-8'),
+                        conf.get('allow_none', 0))
+        return cherrypy.response.body
+    __call__.exposed = True
+    
+    index = __call__
+
 class _XMLRPCTool(object):
     """Tool for using XMLRPC over HTTP.
     
@@ -291,33 +316,9 @@ class _XMLRPCTool(object):
     using it via an extension, provide a true value for allow_none.
     """
     
-    def dispatch(self, path):
-        """Use this tool for cherrypy.request dispatch.
-        
-        For example:
-            [/rpc]
-            dispatch = tools.xmlrpc.dispatch
-        """
-        request = cherrypy.request
-        request.error_response = _xmlrpc.on_error
-        
-        rpcparams, rpcmethod = _xmlrpc.process_body()
-        path = _xmlrpc.patched_path(path, rpcmethod)
-        
-        handler, opath, vpath = _cputil.find_handler(path)
-        
-        # Decode any leftover %2F in the virtual_path atoms.
-        vpath = tuple([x.replace("%2F", "/") for x in vpath])
-        
-        body = handler(*(vpath + rpcparams), **request.params)
-        conf = cherrypy.request.toolmap.get("xmlrpc", {})
-        _xmlrpc.respond(body,
-                        conf.get('encoding', 'utf-8'),
-                        conf.get('allow_none', 0))
-    
     def setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
-        cherrypy.request.dispatch = self.dispatch
+        cherrypy.request.path_info = _xmlrpc.patched_path(cherrypy.request.path_info)
         cherrypy.request.error_response = _xmlrpc.on_error
 xmlrpc = _XMLRPCTool()
 
