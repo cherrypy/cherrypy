@@ -1,9 +1,17 @@
 
+from cherrypy import config
+
+
 class Application:
     
-    def __init__(self, root, conf):
+    def __init__(self, root, conf=None):
         self.root = root
-        self.conf = conf
+        self.conf = {}
+        if conf:
+            self.merge(conf)
+    
+    def merge(self, conf):
+        config.merge(self.conf, conf)
 
 
 class Tree:
@@ -13,22 +21,12 @@ class Tree:
         self.apps = {}
     
     def mount(self, root, script_name=None, conf=None):
-        """Mount the given application root object at the given script_name."""
-        import cherrypy
-        
-        if conf and not isinstance(conf, dict):
-            conf = cherrypy.config.dict_from_config_file(conf)
-        elif conf is None:
-            conf = {}
-        
+        """Mount a new app from a root object, script_name, and conf."""
+        app = Application(root, conf)
         if script_name is None:
             script_name = "/"
-            if conf:
-                conf_pt = conf.get("global", {}).get("script_name")
-                if conf_pt:
-                    script_name = conf_pt
-        
-        self.apps[script_name] = Application(root, conf)
+        self.apps[script_name] = app
+        return app
     
     def script_name(self, path=None):
         """The script_name of the app at the given path, or None.

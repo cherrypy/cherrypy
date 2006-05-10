@@ -31,6 +31,19 @@ environments = {
         },
     }
 
+def merge(base, other):
+    """Merge one app config (from a dict, file, or filename) into another."""
+    if isinstance(other, basestring):
+        if other not in autoreload.reloadFiles:
+            autoreload.reloadFiles.append(other)
+        other = dict_from_config_file(other)
+    elif hasattr(other, 'read'):
+        other = dict_from_config_file(other)
+    
+    # Load other into base
+    for section, value_map in other.iteritems():
+        base.setdefault(section, {}).update(value_map)
+
 default_conf = {
     'server.socket_port': 8080,
     'server.socket_host': '',
