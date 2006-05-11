@@ -13,6 +13,25 @@ class Application:
     
     def merge(self, conf):
         config.merge(self.conf, conf)
+    
+    def guess_abs_path(self):
+        """Guess the absolute URL from server.socket_host and script_name.
+        
+        When inside a request, the abs_path can be formed via:
+            cherrypy.request.base + (cherrypy.request.app.script_name or "/")
+        
+        However, outside of the request we must guess, hoping the deployer
+        set socket_host and socket_port correctly.
+        """
+        port = int(config.get('server.socket_port', 80))
+        if port in (443, 8443):
+            scheme = "https://"
+        else:
+            scheme = "http://"
+        host = config.get('server.socket_host', '')
+        if port != 80:
+            host += ":%s" % port
+        return scheme + host + self.script_name
 
 
 class Tree:
