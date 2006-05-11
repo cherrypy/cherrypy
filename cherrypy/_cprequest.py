@@ -35,6 +35,7 @@ class Request(object):
         self.hooks = tools.HookMap(pts)
         self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
                                'on_end_request']
+        self.redirections = []
     
     def close(self):
         if not self.closed:
@@ -110,6 +111,7 @@ class Request(object):
                     break
                 except cherrypy.InternalRedirect, ir:
                     pi = ir.path
+                    self.redirections.append(pi)
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -144,9 +146,6 @@ class Request(object):
                 self.hooks.run('before_finalize')
                 cherrypy.response.finalize()
             except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
-                # For an HTTPRedirect or HTTPError (including NotFound),
-                # we don't go through the regular mechanism:
-                # we return the redirect or error page immediately
                 inst.set_response()
                 self.hooks.run('before_finalize')
                 cherrypy.response.finalize()
