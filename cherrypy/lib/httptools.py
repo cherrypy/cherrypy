@@ -311,7 +311,9 @@ def parse_request_line(request_line):
     
     # path may be an abs_path (including "http://host.domain.tld");
     # Ignore scheme, location, and fragments (so config lookups work).
-    # [Therefore, this assumes all hosts are valid for this server.]
+    # [Therefore, this assumes all hosts are valid for this server.
+    # Note that we are also violating the RFC which says: if the host
+    # given in an abs_path, it must override any Host header.]
     scheme, location, path, params, qs, frag = urlparse(path)
     if path == "*":
         # "...the request does not apply to a particular resource,

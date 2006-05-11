@@ -187,11 +187,7 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
         else:
             bind_addr = (conf('server.socket_host'), conf('server.socket_port'))
         
-        apps = []
-        for base in cherrypy.tree.apps:
-            if base == "/":
-                base = ""
-            apps.append((base, wsgiApp))
+        apps = [(base, wsgiApp) for base in cherrypy.tree.apps]
         
         s = _cpwsgiserver.CherryPyWSGIServer
         s.__init__(self, bind_addr, apps,

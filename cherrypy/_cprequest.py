@@ -213,7 +213,11 @@ class Request(object):
             if not self.headers.has_key("Host"):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
-        self.base = "%s://%s" % (self.scheme, self.headers.get('Host', ''))
+        
+        host = self.headers.get('Host', '')
+        if not host:
+            host = cherrypy.config.get('server.socket_host', '')
+        self.base = "%s://%s" % (self.scheme, host)
     
     def get_resource(self, path):
         dispatch = _cputil.dispatch

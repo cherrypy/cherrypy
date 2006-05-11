@@ -180,7 +180,7 @@ def unrepr(s):
 # Tool code
 
 def base_url(base=None, use_x_forwarded_host=True):
-    """Change the base URL.
+    """Change the base URL (scheme://host[:port]).
     
     Useful when running a CP server behind Apache.
     """

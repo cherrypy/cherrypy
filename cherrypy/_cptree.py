@@ -4,8 +4,9 @@ from cherrypy import config
 
 class Application:
     
-    def __init__(self, root, conf=None):
+    def __init__(self, root, script_name="", conf=None):
         self.root = root
+        self.script_name = script_name
         self.conf = {}
         if conf:
             self.merge(conf)
@@ -20,11 +21,11 @@ class Tree:
     def __init__(self):
         self.apps = {}
     
-    def mount(self, root, script_name=None, conf=None):
+    def mount(self, root, script_name="", conf=None):
         """Mount a new app from a root object, script_name, and conf."""
-        app = Application(root, conf)
-        if script_name is None:
-            script_name = "/"
+        if script_name == "/":
+            script_name = ""
+        app = Application(root, script_name, conf)
         self.apps[script_name] = app
         return app
     
@@ -41,16 +42,15 @@ class Tree:
             except AttributeError:
                 return None
         
-        while path:
+        while True:
             if path in self.apps:
                 return path
             
+            if path == "":
+                return None
+            
             # Move one node up the tree and try again.
-            if path == "/":
-                break
-            path = path[:path.rfind("/")] or "/"
-        
-        return None
+            path = path[:path.rfind("/")]
     
     def url(self, path, script_name=None):
         """Return 'path', prefixed with script_name.

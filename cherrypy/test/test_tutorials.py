@@ -21,8 +21,8 @@ def setup_server():
             module = reload(sys.modules[target])
         else:
             module = __import__(target, globals(), locals(), [''])
-        # The above import will probably mount a new app at "/".
-        app = cherrypy.tree.apps["/"]
+        # The above import will probably mount a new app at "".
+        app = cherrypy.tree.apps[""]
         
         app.root.load_tut_module = load_tut_module
         app.root.sessfilteron = sessfilteron

@@ -4,7 +4,7 @@ test.prefer_parent_path()
 import cherrypy
 
 
-script_names = ["/", "/users/fred/blog", "/corp/blog"]
+script_names = ["", "/users/fred/blog", "/corp/blog"]
 
 def setup_server():
     class Root:
@@ -113,7 +113,7 @@ def setup_server():
     
     
     for url in script_names:
-        conf = {'user': url.split("/")[-2]}
+        conf = {'user': (url or "/").split("/")[-2]}
         cherrypy.tree.mount(Root(), url, {'/': conf})
     
     cherrypy.config.update({
@@ -198,7 +198,7 @@ class ObjectMappingTest(helper.CPWebCase):
             
             # Test that configs don't overwrite each other from diferent apps
             self.getPage("/confvalue")
-            self.assertBody(url.split("/")[-2])
+            self.assertBody((url or "/").split("/")[-2])
         
         self.script_name = ""
         
