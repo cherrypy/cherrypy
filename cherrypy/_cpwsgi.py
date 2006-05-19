@@ -60,14 +60,16 @@ def wsgiApp(environ, start_response):
     
     request = None
     try:
-        # LOGON_USER is served by IIS, and is the name of the
-        # user after having been mapped to a local account.
-        # Both IIS and Apache set REMOTE_USER, when possible.
         env = environ.get
         clientAddr = (env('REMOTE_ADDR', ''), int(env('REMOTE_PORT', -1)))
         request = cherrypy.engine.request(clientAddr, env('REMOTE_ADDR', ''),
                                           environ['wsgi.url_scheme'])
+        
+        # LOGON_USER is served by IIS, and is the name of the
+        # user after having been mapped to a local account.
+        # Both IIS and Apache set REMOTE_USER, when possible.
         request.login = (env('LOGON_USER') or env('REMOTE_USER') or None)
+        
         request.multithread = environ['wsgi.multithread']
         request.multiprocess = environ['wsgi.multiprocess']
         request.wsgi_environ = environ

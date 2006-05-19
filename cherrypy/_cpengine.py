@@ -136,7 +136,9 @@ class Engine(object):
         """Obtain an HTTP Request object.
         
         client_address: the (IP address, port) of the client
-        remote_host: the IP address of the client
+        remote_host should be the client's host name. If not available
+            (because no reverse DNS lookup is performed), the client
+            IP should be provided.
         scheme: either "http" or "https"; defaults to "http"
         """
         if self.state == STOPPED:

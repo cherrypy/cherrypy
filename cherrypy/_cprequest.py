@@ -16,9 +16,11 @@ class Request(object):
     def __init__(self, remote_addr, remote_port, remote_host, scheme="http"):
         """Populate a new Request object.
         
-        remote_addr should be the client IP address
-        remote_port should be the client Port
-        remote_host should be string of the client's IP address.
+        remote_addr should be the client IP address.
+        remote_port should be the client Port.
+        remote_host should be the client's host name. If not available
+            (because no reverse DNS lookup is performed), the client
+            IP should be provided.
         scheme should be a string, either "http" or "https".
         """
         self.remote_addr = remote_addr
@@ -48,8 +50,7 @@ class Request(object):
         
         request_line should be of the form "GET /path HTTP/1.0".
         headers should be a list of (name, value) tuples.
-        rfile should be a file-like object containing the HTTP request
-            entity.
+        rfile should be a file-like object containing the HTTP request entity.
         
         When run() is done, the returned object should have 3 attributes:
           status, e.g. "200 OK"
@@ -97,8 +98,8 @@ class Request(object):
             # Get the 'Host' header, so we can do HTTPRedirects properly.
             self.process_headers()
             
-            # path_info should be the path from the app
-            # root (script_name) to the handler.
+            # path_info should be the path from the
+            # app root (script_name) to the handler.
             self.script_name = r = cherrypy.tree.script_name(self.path)
             self.app = cherrypy.tree.apps[r]
             self.path_info = self.path[len(r.rstrip("/")):]
