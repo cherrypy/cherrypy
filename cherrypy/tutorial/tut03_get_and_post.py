@@ -44,6 +44,7 @@ cherrypy.tree.mount(WelcomePage())
 
 
 if __name__ == '__main__':
+    import os.path
     cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
     cherrypy.server.start()
     cherrypy.engine.start()
