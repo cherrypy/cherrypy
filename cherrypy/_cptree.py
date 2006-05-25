@@ -42,8 +42,8 @@ class Tree:
     
     def mount(self, root, script_name="", conf=None):
         """Mount a new app from a root object, script_name, and conf."""
-        if script_name == "/":
-            script_name = ""
+        # Next line both 1) strips trailing slash and 2) maps "/" -> "".
+        script_name = script_name.rstrip("/")
         app = Application(root, script_name, conf)
         self.apps[script_name] = app
         return app
