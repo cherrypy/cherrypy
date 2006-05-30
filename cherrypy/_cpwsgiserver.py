@@ -201,6 +201,8 @@ class WorkerThread(threading.Thread):
                                                         request.start_response)
                             for line in response:
                                 request.write(line)
+                            if hasattr(response, "close"):
+                                response.close()
                     except socket.error, e:
                         errno = e.args[0]
                         if errno not in socket_errors_to_ignore:
