@@ -4,6 +4,7 @@ import socket
 import threading
 import Queue
 import mimetools # todo: use email
+import os
 import sys
 import time
 import traceback
@@ -174,6 +175,7 @@ class HTTPRequest(object):
         self.rfile.close()
         self.wfile.close()
         self.socket.close()
+        self.socket = None
 
 
 _SHUTDOWNREQUEST = None
@@ -224,6 +226,10 @@ class CherryPyWSGIServer(object):
     interrupt = None
     RequestHandlerClass = HTTPRequest
     
+    # UNIX allows us to pass the socket file descriptor
+    # from one process to another via os.environ.
+    preserve_socket = hasattr(socket, "fromfd")
+    
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10):
         """Be careful w/ max"""
@@ -258,6 +264,18 @@ class CherryPyWSGIServer(object):
         # If you're using this server with another framework, you should
         # trap those exceptions in whatever code block calls start().
         
+        def bind(family, type, proto=0):
+            """Create (or recreate) the actual socket object."""
+            if self.preserve_socket:
+                socketfd = int(os.environ.get('CPWSGI_SOCKET', -1))
+                if socketfd >= 0:
+                    self.socket = socket.fromfd(socketfd, family, type, proto)
+                    return
+            
+            self.socket = socket.socket(family, type, proto)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.bind(self.bind_addr)
+        
         # Select the appropriate socket
         if isinstance(self.bind_addr, basestring):
             # AF_UNIX socket
@@ -270,9 +288,7 @@ class CherryPyWSGIServer(object):
             try: os.chmod(self.bind_addr, 0777)
             except: pass
             
-            self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(self.bind_addr)
+            info = [(socket.AF_UNIX, socket.SOCK_STREAM, 0, "", self.bind_addr)]
         else:
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6 addresses)
@@ -282,27 +298,22 @@ class CherryPyWSGIServer(object):
                                           socket.SOCK_STREAM)
             except socket.gaierror:
                 # Probably a DNS issue. Assume IPv4.
-                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                self.socket.bind(self.bind_addr)
-            else:
+                info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", self.bind_addr)]
+        
+        self.socket = None
+        msg = "No socket could be created"
+        for res in info:
+            af, socktype, proto, canonname, sa = res
+            try:
+                bind(af, socktype, proto)
+            except socket.error, msg:
+                if self.socket:
+                    self.socket.close()
                 self.socket = None
-                msg = "No socket could be created"
-                for res in info:
-                    af, socktype, proto, canonname, sa = res
-                    try:
-                        self.socket = socket.socket(af, socktype, proto)
-                        self.socket.setsockopt(socket.SOL_SOCKET,
-                                               socket.SO_REUSEADDR, 1)
-                        self.socket.bind(self.bind_addr)
-                    except socket.error, msg:
-                        if self.socket:
-                            self.socket.close()
-                        self.socket = None
-                        continue
-                    break
-                if not self.socket:
-                    raise socket.error, msg
+                continue
+            break
+        if not self.socket:
+            raise socket.error, msg
         
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
@@ -340,9 +351,15 @@ class CherryPyWSGIServer(object):
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         self.ready = False
+        
         s = getattr(self, "socket", None)
-        if s and hasattr(s, "close"):
-            s.close()
+        if s:
+            if self.preserve_socket:
+                os.environ['CPWSGI_SOCKET'] = str(s.fileno())
+            else:
+                if hasattr(s, "close"):
+                    s.close()
+            self.socket = None
         
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
