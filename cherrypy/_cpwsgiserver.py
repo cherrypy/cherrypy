@@ -286,6 +286,8 @@ class CherryPyWSGIServer(object):
                 self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self.socket.bind(self.bind_addr)
             else:
+                self.socket = None
+                msg = "No socket could be created"
                 for res in info:
                     af, socktype, proto, canonname, sa = res
                     try:
