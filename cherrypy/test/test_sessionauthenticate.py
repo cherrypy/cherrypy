@@ -30,9 +30,9 @@ def setup_server():
 
 import helper
 
-class SessionAuthenticateFilterTest(helper.CPWebCase):
+class SessionAuthenticateTest(helper.CPWebCase):
     
-    def testSessionAuthenticateFilter(self):
+    def testSessionAuthenticate(self):
         # request a page and check for login form
         self.getPage('/')
         self.assertInBody('<form method="post" action="do_login">')

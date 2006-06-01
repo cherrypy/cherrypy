@@ -56,8 +56,6 @@ def run(app, env=None):
     environ['SCRIPT_NAME'] = cherrypy.request.script_name
     environ['PATH_INFO'] = cherrypy.request.path_info
     
-    # update the environ with the dict passed to the filter's
-    # constructor
     if env:
         environ.update(env)
     

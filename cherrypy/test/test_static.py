@@ -58,15 +58,15 @@ def setup_server():
 
 import helper
 
-class StaticFilterTest(helper.CPWebCase):
+class StaticTest(helper.CPWebCase):
     
-    def testStaticFilter(self):
+    def testStatic(self):
         self.getPage("/static/index.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
         
-        # Using a static_filter.root value in a subdir...
+        # Using a staticdir.root value in a subdir...
         self.getPage("/docroot/index.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
@@ -97,7 +97,7 @@ class StaticFilterTest(helper.CPWebCase):
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('You want the Baron? You can have the Baron!')
         
-        # Check a directory via "static_filter.index".
+        # Check a directory via "staticdir.index".
         self.getPage("/docroot/")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')

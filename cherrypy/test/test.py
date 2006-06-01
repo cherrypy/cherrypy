@@ -288,24 +288,23 @@ def run():
     prefer_parent_path()
     
     testList = [
-        'test_baseurl_filter',
-        'test_cache_filter',
-        'test_combinedfilters',
+        'test_baseurl',
+        'test_caching',
         'test_config',
         'test_core',
-        'test_custom_filters',
-        'test_decodingencoding_filter',
-        'test_gzip_filter',
+        'test_tools',
+        'test_decodingencoding',
+        'test_gzip',
         'test_objectmapping',
-        'test_response_headers_filter',
-        'test_static_filter',
+        'test_response_headers',
+        'test_static',
         'test_tutorials',
-        'test_virtualhost_filter',
-        'test_session_filter',
-        'test_sessionauthenticate_filter',
+        'test_virtualhost',
+        'test_session',
+        'test_sessionauthenticate',
 ##        'test_states',
-        'test_xmlrpc_filter',
-        'test_wsgiapp_filter',
+        'test_xmlrpc',
+        'test_wsgiapp',
     ]
     CommandLineParser(testList).run()
     

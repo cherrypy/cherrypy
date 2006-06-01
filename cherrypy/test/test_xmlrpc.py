@@ -67,8 +67,8 @@ def setup_server():
 
 import helper
 
-class XmlRpcFilterTest(helper.CPWebCase):
-    def testXmlRpcFilter(self):
+class XmlRpcTest(helper.CPWebCase):
+    def testXmlRpc(self):
         
         # load the appropriate xmlrpc proxy
         url = 'http://localhost:%s/xmlrpc/' % (self.PORT)

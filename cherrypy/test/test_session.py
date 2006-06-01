@@ -36,9 +36,9 @@ def setup_server():
 
 import helper
 
-class SessionFilterTest(helper.CPWebCase):
+class SessionTest(helper.CPWebCase):
     
-    def testSessionFilter(self):
+    def testSession(self):
         self.getPage('/testStr')
         self.assertBody('1')
         self.getPage('/testGen', self.cookies)

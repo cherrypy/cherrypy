@@ -33,17 +33,17 @@ def setup_server():
 
 import helper
 
-class ResponseHeadersFilterTest(helper.CPWebCase):
+class ResponseHeadersTest(helper.CPWebCase):
 
     def testResponseHeadersDecorator(self):
         self.getPage('/')
         self.assertHeader("Content-Language", "en-GB")
         self.assertHeader('Content-Type', 'text/plain')
 
-    def testResponseHeadersFilter(self):
+    def testResponseHeaders(self):
         self.getPage('/other')
         self.assertHeader("Content-Language", "fr")
-        # Since 'force' is False, the filter should only change headers
+        # Since 'force' is False, the tool should only change headers
         # that have not been set yet.
         # Content-Type should have been set when the response object
         # was created (default to text/html)

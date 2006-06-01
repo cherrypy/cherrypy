@@ -31,9 +31,9 @@ def setup_server():
 import helper
 
 
-class DecodingEncodingFilterTest(helper.CPWebCase):
+class DecodingEncodingTest(helper.CPWebCase):
     
-    def testDecodingEncodingFilter(self):
+    def testDecodingEncoding(self):
         europoundUtf8 = europoundUnicode.encode('utf-8')
         self.getPage('/?param=%s' % europoundUtf8)
         self.assertBody(europoundUtf8)

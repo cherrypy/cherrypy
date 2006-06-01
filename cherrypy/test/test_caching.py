@@ -28,7 +28,7 @@ def setup_server():
 
 import helper
 
-class CacheFilterTest(helper.CPWebCase):
+class CacheTest(helper.CPWebCase):
     
     def testCaching(self):
         for trial in xrange(10):

@@ -46,7 +46,7 @@ def setup_server():
 import helper
 
 
-class WSGIAppFilterTest(helper.CPWebCase):
+class WSGIAppTest(helper.CPWebCase):
     
     wsgi_output = '''Hello, world!
 This is a wsgi app running within CherryPy!'''
@@ -55,7 +55,7 @@ This is a wsgi app running within CherryPy!'''
         self.getPage("/")
         self.assertBody("I'm a regular CherryPy page handler!")
     
-    def test_02_cp_filters(self):
+    def test_02_tools(self):
         self.getPage("/hosted/app0")
         self.assertHeader("Content-Type", "text/plain")
         self.assertInBody(self.wsgi_output)

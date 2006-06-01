@@ -21,9 +21,9 @@ def setup_server():
 
 import helper
 
-class BaseUrlFilterTest(helper.CPWebCase):
+class BaseUrlTest(helper.CPWebCase):
     
-    def testBaseUrlFilter(self):
+    def testBaseUrl(self):
         self.getPage("/")
         self.assertHeader('Location',
                           "http://www.mydomain.com%s/dummy" % self.prefix())

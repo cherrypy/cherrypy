@@ -39,9 +39,9 @@ import helper
 
 europoundUtf8 = u'\x80\xa3'.encode('utf-8')
 
-class GzipFilterTest(helper.CPWebCase):
+class GzipTest(helper.CPWebCase):
     
-    def testGzipFilter(self):
+    def testGzip(self):
         zbuf = StringIO.StringIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write("Hello, world")

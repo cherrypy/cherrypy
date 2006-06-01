@@ -47,9 +47,9 @@ def setup_server():
 
 import helper
 
-class VirtualHostFilterTest(helper.CPWebCase):
+class VirtualHostTest(helper.CPWebCase):
     
-    def testVirtualHostFilter(self):
+    def testVirtualHost(self):
         self.getPage("/", [('Host', 'www.mydom1.com')])
         self.assertBody('Hello, world')
         self.getPage("/mydom2/", [('Host', 'www.mydom1.com')])

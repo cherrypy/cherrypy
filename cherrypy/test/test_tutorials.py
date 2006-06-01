@@ -25,13 +25,13 @@ def setup_server():
         app = cherrypy.tree.apps[""]
         
         app.root.load_tut_module = load_tut_module
-        app.root.sessfilteron = sessfilteron
+        app.root.sessions = sessions
         app.root.traceback_setting = traceback_setting
     load_tut_module.exposed = True
     
-    def sessfilteron():
-        cherrypy.config.update({"session_filter.on": True})
-    sessfilteron.exposed = True
+    def sessions():
+        cherrypy.config.update({"tools.sessions.on": True})
+    sessions.exposed = True
     
     def traceback_setting():
         return repr(cherrypy.config.get('show_tracebacks'))
@@ -117,7 +117,7 @@ class TutorialTest(helper.CPWebCase):
                         '(<a href="./">back</a>)')
     def test07Sessions(self):
         self.getPage("/load_tut_module/tut07_sessions")
-        self.getPage("/sessfilteron")
+        self.getPage("/sessions")
         
         self.getPage('/')
         self.assertBody("\n            During your current session, you've viewed this"

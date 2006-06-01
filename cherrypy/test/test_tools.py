@@ -1,5 +1,6 @@
-"""Test the various means of instantiating and invoking filters."""
+"""Test the various means of instantiating and invoking tools."""
 
+import gzip, StringIO
 import types
 import test
 test.prefer_parent_path()
@@ -7,6 +8,8 @@ test.prefer_parent_path()
 import cherrypy
 from cherrypy import tools
 
+
+europoundUnicode = u'\x80\xa3'
 
 def setup_server():
     
@@ -64,6 +67,13 @@ def setup_server():
         def index(self):
             return "Howdy earth!"
         index.exposed = True
+        
+        def euro(self):
+            yield u"Hello,"
+            yield u"world"
+            yield europoundUnicode
+        euro.exposed = True
+    
     root = Root()
     
     
@@ -131,6 +141,11 @@ def setup_server():
             # Because this isn't a dict, on_start_resource will error.
             'tools.numerify.map': "pie->3.14159"
         },
+        # Combined tools
+        '/euro': {
+            'tools.gzip.on': True,
+            'tools.encode.on': True,
+        },
     }
     cherrypy.tree.mount(root, conf=conf)
 
@@ -140,7 +155,7 @@ def setup_server():
 import helper
 
 
-class FilterTests(helper.CPWebCase):
+class ToolTests(helper.CPWebCase):
     
     def testDemo(self):
         self.getPage("/demo/")
@@ -172,17 +187,27 @@ class FilterTests(helper.CPWebCase):
         self.getPage("/demo/restricted")
         self.assertErrorPage(401)
     
-    def testGuaranteedFilters(self):
-        # The on_start_resource and on_end_request filter methods are all
+    def testGuaranteedHooks(self):
+        # The on_start_resource and on_end_request hooks are all
         # guaranteed to run, even if there are failures in other on_start
-        # or on_end methods. This is NOT true of the other filter methods.
-        # Here, we have set up a failure in NumerifyFilter.on_start_resource,
+        # or on_end methods. This is NOT true of the other hooks.
+        # Here, we have set up a failure in NumerifyTool.on_start_resource,
         # but because that failure is logged and passed over, the error
         # page we obtain in the user agent should be from before_finalize.
         self.getPage("/demo/err_in_onstart")
         self.assertErrorPage(500)
         self.assertInBody("AttributeError: 'Request' object has no "
                           "attribute 'numerify_map'")
+    
+    def testCombinedTools(self):
+        expectedResult = (u"Hello,world" + europoundUnicode).encode('utf-8')
+        zbuf = StringIO.StringIO()
+        zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
+        zfile.write(expectedResult)
+        zfile.close()
+        
+        self.getPage("/euro", headers=[("Accept-Encoding", "gzip")])
+        self.assertInBody(zbuf.getvalue()[:3])
 
 
 if __name__ == '__main__':
