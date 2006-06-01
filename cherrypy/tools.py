@@ -96,7 +96,7 @@ class Tool(object):
         return conf
     
     def wrap(self, *args, **kwargs):
-        """Make a decorator for this tool.
+        """Call-time decorator (wrap the handler with pre and post logic).
         
         For example:
         
@@ -111,6 +111,25 @@ class Tool(object):
                 return f(*a, **kw)
             return wrapper
         return deco
+    
+    def enable(self, **kwargs):
+        """Compile-time decorator (turn on the tool in config).
+        
+        For example:
+        
+            @tools.base_url.enable()
+            def whats_my_base(self):
+                return cherrypy.request.base
+            whats_my_base.exposed = True
+        """
+        def wrapper(f):
+            if not hasattr(f, "_cp_config"):
+                f._cp_config = {}
+            f._cp_config["tools." + self.name + ".on"] = True
+            for k, v in kwargs:
+                f._cp_config["tools." + self.name + "." + k] = v
+            return f
+        return wrapper
     
     def setup(self):
         """Hook this tool into cherrypy.request.
@@ -331,14 +350,14 @@ xmlrpc = _XMLRPCTool()
 
 from cherrypy.lib import wsgiapp as _wsgiapp
 class _WSGIAppTool(MainTool):
-    """A filter for running any WSGI middleware/application within CP.
-
+    """A tool for running any WSGI middleware/application within CP.
+    
     Here are the parameters:
-
+    
     wsgi_app - any wsgi application callable
     env_update - a dictionary with arbitrary keys and values to be
                  merged with the WSGI environment dictionary.
-
+    
     Example:
     
     class Whatever:

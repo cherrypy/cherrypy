@@ -97,7 +97,9 @@ def expose(func=None, alias=None):
 def set_config(**kwargs):
     """Decorator to set _cp_config using the given kwargs."""
     def wrapper(f):
-        f._cp_config = kwargs
+        if not hasattr(f, "_cp_config"):
+            f._cp_config = {}
+        f._cp_config.update(kwargs)
         return f
     return wrapper
 

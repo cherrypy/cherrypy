@@ -73,6 +73,12 @@ def setup_server():
             yield u"world"
             yield europoundUnicode
         euro.exposed = True
+        
+        # METHOD FOUR: decorator using Tool.enable
+        @tools.base_url.enable()
+        def base(self):
+            return cherrypy.request.base
+        base.exposed = True
     
     root = Root()
     
@@ -110,7 +116,7 @@ def setup_server():
             raise ValueError()
             yield "confidential"
         
-        # METHOD TWO: decorator using tool.wrap
+        # METHOD TWO: decorator using Tool.wrap
         def restricted(self):
             return "Welcome!"
         restricted = tools.check_access.wrap()(restricted)
@@ -126,7 +132,7 @@ def setup_server():
     
     conf = {
         # METHOD THREE:
-        # Do it all in config
+        # Do it all in detached config
         '/demo': {
             'tools.numerify.on': True,
             'tools.numerify.map': {"pie": "3.14159"},
@@ -183,9 +189,14 @@ class ToolTests(helper.CPWebCase):
         self.getPage("/demo/ended/5")
         self.assertBody("True")
         
-        # Test the decorator technique.
+        # Test the "wrap" technique (call-time decorator).
         self.getPage("/demo/restricted")
         self.assertErrorPage(401)
+        
+        # Test the "enable" technique (compile-time decorator).
+        self.getPage("/base", headers=[('X-Forwarded-Host',
+                                        'www.myforward.com')])
+        self.assertBody("http://www.myforward.com")
     
     def testGuaranteedHooks(self):
         # The on_start_resource and on_end_request hooks are all
