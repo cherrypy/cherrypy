@@ -10,32 +10,7 @@ import time
 import urllib
 
 import cherrypy
-from cherrypy.lib import httptools
-
-
-def modified_since(path, stat=None):
-    """Check whether a file has been modified since the date
-    provided in 'If-Modified-Since'
-    It doesn't check if the file exists or not
-    Return True if has been modified, False otherwise
-    """
-    # serve_file already creates a stat object so let's not
-    # waste our energy to do it again
-    if not stat:
-        try:
-            stat = os.stat(path)
-        except OSError:
-            if cherrypy.config.get('log_file_not_found', False):
-                cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
-            raise cherrypy.NotFound()
-    
-    response = cherrypy.response
-    strModifTime = httptools.HTTPDate(time.gmtime(stat.st_mtime))
-    if cherrypy.request.headers.has_key('If-Modified-Since'):
-        if cherrypy.request.headers['If-Modified-Since'] == strModifTime:
-            return False
-    response.headers['Last-Modified'] = strModifTime
-    return True
+from cherrypy.lib import cptools, httptools
 
 
 def serve_file(path, contentType=None, disposition=None, name=None):
@@ -80,12 +55,10 @@ def serve_file(path, contentType=None, disposition=None, name=None):
         contentType = mimetypes.types_map.get(ext, "text/plain")
     response.headers['Content-Type'] = contentType
     
-    if not modified_since(path, stat):
-        response.status = "304 Not Modified"
-        response.body = []
-        if getattr(cherrypy, "debug", None):
-            cherrypy.log("    Found file (304 Not Modified): %s" % path, "DEBUG")
-        return []
+    # Set the Last-Modified response header, so that
+    # modified-since validation code can work.
+    response.headers['Last-Modified'] = httptools.HTTPDate(time.gmtime(stat.st_mtime))
+    cptools.validate_since()
     
     if disposition is not None:
         if name is None:

@@ -86,7 +86,7 @@ class CommandLineParser(object):
         self.port = 8080
         self.protocol = "HTTP/1.1"
         
-        longopts = ['cover', 'profile', '1.1', 'help', 'basedir=', 'port=',
+        longopts = ['cover', 'profile', '1.0', 'help', 'basedir=', 'port=',
                     'server=']
         longopts.extend(self.available_servers)
         longopts.extend(self.available_tests)
@@ -294,6 +294,7 @@ def run():
         'test_core',
         'test_tools',
         'test_decodingencoding',
+        'test_etags',
         'test_gzip',
         'test_objectmapping',
         'test_response_headers',

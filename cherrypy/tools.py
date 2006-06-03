@@ -227,9 +227,10 @@ response_headers = Tool('before_finalize', cptools.response_headers)
 # We can't call virtual_host in on_start_resource,
 # because it's failsafe and the redirect would be swallowed.
 virtual_host = Tool('before_request_body', cptools.virtual_host)
-log_tracebacks = Tool('before_error_response', cptools.log_traceback)
-log_headers = Tool('before_error_response', cptools.log_request_headers)
+log_tracebacks = Tool('before_error_response', cptools.log_traceback, 'log_tracebacks')
+log_headers = Tool('before_error_response', cptools.log_request_headers, 'log_headers')
 err_redirect = ErrorTool(cptools.redirect, 'err_redirect')
+etags = Tool('before_finalize', cptools.validate_etags, 'etags')
 del cptools
 
 from cherrypy.lib import encodings

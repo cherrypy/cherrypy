@@ -1,6 +1,7 @@
 """Tools which both CherryPy and application developers may invoke."""
 
 import inspect
+import md5
 import os
 import sys
 import time
@@ -177,7 +178,61 @@ def unrepr(s):
     return Builder().build(getObj(s))
 
 
-# Tool code
+#                     Conditional HTTP request support                     #
+
+def validate_etags(autotags=False):
+    """Validate the current ETag against If-Match, If-None-Match headers."""
+    # Guard against being run twice.
+    if hasattr(cherrypy.response, "ETag"):
+        return
+    
+    etag = cherrypy.response.headers.get('ETag')
+    
+    if (not etag) and autotags:
+        etag = '"%s"' % md5.new(cherrypy.response.collapse_body()).hexdigest()
+        cherrypy.response.headers['ETag'] = etag
+    
+    if etag:
+        cherrypy.response.ETag = etag
+        
+        status, reason, msg = httptools.validStatus(cherrypy.response.status)
+        
+        conditions = cherrypy.request.headers.elements('If-Match') or []
+        conditions = [str(x) for x in conditions]
+        if conditions and not (conditions == ["*"] or etag in conditions):
+            if (status >= 200 and status < 299) or status == 412:
+                raise cherrypy.HTTPError(412)
+        
+        conditions = cherrypy.request.headers.elements('If-None-Match') or []
+        conditions = [str(x) for x in conditions]
+        if conditions == ["*"] or etag in conditions:
+            if (status >= 200 and status < 299) or status == 304:
+                if cherrypy.request.method in ("GET", "HEAD"):
+                    raise cherrypy.HTTPRedirect([], 304)
+                else:
+                    raise cherrypy.HTTPError(412)
+
+def validate_since():
+    """Validate the current Last-Modified against If-Modified-Since headers."""
+    lastmod = cherrypy.response.headers.get('Last-Modified')
+    if lastmod:
+        status, reason, msg = httptools.validStatus(cherrypy.response.status)
+        
+        since = cherrypy.request.headers.get('If-Unmodified-Since')
+        if since and since != lastmod:
+            if (status >= 200 and status < 299) or status == 412:
+                raise cherrypy.HTTPError(412)
+        
+        since = cherrypy.request.headers.get('If-Modified-Since')
+        if since and since == lastmod:
+            if (status >= 200 and status < 299) or status == 304:
+                if cherrypy.request.method in ("GET", "HEAD"):
+                    raise cherrypy.HTTPRedirect([], 304)
+                else:
+                    raise cherrypy.HTTPError(412)
+
+
+#                                Tool code                                #
 
 def base_url(base=None, use_x_forwarded_host=True):
     """Change the base URL (scheme://host[:port]).
