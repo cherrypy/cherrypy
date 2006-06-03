@@ -6,8 +6,45 @@ import sys
 import types
 
 import cherrypy
-from cherrypy import _cputil, _cpcgifs, tools
-from cherrypy.lib import cptools, httptools, profiler
+from cherrypy import _cputil, _cpcgifs
+from cherrypy.lib import httptools, profiler
+
+
+class HookMap(object):
+    
+    def __init__(self, points=None, failsafe=None):
+        points = points or []
+        self.callbacks = dict([(point, []) for point in points])
+        self.failsafe = failsafe or []
+    
+    def attach(self, point, callback, conf=None):
+        if not conf:
+            # No point adding a wrapper if there's no conf
+            self.callbacks[point].append(callback)
+        else:
+            def wrapper():
+                callback(**conf)
+            self.callbacks[point].append(wrapper)
+    
+    def run(self, point, *args, **kwargs):
+        """Execute all registered callbacks for the given point."""
+        failsafe = point in self.failsafe
+        for callback in self.callbacks[point]:
+            # Some hookpoints guarantee all callbacks are run even if
+            # others at the same hookpoint fail. We will still log the
+            # failure, but proceed on to the next callback. The only way
+            # to stop all processing from one of these callbacks is
+            # to raise SystemExit and stop the whole server. So, trap
+            # your own errors in these callbacks!
+            if failsafe:
+                try:
+                    callback(*args, **kwargs)
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    cherrypy.log(traceback=True)
+            else:
+                callback(*args, **kwargs)
 
 
 class Request(object):
@@ -34,7 +71,7 @@ class Request(object):
                'before_main', 'before_finalize',
                'on_end_resource', 'on_end_request',
                'before_error_response', 'after_error_response']
-        self.hooks = tools.HookMap(pts)
+        self.hooks = HookMap(pts)
         self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
                                'on_end_request']
         self.redirections = []
@@ -125,7 +162,7 @@ class Request(object):
         try:
             try:
                 self.get_resource(path_info)
-                self.hooks.setup()
+                self.tool_up()
                 self.hooks.run('on_start_resource')
                 
                 if self.process_request_body:
@@ -220,6 +257,7 @@ class Request(object):
         self.base = "%s://%s" % (self.scheme, host)
     
     def get_resource(self, path):
+        """Find and call a dispatcher (which sets self.handler and .config)."""
         dispatch = _cputil.dispatch
         # First, see if there is a custom dispatch at this URI. Custom
         # dispatchers can only be specified in app.conf, not in _cp_config
@@ -249,7 +287,9 @@ class Request(object):
         
         # dispatch() should set self.handler and self.config
         dispatch(path)
-        
+    
+    def tool_up(self):
+        """Populate self.toolmap and set up each tool."""
         # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
         self.toolmap = {}
         for k, v in self.config.iteritems():
@@ -259,6 +299,12 @@ class Request(object):
                 toolname = atoms.pop(0)
                 bucket = self.toolmap.setdefault(toolname, {})
                 bucket[".".join(atoms)] = v
+        
+        # Run tool.setup(conf) for each tool in the new toolmap.
+        for toolname, conf in self.toolmap.iteritems():
+            if conf.get("on", False):
+                tool = getattr(cherrypy.tools, toolname)
+                tool.setup()
     
     def _get_browser_url(self):
         url = self.base + self.path
@@ -330,6 +376,15 @@ class Request(object):
         response.status, response.header_list, response.body = r
 
 
+def fileGenerator(input, chunkSize=65536):
+    """Yield the given input (a file object) in chunks (default 64k)."""
+    chunk = input.read(chunkSize)
+    while chunk:
+        yield chunk
+        chunk = input.read(chunkSize)
+    input.close()
+
+
 class Body(object):
     """The body of the HTTP response (the response entity)."""
     
@@ -343,7 +398,7 @@ class Body(object):
     def __set__(self, obj, value):
         # Convert the given value to an iterable object.
         if isinstance(value, types.FileType):
-            value = cptools.fileGenerator(value)
+            value = fileGenerator(value)
         elif isinstance(value, types.GeneratorType):
             value = flattener(value)
         elif isinstance(value, basestring):

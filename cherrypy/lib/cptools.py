@@ -57,15 +57,6 @@ class ExposeItems:
         return self.items[key]
 
 
-def fileGenerator(input, chunkSize=65536):
-    """Yield the given input (a file object) in chunks (default 64k)."""
-    chunk = input.read(chunkSize)
-    while chunk:
-        yield chunk
-        chunk = input.read(chunkSize)
-    input.close()
-
-
 def modules(modulePath):
     """Load a module and retrieve a reference to that module."""
     try:
