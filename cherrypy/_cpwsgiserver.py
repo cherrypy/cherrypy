@@ -4,7 +4,6 @@ import socket
 import threading
 import Queue
 import mimetools # todo: use email
-import os
 import sys
 import time
 import traceback
@@ -175,7 +174,6 @@ class HTTPRequest(object):
         self.rfile.close()
         self.wfile.close()
         self.socket.close()
-        self.socket = None
 
 
 _SHUTDOWNREQUEST = None
@@ -226,10 +224,6 @@ class CherryPyWSGIServer(object):
     interrupt = None
     RequestHandlerClass = HTTPRequest
     
-    # UNIX allows us to pass the socket file descriptor
-    # from one process to another via os.environ.
-    preserve_socket = hasattr(socket, "fromfd")
-    
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10):
         """Be careful w/ max"""
@@ -266,12 +260,6 @@ class CherryPyWSGIServer(object):
         
         def bind(family, type, proto=0):
             """Create (or recreate) the actual socket object."""
-            if self.preserve_socket:
-                socketfd = int(os.environ.get('CPWSGI_SOCKET', -1))
-                if socketfd >= 0:
-                    self.socket = socket.fromfd(socketfd, family, type, proto)
-                    return
-            
             self.socket = socket.socket(family, type, proto)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.bind(self.bind_addr)
@@ -351,15 +339,9 @@ class CherryPyWSGIServer(object):
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         self.ready = False
-        
         s = getattr(self, "socket", None)
-        if s:
-            if self.preserve_socket:
-                os.environ['CPWSGI_SOCKET'] = str(s.fileno())
-            else:
-                if hasattr(s, "close"):
-                    s.close()
-            self.socket = None
+        if s and hasattr(s, "close"):
+            s.close()
         
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
