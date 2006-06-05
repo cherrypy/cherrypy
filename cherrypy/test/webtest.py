@@ -368,8 +368,13 @@ def openURL(url, headers=None, method="GET", body=None,
             conn = http_conn(host, port)
             conn._http_vsn_str = protocol
             conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
-            conn.putrequest(method.upper(), url,
-                            skip_host=True, skip_accept_encoding=True)
+            
+            # skip_accept_encoding argument added in python version 2.4
+            if sys.version_info < (2, 4):
+                conn.putrequest(method.upper(), url, skip_host=True)
+            else:
+                conn.putrequest(method.upper(), url, skip_host=True,
+                                skip_accept_encoding=True)
             
             for key, value in headers:
                 conn.putheader(key, value)
