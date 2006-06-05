@@ -21,15 +21,15 @@ class HelloWorld:
     # publish methods that don't have the exposed attribute set to True.
     index.exposed = True
 
-# CherryPy always starts with app.root when trying to map request URIs
-# to objects, so we need to mount a request handler object here. A request
-# to '/' will be mapped to HelloWorld().index().
-cherrypy.tree.mount(HelloWorld())
 
 if __name__ == '__main__':
     import os.path
-    # Start the CherryPy server.
-    cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
-    cherrypy.server.start()
-    cherrypy.engine.start()
-
+    tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
+    cherrypy.config.update(tutconf)
+    # CherryPy always starts with app.root when trying to map request URIs
+    # to objects, so we need to mount a request handler root. A request
+    # to '/' will be mapped to HelloWorld().index().
+    cherrypy.quickstart(HelloWorld())
+else:
+    # This branch is for the test suite; you can ignore it.
+    cherrypy.tree.mount(HelloWorld())

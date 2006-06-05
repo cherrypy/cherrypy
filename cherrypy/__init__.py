@@ -170,3 +170,10 @@ def log(msg='', context='', severity=0, traceback=False):
     logfunc = config.get('log_function', _log_message)
     logfunc(msg, context, severity)
 
+
+def quickstart(root, script_name="", conf=None):
+    """Mount the given app, start the engine and builtin server, then block."""
+    tree.mount(root, script_name, conf)
+    server.start()
+    engine.start()
+
