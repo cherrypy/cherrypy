@@ -172,7 +172,9 @@ def setup_server():
 
     class Flatten(Test):
         
-        _cp_config = {'log_file': log_file, 'log_access_file': log_access_file,}
+        _cp_config = {'log_file': log_file,
+                      'log_access_file': log_access_file,
+                      }
         
         def as_string(self):
             return "content"
@@ -193,7 +195,9 @@ def setup_server():
 
     class Error(Test):
         
-        _cp_config = {'log_file': log_file, 'tools.log_tracebacks.on': True}
+        _cp_config = {'log_file': log_file,
+                      'tools.log_tracebacks.on': True,
+                      }
         
         def custom(self):
             raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")

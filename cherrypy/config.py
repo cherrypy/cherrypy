@@ -1,6 +1,7 @@
 """Configuration system for CherryPy."""
 
 import ConfigParser
+import os
 
 import cherrypy
 from cherrypy.lib import autoreload, cptools
@@ -53,7 +54,8 @@ default_conf = {
     'server.reverse_dns': False,
     'server.thread_pool': 10,
     'log_to_screen': True,
-    'log_file': '',
+    'log_file': os.path.join(os.getcwd(), os.path.dirname(__file__),
+                             "error.log"),
     'tools.log_tracebacks.on': True,
     'environment': "development",
     }
