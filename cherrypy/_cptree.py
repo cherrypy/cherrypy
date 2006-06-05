@@ -46,6 +46,15 @@ class Tree:
         script_name = script_name.rstrip("/")
         app = Application(root, script_name, conf)
         self.apps[script_name] = app
+        
+        # If mounted at "", add favicon.ico
+        if script_name == "" and root and not hasattr(root, "favicon_ico"):
+            import os
+            from cherrypy import tools
+            favicon = os.path.join(os.getcwd(), os.path.dirname(__file__),
+                                   "favicon.ico")
+            root.favicon_ico = tools.staticfile.handler(favicon)
+        
         return app
     
     def script_name(self, path=None):
