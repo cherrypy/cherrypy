@@ -71,22 +71,7 @@ class Server(object):
         if cherrypy.config.get('server.socket_port'):
             host = cherrypy.config.get('server.socket_host')
             port = cherrypy.config.get('server.socket_port')
-            if not host:
-                host = 'localhost'
-            
-            for trial in xrange(50):
-                if self.interrupt:
-                    break
-                try:
-                    check_port(host, port)
-                except IOError:
-                    break
-                else:
-                    time.sleep(.1)
-            else:
-                cherrypy.log("Port %s not bound on %s" %
-                             (repr(port), repr(host)), 'HTTP')
-                raise cherrypy.NotReady("Port not bound.")
+            wait_for_occupied_port(host, port)
     
     def stop(self):
         """Stop the HTTP server."""
