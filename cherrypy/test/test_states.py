@@ -54,8 +54,9 @@ class ServerStateTests(helper.CPWebCase):
     def test_0_NormalStateFlow(self):
         if not self.server_class:
             # Without having called "cherrypy.engine.start()", we should
-            # get a NotReady error
-            self.assertRaises(cherrypy.NotReady, self.getPage, "/")
+            # get a 503 Service Unavailable response.
+            self.getPage("/")
+            self.assertStatus(503)
         
         # And our db_connection should not be running
         self.assertEqual(db_connection.running, False)
@@ -90,10 +91,11 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(len(db_connection.threads), 0)
         
         if not self.server_class:
-            # Once the server has stopped, we should get a NotReady
+            # Once the engine has stopped, we should get a 503
             # error again. (If we were running an HTTP server,
             # then the connection should not even be processed).
-            self.assertRaises(cherrypy.NotReady, self.getPage, "/")
+            self.getPage("/")
+            self.assertStatus(503)
         
         # Block the main thread now and verify that stop() works.
         def stoptest():

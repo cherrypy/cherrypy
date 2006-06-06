@@ -124,8 +124,7 @@ class Engine(object):
         while not self.ready:
             time.sleep(.1)
             if self.interrupt:
-                msg = "The CherryPy application engine errored"
-                raise cherrypy.NotReady(msg, "ENGINE")
+                raise self.interrupt
     
     def _is_ready(self):
         return bool(self.state == STARTED)
@@ -142,25 +141,25 @@ class Engine(object):
         scheme: either "http" or "https"; defaults to "http"
         """
         if self.state == STOPPED:
-            raise cherrypy.NotReady("The CherryPy engine has stopped.")
+            r = NotReadyRequest("The CherryPy engine has stopped.")
         elif self.state == STARTING:
-            raise cherrypy.NotReady("The CherryPy engine could not start.")
-        
-        threadID = threading._get_ident()
-        if threadID not in self.seen_threads:
-            
-            if cherrypy.codecoverage:
-                from cherrypy.lib import covercp
-                covercp.start()
-            
-            i = len(self.seen_threads) + 1
-            self.seen_threads[threadID] = i
-            
-            for func in self.on_start_thread_list:
-                func(i)
-        
-        r = self.request_class(client_address[0], client_address[1],
-                               remote_host, scheme)
+            r = NotReadyRequest("The CherryPy engine could not start.")
+        else:
+            # Only run on_start_thread_list if the engine is running.
+            threadID = threading._get_ident()
+            if threadID not in self.seen_threads:
+                
+                if cherrypy.codecoverage:
+                    from cherrypy.lib import covercp
+                    covercp.start()
+                
+                i = len(self.seen_threads) + 1
+                self.seen_threads[threadID] = i
+                
+                for func in self.on_start_thread_list:
+                    func(i)
+            r = self.request_class(client_address[0], client_address[1],
+                                   remote_host, scheme)
         cherrypy.serving.request = r
         cherrypy.serving.response = self.response_class()
         return r
@@ -182,4 +181,16 @@ class Engine(object):
         t.start()
         
         self.start()
+
+
+class NotReadyRequest:
+    
+    def __init__(self, msg):
+        self.msg = msg
+    
+    def run(self, request_line, headers, rfile):
+        self.method = "GET"
+        cherrypy.HTTPError(503, self.msg).set_response()
+        cherrypy.response.finalize()
+        return cherrypy.response
 

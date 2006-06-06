@@ -138,8 +138,9 @@ def wait_for_free_port(host, port):
         else:
             return
     
-    cherrypy.log("Port %s not free on %s" % (repr(port), repr(host)), 'HTTP')
-    raise cherrypy.NotReady("Port not free.")
+    msg = "Port %s not free on %s" % (repr(port), repr(host))
+    cherrypy.log(msg, 'HTTP')
+    raise IOError(msg)
 
 def wait_for_occupied_port(host, port):
     """Wait for the specified port to become active (receive requests)."""
@@ -154,5 +155,6 @@ def wait_for_occupied_port(host, port):
         else:
             time.sleep(.1)
     
-    cherrypy.log("Port %s not bound on %s" % (repr(port), repr(host)), 'HTTP')
-    raise cherrypy.NotReady("Port not bound.")
+    msg = "Port %s not bound on %s" % (repr(port), repr(host))
+    cherrypy.log(msg, 'HTTP')
+    raise IOError(msg)

@@ -13,6 +13,10 @@ responseCodes = BaseHTTPRequestHandler.responses.copy()
 responseCodes[500] = ('Internal error',
                       'The server encountered an unexpected condition '
                       'which prevented it from fulfilling the request.')
+responseCodes[503] = ('Service Unavailable',
+                      'The server is currently unable to handle the '
+                      'request due to a temporary overloading or '
+                      'maintenance of the server.')
 
 
 import cgi

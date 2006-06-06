@@ -12,10 +12,6 @@ from cherrypy.lib import httptools
 class Error(Exception):
     pass
 
-class NotReady(Error):
-    """A request was made before the app server has been started."""
-    pass
-
 class WrongConfigValue(Error):
     """ Happens when a config value can't be parsed, or is otherwise illegal. """
     pass
