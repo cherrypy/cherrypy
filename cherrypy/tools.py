@@ -25,9 +25,6 @@ are generally either modules or instances of the tools.Tool class.
 """
 
 import cherrypy
-from cherrypy import _cputil
-
-
 
 
 class Tool(object):
