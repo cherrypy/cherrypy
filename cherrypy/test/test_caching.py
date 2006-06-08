@@ -35,6 +35,15 @@ class CacheTest(helper.CPWebCase):
             self.getPage("/")
             # The response should be the same every time!
             self.assertBody('visit #1')
+        
+        # POST, PUT, DELETE should not be cached.
+        self.getPage("/", method="POST")
+        self.assertBody('visit #2')
+        self.getPage("/", method="GET")
+        self.assertBody('visit #2')
+        self.getPage("/", method="DELETE")
+        self.assertBody('visit #3')
+
 
 if __name__ == '__main__':
     setup_server()
