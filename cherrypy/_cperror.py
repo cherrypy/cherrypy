@@ -31,6 +31,12 @@ class InternalRedirect(Exception):
         import cherrypy
         request = cherrypy.request
         
+        # Note that urljoin will "do the right thing" whether url is:
+        #  1. a URL relative to root (e.g. "/dummy")
+        #  2. a URL relative to the current path
+        # Note that any querystring will be discarded.
+        path = urlparse.urljoin(cherrypy.request.path_info, path)
+        
         # Set a 'path' member attribute so that code which traps this
         # error can have access to it.
         self.path = path
