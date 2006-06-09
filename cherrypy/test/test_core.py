@@ -161,9 +161,9 @@ def setup_server():
             else:
                 raise cherrypy.InternalRedirect('/image/getImagesByUser')
         
-        @tools.login_redir.wrap()
         def secure(self):
             return "Welcome!"
+        secure = tools.login_redir.wrap()(secure)
         
         def login(self):
             return "Please log in"
