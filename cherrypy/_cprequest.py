@@ -91,7 +91,7 @@ class Request(object):
         
         When run() is done, the returned object should have 3 attributes:
           status, e.g. "200 OK"
-          headers, a list of (name, value) tuples
+          header_list, a list of (name, value) tuples
           body, an iterable yielding strings
         
         Consumer code (HTTP servers) should then access these response

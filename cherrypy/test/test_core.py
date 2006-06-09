@@ -153,12 +153,11 @@ def setup_server():
         def petshop(self, user_id):
             if user_id == "parrot":
                 # Trade it for a slug when redirecting
-                raise cherrypy.InternalRedirect('/image/getImagesByUser',
-                                               "user_id=slug")
+                raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=slug')
             elif user_id == "terrier":
                 # Trade it for a fish when redirecting
-                raise cherrypy.InternalRedirect('/image/getImagesByUser',
-                                               {"user_id": "fish"})
+                cherrypy.request.params = {"user_id": "fish"}
+                raise cherrypy.InternalRedirect('/image/getImagesByUser')
             else:
                 raise cherrypy.InternalRedirect('/image/getImagesByUser')
         

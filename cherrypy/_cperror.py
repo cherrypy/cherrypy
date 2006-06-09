@@ -3,7 +3,6 @@
 import cgi
 import sys
 import traceback
-import urllib
 import urlparse
 
 from cherrypy.lib import httptools
@@ -19,17 +18,20 @@ class WrongConfigValue(Error):
 class InternalRedirect(Exception):
     """Exception raised when processing should be handled by a different path.
     
-    If you supply 'params', it will be used to re-populate params.
-    If 'params' is a dict, it will be used directly.
-    If 'params' is a string, it will be converted to a dict using cgi.parse_qs.
-    
-    If you omit 'params', the params from the original request will
-    remain in effect, including any POST parameters.
+    If you supply a query string, it will be replace request.params.
+    If you omit the query string, the params from the original request will
+    remain in effect.
     """
     
-    def __init__(self, path, params=None):
+    def __init__(self, path):
         import cherrypy
         request = cherrypy.request
+        
+        if "?" in path:
+            # Pop any params included in the path
+            path, pm = path.split("?", 1)
+            request.query_string = pm
+            request.params = httptools.parseQueryString(pm)
         
         # Note that urljoin will "do the right thing" whether url is:
         #  1. a URL relative to root (e.g. "/dummy")
@@ -41,19 +43,7 @@ class InternalRedirect(Exception):
         # error can have access to it.
         self.path = path
         
-        if params is not None:
-            if isinstance(params, basestring):
-                request.query_string = params
-                pm = cgi.parse_qs(params, keep_blank_values=True)
-                for key, val in pm.items():
-                    if len(val) == 1:
-                        pm[key] = val[0]
-                request.params = pm
-            else:
-                request.query_string = urllib.urlencode(params)
-                request.params = params.copy()
-        
-        Exception.__init__(self, path, params)
+        Exception.__init__(self, path)
 
 
 
