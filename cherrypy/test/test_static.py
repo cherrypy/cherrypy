@@ -6,7 +6,6 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import threading
 
 import cherrypy
-from cherrypy.lib import cptools
 
 
 def setup_server():

@@ -7,7 +7,7 @@ import time
 
 import cherrypy
 from cherrypy import _cprequest
-from cherrypy.lib import autoreload, cptools
+from cherrypy.lib import autoreload
 
 # Use a flag to indicate the state of the application engine.
 STOPPED = 0

@@ -2,7 +2,6 @@ import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy.lib import cptools
 
 
 def setup_server():
