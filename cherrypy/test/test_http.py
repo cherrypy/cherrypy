@@ -12,7 +12,7 @@ import gc
 import httplib
 import threading
 import cherrypy
-from cherrypy import _cphttptools
+from cherrypy import _cprequest
 
 
 data = object()
@@ -30,8 +30,8 @@ def setup_server():
         
         def gc_stats(self):
             return "%s %s %s %s" % (gc.collect(),
-                                    len(get_instances(_cphttptools.Request)),
-                                    len(get_instances(_cphttptools.Response)),
+                                    len(get_instances(_cprequest.Request)),
+                                    len(get_instances(_cprequest.Response)),
                                     len(gc.get_referrers(data)))
         gc_stats.exposed = True
     cherrypy.tree.mount(Root())
