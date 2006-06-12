@@ -6,7 +6,7 @@ import sys
 import types
 
 import cherrypy
-from cherrypy import _cputil, _cpcgifs
+from cherrypy import _cpcgifs
 from cherrypy.lib import httptools, profiler
 
 
