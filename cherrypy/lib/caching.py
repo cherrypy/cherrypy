@@ -154,7 +154,7 @@ def enable(**kwargs):
         if not hasattr(f, "_cp_config"):
             f._cp_config = {}
         f._cp_config["tools.caching.on"] = True
-        for k, v in kwargs:
+        for k, v in kwargs.iteritems():
             f._cp_config["tools.caching." + k] = v
         return f
     return wrapper
