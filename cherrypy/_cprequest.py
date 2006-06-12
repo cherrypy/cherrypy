@@ -67,14 +67,6 @@ class Request(object):
         self.scheme = scheme
         
         self.closed = False
-        
-        pts = ['on_start_resource', 'before_request_body',
-               'before_main', 'before_finalize',
-               'on_end_resource', 'on_end_request',
-               'before_error_response', 'after_error_response']
-        self.hooks = HookMap(pts)
-        self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
-                               'on_end_request']
         self.redirections = []
     
     def close(self):
@@ -150,6 +142,10 @@ class Request(object):
                     break
                 except cherrypy.InternalRedirect, ir:
                     pi = ir.path
+                    if (pi in self.redirections and
+                        not cherrypy.config.get("recursive_redirect")):
+                        raise RuntimeError("InternalRedirect visited the "
+                                           "same URL twice: %s" % repr(pi))
                     self.redirections.append(pi)
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -162,6 +158,14 @@ class Request(object):
         """Generate a response for the resource at self.path_info."""
         try:
             try:
+                pts = ['on_start_resource', 'before_request_body',
+                       'before_main', 'before_finalize',
+                       'on_end_resource', 'on_end_request',
+                       'before_error_response', 'after_error_response']
+                self.hooks = HookMap(pts)
+                self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
+                                       'on_end_request']
+                
                 self.get_resource(path_info)
                 self.tool_up()
                 self.hooks.run('on_start_resource')

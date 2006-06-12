@@ -3,16 +3,15 @@ test.prefer_parent_path()
 
 import cherrypy
 from cherrypy import tools
-headers = tools.response_headers.wrap
 
 
 def setup_server():
     class Root:
         def index(self):
             yield "Hello, world"
-        index = headers([("Content-Language", "en-GB"),
-                         ('Content-Type', 'text/plain')])(index)
         index.exposed = True
+        h = [("Content-Language", "en-GB"), ('Content-Type', 'text/plain')]
+        tools.response_headers.enable(headers=h)(index)
         
         def other(self):
             return "salut"

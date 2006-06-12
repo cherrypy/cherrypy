@@ -161,10 +161,13 @@ def setup_server():
                 raise cherrypy.InternalRedirect('/image/getImagesByUser')
         
         # We support Python 2.3, but the @-deco syntax would look like this:
-        # @tools.login_redir.wrap()
+        # @tools.login_redir.enable()
         def secure(self):
             return "Welcome!"
-        secure = tools.login_redir.wrap()(secure)
+        secure = tools.login_redir.enable()(secure)
+        # Since enable returns the same function you pass in,
+        # you could skip binding the return value, and just write:
+        # tools.login_redir.enable()(secure)
         
         def login(self):
             return "Please log in"
@@ -324,7 +327,7 @@ def setup_server():
         def index(self):
             yield "<h1>Choose your document</h1>\n"
             yield "<ul>\n"
-            for id, contents in self.documents:
+            for id, contents in self.documents.iteritems():
                 yield ("    <li><a href='/divorce/get?ID=%s'>%s</a>: %s</li>\n"
                        % (id, id, contents))
             yield "</ul>"

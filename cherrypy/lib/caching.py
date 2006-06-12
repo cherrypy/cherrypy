@@ -148,14 +148,15 @@ def tee_output():
 
 # CherryPy interfaces. Pick one.
 
-def wrap(f):
-    """Caching decorator."""
-    def wrapper(*a, **kw):
-        # There's are no parameters to get(), so there's no need
-        # to merge values from config.
-        if not get():
-            f(*a, **kw)
-            tee_output()
+def enable(**kwargs):
+    """Compile-time decorator (turn on the tool in config)."""
+    def wrapper(f):
+        if not hasattr(f, "_cp_config"):
+            f._cp_config = {}
+        f._cp_config["tools.caching.on"] = True
+        for k, v in kwargs:
+            f._cp_config["tools.caching." + k] = v
+        return f
     return wrapper
 
 def setup():

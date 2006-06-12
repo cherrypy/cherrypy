@@ -7,11 +7,11 @@ may only offer one if they choose):
         The arguments are straightforward and should be detailed within the
         docstring.
     
-    Function decorators: if the tool exposes a "wrap" callable, that is
-        assumed to be a decorator for use in wrapping individual CherryPy
-        page handlers (methods on the CherryPy tree). The tool may choose
-        not to call the page handler at all, if the response has already
-        been populated.
+    Function decorators:
+        If the tool exposes an "enable" callable, that is assumed to be a
+        compile-time decorator for use in configuring individual CherryPy
+        page handlers (methods on the CherryPy tree). It should "turn on"
+        the tool in the decorated function's _cp_config attribute.
     
     CherryPy hooks: "hooks" are points in the CherryPy request-handling
         process which may hand off control to registered callbacks. The
@@ -28,7 +28,10 @@ import cherrypy
 
 
 class Tool(object):
-    """A registered function for use with CherryPy request-processing hooks."""
+    """A registered function for use with CherryPy request-processing hooks.
+    
+    help(tool.callable) should give you more information about this Tool.
+    """
     
     def __init__(self, point, callable, name=None):
         self.point = point
@@ -47,23 +50,6 @@ class Tool(object):
             del conf["on"]
         return conf
     
-    def wrap(self, *args, **kwargs):
-        """Call-time decorator (wrap the handler with pre and post logic).
-        
-        For example:
-        
-            @tools.decode.wrap(encoding='chinese')
-            def mandarin(self, name):
-                return "%s, ni hao shi jie" % name
-            mandarin.exposed = True
-        """
-        def deco(f):
-            def wrapper(*a, **kw):
-                self.callable(*args, **self.merged_args(kwargs))
-                return f(*a, **kw)
-            return wrapper
-        return deco
-    
     def enable(self, **kwargs):
         """Compile-time decorator (turn on the tool in config).
         
@@ -78,7 +64,7 @@ class Tool(object):
             if not hasattr(f, "_cp_config"):
                 f._cp_config = {}
             f._cp_config["tools." + self.name + ".on"] = True
-            for k, v in kwargs:
+            for k, v in kwargs.iteritems():
                 f._cp_config["tools." + self.name + "." + k] = v
             return f
         return wrapper
@@ -118,26 +104,6 @@ class MainTool(Tool):
             return cherrypy.response.body
         wrapper.exposed = True
         return wrapper
-    
-    def wrap(self, *args, **kwargs):
-        """Make a decorator for this tool.
-        
-        For example:
-        
-            @tools.staticdir.wrap(section="/slides", dir="styles", root=absDir)
-            def slides(self, slide=None, style=None):
-                return "No such file"
-            slides.exposed = True
-        """
-        def deco(f):
-            def wrapper(*a, **kw):
-                handled = self.callable(*args, **self.merged_args(kwargs))
-                if handled:
-                    return cherrypy.response.body
-                else:
-                    return f(*a, **kw)
-            return wrapper
-        return deco
     
     def setup(self):
         """Hook this tool into cherrypy.request.
@@ -191,28 +157,7 @@ class SessionTool(Tool):
     def __init__(self):
         self.point = "before_finalize"
         self.callable = _sessions.save
-        self.name = "sessions"
-    
-    def wrap(self, **kwargs):
-        """Make a decorator for this tool."""
-        def deco(f):
-            def wrapper(*a, **kw):
-                conf = cherrypy.request.toolmap.get(self.name, {}).copy()
-                conf.update(kwargs)
-                
-                s = cherrypy.request._session = _sessions.Session()
-                for k, v in conf.iteritems():
-                    setattr(s, str(k), v)
-                s.init()
-                if not hasattr(cherrypy, "session"):
-                    cherrypy.session = _sessions.SessionWrapper()
-                
-                result = f(*a, **kw)
-                _sessions.save()
-                cherrypy.request.hooks.attach('on_end_request', _sessions.cleanup)
-                return result
-            return wrapper
-        return deco
+        self.name = None
     
     def setup(self):
         """Hook this tool into cherrypy.request using the given conf.
