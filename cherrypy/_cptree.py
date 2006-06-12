@@ -92,6 +92,6 @@ class Tree:
             if script_name is None:
                 return path
         
-        from cherrypy.lib import httptools
-        return httptools.urljoin(script_name, path)
+        from cherrypy.lib import http
+        return http.urljoin(script_name, path)
 

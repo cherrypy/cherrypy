@@ -4,7 +4,7 @@ import sys
 import cherrypy
 from cherrypy import _cpwsgiserver
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import httptools
+from cherrypy.lib import http
 
 
 def request_line(environ):
@@ -138,12 +138,12 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
         mhs = int(cherrypy.config.get('server.max_request_header_size',
                                       500 * 1024))
         if mhs > 0:
-            self.rfile = httptools.SizeCheckWrapper(self.rfile, mhs)
+            self.rfile = http.SizeCheckWrapper(self.rfile, mhs)
     
     def parse_request(self):
         try:
             _cpwsgiserver.HTTPRequest.parse_request(self)
-        except httptools.MaxSizeExceeded:
+        except http.MaxSizeExceeded:
             msg = "Request Entity Too Large"
             proto = self.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
             self.wfile.write("%s 413 %s\r\n" % (proto, msg))
@@ -162,7 +162,7 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
                 if path == "*":
                     path = "global"
                 
-                if isinstance(self.rfile, httptools.SizeCheckWrapper):
+                if isinstance(self.rfile, http.SizeCheckWrapper):
                     # Unwrap the rfile
                     self.rfile = self.rfile.rfile
                 self.environ["wsgi.input"] = self.rfile

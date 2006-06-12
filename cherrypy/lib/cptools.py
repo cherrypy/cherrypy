@@ -1,122 +1,7 @@
-"""Tools which CherryPy may invoke."""
-
-import md5
-import sys
+"""Functions for builtin CherryPy tools."""
 
 import cherrypy
-import httptools
-
-
-def modules(modulePath):
-    """Load a module and retrieve a reference to that module."""
-    try:
-        mod = sys.modules[modulePath]
-        if mod is None:
-            raise KeyError()
-    except KeyError:
-        # The last [''] is important.
-        mod = __import__(modulePath, globals(), locals(), [''])
-    return mod
-
-def attributes(fullAttributeName):
-    """Load a module and retrieve an attribute of that module."""
-    
-    # Parse out the path, module, and attribute
-    lastDot = fullAttributeName.rfind(u".")
-    attrName = fullAttributeName[lastDot + 1:]
-    modPath = fullAttributeName[:lastDot]
-    
-    aMod = modules(modPath)
-    # Let an AttributeError propagate outward.
-    try:
-        attr = getattr(aMod, attrName)
-    except AttributeError:
-        raise AttributeError("'%s' object has no attribute '%s'"
-                             % (modPath, attrName))
-    
-    # Return a reference to the attribute.
-    return attr
-
-
-# public domain "unrepr" implementation, found on the web and then improved.
-import compiler
-
-def getObj(s):
-    s = "a=" + s
-    p = compiler.parse(s)
-    return p.getChildren()[1].getChildren()[0].getChildren()[1]
-
-
-class UnknownType(Exception):
-    pass
-
-
-class Builder:
-    
-    def build(self, o):
-        m = getattr(self, 'build_' + o.__class__.__name__, None)
-        if m is None:
-            raise UnknownType(o.__class__.__name__)
-        return m(o)
-    
-    def build_CallFunc(self, o):
-        callee, args, starargs, kwargs = map(self.build, o.getChildren())
-        return callee(args, *(starargs or ()), **(kwargs or {}))
-    
-    def build_List(self, o):
-        return map(self.build, o.getChildren())
-    
-    def build_Const(self, o):
-        return o.value
-    
-    def build_Dict(self, o):
-        d = {}
-        i = iter(map(self.build, o.getChildren()))
-        for el in i:
-            d[el] = i.next()
-        return d
-    
-    def build_Tuple(self, o):
-        return tuple(self.build_List(o))
-    
-    def build_Name(self, o):
-        if o.name == 'None':
-            return None
-        if o.name == 'True':
-            return True
-        if o.name == 'False':
-            return False
-        
-        # See if the Name is a package or module
-        try:
-            return modules(o.name)
-        except ImportError:
-            pass
-        
-        raise UnknownType(o.name)
-    
-    def build_Add(self, o):
-        real, imag = map(self.build_Const, o.getChildren())
-        try:
-            real = float(real)
-        except TypeError:
-            raise UnknownType('Add')
-        if not isinstance(imag, complex) or imag.real != 0.0:
-            raise UnknownType('Add')
-        return real+imag
-    
-    def build_Getattr(self, o):
-        parent = self.build(o.expr)
-        return getattr(parent, o.attrname)
-    
-    def build_NoneType(self, o):
-        return None
-
-
-def unrepr(s):
-    if not s:
-        return s
-    return Builder().build(getObj(s))
+import http as _http
 
 
 #                     Conditional HTTP request support                     #
@@ -130,13 +15,14 @@ def validate_etags(autotags=False):
     etag = cherrypy.response.headers.get('ETag')
     
     if (not etag) and autotags:
+        import md5
         etag = '"%s"' % md5.new(cherrypy.response.collapse_body()).hexdigest()
         cherrypy.response.headers['ETag'] = etag
     
     if etag:
         cherrypy.response.ETag = etag
         
-        status, reason, msg = httptools.validStatus(cherrypy.response.status)
+        status, reason, msg = _http.validStatus(cherrypy.response.status)
         
         conditions = cherrypy.request.headers.elements('If-Match') or []
         conditions = [str(x) for x in conditions]
@@ -157,7 +43,7 @@ def validate_since():
     """Validate the current Last-Modified against If-Modified-Since headers."""
     lastmod = cherrypy.response.headers.get('Last-Modified')
     if lastmod:
-        status, reason, msg = httptools.validStatus(cherrypy.response.status)
+        status, reason, msg = _http.validStatus(cherrypy.response.status)
         
         since = cherrypy.request.headers.get('If-Unmodified-Since')
         if since and since != lastmod:
@@ -220,6 +106,7 @@ Message: %(error_msg)s
 def session_auth(check_login_and_password=None, not_logged_in=None,
                  load_user_by_username=None, session_key='username',
                  on_login=None, on_logout=None, login_screen=None):
+    """Assert that the user is logged in."""
     
     if login_screen is None:
         login_screen = _login_screen
@@ -310,7 +197,7 @@ def virtual_host(use_x_forwarded_host=True, **domains):
     
     cherrypy.request.virtual_prefix = prefix = domains.get(domain, "")
     if prefix:
-        raise cherrypy.InternalRedirect(httptools.urljoin(prefix, cherrypy.request.path_info))
+        raise cherrypy.InternalRedirect(_http.urljoin(prefix, cherrypy.request.path_info))
 
 def log_traceback():
     """Write the last error's traceback to the cherrypy error log."""
@@ -318,7 +205,7 @@ def log_traceback():
     cherrypy.log(_cperror.format_exc(), "HTTP")
 
 def log_request_headers():
-    """Write the last error's traceback to the cherrypy error log."""
+    """Write request headers to the cherrypy error log."""
     h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.header_list]
     cherrypy.log('\nRequest Headers:\n' + '\n'.join(h), "HTTP")
 

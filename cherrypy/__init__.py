@@ -79,8 +79,8 @@ thread_data = _local()
 def logtime():
     import datetime
     now = datetime.datetime.now()
-    from cherrypy.lib import httptools
-    month = httptools.monthname[now.month][:3].capitalize()
+    from cherrypy.lib import http
+    month = http.monthname[now.month][:3].capitalize()
     return '%02d/%s/%04d:%02d:%02d:%02d' % (
         now.day, month, now.year, now.hour, now.minute, now.second)
 

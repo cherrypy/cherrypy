@@ -8,7 +8,7 @@ import types
 import cherrypy
 from cherrypy import _cpcgifs
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import httptools, profiler
+from cherrypy.lib import http, profiler
 
 
 class HookMap(object):
@@ -104,7 +104,7 @@ class Request(object):
         self.request_line = request_line.strip()
         self.header_list = list(headers)
         self.rfile = rfile
-        self.headers = httptools.HeaderMap()
+        self.headers = http.HeaderMap()
         self.simple_cookie = Cookie.SimpleCookie()
         self.handler = None
         
@@ -171,7 +171,7 @@ class Request(object):
                     mbs = int(self.config.get('server.max_request_body_size',
                                               100 * 1024 * 1024))
                     if mbs > 0:
-                        self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
+                        self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
                 
                 self.hooks.run('before_request_body')
                 if self.process_request_body:
@@ -194,7 +194,7 @@ class Request(object):
     def process_request_line(self):
         """Parse the first line (e.g. "GET /path HTTP/1.1") of the request."""
         rl = self.request_line
-        method, path, qs, proto = httptools.parse_request_line(rl)
+        method, path, qs, proto = http.parse_request_line(rl)
         if path == "*":
             path = "global"
         
@@ -220,16 +220,16 @@ class Request(object):
         # only return 505 if the _major_ version is different.
         
         # cherrypy.request.version == request.protocol in a Version instance.
-        self.version = httptools.version_from_http(self.protocol)
+        self.version = http.version_from_http(self.protocol)
         
         # cherrypy.response.version should be used to determine whether or
         # not to include a given HTTP/1.1 feature in the response content.
         server_v = cherrypy.config.get('server.protocol_version', 'HTTP/1.0')
-        server_v = httptools.version_from_http(server_v)
+        server_v = http.version_from_http(server_v)
         cherrypy.response.version = min(self.version, server_v)
     
     def process_headers(self):
-        self.params = httptools.parseQueryString(self.query_string)
+        self.params = http.parseQueryString(self.query_string)
         
         # Process the headers into self.headers
         for name, value in self.header_list:
@@ -329,7 +329,7 @@ class Request(object):
                                           headers=lowerHeaderMap,
                                           environ=methenv,
                                           keep_blank_values=1)
-        except httptools.MaxSizeExceeded:
+        except http.MaxSizeExceeded:
             # Post data is too big
             raise cherrypy.HTTPError(413)
         
@@ -337,7 +337,7 @@ class Request(object):
             # request body was a content-type other than form params.
             self.body = forms.file
         else:
-            self.params.update(httptools.paramsFromCGIForm(forms))
+            self.params.update(http.paramsFromCGIForm(forms))
     
     def handle_error(self, exc):
         response = cherrypy.response
@@ -538,12 +538,12 @@ class Response(object):
         self.header_list = None
         self.body = None
         
-        self.headers = httptools.HeaderMap()
+        self.headers = http.HeaderMap()
         content_type = cherrypy.config.get('default_content_type', 'text/html')
         self.headers.update({
             "Content-Type": content_type,
             "Server": "CherryPy/" + cherrypy.__version__,
-            "Date": httptools.HTTPDate(),
+            "Date": http.HTTPDate(),
             "Set-Cookie": [],
             "Content-Length": None
         })
@@ -558,7 +558,7 @@ class Response(object):
         """Transform headers (and cookies) into cherrypy.response.header_list."""
         
         try:
-            code, reason, _ = httptools.validStatus(self.status)
+            code, reason, _ = http.validStatus(self.status)
         except ValueError, x:
             raise cherrypy.HTTPError(500, x.args[0])
         

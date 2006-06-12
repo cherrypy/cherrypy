@@ -4,7 +4,7 @@ import threading
 import time
 
 import cherrypy
-from cherrypy.lib import cptools
+from cherrypy.lib import attributes
 
 
 class Server(object):
@@ -23,7 +23,7 @@ class Server(object):
             import _cpwsgi
             server = _cpwsgi.WSGIServer()
         if isinstance(server, basestring):
-            server = cptools.attributes(server)()
+            server = attributes(server)()
         self.httpserver = server
         
         if conf('server.socket_port'):

@@ -3,7 +3,7 @@
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from urlparse import urljoin as _urljoin
-from cherrypy.lib import httptools as _httptools
+from cherrypy.lib import http as _http
 
 
 class WrongConfigValue(Exception):
@@ -26,7 +26,7 @@ class InternalRedirect(Exception):
             # Pop any params included in the path
             path, pm = path.split("?", 1)
             request.query_string = pm
-            request.params = _httptools.parseQueryString(pm)
+            request.params = _http.parseQueryString(pm)
         
         # Note that urljoin will "do the right thing" whether url is:
         #  1. a URL relative to root (e.g. "/dummy")
@@ -224,7 +224,7 @@ def get_error_page(status, **kwargs):
     import cherrypy
     
     try:
-        code, reason, message = _httptools.validStatus(status)
+        code, reason, message = _http.validStatus(status)
     except ValueError, x:
         raise cherrypy.HTTPError(500, x.args[0])
     

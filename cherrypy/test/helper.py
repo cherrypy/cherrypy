@@ -23,7 +23,7 @@ import sys
 import thread
 
 import cherrypy
-from cherrypy.lib import httptools
+from cherrypy.lib import http
 import webtest
 
 
@@ -43,7 +43,7 @@ class CPWebCase(webtest.WebCase):
     def getPage(self, url, headers=None, method="GET", body=None, protocol="HTTP/1.1"):
         """Open the url. Return status, headers, body."""
         if self.script_name:
-            url = httptools.urljoin(self.script_name, url)
+            url = http.urljoin(self.script_name, url)
         webtest.WebCase.getPage(self, url, headers, method, body, protocol)
     
     def assertErrorPage(self, status, message=None, pattern=''):

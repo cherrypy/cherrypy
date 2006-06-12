@@ -10,7 +10,7 @@ import time
 import urllib
 
 import cherrypy
-from cherrypy.lib import cptools, httptools
+from cherrypy.lib import cptools, http
 
 
 def serve_file(path, contentType=None, disposition=None, name=None):
@@ -57,7 +57,7 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     
     # Set the Last-Modified response header, so that
     # modified-since validation code can work.
-    response.headers['Last-Modified'] = httptools.HTTPDate(time.gmtime(stat.st_mtime))
+    response.headers['Last-Modified'] = http.HTTPDate(time.gmtime(stat.st_mtime))
     cptools.validate_since()
     
     if disposition is not None:
@@ -76,7 +76,7 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
     if cherrypy.response.version >= (1, 1):
         response.headers["Accept-Ranges"] = "bytes"
-        r = httptools.getRanges(cherrypy.request.headers.get('Range'), c_len)
+        r = http.getRanges(cherrypy.request.headers.get('Range'), c_len)
         if r == []:
             response.headers['Content-Range'] = "bytes */%s" % c_len
             message = "Invalid Range (first-byte-pos greater than Content-Length)"

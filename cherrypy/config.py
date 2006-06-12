@@ -4,7 +4,7 @@ import ConfigParser
 import os
 
 import cherrypy
-from cherrypy.lib import autoreload, cptools
+from cherrypy.lib import autoreload, unrepr
 
 environments = {
     "development": {
@@ -138,7 +138,7 @@ def dict_from_config_file(config_file, raw=False, vars=None):
         for option in configParser.options(section):
             value = configParser.get(section, option, raw, vars)
             try:
-                value = cptools.unrepr(value)
+                value = unrepr(value)
             except Exception, x:
                 msg = ("section: %s, option: %s, value: %s" %
                        (repr(section), repr(option), repr(value)))

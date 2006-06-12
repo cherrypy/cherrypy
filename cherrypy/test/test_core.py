@@ -5,7 +5,7 @@ test.prefer_parent_path()
 
 import cherrypy
 from cherrypy import _cptools, tools
-from cherrypy.lib import httptools, static
+from cherrypy.lib import http, static
 import types
 
 import os
@@ -244,7 +244,7 @@ def setup_server():
         
         def get_ranges(self):
             h = cherrypy.request.headers.get('Range')
-            return repr(httptools.getRanges(h, 8))
+            return repr(http.getRanges(h, 8))
         
         def slice_file(self):
             path = os.path.join(os.getcwd(), os.path.dirname(__file__))
