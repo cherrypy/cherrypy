@@ -75,9 +75,11 @@ def setup_server():
         euro.exposed = True
         
         # METHOD FOUR: decorator using Tool.enable
-        @tools.base_url.enable()
+        # We support Python 2.3, but the @-deco syntax would look like this:
+        # @tools.base_url.enable()
         def base(self):
             return cherrypy.request.base
+        base = tools.base_url.enable()(base)
         base.exposed = True
     
     root = Root()
@@ -117,6 +119,8 @@ def setup_server():
             yield "confidential"
         
         # METHOD TWO: decorator using Tool.wrap
+        # We support Python 2.3, but the @-deco syntax would look like this:
+        # @tools.check_access.wrap()
         def restricted(self):
             return "Welcome!"
         restricted = tools.check_access.wrap()(restricted)

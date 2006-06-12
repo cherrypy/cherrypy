@@ -133,7 +133,6 @@ def setup_server():
         def stringify(self):
             return str(cherrypy.HTTPRedirect("/"))
     
-    
     def login_redir():
         if not getattr(cherrypy.request, "login", None):
             raise cherrypy.InternalRedirect("/internalredirect/login")
@@ -161,6 +160,8 @@ def setup_server():
             else:
                 raise cherrypy.InternalRedirect('/image/getImagesByUser')
         
+        # We support Python 2.3, but the @-deco syntax would look like this:
+        # @tools.login_redir.wrap()
         def secure(self):
             return "Welcome!"
         secure = tools.login_redir.wrap()(secure)
