@@ -4,7 +4,7 @@ import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy import tools
+from cherrypy import _cptools, tools
 from cherrypy.lib import httptools, static
 import types
 
@@ -137,7 +137,7 @@ def setup_server():
     def login_redir():
         if not getattr(cherrypy.request, "login", None):
             raise cherrypy.InternalRedirect("/internalredirect/login")
-    tools.login_redir = tools.Tool('before_main', login_redir)
+    tools.login_redir = _cptools.Tool('before_main', login_redir)
     
     class InternalRedirect(Test):
         

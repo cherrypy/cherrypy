@@ -1,60 +1,10 @@
-"""Tools which both CherryPy and application developers may invoke."""
+"""Tools which CherryPy may invoke."""
 
-import inspect
 import md5
-import os
 import sys
-import time
 
 import cherrypy
 import httptools
-
-
-def decorate(func, decorator):
-    """
-    Return the decorated func. This will automatically copy all
-    non-standard attributes (like exposed) to the newly decorated function.
-    """
-    newfunc = decorator(func)
-    for (k,v) in inspect.getmembers(func):
-        if not hasattr(newfunc, k):
-            setattr(newfunc, k, v)
-    return newfunc
-
-def decorateAll(obj, decorator):
-    """
-    Recursively decorate all exposed functions of obj and all of its children,
-    grandchildren, etc. If you used to use aspects, you might want to look
-    into these. This function modifies obj; there is no return value.
-    """
-    obj_type = type(obj)
-    for (k,v) in inspect.getmembers(obj):
-        if hasattr(obj_type, k): # only deal with user-defined attributes
-            continue
-        if callable(v) and getattr(v, "exposed", False):
-            setattr(obj, k, decorate(v, decorator))
-        decorateAll(v, decorator)
-
-
-class ExposeItems:
-    """
-    Utility class that exposes a getitem-aware object. It does not provide
-    index() or default() methods, and it does not expose the individual item
-    objects - just the list or dict that contains them. User-specific index()
-    and default() methods can be implemented by inheriting from this class.
-    
-    Use case:
-    
-    from cherrypy.lib.cptools import ExposeItems
-    ...
-    root.foo = ExposeItems(mylist)
-    root.bar = ExposeItems(mydict)
-    """
-    exposed = True
-    def __init__(self, items):
-        self.items = items
-    def __getattr__(self, key):
-        return self.items[key]
 
 
 def modules(modulePath):

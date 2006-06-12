@@ -2,36 +2,38 @@
 
 __version__ = '3.0.0alpha'
 
-import cgi
-import datetime
-import sys
-import traceback
-import types
 
 from _cperror import *
 import config
-import tools
+
+import _cptools
+tools = _cptools.default_toolbox
 
 import _cptree
 tree = _cptree.Tree()
-
 import _cpengine
 engine = _cpengine.Engine()
 import _cpserver
 server = _cpserver.Server()
 
+def quickstart(root, script_name="", conf=None):
+    """Mount the given app, start the engine and builtin server, then block."""
+    tree.mount(root, script_name, conf)
+    server.start()
+    engine.start()
+
 codecoverage = False
 
 try:
-    from threading import local
+    from threading import local as _local
 except ImportError:
-    from cherrypy._cpthreadinglocal import local
+    from cherrypy._cpthreadinglocal import local as _local
 
 # Create a threadlocal object to hold the request, response, and other
 # objects. In this way, we can easily dump those objects when we stop/start
 # a new HTTP conversation, yet still refer to them as module-level globals
 # in a thread-safe way.
-serving = local()
+serving = _local()
 
 class _ThreadLocalProxy:
     
@@ -69,42 +71,15 @@ request = _ThreadLocalProxy('request')
 response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
-thread_data = local()
+thread_data = _local()
 
-def expose(func=None, alias=None):
-    """Expose the function, optionally providing an alias or set of aliases."""
-    
-    def expose_(func):
-        func.exposed = True
-        if alias is not None:
-            if isinstance(alias, basestring):
-                parents[alias.replace(".", "_")] = func
-            else:
-                for a in alias:
-                    parents[a.replace(".", "_")] = func
-        return func
-    
-    parents = sys._getframe(1).f_locals
-    if isinstance(func, (types.FunctionType, types.MethodType)):
-        # expose is being called directly, before the method has been bound
-        return expose_(func)
-    else:
-        # expose is being called as a decorator
-        if alias is None:
-            alias = func
-        return expose_
 
-def set_config(**kwargs):
-    """Decorator to set _cp_config using the given kwargs."""
-    def wrapper(f):
-        if not hasattr(f, "_cp_config"):
-            f._cp_config = {}
-        f._cp_config.update(kwargs)
-        return f
-    return wrapper
+
+#                                 Logging                                 #
 
 
 def logtime():
+    import datetime
     now = datetime.datetime.now()
     from cherrypy.lib import httptools
     month = httptools.monthname[now.month][:3].capitalize()
@@ -171,9 +146,89 @@ def log(msg='', context='', severity=0, traceback=False):
     logfunc(msg, context, severity)
 
 
-def quickstart(root, script_name="", conf=None):
-    """Mount the given app, start the engine and builtin server, then block."""
-    tree.mount(root, script_name, conf)
-    server.start()
-    engine.start()
+
+#                       Helper functions for CP apps                       #
+
+
+def decorate(func, decorator):
+    """
+    Return the decorated func. This will automatically copy all
+    non-standard attributes (like exposed) to the newly decorated function.
+    """
+    import inspect
+    newfunc = decorator(func)
+    for (k,v) in inspect.getmembers(func):
+        if not hasattr(newfunc, k):
+            setattr(newfunc, k, v)
+    return newfunc
+
+def decorateAll(obj, decorator):
+    """
+    Recursively decorate all exposed functions of obj and all of its children,
+    grandchildren, etc. If you used to use aspects, you might want to look
+    into these. This function modifies obj; there is no return value.
+    """
+    import inspect
+    obj_type = type(obj)
+    for (k,v) in inspect.getmembers(obj):
+        if hasattr(obj_type, k): # only deal with user-defined attributes
+            continue
+        if callable(v) and getattr(v, "exposed", False):
+            setattr(obj, k, decorate(v, decorator))
+        decorateAll(v, decorator)
+
+
+class ExposeItems:
+    """
+    Utility class that exposes a getitem-aware object. It does not provide
+    index() or default() methods, and it does not expose the individual item
+    objects - just the list or dict that contains them. User-specific index()
+    and default() methods can be implemented by inheriting from this class.
+    
+    Use case:
+    
+    from cherrypy import ExposeItems
+    ...
+    root.foo = ExposeItems(mylist)
+    root.bar = ExposeItems(mydict)
+    """
+    exposed = True
+    def __init__(self, items):
+        self.items = items
+    def __getattr__(self, key):
+        return self.items[key]
+
+
+def expose(func=None, alias=None):
+    """Expose the function, optionally providing an alias or set of aliases."""
+    
+    def expose_(func):
+        func.exposed = True
+        if alias is not None:
+            if isinstance(alias, basestring):
+                parents[alias.replace(".", "_")] = func
+            else:
+                for a in alias:
+                    parents[a.replace(".", "_")] = func
+        return func
+    
+    import sys, types
+    parents = sys._getframe(1).f_locals
+    if isinstance(func, (types.FunctionType, types.MethodType)):
+        # expose is being called directly, before the method has been bound
+        return expose_(func)
+    else:
+        # expose is being called as a decorator
+        if alias is None:
+            alias = func
+        return expose_
+
+def set_config(**kwargs):
+    """Decorator to set _cp_config using the given kwargs."""
+    def wrapper(f):
+        if not hasattr(f, "_cp_config"):
+            f._cp_config = {}
+        f._cp_config.update(kwargs)
+        return f
+    return wrapper
 

@@ -5,7 +5,7 @@ import xmlrpclib
 
 def setup_server():
     import cherrypy
-    from cherrypy import tools
+    from cherrypy import _cptools
     
     class Root:
         def index(self):
@@ -13,7 +13,7 @@ def setup_server():
         index.exposed = True
 
 
-    class XmlRpc(tools.XMLRPCController):
+    class XmlRpc(_cptools.XMLRPCController):
         
         def return_single_item_list(self):
             return [42]

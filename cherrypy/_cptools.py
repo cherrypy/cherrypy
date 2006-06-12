@@ -33,8 +33,6 @@ class Tool(object):
     def __init__(self, point, callable, name=None):
         self.point = point
         self.callable = callable
-        if name is None:
-            name = callable.__name__
         self.name = name
         # TODO: add an attribute to self for each arg
         # in inspect.getargspec(callable)
@@ -171,30 +169,14 @@ class ErrorTool(Tool):
         cherrypy.request.error_response = wrapper
 
 
-
 #                              Builtin tools                              #
 
-from cherrypy.lib import cptools
-session_auth = MainTool(cptools.session_auth)
-base_url = Tool('before_request_body', cptools.base_url)
-response_headers = Tool('before_finalize', cptools.response_headers)
-# We can't call virtual_host in on_start_resource,
-# because it's failsafe and the redirect would be swallowed.
-virtual_host = Tool('before_request_body', cptools.virtual_host)
-log_tracebacks = Tool('before_error_response', cptools.log_traceback, 'log_tracebacks')
-log_headers = Tool('before_error_response', cptools.log_request_headers, 'log_headers')
-err_redirect = ErrorTool(cptools.redirect, 'err_redirect')
-etags = Tool('before_finalize', cptools.validate_etags, 'etags')
-del cptools
+from cherrypy.lib import cptools, encodings, static
+from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
+from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
 
-from cherrypy.lib import encodings
-decode = Tool('before_main', encodings.decode)
-encode = Tool('before_finalize', encodings.encode)
-gzip = Tool('before_finalize', encodings.gzip)
-del encodings
 
-from cherrypy.lib import static
-class _StaticDirTool(MainTool):
+class StaticDirTool(MainTool):
     def setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
         conf = self.merged_args()
@@ -203,12 +185,9 @@ class _StaticDirTool(MainTool):
                 cherrypy.request.handler = None
         # Don't pass conf (or our wrapper will get wrapped!)
         cherrypy.request.hooks.attach(self.point, wrapper)
-staticdir = _StaticDirTool(static.staticdir)
-staticfile = MainTool(static.staticfile)
-del static
 
-from cherrypy.lib import sessions as _sessions
-class _SessionTool(Tool):
+
+class SessionTool(Tool):
     def __init__(self):
         self.point = "before_finalize"
         self.callable = _sessions.save
@@ -255,9 +234,8 @@ class _SessionTool(Tool):
         cherrypy.request.hooks.attach('before_request_body', init)
         cherrypy.request.hooks.attach('before_finalize', _sessions.save)
         cherrypy.request.hooks.attach('on_end_request', _sessions.cleanup)
-sessions = _SessionTool()
 
-from cherrypy.lib import xmlrpc as _xmlrpc
+
 class XMLRPCController(object):
     
     _cp_config = {'tools.xmlrpc.on': True}
@@ -283,7 +261,8 @@ class XMLRPCController(object):
     
     index = __call__
 
-class _XMLRPCTool(object):
+
+class XMLRPCTool(object):
     """Tool for using XMLRPC over HTTP.
     
     Python's None value cannot be used in standard XML-RPC; to allow
@@ -301,10 +280,9 @@ class _XMLRPCTool(object):
         ppath = _xmlrpc.patched_path(path_info)
         if ppath != path_info:
             raise cherrypy.InternalRedirect(ppath)
-xmlrpc = _XMLRPCTool()
 
-from cherrypy.lib import wsgiapp as _wsgiapp
-class _WSGIAppTool(MainTool):
+
+class WSGIAppTool(MainTool):
     """A tool for running any WSGI middleware/application within CP.
     
     Here are the parameters:
@@ -326,9 +304,39 @@ class _WSGIAppTool(MainTool):
         # Keep request body intact so the wsgi app can have its way with it.
         cherrypy.request.process_request_body = False
         MainTool.setup(self)
-wsgiapp = _WSGIAppTool(_wsgiapp.run, "wsgiapp")
-del _wsgiapp
 
 
-# These modules are themselves Tools
-from cherrypy.lib import caching
+class Toolbox(object):
+    """A collection of Tools."""
+    
+    def __setattr__(self, name, value):
+        # If the Tool.name is None, supply it from the attribute name.
+        if isinstance(value, Tool):
+            if value.name is None:
+                value.name = name
+        object.__setattr__(self, name, value)
+
+
+default_toolbox = Toolbox()
+default_toolbox.session_auth = MainTool(cptools.session_auth)
+default_toolbox.base_url = Tool('before_request_body', cptools.base_url)
+default_toolbox.response_headers = Tool('before_finalize', cptools.response_headers)
+# We can't call virtual_host in on_start_resource,
+# because it's failsafe and the redirect would be swallowed.
+default_toolbox.virtual_host = Tool('before_request_body', cptools.virtual_host)
+default_toolbox.log_tracebacks = Tool('before_error_response', cptools.log_traceback)
+default_toolbox.log_headers = Tool('before_error_response', cptools.log_request_headers)
+default_toolbox.err_redirect = ErrorTool(cptools.redirect)
+default_toolbox.etags = Tool('before_finalize', cptools.validate_etags)
+default_toolbox.decode = Tool('before_main', encodings.decode)
+default_toolbox.encode = Tool('before_finalize', encodings.encode)
+default_toolbox.gzip = Tool('before_finalize', encodings.gzip)
+default_toolbox.staticdir = StaticDirTool(static.staticdir)
+default_toolbox.staticfile = MainTool(static.staticfile)
+default_toolbox.sessions = SessionTool()
+default_toolbox.xmlrpc = XMLRPCTool()
+default_toolbox.wsgiapp = WSGIAppTool(_wsgiapp.run)
+default_toolbox.caching = _caching
+
+
+del cptools, encodings, static

@@ -1,11 +1,10 @@
 """Error classes for CherryPy."""
 
-import cgi
-import sys
-import traceback
-import urlparse
-
-from cherrypy.lib import httptools
+# cherrypy imports this module as *, so hide nonessentials.
+from cgi import escape as _escape
+from sys import exc_info as _exc_info
+from urlparse import urljoin as _urljoin
+from cherrypy.lib import httptools as _httptools
 
 
 class Error(Exception):
@@ -31,13 +30,13 @@ class InternalRedirect(Exception):
             # Pop any params included in the path
             path, pm = path.split("?", 1)
             request.query_string = pm
-            request.params = httptools.parseQueryString(pm)
+            request.params = _httptools.parseQueryString(pm)
         
         # Note that urljoin will "do the right thing" whether url is:
         #  1. a URL relative to root (e.g. "/dummy")
         #  2. a URL relative to the current path
         # Note that any querystring will be discarded.
-        path = urlparse.urljoin(cherrypy.request.path_info, path)
+        path = _urljoin(cherrypy.request.path_info, path)
         
         # Set a 'path' member attribute so that code which traps this
         # error can have access to it.
@@ -69,7 +68,7 @@ class HTTPRedirect(Exception):
             #  2. a URL relative to root (e.g. "/dummy")
             #  3. a URL relative to the current path
             # Note that any querystring in browser_url will be discarded.
-            url = urlparse.urljoin(cherrypy.request.browser_url, url)
+            url = _urljoin(cherrypy.request.browser_url, url)
             abs_urls.append(url)
         self.urls = abs_urls
         
@@ -178,7 +177,7 @@ class HTTPError(Error):
         response.headers['Content-Length'] = len(content)
         response.headers['Content-Type'] = "text/html"
         
-        be_ie_unfriendly(self.status)
+        _be_ie_unfriendly(self.status)
 
 
 class NotFound(HTTPError):
@@ -229,7 +228,7 @@ def get_error_page(status, **kwargs):
     import cherrypy
     
     try:
-        code, reason, message = httptools.validStatus(status)
+        code, reason, message = _httptools.validStatus(status)
     except ValueError, x:
         raise cherrypy.HTTPError(500, x.args[0])
     
@@ -247,7 +246,7 @@ def get_error_page(status, **kwargs):
         if v is None:
             kwargs[k] = ""
         else:
-            kwargs[k] = cgi.escape(kwargs[k])
+            kwargs[k] = _escape(kwargs[k])
     
     template = _HTTPErrorTemplate
     error_page_file = cherrypy.config.get('error_page.%s' % code, '')
@@ -259,7 +258,7 @@ def get_error_page(status, **kwargs):
             if m:
                 m += "<br />"
             m += ("In addition, the custom error page "
-                  "failed:\n<br />%s" % (sys.exc_info()[1]))
+                  "failed:\n<br />%s" % (_exc_info()[1]))
             kwargs['message'] = m
     
     return template % kwargs
@@ -272,7 +271,7 @@ _ie_friendly_error_sizes = {
     }
 
 
-def be_ie_unfriendly(status):
+def _be_ie_unfriendly(status):
     import cherrypy
     response = cherrypy.response
     
@@ -299,9 +298,10 @@ def be_ie_unfriendly(status):
 def format_exc(exc=None):
     """format_exc(exc=None) -> exc (or sys.exc_info if None), formatted."""
     if exc is None:
-        exc = sys.exc_info()
+        exc = _exc_info()
     if exc == (None, None, None):
         return ""
+    import traceback
     return "".join(traceback.format_exception(*exc))
 
 def bare_error(extrabody=None):

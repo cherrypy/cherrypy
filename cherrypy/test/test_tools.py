@@ -6,7 +6,7 @@ import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy import tools
+from cherrypy import _cptools, tools
 
 
 europoundUnicode = u'\x80\xa3'
@@ -16,7 +16,7 @@ def setup_server():
     def check_access():
         if not getattr(cherrypy.request, "login", None):
             raise cherrypy.HTTPError(401)
-    tools.check_access = tools.Tool('before_request_body', check_access)
+    tools.check_access = _cptools.Tool('before_request_body', check_access)
     
     def numerify():
         def number_it(body):
@@ -26,7 +26,7 @@ def setup_server():
                 yield chunk
         cherrypy.response.body = number_it(cherrypy.response.body)
     
-    class NumTool(tools.Tool):
+    class NumTool(_cptools.Tool):
         def setup(self):
             def makemap():
                 m = self.merged_args().get("map", {})
@@ -35,7 +35,7 @@ def setup_server():
             cherrypy.request.hooks.attach(self.point, self.callable)
     tools.numerify = NumTool('before_finalize', numerify)
     
-    # It's not mandatory to inherit from tools.Tool.
+    # It's not mandatory to inherit from _cptools.Tool.
     class NadsatTool:
         
         def __init__(self):
