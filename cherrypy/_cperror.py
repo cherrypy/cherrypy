@@ -1,16 +1,12 @@
 """Error classes for CherryPy."""
 
-# cherrypy imports this module as *, so hide nonessentials.
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from urlparse import urljoin as _urljoin
 from cherrypy.lib import httptools as _httptools
 
 
-class Error(Exception):
-    pass
-
-class WrongConfigValue(Error):
+class WrongConfigValue(Exception):
     """ Happens when a config value can't be parsed, or is otherwise illegal. """
     pass
 
@@ -126,7 +122,7 @@ class HTTPRedirect(Exception):
             raise ValueError("The %s status code is unknown." % status)
 
 
-class HTTPError(Error):
+class HTTPError(Exception):
     """ Exception used to return an HTTP error code to the client.
         This exception will automatically set the response status and body.
         
@@ -139,7 +135,7 @@ class HTTPError(Error):
         if status < 400 or status > 599:
             raise ValueError("status must be between 400 and 599.")
         self.message = message
-        Error.__init__(self, status, message)
+        Exception.__init__(self, status, message)
     
     def set_response(self):
         """Set cherrypy.response status, headers, and body."""

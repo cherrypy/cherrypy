@@ -3,7 +3,7 @@
 __version__ = '3.0.0alpha'
 
 
-from _cperror import *
+from _cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, WrongConfigValue
 import config
 
 import _cptools
@@ -139,7 +139,8 @@ def log(msg='', context='', severity=0, traceback=False):
     log application-specific information.
     """
     if traceback:
-        msg += format_exc()
+        import _cperror
+        msg += _cperror.format_exc()
     logfunc = config.get('log_function', _log_message)
     logfunc(msg, context, severity)
 

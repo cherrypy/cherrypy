@@ -7,6 +7,7 @@ import types
 
 import cherrypy
 from cherrypy import _cpcgifs
+from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httptools, profiler
 
 
@@ -367,11 +368,10 @@ class Request(object):
         if cherrypy.config.get('show_tracebacks', False):
             dbltrace = ("\n===First Error===\n\n%s"
                         "\n\n===Second Error===\n\n%s\n\n")
-            body = dbltrace % (cherrypy.format_exc(exc),
-                               cherrypy.format_exc())
+            body = dbltrace % (format_exc(exc), format_exc())
         else:
             body = ""
-        r = cherrypy.bare_error(body)
+        r = bare_error(body)
         response.status, response.header_list, response.body = r
 
 
