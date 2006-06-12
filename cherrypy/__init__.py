@@ -154,11 +154,10 @@ def decorate(func, decorator):
     Return the decorated func. This will automatically copy all
     non-standard attributes (like exposed) to the newly decorated function.
     """
-    import inspect
     newfunc = decorator(func)
-    for (k,v) in inspect.getmembers(func):
-        if not hasattr(newfunc, k):
-            setattr(newfunc, k, v)
+    for key in dir(func):
+        if not hasattr(newfunc, key):
+            setattr(newfunc, key, getattr(func, key))
     return newfunc
 
 def decorateAll(obj, decorator):
@@ -167,14 +166,14 @@ def decorateAll(obj, decorator):
     grandchildren, etc. If you used to use aspects, you might want to look
     into these. This function modifies obj; there is no return value.
     """
-    import inspect
     obj_type = type(obj)
-    for (k,v) in inspect.getmembers(obj):
-        if hasattr(obj_type, k): # only deal with user-defined attributes
+    for key in dir(obj):
+        if hasattr(obj_type, key): # only deal with user-defined attributes
             continue
-        if callable(v) and getattr(v, "exposed", False):
-            setattr(obj, k, decorate(v, decorator))
-        decorateAll(v, decorator)
+        value = getattr(obj, key)
+        if callable(value) and getattr(value, "exposed", False):
+            setattr(obj, key, decorate(value, decorator))
+        decorateAll(value, decorator)
 
 
 class ExposeItems:
