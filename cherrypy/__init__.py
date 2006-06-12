@@ -22,8 +22,6 @@ def quickstart(root, script_name="", conf=None):
     server.start()
     engine.start()
 
-codecoverage = False
-
 try:
     from threading import local as _local
 except ImportError:

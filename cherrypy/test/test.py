@@ -173,7 +173,8 @@ class CommandLineParser(object):
         or Ned Batchelder's enhanced version:
         http://www.nedbatchelder.com/code/modules/coverage.html
         
-        If neither module is found in PYTHONPATH, coverage is disabled.
+        If neither module is found in PYTHONPATH,
+        coverage is silently(!) disabled.
         """
         try:
             from coverage import the_coverage as coverage
@@ -183,7 +184,9 @@ class CommandLineParser(object):
                 os.remove(c)
             coverage.start()
             import cherrypy
-            cherrypy.codecoverage = True
+            from cherrypy.lib import covercp
+            cherrypy.engine.on_start_engine_list.insert(0, covercp.start)
+            cherrypy.engine.on_start_thread_list.insert(0, covercp.start)
         except ImportError:
             coverage = None
         self.coverage = coverage
@@ -191,7 +194,11 @@ class CommandLineParser(object):
     def stop_coverage(self):
         """Stop the coverage tool, save results, and report."""
         import cherrypy
-        cherrypy.codecoverage = False
+        from cherrypy.lib import covercp
+        while covercp.start in cherrypy.engine.on_start_engine_list:
+            cherrypy.engine.on_start_engine_list.remove(covercp.start)
+        while covercp.start in cherrypy.engine.on_start_thread_list:
+            cherrypy.engine.on_start_thread_list.remove(covercp.start)
         if self.coverage:
             self.coverage.save()
             self.report_coverage()

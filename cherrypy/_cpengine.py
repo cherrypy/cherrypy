@@ -43,10 +43,6 @@ class Engine(object):
         if conf("log_config_options", True):
             cherrypy.config.output_config_map()
         
-        if cherrypy.codecoverage:
-            from cherrypy.lib import covercp
-            covercp.start()
-        
         # Autoreload. Note that, if we're not starting our own HTTP server,
         # autoreload could do Very Bad Things when it calls sys.exit, but
         # deployers will just have to be educated and responsible for it.
@@ -149,11 +145,6 @@ class Engine(object):
             # Only run on_start_thread_list if the engine is running.
             threadID = threading._get_ident()
             if threadID not in self.seen_threads:
-                
-                if cherrypy.codecoverage:
-                    from cherrypy.lib import covercp
-                    covercp.start()
-                
                 i = len(self.seen_threads) + 1
                 self.seen_threads[threadID] = i
                 

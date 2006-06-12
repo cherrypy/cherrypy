@@ -8,9 +8,14 @@ http://www.garethrees.org/2001/12/04/python-coverage/
 or Ned Batchelder's enhanced version:
 http://www.nedbatchelder.com/code/modules/coverage.html
 
-Set "cherrypy.codecoverage = True" to turn on coverage tracing.
-Then, use the serve() function to browse the results in a web browser.
-If you run this module from the command line, it will call serve() for you.
+To turn on coverage tracing, use the following code:
+
+    cherrypy.engine.on_start_engine_list.insert(0, covercp.start)
+    cherrypy.engine.on_start_thread_list.insert(0, covercp.start)
+
+Run your code, then use the covercp.serve() function to browse the
+results in a web browser. If you run this module from the command line,
+it will call serve() for you.
 """
 
 import re
@@ -27,7 +32,7 @@ except ImportError:
 
 try:
     from coverage import the_coverage as coverage
-    def start():
+    def start(threadid=None):
         coverage.start()
 except ImportError:
     # Setting coverage to None will raise errors
@@ -37,7 +42,7 @@ except ImportError:
     import warnings
     warnings.warn("No code coverage will be performed; coverage.py could not be imported.")
     
-    def start():
+    def start(threadid=None):
         pass
 
 # Guess initial depth to hide FIXME this doesn't work for non-cherrypy stuff
