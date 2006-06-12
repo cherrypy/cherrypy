@@ -219,12 +219,12 @@ class Request(object):
         # only return 505 if the _major_ version is different.
         
         # cherrypy.request.version == request.protocol in a Version instance.
-        self.version = httptools.Version.from_http(self.protocol)
+        self.version = httptools.version_from_http(self.protocol)
         
         # cherrypy.response.version should be used to determine whether or
         # not to include a given HTTP/1.1 feature in the response content.
         server_v = cherrypy.config.get('server.protocol_version', 'HTTP/1.0')
-        server_v = httptools.Version.from_http(server_v)
+        server_v = httptools.version_from_http(server_v)
         cherrypy.response.version = min(self.version, server_v)
     
     def process_headers(self):
@@ -243,15 +243,14 @@ class Request(object):
             if name.title() == 'Cookie':
                 self.simple_cookie.load(value)
         
-        if self.version >= "1.1":
+        host = self.headers.get('Host')
+        if host is None:
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
             # (Bad Request) status code to any HTTP/1.1 request message
             # which lacks a Host header field.
-            if not self.headers.has_key("Host"):
+            if self.version >= (1, 1):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
-        
-        host = self.headers.get('Host', '')
         if not host:
             host = cherrypy.config.get('server.socket_host', '')
         self.base = "%s://%s" % (self.scheme, host)

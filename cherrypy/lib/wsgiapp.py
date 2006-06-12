@@ -30,7 +30,7 @@ def make_environ():
     environ["SCRIPT_NAME"] = cherrypy.request.script_name
     environ["PATH_INFO"] = cherrypy.request.path_info
     environ["QUERY_STRING"] = cherrypy.request.query_string
-    environ["SERVER_PROTOCOL"] = cherrypy.request.version
+    environ["SERVER_PROTOCOL"] = cherrypy.request.protocol
     server_name = getattr(cherrypy.server.httpserver, 'server_name', "None")
     environ["SERVER_NAME"] = server_name 
     environ["SERVER_PORT"] = cherrypy.config.get('server.socket_port')

@@ -74,7 +74,7 @@ def serve_file(path, contentType=None, disposition=None, name=None):
         cherrypy.log("    Found file: %s" % path, "DEBUG")
     
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
-    if cherrypy.response.version >= "1.1":
+    if cherrypy.response.version >= (1, 1):
         response.headers["Accept-Ranges"] = "bytes"
         r = httptools.getRanges(cherrypy.request.headers.get('Range'), c_len)
         if r == []:

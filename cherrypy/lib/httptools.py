@@ -1,6 +1,6 @@
-"""HTTP library functions and tools."""
+"""HTTP library functions."""
 
-# This module contains functions and tools for building an HTTP application
+# This module contains functions for building an HTTP application
 # framework: any one, not just one whose name starts with "Ch". ;) If you
 # reference any modules from some popular framework inside *this* module,
 # FuManChu will personally hang you up by your thumbs and submit you
@@ -22,7 +22,7 @@ responseCodes[503] = ('Service Unavailable',
 import cgi
 import re
 import time
-import urllib
+from urllib import unquote
 from urlparse import urlparse
 
 
@@ -62,67 +62,9 @@ def HTTPDate(dt=None):
             (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
 
 
-class Version(object):
-    
-    """A version, such as "2.1 beta 3", which can be compared atom-by-atom.
-    
-    If a string is provided to the constructor, it will be split on word
-    boundaries; that is, "1.4.13 beta 9" -> ["1", "4", "13", "beta", "9"].
-    
-    Comparisons are performed atom-by-atom, numerically if both atoms are
-    numeric. Therefore, "2.12" is greater than "2.4", and "3.0 beta" is
-    greater than "3.0 alpha" (only because "b" > "a"). If an atom is
-    provided in one Version and not another, the longer Version is
-    greater than the shorter, that is: "4.8 alpha" > "4.8".
-    """
-    
-    def __init__(self, atoms):
-        """A Version object.
-        
-        atoms: if a str, it will be split on word boundaries;
-               if a float or int, it will be split at the decimal point.
-        """
-        if isinstance(atoms, (int, float)):
-            atoms = str(atoms)
-        if isinstance(atoms, basestring):
-            self.atoms = re.split(r'\W', atoms)
-        else:
-            self.atoms = [str(x) for x in atoms]
-    
-    def from_http(cls, version_str):
-        """Return a Version object from the given 'HTTP/x.y' string."""
-        return cls(version_str[5:])
-    from_http = classmethod(from_http)
-    
-    def to_http(self):
-        """Return a 'HTTP/x.y' string for this Version object."""
-        return "HTTP/%s.%s" % tuple(self.atoms[:2])
-    
-    def __str__(self):
-        return ".".join([str(x) for x in self.atoms])
-    
-    def __cmp__(self, other):
-        cls = self.__class__
-        if not isinstance(other, cls):
-            # Try to coerce other to a Version instance.
-            other = cls(other)
-        
-        index = 0
-        while index < len(self.atoms) and index < len(other.atoms):
-            mine, theirs = self.atoms[index], other.atoms[index]
-            if mine.isdigit() and theirs.isdigit():
-                mine, theirs = int(mine), int(theirs)
-            if mine < theirs:
-                return -1
-            if mine > theirs:
-                return 1
-            index += 1
-        if index < len(other.atoms):
-            return -1
-        if index < len(self.atoms):
-            return 1
-        return 0
-
+def version_from_http(version_str):
+    """Return a Version tuple from the given 'HTTP/x.y' string."""
+    return int(version_str[5]), int(version_str[7])
 
 def getRanges(headervalue, content_length):
     """Return a list of (start, stop) indices from a Range header, or None.
@@ -317,28 +259,22 @@ def parse_request_line(request_line):
     # Ignore scheme, location, and fragments (so config lookups work).
     # [Therefore, this assumes all hosts are valid for this server.
     # Note that we are also violating the RFC which says: if the host
-    # given in an abs_path, it must override any Host header.]
+    # given is an abs_path, it must override any Host header.]
     scheme, location, path, params, qs, frag = urlparse(path)
-    if path == "*":
-        # "...the request does not apply to a particular resource,
-        # but to the server itself". See
-        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-        pass
-    else:
-        if params:
-            params = ";" + params
-        path = path + params
-        
-        # Unquote the path (e.g. "/this%20path" -> "this path").
-        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-        #
-        # But note that "...a URI must be separated into its components
-        # before the escaped characters within those components can be
-        # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
-        #
-        # Note also that cgi.parse_qs will decode the querystring for us.
-        atoms = [urllib.unquote(x) for x in re.split("(?i)%2F", path)]
-        path = "%2F".join(atoms)
+    
+    if params:
+        path = path + ";" + params
+    
+    # Unquote the path (e.g. "/this%20path" -> "this path").
+    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+    #
+    # But note that "...a URI must be separated into its components
+    # before the escaped characters within those components can be
+    # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
+    #
+    # Note also that cgi.parse_qs will decode the querystring for us.
+    atoms = [unquote(x) for x in re.split("(?i)%2F", path)]
+    path = "%2F".join(atoms)
     
     return method, path, qs, protocol
 
