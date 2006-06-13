@@ -11,7 +11,7 @@ def setup_server():
             yield "Hello, world"
         index.exposed = True
         h = [("Content-Language", "en-GB"), ('Content-Type', 'text/plain')]
-        tools.response_headers.enable(headers=h)(index)
+        tools.response_headers(headers=h)(index)
         
         def other(self):
             return "salut"

@@ -8,16 +8,16 @@ may only offer one if they choose):
         docstring.
     
     Function decorators:
-        If the tool exposes an "enable" callable, that is assumed to be a
-        compile-time decorator for use in configuring individual CherryPy
-        page handlers (methods on the CherryPy tree). It should "turn on"
-        the tool in the decorated function's _cp_config attribute.
+        All tools, when called, may be used as decorators which configure
+        individual CherryPy page handlers (methods on the CherryPy tree).
+        That is, "@tools.anytool()" should "turn on" the tool via the
+        decorated function's _cp_config attribute.
     
     CherryPy hooks: "hooks" are points in the CherryPy request-handling
         process which may hand off control to registered callbacks. The
-        Request object possesses a "hooks" attribute (a HookMap)
-        for manipulating this. If a tool exposes a "setup" callable,
-        it will be called once per Request (if the feature is enabled
+        Request object possesses a "hooks" attribute (a HookMap) for
+        manipulating this. If a tool exposes a "_setup" callable, it
+        will be called once per Request (if the feature is "turned on"
         via config).
 
 Tools may be implemented as any object with a namespace. The builtins
@@ -27,6 +27,16 @@ are generally either modules or instances of the tools.Tool class.
 import cherrypy
 
 
+def setargs(obj, func):
+    """Copy func parameter names to obj attributes."""
+    try:
+        import inspect
+        for arg in inspect.getargspec(func)[0]:
+            setattr(obj, arg, None)
+    except (ImportError, AttributeError):
+        pass
+
+
 class Tool(object):
     """A registered function for use with CherryPy request-processing hooks.
     
@@ -34,28 +44,25 @@ class Tool(object):
     """
     
     def __init__(self, point, callable, name=None):
-        self.point = point
+        self._point = point
         self.callable = callable
-        self.name = name
-        # TODO: add an attribute to self for each arg
-        # in inspect.getargspec(callable)
+        self._name = name
+        self.__doc__ = self.callable.__doc__
+        setargs(self, callable)
     
-    def __call__(self, *args, **kwargs):
-        return self.callable(*args, **kwargs)
-    
-    def merged_args(self, d=None):
-        conf = cherrypy.request.toolmap.get(self.name, {}).copy()
+    def _merged_args(self, d=None):
+        conf = cherrypy.request.toolmap.get(self._name, {}).copy()
         conf.update(d or {})
         if "on" in conf:
             del conf["on"]
         return conf
     
-    def enable(self, **kwargs):
+    def __call__(self, **kwargs):
         """Compile-time decorator (turn on the tool in config).
         
         For example:
         
-            @tools.base_url.enable()
+            @tools.base_url()
             def whats_my_base(self):
                 return cherrypy.request.base
             whats_my_base.exposed = True
@@ -63,20 +70,20 @@ class Tool(object):
         def wrapper(f):
             if not hasattr(f, "_cp_config"):
                 f._cp_config = {}
-            f._cp_config["tools." + self.name + ".on"] = True
+            f._cp_config["tools." + self._name + ".on"] = True
             for k, v in kwargs.iteritems():
-                f._cp_config["tools." + self.name + "." + k] = v
+                f._cp_config["tools." + self._name + "." + k] = v
             return f
         return wrapper
     
-    def setup(self):
+    def _setup(self):
         """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        conf = self.merged_args()
-        cherrypy.request.hooks.attach(self.point, self.callable, conf)
+        conf = self._merged_args()
+        cherrypy.request.hooks.attach(self._point, self.callable, conf)
 
 
 class MainTool(Tool):
@@ -98,24 +105,24 @@ class MainTool(Tool):
                                               root=absDir)
         """
         def wrapper(*a, **kw):
-            handled = self.callable(*args, **self.merged_args(kwargs))
+            handled = self.callable(*args, **self._merged_args(kwargs))
             if not handled:
                 raise cherrypy.NotFound()
             return cherrypy.response.body
         wrapper.exposed = True
         return wrapper
     
-    def setup(self):
+    def _setup(self):
         """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
         def wrapper():
-            if self.callable(**self.merged_args()):
+            if self.callable(**self._merged_args()):
                 cherrypy.request.handler = None
         # Don't pass conf (or our wrapper will get wrapped!)
-        cherrypy.request.hooks.attach(self.point, wrapper)
+        cherrypy.request.hooks.attach(self._point, wrapper)
 
 
 class ErrorTool(Tool):
@@ -124,14 +131,14 @@ class ErrorTool(Tool):
     def __init__(self, callable, name=None):
         Tool.__init__(self, None, callable, name)
     
-    def setup(self):
+    def _setup(self):
         """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
         def wrapper():
-            self.callable(**self.merged_args())
+            self.callable(**self._merged_args())
         cherrypy.request.error_response = wrapper
 
 
@@ -143,30 +150,32 @@ from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
 
 
 class StaticDirTool(MainTool):
-    def setup(self):
+    def _setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
-        conf = self.merged_args()
+        conf = self._merged_args()
         def wrapper():
             if self.callable(**conf):
                 cherrypy.request.handler = None
         # Don't pass conf (or our wrapper will get wrapped!)
-        cherrypy.request.hooks.attach(self.point, wrapper)
+        cherrypy.request.hooks.attach(self._point, wrapper)
 
 
 class SessionTool(Tool):
-    def __init__(self):
-        self.point = "before_finalize"
-        self.callable = _sessions.save
-        self.name = None
+    """Session Tool for CherryPy."""
     
-    def setup(self):
+    def __init__(self):
+        self._point = "before_finalize"
+        self.callable = _sessions.save
+        self._name = None
+    
+    def _setup(self):
         """Hook this tool into cherrypy.request using the given conf.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
         def init():
-            conf = cherrypy.request.toolmap.get(self.name, {})
+            conf = cherrypy.request.toolmap.get(self._name, {})
             
             s = cherrypy.request._session = _sessions.Session()
             for k, v in conf.iteritems():
@@ -214,7 +223,7 @@ class XMLRPCTool(object):
     using it via an extension, provide a true value for allow_none.
     """
     
-    def setup(self):
+    def _setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
         request = cherrypy.request
         if hasattr(request, 'xmlrpc'):
@@ -245,20 +254,28 @@ class WSGIAppTool(MainTool):
                       }
     """
     
-    def setup(self):
+    def _setup(self):
         # Keep request body intact so the wsgi app can have its way with it.
         cherrypy.request.process_request_body = False
-        MainTool.setup(self)
+        MainTool._setup(self)
+
+
+class CachingTool:
+    """Caching Tool for CherryPy."""
+    
+    def __init__(self):
+        self._setup = _caching._setup
+        self.__call__ = _caching.enable
 
 
 class Toolbox(object):
     """A collection of Tools."""
     
     def __setattr__(self, name, value):
-        # If the Tool.name is None, supply it from the attribute name.
+        # If the Tool._name is None, supply it from the attribute name.
         if isinstance(value, Tool):
-            if value.name is None:
-                value.name = name
+            if value._name is None:
+                value._name = name
         object.__setattr__(self, name, value)
 
 
@@ -281,7 +298,7 @@ default_toolbox.staticfile = MainTool(static.staticfile)
 default_toolbox.sessions = SessionTool()
 default_toolbox.xmlrpc = XMLRPCTool()
 default_toolbox.wsgiapp = WSGIAppTool(_wsgiapp.run)
-default_toolbox.caching = _caching
+default_toolbox.caching = CachingTool()
 
 
 del cptools, encodings, static

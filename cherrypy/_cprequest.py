@@ -304,11 +304,11 @@ class Request(object):
                 bucket = self.toolmap.setdefault(toolname, {})
                 bucket[".".join(atoms)] = v
         
-        # Run tool.setup(conf) for each tool in the new toolmap.
+        # Run tool._setup(conf) for each tool in the new toolmap.
         for toolname, conf in self.toolmap.iteritems():
             if conf.get("on", False):
                 tool = getattr(cherrypy.tools, toolname)
-                tool.setup()
+                tool._setup()
     
     def _get_browser_url(self):
         url = self.base + self.path

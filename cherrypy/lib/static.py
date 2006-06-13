@@ -142,6 +142,7 @@ def _attempt(filename, content_types):
         return False
 
 def staticdir(section, dir, root="", match="", content_types=None, index=""):
+    """Serve a static resource from the given (root +) dir."""
     if match and not re.search(match, cherrypy.request.path_info):
         return False
     
@@ -177,6 +178,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     return handled
 
 def staticfile(filename, root=None, match="", content_types=None):
+    """Serve a static resource from the given (root +) filename."""
     if match and not re.search(match, cherrypy.request.path_info):
         return False
     

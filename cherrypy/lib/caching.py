@@ -159,7 +159,7 @@ def enable(**kwargs):
         return f
     return wrapper
 
-def setup():
+def _setup():
     """Hook caching into cherrypy.request using the given conf."""
     conf = cherrypy.request.toolmap.get("caching", {})
     if not getattr(cherrypy, "_cache", None):

@@ -27,12 +27,12 @@ def setup_server():
         cherrypy.response.body = number_it(cherrypy.response.body)
     
     class NumTool(_cptools.Tool):
-        def setup(self):
+        def _setup(self):
             def makemap():
-                m = self.merged_args().get("map", {})
+                m = self._merged_args().get("map", {})
                 cherrypy.request.numerify_map = m.items()
             cherrypy.request.hooks.attach('on_start_resource', makemap)
-            cherrypy.request.hooks.attach(self.point, self.callable)
+            cherrypy.request.hooks.attach(self._point, self.callable)
     tools.numerify = NumTool('before_finalize', numerify)
     
     # It's not mandatory to inherit from _cptools.Tool.
@@ -41,7 +41,7 @@ def setup_server():
         def __init__(self):
             self.counter = 0
             self.ended = {}
-            self.name = "nadsat"
+            self._name = "nadsat"
         
         def nadsat(self):
             def nadsat_it_up(body):
@@ -56,7 +56,7 @@ def setup_server():
             cherrypy.response.body = "razdrez"
             self.ended[cherrypy.request.counter] = True
         
-        def setup(self):
+        def _setup(self):
             cherrypy.request.counter = self.counter = self.counter + 1
             self.ended[cherrypy.request.counter] = False
             cherrypy.request.hooks.callbacks['before_finalize'].insert(0, self.nadsat)
@@ -110,12 +110,12 @@ def setup_server():
             raise ValueError()
             yield "confidential"
         
-        # METHOD TWO: decorator using Tool.enable
+        # METHOD TWO: decorator using Tool()
         # We support Python 2.3, but the @-deco syntax would look like this:
-        # @tools.check_access.enable()
+        # @tools.check_access()
         def restricted(self):
             return "Welcome!"
-        restricted = tools.check_access.enable()(restricted)
+        restricted = tools.check_access()(restricted)
         
         def err_in_onstart(self):
             return "success!"
@@ -185,7 +185,7 @@ class ToolTests(helper.CPWebCase):
         self.getPage("/demo/ended/5")
         self.assertBody("True")
         
-        # Test the "enable" technique (compile-time decorator).
+        # Test the "__call__" technique (compile-time decorator).
         self.getPage("/demo/restricted")
         self.assertErrorPage(401)
     

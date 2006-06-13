@@ -161,13 +161,13 @@ def setup_server():
                 raise cherrypy.InternalRedirect('/image/getImagesByUser')
         
         # We support Python 2.3, but the @-deco syntax would look like this:
-        # @tools.login_redir.enable()
+        # @tools.login_redir()
         def secure(self):
             return "Welcome!"
-        secure = tools.login_redir.enable()(secure)
-        # Since enable returns the same function you pass in,
+        secure = tools.login_redir()(secure)
+        # Since calling the tool returns the same function you pass in,
         # you could skip binding the return value, and just write:
-        # tools.login_redir.enable()(secure)
+        # tools.login_redir()(secure)
         
         def login(self):
             return "Please log in"
