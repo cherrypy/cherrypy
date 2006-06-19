@@ -49,11 +49,11 @@ class ETagTest(helper.CPWebCase):
         
         # Test If-None-Match (both valid and invalid)
         self.getPage("/resource", headers=[('If-None-Match', etag)])
-        self.assertStatus("304 Not modified")
+        self.assertStatus(304)
         self.getPage("/resource", method='POST', headers=[('If-None-Match', etag)])
         self.assertStatus("412 Precondition Failed")
         self.getPage("/resource", headers=[('If-None-Match', "*")])
-        self.assertStatus("304 Not modified")
+        self.assertStatus(304)
         self.getPage("/resource", headers=[('If-None-Match', "a bogus tag")])
         self.assertStatus("200 OK")
 

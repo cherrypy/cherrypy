@@ -1,12 +1,28 @@
 """Wrapper for mod_python, for use as a CherryPy HTTP server.
-    
-    To autostart modpython, the "apache" executable or script must be
-    on your system path, or you must override ModPythonServer.APACHE_PATH.
-    On some platforms, "apache" may be called "apachectl" or "apache2ctl"--
-    create a symlink to them if needed.
-    
-    You also need the 'modpython_gateway' module at:
-    http://projects.amor.org/misc/wiki/ModPythonGateway
+
+To autostart modpython, the "apache" executable or script must be
+on your system path, or you must override ModPythonServer.APACHE_PATH.
+On some platforms, "apache" may be called "apachectl" or "apache2ctl"--
+create a symlink to them if needed.
+
+You also need the 'modpython_gateway' module at:
+http://projects.amor.org/misc/wiki/ModPythonGateway
+
+
+KNOWN BUGS
+==========
+
+1. Apache processes Range headers automatically; CherryPy's truncated
+    output is then truncated again by Apache. See test_core.testRanges.
+2. Apache does not allow custom HTTP methods like CONNECT as per the spec.
+    See test_core.testHTTPMethods.
+3. Max request header and body settings do not work with Apache.
+4. Apache replaces status "reason phrases" automatically. For example,
+    CherryPy may set "304 Not modified" but Apache will write out
+    "304 Not Modified" (capital "M").
+5. Apache does not allow custom error codes as per the spec.
+6. Apache (or perhaps modpython, or modpython_gateway) unquotes %xx in the
+    Request-URI too early.
 """
 
 import os
