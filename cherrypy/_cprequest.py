@@ -336,6 +336,12 @@ class Request(object):
                 toolname = atoms.pop(0)
                 bucket = self.toolmap.setdefault(toolname, {})
                 bucket[".".join(atoms)] = v
+            elif namespace == "hooks":
+                # Attach bare hooks declared in config.
+                hookpoint = atoms[0]
+                if isinstance(v, basestring):
+                    v = cherrypy.lib.attributes(v)
+                self.hooks.attach(hookpoint, v)
         
         # Run tool._setup(conf) for each tool in the new toolmap.
         for toolname, conf in self.toolmap.iteritems():

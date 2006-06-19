@@ -63,6 +63,11 @@ def setup_server():
             cherrypy.request.hooks.attach('on_end_request', self.cleanup)
     tools.nadsat = NadsatTool()
     
+    def pipe_body():
+        cherrypy.request.process_request_body = False
+        clen = int(cherrypy.request.headers['Content-Length'])
+        cherrypy.request.body = cherrypy.request.rfile.read(clen)
+    
     class Root:
         def index(self):
             return "Howdy earth!"
@@ -73,6 +78,12 @@ def setup_server():
             yield u"world"
             yield europoundUnicode
         euro.exposed = True
+        
+        # Bare hooks
+        def pipe(self):
+            return cherrypy.request.body
+        pipe.exposed = True
+        pipe._cp_config = {'hooks.before_request_body': pipe_body}
     
     root = Root()
     
@@ -92,7 +103,7 @@ def setup_server():
     
     
     # METHOD ONE:
-    # Use _cp_config
+    # Declare Tools in _cp_config
     class Demo(Test):
         
         _cp_config = {"tools.nadsat.on": True}
@@ -128,7 +139,7 @@ def setup_server():
     
     conf = {
         # METHOD THREE:
-        # Do it all in detached config
+        # Declare Tools in detached config
         '/demo': {
             'tools.numerify.on': True,
             'tools.numerify.map': {"pie": "3.14159"},
@@ -210,6 +221,14 @@ class ToolTests(helper.CPWebCase):
         
         self.getPage("/euro", headers=[("Accept-Encoding", "gzip")])
         self.assertInBody(zbuf.getvalue()[:3])
+    
+    def testBareHooks(self):
+        content = "bit of a pain in me gulliver"
+        self.getPage("/pipe",
+                     headers=[("Content-Length", len(content)),
+                              ("Content-Type", "text/plain")],
+                     method="POST", body=content)
+        self.assertBody(content)
 
 
 if __name__ == '__main__':
