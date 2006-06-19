@@ -33,34 +33,41 @@ except ImportError:
 # in a thread-safe way.
 serving = _local()
 
-class _ThreadLocalProxy:
+# Bind dummy instances of default request/response
+# (in the main thread only!) to help introspection.
+serving.request = _cprequest.Request("localhost", "11111", "localhost")
+serving.response = _cprequest.Response()
+
+
+class _ThreadLocalProxy(object):
+    
+    __slots__ = ['__attrname__', '__dict__']
     
     def __init__(self, attrname):
-        self.__dict__["__attrname__"] = attrname
+        self.__attrname__ = attrname
     
     def __getattr__(self, name):
-        try:
-            childobject = getattr(serving, self.__attrname__)
-        except AttributeError:
-            raise AttributeError("cherrypy.%s has no properties outside of "
-                                 "an HTTP request." % self.__attrname__)
+        childobject = getattr(serving, self.__attrname__)
         return getattr(childobject, name)
     
     def __setattr__(self, name, value):
-        try:
+        if name == "__attrname__":
+            object.__setattr__(self, "__attrname__", value)
+        else:
             childobject = getattr(serving, self.__attrname__)
-        except AttributeError:
-            raise AttributeError("cherrypy.%s has no properties outside of "
-                                 "an HTTP request." % self.__attrname__)
-        setattr(childobject, name, value)
+            setattr(childobject, name, value)
     
     def __delattr__(self, name):
-        try:
-            childobject = getattr(serving, self.__attrname__)
-        except AttributeError:
-            raise AttributeError("cherrypy.%s has no properties outside of "
-                                 "an HTTP request." % self.__attrname__)
+        childobject = getattr(serving, self.__attrname__)
         delattr(childobject, name)
+    
+    def _get_dict(self):
+        childobject = getattr(serving, self.__attrname__)
+        d = childobject.__class__.__dict__.copy()
+        d.update(childobject.__dict__)
+        return d
+    __dict__ = property(_get_dict)
+
 
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect

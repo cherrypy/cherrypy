@@ -84,6 +84,8 @@ def get(key, default=None):
     
     try:
         conf = cherrypy.request.config
+        if conf is None:
+            conf = globalconf
     except AttributeError:
         # There's no request, so just use globalconf.
         conf = globalconf

@@ -51,6 +51,43 @@ class HookMap(object):
 class Request(object):
     """An HTTP request."""
     
+    # Conversation attributes
+    remote_addr = "localhost"
+    remote_port = 1111
+    remote_host = "localhost"
+    scheme = "http"
+    base = ""
+    
+    # Request-Line attributes
+    request_line = ""
+    method = "GET"
+    path = ""
+    query_string = ""
+    protocol = ""
+    params = {}
+    version = http.version_from_http("HTTP/1.1")
+    
+    # Message attributes
+    header_list = []
+    headers = http.HeaderMap()
+    simple_cookie = Cookie.SimpleCookie()
+    rfile = None
+    process_request_body = True
+    body = None
+    
+    # Dispatch attributes
+    script_name = ""
+    path_info = "/"
+    app = None
+    handler = None
+    toolmap = {}
+    config = None
+    error_response = cherrypy.HTTPError(500).set_response
+    hookpoints = ['on_start_resource', 'before_request_body',
+                  'before_main', 'before_finalize',
+                  'on_end_resource', 'on_end_request',
+                  'before_error_response', 'after_error_response']
+    
     def __init__(self, remote_addr, remote_port, remote_host, scheme="http"):
         """Populate a new Request object.
         
@@ -158,11 +195,7 @@ class Request(object):
         """Generate a response for the resource at self.path_info."""
         try:
             try:
-                pts = ['on_start_resource', 'before_request_body',
-                       'before_main', 'before_finalize',
-                       'on_end_resource', 'on_end_request',
-                       'before_error_response', 'after_error_response']
-                self.hooks = HookMap(pts)
+                self.hooks = HookMap(self.hookpoints)
                 self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
                                        'on_end_request']
                 
@@ -535,6 +568,10 @@ def flattener(input):
 class Response(object):
     """An HTTP Response."""
     
+    status = None
+    header_list = None
+    headers = http.HeaderMap()
+    simple_cookie = Cookie.SimpleCookie()
     body = Body()
     
     def __init__(self):
