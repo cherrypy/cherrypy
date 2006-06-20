@@ -51,9 +51,34 @@ def handler(req):
         request = cherrypy.engine.request(clientAddress, remoteHost, scheme)
         req.get_basic_auth_pw()
         request.login = req.user
-        # apache.mpm_query only became available in mod_python 3.1
-        request.multithread = bool(apache.mpm_query(apache.AP_MPMQ_IS_THREADED))
-        request.multiprocess = bool(apache.mpm_query(apache.AP_MPMQ_IS_FORKED))
+        
+        try:
+            # apache.mpm_query only became available in mod_python 3.1
+            q = apache.mpm_query
+            threaded = q(apache.AP_MPMQ_IS_THREADED)
+            forked = q(apache.AP_MPMQ_IS_FORKED)
+        except AttributeError:
+            bad_value = ("You must provide a PythonOption '%s', "
+                         "either 'on' or 'off', when running a version "
+                         "of mod_python < 3.1")
+            
+            threaded = options.get('multithread', '').lower()
+            if threaded == 'on':
+                threaded = True
+            elif threaded == 'off':
+                threaded = False
+            else:
+                raise ValueError(bad_value % "multithread")
+            
+            forked = options.get('multiprocess', '').lower()
+            if forked == 'on':
+                forked = True
+            elif forked == 'off':
+                forked = False
+            else:
+                raise ValueError(bad_value % "multiprocess")
+        request.multithread = bool(threaded)
+        request.multiprocess = bool(forked)
         
         # Run the CherryPy Request object and obtain the response
         requestLine = req.the_request
