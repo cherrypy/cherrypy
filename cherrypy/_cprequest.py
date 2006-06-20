@@ -87,6 +87,7 @@ class Request(object):
                   'before_main', 'before_finalize',
                   'on_end_resource', 'on_end_request',
                   'before_error_response', 'after_error_response']
+    hooks = HookMap(hookpoints)
     
     def __init__(self, remote_addr, remote_port, remote_host, scheme="http"):
         """Populate a new Request object.
@@ -168,6 +169,8 @@ class Request(object):
             # path_info should be the path from the
             # app root (script_name) to the handler.
             self.script_name = r = cherrypy.tree.script_name(self.path)
+            if r is None:
+                raise cherrypy.NotFound()
             self.app = cherrypy.tree.apps[r]
             self.path_info = self.path[len(r.rstrip("/")):]
             
