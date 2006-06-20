@@ -1,14 +1,14 @@
 """CherryPy Benchmark Tool
 
     Usage:
-        benchmark.py --null --notests --help --modpython --ab=path --apache=path
+        benchmark.py --null --notests --help --cpmodpy --modpython --ab=path --apache=path
     
     --null:        use a null Request object (to bench the HTTP server only)
     --notests:     start the server but don't run the tests; this allows
                    you to check the tested pages with a browser
     --help:        show this help message
-    --modpython:   start up apache on 8080 (with a custom modpython
-                   config) and run the tests
+    --cpmodpy:     run tests via apache on 8080 (with the builtin _cpmodpy)
+    --modpython:   run tests via apache on 8080 (with modpython_gateway)
     --ab=path:     Use the ab script/executable at 'path' (see below)
     --apache=path: Use the apache script/exe at 'path' (see below)
     
@@ -267,35 +267,22 @@ def run_standard_benchmarks():
     print_report(size_report())
 
 
-started = False
-def startup(req=None):
-    """Start the CherryPy app engine with no server (for WSGI)."""
-    global started
-    if not started:
-        started = True
-        cherrypy.engine.start(blocking=False)
-    return 0 # apache.OK
-
-
-
 #                         modpython and other WSGI                         #
 
 def startup_modpython(req=None):
-    """Start the CherryPy app server in 'serverless' mode (for WSGI)."""
-    global started
-    if not started:
-        started = True
+    """Start the CherryPy app server in 'serverless' mode (for modpython/WSGI)."""
+    if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
         if req.get_options().has_key("nullreq"):
-            cherrypy.server.request_class = NullRequest
-            cherrypy.server.response_class = NullResponse
+            cherrypy.engine.request_class = NullRequest
+            cherrypy.engine.response_class = NullResponse
         ab_opt = req.get_options().get("ab", "")
         if ab_opt:
             global AB_PATH
             AB_PATH = ab_opt
         cherrypy.engine.start(blocking=False)
-    
-    import modpython_gateway
-    return modpython_gateway.handler(req)
+    if cherrypy.engine.state == cherrypy._cpengine.STARTING:
+        cherrypy.engine.wait()
+    return 0 # apache.OK
 
 mp_conf_template = """
 # Apache2 server configuration file for benchmarking CherryPy with mod_python.
@@ -306,14 +293,31 @@ LoadModule python_module modules/mod_python.so
 
 <Location />
     SetHandler python-program
-    PythonHandler cherrypy.test.benchmark::startup_modpython
-    PythonOption application cherrypy._cpwsgi::wsgiApp
+    PythonFixupHandler cherrypy.test.benchmark::startup_modpython
+    PythonHandler modpython_gateway::handler
+    PythonOption wsgi.application cherrypy._cpwsgi::wsgiApp
     PythonDebug On
 %s%s
 </Location>
 """
 
-def run_modpython():
+cpmodpy_template = """
+# Apache2 server configuration file for benchmarking CherryPy with mod_python.
+
+DocumentRoot "/"
+Listen 8080
+LoadModule python_module modules/mod_python.so
+
+<Location />
+    SetHandler python-program
+    PythonHandler cherrypy._cpmodpy::handler
+    PythonOption cherrypy.setup cherrypy.test.benchmark::startup_modpython
+    PythonDebug On
+%s%s
+</Location>
+"""
+
+def run_modpython(use_wsgi=False):
     # Pass the null and ab=path options through Apache
     nullreq_opt = ""
     if "--null" in opts:
@@ -323,7 +327,10 @@ def run_modpython():
     if "--ab" in opts:
         ab_opt = "    PythonOption ab %s\n" % opts["--ab"]
     
-    conf_data = mp_conf_template % (ab_opt, nullreq_opt)
+    if use_wsgi:
+        conf_data = mp_conf_template % (ab_opt, nullreq_opt)
+    else:
+        conf_data = cpmodpy_template % (ab_opt, nullreq_opt)
     mpconf = os.path.join(curdir, "bench_mp.conf")
     
     f = open(mpconf, 'wb')
@@ -342,7 +349,8 @@ def run_modpython():
 
 
 if __name__ == '__main__':
-    longopts = ['modpython', 'null', 'notests', 'help', 'ab=', 'apache=']
+    longopts = ['cpmodpy', 'modpython', 'null', 'notests',
+                'help', 'ab=', 'apache=']
     try:
         switches, args = getopt.getopt(sys.argv[1:], "", longopts)
         opts = dict(switches)
@@ -377,8 +385,10 @@ if __name__ == '__main__':
     print "Starting CherryPy app server..."
     start = time.time()
     
-    if "--modpython" in opts:
+    if "--cpmodpy" in opts:
         run_modpython()
+    elif "--modpython" in opts:
+        run_modpython(use_wsgi=True)
     else:
         if "--null" in opts:
             cherrypy.server.request_class = NullRequest
