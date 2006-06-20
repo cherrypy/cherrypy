@@ -1,11 +1,12 @@
 """Wrapper for mod_python, for use as a CherryPy HTTP server.
 
 To autostart modpython, the "apache" executable or script must be
-on your system path, or you must override ModPythonServer.APACHE_PATH.
+on your system path, or you must override the global APACHE_PATH.
 On some platforms, "apache" may be called "apachectl" or "apache2ctl"--
 create a symlink to them if needed.
 
-You also need the 'modpython_gateway' module at:
+If you wish to use the WSGI interface instead of our _cpmodpy interface,
+you also need the 'modpython_gateway' module at:
 http://projects.amor.org/misc/wiki/ModPythonGateway
 
 
@@ -48,25 +49,36 @@ def read_process(cmd, args=""):
 
 APACHE_PATH = "apache"
 CONF_PATH = "test_mp.conf"
-ready = False
-interrupt = None
 
-conf_template = """
-# Apache2 server configuration file for testing CherryPy with mod_python.
+conf_modpython_gateway = """
+# Apache2 server conf file for testing CherryPy with modpython_gateway.
 
 DocumentRoot "/"
 Listen %s
 LoadModule python_module modules/mod_python.so
 
 SetHandler python-program
-PythonFixupHandler cherrypy.test.modpy::handler
+PythonFixupHandler cherrypy.test.modpy::wsgisetup
 PythonOption testmod %s
 PythonHandler modpython_gateway::handler
 PythonOption wsgi.application cherrypy._cpwsgi::wsgiApp
 PythonDebug On
 """
 
-def start(testmod, port):
+conf_cpmodpy = """
+# Apache2 server conf file for testing CherryPy with _cpmodpy.
+
+DocumentRoot "/"
+Listen %s
+LoadModule python_module modules/mod_python.so
+
+SetHandler python-program
+PythonHandler cherrypy._cpmodpy::handler
+PythonOption cherrypy.setup cherrypy.test.%s::setup_server
+PythonDebug On
+"""
+
+def start(testmod, port, conf_template):
     mpconf = CONF_PATH
     if not os.path.isabs(mpconf):
         mpconf = os.path.join(curdir, mpconf)
@@ -87,20 +99,20 @@ def stop():
 
 
 loaded = False
-
-def handler(req):
+def wsgisetup(req):
     global loaded
     if not loaded:
         loaded = True
         options = req.get_options()
-        testmod = options.get('testmod')
-        m = __import__(('cherrypy.test.%s' % testmod), globals(), locals(), [''])
+        modname = options['testmod']
+        mod = __import__(modname, globals(), locals(), [''])
+        mod.setup_server()
+        
         import cherrypy
         cherrypy.config.update({
             "log_file": os.path.join(curdir, "test.log"),
             "environment": "production",
             })
-        m.setup_server()
         cherrypy.engine.start(blocking=False)
     from mod_python import apache
     return apache.OK
@@ -109,11 +121,18 @@ def handler(req):
 class ModPythonTestHarness(test.TestHarness):
     """TestHarness for ModPython and CherryPy."""
     
+    use_wsgi = False
+    
     def _run(self, conf):
         import webtest
         webtest.WebCase.PORT = self.port
         print
         print "Running tests:", self.server
+        
+        if self.use_wsgi:
+            conf_template = conf_modpython_gateway
+        else:
+            conf_template = conf_cpmodpy
         
         # mod_python, since it runs in the Apache process, must be
         # started separately for each test, and then *that* process
@@ -121,10 +140,9 @@ class ModPythonTestHarness(test.TestHarness):
         # Then our process can run the actual test.
         for testmod in self.tests:
             try:
-                start(testmod, self.port)
+                start(testmod, self.port, conf_template)
                 suite = webtest.ReloadingTestLoader().loadTestsFromName(testmod)
                 webtest.TerseTestRunner(verbosity=2).run(suite)
             finally:
                 stop()
-
 

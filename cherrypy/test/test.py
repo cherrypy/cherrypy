@@ -67,7 +67,8 @@ class TestHarness(object):
 
 class CommandLineParser(object):
     available_servers = {'wsgi': "cherrypy._cpwsgi.WSGIServer",
-                         'modpy': "modpy",
+                         'cpmodpy': "cpmodpy",
+                         'modpygw': "modpygw",
                          }
     default_server = "wsgi"
     
@@ -145,9 +146,9 @@ class CommandLineParser(object):
         print '    * servers:'
         for name, val in self.available_servers.iteritems():
             if name == self.default_server:
-                print '        --%s: %s (default)' % (name, val)
+                print '        --server=%s: %s (default)' % (name, val)
             else:
-                print '        --%s: %s' % (name, val)
+                print '        --server=%s: %s' % (name, val)
         
         print """
     
@@ -263,10 +264,18 @@ class CommandLineParser(object):
             conf = conf or {}
             conf['profiling.on'] = True
         
-        if self.server == 'modpy':
+        if self.server == 'cpmodpy':
             import modpy
-            modpy.ModPythonTestHarness(self.tests, self.server,
-                                       self.protocol, self.port).run(conf)
+            m = modpy.ModPythonTestHarness(self.tests, self.server,
+                                           self.protocol, self.port)
+            m.use_wsgi = False
+            m.run(conf)
+        elif self.server == 'modpygw':
+            import modpy
+            m = modpy.ModPythonTestHarness(self.tests, self.server,
+                                           self.protocol, self.port)
+            m.use_wsgi = True
+            m.run(conf)
         else:
             TestHarness(self.tests, self.server,
                         self.protocol, self.port).run(conf)
