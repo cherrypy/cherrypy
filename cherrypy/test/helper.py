@@ -114,6 +114,7 @@ def _run_test_suite_thread(moduleNames, conf):
         setup = getattr(m, "setup_server", None)
         if setup:
             setup()
+        
         # The setup functions probably mounted new apps.
         # Tell our server about them.
         apps = []
@@ -127,6 +128,10 @@ def _run_test_suite_thread(moduleNames, conf):
         
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)
+        
+        teardown = getattr(m, "teardown_server", None)
+        if teardown:
+            teardown()
     thread.interrupt_main()
 
 def testmain(conf=None):
