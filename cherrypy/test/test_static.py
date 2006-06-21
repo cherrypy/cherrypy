@@ -127,17 +127,7 @@ class StaticTest(helper.CPWebCase):
         ims = ("If-Modified-Since", lastmod)
         self.getPage("/static/dirback.jpg", headers=[ims])
         self.assertStatus(304)
-##        
-##        # Test lots of requests for the same file (no If-Mod).
-##        ts = []
-##        for x in xrange(500):
-##            t = threading.Thread(target=self.getPage,
-##                                 args=("/static/dirback.jpg",))
-##            ts.append(t)
-##            t.start()
-##        for t in ts:
-##            t.join()
-##
+
 
 if __name__ == "__main__":
     setup_server()

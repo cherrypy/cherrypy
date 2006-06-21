@@ -111,8 +111,10 @@ def log_access():
     fname = config.get('log_access_file', '')
     if fname:
         f = open(fname, 'ab')
-        f.write(s + '\n')
-        f.close()
+        try:
+            f.write(s + '\n')
+        finally:
+            f.close()
 
 _log_severity_levels = {0: "INFO", 1: "WARNING", 2: "ERROR"}
 
@@ -136,8 +138,10 @@ def _log_message(msg, context = '', severity = 0):
     #    os.makedirs(logdir)
     if fname:
         f = open(fname, 'ab')
-        f.write(s + '\n')
-        f.close()
+        try:
+            f.write(s + '\n')
+        finally:
+            f.close()
 
 def log(msg='', context='', severity=0, traceback=False):
     """Syntactic sugar for writing to the (error) log.
