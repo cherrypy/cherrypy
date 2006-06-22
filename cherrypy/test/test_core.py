@@ -10,7 +10,7 @@ import types
 
 import os
 localDir = os.path.dirname(__file__)
-log_file = os.path.join(localDir, "error.log")
+log_file = os.path.join(localDir, "test.log")
 log_access_file = os.path.join(localDir, "access.log")
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
 
@@ -66,8 +66,6 @@ def setup_server():
 
 
     class Params(Test):
-        
-        _cp_config = {'log_file': log_file}
         
         def index(self, thing):
             return repr(thing)
@@ -181,10 +179,6 @@ def setup_server():
 
     class Flatten(Test):
         
-        _cp_config = {'log_file': log_file,
-                      'log_access_file': log_access_file,
-                      }
-        
         def as_string(self):
             return "content"
         
@@ -204,8 +198,7 @@ def setup_server():
 
     class Error(Test):
         
-        _cp_config = {'log_file': log_file,
-                      'tools.log_tracebacks.on': True,
+        _cp_config = {'tools.log_tracebacks.on': True,
                       }
         
         def custom(self):
@@ -367,12 +360,18 @@ def setup_server():
     
     cherrypy.config.update({
         'log_to_screen': False,
+        'log_access_file': log_access_file,
         'server.protocol_version': "HTTP/1.1",
         'environment': 'production',
         'show_tracebacks': True,
         'server.max_request_body_size': 200,
         'server.max_request_header_size': 500,
         })
+    # When run via test.py, the engine is started (and the loggers created)
+    # before the above config.update, so we do it again manually.
+    import logging
+    cherrypy._add_error_log_handler(logging.FileHandler(log_file))
+    
     cherrypy.tree.mount(root)
 
 
@@ -436,8 +435,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertErrorPage(500, msg)
     
     def testLogging(self):
-        open(log_file, "wb").write("")
-        open(log_access_file, "wb").write("")
+        f = open(log_access_file, "wb")
+        f.write("")
+        f.close()
+        f = open(log_file, "wb")
+        f.write("")
+        f.close()
         
         self.getPage("/flatten/as_string")
         self.assertBody('content')
@@ -453,27 +456,26 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         for k, v in self.headers:
             if k.lower() == 'content-length':
                 haslength = True
+        line = data[-2].strip()
         if haslength:
-            self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7 "" ""\n'
+            self.assert_(line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7 "" ""'
                                           % self.prefix()))
         else:
-            self.assert_(data[0].endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 - "" ""\n'
+            self.assert_(line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 - "" ""'
                                           % self.prefix()))
         
-        self.assertEqual(data[1][:15], '127.0.0.1 - - [')
+        self.assertEqual(data[-1][:15], '127.0.0.1 - - [')
         haslength = False
         for k, v in self.headers:
             if k.lower() == 'content-length':
                 haslength = True
+        line = data[-1].strip()
         if haslength:
-            self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 7 "" ""\n'
+            self.assert_(line.endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 7 "" ""'
                                           % self.prefix()))
         else:
-            self.assert_(data[1].endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 - "" ""\n'
+            self.assert_(line.endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 - "" ""'
                                           % self.prefix()))
-        
-        data = open(log_file, "rb").readlines()
-        self.assertEqual(data, [])
         
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
@@ -482,8 +484,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.getPage("/error/page_method")
             self.assertInBody("raise ValueError()")
             data = open(log_file, "rb").readlines()
-            self.assertEqual(data[0][-41:], ' INFO Traceback (most recent call last):\n')
-            self.assertEqual(data[-3], '    raise ValueError()\n')
+            self.assertEqual(data[0].strip().endswith('HTTP Traceback (most recent call last):'), True)
+            self.assertEqual(data[-3].strip().endswith('raise ValueError()'), True)
         finally:
             ignore.pop()
     

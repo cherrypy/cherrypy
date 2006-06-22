@@ -2,6 +2,7 @@
 
 __version__ = '3.0.0alpha'
 
+import logging
 
 from _cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, WrongConfigValue
 import config
@@ -91,6 +92,18 @@ def logtime():
     return '%02d/%s/%04d:%02d:%02d:%02d' % (
         now.day, month, now.year, now.hour, now.minute, now.second)
 
+_logfmt = logging.Formatter("%(message)s")
+
+_access_log = logging.getLogger("cherrypy.access")
+_access_log.setLevel(logging.INFO)
+
+def _add_access_log_handler(handler):
+    if handler.level == logging.NOTSET:
+        handler.setLevel(logging.INFO)
+    if handler.formatter is None:
+        handler.setFormatter(_logfmt)
+    _access_log.addHandler(handler)
+
 def log_access():
     """Default method for logging access"""
     tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
@@ -104,46 +117,46 @@ def log_access():
                 'f': request.headers.get('referer', ''),
                 'a': request.headers.get('user-agent', ''),
                 }
+        
+    # Create handlers if needed
+    if not _access_log.handlers:
+        if config.get('server.log_to_screen'):
+            _add_access_log_handler(logging.StreamHandler(sys.stdout))
+        fname = config.get('log_access_file', '')
+        if fname:
+            _add_access_log_handler(logging.FileHandler(fname))
     
-    if config.get('log_to_screen', True):
-        print s
-    
-    fname = config.get('log_access_file', '')
-    if fname:
-        f = open(fname, 'ab')
-        try:
-            f.write(s + '\n')
-        finally:
-            f.close()
+    _access_log.log(logging.INFO, s)
 
-_log_severity_levels = {0: "INFO", 1: "WARNING", 2: "ERROR"}
 
-def _log_message(msg, context = '', severity = 0):
+_error_log = logging.getLogger("cherrypy.error")
+_error_log.setLevel(logging.DEBUG)
+
+def _add_error_log_handler(handler):
+    if handler.level == logging.NOTSET:
+        handler.setLevel(logging.DEBUG)
+    if handler.formatter is None:
+        handler.setFormatter(_logfmt)
+    _error_log.addHandler(handler)
+
+def _log_message(msg, context = '', severity = logging.DEBUG):
     """Default method for logging messages (error log).
     
     This is not just for errors! Applications may call this at any time to
     log application-specific information.
     """
     
-    level = _log_severity_levels.get(severity, "UNKNOWN")
+    # Create handlers if needed
+    if not _error_log.handlers:
+        if config.get('server.log_to_screen'):
+            _add_error_log_handler(logging.StreamHandler(sys.stdout))
+        fname = config.get('log_file', '')
+        if fname:
+            _add_error_log_handler(logging.FileHandler(fname))
     
-    s = ' '.join((logtime(), context, level, msg))
-    
-    if config.get('log_to_screen', True):
-        print s
-    
-    fname = config.get('log_file', '')
-    #logdir = os.path.dirname(fname)
-    #if logdir and not os.path.exists(logdir):
-    #    os.makedirs(logdir)
-    if fname:
-        f = open(fname, 'ab')
-        try:
-            f.write(s + '\n')
-        finally:
-            f.close()
+    _error_log.log(severity, ' '.join((logtime(), context, msg)))
 
-def log(msg='', context='', severity=0, traceback=False):
+def log(msg='', context='', severity=logging.DEBUG, traceback=False):
     """Syntactic sugar for writing to the (error) log.
     
     This is not just for errors! Applications may call this at any time to
