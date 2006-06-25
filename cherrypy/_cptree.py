@@ -1,10 +1,19 @@
+import logging
+import sys
 
 from cherrypy import config
 
 
 class Application:
+    """A CherryPy Application."""
     
     def __init__(self, root, script_name="", conf=None):
+        self.access_log = log = logging.getLogger("cherrypy.access.%s" % id(self))
+        log.setLevel(logging.INFO)
+        
+        self.error_log = log = logging.getLogger("cherrypy.error.%s" % id(self))
+        log.setLevel(logging.DEBUG)
+        
         self.root = root
         self.script_name = script_name
         self.conf = {}
@@ -12,7 +21,13 @@ class Application:
             self.merge(conf)
     
     def merge(self, conf):
+        """Merge the given config into self.config."""
         config.merge(self.conf, conf)
+        
+        # Create log handlers as specified in config.
+        rootconf = self.conf.get("/", {})
+        config._configure_builtin_logging(rootconf, self.access_log, "log_access_file")
+        config._configure_builtin_logging(rootconf, self.error_log)
     
     def guess_abs_path(self):
         """Guess the absolute URL from server.socket_host and script_name.
@@ -35,7 +50,7 @@ class Application:
 
 
 class Tree:
-    """A registry of mounted applications at diverse points."""
+    """A registry of CherryPy applications, mounted at diverse points."""
     
     def __init__(self):
         self.apps = {}

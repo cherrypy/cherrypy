@@ -1,7 +1,10 @@
 """Configuration system for CherryPy."""
 
 import ConfigParser
+import logging
+_logfmt = logging.Formatter("%(message)s")
 import os
+import sys
 
 import cherrypy
 from cherrypy.lib import autoreload, unrepr
@@ -64,7 +67,7 @@ globalconf = default_conf.copy()
 
 def reset():
     globalconf.clear()
-    globalconf.update(default_conf)
+    update(default_conf)
 
 def update(conf):
     """Update globalconf from a dict, file or filename."""
@@ -77,7 +80,50 @@ def update(conf):
     if isinstance(conf.get("global", None), dict):
         conf = conf["global"]
     globalconf.update(conf)
+    
+    _configure_builtin_logging(globalconf, cherrypy._error_log)
 
+def _add_builtin_screen_handler(log):
+    h = logging.StreamHandler(sys.stdout)
+    h.setLevel(logging.DEBUG)
+    h.setFormatter(_logfmt)
+    h._cpbuiltin = "screen"
+    log.addHandler(h)
+
+def _add_builtin_file_handler(log, fname):
+    h = logging.FileHandler(fname)
+    h.setLevel(logging.DEBUG)
+    h.setFormatter(_logfmt)
+    h._cpbuiltin = "file"
+    log.addHandler(h)
+
+def _configure_builtin_logging(conf, log, filekey="log_file"):
+    """Create/destroy builtin log handlers as needed from conf."""
+    
+    existing = dict([(getattr(x, "_cpbuiltin", None), x)
+                     for x in log.handlers])
+    h = existing.get("screen")
+    screen = conf.get('log_to_screen')
+    if screen:
+        if not h:
+            _add_builtin_screen_handler(log)
+    elif h:
+        log.handlers.remove(h)
+    
+    h = existing.get("file")
+    fname = conf.get(filekey)
+    if fname:
+        if h:
+            if h.baseFilename != os.path.abspath(fname):
+                h.close()
+                log.handlers.remove(h)
+                _add_builtin_file_handler(log, fname)
+        else:
+            _add_builtin_file_handler(log, fname)
+    else:
+        if h:
+            h.close()
+            log.handlers.remove(h)
 
 def get(key, default=None):
     """Return the config value corresponding to key, or default."""

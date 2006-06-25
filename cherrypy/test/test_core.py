@@ -360,19 +360,14 @@ def setup_server():
     
     cherrypy.config.update({
         'log_to_screen': False,
-        'log_access_file': log_access_file,
+        'log_file': log_file,
         'server.protocol_version': "HTTP/1.1",
         'environment': 'production',
         'show_tracebacks': True,
         'server.max_request_body_size': 200,
         'server.max_request_header_size': 500,
         })
-    # When run via test.py, the engine is started (and the loggers created)
-    # before the above config.update, so we do it again manually.
-    import logging
-    cherrypy._add_error_log_handler(logging.FileHandler(log_file))
-    
-    cherrypy.tree.mount(root)
+    cherrypy.tree.mount(root, conf={'/': {'log_access_file': log_access_file}})
 
 
 #                             Client-side code                             #
