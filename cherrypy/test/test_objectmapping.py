@@ -102,6 +102,17 @@ def setup_server():
             return "defnoindex:" + repr(args)
         default.exposed = True
     
+    class ByMethod:
+        exposed = True
+        
+        def __init__(self, *things):
+            self.things = list(things)
+        
+        def GET(self):
+            return repr(self.things)
+        
+        def POST(self, thing):
+            self.things.append(thing)
     
     Root.exposing = Exposing()
     Root.exposingnew = ExposingNewStyle()
@@ -110,11 +121,14 @@ def setup_server():
     Root.dir1.dir2.dir3 = Dir3()
     Root.dir1.dir2.dir3.dir4 = Dir4()
     Root.defnoindex = DefNoIndex()
-    
+    Root.bymethod = ByMethod('another')
     
     for url in script_names:
-        conf = {'user': (url or "/").split("/")[-2]}
-        cherrypy.tree.mount(Root(), url, {'/': conf})
+        d = cherrypy._cprequest.MethodDispatcher()
+        conf = {'/': {'user': (url or "/").split("/")[-2]},
+                '/bymethod': {'dispatch': d},
+                }
+        cherrypy.tree.mount(Root(), url, conf)
     
     cherrypy.config.update({
         'log_to_screen': False,
@@ -239,7 +253,27 @@ class ObjectMappingTest(helper.CPWebCase):
         
         self.getPage("/exposingnew/2")
         self.assertBody("expose works!")
-
+    
+    def testMethodDispatch(self):
+        self.getPage("/bymethod")
+        self.assertBody("['another']")
+        self.assertHeader('Allow', 'GET, HEAD, POST')
+        
+        self.getPage("/bymethod", method="HEAD")
+        self.assertBody("")
+        self.assertHeader('Allow', 'GET, HEAD, POST')
+        
+        self.getPage("/bymethod", method="POST", body="thing=one")
+        self.assertBody("")
+        self.assertHeader('Allow', 'GET, HEAD, POST')
+        
+        self.getPage("/bymethod")
+        self.assertBody("['another', 'one']")
+        self.assertHeader('Allow', 'GET, HEAD, POST')
+        
+        self.getPage("/bymethod", method="PUT")
+        self.assertErrorPage(405)
+        self.assertHeader('Allow', 'GET, HEAD, POST')
 
 
 if __name__ == "__main__":

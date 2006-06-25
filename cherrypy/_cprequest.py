@@ -498,7 +498,7 @@ class Dispatcher(object):
             
             # Try a "default" method on the current leaf.
             defhandler = getattr(candidate, "default", None)
-            if callable(defhandler) and getattr(defhandler, 'exposed', False):
+            if getattr(defhandler, 'exposed', False):
                 # Insert any extra _cp_config from the default handler.
                 conf = getattr(defhandler, "_cp_config", {})
                 object_trail.insert(i+1, ("default", defhandler, conf, curpath))
@@ -509,7 +509,7 @@ class Dispatcher(object):
             # if i < len(object_trail) - 2: continue
             
             # Try the current leaf.
-            if callable(candidate) and getattr(candidate, 'exposed', False):
+            if getattr(candidate, 'exposed', False):
                 set_conf()
                 if i == len(object_trail) - 1:
                     # We found the extra ".index". Check if the original path
@@ -527,6 +527,53 @@ class Dispatcher(object):
         return None, []
 
 default_dispatch = Dispatcher()
+
+
+class MethodDispatcher(Dispatcher):
+    """Additional dispatch based on cherrypy.request.method.upper().
+    
+    Methods named GET, POST, etc will be called on an exposed class.
+    The method names must be all caps; the appropriate Allow header
+    will be output showing all capitalized method names as allowable
+    HTTP verbs.
+    
+    Note that the containing class must be exposed, not the methods.
+    """
+    
+    def __call__(self, path_info):
+        """Set handler and config for the current request."""
+        request = cherrypy.request
+        resource, vpath = self.find_handler(path_info)
+        
+        # Decode any leftover %2F in the virtual_path atoms.
+        vpath = [x.replace("%2F", "/") for x in vpath]
+        
+        if resource:
+            # Set Allow header
+            avail = [m for m in dir(resource) if m.isupper()]
+            if "GET" in avail and "HEAD" not in avail:
+                avail.append("HEAD")
+            avail.sort()
+            cherrypy.response.headers['Allow'] = ", ".join(avail)
+            
+            # Find the subhandler
+            meth = cherrypy.request.method.upper()
+            func = getattr(resource, meth, None)
+            if func is None and meth == "HEAD":
+                func = getattr(resource, "GET", None)
+            if func:
+                def handler():
+                    cherrypy.response.body = func(*vpath, **request.params)
+                request.handler = handler
+                return
+            else:
+                def notallowed():
+                    raise cherrypy.HTTPError(405)
+                request.handler = notallowed
+        else:
+            def notfound():
+                raise cherrypy.NotFound()
+            request.handler = notfound
 
 
 def fileGenerator(input, chunkSize=65536):
