@@ -2,6 +2,7 @@
 
 from mod_python import apache
 import cherrypy
+from cherrypy._cperror import format_exc, bare_error
 
 
 def setup(req):
@@ -86,33 +87,31 @@ def handler(req):
         rfile = _ReadOnlyRequest(req)
         response = request.run(requestLine, headers, rfile)
         
-        sendResponse(req, response)
+        sendResponse(req, response.status, response.header_list, response.body)
         request.close()
     except:
-        cherrypy.log(traceback=True)
+        tb = format_exc()
+        cherrypy.log(tb)
+        s, h, b = bare_error()
+        sendResponse(req, s, h, b)
     return apache.OK
 
-def sendResponse(req, response):
+def sendResponse(req, status, headers, body):
     # Set response status
-    req.status = int(response.status[:3])
+    req.status = int(status[:3])
     
     # Set response headers
     req.content_type = "text/plain"
-    for header, value in response.header_list:
+    for header, value in headers:
         if header.lower() == 'content-type':
             req.content_type = value
             continue
         req.headers_out.add(header, value)
     
-    # Cookie
-    cook_out = response.simple_cookie.output()
-    if cook_out:
-        for line in cook_out.split('\n'):
-            req.headers_out.add(*tuple(v.strip() for v in line.split(':', 1)))
-    
     # Set response body
-    if isinstance(response.body, basestring):
-        req.write(response.body)
+    if isinstance(body, basestring):
+        req.write(body)
     else:
-        for seg in response.body:
+        for seg in body:
             req.write(seg)
+
