@@ -31,12 +31,12 @@ _session_data_holder = {} # Needed for RAM sessions only
 _session_lock_dict = {} # Needed for RAM sessions only
 
 
-def generate_id():
+def generate_id(self=None):
     """Return a new session id"""
     return sha.new('%s' % random.random()).hexdigest()
 
 
-def noop(data): pass
+def noop(self, data=None): pass
 
 class Session:
     """A CherryPy Session object (one per request).
@@ -49,6 +49,8 @@ class Session:
     expiration_time: date/time when the current session will expire
     """
     
+    # It's important that the following are class variables,
+    # so that the CherryPy SessionTool can grab them and fake tooltips.
     timeout = 60
     locking = 'explicit'
     deadlock_timeout = 30
@@ -60,6 +62,10 @@ class Session:
     cookie_secure = False
     cookie_path = None
     cookie_path_from_header = None
+    generate_id = generate_id
+    on_create = noop
+    on_renew = noop
+    on_delete = noop
     
     def __init__(self):
         self.storage = None

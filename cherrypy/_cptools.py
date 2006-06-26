@@ -167,6 +167,9 @@ class SessionTool(Tool):
         self._point = "before_finalize"
         self.callable = _sessions.save
         self._name = None
+        for k in dir(_sessions.Session):
+            if k not in ("init", "save") and not k.startswith("__"):
+                setattr(self, k, None)
     
     def _setup(self):
         """Hook this tool into cherrypy.request using the given conf.
