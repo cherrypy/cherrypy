@@ -3,7 +3,7 @@
 import socket
 import threading
 import Queue
-import mimetools # todo: use email
+from email import FeedParser, Message
 import sys
 import time
 import traceback
@@ -92,10 +92,19 @@ class HTTPRequest(object):
             self.environ["REMOTE_HOST"] = self.addr[0]
             self.environ["REMOTE_ADDR"] = self.addr[0]
             self.environ["REMOTE_PORT"] = str(self.addr[1])
+        
         # then all the http headers
-        headers = mimetools.Message(self.rfile)
-        self.environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
-        cl = headers.getheader("Content-length")
+        feedparser = FeedParser.FeedParser(Message.Message)
+        feedparser._set_headersonly()
+        while True:
+            data = self.rfile.readline()
+            if not data or data in ('\n', '\r\n'):
+                break
+            feedparser.feed(data)
+        headers = feedparser.close()
+        
+        self.environ["CONTENT_TYPE"] = headers.get("Content-type", "")
+        cl = headers.get("Content-length")
         if method in ("POST", "PUT") and cl is None:
             # No Content-Length header supplied. This will hang
             # cgi.FieldStorage, since it cannot determine when to
