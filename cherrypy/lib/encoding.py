@@ -5,6 +5,7 @@ import cherrypy
 
 
 def decode(encoding=None, default_encoding='utf-8'):
+    """Decode cherrypy.request.params ."""
     if not encoding:
         ct = cherrypy.request.headers.elements("Content-Type")
         if ct:

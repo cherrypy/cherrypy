@@ -103,8 +103,9 @@ def init(cache_class=None):
 def get():
     # Ignore POST, PUT, DELETE.
     # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
-    if cherrypy.request.method in cherrypy.config.get("tools.caching.invalid_methods",
-                                                      ("POST", "PUT", "DELETE")):
+    invalid = cherrypy.config.get("tools.caching.invalid_methods",
+                                  ("POST", "PUT", "DELETE"))
+    if cherrypy.request.method in invalid:
         cherrypy.request.cached = c = False
     else:
         cacheData = cherrypy._cache.get()

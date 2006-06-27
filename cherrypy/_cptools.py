@@ -144,7 +144,7 @@ class ErrorTool(Tool):
 
 #                              Builtin tools                              #
 
-from cherrypy.lib import cptools, encodings, static
+from cherrypy.lib import cptools, encoding, static
 from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
 from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
 
@@ -293,9 +293,9 @@ default_toolbox.log_tracebacks = Tool('before_error_response', cptools.log_trace
 default_toolbox.log_headers = Tool('before_error_response', cptools.log_request_headers)
 default_toolbox.err_redirect = ErrorTool(cptools.redirect)
 default_toolbox.etags = Tool('before_finalize', cptools.validate_etags)
-default_toolbox.decode = Tool('before_main', encodings.decode)
-default_toolbox.encode = Tool('before_finalize', encodings.encode)
-default_toolbox.gzip = Tool('before_finalize', encodings.gzip)
+default_toolbox.decode = Tool('before_main', encoding.decode)
+default_toolbox.encode = Tool('before_finalize', encoding.encode)
+default_toolbox.gzip = Tool('before_finalize', encoding.gzip)
 default_toolbox.staticdir = StaticDirTool(static.staticdir)
 default_toolbox.staticfile = MainTool(static.staticfile)
 default_toolbox.sessions = SessionTool()
@@ -304,4 +304,4 @@ default_toolbox.wsgiapp = WSGIAppTool(_wsgiapp.run)
 default_toolbox.caching = CachingTool()
 
 
-del cptools, encodings, static
+del cptools, encoding, static
