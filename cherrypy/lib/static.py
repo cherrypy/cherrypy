@@ -57,7 +57,7 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     
     # Set the Last-Modified response header, so that
     # modified-since validation code can work.
-    response.headers['Last-Modified'] = http.HTTPDate(time.gmtime(stat.st_mtime))
+    response.headers['Last-Modified'] = http.HTTPDate(stat.st_mtime)
     cptools.validate_since()
     
     if disposition is not None:

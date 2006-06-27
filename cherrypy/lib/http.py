@@ -21,6 +21,8 @@ responseCodes[503] = ('Service Unavailable',
 
 import cgi
 import re
+import rfc822
+HTTPDate = rfc822.formatdate
 import time
 from urllib import unquote
 from urlparse import urlparse
@@ -31,36 +33,6 @@ def urljoin(*atoms):
     while "//" in url:
         url = url.replace("//", "/")
     return url
-
-
-weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-def HTTPDate(dt=None):
-    """Return the given time.struct_time as a string in RFC 1123 format.
-    
-    If no arguments are provided, the current time (as determined by
-    time.gmtime() is used).
-    
-    RFC 2616: "[Concerning RFC 1123, RFC 850, asctime date formats]...
-    HTTP/1.1 clients and servers that parse the date value MUST
-    accept all three formats (for compatibility with HTTP/1.0),
-    though they MUST only generate the RFC 1123 format for
-    representing HTTP-date values in header fields."
-    
-    RFC 1945 (HTTP/1.0) requires the same.
-    
-    """
-    
-    if dt is None:
-        dt = time.gmtime()
-    
-    year, month, day, hh, mm, ss, wd, y, z = dt
-    # Is "%a, %d %b %Y %H:%M:%S GMT" better or worse?
-    return ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
-            (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
-
 
 def version_from_http(version_str):
     """Return a Version tuple from the given 'HTTP/x.y' string."""

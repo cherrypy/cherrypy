@@ -8,10 +8,6 @@ import sys
 import time
 import traceback
 
-weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
 import errno
 socket_errors_to_ignore = []
 # Not all of these names will be defined for every platform.
@@ -151,11 +147,7 @@ class HTTPRequest(object):
         if "content-length" not in self.outheaderkeys:
             self.close_at_end = True
         if "date" not in self.outheaderkeys:
-            # HTTP 1.1 mandates date output in RFC 1123 format.
-            year, month, day, hh, mm, ss, wd, y, z = time.gmtime()
-            dt = ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
-                  (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
-            self.outheaders.append(("Date", dt))
+            self.outheaders.append(("Date", rfc822.formatdate()))
         if "server" not in self.outheaderkeys:
             self.outheaders.append(("Server", self.server.version))
         if (self.environ["SERVER_PROTOCOL"] == "HTTP/1.1"
