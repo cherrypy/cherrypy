@@ -274,10 +274,11 @@ class Request(object):
         # Process the headers into self.headers
         for name, value in self.header_list:
             value = value.strip()
+            
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headers
             # (but they will be correctly stored in request.simple_cookie).
-            self.headers[name] = value
+            self.headers[name] = http.decode_TEXT(value)
             
             # Handle cookies differently because on Konqueror, multiple
             # cookies come on different lines with the same key
@@ -687,3 +688,5 @@ class Response(object):
             for line in cookie.split("\n"):
                 name, value = line.split(": ", 1)
                 self.header_list.append((name, value))
+        
+        self.header_list = [(k, http.encode_TEXT(v)) for k, v in self.header_list]

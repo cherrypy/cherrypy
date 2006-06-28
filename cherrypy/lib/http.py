@@ -20,6 +20,7 @@ responseCodes[503] = ('Service Unavailable',
 
 
 import cgi
+from email.Header import Header, decode_header
 import re
 import rfc822
 HTTPDate = rfc822.formatdate
@@ -96,9 +97,12 @@ class HeaderElement(object):
             params = {}
         self.params = params
     
-    def __str__(self):
+    def __unicode__(self):
         p = [";%s=%s" % (k, v) for k, v in self.params.iteritems()]
-        return "%s%s" % (self.value, "".join(p))
+        return u"%s%s" % (self.value, "".join(p))
+    
+    def __str__(self):
+        return str(self.__unicode__())
     
     def parse(elementstr):
         """Transform 'token;key=val' to ('token', {'key': 'val'})."""
@@ -179,6 +183,24 @@ def header_elements(fieldname, fieldvalue):
     result.sort()
     return result
 
+def encode_TEXT(value):
+    """Encode RFC-2047 TEXT (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=")."""
+    try:
+        value = value.encode("iso-8859-1")
+    except UnicodeEncodeError:
+        value = value.encode("utf-8")
+        value = Header(value, 'utf-8').encode()
+    return value
+
+def decode_TEXT(value):
+    """Decode RFC-2047 TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
+    atoms = decode_header(value)
+    decodedvalue = ""
+    for atom, charset in atoms:
+        if charset is not None:
+            atom = atom.decode(charset)
+        decodedvalue += atom
+    return decodedvalue
 
 def validStatus(status):
     """Return legal HTTP status Code, Reason-phrase and Message.
@@ -381,7 +403,7 @@ class HeaderMap(CaseInsensitiveDict):
             if not isinstance(valueList, list):
                 valueList = [valueList]
             for value in valueList:
-                header_list.append((order, (key, str(value))))
+                header_list.append((order, (key, unicode(value))))
         header_list.sort()
         return [item[1] for item in header_list]
 

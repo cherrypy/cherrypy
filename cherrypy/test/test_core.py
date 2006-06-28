@@ -276,13 +276,18 @@ def setup_server():
             hMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
             
             return "double header test"
-
-
+        
+        def ifmatch(self):
+            val = cherrypy.request.headers['If-Match']
+            cherrypy.response.headers['ETag'] = val
+            return repr(val)
+    
+    
     class HeaderElements(Test):
         
         def get_elements(self, headername):
             e = cherrypy.request.headers.elements(headername)
-            return "\n".join([str(x) for x in e])
+            return "\n".join([unicode(x) for x in e])
     
     
     class Method(Test):
@@ -742,6 +747,12 @@ llo,
         for key in ['Content-Length', 'Content-Type', 'Date',
                     'Expires', 'Location', 'Server']:
             self.assertEqual(hnames.count(key), 1)
+        
+        # Test RFC-2047-encoded request and response header values
+        self.getPage("/headers/ifmatch",
+                     [('If-Match', '=?utf-8?q?=E2=84=ABngstr=C3=B6m?=')])
+        self.assertHeader("ETag", '=?utf-8?b?4oSrbmdzdHLDtm0=?=')
+        self.assertBody("u'\\u212bngstr\\xf6m'")
     
     def testHTTPMethods(self):
         # Test that all defined HTTP methods work.
