@@ -389,9 +389,19 @@ def openURL(url, headers=None, method="GET", body=None,
             status = "%s %s" % (response.status, response.reason)
             
             outheaders = []
+            key, value = None, None
             for line in response.msg.headers:
-                key, value = line.split(":", 1)
-                outheaders.append((key.strip(), value.strip()))
+                if line:
+                    if line[0] in " \t":
+                        value += line.strip()
+                    else:
+                        if key and value:
+                            outheaders.append((key, value))
+                        key, value = line.split(":", 1)
+                        key = key.strip()
+                        value = value.strip()
+            if key and value:
+                outheaders.append((key, value))
             
             outbody = response.read()
             
