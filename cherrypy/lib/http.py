@@ -184,7 +184,15 @@ def header_elements(fieldname, fieldvalue):
     return result
 
 def encode_TEXT(value):
-    """Encode RFC-2047 TEXT (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=")."""
+    """Encode RFC-2047 TEXT (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=").
+    
+    Note that HTTP/1.0 says, "Words of *TEXT may contain octets from
+        character sets other than US-ASCII." and "Recipients of header
+        field TEXT containing octets outside the US-ASCII character
+        set may assume that they represent ISO-8859-1 characters."
+        So don't use this function for encoding HTTP/1.0 values.
+    """
+    
     try:
         value = value.encode("iso-8859-1")
     except UnicodeEncodeError:

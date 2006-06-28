@@ -681,12 +681,19 @@ class Response(object):
                 self.headers['Content-Length'] = len(content)
         
         # Transform our header dict into a sorted list of tuples.
-        self.header_list = self.headers.sorted_list()
+        h = self.headers.sorted_list()
         
         cookie = self.simple_cookie.output()
         if cookie:
             for line in cookie.split("\n"):
                 name, value = line.split(": ", 1)
-                self.header_list.append((name, value))
+                h.append((name, value))
         
-        self.header_list = [(k, http.encode_TEXT(v)) for k, v in self.header_list]
+        self.header_list = []
+        for k, v in h:
+            if self.version >= (1, 1):
+                v = http.encode_TEXT(v)
+            # If there are any folds, make sure they are indented.
+            v = v.replace("\n", "\n ")
+            self.header_list.append((k, v))
+
