@@ -630,6 +630,7 @@ class Response(object):
     headers = http.HeaderMap()
     simple_cookie = Cookie.SimpleCookie()
     body = Body()
+    version = (1, 0)
     
     def __init__(self):
         self.status = None
@@ -693,6 +694,8 @@ class Response(object):
         for k, v in h:
             if self.version >= (1, 1):
                 v = http.encode_TEXT(v)
+            else:
+                v = str(v)
             # If there are any folds, make sure they are indented.
             v = v.replace("\n", "\n ")
             self.header_list.append((k, v))
