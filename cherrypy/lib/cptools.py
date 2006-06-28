@@ -61,7 +61,7 @@ def validate_since():
 
 #                                Tool code                                #
 
-def base_url(base=None, use_x_forwarded_host=True):
+def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
     """Change the base URL (scheme://host[:port]).
     
     Useful when running a CP server behind Apache.
@@ -76,14 +76,22 @@ def base_url(base=None, use_x_forwarded_host=True):
         else:
             base = 'http://localhost:%s' % port
     
-    if use_x_forwarded_host:
-        base = request.headers.get("X-Forwarded-Host", base)
+    if local:
+        base = request.headers.get(local, base)
     
     if base.find("://") == -1:
         # add http:// or https:// if needed
         base = request.base[:request.base.find("://") + 3] + base
     
     request.base = base
+    
+    if remote:
+        xff = request.headers.get(remote)
+        if xff:
+            if remote == 'X-Forwarded-For':
+                # See http://bob.pythonmac.org/archives/2005/09/23/apache-x-forwarded-for-caveat/
+                xff = xff.split(',')[-1].strip()
+            request.remote_host = xff
 
 
 def response_headers(headers=None, force=True):

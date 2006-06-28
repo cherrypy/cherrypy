@@ -304,7 +304,7 @@ def run():
     prefer_parent_path()
     
     testList = [
-        'test_baseurl',
+        'test_proxy',
         'test_caching',
         'test_config',
         'test_core',
