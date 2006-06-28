@@ -4,6 +4,7 @@ import socket
 import threading
 import Queue
 from email import FeedParser, Message
+import rfc822
 import sys
 import time
 import traceback
