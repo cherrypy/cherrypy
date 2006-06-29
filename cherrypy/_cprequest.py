@@ -207,6 +207,10 @@ class Request(object):
                 self.hooks.run('on_start_resource')
                 
                 if self.process_request_body:
+                    # Check path-specific methods_with_bodies.
+                    meths = self.config.get("methods_with_bodies", ("POST", "PUT"))
+                    self.process_request_body = self.method in meths
+                    
                     # Prepare the SizeCheckWrapper for the request body
                     mbs = int(self.config.get('server.max_request_body_size',
                                               100 * 1024 * 1024))
@@ -239,8 +243,6 @@ class Request(object):
             path = "global"
         
         self.method = method
-        self.process_request_body = method in ("POST", "PUT")
-        
         self.path = path
         self.query_string = qs
         self.protocol = proto

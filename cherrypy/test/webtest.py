@@ -323,6 +323,7 @@ class WebCase(TestCase):
             self._handlewebError(msg)
 
 
+methods_with_bodies = ("POST", "PUT")
 
 def cleanHeaders(headers, method, body, host, port):
     """Return request headers, with required headers added (if missing)."""
@@ -339,7 +340,7 @@ def cleanHeaders(headers, method, body, host, port):
     if not found:
         headers.append(("Host", "%s:%s" % (host, port)))
     
-    if method in ("POST", "PUT"):
+    if method in methods_with_bodies:
         # Stick in default type and length headers if not present
         found = False
         for k, v in headers:

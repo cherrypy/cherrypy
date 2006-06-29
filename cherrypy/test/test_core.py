@@ -15,7 +15,7 @@ log_access_file = os.path.join(localDir, "access.log")
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
-                        "TRACE", "CONNECT")
+                        "TRACE", "CONNECT", "PROPFIND")
 
 
 def setup_server():
@@ -112,7 +112,7 @@ def setup_server():
                           }
             
             def index(self):
-                raise NameError()
+                raise NameError("redirect_test")
             index.exposed = True
         error = Error()
         
@@ -372,7 +372,11 @@ def setup_server():
         'server.max_request_body_size': 200,
         'server.max_request_header_size': 500,
         })
-    cherrypy.tree.mount(root, conf={'/': {'log_access_file': log_access_file}})
+    appconf = {
+        '/': {'log_access_file': log_access_file},
+        '/method': {'methods_with_bodies': ("POST", "PUT", "PROPFIND")},
+        }
+    cherrypy.tree.mount(root, conf=appconf)
 
 
 #                             Client-side code                             #
@@ -765,6 +769,8 @@ llo,
                           '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2bQ==?=')
     
     def testHTTPMethods(self):
+        helper.webtest.methods_with_bodies = ("POST", "PUT", "PROPFIND")
+        
         # Test that all defined HTTP methods work.
         for m in defined_http_methods:
             self.getPage("/method/", method=m)
@@ -784,12 +790,22 @@ llo,
         self.assertBody("on top of other things")
         
         # Request a PUT method with a file body
-        h = [("Content-type", "text/plain"),
-             ("Content-Length", "27")]
+        b = "one thing on top of another"
+        h = [("Content-Type", "text/plain"),
+             ("Content-Length", str(len(b)))]
+        self.getPage("/method/request_body", headers=h, method="PUT", body=b)
+        self.assertStatus(200)
+        self.assertBody(b)
         
-        self.getPage("/method/request_body", headers=h, method="PUT",
-                       body="one thing on top of another")
-        self.assertBody("one thing on top of another")
+        # Request a custom method with a request body
+        b = ('<?xml version="1.0" encoding="utf-8" ?>\n\n'
+             '<propfind xmlns="DAV:"><prop><getlastmodified/>'
+             '</prop></propfind>')
+        h = [('Content-Type', 'text/xml'),
+             ('Content-Length', str(len(b)))]
+        self.getPage("/method/request_body", headers=h, method="PROPFIND", body=b)
+        self.assertStatus(200)
+        self.assertBody(b)
         
         # Request a disallowed method
         self.getPage("/method/", method="LINK")
