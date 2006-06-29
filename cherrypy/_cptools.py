@@ -203,12 +203,17 @@ class XMLRPCController(object):
         subhandler = self
         for attr in str(rpcmethod).split('.'):
             subhandler = getattr(subhandler, attr, None)
-            if subhandler is None:
-                raise cherrypy.NotFound()
-        if not getattr(subhandler, "exposed", False):
-            raise cherrypy.NotFound()
-        
-        body = subhandler(*(vpath + rpcparams), **params)
+         
+        if subhandler and getattr(subhandler, "exposed", False):
+            body = subhandler(*(vpath + rpcparams), **params)
+
+        else:
+            # http://www.cherrypy.org/ticket/533
+            # if a method is not found, an xmlrpclib.Fault should be returned
+            # raising an exception here will do that; see
+            # cherrypy.lib.xmlrpc.on_error
+            raise Exception, 'method "%s" is not supported' % attr
+            
         conf = cherrypy.request.toolmap.get("xmlrpc", {})
         _xmlrpc.respond(body,
                         conf.get('encoding', 'utf-8'),
