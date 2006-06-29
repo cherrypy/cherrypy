@@ -181,6 +181,7 @@ class SessionTool(Tool):
             conf = cherrypy.request.toolmap.get(self._name, {})
             
             s = cherrypy.request._session = _sessions.Session()
+            # Copy all conf entries onto Session object attributes
             for k, v in conf.iteritems():
                 setattr(s, str(k), v)
             s.init()
