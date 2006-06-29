@@ -365,17 +365,11 @@ class Request(object):
     
     def process_body(self):
         """Convert request.rfile into request.params (or request.body)."""
-        # Create a copy of headers with lowercase keys because
-        # FieldStorage doesn't work otherwise
-        lowerHeaderMap = {}
-        for key, value in self.headers.items():
-            lowerHeaderMap[key.lower()] = value
-        
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
         try:
             forms = _cpcgifs.FieldStorage(fp=self.rfile,
-                                          headers=lowerHeaderMap,
+                                          headers=self.headers,
                                           environ=methenv,
                                           keep_blank_values=1)
         except http.MaxSizeExceeded:
