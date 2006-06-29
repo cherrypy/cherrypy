@@ -419,7 +419,7 @@ class PostgreSQLStorage:
 def generate_session_id():
     """ Return a new session_id """
     return sha.new('%s' % random.random()).hexdigest()
-
+generateSessionID = generate_session_id
 
 # Users access sessions through cherrypy.session, but we want this
 #   to be thread-specific so we use a special wrapper that forwards
