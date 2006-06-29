@@ -25,6 +25,7 @@ import threading
 import types
 
 import cherrypy
+from cherrypy.lib import http
 
 _session_last_clean_up_time = datetime.datetime.now()
 _session_data_holder = {} # Needed for RAM sessions only
@@ -129,8 +130,7 @@ class Session:
         #   So we have to use the old "expires" ... sigh ...
         #cookie[cookie_name]['max-age'] = self.timeout * 60
         gmt_expiration_time = time.gmtime(time.time() + (self.timeout * 60))
-        cookie[self.cookie_name]['expires'] = time.strftime(
-                "%a, %d-%b-%Y %H:%M:%S GMT", gmt_expiration_time)
+        cookie[self.cookie_name]['expires'] = http.HTTPDate(gmt_expiration_time)
         if self.cookie_domain is not None:
             cookie[self.cookie_name]['domain'] = self.cookie_domain
         if self.cookie_secure is True:
