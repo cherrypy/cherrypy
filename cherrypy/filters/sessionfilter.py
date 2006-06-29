@@ -38,6 +38,7 @@ import types
 
 import cherrypy
 import basefilter
+from cherrypy.lib import httptools
 
 
 class EmptyClass:
@@ -154,8 +155,7 @@ class SessionFilter(basefilter.BaseFilter):
         #cookie[cookie_name]['max-age'] = sess.session_timeout * 60
         gmt_expiration_time = time.gmtime(time.time() +
                 (sess.session_timeout * 60))
-        cookie[cookie_name]['expires'] = time.strftime(
-                "%a, %d-%b-%Y %H:%M:%S GMT", gmt_expiration_time)
+        cookie[cookie_name]['expires'] = httptools.HTTPDate(gmt_expiration_time)
         if cookie_domain is not None:
             cookie[cookie_name]['domain'] = cookie_domain
         if cookie_secure is True:
