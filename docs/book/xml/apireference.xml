@@ -390,7 +390,10 @@
         </section>
         <section>
             <title>cherrypy.HTTPRedirect</title>
-            <para>This exception will force a HTTP redirect.</para>
+            <para>This exception will force a HTTP redirect to the url (or urls) you provide it.
+            Optionally, you may specify the 3xx HTTP status code you want it to return. If you do
+            not specify a status, then 303 will be used for HTTP/1.1 responses, and 302 will be
+            used for HTTP/1.0 responses.</para>
         </section>
         <section>
             <title>cherrypy.InternalRedirect</title>
