@@ -130,8 +130,8 @@ class Session:
         #   So we have to use the old "expires" ... sigh ...
         #cookie[cookie_name]['max-age'] = self.timeout * 60
         if self.timeout:
-            gmt_expiration_time = time.gmtime(time.time() + (self.timeout * 60))
-            cookie[self.cookie_name]['expires'] = http.HTTPDate(gmt_expiration_time)
+            expiry = time.time() + (self.timeout * 60)
+            cookie[self.cookie_name]['expires'] = http.HTTPDate(expiry)
         if self.cookie_domain is not None:
             cookie[self.cookie_name]['domain'] = self.cookie_domain
         if self.cookie_secure is True:
