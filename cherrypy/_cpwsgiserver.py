@@ -3,7 +3,14 @@
 import socket
 import threading
 import Queue
-from email import FeedParser, Message
+try:
+    from email import FeedParser
+except ImportError:
+    # Python 2.3 didn't have a FeedParser module. However, we can't
+    # just use Python 2.4's Parser.parse, because it calls read(8192)
+    # instead of readline().
+    FeedParser = None
+    from email import Parser
 import rfc822
 import sys
 import time
@@ -95,15 +102,17 @@ class HTTPRequest(object):
             self.environ["REMOTE_PORT"] = str(self.addr[1])
         
         # then all the http headers
-        feedparser = FeedParser.FeedParser(Message.Message)
-        feedparser._set_headersonly()
-        while True:
-            data = self.rfile.readline()
-            if not data or data in ('\n', '\r\n'):
-                break
-            feedparser.feed(data)
-        headers = feedparser.close()
-        
+        if FeedParser:
+            feedparser = FeedParser.FeedParser()
+            feedparser._set_headersonly()
+            while True:
+                data = self.rfile.readline()
+                if not data or data in ('\n', '\r\n'):
+                    break
+                feedparser.feed(data)
+            headers = feedparser.close()
+        else:
+            headers = Parser.Parser().parse(self.rfile, headersonly=True)
         self.environ["CONTENT_TYPE"] = headers.get("Content-type", "")
         cl = headers.get("Content-length")
         if method in ("POST", "PUT") and cl is None:
