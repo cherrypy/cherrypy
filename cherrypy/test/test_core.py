@@ -217,12 +217,12 @@ def setup_server():
             raise ValueError()
         
         # We support Python 2.3, but the @-deco syntax would look like this:
-        # @cherrypy.set_config(stream_response=True)
+        # @cherrypy.config.wrap(stream_response=True)
         def page_streamed(self):
             yield "word up"
             raise ValueError()
             yield "very oops"
-        page_streamed = cherrypy.set_config(stream_response=True)(page_streamed)
+        page_streamed = cherrypy.config.wrap(stream_response=True)(page_streamed)
         assert(page_streamed._cp_config == {'stream_response': True})
         
         def cause_err_in_finalize(self):

@@ -40,8 +40,8 @@ class Engine(object):
         conf = cherrypy.config.get
         
         # Output config options to log
-        if conf("log_config_options", True):
-            cherrypy.config.output_config_map()
+        if conf("log_config", True):
+            cherrypy.config.log_config()
         
         # Autoreload. Note that, if we're not starting our own HTTP server,
         # autoreload could do Very Bad Things when it calls sys.exit, but

@@ -2,9 +2,10 @@
 
 __version__ = '3.0.0alpha'
 
-import logging
+import logging as _logging
 
-from _cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, WrongConfigValue
+from _cperror import (HTTPError, HTTPRedirect, InternalRedirect,
+                      NotFound, WrongConfigValue)
 import config
 
 import _cptools
@@ -106,15 +107,15 @@ def log_access():
                 'a': request.headers.get('user-agent', ''),
                 }
     try:
-        request.app.access_log.log(logging.INFO, s)
+        request.app.access_log.log(_logging.INFO, s)
     except:
         log(traceback=True)
 
 
-_error_log = logging.getLogger("cherrypy.error")
-_error_log.setLevel(logging.DEBUG)
+_error_log = _logging.getLogger("cherrypy.error")
+_error_log.setLevel(_logging.DEBUG)
 
-def _log_message(msg, context = '', severity = logging.DEBUG):
+def _log_message(msg, context = '', severity = _logging.DEBUG):
     """Default method for logging messages (error log).
     
     This is not just for errors! Applications may call this at any time to
@@ -127,7 +128,7 @@ def _log_message(msg, context = '', severity = logging.DEBUG):
         log = _error_log
     log.log(severity, ' '.join((logtime(), context, msg)))
 
-def log(msg='', context='', severity=logging.DEBUG, traceback=False):
+def log(msg='', context='', severity=_logging.DEBUG, traceback=False):
     """Syntactic sugar for writing to the (error) log.
     
     This is not just for errors! Applications may call this at any time to
@@ -215,13 +216,4 @@ def expose(func=None, alias=None):
         if alias is None:
             alias = func
         return expose_
-
-def set_config(**kwargs):
-    """Decorator to set _cp_config using the given kwargs."""
-    def wrapper(f):
-        if not hasattr(f, "_cp_config"):
-            f._cp_config = {}
-        f._cp_config.update(kwargs)
-        return f
-    return wrapper
 

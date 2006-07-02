@@ -1,13 +1,11 @@
 """Configuration system for CherryPy."""
 
 import ConfigParser
-import logging
-_logfmt = logging.Formatter("%(message)s")
-import os
-import sys
+import logging as _logging
+_logfmt = _logging.Formatter("%(message)s")
+import os as _os
 
 import cherrypy
-from cherrypy.lib import autoreload, unrepr
 
 environments = {
     "development": {
@@ -38,11 +36,11 @@ environments = {
 def merge(base, other):
     """Merge one app config (from a dict, file, or filename) into another."""
     if isinstance(other, basestring):
-        if other not in autoreload.reloadFiles:
-            autoreload.reloadFiles.append(other)
-        other = dict_from_config_file(other)
+        if other not in cherrypy.lib.autoreload.reloadFiles:
+            cherrypy.lib.autoreload.reloadFiles.append(other)
+        other = Parser().dict_from_file(other)
     elif hasattr(other, 'read'):
-        other = dict_from_config_file(other)
+        other = Parser().dict_from_file(other)
     
     # Load other into base
     for section, value_map in other.iteritems():
@@ -57,7 +55,7 @@ default_conf = {
     'server.reverse_dns': False,
     'server.thread_pool': 10,
     'log_to_screen': True,
-    'log_file': os.path.join(os.getcwd(), os.path.dirname(__file__),
+    'log_file': _os.path.join(_os.getcwd(),_os.path.dirname(__file__),
                              "error.log"),
     'tools.log_tracebacks.on': True,
     'environment': "development",
@@ -72,11 +70,12 @@ def reset():
 def update(conf):
     """Update globalconf from a dict, file or filename."""
     if isinstance(conf, basestring):
-        if conf not in autoreload.reloadFiles:
-            autoreload.reloadFiles.append(conf)
-        conf = dict_from_config_file(conf)
+        if conf not in cherrypy.lib.autoreload.reloadFiles:
+            cherrypy.lib.autoreload.reloadFiles.append(conf)
+        conf = Parser().dict_from_file(conf)
     elif hasattr(conf, 'read'):
-        conf = dict_from_config_file(conf)
+        conf = Parser().dict_from_file(conf)
+    
     if isinstance(conf.get("global", None), dict):
         conf = conf["global"]
     globalconf.update(conf)
@@ -84,15 +83,16 @@ def update(conf):
     _configure_builtin_logging(globalconf, cherrypy._error_log)
 
 def _add_builtin_screen_handler(log):
-    h = logging.StreamHandler(sys.stdout)
-    h.setLevel(logging.DEBUG)
+    import sys
+    h = _logging.StreamHandler(sys.stdout)
+    h.setLevel(_logging.DEBUG)
     h.setFormatter(_logfmt)
     h._cpbuiltin = "screen"
     log.addHandler(h)
 
 def _add_builtin_file_handler(log, fname):
-    h = logging.FileHandler(fname)
-    h.setLevel(logging.DEBUG)
+    h = _logging.FileHandler(fname)
+    h.setLevel(_logging.DEBUG)
     h.setFormatter(_logfmt)
     h._cpbuiltin = "file"
     log.addHandler(h)
@@ -114,7 +114,7 @@ def _configure_builtin_logging(conf, log, filekey="log_file"):
     fname = conf.get(filekey)
     if fname:
         if h:
-            if h.baseFilename != os.path.abspath(fname):
+            if h.baseFilename != _os.path.abspath(fname):
                 h.close()
                 log.handlers.remove(h)
                 _add_builtin_file_handler(log, fname)
@@ -146,7 +146,17 @@ def get(key, default=None):
             return default
 
 
-class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
+def wrap(**kwargs):
+    """Decorator to set _cp_config on a handler using the given kwargs."""
+    def wrapper(f):
+        if not hasattr(f, "_cp_config"):
+            f._cp_config = {}
+        f._cp_config.update(kwargs)
+        return f
+    return wrapper
+
+
+class Parser(ConfigParser.ConfigParser):
     """Sub-class of ConfigParser that keeps the case of options and that raises
     an exception if the file cannot be read.
     """
@@ -167,37 +177,37 @@ class CaseSensitiveConfigParser(ConfigParser.ConfigParser):
                 self._read(fp, filename)
             finally:
                 fp.close()
-
-def dict_from_config_file(config_file, raw=False, vars=None):
-    """Convert an INI file to a dictionary"""
     
-    # Parse config file
-    configParser = CaseSensitiveConfigParser()
-    if hasattr(config_file, 'read'):
-        configParser.readfp(config_file)
-    else:
-        configParser.read(config_file)
+    def as_dict(self, raw=False, vars=None):
+        """Convert an INI file to a dictionary"""
+        # Load INI file into a dict
+        from cherrypy.lib import unrepr
+        result = {}
+        for section in self.sections():
+            if section not in result:
+                result[section] = {}
+            for option in self.options(section):
+                value = self.get(section, option, raw, vars)
+                try:
+                    value = unrepr(value)
+                except Exception, x:
+                    msg = ("section: %s, option: %s, value: %s" %
+                           (repr(section), repr(option), repr(value)))
+                    e = cherrypy.WrongConfigValue(msg)
+                    e.args += (x.__class__.__name__, x.args)
+                    raise e
+                result[section][option] = value
+        return result
     
-    # Load INI file into a dict
-    result = {}
-    for section in configParser.sections():
-        if section not in result:
-            result[section] = {}
-        for option in configParser.options(section):
-            value = configParser.get(section, option, raw, vars)
-            try:
-                value = unrepr(value)
-            except Exception, x:
-                msg = ("section: %s, option: %s, value: %s" %
-                       (repr(section), repr(option), repr(value)))
-                e = cherrypy.WrongConfigValue(msg)
-                e.args += (x.__class__.__name__, x.args)
-                raise e
-            result[section][option] = value
-    return result
+    def dict_from_file(self, file):
+        if hasattr(file, 'read'):
+            self.readfp(file)
+        else:
+            self.read(file)
+        return self.as_dict()
 
 
-def output_config_map():
+def log_config():
     """Log engine configuration parameters."""
     cherrypy.log("Server parameters:", 'CONFIG')
     
@@ -217,3 +227,5 @@ def output_config_map():
     for var in serverVars:
         cherrypy.log("  %s: %s" % (var, get(var)), 'CONFIG')
 
+
+del ConfigParser

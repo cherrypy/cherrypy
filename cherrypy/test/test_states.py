@@ -199,7 +199,7 @@ def run_all(host, port):
             'server.socket_port': port,
             'server.thread_pool': 10,
             'log_to_screen': False,
-            'log_config_options': False,
+            'log_config': False,
             'environment': "production",
             'show_tracebacks': True,
             }
@@ -216,7 +216,7 @@ def run_localhosts(port):
                 'server.socket_port': port,
                 'server.thread_pool': 10,
                 'log_to_screen': False,
-                'log_config_options': False,
+                'log_config': False,
                 'environment': "production",
                 'show_tracebacks': True,
                 }
