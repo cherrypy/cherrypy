@@ -60,11 +60,7 @@ class MemoryCache:
                 pass
     
     def get(self):
-        """
-        If the content is in the cache, returns a tuple containing the 
-        expiration time, the lastModified response header and the object 
-        (rendered as a string); returns None if the key is not found.
-        """
+        """Return the object if in the cache, else None."""
         self.totGets += 1
         cacheItem = self.cache.get(self.key, None)
         if cacheItem:
@@ -73,7 +69,7 @@ class MemoryCache:
         else:
             return None
     
-    def put(self, lastModified, obj):
+    def put(self, obj):
         # Size check no longer includes header length
         objSize = len(obj[2])
         totalSize = self.cursize + objSize
@@ -87,7 +83,7 @@ class MemoryCache:
                 expirationTime = time.time() + cherrypy.request.config.get("tools.caching.delay", 600)
                 objKey = self.key
                 self.expirationQueue.put((expirationTime, objSize, objKey))
-                self.cache[objKey] = (expirationTime, lastModified, obj)
+                self.cache[objKey] = obj
                 self.totPuts += 1
                 self.cursize += objSize
             except Queue.Full:
@@ -112,8 +108,7 @@ def get():
         cherrypy.request.cached = c = bool(cacheData)
     
     if c:
-        expirationTime, lastModified, obj = cacheData
-        s, cherrypy.response.header_list, b = obj
+        s, cherrypy.response.header_list, b = cacheData
         try:
             cptools.validate_since()
         except cherrypy.HTTPError, x:
@@ -140,10 +135,8 @@ def tee_output():
         # Might as well do this here; why cache if the body isn't consumed?
         if response.headers.get('Pragma', None) != 'no-cache':
             # save the cache data
-            lastModified = response.headers.get('Last-Modified', None)
             body = ''.join([chunk for chunk in output])
-            cherrypy._cache.put(lastModified,
-                                (response.status, response.header_list, body))
+            cherrypy._cache.put((response.status, response.header_list, body))
     response.body = tee(response.body)
 
 
