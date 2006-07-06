@@ -276,7 +276,7 @@ class WebCase(TestCase):
         for k, v in self.headers:
             if k.lower() == lowkey:
                 if value is None or str(value) == v:
-                    return
+                    return v
         
         if msg is None:
             if value is None:
