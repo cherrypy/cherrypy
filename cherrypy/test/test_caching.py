@@ -31,10 +31,16 @@ import helper
 class CacheTest(helper.CPWebCase):
     
     def testCaching(self):
+        elapsed = 0.0
         for trial in xrange(10):
             self.getPage("/")
-            # The response should be the same every time!
+            # The response should be the same every time,
+            # except for the Age response header.
             self.assertBody('visit #1')
+            if trial != 0:
+                age = int(self.assertHeader("Age"))
+                self.assert_(age >= elapsed)
+                elapsed = age
         
         # POST, PUT, DELETE should not be cached.
         self.getPage("/", method="POST")

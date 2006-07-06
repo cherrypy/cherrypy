@@ -98,7 +98,12 @@ def get():
         cherrypy.request.cached = c = bool(cacheData)
     
     if c:
-        s, cherrypy.response.header_list, b = cacheData
+        response = cherrypy.response
+        s, response.headers, b, create_time = cacheData
+        
+        # Add the required Age header
+        response.headers["Age"] = str(int(time.time() - create_time))
+        
         try:
             cptools.validate_since()
         except cherrypy.HTTPError, x:
@@ -107,8 +112,8 @@ def get():
             raise
         
         # serve it & get out from the request
-        cherrypy.response.status = s
-        cherrypy.response.body = b
+        response.status = s
+        response.body = b
     return c
 
 def tee_output():
@@ -126,7 +131,9 @@ def tee_output():
         if response.headers.get('Pragma', None) != 'no-cache':
             # save the cache data
             body = ''.join([chunk for chunk in output])
-            cherrypy._cache.put((response.status, response.header_list, body))
+            create_time = time.time()
+            cherrypy._cache.put((response.status, response.headers or {},
+                                 body, create_time))
     response.body = tee(response.body)
 
 
