@@ -1,4 +1,3 @@
-import Queue
 import threading
 import time
 
@@ -10,7 +9,6 @@ class MemoryCache:
     
     def __init__(self):
         self.clear()
-        self.expirationQueue = Queue.Queue()
         t = threading.Thread(target=self.expireCache, name='expireCache')
         self.expirationThread = t
         t.setDaemon(True)
@@ -19,6 +17,7 @@ class MemoryCache:
     def clear(self):
         """Reset the cache to its initial, empty state."""
         self.cache = {}
+        self.expirations = {}
         self.totPuts = 0
         self.totGets = 0
         self.totHits = 0
@@ -30,34 +29,24 @@ class MemoryCache:
         return cherrypy.request.config.get("tools.caching.key", cherrypy.request.browser_url)
     key = property(_key)
     
-    def _maxobjsize(self):
-        return cherrypy.request.config.get("tools.caching.maxobjsize", 100000)
-    maxobjsize = property(_maxobjsize)
-    
-    def _maxsize(self):
-        return cherrypy.request.config.get("tools.caching.maxsize", 10000000)
-    maxsize = property(_maxsize)
-    
-    def _maxobjects(self):
-        return cherrypy.request.config.get("tools.caching.maxobjects", 1000)
-    maxobjects = property(_maxobjects)
-    
     def expireCache(self):
-        while True:
-            expirationTime, objSize, objKey = self.expirationQueue.get(block=True, timeout=None)
-            # expireCache runs in a separate thread which the servers are
-            # not aware of. It's possible that "time" will be set to None
-            # arbitrarily, so we check "while time" to avoid exceptions.
-            # See tickets #99 and #180 for more information.
-            while time and (time.time() < expirationTime):
-                time.sleep(0.1)
-            try:
-                del self.cache[objKey]
-                self.totExpires += 1
-                self.cursize -= objSize
-            except KeyError:
-                # the key may have been deleted elsewhere
-                pass
+        # expireCache runs in a separate thread which the servers are
+        # not aware of. It's possible that "time" will be set to None
+        # arbitrarily, so we check "while time" to avoid exceptions.
+        # See tickets #99 and #180 for more information.
+        while time:
+            now = time.time()
+            for expirationTime, objects in self.expirations:
+                if expirationTime <= now:
+                    for objSize, objKey in objects:
+                        try:
+                            del self.cache[objKey]
+                            self.totExpires += 1
+                            self.cursize -= objSize
+                        except KeyError:
+                            # the key may have been deleted elsewhere
+                            pass
+            time.sleep(0.1)
     
     def get(self):
         """Return the object if in the cache, else None."""
@@ -70,25 +59,26 @@ class MemoryCache:
             return None
     
     def put(self, obj):
-        # Size check no longer includes header length
-        objSize = len(obj[2])
-        totalSize = self.cursize + objSize
+        conf = cherrypy.request.config.get
         
-        # checks if there's space for the object
-        if ((objSize < self.maxobjsize) and 
-            (totalSize < self.maxsize) and 
-            (len(self.cache) < self.maxobjects)):
-            # add to the expirationQueue & cache
-            try:
-                expirationTime = time.time() + cherrypy.request.config.get("tools.caching.delay", 600)
+        if len(self.cache) < conf("tools.caching.maxobjects", 1000):
+            # Size check no longer includes header length
+            objSize = len(obj[2])
+            maxobjsize = conf("tools.caching.maxobjsize", 100000)
+            
+            totalSize = self.cursize + objSize
+            maxsize = conf("tools.caching.maxsize", 10000000)
+            
+            # checks if there's space for the object
+            if (objSize < maxobjsize and totalSize < maxsize):
+                # add to the expirations list and cache
+                expirationTime = time.time() + conf("tools.caching.delay", 600)
                 objKey = self.key
-                self.expirationQueue.put((expirationTime, objSize, objKey))
+                bucket = self.expirations.setdefault(expirationTime, [])
+                bucket.append((objSize, objKey))
                 self.cache[objKey] = obj
                 self.totPuts += 1
-                self.cursize += objSize
-            except Queue.Full:
-                # can't add because the queue is full
-                return
+                self.cursize = totalSize
 
 
 def init(cache_class=None):
