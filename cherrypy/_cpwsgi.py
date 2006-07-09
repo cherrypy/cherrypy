@@ -51,13 +51,7 @@ class NullWriter(object):
         pass
 
 
-def wsgiApp(environ, start_response):
-    """The WSGI 'application object' for CherryPy."""
-    
-    # Trap screen output from BaseHTTPRequestHandler.log_message()
-    if not cherrypy.config.get('log_to_screen'):
-        sys.stderr = NullWriter()
-    
+def _wsgi_callable(environ, start_response, app=None):
     request = None
     try:
         env = environ.get
@@ -73,6 +67,11 @@ def wsgiApp(environ, start_response):
         request.multithread = environ['wsgi.multithread']
         request.multiprocess = environ['wsgi.multiprocess']
         request.wsgi_environ = environ
+        
+        if app:
+            request.app = app
+            request.script_name = app.script_name
+        
         response = request.run(request_line(environ),
                                translate_headers(environ),
                                environ['wsgi.input'])
@@ -127,8 +126,30 @@ def wsgiApp(environ, start_response):
                 chunk = chunk.encode("ISO-8859-1")
             yield chunk
 
+def wsgiApp(environ, start_response):
+    """The WSGI 'application object' for CherryPy.
+    
+    Use this as the same WSGI callable for all your CP apps.
+    """
+    return _wsgi_callable(environ, start_response)
 
-# Server components.
+def make_app(app):
+    """Factory for making separate WSGI 'application objects' for each CP app.
+    
+    Example:
+        # 'app' will be a CherryPy application object
+        app = cherrypy.tree.mount(Root(), "/", localconf)
+        
+        # 'wsgi_app' will be a WSGI application
+        wsgi_app = _cpwsgi.make_app(app)
+    """
+    def single_app(environ, start_response):
+        return _wsgi_callable(environ, start_response, app)
+    return single_app
+
+
+
+#                            Server components                            #
 
 
 class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
@@ -187,7 +208,8 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
         if sockFile:
             bind_addr = sockFile
         else:
-            bind_addr = (conf('server.socket_host'), conf('server.socket_port'))
+            bind_addr = (conf('server.socket_host'),
+                         conf('server.socket_port'))
         
         apps = [(base, wsgiApp) for base in cherrypy.tree.apps]
         
