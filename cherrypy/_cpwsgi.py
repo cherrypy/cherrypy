@@ -36,10 +36,10 @@ headerNames = {'HTTP_CGI_AUTHORIZATION': 'Authorization',
 def translate_headers(environ):
     """Translate CGI-environ header names to HTTP header names."""
     for cgiName in environ:
-        translatedHeader = headerNames.get(cgiName.upper())
-        if translatedHeader:
-            yield translatedHeader, environ[cgiName]
-        elif cgiName.upper().startswith("HTTP_"):
+        upname = cgiName.upper()
+        if upname in headerNames:
+            yield headerNames[upname], environ[cgiName]
+        elif upname[:5] == "HTTP_":
             # Hackish attempt at recovering original header names.
             translatedHeader = cgiName[5:].replace("_", "-")
             yield translatedHeader, environ[cgiName]
