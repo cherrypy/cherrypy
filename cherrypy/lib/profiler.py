@@ -20,12 +20,16 @@ You can profile any of your pages as follows:
     cherrypy.tree.mount(Root())
 
 
+You can also turn on profiling for all requests
+using the make_app function as WSGI middleware.
+
+
 CherryPy developers
 ===================
 
-This module can be used whenever you make changes to CherryPy, to get a
-quick sanity-check on overall CP performance. Set the config entry:
-"profiling.on = True" to turn on profiling. Then, use the serve()
+This module can be used whenever you make changes to CherryPy,
+to get a quick sanity-check on overall CP performance. Use the
+"--profile" flag when running the test suite. Then, use the serve()
 function to browse the results in a web browser. If you run this
 module from the command line, it will call serve() for you.
 
@@ -62,6 +66,8 @@ except ImportError:
     import StringIO
 
 
+_count = 0
+
 class Profiler(object):
     
     def __init__(self, path=None):
@@ -70,12 +76,12 @@ class Profiler(object):
         self.path = path
         if not os.path.exists(path):
             os.makedirs(path)
-        self.count = 0
     
     def run(self, func, *args):
         """run(func, *args). Run func, dumping profile data into self.path."""
-        self.count += 1
-        path = os.path.join(self.path, "cp_%04d.prof" % self.count)
+        global _count
+        c = _count = _count + 1
+        path = os.path.join(self.path, "cp_%04d.prof" % c)
         prof = profile.Profile()
         result = prof.runcall(func, *args)
         prof.dump_stats(path)
@@ -128,11 +134,30 @@ class Profiler(object):
     report.exposed = True
 
 
+class ProfileAggregator(Profiler):
+    
+    def __init__(self, path=None):
+        Profiler.__init__(self, path)
+        global _count
+        self.count = _count = _count + 1
+        self.profiler = profile.Profile()
+    
+    def run(self, func, *args):
+        path = os.path.join(self.path, "cp_%04d.prof" % self.count)
+        result = self.profiler.runcall(func, *args)
+        self.profiler.dump_stats(path)
+        return result
+
+
 class make_app:
-    def __init__(self, nextapp, path=None):
+    def __init__(self, nextapp, path=None, aggregate=False):
         """Make a WSGI middleware app which wraps 'nextapp' with profiling."""
         self.nextapp = nextapp
-        self.profiler = Profiler(path)
+        self.aggregate = aggregate
+        if aggregate:
+            self.profiler = ProfileAggregator(path)
+        else:
+            self.profiler = Profiler(path)
     
     def __call__(self, environ, start_response):
         def gather():

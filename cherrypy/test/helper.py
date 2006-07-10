@@ -123,6 +123,7 @@ def _run_test_suite_thread(moduleNames, conf):
                 base = ""
             if conf.get("profiling.on", False):
                 apps.append((base, profiler.make_app(_cpwsgi.wsgiApp)))
+##                apps.append((base, profiler.make_app(_cpwsgi.wsgiApp, aggregate=True)))
             else:
                 apps.append((base, _cpwsgi.wsgiApp))
 ##            # We could use the following line, but it breaks test_tutorials
