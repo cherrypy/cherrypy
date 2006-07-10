@@ -77,8 +77,9 @@ class Profiler(object):
         self.count += 1
         path = os.path.join(self.path, "cp_%04d.prof" % self.count)
         prof = profile.Profile()
-        prof.runcall(func, *args)
+        result = prof.runcall(func, *args)
         prof.dump_stats(path)
+        return result
     
     def statfiles(self):
         """statfiles() -> list of available profiles."""
@@ -125,6 +126,21 @@ class Profiler(object):
         cherrypy.response.headers['Content-Type'] = 'text/plain'
         return self.stats(filename)
     report.exposed = True
+
+
+class make_app:
+    def __init__(self, nextapp, path=None):
+        """Make a WSGI middleware app which wraps 'nextapp' with profiling."""
+        self.nextapp = nextapp
+        self.profiler = Profiler(path)
+    
+    def __call__(self, environ, start_response):
+        def gather():
+            result = []
+            for line in self.nextapp(environ, start_response):
+                result.append(line)
+            return result
+        return self.profiler.run(gather)
 
 
 def serve(path=None, port=8080):

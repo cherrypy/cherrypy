@@ -23,7 +23,7 @@ import sys
 import thread
 
 import cherrypy
-from cherrypy.lib import http
+from cherrypy.lib import http, profiler
 import webtest
 
 
@@ -121,7 +121,10 @@ def _run_test_suite_thread(moduleNames, conf):
         for base, app in cherrypy.tree.apps.iteritems():
             if base == "/":
                 base = ""
-            apps.append((base, _cpwsgi.wsgiApp))
+            if conf.get("profiling.on", False):
+                apps.append((base, profiler.make_app(_cpwsgi.wsgiApp)))
+            else:
+                apps.append((base, _cpwsgi.wsgiApp))
 ##            # We could use the following line, but it breaks test_tutorials
 ##            apps.append((base, _cpwsgi.make_app(app)))
         apps.sort()

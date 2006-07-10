@@ -8,7 +8,7 @@ import types
 import cherrypy
 from cherrypy import _cpcgifs
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import http, profiler
+from cherrypy.lib import http
 
 
 class HookMap(object):
@@ -138,28 +138,6 @@ class Request(object):
         self.simple_cookie = Cookie.SimpleCookie()
         self.handler = None
         
-        # Set up the profiler if requested.
-        conf = cherrypy.config.get
-        if conf("profiling.on", False):
-            p = getattr(cherrypy, "profiler", None)
-            if p is None:
-                ppath = conf("profiling.path", "")
-                p = cherrypy.profiler = profiler.Profiler(ppath)
-            cherrypy.profiler.run(self._run)
-        else:
-            self._run()
-        
-        if self.method == "HEAD":
-            # HEAD requests MUST NOT return a message-body in the response.
-            cherrypy.response.body = []
-        
-        log_access = cherrypy.config.get("log_access", cherrypy.log_access)
-        if log_access:
-            log_access()
-        
-        return cherrypy.response
-    
-    def _run(self):
         try:
             self.process_request_line()
             
@@ -197,6 +175,16 @@ class Request(object):
             if cherrypy.config.get("throw_errors", False):
                 raise
             self.handle_error(sys.exc_info())
+        
+        if self.method == "HEAD":
+            # HEAD requests MUST NOT return a message-body in the response.
+            cherrypy.response.body = []
+        
+        log_access = cherrypy.config.get("log_access", cherrypy.log_access)
+        if log_access:
+            log_access()
+        
+        return cherrypy.response
     
     def respond(self, path_info):
         """Generate a response for the resource at self.path_info."""
