@@ -36,7 +36,7 @@ class MemoryCache:
         # See tickets #99 and #180 for more information.
         while time:
             now = time.time()
-            for expirationTime, objects in self.expirations:
+            for expirationTime, objects in self.expirations.items():
                 if expirationTime <= now:
                     for objSize, objKey in objects:
                         try:
@@ -46,6 +46,7 @@ class MemoryCache:
                         except KeyError:
                             # the key may have been deleted elsewhere
                             pass
+                    del self.expirations[expirationTime]
             time.sleep(0.1)
     
     def get(self):
