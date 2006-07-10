@@ -3,14 +3,7 @@
 import socket
 import threading
 import Queue
-try:
-    from email import FeedParser
-except ImportError:
-    # Python 2.3 didn't have a FeedParser module. However, we can't
-    # just use Python 2.4's Parser.parse, because it calls read(8192)
-    # instead of readline().
-    FeedParser = None
-    from email import Parser
+import mimetools # todo: use email
 import rfc822
 import sys
 import time
@@ -100,21 +93,10 @@ class HTTPRequest(object):
             self.environ["REMOTE_HOST"] = self.addr[0]
             self.environ["REMOTE_ADDR"] = self.addr[0]
             self.environ["REMOTE_PORT"] = str(self.addr[1])
-        
         # then all the http headers
-        if FeedParser:
-            feedparser = FeedParser.FeedParser()
-            feedparser._set_headersonly()
-            while True:
-                data = self.rfile.readline()
-                if not data or data in ('\n', '\r\n'):
-                    break
-                feedparser.feed(data)
-            headers = feedparser.close()
-        else:
-            headers = Parser.Parser().parse(self.rfile, headersonly=True)
-        self.environ["CONTENT_TYPE"] = headers.get("Content-type", "")
-        cl = headers.get("Content-length")
+        headers = mimetools.Message(self.rfile)
+        self.environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
+        cl = headers.getheader("Content-length")
         if method in ("POST", "PUT") and cl is None:
             # No Content-Length header supplied. This will hang
             # cgi.FieldStorage, since it cannot determine when to
