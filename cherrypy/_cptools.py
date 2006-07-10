@@ -144,7 +144,7 @@ class ErrorTool(Tool):
 
 #                              Builtin tools                              #
 
-from cherrypy.lib import cptools, encoding, static
+from cherrypy.lib import cptools, encoding, static, tidy
 from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
 from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
 
@@ -308,6 +308,8 @@ default_toolbox.sessions = SessionTool()
 default_toolbox.xmlrpc = XMLRPCTool()
 default_toolbox.wsgiapp = WSGIAppTool(_wsgiapp.run)
 default_toolbox.caching = CachingTool()
+default_toolbox.tidy = Tool('before_finalize', tidy.tidy)
+default_toolbox.nsgmls = Tool('before_finalize', tidy.nsgmls)
 
 
-del cptools, encoding, static
+del cptools, encoding, static, tidy

@@ -56,7 +56,7 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
             cherrypy.response.body = wrong_content('<br />'.join(new_errs),
                                                    original_body)
         elif strict_xml:
-            # The HTML is OK, but is it valid XML
+            # The HTML is OK, but is it valid XML?
             # Use elementtree to parse XML
             from elementtree.ElementTree import parse
             tagList = ['nbsp', 'quot']
