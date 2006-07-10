@@ -45,12 +45,6 @@ def translate_headers(environ):
             yield translatedHeader, environ[cgiName]
 
 
-class NullWriter(object):
-    
-    def write(self, data):
-        pass
-
-
 def _wsgi_callable(environ, start_response, app=None):
     request = None
     try:

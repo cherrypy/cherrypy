@@ -383,6 +383,13 @@ if __name__ == '__main__':
                 cherrypy.server.stop()
     
     print "Starting CherryPy app server..."
+    
+    class NullWriter(object):
+        """Suppresses the printing of socket errors."""
+        def write(self, data):
+            pass
+    sys.stderr = NullWriter()
+    
     start = time.time()
     
     if "--cpmodpy" in opts:
