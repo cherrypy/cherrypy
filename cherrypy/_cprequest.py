@@ -27,7 +27,7 @@ class HookMap(object):
                 callback(**conf)
             self.callbacks[point].append(wrapper)
     
-    def run(self, point, *args, **kwargs):
+    def run(self, point):
         """Execute all registered callbacks for the given point."""
         failsafe = point in self.failsafe
         for callback in self.callbacks[point]:
@@ -39,13 +39,13 @@ class HookMap(object):
             # your own errors in these callbacks!
             if failsafe:
                 try:
-                    callback(*args, **kwargs)
+                    callback()
                 except (KeyboardInterrupt, SystemExit):
                     raise
                 except:
                     cherrypy.log(traceback=True)
             else:
-                callback(*args, **kwargs)
+                callback()
 
 
 class Request(object):
@@ -266,27 +266,34 @@ class Request(object):
         self.params = http.parseQueryString(self.query_string)
         
         # Process the headers into self.headers
+        headers = self.headers
         for name, value in self.header_list:
+            # Call title() now (and use dict.__method__(headers))
+            # so title doesn't have to be called twice.
+            name = name.title()
             value = value.strip()
             
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headers
             # (but they will be correctly stored in request.simple_cookie).
-            self.headers[name] = http.decode_TEXT(value)
+            if "=?" in value:
+                dict.__setitem__(headers, name, http.decode_TEXT(value))
+            else:
+                dict.__setitem__(headers, name, value)
             
             # Handle cookies differently because on Konqueror, multiple
             # cookies come on different lines with the same key
-            if name.title() == 'Cookie':
+            if name == 'Cookie':
                 self.simple_cookie.load(value)
         
-        host = self.headers.get('Host')
-        if host is None:
+        if not dict.__contains__(headers, 'Host'):
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
             # (Bad Request) status code to any HTTP/1.1 request message
             # which lacks a Host header field.
             if self.version >= (1, 1):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
+        host = dict.__getitem__(headers, 'Host')
         if not host:
             host = cherrypy.config.get('server.socket_host', '')
         self.base = "%s://%s" % (self.scheme, host)
@@ -305,13 +312,6 @@ class Request(object):
                 dispatch = d
                 break
             
-            env = nodeconf.get("environment")
-            if env:
-                d = cherrypy.config.environments[env].get("dispatch")
-                if d:
-                    dispatch = d
-                    break
-            
             lastslash = trail.rfind("/")
             if lastslash == -1:
                 break
@@ -326,25 +326,28 @@ class Request(object):
     def tool_up(self):
         """Populate self.toolmap and set up each tool."""
         # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
-        self.toolmap = {}
-        for k, v in self.config.iteritems():
-            atoms = k.split(".")
-            namespace = atoms.pop(0)
+        self.toolmap = tm = {}
+        reqconf = self.config
+        for k in reqconf:
+            atoms = k.split(".", 2)
+            namespace = atoms[0]
             if namespace == "tools":
-                toolname = atoms.pop(0)
-                bucket = self.toolmap.setdefault(toolname, {})
-                bucket[".".join(atoms)] = v
+                toolname = atoms[1]
+                bucket = tm.setdefault(toolname, {})
+                bucket[atoms[2]] = reqconf[k]
             elif namespace == "hooks":
                 # Attach bare hooks declared in config.
-                hookpoint = atoms[0]
+                hookpoint = atoms[1]
+                v = reqconf[k]
                 if isinstance(v, basestring):
                     v = cherrypy.lib.attributes(v)
                 self.hooks.attach(hookpoint, v)
         
         # Run tool._setup(conf) for each tool in the new toolmap.
-        for toolname, conf in self.toolmap.iteritems():
-            if conf.get("on", False):
-                tool = getattr(cherrypy.tools, toolname)
+        tools = cherrypy.tools
+        for toolname in tm:
+            if tm[toolname].get("on", False):
+                tool = getattr(tools, toolname)
                 tool._setup()
     
     def _get_browser_url(self):
@@ -436,9 +439,18 @@ class Dispatcher(object):
         root = app.root
         
         # Get config for the root object/path.
+        environments = cherrypy.config.environments
         curpath = ""
-        nodeconf = getattr(root, "_cp_config", {}).copy()
-        nodeconf.update(app.conf.get("/", {}))
+        nodeconf = {}
+        if hasattr(root, "_cp_config"):
+            nodeconf.update(root._cp_config)
+        if 'environment' in nodeconf:
+            env = environments[nodeconf['environment']]
+            for k in env:
+                if k not in nodeconf:
+                    nodeconf[k] = env[k]
+        if "/" in app.conf:
+            nodeconf.update(app.conf["/"])
         object_trail = [('root', root, nodeconf, curpath)]
         
         node = root
@@ -451,59 +463,64 @@ class Dispatcher(object):
             node = getattr(node, objname, None)
             if node is not None:
                 # Get _cp_config attached to this node.
-                nodeconf = getattr(node, "_cp_config", {}).copy()
+                if hasattr(node, "_cp_config"):
+                    nodeconf.update(node._cp_config)
+                    
+                    # Resolve "environment" entries. This must be done node-by-node
+                    # so that a child's "environment" can override concrete settings
+                    # of a parent. However, concrete settings in this node will
+                    # override "environment" settings in the same node.
+                    if 'environment' in nodeconf:
+                        env = environments[nodeconf['environment']]
+                        for k in env:
+                            if k not in nodeconf:
+                                nodeconf[k] = env[k]
             
             # Mix in values from app.conf for this path.
             curpath = "/".join((curpath, name))
-            nodeconf.update(app.conf.get(curpath, {}))
-            
-            # Resolve "environment" entries. This must be done node-by-node
-            # so that a child's "environment" can override concrete settings
-            # of a parent. However, concrete settings in this node will
-            # override "environment" settings in the same node.
-            env = nodeconf.get("environment")
-            if env:
-                for k, v in cherrypy.config.environments[env].iteritems():
-                    if k not in nodeconf:
-                        nodeconf[k] = v
+            if curpath in app.conf:
+                nodeconf.update(app.conf[curpath])
             
             object_trail.append((objname, node, nodeconf, curpath))
         
         def set_conf():
             """Set cherrypy.request.config."""
             base = cherrypy.config.globalconf.copy()
-            if 'tools.staticdir.dir' in base:
-                base['tools.staticdir.section'] = "global"
+            # Note that we merge the config from each node
+            # even if that node was None.
             for name, obj, conf, curpath in object_trail:
                 base.update(conf)
                 if 'tools.staticdir.dir' in conf:
                     base['tools.staticdir.section'] = curpath
-            request.config = base
+            return base
         
         # Try successive objects (reverse order)
         for i in xrange(len(object_trail) - 1, -1, -1):
             
             name, candidate, nodeconf, curpath = object_trail[i]
+            if candidate is None:
+                continue
             
             # Try a "default" method on the current leaf.
-            defhandler = getattr(candidate, "default", None)
-            if getattr(defhandler, 'exposed', False):
-                # Insert any extra _cp_config from the default handler.
-                conf = getattr(defhandler, "_cp_config", {})
-                object_trail.insert(i+1, ("default", defhandler, conf, curpath))
-                set_conf()
-                return defhandler, names[i:-1]
+            if hasattr(candidate, "default"):
+                defhandler = candidate.default
+                if getattr(defhandler, 'exposed', False):
+                    # Insert any extra _cp_config from the default handler.
+                    conf = getattr(defhandler, "_cp_config", {})
+                    object_trail.insert(i+1, ("default", defhandler, conf, curpath))
+                    request.config = set_conf()
+                    return defhandler, names[i:-1]
             
             # Uncomment the next line to restrict positional params to "default".
             # if i < len(object_trail) - 2: continue
             
             # Try the current leaf.
             if getattr(candidate, 'exposed', False):
-                set_conf()
+                request.config = set_conf()
                 if i == len(object_trail) - 1:
                     # We found the extra ".index". Check if the original path
                     # had a trailing slash (otherwise, do a redirect).
-                    if not path.endswith('/'):
+                    if path[-1:] != '/':
                         atoms = request.browser_url.split("?", 1)
                         newUrl = atoms.pop(0) + '/'
                         if atoms:
@@ -512,7 +529,7 @@ class Dispatcher(object):
                 return candidate, names[i:-1]
         
         # We didn't find anything
-        set_conf()
+        request.config = set_conf()
         return None, []
 
 default_dispatch = Dispatcher()
@@ -627,7 +644,9 @@ class Response(object):
         
         self.headers = http.HeaderMap()
         content_type = cherrypy.config.get('default_content_type', 'text/html')
-        self.headers.update({
+        # Since we know all our keys are titled strings, we can
+        # bypass HeaderMap.update and get a big speed boost.
+        dict.update(self.headers, {
             "Content-Type": content_type,
             "Server": "CherryPy/" + cherrypy.__version__,
             "Date": http.HTTPDate(),

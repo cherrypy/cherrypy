@@ -44,6 +44,14 @@ def merge(base, other):
     
     # Load other into base
     for section, value_map in other.iteritems():
+        # Resolve "environment" entries
+        if 'environment' in value_map:
+            env = environments[value_map['environment']]
+            for k in env:
+                if k not in value_map:
+                    value_map[k] = env[k]
+            del value_map['environment']
+        
         base.setdefault(section, {}).update(value_map)
 
 default_conf = {
@@ -78,6 +86,16 @@ def update(conf):
     
     if isinstance(conf.get("global", None), dict):
         conf = conf["global"]
+    
+    if 'environment' in conf:
+        env = environments[conf['environment']]
+        for k in env:
+            if k not in conf:
+                conf[k] = env[k]
+    
+    if 'tools.staticdir.dir' in conf:
+        conf['tools.staticdir.section'] = "global"
+    
     globalconf.update(conf)
     
     _configure_builtin_logging(globalconf, cherrypy._error_log)
@@ -127,7 +145,6 @@ def _configure_builtin_logging(conf, log, filekey="log_file"):
 
 def get(key, default=None):
     """Return the config value corresponding to key, or default."""
-    
     try:
         conf = cherrypy.request.config
         if conf is None:
@@ -136,14 +153,7 @@ def get(key, default=None):
         # There's no request, so just use globalconf.
         conf = globalconf
     
-    try:
-        return conf[key]
-    except KeyError:
-        try:
-            env = conf["environment"]
-            return environments[env][key]
-        except KeyError:
-            return default
+    return conf.get(key, default)
 
 
 def wrap(**kwargs):
