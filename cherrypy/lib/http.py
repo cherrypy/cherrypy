@@ -129,6 +129,8 @@ class HeaderElement(object):
     from_str = classmethod(from_str)
 
 
+q_separator = re.compile(r'; *q *=')
+
 class AcceptElement(HeaderElement):
     """An element (with parameters) from an Accept-* header's element list."""
     
@@ -136,7 +138,7 @@ class AcceptElement(HeaderElement):
         qvalue = None
         # The first "q" parameter (if any) separates the initial
         # parameter(s) (if any) from the accept-params.
-        atoms = re.split(r'; *q *=', elementstr, 1)
+        atoms = q_separator.split(elementstr, 1)
         initial_value = atoms.pop(0).strip()
         if atoms:
             # The qvalue for an Accept header can have extensions. The other
@@ -253,6 +255,9 @@ def validStatus(status):
     
     return code, reason, message
 
+
+quoted_slash = re.compile("(?i)%2F")
+
 def parse_request_line(request_line):
     """Return (method, path, querystring, protocol) from a request_line."""
     method, path, protocol = request_line.split()
@@ -275,14 +280,17 @@ def parse_request_line(request_line):
     # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
     #
     # Note also that cgi.parse_qs will decode the querystring for us.
-    atoms = [unquote(x) for x in re.split("(?i)%2F", path)]
+    atoms = [unquote(x) for x in quoted_slash.split(path)]
     path = "%2F".join(atoms)
     
     return method, path, qs, protocol
 
+
+image_map_pattern = re.compile(r"[0-9]+,[0-9]+")
+
 def parseQueryString(query_string, keep_blank_values=True):
     """Build a paramMap dictionary from a query_string."""
-    if re.match(r"[0-9]+,[0-9]+", query_string):
+    if image_map_pattern.match(query_string):
         # Server-side image map. Map the coords to 'x' and 'y'
         # (like CGI::Request does).
         pm = query_string.split(",")
