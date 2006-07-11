@@ -657,34 +657,21 @@ class Response(object):
         if cherrypy.request.method == "OPTIONS":
             stream = False
         
+        headers = self.headers
         if stream:
-            try:
-                del self.headers['Content-Length']
-            except KeyError:
-                pass
+            headers.pop('Content-Length', None)
         else:
             # Responses which are not streamed should have a Content-Length,
             # but allow user code to set Content-Length if desired.
-            if self.headers.get('Content-Length') is None:
+            if dict.get(headers, 'Content-Length') is None:
                 content = self.collapse_body()
-                self.headers['Content-Length'] = len(content)
+                dict.__setitem__(headers, 'Content-Length', len(content))
         
         # Transform our header dict into a sorted list of tuples.
-        h = self.headers.sorted_list()
+        self.header_list = h = headers.output(self.version)
         
         cookie = self.simple_cookie.output()
         if cookie:
             for line in cookie.split("\n"):
                 name, value = line.split(": ", 1)
                 h.append((name, value))
-        
-        self.header_list = []
-        for k, v in h:
-            if self.version >= (1, 1):
-                v = http.encode_TEXT(v)
-            else:
-                v = str(v)
-            # If there are any folds, make sure they are indented.
-            v = v.replace("\n", "\n ")
-            self.header_list.append((k, v))
-

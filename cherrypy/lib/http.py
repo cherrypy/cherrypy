@@ -185,23 +185,6 @@ def header_elements(fieldname, fieldvalue):
     result.sort()
     return result
 
-def encode_TEXT(value):
-    """Encode RFC-2047 TEXT (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=").
-    
-    Note that HTTP/1.0 says, "Words of *TEXT may contain octets from
-        character sets other than US-ASCII." and "Recipients of header
-        field TEXT containing octets outside the US-ASCII character
-        set may assume that they represent ISO-8859-1 characters."
-        So don't use this function for encoding HTTP/1.0 values.
-    """
-    
-    try:
-        value = value.encode("iso-8859-1")
-    except UnicodeEncodeError:
-        value = value.encode("utf-8")
-        value = Header(value, 'utf-8').encode()
-    return value
-
 def decode_TEXT(value):
     """Decode RFC-2047 TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
     atoms = decode_header(value)
@@ -385,43 +368,34 @@ class HeaderMap(CaseInsensitiveDict):
             return []
         return header_elements(key, h)
     
-    general_fields = ["Cache-Control", "Connection", "Date", "Pragma",
-                      "Trailer", "Transfer-Encoding", "Upgrade", "Via",
-                      "Warning"]
-    response_fields = ["Accept-Ranges", "Age", "ETag", "Location",
-                       "Proxy-Authenticate", "Retry-After", "Server",
-                       "Vary", "WWW-Authenticate"]
-    entity_fields = ["Allow", "Content-Encoding", "Content-Language",
-                     "Content-Length", "Content-Location", "Content-MD5",
-                     "Content-Range", "Content-Type", "Expires",
-                     "Last-Modified"]
-    
-    order_map = {}
-    for _ in general_fields:
-        order_map[_] = 0
-    for _ in response_fields:
-        order_map[_] = 1
-    for _ in entity_fields:
-        order_map[_] = 2
-    
-    def sorted_list(self):
-        """Transform self into a sorted list of (name, value) tuples.
-        
-        From http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-            '... it is "good practice" to send general-header fields first,
-            followed by request-header or response-header fields, and ending
-            with the entity-header fields.'
-        """
-        
+    def output(self, version=(1, 1)):
+        """Transform self into a list of (name, value) tuples."""
         header_list = []
-        for key, valueList in self.iteritems():
-            order = self.order_map.get(key, 3)
-            if not isinstance(valueList, list):
-                valueList = [valueList]
-            for value in valueList:
-                header_list.append((order, (key, unicode(value))))
-        header_list.sort()
-        return [item[1] for item in header_list]
+        for key, value in self.iteritems():
+            if not isinstance(value, list):
+                value = [value]
+            for v in value:
+                if isinstance(v, unicode):
+                    # Encode RFC-2047 TEXT (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=").
+                    try:
+                        v = v.encode("iso-8859-1")
+                    except UnicodeEncodeError:
+                        # HTTP/1.0 says, "Words of *TEXT may contain octets
+                        # from character sets other than US-ASCII." and
+                        # "Recipients of header field TEXT containing octets
+                        # outside the US-ASCII character set may assume that
+                        # they represent ISO-8859-1 characters."
+                        if version >= (1, 1):
+                            v = v.encode("utf-8")
+                            v = Header(v, 'utf-8').encode()
+                        else:
+                            raise
+                else:
+                    # This coercion should not take any time at all
+                    # if value is already of type "str".
+                    v = str(v)
+                header_list.append((key, v))
+        return header_list
 
 
 class MaxSizeExceeded(Exception):
