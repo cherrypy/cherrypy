@@ -151,16 +151,17 @@ def enable(**kwargs):
         return f
     return wrapper
 
+def _wrapper():
+    if get():
+        cherrypy.request.handler = None
+    else:
+        # Note the devious technique here of adding hooks on the fly
+        cherrypy.request.hooks.attach('before_finalize', tee_output)
+
 def _setup():
     """Hook caching into cherrypy.request using the given conf."""
     conf = cherrypy.request.toolmap.get("caching", {})
     if not getattr(cherrypy, "_cache", None):
         init(conf.get("class", None))
-    def wrapper():
-        if get():
-            cherrypy.request.handler = None
-        else:
-            # Note the devious technique here of adding hooks on the fly
-            cherrypy.request.hooks.attach('before_finalize', tee_output)
-    cherrypy.request.hooks.attach('before_main', wrapper)
+    cherrypy.request.hooks.attach('before_main', _wrapper)
 
