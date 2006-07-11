@@ -51,8 +51,13 @@ class Tool(object):
         setargs(self, callable)
     
     def _merged_args(self, d=None):
-        conf = cherrypy.request.toolmap.get(self._name, {}).copy()
-        conf.update(d or {})
+        tm = cherrypy.request.toolmap
+        if self._name in tm:
+            conf = tm[self._name].copy()
+        else:
+            conf = {}
+        if d:
+            conf.update(d)
         if "on" in conf:
             del conf["on"]
         return conf
@@ -112,17 +117,18 @@ class MainTool(Tool):
         wrapper.exposed = True
         return wrapper
     
+    def _wrapper(self):
+        if self.callable(**self._merged_args()):
+            cherrypy.request.handler = None
+    
     def _setup(self):
         """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        def wrapper():
-            if self.callable(**self._merged_args()):
-                cherrypy.request.handler = None
         # Don't pass conf (or our wrapper will get wrapped!)
-        cherrypy.request.hooks.attach(self._point, wrapper)
+        cherrypy.request.hooks.attach(self._point, self._wrapper)
 
 
 class ErrorTool(Tool):
@@ -131,15 +137,16 @@ class ErrorTool(Tool):
     def __init__(self, callable, name=None):
         Tool.__init__(self, None, callable, name)
     
+    def _wrapper(self):
+        self.callable(**self._merged_args())
+    
     def _setup(self):
         """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        def wrapper():
-            self.callable(**self._merged_args())
-        cherrypy.request.error_response = wrapper
+        cherrypy.request.error_response = self._wrapper
 
 
 #                              Builtin tools                              #
@@ -147,17 +154,6 @@ class ErrorTool(Tool):
 from cherrypy.lib import cptools, encoding, static, tidy
 from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
 from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
-
-
-class StaticDirTool(MainTool):
-    def _setup(self):
-        """Hook this tool into cherrypy.request using the given conf."""
-        conf = self._merged_args()
-        def wrapper():
-            if self.callable(**conf):
-                cherrypy.request.handler = None
-        # Don't pass conf (or our wrapper will get wrapped!)
-        cherrypy.request.hooks.attach(self._point, wrapper)
 
 
 class SessionTool(Tool):
@@ -171,25 +167,26 @@ class SessionTool(Tool):
             if k not in ("init", "save") and not k.startswith("__"):
                 setattr(self, k, None)
     
+    def _init(self):
+        conf = cherrypy.request.toolmap.get(self._name, {})
+        
+        s = cherrypy.request._session = _sessions.Session()
+        # Copy all conf entries onto Session object attributes
+        for k, v in conf.iteritems():
+            setattr(s, str(k), v)
+        s.init()
+        
+        if not hasattr(cherrypy, "session"):
+            cherrypy.session = _sessions.SessionWrapper()
+    
     def _setup(self):
         """Hook this tool into cherrypy.request using the given conf.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        def init():
-            conf = cherrypy.request.toolmap.get(self._name, {})
-            
-            s = cherrypy.request._session = _sessions.Session()
-            # Copy all conf entries onto Session object attributes
-            for k, v in conf.iteritems():
-                setattr(s, str(k), v)
-            s.init()
-            
-            if not hasattr(cherrypy, "session"):
-                cherrypy.session = _sessions.SessionWrapper()
         # init must be bound after headers are read
-        cherrypy.request.hooks.attach('before_request_body', init)
+        cherrypy.request.hooks.attach('before_request_body', self._init)
         cherrypy.request.hooks.attach('before_finalize', _sessions.save)
         cherrypy.request.hooks.attach('on_end_request', _sessions.cleanup)
 
@@ -235,6 +232,7 @@ class XMLRPCTool(object):
     def _setup(self):
         """Hook this tool into cherrypy.request using the given conf."""
         request = cherrypy.request
+        # Guard against running this method twice.
         if hasattr(request, 'xmlrpc'):
             return
         request.xmlrpc = True
@@ -302,7 +300,7 @@ default_toolbox.etags = Tool('before_finalize', cptools.validate_etags)
 default_toolbox.decode = Tool('before_main', encoding.decode)
 default_toolbox.encode = Tool('before_finalize', encoding.encode)
 default_toolbox.gzip = Tool('before_finalize', encoding.gzip)
-default_toolbox.staticdir = StaticDirTool(static.staticdir)
+default_toolbox.staticdir = MainTool(static.staticdir)
 default_toolbox.staticfile = MainTool(static.staticfile)
 default_toolbox.sessions = SessionTool()
 default_toolbox.xmlrpc = XMLRPCTool()
