@@ -1,8 +1,9 @@
+import datetime
 import threading
 import time
 
 import cherrypy
-from cherrypy.lib import cptools
+from cherrypy.lib import cptools, http
 
 
 class MemoryCache:
@@ -165,3 +166,51 @@ def _setup():
         init(conf.get("class", None))
     cherrypy.request.hooks.attach('before_main', _wrapper)
 
+def expires(e_time=0, ignore_indicators=False, force=True):
+    """Tool for influencing cache mechanisms using the 'Expires' header.
+
+    e_time can either be a datetime.datetime instance or number zero.
+
+    If a datetime.datetime instance is supplied, the 'Expires' header will be
+    set to that value.
+
+    If a number zero is supplied, the following "cache prevention" headers
+    are set:
+       'Expires': '0'
+       'Pragma': 'no-cache'
+       'Cache-Control: 'no-cache'
+
+    By default, if e_time is set to zero, the tool checks to see if the
+    response already includes some common "cacheability indicator" headers.
+    If they are present, the "cache prevention" headers are not set.  This
+    behavior can be overridden by setting the ignore_indicators parameter
+    to True.
+
+    Setting force to False will keep the tool from overwriting any headers
+    that are already present in the response.
+    """
+
+    if e_time and isinstance(e_time, datetime.datetime):
+        e_time = http.HTTPDate(time.mktime(e_time.timetuple()))
+        cptools.response_headers([("Expires", e_time)], force)
+        return
+
+    try:
+        if not(int(e_time)):
+            # some header names that indicate that the response can be cached
+            indicators = set(('Etag', 'Last-Modified', 'Age', 'Expires'))
+            cacheable = indicators.intersection(set(cherrypy.response.headers))
+            if not e_time and (ignore_indicators or not cacheable):
+                cptools.response_headers([("Pragma", "no-cache"),
+                                          ("Expires", "0")], force)
+                if cherrypy.request.version >= (1, 1):
+                    cptools.response_headers([("Cache-Control", "no-cache")], force)
+
+        else:
+            raise ValueError("e_time value must be number zero or a datetime."
+                             "datetime instance")
+
+    except TypeError, e:
+        e.args = ["e_time value must be datetime.datetime instance or number"
+                  "zero."]
+        raise
