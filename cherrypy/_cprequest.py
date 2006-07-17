@@ -3,6 +3,7 @@
 import Cookie
 import os
 import sys
+import time
 import types
 
 import cherrypy
@@ -641,6 +642,7 @@ class Response(object):
         self.status = None
         self.header_list = None
         self.body = None
+        self.time = time.time()
         
         self.headers = http.HeaderMap()
         content_type = cherrypy.config.get('default_content_type', 'text/html')
@@ -649,7 +651,7 @@ class Response(object):
         dict.update(self.headers, {
             "Content-Type": content_type,
             "Server": "CherryPy/" + cherrypy.__version__,
-            "Date": http.HTTPDate(),
+            "Date": http.HTTPDate(self.time),
             "Set-Cookie": [],
             "Content-Length": None
         })

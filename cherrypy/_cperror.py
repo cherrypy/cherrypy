@@ -69,7 +69,7 @@ class HTTPRedirect(Exception):
         self.urls = abs_urls
         
         # RFC 2616 indicates a 301 response code fits our goal; however,
-        # browser support for 301 is quite messy. Do 302 instead. See
+        # browser support for 301 is quite messy. Do 302/303 instead. See
         # http://ppewww.ph.gla.ac.uk/~flavell/www/post-redirect.html
         if status is None:
             if cherrypy.response.version >= (1, 1):

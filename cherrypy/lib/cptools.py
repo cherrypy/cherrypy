@@ -62,9 +62,14 @@ def validate_since():
 #                                Tool code                                #
 
 def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
-    """Change the base URL (scheme://host[:port]).
+    """Change the base URL (scheme://host[:port][/path]).
     
     Useful when running a CP server behind Apache.
+    
+    If you want the new request.base to include path info (not just the host),
+    you must explicitly set base to the full base path, and ALSO set 'local'
+    to '', so that the X-Forwarded-Host request header (which never includes
+    path info) does not override it.
     """
     
     request = cherrypy.request

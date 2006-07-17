@@ -5,11 +5,10 @@ import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
-import datetime
-import time
 
 
 def setup_server():
+    
     class Root:
         
         _cp_config = {'tools.caching.on': True}
@@ -30,15 +29,10 @@ def setup_server():
                       'tools.staticdir.root': curdir,
                       }
 
-        def gentle(self):
-            self._cp_config['tools.expires.force'] = False
+        def force(self):
+            self._cp_config['tools.expires.force'] = True
             return "being forceful"
-        gentle.exposed = True
-
-        def ignorant(self):
-            self._cp_config['tools.expires.ignore_indicators'] = True
-            return "being ignorant"
-        ignorant.exposed = True
+        force.exposed = True
 
         def dynamic(self):
             cherrypy.response.headers['Cache-Control'] = 'private'
@@ -50,26 +44,18 @@ def setup_server():
             return "Hi, I'm cacheable."
         cacheable.exposed = True
 
-        expire_on = datetime.datetime(2006, 7, 17, 8, 55, 59, 171000)
-
         def specific(self):
             return "I am being specific"
         specific.exposed = True
-        specific._cp_config = {'tools.expires.e_time': expire_on}
+        specific._cp_config = {'tools.expires.secs': 86400}
 
         class Foo(object):pass
         
         def wrongtype(self):
             return "Woops"
         wrongtype.exposed = True
-        wrongtype._cp_config = {'tools.expires.e_time': Foo()}
-
-        def wrongvalue(self):
-            return "Uh oh"
-        wrongvalue.exposed = True
-        wrongvalue._cp_config = {'tools.expires.e_time': 42}
-
-
+        wrongtype._cp_config = {'tools.expires.secs': Foo()}
+    
     cherrypy.tree.mount(Root())
     cherrypy.tree.mount(UnCached(), "/expires")
     cherrypy.config.update({
@@ -104,70 +90,63 @@ class CacheTest(helper.CPWebCase):
         self.assertBody('visit #3')
 
     def testExpiresTool(self):
-
-        # test setting a specific expires header
+        
+        # test setting an expires header
         self.getPage("/expires/specific")
         self.assertStatus("200 OK")
-        self.assertHeader("Expires", "Mon, 17 Jul 2006 12:55:59 GMT")
-
-        # test exceptions for bad e_time values
+        self.assertHeader("Expires")
+        
+        # test exceptions for bad time values
         self.getPage("/expires/wrongtype")
         self.assertStatus("500 Internal error")
         self.assertInBody("TypeError")
-
-        self.getPage("/expires/wrongvalue")
-        self.assertStatus("500 Internal error")
-        self.assertInBody("ValueError")
-
-        self.getPage('/expires/dynamic')
-        self.assertBody("D-d-d-dynamic!")
-        # dynamic sets Cache-Control to private but it should  be
-        # overwritten here ...
-        self.assertHeader("Cache-Control", "no-cache")
-        self.assertHeader("Expires", "0")
-        self.assertHeader("Pragma", "no-cache")
-
-        # configure the tool to keep existing headers
-        self.getPage("/expires/gentle")
-        self.assertStatus("200 OK")
-
-        self.getPage('/expires/dynamic')
-        self.assertBody("D-d-d-dynamic!")
-        # the Cache-Control header should now be untouched
-        self.assertHeader("Cache-Control", "private")
-
+        
         # static content should not have "cache prevention" headers
         self.getPage("/expires/index.html")
         self.assertStatus("200 OK")
         self.assertNoHeader("Pragma")
         self.assertNoHeader("Cache-Control")
-        self.assertNoHeader("Expires")
-
+        
         # dynamic content that sets indicators should not have
         # "cache prevention" headers
         self.getPage("/expires/cacheable")
         self.assertStatus("200 OK")
         self.assertNoHeader("Pragma")
         self.assertNoHeader("Cache-Control")
-        self.assertNoHeader("Expires")
-
-        # configure the tool to ignore indicators
-        self.getPage("/expires/ignorant")
+        
+        self.getPage('/expires/dynamic')
+        self.assertBody("D-d-d-dynamic!")
+        # the Cache-Control header should be untouched
+        self.assertHeader("Cache-Control", "private")
+        
+        # configure the tool to ignore indicators and replace existing headers
+        self.getPage("/expires/force")
         self.assertStatus("200 OK")
-
+        
         # static content should now have "cache prevention" headers
         self.getPage("/expires/index.html")
         self.assertStatus("200 OK")
         self.assertHeader("Pragma", "no-cache")
         self.assertHeader("Cache-Control", "no-cache")
-        self.assertHeader("Expires", "0")
-
+        d = self.assertHeader("Date")
+        self.assertHeader("Expires", d)
+        
         # the cacheable handler should now have "cache prevention" headers
         self.getPage("/expires/cacheable")
         self.assertStatus("200 OK")
         self.assertHeader("Pragma", "no-cache")
         self.assertHeader("Cache-Control", "no-cache")
-        self.assertHeader("Expires", "0")
+        d = self.assertHeader("Date")
+        self.assertHeader("Expires", d)
+        
+        self.getPage('/expires/dynamic')
+        self.assertBody("D-d-d-dynamic!")
+        # dynamic sets Cache-Control to private but it should  be
+        # overwritten here ...
+        self.assertHeader("Pragma", "no-cache")
+        self.assertHeader("Cache-Control", "no-cache")
+        d = self.assertHeader("Date")
+        self.assertHeader("Expires", d)
 
 if __name__ == '__main__':
     setup_server()

@@ -166,51 +166,36 @@ def _setup():
         init(conf.get("class", None))
     cherrypy.request.hooks.attach('before_main', _wrapper)
 
-def expires(e_time=0, ignore_indicators=False, force=True):
+def expires(secs=0, force=False):
     """Tool for influencing cache mechanisms using the 'Expires' header.
-
-    e_time can either be a datetime.datetime instance or number zero.
-
-    If a datetime.datetime instance is supplied, the 'Expires' header will be
-    set to that value.
-
-    If a number zero is supplied, the following "cache prevention" headers
-    are set:
-       'Expires': '0'
+    
+    'secs' must be either an int or a datetime.timedelta, and indicates the
+    number of seconds between response.time and when the response should
+    expire. The 'Expires' header will be set to (response.time + secs).
+    
+    If 'secs' is zero, the following "cache prevention" headers are also set:
        'Pragma': 'no-cache'
-       'Cache-Control: 'no-cache'
-
-    By default, if e_time is set to zero, the tool checks to see if the
-    response already includes some common "cacheability indicator" headers.
-    If they are present, the "cache prevention" headers are not set.  This
-    behavior can be overridden by setting the ignore_indicators parameter
-    to True.
-
-    Setting force to False will keep the tool from overwriting any headers
-    that are already present in the response.
+       'Cache-Control': 'no-cache'
+    
+    If 'force' is False (the default), the following headers are checked:
+    'Etag', 'Last-Modified', 'Age', 'Expires'. If any are already present,
+    none of the "cache prevention" headers are set.
     """
-
-    if e_time and isinstance(e_time, datetime.datetime):
-        e_time = http.HTTPDate(time.mktime(e_time.timetuple()))
-        cptools.response_headers([("Expires", e_time)], force)
-        return
-
-    try:
-        if not(int(e_time)):
+    
+    if isinstance(secs, datetime.timedelta):
+        secs = (86400 * secs.days) + secs.seconds
+    expiry = http.HTTPDate(cherrypy.response.time + secs)
+    cptools.response_headers([("Expires", expiry)], force)
+    
+    if secs == 0:
+        cacheable = False
+        if not force:
             # some header names that indicate that the response can be cached
-            indicators = set(('Etag', 'Last-Modified', 'Age', 'Expires'))
-            cacheable = indicators.intersection(set(cherrypy.response.headers))
-            if not e_time and (ignore_indicators or not cacheable):
-                cptools.response_headers([("Pragma", "no-cache"),
-                                          ("Expires", "0")], force)
-                if cherrypy.request.version >= (1, 1):
-                    cptools.response_headers([("Cache-Control", "no-cache")], force)
-
-        else:
-            raise ValueError("e_time value must be number zero or a datetime."
-                             "datetime instance")
-
-    except TypeError, e:
-        e.args = ["e_time value must be datetime.datetime instance or number"
-                  "zero."]
-        raise
+            for indicator in ('Etag', 'Last-Modified', 'Age', 'Expires'):
+                if indicator in cherrypy.response.headers:
+                    cacheable = True
+                    break
+        if not cacheable:
+            cptools.response_headers([("Pragma", "no-cache")], force)
+            if cherrypy.request.version >= (1, 1):
+                cptools.response_headers([("Cache-Control", "no-cache")], force)
