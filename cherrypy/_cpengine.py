@@ -1,18 +1,25 @@
 """Create and manage the CherryPy application engine."""
 
 import cgi
+import os
 import sys
 import threading
 import time
 
 import cherrypy
 from cherrypy import _cprequest
-from cherrypy.lib import autoreload
 
 # Use a flag to indicate the state of the application engine.
 STOPPED = 0
 STARTING = None
 STARTED = 1
+
+
+def fileattr(m):
+    if hasattr(m, "__loader__"):
+        if hasattr(m.__loader__, "archive"):
+            return m.__loader__.archive
+    return getattr(m, "__file__", None)
 
 
 class Engine(object):
@@ -23,7 +30,6 @@ class Engine(object):
     
     def __init__(self):
         self.state = STOPPED
-        self.interrupt = None
         
         # Startup/shutdown hooks
         self.on_start_engine_list = []
@@ -31,11 +37,13 @@ class Engine(object):
         self.on_start_thread_list = []
         self.on_stop_thread_list = []
         self.seen_threads = {}
+        
+        self.mtimes = {}
+        self.reload_files = []
     
     def start(self, blocking=True):
         """Start the application engine."""
         self.state = STARTING
-        self.interrupt = None
         
         conf = cherrypy.config.get
         
@@ -43,31 +51,6 @@ class Engine(object):
         if conf("log_config", True):
             cherrypy.config.log_config()
         
-        # Autoreload. Note that, if we're not starting our own HTTP server,
-        # autoreload could do Very Bad Things when it calls sys.exit, but
-        # deployers will just have to be educated and responsible for it.
-        if conf('autoreload.on', False):
-            try:
-                freq = conf('autoreload.frequency', 1)
-                autoreload.main(self._start, args=(blocking,), freq=freq)
-            except KeyboardInterrupt:
-                cherrypy.log("<Ctrl-C> hit: shutting down autoreloader", "ENGINE")
-                cherrypy.server.stop()
-                self.stop()
-            except SystemExit:
-                cherrypy.log("SystemExit raised: shutting down autoreloader", "ENGINE")
-                cherrypy.server.stop()
-                self.stop()
-                # We must raise here: if this is a process spawned by
-                # autoreload, then it must return its error code to
-                # the parent.
-                raise
-            return
-        
-        self._start(blocking)
-    
-    def _start(self, blocking=True):
-        # This is in a separate function so autoreload can call it.
         for func in self.on_start_engine_list:
             func()
         self.state = STARTED
@@ -77,10 +60,20 @@ class Engine(object):
     def block(self):
         """Block forever (wait for stop(), KeyboardInterrupt or SystemExit)."""
         try:
+            autoreload = cherrypy.config.get('autoreload.on', False)
+            if autoreload:
+                i = 0
+                freq = cherrypy.config.get('autoreload.frequency', 1)
+            
             while self.state != STOPPED:
                 time.sleep(.1)
-                if self.interrupt:
-                    raise self.interrupt
+                
+                # Autoreload
+                if autoreload:
+                    i += .1
+                    if i > freq:
+                        i = 0
+                        self.autoreload()
         except KeyboardInterrupt:
             cherrypy.log("<Ctrl-C> hit: shutting down app engine", "ENGINE")
             cherrypy.server.stop()
@@ -92,10 +85,44 @@ class Engine(object):
             raise
         except:
             # Don't bother logging, since we're going to re-raise.
-            self.interrupt = sys.exc_info()[1]
             # Note that we don't stop the HTTP server here.
             self.stop()
             raise
+    
+    def reexec(self):
+        """Re-execute the current process."""
+        cherrypy.server.stop()
+        self.stop()
+        
+        args = sys.argv[:]
+        cherrypy.log("Re-spawning %s" % " ".join(args), "ENGINE")
+        args.insert(0, sys.executable)
+        
+        if sys.platform == "win32":
+            args = ['"%s"' % arg for arg in args]
+        os.execv(sys.executable, args)
+    
+    def autoreload(self):
+        """Reload the process if registered files have been modified."""
+        for filename in map(fileattr, sys.modules.values()) + self.reload_files:
+            if filename:
+                if filename.endswith(".pyc"):
+                    filename = filename[:-1]
+                
+                try:
+                    mtime = os.stat(filename).st_mtime
+                except OSError:
+                    if filename in self.mtimes:
+                        # The file was probably deleted.
+                        self.reexec()
+                
+                if filename not in self.mtimes:
+                    self.mtimes[filename] = mtime
+                    continue
+                
+                if mtime > self.mtimes[filename]:
+                    # The file has been modified.
+                    self.reexec()
     
     def stop(self):
         """Stop the application engine."""
@@ -120,8 +147,6 @@ class Engine(object):
         """Block the caller until ready to receive requests (or error)."""
         while not self.ready:
             time.sleep(.1)
-            if self.interrupt:
-                raise self.interrupt
     
     def _is_ready(self):
         return bool(self.state == STARTED)
@@ -179,6 +204,9 @@ class NotReadyRequest:
     
     def __init__(self, msg):
         self.msg = msg
+    
+    def close(self):
+        pass
     
     def run(self, request_line, headers, rfile):
         self.method = "GET"

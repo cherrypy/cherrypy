@@ -7,6 +7,7 @@ import os as _os
 
 import cherrypy
 
+
 environments = {
     "development": {
         'autoreload.on': True,
@@ -36,8 +37,8 @@ environments = {
 def merge(base, other):
     """Merge one app config (from a dict, file, or filename) into another."""
     if isinstance(other, basestring):
-        if other not in cherrypy.lib.autoreload.reloadFiles:
-            cherrypy.lib.autoreload.reloadFiles.append(other)
+        if other not in cherrypy.engine.reload_files:
+            cherrypy.engine.reload_files.append(other)
         other = Parser().dict_from_file(other)
     elif hasattr(other, 'read'):
         other = Parser().dict_from_file(other)
@@ -78,8 +79,8 @@ def reset():
 def update(conf):
     """Update globalconf from a dict, file or filename."""
     if isinstance(conf, basestring):
-        if conf not in cherrypy.lib.autoreload.reloadFiles:
-            cherrypy.lib.autoreload.reloadFiles.append(conf)
+        if conf not in cherrypy.engine.reload_files:
+            cherrypy.engine.reload_files.append(conf)
         conf = Parser().dict_from_file(conf)
     elif hasattr(conf, 'read'):
         conf = Parser().dict_from_file(conf)

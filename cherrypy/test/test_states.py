@@ -1,7 +1,10 @@
+import os
+import sys
+import threading
+import time
+
 import test
 test.prefer_parent_path()
-
-import threading
 
 import cherrypy
 
@@ -147,31 +150,72 @@ class ServerStateTests(helper.CPWebCase):
         if self.server_class:
             
             # Raise a keyboard interrupt in the HTTP server's main thread.
-            def interrupt():
-                cherrypy.server.wait()
-                cherrypy.server.httpserver.interrupt = KeyboardInterrupt
-            threading.Thread(target=interrupt).start()
-            
             # We must start the server in this, the main thread
+            cherrypy.engine.start(blocking=False)
             cherrypy.server.start(self.server_class)
-            # Time passes...
+            cherrypy.server.httpserver.interrupt = KeyboardInterrupt
+            while cherrypy.engine.state != 0:
+                time.sleep(0.1)
+            
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
+            self.assertEqual(cherrypy.engine.state, 0)
             
             # Raise a keyboard interrupt in a page handler; on multithreaded
             # servers, this should occur in one of the worker threads.
             # This should raise a BadStatusLine error, since the worker
             # thread will just die without writing a response.
-            def interrupt():
-                cherrypy.server.wait()
-                from httplib import BadStatusLine
-                self.assertRaises(BadStatusLine, self.getPage, "/ctrlc")
-            threading.Thread(target=interrupt).start()
-            
+            cherrypy.engine.start(blocking=False)
             cherrypy.server.start(self.server_class)
-            # Time passes...
+            
+            from httplib import BadStatusLine
+            try:
+                self.getPage("/ctrlc")
+            except BadStatusLine:
+                pass
+            else:
+                print self.body
+                self.fail("AssertionError: BadStatusLine not raised")
+            
+            while cherrypy.engine.state != 0:
+                time.sleep(0.1)
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
+    
+    def test_3_Autoreload(self):
+        if self.server_class:
+            demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
+                                      "test_states_demo.py")
+            
+            # Start the demo script in a new process
+            host = cherrypy.config.get("server.socket_host")
+            port = cherrypy.config.get("server.socket_port")
+            cherrypy._cpserver.wait_for_free_port(host, port)
+            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable,
+                      demoscript, host, str(port))
+            cherrypy._cpserver.wait_for_occupied_port(host, port)
+            
+            try:
+                self.getPage("/pid")
+                pid = self.body
+                
+                # Give the autoreloader time to cache the file time.
+                time.sleep(2)
+                
+                # Touch the file
+                f = open(demoscript, 'ab')
+                f.write(" ")
+                f.close()
+                
+                # Give the autoreloader time to re-exec the process
+                time.sleep(2)
+                cherrypy._cpserver.wait_for_occupied_port(host, port)
+                
+                self.getPage("/pid")
+                self.assertNotEqual(self.body, pid)
+            finally:
+                # Shut down the spawned process
+                self.getPage("/stop")
 
 
 db_connection = None
@@ -188,9 +232,18 @@ def run(server, conf):
         cherrypy.engine.on_start_thread_list.append(db_connection.startthread)
         cherrypy.engine.on_stop_thread_list.append(db_connection.stopthread)
         
-        helper.CPTestRunner.run(suite)
+        import pyconquer
+        tr = pyconquer.Logger("cherrypy")
+        tr.out = open(os.path.join(os.path.dirname(__file__), "state.log"), "wb")
+        try:
+            tr.start()
+            helper.CPTestRunner.run(suite)
+        finally:
+            tr.stop()
+            tr.out.close()
     finally:
-        cherrypy.server.stop()
+        if cherrypy.server.httpserver.ready:
+            cherrypy.server.stop()
         cherrypy.engine.stop()
 
 

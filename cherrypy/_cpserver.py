@@ -16,6 +16,8 @@ class Server(object):
     
     def start(self, server=None):
         """Main function. MUST be called from the main thread."""
+        self.interrupt = None
+        
         conf = cherrypy.config.get
         if server is None:
             server = conf('server.instance', None)
@@ -63,9 +65,11 @@ class Server(object):
     
     def wait(self):
         """Wait until the HTTP server is ready to receive requests."""
-        while (not getattr(self.httpserver, "ready", True)
+        while (not getattr(self.httpserver, "ready", False)
                and not self.interrupt):
             time.sleep(.1)
+        if self.interrupt:
+            raise self.interrupt
         
         # Wait for port to be occupied
         if cherrypy.config.get('server.socket_port'):
@@ -82,6 +86,11 @@ class Server(object):
         else:
             # httpstop() MUST block until the server is *truly* stopped.
             httpstop()
+            conf = cherrypy.config.get
+            if conf('server.socket_port'):
+                host = conf('server.socket_host')
+                port = conf('server.socket_port')
+                wait_for_free_port(host, port)
             cherrypy.log("HTTP Server shut down", "HTTP")
     
     def restart(self):

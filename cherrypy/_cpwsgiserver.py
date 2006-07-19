@@ -214,7 +214,7 @@ class CherryPyWSGIServer(object):
     
     version = "CherryPy/3.0.0alpha"
     ready = False
-    interrupt = None
+    _interrupt = None
     RequestHandlerClass = HTTPRequest
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
@@ -314,11 +314,16 @@ class CherryPyWSGIServer(object):
         while self.ready:
             self.tick()
             if self.interrupt:
+                while self.interrupt is True:
+                    # Wait for self.stop() to complete
+                    time.sleep(0.1)
                 raise self.interrupt
     
     def tick(self):
         try:
             s, addr = self.socket.accept()
+            if not self.ready:
+                return
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
             request = self.RequestHandlerClass(s, addr, self)
@@ -328,13 +333,51 @@ class CherryPyWSGIServer(object):
             # notice keyboard interrupts on Win32, which don't interrupt
             # accept() by default
             return
+        except socket.error, x:
+            if x.args[1] == "Bad file descriptor":
+                # Our socket was closed
+                return
+            raise
+    
+    def _get_interrupt(self):
+        return self._interrupt
+    def _set_interrupt(self, interrupt):
+        self._interrupt = True
+        self.stop()
+        self._interrupt = interrupt
+    interrupt = property(_get_interrupt, _set_interrupt)
     
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         self.ready = False
-        s = getattr(self, "socket", None)
-        if s and hasattr(s, "close"):
-            s.close()
+        
+        sock = getattr(self, "socket", None)
+        if sock:
+            if not isinstance(self.bind_addr, basestring):
+                # Ping our own socket to make accept() return immediately.
+                try:
+                    host, port = sock.getsockname()[:2]
+                except socket.error, x:
+                    if x.args[1] != "Bad file descriptor":
+                        raise
+                else:
+                    for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
+                                                  socket.SOCK_STREAM):
+                        af, socktype, proto, canonname, sa = res
+                        s = None
+                        try:
+                            s = socket.socket(af, socktype, proto)
+                            # See http://groups.google.com/group/cherrypy-users/
+                            #        browse_frm/thread/bbfe5eb39c904fe0
+                            s.settimeout(1.0)
+                            s.connect((host, port))
+                            s.close()
+                        except socket.error:
+                            if s:
+                                s.close()
+            if hasattr(sock, "close"):
+                sock.close()
+            self.socket = None
         
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
@@ -343,8 +386,11 @@ class CherryPyWSGIServer(object):
         
         # Don't join currentThread (when stop is called inside a request).
         current = threading.currentThread()
-        for worker in self._workerThreads:
+        while self._workerThreads:
+            worker = self._workerThreads.pop()
             if worker is not current and worker.isAlive:
-                worker.join()
-        
-        self._workerThreads = []
+                try:
+                    worker.join()
+                except AssertionError:
+                    pass
+
