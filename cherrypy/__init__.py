@@ -4,8 +4,7 @@ __version__ = '3.0.0alpha'
 
 import logging as _logging
 
-from _cperror import (HTTPError, HTTPRedirect, InternalRedirect,
-                      NotFound, WrongConfigValue)
+from _cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, WrongConfigValue
 import config
 
 import _cptools
