@@ -185,7 +185,6 @@ def expires(secs=0, force=False):
     if isinstance(secs, datetime.timedelta):
         secs = (86400 * secs.days) + secs.seconds
     expiry = http.HTTPDate(cherrypy.response.time + secs)
-    cptools.response_headers([("Expires", expiry)], force)
     
     if secs == 0:
         cacheable = False
@@ -199,3 +198,6 @@ def expires(secs=0, force=False):
             cptools.response_headers([("Pragma", "no-cache")], force)
             if cherrypy.request.version >= (1, 1):
                 cptools.response_headers([("Cache-Control", "no-cache")], force)
+    
+    # Set after Pragma, Cache-Control so it doesn't interfere with 'indicators'
+    cptools.response_headers([("Expires", expiry)], force)

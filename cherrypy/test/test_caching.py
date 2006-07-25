@@ -122,6 +122,11 @@ class CacheTest(helper.CPWebCase):
         # configure the tool to ignore indicators and replace existing headers
         self.getPage("/expires/force")
         self.assertStatus("200 OK")
+        # This also gives us a chance to test 0 expiry with no other headers
+        self.assertHeader("Pragma", "no-cache")
+        self.assertHeader("Cache-Control", "no-cache")
+        d = self.assertHeader("Date")
+        self.assertHeader("Expires", d)
         
         # static content should now have "cache prevention" headers
         self.getPage("/expires/index.html")
