@@ -127,7 +127,12 @@ class StaticFilterTest(helper.CPWebCase):
                 lastmod = v
         ims = ("If-Modified-Since", lastmod)
         self.getPage("/static/dirback.jpg", headers=[ims])
-        self.assertStatus("304 Not Modified")
+        self.assertStatus(304)
+        self.assertNoHeader("Content-Type")
+        self.assertNoHeader("Content-Length")
+        self.assertNoHeader("Content-Disposition")
+        self.assertBody("")
+        
 ##        
 ##        # Test lots of requests for the same file (no If-Mod).
 ##        ts = []

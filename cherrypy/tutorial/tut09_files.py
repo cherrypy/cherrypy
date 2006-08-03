@@ -31,7 +31,7 @@ serveFile(path, contentType=None, disposition=None, name=None)
 
 Set "name" to the filename that you expect clients to use when they save
 your file. Note that the "name" argument is ignored if you don't also
-provide a "disposition" (usually "attachement"). You can manually set
+provide a "disposition" (usually "attachment"). You can manually set
 "contentType", but be aware that if you also use the EncodingFilter, it
 may choke if the file extension is not recognized as belonging to a known
 Content-Type. Setting the contentType to "application/x-download" works
