@@ -127,6 +127,10 @@ class StaticTest(helper.CPWebCase):
         ims = ("If-Modified-Since", lastmod)
         self.getPage("/static/dirback.jpg", headers=[ims])
         self.assertStatus(304)
+        self.assertNoHeader("Content-Type")
+        self.assertNoHeader("Content-Length")
+        self.assertNoHeader("Content-Disposition")
+        self.assertBody("")
 
 
 if __name__ == "__main__":

@@ -111,6 +111,14 @@ class HTTPRedirect(Exception):
             # Date, unless its omission is required by section 14.18.1"
             # The "Date" header should have been set in Request.__init__
             
+            # "...the response SHOULD NOT include other entity-headers.
+            for key in ('Allow', 'Content-Encoding', 'Content-Language',
+                        'Content-Length', 'Content-Location', 'Content-MD5',
+                        'Content-Range', 'Content-Type', 'Expires',
+                        'Last-Modified'):
+                if key in response.headers:
+                    del response.headers[key]
+            
             # "The 304 response MUST NOT contain a message-body."
             response.body = None
         elif status == 305:

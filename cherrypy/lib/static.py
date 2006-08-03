@@ -46,6 +46,11 @@ def serve_file(path, contentType=None, disposition=None, name=None):
         # Let the caller deal with it as they like.
         raise cherrypy.NotFound()
     
+    # Set the Last-Modified response header, so that
+    # modified-since validation code can work.
+    response.headers['Last-Modified'] = http.HTTPDate(stat.st_mtime)
+    cptools.validate_since()
+    
     if contentType is None:
         # Set content-type based on filename extension
         ext = ""
@@ -55,15 +60,10 @@ def serve_file(path, contentType=None, disposition=None, name=None):
         contentType = mimetypes.types_map.get(ext, "text/plain")
     response.headers['Content-Type'] = contentType
     
-    # Set the Last-Modified response header, so that
-    # modified-since validation code can work.
-    response.headers['Last-Modified'] = http.HTTPDate(stat.st_mtime)
-    cptools.validate_since()
-    
     if disposition is not None:
         if name is None:
             name = os.path.basename(path)
-        cd = "%s; filename=%s" % (disposition, name)
+        cd = '%s; filename="%s"' % (disposition, name)
         response.headers["Content-Disposition"] = cd
     
     # Set Content-Length and use an iterable (file object)

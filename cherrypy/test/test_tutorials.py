@@ -163,7 +163,9 @@ hello
         self.getPage('/download')
         self.assertStatus("200 OK")
         self.assertHeader("Content-Type", "application/x-download")
-        self.assertHeader("Content-Disposition", "attachment; filename=pdf_file.pdf")
+        self.assertHeader("Content-Disposition",
+                          # Make sure the filename is quoted.
+                          'attachment; filename="pdf_file.pdf"')
         self.assertEqual(len(self.body), 85698)
     
     def test10HTTPErrors(self):
