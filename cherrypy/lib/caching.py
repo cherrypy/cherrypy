@@ -179,25 +179,25 @@ def expires(secs=0, force=False):
     
     If 'force' is False (the default), the following headers are checked:
     'Etag', 'Last-Modified', 'Age', 'Expires'. If any are already present,
-    none of the "cache prevention" headers are set.
+    none of the above response headers are set.
     """
     
-    if isinstance(secs, datetime.timedelta):
-        secs = (86400 * secs.days) + secs.seconds
-    expiry = http.HTTPDate(cherrypy.response.time + secs)
+    cacheable = False
+    if not force:
+        # some header names that indicate that the response can be cached
+        for indicator in ('Etag', 'Last-Modified', 'Age', 'Expires'):
+            if indicator in cherrypy.response.headers:
+                cacheable = True
+                break
     
-    if secs == 0:
-        cacheable = False
-        if not force:
-            # some header names that indicate that the response can be cached
-            for indicator in ('Etag', 'Last-Modified', 'Age', 'Expires'):
-                if indicator in cherrypy.response.headers:
-                    cacheable = True
-                    break
-        if not cacheable:
+    if not cacheable:
+        if isinstance(secs, datetime.timedelta):
+            secs = (86400 * secs.days) + secs.seconds
+        
+        if secs == 0:
             cptools.response_headers([("Pragma", "no-cache")], force)
             if cherrypy.request.version >= (1, 1):
                 cptools.response_headers([("Cache-Control", "no-cache")], force)
-    
-    # Set after Pragma, Cache-Control so it doesn't interfere with 'indicators'
-    cptools.response_headers([("Expires", expiry)], force)
+        
+        expiry = http.HTTPDate(cherrypy.response.time + secs)
+        cptools.response_headers([("Expires", expiry)], force)
