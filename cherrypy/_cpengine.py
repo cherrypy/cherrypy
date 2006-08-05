@@ -125,20 +125,24 @@ class Engine(object):
                 if filename.endswith(".pyc"):
                     filename = filename[:-1]
                 
+                oldtime = self.mtimes.get(filename, 0)
+                if oldtime is None:
+                    # Module with no .py file. Skip it.
+                    continue
+                
                 try:
                     mtime = os.stat(filename).st_mtime
                 except OSError:
-                    if filename in self.mtimes:
-                        # The file was probably deleted.
-                        self.reexec()
+                    # Either a module with no .py file, or it's been deleted.
+                    mtime = None
                 
                 if filename not in self.mtimes:
+                    # If a module has no .py file, this will be None.
                     self.mtimes[filename] = mtime
-                    continue
-                
-                if mtime > self.mtimes[filename]:
-                    # The file has been modified.
-                    self.reexec()
+                else:
+                    if mtime is None or mtime > oldtime:
+                        # The file has been deleted or modified.
+                        self.reexec()
     
     def stop(self):
         """Stop the application engine."""
