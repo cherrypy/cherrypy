@@ -23,17 +23,20 @@ def fileattr(m):
     return getattr(m, "__file__", None)
 
 
-if hasattr(signal, "SIGHUP"):
-    def SIGHUP(signum=None, frame=None):
-        cherrypy.engine.reexec()
-    signal.signal(signal.SIGHUP, SIGHUP)
+try:
+    if hasattr(signal, "SIGHUP"):
+        def SIGHUP(signum=None, frame=None):
+            cherrypy.engine.reexec()
+        signal.signal(signal.SIGHUP, SIGHUP)
 
-if hasattr(signal, "SIGTERM"):
-    def SIGTERM(signum=None, frame=None):
-        cherrypy.server.stop()
-        cherrypy.engine.stop()
-    signal.signal(signal.SIGTERM, SIGTERM)
-
+    if hasattr(signal, "SIGTERM"):
+        def SIGTERM(signum=None, frame=None):
+            cherrypy.server.stop()
+            cherrypy.engine.stop()
+        signal.signal(signal.SIGTERM, SIGTERM)
+except ValueError, _signal_exc:
+    if _signal_exc.args[0] != "signal only works in main thread":
+        raise
 
 class Engine(object):
     """The application engine, which exposes a request interface to (HTTP) servers."""
