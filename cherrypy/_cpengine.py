@@ -23,14 +23,16 @@ def fileattr(m):
     return getattr(m, "__file__", None)
 
 
-def signal_handler(signum, frame):
-    if signum in (signal.SIGHUP,):
+if hasattr(signal, "SIGHUP"):
+    def SIGHUP(signum=None, frame=None):
         cherrypy.engine.reexec()
-    else:
+    signal.signal(signal.SIGHUP, SIGHUP)
+
+if hasattr(signal, "SIGTERM"):
+    def SIGTERM(signum=None, frame=None):
         cherrypy.server.stop()
         cherrypy.engine.stop()
-signal.signal(signal.SIGHUP, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGTERM, SIGTERM)
 
 
 class Engine(object):
