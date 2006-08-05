@@ -1,5 +1,6 @@
 """Manage an HTTP server with CherryPy."""
 
+import socket
 import threading
 import time
 
@@ -8,109 +9,126 @@ from cherrypy.lib import attributes
 
 
 class Server(object):
-    """Manager for an HTTP server."""
+    """Manager for a set of HTTP servers."""
     
     def __init__(self):
-        self.httpserver = None
+        self.httpservers = {}
         self.interrupt = None
     
     def start(self, server=None):
         """Main function. MUST be called from the main thread."""
         self.interrupt = None
-        
+        httpserver, bind_addr = self.httpserver_from_config(server)
+        self.httpservers[httpserver] = bind_addr
+        self._start_http(httpserver)
+    
+    def httpserver_from_config(self, httpserver=None):
+        """Return a (httpserver, bind_addr) pair based on config settings."""
         conf = cherrypy.config.get
-        if server is None:
-            server = conf('server.instance', None)
-        if server is None:
+        if httpserver is None:
+            httpserver = conf('server.instance', None)
+        if httpserver is None:
             import _cpwsgi
-            server = _cpwsgi.WSGIServer()
-        if isinstance(server, basestring):
-            server = attributes(server)()
-        self.httpserver = server
+            httpserver = _cpwsgi.WSGIServer()
+        if isinstance(httpserver, basestring):
+            httpserver = attributes(httpserver)()
         
         if conf('server.socket_port'):
             host = conf('server.socket_host')
             port = conf('server.socket_port')
-            wait_for_free_port(host, port)
             if not host:
                 host = 'localhost'
-            on_what = "http://%s:%s/" % (host, port)
+            return httpserver, (host, port)
         else:
-            on_what = "socket file: %s" % conf('server.socket_file')
+            return httpserver, conf('server.socket_file')
+    
+    def start_all(self):
+        """Start all registered HTTP servers."""
+        for httpserver in self.httpservers:
+            self._start_http(httpserver)
+    
+    def _start_http(self, httpserver):
+        """Start the given httpserver in a new thread."""
+        bind_addr = self.httpservers[httpserver]
+        if isinstance(bind_addr, tuple):
+            wait_for_free_port(*bind_addr)
+            on_what = "http://%s:%s/" % bind_addr
+        else:
+            on_what = "socket file: %s" % bind_addr
         
-        # HTTP servers MUST be started in a new thread, so that the
-        # main thread persists to receive KeyboardInterrupt's. If an
-        # exception is raised in the http server's thread then it's
-        # trapped here, and the http server and engine are shut down.
-        def _start_http():
-            try:
-                self.httpserver.start()
-            except KeyboardInterrupt, exc:
-                cherrypy.log("<Ctrl-C> hit: shutting down HTTP server", "SERVER")
-                self.interrupt = exc
-                self.stop()
-                cherrypy.engine.stop()
-            except SystemExit, exc:
-                cherrypy.log("SystemExit raised: shutting down HTTP server", "SERVER")
-                self.interrupt = exc
-                self.stop()
-                cherrypy.engine.stop()
-                raise
-        t = threading.Thread(target=_start_http)
+        t = threading.Thread(target=self._start_http_thread, args=(httpserver,))
         t.setName("CPHTTPServer " + t.getName())
         t.start()
         
-        self.wait()
+        self.wait(httpserver)
         cherrypy.log("Serving HTTP on %s" % on_what, 'HTTP')
     
-    def wait(self):
-        """Wait until the HTTP server is ready to receive requests."""
-        while (not getattr(self.httpserver, "ready", False)
-               and not self.interrupt):
-            time.sleep(.1)
-        if self.interrupt:
-            raise self.interrupt
+    def _start_http_thread(self, httpserver):
+        """HTTP servers MUST be started in new threads, so that the
+        main thread persists to receive KeyboardInterrupt's. If an
+        exception is raised in the httpserver's thread then it's
+        trapped here, and the httpserver(s) and engine are shut down.
+        """
+        try:
+            httpserver.start()
+        except KeyboardInterrupt, exc:
+            cherrypy.log("<Ctrl-C> hit: shutting down HTTP servers", "SERVER")
+            self.interrupt = exc
+            self.stop()
+            cherrypy.engine.stop()
+        except SystemExit, exc:
+            cherrypy.log("SystemExit raised: shutting down HTTP servers", "SERVER")
+            self.interrupt = exc
+            self.stop()
+            cherrypy.engine.stop()
+            raise
+    
+    def wait(self, httpserver=None):
+        """Wait until the HTTP server is ready to receive requests.
         
-        # Wait for port to be occupied
-        if cherrypy.config.get('server.socket_port'):
-            host = cherrypy.config.get('server.socket_host')
-            port = cherrypy.config.get('server.socket_port')
-            wait_for_occupied_port(host, port)
+        If no httpserver is specified, wait for all registered httpservers.
+        """
+        if httpserver is None:
+            httpservers = self.httpservers.items()
+        else:
+            httpservers = [(httpserver, self.httpservers[httpserver])]
+        
+        for httpserver, bind_addr in httpservers:
+            while not (getattr(httpserver, "ready", False) or self.interrupt):
+                time.sleep(.1)
+            if self.interrupt:
+                raise self.interrupt
+            
+            # Wait for port to be occupied
+            if isinstance(bind_addr, tuple):
+                wait_for_occupied_port(*bind_addr)
     
     def stop(self):
-        """Stop the HTTP server."""
-        try:
-            httpstop = self.httpserver.stop
-        except AttributeError:
-            pass
-        else:
-            # httpstop() MUST block until the server is *truly* stopped.
-            httpstop()
-            conf = cherrypy.config.get
-            if conf('server.socket_port'):
-                host = conf('server.socket_host')
-                port = conf('server.socket_port')
-                wait_for_free_port(host, port)
-            cherrypy.log("HTTP Server shut down", "HTTP")
+        """Stop all HTTP server(s)."""
+        for httpserver, bind_addr in self.httpservers.items():
+            try:
+                httpstop = httpserver.stop
+            except AttributeError:
+                pass
+            else:
+                # httpstop() MUST block until the server is *truly* stopped.
+                httpstop()
+                if isinstance(bind_addr, tuple):
+                    wait_for_free_port(*bind_addr)
+                cherrypy.log("HTTP Server shut down", "HTTP")
     
     def restart(self):
         """Restart the HTTP server."""
         self.stop()
         self.interrupt = None
-        self.start()
+        self.start_all()
 
 
 def check_port(host, port):
     """Raise an error if the given port is not free on the given host."""
-    sock_file = cherrypy.config.get('server.socket_file')
-    if sock_file:
-        return
-    
     if not host:
         host = 'localhost'
     port = int(port)
-    
-    import socket
     
     # AF_INET or AF_INET6 socket
     # Get the correct address family for our host (allows IPv6 addresses)
@@ -126,7 +144,7 @@ def check_port(host, port):
             s.connect((host, port))
             s.close()
             raise IOError("Port %s is in use on %s; perhaps the previous "
-                          "server did not shut down properly." %
+                          "httpserver did not shut down properly." %
                           (repr(port), repr(host)))
         except socket.error:
             if s:

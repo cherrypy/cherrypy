@@ -130,7 +130,8 @@ def _run_test_suite_thread(moduleNames, conf):
 ##            apps.append((base, _cpwsgi.make_app(app)))
         apps.sort()
         apps.reverse()
-        cherrypy.server.httpserver.mount_points = apps
+        for s in cherrypy.server.httpservers:
+            s.mount_points = apps
         
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)

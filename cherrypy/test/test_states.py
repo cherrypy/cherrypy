@@ -153,7 +153,7 @@ class ServerStateTests(helper.CPWebCase):
             # We must start the server in this, the main thread
             cherrypy.engine.start(blocking=False)
             cherrypy.server.start(self.server_class)
-            cherrypy.server.httpserver.interrupt = KeyboardInterrupt
+            cherrypy.server.httpservers.values()[0].interrupt = KeyboardInterrupt
             while cherrypy.engine.state != 0:
                 time.sleep(0.1)
             
@@ -242,8 +242,7 @@ def run(server, conf):
             tr.stop()
             tr.out.close()
     finally:
-        if cherrypy.server.httpserver.ready:
-            cherrypy.server.stop()
+        cherrypy.server.stop()
         cherrypy.engine.stop()
 
 
