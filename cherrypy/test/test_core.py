@@ -257,6 +257,10 @@ def setup_server():
 
     class Headers(Test):
         
+        def default(self, headername):
+            """Spit back out the value for the requested header."""
+            return cherrypy.request.headers[headername]
+        
         def doubledheaders(self):
             # From http://www.cherrypy.org/ticket/165:
             # "header field names should not be case sensitive sayes the rfc.
@@ -767,6 +771,13 @@ llo,
                           '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm0=?='
                           '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm0=?='
                           '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2bQ==?=')
+        
+        # Test that two request headers are collapsed into one.
+        # See http://www.cherrypy.org/ticket/542.
+        self.getPage("/headers/Accept-Charset",
+                     headers=[("Accept-Charset", "iso-8859-5"),
+                              ("Accept-Charset", "unicode-1-1;q=0.8")])
+        self.assertBody("iso-8859-5, unicode-1-1;q=0.8")
     
     def testHTTPMethods(self):
         helper.webtest.methods_with_bodies = ("POST", "PUT", "PROPFIND")

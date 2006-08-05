@@ -21,6 +21,14 @@ for _ in ("EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
 # de-dupe the list
 socket_errors_to_ignore = dict.fromkeys(socket_errors_to_ignore).keys()
 
+# These are lowercase because mimetools.Message uses lowercase keys.
+comma_separated_headers = [
+    'accept', 'accept-charset', 'accept-encoding', 'accept-language',
+    'accept-ranges', 'allow', 'cache-control', 'connection', 'content-encoding',
+    'content-language', 'expect', 'if-match', 'if-none-match', 'pragma',
+    'proxy-authenticate', 'te', 'trailer', 'transfer-encoding', 'upgrade',
+    'vary', 'via', 'warning', 'www-authenticate',
+    ]
 
 class HTTPRequest(object):
     
@@ -107,9 +115,12 @@ class HTTPRequest(object):
             return
         self.environ["CONTENT_LENGTH"] = cl or ""
         
-        for (k, v) in headers.items():
-            envname = "HTTP_" + k.upper().replace("-","_")
-            self.environ[envname] = v
+        for k in headers:
+            envname = "HTTP_" + k.upper().replace("-", "_")
+            if k in comma_separated_headers:
+                self.environ[envname] = ", ".join(headers.getheaders(k))
+            else:
+                self.environ[envname] = headers[k]
         self.ready = True
     
     def abort(self, status, msg=""):
