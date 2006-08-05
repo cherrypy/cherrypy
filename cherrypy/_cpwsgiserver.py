@@ -222,6 +222,20 @@ class WorkerThread(threading.Thread):
 
 
 class CherryPyWSGIServer(object):
+    """An HTTP server for WSGI.
+    
+    bind_addr: a (host, port) tuple if TCP sockets are desired;
+        for UNIX sockets, supply the filename as a string.
+    wsgi_app: the WSGI 'application callable'; multiple WSGI applications
+        may be passed as (script_name, callable) pairs.
+    numthreads: the number of worker threads to create (default 10).
+    server_name: the string to set for WSGI's SERVER_NAME environ entry.
+        Defaults to socket.gethostname().
+    max: the maximum number of queued requests (defaults to -1 = no limit).
+    request_queue_size: the 'backlog' argument to socket.listen();
+        specifies the maximum number of queued connections (default 5).
+    timeout: the timeout in seconds for accepted connections (default 10).
+    """
     
     version = "CherryPy/3.0.0alpha"
     ready = False
@@ -230,7 +244,6 @@ class CherryPyWSGIServer(object):
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10):
-        """Be careful w/ max"""
         self.requests = Queue.Queue(max)
         
         if callable(wsgi_app):
@@ -365,7 +378,7 @@ class CherryPyWSGIServer(object):
         sock = getattr(self, "socket", None)
         if sock:
             if not isinstance(self.bind_addr, basestring):
-                # Ping our own socket to make accept() return immediately.
+                # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]
                 except socket.error, x:
