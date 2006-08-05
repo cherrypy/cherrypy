@@ -20,7 +20,7 @@ server = _cpserver.Server()
 def quickstart(root, script_name="", conf=None):
     """Mount the given app, start the engine and builtin server, then block."""
     tree.mount(root, script_name, conf)
-    server.start()
+    server.quickstart()
     engine.start()
 
 try:

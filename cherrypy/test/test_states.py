@@ -67,7 +67,7 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(len(db_connection.threads), 0)
         
         # Test server start
-        cherrypy.server.start(self.server_class)
+        cherrypy.server.quickstart(self.server_class)
         cherrypy.engine.start(blocking=False)
         self.assertEqual(cherrypy.engine.state, 1)
         
@@ -110,7 +110,7 @@ class ServerStateTests(helper.CPWebCase):
         cherrypy.server.stop()
     
     def test_1_Restart(self):
-        cherrypy.server.start(self.server_class)
+        cherrypy.server.start()
         cherrypy.engine.start(blocking=False)
         
         # The db_connection should be running now
@@ -152,8 +152,8 @@ class ServerStateTests(helper.CPWebCase):
             # Raise a keyboard interrupt in the HTTP server's main thread.
             # We must start the server in this, the main thread
             cherrypy.engine.start(blocking=False)
-            cherrypy.server.start(self.server_class)
-            cherrypy.server.httpservers.values()[0].interrupt = KeyboardInterrupt
+            cherrypy.server.start()
+            cherrypy.server.httpservers.keys()[0].interrupt = KeyboardInterrupt
             while cherrypy.engine.state != 0:
                 time.sleep(0.1)
             
@@ -166,7 +166,7 @@ class ServerStateTests(helper.CPWebCase):
             # This should raise a BadStatusLine error, since the worker
             # thread will just die without writing a response.
             cherrypy.engine.start(blocking=False)
-            cherrypy.server.start(self.server_class)
+            cherrypy.server.start()
             
             from httplib import BadStatusLine
             try:

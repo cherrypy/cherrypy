@@ -79,7 +79,7 @@ def run_client(cookie, request_count, data_dict, index):
     data_dict[index] = int(data)
 
 # Start server
-cherrypy.server.start()
+cherrypy.server.quickstart()
 thread.start_new_thread(cherrypy.engine.start, ())
 
 # Start client

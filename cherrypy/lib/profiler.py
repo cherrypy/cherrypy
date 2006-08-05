@@ -170,13 +170,11 @@ class make_app:
 
 def serve(path=None, port=8080):
     import cherrypy
-    cherrypy.tree.mount(Profiler(path))
     cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
                             'environment': "production",
                             })
-    cherrypy.server.start()
-    cherrypy.engine.start()
+    cherrypy.quickstart(Profiler(path))
 
 
 if __name__ == "__main__":

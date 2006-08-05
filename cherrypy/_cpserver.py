@@ -15,12 +15,16 @@ class Server(object):
         self.httpservers = {}
         self.interrupt = None
     
-    def start(self, server=None):
-        """Main function. MUST be called from the main thread."""
-        self.interrupt = None
+    def quickstart(self, server=None):
+        """Main function for quick starts. MUST be called from the main thread.
+        
+        This function works like CherryPy 2's server.start(). It loads and
+        starts an httpserver based on the given server object, if any, and
+        config entries.
+        """
         httpserver, bind_addr = self.httpserver_from_config(server)
         self.httpservers[httpserver] = bind_addr
-        self._start_http(httpserver)
+        self.start()
     
     def httpserver_from_config(self, httpserver=None):
         """Return a (httpserver, bind_addr) pair based on config settings."""
@@ -42,8 +46,9 @@ class Server(object):
         else:
             return httpserver, conf('server.socket_file')
     
-    def start_all(self):
+    def start(self):
         """Start all registered HTTP servers."""
+        self.interrupt = None
         for httpserver in self.httpservers:
             self._start_http(httpserver)
     
@@ -120,8 +125,7 @@ class Server(object):
     def restart(self):
         """Restart the HTTP server."""
         self.stop()
-        self.interrupt = None
-        self.start_all()
+        self.start()
 
 
 def check_port(host, port):

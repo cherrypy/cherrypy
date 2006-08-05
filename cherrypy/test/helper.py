@@ -97,7 +97,7 @@ def run_test_suite(moduleNames, server, conf):
     """
     cherrypy.config.reset()
     setConfig(conf)
-    cherrypy.server.start(server)
+    cherrypy.server.quickstart(server)
     cherrypy.engine.start_with_callback(_run_test_suite_thread,
                                         args=(moduleNames, conf))
 
@@ -147,7 +147,7 @@ def testmain(conf=None):
         conf = {}
     setConfig(conf)
     try:
-        cherrypy.server.start()
+        cherrypy.server.quickstart()
         cherrypy.engine.start_with_callback(_test_main_thread)
     except KeyboardInterrupt:
         cherrypy.server.stop()

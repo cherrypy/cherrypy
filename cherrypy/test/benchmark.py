@@ -401,6 +401,6 @@ if __name__ == '__main__':
             cherrypy.server.request_class = NullRequest
             cherrypy.server.response_class = NullResponse
         
-        cherrypy.server.start()
+        cherrypy.server.quickstart()
         # This will block
         cherrypy.engine.start_with_callback(run)
