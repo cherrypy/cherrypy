@@ -2,6 +2,7 @@
 
 import cgi
 import os
+import signal
 import sys
 import threading
 import time
@@ -20,6 +21,16 @@ def fileattr(m):
         if hasattr(m.__loader__, "archive"):
             return m.__loader__.archive
     return getattr(m, "__file__", None)
+
+
+def signal_handler(signum, frame):
+    if signum in (signal.SIGHUP,):
+        cherrypy.engine.reexec()
+    else:
+        cherrypy.server.stop()
+        cherrypy.engine.stop()
+signal.signal(signal.SIGHUP, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 
 class Engine(object):
