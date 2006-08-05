@@ -274,6 +274,7 @@ class CherryPyWSGIServer(object):
         # because cherrpy.server already does so, calling self.stop() for us.
         # If you're using this server with another framework, you should
         # trap those exceptions in whatever code block calls start().
+        self._interrupt = None
         
         def bind(family, type, proto=0):
             """Create (or recreate) the actual socket object."""
