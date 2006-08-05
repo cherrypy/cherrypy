@@ -98,7 +98,7 @@ class CacheTest(helper.CPWebCase):
         
         # test exceptions for bad time values
         self.getPage("/expires/wrongtype")
-        self.assertStatus("500 Internal error")
+        self.assertStatus(500)
         self.assertInBody("TypeError")
         
         # static content should not have "cache prevention" headers
