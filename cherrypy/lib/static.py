@@ -70,8 +70,6 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     #   this way CP won't load the whole file in memory
     c_len = stat.st_size
     bodyfile = open(path, 'rb')
-    if getattr(cherrypy, "debug", None):
-        cherrypy.log("    Found file: %s" % path, "DEBUG")
     
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
     if cherrypy.response.version >= (1, 1):
