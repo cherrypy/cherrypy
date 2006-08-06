@@ -99,11 +99,10 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
             request.remote_host = xff
 
 
-def response_headers(headers=None, force=True):
+def response_headers(headers=None):
     """Set headers on the response."""
     for name, value in (headers or []):
-        if force or (name not in cherrypy.response.headers):
-            cherrypy.response.headers[name] = value
+        cherrypy.response.headers[name] = value
 
 
 _login_screen = """<html><body>

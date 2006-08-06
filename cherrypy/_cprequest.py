@@ -631,6 +631,7 @@ def flattener(input):
 class Response(object):
     """An HTTP Response."""
     
+    # Class attributes for dev-time introspection.
     status = None
     header_list = None
     headers = http.HeaderMap()
@@ -645,15 +646,12 @@ class Response(object):
         self.time = time.time()
         
         self.headers = http.HeaderMap()
-        content_type = cherrypy.config.get('default_content_type', 'text/html')
         # Since we know all our keys are titled strings, we can
         # bypass HeaderMap.update and get a big speed boost.
         dict.update(self.headers, {
-            "Content-Type": content_type,
+            "Content-Type": 'text/html',
             "Server": "CherryPy/" + cherrypy.__version__,
             "Date": http.HTTPDate(self.time),
-            "Set-Cookie": [],
-            "Content-Length": None
         })
         self.simple_cookie = Cookie.SimpleCookie()
     

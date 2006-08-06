@@ -18,7 +18,6 @@ def setup_server():
         other.exposed = True
         other._cp_config = {
             'tools.response_headers.on': True,
-            'tools.response_headers.force': False,
             'tools.response_headers.headers': [("Content-Language", "fr"),
                                                ('Content-Type', 'text/plain')],
             }
@@ -42,11 +41,7 @@ class ResponseHeadersTest(helper.CPWebCase):
     def testResponseHeaders(self):
         self.getPage('/other')
         self.assertHeader("Content-Language", "fr")
-        # Since 'force' is False, the tool should only change headers
-        # that have not been set yet.
-        # Content-Type should have been set when the response object
-        # was created (default to text/html)
-        self.assertHeader('Content-Type', 'text/html')
+        self.assertHeader('Content-Type', 'text/plain')
 
 if __name__ == "__main__":
     setup_server()

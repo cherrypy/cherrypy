@@ -41,7 +41,9 @@ def setup_server():
         
         def defct(self, newct):
             newct = "text/%s" % newct
-            cherrypy.config.update({'default_content_type': newct})
+            cherrypy.config.update({'tools.response_headers.on': True,
+                                    'tools.response_headers.headers':
+                                    [('Content-Type', newct)]})
         defct.exposed = True
         
         def upload(self, file):

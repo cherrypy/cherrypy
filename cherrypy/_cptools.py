@@ -289,7 +289,7 @@ class Toolbox(object):
 default_toolbox = Toolbox()
 default_toolbox.session_auth = MainTool(cptools.session_auth)
 default_toolbox.proxy = Tool('before_request_body', cptools.proxy)
-default_toolbox.response_headers = Tool('before_finalize', cptools.response_headers)
+default_toolbox.response_headers = Tool('on_start_resource', cptools.response_headers)
 # We can't call virtual_host in on_start_resource,
 # because it's failsafe and the redirect would be swallowed.
 default_toolbox.virtual_host = Tool('before_request_body', cptools.virtual_host)
