@@ -75,6 +75,7 @@ class Request(object):
     rfile = None
     process_request_body = True
     body = None
+    body_read = False
     
     # Dispatch attributes
     script_name = ""
@@ -199,7 +200,7 @@ class Request(object):
                 self.tool_up()
                 self.hooks.run('on_start_resource')
                 
-                if self.process_request_body:
+                if self.process_request_body and not self.body_read:
                     # Check path-specific methods_with_bodies.
                     meths = self.config.get("methods_with_bodies", ("POST", "PUT"))
                     self.process_request_body = self.method in meths
@@ -213,8 +214,6 @@ class Request(object):
                 self.hooks.run('before_request_body')
                 if self.process_request_body:
                     self.process_body()
-                    # Guard against re-reading body on InternalRedirect
-                    self.process_request_body = False
                 
                 self.hooks.run('before_main')
                 if self.handler:
@@ -361,6 +360,11 @@ class Request(object):
     
     def process_body(self):
         """Convert request.rfile into request.params (or request.body)."""
+        # Guard against re-reading body (e.g. on InternalRedirect)
+        if self.body_read:
+            return
+        self.body_read = True
+        
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
         try:
