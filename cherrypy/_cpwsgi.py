@@ -7,25 +7,6 @@ from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import http
 
 
-def request_line(environ):
-    """Rebuild first line of the request (e.g. "GET /path HTTP/1.0")."""
-    
-    resource = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
-    if not (resource == "*" or resource.startswith("/")):
-        resource = "/" + resource
-    
-    qString = environ.get('QUERY_STRING')
-    if qString:
-        resource += '?' + qString
-    
-    resource = resource.replace(" ", "%20")
-    
-    return ('%s %s %s' % (environ['REQUEST_METHOD'],
-                          resource or '/',
-                          environ['SERVER_PROTOCOL']
-                          )
-            )
-
 headerNames = {'HTTP_CGI_AUTHORIZATION': 'Authorization',
                'CONTENT_LENGTH': 'Content-Length',
                'CONTENT_TYPE': 'Content-Type',
@@ -56,7 +37,7 @@ def _wsgi_callable(environ, start_response, app=None):
         # LOGON_USER is served by IIS, and is the name of the
         # user after having been mapped to a local account.
         # Both IIS and Apache set REMOTE_USER, when possible.
-        request.login = (env('LOGON_USER') or env('REMOTE_USER') or None)
+        request.login = env('LOGON_USER') or env('REMOTE_USER') or None
         
         request.multithread = environ['wsgi.multithread']
         request.multiprocess = environ['wsgi.multiprocess']
@@ -64,9 +45,11 @@ def _wsgi_callable(environ, start_response, app=None):
         
         if app:
             request.app = app
-            request.script_name = app.script_name
         
-        response = request.run(request_line(environ),
+        path = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
+        response = request.run(environ['REQUEST_METHOD'], path,
+                               environ.get('QUERY_STRING'),
+                               environ.get('SERVER_PROTOCOL'),
                                translate_headers(environ),
                                environ['wsgi.input'])
         s, h, b = response.status, response.header_list, response.body
@@ -160,8 +143,7 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
             _cpwsgiserver.HTTPRequest.parse_request(self)
         except http.MaxSizeExceeded:
             msg = "Request Entity Too Large"
-            proto = self.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
-            self.wfile.write("%s 413 %s\r\n" % (proto, msg))
+            self.wfile.write("%s 413 %s\r\n" % (self.server.protocol, msg))
             self.wfile.write("Content-Length: %s\r\n\r\n" % len(msg))
             self.wfile.write(msg)
             self.wfile.flush()
@@ -213,4 +195,5 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
                    conf('server.socket_host'),
                    request_queue_size = conf('server.socket_queue_size'),
                    )
+        s.protocol = conf('server.protocol_version', 'HTTP/1.0')
 

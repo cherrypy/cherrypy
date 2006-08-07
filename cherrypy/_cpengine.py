@@ -228,7 +228,7 @@ class NotReadyRequest:
     def close(self):
         pass
     
-    def run(self, request_line, headers, rfile):
+    def run(self, method, path, query_string, protocol, headers, rfile):
         self.method = "GET"
         cherrypy.HTTPError(503, self.msg).set_response()
         cherrypy.response.finalize()

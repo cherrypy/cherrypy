@@ -1,13 +1,17 @@
 """A high-speed, production ready, thread pooled, generic WSGI server."""
 
-import socket
-import threading
-import Queue
 import mimetools # todo: use email
+import Queue
+import re
+quoted_slash = re.compile("(?i)%2F")
 import rfc822
+import socket
 import sys
+import threading
 import time
 import traceback
+from urllib import unquote
+from urlparse import urlparse
 
 import errno
 socket_errors_to_ignore = []
@@ -63,12 +67,23 @@ class HTTPRequest(object):
         if not request_line:
             self.ready = False
             return
-        method,path,version = request_line.strip().split(" ", 2)
-        if "?" in path:
-            path, qs = path.split("?", 1)
-        else:
-            qs = ""
+        
+        method, path, req_protocol = request_line.strip().split(" ", 2)
         self.environ["REQUEST_METHOD"] = method
+        
+        # path may be an abs_path (including "http://host.domain.tld");
+        scheme, location, path, params, qs, frag = urlparse(path)
+        if params:
+            path = path + ";" + params
+        
+        # Unquote the path+params (e.g. "/this%20path" -> "this path").
+        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+        #
+        # But note that "...a URI must be separated into its components
+        # before the escaped characters within those components can be
+        # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
+        atoms = [unquote(x) for x in quoted_slash.split(path)]
+        path = "%2F".join(atoms)
         
         for mount_point, wsgi_app in self.server.mount_points:
             if path == "*":
@@ -88,9 +103,32 @@ class HTTPRequest(object):
             self.abort("404 Not Found")
             return
         
+        # Note that, like wsgiref and most other WSGI servers,
+        # we unquote the path but not the query string.
         self.environ["QUERY_STRING"] = qs
-        self.environ["SERVER_PROTOCOL"] = version
-        self.environ["SERVER_NAME"] = self.server.server_name
+        
+        # Compare request and server HTTP protocol versions, in case our
+        # server does not support the requested protocol. Limit our output
+        # to min(req, server). We want the following output:
+        #     request    server     actual written   supported response
+        #     protocol   protocol  response protocol feature set (SERVER_PROTOCOL)
+        # a     1.0        1.0           1.0                1.0
+        # b     1.0        1.1           1.1                1.0
+        # c     1.1        1.0           1.0                1.0
+        # d     1.1        1.1           1.1                1.1
+        # Notice that, in (b), the response will be "HTTP/1.1" even though
+        # the client only understands 1.0. RFC 2616 10.5.6 says we should
+        # only return 505 if the _major_ version is different.
+        rp = int(req_protocol[5]), int(req_protocol[7])
+        sp = int(self.server.protocol[5]), int(self.server.protocol[7])
+        if sp[0] != rp[0]:
+            self.abort("505 HTTP Version Not Supported")
+            return
+        self.environ["SERVER_PROTOCOL"] = "HTTP/%s.%s" % min(rp, sp)
+        
+        # If the Request-URI was an absoluteURI, use its location atom.
+        self.environ["SERVER_NAME"] = location or self.server.server_name
+        
         if isinstance(self.server.bind_addr, basestring):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
@@ -101,6 +139,7 @@ class HTTPRequest(object):
             self.environ["REMOTE_HOST"] = self.addr[0]
             self.environ["REMOTE_ADDR"] = self.addr[0]
             self.environ["REMOTE_PORT"] = str(self.addr[1])
+        
         # then all the http headers
         headers = mimetools.Message(self.rfile)
         self.environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
@@ -125,8 +164,7 @@ class HTTPRequest(object):
     
     def abort(self, status, msg=""):
         """Write a simple error message back to the client."""
-        proto = self.environ.get("SERVER_PROTOCOL", "HTTP/1.0")
-        self.wfile.write("%s %s\r\n" % (proto, status))
+        self.wfile.write("%s %s\r\n" % (self.server.protocol, status))
         self.wfile.write("Content-Length: %s\r\n\r\n" % len(msg))
         if msg:
             self.wfile.write(msg)
@@ -162,10 +200,10 @@ class HTTPRequest(object):
             self.outheaders.append(("Date", rfc822.formatdate()))
         if "server" not in self.outheaderkeys:
             self.outheaders.append(("Server", self.server.version))
-        if (self.environ["SERVER_PROTOCOL"] == "HTTP/1.1"
+        if (self.server.protocol == "HTTP/1.1"
             and "connection" not in self.outheaderkeys):
             self.outheaders.append(("Connection", "close"))
-        self.wfile.write(self.environ["SERVER_PROTOCOL"] + " " + self.status + "\r\n")
+        self.wfile.write(self.server.protocol + " " + self.status + "\r\n")
         for (k,v) in self.outheaders:
             self.wfile.write(k + ": " + v + "\r\n")
         self.wfile.write("\r\n")
@@ -237,6 +275,7 @@ class CherryPyWSGIServer(object):
     timeout: the timeout in seconds for accepted connections (default 10).
     """
     
+    protocol = "HTTP/1.0"
     version = "CherryPy/3.0.0alpha"
     ready = False
     _interrupt = None

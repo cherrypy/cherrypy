@@ -25,8 +25,6 @@ import re
 import rfc822
 HTTPDate = rfc822.formatdate
 import time
-from urllib import unquote
-from urlparse import urlparse
 
 
 def urljoin(*atoms):
@@ -35,9 +33,9 @@ def urljoin(*atoms):
         url = url.replace("//", "/")
     return url
 
-def version_from_http(version_str):
-    """Return a Version tuple from the given 'HTTP/x.y' string."""
-    return int(version_str[5]), int(version_str[7])
+def protocol_from_http(protocol_str):
+    """Return a protocol tuple from the given 'HTTP/x.y' string."""
+    return int(protocol_str[5]), int(protocol_str[7])
 
 def getRanges(headervalue, content_length):
     """Return a list of (start, stop) indices from a Range header, or None.
@@ -239,36 +237,6 @@ def validStatus(status):
     return code, reason, message
 
 
-quoted_slash = re.compile("(?i)%2F")
-
-def parse_request_line(request_line):
-    """Return (method, path, querystring, protocol) from a request_line."""
-    method, path, protocol = request_line.split()
-    
-    # path may be an abs_path (including "http://host.domain.tld");
-    # Ignore scheme, location, and fragments (so config lookups work).
-    # [Therefore, this assumes all hosts are valid for this server.
-    # Note that we are also violating the RFC which says: if the host
-    # given is an abs_path, it must override any Host header.]
-    scheme, location, path, params, qs, frag = urlparse(path)
-    
-    if params:
-        path = path + ";" + params
-    
-    # Unquote the path (e.g. "/this%20path" -> "this path").
-    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-    #
-    # But note that "...a URI must be separated into its components
-    # before the escaped characters within those components can be
-    # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
-    #
-    # Note also that cgi.parse_qs will decode the querystring for us.
-    atoms = [unquote(x) for x in quoted_slash.split(path)]
-    path = "%2F".join(atoms)
-    
-    return method, path, qs, protocol
-
-
 image_map_pattern = re.compile(r"[0-9]+,[0-9]+")
 
 def parseQueryString(query_string, keep_blank_values=True):
@@ -368,7 +336,7 @@ class HeaderMap(CaseInsensitiveDict):
             return []
         return header_elements(key, h)
     
-    def output(self, version=(1, 1)):
+    def output(self, protocol=(1, 1)):
         """Transform self into a list of (name, value) tuples."""
         header_list = []
         for key, value in self.iteritems():
@@ -385,7 +353,7 @@ class HeaderMap(CaseInsensitiveDict):
                         # "Recipients of header field TEXT containing octets
                         # outside the US-ASCII character set may assume that
                         # they represent ISO-8859-1 characters."
-                        if version >= (1, 1):
+                        if protocol >= (1, 1):
                             v = v.encode("utf-8")
                             v = Header(v, 'utf-8').encode()
                         else:

@@ -72,7 +72,7 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     bodyfile = open(path, 'rb')
     
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
-    if cherrypy.response.version >= (1, 1):
+    if cherrypy.request.protocol >= (1, 1):
         response.headers["Accept-Ranges"] = "bytes"
         r = http.getRanges(cherrypy.request.headers.get('Range'), c_len)
         if r == []:

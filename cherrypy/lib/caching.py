@@ -197,7 +197,7 @@ def expires(secs=0, force=False):
         if secs == 0:
             if force or "Pragma" not in cherrypy.response.headers:
                 cherrypy.response.headers["Pragma"] = "no-cache"
-            if cherrypy.request.version >= (1, 1):
+            if cherrypy.request.protocol >= (1, 1):
                 if force or "Cache-Control" not in cherrypy.response.headers:
                     cherrypy.response.headers["Cache-Control"] = "no-cache"
         

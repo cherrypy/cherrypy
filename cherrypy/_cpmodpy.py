@@ -82,10 +82,10 @@ def handler(req):
         request.multiprocess = bool(forked)
         
         # Run the CherryPy Request object and obtain the response
-        requestLine = req.the_request
         headers = req.headers_in.items()
         rfile = _ReadOnlyRequest(req)
-        response = request.run(requestLine, headers, rfile)
+        response = request.run(req.method, req.uri, req.args or "",
+                               req.protocol, headers, rfile)
         
         sendResponse(req, response.status, response.header_list, response.body)
         request.close()

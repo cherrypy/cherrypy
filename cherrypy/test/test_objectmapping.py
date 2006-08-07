@@ -216,6 +216,10 @@ class ObjectMappingTest(helper.CPWebCase):
         
         self.script_name = ""
         
+        # Test absoluteURI's in the Request-Line
+        self.getPage('http://localhost/')
+        self.assertBody('world')
+        
         # Test that the "isolated" app doesn't leak url's into the root app.
         # If it did leak, Root.default() would answer with
         #   "default:('isolated', 'doesnt', 'exist')".

@@ -64,9 +64,8 @@ class Request(object):
     method = "GET"
     path = ""
     query_string = ""
-    protocol = ""
+    protocol = (1, 1)
     params = {}
-    version = http.version_from_http("HTTP/1.1")
     
     # Message attributes
     header_list = []
@@ -115,10 +114,12 @@ class Request(object):
             self.hooks.run('on_end_request')
             cherrypy.serving.__dict__.clear()
     
-    def run(self, request_line, headers, rfile):
+    def run(self, method, path, query_string, protocol, headers, rfile):
         """Process the Request.
         
-        request_line should be of the form "GET /path HTTP/1.0".
+        method, path, query_string, and protocol should be pulled directly
+            from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
+        path should be %XX-unquoted, but query_string should not be.
         headers should be a list of (name, value) tuples.
         rfile should be a file-like object containing the HTTP request entity.
         
@@ -131,17 +132,25 @@ class Request(object):
         attributes to build the outbound stream.
         
         """
-        self.error_response = cherrypy.HTTPError(500).set_response
-        
-        self.request_line = request_line.strip()
-        self.header_list = list(headers)
-        self.rfile = rfile
-        self.headers = http.HeaderMap()
-        self.simple_cookie = Cookie.SimpleCookie()
-        self.handler = None
-        
         try:
-            self.process_request_line()
+            self.error_response = cherrypy.HTTPError(500).set_response
+            
+            self.method = method
+            self.path = path or "/"
+            self.query_string = query_string
+            self.protocol = int(protocol[5]), int(protocol[7])
+            
+            # Rebuild first line of the request (e.g. "GET /path HTTP/1.0").
+            url = path
+            if query_string:
+                url += '?' + query_string
+            self.request_line = '%s %s %s' % (method, url, protocol)
+            
+            self.header_list = list(headers)
+            self.rfile = rfile
+            self.headers = http.HeaderMap()
+            self.simple_cookie = Cookie.SimpleCookie()
+            self.handler = None
             
             # Get the 'Host' header, so we can do HTTPRedirects properly.
             self.process_headers()
@@ -153,6 +162,8 @@ class Request(object):
                 if r is None:
                     raise cherrypy.NotFound()
                 self.app = cherrypy.tree.apps[r]
+            else:
+                self.script_name = self.app.script_name
             
             # path_info should be the path from the
             # app root (script_name) to the handler.
@@ -227,41 +238,6 @@ class Request(object):
         finally:
             self.hooks.run('on_end_resource')
     
-    def process_request_line(self):
-        """Parse the first line (e.g. "GET /path HTTP/1.1") of the request."""
-        rl = self.request_line
-        method, path, qs, proto = http.parse_request_line(rl)
-        if path == "*":
-            path = "global"
-        
-        self.method = method
-        self.path = path
-        self.query_string = qs
-        self.protocol = proto
-        
-        # Compare request and server HTTP versions, in case our server does
-        # not support the requested version. We can't tell the server what
-        # version number to write in the response, so we limit our output
-        # to min(req, server). We want the following output:
-        #     request    server     actual written   supported response
-        #     version    version   response version  feature set (resp.v)
-        # a     1.0        1.0           1.0                1.0
-        # b     1.0        1.1           1.1                1.0
-        # c     1.1        1.0           1.0                1.0
-        # d     1.1        1.1           1.1                1.1
-        # Notice that, in (b), the response will be "HTTP/1.1" even though
-        # the client only understands 1.0. RFC 2616 10.5.6 says we should
-        # only return 505 if the _major_ version is different.
-        
-        # cherrypy.request.version == request.protocol in a Version instance.
-        self.version = http.version_from_http(self.protocol)
-        
-        # cherrypy.response.version should be used to determine whether or
-        # not to include a given HTTP/1.1 feature in the response content.
-        server_v = cherrypy.config.get('server.protocol_version', 'HTTP/1.0')
-        server_v = http.version_from_http(server_v)
-        cherrypy.response.version = min(self.version, server_v)
-    
     def process_headers(self):
         self.params = http.parseQueryString(self.query_string)
         
@@ -290,7 +266,7 @@ class Request(object):
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
             # (Bad Request) status code to any HTTP/1.1 request message
             # which lacks a Host header field.
-            if self.version >= (1, 1):
+            if self.protocol >= (1, 1):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
         host = dict.__getitem__(headers, 'Host')
@@ -641,7 +617,6 @@ class Response(object):
     headers = http.HeaderMap()
     simple_cookie = Cookie.SimpleCookie()
     body = Body()
-    version = (1, 0)
     
     def __init__(self):
         self.status = None
@@ -692,7 +667,7 @@ class Response(object):
                 dict.__setitem__(headers, 'Content-Length', len(content))
         
         # Transform our header dict into a sorted list of tuples.
-        self.header_list = h = headers.output(self.version)
+        self.header_list = h = headers.output(cherrypy.request.protocol)
         
         cookie = self.simple_cookie.output()
         if cookie:
