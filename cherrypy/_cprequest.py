@@ -52,10 +52,9 @@ class HookMap(object):
 class Request(object):
     """An HTTP request."""
     
-    # Conversation attributes
-    remote_addr = "localhost"
-    remote_port = 1111
-    remote_host = "localhost"
+    # Conversation/connection attributes
+    local = http.Host("localhost", 80)
+    remote = http.Host("localhost", 1111)
     scheme = "http"
     base = ""
     
@@ -90,19 +89,15 @@ class Request(object):
                   'before_error_response', 'after_error_response']
     hooks = HookMap(hookpoints)
     
-    def __init__(self, remote_addr, remote_port, remote_host, scheme="http"):
+    def __init__(self, local_host, remote_host, scheme="http"):
         """Populate a new Request object.
         
-        remote_addr should be the client IP address.
-        remote_port should be the client Port.
-        remote_host should be the client's host name. If not available
-            (because no reverse DNS lookup is performed), the client
-            IP should be provided.
+        local_host should be an http.Host object with the server info.
+        remote_host should be an http.Host object with the client info.
         scheme should be a string, either "http" or "https".
         """
-        self.remote_addr = remote_addr
-        self.remote_port = remote_port
-        self.remote_host = remote_host
+        self.local = local_host
+        self.remote = remote_host
         self.scheme = scheme
         
         self.closed = False
@@ -271,7 +266,7 @@ class Request(object):
                 raise cherrypy.HTTPError(400, msg)
         host = dict.__getitem__(headers, 'Host')
         if not host:
-            host = cherrypy.config.get('server.socket_host', '')
+            host = self.local.name or self.local.ip
         self.base = "%s://%s" % (self.scheme, host)
     
     def get_resource(self, path):

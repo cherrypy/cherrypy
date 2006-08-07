@@ -11,7 +11,7 @@ def setup_server():
         index.exposed = True
         
         def remotehost(self):
-            return cherrypy.request.remote_host
+            return cherrypy.request.remote.name
         remotehost.exposed = True
         
         def xhost(self):

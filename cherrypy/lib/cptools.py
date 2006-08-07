@@ -75,8 +75,8 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
     request = cherrypy.request
     
     if base is None:
-        port = str(cherrypy.config.get('server.socket_port', '80'))
-        if port == "80":
+        port = cherrypy.local.port
+        if port == 80:
             base = 'http://localhost'
         else:
             base = 'http://localhost:%s' % port
@@ -96,7 +96,7 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
             if remote == 'X-Forwarded-For':
                 # See http://bob.pythonmac.org/archives/2005/09/23/apache-x-forwarded-for-caveat/
                 xff = xff.split(',')[-1].strip()
-            request.remote_host = xff
+            request.remote.name = xff
 
 
 def response_headers(headers=None):

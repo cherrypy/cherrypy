@@ -95,7 +95,7 @@ def logtime():
 def log_access():
     """Default method for logging access"""
     tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-    s = tmpl % {'h': request.remote_host,
+    s = tmpl % {'h': request.remote.name or request.remote.ip,
                 'l': '-',
                 'u': getattr(request, "login", None) or "-",
                 't': logtime(),

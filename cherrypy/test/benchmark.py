@@ -81,7 +81,7 @@ cherrypy.tree.mount(Root(), SCRIPT_NAME, appconf)
 class NullRequest:
     """A null HTTP request class, returning 204 and an empty body."""
     
-    def __init__(self, remote_addr, remote_port, remote_host, scheme="http"):
+    def __init__(self, local, remote, scheme="http"):
         pass
     
     def close(self):

@@ -437,3 +437,21 @@ class SizeCheckWrapper(object):
 ##            raise StopIteration()
         return data
 
+
+class Host(object):
+    """An internet address.
+    
+    name should be the client's host name. If not available (because no DNS
+        lookup is performed), the IP address should be used instead.
+    """
+    
+    ip = "0.0.0.0"
+    port = 80
+    name = "unknown.tld"
+    
+    def __init__(self, ip, port, name=None):
+        self.ip = ip
+        self.port = port
+        if name is None:
+            name = ip
+        self.name = name

@@ -30,9 +30,12 @@ def _wsgi_callable(environ, start_response, app=None):
     request = None
     try:
         env = environ.get
-        clientAddr = (env('REMOTE_ADDR', ''), int(env('REMOTE_PORT', -1)))
-        request = cherrypy.engine.request(clientAddr, env('REMOTE_ADDR', ''),
-                                          environ['wsgi.url_scheme'])
+        local = http.Host('', int(env('SERVER_PORT', 80)),
+                          env('SERVER_NAME', ''))
+        remote = http.Host(env('REMOTE_ADDR', ''),
+                           int(env('REMOTE_PORT', -1)),
+                           env('REMOTE_HOST', ''))
+        request = cherrypy.engine.request(local, remote, env('wsgi.url_scheme'))
         
         # LOGON_USER is served by IIS, and is the name of the
         # user after having been mapped to a local account.

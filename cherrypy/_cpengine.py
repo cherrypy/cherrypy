@@ -38,6 +38,7 @@ except ValueError, _signal_exc:
     if _signal_exc.args[0] != "signal only works in main thread":
         raise
 
+
 class Engine(object):
     """The application engine, which exposes a request interface to (HTTP) servers."""
     
@@ -173,13 +174,11 @@ class Engine(object):
     ready = property(_is_ready, doc="Return True if the engine is ready to"
                                     " receive requests, False otherwise.")
     
-    def request(self, client_address, remote_host, scheme="http"):
+    def request(self, local_host, remote_host, scheme="http"):
         """Obtain an HTTP Request object.
         
-        client_address: the (IP address, port) of the client
-        remote_host should be the client's host name. If not available
-            (because no reverse DNS lookup is performed), the client
-            IP should be provided.
+        local_host should be an http.Host object with the server info.
+        remote_host should be an http.Host object with the client info.
         scheme: either "http" or "https"; defaults to "http"
         """
         if self.state == STOPPED:
@@ -195,8 +194,7 @@ class Engine(object):
                 
                 for func in self.on_start_thread_list:
                     func(i)
-            r = self.request_class(client_address[0], client_address[1],
-                                   remote_host, scheme)
+            r = self.request_class(local_host, remote_host, scheme)
         cherrypy.serving.request = r
         cherrypy.serving.response = self.response_class()
         return r

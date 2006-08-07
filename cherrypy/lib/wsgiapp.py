@@ -31,12 +31,11 @@ def make_environ():
     environ["PATH_INFO"] = cherrypy.request.path_info
     environ["QUERY_STRING"] = cherrypy.request.query_string
     environ["SERVER_PROTOCOL"] = cherrypy.request.protocol
-    server_name = getattr(cherrypy.server.httpserver, 'server_name', "None")
-    environ["SERVER_NAME"] = server_name 
-    environ["SERVER_PORT"] = cherrypy.config.get('server.socket_port')
-    environ["REMOTE_HOST"] = cherrypy.request.remote_host
-    environ["REMOTE_ADDR"] = cherrypy.request.remote_addr
-    environ["REMOTE_PORT"] = cherrypy.request.remote_port
+    environ["SERVER_NAME"] = cherrypy.request.local.name
+    environ["SERVER_PORT"] = cherrypy.request.local.port
+    environ["REMOTE_HOST"] = cherrypy.request.remote.name
+    environ["REMOTE_ADDR"] = cherrypy.request.remote.ip
+    environ["REMOTE_PORT"] = cherrypy.request.remote.port
     # then all the http headers
     headers = cherrypy.request.headers
     environ["CONTENT_TYPE"] = headers.get("Content-type", "")

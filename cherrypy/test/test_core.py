@@ -275,7 +275,7 @@ def setup_server():
             hMap['content-length'] = 18
             hMap['server'] = 'CherryPy headertest'
             hMap['location'] = ('%s://127.0.0.1:%s/headers/'
-                                % (cherrypy.request.remote_port,
+                                % (cherrypy.request.remote.port,
                                    cherrypy.request.scheme))
             
             # Set a rare header for fun

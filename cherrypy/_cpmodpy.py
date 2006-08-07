@@ -3,6 +3,7 @@
 from mod_python import apache
 import cherrypy
 from cherrypy._cperror import format_exc, bare_error
+from cherrypy.lib import http
 
 
 def setup(req):
@@ -46,10 +47,13 @@ def handler(req):
             _isSetUp = True
         
         # Obtain a Request object from CherryPy
-        clientAddress = req.connection.remote_addr
-        remoteHost = clientAddress[0]
+        local = req.connection.local_addr
+        local = http.Host(local[0], local[1], req.connection.local_host or "")
+        remote = req.connection.remote_addr
+        remote = http.Host(remote[0], remote[1], req.connection.remote_host or "")
+        
         scheme = req.parsed_uri[0] or 'http'
-        request = cherrypy.engine.request(clientAddress, remoteHost, scheme)
+        request = cherrypy.engine.request(local, remote, scheme)
         req.get_basic_auth_pw()
         request.login = req.user
         
