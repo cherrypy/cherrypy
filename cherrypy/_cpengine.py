@@ -222,6 +222,7 @@ class NotReadyRequest:
     
     def __init__(self, msg):
         self.msg = msg
+        self.protocol = (1,1)
     
     def close(self):
         pass
