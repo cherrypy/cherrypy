@@ -389,6 +389,33 @@ class Request(object):
         response.status, response.header_list, response.body = r
 
 
+class PageHandler(object):
+    """Callable which sets response.body."""
+    
+    def __init__(self, callable, *args, **kwargs):
+        self.callable = callable
+        self.args = args
+        self.kwargs = kwargs
+    
+    def __call__(self):
+        cherrypy.response.body = self.callable(*self.args, **self.kwargs)
+
+
+class LateParamPageHandler(PageHandler):
+    
+    def __getattribute__(self, name):
+        attr = object.__getattribute__(self, name)
+        if name == "kwargs":
+            if attr:
+                kwargs = cherrypy.request.params.copy()
+                kwargs.update(attr)
+            else:
+                kwargs = cherrypy.request.params
+            return kwargs
+        else:
+            return attr
+
+
 class Dispatcher(object):
     
     def __call__(self, path_info):
@@ -400,13 +427,9 @@ class Dispatcher(object):
         vpath = [x.replace("%2F", "/") for x in vpath]
         
         if func:
-            def handler():
-                cherrypy.response.body = func(*vpath, **request.params)
-            request.handler = handler
+            request.handler = LateParamPageHandler(func, *vpath)
         else:
-            def notfound():
-                raise cherrypy.NotFound()
-            request.handler = notfound
+            request.handler = cherrypy.NotFound()
     
     def find_handler(self, path):
         """Find the appropriate page handler for the given path."""
@@ -544,18 +567,11 @@ class MethodDispatcher(Dispatcher):
             if func is None and meth == "HEAD":
                 func = getattr(resource, "GET", None)
             if func:
-                def handler():
-                    cherrypy.response.body = func(*vpath, **request.params)
-                request.handler = handler
-                return
+                request.handler = LateParamPageHandler(func, *vpath)
             else:
-                def notallowed():
-                    raise cherrypy.HTTPError(405)
-                request.handler = notallowed
+                request.handler = cherrypy.HTTPError(405)
         else:
-            def notfound():
-                raise cherrypy.NotFound()
-            request.handler = notfound
+            request.handler = cherrypy.NotFound()
 
 
 def fileGenerator(input, chunkSize=65536):

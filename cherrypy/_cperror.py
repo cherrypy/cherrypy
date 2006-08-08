@@ -128,6 +128,10 @@ class HTTPRedirect(Exception):
             response.body = None
         else:
             raise ValueError("The %s status code is unknown." % status)
+    
+    def __call__(self):
+        # Allow the exception to be used as a request.handler.
+        raise self
 
 
 class HTTPError(Exception):
@@ -182,6 +186,10 @@ class HTTPError(Exception):
         response.headers['Content-Type'] = "text/html"
         
         _be_ie_unfriendly(self.status)
+    
+    def __call__(self):
+        # Allow the exception to be used as a request.handler.
+        raise self
 
 
 class NotFound(HTTPError):
