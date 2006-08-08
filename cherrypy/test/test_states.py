@@ -232,15 +232,19 @@ def run(server, conf):
         cherrypy.engine.on_start_thread_list.append(db_connection.startthread)
         cherrypy.engine.on_stop_thread_list.append(db_connection.stopthread)
         
-        import pyconquer
-        tr = pyconquer.Logger("cherrypy")
-        tr.out = open(os.path.join(os.path.dirname(__file__), "state.log"), "wb")
         try:
-            tr.start()
+            import pyconquer
+        except ImportError:
             helper.CPTestRunner.run(suite)
-        finally:
-            tr.stop()
-            tr.out.close()
+        else:
+            tr = pyconquer.Logger("cherrypy")
+            tr.out = open(os.path.join(os.path.dirname(__file__), "state.log"), "wb")
+            try:
+                tr.start()
+                helper.CPTestRunner.run(suite)
+            finally:
+                tr.stop()
+                tr.out.close()
     finally:
         cherrypy.server.stop()
         cherrypy.engine.stop()
