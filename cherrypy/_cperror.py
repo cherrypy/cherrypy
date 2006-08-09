@@ -200,7 +200,12 @@ class NotFound(HTTPError):
             import cherrypy
             path = cherrypy.request.path
         self.args = (path,)
-        HTTPError.__init__(self, 404, "The path %s was not found." % repr(path))
+        HTTPError.__init__(self, 404, "The path %r was not found." % path)
+
+
+class TimeoutError(Exception):
+    """Exception raised when Response.timed_out is detected."""
+    pass
 
 
 _HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

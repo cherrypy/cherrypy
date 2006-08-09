@@ -30,6 +30,9 @@ class HookMap(object):
     
     def run(self, point):
         """Execute all registered callbacks for the given point."""
+        if cherrypy.response.timed_out:
+            raise cherrypy.TimeoutError()
+        
         failsafe = point in self.failsafe
         for callback in self.callbacks[point]:
             # Some hookpoints guarantee all callbacks are run even if
@@ -107,6 +110,13 @@ class Request(object):
         if not self.closed:
             self.closed = True
             self.hooks.run('on_end_request')
+            
+            s = (self, cherrypy.serving.response)
+            try:
+                cherrypy.engine.servings.remove(s)
+            except ValueError:
+                pass
+            
             cherrypy.serving.__dict__.clear()
     
     def run(self, method, path, query_string, protocol, headers, rfile):
@@ -179,6 +189,8 @@ class Request(object):
                     self.redirections.append(pi)
         except (KeyboardInterrupt, SystemExit):
             raise
+        except cherrypy.TimeoutError:
+            raise
         except:
             if cherrypy.config.get("throw_errors", False):
                 raise
@@ -198,6 +210,9 @@ class Request(object):
         """Generate a response for the resource at self.path_info."""
         try:
             try:
+                if cherrypy.response.timed_out:
+                    raise cherrypy.TimeoutError()
+                
                 self.hooks = HookMap(self.hookpoints)
                 self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
                                        'on_end_request']
@@ -594,6 +609,8 @@ class Body(object):
             return obj._body
     
     def __set__(self, obj, value):
+        if cherrypy.response.timed_out:
+            raise cherrypy.TimeoutError()
         # Convert the given value to an iterable object.
         if isinstance(value, types.FileType):
             value = fileGenerator(value)
@@ -623,16 +640,18 @@ class Response(object):
     """An HTTP Response."""
     
     # Class attributes for dev-time introspection.
-    status = None
-    header_list = None
+    status = ""
+    header_list = []
     headers = http.HeaderMap()
     simple_cookie = Cookie.SimpleCookie()
     body = Body()
+    time = None
+    timed_out = False
     
     def __init__(self):
         self.status = None
         self.header_list = None
-        self.body = None
+        self._body = []
         self.time = time.time()
         
         self.headers = http.HeaderMap()
@@ -652,6 +671,8 @@ class Response(object):
     
     def finalize(self):
         """Transform headers (and cookies) into cherrypy.response.header_list."""
+        if self.timed_out:
+            raise cherrypy.TimeoutError()
         
         try:
             code, reason, _ = http.validStatus(self.status)
@@ -685,3 +706,14 @@ class Response(object):
             for line in cookie.split("\n"):
                 name, value = line.split(": ", 1)
                 h.append((name, value))
+    
+    def check_timeout(self):
+        """If now > self.time + deadlock_timeout, set self.timed_out.
+        
+        This purposefully sets a flag, rather than raising an error,
+        so that a monitor thread can interrupt the Response thread.
+        """
+        timeout = float(cherrypy.config.get('deadlock_timeout', 300))
+        if time.time() > self.time + timeout:
+            self.timed_out = True
+

@@ -22,11 +22,26 @@ class Root:
         cherrypy.engine.restart()
         return "app was restarted succesfully"
     restart.exposed = True
+    
+    def block_explicit(self):
+        while True:
+            if cherrypy.response.timed_out:
+                cherrypy.response.timed_out = False
+                return "broken!"
+            time.sleep(0.1)
+    block_explicit.exposed = True
+    
+    def block_implicit(self):
+        raise cherrypy.InternalRedirect("/block_implicit")
+    block_implicit.exposed = True
+    block_implicit._cp_config = {'recursive_redirect': True}
 
 cherrypy.tree.mount(Root())
 cherrypy.config.update({
     'log_to_screen': False,
     'environment': 'production',
+    'deadlock_poll_freq': 1,
+    'deadlock_timeout': 2,
     })
 
 class Dependency:
@@ -182,7 +197,36 @@ class ServerStateTests(helper.CPWebCase):
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
     
-    def test_3_Autoreload(self):
+    def test_3_Deadlocks(self):
+        cherrypy.engine.start(blocking=False)
+        cherrypy.server.start()
+        try:
+            self.assertNotEqual(cherrypy.engine.monitor_thread, None)
+            
+            # Request a "normal" page.
+            self.assertEqual(cherrypy.engine.servings, [])
+            self.getPage("/")
+            self.assertBody("Hello World")
+            # request.close is called async.
+            while cherrypy.engine.servings:
+                time.sleep(0.1)
+            
+            # Request a page that explicitly checks itself for deadlock.
+            # The deadlock_timeout should be 2 secs.
+            self.getPage("/block_explicit")
+            self.assertBody("broken!")
+            
+            # Request a page that implicitly breaks deadlock.
+            # If we deadlock, we want to touch as little code as possible,
+            # so we won't even call handle_error, just bail ASAP.
+            self.getPage("/block_implicit")
+            self.assertStatus(500)
+            self.assertInBody("raise cherrypy.TimeoutError()")
+        finally:
+            cherrypy.engine.stop()
+            cherrypy.server.stop()
+    
+    def test_4_Autoreload(self):
         if self.server_class:
             demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
                                       "test_states_demo.py")

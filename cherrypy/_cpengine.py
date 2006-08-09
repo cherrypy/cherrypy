@@ -55,6 +55,8 @@ class Engine(object):
         self.on_stop_thread_list = []
         self.seen_threads = {}
         
+        self.servings = []
+        
         self.mtimes = {}
         self.reload_files = []
     
@@ -70,7 +72,14 @@ class Engine(object):
         
         for func in self.on_start_engine_list:
             func()
+        
         self.state = STARTED
+        
+        freq = float(cherrypy.config.get('deadlock_poll_freq', 60))
+        if freq > 0:
+            self.monitor_thread = threading.Timer(freq, self.monitor)
+            self.monitor_thread.start()
+        
         if blocking:
             self.block()
     
@@ -156,6 +165,10 @@ class Engine(object):
             for func in self.on_stop_engine_list:
                 func()
             
+            if self.monitor_thread:
+                self.monitor_thread.cancel()
+                self.monitor_thread = None
+            
             self.state = STOPPED
             cherrypy.log("CherryPy shut down", "ENGINE")
     
@@ -182,9 +195,9 @@ class Engine(object):
         scheme: either "http" or "https"; defaults to "http"
         """
         if self.state == STOPPED:
-            r = NotReadyRequest("The CherryPy engine has stopped.")
+            req = NotReadyRequest("The CherryPy engine has stopped.")
         elif self.state == STARTING:
-            r = NotReadyRequest("The CherryPy engine could not start.")
+            req = NotReadyRequest("The CherryPy engine could not start.")
         else:
             # Only run on_start_thread_list if the engine is running.
             threadID = threading._get_ident()
@@ -194,10 +207,20 @@ class Engine(object):
                 
                 for func in self.on_start_thread_list:
                     func(i)
-            r = self.request_class(local_host, remote_host, scheme)
-        cherrypy.serving.request = r
-        cherrypy.serving.response = self.response_class()
-        return r
+            req = self.request_class(local_host, remote_host, scheme)
+        cherrypy.serving.request = req
+        cherrypy.serving.response = resp = self.response_class()
+        self.servings.append((req, resp))
+        return req
+    
+    def monitor(self):
+        """Check timeout on all responses."""
+        if self.state == STARTED:
+            for req, resp in self.servings:
+                resp.check_timeout()
+            freq = float(cherrypy.config.get('deadlock_poll_freq', 60))
+            self.monitor_thread = threading.Timer(freq, self.monitor)
+            self.monitor_thread.start()
     
     def start_with_callback(self, func, args=None, kwargs=None):
         """Start, then callback the given func in a new thread."""
