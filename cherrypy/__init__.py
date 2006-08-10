@@ -69,6 +69,14 @@ class _ThreadLocalProxy(object):
         d.update(childobject.__dict__)
         return d
     __dict__ = property(_get_dict)
+    
+    def __getitem__(self, key):
+        childobject = getattr(serving, self.__attrname__)
+        return childobject[key]
+    
+    def __setitem__(self, key, value):
+        childobject = getattr(serving, self.__attrname__)
+        childobject[key] = value
 
 
 # Create request and response object (the same objects will be used

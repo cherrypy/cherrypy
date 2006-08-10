@@ -125,17 +125,10 @@ def session_auth(check_login_and_password=None, not_logged_in=None,
     
     request = cherrypy.request
     tdata = cherrypy.thread_data
-    sess = getattr(cherrypy, "session", None)
-    if sess is None:
-        # Shouldn't this raise an error (if the sessions tool isn't enabled)?
-        return False
-    
+    sess = cherrypy.session
     request.user = None
     tdata.user = None
     
-##    conf = cherrypy.config.get
-##    if conf('tools.staticfile.on', False) or conf('tools.staticdir.on', False):
-##        return
     if request.path.endswith('login_screen'):
         return False
     elif request.path.endswith('do_logout'):

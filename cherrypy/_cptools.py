@@ -159,36 +159,15 @@ from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
 class SessionTool(Tool):
     """Session Tool for CherryPy."""
     
-    def __init__(self):
-        self._point = "before_finalize"
-        self.callable = _sessions.save
-        self._name = None
-        for k in dir(_sessions.Session):
-            if k not in ("init", "save") and not k.startswith("__"):
-                setattr(self, k, None)
-    
-    def _init(self):
-        conf = cherrypy.request.toolmap.get(self._name, {})
-        
-        s = cherrypy.request._session = _sessions.Session()
-        # Copy all conf entries onto Session object attributes
-        for k, v in conf.iteritems():
-            setattr(s, str(k), v)
-        s.init()
-        
-        if not hasattr(cherrypy, "session"):
-            cherrypy.session = _sessions.SessionWrapper()
-    
     def _setup(self):
         """Hook this tool into cherrypy.request using the given conf.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        # init must be bound after headers are read
-        cherrypy.request.hooks.attach('before_request_body', self._init)
+        Tool._setup(self)
         cherrypy.request.hooks.attach('before_finalize', _sessions.save)
-        cherrypy.request.hooks.attach('on_end_request', _sessions.cleanup)
+        cherrypy.request.hooks.attach('on_end_request', _sessions.close)
 
 
 class XMLRPCController(object):
@@ -302,7 +281,8 @@ default_toolbox.encode = Tool('before_finalize', encoding.encode)
 default_toolbox.gzip = Tool('before_finalize', encoding.gzip)
 default_toolbox.staticdir = MainTool(static.staticdir)
 default_toolbox.staticfile = MainTool(static.staticfile)
-default_toolbox.sessions = SessionTool()
+# _sessions.init must be bound after headers are read
+default_toolbox.sessions = SessionTool('before_request_body', _sessions.init)
 default_toolbox.xmlrpc = XMLRPCTool()
 default_toolbox.wsgiapp = WSGIAppTool(_wsgiapp.run)
 default_toolbox.caching = CachingTool()
