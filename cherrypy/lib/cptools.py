@@ -70,6 +70,11 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
     you must explicitly set base to the full base path, and ALSO set 'local'
     to '', so that the X-Forwarded-Host request header (which never includes
     path info) does not override it.
+    
+    cherrypy.request.remote.ip (the IP address of the client) will be
+    rewritten if the header specified by the 'remote' arg is valid.
+    By default, 'remote' is set to 'X-Forwarded-For'. If you do not
+    want to rewrite remote.ip, set the 'remote' arg to an empty string.
     """
     
     request = cherrypy.request
@@ -96,7 +101,7 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
             if remote == 'X-Forwarded-For':
                 # See http://bob.pythonmac.org/archives/2005/09/23/apache-x-forwarded-for-caveat/
                 xff = xff.split(',')[-1].strip()
-            request.remote.name = xff
+            request.remote.ip = xff
 
 
 def response_headers(headers=None):

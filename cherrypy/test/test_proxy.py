@@ -10,9 +10,9 @@ def setup_server():
             raise cherrypy.HTTPRedirect('dummy')
         index.exposed = True
         
-        def remotehost(self):
-            return cherrypy.request.remote.name
-        remotehost.exposed = True
+        def remoteip(self):
+            return cherrypy.request.remote.ip
+        remoteip.exposed = True
         
         def xhost(self):
             raise cherrypy.HTTPRedirect('blah')
@@ -44,10 +44,10 @@ class ProxyTest(helper.CPWebCase):
         self.assertHeader('Location', "http://www.yetanother.com/dummy")
         
         # Test X-Forwarded-For (Apache2)
-        self.getPage("/remotehost",
+        self.getPage("/remoteip",
                      headers=[('X-Forwarded-For', '192.168.0.20')])
         self.assertBody("192.168.0.20")
-        self.getPage("/remotehost",
+        self.getPage("/remoteip",
                      headers=[('X-Forwarded-For', '67.15.36.43, 192.168.0.20')])
         self.assertBody("192.168.0.20")
         
