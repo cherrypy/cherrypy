@@ -101,6 +101,7 @@ def update(conf):
     globalconf.update(conf)
     
     _configure_builtin_logging(globalconf, cherrypy._error_log)
+    _configure_builtin_logging(globalconf, cherrypy._access_log, "log_access_file")
 
 def _add_builtin_screen_handler(log):
     import sys

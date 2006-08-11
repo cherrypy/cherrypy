@@ -123,6 +123,9 @@ def log_access():
 _error_log = _logging.getLogger("cherrypy.error")
 _error_log.setLevel(_logging.DEBUG)
 
+_access_log = _logging.getLogger("cherrypy.access")
+_access_log.setLevel(_logging.INFO)
+
 def _log_message(msg, context = '', severity = _logging.DEBUG):
     """Default method for logging messages (error log).
     
