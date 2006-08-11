@@ -84,6 +84,15 @@ def setup_server():
             return cherrypy.request.body
         pipe.exposed = True
         pipe._cp_config = {'hooks.before_request_body': pipe_body}
+        
+        # Multiple decorators; include kwargs just for fun.
+        def decorated_euro(self):
+            yield u"Hello,"
+            yield u"world"
+            yield europoundUnicode
+        decorated_euro.exposed = True
+        decorated_euro = tools.gzip(compress_level=6)(decorated_euro)
+        decorated_euro = tools.encode(errors='ignore')(decorated_euro)
     
     root = Root()
     
@@ -220,6 +229,14 @@ class ToolTests(helper.CPWebCase):
         zfile.close()
         
         self.getPage("/euro", headers=[("Accept-Encoding", "gzip")])
+        self.assertInBody(zbuf.getvalue()[:3])
+        
+        zbuf = StringIO.StringIO()
+        zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=6)
+        zfile.write(expectedResult)
+        zfile.close()
+        
+        self.getPage("/decorated_euro", headers=[("Accept-Encoding", "gzip")])
         self.assertInBody(zbuf.getvalue()[:3])
     
     def testBareHooks(self):

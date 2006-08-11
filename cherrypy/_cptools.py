@@ -62,7 +62,7 @@ class Tool(object):
             del conf["on"]
         return conf
     
-    def __call__(self, **kwargs):
+    def __call__(self, *args, **kwargs):
         """Compile-time decorator (turn on the tool in config).
         
         For example:
@@ -72,6 +72,10 @@ class Tool(object):
                 return cherrypy.request.base
             whats_my_base.exposed = True
         """
+        if args:
+            raise TypeError("The %r Tool does not accept positional "
+                            "arguments; you must use keyword arguments."
+                            % self._name)
         def wrapper(f):
             if not hasattr(f, "_cp_config"):
                 f._cp_config = {}
