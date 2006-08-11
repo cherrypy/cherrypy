@@ -417,18 +417,26 @@ class PageHandler(object):
 
 
 class LateParamPageHandler(PageHandler):
+    """When passing cherrypy.request.params to the page handler, we don't
+    want to capture that dict too early; we want to give tools like the
+    decoding tool a chance to modify the params dict in-between the lookup
+    of the handler and the actual calling of the handler. This subclass
+    takes that into account, and allows request.params to be 'bound late'
+    (it's more complicated than that, but that's the effect).
+    """
     
-    def __getattribute__(self, name):
-        attr = object.__getattribute__(self, name)
-        if name == "kwargs":
-            if attr:
-                kwargs = cherrypy.request.params.copy()
-                kwargs.update(attr)
-            else:
-                kwargs = cherrypy.request.params
-            return kwargs
-        else:
-            return attr
+    def _get_kwargs(self):
+        kwargs = cherrypy.request.params.copy()
+        if self._kwargs:
+            kwargs.update(self._kwargs)
+        return kwargs
+    
+    def _set_kwargs(self, kwargs):
+        self._kwargs = kwargs
+    
+    kwargs = property(_get_kwargs, _set_kwargs,
+                      doc='page handler kwargs (with '
+                      'cherrypy.request.params copied in)')
 
 
 class Dispatcher(object):
