@@ -249,7 +249,7 @@ class Request(object):
             self.hooks.run('on_end_resource')
     
     def process_headers(self):
-        self.params = http.parseQueryString(self.query_string)
+        self.params = http.parse_query_string(self.query_string)
         
         # Process the headers into self.headers
         headers = self.headers
@@ -366,7 +366,7 @@ class Request(object):
             # request body was a content-type other than form params.
             self.body = forms.file
         else:
-            self.params.update(http.paramsFromCGIForm(forms))
+            self.params.update(http.params_from_CGI_form(forms))
     
     def handle_error(self, exc):
         response = cherrypy.response
@@ -544,10 +544,10 @@ class Dispatcher(object):
                     # had a trailing slash (otherwise, do a redirect).
                     if path[-1:] != '/':
                         atoms = request.browser_url.split("?", 1)
-                        newUrl = atoms.pop(0) + '/'
+                        new_url = atoms.pop(0) + '/'
                         if atoms:
-                            newUrl += "?" + atoms[0]
-                        raise cherrypy.HTTPRedirect(newUrl)
+                            new_url += "?" + atoms[0]
+                        raise cherrypy.HTTPRedirect(new_url)
                 return candidate, names[i:-1]
         
         # We didn't find anything
@@ -597,7 +597,7 @@ class MethodDispatcher(Dispatcher):
             request.handler = cherrypy.NotFound()
 
 
-def fileGenerator(input, chunkSize=65536):
+def file_generator(input, chunkSize=65536):
     """Yield the given input (a file object) in chunks (default 64k)."""
     chunk = input.read(chunkSize)
     while chunk:
@@ -621,7 +621,7 @@ class Body(object):
             raise cherrypy.TimeoutError()
         # Convert the given value to an iterable object.
         if isinstance(value, types.FileType):
-            value = fileGenerator(value)
+            value = file_generator(value)
         elif isinstance(value, types.GeneratorType):
             value = flattener(value)
         elif isinstance(value, basestring):
@@ -683,7 +683,7 @@ class Response(object):
             raise cherrypy.TimeoutError()
         
         try:
-            code, reason, _ = http.validStatus(self.status)
+            code, reason, _ = http.valid_status(self.status)
         except ValueError, x:
             raise cherrypy.HTTPError(500, x.args[0])
         

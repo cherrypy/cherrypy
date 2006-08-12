@@ -14,21 +14,21 @@ def modules(modulePath):
         mod = __import__(modulePath, globals(), locals(), [''])
     return mod
 
-def attributes(fullAttributeName):
+def attributes(full_attribute_name):
     """Load a module and retrieve an attribute of that module."""
     
     # Parse out the path, module, and attribute
-    lastDot = fullAttributeName.rfind(u".")
-    attrName = fullAttributeName[lastDot + 1:]
-    modPath = fullAttributeName[:lastDot]
+    last_dot = full_attribute_name.rfind(u".")
+    attr_name = full_attribute_name[last_dot + 1:]
+    mod_path = full_attribute_name[:last_dot]
     
-    aMod = modules(modPath)
+    mod = modules(mod_path)
     # Let an AttributeError propagate outward.
     try:
-        attr = getattr(aMod, attrName)
+        attr = getattr(mod, attr_name)
     except AttributeError:
         raise AttributeError("'%s' object has no attribute '%s'"
-                             % (modPath, attrName))
+                             % (mod_path, attr_name))
     
     # Return a reference to the attribute.
     return attr

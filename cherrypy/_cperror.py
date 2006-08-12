@@ -26,7 +26,7 @@ class InternalRedirect(Exception):
             # Pop any params included in the path
             path, pm = path.split("?", 1)
             request.query_string = pm
-            request.params = _http.parseQueryString(pm)
+            request.params = _http.parse_query_string(pm)
         
         # Note that urljoin will "do the right thing" whether url is:
         #  1. a URL relative to root (e.g. "/dummy")
@@ -245,7 +245,7 @@ def get_error_page(status, **kwargs):
     import cherrypy
     
     try:
-        code, reason, message = _http.validStatus(status)
+        code, reason, message = _http.valid_status(status)
     except ValueError, x:
         raise cherrypy.HTTPError(500, x.args[0])
     

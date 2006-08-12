@@ -224,7 +224,7 @@ def log_config():
     """Log engine configuration parameters."""
     cherrypy.log("Server parameters:", 'CONFIG')
     
-    serverVars = [
+    server_vars = [
                   'environment',
                   'log_to_screen',
                   'log_file',
@@ -237,7 +237,7 @@ def log_config():
                   'server.thread_pool',
                  ]
     
-    for var in serverVars:
+    for var in server_vars:
         cherrypy.log("  %s: %s" % (var, get(var)), 'CONFIG')
 
 

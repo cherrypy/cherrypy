@@ -7,13 +7,13 @@
 # to a public caning.
 
 from BaseHTTPServer import BaseHTTPRequestHandler
-responseCodes = BaseHTTPRequestHandler.responses.copy()
+response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From http://www.cherrypy.org/ticket/361
-responseCodes[500] = ('Internal error',
+response_codes[500] = ('Internal error',
                       'The server encountered an unexpected condition '
                       'which prevented it from fulfilling the request.')
-responseCodes[503] = ('Service Unavailable',
+response_codes[503] = ('Service Unavailable',
                       'The server is currently unable to handle the '
                       'request due to a temporary overloading or '
                       'maintenance of the server.')
@@ -37,7 +37,7 @@ def protocol_from_http(protocol_str):
     """Return a protocol tuple from the given 'HTTP/x.y' string."""
     return int(protocol_str[5]), int(protocol_str[7])
 
-def getRanges(headervalue, content_length):
+def get_ranges(headervalue, content_length):
     """Return a list of (start, stop) indices from a Range header, or None.
     
     Each (start, stop) tuple will be composed of two ints, which are suitable
@@ -193,7 +193,7 @@ def decode_TEXT(value):
         decodedvalue += atom
     return decodedvalue
 
-def validStatus(status):
+def valid_status(status):
     """Return legal HTTP status Code, Reason-phrase and Message.
     
     The status arg must be an int, or a str that begins with an int.
@@ -225,22 +225,22 @@ def validStatus(status):
         raise ValueError("Illegal response status from server "
                          "(%s is out of range)." % repr(code))
     
-    if code not in responseCodes:
+    if code not in response_codes:
         # code is unknown but not illegal
-        defaultReason, message = "", ""
+        default_reason, message = "", ""
     else:
-        defaultReason, message = responseCodes[code]
+        default_reason, message = response_codes[code]
     
     if reason is None:
-        reason = defaultReason
+        reason = default_reason
     
     return code, reason, message
 
 
 image_map_pattern = re.compile(r"[0-9]+,[0-9]+")
 
-def parseQueryString(query_string, keep_blank_values=True):
-    """Build a paramMap dictionary from a query_string."""
+def parse_query_string(query_string, keep_blank_values=True):
+    """Build a params dictionary from a query_string."""
     if image_map_pattern.match(query_string):
         # Server-side image map. Map the coords to 'x' and 'y'
         # (like CGI::Request does).
@@ -253,25 +253,25 @@ def parseQueryString(query_string, keep_blank_values=True):
                 pm[key] = val[0]
     return pm
 
-def paramsFromCGIForm(form):
-    paramMap = {}
+def params_from_CGI_form(form):
+    params = {}
     for key in form.keys():
-        valueList = form[key]
-        if isinstance(valueList, list):
-            paramMap[key] = []
-            for item in valueList:
+        value_list = form[key]
+        if isinstance(value_list, list):
+            params[key] = []
+            for item in value_list:
                 if item.filename is not None:
                     value = item # It's a file upload
                 else:
                     value = item.value # It's a regular field
-                paramMap[key].append(value)
+                params[key].append(value)
         else:
-            if valueList.filename is not None:
-                value = valueList # It's a file upload
+            if value_list.filename is not None:
+                value = value_list # It's a file upload
             else:
-                value = valueList.value # It's a regular field
-            paramMap[key] = value
-    return paramMap
+                value = value_list.value # It's a regular field
+            params[key] = value
+    return params
 
 
 class CaseInsensitiveDict(dict):

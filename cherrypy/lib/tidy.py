@@ -16,7 +16,7 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
     """
     # the tidy tool, by its very nature it's not generator friendly, 
     # so we just collapse the body and work with it.
-    originalBody = cherrypy.response.collapse_body()
+    orig_body = cherrypy.response.collapse_body()
     
     fct = cherrypy.response.headers.get('Content-Type', '')
     ct = fct.split(';')[0]
@@ -26,27 +26,27 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
         encoding = fct[i + 8:]
     
     if ct == 'text/html':
-        pageFile = os.path.join(temp_dir, 'page.html')
-        open(pageFile, 'wb').write(originalBody)
+        page_file = os.path.join(temp_dir, 'page.html')
+        open(page_file, 'wb').write(orig_body)
         
-        outFile = os.path.join(temp_dir, 'tidy.out')
-        errFile = os.path.join(temp_dir, 'tidy.err')
-        tidyEncoding = encoding.replace('-', '')
-        if tidyEncoding:
-            tidyEncoding = '-' + tidyEncoding
+        out_file = os.path.join(temp_dir, 'tidy.out')
+        err_file = os.path.join(temp_dir, 'tidy.err')
+        tidy_enc = encoding.replace('-', '')
+        if tidy_enc:
+            tidy_enc = '-' + tidy_enc
         
         strict_xml = (" -xml", "")[bool(strict_xml)]
         os.system('"%s" %s%s -f %s -o %s %s' %
-                  (tidy_path, tidyEncoding, strict_xml,
-                   errFile, outFile, pageFile))
-        errs = open(errFile, 'rb').read()
+                  (tidy_path, tidy_enc, strict_xml,
+                   err_file, out_file, page_file))
+        errs = open(err_file, 'rb').read()
         
         new_errs = []
         for err in errs.splitlines():
             if (err.find('Warning') != -1 or err.find('Error') != -1):
                 ignore = 0
-                for errIgn in errors_to_ignore or []:
-                    if err.find(errIgn) != -1:
+                for err_ign in errors_to_ignore or []:
+                    if err.find(err_ign) != -1:
                         ignore = 1
                         break
                 if not ignore:
@@ -54,28 +54,28 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
         
         if new_errs:
             cherrypy.response.body = wrong_content('<br />'.join(new_errs),
-                                                   original_body)
+                                                   orig_body)
         elif strict_xml:
             # The HTML is OK, but is it valid XML?
             # Use elementtree to parse XML
             from elementtree.ElementTree import parse
-            tagList = ['nbsp', 'quot']
-            for tag in tagList:
-                originalBody = originalBody.replace('&' + tag + ';', tag.upper())
+            tag_list = ['nbsp', 'quot']
+            for tag in tag_list:
+                orig_body = orig_body.replace('&' + tag + ';', tag.upper())
             
             if encoding:
                 enctag = '<?xml version="1.0" encoding="%s"?>' % encoding
-                originalBody = enctag + originalBody
+                orig_body = enctag + orig_body
             
-            f = StringIO.StringIO(originalBody)
+            f = StringIO.StringIO(orig_body)
             try:
                 tree = parse(f)
             except:
                 # Wrong XML
-                bodyFile = StringIO.StringIO()
-                traceback.print_exc(file = bodyFile)
-                bodyFile = '<br />'.join(bodyFile.getvalue())
-                cherrypy.response.body = wrong_content(bodyFile, originalbody, "XML")
+                body_file = StringIO.StringIO()
+                traceback.print_exc(file = body_file)
+                body_file = '<br />'.join(body_file.getvalue())
+                cherrypy.response.body = wrong_content(body_file, orig_body, "XML")
 
 def html_space(text):
     """Escape text, replacing space with nbsp and tab with 4 nbsp's."""
@@ -95,7 +95,7 @@ def wrong_content(header, body, content_type="HTML"):
 def nsgmls(temp_dir, nsgmls_path, catalog_path, errors_to_ignore=None):
     # the tidy tool, by its very nature it's not generator friendly, 
     # so we just collect the body and work with it.
-    original_body = cherrypy.response.collapse_body()
+    orig_body = cherrypy.response.collapse_body()
     
     fct = cherrypy.response.headers.get('Content-Type', '')
     ct = fct.split(';')[0]
@@ -108,16 +108,16 @@ def nsgmls(temp_dir, nsgmls_path, catalog_path, errors_to_ignore=None):
         #   them correctly (for instance, if <a appears in your
         #   Javascript code nsgmls complains about it)
         while True:
-            i = original_body.find('<script')
+            i = orig_body.find('<script')
             if i == -1:
                 break
-            j = original_body.find('</script>', i)
+            j = orig_body.find('</script>', i)
             if j == -1:
                 break
-            original_body = original_body[:i] + original_body[j+9:]
+            orig_body = orig_body[:i] + orig_body[j+9:]
 
         page_file = os.path.join(temp_dir, 'page.html')
-        open(page_file, 'wb').write(original_body)
+        open(page_file, 'wb').write(orig_body)
         
         err_file = os.path.join(temp_dir, 'nsgmls.err')
         command = ('%s -c%s -f%s -s -E10 %s' %
@@ -138,5 +138,5 @@ def nsgmls(temp_dir, nsgmls_path, catalog_path, errors_to_ignore=None):
         
         if new_errs:
             cherrypy.response.body = wrong_content('<br />'.join(new_errs),
-                                                   original_body)
+                                                   orig_body)
 

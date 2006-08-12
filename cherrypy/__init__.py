@@ -167,7 +167,7 @@ def decorate(func, decorator):
             setattr(newfunc, key, getattr(func, key))
     return newfunc
 
-def decorateAll(obj, decorator):
+def decorate_all(obj, decorator):
     """
     Recursively decorate all exposed functions of obj and all of its children,
     grandchildren, etc. If you used to use aspects, you might want to look
@@ -180,7 +180,7 @@ def decorateAll(obj, decorator):
         value = getattr(obj, key)
         if callable(value) and getattr(value, "exposed", False):
             setattr(obj, key, decorate(value, decorator))
-        decorateAll(value, decorator)
+        decorate_all(value, decorator)
 
 
 class ExposeItems:

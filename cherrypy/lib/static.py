@@ -74,7 +74,7 @@ def serve_file(path, content_type=None, disposition=None, name=None):
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
     if cherrypy.request.protocol >= (1, 1):
         response.headers["Accept-Ranges"] = "bytes"
-        r = http.getRanges(cherrypy.request.headers.get('Range'), c_len)
+        r = http.get_ranges(cherrypy.request.headers.get('Range'), c_len)
         if r == []:
             response.headers['Content-Range'] = "bytes */%s" % c_len
             message = "Invalid Range (first-byte-pos greater than Content-Length)"
@@ -98,7 +98,7 @@ def serve_file(path, content_type=None, disposition=None, name=None):
                 response.headers['Content-Type'] = ct
 ##                del response.headers['Content-Length']
                 
-                def fileRanges():
+                def file_ranges():
                     for start, stop in r:
                         yield "--" + boundary
                         yield "\nContent-type: %s" % content_type
@@ -109,7 +109,7 @@ def serve_file(path, content_type=None, disposition=None, name=None):
                         yield "\n"
                     # Final boundary
                     yield "--" + boundary
-                response.body = fileRanges()
+                response.body = file_ranges()
         else:
             response.headers['Content-Length'] = c_len
             response.body = bodyfile

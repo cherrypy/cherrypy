@@ -91,16 +91,16 @@ def handler(req):
         response = request.run(req.method, req.uri, req.args or "",
                                req.protocol, headers, rfile)
         
-        sendResponse(req, response.status, response.header_list, response.body)
+        send_response(req, response.status, response.header_list, response.body)
         request.close()
     except:
         tb = format_exc()
         cherrypy.log(tb)
         s, h, b = bare_error()
-        sendResponse(req, s, h, b)
+        send_response(req, s, h, b)
     return apache.OK
 
-def sendResponse(req, status, headers, body):
+def send_response(req, status, headers, body):
     # Set response status
     req.status = int(status[:3])
     

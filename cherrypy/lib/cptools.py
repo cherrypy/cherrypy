@@ -22,7 +22,7 @@ def validate_etags(autotags=False):
     if etag:
         cherrypy.response.ETag = etag
         
-        status, reason, msg = _http.validStatus(cherrypy.response.status)
+        status, reason, msg = _http.valid_status(cherrypy.response.status)
         
         conditions = cherrypy.request.headers.elements('If-Match') or []
         conditions = [str(x) for x in conditions]
@@ -43,7 +43,7 @@ def validate_since():
     """Validate the current Last-Modified against If-Modified-Since headers."""
     lastmod = cherrypy.response.headers.get('Last-Modified')
     if lastmod:
-        status, reason, msg = _http.validStatus(cherrypy.response.status)
+        status, reason, msg = _http.valid_status(cherrypy.response.status)
         
         since = cherrypy.request.headers.get('If-Unmodified-Since')
         if since and since != lastmod:

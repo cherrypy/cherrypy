@@ -242,7 +242,7 @@ def setup_server():
         
         def get_ranges(self):
             h = cherrypy.request.headers.get('Range')
-            return repr(http.getRanges(h, 8))
+            return repr(http.get_ranges(h, 8))
         
         def slice_file(self):
             path = os.path.join(os.getcwd(), os.path.dirname(__file__))
