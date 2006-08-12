@@ -73,6 +73,8 @@ class HTTPRequest(object):
         
         # path may be an abs_path (including "http://host.domain.tld");
         scheme, location, path, params, qs, frag = urlparse(path)
+        if scheme:
+            self.environ["wsgi.url_scheme"] = scheme
         if params:
             path = path + ";" + params
         
