@@ -35,5 +35,5 @@ class VirtualHostFilter(BaseFilter):
         
         prefix = cherrypy.config.get("virtual_host_filter." + domain, "")
         if prefix:
-            cherrypy.request.object_path = prefix + "/" + cherrypy.request.object_path
+            cherrypy.request.object_path = prefix + cherrypy.request.object_path
 

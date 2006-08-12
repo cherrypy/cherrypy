@@ -13,7 +13,7 @@ def setup_server():
         def dom4(self):
             return "Under construction"
         dom4.exposed = True
-
+    
     class VHost:
         def __init__(self, sitename):
             self.sitename = sitename
@@ -21,8 +21,12 @@ def setup_server():
         def index(self):
             return "Welcome to %s" % self.sitename
         index.exposed = True
-
-
+        
+        def somewhere(self):
+            return "Over the %s rainbow" % self.sitename
+        somewhere.exposed = True
+    
+    
     cherrypy.root = Root()
     cherrypy.root.mydom2 = VHost("Domain 2")
     cherrypy.root.mydom3 = VHost("Domain 3")
@@ -52,6 +56,12 @@ class VirtualHostFilterTest(helper.CPWebCase):
         self.assertBody('Welcome to Domain 3')
         self.getPage("/", [('Host', 'www.mydom4.com')])
         self.assertBody('Under construction')
+        
+        # Test sub pages. See http://www.cherrypy.org/ticket/543.
+        self.getPage("/somewhere", [('Host', 'www.mydom2.com')])
+        self.assertBody('Over the Domain 2 rainbow')
+        self.getPage("/somewhere", [('Host', 'www.mydom3.com')])
+        self.assertBody('Over the Domain 3 rainbow')
 
 
 if __name__ == "__main__":
