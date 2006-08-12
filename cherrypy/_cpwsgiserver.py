@@ -1,16 +1,17 @@
 """A high-speed, production ready, thread pooled, generic WSGI server."""
 
-import socket
-import threading
-import Queue
 import mimetools # todo: use email
+import Queue
+import re
+quoted_slash = re.compile("(?i)%2F")
+import rfc822
+import socket
 import sys
+import threading
 import time
 import traceback
-
-weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+from urllib import unquote
+from urlparse import urlparse
 
 import errno
 socket_errors_to_ignore = []
@@ -24,6 +25,14 @@ for _ in ("EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
 # de-dupe the list
 socket_errors_to_ignore = dict.fromkeys(socket_errors_to_ignore).keys()
 
+# These are lowercase because mimetools.Message uses lowercase keys.
+comma_separated_headers = [
+    'accept', 'accept-charset', 'accept-encoding', 'accept-language',
+    'accept-ranges', 'allow', 'cache-control', 'connection', 'content-encoding',
+    'content-language', 'expect', 'if-match', 'if-none-match', 'pragma',
+    'proxy-authenticate', 'te', 'trailer', 'transfer-encoding', 'upgrade',
+    'vary', 'via', 'warning', 'www-authenticate',
+    ]
 
 class HTTPRequest(object):
     
@@ -58,12 +67,25 @@ class HTTPRequest(object):
         if not request_line:
             self.ready = False
             return
-        method,path,version = request_line.strip().split(" ", 2)
-        if "?" in path:
-            path, qs = path.split("?", 1)
-        else:
-            qs = ""
+        
+        method, path, req_protocol = request_line.strip().split(" ", 2)
         self.environ["REQUEST_METHOD"] = method
+        
+        # path may be an abs_path (including "http://host.domain.tld");
+        scheme, location, path, params, qs, frag = urlparse(path)
+        if scheme:
+            self.environ["wsgi.url_scheme"] = scheme
+        if params:
+            path = path + ";" + params
+        
+        # Unquote the path+params (e.g. "/this%20path" -> "this path").
+        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+        #
+        # But note that "...a URI must be separated into its components
+        # before the escaped characters within those components can be
+        # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
+        atoms = [unquote(x) for x in quoted_slash.split(path)]
+        path = "%2F".join(atoms)
         
         for mount_point, wsgi_app in self.server.mount_points:
             if path == "*":
@@ -83,9 +105,13 @@ class HTTPRequest(object):
             self.abort("404 Not Found")
             return
         
+        # Note that, like wsgiref and most other WSGI servers,
+        # we unquote the path but not the query string.
         self.environ["QUERY_STRING"] = qs
-        self.environ["SERVER_PROTOCOL"] = version
-        self.environ["SERVER_NAME"] = self.server.server_name
+        self.environ["SERVER_PROTOCOL"] = req_protocol
+        # If the Request-URI was an absoluteURI, use its location atom.
+        self.environ["SERVER_NAME"] = location or self.server.server_name
+        
         if isinstance(self.server.bind_addr, basestring):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
@@ -96,6 +122,7 @@ class HTTPRequest(object):
             self.environ["REMOTE_HOST"] = self.addr[0]
             self.environ["REMOTE_ADDR"] = self.addr[0]
             self.environ["REMOTE_PORT"] = str(self.addr[1])
+        
         # then all the http headers
         headers = mimetools.Message(self.rfile)
         self.environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
@@ -110,9 +137,12 @@ class HTTPRequest(object):
             return
         self.environ["CONTENT_LENGTH"] = cl or ""
         
-        for (k, v) in headers.items():
-            envname = "HTTP_" + k.upper().replace("-","_")
-            self.environ[envname] = v
+        for k in headers:
+            envname = "HTTP_" + k.upper().replace("-", "_")
+            if k in comma_separated_headers:
+                self.environ[envname] = ", ".join(headers.getheaders(k))
+            else:
+                self.environ[envname] = headers[k]
         self.ready = True
     
     def abort(self, status, msg=""):
@@ -151,11 +181,7 @@ class HTTPRequest(object):
         if "content-length" not in self.outheaderkeys:
             self.close_at_end = True
         if "date" not in self.outheaderkeys:
-            # HTTP 1.1 mandates date output in RFC 1123 format.
-            year, month, day, hh, mm, ss, wd, y, z = time.gmtime()
-            dt = ("%s, %02d %3s %4d %02d:%02d:%02d GMT" %
-                  (weekdayname[wd], day, monthname[month], year, hh, mm, ss))
-            self.outheaders.append(("Date", dt))
+            self.outheaders.append(("Date", rfc822.formatdate()))
         if "server" not in self.outheaderkeys:
             self.outheaders.append(("Server", self.server.version))
         if (self.environ["SERVER_PROTOCOL"] == "HTTP/1.1"
@@ -218,15 +244,29 @@ class WorkerThread(threading.Thread):
 
 
 class CherryPyWSGIServer(object):
+    """An HTTP server for WSGI.
     
-    version = "CherryPy/2.2.1"
+    bind_addr: a (host, port) tuple if TCP sockets are desired;
+        for UNIX sockets, supply the filename as a string.
+    wsgi_app: the WSGI 'application callable'; multiple WSGI applications
+        may be passed as (script_name, callable) pairs.
+    numthreads: the number of worker threads to create (default 10).
+    server_name: the string to set for WSGI's SERVER_NAME environ entry.
+        Defaults to socket.gethostname().
+    max: the maximum number of queued requests (defaults to -1 = no limit).
+    request_queue_size: the 'backlog' argument to socket.listen();
+        specifies the maximum number of queued connections (default 5).
+    timeout: the timeout in seconds for accepted connections (default 10).
+    """
+    
+    version = "CherryPy/2.2.2rc1"
+    protocol = "HTTP/1.0"
     ready = False
     interrupt = None
     RequestHandlerClass = HTTPRequest
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10):
-        """Be careful w/ max"""
         self.requests = Queue.Queue(max)
         
         if callable(wsgi_app):
@@ -257,6 +297,12 @@ class CherryPyWSGIServer(object):
         # because cherrpy.server already does so, calling self.stop() for us.
         # If you're using this server with another framework, you should
         # trap those exceptions in whatever code block calls start().
+        
+        def bind(family, type, proto=0):
+            """Create (or recreate) the actual socket object."""
+            self.socket = socket.socket(family, type, proto)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.bind(self.bind_addr)
         
         # Select the appropriate socket
         if isinstance(self.bind_addr, basestring):
@@ -327,6 +373,8 @@ class CherryPyWSGIServer(object):
     def tick(self):
         try:
             s, addr = self.socket.accept()
+            if not self.ready:
+                return
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
             request = self.RequestHandlerClass(s, addr, self)
@@ -336,6 +384,11 @@ class CherryPyWSGIServer(object):
             # notice keyboard interrupts on Win32, which don't interrupt
             # accept() by default
             return
+        except socket.error, x:
+            if x.args[1] == "Bad file descriptor":
+                # Our socket was closed
+                return
+            raise
     
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
@@ -351,8 +404,11 @@ class CherryPyWSGIServer(object):
         
         # Don't join currentThread (when stop is called inside a request).
         current = threading.currentThread()
-        for worker in self._workerThreads:
+        while self._workerThreads:
+            worker = self._workerThreads.pop()
             if worker is not current and worker.isAlive:
-                worker.join()
-        
-        self._workerThreads = []
+                try:
+                    worker.join()
+                except AssertionError:
+                    pass
+
