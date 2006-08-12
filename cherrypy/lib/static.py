@@ -13,10 +13,10 @@ import cherrypy
 from cherrypy.lib import cptools, http
 
 
-def serve_file(path, contentType=None, disposition=None, name=None):
+def serve_file(path, content_type=None, disposition=None, name=None):
     """Set status, headers, and body in order to serve the given file.
     
-    The Content-Type header will be set to the contentType arg, if provided.
+    The Content-Type header will be set to the content_ype arg, if provided.
     If not provided, the Content-Type will be guessed by its extension.
     
     If disposition is not None, the Content-Disposition header will be set
@@ -51,14 +51,14 @@ def serve_file(path, contentType=None, disposition=None, name=None):
     response.headers['Last-Modified'] = http.HTTPDate(stat.st_mtime)
     cptools.validate_since()
     
-    if contentType is None:
+    if content_type is None:
         # Set content-type based on filename extension
         ext = ""
         i = path.rfind('.')
         if i != -1:
             ext = path[i:].lower()
-        contentType = mimetypes.types_map.get(ext, "text/plain")
-    response.headers['Content-Type'] = contentType
+        content_type = mimetypes.types_map.get(ext, "text/plain")
+    response.headers['Content-Type'] = content_type
     
     if disposition is not None:
         if name is None:
@@ -101,7 +101,7 @@ def serve_file(path, contentType=None, disposition=None, name=None):
                 def fileRanges():
                     for start, stop in r:
                         yield "--" + boundary
-                        yield "\nContent-type: %s" % contentType
+                        yield "\nContent-type: %s" % content_type
                         yield ("\nContent-range: bytes %s-%s/%s\n\n"
                                % (start, stop - 1, c_len))
                         bodyfile.seek(start)
@@ -132,7 +132,7 @@ def _attempt(filename, content_types):
         if content_types:
             r, ext = os.path.splitext(filename)
             content_type = content_types.get(ext[1:], None)
-        serve_file(filename, contentType=content_type)
+        serve_file(filename, content_type=content_type)
         return True
     except cherrypy.NotFound:
         # If we didn't find the static file, continue handling the
