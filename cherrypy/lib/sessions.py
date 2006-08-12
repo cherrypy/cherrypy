@@ -37,14 +37,20 @@ class Session(object):
     
     clean_thread = None
     
-    def __init__(self, id=None):
+    def __init__(self, id=None, **kwargs):
         self.locked = False
         self.loaded = False
         self._data = {}
         
-        if id is None:
-            id = self.generate_id()
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
+        
         self.id = id
+        while self.id is None:
+            self.id = self.generate_id()
+            # Assert that the generated id is not already stored.
+            if self._load() is not None:
+                self.id = None
     
     def clean_cycle(self):
         """Clean up expired sessions at regular intervals."""
@@ -368,11 +374,9 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     # It will possess a reference to (and lock, and lazily load)
     # the requested session data.
     storage_class = storage_type.title() + 'Session'
-    cherrypy.serving.session = sess = globals()[storage_class](id)
-    sess.timeout = timeout
-    sess.clean_freq = clean_freq
-    for k, v in kwargs.iteritems():
-        setattr(sess, k, v)
+    kwargs['timeout'] = timeout
+    kwargs['clean_freq'] = clean_freq
+    cherrypy.serving.session = sess = globals()[storage_class](id, **kwargs)
     
     if locking == 'implicit':
         sess.acquire_lock()
