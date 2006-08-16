@@ -59,6 +59,8 @@ class Engine(object):
         
         self.mtimes = {}
         self.reload_files = []
+        
+        self.monitor_thread = None
     
     def start(self, blocking=True):
         """Start the application engine."""
