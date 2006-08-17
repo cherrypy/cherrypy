@@ -446,10 +446,9 @@ class Dispatcher(object):
         request = cherrypy.request
         func, vpath = self.find_handler(path_info)
         
-        # Decode any leftover %2F in the virtual_path atoms.
-        vpath = [x.replace("%2F", "/") for x in vpath]
-        
         if func:
+            # Decode any leftover %2F in the virtual_path atoms.
+            vpath = [x.replace("%2F", "/") for x in vpath]
             request.handler = LateParamPageHandler(func, *vpath)
         else:
             request.handler = cherrypy.NotFound()
