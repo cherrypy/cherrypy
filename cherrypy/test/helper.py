@@ -101,8 +101,21 @@ def run_test_suite(moduleNames, server, conf):
     cherrypy.engine.start_with_callback(_run_test_suite_thread,
                                         args=(moduleNames, conf))
 
+def sync_apps(profile=False):
+    apps = []
+    for base, app in cherrypy.tree.apps.iteritems():
+        if base == "/":
+            base = ""
+        if profile:
+            apps.append((base, profiler.make_app(app, aggregate=False)))
+        else:
+            apps.append((base, app))
+    apps.sort()
+    apps.reverse()
+    for s in cherrypy.server.httpservers:
+        s.mount_points = apps
+
 def _run_test_suite_thread(moduleNames, conf):
-    from cherrypy import _cpwsgi
     for testmod in moduleNames:
         # Must run each module in a separate suite,
         # because each module uses/overwrites cherrypy globals.
@@ -117,21 +130,7 @@ def _run_test_suite_thread(moduleNames, conf):
         
         # The setup functions probably mounted new apps.
         # Tell our server about them.
-        apps = []
-        for base, app in cherrypy.tree.apps.iteritems():
-            if base == "/":
-                base = ""
-            if conf.get("profiling.on", False):
-                apps.append((base, profiler.make_app(_cpwsgi.wsgiApp)))
-##                apps.append((base, profiler.make_app(_cpwsgi.wsgiApp, aggregate=True)))
-            else:
-                apps.append((base, _cpwsgi.wsgiApp))
-##            # We could use the following line, but it breaks test_tutorials
-##            apps.append((base, _cpwsgi.make_app(app)))
-        apps.sort()
-        apps.reverse()
-        for s in cherrypy.server.httpservers:
-            s.mount_points = apps
+        sync_apps(profile=conf.get("profiling.on", False))
         
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)

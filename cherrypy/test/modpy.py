@@ -61,7 +61,7 @@ SetHandler python-program
 PythonFixupHandler cherrypy.test.modpy::wsgisetup
 PythonOption testmod %s
 PythonHandler modpython_gateway::handler
-PythonOption wsgi.application cherrypy._cpwsgi::wsgiApp
+PythonOption wsgi.application cherrypy::tree
 PythonDebug On
 """
 

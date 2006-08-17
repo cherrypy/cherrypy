@@ -13,6 +13,7 @@ tools = _cptools.default_toolbox
 
 import _cptree
 tree = _cptree.Tree()
+from _cptree import Application
 import _cpengine
 engine = _cpengine.Engine()
 import _cpserver

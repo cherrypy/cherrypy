@@ -112,28 +112,6 @@ def _wsgi_callable(environ, start_response, app=None):
                 chunk = chunk.encode("ISO-8859-1")
             yield chunk
 
-def wsgiApp(environ, start_response):
-    """The WSGI 'application object' for CherryPy.
-    
-    Use this as the same WSGI callable for all your CP apps.
-    """
-    return _wsgi_callable(environ, start_response)
-
-def make_app(app):
-    """Factory for making separate WSGI 'application objects' for each CP app.
-    
-    Example:
-        # 'app' will be a CherryPy application object
-        app = cherrypy.tree.mount(Root(), "/", localconf)
-        
-        # 'wsgi_app' will be a WSGI application
-        wsgi_app = _cpwsgi.make_app(app)
-    """
-    def single_app(environ, start_response):
-        return _wsgi_callable(environ, start_response, app)
-    return single_app
-
-
 
 #                            Server components                            #
 
@@ -196,10 +174,8 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
             bind_addr = (conf('server.socket_host'),
                          conf('server.socket_port'))
         
-        apps = [(base, wsgiApp) for base in cherrypy.tree.apps]
-        
         s = _cpwsgiserver.CherryPyWSGIServer
-        s.__init__(self, bind_addr, apps,
+        s.__init__(self, bind_addr, cherrypy.tree,
                    conf('server.thread_pool'),
                    conf('server.socket_host'),
                    request_queue_size = conf('server.socket_queue_size'),

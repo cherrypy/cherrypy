@@ -295,7 +295,7 @@ LoadModule python_module modules/mod_python.so
     SetHandler python-program
     PythonFixupHandler cherrypy.test.benchmark::startup_modpython
     PythonHandler modpython_gateway::handler
-    PythonOption wsgi.application cherrypy._cpwsgi::wsgiApp
+    PythonOption wsgi.application cherrypy::tree
     PythonDebug On
 %s%s
 </Location>
