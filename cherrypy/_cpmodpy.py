@@ -1,9 +1,12 @@
 """Native adapter for serving CherryPy via mod_python"""
 
-from mod_python import apache
 import cherrypy
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import http
+
+
+
+# ------------------------------ Request-handling
 
 
 def setup(req):
@@ -25,6 +28,7 @@ def setup(req):
     def cherrypy_cleanup(data):
         cherrypy.engine.stop()
     try:
+        from mod_python import apache
         # apache.register_cleanup wasn't available until 3.1.4.
         apache.register_cleanup(cherrypy_cleanup)
     except AttributeError:
@@ -40,6 +44,7 @@ class _ReadOnlyRequest:
 
 _isSetUp = False
 def handler(req):
+    from mod_python import apache
     try:
         global _isSetUp
         if not _isSetUp:
@@ -118,4 +123,75 @@ def send_response(req, status, headers, body):
     else:
         for seg in body:
             req.write(seg)
+
+
+
+# --------------- Startup tools for CherryPy + mod_python --------------- #
+
+
+import os
+import re
+
+
+def read_process(cmd, args=""):
+    pipein, pipeout = os.popen4("%s %s" % (cmd, args))
+    try:
+        firstline = pipeout.readline()
+        if (re.search(r"(not recognized|No such file|not found)", firstline,
+                      re.IGNORECASE)):
+            raise IOError('%s must be on your system path.' % cmd)
+        output = firstline + pipeout.read()
+    finally:
+        pipeout.close()
+    return output
+
+
+class ModPythonServer(object):
+    
+    template = """
+# Apache2 server configuration file for running CherryPy with mod_python.
+
+DocumentRoot "/"
+Listen %(port)s
+LoadModule python_module modules/mod_python.so
+
+<Location %(loc)s>
+    SetHandler python-program
+    PythonHandler %(handler)s
+    PythonDebug On
+%(opts)s
+</Location>
+"""
+    
+    def __init__(self, loc="/", port=80, opts=None, apache_path="apache",
+                 handler="cherrypy._cpmodpy::handler"):
+        self.loc = loc
+        self.port = port
+        self.opts = opts
+        self.apache_path = apache_path
+        self.handler = handler
+    
+    def start(self):
+        opts = "".join(["    PythonOption %s %s\n" % (k, v)
+                        for k, v in self.opts])
+        conf_data = self.template % {"port": self.port,
+                                     "loc": self.loc,
+                                     "opts": opts,
+                                     "handler": self.handler,
+                                     }
+        
+        mpconf = os.path.join(os.path.dirname(__file__), "cpmodpy.conf")
+        f = open(mpconf, 'wb')
+        try:
+            f.write(conf_data)
+        finally:
+            f.close()
+        
+        response = read_process(self.apache_path, "-k start -f %s" % mpconf)
+        self.ready = True
+        return response
+    
+    def stop(self):
+        os.popen("apache -k stop")
+        self.ready = False
 

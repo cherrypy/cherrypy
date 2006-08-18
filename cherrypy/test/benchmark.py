@@ -31,14 +31,15 @@ import time
 import traceback
 
 import cherrypy
+from cherrypy import _cpmodpy
 from cherrypy.lib import http
 
 
 AB_PATH = ""
-APACHE_PATH = ""
+APACHE_PATH = "apache"
 SCRIPT_NAME = "/cpbench/users/rdelon/apps/blog"
 
-__all__ = ['ABSession', 'Root', 'print_report', 'read_process',
+__all__ = ['ABSession', 'Root', 'print_report',
            'run_standard_benchmarks', 'safe_threads',
            'size_report', 'startup', 'thread_report',
            ]
@@ -100,19 +101,6 @@ class NullRequest:
 
 class NullResponse:
     pass
-
-
-def read_process(cmd, args=""):
-    pipein, pipeout = os.popen4("%s %s" % (cmd, args))
-    try:
-        firstline = pipeout.readline()
-        if (re.search(r"(not recognized|No such file|not found)", firstline,
-                      re.IGNORECASE)):
-            raise IOError('%s must be on your system path.' % cmd)
-        output = firstline + pipeout.read()
-    finally:
-        pipeout.close()
-    return output
 
 
 class ABSession:
@@ -201,7 +189,7 @@ Finished 1000 requests
     
     def run(self):
         # Parse output of ab, setting attributes on self
-        self.output = read_process(AB_PATH or "ab", self.args())
+        self.output = _cpmodpy.read_process(AB_PATH or "ab", self.args())
         for attr, name, pattern in self.parse_patterns:
             val = re.search(pattern, self.output, re.MULTILINE)
             if val:
@@ -272,79 +260,46 @@ def run_standard_benchmarks():
 def startup_modpython(req=None):
     """Start the CherryPy app server in 'serverless' mode (for modpython/WSGI)."""
     if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
-        if req.get_options().has_key("nullreq"):
-            cherrypy.engine.request_class = NullRequest
-            cherrypy.engine.response_class = NullResponse
-        ab_opt = req.get_options().get("ab", "")
-        if ab_opt:
-            global AB_PATH
-            AB_PATH = ab_opt
+        if req:
+            if req.get_options().has_key("nullreq"):
+                cherrypy.engine.request_class = NullRequest
+                cherrypy.engine.response_class = NullResponse
+            ab_opt = req.get_options().get("ab", "")
+            if ab_opt:
+                global AB_PATH
+                AB_PATH = ab_opt
         cherrypy.engine.start(blocking=False)
     if cherrypy.engine.state == cherrypy._cpengine.STARTING:
         cherrypy.engine.wait()
     return 0 # apache.OK
 
-mp_conf_template = """
-# Apache2 server configuration file for benchmarking CherryPy with mod_python.
-
-DocumentRoot "/"
-Listen 8080
-LoadModule python_module modules/mod_python.so
-
-<Location />
-    SetHandler python-program
-    PythonFixupHandler cherrypy.test.benchmark::startup_modpython
-    PythonHandler modpython_gateway::handler
-    PythonOption wsgi.application cherrypy::tree
-    PythonDebug On
-%s%s
-</Location>
-"""
-
-cpmodpy_template = """
-# Apache2 server configuration file for benchmarking CherryPy with mod_python.
-
-DocumentRoot "/"
-Listen 8080
-LoadModule python_module modules/mod_python.so
-
-<Location />
-    SetHandler python-program
-    PythonHandler cherrypy._cpmodpy::handler
-    PythonOption cherrypy.setup cherrypy.test.benchmark::startup_modpython
-    PythonDebug On
-%s%s
-</Location>
-"""
 
 def run_modpython(use_wsgi=False):
+    print "Starting mod_python..."
+    pyopts = []
+    
     # Pass the null and ab=path options through Apache
-    nullreq_opt = ""
     if "--null" in opts:
-        nullreq_opt = "    PythonOption nullreq\n"
+        pyopts.append(("nullreq", ""))
     
-    ab_opt = ""
     if "--ab" in opts:
-        ab_opt = "    PythonOption ab %s\n" % opts["--ab"]
+        pyopts.append(("ab", opts["--ab"]))
     
+    s = _cpmodpy.ModPythonServer
     if use_wsgi:
-        conf_data = mp_conf_template % (ab_opt, nullreq_opt)
+        pyopts.append(("wsgi.application", "cherrypy::tree"))
+        pyopts.append(("wsgi.startup", "cherrypy.test.benchmark::startup_modpython"))
+        handler = "modpython_gateway::handler"
+        s = s(port=8080, opts=pyopts, apache_path=APACHE_PATH, handler=handler)
     else:
-        conf_data = cpmodpy_template % (ab_opt, nullreq_opt)
-    mpconf = os.path.join(curdir, "bench_mp.conf")
+        pyopts.append(("cherrypy.setup", "cherrypy.test.benchmark::startup_modpython"))
+        s = s(port=8080, opts=pyopts, apache_path=APACHE_PATH)
     
-    f = open(mpconf, 'wb')
     try:
-        f.write(conf_data)
-    finally:
-        f.close()
-    
-    apargs = "-k start -f %s" % mpconf
-    try:
-        read_process(APACHE_PATH or "apache", apargs)
+        s.start()
         run()
     finally:
-        os.popen("apache -k stop")
+        s.stop()
 
 
 
