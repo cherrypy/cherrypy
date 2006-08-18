@@ -1,5 +1,4 @@
 import logging
-import sys
 
 import cherrypy
 from cherrypy import config, _cpwsgi

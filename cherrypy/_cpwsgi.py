@@ -1,4 +1,4 @@
-"""A WSGI application interface (see PEP 333)."""
+"""WSGI interface (see PEP 333)."""
 
 import sys
 import cherrypy
@@ -49,10 +49,10 @@ def _wsgi_callable(environ, start_response, app=None):
         if app:
             request.app = app
         
-        path = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
+        path = env('SCRIPT_NAME', '') + env('PATH_INFO', '')
         response = request.run(environ['REQUEST_METHOD'], path,
-                               environ.get('QUERY_STRING'),
-                               environ.get('SERVER_PROTOCOL'),
+                               env('QUERY_STRING'),
+                               env('SERVER_PROTOCOL'),
                                translate_headers(environ),
                                environ['wsgi.input'])
         s, h, b = response.status, response.header_list, response.body
