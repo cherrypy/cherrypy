@@ -321,7 +321,7 @@ def run():
         'test_sessionauthenticate',
 ##        'test_states',
         'test_xmlrpc',
-        'test_wsgiapp',
+        'test_wsgiapps',
     ]
     CommandLineParser(testList).run()
     
