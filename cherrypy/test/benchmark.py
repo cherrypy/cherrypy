@@ -184,7 +184,7 @@ Finished 1000 requests
         port = cherrypy.config.get('server.socket_port')
         assert self.concurrency > 0
         assert self.requests > 0
-        return ("-n %s -c %s http://localhost:%s%s" %
+        return ("-k -n %s -c %s http://localhost:%s%s" %
                 (self.requests, self.concurrency, port, self.path))
     
     def run(self):

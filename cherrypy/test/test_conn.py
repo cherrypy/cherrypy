@@ -19,6 +19,10 @@ def setup_server():
         page2 = index
         page3 = index
         
+        def hello(self):
+            return "Hello, world!"
+        hello.exposed = True
+        
         def stream(self):
             for x in xrange(10):
                 yield str(x)
@@ -41,6 +45,9 @@ class ConnectionTests(helper.CPWebCase):
         
         # Set our HTTP_CONN to an instance so it persists between requests.
         self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        # Don't automatically re-connect
+        self.HTTP_CONN.auto_open = False
+        self.HTTP_CONN.connect()
         
         # Make the first request and assert there's no "Connection: close".
         self.getPage("/")
@@ -55,26 +62,54 @@ class ConnectionTests(helper.CPWebCase):
         self.assertNoHeader("Connection")
         
         # Make another, streamed request on the same connection.
+        # Streamed output closes the connection to determine transfer-length.
         self.getPage("/stream")
         self.assertStatus('200 OK')
         self.assertBody('0123456789')
-        # Streamed output closes the connection to determine transfer-length.
         self.assertHeader("Connection", "close")
         
-        # Make another request on a new connection, but close it.
+        # Make another request on the same connection, which should error.
+        self.assertRaises(httplib.NotConnected, self.getPage, "/")
+        
+        # Test client-side close.
         self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
         self.getPage("/page2", headers=[("Connection", "close")])
         self.assertStatus('200 OK')
         self.assertBody(pov)
         self.assertHeader("Connection", "close")
+    
+    def test_HTTP11_pipelining(self):
+        # Test pipelining. httplib doesn't support this directly.
+        conn = httplib.HTTPConnection(self.HOST, self.PORT)
+        conn.auto_open = False
+        conn.connect()
         
-        # Make another request on the same connection, which should error.
-        # This doesn't work with httplib, because it spawns a new socket as needed.
-##        self.assertRaises(socket.timeout, self.getPage, "/")
+        # Put request 1
+        conn.putrequest("GET", "/", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
         
-        # XXX Test pipelining. httplib doesn't support this.
+        # Put request 2
+        conn._output('GET /hello HTTP/1.1')
+        conn._output("Host: %s" % self.HOST)
+        conn._send_output()
         
+        # Retrieve response 1
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        body = response.read()
+        self.assertEqual(response.status, 200)
+        self.assertEqual(body, pov)
         
+        # Retrieve response 2
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        body = response.read()
+        self.assertEqual(response.status, 200)
+        self.assertEqual(body, "Hello, world!")
+        
+        conn.close()
+    
     def test_HTTP10(self):
         self.PROTOCOL = "HTTP/1.1"
         self.HTTP_CONN = httplib.HTTPConnection
