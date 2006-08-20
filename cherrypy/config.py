@@ -61,7 +61,7 @@ default_conf = {
     'server.socket_file': '',
     'server.socket_queue_size': 5,
     'server.socket_timeout': 10,
-    'server.protocol_version': 'HTTP/1.0',
+    'server.protocol_version': 'HTTP/1.1',
     'server.reverse_dns': False,
     'server.thread_pool': 10,
     'log_to_screen': True,

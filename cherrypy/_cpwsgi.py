@@ -118,38 +118,22 @@ def _wsgi_callable(environ, start_response, app=None):
 
 class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
     
-    def __init__(self, socket, addr, server):
-        _cpwsgiserver.HTTPRequest.__init__(self, socket, addr, server)
+    def parse_request(self):
         mhs = int(cherrypy.config.get('server.max_request_header_size',
                                       500 * 1024))
         if mhs > 0:
             self.rfile = http.SizeCheckWrapper(self.rfile, mhs)
-    
-    def parse_request(self):
+        
         try:
             _cpwsgiserver.HTTPRequest.parse_request(self)
         except http.MaxSizeExceeded:
-            msg = "Request Entity Too Large"
-            self.wfile.write("%s 413 %s\r\n" % (self.server.protocol, msg))
-            self.wfile.write("Content-Length: %s\r\n\r\n" % len(msg))
-            self.wfile.write(msg)
-            self.wfile.flush()
-            self.ready = False
-            
+            self.abort(413, "Request Entity Too Large")
             cherrypy.log(traceback=True)
-        else:
-            if self.ready:
-                # Request header is parsed
-                script_name = self.environ.get('SCRIPT_NAME', '')
-                path_info = self.environ.get('PATH_INFO', '')
-                path = (script_name + path_info)
-                if path == "*":
-                    path = "global"
-                
-                if isinstance(self.rfile, http.SizeCheckWrapper):
-                    # Unwrap the rfile
-                    self.rfile = self.rfile.rfile
-                self.environ["wsgi.input"] = self.rfile
+
+
+class CPHTTPConnection(_cpwsgiserver.HTTPConnection):
+    
+    RequestHandlerClass = CPHTTPRequest
 
 
 class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
@@ -162,7 +146,7 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     
     """
     
-    RequestHandlerClass = CPHTTPRequest
+    ConnectionClass = CPHTTPConnection
     
     def __init__(self):
         conf = cherrypy.config.get
@@ -181,5 +165,5 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
                    request_queue_size = conf('server.socket_queue_size'),
                    timeout = conf('server.socket_timeout'),
                    )
-        s.protocol = conf('server.protocol_version', 'HTTP/1.0')
+        s.protocol = conf('server.protocol_version', 'HTTP/1.1')
 

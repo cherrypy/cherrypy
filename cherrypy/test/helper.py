@@ -40,7 +40,7 @@ class CPWebCase(webtest.WebCase):
     def tearDown(self):
         pass
     
-    def getPage(self, url, headers=None, method="GET", body=None, protocol="HTTP/1.1"):
+    def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url. Return status, headers, body."""
         if self.script_name:
             url = http.urljoin(self.script_name, url)

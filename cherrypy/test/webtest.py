@@ -139,15 +139,16 @@ except ImportError:
 class WebCase(TestCase):
     HOST = "127.0.0.1"
     PORT = 8000
-    HTTP_CONN=httplib.HTTPConnection
+    HTTP_CONN = httplib.HTTPConnection
+    PROTOCOL = "HTTP/1.1"
     
-    def getPage(self, url, headers=None, method="GET", body=None, protocol="HTTP/1.1"):
+    def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
         
         self.url = url
         result = openURL(url, headers, method, body, self.HOST, self.PORT,
-                         self.HTTP_CONN, protocol)
+                         self.HTTP_CONN, protocol or self.PROTOCOL)
         self.status, self.headers, self.body = result
         
         # Build a list of request cookies from the previous response cookies.
@@ -366,7 +367,12 @@ def openURL(url, headers=None, method="GET", body=None,
     trial = 0
     while trial < 10:
         try:
-            conn = http_conn(host, port)
+            # Allow http_conn to be a class or an instance
+            if hasattr(http_conn, "host"):
+                conn = http_conn
+            else:
+                conn = http_conn(host, port)
+            
             conn._http_vsn_str = protocol
             conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
             
@@ -406,7 +412,10 @@ def openURL(url, headers=None, method="GET", body=None,
             
             outbody = response.read()
             
-            conn.close()
+            if not hasattr(http_conn, "host"):
+                # We made our own conn instance. Close it.
+                conn.close()
+            
             return status, outheaders, outbody
         except socket.error:
             trial += 1
