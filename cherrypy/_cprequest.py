@@ -163,10 +163,15 @@ class Request(object):
             if self.app is None:
                 # Some interfaces (like WSGI) may have already set self.app.
                 # If not, look up the app for this path.
-                self.script_name = r = cherrypy.tree.script_name(self.path)
-                if r is None:
-                    raise cherrypy.NotFound()
-                self.app = cherrypy.tree.apps[r]
+                self.script_name = sn = cherrypy.tree.script_name(self.path)
+                if sn is None:
+                    # No app was found to handle this path. Rather than
+                    # abort here, we leave self.app == None so NotFound
+                    # can be raised later (with proper error handling
+                    # and response finalization). See self.respond.
+                    self.script_name = ""
+                else:
+                    self.app = cherrypy.tree.apps[sn]
             else:
                 self.script_name = self.app.script_name
             
@@ -212,6 +217,9 @@ class Request(object):
             try:
                 if cherrypy.response.timed_out:
                     raise cherrypy.TimeoutError()
+                
+                if self.app is None:
+                    raise cherrypy.NotFound()
                 
                 self.hooks = HookMap(self.hookpoints)
                 self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
@@ -701,7 +709,7 @@ class Response(object):
             # Responses which are not streamed should have a Content-Length,
             # but allow user code to set Content-Length if desired.
             if (dict.get(headers, 'Content-Length') is None
-                and code not in (304,)):
+                    and code not in (304,)):
                 content = self.collapse_body()
                 dict.__setitem__(headers, 'Content-Length', len(content))
         
