@@ -138,16 +138,6 @@ class HTTPRequest(object):
         headers = mimetools.Message(self.rfile)
         self.environ.update(self.parse_headers(headers))
         
-        cl = headers.getheader("Content-length")
-        if method in ("POST", "PUT") and cl is None:
-            # No Content-Length header supplied. This will hang
-            # cgi.FieldStorage, since it cannot determine when to
-            # stop reading from the socket. Until we handle chunked
-            # encoding, always respond with 411 Length Required.
-            # See http://www.cherrypy.org/ticket/493.
-            self.simple_response("411 Length Required")
-            return
-        
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
             if headers.getheader("Connection", "") == "close":
@@ -163,14 +153,25 @@ class HTTPRequest(object):
         # Transfer-Encoding support
         te = headers.getheader("Transfer-Encoding", "")
         te = [x.strip() for x in te.split(",") if x.strip()]
-        while te:
-            enc = te.pop()
-            if enc.lower() == "chunked":
-                if not self.decode_chunked():
+        if te:
+            while te:
+                enc = te.pop()
+                if enc.lower() == "chunked":
+                    if not self.decode_chunked():
+                        return
+                else:
+                    self.simple_response("501 Unimplemented")
+                    self.close_connection = True
                     return
-            else:
-                self.simple_response("501 Unimplemented")
-                self.close_connection = True
+        else:
+            cl = headers.getheader("Content-length")
+            if method in ("POST", "PUT") and cl is None:
+                # No Content-Length header supplied. This will hang
+                # cgi.FieldStorage, since it cannot determine when to
+                # stop reading from the socket. Until we handle chunked
+                # encoding, always respond with 411 Length Required.
+                # See http://www.cherrypy.org/ticket/493.
+                self.simple_response("411 Length Required")
                 return
         
         # From PEP 333:

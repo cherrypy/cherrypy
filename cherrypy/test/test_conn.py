@@ -75,21 +75,34 @@ class ConnectionTests(helper.CPWebCase):
         self.assertNoHeader("Connection")
         
         # Make another, streamed request on the same connection.
-        # Streamed output closes the connection to determine transfer-length.
         self.getPage("/stream")
         self.assertStatus('200 OK')
         self.assertBody('0123456789')
-        self.assertHeader("Connection", "close")
-        
-        # Make another request on the same connection, which should error.
-        self.assertRaises(httplib.NotConnected, self.getPage, "/")
+        self.assertNoHeader("Content-Length")
+        # Streamed output will either close the connection, or use
+        # chunked encoding, to determine transfer-length.
+        chunked_response = False
+        for k, v in self.headers:
+            if k.lower() == "transfer-encoding":
+                if str(v) == "chunked":
+                    chunked_response = True
+        if not chunked_response:
+            self.assertHeader("Connection", "close")
+            
+            # Make another request on the same connection, which should error.
+            self.assertRaises(httplib.NotConnected, self.getPage, "/")
         
         # Test client-side close.
         self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        self.HTTP_CONN.auto_open = False
+        self.HTTP_CONN.connect()
         self.getPage("/page2", headers=[("Connection", "close")])
         self.assertStatus('200 OK')
         self.assertBody(pov)
         self.assertHeader("Connection", "close")
+        
+        # Make another request on the same connection, which should error.
+        self.assertRaises(httplib.NotConnected, self.getPage, "/")
     
     def test_HTTP11_pipelining(self):
         if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
@@ -189,29 +202,38 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Set our HTTP_CONN to an instance so it persists between requests.
-        self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        conn = httplib.HTTPConnection(self.HOST, self.PORT)
         
         # Try a normal chunked request
         body = ("8\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
                 "Content-Type: application/x-json\r\n\r\n")
-        self.getPage("/upload",
-                     headers=[("Transfer-Encoding", "chunked"),
-                              ("Trailer", "Content-Type"),
-                              ("Content-Length", len(body)),
-                              ],
-                     body=body, method="POST")
+        conn.putrequest("POST", "/upload", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.putheader("Transfer-Encoding", "chunked")
+        conn.putheader("Trailer", "Content-Type")
+        # Note that this is somewhat malformed:
+        # we shouldn't be sending Content-Length.
+        # RFC 2616 says the server should ignore it.
+        conn.putheader("Content-Length", len(body))
+        conn.endheaders()
+        conn.send(body)
+        response = conn.getresponse()
+        self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus('200 OK')
         self.assertBody("thanks for 'xx\r\nxxxxyyyyy' (application/x-json)")
         
         # Try a chunked request that exceeds max_request_body_size.
         # Note that the delimiters and trailer are included.
-        body = ("5f\r\n" + ("x" * 95) + "\r\n0\r\n\r\n")
-        self.getPage("/upload",
-                     headers=[("Transfer-Encoding", "chunked"),
-                              ("Content-Type", "text/plain"),
-                              ("Content-Length", len(body)),
-                              ],
-                     body=body, method="POST")
+        body = "5f\r\n" + ("x" * 95) + "\r\n0\r\n\r\n"
+        conn.putrequest("POST", "/upload", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.putheader("Transfer-Encoding", "chunked")
+        conn.putheader("Content-Type", "text/plain")
+##        conn.putheader("Content-Length", len(body))
+        conn.endheaders()
+        conn.send(body)
+        response = conn.getresponse()
+        self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(413)
         self.assertBody("")
     
@@ -223,7 +245,8 @@ class ConnectionTests(helper.CPWebCase):
         self.getPage("/page2")
         self.assertStatus('200 OK')
         self.assertBody(pov)
-        self.assertNoHeader("Connection")
+        # Apache, for example, may emit a Connection header even for HTTP/1.0
+##        self.assertNoHeader("Connection")
         
         # Test a keep-alive HTTP/1.0 request.
         self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
@@ -239,7 +262,8 @@ class ConnectionTests(helper.CPWebCase):
         self.getPage("/page3")
         self.assertStatus('200 OK')
         self.assertBody(pov)
-        self.assertNoHeader("Connection")
+        # Apache, for example, may emit a Connection header even for HTTP/1.0
+##        self.assertNoHeader("Connection")
 
 
 if __name__ == "__main__":
