@@ -39,6 +39,7 @@ def setup_server():
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
         'log_to_screen': False,
+        'server.max_request_body_size': 100,
         'show_tracebacks': True,
         'environment': 'production',
         })
@@ -185,6 +186,18 @@ class ConnectionTests(helper.CPWebCase):
                      body=body, method="POST")
         self.assertStatus('200 OK')
         self.assertBody("thanks for 'xx\r\nxxxxyyyyy' (application/x-json)")
+        
+        # Try a chunked request that exceeds max_request_body_size.
+        # Note that the delimiters and trailer are included.
+        body = ("5f\r\n" + ("x" * 95) + "\r\n0\r\n\r\n")
+        self.getPage("/upload",
+                     headers=[("Transfer-Encoding", "chunked"),
+                              ("Content-Type", "text/plain"),
+                              ("Content-Length", len(body)),
+                              ],
+                     body=body, method="POST")
+        self.assertStatus(413)
+        self.assertBody("")
     
     def test_HTTP10(self):
         self.PROTOCOL = "HTTP/1.0"

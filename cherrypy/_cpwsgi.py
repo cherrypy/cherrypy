@@ -127,8 +127,23 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
         try:
             _cpwsgiserver.HTTPRequest.parse_request(self)
         except http.MaxSizeExceeded:
-            self.simple_response(413, "Request Entity Too Large")
+            self.simple_response("413 Request Entity Too Large")
             cherrypy.log(traceback=True)
+    
+    def decode_chunked(self):
+        """Decode the 'chunked' transfer coding."""
+        if isinstance(self.rfile, http.SizeCheckWrapper):
+            self.rfile = self.rfile.rfile
+        mbs = int(cherrypy.config.get('server.max_request_body_size',
+                                      100 * 1024 * 1024))
+        if mbs > 0:
+            self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
+        try:
+            return _cpwsgiserver.HTTPRequest.decode_chunked(self)
+        except http.MaxSizeExceeded:
+            self.simple_response("413 Request Entity Too Large")
+            cherrypy.log(traceback=True)
+            return False
 
 
 class CPHTTPConnection(_cpwsgiserver.HTTPConnection):

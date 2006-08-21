@@ -217,9 +217,11 @@ class HTTPRequest(object):
 ##            if line: chunk_extension = line[0]
             cl += chunk_size
             data.write(self.rfile.read(chunk_size))
-            if self.rfile.read(2) != "\r\n":
+            crlf = self.rfile.read(2)
+            if crlf != "\r\n":
                 self.simple_response("400 Bad Request",
-                                     "Bad chunked transfer coding")
+                                     "Bad chunked transfer coding "
+                                     "(expected '\\r\\n', got %r)" % crlf)
                 return
         
         headers = mimetools.Message(self.rfile)
