@@ -110,7 +110,7 @@ class HTTPRequest(object):
         # server does not support the requested protocol. Limit our output
         # to min(req, server). We want the following output:
         #     request    server     actual written   supported response
-        #     protocol   protocol  response protocol feature set (SERVER_PROTOCOL)
+        #     protocol   protocol  response protocol    feature set
         # a     1.0        1.0           1.0                1.0
         # b     1.0        1.1           1.1                1.0
         # c     1.1        1.0           1.0                1.0
@@ -123,7 +123,12 @@ class HTTPRequest(object):
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
             return
-        self.environ["SERVER_PROTOCOL"] = "HTTP/%s.%s" % min(rp, sp)
+        # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
+        self.environ["SERVER_PROTOCOL"] = req_protocol
+        # set a non-standard environ entry so the WSGI app can know what
+        # the *real* server protocol is (and what features to support).
+        self.environ["ACTUAL_SERVER_PROTOCOL"] = server.protocol
+        self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
         
         # If the Request-URI was an absoluteURI, use its location atom.
         if location:
@@ -144,7 +149,7 @@ class HTTPRequest(object):
             return
         
         # Persistent connection support
-        if self.environ["SERVER_PROTOCOL"] == "HTTP/1.1":
+        if self.response_protocol == "HTTP/1.1":
             if headers.getheader("Connection", "") == "close":
                 self.close_connection = True
                 self.outheaders.append(("Connection", "close"))
@@ -246,7 +251,7 @@ class HTTPRequest(object):
         wfile.write("%s %s\r\n" % (self.connection.server.protocol, status))
         wfile.write("Content-Length: %s\r\n" % len(msg))
         
-        if status[:3] == "413" and self.environ["SERVER_PROTOCOL"] == 'HTTP/1.1':
+        if status[:3] == "413" and self.response_protocol == 'HTTP/1.1':
             # Request Entity Too Large
             self.close_connection = True
             wfile.write("Connection: close\r\n")
@@ -280,7 +285,7 @@ class HTTPRequest(object):
     def send_headers(self):
         hkeys = [key.lower() for (key,value) in self.outheaders]
         
-        if (self.environ["SERVER_PROTOCOL"] == 'HTTP/1.1'
+        if (self.response_protocol == 'HTTP/1.1'
             and (# Request Entity Too Large. Close conn to avoid garbage.
                 self.status[:3] == "413"
                 # No Content-Length. Close conn to determine transfer-length.

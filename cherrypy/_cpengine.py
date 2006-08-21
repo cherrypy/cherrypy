@@ -189,7 +189,8 @@ class Engine(object):
     ready = property(_is_ready, doc="Return True if the engine is ready to"
                                     " receive requests, False otherwise.")
     
-    def request(self, local_host, remote_host, scheme="http"):
+    def request(self, local_host, remote_host, scheme="http",
+                server_protocol="HTTP/1.1"):
         """Obtain an HTTP Request object.
         
         local_host should be an http.Host object with the server info.
@@ -209,7 +210,8 @@ class Engine(object):
                 
                 for func in self.on_start_thread_list:
                     func(i)
-            req = self.request_class(local_host, remote_host, scheme)
+            req = self.request_class(local_host, remote_host, scheme,
+                                     server_protocol)
         cherrypy.serving.request = req
         cherrypy.serving.response = resp = self.response_class()
         self.servings.append((req, resp))

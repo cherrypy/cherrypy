@@ -50,6 +50,10 @@ import helper
 class ConnectionTests(helper.CPWebCase):
     
     def test_HTTP11(self):
+        if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
+            print "skipped ",
+            return
+        
         self.PROTOCOL = "HTTP/1.1"
         
         # Set our HTTP_CONN to an instance so it persists between requests.
@@ -88,6 +92,10 @@ class ConnectionTests(helper.CPWebCase):
         self.assertHeader("Connection", "close")
     
     def test_HTTP11_pipelining(self):
+        if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
+            print "skipped ",
+            return
+        
         self.PROTOCOL = "HTTP/1.1"
         
         # Test pipelining. httplib doesn't support this directly.
@@ -122,6 +130,10 @@ class ConnectionTests(helper.CPWebCase):
         conn.close()
     
     def test_100_Continue(self):
+        if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
+            print "skipped ",
+            return
+        
         self.PROTOCOL = "HTTP/1.1"
         
         conn = httplib.HTTPConnection(self.HOST, self.PORT)
@@ -170,6 +182,10 @@ class ConnectionTests(helper.CPWebCase):
         self.assertBody("thanks for 'I am a small file' (text/plain)")
     
     def test_Chunked_Encoding(self):
+        if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
+            print "skipped ",
+            return
+        
         self.PROTOCOL = "HTTP/1.1"
         
         # Set our HTTP_CONN to an instance so it persists between requests.

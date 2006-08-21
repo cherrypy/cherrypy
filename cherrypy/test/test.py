@@ -35,6 +35,7 @@ class TestHarness(object):
         v = sys.version.split()[0]
         print "Python version used to run this test script:", v
         print "CherryPy version", cherrypy.__version__
+        print "HTTP server version", self.protocol
         print
         
         if isinstance(conf, basestring):

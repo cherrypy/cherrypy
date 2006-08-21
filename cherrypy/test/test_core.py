@@ -372,7 +372,6 @@ def setup_server():
     cherrypy.config.update({
         'log_to_screen': False,
         'log_file': log_file,
-        'server.protocol_version': "HTTP/1.1",
         'environment': 'production',
         'show_tracebacks': True,
         'server.max_request_body_size': 200,
@@ -468,11 +467,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 haslength = True
         line = data[-2].strip()
         if haslength:
-            self.assert_(line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7 "" ""'
-                                          % self.prefix()))
+            if not line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7 "" ""'
+                                 % self.prefix()):
+                self.fail(line)
         else:
-            self.assert_(line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 - "" ""'
-                                          % self.prefix()))
+            if not line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 - "" ""'
+                                 % self.prefix()):
+                self.fail(line)
         
         self.assertEqual(data[-1][:15], '127.0.0.1 - - [')
         haslength = False
@@ -585,9 +586,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/stringify", protocol="HTTP/1.0")
         self.assertStatus(200)
         self.assertBody("(['http://127.0.0.1:%s/'], 302)" % self.PORT)
-        self.getPage("/redirect/stringify", protocol="HTTP/1.1")
-        self.assertStatus(200)
-        self.assertBody("(['http://127.0.0.1:%s/'], 303)" % self.PORT)
+        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+            self.getPage("/redirect/stringify", protocol="HTTP/1.1")
+            self.assertStatus(200)
+            self.assertBody("(['http://127.0.0.1:%s/'], 303)" % self.PORT)
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
@@ -652,24 +654,25 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody("[(2, 5), (7, 8)]")
         
         # Get a partial file.
-        self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
-        self.assertStatus(206)
-        self.assertHeader("Content-Type", "text/html")
-        self.assertHeader("Content-Range", "bytes 2-5/14")
-        self.assertBody("llo,")
-        
-        # What happens with overlapping ranges (and out of order, too)?
-        self.getPage("/ranges/slice_file", [('Range', 'bytes=4-6,2-5')])
-        self.assertStatus(206)
-        ct = ""
-        for k, v in self.headers:
-            if k.lower() == "content-type":
-                ct = v
-                break
-        expected_type = "multipart/byteranges; boundary="
-        self.assert_(ct.startswith(expected_type))
-        boundary = ct[len(expected_type):]
-        expected_body = """--%s
+        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+            self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
+            self.assertStatus(206)
+            self.assertHeader("Content-Type", "text/html")
+            self.assertHeader("Content-Range", "bytes 2-5/14")
+            self.assertBody("llo,")
+            
+            # What happens with overlapping ranges (and out of order, too)?
+            self.getPage("/ranges/slice_file", [('Range', 'bytes=4-6,2-5')])
+            self.assertStatus(206)
+            ct = ""
+            for k, v in self.headers:
+                if k.lower() == "content-type":
+                    ct = v
+                    break
+            expected_type = "multipart/byteranges; boundary="
+            self.assert_(ct.startswith(expected_type))
+            boundary = ct[len(expected_type):]
+            expected_body = """--%s
 Content-type: text/html
 Content-range: bytes 4-6/14
 
@@ -680,18 +683,18 @@ Content-range: bytes 2-5/14
 
 llo, 
 --%s""" % (boundary, boundary, boundary)
-        self.assertBody(expected_body)
-        self.assertHeader("Content-Length")
-        
-        # Test "416 Requested Range Not Satisfiable"
-        self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
-        self.assertStatus(416)
-        self.assertHeader("Content-Range", "bytes */14")
-        
-        # Test Range behavior with HTTP/1.0 request
-        self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')], protocol="HTTP/1.0")
-        self.assertStatus(200)
-        self.assertBody("Hello, world\r\n")
+            self.assertBody(expected_body)
+            self.assertHeader("Content-Length")
+            
+            # Test "416 Requested Range Not Satisfiable"
+            self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
+            self.assertStatus(416)
+            self.assertHeader("Content-Range", "bytes */14")
+        elif cherrypy.config.get('server.protocol_version') == "HTTP/1.0":
+            # Test Range behavior with HTTP/1.0 request
+            self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
+            self.assertStatus(200)
+            self.assertBody("Hello, world\r\n")
     
     def testExpect(self):
         e = ('Expect', '100-continue')
@@ -758,21 +761,22 @@ llo,
                     'Expires', 'Location', 'Server']:
             self.assertEqual(hnames.count(key), 1)
         
-        # Test RFC-2047-encoded request and response header values
-        self.getPage("/headers/ifmatch",
-                     [('If-Match', '=?utf-8?q?=E2=84=ABngstr=C3=B6m?=')])
-        self.assertBody("u'\\u212bngstr\\xf6m'")
-        self.assertHeader("ETag", '=?utf-8?b?4oSrbmdzdHLDtm0=?=')
-        
-        # Test a *LONG* RFC-2047-encoded request and response header value
-        c = "=E2=84=ABngstr=C3=B6m"
-        self.getPage("/headers/ifmatch",
-                     [('If-Match', '=?utf-8?q?%s?=' % (c * 10))])
-        self.assertBody("u'%s'" % ('\\u212bngstr\\xf6m' * 10))
-        self.assertHeader("ETag",
-                          '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm0=?='
-                          '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm0=?='
-                          '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2bQ==?=')
+        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+            # Test RFC-2047-encoded request and response header values
+            self.getPage("/headers/ifmatch",
+                         [('If-Match', '=?utf-8?q?=E2=84=ABngstr=C3=B6m?=')])
+            self.assertBody("u'\\u212bngstr\\xf6m'")
+            self.assertHeader("ETag", '=?utf-8?b?4oSrbmdzdHLDtm0=?=')
+            
+            # Test a *LONG* RFC-2047-encoded request and response header value
+            c = "=E2=84=ABngstr=C3=B6m"
+            self.getPage("/headers/ifmatch",
+                         [('If-Match', '=?utf-8?q?%s?=' % (c * 10))])
+            self.assertBody("u'%s'" % ('\\u212bngstr\\xf6m' * 10))
+            self.assertHeader("ETag",
+                              '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm0=?='
+                              '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm0=?='
+                              '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2bQ==?=')
         
         # Test that two request headers are collapsed into one.
         # See http://www.cherrypy.org/ticket/542.

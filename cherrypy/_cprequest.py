@@ -81,6 +81,7 @@ class Request(object):
     local = http.Host("localhost", 80)
     remote = http.Host("localhost", 1111)
     scheme = "http"
+    server_protocol = "HTTP/1.1"
     base = ""
     
     # Request-Line attributes
@@ -114,7 +115,8 @@ class Request(object):
                   'before_error_response', 'after_error_response']
     hooks = HookMap(hookpoints)
     
-    def __init__(self, local_host, remote_host, scheme="http"):
+    def __init__(self, local_host, remote_host, scheme="http",
+                 server_protocol="HTTP/1.1"):
         """Populate a new Request object.
         
         local_host should be an http.Host object with the server info.
@@ -124,6 +126,7 @@ class Request(object):
         self.local = local_host
         self.remote = remote_host
         self.scheme = scheme
+        self.server_protocol = server_protocol
         
         self.closed = False
         self.redirections = []
@@ -141,10 +144,10 @@ class Request(object):
             
             cherrypy.serving.__dict__.clear()
     
-    def run(self, method, path, query_string, protocol, headers, rfile):
+    def run(self, method, path, query_string, req_protocol, headers, rfile):
         """Process the Request.
         
-        method, path, query_string, and protocol should be pulled directly
+        method, path, query_string, and req_protocol should be pulled directly
             from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
         path should be %XX-unquoted, but query_string should not be.
         headers should be a list of (name, value) tuples.
@@ -159,19 +162,35 @@ class Request(object):
         attributes to build the outbound stream.
         
         """
+        
         try:
             self.error_response = cherrypy.HTTPError(500).set_response
             
             self.method = method
             self.path = path or "/"
             self.query_string = query_string
-            self.protocol = int(protocol[5]), int(protocol[7])
+            
+            # Compare request and server HTTP protocol versions, in case our
+            # server does not support the requested protocol. Limit our output
+            # to min(req, server). We want the following output:
+            #     request    server     actual written   supported response
+            #     protocol   protocol  response protocol    feature set
+            # a     1.0        1.0           1.0                1.0
+            # b     1.0        1.1           1.1                1.0
+            # c     1.1        1.0           1.0                1.0
+            # d     1.1        1.1           1.1                1.1
+            # Notice that, in (b), the response will be "HTTP/1.1" even though
+            # the client only understands 1.0. RFC 2616 10.5.6 says we should
+            # only return 505 if the _major_ version is different.
+            rp = int(req_protocol[5]), int(req_protocol[7])
+            sp = int(self.server_protocol[5]), int(self.server_protocol[7])
+            self.protocol = min(rp, sp)
             
             # Rebuild first line of the request (e.g. "GET /path HTTP/1.0").
             url = path
             if query_string:
                 url += '?' + query_string
-            self.request_line = '%s %s %s' % (method, url, protocol)
+            self.request_line = '%s %s %s' % (method, url, req_protocol)
             
             self.header_list = list(headers)
             self.rfile = rfile
