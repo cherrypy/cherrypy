@@ -32,7 +32,14 @@ def setup_server():
                 m = self._merged_args().get("map", {})
                 cherrypy.request.numerify_map = m.items()
             cherrypy.request.hooks.attach('on_start_resource', makemap)
+            
+            def critical():
+                cherrypy.request.error_response = cherrypy.HTTPError(502).set_response
+            critical.failsafe = True
+            cherrypy.request.hooks.attach('on_start_resource', critical)
+            
             cherrypy.request.hooks.attach(self._point, self.callable)
+    
     tools.numerify = NumTool('before_finalize', numerify)
     
     # It's not mandatory to inherit from _cptools.Tool.
@@ -42,7 +49,7 @@ def setup_server():
             self.counter = 0
             self.ended = {}
             self._name = "nadsat"
-        
+            
         def nadsat(self):
             def nadsat_it_up(body):
                 for chunk in body:
@@ -55,6 +62,7 @@ def setup_server():
             # This runs after the request has been completely written out.
             cherrypy.response.body = "razdrez"
             self.ended[cherrypy.request.counter] = True
+        cleanup.failsafe = True
         
         def _setup(self):
             cherrypy.request.counter = self.counter = self.counter + 1
@@ -190,7 +198,7 @@ class ToolTests(helper.CPWebCase):
         valerr = '\n    raise ValueError()\nValueError'
         self.getPage("/demo/err")
         # If body is "razdrez", then on_end_request is being called too early.
-        self.assertErrorPage(500, pattern=valerr)
+        self.assertErrorPage(502, pattern=valerr)
         # If this fails, then on_end_request isn't being called at all.
         self.getPage("/demo/ended/3")
         self.assertBody("True")
@@ -210,16 +218,14 @@ class ToolTests(helper.CPWebCase):
         self.assertErrorPage(401)
     
     def testGuaranteedHooks(self):
-        # The on_start_resource and on_end_request hooks are all
-        # guaranteed to run, even if there are failures in other on_start
-        # or on_end methods. This is NOT true of the other hooks.
-        # Here, we have set up a failure in NumerifyTool.on_start_resource,
-        # but because that failure is logged and passed over, the error
-        # page we obtain in the user agent should be from before_finalize.
+        # The 'critical' on_start_resource hook is 'failsafe' (guaranteed
+        # to run even if there are failures in other on_start methods).
+        # This is NOT true of the other hooks.
+        # Here, we have set up a failure in NumerifyTool.numerify_map,
+        # but our 'critical' hook should run and set the error to 502.
         self.getPage("/demo/err_in_onstart")
-        self.assertErrorPage(500)
-        self.assertInBody("AttributeError: 'Request' object has no "
-                          "attribute 'numerify_map'")
+        self.assertErrorPage(502)
+        self.assertInBody("AttributeError: 'str' object has no attribute 'items'")
     
     def testCombinedTools(self):
         expectedResult = (u"Hello,world" + europoundUnicode).encode('utf-8')

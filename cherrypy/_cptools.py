@@ -92,7 +92,7 @@ class Tool(object):
         method when the tool is "turned on" in config.
         """
         conf = self._merged_args()
-        cherrypy.request.hooks.attach(self._point, self.callable, conf)
+        cherrypy.request.hooks.attach(self._point, self.callable, **conf)
 
 
 class MainTool(Tool):
@@ -132,7 +132,8 @@ class MainTool(Tool):
         method when the tool is "turned on" in config.
         """
         # Don't pass conf (or our wrapper will get wrapped!)
-        cherrypy.request.hooks.attach(self._point, self._wrapper)
+        f = getattr(self.callable, "failsafe", False)
+        cherrypy.request.hooks.attach(self._point, self._wrapper, failsafe=f)
 
 
 class ErrorTool(Tool):

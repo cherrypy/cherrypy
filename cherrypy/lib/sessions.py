@@ -351,6 +351,7 @@ def close():
     if sess.locked:
         # If the session is still locked we release the lock
         sess.release_lock()
+close.failsafe = True
 
 def init(storage_type='ram', path=None, path_header=None, name='session_id',
          timeout=60, domain=None, secure=False, locking='implicit',

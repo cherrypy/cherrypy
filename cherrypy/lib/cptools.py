@@ -108,6 +108,7 @@ def response_headers(headers=None):
     """Set headers on the response."""
     for name, value in (headers or []):
         cherrypy.response.headers[name] = value
+response_headers.failsafe = True
 
 
 _login_screen = """<html><body>

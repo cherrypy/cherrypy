@@ -13,27 +13,48 @@ from cherrypy.lib import http
 
 
 class HookMap(object):
+    """A map of call points to callback lists.
     
-    def __init__(self, points=None, failsafe=None):
+    callbacks: a dict of the form {call point: [callbacks]}.
+        Each 'call point' is a name and each callback is a callable
+        that takes no arguments.
+    failsafes: a dict of the form {callback: failsafe}. If 'failsafe' is
+        True, the callback is guaranteed to run even if other callbacks
+        from the same call point raise exceptions. False values are
+        permissible, but ignored.
+    """
+    
+    def __init__(self, points=None):
         points = points or []
         self.callbacks = dict([(point, []) for point in points])
-        self.failsafe = failsafe or []
+        self.failsafes = {}
     
-    def attach(self, point, callback, conf=None):
-        if not conf:
-            # No point adding a wrapper if there's no conf
-            self.callbacks[point].append(callback)
-        else:
+    def attach(self, point, callback, failsafe=None, **kwargs):
+        """Append callback at the given call point.
+        
+        If failsafe is True, the supplied callback is guaranteed to
+            run, even is other callbacks at the same call point fail.
+            If failsafe is None or not given, callback.failsafe will
+            be used if present; otherwise, False is assumed.
+        If additional keyword args are provided, they will be passed
+            to the given callback for each call.
+        """
+        func = callback
+        if kwargs:
             def wrapper():
-                callback(**conf)
-            self.callbacks[point].append(wrapper)
+                callback(**kwargs)
+            func = wrapper
+        self.callbacks[point].append(func)
+        if failsafe is None:
+            failsafe = getattr(callback, 'failsafe', False)
+        self.failsafes[func] = failsafe
     
     def run(self, point):
         """Execute all registered callbacks for the given point."""
         if cherrypy.response.timed_out:
             raise cherrypy.TimeoutError()
         
-        failsafe = point in self.failsafe
+        exc = None
         for callback in self.callbacks[point]:
             # Some hookpoints guarantee all callbacks are run even if
             # others at the same hookpoint fail. We will still log the
@@ -41,15 +62,16 @@ class HookMap(object):
             # to stop all processing from one of these callbacks is
             # to raise SystemExit and stop the whole server. So, trap
             # your own errors in these callbacks!
-            if failsafe:
+            if exc is None or self.failsafes.get(callback, False):
                 try:
                     callback()
                 except (KeyboardInterrupt, SystemExit):
                     raise
                 except:
+                    exc = sys.exc_info()[1]
                     cherrypy.log(traceback=True)
-            else:
-                callback()
+        if exc:
+            raise
 
 
 class Request(object):
@@ -208,9 +230,6 @@ class Request(object):
                     raise cherrypy.NotFound()
                 
                 self.hooks = HookMap(self.hookpoints)
-                self.hooks.failsafe = ['on_start_resource', 'on_end_resource',
-                                       'on_end_request']
-                
                 self.get_resource(path_info)
                 self.tool_up()
                 self.hooks.run('on_start_resource')
