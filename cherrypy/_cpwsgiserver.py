@@ -6,6 +6,10 @@ import re
 quoted_slash = re.compile("(?i)%2F")
 import rfc822
 import socket
+try:
+    import cStringIO as StringIO
+except ImportError:
+    import StringIO
 import sys
 import threading
 import time
@@ -127,7 +131,7 @@ class HTTPRequest(object):
         
         # then all the http headers
         headers = mimetools.Message(self.rfile)
-        self.environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
+        self.environ.update(self.parse_headers(headers))
         
         cl = headers.getheader("Content-length")
         if method in ("POST", "PUT") and cl is None:
@@ -138,15 +142,8 @@ class HTTPRequest(object):
             # See http://www.cherrypy.org/ticket/493.
             self.simple_response("411 Length Required")
             return
-        self.environ["CONTENT_LENGTH"] = cl or ""
         
-        for k in headers:
-            envname = "HTTP_" + k.upper().replace("-", "_")
-            if k in comma_separated_headers:
-                self.environ[envname] = ", ".join(headers.getheaders(k))
-            else:
-                self.environ[envname] = headers[k]
-        
+        # Persistent connection support
         if self.environ["SERVER_PROTOCOL"] == "HTTP/1.1":
             if headers.getheader("Connection", "") == "close":
                 self.close_connection = True
@@ -157,6 +154,19 @@ class HTTPRequest(object):
                     self.outheaders.append(("Connection", "Keep-Alive"))
             else:
                 self.close_connection = True
+        
+        # Transfer-Encoding support
+        te = headers.getheader("Transfer-Encoding", "")
+        te = [x.strip() for x in te.split(",") if x.strip()]
+        while te:
+            enc = te.pop()
+            if enc.lower() == "chunked":
+                if not self.decode_chunked():
+                    return
+            else:
+                self.simple_response("501 Unimplemented")
+                self.close_connection = True
+                return
         
         # From PEP 333:
         # "Servers and gateways that implement HTTP 1.1 must provide
@@ -179,6 +189,45 @@ class HTTPRequest(object):
             self.simple_response(100)
         
         self.ready = True
+    
+    def parse_headers(self, headers):
+        environ = {}
+        environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
+        environ["CONTENT_LENGTH"] = headers.getheader("Content-length") or ""
+        
+        for k in headers:
+            envname = "HTTP_" + k.upper().replace("-", "_")
+            if k in comma_separated_headers:
+                environ[envname] = ", ".join(headers.getheaders(k))
+            elif k in ('Transfer-Encoding',):
+                pass
+            else:
+                environ[envname] = headers[k]
+        return environ
+    
+    def decode_chunked(self):
+        """Decode the 'chunked' transfer coding."""
+        cl = 0
+        data = StringIO.StringIO()
+        while True:
+            line = self.rfile.readline().strip().split(" ", 1)
+            chunk_size = int(line.pop(0), 16)
+            if chunk_size <= 0:
+                break
+##            if line: chunk_extension = line[0]
+            cl += chunk_size
+            data.write(self.rfile.read(chunk_size))
+            if self.rfile.read(2) != "\r\n":
+                self.simple_response("400 Bad Request",
+                                     "Bad chunked transfer coding")
+                return
+        
+        headers = mimetools.Message(self.rfile)
+        self.environ.update(self.parse_headers(headers))
+        data.seek(0)
+        self.environ["wsgi.input"] = data
+        self.environ["CONTENT_LENGTH"] = str(cl) or ""
+        return True
     
     def respond(self):
         response = self.wsgi_app(self.environ, self.start_response)

@@ -31,12 +31,15 @@ def setup_server():
         stream._cp_config = {'stream_response': True}
         
         def upload(self):
-            return "thanks for the %s bytes!" % len(cherrypy.request.body.read())
+            return ("thanks for '%s' (%s)" %
+                    (cherrypy.request.body.read(),
+                     cherrypy.request.headers['Content-Type']))
         upload.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
         'log_to_screen': False,
+        'show_tracebacks': True,
         'environment': 'production',
         })
 
@@ -84,6 +87,8 @@ class ConnectionTests(helper.CPWebCase):
         self.assertHeader("Connection", "close")
     
     def test_HTTP11_pipelining(self):
+        self.PROTOCOL = "HTTP/1.1"
+        
         # Test pipelining. httplib doesn't support this directly.
         conn = httplib.HTTPConnection(self.HOST, self.PORT)
         conn.auto_open = False
@@ -116,6 +121,8 @@ class ConnectionTests(helper.CPWebCase):
         conn.close()
     
     def test_100_Continue(self):
+        self.PROTOCOL = "HTTP/1.1"
+        
         conn = httplib.HTTPConnection(self.HOST, self.PORT)
         conn.auto_open = False
         conn.connect()
@@ -159,7 +166,25 @@ class ConnectionTests(helper.CPWebCase):
         response.begin()
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(200)
-        self.assertBody("thanks for the 17 bytes!")
+        self.assertBody("thanks for 'I am a small file' (text/plain)")
+    
+    def test_Chunked_Encoding(self):
+        self.PROTOCOL = "HTTP/1.1"
+        
+        # Set our HTTP_CONN to an instance so it persists between requests.
+        self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        
+        # Try a normal chunked request
+        body = ("8\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
+                "Content-Type: application/x-json\r\n\r\n")
+        self.getPage("/upload",
+                     headers=[("Transfer-Encoding", "chunked"),
+                              ("Trailer", "Content-Type"),
+                              ("Content-Length", len(body)),
+                              ],
+                     body=body, method="POST")
+        self.assertStatus('200 OK')
+        self.assertBody("thanks for 'xx\r\nxxxxyyyyy' (application/x-json)")
     
     def test_HTTP10(self):
         self.PROTOCOL = "HTTP/1.0"
