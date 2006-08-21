@@ -26,7 +26,7 @@ def translate_headers(environ):
             yield translatedHeader, environ[cgiName]
 
 
-def _wsgi_callable(environ, start_response, app=None):
+def _wsgi_callable(environ, start_response, app):
     request = None
     try:
         env = environ.get
@@ -46,8 +46,7 @@ def _wsgi_callable(environ, start_response, app=None):
         request.multiprocess = environ['wsgi.multiprocess']
         request.wsgi_environ = environ
         
-        if app:
-            request.app = app
+        request.app = app
         
         path = env('SCRIPT_NAME', '') + env('PATH_INFO', '')
         response = request.run(environ['REQUEST_METHOD'], path,
@@ -174,7 +173,9 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
                          conf('server.socket_port'))
         
         s = _cpwsgiserver.CherryPyWSGIServer
-        s.__init__(self, bind_addr, cherrypy.tree,
+        # We could just pass cherrypy.tree, but by passing tree.apps,
+        # we get correct SCRIPT_NAMEs as early as possible.
+        s.__init__(self, bind_addr, cherrypy.tree.apps.items(),
                    conf('server.thread_pool'),
                    conf('server.socket_host'),
                    request_queue_size = conf('server.socket_queue_size'),

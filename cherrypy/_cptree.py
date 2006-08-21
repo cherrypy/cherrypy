@@ -1,10 +1,9 @@
 import logging
 
-import cherrypy
 from cherrypy import config, _cpwsgi
 
 
-class Application:
+class Application(object):
     """A CherryPy Application.
     
     An instance of this class may also be used as a WSGI callable
@@ -37,11 +36,12 @@ class Application:
     def _get_script_name(self):
         if self._script_name is None:
             # None signals that the script name should be pulled from WSGI environ.
+            import cherrypy
             return cherrypy.request.wsgi_environ['SCRIPT_NAME']
         return self._script_name
     def _set_script_name(self, value):
         self._script_name = value
-    script_name = property(_get_script_name, _set_script_name)
+    script_name = property(fget=_get_script_name, fset=_set_script_name)
     
     def merge(self, conf):
         """Merge the given config into self.config."""
@@ -148,5 +148,20 @@ class Tree:
         return http.urljoin(script_name, path)
     
     def __call__(self, environ, start_response):
-        return _cpwsgi._wsgi_callable(environ, start_response)
+        # If you're calling this, then you're probably setting SCRIPT_NAME
+        # to '' (some WSGI servers always set SCRIPT_NAME to '').
+        # Try to look up the app using the full path.
+        path = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
+        sn = self.script_name(path or "/")
+        if sn is None:
+            start_response('404 Not Found', [])
+            return []
+        
+        app = self.apps[sn]
+        
+        # Correct the SCRIPT_NAME and PATH_INFO environ entries.
+        environ = environ.copy()
+        environ['SCRIPT_NAME'] = sn
+        environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
+        return app(environ, start_response)
 

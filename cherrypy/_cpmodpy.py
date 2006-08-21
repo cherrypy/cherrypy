@@ -90,14 +90,20 @@ def handler(req):
         request.multithread = bool(threaded)
         request.multiprocess = bool(forked)
         
-        # Run the CherryPy Request object and obtain the response
-        headers = req.headers_in.items()
-        rfile = _ReadOnlyRequest(req)
-        response = request.run(req.method, req.uri, req.args or "",
-                               req.protocol, headers, rfile)
-        
-        send_response(req, response.status, response.header_list, response.body)
-        request.close()
+        sn = cherrypy.tree.script_name(req.uri or "/")
+        if sn is None:
+            send_response(req, '404 Not Found', [], '')
+        else:
+            request.app = cherrypy.tree.apps[sn]
+            
+            # Run the CherryPy Request object and obtain the response
+            headers = req.headers_in.items()
+            rfile = _ReadOnlyRequest(req)
+            response = request.run(req.method, req.uri, req.args or "",
+                                   req.protocol, headers, rfile)
+            
+            send_response(req, response.status, response.header_list, response.body)
+            request.close()
     except:
         tb = format_exc()
         cherrypy.log(tb)

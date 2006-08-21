@@ -18,7 +18,7 @@ def setup_server():
         keys.sort()
         for k in keys:
             yield '%s: %s\n' % (k,environ[k])
-
+    
     def reversing_middleware(app):
         def _app(environ, start_response):
             results = app(environ, start_response)
@@ -53,7 +53,9 @@ def setup_server():
     cherrypy.tree.mount(HostedWSGI(), '/hosted/app0', conf0)
     cherrypy.tree.graft(test_app, '/hosted/app1')
     
-    app = cherrypy.Application(Root(), None)
+    # Set script_name explicitly to None to signal CP that it should
+    # be pulled from the WSGI environ each time.
+    app = cherrypy.Application(Root(), script_name=None)
     cherrypy.tree.graft(reversing_middleware(app), '/hosted/app2')
 
 import helper
