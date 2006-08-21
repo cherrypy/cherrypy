@@ -53,7 +53,8 @@ class HTTPRequest(object):
         try:
             request_line = self.rfile.readline()
         except socket.timeout:
-            self.abort("408 Request Timeout")
+            self.simple_response("408 Request Timeout")
+            return
         
         if not request_line:
             return
@@ -94,7 +95,7 @@ class HTTPRequest(object):
                 self.wsgi_app = wsgi_app
                 break
         else:
-            self.abort("404 Not Found")
+            self.simple_response("404 Not Found")
             return
         
         # Note that, like wsgiref and most other WSGI servers,
@@ -116,7 +117,7 @@ class HTTPRequest(object):
         rp = int(req_protocol[5]), int(req_protocol[7])
         sp = int(server.protocol[5]), int(server.protocol[7])
         if sp[0] != rp[0]:
-            self.abort("505 HTTP Version Not Supported")
+            self.simple_response("505 HTTP Version Not Supported")
             return
         self.environ["SERVER_PROTOCOL"] = "HTTP/%s.%s" % min(rp, sp)
         
@@ -135,7 +136,7 @@ class HTTPRequest(object):
             # stop reading from the socket. Until we handle chunked
             # encoding, always respond with 411 Length Required.
             # See http://www.cherrypy.org/ticket/493.
-            self.abort("411 Length Required")
+            self.simple_response("411 Length Required")
             return
         self.environ["CONTENT_LENGTH"] = cl or ""
         
@@ -157,6 +158,26 @@ class HTTPRequest(object):
             else:
                 self.close_connection = True
         
+        # From PEP 333:
+        # "Servers and gateways that implement HTTP 1.1 must provide
+        # transparent support for HTTP 1.1's "expect/continue" mechanism.
+        # This may be done in any of several ways:
+        #   1. Respond to requests containing an Expect: 100-continue request
+        #      with an immediate "100 Continue" response, and proceed normally.
+        #   2. Proceed with the request normally, but provide the application
+        #      with a wsgi.input stream that will send the "100 Continue"
+        #      response if/when the application first attempts to read from
+        #      the input stream. The read request must then remain blocked
+        #      until the client responds.
+        #   3. Wait until the client decides that the server does not support
+        #      expect/continue, and sends the request body on its own.
+        #      (This is suboptimal, and is not recommended.)
+        #
+        # We used to do 3, but are now doing 1. Maybe we'll do 2 someday,
+        # but it seems like it would be a big slowdown for such a rare case.
+        if headers.getheader("Expect", "") == "100-continue":
+            self.simple_response(100)
+        
         self.ready = True
     
     def respond(self):
@@ -167,8 +188,8 @@ class HTTPRequest(object):
             response.close()
         self.terminate()
     
-    def abort(self, status, msg=""):
-        """Write a simple error message back to the client."""
+    def simple_response(self, status, msg=""):
+        """Write a simple response back to the client."""
         status = str(status)
         wfile = self.connection.wfile
         wfile.write("%s %s\r\n" % (self.connection.server.protocol, status))
@@ -183,7 +204,6 @@ class HTTPRequest(object):
         if msg:
             wfile.write(msg)
         wfile.flush()
-        self.ready = False
     
     def start_response(self, status, headers, exc_info = None):
         if self.started_response:

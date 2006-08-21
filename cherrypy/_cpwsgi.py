@@ -127,7 +127,7 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
         try:
             _cpwsgiserver.HTTPRequest.parse_request(self)
         except http.MaxSizeExceeded:
-            self.abort(413, "Request Entity Too Large")
+            self.simple_response(413, "Request Entity Too Large")
             cherrypy.log(traceback=True)
 
 

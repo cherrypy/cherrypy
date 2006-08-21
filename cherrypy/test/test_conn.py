@@ -5,6 +5,7 @@ import httplib
 import socket
 
 import cherrypy
+from cherrypy.test import webtest
 
 
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
@@ -28,6 +29,10 @@ def setup_server():
                 yield str(x)
         stream.exposed = True
         stream._cp_config = {'stream_response': True}
+        
+        def upload(self):
+            return "thanks for the %s bytes!" % len(cherrypy.request.body.read())
+        upload.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
@@ -110,26 +115,74 @@ class ConnectionTests(helper.CPWebCase):
         
         conn.close()
     
+    def test_100_Continue(self):
+        conn = httplib.HTTPConnection(self.HOST, self.PORT)
+        conn.auto_open = False
+        conn.connect()
+        
+        # Try a page without an Expect request header first.
+        # Note that httplib's response.begin automatically ignores
+        # 100 Continue responses, so we must manually check for it.
+        conn.putrequest("POST", "/upload", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.putheader("Content-Type", "text/plain")
+        conn.putheader("Content-Length", "4")
+        conn.endheaders()
+        conn.send("d'oh")
+        response = conn.response_class(conn.sock, method="POST")
+        version, status, reason = response._read_status()
+        self.assertNotEqual(status, 100)
+        conn.close()
+        
+        # Now try a page with an Expect header...
+        conn.connect()
+        conn.putrequest("POST", "/upload", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.putheader("Content-Type", "text/plain")
+        conn.putheader("Content-Length", "17")
+        conn.putheader("Expect", "100-continue")
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="POST")
+        
+        # ...assert and then skip the 100 response
+        version, status, reason = response._read_status()
+        self.assertEqual(status, 100)
+        while True:
+            skip = response.fp.readline().strip()
+            if not skip:
+                break
+        
+        # ...send the body
+        conn.send("I am a small file")
+        
+        # ...get the final response
+        response.begin()
+        self.status, self.headers, self.body = webtest.shb(response)
+        self.assertStatus(200)
+        self.assertBody("thanks for the 17 bytes!")
+    
     def test_HTTP10(self):
-        self.PROTOCOL = "HTTP/1.1"
+        self.PROTOCOL = "HTTP/1.0"
         self.HTTP_CONN = httplib.HTTPConnection
         
         # Test a normal HTTP/1.0 request.
-        self.getPage("/page2", protocol="HTTP/1.0")
+        self.getPage("/page2")
         self.assertStatus('200 OK')
         self.assertBody(pov)
         self.assertNoHeader("Connection")
         
         # Test a keep-alive HTTP/1.0 request.
         self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
-        self.getPage("/page3", headers=[("Connection", "Keep-Alive")],
-                     protocol="HTTP/1.0")
+        self.HTTP_CONN.auto_open = False
+        self.HTTP_CONN.connect()
+        
+        self.getPage("/page3", headers=[("Connection", "Keep-Alive")])
         self.assertStatus('200 OK')
         self.assertBody(pov)
         self.assertHeader("Connection", "Keep-Alive")
         
-        # Test a keep-alive HTTP/1.0 request.
-        self.getPage("/page3", protocol="HTTP/1.0")
+        # Remove the keep-alive header again.
+        self.getPage("/page3")
         self.assertStatus('200 OK')
         self.assertBody(pov)
         self.assertNoHeader("Connection")

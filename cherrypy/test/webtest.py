@@ -355,6 +355,26 @@ def cleanHeaders(headers, method, body, host, port):
     return headers
 
 
+def shb(response):
+    """Return status, headers, body the way we like from a response."""
+    h = []
+    key, value = None, None
+    for line in response.msg.headers:
+        if line:
+            if line[0] in " \t":
+                value += line.strip()
+            else:
+                if key and value:
+                    h.append((key, value))
+                key, value = line.split(":", 1)
+                key = key.strip()
+                value = value.strip()
+    if key and value:
+        h.append((key, value))
+    
+    return "%s %s" % (response.status, response.reason), h, response.read()
+
+
 def openURL(url, headers=None, method="GET", body=None,
             host="127.0.0.1", port=8000, http_conn=httplib.HTTPConnection,
             protocol="HTTP/1.1"):
@@ -393,30 +413,13 @@ def openURL(url, headers=None, method="GET", body=None,
             # Handle response
             response = conn.getresponse()
             
-            status = "%s %s" % (response.status, response.reason)
-            
-            outheaders = []
-            key, value = None, None
-            for line in response.msg.headers:
-                if line:
-                    if line[0] in " \t":
-                        value += line.strip()
-                    else:
-                        if key and value:
-                            outheaders.append((key, value))
-                        key, value = line.split(":", 1)
-                        key = key.strip()
-                        value = value.strip()
-            if key and value:
-                outheaders.append((key, value))
-            
-            outbody = response.read()
+            s, h, b = shb(response)
             
             if not hasattr(http_conn, "host"):
                 # We made our own conn instance. Close it.
                 conn.close()
             
-            return status, outheaders, outbody
+            return s, h, b
         except socket.error:
             trial += 1
             if trial >= 10:
