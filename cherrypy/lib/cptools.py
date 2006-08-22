@@ -7,7 +7,14 @@ import http as _http
 #                     Conditional HTTP request support                     #
 
 def validate_etags(autotags=False):
-    """Validate the current ETag against If-Match, If-None-Match headers."""
+    """Validate the current ETag against If-Match, If-None-Match headers.
+    
+    If autotags is True, an ETag response-header value will be provided
+    from an MD5 hash of the response body (unless some other code has
+    already provided an ETag header). If False, the ETag will not be
+    automatic, and if no other code has provided an ETag value, then no
+    checks will be performed against If-Match or If-None-Match headers.
+    """
     # Guard against being run twice.
     if hasattr(cherrypy.response, "ETag"):
         return
@@ -40,7 +47,11 @@ def validate_etags(autotags=False):
                     raise cherrypy.HTTPError(412)
 
 def validate_since():
-    """Validate the current Last-Modified against If-Modified-Since headers."""
+    """Validate the current Last-Modified against If-Modified-Since headers.
+    
+    If no code has set the Last-Modified response header, then no validation
+    will be performed.
+    """
     lastmod = cherrypy.response.headers.get('Last-Modified')
     if lastmod:
         status, reason, msg = _http.valid_status(cherrypy.response.status)
