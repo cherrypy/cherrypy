@@ -54,6 +54,7 @@ class HTTPRequest(object):
         self.close_connection = False
     
     def parse_request(self):
+        request_line = None
         try:
             request_line = self.rfile.readline()
         except socket.timeout:
