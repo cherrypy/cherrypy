@@ -67,6 +67,9 @@ class HookMap(object):
                     callback()
                 except (KeyboardInterrupt, SystemExit):
                     raise
+                except (cherrypy.HTTPError, cherrypy.HTTPRedirect,
+                        cherrypy.InternalRedirect):
+                    exc = sys.exc_info()[1]
                 except:
                     exc = sys.exc_info()[1]
                     cherrypy.log(traceback=True)
