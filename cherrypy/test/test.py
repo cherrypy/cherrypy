@@ -72,6 +72,7 @@ class CommandLineParser(object):
                          'modpygw': "modpygw",
                          }
     default_server = "wsgi"
+    port = 8080
     
     def __init__(self, available_tests, args=sys.argv[1:]):
         """Constructor to populate the TestHarness instance.
@@ -85,7 +86,6 @@ class CommandLineParser(object):
         self.cover = False
         self.profile = False
         self.server = None
-        self.port = 8080
         self.protocol = "HTTP/1.1"
         
         longopts = ['cover', 'profile', '1.0', 'help', 'basedir=', 'port=',
@@ -140,9 +140,9 @@ class CommandLineParser(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server=* --1.0 --cover --basedir=path --profile --tests**
+        test.py --server=* --port=%s --1.0 --cover --basedir=path --profile --tests**
         
-    """
+    """ % self.__class__.port
         print '    * servers:'
         for name, val in self.available_servers.iteritems():
             if name == self.default_server:
@@ -152,13 +152,14 @@ class CommandLineParser(object):
         
         print """
     
+    --port=<int>: use a port other than the default (%s)
     --1.0: use HTTP/1.0 servers instead of default HTTP/1.1
     
     --cover: turn on code-coverage tool
     --basedir=path: display coverage stats for some path other than cherrypy.
     
     --profile: turn on profiling tool
-    """
+    """ % self.__class__.port
         
         print '    ** tests:'
         for name in self.available_tests:
