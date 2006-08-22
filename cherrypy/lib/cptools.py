@@ -27,13 +27,13 @@ def validate_etags(autotags=False):
         conditions = cherrypy.request.headers.elements('If-Match') or []
         conditions = [str(x) for x in conditions]
         if conditions and not (conditions == ["*"] or etag in conditions):
-            if (status >= 200 and status < 299) or status == 412:
+            if status >= 200 and status < 299:
                 raise cherrypy.HTTPError(412)
         
         conditions = cherrypy.request.headers.elements('If-None-Match') or []
         conditions = [str(x) for x in conditions]
         if conditions == ["*"] or etag in conditions:
-            if (status >= 200 and status < 299) or status == 304:
+            if status >= 200 and status < 299:
                 if cherrypy.request.method in ("GET", "HEAD"):
                     raise cherrypy.HTTPRedirect([], 304)
                 else:

@@ -9,9 +9,13 @@ def setup_server():
         def resource(self):
             return "Oh wah ta goo Siam."
         resource.exposed = True
+        
+        def fail(self):
+            raise cherrypy.HTTPError(412)
+        fail.exposed = True
     
     conf = {
-        '/resource': {
+        '/': {
             'tools.etags.on': True,
             'tools.etags.autotags': True,
         },
@@ -56,6 +60,11 @@ class ETagTest(helper.CPWebCase):
         self.assertStatus(304)
         self.getPage("/resource", headers=[('If-None-Match', "a bogus tag")])
         self.assertStatus("200 OK")
+        
+        # Test raising 412 in page handler
+        self.getPage("/fail", headers=[('If-Match', etag)])
+        self.assertStatus(412)
+
 
 if __name__ == "__main__":
     setup_server()
