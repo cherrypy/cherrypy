@@ -357,15 +357,32 @@ class HTTPConnection(object):
     
     def communicate(self):
         """Read each request and respond appropriately."""
-        while True:
-            req = self.RequestHandlerClass(self)
-            # This order of operations should guarantee correct pipelining.
-            req.parse_request()
-            if not req.ready:
-                break
-            req.respond()
-            if req.close_connection:
-                break
+        try:
+            while True:
+                # (re)set req to None so that if something goes wrong in
+                # the RequestHandlerClass constructor, the error doesn't
+                # get written to the previous request.
+                req = None
+                req = self.RequestHandlerClass(self)
+                # This order of operations should guarantee correct pipelining.
+                req.parse_request()
+                if not req.ready:
+                    break
+                req.respond()
+                if req.close_connection:
+                    break
+        except socket.error, e:
+            errno = e.args[0]
+            if errno not in socket_errors_to_ignore:
+                if req:
+                    req.simple_response("500 Internal Server Error",
+                                        traceback.format_exc())
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            if req:
+                req.simple_response("500 Internal Server Error",
+                                    traceback.format_exc())
     
     def close(self):
         self.rfile.close()
@@ -391,16 +408,7 @@ class WorkerThread(threading.Thread):
                     return
                 
                 try:
-                    try:
-                        conn.communicate()
-                    except socket.error, e:
-                        errno = e.args[0]
-                        if errno not in socket_errors_to_ignore:
-                            traceback.print_exc()
-                    except (KeyboardInterrupt, SystemExit), exc:
-                        self.server.interrupt = exc
-                    except:
-                        traceback.print_exc()
+                    conn.communicate()
                 finally:
                     conn.close()
         except (KeyboardInterrupt, SystemExit), exc:
