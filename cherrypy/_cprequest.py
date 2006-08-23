@@ -101,6 +101,7 @@ class Request(object):
     simple_cookie = Cookie.SimpleCookie()
     rfile = None
     process_request_body = True
+    methods_with_bodies = ("POST", "PUT")
     body = None
     body_read = False
     
@@ -256,16 +257,17 @@ class Request(object):
                 self.tool_up()
                 self.hooks.run('on_start_resource')
                 
-                if self.process_request_body and not self.body_read:
-                    # Check path-specific methods_with_bodies.
-                    meths = self.config.get("methods_with_bodies", ("POST", "PUT"))
-                    self.process_request_body = self.method in meths
+                if not self.body_read:
+                    if self.process_request_body:
+                        if self.method not in self.methods_with_bodies:
+                            self.process_request_body = False
                     
-                    # Prepare the SizeCheckWrapper for the request body
-                    mbs = int(self.config.get('server.max_request_body_size',
-                                              100 * 1024 * 1024))
-                    if mbs > 0:
-                        self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
+                    if self.process_request_body:
+                        # Prepare the SizeCheckWrapper for the request body
+                        mbs = int(self.config.get('server.max_request_body_size',
+                                                  100 * 1024 * 1024))
+                        if mbs > 0:
+                            self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
                 
                 self.hooks.run('before_request_body')
                 if self.process_request_body:

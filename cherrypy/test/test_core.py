@@ -377,9 +377,12 @@ def setup_server():
         'server.max_request_body_size': 200,
         'server.max_request_header_size': 500,
         })
+    
+    def expand_methods():
+        cherrypy.request.methods_with_bodies = ("POST", "PUT", "PROPFIND")
     appconf = {
         '/': {'log_access_file': log_access_file},
-        '/method': {'methods_with_bodies': ("POST", "PUT", "PROPFIND")},
+        '/method': {'hooks.on_start_resource': expand_methods},
         }
     cherrypy.tree.mount(root, conf=appconf)
 
