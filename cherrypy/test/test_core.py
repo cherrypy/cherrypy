@@ -857,15 +857,27 @@ llo,
         self.assertBody(data)
     
     def testCookies(self):
-        self.getPage("/cookies/single?name=First",
-                     [('Cookie', 'First=Dinsdale;')])
-        self.assertHeader('Set-Cookie', 'First=Dinsdale;')
-        
-        self.getPage("/cookies/multiple?names=First&names=Last",
-                     [('Cookie', 'First=Dinsdale; Last=Piranha;'),
-                      ])
-        self.assertHeader('Set-Cookie', 'First=Dinsdale;')
-        self.assertHeader('Set-Cookie', 'Last=Piranha;')
+        import sys
+        if sys.version_info >= (2, 5):
+            self.getPage("/cookies/single?name=First",
+                         [('Cookie', 'First=Dinsdale;')])
+            self.assertHeader('Set-Cookie', 'First=Dinsdale')
+            
+            self.getPage("/cookies/multiple?names=First&names=Last",
+                         [('Cookie', 'First=Dinsdale; Last=Piranha;'),
+                          ])
+            self.assertHeader('Set-Cookie', 'First=Dinsdale')
+            self.assertHeader('Set-Cookie', 'Last=Piranha')
+        else:
+            self.getPage("/cookies/single?name=First",
+                         [('Cookie', 'First=Dinsdale;')])
+            self.assertHeader('Set-Cookie', 'First=Dinsdale;')
+            
+            self.getPage("/cookies/multiple?names=First&names=Last",
+                         [('Cookie', 'First=Dinsdale; Last=Piranha;'),
+                          ])
+            self.assertHeader('Set-Cookie', 'First=Dinsdale;')
+            self.assertHeader('Set-Cookie', 'Last=Piranha;')
     
     def testMaxRequestSize(self):
         self.getPage("/", headers=[('From', "x" * 500)])
