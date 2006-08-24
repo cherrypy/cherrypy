@@ -1,4 +1,4 @@
-from cherrypy import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 import gzip, StringIO

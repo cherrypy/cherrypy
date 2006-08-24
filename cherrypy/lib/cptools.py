@@ -1,7 +1,7 @@
 """Functions for builtin CherryPy tools."""
 
 import cherrypy
-from cherrypy import http as _http
+from cherrypy.lib import http as _http
 
 
 #                     Conditional HTTP request support                     #

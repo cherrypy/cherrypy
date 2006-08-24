@@ -13,7 +13,7 @@ tools = _cptools.default_toolbox
 
 from cherrypy import _cptree
 tree = _cptree.Tree()
-from cherrypy from _cptree import Application
+from cherrypy._cptree import Application
 from cherrypy import _cpengine
 engine = _cpengine.Engine()
 from cherrypy import _cpserver
