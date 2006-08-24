@@ -126,14 +126,11 @@ def setup_server():
     for url in script_names:
         d = cherrypy._cprequest.MethodDispatcher()
         conf = {'/': {'user': (url or "/").split("/")[-2]},
-                '/bymethod': {'dispatch': d},
+                '/bymethod': {'request.dispatch': d},
                 }
         cherrypy.tree.mount(Root(), url, conf)
     
-    cherrypy.config.update({
-        'log_to_screen': False,
-        'environment': "production",
-    })
+    cherrypy.config.update({'environment': "test_suite"})
     
     
     class Isolated:

@@ -149,10 +149,7 @@ def setup_server():
             return "success!"
     
     
-    cherrypy.config.update({'log_to_screen': False,
-                            'environment': 'production',
-                            'show_tracebacks': True,
-                            })
+    cherrypy.config.update({'environment': 'test_suite'})
     
     conf = {
         # METHOD THREE:
@@ -162,10 +159,10 @@ def setup_server():
             'tools.numerify.map': {"pie": "3.14159"},
         },
         '/demo/restricted': {
-            'show_tracebacks': False,
+            'request.show_tracebacks': False,
         },
         '/demo/errinstream': {
-            'stream_response': True,
+            'response.stream': True,
         },
         '/demo/err_in_onstart': {
             # Because this isn't a dict, on_start_resource will error.

@@ -49,7 +49,7 @@ class Application(object):
         
         # Create log handlers as specified in config.
         rootconf = self.conf.get("/", {})
-        config._configure_builtin_logging(rootconf, self.access_log, "log_access_file")
+        config._configure_builtin_logging(rootconf, self.access_log, "log.access.file")
         config._configure_builtin_logging(rootconf, self.error_log)
     
     def guess_abs_path(self):

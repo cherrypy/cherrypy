@@ -22,10 +22,7 @@ def setup_server():
         index.exposed = True
     
     cherrypy.tree.mount(Test())
-    cherrypy.config.update({
-            'log_to_screen': False,
-            'environment': 'production',
-            })
+    cherrypy.config.update({'environment': 'test_suite'})
 
 
 from cherrypy.test import helper

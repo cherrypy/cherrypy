@@ -58,11 +58,7 @@ def setup_server():
     
     cherrypy.tree.mount(Root())
     cherrypy.tree.mount(UnCached(), "/expires")
-    cherrypy.config.update({
-        'log_to_screen': False,
-        'environment': 'production',
-        'show_tracebacks': True,
-    })
+    cherrypy.config.update({'environment': 'test_suite'})
 
 
 from cherrypy.test import helper

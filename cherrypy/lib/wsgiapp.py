@@ -17,7 +17,7 @@ def make_environ():
     for hosting WSGI apps in non-WSGI environments (yikes!)
     """
     
-    # create and populate the wsgi environment
+    # create and populate the wsgi environ
     environ = dict()
     environ["wsgi.version"] = (1,0)
     environ["wsgi.url_scheme"] = cherrypy.request.scheme

@@ -37,13 +37,12 @@ def setup_server():
     cherrypy.tree.mount(root)
     
     cherrypy.config.update({
-            'log_to_screen': False,
-            'environment': 'production',
-            'tools.virtual_host.on': True,
-            'tools.virtual_host.www.mydom2.com': '/mydom2',
-            'tools.virtual_host.www.mydom3.com': '/mydom3',
-            'tools.virtual_host.www.mydom4.com': '/dom4',
-    })
+        'environment': 'test_suite',
+        'tools.virtual_host.on': True,
+        'tools.virtual_host.www.mydom2.com': '/mydom2',
+        'tools.virtual_host.www.mydom3.com': '/mydom3',
+        'tools.virtual_host.www.mydom4.com': '/dom4',
+        })
 
 from cherrypy.test import helper
 

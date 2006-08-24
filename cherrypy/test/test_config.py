@@ -34,28 +34,17 @@ def setup_server():
         bar.exposed = True
         bar._cp_config = {'foo': 'this3', 'bax': 'this4'}
     
-    class Env:
+    class Another:
         
         def index(self, key):
             return str(cherrypy.config.get(key, "None"))
         index.exposed = True
-        prod = index
-        embed = index
     
     root = Root()
     root.foo = Foo()
     cherrypy.tree.mount(root)
-    
-    cherrypy.config.update({'log_to_screen': False,
-                            'environment': 'production',
-                            'show_tracebacks': True,
-                            })
-    
-    _env_conf = {'/': {'environment': 'development'},
-                 '/prod': {'environment': 'production'},
-                 '/embed': {'environment': 'embedded'},
-                 }
-    cherrypy.tree.mount(Env(), "/env", _env_conf)
+    cherrypy.tree.mount(Another(), "/another")
+    cherrypy.config.update({'environment': 'test_suite'})
     
     # Shortcut syntax--should get put in the "global" bucket
     cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
@@ -78,23 +67,12 @@ class ConfigTests(helper.CPWebCase):
             ('/foo/',    'bax', 'None'),
             ('/foo/bar', 'baz', 'that2'),
             ('/foo/nex', 'baz', 'that2'),
-            # If 'foo' == 'this', then the mount point '/env' leaks into '/'.
-            ('/env/prod','foo', 'None'),
+            # If 'foo' == 'this', then the mount point '/another' leaks into '/'.
+            ('/another/','foo', 'None'),
         ]
         for path, key, expected in tests:
             self.getPage(path + "?key=" + key)
             self.assertBody(expected)
-    
-    def testEnvironments(self):
-        for key, val in cherrypy.config.environments['development'].iteritems():
-            self.getPage("/env/?key=" + key)
-            self.assertBody(str(val))
-        for key, val in cherrypy.config.environments['production'].iteritems():
-            self.getPage("/env/prod/?key=" + key)
-            self.assertBody(str(val))
-        for key, val in cherrypy.config.environments['embedded'].iteritems():
-            self.getPage("/env/embed/?key=" + key)
-            self.assertBody(str(val))
 
 
 if __name__ == '__main__':

@@ -149,7 +149,7 @@ def log(msg='', context='', severity=_logging.DEBUG, traceback=False):
     if traceback:
         from cherrypy import _cperror
         msg += _cperror.format_exc()
-    logfunc = config.get('log_function', _log_message)
+    logfunc = config.get('log.error.function', _log_message)
     logfunc(msg, context, severity)
 
 

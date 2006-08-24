@@ -68,16 +68,12 @@ class Engine(object):
         
         conf = cherrypy.config.get
         
-        # Output config options to log
-        if conf("log_config", True):
-            cherrypy.config.log_config()
-        
         for func in self.on_start_engine_list:
             func()
         
         self.state = STARTED
         
-        freq = float(cherrypy.config.get('deadlock_poll_freq', 60))
+        freq = float(conf('deadlock.poll_freq', 60))
         if freq > 0:
             self.monitor_thread = threading.Timer(freq, self.monitor)
             self.monitor_thread.start()
@@ -222,7 +218,7 @@ class Engine(object):
         if self.state == STARTED:
             for req, resp in self.servings:
                 resp.check_timeout()
-            freq = float(cherrypy.config.get('deadlock_poll_freq', 60))
+            freq = float(cherrypy.config.get('deadlock.poll_freq', 60))
             self.monitor_thread = threading.Timer(freq, self.monitor)
             self.monitor_thread.start()
     

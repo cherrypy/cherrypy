@@ -44,16 +44,12 @@ def setup_server():
         },
         '/error': {
             'tools.staticdir.on': True,
-            'show_tracebacks': True,
+            'request.show_tracebacks': True,
         },
         }
     
     cherrypy.tree.mount(root, conf=conf)
-    
-    cherrypy.config.update({
-        'log_to_screen': False,
-        'environment': 'production',
-        })
+    cherrypy.config.update({'environment': 'test_suite'})
 
 from cherrypy.test import helper
 

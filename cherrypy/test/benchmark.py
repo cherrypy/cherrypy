@@ -60,13 +60,12 @@ class Root:
 
 
 cherrypy.config.update({
-    'log_to_screen': False,
-##    'log_file': os.path.join(curdir, "bench.log"),
+    'log.error.file': '',
     'environment': 'production',
     'server.socket_host': 'localhost',
     'server.socket_port': 8080,
     'server.max_request_header_size': 0,
-    'server.max_request_body_size': 0,
+    'request.max_body_size': 0,
     })
 
 appconf = {

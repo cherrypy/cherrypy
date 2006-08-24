@@ -28,7 +28,7 @@ def setup_server():
             for x in xrange(10):
                 yield str(x)
         stream.exposed = True
-        stream._cp_config = {'stream_response': True}
+        stream._cp_config = {'response.stream': True}
         
         def upload(self):
             return ("thanks for '%s' (%s)" %
@@ -38,10 +38,8 @@ def setup_server():
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
-        'log_to_screen': False,
-        'server.max_request_body_size': 100,
-        'show_tracebacks': True,
-        'environment': 'production',
+        'request.max_body_size': 100,
+        'environment': 'test_suite',
         })
 
 
@@ -222,7 +220,7 @@ class ConnectionTests(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertBody("thanks for 'xx\r\nxxxxyyyyy' (application/x-json)")
         
-        # Try a chunked request that exceeds max_request_body_size.
+        # Try a chunked request that exceeds request.max_body_size.
         # Note that the delimiters and trailer are included.
         body = "5f\r\n" + ("x" * 95) + "\r\n0\r\n\r\n"
         conn.putrequest("POST", "/upload", skip_host=True)

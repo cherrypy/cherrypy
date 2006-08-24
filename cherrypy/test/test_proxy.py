@@ -21,11 +21,10 @@ def setup_server():
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
-            'environment': 'production',
-            'log_to_screen': False,
-            'tools.proxy.on': True,
-            'tools.proxy.base': 'http://www.mydomain.com',
-    })
+        'environment': 'test_suite',
+        'tools.proxy.on': True,
+        'tools.proxy.base': 'http://www.mydomain.com',
+        })
 
 
 from cherrypy.test import helper

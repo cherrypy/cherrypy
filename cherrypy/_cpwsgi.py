@@ -67,11 +67,11 @@ def _wsgi_callable(environ, start_response, app):
         request = None
         raise ex
     except:
-        if cherrypy.config.get("throw_errors", False):
+        if request and request.throw_errors:
             raise
         tb = format_exc()
         cherrypy.log(tb)
-        if not cherrypy.config.get("show_tracebacks", False):
+        if request and not request.show_tracebacks:
             tb = ""
         s, h, b = bare_error(tb)
         exc = sys.exc_info()
@@ -135,8 +135,7 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
         """Decode the 'chunked' transfer coding."""
         if isinstance(self.rfile, http.SizeCheckWrapper):
             self.rfile = self.rfile.rfile
-        mbs = int(cherrypy.config.get('server.max_request_body_size',
-                                      100 * 1024 * 1024))
+        mbs = int(cherrypy.config.get('request.max_body_size', 100 * 1024 * 1024))
         if mbs > 0:
             self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
         try:

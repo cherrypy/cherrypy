@@ -14,19 +14,10 @@ def setup_server():
             raise cherrypy.HTTPError(412)
         fail.exposed = True
     
-    conf = {
-        '/': {
-            'tools.etags.on': True,
-            'tools.etags.autotags': True,
-        },
-        }
+    conf = {'/': {'tools.etags.on': True,
+                  'tools.etags.autotags': True}}
     cherrypy.tree.mount(Root(), conf=conf)
-    
-    cherrypy.config.update({
-        'log_to_screen': False,
-        'environment': 'production',
-        'show_tracebacks': True,
-        })
+    cherrypy.config.update({'environment': 'test_suite'})
 
 from cherrypy.test import helper
 

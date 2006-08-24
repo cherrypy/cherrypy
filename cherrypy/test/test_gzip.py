@@ -23,16 +23,11 @@ def setup_server():
             raise IndexError()
             yield "Here be dragons"
         noshow_stream.exposed = True
-        noshow_stream._cp_config = {'stream_response': True}
+        noshow_stream._cp_config = {'response.stream': True}
     
     cherrypy.tree.mount(Root())
-    cherrypy.config.update({
-        'global': {'log_to_screen': False,
-                   'environment': 'production',
-                   'show_tracebacks': True,
-                   'tools.gzip.on': True,
-                   },
-    })
+    cherrypy.config.update({'environment': 'test_suite',
+                            'tools.gzip.on': True})
 
 
 from cherrypy.test import helper

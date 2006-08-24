@@ -1,36 +1,109 @@
-"""Configuration system for CherryPy."""
+"""Configuration system for CherryPy.
+
+Configuration in CherryPy is implemented via dictionaries. Keys are strings
+which name the mapped value, which may be of any type.
+
+
+Architecture
+------------
+
+CherryPy Requests are part of an Application, which runs in a global context,
+and configuration data may apply to any of those three scopes:
+
+    Global: configuration entries which apply everywhere are stored in
+    cherrypy.config.globalconf. Use the top-level function 'config.update'
+    to modify it.
+    
+    Application: entries which apply to each mounted application are stored
+    on the Application object itself, as 'app.conf'. This is a two-level
+    dict where each key is a path, or "relative URL" (for example, "/" or
+    "/path/to/my/page"), and each value is a config dict. Usually, this
+    data is provided in the call to cherrypy.tree.mount(root(), conf=conf),
+    although you may also use app.merge(conf).
+    
+    Request: each Request object possesses a single 'Request.config' dict.
+    Early in the request process, this dict is populated by merging global
+    config entries, Application entries (whose path equals or is a parent
+    of Request.path_info), and any config acquired while looking up the
+    page handler (see next).
+
+
+Usage
+-----
+
+Configuration data may be supplied as a Python dictionary, as a filename,
+or as an open file object. When you supply a filename or file, CherryPy
+uses Python's builtin ConfigParser; you declare Application config by
+writing each path as a section header:
+
+    [/path/to/my/page]
+    request.stream = True
+
+To declare global configuration entries, place them in a [global] section.
+
+You may also declare config entries directly on the classes and methods
+(page handlers) that make up your CherryPy application via the '_cp_config'
+attribute. For example:
+
+    class Demo:
+        _cp_config = {'tools.gzip.on': True}
+        
+        def index(self):
+            raise cherrypy.InternalRedirect("/cuba")
+        index.exposed = True
+        index._cp_config = {'request.recursive_redirect': True}
+
+
+Namespaces
+----------
+
+Configuration keys are separated into namespaces by the first "." in the key.
+Current namespaces:
+
+    autoreload: Controls the autoreload mechanism in cherrypy.engine.
+                These can only be declared in the global config.
+    deadlock:   Controls the deadlock monitoring system in cherrypy.engine.
+                These can only be declared in the global config.
+    hooks:      Declares additional request-processing functions.
+    log:        Configures the logging for each application.
+    request:    Adds attributes to each Request during the tool_up phase.
+    response:   Adds attributes to each Response during the tool_up phase.
+    server:     Controls the default HTTP server via cherrypy.server.
+                These can only be declared in the global config.
+    tools:      Runs and configures additional request-processing packages.
+
+The only key that does not exist in a namespace is the "environment" entry.
+This special entry 'imports' other config entries from a template stored in
+cherrypy.config.environments[environment]. It only applies to globalconf,
+and only when you use "update" to modify globalconf.
+"""
 
 import ConfigParser
 import logging as _logging
 _logfmt = _logging.Formatter("%(message)s")
 import os as _os
+_localdir = _os.path.dirname(__file__)
 
 import cherrypy
 
 
 environments = {
-    "development": {
-        'autoreload.on': True,
-        'log_file_not_found': True,
-        'show_tracebacks': True,
-        'log_request_headers': True,
-        },
     "staging": {
         'autoreload.on': False,
-        'log_file_not_found': False,
-        'show_tracebacks': False,
-        'log_request_headers': False,
+        'tools.log_headers.on': False,
+        'request.show_tracebacks': False,
         },
     "production": {
         'autoreload.on': False,
-        'log_file_not_found': False,
-        'show_tracebacks': False,
-        'log_request_headers': False,
+        'tools.log_headers.on': False,
+        'request.show_tracebacks': False,
+        'log.screen': False,
         },
-    "embedded": {
+    "test_suite": {
         'autoreload.on': False,
-        'log_to_screen': False,
-        'server.class': None,
+        'tools.log_headers.on': False,
+        'request.show_tracebacks': True,
+        'log.screen': False,
         },
     }
 
@@ -39,23 +112,17 @@ def merge(base, other):
     if isinstance(other, basestring):
         if other not in cherrypy.engine.reload_files:
             cherrypy.engine.reload_files.append(other)
-        other = Parser().dict_from_file(other)
+        other = _Parser().dict_from_file(other)
     elif hasattr(other, 'read'):
-        other = Parser().dict_from_file(other)
+        other = _Parser().dict_from_file(other)
     
     # Load other into base
     for section, value_map in other.iteritems():
-        # Resolve "environment" entries
-        if 'environment' in value_map:
-            env = environments[value_map['environment']]
-            for k in env:
-                if k not in value_map:
-                    value_map[k] = env[k]
-            del value_map['environment']
-        
         base.setdefault(section, {}).update(value_map)
 
+
 default_conf = {
+    # Server config
     'server.socket_port': 8080,
     'server.socket_host': '',
     'server.socket_file': '',
@@ -64,12 +131,29 @@ default_conf = {
     'server.protocol_version': 'HTTP/1.1',
     'server.reverse_dns': False,
     'server.thread_pool': 10,
-    'log_to_screen': True,
-    'log_file': _os.path.join(_os.getcwd(), _os.path.dirname(__file__),
-                              "error.log"),
+    'server.max_request_header_size': 500 * 1024,
+    'server.instance': None,
+    
+    # Log config
+    'log.to_screen': True,
+##    'log.error.function': cherrypy._log_message,
+    'log.error.file': _os.path.join(_os.getcwd(), _localdir, "error.log"),
+    # Using an access file makes CP about 10% slower.
+##    'log.access.function': cherrypy.log_access,
+##    'log.access.file': _os.path.join(_os.getcwd(), _localdir, "access.log"),
+    
+    # Process management
+    'autoreload.on': True,
+    'autoreload.frequency': 1,
+    'deadlock.timeout': 300,
+    'deadlock.poll_freq': 60,
+    
+    'error_page.404': '',
+    
     'tools.log_tracebacks.on': True,
-    'environment': "development",
+    'tools.log_headers.on': True,
     }
+
 
 globalconf = default_conf.copy()
 
@@ -82,9 +166,9 @@ def update(conf):
     if isinstance(conf, basestring):
         if conf not in cherrypy.engine.reload_files:
             cherrypy.engine.reload_files.append(conf)
-        conf = Parser().dict_from_file(conf)
+        conf = _Parser().dict_from_file(conf)
     elif hasattr(conf, 'read'):
-        conf = Parser().dict_from_file(conf)
+        conf = _Parser().dict_from_file(conf)
     
     if isinstance(conf.get("global", None), dict):
         conf = conf["global"]
@@ -101,7 +185,7 @@ def update(conf):
     globalconf.update(conf)
     
     _configure_builtin_logging(globalconf, cherrypy._error_log)
-    _configure_builtin_logging(globalconf, cherrypy._access_log, "log_access_file")
+    _configure_builtin_logging(globalconf, cherrypy._access_log, "log.access.file")
 
 def _add_builtin_screen_handler(log):
     import sys
@@ -118,13 +202,13 @@ def _add_builtin_file_handler(log, fname):
     h._cpbuiltin = "file"
     log.addHandler(h)
 
-def _configure_builtin_logging(conf, log, filekey="log_file"):
+def _configure_builtin_logging(conf, log, filekey="log.error.file"):
     """Create/destroy builtin log handlers as needed from conf."""
     
     existing = dict([(getattr(x, "_cpbuiltin", None), x)
                      for x in log.handlers])
     h = existing.get("screen")
-    screen = conf.get('log_to_screen')
+    screen = conf.get('log.screen')
     if screen:
         if not h:
             _add_builtin_screen_handler(log)
@@ -169,7 +253,7 @@ def wrap(**kwargs):
     return wrapper
 
 
-class Parser(ConfigParser.ConfigParser):
+class _Parser(ConfigParser.ConfigParser):
     """Sub-class of ConfigParser that keeps the case of options and that raises
     an exception if the file cannot be read.
     """
@@ -226,8 +310,8 @@ def log_config():
     
     server_vars = [
                   'environment',
-                  'log_to_screen',
-                  'log_file',
+                  'log.screen',
+                  'log.error.file',
                   'server.protocol_version',
                   'server.socket_host',
                   'server.socket_port',

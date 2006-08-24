@@ -88,8 +88,7 @@ def find_acceptable_charset(encoding=None, default_encoding='utf-8', errors='str
     
     attempted_charsets = []
     
-    stream = cherrypy.config.get("stream_response", False)
-    if stream:
+    if cherrypy.response.stream:
         encoder = encode_stream
     else:
         response.collapse_body()

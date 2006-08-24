@@ -40,10 +40,7 @@ def setup_server():
                       'tools.wsgiapp.app': test_app,
                       }
     
-    cherrypy.config.update({'log_to_screen': False,
-                            'environment': 'production',
-                            'show_tracebacks': True,
-                            })
+    cherrypy.config.update({'environment': 'test_suite'})
     cherrypy.tree.mount(Root())
     
     conf0 = {'/static': {'tools.staticdir.on': True,

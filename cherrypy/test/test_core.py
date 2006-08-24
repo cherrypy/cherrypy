@@ -219,23 +219,23 @@ def setup_server():
             raise ValueError()
         
         # We support Python 2.3, but the @-deco syntax would look like this:
-        # @cherrypy.config.wrap(stream_response=True)
+        # @cherrypy.config.wrap(**{"response.stream": True})
         def page_streamed(self):
             yield "word up"
             raise ValueError()
             yield "very oops"
-        page_streamed = cherrypy.config.wrap(stream_response=True)(page_streamed)
-        assert(page_streamed._cp_config == {'stream_response': True})
+        page_streamed = cherrypy.config.wrap(**{"response.stream": True})(page_streamed)
+        assert(page_streamed._cp_config == {'response.stream': True})
         
         def cause_err_in_finalize(self):
             # Since status must start with an int, this should error.
             cherrypy.response.status = "ZOO OK"
-        cause_err_in_finalize._cp_config = {'show_tracebacks': False}
+        cause_err_in_finalize._cp_config = {'request.show_tracebacks': False}
         
         def rethrow(self):
             """Test that an error raised here will be thrown out to the server."""
             raise ValueError()
-        rethrow._cp_config = {'throw_errors': True}
+        rethrow._cp_config = {'request.throw_errors': True}
     
     
     class Ranges(Test):
@@ -370,19 +370,14 @@ def setup_server():
             return u'Wrong login/password'
     
     cherrypy.config.update({
-        'log_to_screen': False,
-        'log_file': log_file,
-        'environment': 'production',
-        'show_tracebacks': True,
-        'server.max_request_body_size': 200,
+        'log.error.file': log_file,
+        'environment': 'test_suite',
+        'request.max_body_size': 200,
         'server.max_request_header_size': 500,
         })
-    
-    def expand_methods():
-        cherrypy.request.methods_with_bodies = ("POST", "PUT", "PROPFIND")
     appconf = {
-        '/': {'log_access_file': log_access_file},
-        '/method': {'hooks.on_start_resource': expand_methods},
+        '/': {'log.access.file': log_access_file},
+        '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
         }
     cherrypy.tree.mount(root, conf=appconf)
 
@@ -643,10 +638,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                "In addition, the custom error page failed:\n<br />"
                "[Errno 2] No such file or directory: 'nonexistent.html'")
         self.assertInBody(msg)
-##        
-##        # Test throw_errors (ticket #186).
-##        self.getPage("/error/rethrow")
-##        self.assertBody("THROWN ERROR: ValueError")
+        
+        # Test throw_errors (ticket #186).
+        self.getPage("/error/rethrow")
+        self.assertInBody("raise ValueError()")
     
     def testRanges(self):
         self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])

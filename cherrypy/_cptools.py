@@ -234,7 +234,7 @@ class WSGIAppTool(MainTool):
     
     wsgi_app - any wsgi application callable
     env_update - a dictionary with arbitrary keys and values to be
-                 merged with the WSGI environment dictionary.
+                 merged with the WSGI environ dictionary.
     
     Example:
     

@@ -35,13 +35,7 @@ def setup_server():
                                     len(gc.get_referrers(data)))
         gc_stats.exposed = True
     cherrypy.tree.mount(Root())
-    
-    cherrypy.config.update({
-        'global': {'log_to_screen': False,
-                   'environment': 'production',
-                   'show_tracebacks': True,
-                   },
-    })
+    cherrypy.config.update({'environment': 'test_suite'})
 
 
 from cherrypy.test import helper

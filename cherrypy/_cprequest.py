@@ -77,6 +77,180 @@ class HookMap(object):
             raise
 
 
+class PageHandler(object):
+    """Callable which sets response.body."""
+    
+    def __init__(self, callable, *args, **kwargs):
+        self.callable = callable
+        self.args = args
+        self.kwargs = kwargs
+    
+    def __call__(self):
+        cherrypy.response.body = self.callable(*self.args, **self.kwargs)
+
+
+class LateParamPageHandler(PageHandler):
+    """When passing cherrypy.request.params to the page handler, we don't
+    want to capture that dict too early; we want to give tools like the
+    decoding tool a chance to modify the params dict in-between the lookup
+    of the handler and the actual calling of the handler. This subclass
+    takes that into account, and allows request.params to be 'bound late'
+    (it's more complicated than that, but that's the effect).
+    """
+    
+    def _get_kwargs(self):
+        kwargs = cherrypy.request.params.copy()
+        if self._kwargs:
+            kwargs.update(self._kwargs)
+        return kwargs
+    
+    def _set_kwargs(self, kwargs):
+        self._kwargs = kwargs
+    
+    kwargs = property(_get_kwargs, _set_kwargs,
+                      doc='page handler kwargs (with '
+                      'cherrypy.request.params copied in)')
+
+
+class Dispatcher(object):
+    
+    def __call__(self, path_info):
+        """Set handler and config for the current request."""
+        request = cherrypy.request
+        func, vpath = self.find_handler(path_info)
+        
+        if func:
+            # Decode any leftover %2F in the virtual_path atoms.
+            vpath = [x.replace("%2F", "/") for x in vpath]
+            request.handler = LateParamPageHandler(func, *vpath)
+        else:
+            request.handler = cherrypy.NotFound()
+    
+    def find_handler(self, path):
+        """Find the appropriate page handler for the given path."""
+        request = cherrypy.request
+        app = request.app
+        root = app.root
+        
+        # Get config for the root object/path.
+        curpath = ""
+        nodeconf = {}
+        if hasattr(root, "_cp_config"):
+            nodeconf.update(root._cp_config)
+        if "/" in app.conf:
+            nodeconf.update(app.conf["/"])
+        object_trail = [('root', root, nodeconf, curpath)]
+        
+        node = root
+        names = [x for x in path.strip('/').split('/') if x] + ['index']
+        for name in names:
+            # map to legal Python identifiers (replace '.' with '_')
+            objname = name.replace('.', '_')
+            
+            nodeconf = {}
+            node = getattr(node, objname, None)
+            if node is not None:
+                # Get _cp_config attached to this node.
+                if hasattr(node, "_cp_config"):
+                    nodeconf.update(node._cp_config)
+            
+            # Mix in values from app.conf for this path.
+            curpath = "/".join((curpath, name))
+            if curpath in app.conf:
+                nodeconf.update(app.conf[curpath])
+            
+            object_trail.append((objname, node, nodeconf, curpath))
+        
+        def set_conf():
+            """Set cherrypy.request.config."""
+            base = cherrypy.config.globalconf.copy()
+            # Note that we merge the config from each node
+            # even if that node was None.
+            for name, obj, conf, curpath in object_trail:
+                base.update(conf)
+                if 'tools.staticdir.dir' in conf:
+                    base['tools.staticdir.section'] = curpath
+            return base
+        
+        # Try successive objects (reverse order)
+        for i in xrange(len(object_trail) - 1, -1, -1):
+            
+            name, candidate, nodeconf, curpath = object_trail[i]
+            if candidate is None:
+                continue
+            
+            # Try a "default" method on the current leaf.
+            if hasattr(candidate, "default"):
+                defhandler = candidate.default
+                if getattr(defhandler, 'exposed', False):
+                    # Insert any extra _cp_config from the default handler.
+                    conf = getattr(defhandler, "_cp_config", {})
+                    object_trail.insert(i+1, ("default", defhandler, conf, curpath))
+                    request.config = set_conf()
+                    return defhandler, names[i:-1]
+            
+            # Uncomment the next line to restrict positional params to "default".
+            # if i < len(object_trail) - 2: continue
+            
+            # Try the current leaf.
+            if getattr(candidate, 'exposed', False):
+                request.config = set_conf()
+                if i == len(object_trail) - 1:
+                    # We found the extra ".index". Check if the original path
+                    # had a trailing slash (otherwise, do a redirect).
+                    if path[-1:] != '/':
+                        atoms = request.browser_url.split("?", 1)
+                        new_url = atoms.pop(0) + '/'
+                        if atoms:
+                            new_url += "?" + atoms[0]
+                        raise cherrypy.HTTPRedirect(new_url)
+                return candidate, names[i:-1]
+        
+        # We didn't find anything
+        request.config = set_conf()
+        return None, []
+
+
+class MethodDispatcher(Dispatcher):
+    """Additional dispatch based on cherrypy.request.method.upper().
+    
+    Methods named GET, POST, etc will be called on an exposed class.
+    The method names must be all caps; the appropriate Allow header
+    will be output showing all capitalized method names as allowable
+    HTTP verbs.
+    
+    Note that the containing class must be exposed, not the methods.
+    """
+    
+    def __call__(self, path_info):
+        """Set handler and config for the current request."""
+        request = cherrypy.request
+        resource, vpath = self.find_handler(path_info)
+        
+        # Decode any leftover %2F in the virtual_path atoms.
+        vpath = [x.replace("%2F", "/") for x in vpath]
+        
+        if resource:
+            # Set Allow header
+            avail = [m for m in dir(resource) if m.isupper()]
+            if "GET" in avail and "HEAD" not in avail:
+                avail.append("HEAD")
+            avail.sort()
+            cherrypy.response.headers['Allow'] = ", ".join(avail)
+            
+            # Find the subhandler
+            meth = cherrypy.request.method.upper()
+            func = getattr(resource, meth, None)
+            if func is None and meth == "HEAD":
+                func = getattr(resource, "GET", None)
+            if func:
+                request.handler = LateParamPageHandler(func, *vpath)
+            else:
+                request.handler = cherrypy.HTTPError(405)
+        else:
+            request.handler = cherrypy.NotFound()
+
+
 class Request(object):
     """An HTTP request."""
     
@@ -104,20 +278,28 @@ class Request(object):
     methods_with_bodies = ("POST", "PUT")
     body = None
     body_read = False
+    max_body_size = 100 * 1024 * 1024
     
     # Dispatch attributes
+    dispatch = Dispatcher()
     script_name = ""
     path_info = "/"
     app = None
     handler = None
     toolmap = {}
     config = None
-    error_response = cherrypy.HTTPError(500).set_response
+    recursive_redirect = False
+    
     hookpoints = ['on_start_resource', 'before_request_body',
                   'before_main', 'before_finalize',
                   'on_end_resource', 'on_end_request',
                   'before_error_response', 'after_error_response']
     hooks = HookMap(hookpoints)
+    
+    error_response = cherrypy.HTTPError(500).set_response
+    show_tracebacks = True
+    throw_errors = False
+    
     
     def __init__(self, local_host, remote_host, scheme="http",
                  server_protocol="HTTP/1.1"):
@@ -218,8 +400,7 @@ class Request(object):
                     break
                 except cherrypy.InternalRedirect, ir:
                     pi = ir.path
-                    if (pi in self.redirections and
-                        not cherrypy.config.get("recursive_redirect")):
+                    if pi in self.redirections and not self.recursive_redirect:
                         raise RuntimeError("InternalRedirect visited the "
                                            "same URL twice: %s" % repr(pi))
                     self.redirections.append(pi)
@@ -228,7 +409,7 @@ class Request(object):
         except cherrypy.TimeoutError:
             raise
         except:
-            if cherrypy.config.get("throw_errors", False):
+            if self.throw_errors:
                 raise
             self.handle_error(sys.exc_info())
         
@@ -236,7 +417,7 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        log_access = cherrypy.config.get("log_access", cherrypy.log_access)
+        log_access = cherrypy.config.get("log.access.function", cherrypy.log_access)
         if log_access:
             log_access()
         
@@ -264,8 +445,7 @@ class Request(object):
                     
                     if self.process_request_body:
                         # Prepare the SizeCheckWrapper for the request body
-                        mbs = int(self.config.get('server.max_request_body_size',
-                                                  100 * 1024 * 1024))
+                        mbs = self.max_body_size
                         if mbs > 0:
                             self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
                 
@@ -323,14 +503,14 @@ class Request(object):
     
     def get_resource(self, path):
         """Find and call a dispatcher (which sets self.handler and .config)."""
-        dispatch = default_dispatch
+        dispatch = self.dispatch
         # First, see if there is a custom dispatch at this URI. Custom
         # dispatchers can only be specified in app.conf, not in _cp_config
         # (since custom dispatchers may not even have an app.root).
         trail = path
         while trail:
             nodeconf = self.app.conf.get(trail, {})
-            d = nodeconf.get("dispatch")
+            d = nodeconf.get("request.dispatch")
             if d:
                 dispatch = d
                 break
@@ -347,7 +527,7 @@ class Request(object):
         dispatch(path)
     
     def tool_up(self):
-        """Populate self.toolmap and set up each tool."""
+        """Process self.config, populate self.toolmap and set up each tool."""
         # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
         self.toolmap = tm = {}
         reqconf = self.config
@@ -365,6 +545,12 @@ class Request(object):
                 if isinstance(v, basestring):
                     v = cherrypy.lib.attributes(v)
                 self.hooks.attach(hookpoint, v)
+            elif namespace == "request":
+                # Override properties of this request object.
+                setattr(self, atoms[1], reqconf[k])
+            elif namespace == "response":
+                # Override properties of the current response object.
+                setattr(cherrypy.response, atoms[1], reqconf[k])
         
         # Run tool._setup(conf) for each tool in the new toolmap.
         tools = cherrypy.tools
@@ -431,7 +617,7 @@ class Request(object):
             pass
         
         # Failure in error handler or finalize. Bypass them.
-        if cherrypy.config.get('show_tracebacks', False):
+        if self.show_tracebacks:
             dbltrace = ("\n===First Error===\n\n%s"
                         "\n\n===Second Error===\n\n%s\n\n")
             body = dbltrace % (format_exc(exc), format_exc())
@@ -439,198 +625,6 @@ class Request(object):
             body = ""
         r = bare_error(body)
         response.status, response.header_list, response.body = r
-
-
-class PageHandler(object):
-    """Callable which sets response.body."""
-    
-    def __init__(self, callable, *args, **kwargs):
-        self.callable = callable
-        self.args = args
-        self.kwargs = kwargs
-    
-    def __call__(self):
-        cherrypy.response.body = self.callable(*self.args, **self.kwargs)
-
-
-class LateParamPageHandler(PageHandler):
-    """When passing cherrypy.request.params to the page handler, we don't
-    want to capture that dict too early; we want to give tools like the
-    decoding tool a chance to modify the params dict in-between the lookup
-    of the handler and the actual calling of the handler. This subclass
-    takes that into account, and allows request.params to be 'bound late'
-    (it's more complicated than that, but that's the effect).
-    """
-    
-    def _get_kwargs(self):
-        kwargs = cherrypy.request.params.copy()
-        if self._kwargs:
-            kwargs.update(self._kwargs)
-        return kwargs
-    
-    def _set_kwargs(self, kwargs):
-        self._kwargs = kwargs
-    
-    kwargs = property(_get_kwargs, _set_kwargs,
-                      doc='page handler kwargs (with '
-                      'cherrypy.request.params copied in)')
-
-
-class Dispatcher(object):
-    
-    def __call__(self, path_info):
-        """Set handler and config for the current request."""
-        request = cherrypy.request
-        func, vpath = self.find_handler(path_info)
-        
-        if func:
-            # Decode any leftover %2F in the virtual_path atoms.
-            vpath = [x.replace("%2F", "/") for x in vpath]
-            request.handler = LateParamPageHandler(func, *vpath)
-        else:
-            request.handler = cherrypy.NotFound()
-    
-    def find_handler(self, path):
-        """Find the appropriate page handler for the given path."""
-        request = cherrypy.request
-        app = request.app
-        root = app.root
-        
-        # Get config for the root object/path.
-        environments = cherrypy.config.environments
-        curpath = ""
-        nodeconf = {}
-        if hasattr(root, "_cp_config"):
-            nodeconf.update(root._cp_config)
-        if 'environment' in nodeconf:
-            env = environments[nodeconf['environment']]
-            for k in env:
-                if k not in nodeconf:
-                    nodeconf[k] = env[k]
-        if "/" in app.conf:
-            nodeconf.update(app.conf["/"])
-        object_trail = [('root', root, nodeconf, curpath)]
-        
-        node = root
-        names = [x for x in path.strip('/').split('/') if x] + ['index']
-        for name in names:
-            # map to legal Python identifiers (replace '.' with '_')
-            objname = name.replace('.', '_')
-            
-            nodeconf = {}
-            node = getattr(node, objname, None)
-            if node is not None:
-                # Get _cp_config attached to this node.
-                if hasattr(node, "_cp_config"):
-                    nodeconf.update(node._cp_config)
-                    
-                    # Resolve "environment" entries. This must be done node-by-node
-                    # so that a child's "environment" can override concrete settings
-                    # of a parent. However, concrete settings in this node will
-                    # override "environment" settings in the same node.
-                    if 'environment' in nodeconf:
-                        env = environments[nodeconf['environment']]
-                        for k in env:
-                            if k not in nodeconf:
-                                nodeconf[k] = env[k]
-            
-            # Mix in values from app.conf for this path.
-            curpath = "/".join((curpath, name))
-            if curpath in app.conf:
-                nodeconf.update(app.conf[curpath])
-            
-            object_trail.append((objname, node, nodeconf, curpath))
-        
-        def set_conf():
-            """Set cherrypy.request.config."""
-            base = cherrypy.config.globalconf.copy()
-            # Note that we merge the config from each node
-            # even if that node was None.
-            for name, obj, conf, curpath in object_trail:
-                base.update(conf)
-                if 'tools.staticdir.dir' in conf:
-                    base['tools.staticdir.section'] = curpath
-            return base
-        
-        # Try successive objects (reverse order)
-        for i in xrange(len(object_trail) - 1, -1, -1):
-            
-            name, candidate, nodeconf, curpath = object_trail[i]
-            if candidate is None:
-                continue
-            
-            # Try a "default" method on the current leaf.
-            if hasattr(candidate, "default"):
-                defhandler = candidate.default
-                if getattr(defhandler, 'exposed', False):
-                    # Insert any extra _cp_config from the default handler.
-                    conf = getattr(defhandler, "_cp_config", {})
-                    object_trail.insert(i+1, ("default", defhandler, conf, curpath))
-                    request.config = set_conf()
-                    return defhandler, names[i:-1]
-            
-            # Uncomment the next line to restrict positional params to "default".
-            # if i < len(object_trail) - 2: continue
-            
-            # Try the current leaf.
-            if getattr(candidate, 'exposed', False):
-                request.config = set_conf()
-                if i == len(object_trail) - 1:
-                    # We found the extra ".index". Check if the original path
-                    # had a trailing slash (otherwise, do a redirect).
-                    if path[-1:] != '/':
-                        atoms = request.browser_url.split("?", 1)
-                        new_url = atoms.pop(0) + '/'
-                        if atoms:
-                            new_url += "?" + atoms[0]
-                        raise cherrypy.HTTPRedirect(new_url)
-                return candidate, names[i:-1]
-        
-        # We didn't find anything
-        request.config = set_conf()
-        return None, []
-
-default_dispatch = Dispatcher()
-
-
-class MethodDispatcher(Dispatcher):
-    """Additional dispatch based on cherrypy.request.method.upper().
-    
-    Methods named GET, POST, etc will be called on an exposed class.
-    The method names must be all caps; the appropriate Allow header
-    will be output showing all capitalized method names as allowable
-    HTTP verbs.
-    
-    Note that the containing class must be exposed, not the methods.
-    """
-    
-    def __call__(self, path_info):
-        """Set handler and config for the current request."""
-        request = cherrypy.request
-        resource, vpath = self.find_handler(path_info)
-        
-        # Decode any leftover %2F in the virtual_path atoms.
-        vpath = [x.replace("%2F", "/") for x in vpath]
-        
-        if resource:
-            # Set Allow header
-            avail = [m for m in dir(resource) if m.isupper()]
-            if "GET" in avail and "HEAD" not in avail:
-                avail.append("HEAD")
-            avail.sort()
-            cherrypy.response.headers['Allow'] = ", ".join(avail)
-            
-            # Find the subhandler
-            meth = cherrypy.request.method.upper()
-            func = getattr(resource, meth, None)
-            if func is None and meth == "HEAD":
-                func = getattr(resource, "GET", None)
-            if func:
-                request.handler = LateParamPageHandler(func, *vpath)
-            else:
-                request.handler = cherrypy.HTTPError(405)
-        else:
-            request.handler = cherrypy.NotFound()
 
 
 def file_generator(input, chunkSize=65536):
@@ -691,6 +685,7 @@ class Response(object):
     body = Body()
     time = None
     timed_out = False
+    stream = False
     
     def __init__(self):
         self.status = None
@@ -725,14 +720,8 @@ class Response(object):
         
         self.status = "%s %s" % (code, reason)
         
-        stream = cherrypy.config.get("stream_response", False)
-        # OPTIONS requests MUST include a Content-Length of 0 if no body.
-        # Just punt and figure Content-Length for all OPTIONS requests.
-        if cherrypy.request.method == "OPTIONS":
-            stream = False
-        
         headers = self.headers
-        if stream:
+        if self.stream:
             headers.pop('Content-Length', None)
         else:
             # Responses which are not streamed should have a Content-Length,
@@ -757,7 +746,7 @@ class Response(object):
         This purposefully sets a flag, rather than raising an error,
         so that a monitor thread can interrupt the Response thread.
         """
-        timeout = float(cherrypy.config.get('deadlock_timeout', 300))
+        timeout = float(cherrypy.config.get('deadlock.timeout', 300))
         if time.time() > self.time + timeout:
             self.timed_out = True
 

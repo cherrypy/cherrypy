@@ -34,14 +34,13 @@ class Root:
     def block_implicit(self):
         raise cherrypy.InternalRedirect("/block_implicit")
     block_implicit.exposed = True
-    block_implicit._cp_config = {'recursive_redirect': True}
+    block_implicit._cp_config = {'request.recursive_redirect': True}
 
 cherrypy.tree.mount(Root())
 cherrypy.config.update({
-    'log_to_screen': False,
-    'environment': 'production',
-    'deadlock_poll_freq': 1,
-    'deadlock_timeout': 2,
+    'environment': 'test_suite',
+    'deadlock.poll_freq': 1,
+    'deadlock.timeout': 2,
     })
 
 class Dependency:
@@ -298,10 +297,7 @@ def run_all(host, port):
     conf = {'server.socket_host': host,
             'server.socket_port': port,
             'server.thread_pool': 10,
-            'log_to_screen': False,
-            'log_config': False,
-            'environment': "production",
-            'show_tracebacks': True,
+            'environment': "test_suite",
             }
     def _run(server):
         print
@@ -315,10 +311,7 @@ def run_localhosts(port):
         conf = {'server.socket_host': host,
                 'server.socket_port': port,
                 'server.thread_pool': 10,
-                'log_to_screen': False,
-                'log_config': False,
-                'environment': "production",
-                'show_tracebacks': True,
+                'environment': "test_suite",
                 }
         def _run(server):
             print

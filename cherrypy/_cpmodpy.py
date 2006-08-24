@@ -18,7 +18,7 @@ def setup(req):
         func = getattr(mod, fname)
         func()
     
-    cherrypy.config.update({'global' : {'log_to_screen' : False}})
+    cherrypy.config.update({'log.screen': False})
     
     if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
         cherrypy.engine.start(blocking=False)

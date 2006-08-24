@@ -36,7 +36,7 @@ def setup_server():
     sessions.exposed = True
     
     def traceback_setting():
-        return repr(cherrypy.config.get('show_tracebacks'))
+        return repr(cherrypy.config.get('request.show_tracebacks'))
     traceback_setting.exposed = True
     
     class Dummy:
@@ -205,9 +205,7 @@ if __name__ == "__main__":
     conf = {'server.socket_host': '127.0.0.1',
             'server.socket_port': 8080,
             'server.thread_pool': 10,
-            'log_to_screen': False,
-            'environment': "production",
-            'show_tracebacks': True,
+            'environment': "test_suite",
             }
     cherrypy.config.update(conf)
     setup_server()
