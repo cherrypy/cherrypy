@@ -1,4 +1,4 @@
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 
@@ -58,7 +58,7 @@ def setup_server():
     app = cherrypy.Application(Root(), script_name=None)
     cherrypy.tree.graft(reversing_middleware(app), '/hosted/app2')
 
-import helper
+from cherrypy.test import helper
 
 
 class WSGIAppTest(helper.CPWebCase):

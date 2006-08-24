@@ -1,4 +1,4 @@
-import test
+from cherrypy import test
 test.prefer_parent_path()
 
 import gzip, StringIO
@@ -35,7 +35,7 @@ def setup_server():
     })
 
 
-import helper
+from cherrypy.test import helper
 
 europoundUtf8 = u'\x80\xa3'.encode('utf-8')
 

@@ -32,7 +32,7 @@ class Server(object):
         if httpserver is None:
             httpserver = conf('server.instance', None)
         if httpserver is None:
-            import _cpwsgi
+            from cherrypy import _cpwsgi
             httpserver = _cpwsgi.WSGIServer()
         if isinstance(httpserver, basestring):
             httpserver = attributes(httpserver)()

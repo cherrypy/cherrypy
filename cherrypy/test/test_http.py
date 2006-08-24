@@ -5,7 +5,7 @@ time to run. Therefore, this module should probably not be included in
 the 'comprehensive' test suite (test.py).
 """
 
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 import gc
@@ -44,7 +44,7 @@ def setup_server():
     })
 
 
-import helper
+from cherrypy.test import helper
 
 class HTTPTests(helper.CPWebCase):
     

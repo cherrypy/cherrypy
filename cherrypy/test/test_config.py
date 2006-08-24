@@ -1,5 +1,5 @@
 """Tests for the CherryPy configuration system."""
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 import StringIO
@@ -63,7 +63,7 @@ def setup_server():
 
 #                             Client-side code                             #
 
-import helper
+from cherrypy.test import helper
 
 class ConfigTests(helper.CPWebCase):
     

@@ -1,10 +1,10 @@
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 import sys
 
 import cherrypy
-import helper
+from cherrypy.test import helper
 
 
 def setup_server():

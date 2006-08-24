@@ -3,7 +3,7 @@ import sys
 import threading
 import time
 
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 import cherrypy
@@ -65,7 +65,7 @@ class Dependency:
         del self.threads[thread_id]
 
 
-import helper
+from cherrypy.test import helper
 
 class ServerStateTests(helper.CPWebCase):
     

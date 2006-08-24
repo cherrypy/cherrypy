@@ -1,4 +1,4 @@
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 import xmlrpclib
 
@@ -65,7 +65,7 @@ def setup_server():
         })
 
 
-import helper
+from cherrypy.test import helper
 
 class XmlRpcTest(helper.CPWebCase):
     def testXmlRpc(self):

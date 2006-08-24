@@ -1,4 +1,4 @@
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 import os
@@ -50,7 +50,7 @@ def setup_server():
             'environment': 'production',
     })
 
-import helper
+from cherrypy.test import helper
 
 class SessionTest(helper.CPWebCase):
     

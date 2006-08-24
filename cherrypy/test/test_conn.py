@@ -1,4 +1,4 @@
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 import httplib
@@ -45,7 +45,7 @@ def setup_server():
         })
 
 
-import helper
+from cherrypy.test import helper
 
 class ConnectionTests(helper.CPWebCase):
     

@@ -2,7 +2,7 @@
 
 import gzip, StringIO
 import types
-import test
+from cherrypy.test import test
 test.prefer_parent_path()
 
 import cherrypy
@@ -182,7 +182,7 @@ def setup_server():
 
 #                             Client-side code                             #
 
-import helper
+from cherrypy.test import helper
 
 
 class ToolTests(helper.CPWebCase):

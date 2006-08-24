@@ -24,7 +24,7 @@ import thread
 
 import cherrypy
 from cherrypy.lib import http, profiler
-import webtest
+from cherrypy.test import webtest
 
 
 class CPWebCase(webtest.WebCase):

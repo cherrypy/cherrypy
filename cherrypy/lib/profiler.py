@@ -5,7 +5,7 @@ CherryPy users
 
 You can profile any of your pages as follows:
 
-    from cherrypy.lib import profile
+    from cherrypy.lib import profiler
     
     class Root:
         p = profile.Profiler("/path/to/profile/dir")

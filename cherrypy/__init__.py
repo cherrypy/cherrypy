@@ -4,19 +4,19 @@ __version__ = '3.0.0alpha'
 
 import logging as _logging
 
-from _cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound
-from _cperror import WrongConfigValue, TimeoutError
-import config
+from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound
+from cherrypy._cperror import WrongConfigValue, TimeoutError
+from cherrypy import config
 
-import _cptools
+from cherrypy import _cptools
 tools = _cptools.default_toolbox
 
-import _cptree
+from cherrypy import _cptree
 tree = _cptree.Tree()
-from _cptree import Application
-import _cpengine
+from cherrypy from _cptree import Application
+from cherrypy import _cpengine
 engine = _cpengine.Engine()
-import _cpserver
+from cherrypy import _cpserver
 server = _cpserver.Server()
 
 def quickstart(root, script_name="", conf=None):
@@ -147,7 +147,7 @@ def log(msg='', context='', severity=_logging.DEBUG, traceback=False):
     log application-specific information.
     """
     if traceback:
-        import _cperror
+        from cherrypy import _cperror
         msg += _cperror.format_exc()
     logfunc = config.get('log_function', _log_message)
     logfunc(msg, context, severity)

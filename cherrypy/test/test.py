@@ -12,7 +12,7 @@ called "helper.py" (in this folder); this module calls that as a library.
 
 import sys
 import os, os.path
-import webtest
+from cherrypy.test import webtest
 import getopt
 
 
@@ -55,11 +55,11 @@ class TestHarness(object):
     def _run(self, conf):
         # helper must be imported lazily so the coverage tool
         # can run against module-level statements within cherrypy.
-        # Also, we have to do a relative import here, not
-        # "from cherrypy.test import helper", because the latter
+        # Also, we have to do "from cherrypy.test import helper",
+        # exactly like each test module does, because a relative import
         # would stick a second instance of webtest in sys.modules,
         # and we wouldn't be able to globally override the port anymore.
-        import helper
+        from cherrypy.test import helper
         webtest.WebCase.PORT = self.port
         print
         print "Running tests:", self.server
@@ -266,13 +266,13 @@ class CommandLineParser(object):
             conf['profiling.on'] = True
         
         if self.server == 'cpmodpy':
-            import modpy
+            from cherrypy.test import modpy
             m = modpy.ModPythonTestHarness(self.tests, self.server,
                                            self.protocol, self.port)
             m.use_wsgi = False
             m.run(conf)
         elif self.server == 'modpygw':
-            import modpy
+            from cherrypy.test import modpy
             m = modpy.ModPythonTestHarness(self.tests, self.server,
                                            self.protocol, self.port)
             m.use_wsgi = True
