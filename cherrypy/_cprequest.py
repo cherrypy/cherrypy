@@ -44,6 +44,9 @@ class HookMap(object):
             def wrapper():
                 callback(**kwargs)
             func = wrapper
+            name = getattr(callback, "__name__", None)
+            if name:
+                func.__name__ = name
         self.callbacks[point].append(func)
         if failsafe is None:
             failsafe = getattr(callback, 'failsafe', False)
