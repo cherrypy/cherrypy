@@ -38,7 +38,7 @@ def setup_server():
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
-        'request.max_body_size': 100,
+        'server.max_request_body_size': 100,
         'environment': 'test_suite',
         })
 
@@ -48,7 +48,7 @@ from cherrypy.test import helper
 class ConnectionTests(helper.CPWebCase):
     
     def test_HTTP11(self):
-        if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
+        if cherrypy.server.protocol_version != "HTTP/1.1":
             print "skipped ",
             return
         
@@ -103,7 +103,7 @@ class ConnectionTests(helper.CPWebCase):
         self.assertRaises(httplib.NotConnected, self.getPage, "/")
     
     def test_HTTP11_pipelining(self):
-        if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
+        if cherrypy.server.protocol_version != "HTTP/1.1":
             print "skipped ",
             return
         
@@ -141,7 +141,7 @@ class ConnectionTests(helper.CPWebCase):
         conn.close()
     
     def test_100_Continue(self):
-        if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
+        if cherrypy.server.protocol_version != "HTTP/1.1":
             print "skipped ",
             return
         
@@ -193,7 +193,7 @@ class ConnectionTests(helper.CPWebCase):
         self.assertBody("thanks for 'I am a small file' (text/plain)")
     
     def test_Chunked_Encoding(self):
-        if cherrypy.config.get('server.protocol_version') != "HTTP/1.1":
+        if cherrypy.server.protocol_version != "HTTP/1.1":
             print "skipped ",
             return
         
@@ -220,7 +220,7 @@ class ConnectionTests(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertBody("thanks for 'xx\r\nxxxxyyyyy' (application/x-json)")
         
-        # Try a chunked request that exceeds request.max_body_size.
+        # Try a chunked request that exceeds server.max_request_body_size.
         # Note that the delimiters and trailer are included.
         body = "5f\r\n" + ("x" * 95) + "\r\n0\r\n\r\n"
         conn.putrequest("POST", "/upload", skip_host=True)

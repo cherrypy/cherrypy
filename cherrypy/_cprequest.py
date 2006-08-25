@@ -281,7 +281,6 @@ class Request(object):
     methods_with_bodies = ("POST", "PUT")
     body = None
     body_read = False
-    max_body_size = 100 * 1024 * 1024
     
     # Dispatch attributes
     dispatch = Dispatcher()
@@ -300,6 +299,7 @@ class Request(object):
     hooks = HookMap(hookpoints)
     
     error_response = cherrypy.HTTPError(500).set_response
+    error_page = {}
     show_tracebacks = True
     throw_errors = False
     
@@ -420,7 +420,7 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        log_access = cherrypy.config.get("log.access.function", cherrypy.log_access)
+        log_access = cherrypy.log.access
         if log_access:
             log_access()
         
@@ -448,7 +448,7 @@ class Request(object):
                     
                     if self.process_request_body:
                         # Prepare the SizeCheckWrapper for the request body
-                        mbs = self.max_body_size
+                        mbs = cherrypy.server.max_request_body_size
                         if mbs > 0:
                             self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
                 
@@ -531,16 +531,18 @@ class Request(object):
     
     def tool_up(self):
         """Process self.config, populate self.toolmap and set up each tool."""
+        self.error_page = cherrypy.error_page.copy()
+        
         # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
         self.toolmap = tm = {}
         reqconf = self.config
         for k in reqconf:
-            atoms = k.split(".", 2)
+            atoms = k.split(".", 1)
             namespace = atoms[0]
             if namespace == "tools":
-                toolname = atoms[1]
+                toolname, arg = atoms[1].split(".", 1)
                 bucket = tm.setdefault(toolname, {})
-                bucket[atoms[2]] = reqconf[k]
+                bucket[arg] = reqconf[k]
             elif namespace == "hooks":
                 # Attach bare hooks declared in config.
                 hookpoint = atoms[1]
@@ -554,6 +556,8 @@ class Request(object):
             elif namespace == "response":
                 # Override properties of the current response object.
                 setattr(cherrypy.response, atoms[1], reqconf[k])
+            elif namespace == "error_page":
+                self.error_page[int(atoms[1])] = reqconf[k]
         
         # Run tool._setup(conf) for each tool in the new toolmap.
         tools = cherrypy.tools
@@ -687,6 +691,7 @@ class Response(object):
     simple_cookie = Cookie.SimpleCookie()
     body = Body()
     time = None
+    timeout = 300
     timed_out = False
     stream = False
     
@@ -744,12 +749,11 @@ class Response(object):
                 h.append((name, value))
     
     def check_timeout(self):
-        """If now > self.time + deadlock_timeout, set self.timed_out.
+        """If now > self.time + self.timeout, set self.timed_out.
         
         This purposefully sets a flag, rather than raising an error,
         so that a monitor thread can interrupt the Response thread.
         """
-        timeout = float(cherrypy.config.get('deadlock.timeout', 300))
-        if time.time() > self.time + timeout:
+        if time.time() > self.time + self.timeout:
             self.timed_out = True
 

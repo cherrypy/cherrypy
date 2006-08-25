@@ -219,7 +219,8 @@ def setup_server():
             raise ValueError()
         
         # We support Python 2.3, but the @-deco syntax would look like this:
-        # @cherrypy.config.wrap(**{"response.stream": True})
+        # @cherrypy.config.response.stream(True)
+        # @cherrypy.config.tools.static.on(True)
         def page_streamed(self):
             yield "word up"
             raise ValueError()
@@ -370,13 +371,13 @@ def setup_server():
             return u'Wrong login/password'
     
     cherrypy.config.update({
-        'log.error.file': log_file,
+        'log.error_file': log_file,
         'environment': 'test_suite',
-        'request.max_body_size': 200,
+        'server.max_request_body_size': 200,
         'server.max_request_header_size': 500,
         })
     appconf = {
-        '/': {'log.access.file': log_access_file},
+        '/': {'log.access_file': log_access_file},
         '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
         }
     cherrypy.tree.mount(root, conf=appconf)
@@ -584,7 +585,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/stringify", protocol="HTTP/1.0")
         self.assertStatus(200)
         self.assertBody("(['http://127.0.0.1:%s/'], 302)" % self.PORT)
-        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+        if cherrypy.server.protocol_version == "HTTP/1.1":
             self.getPage("/redirect/stringify", protocol="HTTP/1.1")
             self.assertStatus(200)
             self.assertBody("(['http://127.0.0.1:%s/'], 303)" % self.PORT)
@@ -627,7 +628,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # Test custom error page.
         self.getPage("/error/custom")
         self.assertStatus(404)
-        self.assertEqual(len(self.body), 513)
         self.assertBody("Hello, world\r\n" + (" " * 499))
         
         # Test error in custom error page (ticket #305).
@@ -652,7 +652,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody("[(2, 5), (7, 8)]")
         
         # Get a partial file.
-        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+        if cherrypy.server.protocol_version == "HTTP/1.1":
             self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
             self.assertStatus(206)
             self.assertHeader("Content-Type", "text/html")
@@ -688,7 +688,7 @@ llo,
             self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
             self.assertStatus(416)
             self.assertHeader("Content-Range", "bytes */14")
-        elif cherrypy.config.get('server.protocol_version') == "HTTP/1.0":
+        elif cherrypy.server.protocol_version == "HTTP/1.0":
             # Test Range behavior with HTTP/1.0 request
             self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
             self.assertStatus(200)
@@ -759,7 +759,7 @@ llo,
                     'Expires', 'Location', 'Server']:
             self.assertEqual(hnames.count(key), 1)
         
-        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+        if cherrypy.server.protocol_version == "HTTP/1.1":
             # Test RFC-2047-encoded request and response header values
             self.getPage("/headers/ifmatch",
                          [('If-Match', '=?utf-8?q?=E2=84=ABngstr=C3=B6m?=')])

@@ -1,6 +1,6 @@
 import logging
 
-from cherrypy import config, _cpwsgi
+from cherrypy import _cpconfig, _cpwsgi
 
 
 class Application(object):
@@ -45,12 +45,12 @@ class Application(object):
     
     def merge(self, conf):
         """Merge the given config into self.config."""
-        config.merge(self.conf, conf)
+        _cpconfig.merge(self.conf, conf)
         
         # Create log handlers as specified in config.
         rootconf = self.conf.get("/", {})
-        config._configure_builtin_logging(rootconf, self.access_log, "log.access.file")
-        config._configure_builtin_logging(rootconf, self.error_log)
+        _cpconfig._configure_builtin_logging(rootconf, self.access_log, "log.access_file")
+        _cpconfig._configure_builtin_logging(rootconf, self.error_log)
     
     def guess_abs_path(self):
         """Guess the absolute URL from server.socket_host and script_name.
@@ -61,12 +61,12 @@ class Application(object):
         However, outside of the request we must guess, hoping the deployer
         set socket_host and socket_port correctly.
         """
-        port = int(config.get('server.socket_port', 80))
+        port = cherrypy.server.socket_port
         if port in (443, 8443):
             scheme = "https://"
         else:
             scheme = "http://"
-        host = config.get('server.socket_host', '')
+        host = cherrypy.server.socket_host
         if port != 80:
             host += ":%s" % port
         return scheme + host + self.script_name
@@ -81,6 +81,11 @@ class Tree:
     An instance of this class may also be used as a WSGI callable
     (WSGI application object), in which case it dispatches to all
     mounted apps.
+    
+    apps: a dict of the form {script name: application}, where "script name"
+        is a string declaring the URL mount point (no trailing slash),
+        and "application" is an instance of cherrypy.Application (or an
+        arbitrary WSGI callable if you happen to be using a WSGI server).
     """
     
     def __init__(self):

@@ -22,7 +22,7 @@ class HTTPErrorDemo(object):
     
     def index(self):
         # display some links that will result in errors
-        tracebacks = cherrypy.config.get('request.show_tracebacks')
+        tracebacks = cherrypy.request.show_tracebacks
         if tracebacks:
             trace = 'off'
         else:
@@ -48,7 +48,7 @@ class HTTPErrorDemo(object):
     
     def toggleTracebacks(self):
         # simple function to toggle tracebacks on and off 
-        tracebacks = cherrypy.config.get('request.show_tracebacks')
+        tracebacks = cherrypy.request.show_tracebacks
         cherrypy.config.update({'request.show_tracebacks': not tracebacks})
         
         # redirect back to the index

@@ -154,7 +154,7 @@ def testmain(conf=None):
 
 def _test_main_thread():
     try:
-        webtest.WebCase.PORT = cherrypy.config.get('server.socket_port')
+        webtest.WebCase.PORT = cherrypy.server.socket_port
         webtest.main()
     finally:
         thread.interrupt_main()

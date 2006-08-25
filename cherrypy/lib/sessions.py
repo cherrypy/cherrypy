@@ -353,6 +353,9 @@ def close():
         sess.release_lock()
 close.failsafe = True
 
+
+_def_session = RamSession()
+
 def init(storage_type='ram', path=None, path_header=None, name='session_id',
          timeout=60, domain=None, secure=False, locking='implicit',
          clean_freq=5, **kwargs):
@@ -369,7 +372,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
         id = request.simple_cookie[name].value
     
     if not hasattr(cherrypy, "session"):
-        cherrypy.session = cherrypy._ThreadLocalProxy('session')
+        cherrypy.session = cherrypy._ThreadLocalProxy('session', _def_session)
     
     # Create and attach a new Session instance to cherrypy.request.
     # It will possess a reference to (and lock, and lazily load)

@@ -11,6 +11,18 @@ from cherrypy.lib import attributes
 class Server(object):
     """Manager for a set of HTTP servers."""
     
+    socket_port = 8080
+    socket_host = ''
+    socket_file = ''
+    socket_queue_size = 5
+    socket_timeout = 10
+    protocol_version = 'HTTP/1.1'
+    reverse_dns = False
+    thread_pool = 10
+    max_request_header_size = 500 * 1024
+    max_request_body_size = 100 * 1024 * 1024
+    instance = None
+    
     def __init__(self):
         self.httpservers = {}
         self.interrupt = None
@@ -19,32 +31,31 @@ class Server(object):
         """Main function for quick starts. MUST be called from the main thread.
         
         This function works like CherryPy 2's server.start(). It loads and
-        starts an httpserver based on the given server object, if any, and
-        config entries.
+        starts an httpserver based on the given server object (if provided)
+        and attributes of self.
         """
-        httpserver, bind_addr = self.httpserver_from_config(server)
+        httpserver, bind_addr = self.httpserver_from_self(server)
         self.httpservers[httpserver] = bind_addr
         self.start()
     
-    def httpserver_from_config(self, httpserver=None):
-        """Return a (httpserver, bind_addr) pair based on config settings."""
-        conf = cherrypy.config.get
+    def httpserver_from_self(self, httpserver=None):
+        """Return a (httpserver, bind_addr) pair based on self attributes."""
         if httpserver is None:
-            httpserver = conf('server.instance', None)
+            httpserver = self.instance
         if httpserver is None:
             from cherrypy import _cpwsgi
             httpserver = _cpwsgi.WSGIServer()
         if isinstance(httpserver, basestring):
             httpserver = attributes(httpserver)()
         
-        if conf('server.socket_port'):
-            host = conf('server.socket_host')
-            port = conf('server.socket_port')
+        if self.socket_port:
+            host = self.socket_host
+            port = self.socket_port
             if not host:
                 host = 'localhost'
             return httpserver, (host, port)
         else:
-            return httpserver, conf('server.socket_file')
+            return httpserver, self.socket_file
     
     def start(self):
         """Start all registered HTTP servers."""

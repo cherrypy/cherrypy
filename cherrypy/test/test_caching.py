@@ -120,7 +120,7 @@ class CacheTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         # This also gives us a chance to test 0 expiry with no other headers
         self.assertHeader("Pragma", "no-cache")
-        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+        if cherrypy.server.protocol_version == "HTTP/1.1":
             self.assertHeader("Cache-Control", "no-cache")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)
@@ -129,7 +129,7 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/expires/index.html")
         self.assertStatus("200 OK")
         self.assertHeader("Pragma", "no-cache")
-        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+        if cherrypy.server.protocol_version == "HTTP/1.1":
             self.assertHeader("Cache-Control", "no-cache")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)
@@ -138,7 +138,7 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/expires/cacheable")
         self.assertStatus("200 OK")
         self.assertHeader("Pragma", "no-cache")
-        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+        if cherrypy.server.protocol_version == "HTTP/1.1":
             self.assertHeader("Cache-Control", "no-cache")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)
@@ -148,7 +148,7 @@ class CacheTest(helper.CPWebCase):
         # dynamic sets Cache-Control to private but it should  be
         # overwritten here ...
         self.assertHeader("Pragma", "no-cache")
-        if cherrypy.config.get('server.protocol_version') == "HTTP/1.1":
+        if cherrypy.server.protocol_version == "HTTP/1.1":
             self.assertHeader("Cache-Control", "no-cache")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)

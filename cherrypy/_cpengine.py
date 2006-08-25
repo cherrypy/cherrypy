@@ -42,8 +42,12 @@ except ValueError, _signal_exc:
 class Engine(object):
     """The application engine, which exposes a request interface to (HTTP) servers."""
     
+    # Configurable attributes
     request_class = _cprequest.Request
     response_class = _cprequest.Response
+    deadlock_poll_freq = 60
+    autoreload_on = False
+    autoreload_frequency = 1
     
     def __init__(self):
         self.state = STOPPED
@@ -66,14 +70,12 @@ class Engine(object):
         """Start the application engine."""
         self.state = STARTING
         
-        conf = cherrypy.config.get
-        
         for func in self.on_start_engine_list:
             func()
         
         self.state = STARTED
         
-        freq = float(conf('deadlock.poll_freq', 60))
+        freq = self.deadlock_poll_freq
         if freq > 0:
             self.monitor_thread = threading.Timer(freq, self.monitor)
             self.monitor_thread.start()
@@ -84,16 +86,15 @@ class Engine(object):
     def block(self):
         """Block forever (wait for stop(), KeyboardInterrupt or SystemExit)."""
         try:
-            autoreload = cherrypy.config.get('autoreload.on', False)
-            if autoreload:
+            if self.autoreload_on:
                 i = 0
-                freq = cherrypy.config.get('autoreload.frequency', 1)
+                freq = self.autoreload_frequency
             
             while self.state != STOPPED:
                 time.sleep(.1)
                 
                 # Autoreload
-                if autoreload:
+                if self.autoreload_on:
                     i += .1
                     if i > freq:
                         i = 0
@@ -218,7 +219,7 @@ class Engine(object):
         if self.state == STARTED:
             for req, resp in self.servings:
                 resp.check_timeout()
-            freq = float(cherrypy.config.get('deadlock.poll_freq', 60))
+            freq = self.deadlock_poll_freq
             self.monitor_thread = threading.Timer(freq, self.monitor)
             self.monitor_thread.start()
     

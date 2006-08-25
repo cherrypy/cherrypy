@@ -1,4 +1,5 @@
 """Tests for the CherryPy configuration system."""
+
 from cherrypy.test import test
 test.prefer_parent_path()
 
@@ -14,7 +15,7 @@ def setup_server():
                       'bar': 'that'}
         
         def index(self, key):
-            return cherrypy.config.get(key, "None")
+            return cherrypy.request.config.get(key, "None")
         index.exposed = True
         global_ = index
         xyz = index
@@ -25,19 +26,19 @@ def setup_server():
                       'baz': 'that2'}
         
         def index(self, key):
-            return cherrypy.config.get(key, "None")
+            return cherrypy.request.config.get(key, "None")
         index.exposed = True
         nex = index
         
         def bar(self, key):
-            return cherrypy.config.get(key, "None")
+            return cherrypy.request.config.get(key, "None")
         bar.exposed = True
         bar._cp_config = {'foo': 'this3', 'bax': 'this4'}
     
     class Another:
         
         def index(self, key):
-            return str(cherrypy.config.get(key, "None"))
+            return str(cherrypy.request.config.get(key, "None"))
         index.exposed = True
     
     root = Root()
@@ -73,6 +74,31 @@ class ConfigTests(helper.CPWebCase):
         for path, key, expected in tests:
             self.getPage(path + "?key=" + key)
             self.assertBody(expected)
+    
+    def testExternalDispatch(self):
+        # 'cherrypy.request' should reference a default instance
+        cherrypy.request.app = cherrypy.tree.apps[""]
+        cherrypy.request.dispatch("/foo/bar")
+        expectedconf = {
+            # From CP defaults
+            'tools.log_headers.on': False,
+            'tools.log_tracebacks.on': True,
+            'request.show_tracebacks': True,
+            'log.screen': False,
+            'environment': 'test_suite',
+            'autoreload.on': False,
+            # From globalconf
+            'luxuryyacht': 'throatwobblermangrove',
+            # From Root._cp_config
+            'bar': 'that',
+            # From Foo._cp_config
+            'baz': 'that2',
+            # From Foo.bar._cp_config
+            'foo': 'this3',
+            'bax': 'this4',
+            }
+        for k, v in expectedconf.iteritems():
+            self.assertEqual(cherrypy.request.config[k], v)
 
 
 if __name__ == '__main__':

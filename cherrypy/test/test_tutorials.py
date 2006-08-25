@@ -36,7 +36,7 @@ def setup_server():
     sessions.exposed = True
     
     def traceback_setting():
-        return repr(cherrypy.config.get('request.show_tracebacks'))
+        return repr(cherrypy.request.show_tracebacks)
     traceback_setting.exposed = True
     
     class Dummy:

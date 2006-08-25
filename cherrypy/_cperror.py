@@ -266,7 +266,7 @@ def get_error_page(status, **kwargs):
             kwargs[k] = _escape(kwargs[k])
     
     template = _HTTPErrorTemplate
-    error_page_file = cherrypy.config.get('error_page.%s' % code, '')
+    error_page_file = cherrypy.request.error_page.get(code, '')
     if error_page_file:
         try:
             template = file(error_page_file, 'rb').read()

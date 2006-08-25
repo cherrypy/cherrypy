@@ -65,7 +65,7 @@ cherrypy.config.update({
     'server.socket_host': 'localhost',
     'server.socket_port': 8080,
     'server.max_request_header_size': 0,
-    'request.max_body_size': 0,
+    'server.max_request_body_size': 0,
     })
 
 appconf = {
@@ -180,7 +180,7 @@ Finished 1000 requests
         self.concurrency = concurrency
     
     def args(self):
-        port = cherrypy.config.get('server.socket_port')
+        port = cherrypy.server.socket_port
         assert self.concurrency > 0
         assert self.requests > 0
         return ("-k -n %s -c %s http://localhost:%s%s" %
@@ -240,17 +240,17 @@ def print_report(rows):
 def run_standard_benchmarks():
     print
     print ("Client Thread Report (1000 requests, 14 byte response body, "
-           "%s server threads):" % cherrypy.config.get('server.thread_pool'))
+           "%s server threads):" % cherrypy.server.thread_pool)
     print_report(thread_report())
     
     print
     print ("Client Thread Report (1000 requests, 14 bytes via staticdir, "
-           "%s server threads):" % cherrypy.config.get('server.thread_pool'))
+           "%s server threads):" % cherrypy.server.thread_pool)
     print_report(thread_report("%s/static/index.html" % SCRIPT_NAME))
     
     print
     print ("Size Report (1000 requests, 50 client threads, "
-           "%s server threads):" % cherrypy.config.get('server.thread_pool'))
+           "%s server threads):" % cherrypy.server.thread_pool)
     print_report(size_report())
 
 

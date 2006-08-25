@@ -28,8 +28,8 @@ and configuration data may apply to any of those three scopes:
     page handler (see next).
 
 
-Usage
------
+Declaration
+-----------
 
 Configuration data may be supplied as a Python dictionary, as a filename,
 or as an open file object. When you supply a filename or file, CherryPy
@@ -60,12 +60,11 @@ Namespaces
 Configuration keys are separated into namespaces by the first "." in the key.
 Current namespaces:
 
-    autoreload: Controls the autoreload mechanism in cherrypy.engine.
-                These can only be declared in the global config.
-    deadlock:   Controls the deadlock monitoring system in cherrypy.engine.
+    engine:     Controls the 'application engine', including autoreload.
                 These can only be declared in the global config.
     hooks:      Declares additional request-processing functions.
     log:        Configures the logging for each application.
+                These can only be declared in the global or / config.
     request:    Adds attributes to each Request during the tool_up phase.
     response:   Adds attributes to each Response during the tool_up phase.
     server:     Controls the default HTTP server via cherrypy.server.
@@ -82,7 +81,7 @@ import ConfigParser
 import logging as _logging
 _logfmt = _logging.Formatter("%(message)s")
 import os as _os
-_localdir = _os.path.dirname(__file__)
+import types
 
 import cherrypy
 
@@ -122,70 +121,70 @@ def merge(base, other):
 
 
 default_conf = {
-    # Server config
-    'server.socket_port': 8080,
-    'server.socket_host': '',
-    'server.socket_file': '',
-    'server.socket_queue_size': 5,
-    'server.socket_timeout': 10,
-    'server.protocol_version': 'HTTP/1.1',
-    'server.reverse_dns': False,
-    'server.thread_pool': 10,
-    'server.max_request_header_size': 500 * 1024,
-    'server.instance': None,
-    
-    # Log config
-    'log.to_screen': True,
-##    'log.error.function': cherrypy._log_message,
-    'log.error.file': _os.path.join(_os.getcwd(), _localdir, "error.log"),
-    # Using an access file makes CP about 10% slower.
-##    'log.access.function': cherrypy.log_access,
-##    'log.access.file': _os.path.join(_os.getcwd(), _localdir, "access.log"),
-    
-    # Process management
-    'autoreload.on': True,
-    'autoreload.frequency': 1,
-    'deadlock.timeout': 300,
-    'deadlock.poll_freq': 60,
-    
-    'error_page.404': '',
-    
     'tools.log_tracebacks.on': True,
     'tools.log_headers.on': True,
     }
 
 
-globalconf = default_conf.copy()
+class Config(object):
+    
+    globalconf = default_conf.copy()
+    
+    def reset(self):
+        """Reset self.globalconf to default values."""
+        self.globalconf.clear()
+        self.update(default_conf)
+    
+    def update(self, conf):
+        """Update self.globalconf from a dict, file or filename."""
+        if isinstance(conf, basestring):
+            if conf not in cherrypy.engine.reload_files:
+                cherrypy.engine.reload_files.append(conf)
+            conf = _Parser().dict_from_file(conf)
+        elif hasattr(conf, 'read'):
+            conf = _Parser().dict_from_file(conf)
+        
+        if isinstance(conf.get("global", None), dict):
+            conf = conf["global"]
+        
+        if 'environment' in conf:
+            env = environments[conf['environment']]
+            for k in env:
+                if k not in conf:
+                    conf[k] = env[k]
+        
+        if 'tools.staticdir.dir' in conf:
+            conf['tools.staticdir.section'] = "global"
+        
+        self.globalconf.update(conf)
+        
+        _configure_builtin_logging(self.globalconf, cherrypy._error_log)
+        _configure_builtin_logging(self.globalconf, cherrypy._access_log, "log.access_file")
+        
+        # Override properties specified in config.
+        gconf = self.globalconf
+        for k in gconf:
+            atoms = k.split(".", 1)
+            namespace = atoms[0]
+            if namespace == "server":
+                setattr(cherrypy.server, atoms[1], gconf[k])
+            elif namespace == "engine":
+                setattr(cherrypy.engine, atoms[1], gconf[k])
+            elif namespace == "log":
+                setattr(cherrypy.log, atoms[1], gconf[k])
+            elif namespace == "error_page":
+                cherrypy.error_page[int(atoms[1])] = gconf[k]
+    
+    def wrap(**kwargs):
+        """Decorator to set _cp_config on a handler using the given kwargs."""
+        def wrapper(f):
+            if not hasattr(f, "_cp_config"):
+                f._cp_config = {}
+            f._cp_config.update(kwargs)
+            return f
+        return wrapper
+    wrap = staticmethod(wrap)
 
-def reset():
-    globalconf.clear()
-    update(default_conf)
-
-def update(conf):
-    """Update globalconf from a dict, file or filename."""
-    if isinstance(conf, basestring):
-        if conf not in cherrypy.engine.reload_files:
-            cherrypy.engine.reload_files.append(conf)
-        conf = _Parser().dict_from_file(conf)
-    elif hasattr(conf, 'read'):
-        conf = _Parser().dict_from_file(conf)
-    
-    if isinstance(conf.get("global", None), dict):
-        conf = conf["global"]
-    
-    if 'environment' in conf:
-        env = environments[conf['environment']]
-        for k in env:
-            if k not in conf:
-                conf[k] = env[k]
-    
-    if 'tools.staticdir.dir' in conf:
-        conf['tools.staticdir.section'] = "global"
-    
-    globalconf.update(conf)
-    
-    _configure_builtin_logging(globalconf, cherrypy._error_log)
-    _configure_builtin_logging(globalconf, cherrypy._access_log, "log.access.file")
 
 def _add_builtin_screen_handler(log):
     import sys
@@ -202,7 +201,7 @@ def _add_builtin_file_handler(log, fname):
     h._cpbuiltin = "file"
     log.addHandler(h)
 
-def _configure_builtin_logging(conf, log, filekey="log.error.file"):
+def _configure_builtin_logging(conf, log, filekey="log.error_file"):
     """Create/destroy builtin log handlers as needed from conf."""
     
     existing = dict([(getattr(x, "_cpbuiltin", None), x)
@@ -229,28 +228,6 @@ def _configure_builtin_logging(conf, log, filekey="log.error.file"):
         if h:
             h.close()
             log.handlers.remove(h)
-
-def get(key, default=None):
-    """Return the config value corresponding to key, or default."""
-    try:
-        conf = cherrypy.request.config
-        if conf is None:
-            conf = globalconf
-    except AttributeError:
-        # There's no request, so just use globalconf.
-        conf = globalconf
-    
-    return conf.get(key, default)
-
-
-def wrap(**kwargs):
-    """Decorator to set _cp_config on a handler using the given kwargs."""
-    def wrapper(f):
-        if not hasattr(f, "_cp_config"):
-            f._cp_config = {}
-        f._cp_config.update(kwargs)
-        return f
-    return wrapper
 
 
 class _Parser(ConfigParser.ConfigParser):
@@ -302,27 +279,5 @@ class _Parser(ConfigParser.ConfigParser):
         else:
             self.read(file)
         return self.as_dict()
-
-
-def log_config():
-    """Log engine configuration parameters."""
-    cherrypy.log("Server parameters:", 'CONFIG')
-    
-    server_vars = [
-                  'environment',
-                  'log.screen',
-                  'log.error.file',
-                  'server.protocol_version',
-                  'server.socket_host',
-                  'server.socket_port',
-                  'server.socket_file',
-                  'server.reverse_dns',
-                  'server.socket_queue_size',
-                  'server.thread_pool',
-                 ]
-    
-    for var in server_vars:
-        cherrypy.log("  %s: %s" % (var, get(var)), 'CONFIG')
-
 
 del ConfigParser

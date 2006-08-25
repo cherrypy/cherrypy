@@ -94,7 +94,9 @@ def setup_server():
         pipe._cp_config = {'hooks.before_request_body': pipe_body}
         
         # Multiple decorators; include kwargs just for fun.
+        # XXX Note that encode must run before gzip.
         def decorated_euro(self):
+            print cherrypy.request.hooks.callbacks
             yield u"Hello,"
             yield u"world"
             yield europoundUnicode

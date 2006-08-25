@@ -32,7 +32,7 @@ def setup_server():
             return "not exposed"
         
         def confvalue(self):
-            return cherrypy.config.get("user")
+            return cherrypy.request.config.get("user")
         confvalue.exposed = True
     
     def mapped_func(self, ID=None):

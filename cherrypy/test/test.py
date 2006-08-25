@@ -39,7 +39,7 @@ class TestHarness(object):
         print
         
         if isinstance(conf, basestring):
-            conf = cherrypy.config.dict_from_config_file(conf)
+            conf = cherrypy.config._Parser().dict_from_file(conf)
         baseconf = {'server.socket_host': '127.0.0.1',
                     'server.socket_port': self.port,
                     'server.thread_pool': 10,

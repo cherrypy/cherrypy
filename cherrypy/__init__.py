@@ -3,10 +3,12 @@
 __version__ = '3.0.0alpha'
 
 import logging as _logging
+import os as _os
+_localdir = _os.path.dirname(__file__)
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound
 from cherrypy._cperror import WrongConfigValue, TimeoutError
-from cherrypy import config
+error_page = {}
 
 from cherrypy import _cptools
 tools = _cptools.default_toolbox
@@ -36,55 +38,56 @@ except ImportError:
 # in a thread-safe way.
 serving = _local()
 
-# Bind dummy instances of default request/response
-# (in the main thread only!) to help introspection.
-serving.request = _cprequest.Request("localhost", "11111", "localhost")
-serving.response = _cprequest.Response()
-
 
 class _ThreadLocalProxy(object):
     
-    __slots__ = ['__attrname__', '__dict__']
+    __slots__ = ['__attrname__', '_default_child', '__dict__']
     
-    def __init__(self, attrname):
+    def __init__(self, attrname, default):
         self.__attrname__ = attrname
+        self._default_child = default
+    
+    def _get_child(self):
+        try:
+            return getattr(serving, self.__attrname__)
+        except AttributeError:
+            # Bind dummy instances of default objects to help introspection.
+            return self._default_child
     
     def __getattr__(self, name):
-        childobject = getattr(serving, self.__attrname__)
-        return getattr(childobject, name)
+        return getattr(self._get_child(), name)
     
     def __setattr__(self, name, value):
-        if name == "__attrname__":
-            object.__setattr__(self, "__attrname__", value)
+        if name in ("__attrname__", "_default_child"):
+            object.__setattr__(self, name, value)
         else:
-            childobject = getattr(serving, self.__attrname__)
-            setattr(childobject, name, value)
+            setattr(self._get_child(), name, value)
     
     def __delattr__(self, name):
-        childobject = getattr(serving, self.__attrname__)
-        delattr(childobject, name)
+        delattr(self._get_child(), name)
     
     def _get_dict(self):
-        childobject = getattr(serving, self.__attrname__)
+        childobject = self._get_child()
         d = childobject.__class__.__dict__.copy()
         d.update(childobject.__dict__)
         return d
     __dict__ = property(_get_dict)
     
     def __getitem__(self, key):
-        childobject = getattr(serving, self.__attrname__)
-        return childobject[key]
+        return self._get_child()[key]
     
     def __setitem__(self, key, value):
-        childobject = getattr(serving, self.__attrname__)
-        childobject[key] = value
+        self._get_child()[key] = value
 
 
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "serving" object)
-request = _ThreadLocalProxy('request')
-response = _ThreadLocalProxy('response')
+from cherrypy.lib import http as _http
+request = _ThreadLocalProxy('request',
+                            _cprequest.Request(_http.Host("localhost", 80),
+                                               _http.Host("localhost", 1111)))
+response = _ThreadLocalProxy('response', _cprequest.Response())
 
 # Create thread_data object as a thread-specific all-purpose storage
 thread_data = _local()
@@ -102,56 +105,59 @@ def logtime():
     return '%02d/%s/%04d:%02d:%02d:%02d' % (
         now.day, month, now.year, now.hour, now.minute, now.second)
 
-def log_access():
-    """Default method for logging access"""
-    tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-    s = tmpl % {'h': request.remote.name or request.remote.ip,
-                'l': '-',
-                'u': getattr(request, "login", None) or "-",
-                't': logtime(),
-                'r': request.request_line,
-                's': response.status.split(" ", 1)[0],
-                'b': response.headers.get('Content-Length', '') or "-",
-                'f': request.headers.get('referer', ''),
-                'a': request.headers.get('user-agent', ''),
-                }
-    try:
-        request.app.access_log.log(_logging.INFO, s)
-    except:
-        log(traceback=True)
-
 
 _error_log = _logging.getLogger("cherrypy.error")
 _error_log.setLevel(_logging.DEBUG)
-
 _access_log = _logging.getLogger("cherrypy.access")
 _access_log.setLevel(_logging.INFO)
 
-def _log_message(msg, context = '', severity = _logging.DEBUG):
-    """Default method for logging messages (error log).
-    
-    This is not just for errors! Applications may call this at any time to
-    log application-specific information.
-    """
-    
-    try:
-        log = request.app.error_log
-    except AttributeError:
-        log = _error_log
-    log.log(severity, ' '.join((logtime(), context, msg)))
 
-def log(msg='', context='', severity=_logging.DEBUG, traceback=False):
-    """Syntactic sugar for writing to the (error) log.
+class LogManager(object):
     
-    This is not just for errors! Applications may call this at any time to
-    log application-specific information.
-    """
-    if traceback:
-        from cherrypy import _cperror
-        msg += _cperror.format_exc()
-    logfunc = config.get('log.error.function', _log_message)
-    logfunc(msg, context, severity)
+    screen = True
+    error_file = _os.path.join(_os.getcwd(), _localdir, "error.log")
+    # Using an access file makes CP about 10% slower.
+    access_file = ''
+    
+    def error(self, msg='', context='', severity=_logging.DEBUG, traceback=False):
+        """Write to the 'error' log.
+        
+        This is not just for errors! Applications may call this at any time
+        to log application-specific information.
+        """
+        if traceback:
+            from cherrypy import _cperror
+            msg += _cperror.format_exc()
+        
+        try:
+            elog = request.app.error_log
+        except AttributeError:
+            elog = _error_log
+        elog.log(severity, ' '.join((logtime(), context, msg)))
+    
+    def __call__(self, *args, **kwargs):
+        return self.error(*args, **kwargs)
+    
+    def access(self):
+        """Default method for logging access"""
+        tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+        s = tmpl % {'h': request.remote.name or request.remote.ip,
+                    'l': '-',
+                    'u': getattr(request, "login", None) or "-",
+                    't': logtime(),
+                    'r': request.request_line,
+                    's': response.status.split(" ", 1)[0],
+                    'b': response.headers.get('Content-Length', '') or "-",
+                    'f': request.headers.get('referer', ''),
+                    'a': request.headers.get('user-agent', ''),
+                    }
+        try:
+            request.app.access_log.log(_logging.INFO, s)
+        except:
+            self.error(traceback=True)
 
+
+log = LogManager()
 
 
 #                       Helper functions for CP apps                       #
@@ -229,3 +235,7 @@ def expose(func=None, alias=None):
             alias = func
         return expose_
 
+
+# Set up config last so it can wrap other top-level objects
+from cherrypy import _cpconfig
+config = _cpconfig.Config()

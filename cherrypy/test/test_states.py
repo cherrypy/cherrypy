@@ -86,8 +86,8 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(cherrypy.engine.state, 1)
         
         if self.server_class:
-            host = cherrypy.config.get('server.socket_host')
-            port = cherrypy.config.get('server.socket_port')
+            host = cherrypy.server.socket_host
+            port = cherrypy.server.socket_port
             self.assertRaises(IOError, cherrypy._cpserver.check_port, host, port)
         
         # The db_connection should be running now
@@ -231,8 +231,8 @@ class ServerStateTests(helper.CPWebCase):
                                       "test_states_demo.py")
             
             # Start the demo script in a new process
-            host = cherrypy.config.get("server.socket_host")
-            port = cherrypy.config.get("server.socket_port")
+            host = cherrypy.server.socket_host
+            port = cherrypy.server.socket_port
             cherrypy._cpserver.wait_for_free_port(host, port)
             os.spawnl(os.P_NOWAIT, sys.executable, sys.executable,
                       demoscript, host, str(port))

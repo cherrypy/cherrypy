@@ -120,8 +120,7 @@ def _wsgi_callable(environ, start_response, app):
 class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
     
     def parse_request(self):
-        mhs = int(cherrypy.config.get('server.max_request_header_size',
-                                      500 * 1024))
+        mhs = cherrypy.server.max_request_header_size
         if mhs > 0:
             self.rfile = http.SizeCheckWrapper(self.rfile, mhs)
         
@@ -135,7 +134,7 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
         """Decode the 'chunked' transfer coding."""
         if isinstance(self.rfile, http.SizeCheckWrapper):
             self.rfile = self.rfile.rfile
-        mbs = int(cherrypy.config.get('request.max_body_size', 100 * 1024 * 1024))
+        mbs = cherrypy.server.max_request_body_size
         if mbs > 0:
             self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
         try:
@@ -164,23 +163,21 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
     ConnectionClass = CPHTTPConnection
     
     def __init__(self):
-        conf = cherrypy.config.get
-        
-        sockFile = conf('server.socket_file')
+        server = cherrypy.server
+        sockFile = server.socket_file
         if sockFile:
             bind_addr = sockFile
         else:
-            bind_addr = (conf('server.socket_host'),
-                         conf('server.socket_port'))
+            bind_addr = (server.socket_host, server.socket_port)
         
         s = _cpwsgiserver.CherryPyWSGIServer
         # We could just pass cherrypy.tree, but by passing tree.apps,
         # we get correct SCRIPT_NAMEs as early as possible.
         s.__init__(self, bind_addr, cherrypy.tree.apps.items(),
-                   conf('server.thread_pool'),
-                   conf('server.socket_host'),
-                   request_queue_size = conf('server.socket_queue_size'),
-                   timeout = conf('server.socket_timeout'),
+                   server.thread_pool,
+                   server.socket_host,
+                   request_queue_size = server.socket_queue_size,
+                   timeout = server.socket_timeout,
                    )
-        s.protocol = conf('server.protocol_version', 'HTTP/1.1')
+        s.protocol = server.protocol_version
 
