@@ -432,9 +432,7 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        log_access = cherrypy.log.access
-        if log_access:
-            log_access()
+        cherrypy.log.access()
         
         return cherrypy.response
     

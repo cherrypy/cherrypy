@@ -1,6 +1,4 @@
-import logging
-
-from cherrypy import _cpconfig, _cpwsgi
+from cherrypy import _cpconfig, _cplogging, _cpwsgi
 
 
 class Application(object):
@@ -21,12 +19,7 @@ class Application(object):
     """
     
     def __init__(self, root, script_name="", conf=None):
-        self.access_log = log = logging.getLogger("cherrypy.access.%s" % id(self))
-        log.setLevel(logging.INFO)
-        
-        self.error_log = log = logging.getLogger("cherrypy.error.%s" % id(self))
-        log.setLevel(logging.DEBUG)
-        
+        self.log = _cplogging.LogManager(id(self))
         self.root = root
         self.script_name = script_name
         self.conf = {}
@@ -49,8 +42,11 @@ class Application(object):
         
         # Create log handlers as specified in config.
         rootconf = self.conf.get("/", {})
-        _cpconfig._configure_builtin_logging(rootconf, self.access_log, "log.access_file")
-        _cpconfig._configure_builtin_logging(rootconf, self.error_log)
+        for k, v in rootconf.iteritems():
+            atoms = k.split(".", 1)
+            namespace = atoms[0]
+            if namespace == "log":
+                setattr(self.log, atoms[1], v)
     
     def guess_abs_path(self):
         """Guess the absolute URL from server.socket_host and script_name.

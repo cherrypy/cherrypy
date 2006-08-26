@@ -2,7 +2,6 @@
 
 __version__ = '3.0.0alpha'
 
-import logging as _logging
 import os as _os
 _localdir = _os.path.dirname(__file__)
 
@@ -93,70 +92,28 @@ response = _ThreadLocalProxy('response', _cprequest.Response())
 thread_data = _local()
 
 
+from cherrypy import _cplogging
 
-#                                 Logging                                 #
-
-
-_error_log = _logging.getLogger("cherrypy.error")
-_error_log.setLevel(_logging.DEBUG)
-_access_log = _logging.getLogger("cherrypy.access")
-_access_log.setLevel(_logging.INFO)
-
-
-class _LogManager(object):
-    
-    screen = True
-    error_file = _os.path.join(_os.getcwd(), _localdir, "error.log")
-    # Using an access file makes CP about 10% slower.
-    access_file = ''
-    
-    def error(self, msg='', context='', severity=_logging.DEBUG, traceback=False):
-        """Write to the 'error' log.
-        
-        This is not just for errors! Applications may call this at any time
-        to log application-specific information.
-        """
-        if traceback:
-            from cherrypy import _cperror
-            msg += _cperror.format_exc()
-        
-        try:
-            elog = request.app.error_log
-        except AttributeError:
-            elog = _error_log
-        elog.log(severity, ' '.join((self.time(), context, msg)))
+class _GlobalLogManager(_cplogging.LogManager):
     
     def __call__(self, *args, **kwargs):
-        return self.error(*args, **kwargs)
+        try:
+            log = request.app.log
+        except AttributeError:
+            log = self
+        return log.error(*args, **kwargs)
     
     def access(self):
-        """Write to the access log."""
-        tmpl = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-        s = tmpl % {'h': request.remote.name or request.remote.ip,
-                    'l': '-',
-                    'u': getattr(request, "login", None) or "-",
-                    't': self.time(),
-                    'r': request.request_line,
-                    's': response.status.split(" ", 1)[0],
-                    'b': response.headers.get('Content-Length', '') or "-",
-                    'f': request.headers.get('referer', ''),
-                    'a': request.headers.get('user-agent', ''),
-                    }
         try:
-            request.app.access_log.log(_logging.INFO, s)
-        except:
-            self.error(traceback=True)
-    
-    def time(self):
-        """Return now() in Apache Common Log Format (no timezone)."""
-        import datetime, rfc822
-        now = datetime.datetime.now()
-        month = rfc822._monthnames[now.month - 1].capitalize()
-        return ('[%02d/%s/%04d:%02d:%02d:%02d]' %
-                (now.day, month, now.year, now.hour, now.minute, now.second))
+            return request.app.log.access()
+        except AttributeError:
+            return _cplogging.LogManager.access(self)
 
 
-log = _LogManager()
+log = _GlobalLogManager()
+log.error_file = _os.path.join(_os.getcwd(), _localdir, "error.log")
+# Using an access file makes CP about 10% slower. Leave off by default.
+log.access_file = ''
 
 
 #                       Helper functions for CP apps                       #

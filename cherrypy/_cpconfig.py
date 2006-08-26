@@ -77,11 +77,6 @@ config, and only when you use cherrypy.config.update.
 """
 
 import ConfigParser
-import logging as _logging
-_logfmt = _logging.Formatter("%(message)s")
-import os as _os
-import types
-
 import cherrypy
 
 
@@ -161,9 +156,6 @@ class Config(dict):
         # Must use this idiom in order to hit our custom __setitem__.
         for k, v in conf.iteritems():
             self[k] = v
-        
-        _configure_builtin_logging(self, cherrypy._error_log)
-        _configure_builtin_logging(self, cherrypy._access_log, "log.access_file")
     
     def __setitem__(self, k, v):
         dict.__setitem__(self, k, v)
@@ -187,50 +179,6 @@ class Config(dict):
             return f
         return wrapper
     wrap = staticmethod(wrap)
-
-
-def _add_builtin_screen_handler(log):
-    import sys
-    h = _logging.StreamHandler(sys.stdout)
-    h.setLevel(_logging.DEBUG)
-    h.setFormatter(_logfmt)
-    h._cpbuiltin = "screen"
-    log.addHandler(h)
-
-def _add_builtin_file_handler(log, fname):
-    h = _logging.FileHandler(fname)
-    h.setLevel(_logging.DEBUG)
-    h.setFormatter(_logfmt)
-    h._cpbuiltin = "file"
-    log.addHandler(h)
-
-def _configure_builtin_logging(conf, log, filekey="log.error_file"):
-    """Create/destroy builtin log handlers as needed from conf."""
-    
-    existing = dict([(getattr(x, "_cpbuiltin", None), x)
-                     for x in log.handlers])
-    h = existing.get("screen")
-    screen = conf.get('log.screen')
-    if screen:
-        if not h:
-            _add_builtin_screen_handler(log)
-    elif h:
-        log.handlers.remove(h)
-    
-    h = existing.get("file")
-    fname = conf.get(filekey)
-    if fname:
-        if h:
-            if h.baseFilename != _os.path.abspath(fname):
-                h.close()
-                log.handlers.remove(h)
-                _add_builtin_file_handler(log, fname)
-        else:
-            _add_builtin_file_handler(log, fname)
-    else:
-        if h:
-            h.close()
-            log.handlers.remove(h)
 
 
 class _Parser(ConfigParser.ConfigParser):
