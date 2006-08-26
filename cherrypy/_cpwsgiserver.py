@@ -385,8 +385,12 @@ class CherryPyWSGIServer(object):
             # accept() by default
             return
         except socket.error, x:
-            if x.args[1] == "Bad file descriptor":
+            msg = x.args[1]
+            if msg == "Bad file descriptor":
                 # Our socket was closed
+                return
+            if msg == "Resource temporarily unavailable":
+                # Just try again. See http://www.cherrypy.org/ticket/479.
                 return
             raise
     
