@@ -184,11 +184,7 @@ def get(key, default_value=None, return_section=False, path = None):
         return result
 
 def getAll(key):
-    """Lookup key in the current node and all of its parent nodes
-    as a list of path, value pairs.
-    """
-    # Needed by the session filter
-    
+    """Return a list of (path, value) pairs for current node and all parents."""
     try:
         results = [('global', configs['global'][key])]
     except KeyError:
@@ -199,10 +195,15 @@ def getAll(key):
     except AttributeError:
         return results
     
-    pathList = path.split('/')
+    try:
+        results.append(('/', configs['/'][key]))
+    except KeyError:
+        pass
     
-    for n in xrange(1, len(pathList)):
-        path = '/' + '/'.join(pathList[0:n+1])
+    atoms = path.strip('/').split('/')
+    path = ""
+    for atom in atoms:
+        path = path + "/" + atom
         try:
             results.append((path, configs[path][key]))
         except KeyError:

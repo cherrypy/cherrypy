@@ -21,6 +21,10 @@ def setup_server():
         index.exposed = True
         bar = index
         nex = index
+        
+        def getall(self, key):
+            return repr(cherrypy.config.getAll(key))
+        getall.exposed = True
     
     class Env:
         def index(self, key):
@@ -90,6 +94,9 @@ class ConfigTests(helper.CPWebCase):
         for path, key, expected in tests:
             self.getPage(path + "?key=" + key)
             self.assertBody(expected)
+        
+        self.getPage("/foo/getall?key=foo")
+        self.assertBody("[('/', 'this'), ('/foo', 'this2')]")
     
     def testUnrepr(self):
         err = ('WrongConfigValue: ("section: '
