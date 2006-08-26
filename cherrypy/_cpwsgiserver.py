@@ -205,7 +205,8 @@ class HTTPRequest(object):
         environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
         environ["CONTENT_LENGTH"] = headers.getheader("Content-length") or ""
         
-        for k in headers:
+        # Must use keys() here for Python 2.3 (rfc822.Message had no __iter__).
+        for k in headers.keys():
             envname = "HTTP_" + k.upper().replace("-", "_")
             if k in comma_separated_headers:
                 environ[envname] = ", ".join(headers.getheaders(k))
@@ -379,18 +380,26 @@ class HTTPConnection(object):
             if errno not in socket_errors_to_ignore:
                 if req:
                     req.simple_response("500 Internal Server Error",
-                                        traceback.format_exc())
+                                        format_exc())
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
             if req:
-                req.simple_response("500 Internal Server Error",
-                                    traceback.format_exc())
+                req.simple_response("500 Internal Server Error", format_exc())
     
     def close(self):
         self.rfile.close()
         self.wfile.close()
         self.socket.close()
+
+
+def format_exc(limit=None):
+    """Like print_exc() but return a string. Backport for Python 2.3."""
+    try:
+        etype, value, tb = sys.exc_info()
+        return ''.join(traceback.format_exception(etype, value, tb, limit))
+    finally:
+        etype = value = tb = None
 
 
 _SHUTDOWNREQUEST = None
