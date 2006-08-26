@@ -121,8 +121,8 @@ class MainTool(Tool):
         wrapper.exposed = True
         return wrapper
     
-    def _wrapper(self):
-        if self.callable(**self._merged_args()):
+    def _wrapper(self, **kwargs):
+        if self.callable(**kwargs):
             cherrypy.request.handler = None
     
     def _setup(self):
@@ -131,9 +131,10 @@ class MainTool(Tool):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        # Don't pass conf (or our wrapper will get wrapped!)
         f = getattr(self.callable, "failsafe", False)
-        cherrypy.request.hooks.attach(self._point, self._wrapper, failsafe=f)
+        p = getattr(self.callable, "priority", 50)
+        cherrypy.request.hooks.attach(self._point, self._wrapper, failsafe=f,
+                                      priority=p, **self._merged_args())
 
 
 class ErrorTool(Tool):

@@ -8,10 +8,10 @@ _localdir = _os.path.dirname(__file__)
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound
 from cherrypy._cperror import WrongConfigValue, TimeoutError
-error_page = {}
 
 from cherrypy import _cptools
 tools = _cptools.default_toolbox
+Tool = _cptools.Tool
 
 from cherrypy import _cptree
 tree = _cptree.Tree()
@@ -36,7 +36,7 @@ except ImportError:
 # objects. In this way, we can easily dump those objects when we stop/start
 # a new HTTP conversation, yet still refer to them as module-level globals
 # in a thread-safe way.
-serving = _local()
+_serving = _local()
 
 
 class _ThreadLocalProxy(object):
@@ -49,7 +49,7 @@ class _ThreadLocalProxy(object):
     
     def _get_child(self):
         try:
-            return getattr(serving, self.__attrname__)
+            return getattr(_serving, self.__attrname__)
         except AttributeError:
             # Bind dummy instances of default objects to help introspection.
             return self._default_child
@@ -82,7 +82,7 @@ class _ThreadLocalProxy(object):
 
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
-#   to the "serving" object)
+#   to the "_serving" object)
 from cherrypy.lib import http as _http
 request = _ThreadLocalProxy('request',
                             _cprequest.Request(_http.Host("localhost", 80),
@@ -112,7 +112,7 @@ _access_log = _logging.getLogger("cherrypy.access")
 _access_log.setLevel(_logging.INFO)
 
 
-class LogManager(object):
+class _LogManager(object):
     
     screen = True
     error_file = _os.path.join(_os.getcwd(), _localdir, "error.log")
@@ -157,7 +157,7 @@ class LogManager(object):
             self.error(traceback=True)
 
 
-log = LogManager()
+log = _LogManager()
 
 
 #                       Helper functions for CP apps                       #

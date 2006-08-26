@@ -12,62 +12,70 @@ from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import http
 
 
-class HookMap(object):
-    """A map of call points to callback lists.
+class Hook(object):
+    """A callback and its metadata: failsafe, priority, and kwargs.
     
-    callbacks: a dict of the form {call point: [callbacks]}.
-        Each 'call point' is a name and each callback is a callable
-        that takes no arguments.
-    failsafes: a dict of the form {callback: failsafe}. If 'failsafe' is
-        True, the callback is guaranteed to run even if other callbacks
-        from the same call point raise exceptions. False values are
-        permissible, but ignored.
+    failsafe: If True, the callback is guaranteed to run even if other
+        callbacks from the same call point raise exceptions.
+    priority: Defines the order of execution for a list of Hooks.
+        Defaults to 50. Priority numbers should be limited to the
+        closed interval [0, 100], but values outside this range are
+        acceptable, as are fractional values.
     """
     
-    def __init__(self, points=None):
-        points = points or []
-        self.callbacks = dict([(point, []) for point in points])
-        self.failsafes = {}
-    
-    def attach(self, point, callback, failsafe=None, **kwargs):
-        """Append callback at the given call point.
+    def __init__(self, callback, failsafe=None, priority=None, **kwargs):
+        self.callback = callback
         
-        If failsafe is True, the supplied callback is guaranteed to
-            run, even is other callbacks at the same call point fail.
-            If failsafe is None or not given, callback.failsafe will
-            be used if present; otherwise, False is assumed.
-        If additional keyword args are provided, they will be passed
-            to the given callback for each call.
-        """
-        func = callback
-        if kwargs:
-            def wrapper():
-                callback(**kwargs)
-            func = wrapper
-            name = getattr(callback, "__name__", None)
-            if name:
-                func.__name__ = name
-        self.callbacks[point].append(func)
         if failsafe is None:
-            failsafe = getattr(callback, 'failsafe', False)
-        self.failsafes[func] = failsafe
+            failsafe = getattr(callback, "failsafe", False)
+        self.failsafe = failsafe
+        
+        if priority is None:
+            priority = getattr(callback, "priority", 50)
+        self.priority = priority
+        
+        self.kwargs = kwargs
+    
+    def __cmp__(self, other):
+        return cmp(self.priority, other.priority)
+    
+    def __call__(self):
+        return self.callback(**self.kwargs)
+
+
+class HookMap(dict):
+    """A map of call points to lists of callbacks (Hook objects)."""
+    
+    def __new__(cls, points=None):
+        d = dict.__new__(cls)
+        for p in points or []:
+            d[p] = []
+        return d
+    
+    def __init__(self, *a, **kw):
+        pass
+    
+    def attach(self, point, callback, failsafe=None, priority=None, **kwargs):
+        """Append a new Hook made from the supplied arguments."""
+        self[point].append(Hook(callback, failsafe, priority, **kwargs))
     
     def run(self, point):
-        """Execute all registered callbacks for the given point."""
+        """Execute all registered Hooks (callbacks) for the given point."""
         if cherrypy.response.timed_out:
             raise cherrypy.TimeoutError()
         
         exc = None
-        for callback in self.callbacks[point]:
-            # Some hookpoints guarantee all callbacks are run even if
-            # others at the same hookpoint fail. We will still log the
-            # failure, but proceed on to the next callback. The only way
-            # to stop all processing from one of these callbacks is
-            # to raise SystemExit and stop the whole server. So, trap
-            # your own errors in these callbacks!
-            if exc is None or self.failsafes.get(callback, False):
+        hooks = self[point]
+        hooks.sort()
+        for hook in hooks:
+            # Some hooks are guaranteed to run even if others at
+            # the same hookpoint fail. We will still log the failure,
+            # but proceed on to the next hook. The only way
+            # to stop all processing from one of these hooks is
+            # to raise SystemExit and stop the whole server.
+            if exc is None or hook.failsafe:
                 try:
-                    callback()
+                    hook()
                 except (KeyboardInterrupt, SystemExit):
                     raise
                 except (cherrypy.HTTPError, cherrypy.HTTPRedirect,
@@ -319,19 +327,22 @@ class Request(object):
         
         self.closed = False
         self.redirections = []
+        
+        # Put a *copy* of the class error_page into self.
+        self.error_page = self.error_page.copy()
     
     def close(self):
         if not self.closed:
             self.closed = True
             self.hooks.run('on_end_request')
             
-            s = (self, cherrypy.serving.response)
+            s = (self, cherrypy._serving.response)
             try:
                 cherrypy.engine.servings.remove(s)
             except ValueError:
                 pass
             
-            cherrypy.serving.__dict__.clear()
+            cherrypy._serving.__dict__.clear()
     
     def run(self, method, path, query_string, req_protocol, headers, rfile):
         """Process the Request.
@@ -531,8 +542,6 @@ class Request(object):
     
     def tool_up(self):
         """Process self.config, populate self.toolmap and set up each tool."""
-        self.error_page = cherrypy.error_page.copy()
-        
         # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
         self.toolmap = tm = {}
         reqconf = self.config
@@ -545,11 +554,16 @@ class Request(object):
                 bucket[arg] = reqconf[k]
             elif namespace == "hooks":
                 # Attach bare hooks declared in config.
-                hookpoint = atoms[1]
+                # Use split again to allow multiple hooks for a single
+                # hookpoint per path (e.g. "hooks.before_main.1").
+                # Little-known fact you only get from reading source ;)
+                hookpoint = atoms[1].split(".", 1)[0]
                 v = reqconf[k]
                 if isinstance(v, basestring):
                     v = cherrypy.lib.attributes(v)
-                self.hooks.attach(hookpoint, v)
+                if not isinstance(v, Hook):
+                    v = Hook(v)
+                self.hooks[hookpoint].append(v)
             elif namespace == "request":
                 # Override properties of this request object.
                 setattr(self, atoms[1], reqconf[k])

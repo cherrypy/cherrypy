@@ -6,7 +6,7 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy import _cptools, tools
+from cherrypy import tools
 
 
 europoundUnicode = u'\x80\xa3'
@@ -16,7 +16,7 @@ def setup_server():
     def check_access():
         if not getattr(cherrypy.request, "login", None):
             raise cherrypy.HTTPError(401)
-    tools.check_access = _cptools.Tool('before_request_body', check_access)
+    tools.check_access = cherrypy.Tool('before_request_body', check_access)
     
     def numerify():
         def number_it(body):
@@ -26,7 +26,7 @@ def setup_server():
                 yield chunk
         cherrypy.response.body = number_it(cherrypy.response.body)
     
-    class NumTool(_cptools.Tool):
+    class NumTool(cherrypy.Tool):
         def _setup(self):
             def makemap():
                 m = self._merged_args().get("map", {})
@@ -36,13 +36,13 @@ def setup_server():
             def critical():
                 cherrypy.request.error_response = cherrypy.HTTPError(502).set_response
             critical.failsafe = True
-            cherrypy.request.hooks.attach('on_start_resource', critical)
             
+            cherrypy.request.hooks.attach('on_start_resource', critical)
             cherrypy.request.hooks.attach(self._point, self.callable)
     
     tools.numerify = NumTool('before_finalize', numerify)
     
-    # It's not mandatory to inherit from _cptools.Tool.
+    # It's not mandatory to inherit from cherrypy.Tool.
     class NadsatTool:
         
         def __init__(self):
@@ -57,6 +57,7 @@ def setup_server():
                     chunk = chunk.replace("piece", "lomtick")
                     yield chunk
             cherrypy.response.body = nadsat_it_up(cherrypy.response.body)
+        nadsat.priority = 0
         
         def cleanup(self):
             # This runs after the request has been completely written out.
@@ -67,7 +68,7 @@ def setup_server():
         def _setup(self):
             cherrypy.request.counter = self.counter = self.counter + 1
             self.ended[cherrypy.request.counter] = False
-            cherrypy.request.hooks.callbacks['before_finalize'].insert(0, self.nadsat)
+            cherrypy.request.hooks.attach('before_finalize', self.nadsat)
             cherrypy.request.hooks.attach('on_end_request', self.cleanup)
     tools.nadsat = NadsatTool()
     
@@ -96,7 +97,6 @@ def setup_server():
         # Multiple decorators; include kwargs just for fun.
         # XXX Note that encode must run before gzip.
         def decorated_euro(self):
-            print cherrypy.request.hooks.callbacks
             yield u"Hello,"
             yield u"world"
             yield europoundUnicode

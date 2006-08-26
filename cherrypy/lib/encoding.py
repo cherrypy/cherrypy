@@ -216,4 +216,4 @@ def gzip(compress_level=9, mime_types=['text/html', 'text/plain']):
                 zipit()
             return
     cherrypy.HTTPError(406, "identity, gzip").set_response()
-
+gzip.priority = 90

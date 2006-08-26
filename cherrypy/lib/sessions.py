@@ -380,7 +380,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     storage_class = storage_type.title() + 'Session'
     kwargs['timeout'] = timeout
     kwargs['clean_freq'] = clean_freq
-    cherrypy.serving.session = sess = globals()[storage_class](id, **kwargs)
+    cherrypy._serving.session = sess = globals()[storage_class](id, **kwargs)
     
     if locking == 'implicit':
         sess.acquire_lock()

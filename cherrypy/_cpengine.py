@@ -209,8 +209,8 @@ class Engine(object):
                     func(i)
             req = self.request_class(local_host, remote_host, scheme,
                                      server_protocol)
-        cherrypy.serving.request = req
-        cherrypy.serving.response = resp = self.response_class()
+        cherrypy._serving.request = req
+        cherrypy._serving.response = resp = self.response_class()
         self.servings.append((req, resp))
         return req
     
