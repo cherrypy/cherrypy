@@ -3,6 +3,7 @@ test.prefer_parent_path()
 
 import httplib
 import socket
+import time
 
 import cherrypy
 from cherrypy.test import webtest
@@ -101,6 +102,57 @@ class ConnectionTests(helper.CPWebCase):
         
         # Make another request on the same connection, which should error.
         self.assertRaises(httplib.NotConnected, self.getPage, "/")
+    
+    def test_HTTP11_Timeout(self):
+        if cherrypy.server.protocol_version != "HTTP/1.1":
+            print "skipped ",
+            return
+        
+        old_timeout = None
+        try:
+            httpserver = cherrypy.server.httpservers.keys()[0]
+            old_timeout = httpserver.timeout
+        except AttributeError:
+            print "skipped ",
+            return
+        
+        try:
+            httpserver.timeout = 0.1
+            self.PROTOCOL = "HTTP/1.1"
+            
+            # Make an initial request
+            conn = httplib.HTTPConnection(self.HOST, self.PORT)
+            conn.auto_open = False
+            conn.connect()
+            conn.putrequest("GET", "/", skip_host=True)
+            conn.putheader("Host", self.HOST)
+            conn.endheaders()
+            response = conn.response_class(conn.sock, method="GET")
+            response.begin()
+            self.assertEqual(response.status, 200)
+            
+            # Make a second request on the same socket
+            conn._output('GET /hello HTTP/1.1')
+            conn._output("Host: %s" % self.HOST)
+            conn._send_output()
+            response = conn.response_class(conn.sock, method="GET")
+            response.begin()
+            self.assertEqual(response.status, 200)
+            
+            # Wait for our socket timeout
+            time.sleep(0.2)
+            
+            # Make another request on the same socket, which should error
+            conn._output('GET /hello HTTP/1.1')
+            conn._output("Host: %s" % self.HOST)
+            conn._send_output()
+            response = conn.response_class(conn.sock, method="GET")
+            self.assertRaises(socket.error, response.begin)
+            
+            conn.close()
+        finally:
+            if old_timeout is not None:
+                httpserver.timeout = old_timeout
     
     def test_HTTP11_pipelining(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":

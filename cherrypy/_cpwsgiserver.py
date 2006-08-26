@@ -54,14 +54,17 @@ class HTTPRequest(object):
         self.close_connection = False
     
     def parse_request(self):
-        request_line = None
-        try:
-            request_line = self.rfile.readline()
-        except socket.timeout:
-            self.simple_response("408 Request Timeout")
-            return
-        
+        # HTTP/1.1 connections are persistent by default. If a client
+        # requests a page, then idles (leaves the connection open),
+        # then rfile.readline() will raise socket.error("timed out").
+        # Note that it does this based on the value given to settimeout(),
+        # and doesn't need the client to request or acknowledge the close
+        # (although your TCP stack might suffer for it: cf Apache's history
+        # with FIN_WAIT_2).
+        request_line = self.rfile.readline()
         if not request_line:
+            # Force self.ready = False so the connection will close.
+            self.ready = False
             return
         
         server = self.connection.server
