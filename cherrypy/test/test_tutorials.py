@@ -9,7 +9,7 @@ from cherrypy.test import helper
 
 def setup_server():
     
-    conf = cherrypy.config.globalconf.copy()
+    conf = cherrypy.config.copy()
     
     def load_tut_module(name):
         """Import or reload tutorial module as needed."""

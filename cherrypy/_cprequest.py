@@ -40,6 +40,7 @@ class Hook(object):
         return cmp(self.priority, other.priority)
     
     def __call__(self):
+        """Run self.callback(**self.kwargs)."""
         return self.callback(**self.kwargs)
 
 
@@ -101,7 +102,7 @@ class PageHandler(object):
 
 
 class LateParamPageHandler(PageHandler):
-    """When passing cherrypy.request.params to the page handler, we don't
+    """When passing cherrypy.request.params to the page handler, we do not
     want to capture that dict too early; we want to give tools like the
     decoding tool a chance to modify the params dict in-between the lookup
     of the handler and the actual calling of the handler. This subclass
@@ -174,7 +175,7 @@ class Dispatcher(object):
         
         def set_conf():
             """Set cherrypy.request.config."""
-            base = cherrypy.config.globalconf.copy()
+            base = cherrypy.config.copy()
             # Note that we merge the config from each node
             # even if that node was None.
             for name, obj, conf, curpath in object_trail:

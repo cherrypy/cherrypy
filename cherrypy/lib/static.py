@@ -146,7 +146,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     if not os.path.isabs(dir):
         if not root:
             msg = "Static dir requires an absolute dir (or root)."
-            raise cherrypy.WrongConfigValue(msg)
+            raise ValueError(msg)
         dir = os.path.join(root, dir)
     
     # Determine where we are in the object tree relative to 'section'
@@ -182,7 +182,7 @@ def staticfile(filename, root=None, match="", content_types=None):
     if not os.path.isabs(filename):
         if not root:
             msg = "Static tool requires an absolute filename (got '%s')." % filename
-            raise cherrypy.WrongConfigValue(msg)
+            raise ValueError(msg)
         filename = os.path.join(root, filename)
     
     return _attempt(filename, content_types)

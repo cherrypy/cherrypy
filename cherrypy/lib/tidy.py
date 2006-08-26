@@ -10,7 +10,7 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
     """Run cherrypy.response through Tidy.
     
     Note that we use the standalone Tidy tool rather than the python
-    mxTidy module. This is because this module doesn't seem to be
+    mxTidy module. This is because this module does not seem to be
     stable and it crashes on some HTML pages (which means that the
     server would also crash)
     """

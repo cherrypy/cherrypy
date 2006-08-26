@@ -46,7 +46,7 @@ class Engine(object):
     request_class = _cprequest.Request
     response_class = _cprequest.Response
     deadlock_poll_freq = 60
-    autoreload_on = False
+    autoreload_on = True
     autoreload_frequency = 1
     
     def __init__(self):
@@ -172,7 +172,7 @@ class Engine(object):
             cherrypy.log("CherryPy shut down", "ENGINE")
     
     def restart(self):
-        """Restart the application engine (doesn't block)."""
+        """Restart the application engine (does not block)."""
         self.stop()
         self.start(blocking=False)
     
@@ -215,7 +215,7 @@ class Engine(object):
         return req
     
     def monitor(self):
-        """Check timeout on all responses."""
+        """Check timeout on all responses (starts a recurring Timer)."""
         if self.state == STARTED:
             for req, resp in self.servings:
                 resp.check_timeout()

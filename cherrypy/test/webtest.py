@@ -12,8 +12,8 @@ both the client (your WebCase tests) and the server in the same process
 
 When an error occurs in the framework, call server_error. It will print
 the traceback to stdout, and keep any assertions you have from running
-(the assumption is that, if the server errors, the page output won't be
-of further significance to your tests).
+(the assumption is that, if the server errors, the page output will not
+be of further significance to your tests).
 """
 
 import os, sys, time, re
@@ -114,7 +114,7 @@ class ReloadingTestLoader(TestLoader):
                                  "not a test" % (obj,test))
             return test
         else:
-            raise ValueError("don't know how to make test from: %s" % obj)
+            raise ValueError("do not know how to make test from: %s" % obj)
 
 
 try:

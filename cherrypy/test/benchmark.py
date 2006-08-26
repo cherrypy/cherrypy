@@ -4,7 +4,7 @@
         benchmark.py --null --notests --help --cpmodpy --modpython --ab=path --apache=path
     
     --null:        use a null Request object (to bench the HTTP server only)
-    --notests:     start the server but don't run the tests; this allows
+    --notests:     start the server but do not run the tests; this allows
                    you to check the tested pages with a browser
     --help:        show this help message
     --cpmodpy:     run tests via apache on 8080 (with the builtin _cpmodpy)

@@ -75,7 +75,7 @@ class Application(object):
         return _cpwsgi._wsgi_callable(environ, start_response, app=self)
 
 
-class Tree:
+class Tree(object):
     """A registry of CherryPy applications, mounted at diverse points.
     
     An instance of this class may also be used as a WSGI callable

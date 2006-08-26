@@ -6,14 +6,10 @@ from urlparse import urljoin as _urljoin
 from cherrypy.lib import http as _http
 
 
-class WrongConfigValue(Exception):
-    """ Happens when a config value can't be parsed, or is otherwise illegal. """
-    pass
-
 class InternalRedirect(Exception):
     """Exception raised when processing should be handled by a different path.
     
-    If you supply a query string, it will be replace request.params.
+    If you supply a query string, it will replace request.params.
     If you omit the query string, the params from the original request will
     remain in effect.
     """
@@ -45,10 +41,10 @@ class InternalRedirect(Exception):
 class HTTPRedirect(Exception):
     """Exception raised when the request should be redirected.
     
-    The new URL must be passed as the first argument to the Exception, e.g.,
-        cperror.HTTPRedirect(newUrl). Multiple URLs are allowed. If a URL
-        is absolute, it will be used as-is. If it is relative, it is assumed
-        to be relative to the current cherrypy.request.path.
+    The new URL must be passed as the first argument to the Exception,
+    e.g., HTTPRedirect(newUrl). Multiple URLs are allowed. If a URL is
+    absolute, it will be used as-is. If it is relative, it is assumed
+    to be relative to the current cherrypy.request.path.
     """
     
     def __init__(self, urls, status=None):
@@ -85,6 +81,11 @@ class HTTPRedirect(Exception):
         Exception.__init__(self, abs_urls, status)
     
     def set_response(self):
+        """Modify cherrypy.response status, headers, and body to represent self.
+        
+        CherryPy uses this internally, but you can also use it to create an
+        HTTPRedirect object and set its output without *raising* the exception.
+        """
         import cherrypy
         response = cherrypy.response
         response.status = status = self.status
@@ -130,12 +131,12 @@ class HTTPRedirect(Exception):
             raise ValueError("The %s status code is unknown." % status)
     
     def __call__(self):
-        # Allow the exception to be used as a request.handler.
+        """Use this exception as a request.handler (raise self)."""
         raise self
 
 
 class HTTPError(Exception):
-    """ Exception used to return an HTTP error code to the client.
+    """ Exception used to return an HTTP error code (4xx-5xx) to the client.
         This exception will automatically set the response status and body.
         
         A custom message (a long description to display in the browser)
@@ -150,7 +151,11 @@ class HTTPError(Exception):
         Exception.__init__(self, status, message)
     
     def set_response(self):
-        """Set cherrypy.response status, headers, and body."""
+        """Modify cherrypy.response status, headers, and body to represent self.
+        
+        CherryPy uses this internally, but you can also use it to create an
+        HTTPError object and set its output without *raising* the exception.
+        """
         import cherrypy
         
         response = cherrypy.response
@@ -188,12 +193,12 @@ class HTTPError(Exception):
         _be_ie_unfriendly(self.status)
     
     def __call__(self):
-        # Allow the exception to be used as a request.handler.
+        """Use this exception as a request.handler (raise self)."""
         raise self
 
 
 class NotFound(HTTPError):
-    """ Happens when a URL couldn't be mapped to any class.method """
+    """Exception raised when a URL could not be mapped to any handler (404)."""
     
     def __init__(self, path=None):
         if path is None:
@@ -313,7 +318,7 @@ def _be_ie_unfriendly(status):
 
 
 def format_exc(exc=None):
-    """format_exc(exc=None) -> exc (or sys.exc_info if None), formatted."""
+    """Return exc (or sys.exc_info if None), formatted."""
     if exc is None:
         exc = _exc_info()
     if exc == (None, None, None):

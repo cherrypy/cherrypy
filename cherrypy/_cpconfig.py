@@ -11,8 +11,7 @@ CherryPy Requests are part of an Application, which runs in a global context,
 and configuration data may apply to any of those three scopes:
 
     Global: configuration entries which apply everywhere are stored in
-    cherrypy.config.globalconf. Use the top-level function 'config.update'
-    to modify it.
+    cherrypy.config.
     
     Application: entries which apply to each mounted application are stored
     on the Application object itself, as 'app.conf'. This is a two-level
@@ -73,8 +72,8 @@ Current namespaces:
 
 The only key that does not exist in a namespace is the "environment" entry.
 This special entry 'imports' other config entries from a template stored in
-cherrypy.config.environments[environment]. It only applies to globalconf,
-and only when you use "update" to modify globalconf.
+cherrypy._cpconfig.environments[environment]. It only applies to the global
+config, and only when you use cherrypy.config.update.
 """
 
 import ConfigParser
@@ -120,28 +119,31 @@ def merge(base, other):
         base.setdefault(section, {}).update(value_map)
 
 
-default_conf = {
-    'tools.log_tracebacks.on': True,
-    'tools.log_headers.on': True,
-    }
-
-
-class Config(object):
+class Config(dict):
+    """The 'global' configuration data for the entire CherryPy process."""
     
-    globalconf = default_conf.copy()
+    defaults = {
+        'tools.log_tracebacks.on': True,
+        'tools.log_headers.on': True,
+        }
+    
+    def __init__(self):
+        self.reset()
     
     def reset(self):
-        """Reset self.globalconf to default values."""
-        self.globalconf.clear()
-        self.update(default_conf)
+        """Reset self to default values."""
+        self.clear()
+        dict.update(self, self.defaults)
     
     def update(self, conf):
-        """Update self.globalconf from a dict, file or filename."""
+        """Update self from a dict, file or filename."""
         if isinstance(conf, basestring):
+            # Filename
             if conf not in cherrypy.engine.reload_files:
                 cherrypy.engine.reload_files.append(conf)
             conf = _Parser().dict_from_file(conf)
         elif hasattr(conf, 'read'):
+            # Open file object
             conf = _Parser().dict_from_file(conf)
         
         if isinstance(conf.get("global", None), dict):
@@ -156,24 +158,25 @@ class Config(object):
         if 'tools.staticdir.dir' in conf:
             conf['tools.staticdir.section'] = "global"
         
-        self.globalconf.update(conf)
+        # Must use this idiom in order to hit our custom __setitem__.
+        for k, v in conf.iteritems():
+            self[k] = v
         
-        _configure_builtin_logging(self.globalconf, cherrypy._error_log)
-        _configure_builtin_logging(self.globalconf, cherrypy._access_log, "log.access_file")
+        _configure_builtin_logging(self, cherrypy._error_log)
+        _configure_builtin_logging(self, cherrypy._access_log, "log.access_file")
+    
+    def __setitem__(self, k, v):
+        dict.__setitem__(self, k, v)
         
-        # Override properties specified in config.
-        gconf = self.globalconf
-        for k in gconf:
-            atoms = k.split(".", 1)
-            namespace = atoms[0]
-            if namespace == "server":
-                setattr(cherrypy.server, atoms[1], gconf[k])
-            elif namespace == "engine":
-                setattr(cherrypy.engine, atoms[1], gconf[k])
-            elif namespace == "log":
-                setattr(cherrypy.log, atoms[1], gconf[k])
-            elif namespace == "error_page":
-                cherrypy.error_page[int(atoms[1])] = gconf[k]
+        # Override object properties if specified in config.
+        atoms = k.split(".", 1)
+        namespace = atoms[0]
+        if namespace == "server":
+            setattr(cherrypy.server, atoms[1], v)
+        elif namespace == "engine":
+            setattr(cherrypy.engine, atoms[1], v)
+        elif namespace == "log":
+            setattr(cherrypy.log, atoms[1], v)
     
     def wrap(**kwargs):
         """Decorator to set _cp_config on a handler using the given kwargs."""
@@ -265,11 +268,9 @@ class _Parser(ConfigParser.ConfigParser):
                 try:
                     value = unrepr(value)
                 except Exception, x:
-                    msg = ("section: %s, option: %s, value: %s" %
+                    msg = ("Config error in section: %s, option: %s, value: %s" %
                            (repr(section), repr(option), repr(value)))
-                    e = cherrypy.WrongConfigValue(msg)
-                    e.args += (x.__class__.__name__, x.args)
-                    raise e
+                    raise ValueError(msg, x.__class__.__name__, x.args)
                 result[section][option] = value
         return result
     

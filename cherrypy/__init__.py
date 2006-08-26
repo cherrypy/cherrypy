@@ -7,7 +7,7 @@ import os as _os
 _localdir = _os.path.dirname(__file__)
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound
-from cherrypy._cperror import WrongConfigValue, TimeoutError
+from cherrypy._cperror import TimeoutError
 
 from cherrypy import _cptools
 tools = _cptools.default_toolbox
@@ -97,15 +97,6 @@ thread_data = _local()
 #                                 Logging                                 #
 
 
-def logtime():
-    import datetime
-    now = datetime.datetime.now()
-    import rfc822
-    month = rfc822._monthnames[now.month - 1].capitalize()
-    return '%02d/%s/%04d:%02d:%02d:%02d' % (
-        now.day, month, now.year, now.hour, now.minute, now.second)
-
-
 _error_log = _logging.getLogger("cherrypy.error")
 _error_log.setLevel(_logging.DEBUG)
 _access_log = _logging.getLogger("cherrypy.access")
@@ -133,18 +124,18 @@ class _LogManager(object):
             elog = request.app.error_log
         except AttributeError:
             elog = _error_log
-        elog.log(severity, ' '.join((logtime(), context, msg)))
+        elog.log(severity, ' '.join((self.time(), context, msg)))
     
     def __call__(self, *args, **kwargs):
         return self.error(*args, **kwargs)
     
     def access(self):
-        """Default method for logging access"""
-        tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+        """Write to the access log."""
+        tmpl = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
         s = tmpl % {'h': request.remote.name or request.remote.ip,
                     'l': '-',
                     'u': getattr(request, "login", None) or "-",
-                    't': logtime(),
+                    't': self.time(),
                     'r': request.request_line,
                     's': response.status.split(" ", 1)[0],
                     'b': response.headers.get('Content-Length', '') or "-",
@@ -155,60 +146,20 @@ class _LogManager(object):
             request.app.access_log.log(_logging.INFO, s)
         except:
             self.error(traceback=True)
+    
+    def time(self):
+        """Return now() in Apache Common Log Format (no timezone)."""
+        import datetime, rfc822
+        now = datetime.datetime.now()
+        month = rfc822._monthnames[now.month - 1].capitalize()
+        return ('[%02d/%s/%04d:%02d:%02d:%02d]' %
+                (now.day, month, now.year, now.hour, now.minute, now.second))
 
 
 log = _LogManager()
 
 
 #                       Helper functions for CP apps                       #
-
-
-def decorate(func, decorator):
-    """
-    Return the decorated func. This will automatically copy all
-    non-standard attributes (like exposed) to the newly decorated function.
-    """
-    newfunc = decorator(func)
-    for key in dir(func):
-        if not hasattr(newfunc, key):
-            setattr(newfunc, key, getattr(func, key))
-    return newfunc
-
-def decorate_all(obj, decorator):
-    """
-    Recursively decorate all exposed functions of obj and all of its children,
-    grandchildren, etc. If you used to use aspects, you might want to look
-    into these. This function modifies obj; there is no return value.
-    """
-    obj_type = type(obj)
-    for key in dir(obj):
-        if hasattr(obj_type, key): # only deal with user-defined attributes
-            continue
-        value = getattr(obj, key)
-        if callable(value) and getattr(value, "exposed", False):
-            setattr(obj, key, decorate(value, decorator))
-        decorate_all(value, decorator)
-
-
-class ExposeItems:
-    """
-    Utility class that exposes a getitem-aware object. It does not provide
-    index() or default() methods, and it does not expose the individual item
-    objects - just the list or dict that contains them. User-specific index()
-    and default() methods can be implemented by inheriting from this class.
-    
-    Use case:
-    
-    from cherrypy import ExposeItems
-    ...
-    root.foo = ExposeItems(mylist)
-    root.bar = ExposeItems(mydict)
-    """
-    exposed = True
-    def __init__(self, items):
-        self.items = items
-    def __getattr__(self, key):
-        return self.items[key]
 
 
 def expose(func=None, alias=None):

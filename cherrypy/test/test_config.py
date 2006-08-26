@@ -87,7 +87,7 @@ class ConfigTests(helper.CPWebCase):
             'log.screen': False,
             'environment': 'test_suite',
             'autoreload.on': False,
-            # From globalconf
+            # From global config
             'luxuryyacht': 'throatwobblermangrove',
             # From Root._cp_config
             'bar': 'that',

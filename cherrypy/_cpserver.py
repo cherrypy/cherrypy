@@ -9,7 +9,35 @@ from cherrypy.lib import attributes
 
 
 class Server(object):
-    """Manager for a set of HTTP servers."""
+    """Manager for a set of HTTP servers.
+    
+    This is both a container and controller for "HTTP server" objects,
+    which are kept in Server.httpservers, a dictionary of the form:
+    {httpserver: bind_addr} where 'bind_addr' is usually a (host, port)
+    tuple.
+    
+    Most often, you will only be starting a single HTTP server. In this
+    common case, you can set attributes (like socket_host and socket_port)
+    on *this* object (which is probably cherrypy.server), and call
+    quickstart. For example:
+    
+        cherrypy.server.socket_port = 80
+        cherrypy.server.quickstart()
+    
+    But if you need to start more than one HTTP server (to serve on multiple
+    ports, or protocols, etc.), you can manually register each one and then
+    control them all through this object:
+    
+        s1 = MyWSGIServer(host='', port=80)
+        s2 = another.HTTPServer(host='localhost', SSL=True)
+        cherrypy.server.httpservers = {s1: ('', 80), s2: ('localhost', 443)}
+        # Note we do not use quickstart when we define our own httpservers
+        cherrypy.server.start()
+    
+    Whether you use quickstart(), or define your own httpserver entries and
+    use start(), you'll find that the start, wait, restart, and stop methods
+    work the same way, controlling all registered httpserver objects at once.
+    """
     
     socket_port = 8080
     socket_host = ''
@@ -120,7 +148,7 @@ class Server(object):
                 wait_for_occupied_port(*bind_addr)
     
     def stop(self):
-        """Stop all HTTP server(s)."""
+        """Stop all HTTP servers."""
         for httpserver, bind_addr in self.httpservers.items():
             try:
                 httpstop = httpserver.stop
@@ -134,7 +162,7 @@ class Server(object):
                 cherrypy.log("HTTP Server shut down", "HTTP")
     
     def restart(self):
-        """Restart the HTTP server."""
+        """Restart all HTTP servers."""
         self.stop()
         self.start()
 
