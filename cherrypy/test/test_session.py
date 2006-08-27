@@ -8,6 +8,7 @@ import threading
 import time
 
 import cherrypy
+from cherrypy.lib import sessions
 
 
 def setup_server():
@@ -43,6 +44,12 @@ def setup_server():
             sess['counter'] = c
             return str(c)
         index.exposed = True
+        
+        def delete(self):
+            cherrypy.session.delete()
+            sessions.expire()
+            return "done"
+        delete.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'test_suite'})
@@ -58,6 +65,7 @@ class SessionTest(helper.CPWebCase):
         self.assertBody('2')
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
+        
         self.getPage('/setsessiontype/file')
         self.getPage('/testStr')
         self.assertBody('1')
@@ -71,7 +79,14 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/')
         self.assertBody('1')
         
-        # Wait for the cleanup thread to delete session files
+        # Test session delete
+        self.getPage('/delete', self.cookies)
+        self.assertBody("done")
+        f = lambda: [x for x in os.listdir(localDir) if x.startswith('session-')]
+        self.assertEqual(f(), [])
+        
+        # Wait for the cleanup thread to delete remaining session files
+        self.getPage('/')
         f = lambda: [x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertNotEqual(f(), [])
         time.sleep(2)

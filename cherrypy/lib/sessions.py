@@ -117,6 +117,10 @@ class Session(object):
                                                    self.clean_cycle)
             t.start()
     
+    def delete(self):
+        """Delete stored session data."""
+        self._delete()
+    
     def __getitem__(self, key):
         if not self.loaded: self.load()
         return self._data[key]
@@ -188,6 +192,9 @@ class RamSession(Session):
     def _save(self, expiration_time):
         self.cache[self.id] = (self._data, expiration_time)
     
+    def _delete(self):
+        del self.cache[self.id]
+    
     def acquire_lock(self):
         self.locked = True
         self.locks.setdefault(self.id, threading.Semaphore()).acquire()
@@ -224,6 +231,9 @@ class FileSession(Session):
             pickle.dump((self._data, expiration_time), f)
         finally:
             f.close()
+    
+    def _delete(self):
+        os.unlink(self._get_file_path())
     
     def acquire_lock(self, path=None):
         if path is None:
@@ -303,14 +313,17 @@ class PostgresqlSession(Session):
         return data, expiration_time
     
     def _save(self, expiration_time):
-        self.cursor.execute('delete from session where id=%s', (self.id,))
         pickled_data = pickle.dumps(self._data)
-        self.cursor.execute(
-            'insert into session (id, data, expiration_time) values (%s, %s, %s)',
-            (self.id, pickled_data, expiration_time))
+        self.cursor.execute('update session set data = %s, '
+                            'expiration_time = %s where id = %s',
+                            (pickled_data, expiration_time, self.id))
     
+    def _delete(self):
+        self.cursor.execute('delete from session where id=%s', (self.id,))
+   
     def acquire_lock(self):
         # We use the "for update" clause to lock the row
+        self.locked = True
         self.cursor.execute('select id from session where id=%s for update',
                             (self.id,))
     
@@ -318,6 +331,7 @@ class PostgresqlSession(Session):
         # We just close the cursor and that will remove the lock
         #   introduced by the "for update" clause
         self.cursor.close()
+        self.locked = False
     
     def clean_up(self):
         """Clean up expired sessions."""
@@ -401,4 +415,12 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
         cookie[name]['domain'] = domain
     if secure:
         cookie[name]['secure'] = 1
+
+def expire():
+    """Expire the current session cookie."""
+    name = cherrypy.request.config.get('tools.sessions.name', 'session_id')
+    one_year = 60 * 60 * 24 * 365
+    exp = time.gmtime(time.time() - one_year)
+    t = time.strftime("%a, %d-%b-%Y %H:%M:%S GMT", exp)
+    cherrypy.response.simple_cookie[name]['expires'] = t
 
