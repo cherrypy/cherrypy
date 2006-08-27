@@ -28,6 +28,7 @@ for _ in ("EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
         socket_errors_to_ignore.append(getattr(errno, _))
 # de-dupe the list
 socket_errors_to_ignore = dict.fromkeys(socket_errors_to_ignore).keys()
+socket_errors_to_ignore.append("timed out")
 
 # These are lowercase because mimetools.Message uses lowercase keys.
 comma_separated_headers = [

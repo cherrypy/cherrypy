@@ -130,6 +130,8 @@ class ConnectionTests(helper.CPWebCase):
             response = conn.response_class(conn.sock, method="GET")
             response.begin()
             self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(pov)
             
             # Make a second request on the same socket
             conn._output('GET /hello HTTP/1.1')
@@ -138,6 +140,8 @@ class ConnectionTests(helper.CPWebCase):
             response = conn.response_class(conn.sock, method="GET")
             response.begin()
             self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody("Hello, world!")
             
             # Wait for our socket timeout
             time.sleep(0.2)
@@ -150,6 +154,19 @@ class ConnectionTests(helper.CPWebCase):
             self.assertRaises(socket.error, response.begin)
             
             conn.close()
+            
+            # Make another request on a new socket, which should work
+            conn = httplib.HTTPConnection(self.HOST, self.PORT)
+            conn.auto_open = False
+            conn.connect()
+            conn.putrequest("GET", "/", skip_host=True)
+            conn.putheader("Host", self.HOST)
+            conn.endheaders()
+            response = conn.response_class(conn.sock, method="GET")
+            response.begin()
+            self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(pov)
         finally:
             if old_timeout is not None:
                 httpserver.timeout = old_timeout
