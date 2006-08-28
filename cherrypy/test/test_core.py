@@ -111,6 +111,7 @@ def setup_server():
         class Error:
             _cp_config = {"tools.err_redirect.on": True,
                           "tools.err_redirect.url": "/errpage",
+                          "tools.err_redirect.internal": False,
                           }
             
             def index(self):

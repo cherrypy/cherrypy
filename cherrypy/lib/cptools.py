@@ -240,6 +240,9 @@ def log_request_headers():
     h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.header_list]
     cherrypy.log('\nRequest Headers:\n' + '\n'.join(h), "HTTP")
 
-def redirect(url=''):
-    """Raise cherrypy.HTTPRedirect to the given url."""
-    raise cherrypy.HTTPRedirect(url)
+def redirect(url='', internal=True):
+    """Raise InternalRedirect or HTTPRedirect to the given url."""
+    if internal:
+        raise cherrypy.InternalRedirect(url)
+    else:
+        raise cherrypy.HTTPRedirect(url)
