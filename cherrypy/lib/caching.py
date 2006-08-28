@@ -84,18 +84,16 @@ class MemoryCache:
                 self.cursize = total_size
 
 
-def init(cache_class=None):
-    if cache_class is None:
-        cache_class = MemoryCache
-    cherrypy._cache = cache_class()
-
-def get():
+def get(invalid_methods=("POST", "PUT", "DELETE"), cache_class=MemoryCache):
+    """Try to obtain cached output. If fresh enough, raise HTTPError(304)."""
+    if not hasattr(cherrypy, "_cache"):
+        cherrypy._cache = cache_class()
+    
     request = cherrypy.request
+    
     # Ignore POST, PUT, DELETE.
     # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
-    invalid = request.config.get("tools.caching.invalid_methods",
-                                 ("POST", "PUT", "DELETE"))
-    if request.method in invalid:
+    if request.method in invalid_methods:
         request.cached = c = False
     else:
         cache_data = cherrypy._cache.get()
@@ -120,6 +118,7 @@ def get():
         response.body = b
     return c
 
+
 def tee_output():
     if cherrypy.request.cached:
         return
@@ -140,33 +139,6 @@ def tee_output():
                                  body, create_time))
     response.body = tee(response.body)
 
-
-# CherryPy interfaces. Pick one.
-
-def enable(**kwargs):
-    """Compile-time decorator (turn on the tool in config)."""
-    def wrapper(f):
-        if not hasattr(f, "_cp_config"):
-            f._cp_config = {}
-        f._cp_config["tools.caching.on"] = True
-        for k, v in kwargs.iteritems():
-            f._cp_config["tools.caching." + k] = v
-        return f
-    return wrapper
-
-def _wrapper():
-    if get():
-        cherrypy.request.handler = None
-    else:
-        # Note the devious technique here of adding hooks on the fly
-        cherrypy.request.hooks.attach('before_finalize', tee_output)
-
-def _setup():
-    """Hook caching into cherrypy.request using the given conf."""
-    conf = cherrypy.request.toolmap.get("caching", {})
-    if not getattr(cherrypy, "_cache", None):
-        init(conf.get("class", None))
-    cherrypy.request.hooks.attach('before_main', _wrapper)
 
 def expires(secs=0, force=False):
     """Tool for influencing cache mechanisms using the 'Expires' header.

@@ -252,12 +252,29 @@ class WSGIAppTool(MainTool):
         MainTool._setup(self)
 
 
-class CachingTool:
+class CachingTool(Tool):
     """Caching Tool for CherryPy."""
     
     def __init__(self):
-        self._setup = _caching._setup
-        self.__call__ = _caching.enable
+        self._point = 'before_main'
+        self.callable = _caching.get
+        self._name = 'caching'
+        self.__doc__ = self.callable.__doc__
+        setargs(self, self.callable)
+    
+    def _wrapper(self):
+        request = cherrypy.request
+        if _caching.get():
+            request.handler = None
+        else:
+            # Note the devious technique here of adding hooks on the fly
+            request.hooks.attach('before_finalize', _caching.tee_output)
+    
+    def _setup(self):
+        """Hook caching into cherrypy.request using the given conf."""
+        conf = self._merged_args()
+        cherrypy.request.hooks.attach('before_main', self._wrapper, **conf)
+
 
 
 class Toolbox(object):
