@@ -22,6 +22,8 @@ class Application(object):
         self.log = _cplogging.LogManager(id(self))
         self.root = root
         self.script_name = script_name
+        self.namespaces = {"log": lambda k, v: setattr(self.log, k, v),
+                           }
         self.conf = {}
         if conf:
             self.merge(conf)
@@ -45,8 +47,8 @@ class Application(object):
         for k, v in rootconf.iteritems():
             atoms = k.split(".", 1)
             namespace = atoms[0]
-            if namespace == "log":
-                setattr(self.log, atoms[1], v)
+            if namespace in self.namespaces:
+                self.namespaces[namespace](atoms[1], v)
     
     def guess_abs_path(self):
         """Guess the absolute URL from server.socket_host and script_name.
