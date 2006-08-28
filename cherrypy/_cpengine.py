@@ -40,7 +40,7 @@ except ValueError, _signal_exc:
 
 
 class Engine(object):
-    """The application engine, which exposes a request interface to (HTTP) servers."""
+    """Application interface for (HTTP) servers, plus process controls."""
     
     # Configurable attributes
     request_class = _cprequest.Request
@@ -240,6 +240,52 @@ class Engine(object):
         t.start()
         
         self.start()
+    
+    # Special thanks to Gavin Baker: http://antonym.org/node/100.
+    try:
+        import pwd, grp
+    except ImportError:
+        try:
+            os.umask
+        except AttributeError:
+            def drop_privileges(self):
+                """Drop privileges. Not available."""
+                raise NotImplementedError
+        else:
+            # A very conservative umask
+            umask = 077
+            
+            def drop_privileges(self):
+                """Drop privileges. Windows version (umask only)."""
+                if self.umask is not None:
+                    old_umask = os.umask(self.umask)
+                    cherrypy.log('umask old: %03o, new: %03o' %
+                                 (old_umask, self.umask), "PRIV")
+    else:
+        uid = None
+        gid = None
+        # A very conservative umask
+        umask = 077
+        
+        def drop_privileges(self):
+            """Drop privileges. UNIX version (uid, gid, and umask)."""
+            if not (self.uid is None and self.gid is None):
+                def names():
+                    name = pwd.getpwuid(os.getuid())[0]
+                    group = grp.getgrgid(os.getgid())[0]
+                    return name, group
+                
+                cherrypy.log('Started as %r/%r' % names(), "PRIV")
+                if self.gid is not None:
+                    os.setgid(grp.getgrnam(self.gid)[2])
+                if self.uid is not None:
+                    os.setuid(pwd.getpwnam(self.uid)[2])
+                cherrypy.log('Running as %r/%r' % names(), "PRIV")
+            
+            if self.umask is not None:
+                old_umask = os.umask(self.umask)
+                cherrypy.log('umask old: %03o, new: %03o' %
+                             (old_umask, self.umask), "PRIV")
 
 
 class NotReadyRequest:
