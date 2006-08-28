@@ -122,6 +122,11 @@ class Config(dict):
         'tools.log_headers.on': True,
         }
     
+    namespaces = {"server": lambda k, v: setattr(cherrypy.server, k, v),
+                  "engine": lambda k, v: setattr(cherrypy.engine, k, v),
+                  "log": lambda k, v: setattr(cherrypy.log, k, v),
+                  }
+    
     def __init__(self):
         self.reset()
     
@@ -163,12 +168,8 @@ class Config(dict):
         # Override object properties if specified in config.
         atoms = k.split(".", 1)
         namespace = atoms[0]
-        if namespace == "server":
-            setattr(cherrypy.server, atoms[1], v)
-        elif namespace == "engine":
-            setattr(cherrypy.engine, atoms[1], v)
-        elif namespace == "log":
-            setattr(cherrypy.log, atoms[1], v)
+        if namespace in self.namespaces:
+            self.namespaces[namespace](atoms[1], v)
 
 
 class _Parser(ConfigParser.ConfigParser):

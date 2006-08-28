@@ -330,6 +330,13 @@ class Request(object):
         
         # Put a *copy* of the class error_page into self.
         self.error_page = self.error_page.copy()
+        
+        self.namespaces = {"tools": self._set_tool,
+                           "hooks": self._set_hook,
+                           "request": self.__setattr__,
+                           "response": lambda k, v: setattr(cherrypy.response, k, v),
+                           "error_page": lambda k, v: self.error_page.__setitem__(int(k), v),
+                           }
     
     def close(self):
         if not self.closed:
@@ -538,6 +545,24 @@ class Request(object):
         # dispatch() should set self.handler and self.config
         dispatch(path)
     
+    def _set_tool(self, k, v):
+        """Attach tools specified in config."""
+        toolname, arg = k.split(".", 1)
+        bucket = self.toolmap.setdefault(toolname, {})
+        bucket[arg] = v
+    
+    def _set_hook(self, k, v):
+        """Attach bare hooks declared in config."""
+        # Use split again to allow multiple hooks for a single
+        # hookpoint per path (e.g. "hooks.before_main.1").
+        # Little-known fact you only get from reading source ;)
+        hookpoint = k.split(".", 1)[0]
+        if isinstance(v, basestring):
+            v = cherrypy.lib.attributes(v)
+        if not isinstance(v, Hook):
+            v = Hook(v)
+        self.hooks[hookpoint].append(v)
+    
     def tool_up(self):
         """Process self.config, populate self.toolmap and set up each tool."""
         # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
@@ -546,30 +571,8 @@ class Request(object):
         for k in reqconf:
             atoms = k.split(".", 1)
             namespace = atoms[0]
-            if namespace == "tools":
-                toolname, arg = atoms[1].split(".", 1)
-                bucket = tm.setdefault(toolname, {})
-                bucket[arg] = reqconf[k]
-            elif namespace == "hooks":
-                # Attach bare hooks declared in config.
-                # Use split again to allow multiple hooks for a single
-                # hookpoint per path (e.g. "hooks.before_main.1").
-                # Little-known fact you only get from reading source ;)
-                hookpoint = atoms[1].split(".", 1)[0]
-                v = reqconf[k]
-                if isinstance(v, basestring):
-                    v = cherrypy.lib.attributes(v)
-                if not isinstance(v, Hook):
-                    v = Hook(v)
-                self.hooks[hookpoint].append(v)
-            elif namespace == "request":
-                # Override properties of this request object.
-                setattr(self, atoms[1], reqconf[k])
-            elif namespace == "response":
-                # Override properties of the current response object.
-                setattr(cherrypy.response, atoms[1], reqconf[k])
-            elif namespace == "error_page":
-                self.error_page[int(atoms[1])] = reqconf[k]
+            if namespace in self.namespaces:
+                self.namespaces[namespace](atoms[1], reqconf[k])
         
         # Run tool._setup(conf) for each tool in the new toolmap.
         tools = cherrypy.tools
