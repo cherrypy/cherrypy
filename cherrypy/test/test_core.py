@@ -218,15 +218,11 @@ def setup_server():
             yield "howdy"
             raise ValueError()
         
-        # We support Python 2.3, but the @-deco syntax would look like this:
-        # @cherrypy.config.response.stream(True)
-        # @cherrypy.config.tools.static.on(True)
         def page_streamed(self):
             yield "word up"
             raise ValueError()
             yield "very oops"
-        page_streamed = cherrypy.config.wrap(**{"response.stream": True})(page_streamed)
-        assert(page_streamed._cp_config == {'response.stream': True})
+        page_streamed._cp_config = {"response.stream": True}
         
         def cause_err_in_finalize(self):
             # Since status must start with an int, this should error.
