@@ -15,33 +15,37 @@ def validate_etags(autotags=False):
     automatic, and if no other code has provided an ETag value, then no
     checks will be performed against If-Match or If-None-Match headers.
     """
+    response = cherrypy.response
+    
     # Guard against being run twice.
-    if hasattr(cherrypy.response, "ETag"):
+    if hasattr(response, "ETag"):
         return
     
-    etag = cherrypy.response.headers.get('ETag')
+    etag = response.headers.get('ETag')
     
     if (not etag) and autotags:
         import md5
-        etag = '"%s"' % md5.new(cherrypy.response.collapse_body()).hexdigest()
-        cherrypy.response.headers['ETag'] = etag
+        etag = '"%s"' % md5.new(response.collapse_body()).hexdigest()
+        response.headers['ETag'] = etag
     
     if etag:
-        cherrypy.response.ETag = etag
+        response.ETag = etag
         
-        status, reason, msg = _http.valid_status(cherrypy.response.status)
+        status, reason, msg = _http.valid_status(response.status)
         
-        conditions = cherrypy.request.headers.elements('If-Match') or []
+        request = cherrypy.request
+        
+        conditions = request.headers.elements('If-Match') or []
         conditions = [str(x) for x in conditions]
         if conditions and not (conditions == ["*"] or etag in conditions):
             if status >= 200 and status < 299:
                 raise cherrypy.HTTPError(412)
         
-        conditions = cherrypy.request.headers.elements('If-None-Match') or []
+        conditions = request.headers.elements('If-None-Match') or []
         conditions = [str(x) for x in conditions]
         if conditions == ["*"] or etag in conditions:
             if status >= 200 and status < 299:
-                if cherrypy.request.method in ("GET", "HEAD"):
+                if request.method in ("GET", "HEAD"):
                     raise cherrypy.HTTPRedirect([], 304)
                 else:
                     raise cherrypy.HTTPError(412)
@@ -52,19 +56,22 @@ def validate_since():
     If no code has set the Last-Modified response header, then no validation
     will be performed.
     """
-    lastmod = cherrypy.response.headers.get('Last-Modified')
+    response = cherrypy.response
+    lastmod = response.headers.get('Last-Modified')
     if lastmod:
-        status, reason, msg = _http.valid_status(cherrypy.response.status)
+        status, reason, msg = _http.valid_status(response.status)
         
-        since = cherrypy.request.headers.get('If-Unmodified-Since')
+        request = cherrypy.request
+        
+        since = request.headers.get('If-Unmodified-Since')
         if since and since != lastmod:
             if (status >= 200 and status < 299) or status == 412:
                 raise cherrypy.HTTPError(412)
         
-        since = cherrypy.request.headers.get('If-Modified-Since')
+        since = request.headers.get('If-Modified-Since')
         if since and since == lastmod:
             if (status >= 200 and status < 299) or status == 304:
-                if cherrypy.request.method in ("GET", "HEAD"):
+                if request.method in ("GET", "HEAD"):
                     raise cherrypy.HTTPRedirect([], 304)
                 else:
                     raise cherrypy.HTTPError(412)
@@ -210,16 +217,18 @@ def virtual_host(use_x_forwarded_host=True, **domains):
     but also to have  http://www.mydom1.com/mydom2/  etc to be valid pages in
     their own right.
     """
-    if hasattr(cherrypy.request, "virtual_prefix"):
+    request = cherrypy.request
+    
+    if hasattr(request, "virtual_prefix"):
         return
     
-    domain = cherrypy.request.headers.get('Host', '')
+    domain = request.headers.get('Host', '')
     if use_x_forwarded_host:
-        domain = cherrypy.request.headers.get("X-Forwarded-Host", domain)
+        domain = request.headers.get("X-Forwarded-Host", domain)
     
-    cherrypy.request.virtual_prefix = prefix = domains.get(domain, "")
+    request.virtual_prefix = prefix = domains.get(domain, "")
     if prefix:
-        raise cherrypy.InternalRedirect(_http.urljoin(prefix, cherrypy.request.path_info))
+        raise cherrypy.InternalRedirect(_http.urljoin(prefix, request.path_info))
 
 def log_traceback():
     """Write the last error's traceback to the cherrypy error log."""

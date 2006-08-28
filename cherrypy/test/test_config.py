@@ -14,11 +14,10 @@ def setup_server():
         _cp_config = {'foo': 'this',
                       'bar': 'that'}
         
+        # @cherrypy.expose(alias=('global_', 'xyz'))
         def index(self, key):
             return cherrypy.request.config.get(key, "None")
-        index.exposed = True
-        global_ = index
-        xyz = index
+        index = cherrypy.expose(index, alias=('global_', 'xyz'))
     
     class Foo:
         

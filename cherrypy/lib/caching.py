@@ -27,7 +27,8 @@ class MemoryCache:
         self.cursize = 0
     
     def _key(self):
-        return cherrypy.request.config.get("tools.caching.key", cherrypy.request.browser_url)
+        return cherrypy.request.config.get("tools.caching.key",
+                                           cherrypy.request.browser_url)
     key = property(_key)
     
     def expire_cache(self):
@@ -89,15 +90,16 @@ def init(cache_class=None):
     cherrypy._cache = cache_class()
 
 def get():
+    request = cherrypy.request
     # Ignore POST, PUT, DELETE.
     # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
-    invalid = cherrypy.request.config.get("tools.caching.invalid_methods",
-                                          ("POST", "PUT", "DELETE"))
-    if cherrypy.request.method in invalid:
-        cherrypy.request.cached = c = False
+    invalid = request.config.get("tools.caching.invalid_methods",
+                                 ("POST", "PUT", "DELETE"))
+    if request.method in invalid:
+        request.cached = c = False
     else:
         cache_data = cherrypy._cache.get()
-        cherrypy.request.cached = c = bool(cache_data)
+        request.cached = c = bool(cache_data)
     
     if c:
         response = cherrypy.response
@@ -182,11 +184,13 @@ def expires(secs=0, force=False):
     none of the above response headers are set.
     """
     
+    response = cherrypy.response
+    
     cacheable = False
     if not force:
         # some header names that indicate that the response can be cached
         for indicator in ('Etag', 'Last-Modified', 'Age', 'Expires'):
-            if indicator in cherrypy.response.headers:
+            if indicator in response.headers:
                 cacheable = True
                 break
     
@@ -195,12 +199,12 @@ def expires(secs=0, force=False):
             secs = (86400 * secs.days) + secs.seconds
         
         if secs == 0:
-            if force or "Pragma" not in cherrypy.response.headers:
-                cherrypy.response.headers["Pragma"] = "no-cache"
+            if force or "Pragma" not in response.headers:
+                response.headers["Pragma"] = "no-cache"
             if cherrypy.request.protocol >= (1, 1):
-                if force or "Cache-Control" not in cherrypy.response.headers:
-                    cherrypy.response.headers["Cache-Control"] = "no-cache"
+                if force or "Cache-Control" not in response.headers:
+                    response.headers["Cache-Control"] = "no-cache"
         
-        expiry = http.HTTPDate(cherrypy.response.time + secs)
-        if force or "Expires" not in cherrypy.response.headers:
-            cherrypy.response.headers["Expires"] = expiry
+        expiry = http.HTTPDate(response.time + secs)
+        if force or "Expires" not in response.headers:
+            response.headers["Expires"] = expiry

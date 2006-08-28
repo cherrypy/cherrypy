@@ -169,16 +169,6 @@ class Config(dict):
             setattr(cherrypy.engine, atoms[1], v)
         elif namespace == "log":
             setattr(cherrypy.log, atoms[1], v)
-    
-    def wrap(**kwargs):
-        """Decorator to set _cp_config on a handler using the given kwargs."""
-        def wrapper(f):
-            if not hasattr(f, "_cp_config"):
-                f._cp_config = {}
-            f._cp_config.update(kwargs)
-            return f
-        return wrapper
-    wrap = staticmethod(wrap)
 
 
 class _Parser(ConfigParser.ConfigParser):

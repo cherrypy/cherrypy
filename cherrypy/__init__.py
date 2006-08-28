@@ -138,10 +138,13 @@ def expose(func=None, alias=None):
         # expose is being called directly, before the method has been bound
         return expose_(func)
     else:
-        # expose is being called as a decorator
         if alias is None:
-            alias = func
-        return expose_
+            # expose is being called as a decorator "@expose"
+            func.exposed = True
+            return func
+        else:
+            # expose is returning a decorator "@expose(alias=...)"
+            return expose_
 
 
 # Set up config last so it can wrap other top-level objects

@@ -239,9 +239,6 @@ class MethodDispatcher(Dispatcher):
         request = cherrypy.request
         resource, vpath = self.find_handler(path_info)
         
-        # Decode any leftover %2F in the virtual_path atoms.
-        vpath = [x.replace("%2F", "/") for x in vpath]
-        
         if resource:
             # Set Allow header
             avail = [m for m in dir(resource) if m.isupper()]
@@ -251,11 +248,13 @@ class MethodDispatcher(Dispatcher):
             cherrypy.response.headers['Allow'] = ", ".join(avail)
             
             # Find the subhandler
-            meth = cherrypy.request.method.upper()
+            meth = request.method.upper()
             func = getattr(resource, meth, None)
             if func is None and meth == "HEAD":
                 func = getattr(resource, "GET", None)
             if func:
+                # Decode any leftover %2F in the virtual_path atoms.
+                vpath = [x.replace("%2F", "/") for x in vpath]
                 request.handler = LateParamPageHandler(func, *vpath)
             else:
                 request.handler = cherrypy.HTTPError(405)

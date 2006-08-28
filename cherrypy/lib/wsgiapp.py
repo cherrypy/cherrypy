@@ -17,27 +17,29 @@ def make_environ():
     for hosting WSGI apps in non-WSGI environments (yikes!)
     """
     
+    request = cherrypy.request
+    
     # create and populate the wsgi environ
     environ = dict()
     environ["wsgi.version"] = (1,0)
-    environ["wsgi.url_scheme"] = cherrypy.request.scheme
-    environ["wsgi.input"] = cherrypy.request.rfile
+    environ["wsgi.url_scheme"] = request.scheme
+    environ["wsgi.input"] = request.rfile
     environ["wsgi.errors"] = sys.stderr
     environ["wsgi.multithread"] = True
     environ["wsgi.multiprocess"] = False
     environ["wsgi.run_once"] = False
-    environ["REQUEST_METHOD"] = cherrypy.request.method
-    environ["SCRIPT_NAME"] = cherrypy.request.script_name
-    environ["PATH_INFO"] = cherrypy.request.path_info
-    environ["QUERY_STRING"] = cherrypy.request.query_string
-    environ["SERVER_PROTOCOL"] = cherrypy.request.protocol
-    environ["SERVER_NAME"] = cherrypy.request.local.name
-    environ["SERVER_PORT"] = cherrypy.request.local.port
-    environ["REMOTE_HOST"] = cherrypy.request.remote.name
-    environ["REMOTE_ADDR"] = cherrypy.request.remote.ip
-    environ["REMOTE_PORT"] = cherrypy.request.remote.port
+    environ["REQUEST_METHOD"] = request.method
+    environ["SCRIPT_NAME"] = request.script_name
+    environ["PATH_INFO"] = request.path_info
+    environ["QUERY_STRING"] = request.query_string
+    environ["SERVER_PROTOCOL"] = request.protocol
+    environ["SERVER_NAME"] = request.local.name
+    environ["SERVER_PORT"] = request.local.port
+    environ["REMOTE_HOST"] = request.remote.name
+    environ["REMOTE_ADDR"] = request.remote.ip
+    environ["REMOTE_PORT"] = request.remote.port
     # then all the http headers
-    headers = cherrypy.request.headers
+    headers = request.headers
     environ["CONTENT_TYPE"] = headers.get("Content-type", "")
     environ["CONTENT_LENGTH"] = headers.get("Content-length", "")
     for (k, v) in headers.iteritems():

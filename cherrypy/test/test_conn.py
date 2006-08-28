@@ -3,6 +3,7 @@ test.prefer_parent_path()
 
 import httplib
 import socket
+import sys
 import time
 
 import cherrypy
@@ -151,7 +152,16 @@ class ConnectionTests(helper.CPWebCase):
             conn._output("Host: %s" % self.HOST)
             conn._send_output()
             response = conn.response_class(conn.sock, method="GET")
-            self.assertRaises(socket.error, response.begin)
+            try:
+                response.begin()
+            except:
+                if not isinstance(sys.exc_info()[1],
+                                  (socket.error, httplib.BadStatusLine)):
+                    self.fail("Writing to timed out socket didn't fail"
+                              " as it should have: %s" % sys.exc_info()[1])
+            else:
+                self.fail("Writing to timed out socket didn't fail"
+                          " as it should have.")
             
             conn.close()
             
