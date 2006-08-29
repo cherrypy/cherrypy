@@ -262,9 +262,9 @@ class CachingTool(Tool):
         self.__doc__ = self.callable.__doc__
         setargs(self, self.callable)
     
-    def _wrapper(self):
+    def _wrapper(self, **kwargs):
         request = cherrypy.request
-        if _caching.get():
+        if _caching.get(**kwargs):
             request.handler = None
         else:
             # Note the devious technique here of adding hooks on the fly
