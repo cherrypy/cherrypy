@@ -102,6 +102,7 @@ def setup_server():
             return "defnoindex:" + repr(args)
         default.exposed = True
     
+    # MethodDispatcher code
     class ByMethod:
         exposed = True
         
@@ -114,6 +115,9 @@ def setup_server():
         def POST(self, thing):
             self.things.append(thing)
     
+    class Collection:
+        default = ByMethod('a', 'bit')
+    
     Root.exposing = Exposing()
     Root.exposingnew = ExposingNewStyle()
     Root.dir1 = Dir1()
@@ -122,11 +126,13 @@ def setup_server():
     Root.dir1.dir2.dir3.dir4 = Dir4()
     Root.defnoindex = DefNoIndex()
     Root.bymethod = ByMethod('another')
+    Root.collection = Collection()
     
     for url in script_names:
         d = cherrypy._cprequest.MethodDispatcher()
         conf = {'/': {'user': (url or "/").split("/")[-2]},
                 '/bymethod': {'request.dispatch': d},
+                '/collection': {'request.dispatch': d},
                 }
         cherrypy.tree.mount(Root(), url, conf)
     
@@ -275,6 +281,11 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage("/bymethod", method="PUT")
         self.assertErrorPage(405)
         self.assertHeader('Allow', 'GET, HEAD, POST')
+        
+        # Test default with posparams
+        self.getPage("/collection/silly", method="POST")
+        self.getPage("/collection", method="GET")
+        self.assertBody("['a', 'bit', 'silly']")
 
 
 if __name__ == "__main__":
