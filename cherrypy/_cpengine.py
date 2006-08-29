@@ -303,36 +303,3 @@ class NotReadyRequest:
         cherrypy.response.finalize()
         return cherrypy.response
 
-
-def drop_privileges(new_user='nobody', new_group='nogroup'):
-    """Drop privileges. UNIX only."""
-    # Special thanks to Gavin Baker: http://antonym.org/node/100.
-    
-    import pwd, grp
-    
-    def names():
-        return pwd.getpwuid(os.getuid())[0], grp.getgrgid(os.getgid())[0]
-    name, group = names()
-    cherrypy.log('Started as %r/%r' % (name, group), "PRIV")
-    
-    if os.getuid() != 0:
-        # We're not root so, like, whatever dude.
-        cherrypy.log("Already running as %r" % name, "PRIV")
-        return
-    
-    # Try setting the new uid/gid (from new_user/new_group).
-    try:
-        os.setgid(grp.getgrnam(new_group)[2])
-    except OSError, e:
-        cherrypy.log('Could not set effective group id: %r' % e, "PRIV")
-    
-    try:
-        os.setuid(pwd.getpwnam(new_user)[2])
-    except OSError, e:
-        cherrypy.log('Could not set effective user id: %r' % e, "PRIV")
-    
-    # Ensure a very convervative umask
-    old_umask = os.umask(077)
-    cherrypy.log('Old umask: %o, new umask: 077' % old_umask, "PRIV")
-    cherrypy.log('Running as %r/%r' % names(), "PRIV")
-
