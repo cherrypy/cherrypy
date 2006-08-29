@@ -132,6 +132,7 @@ class HTTPRequest(object):
         self.environ["SERVER_PROTOCOL"] = req_protocol
         # set a non-standard environ entry so the WSGI app can know what
         # the *real* server protocol is (and what features to support).
+        # See http://www.faqs.org/rfcs/rfc2145.html.
         self.environ["ACTUAL_SERVER_PROTOCOL"] = server.protocol
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
         

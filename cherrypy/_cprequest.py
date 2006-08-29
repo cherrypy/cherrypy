@@ -587,7 +587,7 @@ class Request(object):
             url += '?' + self.query_string
         return url
     browser_url = property(_get_browser_url,
-                          doc="The URL as entered in a browser (read-only).")
+                           doc="The URL as entered in a browser (read-only).")
     
     def process_body(self):
         """Convert request.rfile into request.params (or request.body)."""
@@ -754,7 +754,7 @@ class Response(object):
                 content = self.collapse_body()
                 dict.__setitem__(headers, 'Content-Length', len(content))
         
-        # Transform our header dict into a sorted list of tuples.
+        # Transform our header dict into a list of tuples.
         self.header_list = h = headers.output(cherrypy.request.protocol)
         
         cookie = self.simple_cookie.output()

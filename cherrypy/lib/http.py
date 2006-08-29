@@ -44,6 +44,8 @@ def get_ranges(headervalue, content_length):
     for use in a slicing operation. That is, the header "Range: bytes=3-6",
     if applied against a Python string, is requesting resource[3:7]. This
     function will return the list [(3, 7)].
+    
+    If this function return an empty list, you should return HTTP 416.
     """
     
     if not headervalue:
