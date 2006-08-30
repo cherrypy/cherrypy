@@ -283,7 +283,7 @@ class Request(object):
     # Message attributes
     header_list = []
     headers = http.HeaderMap()
-    simple_cookie = Cookie.SimpleCookie()
+    cookie = Cookie.SimpleCookie()
     rfile = None
     process_request_body = True
     methods_with_bodies = ("POST", "PUT")
@@ -402,7 +402,7 @@ class Request(object):
             self.header_list = list(headers)
             self.rfile = rfile
             self.headers = http.HeaderMap()
-            self.simple_cookie = Cookie.SimpleCookie()
+            self.cookie = Cookie.SimpleCookie()
             self.handler = None
             
             # Get the 'Host' header, so we can do HTTPRedirects properly.
@@ -497,7 +497,7 @@ class Request(object):
             
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headers
-            # (but they will be correctly stored in request.simple_cookie).
+            # (but they will be correctly stored in request.cookie).
             if "=?" in value:
                 dict.__setitem__(headers, name, http.decode_TEXT(value))
             else:
@@ -506,7 +506,7 @@ class Request(object):
             # Handle cookies differently because on Konqueror, multiple
             # cookies come on different lines with the same key
             if name == 'Cookie':
-                self.simple_cookie.load(value)
+                self.cookie.load(value)
         
         if not dict.__contains__(headers, 'Host'):
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
@@ -703,7 +703,7 @@ class Response(object):
     status = ""
     header_list = []
     headers = http.HeaderMap()
-    simple_cookie = Cookie.SimpleCookie()
+    cookie = Cookie.SimpleCookie()
     body = Body()
     time = None
     timeout = 300
@@ -724,7 +724,7 @@ class Response(object):
             "Server": "CherryPy/" + cherrypy.__version__,
             "Date": http.HTTPDate(self.time),
         })
-        self.simple_cookie = Cookie.SimpleCookie()
+        self.cookie = Cookie.SimpleCookie()
     
     def collapse_body(self):
         newbody = ''.join([chunk for chunk in self.body])
@@ -757,7 +757,7 @@ class Response(object):
         # Transform our header dict into a list of tuples.
         self.header_list = h = headers.output(cherrypy.request.protocol)
         
-        cookie = self.simple_cookie.output()
+        cookie = self.cookie.output()
         if cookie:
             for line in cookie.split("\n"):
                 name, value = line.split(": ", 1)

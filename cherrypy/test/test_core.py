@@ -346,13 +346,13 @@ def setup_server():
     class Cookies(Test):
         
         def single(self, name):
-            cookie = cherrypy.request.simple_cookie[name]
-            cherrypy.response.simple_cookie[name] = cookie.value
+            cookie = cherrypy.request.cookie[name]
+            cherrypy.response.cookie[name] = cookie.value
         
         def multiple(self, names):
             for name in names:
-                cookie = cherrypy.request.simple_cookie[name]
-                cherrypy.response.simple_cookie[name] = cookie.value
+                cookie = cherrypy.request.cookie[name]
+                cherrypy.response.cookie[name] = cookie.value
 
 
     class ThreadLocal(Test):

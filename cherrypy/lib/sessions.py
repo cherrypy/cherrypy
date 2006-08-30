@@ -382,8 +382,8 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     
     # Check if request came with a session ID
     id = None
-    if name in request.simple_cookie:
-        id = request.simple_cookie[name].value
+    if name in request.cookie:
+        id = request.cookie[name].value
     
     if not hasattr(cherrypy, "session"):
         cherrypy.session = cherrypy._ThreadLocalProxy('session', _def_session)
@@ -400,7 +400,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
         sess.acquire_lock()
     
     # Set response cookie
-    cookie = cherrypy.response.simple_cookie
+    cookie = cherrypy.response.cookie
     cookie[name] = sess.id
     cookie[name]['path'] = path or request.headers.get(path_header) or '/'
     
@@ -422,5 +422,5 @@ def expire():
     one_year = 60 * 60 * 24 * 365
     exp = time.gmtime(time.time() - one_year)
     t = time.strftime("%a, %d-%b-%Y %H:%M:%S GMT", exp)
-    cherrypy.response.simple_cookie[name]['expires'] = t
+    cherrypy.response.cookie[name]['expires'] = t
 
