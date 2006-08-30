@@ -76,14 +76,14 @@ class Server(object):
         if isinstance(httpserver, basestring):
             httpserver = attributes(httpserver)()
         
-        if self.socket_port:
-            host = self.socket_host
-            port = self.socket_port
-            if not host:
-                host = 'localhost'
-            return httpserver, (host, port)
-        else:
+        if self.socket_file:
             return httpserver, self.socket_file
+        
+        host = self.socket_host
+        port = self.socket_port
+        if not host:
+            host = 'localhost'
+        return httpserver, (host, port)
     
     def start(self):
         """Start all registered HTTP servers."""
