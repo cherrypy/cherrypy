@@ -85,7 +85,7 @@ class ConfigTests(helper.CPWebCase):
             'request.show_tracebacks': True,
             'log.screen': False,
             'environment': 'test_suite',
-            'autoreload.on': False,
+            'engine.autoreload_on': False,
             # From global config
             'luxuryyacht': 'throatwobblermangrove',
             # From Root._cp_config

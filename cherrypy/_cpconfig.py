@@ -82,18 +82,18 @@ import cherrypy
 
 environments = {
     "staging": {
-        'autoreload.on': False,
+        'engine.autoreload_on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         },
     "production": {
-        'autoreload.on': False,
+        'engine.autoreload_on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         'log.screen': False,
         },
     "test_suite": {
-        'autoreload.on': False,
+        'engine.autoreload_on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': True,
         'log.screen': False,
@@ -145,6 +145,8 @@ class Config(dict):
         elif hasattr(conf, 'read'):
             # Open file object
             conf = _Parser().dict_from_file(conf)
+        else:
+            conf = conf.copy()
         
         if isinstance(conf.get("global", None), dict):
             conf = conf["global"]
