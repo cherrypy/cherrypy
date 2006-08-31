@@ -185,7 +185,8 @@ class Dispatcher(object):
             return base
         
         # Try successive objects (reverse order)
-        for i in xrange(len(object_trail) - 1, -1, -1):
+        num_candidates = len(object_trail) - 1
+        for i in xrange(num_candidates, -1, -1):
             
             name, candidate, nodeconf, curpath = object_trail[i]
             if candidate is None:
@@ -202,25 +203,55 @@ class Dispatcher(object):
                     return defhandler, names[i:-1]
             
             # Uncomment the next line to restrict positional params to "default".
-            # if i < len(object_trail) - 2: continue
+            # if i < num_candidates - 2: continue
             
             # Try the current leaf.
             if getattr(candidate, 'exposed', False):
                 request.config = set_conf()
-                if i == len(object_trail) - 1:
-                    # We found the extra ".index". Check if the original path
-                    # had a trailing slash (otherwise, do a redirect).
-                    if path[-1:] != '/':
-                        atoms = request.browser_url.split("?", 1)
-                        new_url = atoms.pop(0) + '/'
-                        if atoms:
-                            new_url += "?" + atoms[0]
-                        raise cherrypy.HTTPRedirect(new_url)
+                if i == num_candidates:
+                    # We found the extra ".index". Check that path_info
+                    # has a trailing slash (otherwise, do a redirect).
+                    self.check_missing_slash()
+                else:
+                    # We're not at an 'index' handler. Check that path_info
+                    # had NO trailing slash (if it did, do a redirect).
+                    self.check_extra_slash()
                 return candidate, names[i:-1]
         
         # We didn't find anything
         request.config = set_conf()
         return None, []
+    
+    def check_missing_slash(self):
+        """Redirect if path_info has no trailing slash (if configured)."""
+        request = cherrypy.request
+        pi = request.path_info
+        
+        # Must use config here because tool_up probably hasn't run yet.
+        if request.config.get("request.redirect_on_missing_slash",
+                              request.redirect_on_missing_slash):
+            if pi[-1:] != '/':
+                atoms = request.browser_url.split("?", 1)
+                new_url = atoms.pop(0) + '/'
+                if atoms:
+                    new_url += "?" + atoms[0]
+                raise cherrypy.HTTPRedirect(new_url)
+    
+    def check_extra_slash(self):
+        """Redirect if path_info has trailing slash (if configured)."""
+        request = cherrypy.request
+        pi = request.path_info
+        
+        # Must use config here because tool_up hasn't run yet.
+        if request.config.get("request.redirect_on_extra_slash",
+                              request.redirect_on_extra_slash):
+            # If pi == '/', don't redirect to ''!
+            if pi[-1:] == '/' and pi != '/':
+                atoms = request.browser_url.split("?", 1)
+                new_url = atoms.pop(0)[:-1]
+                if atoms:
+                    new_url += "?" + atoms[0]
+                raise cherrypy.HTTPRedirect(new_url)
 
 
 class MethodDispatcher(Dispatcher):
@@ -299,6 +330,8 @@ class Request(object):
     toolmap = {}
     config = None
     recursive_redirect = False
+    redirect_on_extra_slash = False
+    redirect_on_missing_slash = True
     
     hookpoints = ['on_start_resource', 'before_request_body',
                   'before_main', 'before_finalize',

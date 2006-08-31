@@ -219,6 +219,7 @@ def virtual_host(use_x_forwarded_host=True, **domains):
     """
     request = cherrypy.request
     
+    # Guard against running twice.
     if hasattr(request, "virtual_prefix"):
         return
     

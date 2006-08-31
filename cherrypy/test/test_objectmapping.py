@@ -64,6 +64,7 @@ def setup_server():
         def myMethod(self):
             return "myMethod from dir1, path_info is:" + repr(cherrypy.request.path_info)
         myMethod.exposed = True
+        myMethod._cp_config = {'request.redirect_on_extra_slash': True}
         
         def default(self, *params):
             return "default for dir1, param is:" + repr(params)
@@ -91,7 +92,6 @@ def setup_server():
     class Dir3:
         def default(self):
             return "default for dir3, not exposed"
-    
     
     class Dir4:
         def index(self):
@@ -178,11 +178,19 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage("/dir1/dir2/")
             self.assertBody('index for dir2, path is:%s/dir1/dir2/' % prefix)
             
+            # Test omitted trailing slash (should be redirected by default).
             self.getPage("/dir1/dir2")
-            self.assert_(self.status in ('302 Found', '303 See Other'))
+            self.assertStatus((302, 303))
             self.assertHeader('Location', 'http://%s:%s%s/dir1/dir2/'
                               % (self.HOST, self.PORT, prefix))
             
+            # Test extra trailing slash (should be redirected if configured).
+            self.getPage("/dir1/myMethod/")
+            self.assertStatus((302, 303))
+            self.assertHeader('Location', 'http://%s:%s%s/dir1/myMethod'
+                              % (self.HOST, self.PORT, prefix))
+            
+            # Test that default method must be exposed in order to match.
             self.getPage("/dir1/dir2/dir3/dir4/index")
             self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
             
