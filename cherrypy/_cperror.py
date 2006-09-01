@@ -5,6 +5,9 @@ from sys import exc_info as _exc_info
 from urlparse import urljoin as _urljoin
 from cherrypy.lib import http as _http
 
+import exceptions
+class Exception(exceptions.Exception):
+    pass
 
 class InternalRedirect(Exception):
     """Exception raised when processing should be handled by a different path.
