@@ -96,6 +96,11 @@ from cherrypy import _cplogging
 
 class _GlobalLogManager(_cplogging.LogManager):
     
+    def __init__(self, appid=None):
+        _cplogging.LogManager.__init__(self, appid)
+        # Set a default screen handler on the global log.
+        self.screen = True
+    
     def __call__(self, *args, **kwargs):
         try:
             log = request.app.log

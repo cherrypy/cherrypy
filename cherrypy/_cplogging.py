@@ -89,8 +89,10 @@ class LogManager(object):
             log.handlers.remove(h)
     
     def _get_screen(self):
-        return (bool(self._get_builtin_handler(self.error_log, "screen")) or
-                bool(self._get_builtin_handler(self.access_log, "screen")))
+        h = self._get_builtin_handler
+        has_h = h(self.error_log, "screen") or h(self.access_log, "screen")
+        return bool(has_h)
+    
     def _set_screen(self, newvalue):
         self._set_screen_handler(self.error_log, newvalue)
         self._set_screen_handler(self.access_log, newvalue)
