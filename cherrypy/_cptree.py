@@ -18,15 +18,13 @@ class Application(object):
         a dict of {key: value} pairs.
     """
     
-    def __init__(self, root, script_name="", conf=None):
+    def __init__(self, root, script_name=""):
         self.log = _cplogging.LogManager(id(self))
         self.root = root
         self.script_name = script_name
         self.namespaces = {"log": lambda k, v: setattr(self.log, k, v),
                            }
         self.conf = {}
-        if conf:
-            self.merge(conf)
     
     def _get_script_name(self):
         if self._script_name is None:
@@ -42,7 +40,7 @@ class Application(object):
         """Merge the given config into self.config."""
         _cpconfig.merge(self.conf, conf)
         
-        # Create log handlers as specified in config.
+        # Handle namespaces specified in config.
         rootconf = self.conf.get("/", {})
         for k, v in rootconf.iteritems():
             atoms = k.split(".", 1)
@@ -93,16 +91,24 @@ class Tree(object):
         """Mount a new app from a root object, script_name, and conf."""
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
         script_name = script_name.rstrip("/")
-        app = Application(root, script_name, conf)
-        self.apps[script_name] = app
         
-        # If mounted at "", add favicon.ico
-        if script_name == "" and root and not hasattr(root, "favicon_ico"):
-            import os
-            from cherrypy import tools
-            favicon = os.path.join(os.getcwd(), os.path.dirname(__file__),
-                                   "favicon.ico")
-            root.favicon_ico = tools.staticfile.handler(favicon)
+        if isinstance(root, Application):
+            app = root
+        else:
+            app = Application(root, script_name)
+            
+            # If mounted at "", add favicon.ico
+            if script_name == "" and root and not hasattr(root, "favicon_ico"):
+                import os
+                from cherrypy import tools
+                favicon = os.path.join(os.getcwd(), os.path.dirname(__file__),
+                                       "favicon.ico")
+                root.favicon_ico = tools.staticfile.handler(favicon)
+        
+        if conf:
+            app.merge(conf)
+        
+        self.apps[script_name] = app
         
         return app
     
