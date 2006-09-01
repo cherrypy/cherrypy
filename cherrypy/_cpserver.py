@@ -88,6 +88,9 @@ class Server(object):
     def start(self):
         """Start all registered HTTP servers."""
         self.interrupt = None
+        if not self.httpservers:
+            raise ValueError("No HTTP servers have been created. "
+                             "Try server.quickstart instead.")
         for httpserver in self.httpservers:
             self._start_http(httpserver)
     
