@@ -99,7 +99,7 @@ class Server(Engine):
             wait_for_free_port(host, port)
             
             if not host:
-                host = 'localhost'
+                host = '0.0.0.0'
             on_what = "http://%s:%s/" % (host, port)
         else:
             on_what = "socket file: %s" % cherrypy.config.get('server.socket_file')
