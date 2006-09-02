@@ -18,6 +18,10 @@ def setup_server():
         def index(self, key):
             return cherrypy.request.config.get(key, "None")
         index = cherrypy.expose(index, alias=('global_', 'xyz'))
+        
+        def repr(self, key):
+            return repr(cherrypy.request.config.get(key, None))
+        repr.exposed = True
     
     class Foo:
         
@@ -40,9 +44,14 @@ def setup_server():
             return str(cherrypy.request.config.get(key, "None"))
         index.exposed = True
     
+    ioconf = StringIO.StringIO("""
+[/]
+neg: -1234
+""")
+    
     root = Root()
     root.foo = Foo()
-    cherrypy.tree.mount(root)
+    cherrypy.tree.mount(root, config=ioconf)
     cherrypy.tree.mount(Another(), "/another")
     cherrypy.config.update({'environment': 'test_suite'})
     
@@ -61,6 +70,7 @@ class ConfigTests(helper.CPWebCase):
             ('/',        'nex', 'None'),
             ('/',        'foo', 'this'),
             ('/',        'bar', 'that'),
+            ('/repr',    'neg', '-1234'),
             ('/xyz',     'foo', 'this'),
             ('/foo/',    'foo', 'this2'),
             ('/foo/',    'bar', 'that'),

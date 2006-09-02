@@ -97,6 +97,12 @@ class _Builder:
     
     def build_NoneType(self, o):
         return None
+    
+    def build_UnarySub(self, o):
+        return -self.build_Const(o.getChildren()[0])
+    
+    def build_UnaryAdd(self, o):
+        return self.build_Const(o.getChildren()[0])
 
 
 def unrepr(s):
