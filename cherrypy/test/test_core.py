@@ -138,7 +138,7 @@ def setup_server():
     def login_redir():
         if not getattr(cherrypy.request, "login", None):
             raise cherrypy.InternalRedirect("/internalredirect/login")
-    tools.login_redir = _cptools.Tool('before_main', login_redir)
+    tools.login_redir = _cptools.Tool('before_handler', login_redir)
     
     def redir_custom():
         raise cherrypy.InternalRedirect("/internalredirect/custom_err")

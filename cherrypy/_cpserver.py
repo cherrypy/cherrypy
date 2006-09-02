@@ -56,7 +56,7 @@ class Server(object):
         self.interrupt = None
     
     def quickstart(self, server=None):
-        """Main function for quick starts. MUST be called from the main thread.
+        """Start from defaults. MUST be called from the main thread.
         
         This function works like CherryPy 2's server.start(). It loads and
         starts an httpserver based on the given server object (if provided)

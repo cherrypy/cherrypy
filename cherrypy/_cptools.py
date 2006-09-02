@@ -94,7 +94,7 @@ class Tool(object):
         cherrypy.request.hooks.attach(self._point, self.callable, **conf)
 
 
-class MainTool(Tool):
+class HandlerTool(Tool):
     """Tool which is called 'before main', that may skip normal handlers.
     
     The callable provided should return True if processing should skip
@@ -102,7 +102,7 @@ class MainTool(Tool):
     """
     
     def __init__(self, callable, name=None):
-        Tool.__init__(self, 'before_main', callable, name)
+        Tool.__init__(self, 'before_handler', callable, name)
     
     def handler(self, *args, **kwargs):
         """Use this tool as a CherryPy page handler.
@@ -227,7 +227,7 @@ class XMLRPCTool(object):
             raise cherrypy.InternalRedirect(ppath)
 
 
-class WSGIAppTool(MainTool):
+class WSGIAppTool(HandlerTool):
     """A tool for running any WSGI middleware/application within CP.
     
     Here are the parameters:
@@ -248,10 +248,10 @@ class WSGIAppTool(MainTool):
     def _setup(self):
         # Keep request body intact so the wsgi app can have its way with it.
         cherrypy.request.process_request_body = False
-        MainTool._setup(self)
+        HandlerTool._setup(self)
 
 
-class SessionAuthTool(MainTool):
+class SessionAuthTool(HandlerTool):
     
     def _setargs(self):
         for name in dir(cptools.SessionAuth):
@@ -273,7 +273,7 @@ class CachingTool(Tool):
     def _setup(self):
         """Hook caching into cherrypy.request."""
         conf = self._merged_args()
-        cherrypy.request.hooks.attach('before_main', self._wrapper, **conf)
+        cherrypy.request.hooks.attach('before_handler', self._wrapper, **conf)
 
 
 
@@ -299,16 +299,16 @@ default_toolbox.log_tracebacks = Tool('before_error_response', cptools.log_trace
 default_toolbox.log_headers = Tool('before_error_response', cptools.log_request_headers)
 default_toolbox.err_redirect = ErrorTool(cptools.redirect)
 default_toolbox.etags = Tool('before_finalize', cptools.validate_etags)
-default_toolbox.decode = Tool('before_main', encoding.decode)
+default_toolbox.decode = Tool('before_handler', encoding.decode)
 default_toolbox.encode = Tool('before_finalize', encoding.encode)
 default_toolbox.gzip = Tool('before_finalize', encoding.gzip)
-default_toolbox.staticdir = MainTool(static.staticdir)
-default_toolbox.staticfile = MainTool(static.staticfile)
+default_toolbox.staticdir = HandlerTool(static.staticdir)
+default_toolbox.staticfile = HandlerTool(static.staticfile)
 # _sessions.init must be bound after headers are read
 default_toolbox.sessions = SessionTool('before_request_body', _sessions.init)
 default_toolbox.xmlrpc = XMLRPCTool()
 default_toolbox.wsgiapp = WSGIAppTool(_wsgiapp.run)
-default_toolbox.caching = CachingTool('before_main', _caching.get, 'caching')
+default_toolbox.caching = CachingTool('before_handler', _caching.get, 'caching')
 default_toolbox.expires = Tool('before_finalize', _caching.expires)
 default_toolbox.tidy = Tool('before_finalize', tidy.tidy)
 default_toolbox.nsgmls = Tool('before_finalize', tidy.nsgmls)

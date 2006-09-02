@@ -335,7 +335,7 @@ class Request(object):
     redirect_on_missing_slash = True
     
     hookpoints = ['on_start_resource', 'before_request_body',
-                  'before_main', 'before_finalize',
+                  'before_handler', 'before_finalize',
                   'on_end_resource', 'on_end_request',
                   'before_error_response', 'after_error_response']
     hooks = HookMap(hookpoints)
@@ -524,7 +524,7 @@ class Request(object):
                     if self.process_request_body:
                         self.process_body()
                     
-                    self.hooks.run('before_main')
+                    self.hooks.run('before_handler')
                     if self.handler:
                         self.handler()
                     self.hooks.run('before_finalize')
@@ -617,7 +617,7 @@ class Request(object):
     def _set_hook(self, k, v):
         """Attach bare hooks declared in config."""
         # Use split again to allow multiple hooks for a single
-        # hookpoint per path (e.g. "hooks.before_main.1").
+        # hookpoint per path (e.g. "hooks.before_handler.1").
         # Little-known fact you only get from reading source ;)
         hookpoint = k.split(".", 1)[0]
         if isinstance(v, basestring):
