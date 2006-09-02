@@ -312,6 +312,7 @@ default_toolbox.caching = CachingTool()
 default_toolbox.expires = Tool('before_finalize', _caching.expires)
 default_toolbox.tidy = Tool('before_finalize', tidy.tidy)
 default_toolbox.nsgmls = Tool('before_finalize', tidy.nsgmls)
+default_toolbox.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
 
 
 del cptools, encoding, static, tidy

@@ -18,7 +18,10 @@ def setup(req):
         func = getattr(mod, fname)
         func()
     
-    cherrypy.config.update({'log.screen': False})
+    cherrypy.config.update({'log.screen': False,
+                            "tools.ignore_headers.on": True,
+                            "tools.ignore_headers.headers": ['Range'],
+                            })
     
     if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
         cherrypy.engine.start(blocking=False)

@@ -110,7 +110,7 @@ def wsgisetup(req):
         
         import cherrypy
         cherrypy.config.update({
-            "log.error.file": os.path.join(curdir, "test.log"),
+            "log.error_file": os.path.join(curdir, "test.log"),
             "environment": "production",
             })
         cherrypy.engine.start(blocking=False)
