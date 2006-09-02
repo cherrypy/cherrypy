@@ -209,18 +209,15 @@ Message: %(error_msg)s
             return True
         
         # Everything is OK: user is logged in
-        tdata = cherrypy.thread_data
-        if not tdata.user:
-            tdata.user = request.user = self.load_user_by_username(username)
+        if not request.user_data:
+            request.user_data = self.load_user_by_username(username)
     
     def run(self):
         request = cherrypy.request
-        request.user = None
-        cherrypy.thread_data.user = None
+        request.user_data = None
         
         path = request.path
         if path.endswith('login_screen'):
-            # pass and let the normal handler work
             return self.login_screen()
         elif path.endswith('do_login'):
             return self.do_login(**request.params)
