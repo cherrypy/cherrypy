@@ -8,6 +8,7 @@ import thread
 
 RUN_RELOADER = True
 reloadFiles = []
+ignoreFiles = ['<string>']
 
 def reloader_thread(freq):
     mtimes = {}
@@ -20,7 +21,7 @@ def reloader_thread(freq):
     
     while RUN_RELOADER:
         for filename in map(fileattr, sys.modules.values()) + reloadFiles:
-            if filename:
+            if filename and filename not in ignoreFiles:
                 if filename.endswith(".pyc"):
                     filename = filename[:-1]
                 try:
