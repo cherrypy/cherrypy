@@ -176,7 +176,7 @@ def setup_server():
             'tools.encode.on': True,
         },
     }
-    cherrypy.tree.mount(root, conf=conf)
+    cherrypy.tree.mount(root, config=conf)
 
 
 #                             Client-side code                             #

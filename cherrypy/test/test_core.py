@@ -377,7 +377,7 @@ def setup_server():
         '/': {'log.access_file': log_access_file},
         '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
         }
-    cherrypy.tree.mount(root, conf=appconf)
+    cherrypy.tree.mount(root, config=appconf)
 
 
 #                             Client-side code                             #

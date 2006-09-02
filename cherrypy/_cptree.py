@@ -20,7 +20,7 @@ class Application(object):
         by a "page1" method on the root object. If script_name is
         explicitly set to None, then CherryPy will attempt to provide
         it each time from request.wsgi_environ['SCRIPT_NAME'].
-    conf: a dict of {path: pathconf} pairs, where 'pathconf' is itself
+    config: a dict of {path: pathconf} pairs, where 'pathconf' is itself
         a dict of {key: value} pairs.
     """
     
@@ -30,7 +30,7 @@ class Application(object):
         self.script_name = script_name
         self.namespaces = {"log": lambda k, v: setattr(self.log, k, v),
                            }
-        self.conf = {}
+        self.config = {}
     
     def _get_script_name(self):
         if self._script_name is None:
@@ -42,12 +42,12 @@ class Application(object):
         self._script_name = value
     script_name = property(fget=_get_script_name, fset=_set_script_name)
     
-    def merge(self, conf):
+    def merge(self, config):
         """Merge the given config into self.config."""
-        _cpconfig.merge(self.conf, conf)
+        _cpconfig.merge(self.config, config)
         
         # Handle namespaces specified in config.
-        rootconf = self.conf.get("/", {})
+        rootconf = self.config.get("/", {})
         for k, v in rootconf.iteritems():
             atoms = k.split(".", 1)
             namespace = atoms[0]
@@ -205,8 +205,8 @@ class Tree(object):
     def __init__(self):
         self.apps = {}
     
-    def mount(self, root, script_name="", conf=None):
-        """Mount a new app from a root object, script_name, and conf."""
+    def mount(self, root, script_name="", config=None):
+        """Mount a new app from a root object, script_name, and config."""
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
         script_name = script_name.rstrip("/")
         
@@ -223,8 +223,8 @@ class Tree(object):
                                        "favicon.ico")
                 root.favicon_ico = tools.staticfile.handler(favicon)
         
-        if conf:
-            app.merge(conf)
+        if config:
+            app.merge(config)
         
         self.apps[script_name] = app
         

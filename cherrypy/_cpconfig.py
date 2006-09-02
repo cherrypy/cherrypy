@@ -14,10 +14,10 @@ and configuration data may apply to any of those three scopes:
     cherrypy.config.
     
     Application: entries which apply to each mounted application are stored
-    on the Application object itself, as 'app.conf'. This is a two-level
+    on the Application object itself, as 'app.config'. This is a two-level
     dict where each key is a path, or "relative URL" (for example, "/" or
     "/path/to/my/page"), and each value is a config dict. Usually, this
-    data is provided in the call to cherrypy.tree.mount(root(), conf=conf),
+    data is provided in the call to cherrypy.tree.mount(root(), config=conf),
     although you may also use app.merge(conf).
     
     Request: each Request object possesses a single 'Request.config' dict.
@@ -135,33 +135,33 @@ class Config(dict):
         self.clear()
         dict.update(self, self.defaults)
     
-    def update(self, conf):
+    def update(self, config):
         """Update self from a dict, file or filename."""
-        if isinstance(conf, basestring):
+        if isinstance(config, basestring):
             # Filename
-            if conf not in cherrypy.engine.reload_files:
-                cherrypy.engine.reload_files.append(conf)
-            conf = _Parser().dict_from_file(conf)
-        elif hasattr(conf, 'read'):
+            if config not in cherrypy.engine.reload_files:
+                cherrypy.engine.reload_files.append(config)
+            config = _Parser().dict_from_file(config)
+        elif hasattr(config, 'read'):
             # Open file object
-            conf = _Parser().dict_from_file(conf)
+            config = _Parser().dict_from_file(config)
         else:
-            conf = conf.copy()
+            config = config.copy()
         
-        if isinstance(conf.get("global", None), dict):
-            conf = conf["global"]
+        if isinstance(config.get("global", None), dict):
+            config = config["global"]
         
-        if 'environment' in conf:
-            env = environments[conf['environment']]
+        if 'environment' in config:
+            env = environments[config['environment']]
             for k in env:
-                if k not in conf:
-                    conf[k] = env[k]
+                if k not in config:
+                    config[k] = env[k]
         
-        if 'tools.staticdir.dir' in conf:
-            conf['tools.staticdir.section'] = "global"
+        if 'tools.staticdir.dir' in config:
+            config['tools.staticdir.section'] = "global"
         
         # Must use this idiom in order to hit our custom __setitem__.
-        for k, v in conf.iteritems():
+        for k, v in config.iteritems():
             self[k] = v
     
     def __setitem__(self, k, v):

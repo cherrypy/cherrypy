@@ -149,8 +149,8 @@ class Dispatcher(object):
         nodeconf = {}
         if hasattr(root, "_cp_config"):
             nodeconf.update(root._cp_config)
-        if "/" in app.conf:
-            nodeconf.update(app.conf["/"])
+        if "/" in app.config:
+            nodeconf.update(app.config["/"])
         object_trail = [('root', root, nodeconf, curpath)]
         
         node = root
@@ -166,10 +166,10 @@ class Dispatcher(object):
                 if hasattr(node, "_cp_config"):
                     nodeconf.update(node._cp_config)
             
-            # Mix in values from app.conf for this path.
+            # Mix in values from app.config for this path.
             curpath = "/".join((curpath, name))
-            if curpath in app.conf:
-                nodeconf.update(app.conf[curpath])
+            if curpath in app.config:
+                nodeconf.update(app.config[curpath])
             
             object_trail.append((objname, node, nodeconf, curpath))
         
@@ -557,11 +557,11 @@ class Request(object):
         """Find and call a dispatcher (which sets self.handler and .config)."""
         dispatch = self.dispatch
         # First, see if there is a custom dispatch at this URI. Custom
-        # dispatchers can only be specified in app.conf, not in _cp_config
+        # dispatchers can only be specified in app.config, not in _cp_config
         # (since custom dispatchers may not even have an app.root).
         trail = path
         while trail:
-            nodeconf = self.app.conf.get(trail, {})
+            nodeconf = self.app.config.get(trail, {})
             d = nodeconf.get("request.dispatch")
             if d:
                 dispatch = d

@@ -48,7 +48,7 @@ def setup_server():
         },
         }
     
-    cherrypy.tree.mount(root, conf=conf)
+    cherrypy.tree.mount(root, config=conf)
     cherrypy.config.update({'environment': 'test_suite'})
 
 from cherrypy.test import helper

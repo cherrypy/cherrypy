@@ -21,9 +21,9 @@ engine = _cpengine.Engine()
 from cherrypy import _cpserver
 server = _cpserver.Server()
 
-def quickstart(root, script_name="", conf=None):
+def quickstart(root, script_name="", config=None):
     """Mount the given app, start the engine and builtin server, then block."""
-    tree.mount(root, script_name, conf)
+    tree.mount(root, script_name, config)
     server.quickstart()
     engine.start()
 

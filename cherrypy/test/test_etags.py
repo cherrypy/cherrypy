@@ -16,7 +16,7 @@ def setup_server():
     
     conf = {'/': {'tools.etags.on': True,
                   'tools.etags.autotags': True}}
-    cherrypy.tree.mount(Root(), conf=conf)
+    cherrypy.tree.mount(Root(), config=conf)
     cherrypy.config.update({'environment': 'test_suite'})
 
 from cherrypy.test import helper

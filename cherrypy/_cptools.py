@@ -166,7 +166,7 @@ class SessionTool(Tool):
     """Session Tool for CherryPy."""
     
     def _setup(self):
-        """Hook this tool into cherrypy.request using the given conf.
+        """Hook this tool into cherrypy.request.
         
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
@@ -215,7 +215,7 @@ class XMLRPCTool(object):
     """
     
     def _setup(self):
-        """Hook this tool into cherrypy.request using the given conf."""
+        """Hook this tool into cherrypy.request."""
         request = cherrypy.request
         # Guard against running this method twice.
         if hasattr(request, 'xmlrpc'):
@@ -271,7 +271,7 @@ class CachingTool(Tool):
             request.hooks.attach('before_finalize', _caching.tee_output)
     
     def _setup(self):
-        """Hook caching into cherrypy.request using the given conf."""
+        """Hook caching into cherrypy.request."""
         conf = self._merged_args()
         cherrypy.request.hooks.attach('before_main', self._wrapper, **conf)
 
