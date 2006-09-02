@@ -142,7 +142,29 @@ def response_headers(headers=None):
 response_headers.failsafe = True
 
 
-_login_screen = """<html><body>
+class SessionAuth(object):
+    """Assert that the user is logged in."""
+    
+    session_key = "username"
+    
+    def check_login_and_password(self, login, password):
+        pass
+    
+    def anonymous(self):
+        """Provide a temporary user name for anonymous users."""
+        pass
+    
+    def load_user_by_username(self, username):
+        pass
+    
+    def on_login(self, login):
+        pass
+    
+    def on_logout(self, login):
+        pass
+    
+    def login_screen(self, from_page='..', login='', error_msg=''):
+        return """<html><body>
 Message: %(error_msg)s
 <form method="post" action="do_login">
     Login: <input type="text" name="login" value="%(login)s" size="10" /><br />
@@ -150,67 +172,70 @@ Message: %(error_msg)s
     <input type="hidden" name="from_page" value="%(from_page)s" /><br />
     <input type="submit" />
 </form>
-</body></html>"""
-
-def session_auth(check_login_and_password=None, not_logged_in=None,
-                 load_user_by_username=None, session_key='username',
-                 on_login=None, on_logout=None, login_screen=None):
-    """Assert that the user is logged in."""
+</body></html>""" % {'from_page': from_page, 'login': login,
+                     'error_msg': error_msg}
     
-    if login_screen is None:
-        login_screen = _login_screen
-    
-    request = cherrypy.request
-    tdata = cherrypy.thread_data
-    sess = cherrypy.session
-    request.user = None
-    tdata.user = None
-    
-    if request.path.endswith('login_screen'):
-        return False
-    elif request.path.endswith('do_logout'):
-        login = sess.get(session_key)
-        sess[session_key] = None
-        request.user = None
-        tdata.user = None
-        if login and on_logout:
-            on_logout(login)
-        from_page = request.params.get('from_page', '..')
-        raise cherrypy.HTTPRedirect(from_page)
-    elif request.path.endswith('do_login'):
-        from_page = request.params.get('from_page', '..')
-        login = request.params['login']
-        password = request.params['password']
-        error_msg = check_login_and_password(login, password)
+    def do_login(self, login, password, from_page='..'):
+        """Login. May raise redirect, or return True if request handled."""
+        error_msg = self.check_login_and_password(login, password)
         if error_msg:
-            kw = {"from_page": from_page,
-                  "login": login, "error_msg": error_msg}
-            cherrypy.response.body = login_screen % kw
+            body = self.login_screen(from_page, login, error_msg)
+            cherrypy.response.body = body
+            return True
+        else:
+            cherrypy.session[self.session_key] = login
+            self.on_login(login)
+            raise cherrypy.HTTPRedirect(from_page or "/")
+    
+    def do_logout(self, from_page='..'):
+        """Logout. May raise redirect, or return True if request handled."""
+        sess = cherrypy.session
+        login = sess.get(self.session_key)
+        sess[self.session_key] = None
+        if login:
+            self.on_logout(login)
+        raise cherrypy.HTTPRedirect(from_page)
+    
+    def check_user(self):
+        """Assert username. May raise redirect, or return True if request handled."""
+        sess = cherrypy.session
+        request = cherrypy.request
+        
+        username = sess.get(self.session_key)
+        if not username:
+            username = self.anonymous()
+        if not username:
+            cherrypy.response.body = self.login_screen(request.browser_url)
             return True
         
-        sess[session_key] = login
-        if on_login:
-            on_login(login)
-        raise cherrypy.HTTPRedirect(from_page or "/")
+        # Everything is OK: user is logged in
+        tdata = cherrypy.thread_data
+        if not tdata.user:
+            tdata.user = request.user = self.load_user_by_username(username)
     
-    # Check if user is logged in
-    temp_user = None
-    if (not sess.get(session_key)) and not_logged_in:
-        # Call not_logged_in so that applications where anonymous user
-        #   is OK can handle it
-        temp_user = not_logged_in()
-    if (not sess.get(session_key)) and not temp_user:
-        kw = {"from_page": request.browser_url, "login": "", "error_msg": ""}
-        cherrypy.response.body = login_screen % kw
-        return True
-    
-    # Everything is OK: user is logged in
-    if load_user_by_username and not tdata.user:
-        username = temp_user or sess[session_key]
-        request.user = load_user_by_username(username)
-        tdata.user = request.user
-    
-    return False
+    def run(self):
+        request = cherrypy.request
+        request.user = None
+        cherrypy.thread_data.user = None
+        
+        path = request.path
+        if path.endswith('login_screen'):
+            # pass and let the normal handler work
+            return self.login_screen()
+        elif path.endswith('do_login'):
+            return self.do_login(**request.params)
+        elif path.endswith('do_logout'):
+            return self.do_logout(**request.params)
+        else:
+            return self.check_user()
+
+
+def session_auth(**kwargs):
+    sa = SessionAuth()
+    for k, v in kwargs.iteritems():
+        setattr(sa, k, v)
+    return sa.run()
+
 
 def virtual_host(use_x_forwarded_host=True, **domains):
     """Redirect internally based on the Host header.

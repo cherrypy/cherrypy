@@ -27,16 +27,6 @@ are generally either modules or instances of the tools.Tool class.
 import cherrypy
 
 
-def setargs(obj, func):
-    """Copy func parameter names to obj attributes."""
-    try:
-        import inspect
-        for arg in inspect.getargspec(func)[0]:
-            setattr(obj, arg, None)
-    except (ImportError, AttributeError):
-        pass
-
-
 class Tool(object):
     """A registered function for use with CherryPy request-processing hooks.
     
@@ -48,7 +38,16 @@ class Tool(object):
         self.callable = callable
         self._name = name
         self.__doc__ = self.callable.__doc__
-        setargs(self, callable)
+        self._setargs()
+    
+    def _setargs(self):
+        """Copy func parameter names to obj attributes."""
+        try:
+            import inspect
+            for arg in inspect.getargspec(self.callable)[0]:
+                setattr(self, arg, None)
+        except (ImportError, AttributeError):
+            pass
     
     def _merged_args(self, d=None):
         tm = cherrypy.request.toolmap
@@ -252,15 +251,16 @@ class WSGIAppTool(MainTool):
         MainTool._setup(self)
 
 
+class SessionAuthTool(MainTool):
+    
+    def _setargs(self):
+        for name in dir(cptools.SessionAuth):
+            if not name.startswith("__"):
+                setattr(self, name, None)
+
+
 class CachingTool(Tool):
     """Caching Tool for CherryPy."""
-    
-    def __init__(self):
-        self._point = 'before_main'
-        self.callable = _caching.get
-        self._name = 'caching'
-        self.__doc__ = self.callable.__doc__
-        setargs(self, self.callable)
     
     def _wrapper(self, **kwargs):
         request = cherrypy.request
@@ -289,7 +289,7 @@ class Toolbox(object):
 
 
 default_toolbox = Toolbox()
-default_toolbox.session_auth = MainTool(cptools.session_auth)
+default_toolbox.session_auth = SessionAuthTool(cptools.session_auth)
 default_toolbox.proxy = Tool('before_request_body', cptools.proxy)
 default_toolbox.response_headers = Tool('on_start_resource', cptools.response_headers)
 # We can't call virtual_host in on_start_resource,
@@ -308,7 +308,7 @@ default_toolbox.staticfile = MainTool(static.staticfile)
 default_toolbox.sessions = SessionTool('before_request_body', _sessions.init)
 default_toolbox.xmlrpc = XMLRPCTool()
 default_toolbox.wsgiapp = WSGIAppTool(_wsgiapp.run)
-default_toolbox.caching = CachingTool()
+default_toolbox.caching = CachingTool('before_main', _caching.get, 'caching')
 default_toolbox.expires = Tool('before_finalize', _caching.expires)
 default_toolbox.tidy = Tool('before_finalize', tidy.tidy)
 default_toolbox.nsgmls = Tool('before_finalize', tidy.nsgmls)
