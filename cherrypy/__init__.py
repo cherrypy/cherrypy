@@ -15,6 +15,7 @@ Tool = _cptools.Tool
 from cherrypy import _cptree
 tree = _cptree.Tree()
 from cherrypy._cptree import Application
+from cherrypy import _cpwsgi as wsgi
 from cherrypy import _cpengine
 engine = _cpengine.Engine()
 from cherrypy import _cpserver
