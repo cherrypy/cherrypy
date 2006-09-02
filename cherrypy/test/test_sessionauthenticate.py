@@ -5,16 +5,16 @@ import cherrypy
 
 def setup_server():
     
-    def check(login, password):
-        # Dummy check_login_and_password function
-        if login != 'login' or password != 'password':
+    def check(username, password):
+        # Dummy check_username_and_password function
+        if username != 'login' or password != 'password':
             return u'Wrong login/password'
     
     class Test:
         
         _cp_config = {'tools.sessions.on': True,
                       'tools.session_auth.on': True,
-                      'tools.session_auth.check_login_and_password': check,
+                      'tools.session_auth.check_username_and_password': check,
                       }
         
         def index(self):
@@ -36,7 +36,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
         self.assertInBody('<form method="post" action="do_login">')
         
         # setup credentials
-        login_body = 'login=login&password=password&from_page=/'
+        login_body = 'username=login&password=password&from_page=/'
         
         # attempt a login
         self.getPage('/do_login', method='POST', body=login_body)
