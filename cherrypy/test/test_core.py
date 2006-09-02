@@ -134,10 +134,14 @@ def setup_server():
         def stringify(self):
             return str(cherrypy.HTTPRedirect("/"))
     
+    
     def login_redir():
         if not getattr(cherrypy.request, "login", None):
             raise cherrypy.InternalRedirect("/internalredirect/login")
     tools.login_redir = _cptools.Tool('before_main', login_redir)
+    
+    def redir_custom():
+        raise cherrypy.InternalRedirect("/internalredirect/custom_err")
     
     class InternalRedirect(Test):
         
@@ -172,8 +176,11 @@ def setup_server():
         
         def login(self):
             return "Please log in"
-
-
+        login._cp_config = {'hooks.before_error_response': redir_custom}
+        
+        def custom_err(self):
+            return "Something went horribly wrong."
+    
     class Image(Test):
         
         def getImagesByUser(self, user_id):
@@ -571,6 +578,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/internalredirect/relative")
         self.assertBody('I am a redirected page.')
         self.assertStatus(200)
+        
+        # InternalRedirect on error
+        self.getPage("/internalredirect/login/illegal/extra/vpath/atoms")
+        self.assertStatus(200)
+        self.assertBody("Something went horribly wrong.")
         
         # HTTPRedirect on error
         self.getPage("/redirect/error/")

@@ -320,6 +320,7 @@ class Request(object):
     methods_with_bodies = ("POST", "PUT")
     body = None
     body_read = False
+    headers_read = False
     
     # Dispatch attributes
     dispatch = Dispatcher()
@@ -438,9 +439,6 @@ class Request(object):
             self.cookie = Cookie.SimpleCookie()
             self.handler = None
             
-            # Get the 'Host' header, so we can do HTTPRedirects properly.
-            self.process_headers()
-            
             # path_info should be the path from the
             # app root (script_name) to the handler.
             self.script_name = self.app.script_name
@@ -460,12 +458,27 @@ class Request(object):
                     self.redirections.append(pi)
         except (KeyboardInterrupt, SystemExit):
             raise
-        except cherrypy.TimeoutError:
-            raise
         except:
             if self.throw_errors:
                 raise
-            self.handle_error(sys.exc_info())
+            else:
+                # Can't use handle_error because we may not have hooks yet.
+                cherrypy.log(traceback=True)
+                
+                # Failure in setup, error handler or finalize. Bypass them.
+                if self.show_tracebacks:
+                    exc = sys.exc_info()
+                    try:
+                        dbltrace = ("\n===First Error===\n\n%s"
+                                    "\n\n===Second Error===\n\n%s\n\n")
+                        body = dbltrace % (format_exc(exc), format_exc())
+                    finally:
+                        del exc
+                else:
+                    body = ""
+                r = bare_error(body)
+                response = cherrypy.response
+                response.status, response.header_list, response.body = r
         
         if self.method == "HEAD":
             # HEAD requests MUST NOT return a message-body in the response.
@@ -479,45 +492,62 @@ class Request(object):
         """Generate a response for the resource at self.path_info."""
         try:
             try:
-                if cherrypy.response.timed_out:
-                    raise cherrypy.TimeoutError()
-                
-                if self.app is None:
-                    raise cherrypy.NotFound()
-                
-                self.hooks = HookMap(self.hookpoints)
-                self.get_resource(path_info)
-                self.tool_up()
-                self.hooks.run('on_start_resource')
-                
-                if not self.body_read:
-                    if self.process_request_body:
-                        if self.method not in self.methods_with_bodies:
-                            self.process_request_body = False
+                try:
+                    if cherrypy.response.timed_out:
+                        raise cherrypy.TimeoutError()
                     
+                    if self.app is None:
+                        raise cherrypy.NotFound()
+                    
+                    if not self.headers_read:
+                        # Get the 'Host' header, so we can do HTTPRedirects properly.
+                        self.process_headers()
+                    
+                    self.hooks = HookMap(self.hookpoints)
+                    self.get_resource(path_info)
+                    self.tool_up()
+                    
+                    self.hooks.run('on_start_resource')
+                    
+                    if not self.body_read:
+                        if self.process_request_body:
+                            if self.method not in self.methods_with_bodies:
+                                self.process_request_body = False
+                        
+                        if self.process_request_body:
+                            # Prepare the SizeCheckWrapper for the request body
+                            mbs = cherrypy.server.max_request_body_size
+                            if mbs > 0:
+                                self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
+                    
+                    self.hooks.run('before_request_body')
                     if self.process_request_body:
-                        # Prepare the SizeCheckWrapper for the request body
-                        mbs = cherrypy.server.max_request_body_size
-                        if mbs > 0:
-                            self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
-                
-                self.hooks.run('before_request_body')
-                if self.process_request_body:
-                    self.process_body()
-                
-                self.hooks.run('before_main')
-                if self.handler:
-                    self.handler()
-                self.hooks.run('before_finalize')
-                cherrypy.response.finalize()
-            except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
-                inst.set_response()
-                self.hooks.run('before_finalize')
-                cherrypy.response.finalize()
-        finally:
-            self.hooks.run('on_end_resource')
+                        self.process_body()
+                    
+                    self.hooks.run('before_main')
+                    if self.handler:
+                        self.handler()
+                    self.hooks.run('before_finalize')
+                    cherrypy.response.finalize()
+                except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
+                    inst.set_response()
+                    self.hooks.run('before_finalize')
+                    cherrypy.response.finalize()
+            finally:
+                self.hooks.run('on_end_resource')
+        except cherrypy.InternalRedirect:
+            raise
+        except:
+            if self.throw_errors:
+                raise
+            self.handle_error(sys.exc_info())
     
     def process_headers(self):
+        # Guard against re-reading body (e.g. on InternalRedirect)
+        if self.headers_read:
+            return
+        self.headers_read = True
+        
         self.params = http.parse_query_string(self.query_string)
         
         # Process the headers into self.headers
@@ -647,39 +677,15 @@ class Request(object):
             self.params.update(http.params_from_CGI_form(forms))
     
     def handle_error(self, exc):
-        response = cherrypy.response
         try:
             self.hooks.run("before_error_response")
             if self.error_response:
                 self.error_response()
             self.hooks.run("after_error_response")
-            response.finalize()
-            return
+            cherrypy.response.finalize()
         except cherrypy.HTTPRedirect, inst:
-            try:
-                inst.set_response()
-                response.finalize()
-                return
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                # Fall through to the second error handler
-                pass
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            # Fall through to the second error handler
-            pass
-        
-        # Failure in error handler or finalize. Bypass them.
-        if self.show_tracebacks:
-            dbltrace = ("\n===First Error===\n\n%s"
-                        "\n\n===Second Error===\n\n%s\n\n")
-            body = dbltrace % (format_exc(exc), format_exc())
-        else:
-            body = ""
-        r = bare_error(body)
-        response.status, response.header_list, response.body = r
+            inst.set_response()
+            cherrypy.response.finalize()
 
 
 def file_generator(input, chunkSize=65536):
