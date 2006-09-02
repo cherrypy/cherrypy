@@ -99,7 +99,10 @@ class Server(object):
         bind_addr = self.httpservers[httpserver]
         if isinstance(bind_addr, tuple):
             wait_for_free_port(*bind_addr)
-            on_what = "http://%s:%s/" % bind_addr
+            host, port = bind_addr
+            if not host:
+                host = '0.0.0.0'
+            on_what = "http://%s:%s/" % (host, port)
         else:
             on_what = "socket file: %s" % bind_addr
         
