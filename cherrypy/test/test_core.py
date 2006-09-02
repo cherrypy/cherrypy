@@ -238,9 +238,8 @@ def setup_server():
     
     class Ranges(Test):
         
-        def get_ranges(self):
-            h = cherrypy.request.headers.get('Range')
-            return repr(http.get_ranges(h, 8))
+        def get_ranges(self, bytes):
+            return repr(http.get_ranges('bytes=%s' % bytes, 8))
         
         def slice_file(self):
             path = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -641,11 +640,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertInBody("raise ValueError()")
     
     def testRanges(self):
-        self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
+        self.getPage("/ranges/get_ranges?bytes=3-6")
         self.assertBody("[(3, 7)]")
         
         # Test multiple ranges and a suffix-byte-range-spec, for good measure.
-        self.getPage("/ranges/get_ranges", [('Range', 'bytes=2-4,-1')])
+        self.getPage("/ranges/get_ranges?bytes=2-4,-1")
         self.assertBody("[(2, 5), (7, 8)]")
         
         # Get a partial file.
@@ -659,31 +658,30 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             # What happens with overlapping ranges (and out of order, too)?
             self.getPage("/ranges/slice_file", [('Range', 'bytes=4-6,2-5')])
             self.assertStatus(206)
-            ct = ""
-            for k, v in self.headers:
-                if k.lower() == "content-type":
-                    ct = v
-                    break
+            ct = self.assertHeader("Content-Type")
             expected_type = "multipart/byteranges; boundary="
             self.assert_(ct.startswith(expected_type))
             boundary = ct[len(expected_type):]
-            expected_body = """--%s
-Content-type: text/html
-Content-range: bytes 4-6/14
-
-o, w
---%s
-Content-type: text/html
-Content-range: bytes 2-5/14
-
-llo, 
---%s""" % (boundary, boundary, boundary)
+            expected_body = ("\r\n--%s\r\n"
+                             "Content-type: text/html\r\n"
+                             "Content-range: bytes 4-6/14\r\n"
+                             "\r\n"
+                             "o, \r\n"
+                             "--%s\r\n"
+                             "Content-type: text/html\r\n"
+                             "Content-range: bytes 2-5/14\r\n"
+                             "\r\n"
+                             "llo,\r\n"
+                             "--%s--\r\n" % (boundary, boundary, boundary))
             self.assertBody(expected_body)
             self.assertHeader("Content-Length")
             
             # Test "416 Requested Range Not Satisfiable"
             self.getPage("/ranges/slice_file", [('Range', 'bytes=2300-2900')])
             self.assertStatus(416)
+            # "When this status code is returned for a byte-range request,
+            # the response SHOULD include a Content-Range entity-header
+            # field specifying the current length of the selected resource"
             self.assertHeader("Content-Range", "bytes */14")
         elif cherrypy.server.protocol_version == "HTTP/1.0":
             # Test Range behavior with HTTP/1.0 request
