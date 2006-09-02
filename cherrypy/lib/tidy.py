@@ -6,8 +6,12 @@ import StringIO
 import traceback
 
 
-def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
+def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None,
+         indent=False, wrap=False):
     """Run cherrypy.response through Tidy.
+    
+    If either 'indent' or 'wrap' are specified, then response.body will be
+    set to the output of tidy. Otherwise, only errors will change the body.
     
     Note that we use the standalone Tidy tool rather than the python
     mxTidy module. This is because this module does not seem to be
@@ -36,13 +40,29 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
             tidy_enc = '-' + tidy_enc
         
         strict_xml = (" -xml", "")[bool(strict_xml)]
-        os.system('"%s" %s%s -f %s -o %s %s' %
-                  (tidy_path, tidy_enc, strict_xml,
-                   err_file, out_file, page_file))
-        errs = open(err_file, 'rb').read()
+        
+        if indent:
+            indent = ' -indent'
+        else:
+            index = ''
+        
+        if wrap is False:
+            wrap = ''
+        else:
+            try:
+                wrap = ' -wrap %d' % int(tidyWrap)
+            except:
+                wrap = ''
+        
+        result = os.system('"%s" %s%s%s%s -f %s -o %s %s' %
+                           (tidy_path, tidy_enc, strict_xml, indent, wrap,
+                            err_file, out_file, page_file))
+        use_output = bool(indent or wrap) and not result
+        if use_output:
+            output = open(out_file, 'rb').read()
         
         new_errs = []
-        for err in errs.splitlines():
+        for err in open(err_file, 'rb').read().splitlines():
             if (err.find('Warning') != -1 or err.find('Error') != -1):
                 ignore = 0
                 for err_ign in errors_to_ignore or []:
@@ -55,6 +75,7 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
         if new_errs:
             cherrypy.response.body = wrong_content('<br />'.join(new_errs),
                                                    orig_body)
+            return
         elif strict_xml:
             # The HTML is OK, but is it valid XML?
             # Use elementtree to parse XML
@@ -76,6 +97,10 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None):
                 traceback.print_exc(file = body_file)
                 body_file = '<br />'.join(body_file.getvalue())
                 cherrypy.response.body = wrong_content(body_file, orig_body, "XML")
+                return
+        
+        if use_output:
+            cherrypy.response.body = [output]
 
 def html_space(text):
     """Escape text, replacing space with nbsp and tab with 4 nbsp's."""
