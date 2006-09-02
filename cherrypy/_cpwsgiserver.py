@@ -75,6 +75,12 @@ class HTTPRequest(object):
         
         # path may be an abs_path (including "http://host.domain.tld");
         scheme, location, path, params, qs, frag = urlparse(path)
+        
+        if frag:
+            self.simple_response("400 Bad Request",
+                                 "Illegal #fragment in Request-URI.")
+            return
+        
         if scheme:
             self.environ["wsgi.url_scheme"] = scheme
         if params:
