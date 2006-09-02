@@ -5,6 +5,71 @@ from cherrypy import _cpwsgiserver
 from cherrypy.lib import http as _http
 
 
+class pipeline(list):
+    """An ordered list of configurable WSGI middleware.
+    
+    self: a list of (name, wsgiapp) pairs. Each 'wsgiapp' MUST be a
+        constructor that takes an initial, positional wsgiapp argument,
+        plus optional keyword arguments, and returns a WSGI application
+        (that takes environ and start_response arguments). The 'name' can
+        be any you choose, and will correspond to keys in self.config.
+    config: a dict whose keys match names listed in the pipeline. Each
+        value is a further dict which will be passed to the corresponding
+        named WSGI callable (from the pipeline) as keyword arguments.
+    """
+    
+    def __new__(cls, app, members=None, key="wsgi"):
+        return list.__new__(cls)
+    
+    def __init__(self, app, members=None, key="wsgi"):
+        self.app = app
+        if members:
+            self.extend(members)
+        self.head = None
+        self.tail = None
+        self.config = {}
+        self.key = key
+        app.namespaces[key] = self.namespace_handler
+        app.wsgi_pipeline = self
+    
+    def namespace_handler(self, k, v):
+        """Config handler for our namespace."""
+        if k == "pipeline":
+            # Note this allows multiple entries to be aggregated (but also
+            # note dicts are essentially unordered). It should also allow
+            # developers to set default middleware in code (passed to
+            # pipeline.__init__) that deployers can add to but not remove.
+            self.extend(v)
+            
+            if self:
+                # If self is empty, there's no need to replace app.wsgiapp.
+                # Also note we're grabbing app.wsgiapp, not app.__call__,
+                # so we can "play nice" with other Application-manglers
+                # (hopefully, they'll do the same).
+                self.tail = self.app.wsgiapp
+                self.app.wsgiapp = self.__call__
+        else:
+            name, arg = k.split(".", 1)
+            bucket = self.config.setdefault(name, {})
+            bucket[arg] = v
+    
+    def __call__(self, environ, start_response):
+        if not self.head:
+            # This class may be used without calling namespace_handler,
+            # in which case self.tail may still be None.
+            self.head = self.tail or self.app.wsgiapp
+            pipe = self[:]
+            pipe.reverse()
+            for name, callable in pipe:
+                conf = self.config.get(name, {})
+                self.head = callable(self.head, **conf)
+        return self.head(environ, start_response)
+    
+    def __repr__(self):
+        return "%s.%s(%r)" % (self.__module__, self.__class__.__name__,
+                              list(self))
+
+
 
 #                            Server components                            #
 

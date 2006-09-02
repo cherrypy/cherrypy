@@ -322,6 +322,7 @@ def run():
 ##        'test_states',
         'test_xmlrpc',
         'test_wsgiapps',
+        'test_wsgi_ns',
     ]
     CommandLineParser(testList).run()
     
