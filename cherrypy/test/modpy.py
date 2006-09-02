@@ -31,7 +31,7 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
 import time
 
-from cherrypy import test
+from cherrypy.test import test
 
 
 def read_process(cmd, args=""):
@@ -124,7 +124,7 @@ class ModPythonTestHarness(test.TestHarness):
     use_wsgi = False
     
     def _run(self, conf):
-        from cherrypy import webtest
+        from cherrypy.test import webtest
         webtest.WebCase.PORT = self.port
         print
         print "Running tests:", self.server
