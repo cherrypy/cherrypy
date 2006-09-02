@@ -219,9 +219,8 @@ def setup_server():
 
     class Ranges(Test):
         
-        def get_ranges(self):
-            h = cherrypy.request.headers.get('Range')
-            return repr(httptools.getRanges(h, 8))
+        def get_ranges(self, bytes):
+            return repr(httptools.getRanges('bytes=%s' % bytes, 8))
         
         def slice_file(self):
             path = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -639,11 +638,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 ##        self.assertBody("THROWN ERROR: ValueError")
     
     def testRanges(self):
-        self.getPage("/ranges/get_ranges", [('Range', 'bytes=3-6')])
+        self.getPage("/ranges/get_ranges?bytes=3-6")
         self.assertBody("[(3, 7)]")
         
         # Test multiple ranges and a suffix-byte-range-spec, for good measure.
-        self.getPage("/ranges/get_ranges", [('Range', 'bytes=2-4,-1')])
+        self.getPage("/ranges/get_ranges?bytes=2-4,-1")
         self.assertBody("[(2, 5), (7, 8)]")
         
         # Get a partial file.
@@ -664,17 +663,17 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         expected_type = "multipart/byteranges; boundary="
         self.assert_(ct.startswith(expected_type))
         boundary = ct[len(expected_type):]
-        expected_body = """--%s
-Content-type: text/html
-Content-range: bytes 4-6/14
-
-o, w
---%s
-Content-type: text/html
-Content-range: bytes 2-5/14
-
-llo, 
---%s""" % (boundary, boundary, boundary)
+        expected_body = ("\r\n--%s\r\n"
+                         "Content-type: text/html\r\n"
+                         "Content-range: bytes 4-6/14\r\n"
+                         "\r\n"
+                         "o, \r\n"
+                         "--%s\r\n"
+                         "Content-type: text/html\r\n"
+                         "Content-range: bytes 2-5/14\r\n"
+                         "\r\n"
+                         "llo,\r\n"
+                         "--%s--\r\n" % (boundary, boundary, boundary))
         self.assertBody(expected_body)
         self.assertHeader("Content-Length")
         

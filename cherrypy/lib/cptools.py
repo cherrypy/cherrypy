@@ -173,16 +173,22 @@ def serveFile(path, contentType=None, disposition=None, name=None):
 ##                del response.headers['Content-Length']
                 
                 def fileRanges():
+                    # Apache compatibility:
+                    yield "\r\n"
+                    
                     for start, stop in r:
                         yield "--" + boundary
-                        yield "\nContent-type: %s" % contentType
-                        yield ("\nContent-range: bytes %s-%s/%s\n\n"
+                        yield "\r\nContent-type: %s" % contentType
+                        yield ("\r\nContent-range: bytes %s-%s/%s\r\n\r\n"
                                % (start, stop - 1, c_len))
                         bodyfile.seek(start)
-                        yield bodyfile.read((stop + 1) - start)
-                        yield "\n"
+                        yield bodyfile.read(stop - start)
+                        yield "\r\n"
                     # Final boundary
-                    yield "--" + boundary
+                    yield "--" + boundary + "--"
+                    
+                    # Apache compatibility:
+                    yield "\r\n"
                 response.body = fileRanges()
         else:
             response.headers['Content-Length'] = c_len
