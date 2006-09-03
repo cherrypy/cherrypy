@@ -15,6 +15,7 @@ KNOWN BUGS
 
 1. Apache processes Range headers automatically; CherryPy's truncated
     output is then truncated again by Apache. See test_core.testRanges.
+    This was worked around in http://www.cherrypy.org/changeset/1319.
 2. Apache does not allow custom HTTP methods like CONNECT as per the spec.
     See test_core.testHTTPMethods.
 3. Max request header and body settings do not work with Apache.
@@ -24,6 +25,10 @@ KNOWN BUGS
 5. Apache does not allow custom error codes as per the spec.
 6. Apache (or perhaps modpython, or modpython_gateway) unquotes %xx in the
     Request-URI too early.
+7. mod_python will not read request bodies which use the "chunked"
+    transfer-coding (it passes REQUEST_CHUNKED_ERROR to ap_setup_client_block
+    instead of REQUEST_CHUNKED_DECHUNK, see Apache2's http_protocol.c and
+    mod_python's requestobject.c).
 """
 
 import os
@@ -126,6 +131,7 @@ class ModPythonTestHarness(test.TestHarness):
     def _run(self, conf):
         from cherrypy.test import webtest
         webtest.WebCase.PORT = self.port
+        webtest.WebCase.harness = self
         print
         print "Running tests:", self.server
         

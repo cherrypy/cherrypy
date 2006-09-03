@@ -113,7 +113,7 @@ class ConnectionTests(helper.CPWebCase):
         try:
             httpserver = cherrypy.server.httpservers.keys()[0]
             old_timeout = httpserver.timeout
-        except AttributeError:
+        except (AttributeError, IndexError):
             print "skipped ",
             return
         
@@ -273,6 +273,12 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_Chunked_Encoding(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
+            print "skipped ",
+            return
+        
+        if (hasattr(self, 'harness') and
+            "modpython" in self.harness.__class__.__name__.lower()):
+            # mod_python forbids chunked encoding
             print "skipped ",
             return
         

@@ -1,11 +1,10 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import cherrypy
+
 
 def setup_server():
-    
-    import cherrypy
-    
     
     class ChangeCase(object):
         
@@ -55,6 +54,10 @@ from cherrypy.test import helper
 class WSGI_Namespace_Test(helper.CPWebCase):
     
     def test_pipeline(self):
+        if not cherrypy.server.httpservers:
+            print "skipped ",
+            return
+        
         self.getPage("/")
         # If body is "HEXXO WORXD!", the middleware was applied out of order.
         self.assertBody("HERRO WORRD!")

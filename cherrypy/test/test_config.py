@@ -34,7 +34,7 @@ def setup_server():
         nex = index
         
         def bar(self, key):
-            return cherrypy.request.config.get(key, "None")
+            return `cherrypy.request.config.get(key, None)`
         bar.exposed = True
         bar._cp_config = {'foo': 'this3', 'bax': 'this4'}
     
@@ -75,7 +75,7 @@ class ConfigTests(helper.CPWebCase):
             ('/foo/',    'foo', 'this2'),
             ('/foo/',    'bar', 'that'),
             ('/foo/',    'bax', 'None'),
-            ('/foo/bar', 'baz', 'that2'),
+            ('/foo/bar', 'baz', "'that2'"),
             ('/foo/nex', 'baz', 'that2'),
             # If 'foo' == 'this', then the mount point '/another' leaks into '/'.
             ('/another/','foo', 'None'),
@@ -83,11 +83,7 @@ class ConfigTests(helper.CPWebCase):
         for path, key, expected in tests:
             self.getPage(path + "?key=" + key)
             self.assertBody(expected)
-    
-    def testExternalDispatch(self):
-        # 'cherrypy.request' should reference a default instance
-        cherrypy.request.app = cherrypy.tree.apps[""]
-        cherrypy.request.dispatch("/foo/bar")
+        
         expectedconf = {
             # From CP defaults
             'tools.log_headers.on': False,
@@ -106,8 +102,9 @@ class ConfigTests(helper.CPWebCase):
             'foo': 'this3',
             'bax': 'this4',
             }
-        for k, v in expectedconf.iteritems():
-            self.assertEqual(cherrypy.request.config[k], v)
+        for key, expected in expectedconf.iteritems():
+            self.getPage("/foo/bar?key=" + key)
+            self.assertBody(`expected`)
 
 
 if __name__ == '__main__':

@@ -59,6 +59,7 @@ class TestHarness(object):
         # and we wouldn't be able to globally override the port anymore.
         from cherrypy.test import helper
         webtest.WebCase.PORT = self.port
+        webtest.WebCase.harness = self
         print
         print "Running tests:", self.server
         helper.run_test_suite(self.tests, self.server, conf)
@@ -265,19 +266,18 @@ class CommandLineParser(object):
         
         if self.server == 'cpmodpy':
             from cherrypy.test import modpy
-            m = modpy.ModPythonTestHarness(self.tests, self.server,
+            h = modpy.ModPythonTestHarness(self.tests, self.server,
                                            self.protocol, self.port)
-            m.use_wsgi = False
-            m.run(conf)
+            h.use_wsgi = False
         elif self.server == 'modpygw':
             from cherrypy.test import modpy
-            m = modpy.ModPythonTestHarness(self.tests, self.server,
+            h = modpy.ModPythonTestHarness(self.tests, self.server,
                                            self.protocol, self.port)
-            m.use_wsgi = True
-            m.run(conf)
+            h.use_wsgi = True
         else:
-            TestHarness(self.tests, self.server,
-                        self.protocol, self.port).run(conf)
+            h = TestHarness(self.tests, self.server, self.protocol, self.port)
+        
+        h.run(conf)
         
         if self.profile:
             del conf['profiling.on']

@@ -647,9 +647,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                "[Errno 2] No such file or directory: 'nonexistent.html'")
         self.assertInBody(msg)
         
-        # Test throw_errors (ticket #186).
-        self.getPage("/error/rethrow")
-        self.assertInBody("raise ValueError()")
+        # Ugly hack to skip the test if we're using _cpmodpy.
+        if cherrypy.servers.httpservers:
+            # Test throw_errors (ticket #186).
+            self.getPage("/error/rethrow")
+            self.assertInBody("raise ValueError()")
     
     def testRanges(self):
         self.getPage("/ranges/get_ranges?bytes=3-6")
