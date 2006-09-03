@@ -217,7 +217,11 @@ class HTTPRequest(object):
         for k in headers.keys():
             envname = "HTTP_" + k.upper().replace("-", "_")
             if k in comma_separated_headers:
-                environ[envname] = ", ".join(headers.getheaders(k))
+                existing = environ.get(envname)
+                if existing:
+                    environ[envname] = ", ".join([existing] + headers.getheaders(k))
+                else:
+                    environ[envname] = ", ".join(headers.getheaders(k))
             elif k in ('Transfer-Encoding',):
                 pass
             else:
