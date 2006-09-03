@@ -86,19 +86,12 @@ class Engine(object):
     def block(self):
         """Block forever (wait for stop(), KeyboardInterrupt or SystemExit)."""
         try:
-            if self.autoreload_on:
-                i = 0
-                freq = self.autoreload_frequency
-            
             while self.state != STOPPED:
-                time.sleep(.1)
-                
-                # Autoreload
+                # Note that autoreload_frequency controls
+                # sleep timer even if autoreload is off.
+                time.sleep(self.autoreload_frequency)
                 if self.autoreload_on:
-                    i += .1
-                    if i > freq:
-                        i = 0
-                        self.autoreload()
+                    self.autoreload()
         except KeyboardInterrupt:
             cherrypy.log("<Ctrl-C> hit: shutting down app engine", "ENGINE")
             cherrypy.server.stop()
@@ -219,9 +212,9 @@ class Engine(object):
         if self.state == STARTED:
             for req, resp in self.servings:
                 resp.check_timeout()
-            freq = self.deadlock_poll_freq
-            self.monitor_thread = threading.Timer(freq, self.monitor)
-            self.monitor_thread.start()
+        freq = self.deadlock_poll_freq
+        self.monitor_thread = threading.Timer(freq, self.monitor)
+        self.monitor_thread.start()
     
     def start_with_callback(self, func, args=None, kwargs=None):
         """Start, then callback the given func in a new thread."""

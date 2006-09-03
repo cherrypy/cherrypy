@@ -39,8 +39,8 @@ class Root:
 cherrypy.tree.mount(Root())
 cherrypy.config.update({
     'environment': 'test_suite',
-    'deadlock.poll_freq': 1,
-    'deadlock.timeout': 2,
+    'engine.deadlock_poll_freq': 1,
+    'response.timeout': 2,
     })
 
 class Dependency:

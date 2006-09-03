@@ -529,7 +529,7 @@ class Request(object):
                     cherrypy.response.finalize()
             finally:
                 self.hooks.run('on_end_resource')
-        except cherrypy.InternalRedirect:
+        except (KeyboardInterrupt, SystemExit, cherrypy.InternalRedirect):
             raise
         except:
             if self.throw_errors:

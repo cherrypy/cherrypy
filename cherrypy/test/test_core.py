@@ -647,8 +647,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                "[Errno 2] No such file or directory: 'nonexistent.html'")
         self.assertInBody(msg)
         
-        # Ugly hack to skip the test if we're using _cpmodpy.
-        if cherrypy.servers.httpservers:
+        if (hasattr(self, 'harness') and
+            "modpython" in self.harness.__class__.__name__.lower()):
+            pass
+        else:
             # Test throw_errors (ticket #186).
             self.getPage("/error/rethrow")
             self.assertInBody("raise ValueError()")
