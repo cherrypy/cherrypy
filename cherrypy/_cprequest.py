@@ -467,13 +467,7 @@ class Request(object):
                 
                 # Failure in setup, error handler or finalize. Bypass them.
                 if self.show_tracebacks:
-                    exc = sys.exc_info()
-                    try:
-                        dbltrace = ("\n===First Error===\n\n%s"
-                                    "\n\n===Second Error===\n\n%s\n\n")
-                        body = dbltrace % (format_exc(exc), format_exc())
-                    finally:
-                        del exc
+                    body = format_exc()
                 else:
                     body = ""
                 r = bare_error(body)
