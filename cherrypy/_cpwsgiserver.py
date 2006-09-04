@@ -456,7 +456,7 @@ class CherryPyWSGIServer(object):
     """
     
     protocol = "HTTP/1.1"
-    version = "CherryPy/3.0.0alpha"
+    version = "CherryPy/3.0.0beta"
     ready = False
     _interrupt = None
     ConnectionClass = HTTPConnection

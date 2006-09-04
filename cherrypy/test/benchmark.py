@@ -123,7 +123,7 @@ Completed 800 requests
 Completed 900 requests
 
 
-Server Software:        CherryPy/3.0.0alpha
+Server Software:        CherryPy/3.0.0beta
 Server Hostname:        localhost
 Server Port:            8080
 

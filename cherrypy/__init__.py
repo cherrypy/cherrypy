@@ -1,6 +1,6 @@
 """Global module that all modules developing with CherryPy should import."""
 
-__version__ = '3.0.0alpha'
+__version__ = '3.0.0beta'
 
 import os as _os
 _localdir = _os.path.dirname(__file__)
