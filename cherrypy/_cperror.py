@@ -6,10 +6,10 @@ from urlparse import urljoin as _urljoin
 from cherrypy.lib import http as _http
 
 import exceptions
-class Exception(exceptions.Exception):
+class CherryPyException(exceptions.Exception):
     pass
 
-class InternalRedirect(Exception):
+class InternalRedirect(CherryPyException):
     """Exception raised when processing should be handled by a different path.
     
     If you supply a query string, it will replace request.params.
@@ -37,11 +37,11 @@ class InternalRedirect(Exception):
         # error can have access to it.
         self.path = path
         
-        Exception.__init__(self, path)
+        CherryPyException.__init__(self, path)
 
 
 
-class HTTPRedirect(Exception):
+class HTTPRedirect(CherryPyException):
     """Exception raised when the request should be redirected.
     
     The new URL must be passed as the first argument to the Exception,
@@ -81,7 +81,7 @@ class HTTPRedirect(Exception):
                 raise ValueError("status must be between 300 and 399.")
         
         self.status = status
-        Exception.__init__(self, abs_urls, status)
+        CherryPyException.__init__(self, abs_urls, status)
     
     def set_response(self):
         """Modify cherrypy.response status, headers, and body to represent self.
@@ -138,7 +138,7 @@ class HTTPRedirect(Exception):
         raise self
 
 
-class HTTPError(Exception):
+class HTTPError(CherryPyException):
     """ Exception used to return an HTTP error code (4xx-5xx) to the client.
         This exception will automatically set the response status and body.
         
@@ -151,7 +151,7 @@ class HTTPError(Exception):
         if status < 400 or status > 599:
             raise ValueError("status must be between 400 and 599.")
         self.message = message
-        Exception.__init__(self, status, message)
+        CherryPyException.__init__(self, status, message)
     
     def set_response(self):
         """Modify cherrypy.response status, headers, and body to represent self.
@@ -211,7 +211,7 @@ class NotFound(HTTPError):
         HTTPError.__init__(self, 404, "The path %r was not found." % path)
 
 
-class TimeoutError(Exception):
+class TimeoutError(CherryPyException):
     """Exception raised when Response.timed_out is detected."""
     pass
 

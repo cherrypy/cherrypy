@@ -5,7 +5,7 @@ __version__ = '3.0.0beta'
 import os as _os
 _localdir = _os.path.dirname(__file__)
 
-from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound
+from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, CherryPyException
 from cherrypy._cperror import TimeoutError
 
 from cherrypy import _cptools
