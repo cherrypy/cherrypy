@@ -313,7 +313,7 @@ def run():
         'test_etags',
         'test_gzip',
         'test_objectmapping',
-        'test_response_headers',
+        'test_misc_tools',
         'test_static',
         'test_tutorials',
         'test_virtualhost',

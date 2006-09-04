@@ -268,7 +268,9 @@ class CachingTool(Tool):
             request.handler = None
         else:
             # Note the devious technique here of adding hooks on the fly
-            request.hooks.attach('before_finalize', _caching.tee_output)
+            request.hooks.attach('before_finalize', _caching.tee_output,
+                                 priority = 90)
+    _wrapper.priority = 20
     
     def _setup(self):
         """Hook caching into cherrypy.request."""
@@ -313,6 +315,7 @@ default_toolbox.expires = Tool('before_finalize', _caching.expires)
 default_toolbox.tidy = Tool('before_finalize', tidy.tidy)
 default_toolbox.nsgmls = Tool('before_finalize', tidy.nsgmls)
 default_toolbox.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
+default_toolbox.referer = Tool('before_request_body', cptools.referer)
 
 
 del cptools, encoding, static, tidy

@@ -1,5 +1,7 @@
 """Functions for builtin CherryPy tools."""
 
+import re
+
 import cherrypy
 from cherrypy.lib import http as _http
 
@@ -140,6 +142,28 @@ def response_headers(headers=None):
     for name, value in (headers or []):
         cherrypy.response.headers[name] = value
 response_headers.failsafe = True
+
+
+def referer(pattern, accept=True, accept_missing=False, error=403,
+            message='Forbidden Referer header.'):
+    """Raise HTTPError if Referer header does not pass our test.
+    
+    pattern: a regular expression pattern to test against the Referer.
+    accept: if True, the Referer must match the pattern; if False,
+        the Referer must NOT match the pattern.
+    accept_missing: if True, permit requests with no Referer header.
+    error: the HTTP error code to return to the client on failure.
+    message: a string to include in the response body on failure.
+    """
+    try:
+        match = bool(re.match(pattern, cherrypy.request.headers['Referer']))
+        if accept == match:
+            return
+    except KeyError:
+        if accept_missing:
+            return
+    
+    raise cherrypy.HTTPError(error, message)
 
 
 class SessionAuth(object):
