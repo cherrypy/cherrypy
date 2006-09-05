@@ -44,6 +44,31 @@ def setup_server():
             return str(cherrypy.request.config.get(key, "None"))
         index.exposed = True
     
+    
+    def raw_namespace(key, value):
+        if key == 'input.map':
+            params = cherrypy.request.params
+            for name, coercer in value.iteritems():
+                try:
+                    params[name] = coercer(params[name])
+                except KeyError:
+                    pass
+        elif key == 'output':
+            handler = cherrypy.request.handler
+            def wrapper():
+                return value(handler())
+            cherrypy.request.handler = wrapper
+    cherrypy.engine.request_class.namespaces['raw'] = raw_namespace
+    
+    class Raw:
+        
+        _cp_config = {'raw.output': repr}
+        
+        def incr(self, num):
+            return num + 1
+        incr.exposed = True
+        incr._cp_config = {'raw.input.map': {'num': int}}
+    
     ioconf = StringIO.StringIO("""
 [/]
 neg: -1234
@@ -51,6 +76,7 @@ neg: -1234
     
     root = Root()
     root.foo = Foo()
+    root.raw = Raw()
     cherrypy.tree.mount(root, config=ioconf)
     cherrypy.tree.mount(Another(), "/another")
     cherrypy.config.update({'environment': 'test_suite'})
@@ -105,6 +131,10 @@ class ConfigTests(helper.CPWebCase):
         for key, expected in expectedconf.iteritems():
             self.getPage("/foo/bar?key=" + key)
             self.assertBody(`expected`)
+    
+    def testCustomNamespaces(self):
+        self.getPage("/raw/incr?num=12")
+        self.assertBody("13")
 
 
 if __name__ == '__main__':

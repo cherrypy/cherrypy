@@ -64,8 +64,8 @@ Current namespaces:
     hooks:      Declares additional request-processing functions.
     log:        Configures the logging for each application.
                 These can only be declared in the global or / config.
-    request:    Adds attributes to each Request during the tool_up phase.
-    response:   Adds attributes to each Response during the tool_up phase.
+    request:    Adds attributes to each Request.
+    response:   Adds attributes to each Response.
     server:     Controls the default HTTP server via cherrypy.server.
                 These can only be declared in the global config.
     tools:      Runs and configures additional request-processing packages.

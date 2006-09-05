@@ -98,7 +98,7 @@ class PageHandler(object):
         self.kwargs = kwargs
     
     def __call__(self):
-        cherrypy.response.body = self.callable(*self.args, **self.kwargs)
+        return self.callable(*self.args, **self.kwargs)
 
 
 class LateParamPageHandler(PageHandler):
@@ -227,7 +227,7 @@ class Dispatcher(object):
         request = cherrypy.request
         pi = request.path_info
         
-        # Must use config here because tool_up probably hasn't run yet.
+        # Must use config here because configure probably hasn't run yet.
         if request.config.get("request.redirect_on_missing_slash",
                               request.redirect_on_missing_slash):
             if pi[-1:] != '/':
@@ -242,7 +242,7 @@ class Dispatcher(object):
         request = cherrypy.request
         pi = request.path_info
         
-        # Must use config here because tool_up hasn't run yet.
+        # Must use config here because configure hasn't run yet.
         if request.config.get("request.redirect_on_extra_slash",
                               request.redirect_on_extra_slash):
             # If pi == '/', don't redirect to ''!
@@ -291,6 +291,38 @@ class MethodDispatcher(Dispatcher):
                 request.handler = cherrypy.HTTPError(405)
         else:
             request.handler = cherrypy.NotFound()
+
+
+# Config namespace handlers
+def tools_namespace(k, v):
+    """Attach tools specified in config."""
+    toolname, arg = k.split(".", 1)
+    bucket = cherrypy.request.toolmap.setdefault(toolname, {})
+    bucket[arg] = v
+
+def hooks_namespace(k, v):
+    """Attach bare hooks declared in config."""
+    # Use split again to allow multiple hooks for a single
+    # hookpoint per path (e.g. "hooks.before_handler.1").
+    # Little-known fact you only get from reading source ;)
+    hookpoint = k.split(".", 1)[0]
+    if isinstance(v, basestring):
+        v = cherrypy.lib.attributes(v)
+    if not isinstance(v, Hook):
+        v = Hook(v)
+    cherrypy.request.hooks[hookpoint].append(v)
+
+def request_namespace(k, v):
+    """Attach request attributes declared in config."""
+    setattr(cherrypy.request, k, v)
+
+def response_namespace(k, v):
+    """Attach response attributes declared in config."""
+    setattr(cherrypy.response, k, v)
+
+def error_page_namespace(k, v):
+    """Attach error pages declared in config."""
+    cherrypy.request.error_page[int(k)] = v
 
 
 class Request(object):
@@ -345,6 +377,12 @@ class Request(object):
     show_tracebacks = True
     throw_errors = False
     
+    namespaces = {"tools": tools_namespace,
+                  "hooks": hooks_namespace,
+                  "request": request_namespace,
+                  "response": response_namespace,
+                  "error_page": error_page_namespace,
+                  }
     
     def __init__(self, local_host, remote_host, scheme="http",
                  server_protocol="HTTP/1.1"):
@@ -365,12 +403,8 @@ class Request(object):
         # Put a *copy* of the class error_page into self.
         self.error_page = self.error_page.copy()
         
-        self.namespaces = {"tools": self._set_tool,
-                           "hooks": self._set_hook,
-                           "request": self.__setattr__,
-                           "response": lambda k, v: setattr(cherrypy.response, k, v),
-                           "error_page": lambda k, v: self.error_page.__setitem__(int(k), v),
-                           }
+        # Put a *copy* of the class namespaces into self.
+        self.namespaces = self.namespaces.copy()
     
     def close(self):
         if not self.closed:
@@ -499,7 +533,7 @@ class Request(object):
                     
                     self.hooks = HookMap(self.hookpoints)
                     self.get_resource(path_info)
-                    self.tool_up()
+                    self.configure()
                     
                     self.hooks.run('on_start_resource')
                     
@@ -520,7 +554,7 @@ class Request(object):
                     
                     self.hooks.run('before_handler')
                     if self.handler:
-                        self.handler()
+                        cherrypy.response.body = self.handler()
                     self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
                 except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
@@ -586,6 +620,7 @@ class Request(object):
         trail = path
         while trail:
             nodeconf = self.app.config.get(trail, {})
+            
             d = nodeconf.get("request.dispatch")
             if d:
                 dispatch = d
@@ -602,28 +637,11 @@ class Request(object):
         # dispatch() should set self.handler and self.config
         dispatch(path)
     
-    def _set_tool(self, k, v):
-        """Attach tools specified in config."""
-        toolname, arg = k.split(".", 1)
-        bucket = self.toolmap.setdefault(toolname, {})
-        bucket[arg] = v
-    
-    def _set_hook(self, k, v):
-        """Attach bare hooks declared in config."""
-        # Use split again to allow multiple hooks for a single
-        # hookpoint per path (e.g. "hooks.before_handler.1").
-        # Little-known fact you only get from reading source ;)
-        hookpoint = k.split(".", 1)[0]
-        if isinstance(v, basestring):
-            v = cherrypy.lib.attributes(v)
-        if not isinstance(v, Hook):
-            v = Hook(v)
-        self.hooks[hookpoint].append(v)
-    
-    def tool_up(self):
+    def configure(self):
         """Process self.config, populate self.toolmap and set up each tool."""
-        # Get all 'tools.*' config entries as a {toolname: {k: v}} dict.
         self.toolmap = tm = {}
+        
+        # Process config namespaces (including tools.*)
         reqconf = self.config
         for k in reqconf:
             atoms = k.split(".", 1)
