@@ -97,11 +97,6 @@ from cherrypy import _cplogging
 
 class _GlobalLogManager(_cplogging.LogManager):
     
-    def __init__(self, appid=None):
-        _cplogging.LogManager.__init__(self, appid)
-        # Set a default screen handler on the global log.
-        self.screen = True
-    
     def __call__(self, *args, **kwargs):
         try:
             log = request.app.log
@@ -117,7 +112,9 @@ class _GlobalLogManager(_cplogging.LogManager):
 
 
 log = _GlobalLogManager()
-log.error_file = _os.path.join(_os.getcwd(), _localdir, "error.log")
+# Set a default screen handler on the global log.
+log.screen = True
+log.error_file = ''
 # Using an access file makes CP about 10% slower. Leave off by default.
 log.access_file = ''
 
