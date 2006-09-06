@@ -81,10 +81,11 @@ def validate_since():
 
 #                                Tool code                                #
 
-def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
+def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
+          scheme='X-Forwarded-Proto'):
     """Change the base URL (scheme://host[:port][/path]).
     
-    Useful when running a CP server behind Apache.
+    For running a CP server behind Apache, lighttpd, or other HTTP server.
     
     If you want the new request.base to include path info (not just the host),
     you must explicitly set base to the full base path, and ALSO set 'local'
@@ -99,19 +100,23 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For'):
     
     request = cherrypy.request
     
-    if base is None:
-        port = cherrypy.local.port
-        if port == 80:
-            base = 'http://localhost'
-        else:
-            base = 'http://localhost:%s' % port
+    if scheme:
+        scheme = request.headers.get(scheme, None)
+    if not scheme:
+        scheme = request.base[:request.base.find("://")]
     
     if local:
         base = request.headers.get(local, base)
+    if not base:
+        port = cherrypy.request.local.port
+        if port == 80:
+            base = 'localhost'
+        else:
+            base = 'localhost:%s' % port
     
     if base.find("://") == -1:
         # add http:// or https:// if needed
-        base = request.base[:request.base.find("://") + 3] + base
+        base = scheme + "://" + base
     
     request.base = base
     

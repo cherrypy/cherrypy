@@ -20,6 +20,10 @@ def setup_server():
         xhost.exposed = True
         xhost._cp_config = {'tools.proxy.local': 'X-Host'}
         
+        def base(self):
+            return cherrypy.request.base
+        base.exposed = True
+        
         def newurl(self):
             return ("Browse to <a href='%s'>this page</a>."
                     % cherrypy.tree.url("/this/new/page"))
@@ -31,7 +35,7 @@ def setup_server():
     cherrypy.config.update({
         'environment': 'test_suite',
         'tools.proxy.on': True,
-        'tools.proxy.base': 'http://www.mydomain.com',
+        'tools.proxy.base': 'www.mydomain.com',
         })
 
 
@@ -59,8 +63,12 @@ class ProxyTest(helper.CPWebCase):
         self.assertBody("192.168.0.20")
         
         # Test X-Host (lighttpd; see https://trac.lighttpd.net/trac/ticket/418)
-        self.getPage("/xhost", headers=[('X-Host', 'http://www.yetanother.com')])
+        self.getPage("/xhost", headers=[('X-Host', 'www.yetanother.com')])
         self.assertHeader('Location', "http://www.yetanother.com/blah")
+        
+        # Test X-Forwarded-Proto (lighttpd)
+        self.getPage("/base", headers=[('X-Forwarded-Proto', 'https')])
+        self.assertBody("https://www.mydomain.com")
         
         # Test tree.url()
         for sn in script_names:
