@@ -229,7 +229,7 @@ Message: %(error_msg)s
         if not username:
             sess[self.session_key] = username = self.anonymous()
         if not username:
-            cherrypy.response.body = self.login_screen(request.browser_url)
+            cherrypy.response.body = self.login_screen(request.url(qs=request.query_string))
             return True
         
         self.on_check(username)

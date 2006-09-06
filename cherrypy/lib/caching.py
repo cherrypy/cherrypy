@@ -27,8 +27,8 @@ class MemoryCache:
         self.cursize = 0
     
     def _key(self):
-        return cherrypy.request.config.get("tools.caching.key",
-                                           cherrypy.request.browser_url)
+        request = cherrypy.request
+        return request.config.get("tools.caching.key", request.url(qs=request.query_string))
     key = property(_key)
     
     def expire_cache(self):

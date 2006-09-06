@@ -30,7 +30,7 @@ class InternalRedirect(CherryPyException):
         # Note that urljoin will "do the right thing" whether url is:
         #  1. a URL relative to root (e.g. "/dummy")
         #  2. a URL relative to the current path
-        # Note that any querystring will be discarded.
+        # Note that any query string will be discarded.
         path = _urljoin(cherrypy.request.path_info, path)
         
         # Set a 'path' member attribute so that code which traps this
@@ -52,6 +52,7 @@ class HTTPRedirect(CherryPyException):
     
     def __init__(self, urls, status=None):
         import cherrypy
+        request = cherrypy.request
         
         if isinstance(urls, basestring):
             urls = [urls]
@@ -62,8 +63,8 @@ class HTTPRedirect(CherryPyException):
             #  1. a complete URL with host (e.g. "http://www.dummy.biz/test")
             #  2. a URL relative to root (e.g. "/dummy")
             #  3. a URL relative to the current path
-            # Note that any querystring in browser_url will be discarded.
-            url = _urljoin(cherrypy.request.browser_url, url)
+            # Note that any query string in cherrypy.request is discarded.
+            url = _urljoin(request.url(), url)
             abs_urls.append(url)
         self.urls = abs_urls
         

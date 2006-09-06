@@ -1,8 +1,9 @@
 """CherryPy Application and Tree objects."""
 
+import os
 import sys
 import cherrypy
-from cherrypy import _cpconfig, _cplogging
+from cherrypy import _cpconfig, _cplogging, tools
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import http
 
@@ -35,7 +36,6 @@ class Application(object):
     def _get_script_name(self):
         if self._script_name is None:
             # None signals that the script name should be pulled from WSGI environ.
-            import cherrypy
             return cherrypy.request.wsgi_environ['SCRIPT_NAME']
         return self._script_name
     def _set_script_name(self, value):
@@ -217,8 +217,6 @@ class Tree(object):
             
             # If mounted at "", add favicon.ico
             if script_name == "" and root and not hasattr(root, "favicon_ico"):
-                import os
-                from cherrypy import tools
                 favicon = os.path.join(os.getcwd(), os.path.dirname(__file__),
                                        "favicon.ico")
                 root.favicon_ico = tools.staticfile.handler(favicon)
@@ -244,7 +242,6 @@ class Tree(object):
         
         if path is None:
             try:
-                import cherrypy
                 path = cherrypy.request.path
             except AttributeError:
                 return None
@@ -259,11 +256,14 @@ class Tree(object):
             # Move one node up the tree and try again.
             path = path[:path.rfind("/")]
     
-    def url(self, path, script_name=None):
-        """Return 'path', prefixed with script_name.
+    def url(self, path, script_name=None, base=None):
+        """Return 'path', prefixed with script_name and base.
         
         If script_name is None, cherrypy.request.path will be used
         to find a script_name.
+        
+        If base is None, cherrypy.request.base will be used. Note that
+        you can use cherrypy.tools.proxy to change this.
         """
         
         if script_name is None:
@@ -271,8 +271,10 @@ class Tree(object):
             if script_name is None:
                 return path
         
-        from cherrypy.lib import http
-        return http.urljoin(script_name, path)
+        if base is None:
+            base = cherrypy.request.base
+        
+        return base + http.urljoin(script_name, path)
     
     def __call__(self, environ, start_response):
         # If you're calling this, then you're probably setting SCRIPT_NAME

@@ -219,7 +219,8 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage("/dir1/dir2/script_name")
             self.assertBody(url)
             self.getPage("/dir1/dir2/tree_url")
-            self.assertBody(prefix + "/extra")
+            self.assertBody("http://%s:%s%s/extra" %
+                            (self.HOST, self.PORT, prefix))
             
             # Test that configs don't overwrite each other from diferent apps
             self.getPage("/confvalue")

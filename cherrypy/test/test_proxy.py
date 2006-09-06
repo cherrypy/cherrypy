@@ -3,6 +3,7 @@ test.prefer_parent_path()
 
 import cherrypy
 
+script_names = ["", "/path/to/myapp"]
 
 def setup_server():
     class Root:
@@ -18,8 +19,15 @@ def setup_server():
             raise cherrypy.HTTPRedirect('blah')
         xhost.exposed = True
         xhost._cp_config = {'tools.proxy.local': 'X-Host'}
+        
+        def newurl(self):
+            return ("Browse to <a href='%s'>this page</a>."
+                    % cherrypy.tree.url("/this/new/page"))
+        newurl.exposed = True
     
-    cherrypy.tree.mount(Root())
+    for sn in script_names:
+        cherrypy.tree.mount(Root(), sn)
+    
     cherrypy.config.update({
         'environment': 'test_suite',
         'tools.proxy.on': True,
@@ -53,6 +61,16 @@ class ProxyTest(helper.CPWebCase):
         # Test X-Host (lighttpd; see https://trac.lighttpd.net/trac/ticket/418)
         self.getPage("/xhost", headers=[('X-Host', 'http://www.yetanother.com')])
         self.assertHeader('Location', "http://www.yetanother.com/blah")
+        
+        # Test tree.url()
+        for sn in script_names:
+            self.getPage(sn + "/newurl")
+            self.assertBody("Browse to <a href='http://www.mydomain.com"
+                            + sn + "/this/new/page'>this page</a>.")
+            self.getPage(sn + "/newurl", headers=[('X-Forwarded-Host',
+                                                   'http://www.yetanother.com')])
+            self.assertBody("Browse to <a href='http://www.yetanother.com"
+                            + sn + "/this/new/page'>this page</a>.")
 
 
 if __name__ == '__main__':
