@@ -2,6 +2,7 @@
 
 import cgi
 import os
+import re
 import signal
 import sys
 import threading
@@ -14,14 +15,6 @@ from cherrypy import _cprequest
 STOPPED = 0
 STARTING = None
 STARTED = 1
-
-
-def fileattr(m):
-    if hasattr(m, "__loader__"):
-        if hasattr(m.__loader__, "archive"):
-            return m.__loader__.archive
-    return getattr(m, "__file__", None)
-
 
 try:
     if hasattr(signal, "SIGHUP"):
@@ -48,6 +41,7 @@ class Engine(object):
     deadlock_poll_freq = 60
     autoreload_on = True
     autoreload_frequency = 1
+    autoreload_match = ".*"
     
     def __init__(self):
         self.state = STOPPED
@@ -122,7 +116,16 @@ class Engine(object):
     
     def autoreload(self):
         """Reload the process if registered files have been modified."""
-        for filename in map(fileattr, sys.modules.values()) + self.reload_files:
+        sysfiles = []
+        for k, m in sys.modules.items():
+            if re.match(self.autoreload_match, k):
+                if hasattr(m, "__loader__"):
+                    if hasattr(m.__loader__, "archive"):
+                        k = m.__loader__.archive
+                k = getattr(m, "__file__", None)
+                sysfiles.append(k)
+        
+        for filename in sysfiles + self.reload_files:
             if filename:
                 if filename.endswith(".pyc"):
                     filename = filename[:-1]
