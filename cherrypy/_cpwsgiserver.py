@@ -215,6 +215,9 @@ class HTTPRequest(object):
         
         # Must use keys() here for Python 2.3 (rfc822.Message had no __iter__).
         for k in headers.keys():
+            if k in ('transfer-encoding', 'content-type', 'content-length'):
+                continue
+            
             envname = "HTTP_" + k.upper().replace("-", "_")
             if k in comma_separated_headers:
                 existing = environ.get(envname)
@@ -222,8 +225,6 @@ class HTTPRequest(object):
                     environ[envname] = ", ".join([existing] + headers.getheaders(k))
                 else:
                     environ[envname] = ", ".join(headers.getheaders(k))
-            elif k in ('Transfer-Encoding',):
-                pass
             else:
                 environ[envname] = headers[k]
         return environ

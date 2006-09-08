@@ -101,15 +101,20 @@ def run_test_suite(moduleNames, server, conf):
     cherrypy.engine.start_with_callback(_run_test_suite_thread,
                                         args=(moduleNames, conf))
 
-def sync_apps(profile=False):
+def sync_apps(profile=False, validate=False):
     apps = []
     for base, app in cherrypy.tree.apps.iteritems():
         if base == "/":
             base = ""
         if profile:
-            apps.append((base, profiler.make_app(app, aggregate=False)))
-        else:
-            apps.append((base, app))
+            app = profiler.make_app(app, aggregate=False)
+        if validate:
+            try:
+                from wsgiref import validate
+            except ImportError:
+                warnings.warn("Error importing wsgiref. The validator will not run.")
+            app = validate.validator(app)
+        apps.append((base, app))
     apps.sort()
     apps.reverse()
     for s in cherrypy.server.httpservers:
@@ -130,7 +135,8 @@ def _run_test_suite_thread(moduleNames, conf):
         
         # The setup functions probably mounted new apps.
         # Tell our server about them.
-        sync_apps(profile=conf.get("profiling.on", False))
+        sync_apps(profile=conf.get("profiling.on", False),
+                  validate=conf.get("validator.on", False))
         
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)

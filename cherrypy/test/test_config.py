@@ -56,6 +56,7 @@ def setup_server():
         elif key == 'output':
             handler = cherrypy.request.handler
             def wrapper():
+                # 'value' is a type (like int or str).
                 return value(handler())
             cherrypy.request.handler = wrapper
     cherrypy.engine.request_class.namespaces['raw'] = raw_namespace

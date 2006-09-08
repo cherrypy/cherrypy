@@ -26,7 +26,7 @@ def setup_server():
                 results = "".join(results)
             results = list(results)
             results.reverse()
-            return "".join(results)
+            return ["".join(results)]
         return _app
     
     class Root:

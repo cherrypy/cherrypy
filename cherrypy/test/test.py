@@ -84,10 +84,11 @@ class CommandLineParser(object):
         self.available_tests = available_tests
         self.cover = False
         self.profile = False
+        self.validate = False
         self.server = None
         self.protocol = "HTTP/1.1"
         
-        longopts = ['cover', 'profile', '1.0', 'help', 'basedir=', 'port=',
+        longopts = ['cover', 'profile', 'validate', '1.0', 'help', 'basedir=', 'port=',
                     'server=']
         longopts.extend(self.available_tests)
         try:
@@ -107,6 +108,8 @@ class CommandLineParser(object):
                 self.cover = True
             elif o == "--profile":
                 self.profile = True
+            elif o == "--validate":
+                self.validate = True
             elif o == "--1.0":
                 self.protocol = "HTTP/1.0"
             elif o == "--basedir":
@@ -139,7 +142,7 @@ class CommandLineParser(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server=* --port=%s --1.0 --cover --basedir=path --profile --tests**
+        test.py --server=* --port=%s --1.0 --cover --basedir=path --profile --validate --tests**
         
     """ % self.__class__.port
         print '    * servers:'
@@ -158,6 +161,7 @@ class CommandLineParser(object):
     --basedir=path: display coverage stats for some path other than cherrypy.
     
     --profile: turn on profiling tool
+    --validate: use wsgiref.validate (builtin in Python 2.5).
     """ % self.__class__.port
         
         print '    ** tests:'
@@ -264,6 +268,10 @@ class CommandLineParser(object):
             conf = conf or {}
             conf['profiling.on'] = True
         
+        if self.validate:
+            conf = conf or {}
+            conf['validator.on'] = True
+        
         if self.server == 'cpmodpy':
             from cherrypy.test import modpy
             h = modpy.ModPythonTestHarness(self.tests, self.server,
@@ -280,7 +288,6 @@ class CommandLineParser(object):
         h.run(conf)
         
         if self.profile:
-            del conf['profiling.on']
             print
             print ("run /cherrypy/lib/profiler.py as a script to serve "
                    "profiling results on port 8080")
