@@ -323,8 +323,16 @@ class HTTPRequest(object):
             self.outheaders.append(("Server", server.version))
         
         wfile.write(server.protocol + " " + self.status + "\r\n")
-        for k, v in self.outheaders:
-            wfile.write(k + ": " + v + "\r\n")
+        try:
+            for k, v in self.outheaders:
+                wfile.write(k + ": " + v + "\r\n")
+        except TypeError:
+            if not isinstance(k, str):
+                raise TypeError("WSGI response header key %r is not a string.")
+            if not isinstance(v, str):
+                raise TypeError("WSGI response header value %r is not a string.")
+            else:
+                raise
         wfile.write("\r\n")
         wfile.flush()
     
