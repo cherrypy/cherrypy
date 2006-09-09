@@ -436,7 +436,7 @@ class Request(object):
             self.error_response = cherrypy.HTTPError(500).set_response
             
             self.method = method
-            self.path = path or "/"
+            path = path or "/"
             self.query_string = query_string
             
             # Compare request and server HTTP protocol versions, in case our
@@ -470,7 +470,7 @@ class Request(object):
             # path_info should be the path from the
             # app root (script_name) to the handler.
             self.script_name = self.app.script_name
-            self.path_info = self.path[len(self.script_name.rstrip("/")):]
+            self.path_info = path[len(self.script_name.rstrip("/")):]
             
             # Loop to allow for InternalRedirect.
             pi = self.path_info

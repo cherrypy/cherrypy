@@ -237,12 +237,12 @@ class Tree(object):
     def script_name(self, path=None):
         """The script_name of the app at the given path, or None.
         
-        If path is None, cherrypy.request.path is used.
+        If path is None, cherrypy.request is used.
         """
         
         if path is None:
             try:
-                path = cherrypy.request.path
+                path = cherrypy.request.script_name + cherrypy.request.path_info
             except AttributeError:
                 return None
         
@@ -259,7 +259,7 @@ class Tree(object):
     def url(self, path, script_name=None, base=None):
         """Return 'path', prefixed with script_name and base.
         
-        If script_name is None, cherrypy.request.path will be used
+        If script_name is None, cherrypy.request will be used
         to find a script_name.
         
         If base is None, cherrypy.request.base will be used. Note that

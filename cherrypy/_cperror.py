@@ -47,7 +47,7 @@ class HTTPRedirect(CherryPyException):
     The new URL must be passed as the first argument to the Exception,
     e.g., HTTPRedirect(newUrl). Multiple URLs are allowed. If a URL is
     absolute, it will be used as-is. If it is relative, it is assumed
-    to be relative to the current cherrypy.request.path.
+    to be relative to the current cherrypy.request.path_info.
     """
     
     def __init__(self, urls, status=None):
@@ -207,7 +207,7 @@ class NotFound(HTTPError):
     def __init__(self, path=None):
         if path is None:
             import cherrypy
-            path = cherrypy.request.path
+            path = cherrypy.request.script_name + cherrypy.request.path_info
         self.args = (path,)
         HTTPError.__init__(self, 404, "The path %r was not found." % path)
 

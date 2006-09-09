@@ -73,7 +73,7 @@ def setup_server():
 
     class Dir2:
         def index(self):
-            return "index for dir2, path is:" + cherrypy.request.path
+            return "index for dir2, path is:" + cherrypy.request.path_info
         index.exposed = True
         
         def script_name(self):
@@ -176,7 +176,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertBody("default:('notExposed',)")
             
             self.getPage("/dir1/dir2/")
-            self.assertBody('index for dir2, path is:%s/dir1/dir2/' % prefix)
+            self.assertBody('index for dir2, path is:/dir1/dir2/')
             
             # Test omitted trailing slash (should be redirected by default).
             self.getPage("/dir1/dir2")

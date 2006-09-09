@@ -241,7 +241,7 @@ Message: %(error_msg)s
     
     def run(self):
         request = cherrypy.request
-        path = request.path
+        path = request.path_info
         if path.endswith('login_screen'):
             return self.login_screen()
         elif path.endswith('do_login'):
