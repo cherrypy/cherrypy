@@ -12,7 +12,6 @@ called "helper.py" (in this folder); this module calls that as a library.
 
 import sys
 import os, os.path
-from cherrypy.test import webtest
 import getopt
 
 
@@ -57,7 +56,7 @@ class TestHarness(object):
         # exactly like each test module does, because a relative import
         # would stick a second instance of webtest in sys.modules,
         # and we wouldn't be able to globally override the port anymore.
-        from cherrypy.test import helper
+        from cherrypy.test import helper, webtest
         webtest.WebCase.PORT = self.port
         webtest.WebCase.harness = self
         print
@@ -72,6 +71,7 @@ class CommandLineParser(object):
                          }
     default_server = "wsgi"
     port = 8080
+    basedir = None
     
     def __init__(self, available_tests, args=sys.argv[1:]):
         """Constructor to populate the TestHarness instance.
