@@ -98,13 +98,16 @@ class Server(object):
     
     def _start_http(self, httpserver):
         """Start the given httpserver in a new thread."""
+        scheme = "http"
+        if getattr(httpserver, "ssl_certificate", None):
+            scheme = "https"
         bind_addr = self.httpservers[httpserver]
         if isinstance(bind_addr, tuple):
             wait_for_free_port(*bind_addr)
             host, port = bind_addr
             if not host:
                 host = '0.0.0.0'
-            on_what = "http://%s:%s/" % (host, port)
+            on_what = "%s://%s:%s/" % (scheme, host, port)
         else:
             on_what = "socket file: %s" % bind_addr
         
@@ -113,7 +116,7 @@ class Server(object):
         t.start()
         
         self.wait(httpserver)
-        cherrypy.log("Serving HTTP on %s" % on_what, 'HTTP')
+        cherrypy.log("Serving %s on %s" % (scheme.upper(), on_what), 'HTTP')
     
     def _start_http_thread(self, httpserver):
         """HTTP servers MUST be started in new threads, so that the

@@ -774,13 +774,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         if cherrypy.server.protocol_version == "HTTP/1.1":
             # Test RFC-2047-encoded request and response header values
-            self.getPage("/headers/ifmatch",
-                         [('If-Match', '=?utf-8?q?=E2=84=ABngstr=C3=B6m?=')])
+            c = "=E2=84=ABngstr=C3=B6m"
+            self.getPage("/headers/ifmatch", [('If-Match', '=?utf-8?q?%s?=' % c)])
             self.assertBody("u'\\u212bngstr\\xf6m'")
             self.assertHeader("ETag", '=?utf-8?b?4oSrbmdzdHLDtm0=?=')
             
             # Test a *LONG* RFC-2047-encoded request and response header value
-            c = "=E2=84=ABngstr=C3=B6m"
             self.getPage("/headers/ifmatch",
                          [('If-Match', '=?utf-8?q?%s?=' % (c * 10))])
             self.assertBody("u'%s'" % ('\\u212bngstr\\xf6m' * 10))
