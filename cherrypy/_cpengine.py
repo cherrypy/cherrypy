@@ -248,8 +248,7 @@ class Engine(object):
                 """Drop privileges. Not available."""
                 raise NotImplementedError
         else:
-            # A very conservative umask
-            umask = 077
+            umask = None
             
             def drop_privileges(self):
                 """Drop privileges. Windows version (umask only)."""
@@ -260,8 +259,7 @@ class Engine(object):
     else:
         uid = None
         gid = None
-        # A very conservative umask
-        umask = 077
+        umask = None
         
         def drop_privileges(self):
             """Drop privileges. UNIX version (uid, gid, and umask)."""
