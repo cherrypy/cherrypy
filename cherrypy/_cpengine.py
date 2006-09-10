@@ -266,16 +266,30 @@ class Engine(object):
         def drop_privileges(self):
             """Drop privileges. UNIX version (uid, gid, and umask)."""
             if not (self.uid is None and self.gid is None):
+                if self.uid is None:
+                    uid = None
+                elif isinstance(self.uid, basestring):
+                    uid = self.pwd.getpwnam(self.uid)[2]
+                else:
+                    uid = self.uid
+                
+                if self.gid is None:
+                    gid = None
+                elif isinstance(self.gid, basestring):
+                    gid = self.grp.getgrnam(self.gid)[2]
+                else:
+                    gid = self.gid
+                
                 def names():
-                    name = pwd.getpwuid(os.getuid())[0]
-                    group = grp.getgrgid(os.getgid())[0]
+                    name = self.pwd.getpwuid(os.getuid())[0]
+                    group = self.grp.getgrgid(os.getgid())[0]
                     return name, group
                 
                 cherrypy.log('Started as %r/%r' % names(), "PRIV")
-                if self.gid is not None:
-                    os.setgid(grp.getgrnam(self.gid)[2])
-                if self.uid is not None:
-                    os.setuid(pwd.getpwnam(self.uid)[2])
+                if gid is not None:
+                    os.setgid(gid)
+                if uid is not None:
+                    os.setuid(uid)
                 cherrypy.log('Running as %r/%r' % names(), "PRIV")
             
             if self.umask is not None:
