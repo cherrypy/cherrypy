@@ -18,6 +18,11 @@ import traceback
 from urllib import unquote
 from urlparse import urlparse
 
+try:
+    from OpenSSL import SSL
+except ImportError:
+    SSL = None
+
 import errno
 socket_errors_to_ignore = []
 # Not all of these names will be defined for every platform.
@@ -341,9 +346,49 @@ class HTTPRequest(object):
         wfile.flush()
 
 
+def _ssl_wrap_method(method):
+    def ssl_method_wrapper(self, *args, **kwargs):
+##        print (id(self), method, args, kwargs)
+        while True:
+            try:
+                return method(self, *args, **kwargs)
+            except (SSL.WantReadError, SSL.WantWriteError):
+                # Sleep and try again
+                time.sleep(self.ssl_retry)
+            except SSL.SysCallError, e:
+                errno = e.args[0]
+                if errno not in socket_errors_to_ignore:
+                    raise socket.error(errno)
+                return ""
+            except SSL.Error, e:
+                if e.args == (-1, 'Unexpected EOF'):
+                    return ""
+                elif e.args[0][0][2] == 'ssl handshake failure':
+                    return ""
+                else:
+                    raise
+##        raise socket.timeout()
+    return ssl_method_wrapper
+
+class SSL_fileobject(socket._fileobject):
+    """Faux file object attached to a socket object."""
+    
+    ssl_timeout = 3
+    ssl_retry = .01
+    
+    close = _ssl_wrap_method(socket._fileobject.close)
+    flush = _ssl_wrap_method(socket._fileobject.flush)
+    write = _ssl_wrap_method(socket._fileobject.write)
+    writelines = _ssl_wrap_method(socket._fileobject.writelines)
+    read = _ssl_wrap_method(socket._fileobject.read)
+    readline = _ssl_wrap_method(socket._fileobject.readline)
+    readlines = _ssl_wrap_method(socket._fileobject.readlines)
+
+
 class HTTPConnection(object):
     
-    bufsize = -1
+    rbufsize = -1
+    wbufsize = -1
     RequestHandlerClass = HTTPRequest
     environ = {"wsgi.version": (1, 0),
                "wsgi.url_scheme": "http",
@@ -353,16 +398,23 @@ class HTTPConnection(object):
                "wsgi.errors": sys.stderr,
                }
     
-    def __init__(self, socket, addr, server):
-        self.socket = socket
+    def __init__(self, sock, addr, server):
+        self.socket = sock
         self.addr = addr
         self.server = server
         
-        self.rfile = self.socket.makefile("r", self.bufsize)
-        self.wfile = self.socket.makefile("w", self.bufsize)
-        
         # Copy the class environ into self.
         self.environ = self.environ.copy()
+        
+        if type(sock) is socket.socket:
+            self.rfile = self.socket.makefile("r", self.rbufsize)
+            self.wfile = self.socket.makefile("w", self.wbufsize)
+        else:
+            # Assume it's an HTTPS socket wrapper
+            self.environ["wsgi.url_scheme"] = "https"
+            self.rfile = SSL_fileobject(sock, "r", self.rbufsize)
+            self.wfile = SSL_fileobject(sock, "w", self.wbufsize)
+        
         self.environ.update({"wsgi.input": self.rfile,
                              "SERVER_NAME": self.server.server_name,
                              })
@@ -390,16 +442,17 @@ class HTTPConnection(object):
                 # This order of operations should guarantee correct pipelining.
                 req.parse_request()
                 if not req.ready:
-                    break
+                    return
                 req.respond()
                 if req.close_connection:
-                    break
+                    return
         except socket.error, e:
             errno = e.args[0]
             if errno not in socket_errors_to_ignore:
                 if req:
                     req.simple_response("500 Internal Server Error",
                                         format_exc())
+            return
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -468,6 +521,10 @@ class CherryPyWSGIServer(object):
     _interrupt = None
     ConnectionClass = HTTPConnection
     
+    # Paths to certificate and private key files
+    ssl_certificate = None
+    ssl_private_key = None
+    
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10):
         self.requests = Queue.Queue(max)
@@ -506,6 +563,12 @@ class CherryPyWSGIServer(object):
             """Create (or recreate) the actual socket object."""
             self.socket = socket.socket(family, type, proto)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if self.ssl_certificate and self.ssl_private_key:
+                # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
+                ctx = SSL.Context(SSL.SSLv23_METHOD)
+                ctx.use_privatekey_file(self.ssl_private_key)
+                ctx.use_certificate_file(self.ssl_certificate)
+                self.socket = SSL.Connection(ctx, self.socket)
             self.socket.bind(self.bind_addr)
         
         # Select the appropriate socket

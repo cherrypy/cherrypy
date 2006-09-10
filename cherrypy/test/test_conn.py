@@ -57,7 +57,10 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Set our HTTP_CONN to an instance so it persists between requests.
-        self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        if self.scheme == "https":
+            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
+        else:
+            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
         # Don't automatically re-connect
         self.HTTP_CONN.auto_open = False
         self.HTTP_CONN.connect()
@@ -93,7 +96,10 @@ class ConnectionTests(helper.CPWebCase):
             self.assertRaises(httplib.NotConnected, self.getPage, "/")
         
         # Test client-side close.
-        self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        if self.scheme == "https":
+            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
+        else:
+            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
         self.HTTP_CONN.auto_open = False
         self.HTTP_CONN.connect()
         self.getPage("/page2", headers=[("Connection", "close")])
@@ -122,7 +128,10 @@ class ConnectionTests(helper.CPWebCase):
             self.PROTOCOL = "HTTP/1.1"
             
             # Make an initial request
-            conn = httplib.HTTPConnection(self.HOST, self.PORT)
+            if self.scheme == "https":
+                conn = httplib.HTTPSConnection(self.HOST, self.PORT)
+            else:
+                conn = httplib.HTTPConnection(self.HOST, self.PORT)
             conn.auto_open = False
             conn.connect()
             conn.putrequest("GET", "/", skip_host=True)
@@ -161,12 +170,16 @@ class ConnectionTests(helper.CPWebCase):
                               " as it should have: %s" % sys.exc_info()[1])
             else:
                 self.fail("Writing to timed out socket didn't fail"
-                          " as it should have.")
+                          " as it should have: %s" %
+                          response.read())
             
             conn.close()
             
             # Make another request on a new socket, which should work
-            conn = httplib.HTTPConnection(self.HOST, self.PORT)
+            if self.scheme == "https":
+                conn = httplib.HTTPSConnection(self.HOST, self.PORT)
+            else:
+                conn = httplib.HTTPConnection(self.HOST, self.PORT)
             conn.auto_open = False
             conn.connect()
             conn.putrequest("GET", "/", skip_host=True)
@@ -189,7 +202,10 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Test pipelining. httplib doesn't support this directly.
-        conn = httplib.HTTPConnection(self.HOST, self.PORT)
+        if self.scheme == "https":
+            conn = httplib.HTTPSConnection(self.HOST, self.PORT)
+        else:
+            conn = httplib.HTTPConnection(self.HOST, self.PORT)
         conn.auto_open = False
         conn.connect()
         
@@ -226,7 +242,10 @@ class ConnectionTests(helper.CPWebCase):
         
         self.PROTOCOL = "HTTP/1.1"
         
-        conn = httplib.HTTPConnection(self.HOST, self.PORT)
+        if self.scheme == "https":
+            conn = httplib.HTTPSConnection(self.HOST, self.PORT)
+        else:
+            conn = httplib.HTTPConnection(self.HOST, self.PORT)
         conn.auto_open = False
         conn.connect()
         
@@ -285,7 +304,10 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Set our HTTP_CONN to an instance so it persists between requests.
-        conn = httplib.HTTPConnection(self.HOST, self.PORT)
+        if self.scheme == "https":
+            conn = httplib.HTTPSConnection(self.HOST, self.PORT)
+        else:
+            conn = httplib.HTTPConnection(self.HOST, self.PORT)
         
         # Try a normal chunked request
         body = ("8\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
@@ -322,7 +344,10 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_HTTP10(self):
         self.PROTOCOL = "HTTP/1.0"
-        self.HTTP_CONN = httplib.HTTPConnection
+        if self.scheme == "https":
+            self.HTTP_CONN = httplib.HTTPSConnection
+        else:
+            self.HTTP_CONN = httplib.HTTPConnection
         
         # Test a normal HTTP/1.0 request.
         self.getPage("/page2")
@@ -332,7 +357,10 @@ class ConnectionTests(helper.CPWebCase):
 ##        self.assertNoHeader("Connection")
         
         # Test a keep-alive HTTP/1.0 request.
-        self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        if self.scheme == "https":
+            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
+        else:
+            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
         self.HTTP_CONN.auto_open = False
         self.HTTP_CONN.connect()
         

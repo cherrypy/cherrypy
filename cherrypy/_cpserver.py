@@ -50,6 +50,8 @@ class Server(object):
     max_request_header_size = 500 * 1024
     max_request_body_size = 100 * 1024 * 1024
     instance = None
+    ssl_certificate = None
+    ssl_private_key = None
     
     def __init__(self):
         self.httpservers = {}

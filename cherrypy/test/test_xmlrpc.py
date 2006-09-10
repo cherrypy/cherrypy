@@ -61,14 +61,41 @@ def setup_server():
     cherrypy.config.update({'environment': 'test_suite'})
 
 
+class HTTPSTransport(xmlrpclib.SafeTransport):
+    """Subclass of SafeTransport to fix sock.recv errors (by using file)."""
+    
+    def request(self, host, handler, request_body, verbose=0):
+        # issue XML-RPC request
+        h = self.make_connection(host)
+        if verbose:
+            h.set_debuglevel(1)
+        
+        self.send_request(h, handler, request_body)
+        self.send_host(h, host)
+        self.send_user_agent(h)
+        self.send_content(h, request_body)
+        
+        errcode, errmsg, headers = h.getreply()
+        if errcode != 200:
+            raise xmlrpclib.ProtocolError(host + handler, errcode, errmsg,
+                                          headers)
+        
+        self.verbose = verbose
+        return self.parse_response(h.getfile())
+
+
 from cherrypy.test import helper
 
 class XmlRpcTest(helper.CPWebCase):
     def testXmlRpc(self):
         
         # load the appropriate xmlrpc proxy
-        url = 'http://localhost:%s/xmlrpc/' % (self.PORT)
-        proxy = xmlrpclib.ServerProxy(url)
+        if getattr(self.harness, "scheme", "http") == "https":
+            url = 'https://localhost:%s/xmlrpc/' % self.PORT
+            proxy = xmlrpclib.ServerProxy(url, transport=HTTPSTransport())
+        else:
+            url = 'http://localhost:%s/xmlrpc/' % self.PORT
+            proxy = xmlrpclib.ServerProxy(url)
         
         # begin the tests ...
         self.assertEqual(proxy.return_single_item_list(), [42])

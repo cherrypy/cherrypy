@@ -132,6 +132,7 @@ class ModPythonTestHarness(test.TestHarness):
         from cherrypy.test import webtest
         webtest.WebCase.PORT = self.port
         webtest.WebCase.harness = self
+        webtest.WebCase.scheme = "http"
         print
         print "Running tests:", self.server
         

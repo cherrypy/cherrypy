@@ -46,13 +46,13 @@ class ProxyTest(helper.CPWebCase):
     def testProxy(self):
         self.getPage("/")
         self.assertHeader('Location',
-                          "http://www.mydomain.com%s/dummy" % self.prefix())
+                          "%s://www.mydomain.com%s/dummy" % (self.scheme, self.prefix()))
         
         # Test X-Forwarded-Host (Apache 1.3.33+ and Apache 2)
         self.getPage("/", headers=[('X-Forwarded-Host', 'http://www.yetanother.com')])
         self.assertHeader('Location', "http://www.yetanother.com/dummy")
         self.getPage("/", headers=[('X-Forwarded-Host', 'www.yetanother.com')])
-        self.assertHeader('Location', "http://www.yetanother.com/dummy")
+        self.assertHeader('Location', "%s://www.yetanother.com/dummy" % self.scheme)
         
         # Test X-Forwarded-For (Apache2)
         self.getPage("/remoteip",
@@ -64,7 +64,7 @@ class ProxyTest(helper.CPWebCase):
         
         # Test X-Host (lighttpd; see https://trac.lighttpd.net/trac/ticket/418)
         self.getPage("/xhost", headers=[('X-Host', 'www.yetanother.com')])
-        self.assertHeader('Location', "http://www.yetanother.com/blah")
+        self.assertHeader('Location', "%s://www.yetanother.com/blah" % self.scheme)
         
         # Test X-Forwarded-Proto (lighttpd)
         self.getPage("/base", headers=[('X-Forwarded-Proto', 'https')])
@@ -73,7 +73,7 @@ class ProxyTest(helper.CPWebCase):
         # Test tree.url()
         for sn in script_names:
             self.getPage(sn + "/newurl")
-            self.assertBody("Browse to <a href='http://www.mydomain.com"
+            self.assertBody("Browse to <a href='%s://www.mydomain.com" % self.scheme
                             + sn + "/this/new/page'>this page</a>.")
             self.getPage(sn + "/newurl", headers=[('X-Forwarded-Host',
                                                    'http://www.yetanother.com')])

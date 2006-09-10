@@ -10,23 +10,28 @@ called "helper.py" (in this folder); this module calls that as a library.
 # or vice-versa, unless you *really* know what you're doing.
 
 
-import sys
-import os, os.path
 import getopt
+import httplib
+import os, os.path
+localDir = os.path.dirname(__file__)
+serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
+import sys
 
 
 class TestHarness(object):
     """A test harness for the CherryPy framework and CherryPy applications."""
     
-    def __init__(self, tests=None, server=None, protocol="HTTP/1.1", port=8000):
+    def __init__(self, tests=None, server=None, protocol="HTTP/1.1",
+                 port=8000, scheme="http"):
         """Constructor to populate the TestHarness instance.
         
         tests should be a list of module names (strings).
         """
+        self.tests = tests or []
+        self.server = server
         self.protocol = protocol
         self.port = port
-        self.server = server
-        self.tests = tests or []
+        self.scheme = scheme
     
     def run(self, conf=None):
         """Run the test harness."""
@@ -34,7 +39,11 @@ class TestHarness(object):
         v = sys.version.split()[0]
         print "Python version used to run this test script:", v
         print "CherryPy version", cherrypy.__version__
-        print "HTTP server version", self.protocol
+        if self.scheme == "https":
+            ssl = "(ssl)"
+        else:
+            ssl = ""
+        print "HTTP server version", self.protocol, ssl
         print
         
         if isinstance(conf, basestring):
@@ -47,6 +56,9 @@ class TestHarness(object):
         baseconf.update(conf or {})
         
         baseconf['server.protocol_version'] = self.protocol
+        if self.scheme == "https":
+            baseconf['server.ssl_certificate'] = serverpem
+            baseconf['server.ssl_private_key'] = serverpem
         self._run(baseconf)
     
     def _run(self, conf):
@@ -59,6 +71,9 @@ class TestHarness(object):
         from cherrypy.test import helper, webtest
         webtest.WebCase.PORT = self.port
         webtest.WebCase.harness = self
+        webtest.WebCase.scheme = self.scheme
+        if self.scheme == "https":
+            webtest.WebCase.HTTP_CONN = httplib.HTTPSConnection
         print
         print "Running tests:", self.server
         helper.run_test_suite(self.tests, self.server, conf)
@@ -70,7 +85,13 @@ class CommandLineParser(object):
                          'modpygw': "modpygw",
                          }
     default_server = "wsgi"
+    scheme = "http"
+    protocol = "HTTP/1.1"
     port = 8080
+    cover = False
+    profile = False
+    validate = False
+    server = None
     basedir = None
     
     def __init__(self, available_tests, args=sys.argv[1:]):
@@ -82,14 +103,9 @@ class CommandLineParser(object):
             set of args if you like.
         """
         self.available_tests = available_tests
-        self.cover = False
-        self.profile = False
-        self.validate = False
-        self.server = None
-        self.protocol = "HTTP/1.1"
         
-        longopts = ['cover', 'profile', 'validate', '1.0', 'help', 'basedir=', 'port=',
-                    'server=']
+        longopts = ['cover', 'profile', 'validate', '1.0', 'ssl', 'help',
+                    'basedir=', 'port=', 'server=']
         longopts.extend(self.available_tests)
         try:
             opts, args = getopt.getopt(args, "", longopts)
@@ -112,6 +128,8 @@ class CommandLineParser(object):
                 self.validate = True
             elif o == "--1.0":
                 self.protocol = "HTTP/1.0"
+            elif o == "--ssl":
+                self.scheme = "https"
             elif o == "--basedir":
                 self.basedir = a
             elif o == "--port":
@@ -216,7 +234,6 @@ class CommandLineParser(object):
         basedir = self.basedir
         if basedir is None:
             # Assume we want to cover everything in "../../cherrypy/"
-            localDir = os.path.dirname(__file__)
             basedir = os.path.normpath(os.path.join(os.getcwd(), localDir, '../'))
         else:
             if not os.path.isabs(basedir):
@@ -283,7 +300,8 @@ class CommandLineParser(object):
                                            self.protocol, self.port)
             h.use_wsgi = True
         else:
-            h = TestHarness(self.tests, self.server, self.protocol, self.port)
+            h = TestHarness(self.tests, self.server, self.protocol,
+                            self.port, self.scheme)
         
         h.run(conf)
         
@@ -299,7 +317,6 @@ class CommandLineParser(object):
 def prefer_parent_path():
     # Place this __file__'s grandparent (../../) at the start of sys.path,
     # so that all cherrypy/* imports are from this __file__'s package.
-    localDir = os.path.dirname(__file__)
     curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
     grandparent = os.path.normpath(os.path.join(curpath, '../../'))
     if grandparent not in sys.path:

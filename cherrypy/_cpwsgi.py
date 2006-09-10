@@ -137,4 +137,6 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
                    timeout = server.socket_timeout,
                    )
         s.protocol = server.protocol_version
+        s.ssl_certificate = server.ssl_certificate
+        s.ssl_private_key = server.ssl_private_key
 
