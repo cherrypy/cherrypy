@@ -2,6 +2,7 @@
 
 import mimetools # todo: use email
 import Queue
+import os
 import re
 quoted_slash = re.compile("(?i)%2F")
 import rfc822
@@ -261,7 +262,10 @@ class HTTPRequest(object):
             self.write(line)
         if hasattr(response, "close"):
             response.close()
-        self.terminate()
+        if (self.ready and not self.sent_headers
+                and not self.connection.server.interrupt):
+            self.sent_headers = True
+            self.send_headers()
     
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
@@ -335,12 +339,6 @@ class HTTPRequest(object):
                 raise
         wfile.write("\r\n")
         wfile.flush()
-    
-    def terminate(self):
-        if (self.ready and not self.sent_headers
-                and not self.connection.server.interrupt):
-            self.sent_headers = True
-            self.send_headers()
 
 
 class HTTPConnection(object):
