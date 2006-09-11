@@ -71,7 +71,7 @@ class TestHarness(object):
         from cherrypy.test import helper, webtest
         webtest.WebCase.PORT = self.port
         webtest.WebCase.harness = self
-        webtest.WebCase.scheme = self.scheme
+        helper.CPWebCase.scheme = self.scheme
         if self.scheme == "https":
             webtest.WebCase.HTTP_CONN = httplib.HTTPSConnection
         print

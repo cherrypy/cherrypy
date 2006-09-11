@@ -80,9 +80,9 @@ def setup_server():
             return cherrypy.tree.script_name()
         script_name.exposed = True
         
-        def tree_url(self):
-            return cherrypy.tree.url("/extra")
-        tree_url.exposed = True
+        def cherrypy_url(self):
+            return cherrypy.url("/extra")
+        cherrypy_url.exposed = True
         
         def posparam(self, *vpath):
             return "/".join(vpath)
@@ -218,7 +218,7 @@ class ObjectMappingTest(helper.CPWebCase):
             
             self.getPage("/dir1/dir2/script_name")
             self.assertBody(url)
-            self.getPage("/dir1/dir2/tree_url")
+            self.getPage("/dir1/dir2/cherrypy_url")
             self.assertBody("%s://%s:%s%s/extra" %
                             (self.scheme, self.HOST, self.PORT, prefix))
             

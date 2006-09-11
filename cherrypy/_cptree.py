@@ -71,7 +71,7 @@ class Application(object):
         host = cherrypy.server.socket_host
         if port != 80:
             host += ":%s" % port
-        return scheme + host + self.script_name
+        return scheme + host + (self.script_name or "/")
     
     def wsgiapp(self, environ, start_response):
         # This is here instead of __call__ because it's really hard
@@ -255,26 +255,6 @@ class Tree(object):
             
             # Move one node up the tree and try again.
             path = path[:path.rfind("/")]
-    
-    def url(self, path, script_name=None, base=None):
-        """Return 'path', prefixed with script_name and base.
-        
-        If script_name is None, cherrypy.request will be used
-        to find a script_name.
-        
-        If base is None, cherrypy.request.base will be used. Note that
-        you can use cherrypy.tools.proxy to change this.
-        """
-        
-        if script_name is None:
-            script_name = self.script_name()
-            if script_name is None:
-                return path
-        
-        if base is None:
-            base = cherrypy.request.base
-        
-        return base + http.urljoin(script_name, path)
     
     def __call__(self, environ, start_response):
         # If you're calling this, then you're probably setting SCRIPT_NAME

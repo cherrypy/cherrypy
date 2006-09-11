@@ -231,7 +231,7 @@ class Dispatcher(object):
         if request.config.get("request.redirect_on_missing_slash",
                               request.redirect_on_missing_slash):
             if pi[-1:] != '/':
-                new_url = request.url(pi + '/', request.query_string)
+                new_url = cherrypy.url(pi + '/', request.query_string)
                 raise cherrypy.HTTPRedirect(new_url)
     
     def check_extra_slash(self):
@@ -244,7 +244,7 @@ class Dispatcher(object):
                               request.redirect_on_extra_slash):
             # If pi == '/', don't redirect to ''!
             if pi[-1:] == '/' and pi != '/':
-                new_url = request.url(pi[:-1], request.query_string)
+                new_url = cherrypy.url(pi[:-1], request.query_string)
                 raise cherrypy.HTTPRedirect(new_url)
 
 
@@ -649,23 +649,6 @@ class Request(object):
             if tm[toolname].get("on", False):
                 tool = getattr(tools, toolname)
                 tool._setup()
-    
-    def url(self, path_info="", qs=""):
-        """Create an absolute URL for the given path_info.
-        
-        If 'path_info' starts with a slash ('/'), this will return
-            (self.base + self.script_name + path_info + qs).
-        If it does not start with a slash, this returns
-            (self.base + self.script_name + self.path_info + path_info + qs).
-        """
-        if path_info == "":
-            path_info = self.path_info
-        if not path_info.startswith("/"):
-            path_info = self.path_info + "/" + path_info
-        
-        if qs:
-            qs = '?' + qs
-        return self.base + self.script_name + path_info + qs
     
     def process_body(self):
         """Convert request.rfile into request.params (or request.body)."""

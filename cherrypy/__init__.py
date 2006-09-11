@@ -149,6 +149,63 @@ def expose(func=None, alias=None):
             # expose is returning a decorator "@expose(alias=...)"
             return expose_
 
+def url(path="", qs="", script_name=None, base=None):
+    """Create an absolute URL for the given path.
+    
+    If 'path' starts with a slash ('/'), this will return
+        (base + script_name + path + qs).
+    If it does not start with a slash, this returns
+        (base + script_name [+ request.path_info] + path + qs).
+    
+    If script_name is None, cherrypy.request will be used
+    to find a script_name, if available.
+    
+    If base is None, cherrypy.request.base will be used if available.
+    Note that you can use cherrypy.tools.proxy to change this.
+    
+    Finally, note that this function can be used to obtain an absolute URL
+    for the current request path (minus the querystring) by passing no args.
+    """
+    if qs:
+        qs = '?' + qs
+    
+    if request.app:
+        if path == "":
+            path = request.path_info
+        if not path.startswith("/"):
+            path = request.path_info + "/" + path
+        if script_name is None:
+            script_name = request.app.script_name
+        if base is None:
+            base = request.base
+        
+        return base + script_name + path + qs
+    else:
+        # No request.app (we're being called outside a request).
+        # We'll have to guess the base from server.* attributes.
+        # This will produce very different results from the above
+        # if you're using vhosts or tools.proxy.
+        if base is None:
+            f = server.socket_file
+            if f:
+                base = f
+            else:
+                host = server.socket_host
+                if not host:
+                    import socket
+                    host = socket.gethostname()
+                port = server.socket_port
+                if (port in (443, 8443) or server.ssl_certificate):
+                    scheme = "https"
+                    if port != 443:
+                        host += ":%s" % port
+                else:
+                    scheme = "http"
+                    if port != 80:
+                        host += ":%s" % port
+                base = "%s://%s" % (scheme, host)
+        path = (script_name or "") + path
+        return base + path + qs
 
 # Set up config last so it can wrap other top-level objects
 from cherrypy import _cpconfig

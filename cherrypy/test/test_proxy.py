@@ -26,7 +26,7 @@ def setup_server():
         
         def newurl(self):
             return ("Browse to <a href='%s'>this page</a>."
-                    % cherrypy.tree.url("/this/new/page"))
+                    % cherrypy.url("/this/new/page"))
         newurl.exposed = True
     
     for sn in script_names:
@@ -46,7 +46,8 @@ class ProxyTest(helper.CPWebCase):
     def testProxy(self):
         self.getPage("/")
         self.assertHeader('Location',
-                          "%s://www.mydomain.com%s/dummy" % (self.scheme, self.prefix()))
+                          "%s://www.mydomain.com%s/dummy" %
+                          (self.scheme, self.prefix()))
         
         # Test X-Forwarded-Host (Apache 1.3.33+ and Apache 2)
         self.getPage("/", headers=[('X-Forwarded-Host', 'http://www.yetanother.com')])
@@ -70,8 +71,9 @@ class ProxyTest(helper.CPWebCase):
         self.getPage("/base", headers=[('X-Forwarded-Proto', 'https')])
         self.assertBody("https://www.mydomain.com")
         
-        # Test tree.url()
+        # Test cherrypy.url()
         for sn in script_names:
+            # Test the value inside requests
             self.getPage(sn + "/newurl")
             self.assertBody("Browse to <a href='%s://www.mydomain.com" % self.scheme
                             + sn + "/this/new/page'>this page</a>.")
@@ -79,6 +81,16 @@ class ProxyTest(helper.CPWebCase):
                                                    'http://www.yetanother.com')])
             self.assertBody("Browse to <a href='http://www.yetanother.com"
                             + sn + "/this/new/page'>this page</a>.")
+            
+            # Test the value outside requests
+            port = ""
+            if self.scheme == "http" and self.PORT != 80:
+                port = ":%s" % self.PORT
+            elif self.scheme == "https" and self.PORT != 443:
+                port = ":%s" % self.PORT
+            self.assertEqual(cherrypy.url("/this/new/page", script_name=sn),
+                             "%s://127.0.0.1%s%s/this/new/page"
+                             % (self.scheme, port, sn))
 
 
 if __name__ == '__main__':

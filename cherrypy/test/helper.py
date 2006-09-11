@@ -30,6 +30,7 @@ from cherrypy.test import webtest
 class CPWebCase(webtest.WebCase):
     
     script_name = ""
+    scheme = "http"
     
     def prefix(self):
         return self.script_name.rstrip("/")
@@ -149,7 +150,7 @@ def _run_test_suite_thread(moduleNames, conf):
 def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
     if conf is None:
-        conf = {}
+        conf = {'server.socket_host': '127.0.0.1'}
     setConfig(conf)
     try:
         cherrypy.server.quickstart()

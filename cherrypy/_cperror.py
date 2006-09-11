@@ -64,7 +64,7 @@ class HTTPRedirect(CherryPyException):
             #  2. a URL relative to root (e.g. "/dummy")
             #  3. a URL relative to the current path
             # Note that any query string in cherrypy.request is discarded.
-            url = _urljoin(request.url(), url)
+            url = _urljoin(cherrypy.url(), url)
             abs_urls.append(url)
         self.urls = abs_urls
         

@@ -377,7 +377,10 @@ def cleanHeaders(headers, method, body, host, port):
             found = True
             break
     if not found:
-        headers.append(("Host", "%s:%s" % (host, port)))
+        if port == 80:
+            headers.append(("Host", host))
+        else:
+            headers.append(("Host", "%s:%s" % (host, port)))
     
     if method in methods_with_bodies:
         # Stick in default type and length headers if not present
