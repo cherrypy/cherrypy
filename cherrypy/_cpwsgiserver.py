@@ -499,6 +499,28 @@ class WorkerThread(threading.Thread):
             self.server.interrupt = exc
 
 
+class SSLConnection:
+    def __init__(self, *args):
+        self._ssl_conn = SSL.Connection(*args)
+        self._lock = threading.RLock()
+    
+    for f in ('get_context', 'pending', 'send', 'write', 'recv', 'read',
+              'renegotiate', 'bind', 'listen', 'connect', 'accept',
+              'setblocking', 'fileno', 'shutdown', 'close', 'get_cipher_list',
+              'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
+              'makefile', 'get_app_data', 'set_app_data', 'state_string',
+              'sock_shutdown', 'get_peer_certificate', 'want_read',
+              'want_write', 'set_connect_state', 'set_accept_state',
+              'connect_ex', 'sendall', 'settimeout'):
+        exec """def %s(self, *args):
+        self._lock.acquire()
+        try:
+            return self._ssl_conn.%s(*args)
+        finally:
+            self._lock.release()
+""" % (f, f)
+
+
 class CherryPyWSGIServer(object):
     """An HTTP server for WSGI.
     
@@ -564,11 +586,13 @@ class CherryPyWSGIServer(object):
             self.socket = socket.socket(family, type, proto)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             if self.ssl_certificate and self.ssl_private_key:
+                if SSL is None:
+                    raise ImportError("You must install pyOpenSSL to use HTTPS.")
                 # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
                 ctx = SSL.Context(SSL.SSLv23_METHOD)
                 ctx.use_privatekey_file(self.ssl_private_key)
                 ctx.use_certificate_file(self.ssl_certificate)
-                self.socket = SSL.Connection(ctx, self.socket)
+                self.socket = SSLConnection(ctx, self.socket)
             self.socket.bind(self.bind_addr)
         
         # Select the appropriate socket
