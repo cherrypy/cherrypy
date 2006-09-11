@@ -1,6 +1,8 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import md5
+
 import cherrypy
 from cherrypy.lib import httpauth
 
@@ -20,12 +22,19 @@ def setup_server():
             return "This is protected by Basic auth."
         index.exposed = True
 
+    def md5_encrypt(data):
+        return md5.new(data).hexdigest()
+
+    def fetch_users():
+        return {'test': 'test'}
+
     conf = {'/digest': {'tools.digestauth.on': True,
                         'tools.digestauth.realm': 'localhost',
-                        'tools.digestauth.users': {'test': 'test'}},
+                        'tools.digestauth.users': fetch_users},
             '/basic': {'tools.basicauth.on': True,
                        'tools.basicauth.realm': 'localhost',
-                       'tools.basicauth.users': {'test': 'test'}}}
+                       'tools.basicauth.users': {'test': md5_encrypt('test')},
+                       'tools.basicauth.encrypt': md5_encrypt}}
     root = Root()
     root.digest = DigestProtected()
     root.basic = BasicProtected()
@@ -96,18 +105,18 @@ class HTTPAuthTest(helper.CPWebCase):
             self._handlewebError(bad_value_msg % ('qop', '"auth"', tokens['qop']))
 
             # now let's see if what 
-            base_auth = 'Digest username="test", realm="localhost", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
+        base_auth = 'Digest username="test", realm="localhost", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
 
-            auth = base_auth % (nonce, '', '00000001')
+        auth = base_auth % (nonce, '', '00000001')
                 
-            params = httpauth.parseAuthorization(auth)
-            response = httpauth._computeDigestResponse(params, 'test')
+        params = httpauth.parseAuthorization(auth)
+        response = httpauth._computeDigestResponse(params, 'test')
+        
+        auth = base_auth % (nonce, response, '00000001')
+        self.getPage('/digest/', [('Authorization', auth)])
+        self.assertStatus('200 OK')
+        self.assertBody('This is protected by Digest auth.')
             
-            auth = base_auth % (nonce, response, '00000001')
-            self.getPage('/digest/', [('Authorization', auth)])
-            self.assertStatus('200 OK')
-            self.assertBody('This is protected by Digest auth.')
-
 if __name__ == "__main__":
     setup_server()
     helper.testmain()

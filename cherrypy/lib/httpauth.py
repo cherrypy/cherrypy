@@ -295,7 +295,7 @@ def _computeDigestResponse(auth_map, password, method = "GET", A1 = None,**kwarg
 
     return KD(H_A1, request)
 
-def _checkDigestResponse(auth_map, password, method = "GET", A1 = None,**kwargs):
+def _checkDigestResponse(auth_map, password, method = "GET", A1 = None, **kwargs):
     """This function is used to verify the response given by the client when
     he tries to authenticate.
     Optional arguments:
@@ -308,15 +308,15 @@ def _checkDigestResponse(auth_map, password, method = "GET", A1 = None,**kwargs)
 
     return response == auth_map["response"]
 
-def _checkBasicResponse (auth_map, password, method='GET', **kwargs):
-    return auth_map["password"] == password
+def _checkBasicResponse (auth_map, password, method='GET', encrypt=None, **kwargs):
+    return encrypt(auth_map["password"]) == password
 
 AUTH_RESPONSES = {
     "basic": _checkBasicResponse,
     "digest": _checkDigestResponse,
 }
 
-def checkResponse (auth_map, password, method = "GET", **kwargs):
+def checkResponse (auth_map, password, method = "GET", encrypt=None, **kwargs):
     """'checkResponse' compares the auth_map with the password and optionally
     other arguments that each implementation might need.
     
@@ -335,7 +335,7 @@ def checkResponse (auth_map, password, method = "GET", **kwargs):
     """
     global AUTH_RESPONSES
     checker = AUTH_RESPONSES[auth_map["auth_scheme"]]
-    return checker (auth_map, password, method, **kwargs)
+    return checker (auth_map, password, method=method, encrypt=encrypt, **kwargs)
  
 
 
