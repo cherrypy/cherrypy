@@ -156,7 +156,7 @@ class ErrorTool(Tool):
 
 #                              Builtin tools                              #
 
-from cherrypy.lib import cptools, encoding, static, tidy
+from cherrypy.lib import cptools, encoding, httpauth, static, tidy
 from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
 from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
 
@@ -316,6 +316,8 @@ default_toolbox.tidy = Tool('before_finalize', tidy.tidy)
 default_toolbox.nsgmls = Tool('before_finalize', tidy.nsgmls)
 default_toolbox.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
 default_toolbox.referer = Tool('before_request_body', cptools.referer)
+default_toolbox.basicauth = Tool('on_start_resource', httpauth.basic_auth)
+default_toolbox.digestauth = Tool('on_start_resource', httpauth.digest_auth)
 
 
-del cptools, encoding, static, tidy
+del cptools, encoding, httpauth, static, tidy
