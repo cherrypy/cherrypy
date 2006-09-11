@@ -1,32 +1,31 @@
-import md5
 import cherrypy
-
-from httpauth import parseAuthorization, checkResponse, basicAuth, digestAuth
+from cherrypy.lib import httpauth
 
 
 def check_auth(users, encrypt=None):
     """If an authorization header contains credentials, return True, else False."""
     if 'authorization' in cherrypy.request.headers:
         # make sure the provided credentials are correctly set
-        ah = parseAuthorization(cherrypy.request.headers['authorization'])
+        ah = httpauth.parseAuthorization(cherrypy.request.headers['authorization'])
         if ah is None:
             raise cherrypy.HTTPError(400, 'Bad Request')
-
+        
         if not encrypt:
-            encrypt = lambda x: md5.new(x).hexdigest()
-
+            encrypt = httpauth.DIGEST_AUTH_ENCODERS[httpauth.MD5]
+        
         if callable(users):
             users = users() # expect it to return a dictionary
-
+        
         if not isinstance(users, dict):
-            raise ValueError, "Authentication users must be passed contained in a dictionary"
-    
+            raise ValueError, "Authentication users must be a dictionary"
+        
         # fetch the user password
         password = users.get(ah["username"], None)
         
         # validate the authorization by re-computing it here
         # and compare it with what the user-agent provided
-        if checkResponse(ah, password, method=cherrypy.request.method, encrypt=encrypt):
+        if httpauth.checkResponse(ah, password, method=cherrypy.request.method,
+                                  encrypt=encrypt):
             return True
     
     return False
@@ -43,7 +42,7 @@ def basic_auth(realm, users, encrypt=None):
         return
     
     # inform the user-agent this path is protected
-    cherrypy.response.headers['www-authenticate'] = basicAuth(realm)
+    cherrypy.response.headers['www-authenticate'] = httpauth.basicAuth(realm)
     
     raise cherrypy.HTTPError(401, "You are not authorized to access that resource") 
 
@@ -57,7 +56,7 @@ def digest_auth(realm, users):
         return
     
     # inform the user-agent this path is protected
-    cherrypy.response.headers['www-authenticate'] = digestAuth(realm)
+    cherrypy.response.headers['www-authenticate'] = httpauth.digestAuth(realm)
     
     raise cherrypy.HTTPError(401, "You are not authorized to access that resource") 
  
