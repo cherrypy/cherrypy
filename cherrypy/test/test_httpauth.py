@@ -22,9 +22,6 @@ def setup_server():
             return "This is protected by Basic auth."
         index.exposed = True
 
-    def md5_encrypt(data):
-        return md5.new(data).hexdigest()
-
     def fetch_users():
         return {'test': 'test'}
 
@@ -33,8 +30,7 @@ def setup_server():
                         'tools.digestauth.users': fetch_users},
             '/basic': {'tools.basicauth.on': True,
                        'tools.basicauth.realm': 'localhost',
-                       'tools.basicauth.users': {'test': md5_encrypt('test')},
-                       'tools.basicauth.encrypt': md5_encrypt}}
+                       'tools.basicauth.users': {'test': md5.new('test').hexdigest()}}}
     root = Root()
     root.digest = DigestProtected()
     root.basic = BasicProtected()

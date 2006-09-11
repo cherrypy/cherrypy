@@ -1,3 +1,4 @@
+import md5
 import cherrypy
 
 from httpauth import parseAuthorization, checkResponse, basicAuth, digestAuth
@@ -12,7 +13,7 @@ def check_auth(users, encrypt=None):
             raise cherrypy.HTTPError(400, 'Bad Request')
 
         if not encrypt:
-            encrypt = lambda x: x
+            encrypt = lambda x: md5.new(x).hexdigest()
 
         if callable(users):
             users = users() # expect it to return a dictionary
@@ -36,6 +37,7 @@ def basic_auth(realm, users, encrypt=None):
     realm: a string containing the authentication realm.
     users: a dict of the form: {username: password} or a callable returning a dict.
     encrypt: callable used to encrypt the password returned from the user-agent.
+             if None it defaults to a md5 encryption.
     """
     if check_auth(users, encrypt):
         return
