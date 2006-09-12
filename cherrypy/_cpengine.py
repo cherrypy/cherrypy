@@ -298,6 +298,8 @@ class Engine(object):
 
 class NotReadyRequest:
     
+    throw_errors = True
+    
     def __init__(self, msg):
         self.msg = msg
         self.protocol = (1,1)
