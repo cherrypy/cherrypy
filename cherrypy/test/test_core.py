@@ -392,11 +392,6 @@ from cherrypy.test import helper
 
 class CoreRequestHandlingTest(helper.CPWebCase):
     
-    def testRequestPath(self):
-        self.getPage("/andnow")
-        self.assertStatus("200 OK")
-        self.assertEqual(cherrypy.request.path, "/andnow")
-    
     def testParams(self):
         self.getPage("/params/?thing=a")
         self.assertBody("'a'")
