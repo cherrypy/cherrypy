@@ -154,8 +154,6 @@ class ObjectMappingTest(helper.CPWebCase):
     def testObjectMapping(self):
         for url in script_names:
             prefix = self.script_name = url
-            if prefix == "/":
-                prefix = ""
             
             self.getPage('/')
             self.assertBody('world')
@@ -181,14 +179,12 @@ class ObjectMappingTest(helper.CPWebCase):
             # Test omitted trailing slash (should be redirected by default).
             self.getPage("/dir1/dir2")
             self.assertStatus((302, 303))
-            self.assertHeader('Location', '%s://%s:%s%s/dir1/dir2/'
-                              % (self.scheme, self.HOST, self.PORT, prefix))
+            self.assertHeader('Location', '%s/dir1/dir2/' % self.base())
             
             # Test extra trailing slash (should be redirected if configured).
             self.getPage("/dir1/myMethod/")
             self.assertStatus((302, 303))
-            self.assertHeader('Location', '%s://%s:%s%s/dir1/myMethod'
-                              % (self.scheme, self.HOST, self.PORT, prefix))
+            self.assertHeader('Location', '%s/dir1/myMethod' % self.base())
             
             # Test that default method must be exposed in order to match.
             self.getPage("/dir1/dir2/dir3/dir4/index")
@@ -202,8 +198,7 @@ class ObjectMappingTest(helper.CPWebCase):
             
             self.getPage("/redirect")
             self.assertStatus('302 Found')
-            self.assertHeader('Location', '%s://%s:%s%s/dir1/'
-                              % (self.scheme, self.HOST, self.PORT, prefix))
+            self.assertHeader('Location', '%s/dir1/' % self.base())
             
             # Test that we can use URL's which aren't all valid Python identifiers
             # This should also test the %XX-unquoting of URL's.
@@ -219,8 +214,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage("/dir1/dir2/script_name")
             self.assertBody(url)
             self.getPage("/dir1/dir2/cherrypy_url")
-            self.assertBody("%s://%s:%s%s/extra" %
-                            (self.scheme, self.HOST, self.PORT, prefix))
+            self.assertBody("%s/extra" % self.base())
             
             # Test that configs don't overwrite each other from diferent apps
             self.getPage("/confvalue")

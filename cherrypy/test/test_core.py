@@ -512,20 +512,16 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # Make sure GET params are preserved.
         self.getPage("/redirect?id=3")
         self.assertStatus(('302 Found', '303 See Other'))
-        self.assertInBody("<a href='%s://127.0.0.1:%s%s/redirect/?id=3'>"
-                          "%s://127.0.0.1:%s%s/redirect/?id=3</a>" %
-                          (self.scheme, self.PORT, self.prefix(),
-                           self.scheme, self.PORT, self.prefix()))
+        self.assertInBody("<a href='%s/redirect/?id=3'>"
+                          "%s/redirect/?id=3</a>" % (self.base(), self.base()))
         
         if self.prefix():
             # Corner case: the "trailing slash" redirect could be tricky if
             # we're using a virtual root and the URI is "/vroot" (no slash).
             self.getPage("")
             self.assertStatus(('302 Found', '303 See Other'))
-            self.assertInBody("<a href='%s://127.0.0.1:%s%s/'>"
-                              "%s://127.0.0.1:%s%s/</a>" %
-                              (self.scheme, self.PORT, self.prefix(),
-                               self.scheme, self.PORT, self.prefix()))
+            self.assertInBody("<a href='%s/'>%s/</a>" %
+                              (self.base(), self.base()))
         
         self.getPage("/redirect/by_code?code=300")
         self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
@@ -594,11 +590,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # Make sure str(HTTPRedirect()) works.
         self.getPage("/redirect/stringify", protocol="HTTP/1.0")
         self.assertStatus(200)
-        self.assertBody("(['%s://127.0.0.1:%s/'], 302)" % (self.scheme, self.PORT))
+        self.assertBody("(['%s/'], 302)" % self.base())
         if cherrypy.server.protocol_version == "HTTP/1.1":
             self.getPage("/redirect/stringify", protocol="HTTP/1.1")
             self.assertStatus(200)
-            self.assertBody("(['%s://127.0.0.1:%s/'], 303)" % (self.scheme, self.PORT))
+            self.assertBody("(['%s/'], 303)" % self.base())
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",

@@ -35,6 +35,15 @@ class CPWebCase(webtest.WebCase):
     def prefix(self):
         return self.script_name.rstrip("/")
     
+    def base(self):
+        if ((self.scheme == "http" and self.PORT == 80) or
+            (self.scheme == "https" and self.PORT == 443)):
+            port = ""
+        else:
+            port = ":%s" % self.PORT
+        return "%s://%s%s%s" % (self.scheme, self.HOST, port,
+                                self.script_name.rstrip("/"))
+    
     def exit(self):
         sys.exit()
     

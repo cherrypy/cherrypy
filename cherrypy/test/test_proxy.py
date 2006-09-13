@@ -89,8 +89,8 @@ class ProxyTest(helper.CPWebCase):
             elif self.scheme == "https" and self.PORT != 443:
                 port = ":%s" % self.PORT
             self.assertEqual(cherrypy.url("/this/new/page", script_name=sn),
-                             "%s://127.0.0.1%s%s/this/new/page"
-                             % (self.scheme, port, sn))
+                             "%s://%s%s%s/this/new/page"
+                             % (self.scheme, self.HOST, port, sn))
 
 
 if __name__ == '__main__':
