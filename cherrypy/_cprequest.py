@@ -332,7 +332,6 @@ class Request(object):
     # Request-Line attributes
     request_line = ""
     method = "GET"
-    path = ""
     query_string = ""
     protocol = (1, 1)
     params = {}
