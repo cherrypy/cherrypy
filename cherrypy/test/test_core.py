@@ -790,7 +790,19 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                      headers=[("Accept-Charset", "iso-8859-5"),
                               ("Accept-Charset", "unicode-1-1;q=0.8")])
         self.assertBody("iso-8859-5, unicode-1-1;q=0.8")
-    
+        
+        # If we don't pass a Content-Type header, it should not be present
+        # in cherrypy.request.headers
+        self.getPage("/headers/Content-Type",
+                     headers=[])
+        self.assertStatus(500)
+        
+        # If Content-Type is present in the request, it should be present in
+        # cherrypy.request.headers
+        self.getPage("/headers/Content-Type",
+                     headers=[("Content-type", "application/json")])
+        self.assertBody("application/json")
+        
     def testHTTPMethods(self):
         helper.webtest.methods_with_bodies = ("POST", "PUT", "PROPFIND")
         
