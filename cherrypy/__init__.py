@@ -195,7 +195,7 @@ def url(path="", qs="", script_name=None, base=None):
                     import socket
                     host = socket.gethostname()
                 port = server.socket_port
-                if (port in (443, 8443) or server.ssl_certificate):
+                if server.ssl_certificate:
                     scheme = "https"
                     if port != 443:
                         host += ":%s" % port
