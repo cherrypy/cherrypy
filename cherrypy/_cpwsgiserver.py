@@ -216,8 +216,12 @@ class HTTPRequest(object):
     
     def parse_headers(self, headers):
         environ = {}
-        environ["CONTENT_TYPE"] = headers.getheader("Content-type", "")
-        environ["CONTENT_LENGTH"] = headers.getheader("Content-length") or ""
+        ct = headers.getheader("Content-type", "")
+        if ct:
+            environ["CONTENT_TYPE"] = ct
+        cl = headers.getheader("Content-length") or ""
+        if cl:
+            environ["CONTENT_LENGTH"] = cl
         
         # Must use keys() here for Python 2.3 (rfc822.Message had no __iter__).
         for k in headers.keys():
