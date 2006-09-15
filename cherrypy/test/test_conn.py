@@ -210,23 +210,24 @@ class ConnectionTests(helper.CPWebCase):
         conn.connect()
         
         # Put request 1
-        conn.putrequest("GET", "/", skip_host=True)
+        conn.putrequest("GET", "/hello", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         
-        # Put request 2
-        conn._output('GET /hello HTTP/1.1')
-        conn._output("Host: %s" % self.HOST)
-        conn._send_output()
+        for trial in xrange(5):
+            # Put next request
+            conn._output('GET /hello HTTP/1.1')
+            conn._output("Host: %s" % self.HOST)
+            conn._send_output()
+            
+            # Retrieve previous response
+            response = conn.response_class(conn.sock, method="GET")
+            response.begin()
+            body = response.read()
+            self.assertEqual(response.status, 200)
+            self.assertEqual(body, "Hello, world!")
         
-        # Retrieve response 1
-        response = conn.response_class(conn.sock, method="GET")
-        response.begin()
-        body = response.read()
-        self.assertEqual(response.status, 200)
-        self.assertEqual(body, pov)
-        
-        # Retrieve response 2
+        # Retrieve final response
         response = conn.response_class(conn.sock, method="GET")
         response.begin()
         body = response.read()

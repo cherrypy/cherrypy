@@ -86,16 +86,18 @@ class Session(object):
     
     def save(self):
         """Save session data."""
-        # If session data has never been loaded then it's never been
-        #   accessed: no need to delete it
-        if self.loaded:
-            t = datetime.timedelta(seconds = self.timeout * 60)
-            expiration_time = datetime.datetime.now() + t
-            self._save(expiration_time)
-        
-        if self.locked:
-            # Always release the lock if the user didn't release it
-            self.release_lock()
+        try:
+            # If session data has never been loaded then it's never been
+            #   accessed: no need to delete it
+            if self.loaded:
+                t = datetime.timedelta(seconds = self.timeout * 60)
+                expiration_time = datetime.datetime.now() + t
+                self._save(expiration_time)
+            
+        finally:
+            if self.locked:
+                # Always release the lock if the user didn't release it
+                self.release_lock()
     
     def load(self):
         """Copy stored session data into this session instance."""
@@ -185,6 +187,10 @@ class RamSession(Session):
                     del self.cache[id]
                 except KeyError:
                     pass
+                try:
+                    del self.locks[id]
+                except KeyError:
+                    pass
     
     def _load(self):
         return self.cache.get(self.id)
@@ -197,7 +203,7 @@ class RamSession(Session):
     
     def acquire_lock(self):
         self.locked = True
-        self.locks.setdefault(self.id, threading.Semaphore()).acquire()
+        self.locks.setdefault(self.id, threading.RLock()).acquire()
     
     def release_lock(self):
         self.locks[self.id].release()
@@ -365,7 +371,9 @@ def close():
     if sess.locked:
         # If the session is still locked we release the lock
         sess.release_lock()
+    del cherrypy._serving.session
 close.failsafe = True
+close.priority = 90
 
 
 _def_session = RamSession()
@@ -388,7 +396,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     if not hasattr(cherrypy, "session"):
         cherrypy.session = cherrypy._ThreadLocalProxy('session', _def_session)
     
-    # Create and attach a new Session instance to cherrypy.request.
+    # Create and attach a new Session instance to cherrypy._serving.
     # It will possess a reference to (and lock, and lazily load)
     # the requested session data.
     storage_class = storage_type.title() + 'Session'
