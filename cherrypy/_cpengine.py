@@ -211,7 +211,7 @@ class Engine(object):
         return req
     
     def monitor(self):
-        """Check timeout on all responses (starts a recurring Timer)."""
+        """Check timeout on all responses (starts a recurring Timer thread)."""
         if self.state == STARTED:
             for req, resp in self.servings:
                 resp.check_timeout()
@@ -220,7 +220,7 @@ class Engine(object):
         self.monitor_thread.start()
     
     def start_with_callback(self, func, args=None, kwargs=None):
-        """Start, then callback the given func in a new thread."""
+        """Start the given func in a new thread, then start self and block."""
         
         if args is None:
             args = ()
@@ -245,7 +245,7 @@ class Engine(object):
             os.umask
         except AttributeError:
             def drop_privileges(self):
-                """Drop privileges. Not available."""
+                """Drop privileges. Not implemented on this platform."""
                 raise NotImplementedError
         else:
             umask = None
