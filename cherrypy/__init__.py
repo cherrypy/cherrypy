@@ -4,6 +4,7 @@ __version__ = '3.0.0beta'
 
 import os as _os
 _localdir = _os.path.dirname(__file__)
+from urlparse import urljoin as _urljoin
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, CherryPyException
 from cherrypy._cperror import TimeoutError
@@ -149,7 +150,7 @@ def expose(func=None, alias=None):
             # expose is returning a decorator "@expose(alias=...)"
             return expose_
 
-def url(path="", qs="", script_name=None, base=None):
+def url(path="", qs="", script_name=None, base=None, relative=False):
     """Create an absolute URL for the given path.
     
     If 'path' starts with a slash ('/'), this will return
@@ -160,7 +161,7 @@ def url(path="", qs="", script_name=None, base=None):
     If script_name is None, cherrypy.request will be used
     to find a script_name, if available.
     
-    If base is None, cherrypy.request.base will be used if available.
+    If base is None, cherrypy.request.base will be used (if available).
     Note that you can use cherrypy.tools.proxy to change this.
     
     Finally, note that this function can be used to obtain an absolute URL
@@ -173,13 +174,13 @@ def url(path="", qs="", script_name=None, base=None):
         if path == "":
             path = request.path_info
         if not path.startswith("/"):
-            path = request.path_info + "/" + path
+            path = _urljoin(request.path_info, path)
         if script_name is None:
             script_name = request.app.script_name
         if base is None:
             base = request.base
         
-        return base + script_name + path + qs
+        newurl = base + script_name + path + qs
     else:
         # No request.app (we're being called outside a request).
         # We'll have to guess the base from server.* attributes.
@@ -205,7 +206,34 @@ def url(path="", qs="", script_name=None, base=None):
                         host += ":%s" % port
                 base = "%s://%s" % (scheme, host)
         path = (script_name or "") + path
-        return base + path + qs
+        newurl = base + path + qs
+    
+    if './' in newurl:
+        # Normalize the URL by removing ./ and ../
+        atoms = []
+        for atom in newurl.split('/'):
+            if atom == '.':
+                pass
+            elif atom == '..':
+                atoms.pop()
+            else:
+                atoms.append(atom)
+        newurl = '/'.join(atoms)
+    
+    if relative:
+        old = url().split('/')[:-1]
+        new = newurl.split('/')
+        while old and new:
+            a, b = old[0], new[0]
+            if a != b:
+                break
+            old.pop(0)
+            new.pop(0)
+        new = (['..'] * len(old)) + new
+        newurl = '/'.join(new)
+    
+    return newurl
+
 
 # Set up config last so it can wrap other top-level objects
 from cherrypy import _cpconfig

@@ -51,8 +51,8 @@ def setup_server():
         upload.exposed = True
     
     root = Root()
-
-
+    
+    
     class TestType(type):
         """Metaclass which automatically exposes all functions in each subclass,
         and adds an instance of the subclass as an attribute of root.
@@ -65,8 +65,17 @@ def setup_server():
             setattr(root, name.lower(), cls())
     class Test(object):
         __metaclass__ = TestType
-
-
+    
+    
+    class URL(Test):
+        
+        def index(self, path_info, relative=None):
+            return cherrypy.url(path_info, relative=bool(relative))
+        
+        def leaf(self, path_info, relative=None):
+            return cherrypy.url(path_info, relative=bool(relative))
+    
+    
     class Params(Test):
         
         def index(self, thing):
@@ -940,6 +949,45 @@ Content-Type: text/plain
         self.getPage('/')
         self.assertHeader('Content-Type', 'text/plain')
         self.getPage('/defct/html')
+    
+    def test_cherrypy_url(self):
+        # Input relative to current
+        self.getPage('/url/leaf?path_info=page1')
+        self.assertBody('%s/url/page1' % self.base())
+        self.getPage('/url/?path_info=page1')
+        self.assertBody('%s/url/page1' % self.base())
+        
+        # Input is 'absolute'; that is, relative to script_name
+        self.getPage('/url/leaf?path_info=/page1')
+        self.assertBody('%s/page1' % self.base())
+        self.getPage('/url/?path_info=/page1')
+        self.assertBody('%s/page1' % self.base())
+        
+        # Single dots
+        self.getPage('/url/leaf?path_info=./page1')
+        self.assertBody('%s/url/page1' % self.base())
+        self.getPage('/url/leaf?path_info=other/./page1')
+        self.assertBody('%s/url/other/page1' % self.base())
+        self.getPage('/url/?path_info=/other/./page1')
+        self.assertBody('%s/other/page1' % self.base())
+        
+        # Double dots
+        self.getPage('/url/leaf?path_info=../page1')
+        self.assertBody('%s/page1' % self.base())
+        self.getPage('/url/leaf?path_info=other/../page1')
+        self.assertBody('%s/url/page1' % self.base())
+        self.getPage('/url/leaf?path_info=/other/../page1')
+        self.assertBody('%s/page1' % self.base())
+        
+        # Output relative to current path or script_name
+        self.getPage('/url/?path_info=page1&relative=True')
+        self.assertBody('page1')
+        self.getPage('/url/leaf?path_info=/page1&relative=True')
+        self.assertBody('../page1')
+        self.getPage('/url/leaf?path_info=../page1&relative=True')
+        self.assertBody('../page1')
+        self.getPage('/url/?path_info=other/../page1&relative=True')
+        self.assertBody('page1')
 
 
 if __name__ == '__main__':
