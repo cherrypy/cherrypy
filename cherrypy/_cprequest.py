@@ -87,6 +87,15 @@ class HookMap(dict):
                     cherrypy.log(traceback=True)
         if exc:
             raise
+    
+    def __copy__(self):
+        newmap = self.__class__()
+        # We can't just use 'update' because we want copies of the
+        # mutable values (each is a list) as well.
+        for k, v in self.iteritems():
+            newmap[k] = v[:]
+        return newmap
+    copy = __copy__
 
 
 class PageHandler(object):
@@ -297,6 +306,12 @@ def error_page_namespace(k, v):
     cherrypy.request.error_page[int(k)] = v
 
 
+hookpoints = ['on_start_resource', 'before_request_body',
+              'before_handler', 'before_finalize',
+              'on_end_resource', 'on_end_request',
+              'before_error_response', 'after_error_response']
+
+
 class Request(object):
     """An HTTP request."""
     
@@ -336,10 +351,6 @@ class Request(object):
     recursive_redirect = False
     is_index = None
     
-    hookpoints = ['on_start_resource', 'before_request_body',
-                  'before_handler', 'before_finalize',
-                  'on_end_resource', 'on_end_request',
-                  'before_error_response', 'after_error_response']
     hooks = HookMap(hookpoints)
     
     error_response = cherrypy.HTTPError(500).set_response
@@ -501,7 +512,8 @@ class Request(object):
                         # Get the 'Host' header, so we can do HTTPRedirects properly.
                         self.process_headers()
                     
-                    self.hooks = HookMap(self.hookpoints)
+                    # Make a copy of the class hooks
+                    self.hooks = self.__class__.hooks.copy()
                     self.get_resource(path_info)
                     self.configure()
                     
