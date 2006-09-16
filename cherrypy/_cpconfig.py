@@ -120,6 +120,7 @@ class Config(dict):
     defaults = {
         'tools.log_tracebacks.on': True,
         'tools.log_headers.on': True,
+        'tools.trailing_slash.on': True,
         }
     
     namespaces = {"server": lambda k, v: setattr(cherrypy.server, k, v),

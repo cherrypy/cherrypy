@@ -200,6 +200,7 @@ class Dispatcher(object):
                     conf = getattr(defhandler, "_cp_config", {})
                     object_trail.insert(i+1, ("default", defhandler, conf, curpath))
                     request.config = set_conf()
+                    request.is_index = False
                     return defhandler, names[i:-1]
             
             # Uncomment the next line to restrict positional params to "default".
@@ -209,43 +210,20 @@ class Dispatcher(object):
             if getattr(candidate, 'exposed', False):
                 request.config = set_conf()
                 if i == num_candidates:
-                    # We found the extra ".index". Check that path_info
-                    # has a trailing slash (otherwise, do a redirect).
-                    self.check_missing_slash()
+                    # We found the extra ".index". Mark request so tools
+                    # can redirect if path_info has no trailing slash.
+                    request.is_index = True
                 else:
-                    # We're not at an 'index' handler. Check that path_info
-                    # had NO trailing slash (if it did, do a redirect).
-                    self.check_extra_slash()
+                    # We're not at an 'index' handler. Mark request so tools
+                    # can redirect if path_info has NO trailing slash.
+                    # Note that this also includes handlers which take
+                    # positional parameters (virtual paths).
+                    request.is_index = False
                 return candidate, names[i:-1]
         
         # We didn't find anything
         request.config = set_conf()
         return None, []
-    
-    def check_missing_slash(self):
-        """Redirect if path_info has no trailing slash (if configured)."""
-        request = cherrypy.request
-        pi = request.path_info
-        
-        # Must use config here because configure probably hasn't run yet.
-        if request.config.get("request.redirect_on_missing_slash",
-                              request.redirect_on_missing_slash):
-            if pi[-1:] != '/':
-                new_url = cherrypy.url(pi + '/', request.query_string)
-                raise cherrypy.HTTPRedirect(new_url)
-    
-    def check_extra_slash(self):
-        """Redirect if path_info has trailing slash (if configured)."""
-        request = cherrypy.request
-        pi = request.path_info
-        
-        # Must use config here because configure hasn't run yet.
-        if request.config.get("request.redirect_on_extra_slash",
-                              request.redirect_on_extra_slash):
-            # If pi == '/', don't redirect to ''!
-            if pi[-1:] == '/' and pi != '/':
-                new_url = cherrypy.url(pi[:-1], request.query_string)
-                raise cherrypy.HTTPRedirect(new_url)
 
 
 class MethodDispatcher(Dispatcher):
@@ -356,8 +334,7 @@ class Request(object):
     toolmap = {}
     config = None
     recursive_redirect = False
-    redirect_on_extra_slash = False
-    redirect_on_missing_slash = True
+    is_index = None
     
     hookpoints = ['on_start_resource', 'before_request_body',
                   'before_handler', 'before_finalize',

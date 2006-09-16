@@ -171,10 +171,23 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
         qs = '?' + qs
     
     if request.app:
-        if path == "":
-            path = request.path_info
-        if not path.startswith("/"):
-            path = _urljoin(request.path_info, path)
+        if path[:1] != "/":
+            # Append/remove trailing slash from path_info as needed
+            # (this is to support mistyped URL's without redirecting;
+            # if you want to redirect, use tools.trailing_slash).
+            pi = request.path_info
+            if request.is_index is True:
+                if pi[-1:] != '/':
+                    pi = pi + '/'
+            elif request.is_index is False:
+                if pi[-1:] == '/' and pi != '/':
+                    pi = pi[:-1]
+            
+            if path == "":
+                path = pi
+            else:
+                path = _urljoin(pi, path)
+        
         if script_name is None:
             script_name = request.app.script_name
         if base is None:

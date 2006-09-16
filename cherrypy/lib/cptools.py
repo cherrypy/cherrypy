@@ -307,3 +307,21 @@ def redirect(url='', internal=True):
         raise cherrypy.InternalRedirect(url)
     else:
         raise cherrypy.HTTPRedirect(url)
+
+def trailing_slash(missing=True, extra=False):
+    """Redirect if path_info has (missing|extra) trailing slash."""
+    request = cherrypy.request
+    pi = request.path_info
+    
+    if request.is_index is True:
+        if missing:
+            if pi[-1:] != '/':
+                new_url = cherrypy.url(pi + '/', request.query_string)
+                raise cherrypy.HTTPRedirect(new_url)
+    elif request.is_index is False:
+        if extra:
+            # If pi == '/', don't redirect to ''!
+            if pi[-1:] == '/' and pi != '/':
+                new_url = cherrypy.url(pi[:-1], request.query_string)
+                raise cherrypy.HTTPRedirect(new_url)
+

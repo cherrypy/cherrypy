@@ -18,7 +18,9 @@ def setup_server():
         def xhost(self):
             raise cherrypy.HTTPRedirect('blah')
         xhost.exposed = True
-        xhost._cp_config = {'tools.proxy.local': 'X-Host'}
+        xhost._cp_config = {'tools.proxy.local': 'X-Host',
+                            'tools.trailing_slash.extra': True,
+                            }
         
         def base(self):
             return cherrypy.request.base
@@ -91,6 +93,11 @@ class ProxyTest(helper.CPWebCase):
             self.assertEqual(cherrypy.url("/this/new/page", script_name=sn),
                              "%s://%s%s%s/this/new/page"
                              % (self.scheme, self.HOST, port, sn))
+        
+        # Test trailing slash (see http://www.cherrypy.org/ticket/562).
+        self.getPage("/xhost/", headers=[('X-Host', 'www.yetanother.com')])
+        self.assertHeader('Location', "%s://www.yetanother.com/xhost"
+                          % self.scheme)
 
 
 if __name__ == '__main__':

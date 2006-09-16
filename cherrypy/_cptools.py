@@ -318,6 +318,6 @@ default_toolbox.ignore_headers = Tool('before_request_body', cptools.ignore_head
 default_toolbox.referer = Tool('before_request_body', cptools.referer)
 default_toolbox.basicauth = Tool('on_start_resource', auth.basic_auth)
 default_toolbox.digestauth = Tool('on_start_resource', auth.digest_auth)
-
+default_toolbox.trailing_slash = Tool('before_handler', cptools.trailing_slash)
 
 del cptools, encoding, auth, static, tidy

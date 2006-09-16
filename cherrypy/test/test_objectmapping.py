@@ -64,7 +64,7 @@ def setup_server():
         def myMethod(self):
             return "myMethod from dir1, path_info is:" + repr(cherrypy.request.path_info)
         myMethod.exposed = True
-        myMethod._cp_config = {'request.redirect_on_extra_slash': True}
+        myMethod._cp_config = {'tools.trailing_slash.extra': True}
         
         def default(self, *params):
             return "default for dir1, param is:" + repr(params)

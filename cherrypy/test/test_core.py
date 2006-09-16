@@ -69,6 +69,8 @@ def setup_server():
     
     class URL(Test):
         
+        _cp_config = {'tools.trailing_slash.on': False}
+        
         def index(self, path_info, relative=None):
             return cherrypy.url(path_info, relative=bool(relative))
         
@@ -133,6 +135,7 @@ def setup_server():
         
         def by_code(self, code):
             raise cherrypy.HTTPRedirect("somewhere else", code)
+        by_code._cp_config = {'tools.trailing_slash.extra': True}
         
         def nomodify(self):
             raise cherrypy.HTTPRedirect("", 304)
@@ -511,11 +514,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         finally:
             ignore.pop()
     
-    def testRedirect(self):
-        self.getPage("/redirect/")
-        self.assertBody('child')
-        self.assertStatus(200)
-        
+    def testSlashes(self):
         # Test that requests for index methods without a trailing slash
         # get redirected to the same URI path with a trailing slash.
         # Make sure GET params are preserved.
@@ -531,6 +530,28 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertStatus(('302 Found', '303 See Other'))
             self.assertInBody("<a href='%s/'>%s/</a>" %
                               (self.base(), self.base()))
+        
+        # Test that requests for NON-index methods WITH a trailing slash
+        # get redirected to the same URI path WITHOUT a trailing slash.
+        # Make sure GET params are preserved.
+        self.getPage("/redirect/by_code/?code=307")
+        self.assertStatus(('302 Found', '303 See Other'))
+        self.assertInBody("<a href='%s/redirect/by_code?code=307'>"
+                          "%s/redirect/by_code?code=307</a>"
+                          % (self.base(), self.base()))
+        
+        # If the trailing_slash tool is off, CP should just continue
+        # as if the slashes were correct. But it needs some help
+        # inside cherrypy.url to form correct output.
+        self.getPage('/url?path_info=page1')
+        self.assertBody('%s/url/page1' % self.base())
+        self.getPage('/url/leaf/?path_info=page1')
+        self.assertBody('%s/url/page1' % self.base())
+    
+    def testRedirect(self):
+        self.getPage("/redirect/")
+        self.assertBody('child')
+        self.assertStatus(200)
         
         self.getPage("/redirect/by_code?code=300")
         self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
