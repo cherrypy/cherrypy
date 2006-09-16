@@ -33,10 +33,11 @@ class Tool(object):
     help(tool.callable) should give you more information about this Tool.
     """
     
-    def __init__(self, point, callable, name=None):
+    def __init__(self, point, callable, name=None, priority=50):
         self._point = point
         self.callable = callable
         self._name = name
+        self._priority = priority
         self.__doc__ = self.callable.__doc__
         self._setargs()
     
@@ -131,7 +132,7 @@ class HandlerTool(Tool):
         method when the tool is "turned on" in config.
         """
         f = getattr(self.callable, "failsafe", False)
-        p = getattr(self.callable, "priority", 50)
+        p = getattr(self.callable, "priority", self._priority)
         cherrypy.request.hooks.attach(self._point, self._wrapper, failsafe=f,
                                       priority=p, **self._merged_args())
 
@@ -290,34 +291,37 @@ class Toolbox(object):
         object.__setattr__(self, name, value)
 
 
-default_toolbox = Toolbox()
+default_toolbox = _d = Toolbox()
 default_toolbox.session_auth = SessionAuthTool(cptools.session_auth)
-default_toolbox.proxy = Tool('before_request_body', cptools.proxy)
-default_toolbox.response_headers = Tool('on_start_resource', cptools.response_headers)
+_d.proxy = Tool('before_request_body',
+                             cptools.proxy, priority=30)
+_d.response_headers = Tool('on_start_resource', cptools.response_headers)
 # We can't call virtual_host in on_start_resource,
 # because it's failsafe and the redirect would be swallowed.
-default_toolbox.virtual_host = Tool('before_request_body', cptools.virtual_host)
-default_toolbox.log_tracebacks = Tool('before_error_response', cptools.log_traceback)
-default_toolbox.log_headers = Tool('before_error_response', cptools.log_request_headers)
-default_toolbox.err_redirect = ErrorTool(cptools.redirect)
-default_toolbox.etags = Tool('before_finalize', cptools.validate_etags)
-default_toolbox.decode = Tool('before_handler', encoding.decode)
-default_toolbox.encode = Tool('before_finalize', encoding.encode)
-default_toolbox.gzip = Tool('before_finalize', encoding.gzip)
-default_toolbox.staticdir = HandlerTool(static.staticdir)
-default_toolbox.staticfile = HandlerTool(static.staticfile)
+_d.virtual_host = Tool('before_request_body',
+                                    cptools.virtual_host, priority=40)
+_d.log_tracebacks = Tool('before_error_response', cptools.log_traceback)
+_d.log_headers = Tool('before_error_response', cptools.log_request_headers)
+_d.err_redirect = ErrorTool(cptools.redirect)
+_d.etags = Tool('before_finalize', cptools.validate_etags)
+_d.decode = Tool('before_handler', encoding.decode)
+# the order of encoding, gzip, caching is important
+_d.encode = Tool('before_finalize', encoding.encode, priority=70)
+_d.gzip = Tool('before_finalize', encoding.gzip, priority=80)
+_d.staticdir = HandlerTool(static.staticdir)
+_d.staticfile = HandlerTool(static.staticfile)
 # _sessions.init must be bound after headers are read
-default_toolbox.sessions = SessionTool('before_request_body', _sessions.init)
-default_toolbox.xmlrpc = XMLRPCTool()
-default_toolbox.wsgiapp = WSGIAppTool(_wsgiapp.run)
-default_toolbox.caching = CachingTool('before_handler', _caching.get, 'caching')
-default_toolbox.expires = Tool('before_finalize', _caching.expires)
-default_toolbox.tidy = Tool('before_finalize', tidy.tidy)
-default_toolbox.nsgmls = Tool('before_finalize', tidy.nsgmls)
-default_toolbox.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
-default_toolbox.referer = Tool('before_request_body', cptools.referer)
-default_toolbox.basicauth = Tool('on_start_resource', auth.basic_auth)
-default_toolbox.digestauth = Tool('on_start_resource', auth.digest_auth)
-default_toolbox.trailing_slash = Tool('before_handler', cptools.trailing_slash)
+_d.sessions = SessionTool('before_request_body', _sessions.init)
+_d.xmlrpc = XMLRPCTool()
+_d.wsgiapp = WSGIAppTool(_wsgiapp.run)
+_d.caching = CachingTool('before_handler', _caching.get, 'caching')
+_d.expires = Tool('before_finalize', _caching.expires)
+_d.tidy = Tool('before_finalize', tidy.tidy)
+_d.nsgmls = Tool('before_finalize', tidy.nsgmls)
+_d.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
+_d.referer = Tool('before_request_body', cptools.referer)
+_d.basicauth = Tool('on_start_resource', auth.basic_auth)
+_d.digestauth = Tool('on_start_resource', auth.digest_auth)
+_d.trailing_slash = Tool('before_handler', cptools.trailing_slash)
 
-del cptools, encoding, auth, static, tidy
+del _d, cptools, encoding, auth, static, tidy

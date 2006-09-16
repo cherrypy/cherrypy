@@ -364,6 +364,7 @@ def save():
             for line in body:
                 yield line
     cherrypy.response.body = wrap_body(cherrypy.response.body)
+save.failsafe = True
 
 def close():
     """Close the session object for this request."""
@@ -371,7 +372,6 @@ def close():
     if sess.locked:
         # If the session is still locked we release the lock
         sess.release_lock()
-    del cherrypy._serving.session
 close.failsafe = True
 close.priority = 90
 
