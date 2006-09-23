@@ -320,8 +320,8 @@ _d.tidy = Tool('before_finalize', tidy.tidy)
 _d.nsgmls = Tool('before_finalize', tidy.nsgmls)
 _d.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
 _d.referer = Tool('before_request_body', cptools.referer)
-_d.basicauth = Tool('on_start_resource', auth.basic_auth)
-_d.digestauth = Tool('on_start_resource', auth.digest_auth)
+_d.basic_auth = Tool('on_start_resource', auth.basic_auth)
+_d.digest_auth = Tool('on_start_resource', auth.digest_auth)
 _d.trailing_slash = Tool('before_handler', cptools.trailing_slash)
 
 del _d, cptools, encoding, auth, static, tidy
