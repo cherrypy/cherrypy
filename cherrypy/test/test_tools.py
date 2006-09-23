@@ -83,6 +83,10 @@ def setup_server():
         index.exposed = True
         
         def euro(self):
+            hooks = list(cherrypy.request.hooks['before_finalize'])
+            hooks.sort()
+            assert [x.callback.__name__ for x in hooks] == ['encode', 'gzip']
+            assert [x.priority for x in hooks] == [70, 80]
             yield u"Hello,"
             yield u"world"
             yield europoundUnicode
@@ -233,7 +237,8 @@ class ToolTests(helper.CPWebCase):
         zfile.write(expectedResult)
         zfile.close()
         
-        self.getPage("/euro", headers=[("Accept-Encoding", "gzip")])
+        self.getPage("/euro", headers=[("Accept-Encoding", "gzip"),
+                                        ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
         self.assertInBody(zbuf.getvalue()[:3])
         
         zbuf = StringIO.StringIO()

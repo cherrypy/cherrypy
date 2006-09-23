@@ -91,8 +91,10 @@ class Tool(object):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        conf = self._merged_args()
-        cherrypy.request.hooks.attach(self._point, self.callable, **conf)
+        f = getattr(self.callable, "failsafe", False)
+        p = getattr(self.callable, "priority", self._priority)
+        cherrypy.request.hooks.attach(self._point, self.callable, failsafe=f,
+                                      priority=p, **self._merged_args())
 
 
 class HandlerTool(Tool):
@@ -293,13 +295,11 @@ class Toolbox(object):
 
 default_toolbox = _d = Toolbox()
 default_toolbox.session_auth = SessionAuthTool(cptools.session_auth)
-_d.proxy = Tool('before_request_body',
-                             cptools.proxy, priority=30)
+_d.proxy = Tool('before_request_body', cptools.proxy, priority=30)
 _d.response_headers = Tool('on_start_resource', cptools.response_headers)
 # We can't call virtual_host in on_start_resource,
 # because it's failsafe and the redirect would be swallowed.
-_d.virtual_host = Tool('before_request_body',
-                                    cptools.virtual_host, priority=40)
+_d.virtual_host = Tool('before_request_body', cptools.virtual_host, priority=40)
 _d.log_tracebacks = Tool('before_error_response', cptools.log_traceback)
 _d.log_headers = Tool('before_error_response', cptools.log_request_headers)
 _d.err_redirect = ErrorTool(cptools.redirect)
