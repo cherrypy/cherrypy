@@ -77,6 +77,8 @@ config, and only when you use cherrypy.config.update.
 """
 
 import ConfigParser
+from warnings import warn
+
 import cherrypy
 
 
@@ -100,17 +102,26 @@ environments = {
         },
     }
 
+def as_dict(config):
+    """Return a dict from 'config' whether it is a dict, file, or filename."""
+    if isinstance(config, basestring):
+        config = _Parser().dict_from_file(config)
+    elif hasattr(config, 'read'):
+        config = _Parser().dict_from_file(config)
+    return config
+
 def merge(base, other):
-    """Merge one app config (from a dict, file, or filename) into another."""
+    """Merge one app config (from a dict, file, or filename) into another.
+    
+    If the given config is a filename, it will be appended to
+    cherrypy.engine.reload_files and monitored for changes.
+    """
     if isinstance(other, basestring):
         if other not in cherrypy.engine.reload_files:
             cherrypy.engine.reload_files.append(other)
-        other = _Parser().dict_from_file(other)
-    elif hasattr(other, 'read'):
-        other = _Parser().dict_from_file(other)
     
     # Load other into base
-    for section, value_map in other.iteritems():
+    for section, value_map in as_dict(other).iteritems():
         base.setdefault(section, {}).update(value_map)
 
 
@@ -173,6 +184,37 @@ class Config(dict):
         namespace = atoms[0]
         if namespace in self.namespaces:
             self.namespaces[namespace](atoms[1], v)
+
+
+obsolete = {
+    'server.default_content_type': 'tools.response_headers.headers',
+    'log_access_file': 'log.access_file',
+    'log_config_options': None,
+    'log_file': 'log.error_file',
+    'log_file_not_found': None,
+    'log_request_headers': 'tools.log_headers.on',
+    'log_to_screen': 'log.screen',
+    'show_tracebacks': 'request.show_tracebacks',
+    'throw_errors': 'request.throw_errors',
+    'profiler.on': 'cherrypy.tree.mount(profiler.make_app(cherrypy.Application(Root())))',
+    }
+
+deprecated = {}
+
+def check_compatibility(config):
+    """Process config and warn on each obsolete or deprecated entry."""
+    for section, map in as_dict(config).iteritems():
+        if isinstance(map, dict):
+            for k, v in map.iteritems():
+                if k in obsolete:
+                    warn("%r is obsolete. Use %r instead." % (k, v))
+                elif k in deprecated:
+                    warn("%r is deprecated. Use %r instead." % (k, v))
+        else:
+            if section in obsolete:
+                warn("%r is obsolete. Use %r instead." % (section, map))
+            elif section in deprecated:
+                warn("%r is deprecated. Use %r instead." % (section, map))
 
 
 class _Parser(ConfigParser.ConfigParser):
