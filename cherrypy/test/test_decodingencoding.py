@@ -61,7 +61,15 @@ class DecodingEncodingTest(helper.CPWebCase):
         self.assertInBody("Your client sent this Accept-Charset header: "
                           "iso-8859-1, *;q=0. We tried these charsets: "
                           "iso-8859-1.")
-
+        
+        # Ask for x-mac-ce, which should be unknown. See ticket #569.
+        self.getPage('/mao_zedong', [('Accept-Charset',
+                                      'us-ascii, ISO-8859-1, x-mac-ce')])
+        self.assertStatus("406 Not Acceptable")
+        self.assertInBody("Your client sent this Accept-Charset header: "
+                          "us-ascii, ISO-8859-1, x-mac-ce. We tried these "
+                          "charsets: x-mac-ce, us-ascii, ISO-8859-1.")
+        
 
 if __name__ == "__main__":
     setup_server()

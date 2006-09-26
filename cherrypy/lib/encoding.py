@@ -78,7 +78,7 @@ def encode_string(encoding, errors='strict'):
         for chunk in cherrypy.response.body:
             body.append(chunk.encode(encoding, errors))
         cherrypy.response.body = body
-    except UnicodeError:
+    except (LookupError, UnicodeError):
         return False
     else:
         return True
