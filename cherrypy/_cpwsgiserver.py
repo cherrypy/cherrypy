@@ -101,23 +101,23 @@ class HTTPRequest(object):
         atoms = [unquote(x) for x in quoted_slash.split(path)]
         path = "%2F".join(atoms)
         
-        for mount_point, wsgi_app in server.mount_points:
-            if path == "*":
-                # This means, of course, that the first wsgi_app will
-                # always handle a URI of "*".
-                self.environ["SCRIPT_NAME"] = ""
-                self.environ["PATH_INFO"] = "*"
-                self.wsgi_app = wsgi_app
-                break
-            # The mount_points list should be sorted by length, descending.
-            if path.startswith(mount_point):
-                self.environ["SCRIPT_NAME"] = mount_point
-                self.environ["PATH_INFO"] = path[len(mount_point):]
-                self.wsgi_app = wsgi_app
-                break
+        if path == "*":
+            # This means, of course, that the last wsgi_app (shortest path)
+            # will always handle a URI of "*".
+            self.environ["SCRIPT_NAME"] = ""
+            self.environ["PATH_INFO"] = "*"
+            self.wsgi_app = server.mount_points[-1][1]
         else:
-            self.simple_response("404 Not Found")
-            return
+            for mount_point, wsgi_app in server.mount_points:
+                # The mount_points list should be sorted by length, descending.
+                if path.startswith(mount_point):
+                    self.environ["SCRIPT_NAME"] = mount_point
+                    self.environ["PATH_INFO"] = path[len(mount_point):]
+                    self.wsgi_app = wsgi_app
+                    break
+            else:
+                self.simple_response("404 Not Found")
+                return
         
         # Note that, like wsgiref and most other WSGI servers,
         # we unquote the path but not the query string.
