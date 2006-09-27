@@ -10,7 +10,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From http://www.cherrypy.org/ticket/361
-response_codes[500] = ('Internal error',
+response_codes[500] = ('Internal Server Error',
                       'The server encountered an unexpected condition '
                       'which prevented it from fulfilling the request.')
 response_codes[503] = ('Service Unavailable',
