@@ -299,6 +299,8 @@ class Engine(object):
 class NotReadyRequest:
     
     throw_errors = True
+    show_tracebacks = True
+    error_page = {}
     
     def __init__(self, msg):
         self.msg = msg
