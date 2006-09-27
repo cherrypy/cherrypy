@@ -66,8 +66,10 @@ def encode_stream(encoding, errors='strict'):
     being written out.
     """
     def encoder(body):
-        for line in body:
-            yield line.encode(encoding, errors)
+        for chunk in body:
+            if isinstance(chunk, unicode):
+                chunk = chunk.encode(encoding, errors)
+            yield chunk
     cherrypy.response.body = encoder(cherrypy.response.body)
     return True
 
@@ -76,7 +78,9 @@ def encode_string(encoding, errors='strict'):
     try:
         body = []
         for chunk in cherrypy.response.body:
-            body.append(chunk.encode(encoding, errors))
+            if isinstance(chunk, unicode):
+                chunk = chunk.encode(encoding, errors)
+            body.append(chunk)
         cherrypy.response.body = body
     except (LookupError, UnicodeError):
         return False
