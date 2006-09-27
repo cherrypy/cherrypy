@@ -20,6 +20,11 @@ def setup_server():
         def mao_zedong(self):
             return sing
         mao_zedong.exposed = True
+        
+        def utf8(self):
+            return sing8
+        utf8.exposed = True
+        utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
     
     class GZIP:
         def index(self):
@@ -96,6 +101,12 @@ class EncodingTests(helper.CPWebCase):
         self.assertInBody("Your client sent this Accept-Charset header: "
                           "us-ascii, ISO-8859-1, x-mac-ce. We tried these "
                           "charsets: x-mac-ce, us-ascii, ISO-8859-1.")
+        
+        # Test the 'encoding' arg to encode.
+        self.getPage('/utf8')
+        self.assertBody(sing8)
+        self.getPage('/utf8', [('Accept-Charset', 'us-ascii, ISO-8859-1')])
+        self.assertStatus("406 Not Acceptable")
     
     def testGzip(self):
         zbuf = StringIO.StringIO()

@@ -51,6 +51,11 @@ def decode_params(encoding):
 # Encoding
 
 def encode(encoding=None, errors='strict'):
+    # Guard against running twice
+    if getattr(cherrypy.request, "_encoding_attempted", False):
+        return
+    cherrypy.request._encoding_attempted = True
+    
     ct = cherrypy.response.headers.elements("Content-Type")
     if ct:
         ct = ct[0]
@@ -90,60 +95,57 @@ def encode_string(encoding, errors='strict'):
 def find_acceptable_charset(encoding=None, default_encoding='utf-8', errors='strict'):
     response = cherrypy.response
     
-    attempted_charsets = []
-    
     if cherrypy.response.stream:
         encoder = encode_stream
     else:
         response.collapse_body()
         encoder = encode_string
     
-    failmsg = "The response could not be encoded with %s"
-    
-    if encoding is not None:
-        # If specified, force this encoding to be used, or fail.
-        if encoder(encoding, errors):
-            return encoding
-        else:
-            raise cherrypy.HTTPError(500, failmsg % encoding)
-    
     # Parse the Accept-Charset request header, and try to provide one
     # of the requested charsets (in order of user preference).
     encs = cherrypy.request.headers.elements('Accept-Charset')
-    if not encs:
-        # Any character-set is acceptable.
-        charsets = []
-        if encoder(default_encoding, errors):
-            return default_encoding
-        else:
-            raise cherrypy.HTTPError(500, failmsg % default_encoding)
+    charsets = [enc.value.lower() for enc in encs]
+    attempted_charsets = []
+    
+    if encoding is not None:
+        # If specified, force this encoding to be used, or fail.
+        encoding = encoding.lower()
+        if (not charsets) or "*" in charsets or encoding in charsets:
+            if encoder(encoding, errors):
+                return encoding
     else:
-        charsets = [enc.value.lower() for enc in encs]
-        if "*" not in charsets:
-            # If no "*" is present in an Accept-Charset field, then all
-            # character sets not explicitly mentioned get a quality
-            # value of 0, except for ISO-8859-1, which gets a quality
-            # value of 1 if not explicitly mentioned.
-            iso = 'iso-8859-1'
-            if iso not in charsets:
-                attempted_charsets.append(iso)
-                if encoder(iso, errors):
-                    return iso
-        
-        for element in encs:
-            if element.qvalue > 0:
-                if element.value == "*":
-                    # Matches any charset. Try our default.
-                    if default_encoding not in attempted_charsets:
-                        attempted_charsets.append(default_encoding)
-                        if encoder(default_encoding, errors):
-                            return default_encoding
-                else:
-                    encoding = element.value
-                    if encoding not in attempted_charsets:
-                        attempted_charsets.append(encoding)
-                        if encoder(encoding, errors):
-                            return encoding
+        if not encs:
+            # Any character-set is acceptable.
+            if encoder(default_encoding, errors):
+                return default_encoding
+            else:
+                raise cherrypy.HTTPError(500, failmsg % default_encoding)
+        else:
+            if "*" not in charsets:
+                # If no "*" is present in an Accept-Charset field, then all
+                # character sets not explicitly mentioned get a quality
+                # value of 0, except for ISO-8859-1, which gets a quality
+                # value of 1 if not explicitly mentioned.
+                iso = 'iso-8859-1'
+                if iso not in charsets:
+                    attempted_charsets.append(iso)
+                    if encoder(iso, errors):
+                        return iso
+            
+            for element in encs:
+                if element.qvalue > 0:
+                    if element.value == "*":
+                        # Matches any charset. Try our default.
+                        if default_encoding not in attempted_charsets:
+                            attempted_charsets.append(default_encoding)
+                            if encoder(default_encoding, errors):
+                                return default_encoding
+                    else:
+                        encoding = element.value
+                        if encoding not in attempted_charsets:
+                            attempted_charsets.append(encoding)
+                            if encoder(encoding, errors):
+                                return encoding
     
     # No suitable encoding found.
     ac = cherrypy.request.headers.get('Accept-Charset')
