@@ -424,7 +424,7 @@ class Request(object):
             
             self.method = method
             path = path or "/"
-            self.query_string = query_string
+            self.query_string = query_string or ''
             
             # Compare request and server HTTP protocol versions, in case our
             # server does not support the requested protocol. Limit our output

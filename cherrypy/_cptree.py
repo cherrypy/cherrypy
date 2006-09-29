@@ -108,7 +108,7 @@ def wsgi_handler(environ, start_response, app):
         
         path = env('SCRIPT_NAME', '') + env('PATH_INFO', '')
         response = request.run(environ['REQUEST_METHOD'], path,
-                               env('QUERY_STRING'),
+                               env('QUERY_STRING', ''),
                                env('SERVER_PROTOCOL'),
                                translate_headers(environ),
                                environ['wsgi.input'])
