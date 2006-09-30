@@ -697,15 +697,15 @@ class Body(object):
         if cherrypy.response.timed_out:
             raise cherrypy.TimeoutError()
         # Convert the given value to an iterable object.
-        if isinstance(value, types.FileType):
-            value = file_generator(value)
-        elif isinstance(value, types.GeneratorType):
-            value = flattener(value)
-        elif isinstance(value, basestring):
+        if isinstance(value, basestring):
             # strings get wrapped in a list because iterating over a single
             # item list is much faster than iterating over every character
             # in a long string.
             value = [value]
+        elif isinstance(value, types.FileType):
+            value = file_generator(value)
+        elif isinstance(value, types.GeneratorType):
+            value = flattener(value)
         elif value is None:
             value = []
         obj._body = value
