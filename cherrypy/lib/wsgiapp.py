@@ -61,7 +61,12 @@ def run(app, env=None):
         environ.update(env)
     
     # run the wsgi app and have it set response.body
-    cherrypy.response.body = app(environ, start_response)
+    response = app(environ, start_response)
+    try:
+        cherrypy.response.body = response
+    finally:
+        if hasattr(response, "close"):
+            response.close()
     
     return True
 

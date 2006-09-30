@@ -267,10 +267,12 @@ class HTTPRequest(object):
     
     def respond(self):
         response = self.wsgi_app(self.environ, self.start_response)
-        for line in response:
-            self.write(line)
-        if hasattr(response, "close"):
-            response.close()
+        try:
+            for line in response:
+                self.write(line)
+        finally:
+            if hasattr(response, "close"):
+                response.close()
         if (self.ready and not self.sent_headers
                 and not self.connection.server.interrupt):
             self.sent_headers = True
