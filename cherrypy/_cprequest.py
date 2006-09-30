@@ -148,7 +148,24 @@ class Dispatcher(object):
             request.handler = cherrypy.NotFound()
     
     def find_handler(self, path):
-        """Find the appropriate page handler for the given path."""
+        """Return the appropriate page handler, plus any virtual path.
+        
+        This will return two objects. The first will be a callable,
+        which can be used to generate page output. Any parameters from
+        the query string or request body will be sent to that callable
+        as keyword arguments.
+        
+        The callable is found by traversing the application's tree,
+        starting from cherrypy.request.app.root, and matching path
+        components to successive objects in the tree. For example, the
+        URL "/path/to/handler" might return root.path.to.handler.
+        
+        The second object returned will be a list of names which are
+        'virtual path' components: parts of the URL which are dynamic,
+        and were not used when looking up the handler.
+        These virtual path components are passed to the handler as
+        positional arguments.
+        """
         request = cherrypy.request
         app = request.app
         root = app.root
@@ -160,7 +177,7 @@ class Dispatcher(object):
             nodeconf.update(root._cp_config)
         if "/" in app.config:
             nodeconf.update(app.config["/"])
-        object_trail = [('root', root, nodeconf, curpath)]
+        object_trail = [['root', root, nodeconf, curpath]]
         
         node = root
         names = [x for x in path.strip('/').split('/') if x] + ['index']
@@ -180,7 +197,7 @@ class Dispatcher(object):
             if curpath in app.config:
                 nodeconf.update(app.config[curpath])
             
-            object_trail.append((objname, node, nodeconf, curpath))
+            object_trail.append([name, node, nodeconf, curpath])
         
         def set_conf():
             """Set cherrypy.request.config."""
@@ -207,7 +224,7 @@ class Dispatcher(object):
                 if getattr(defhandler, 'exposed', False):
                     # Insert any extra _cp_config from the default handler.
                     conf = getattr(defhandler, "_cp_config", {})
-                    object_trail.insert(i+1, ("default", defhandler, conf, curpath))
+                    object_trail.insert(i+1, ["default", defhandler, conf, curpath])
                     request.config = set_conf()
                     request.is_index = False
                     return defhandler, names[i:-1]
