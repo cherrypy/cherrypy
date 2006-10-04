@@ -22,7 +22,7 @@ class TestHarness(object):
     """A test harness for the CherryPy framework and CherryPy applications."""
     
     def __init__(self, tests=None, server=None, protocol="HTTP/1.1",
-                 port=8000, scheme="http"):
+                 port=8000, scheme="http", interactive=True):
         """Constructor to populate the TestHarness instance.
         
         tests should be a list of module names (strings).
@@ -32,6 +32,7 @@ class TestHarness(object):
         self.protocol = protocol
         self.port = port
         self.scheme = scheme
+        self.interactive = interactive
     
     def run(self, conf=None):
         """Run the test harness."""
@@ -72,6 +73,7 @@ class TestHarness(object):
         webtest.WebCase.PORT = self.port
         webtest.WebCase.harness = self
         helper.CPWebCase.scheme = self.scheme
+        webtest.WebCase.interactive = self.interactive
         if self.scheme == "https":
             webtest.WebCase.HTTP_CONN = httplib.HTTPSConnection
         print
@@ -93,6 +95,7 @@ class CommandLineParser(object):
     validate = False
     server = None
     basedir = None
+    interactive = True
     
     def __init__(self, available_tests, args=sys.argv[1:]):
         """Constructor to populate the TestHarness instance.
@@ -104,7 +107,8 @@ class CommandLineParser(object):
         """
         self.available_tests = available_tests
         
-        longopts = ['cover', 'profile', 'validate', '1.0', 'ssl', 'help',
+        longopts = ['cover', 'profile', 'validate', 'dumb',
+                    '1.0', 'ssl', 'help',
                     'basedir=', 'port=', 'server=']
         longopts.extend(self.available_tests)
         try:
@@ -126,6 +130,8 @@ class CommandLineParser(object):
                 self.profile = True
             elif o == "--validate":
                 self.validate = True
+            elif o == "--dumb":
+                self.interactive = False
             elif o == "--1.0":
                 self.protocol = "HTTP/1.0"
             elif o == "--ssl":
@@ -160,7 +166,7 @@ class CommandLineParser(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server=* --port=%s --1.0 --cover --basedir=path --profile --validate --tests**
+        test.py --server=* --port=%s --1.0 --cover --basedir=path --profile --validate --dumb --tests**
         
     """ % self.__class__.port
         print '    * servers:'
@@ -180,6 +186,7 @@ class CommandLineParser(object):
     
     --profile: turn on profiling tool
     --validate: use wsgiref.validate (builtin in Python 2.5).
+    --dumb: turn off the interactive output features.
     """ % self.__class__.port
         
         print '    ** tests:'
@@ -292,16 +299,18 @@ class CommandLineParser(object):
         if self.server == 'cpmodpy':
             from cherrypy.test import modpy
             h = modpy.ModPythonTestHarness(self.tests, self.server,
-                                           self.protocol, self.port)
+                                           self.protocol, self.port,
+                                           "http", self.interactive)
             h.use_wsgi = False
         elif self.server == 'modpygw':
             from cherrypy.test import modpy
             h = modpy.ModPythonTestHarness(self.tests, self.server,
-                                           self.protocol, self.port)
+                                           self.protocol, self.port,
+                                           "http", self.interactive)
             h.use_wsgi = True
         else:
             h = TestHarness(self.tests, self.server, self.protocol,
-                            self.port, self.scheme)
+                            self.port, self.scheme, self.interactive)
         
         h.run(conf)
         
@@ -347,10 +356,11 @@ def run():
         'test_wsgiapps',
         'test_wsgi_ns',
     ]
-    CommandLineParser(testList).run()
-    
-    print
-    raw_input('hit enter')
+    clp = CommandLineParser(testList)
+    clp.run()
+    if clp.interactive:
+        print
+        raw_input('hit enter')
 
 
 if __name__ == '__main__':

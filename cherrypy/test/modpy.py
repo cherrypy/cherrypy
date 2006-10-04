@@ -133,6 +133,7 @@ class ModPythonTestHarness(test.TestHarness):
         webtest.WebCase.PORT = self.port
         webtest.WebCase.harness = self
         webtest.WebCase.scheme = "http"
+        webtest.WebCase.interactive = self.interactive
         print
         print "Running tests:", self.server
         
