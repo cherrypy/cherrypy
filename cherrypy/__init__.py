@@ -84,6 +84,7 @@ class _ThreadLocalProxy(object):
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "_serving" object)
+from cherrypy import _cprequest
 from cherrypy.lib import http as _http
 request = _ThreadLocalProxy('request',
                             _cprequest.Request(_http.Host("localhost", 80),
