@@ -60,7 +60,7 @@ class TestHarness(object):
         if self.scheme == "https":
             baseconf['server.ssl_certificate'] = serverpem
             baseconf['server.ssl_private_key'] = serverpem
-        self._run(baseconf)
+        return self._run(baseconf)
     
     def _run(self, conf):
         # helper must be imported lazily so the coverage tool
@@ -78,7 +78,7 @@ class TestHarness(object):
             webtest.WebCase.HTTP_CONN = httplib.HTTPSConnection
         print
         print "Running tests:", self.server
-        helper.run_test_suite(self.tests, self.server, conf)
+        return helper.run_test_suite(self.tests, self.server, conf)
 
 
 class CommandLineParser(object):
@@ -312,7 +312,7 @@ class CommandLineParser(object):
             h = TestHarness(self.tests, self.server, self.protocol,
                             self.port, self.scheme, self.interactive)
         
-        h.run(conf)
+        success = h.run(conf)
         
         if self.profile:
             print
@@ -321,6 +321,8 @@ class CommandLineParser(object):
         
         if self.cover:
             self.stop_coverage()
+        
+        return success
 
 
 def prefer_parent_path():
@@ -357,10 +359,11 @@ def run():
         'test_wsgi_ns',
     ]
     clp = CommandLineParser(testList)
-    clp.run()
+    success = clp.run()
     if clp.interactive:
         print
         raw_input('hit enter')
+    sys.exit(success)
 
 
 if __name__ == '__main__':

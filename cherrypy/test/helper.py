@@ -108,8 +108,16 @@ def run_test_suite(moduleNames, server, conf):
     cherrypy.config.reset()
     setConfig(conf)
     cherrypy.server.quickstart(server)
+    # The Pybots automatic testing system needs the suite to exit
+    # with a non-zero value if there were any problems.
+    # Might as well stick it in the engine... :/
+    cherrypy.engine.test_success = True
     cherrypy.engine.start_with_callback(_run_test_suite_thread,
                                         args=(moduleNames, conf))
+    if cherrypy.engine.test_success:
+        return 0
+    else:
+        return 1
 
 def sync_apps(profile=False, validate=False):
     apps = []
@@ -149,7 +157,8 @@ def _run_test_suite_thread(moduleNames, conf):
                   validate=conf.get("validator.on", False))
         
         suite = CPTestLoader.loadTestsFromName(testmod)
-        CPTestRunner.run(suite)
+        result = CPTestRunner.run(suite)
+        cherrypy.engine.test_success &= result.wasSuccessful()
         
         teardown = getattr(m, "teardown_server", None)
         if teardown:
