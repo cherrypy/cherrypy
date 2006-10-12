@@ -236,6 +236,9 @@ def setup_server():
             raise cherrypy.HTTPError(417, 'Expectation Failed')
 
     class Headers(Test):
+        def default(self, headername): 
+            """Spit back out the value for the requested header.""" 
+            return cherrypy.request.headers[headername]
         
         def doubledheaders(self):
             # From http://www.cherrypy.org/ticket/165:
@@ -742,7 +745,14 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody("da\n"
                         "en-gb;q=0.8\n"
                         "en;q=0.7")
-    
+        
+        # Test that two request headers are collapsed into one.
+        # See http://www.cherrypy.org/ticket/542.
+        self.getPage("/headers/Accept-Charset",
+                     headers=[("Accept-Charset", "iso-8859-5"),
+                              ("Accept-Charset", "unicode-1-1;q=0.8")])
+        self.assertBody("iso-8859-5, unicode-1-1;q=0.8")
+        
     def testHeaders(self):
         # Tests that each header only appears once, regardless of case.
         self.getPage("/headers/doubledheaders")
