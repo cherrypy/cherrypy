@@ -348,7 +348,6 @@ def run():
         'test_etags',
         'test_objectmapping',
         'test_misc_tools',
-        'test_routes',
         'test_static',
         'test_tutorials',
         'test_virtualhost',
@@ -359,6 +358,13 @@ def run():
         'test_wsgiapps',
         'test_wsgi_ns',
     ]
+    
+    try:
+        import routes
+        testList.append('test_routes')
+    except ImportError:
+        pass
+    
     clp = CommandLineParser(testList)
     success = clp.run()
     if clp.interactive:
