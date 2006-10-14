@@ -105,7 +105,7 @@ class Dispatcher(object):
             object_trail.append([name, node, nodeconf, curpath])
         
         def set_conf():
-            """Set cherrypy.request.config."""
+            """Collapse all object_trail config into cherrypy.request.config."""
             base = cherrypy.config.copy()
             # Note that we merge the config from each node
             # even if that node was None.

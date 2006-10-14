@@ -348,6 +348,7 @@ def run():
         'test_etags',
         'test_objectmapping',
         'test_misc_tools',
+        'test_routes',
         'test_static',
         'test_tutorials',
         'test_virtualhost',
