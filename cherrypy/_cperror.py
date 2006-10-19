@@ -10,22 +10,22 @@ class CherryPyException(exceptions.Exception):
     pass
 
 class InternalRedirect(CherryPyException):
-    """Exception raised when processing should be handled by a different path.
+    """Exception raised to switch to the handler for a different URL.
     
     If you supply a query string, it will replace request.params.
-    If you omit the query string, the params from the original request will
-    remain in effect.
+    If you omit the query string (no question mark), the params from the
+    original request will remain in effect.
+    To erase any query string parameters, write url + "?" with no params.
     """
     
     def __init__(self, path):
         import cherrypy
         request = cherrypy.request
         
+        self.query_string = ""
         if "?" in path:
-            # Pop any params included in the path
-            path, pm = path.split("?", 1)
-            request.query_string = pm
-            request.params = _http.parse_query_string(pm)
+            # Separate any params included in the path
+            path, self.query_string = path.split("?", 1)
         
         # Note that urljoin will "do the right thing" whether url is:
         #  1. a URL relative to root (e.g. "/dummy")
@@ -37,8 +37,7 @@ class InternalRedirect(CherryPyException):
         # error can have access to it.
         self.path = path
         
-        CherryPyException.__init__(self, path)
-
+        CherryPyException.__init__(self, path, self.query_string)
 
 
 class HTTPRedirect(CherryPyException):

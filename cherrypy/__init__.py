@@ -167,6 +167,8 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
     
     Finally, note that this function can be used to obtain an absolute URL
     for the current request path (minus the querystring) by passing no args.
+    If you call url(qs=cherrypy.request.query_string), you should get the
+    original browser URL (assuming no Internal redirections).
     """
     if qs:
         qs = '?' + qs

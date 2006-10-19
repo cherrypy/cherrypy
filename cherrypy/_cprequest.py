@@ -286,16 +286,26 @@ class Request(object):
             
             # Loop to allow for InternalRedirect.
             pi = self.path_info
+            qs = self.query_string
             while True:
                 try:
                     self.respond(pi)
                     break
                 except cherrypy.InternalRedirect, ir:
-                    pi = ir.path
-                    if pi in self.redirections and not self.recursive_redirect:
+                    if (ir.path in self.redirections
+                        and not self.recursive_redirect):
                         raise RuntimeError("InternalRedirect visited the "
-                                           "same URL twice: %s" % repr(pi))
-                    self.redirections.append(pi)
+                                           "same URL twice: %s" % repr(ir.path))
+                    
+                    # Add the *previous* path_info + qs to self.redirections.
+                    if qs:
+                        qs = "?" + qs
+                    self.redirections.append(pi + qs)
+                    
+                    pi = self.path_info = ir.path
+                    qs = self.query_string = ir.query_string
+                    if qs:
+                        self.params = http.parse_query_string(qs)
         except (KeyboardInterrupt, SystemExit):
             raise
         except:

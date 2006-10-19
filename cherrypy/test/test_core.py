@@ -160,11 +160,12 @@ def setup_server():
         def index(self):
             raise cherrypy.InternalRedirect("/")
         
-        def relative(self):
-            raise cherrypy.InternalRedirect("cousin")
+        def relative(self, a, b):
+            raise cherrypy.InternalRedirect("cousin?t=6")
         
-        def cousin(self):
-            return "I am a redirected page."
+        def cousin(self, t):
+            return repr(cherrypy.request.redirections +
+                        [cherrypy.url(qs=cherrypy.request.query_string)])
         
         def petshop(self, user_id):
             if user_id == "parrot":
@@ -175,6 +176,7 @@ def setup_server():
                 cherrypy.request.params = {"user_id": "fish"}
                 raise cherrypy.InternalRedirect('/image/getImagesByUser')
             else:
+                # This should pass the user_id through to getImagesByUser
                 raise cherrypy.InternalRedirect('/image/getImagesByUser')
         
         # We support Python 2.3, but the @-deco syntax would look like this:
@@ -602,9 +604,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('Please log in')
         self.assertStatus(200)
         
-        # Relative path in InternalRedirect
-        self.getPage("/internalredirect/relative")
-        self.assertBody('I am a redirected page.')
+        # Relative path in InternalRedirect.
+        # Also tests request.redirections
+        self.getPage("/internalredirect/relative?a=3&b=5")
+        self.assertBody("['/internalredirect/relative?a=3&b=5', "
+                        "'%s/internalredirect/cousin?t=6']" % self.base())
         self.assertStatus(200)
         
         # InternalRedirect on error
