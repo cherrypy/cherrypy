@@ -6,6 +6,7 @@ mimetypes.types_map['.ico']='image/x-icon'
 
 import os
 import re
+import stat
 import time
 import urllib
 
@@ -36,17 +37,18 @@ def serve_file(path, content_type=None, disposition=None, name=None):
         raise ValueError("'%s' is not an absolute path." % path)
     
     try:
-        stat = os.stat(path)
+        st = os.stat(path)
     except OSError:
         raise cherrypy.NotFound()
     
-    if os.path.isdir(path):
+    # Check if path is a directory.
+    if stat.S_ISDIR(st.st_mode):
         # Let the caller deal with it as they like.
         raise cherrypy.NotFound()
     
     # Set the Last-Modified response header, so that
     # modified-since validation code can work.
-    response.headers['Last-Modified'] = http.HTTPDate(stat.st_mtime)
+    response.headers['Last-Modified'] = http.HTTPDate(st.st_mtime)
     cptools.validate_since()
     
     if content_type is None:
@@ -66,7 +68,7 @@ def serve_file(path, content_type=None, disposition=None, name=None):
     
     # Set Content-Length and use an iterable (file object)
     #   this way CP won't load the whole file in memory
-    c_len = stat.st_size
+    c_len = st.st_size
     bodyfile = open(path, 'rb')
     
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
