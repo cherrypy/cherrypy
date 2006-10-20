@@ -210,6 +210,9 @@ Message: %(error_msg)s
         if error_msg:
             body = self.login_screen(from_page, username, error_msg)
             cherrypy.response.body = body
+            if cherrypy.response.headers.has_key("Content-Length"):
+                # Delete Content-Length header so finalize() recalcs it.
+                del cherrypy.response.headers["Content-Length"]
             return True
         else:
             cherrypy.session[self.session_key] = username
@@ -235,6 +238,9 @@ Message: %(error_msg)s
             sess[self.session_key] = username = self.anonymous()
         if not username:
             cherrypy.response.body = self.login_screen(cherrypy.url(qs=request.query_string))
+            if cherrypy.response.headers.has_key("Content-Length"):
+                # Delete Content-Length header so finalize() recalcs it.
+                del cherrypy.response.headers["Content-Length"]
             return True
         
         self.on_check(username)

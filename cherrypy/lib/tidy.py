@@ -18,11 +18,13 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None,
     stable and it crashes on some HTML pages (which means that the
     server would also crash)
     """
+    response = cherrypy.response
+    
     # the tidy tool, by its very nature it's not generator friendly, 
     # so we just collapse the body and work with it.
-    orig_body = cherrypy.response.collapse_body()
+    orig_body = response.collapse_body()
     
-    fct = cherrypy.response.headers.get('Content-Type', '')
+    fct = response.headers.get('Content-Type', '')
     ct = fct.split(';')[0]
     encoding = ''
     i = fct.find('charset=')
@@ -73,8 +75,10 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None,
                     new_errs.append(err)
         
         if new_errs:
-            cherrypy.response.body = wrong_content('<br />'.join(new_errs),
-                                                   orig_body)
+            response.body = wrong_content('<br />'.join(new_errs), orig_body)
+            if response.headers.has_key("Content-Length"):
+                # Delete Content-Length header so finalize() recalcs it.
+                del response.headers["Content-Length"]
             return
         elif strict_xml:
             # The HTML is OK, but is it valid XML?
@@ -96,11 +100,17 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None,
                 body_file = StringIO.StringIO()
                 traceback.print_exc(file = body_file)
                 body_file = '<br />'.join(body_file.getvalue())
-                cherrypy.response.body = wrong_content(body_file, orig_body, "XML")
+                response.body = wrong_content(body_file, orig_body, "XML")
+                if response.headers.has_key("Content-Length"):
+                    # Delete Content-Length header so finalize() recalcs it.
+                    del response.headers["Content-Length"]
                 return
         
         if use_output:
-            cherrypy.response.body = [output]
+            response.body = [output]
+            if response.headers.has_key("Content-Length"):
+                # Delete Content-Length header so finalize() recalcs it.
+                del response.headers["Content-Length"]
 
 def html_space(text):
     """Escape text, replacing space with nbsp and tab with 4 nbsp's."""
@@ -118,11 +128,13 @@ def wrong_content(header, body, content_type="HTML"):
 
 
 def nsgmls(temp_dir, nsgmls_path, catalog_path, errors_to_ignore=None):
+    response = cherrypy.response
+    
     # the tidy tool, by its very nature it's not generator friendly, 
     # so we just collect the body and work with it.
-    orig_body = cherrypy.response.collapse_body()
+    orig_body = response.collapse_body()
     
-    fct = cherrypy.response.headers.get('Content-Type', '')
+    fct = response.headers.get('Content-Type', '')
     ct = fct.split(';')[0]
     encoding = ''
     i = fct.find('charset=')
@@ -162,6 +174,8 @@ def nsgmls(temp_dir, nsgmls_path, catalog_path, errors_to_ignore=None):
                 new_errs.append(err)
         
         if new_errs:
-            cherrypy.response.body = wrong_content('<br />'.join(new_errs),
-                                                   orig_body)
+            response.body = wrong_content('<br />'.join(new_errs), orig_body)
+            if response.headers.has_key("Content-Length"):
+                # Delete Content-Length header so finalize() recalcs it.
+                del response.headers["Content-Length"]
 

@@ -100,6 +100,18 @@ def find_acceptable_charset(encoding=None, default_encoding='utf-8', errors='str
     else:
         response.collapse_body()
         encoder = encode_string
+        if response.headers.has_key("Content-Length"):
+            # Delete Content-Length header so finalize() recalcs it.
+            # Encoded strings may be of different lengths from their
+            # unicode equivalents, and even from each other. For example:
+            # >>> t = u"\u7007\u3040"
+            # >>> len(t)
+            # 2
+            # >>> len(t.encode("UTF-8"))
+            # 6
+            # >>> len(t.encode("utf7"))
+            # 8
+            del response.headers["Content-Length"]
     
     # Parse the Accept-Charset request header, and try to provide one
     # of the requested charsets (in order of user preference).
@@ -217,5 +229,8 @@ def gzip(compress_level=9, mime_types=['text/html', 'text/plain']):
                 
                 response.headers['Content-Encoding'] = 'gzip'
                 response.body = compress(response.body, compress_level)
+                if response.headers.has_key("Content-Length"):
+                    # Delete Content-Length header so finalize() recalcs it.
+                    del response.headers["Content-Length"]
             return
     cherrypy.HTTPError(406, "identity, gzip").set_response()

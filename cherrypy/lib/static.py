@@ -17,7 +17,7 @@ from cherrypy.lib import cptools, http
 def serve_file(path, content_type=None, disposition=None, name=None):
     """Set status, headers, and body in order to serve the given file.
     
-    The Content-Type header will be set to the content_ype arg, if provided.
+    The Content-Type header will be set to the content_type arg, if provided.
     If not provided, the Content-Type will be guessed by its extension.
     
     If disposition is not None, the Content-Disposition header will be set
@@ -96,7 +96,9 @@ def serve_file(path, content_type=None, disposition=None, name=None):
                 boundary = mimetools.choose_boundary()
                 ct = "multipart/byteranges; boundary=%s" % boundary
                 response.headers['Content-Type'] = ct
-##                del response.headers['Content-Length']
+                if response.headers.has_key("Content-Length"):
+                    # Delete Content-Length header so finalize() recalcs it.
+                    del response.headers["Content-Length"]
                 
                 def file_ranges():
                     # Apache compatibility:
