@@ -93,6 +93,7 @@ class CommandLineParser(object):
     cover = False
     profile = False
     validate = False
+    conquer = False
     server = None
     basedir = None
     interactive = True
@@ -107,7 +108,7 @@ class CommandLineParser(object):
         """
         self.available_tests = available_tests
         
-        longopts = ['cover', 'profile', 'validate', 'dumb',
+        longopts = ['cover', 'profile', 'validate', 'conquer', 'dumb',
                     '1.0', 'ssl', 'help',
                     'basedir=', 'port=', 'server=']
         longopts.extend(self.available_tests)
@@ -130,6 +131,8 @@ class CommandLineParser(object):
                 self.profile = True
             elif o == "--validate":
                 self.validate = True
+            elif o == "--conquer":
+                self.conquer = True
             elif o == "--dumb":
                 self.interactive = False
             elif o == "--1.0":
@@ -166,7 +169,7 @@ class CommandLineParser(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server=* --port=%s --1.0 --cover --basedir=path --profile --validate --dumb --tests**
+        test.py --server=* --port=%s --1.0 --cover --basedir=path --profile --validate --conquer --dumb --tests**
         
     """ % self.__class__.port
         print '    * servers:'
@@ -186,6 +189,7 @@ class CommandLineParser(object):
     
     --profile: turn on profiling tool
     --validate: use wsgiref.validate (builtin in Python 2.5).
+    --conquer: use wsgiconq (which uses pyconquer) to trace calls.
     --dumb: turn off the interactive output features.
     """ % self.__class__.port
         
@@ -295,6 +299,10 @@ class CommandLineParser(object):
         if self.validate:
             conf = conf or {}
             conf['validator.on'] = True
+        
+        if self.conquer:
+            conf = conf or {}
+            conf['conquer.on'] = True
         
         if self.server == 'cpmodpy':
             from cherrypy.test import modpy

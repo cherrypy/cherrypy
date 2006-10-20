@@ -119,19 +119,27 @@ def run_test_suite(moduleNames, server, conf):
     else:
         return 1
 
-def sync_apps(profile=False, validate=False):
+def sync_apps(profile=False, validate=False, conquer=False):
     apps = []
     for base, app in cherrypy.tree.apps.iteritems():
         if base == "/":
             base = ""
         if profile:
             app = profiler.make_app(app, aggregate=False)
+        if conquer:
+            try:
+                import wsgiconq
+            except ImportError:
+                warnings.warn("Error importing wsgiconq. pyconquer will not run.")
+            else:
+                app = wsgiconq.WSGILogger(app)
         if validate:
             try:
                 from wsgiref import validate
             except ImportError:
                 warnings.warn("Error importing wsgiref. The validator will not run.")
-            app = validate.validator(app)
+            else:
+                app = validate.validator(app)
         apps.append((base, app))
     apps.sort()
     apps.reverse()
@@ -154,7 +162,9 @@ def _run_test_suite_thread(moduleNames, conf):
         # The setup functions probably mounted new apps.
         # Tell our server about them.
         sync_apps(profile=conf.get("profiling.on", False),
-                  validate=conf.get("validator.on", False))
+                  validate=conf.get("validator.on", False),
+                  conquer=conf.get("conquer.on", False),
+                  )
         
         suite = CPTestLoader.loadTestsFromName(testmod)
         result = CPTestRunner.run(suite)
