@@ -439,6 +439,12 @@ def openURL(url, headers=None, method="GET", body=None,
             
             # skip_accept_encoding argument added in python version 2.4
             if sys.version_info < (2, 4):
+                def putheader(self, header, value):
+                    if header == 'Accept-Encoding' and value == 'identity':
+                        return
+                    self.__class__.putheader(self, header, value)
+                import new
+                conn.putheader = new.instancemethod(putheader, conn, conn.__class__)
                 conn.putrequest(method.upper(), url, skip_host=True)
             else:
                 conn.putrequest(method.upper(), url, skip_host=True,
