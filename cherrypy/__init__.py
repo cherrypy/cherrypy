@@ -24,6 +24,7 @@ server = _cpserver.Server()
 
 def quickstart(root, script_name="", config=None):
     """Mount the given app, start the engine and builtin server, then block."""
+    _global_conf_alias.update(config)
     tree.mount(root, script_name, config)
     server.quickstart()
     engine.start()
@@ -169,6 +170,11 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
     for the current request path (minus the querystring) by passing no args.
     If you call url(qs=cherrypy.request.query_string), you should get the
     original browser URL (assuming no Internal redirections).
+    
+    If relative is False (the default), the output will be an absolute URL
+    (usually including the scheme, host, vhost, and script_name).
+    If relative is True, the output will instead be a URL that is relative
+    to the current request path, perhaps including '..' atoms.
     """
     if qs:
         qs = '?' + qs
@@ -251,6 +257,8 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
     return newurl
 
 
-# Set up config last so it can wrap other top-level objects
+# import _cpconfig last so it can reference other top-level objects
 from cherrypy import _cpconfig
-config = _cpconfig.Config()
+# Use _global_conf_alias so quickstart can use 'config' as an arg
+# without shadowing cherrypy.config.
+config = _global_conf_alias = _cpconfig.Config()
