@@ -50,9 +50,18 @@ def setup_server():
             sessions.expire()
             return "done"
         delete.exposed = True
+        
+        def blah(self):
+            return self._cp_config['tools.sessions.storage_type']
+        blah.exposed = True
+        
+        def iredir(self):
+            raise cherrypy.InternalRedirect('/blah')
+        iredir.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'test_suite'})
+
 
 from cherrypy.test import helper
 
@@ -133,6 +142,21 @@ class SessionTest(helper.CPWebCase):
         hitcount = max(data_dict.values())
         expected = 1 + (client_thread_count * request_count)
         self.assertEqual(hitcount, expected)
+    
+    def test_3_Redirect(self):
+        # Start a new session
+        self.getPage('/testStr')
+        self.getPage('/iredir', self.cookies)
+        self.assertBody("file")
+    
+    def test_4_File_deletion(self):
+        # Start a new session
+        self.getPage('/testStr')
+        # Delete the session file manually and retry.
+        id = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        path = os.path.join(localDir, "session-" + id)
+        os.unlink(path)
+        self.getPage('/testStr', self.cookies)
 
 
 

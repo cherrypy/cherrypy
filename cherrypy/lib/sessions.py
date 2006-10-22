@@ -211,7 +211,12 @@ class RamSession(Session):
 
 
 class FileSession(Session):
-    """ Implementation of the File backend for sessions """
+    """ Implementation of the File backend for sessions
+    
+    storage_path: the folder where session data will be saved. Each session
+        will be saved as pickle.dump(data, expiration_time) in its own file;
+        the filename will be self.SESSION_PREFIX + self.id.
+    """
     
     SESSION_PREFIX = 'session-'
     LOCK_SUFFIX = '.lock'
@@ -239,7 +244,10 @@ class FileSession(Session):
             f.close()
     
     def _delete(self):
-        os.unlink(self._get_file_path())
+        try:
+            os.unlink(self._get_file_path())
+        except OSError:
+            pass
     
     def acquire_lock(self, path=None):
         if path is None:
@@ -387,6 +395,10 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     """
     
     request = cherrypy.request
+    
+    # Guard against running twice
+    if hasattr(cherrypy._serving, "session"):
+        return
     
     # Check if request came with a session ID
     id = None
