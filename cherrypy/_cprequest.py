@@ -606,11 +606,16 @@ class Response(object):
         headers = self.headers
         if self.stream:
             headers.pop('Content-Length', None)
+        elif code < 200 or code in (204, 304):
+            # "All 1xx (informational), 204 (no content),
+            # and 304 (not modified) responses MUST NOT
+            # include a message-body."
+            headers.pop('Content-Length', None)
+            self.body = ""
         else:
             # Responses which are not streamed should have a Content-Length,
             # but allow user code to set Content-Length if desired.
-            if (dict.get(headers, 'Content-Length') is None
-                    and code not in (304,)):
+            if dict.get(headers, 'Content-Length') is None:
                 content = self.collapse_body()
                 dict.__setitem__(headers, 'Content-Length', len(content))
         

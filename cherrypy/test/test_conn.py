@@ -37,6 +37,11 @@ def setup_server():
                     (cherrypy.request.body.read(),
                      cherrypy.request.headers['Content-Type']))
         upload.exposed = True
+        
+        def custom(self, response_code):
+            cherrypy.response.status = response_code
+            return "Code = %s" % response_code
+        custom.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
@@ -290,6 +295,42 @@ class ConnectionTests(helper.CPWebCase):
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(200)
         self.assertBody("thanks for 'I am a small file' (text/plain)")
+    
+    def test_No_Message_Body(self):
+        if cherrypy.server.protocol_version != "HTTP/1.1":
+            print "skipped ",
+            return
+        
+        self.PROTOCOL = "HTTP/1.1"
+        
+        # Set our HTTP_CONN to an instance so it persists between requests.
+        if self.scheme == "https":
+            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
+        else:
+            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        # Don't automatically re-connect
+        self.HTTP_CONN.auto_open = False
+        self.HTTP_CONN.connect()
+        
+        # Make the first request and assert there's no "Connection: close".
+        self.getPage("/")
+        self.assertStatus('200 OK')
+        self.assertBody(pov)
+        self.assertNoHeader("Connection")
+        
+        # Make a 204 request on the same connection.
+        self.getPage("/custom/204")
+        self.assertStatus(204)
+        self.assertNoHeader("Content-Length")
+        self.assertBody("")
+        self.assertNoHeader("Connection")
+        
+        # Make a 304 request on the same connection.
+        self.getPage("/custom/304")
+        self.assertStatus(304)
+        self.assertNoHeader("Content-Length")
+        self.assertBody("")
+        self.assertNoHeader("Connection")
     
     def test_Chunked_Encoding(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":

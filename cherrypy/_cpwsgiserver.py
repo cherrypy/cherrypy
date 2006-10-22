@@ -319,11 +319,16 @@ class HTTPRequest(object):
     def send_headers(self):
         hkeys = [key.lower() for (key,value) in self.outheaders]
         
+        status = int(self.status[:3])
         if (self.response_protocol == 'HTTP/1.1'
             and (# Request Entity Too Large. Close conn to avoid garbage.
-                self.status[:3] == "413"
+                status == 413
                 # No Content-Length. Close conn to determine transfer-length.
-                or "content-length" not in hkeys)):
+                or ("content-length" not in hkeys and
+                    # "All 1xx (informational), 204 (no content),
+                    # and 304 (not modified) responses MUST NOT
+                    # include a message-body."
+                    status >= 200 and status not in (204, 304)))):
             if "connection" not in hkeys:
                 self.outheaders.append(("Connection", "close"))
             self.close_connection = True
