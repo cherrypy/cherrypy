@@ -81,6 +81,9 @@ class _ThreadLocalProxy(object):
     
     def __setitem__(self, key, value):
         self._get_child()[key] = value
+    
+    def __delitem__(self, key):
+        del self._get_child()[key]
 
 
 # Create request and response object (the same objects will be used

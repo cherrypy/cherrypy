@@ -51,6 +51,11 @@ def setup_server():
             return "done"
         delete.exposed = True
         
+        def delkey(self, key):
+            del cherrypy.session[key]
+            return "OK"
+        delkey.exposed = True
+        
         def blah(self):
             return self._cp_config['tools.sessions.storage_type']
         blah.exposed = True
@@ -74,6 +79,8 @@ class SessionTest(helper.CPWebCase):
         self.assertBody('2')
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
+        self.getPage('/delkey?key=counter', self.cookies)
+        self.assertStatus(200)
         
         self.getPage('/setsessiontype/file')
         self.getPage('/testStr')
@@ -82,6 +89,8 @@ class SessionTest(helper.CPWebCase):
         self.assertBody('2')
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
+        self.getPage('/delkey?key=counter', self.cookies)
+        self.assertStatus(200)
         
         # Wait for the session.timeout (1.02 secs)
         time.sleep(1.25)
