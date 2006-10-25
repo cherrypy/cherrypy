@@ -367,9 +367,13 @@ def _ssl_wrap_method(method):
                 # Sleep and try again
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError, e:
+                if e.args == (-1, 'Unexpected EOF'):
+                    return ""
+                
                 errno = e.args[0]
                 if errno not in socket_errors_to_ignore:
                     raise socket.error(errno)
+                
                 return ""
             except SSL.Error, e:
                 if e.args == (-1, 'Unexpected EOF'):
