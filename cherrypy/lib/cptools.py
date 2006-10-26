@@ -249,7 +249,7 @@ Message: %(error_msg)s
         request = cherrypy.request
         path = request.path_info
         if path.endswith('login_screen'):
-            return self.login_screen()
+            return self.login_screen(**request.params)
         elif path.endswith('do_login'):
             return self.do_login(**request.params)
         elif path.endswith('do_logout'):
