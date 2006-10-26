@@ -1,6 +1,7 @@
 """Test the various means of instantiating and invoking tools."""
 
 import gzip, StringIO
+import time
 import types
 from cherrypy.test import test
 test.prefer_parent_path()
@@ -195,6 +196,7 @@ class ToolTests(helper.CPWebCase):
         # If body is "razdrez", then on_end_request is being called too early.
         self.assertBody("A horrorshow lomtick of cherry 3.14159")
         # If this fails, then on_end_request isn't being called at all.
+        time.sleep(0.1)
         self.getPage("/demo/ended/1")
         self.assertBody("True")
         
@@ -203,6 +205,7 @@ class ToolTests(helper.CPWebCase):
         # If body is "razdrez", then on_end_request is being called too early.
         self.assertErrorPage(502, pattern=valerr)
         # If this fails, then on_end_request isn't being called at all.
+        time.sleep(0.1)
         self.getPage("/demo/ended/3")
         self.assertBody("True")
         
@@ -213,6 +216,7 @@ class ToolTests(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertBody("Unrecoverable error in the server.")
         # If this fails, then on_end_request isn't being called at all.
+        time.sleep(0.1)
         self.getPage("/demo/ended/5")
         self.assertBody("True")
         
