@@ -12,12 +12,13 @@ def setup_server():
         status = '200 OK'
         response_headers = [('Content-type', 'text/plain')]
         start_response(status, response_headers)
-        yield 'Hello, world!\n'
-        yield 'This is a wsgi app running within CherryPy!\n\n'
+        output = ['Hello, world!\n',
+                  'This is a wsgi app running within CherryPy!\n\n']
         keys = environ.keys()
         keys.sort()
         for k in keys:
-            yield '%s: %s\n' % (k,environ[k])
+            output.append('%s: %s\n' % (k,environ[k]))
+        return output
     
     def reversing_middleware(app):
         def _app(environ, start_response):
