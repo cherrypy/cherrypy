@@ -4,13 +4,17 @@ test.prefer_parent_path()
 import cherrypy
 
 
-script_names = ["", "/users/fred/blog", "/corp/blog"]
+script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
 
 def setup_server():
     class Root:
         def index(self, name="world"):
             return name
         index.exposed = True
+        
+        def foobar(self):
+            return "bar"
+        foobar.exposed = True
         
         def default(self, *params):
             return "default:" + repr(params)
@@ -234,6 +238,11 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertBody("made it!")
         self.getPage("/isolated/doesnt/exist")
         self.assertStatus("404 Not Found")
+        
+        # Make sure /foobar maps to Root.foobar and not to the app
+        # mounted at /foo. See http://www.cherrypy.org/ticket/573
+        self.getPage("/foobar")
+        self.assertBody("bar")
     
     def testPositionalParams(self):
         self.getPage("/dir1/dir2/posparam/18/24/hut/hike")

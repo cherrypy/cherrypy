@@ -110,7 +110,7 @@ class HTTPRequest(object):
         else:
             for mount_point, wsgi_app in server.mount_points:
                 # The mount_points list should be sorted by length, descending.
-                if path.startswith(mount_point):
+                if path.startswith(mount_point + "/") or path == mount_point:
                     self.environ["SCRIPT_NAME"] = mount_point
                     self.environ["PATH_INFO"] = path[len(mount_point):]
                     self.wsgi_app = wsgi_app
