@@ -539,21 +539,9 @@ class Body(object):
             value = [value]
         elif isinstance(value, types.FileType):
             value = file_generator(value)
-        elif isinstance(value, types.GeneratorType):
-            value = flattener(value)
         elif value is None:
             value = []
         obj._body = value
-
-
-def flattener(input):
-    """Yield the given input, recursively iterating over each result (if needed)."""
-    for x in input:
-        if not isinstance(x, types.GeneratorType):
-            yield x
-        else:
-            for y in flattener(x):
-                yield y 
 
 
 class Response(object):

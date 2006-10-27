@@ -214,6 +214,7 @@ def setup_server():
         
         def as_dblyield(self):
             yield self.as_yield()
+        as_dblyield._cp_config = {'tools.flatten.on': True}
         
         def as_refyield(self):
             for chunk in self.as_yield():

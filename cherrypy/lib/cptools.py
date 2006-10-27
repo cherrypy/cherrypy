@@ -331,3 +331,20 @@ def trailing_slash(missing=True, extra=False):
                 new_url = cherrypy.url(pi[:-1], request.query_string)
                 raise cherrypy.HTTPRedirect(new_url)
 
+def flatten():
+    """Wrap response.body in a generator that recursively iterates over body.
+    
+    This allows cherrypy.response.body to consist of 'nested generators';
+    that is, a set of generators that yield generators.
+    """
+    import types
+    def flattener(input):
+        for x in input:
+            if not isinstance(x, types.GeneratorType):
+                yield x
+            else:
+                for y in flattener(x):
+                    yield y 
+    response = cherrypy.response
+    response.body = flattener(response.body)
+
