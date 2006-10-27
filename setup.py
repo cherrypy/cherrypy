@@ -40,7 +40,7 @@ packages=[
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
 ]
-download_url="http://sourceforge.net/project/showfiles.php?group_id=56099"
+download_url="http://download.cherrypy.org/cherrypy/3.0beta2/"
 data_files=[
     ('cherrypy/tutorial',
         [
