@@ -5,7 +5,8 @@ import os
 import StringIO
 import traceback
 
-
+import cherrypy
+    
 def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None,
          indent=False, wrap=False):
     """Run cherrypy.response through Tidy.
