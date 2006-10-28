@@ -205,8 +205,16 @@ class WSGIEnvProxy(object):
 class RoutesDispatcher(object):
     """A Routes based dispatcher for CherryPy."""
     
-    def __init__(self):
+    def __init__(self, full_result=False):
+        """
+        Routes dispatcher
+
+        Set full_result to True if you wish the controller
+        and the action to be passed on to the page handler
+        parameters. By default they won't be.
+        """
         import routes
+        self.full_result = full_result
         self.controllers = {}
         self.mapper = routes.Mapper()
         self.mapper.controller_scan = self.controllers.keys
@@ -244,7 +252,13 @@ class RoutesDispatcher(object):
         
         result = self.mapper.match(path_info)
         config.mapper_dict = result
-        request.params.update(result or {})
+        params = {}
+        if result:
+            params = result.copy()
+        if not self.full_result:
+            params.pop('controller', None)
+            params.pop('action', None)
+        request.params.update(params)
         
         # Get config for the root object/path.
         request.config = base = cherrypy.config.copy()
@@ -269,7 +283,7 @@ class RoutesDispatcher(object):
         else:
             last = None
         for atom in atoms:
-            curpath = "/".join((curpath, name))
+            curpath = "/".join((curpath, atom))
             if curpath in app.config:
                 merge(app.config[curpath])
         
