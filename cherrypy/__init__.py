@@ -9,6 +9,10 @@ from urlparse import urljoin as _urljoin
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, CherryPyException
 from cherrypy._cperror import TimeoutError
 
+from cherrypy import _cprequest
+from cherrypy import _cpengine
+engine = _cpengine.Engine()
+
 from cherrypy import _cptools
 tools = _cptools.default_toolbox
 Tool = _cptools.Tool
@@ -17,8 +21,6 @@ from cherrypy import _cptree
 tree = _cptree.Tree()
 from cherrypy._cptree import Application
 from cherrypy import _cpwsgi as wsgi
-from cherrypy import _cpengine
-engine = _cpengine.Engine()
 from cherrypy import _cpserver
 server = _cpserver.Server()
 
@@ -89,7 +91,6 @@ class _ThreadLocalProxy(object):
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "_serving" object)
-from cherrypy import _cprequest
 from cherrypy.lib import http as _http
 request = _ThreadLocalProxy('request',
                             _cprequest.Request(_http.Host("localhost", 80),

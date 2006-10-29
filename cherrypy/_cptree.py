@@ -47,12 +47,7 @@ class Application(object):
         _cpconfig.merge(self.config, config)
         
         # Handle namespaces specified in config.
-        rootconf = self.config.get("/", {})
-        for k, v in rootconf.iteritems():
-            atoms = k.split(".", 1)
-            namespace = atoms[0]
-            if namespace in self.namespaces:
-                self.namespaces[namespace](atoms[1], v)
+        _cpconfig._call_namespaces(self.config.get("/", {}), self.namespaces)
     
     def wsgiapp(self, environ, start_response):
         # This is here instead of __call__ because it's really hard

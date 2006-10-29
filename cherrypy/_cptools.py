@@ -33,6 +33,8 @@ class Tool(object):
     help(tool.callable) should give you more information about this Tool.
     """
     
+    namespace = "tools"
+    
     def __init__(self, point, callable, name=None, priority=50):
         self._point = point
         self.callable = callable
@@ -51,7 +53,7 @@ class Tool(object):
             pass
     
     def _merged_args(self, d=None):
-        tm = cherrypy.request.toolmap
+        tm = cherrypy.request.toolmaps[self.namespace]
         if self._name in tm:
             conf = tm[self._name].copy()
         else:
@@ -76,14 +78,15 @@ class Tool(object):
             raise TypeError("The %r Tool does not accept positional "
                             "arguments; you must use keyword arguments."
                             % self._name)
-        def wrapper(f):
+        def tool_decorator(f):
             if not hasattr(f, "_cp_config"):
                 f._cp_config = {}
-            f._cp_config["tools." + self._name + ".on"] = True
+            subspace = self.namespace + "." + self._name + "."
+            f._cp_config[subspace + "on"] = True
             for k, v in kwargs.iteritems():
-                f._cp_config["tools." + self._name + "." + k] = v
+                f._cp_config[subspace + k] = v
             return f
-        return wrapper
+        return tool_decorator
     
     def _setup(self):
         """Hook this tool into cherrypy.request.
@@ -115,13 +118,13 @@ class HandlerTool(Tool):
                 nav = tools.staticdir.handler(section="/nav", dir="nav",
                                               root=absDir)
         """
-        def wrapper(*a, **kw):
+        def handle_func(*a, **kw):
             handled = self.callable(*args, **self._merged_args(kwargs))
             if not handled:
                 raise cherrypy.NotFound()
             return cherrypy.response.body
-        wrapper.exposed = True
-        return wrapper
+        handle_func.exposed = True
+        return handle_func
     
     def _wrapper(self, **kwargs):
         if self.callable(**kwargs):
@@ -180,6 +183,9 @@ class SessionTool(Tool):
 
 class XMLRPCController(object):
     
+    # Note we're hard-coding this into the 'tools' namespace. We could do
+    # a huge amount of work to make it relocatable, but the only reason why
+    # would be if someone actually disabled the default_toolbox. Meh.
     _cp_config = {'tools.xmlrpc.on': True}
     
     def __call__(self, *vpath, **params):
@@ -191,15 +197,15 @@ class XMLRPCController(object):
          
         if subhandler and getattr(subhandler, "exposed", False):
             body = subhandler(*(vpath + rpcparams), **params)
-
+        
         else:
             # http://www.cherrypy.org/ticket/533
             # if a method is not found, an xmlrpclib.Fault should be returned
             # raising an exception here will do that; see
             # cherrypy.lib.xmlrpc.on_error
             raise Exception, 'method "%s" is not supported' % attr
-            
-        conf = cherrypy.request.toolmap.get("xmlrpc", {})
+        
+        conf = cherrypy.request.toolmaps['tools'].get("xmlrpc", {})
         _xmlrpc.respond(body,
                         conf.get('encoding', 'utf-8'),
                         conf.get('allow_none', 0))
@@ -283,17 +289,45 @@ class CachingTool(Tool):
 
 
 class Toolbox(object):
-    """A collection of Tools."""
+    """A collection of Tools.
+    
+    This object also functions as a config namespace handler for itself.
+    """
+    
+    def __init__(self, namespace):
+        self.namespace = namespace
+        cherrypy.engine.request_class.namespaces[namespace] = self
     
     def __setattr__(self, name, value):
         # If the Tool._name is None, supply it from the attribute name.
         if isinstance(value, Tool):
             if value._name is None:
                 value._name = name
+            value.namespace = self.namespace
         object.__setattr__(self, name, value)
+    
+    def __enter__(self):
+        cherrypy.request.toolmaps[self.namespace] = {}
+        return self
+    
+    def __call__(self, k, v):
+        """Populate request.toolmaps from tools specified in config."""
+        toolname, arg = k.split(".", 1)
+        map = cherrypy.request.toolmaps[self.namespace]
+        bucket = map.setdefault(toolname, {})
+        bucket[arg] = v
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Run tool._setup() for each tool in our toolmap."""
+        map = cherrypy.request.toolmaps.get(self.namespace)
+        if map:
+            for name, settings in map.iteritems():
+                if settings.get("on", False):
+                    tool = getattr(self, name)
+                    tool._setup()
 
 
-default_toolbox = _d = Toolbox()
+default_toolbox = _d = Toolbox("tools")
 default_toolbox.session_auth = SessionAuthTool(cptools.session_auth)
 _d.proxy = Tool('before_request_body', cptools.proxy, priority=30)
 _d.response_headers = Tool('on_start_resource', cptools.response_headers)

@@ -14,10 +14,13 @@ europoundUnicode = u'\x80\xa3'
 
 def setup_server():
     
+    # Put check_access in a custom toolbox with its own namespace
+    myauthtools = cherrypy._cptools.Toolbox("myauth")
+    
     def check_access():
         if not getattr(cherrypy.request, "login", None):
             raise cherrypy.HTTPError(401)
-    tools.check_access = cherrypy.Tool('before_request_body', check_access)
+    myauthtools.check_access = cherrypy.Tool('before_request_body', check_access)
     
     def numerify():
         def number_it(body):
@@ -150,7 +153,7 @@ def setup_server():
         # @tools.check_access()
         def restricted(self):
             return "Welcome!"
-        restricted = tools.check_access()(restricted)
+        restricted = myauthtools.check_access()(restricted)
         
         def err_in_onstart(self):
             return "success!"

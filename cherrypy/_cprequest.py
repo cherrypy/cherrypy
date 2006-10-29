@@ -100,11 +100,6 @@ class HookMap(dict):
 
 
 # Config namespace handlers
-def tools_namespace(k, v):
-    """Attach tools specified in config."""
-    toolname, arg = k.split(".", 1)
-    bucket = cherrypy.request.toolmap.setdefault(toolname, {})
-    bucket[arg] = v
 
 def hooks_namespace(k, v):
     """Attach bare hooks declared in config."""
@@ -171,7 +166,7 @@ class Request(object):
     path_info = "/"
     app = None
     handler = None
-    toolmap = {}
+    toolmaps = {}
     config = None
     recursive_redirect = False
     is_index = None
@@ -183,8 +178,7 @@ class Request(object):
     show_tracebacks = True
     throw_errors = False
     
-    namespaces = {"tools": tools_namespace,
-                  "hooks": hooks_namespace,
+    namespaces = {"hooks": hooks_namespace,
                   "request": request_namespace,
                   "response": response_namespace,
                   "error_page": error_page_namespace,
@@ -350,7 +344,7 @@ class Request(object):
                     # Make a copy of the class hooks
                     self.hooks = self.__class__.hooks.copy()
                     self.get_resource(path_info)
-                    self.configure()
+                    cherrypy._cpconfig._call_namespaces(self.config, self.namespaces)
                     
                     self.hooks.run('on_start_resource')
                     
@@ -453,25 +447,6 @@ class Request(object):
         
         # dispatch() should set self.handler and self.config
         dispatch(path)
-    
-    def configure(self):
-        """Process self.config, populate self.toolmap and set up each tool."""
-        self.toolmap = tm = {}
-        
-        # Process config namespaces (including tools.*)
-        reqconf = self.config
-        for k in reqconf:
-            atoms = k.split(".", 1)
-            namespace = atoms[0]
-            if namespace in self.namespaces:
-                self.namespaces[namespace](atoms[1], reqconf[k])
-        
-        # Run tool._setup(conf) for each tool in the new toolmap.
-        tools = cherrypy.tools
-        for toolname in tm:
-            if tm[toolname].get("on", False):
-                tool = getattr(tools, toolname)
-                tool._setup()
     
     def process_body(self):
         """Convert request.rfile into request.params (or request.body)."""

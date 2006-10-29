@@ -74,6 +74,12 @@ The only key that does not exist in a namespace is the "environment" entry.
 This special entry 'imports' other config entries from a template stored in
 cherrypy._cpconfig.environments[environment]. It only applies to the global
 config, and only when you use cherrypy.config.update.
+
+You can define your own namespaces to be called at the Global, Application,
+or Request level, by adding a named handler to cherrypy.config.namespaces,
+app.namespaces, or cherrypy.engine.request_class.namespaces. The name can
+be any string, and the handler must be either a callable or a context
+manager.
 """
 
 import ConfigParser
@@ -125,6 +131,62 @@ def merge(base, other):
         base.setdefault(section, {}).update(value_map)
 
 
+def _call_namespaces(config, namespaces):
+    """Iterate through config and pass it to each namespace.
+    
+    'config' should be a flat dict, where keys use dots to separate
+    namespaces, and values are arbitrary.
+    'namespaces' should be a dict whose keys are strings and whose
+    values are namespace handlers.
+    
+    The first name in each config key is used to look up the corresponding
+    namespace handler. For example, a config entry of {'tools.gzip.on': v}
+    will call the 'tools' namespace handler with the args: ('gzip.on', v)
+    
+    Each handler may be a bare callable, or it may be a context manager
+    with __enter__ and __exit__ methods, in which case the __enter__
+    method should return the callable.
+    """
+    # Separate the given config into namespaces
+    ns_confs = {}
+    for k in config:
+        if "." in k:
+            ns, name = k.split(".", 1)
+            bucket = ns_confs.setdefault(ns, {})
+            bucket[name] = config[k]
+    
+    # I chose __enter__ and __exit__ so someday this could be
+    # rewritten using Python 2.5's 'with' statement:
+    # for ns, handler in namespaces.iteritems():
+    #     with handler as callable:
+    #         for k, v in ns_confs.get(ns, {}).iteritems():
+    #             callable(k, v)
+    for ns, handler in namespaces.iteritems():
+        exit = getattr(handler, "__exit__", None)
+        if exit:
+            callable = handler.__enter__()
+            no_exc = True
+            try:
+                try:
+                    for k, v in ns_confs.get(ns, {}).iteritems():
+                        callable(k, v)
+                except:
+                    # The exceptional case is handled here
+                    no_exc = False
+                    if exit is None:
+                        raise
+                    if not exit(*sys.exc_info()):
+                        raise
+                    # The exception is swallowed if exit() returns true
+            finally:
+                # The normal and non-local-goto cases are handled here
+                if no_exc and exit:
+                    exit(None, None, None)
+        else:
+            for k, v in ns_confs.get(ns, {}).iteritems():
+                handler(k, v)
+
+
 class Config(dict):
     """The 'global' configuration data for the entire CherryPy process."""
     
@@ -172,18 +234,12 @@ class Config(dict):
         if 'tools.staticdir.dir' in config:
             config['tools.staticdir.section'] = "global"
         
-        # Must use this idiom in order to hit our custom __setitem__.
-        for k, v in config.iteritems():
-            self[k] = v
+        dict.update(self, config)
+        _call_namespaces(config, self.namespaces)
     
     def __setitem__(self, k, v):
         dict.__setitem__(self, k, v)
-        
-        # Override object properties if specified in config.
-        atoms = k.split(".", 1)
-        namespace = atoms[0]
-        if namespace in self.namespaces:
-            self.namespaces[namespace](atoms[1], v)
+        _call_namespaces({k: v}, self.namespaces)
 
 
 obsolete = {
