@@ -321,7 +321,7 @@ class Toolbox(object):
         """Run tool._setup() for each tool in our toolmap."""
         map = cherrypy.request.toolmaps.get(self.namespace)
         if map:
-            for name, settings in map.iteritems():
+            for name, settings in map.items():
                 if settings.get("on", False):
                     tool = getattr(self, name)
                     tool._setup()
