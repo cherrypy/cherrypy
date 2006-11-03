@@ -22,6 +22,33 @@ def setup_server():
                                                ('Content-Type', 'text/plain')],
             }
     
+    
+    class Accept:
+        _cp_config = {'tools.accept.on': True}
+        
+        def index(self):
+            return '<a href="feed">Atom feed</a>'
+        index.exposed = True
+        
+        # In Python 2.4+, we could use a decorator instead:
+        # @tools.accept('application/atom+xml')
+        def feed(self):
+            return """<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>Unknown Blog</title>
+</feed>"""
+        feed.exposed = True
+        feed._cp_config = {'tools.accept.media': 'application/atom+xml'}
+        
+        def select(self):
+            # We could also write this: mtype = cherrypy.lib.accept.accept(...)
+            mtype = tools.accept.callable(['text/html', 'text/plain'])
+            if mtype == 'text/html':
+                return "<h2>Page Title</h2>"
+            else:
+                return "PAGE TITLE"
+        select.exposed = True
+    
     class Referer:
         def accept(self):
             return "Accepted!"
@@ -38,6 +65,7 @@ def setup_server():
     
     root = Root()
     root.referer = Referer()
+    root.accept = Accept()
     cherrypy.tree.mount(root, config=conf)
     cherrypy.config.update({'environment': 'test_suite'})
 
@@ -76,6 +104,71 @@ class RefererTest(helper.CPWebCase):
         self.getPage('/referer/reject',
                      headers=[('Referer', 'http://www.thisdomain.com/')])
         self.assertErrorPage(403, 'Forbidden Referer header.')
+
+
+class AcceptTest(helper.CPWebCase):
+    
+    def test_Accept_Tool(self):
+        # Test with no header provided
+        self.getPage('/accept/feed')
+        self.assertStatus(200)
+        self.assertInBody('<title>Unknown Blog</title>')
+        
+        # Specify exact media type
+        self.getPage('/accept/feed', headers=[('Accept', 'application/atom+xml')])
+        self.assertStatus(200)
+        self.assertInBody('<title>Unknown Blog</title>')
+        
+        # Specify matching media range
+        self.getPage('/accept/feed', headers=[('Accept', 'application/*')])
+        self.assertStatus(200)
+        self.assertInBody('<title>Unknown Blog</title>')
+        
+        # Specify all media ranges
+        self.getPage('/accept/feed', headers=[('Accept', '*/*')])
+        self.assertStatus(200)
+        self.assertInBody('<title>Unknown Blog</title>')
+        
+        # Specify unacceptable media types
+        self.getPage('/accept/feed', headers=[('Accept', 'text/html')])
+        self.assertErrorPage(406,
+                             "Your client sent this Accept header: text/html. "
+                             "But this resource only emits these media types: "
+                             "application/atom+xml.")
+        
+        # Test resource where tool is 'on' but media is None (not set).
+        self.getPage('/accept/')
+        self.assertStatus(200)
+        self.assertBody('<a href="feed">Atom feed</a>')
+    
+    def test_accept_selection(self):
+        # Try both our expected media types
+        self.getPage('/accept/select', [('Accept', 'text/html')])
+        self.assertStatus(200)
+        self.assertBody('<h2>Page Title</h2>')
+        self.getPage('/accept/select', [('Accept', 'text/plain')])
+        self.assertStatus(200)
+        self.assertBody('PAGE TITLE')
+        self.getPage('/accept/select', [('Accept', 'text/plain, text/*;q=0.5')])
+        self.assertStatus(200)
+        self.assertBody('PAGE TITLE')
+        
+        # text/* and */* should prefer text/html since it comes first
+        # in our 'media' argument to tools.accept
+        self.getPage('/accept/select', [('Accept', 'text/*')])
+        self.assertStatus(200)
+        self.assertBody('<h2>Page Title</h2>')
+        self.getPage('/accept/select', [('Accept', '*/*')])
+        self.assertStatus(200)
+        self.assertBody('<h2>Page Title</h2>')
+        
+        # Try unacceptable media types
+        self.getPage('/accept/select', [('Accept', 'application/xml')])
+        self.assertErrorPage(406,
+                             "Your client sent this Accept header: application/xml. "
+                             "But this resource only emits these media types: "
+                             "text/html, text/plain.")
+
 
 
 if __name__ == "__main__":

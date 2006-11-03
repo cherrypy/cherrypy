@@ -356,5 +356,6 @@ _d.basic_auth = Tool('on_start_resource', auth.basic_auth)
 _d.digest_auth = Tool('on_start_resource', auth.digest_auth)
 _d.trailing_slash = Tool('before_handler', cptools.trailing_slash)
 _d.flatten = Tool('before_finalize', cptools.flatten)
+_d.accept = Tool('on_start_resource', cptools.accept)
 
 del _d, cptools, encoding, auth, static, tidy
