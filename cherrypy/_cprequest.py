@@ -343,6 +343,7 @@ class Request(object):
                     
                     # Make a copy of the class hooks
                     self.hooks = self.__class__.hooks.copy()
+                    self.toolmaps = {}
                     self.get_resource(path_info)
                     cherrypy._cpconfig._call_namespaces(self.config, self.namespaces)
                     
