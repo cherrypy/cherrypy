@@ -357,21 +357,21 @@ class PostgresqlSession(Session):
 
 def save():
     """Save any changed session data."""
-    def wrap_body(body):
-        """Response.body wrapper which saves session data."""
-        if isinstance(body, types.GeneratorType):
-            # If the body is a generator, we have to save the data
-            #   *after* the generator has been consumed
-            for line in body:
-                yield line
-            cherrypy.session.save()
-        else:
-            # If the body is not a generator, we save the data
-            #   before the body is returned (so we can release the lock).
-            cherrypy.session.save()
-            for line in body:
-                yield line
-    cherrypy.response.body = wrap_body(cherrypy.response.body)
+    # Guard against running twice
+    if hasattr(cherrypy.request, "_sessionsaved"):
+        return
+    cherrypy.request._sessionsaved = True
+    
+    if cherrypy.response.stream:
+        # If the body is being streamed, we have to save the data
+        #   *after* the response has been written out
+        cherrypy.request.hooks.attach('on_end_request', cherrypy.session.save)
+    else:
+        # If the body is not being streamed, we save the data now
+        # (so we can release the lock).
+        if isinstance(cherrypy.response.body, types.GeneratorType):
+            cherrypy.response.collapse_body()
+        cherrypy.session.save()
 save.failsafe = True
 
 def close():
