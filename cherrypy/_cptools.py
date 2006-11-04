@@ -94,9 +94,8 @@ class Tool(object):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        f = getattr(self.callable, "failsafe", False)
         p = getattr(self.callable, "priority", self._priority)
-        cherrypy.request.hooks.attach(self._point, self.callable, failsafe=f,
+        cherrypy.request.hooks.attach(self._point, self.callable,
                                       priority=p, **self._merged_args())
 
 
@@ -136,9 +135,8 @@ class HandlerTool(Tool):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        f = getattr(self.callable, "failsafe", False)
         p = getattr(self.callable, "priority", self._priority)
-        cherrypy.request.hooks.attach(self._point, self._wrapper, failsafe=f,
+        cherrypy.request.hooks.attach(self._point, self._wrapper,
                                       priority=p, **self._merged_args())
 
 
