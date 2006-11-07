@@ -3,7 +3,8 @@
 Tools are usually designed to be used in a variety of ways (although some
 may only offer one if they choose):
     
-    Library calls: all tools are callables that can be used wherever needed.
+    Library calls:
+        All tools are callables that can be used wherever needed.
         The arguments are straightforward and should be detailed within the
         docstring.
     
@@ -13,12 +14,12 @@ may only offer one if they choose):
         That is, "@tools.anytool()" should "turn on" the tool via the
         decorated function's _cp_config attribute.
     
-    CherryPy hooks: "hooks" are points in the CherryPy request-handling
-        process which may hand off control to registered callbacks. The
-        Request object possesses a "hooks" attribute (a HookMap) for
-        manipulating this. If a tool exposes a "_setup" callable, it
-        will be called once per Request (if the feature is "turned on"
-        via config).
+    CherryPy config:
+        Hookpoints are places in the CherryPy request-handling process
+        which may hand off control to registered callbacks. The Request
+        object possesses a "hooks" attribute (a HookMap) for manipulating
+        this. If a tool exposes a "_setup" callable, it will be called
+        once per Request (if the feature is "turned on" via config).
 
 Tools may be implemented as any object with a namespace. The builtins
 are generally either modules or instances of the tools.Tool class.
@@ -223,10 +224,12 @@ class XMLRPCTool(object):
     def _setup(self):
         """Hook this tool into cherrypy.request."""
         request = cherrypy.request
+        
         # Guard against running this method twice.
         if hasattr(request, 'xmlrpc'):
             return
         request.xmlrpc = True
+        
         request.error_response = _xmlrpc.on_error
         path_info = request.path_info
         ppath = _xmlrpc.patched_path(path_info)
@@ -326,7 +329,7 @@ class Toolbox(object):
 
 
 default_toolbox = _d = Toolbox("tools")
-default_toolbox.session_auth = SessionAuthTool(cptools.session_auth)
+_d.session_auth = SessionAuthTool(cptools.session_auth)
 _d.proxy = Tool('before_request_body', cptools.proxy, priority=30)
 _d.response_headers = Tool('on_start_resource', cptools.response_headers)
 _d.virtual_host = Tool('on_start_resource', cptools.virtual_host, priority=40)

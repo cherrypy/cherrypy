@@ -49,9 +49,9 @@ def make_environ():
 
 
 def run(app, env=None):
-    """Run the (WSGI) app and set response.body to its output"""
+    """Run the given WSGI app and set response.body to its output."""
     try:
-        environ = cherrypy.request.wsgi_environ
+        environ = cherrypy.request.wsgi_environ.copy()
         environ['SCRIPT_NAME'] = cherrypy.request.script_name
         environ['PATH_INFO'] = cherrypy.request.path_info
     except AttributeError:
@@ -63,7 +63,7 @@ def run(app, env=None):
     # run the wsgi app and have it set response.body
     response = app(environ, start_response)
     try:
-        cherrypy.response.body = response
+        cherrypy.response.body = [x for x in response]
     finally:
         if hasattr(response, "close"):
             response.close()

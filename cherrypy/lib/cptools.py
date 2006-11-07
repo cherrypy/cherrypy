@@ -263,6 +263,13 @@ def session_auth(**kwargs):
     for k, v in kwargs.iteritems():
         setattr(sa, k, v)
     return sa.run()
+session_auth.__doc__ = """Session authentication hook.
+
+Any attribute of the SessionAuth class may be overridden via a keyword arg
+to this function:
+
+""" + "\n".join(["%s: %s" % (k, type(getattr(SessionAuth, k)).__name__)
+                 for k in dir(SessionAuth) if not k.startswith("__")])
 
 
 def virtual_host(use_x_forwarded_host=True, **domains):
