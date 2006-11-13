@@ -29,6 +29,10 @@ def setup_server():
         def vmethod(self, value):
             return "You sent %s" % repr(value)
         vmethod.exposed = True
+        
+        def url(self):
+            return cherrypy.url("nextpage")
+        url.exposed = True
     
     
     root = Root()
@@ -71,6 +75,9 @@ class VirtualHostTest(helper.CPWebCase):
         self.assertBody("You sent 'dom3 POST'")
         self.getPage("/vmethod/pos", [('Host', 'www.mydom3.com')])
         self.assertBody("You sent 'pos'")
+        
+        self.getPage("/url", [('Host', 'www.mydom2.com')])
+        self.assertBody("http://www.mydom2.com/nextpage")
 
 
 if __name__ == "__main__":
