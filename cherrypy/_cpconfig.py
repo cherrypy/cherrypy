@@ -48,9 +48,9 @@ attribute. For example:
         _cp_config = {'tools.gzip.on': True}
         
         def index(self):
-            raise cherrypy.InternalRedirect("/cuba")
+            return "Hello world"
         index.exposed = True
-        index._cp_config = {'request.recursive_redirect': True}
+        index._cp_config = {'request.show_tracebacks': False}
 
 
 Namespaces
