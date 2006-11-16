@@ -38,14 +38,9 @@ def setup_server():
     cherrypy.config.update({'environment': 'test_suite'})
     
     app = cherrypy.Application(Root())
-    p = cherrypy.wsgi.pipeline(app, [('changecase', ChangeCase)])
-    p.config['changecase'] = {'to': 'upper'}
+    app.wsgiapp.pipeline.append(('changecase', ChangeCase))
+    app.wsgiapp.config['changecase'] = {'to': 'upper'}
     cherrypy.tree.mount(app, config={'/': root_conf})
-    
-    # If we do not supply any middleware in code, pipeline is much cleaner:
-    # app = cherrypy.Application(Root())
-    # cherrypy.wsgi.pipeline(app)
-    # cherrypy.tree.mount(app, config={'/': root_conf})
 
 
 from cherrypy.test import helper
