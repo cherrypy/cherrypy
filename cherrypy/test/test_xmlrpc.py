@@ -2,6 +2,8 @@ from cherrypy.test import test
 test.prefer_parent_path()
 import xmlrpclib
 
+from cherrypy import _cpdispatch
+
 
 def setup_server():
     import cherrypy
@@ -57,7 +59,9 @@ def setup_server():
 
     root = Root()
     root.xmlrpc = XmlRpc()
-    cherrypy.tree.mount(root)
+    cherrypy.tree.mount(root, config={'/': {
+        'request.dispatch': _cpdispatch.XMLRPCDispatcher(),
+        }})
     cherrypy.config.update({'environment': 'test_suite'})
 
 

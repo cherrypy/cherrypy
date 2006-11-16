@@ -3,6 +3,7 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import cherrypy
+from cherrypy import _cpdispatch
 
 def setup_server():
     class Root:
@@ -38,15 +39,15 @@ def setup_server():
     root = Root()
     root.mydom2 = VHost("Domain 2")
     root.mydom3 = VHost("Domain 3")
-    cherrypy.tree.mount(root)
+    cherrypy.tree.mount(root, config={'/': {
+        'request.dispatch': _cpdispatch.VirtualHost(
+            **{'www.mydom2.com': '/mydom2',
+               'www.mydom3.com': '/mydom3',
+               'www.mydom4.com': '/dom4',
+               }),
+        }})
     
-    cherrypy.config.update({
-        'environment': 'test_suite',
-        'tools.virtual_host.on': True,
-        'tools.virtual_host.www.mydom2.com': '/mydom2',
-        'tools.virtual_host.www.mydom3.com': '/mydom3',
-        'tools.virtual_host.www.mydom4.com': '/dom4',
-        })
+    cherrypy.config.update({'environment': 'test_suite'})
 
 from cherrypy.test import helper
 
@@ -76,6 +77,7 @@ class VirtualHostTest(helper.CPWebCase):
         self.getPage("/vmethod/pos", [('Host', 'www.mydom3.com')])
         self.assertBody("You sent 'pos'")
         
+        # Test that cherrypy.url uses the browser url, not the virtual url
         self.getPage("/url", [('Host', 'www.mydom2.com')])
         self.assertBody("http://www.mydom2.com/nextpage")
 

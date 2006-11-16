@@ -272,38 +272,6 @@ to this function:
                  for k in dir(SessionAuth) if not k.startswith("__")])
 
 
-def virtual_host(use_x_forwarded_host=True, **domains):
-    """Redirect internally based on the Host header.
-    
-    Useful when running multiple sites within one CP server.
-    
-    From http://groups.google.com/group/cherrypy-users/browse_thread/thread/f393540fe278e54d:
-    
-    For various reasons I need several domains to point to different parts of a
-    single website structure as well as to their own "homepage"   EG
-    
-    http://www.mydom1.com  ->  root
-    http://www.mydom2.com  ->  root/mydom2/
-    http://www.mydom3.com  ->  root/mydom3/
-    http://www.mydom4.com  ->  under construction page
-    
-    but also to have  http://www.mydom1.com/mydom2/  etc to be valid pages in
-    their own right.
-    """
-    request = cherrypy.request
-    
-    # Guard against running twice.
-    if hasattr(request, "virtual_prefix"):
-        return
-    
-    domain = request.headers.get('Host', '')
-    if use_x_forwarded_host:
-        domain = request.headers.get("X-Forwarded-Host", domain)
-    
-    request.virtual_prefix = prefix = domains.get(domain, "")
-    if prefix:
-        raise cherrypy.InternalRedirect(_http.urljoin(prefix, request.path_info))
-
 def log_traceback():
     """Write the last error's traceback to the cherrypy error log."""
     from cherrypy import _cperror

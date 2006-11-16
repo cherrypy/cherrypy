@@ -308,3 +308,46 @@ class RoutesDispatcher(object):
                 merge(app.config[curpath])
         
         return handler
+
+
+def XMLRPCDispatcher(next_dispatcher=Dispatcher()):
+    from cherrypy.lib import xmlrpc
+    def xmlrpc_dispatch(path_info):
+        path_info = xmlrpc.patched_path(path_info)
+        return next_dispatcher(path_info)
+    return xmlrpc_dispatch
+
+
+def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domains):
+    """Select a different handler based on the Host header.
+    
+    Useful when running multiple sites within one CP server.
+    
+    From http://groups.google.com/group/cherrypy-users/browse_thread/thread/f393540fe278e54d:
+    
+    For various reasons I need several domains to point to different parts of a
+    single website structure as well as to their own "homepage"   EG
+    
+    http://www.mydom1.com  ->  root
+    http://www.mydom2.com  ->  root/mydom2/
+    http://www.mydom3.com  ->  root/mydom3/
+    http://www.mydom4.com  ->  under construction page
+    
+    but also to have  http://www.mydom1.com/mydom2/  etc to be valid pages in
+    their own right.
+    """
+    from cherrypy.lib import http
+    def vhost_dispatch(path_info):
+        header = cherrypy.request.headers.get
+        
+        domain = header('Host', '')
+        if use_x_forwarded_host:
+            domain = header("X-Forwarded-Host", domain)
+        
+        prefix = domains.get(domain, "")
+        if prefix:
+            path_info = http.urljoin(prefix, path_info)
+        
+        return next_dispatcher(path_info)
+    return vhost_dispatch
+

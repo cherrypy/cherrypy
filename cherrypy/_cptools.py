@@ -214,29 +214,6 @@ class XMLRPCController(object):
     index = __call__
 
 
-class XMLRPCTool(object):
-    """Tool for using XMLRPC over HTTP.
-    
-    Python's None value cannot be used in standard XML-RPC; to allow
-    using it via an extension, provide a true value for allow_none.
-    """
-    
-    def _setup(self):
-        """Hook this tool into cherrypy.request."""
-        request = cherrypy.request
-        
-        # Guard against running this method twice.
-        if hasattr(request, 'xmlrpc'):
-            return
-        request.xmlrpc = True
-        
-        request.error_response = _xmlrpc.on_error
-        path_info = request.path_info
-        ppath = _xmlrpc.patched_path(path_info)
-        if ppath != path_info:
-            raise cherrypy.InternalRedirect(ppath)
-
-
 class WSGIAppTool(HandlerTool):
     """A tool for running any WSGI middleware/application within CP.
     
@@ -332,7 +309,6 @@ default_toolbox = _d = Toolbox("tools")
 _d.session_auth = SessionAuthTool(cptools.session_auth)
 _d.proxy = Tool('before_request_body', cptools.proxy, priority=30)
 _d.response_headers = Tool('on_start_resource', cptools.response_headers)
-_d.virtual_host = Tool('on_start_resource', cptools.virtual_host, priority=40)
 _d.log_tracebacks = Tool('before_error_response', cptools.log_traceback)
 _d.log_headers = Tool('before_error_response', cptools.log_request_headers)
 _d.err_redirect = ErrorTool(cptools.redirect)
@@ -345,7 +321,7 @@ _d.staticdir = HandlerTool(static.staticdir)
 _d.staticfile = HandlerTool(static.staticfile)
 # _sessions.init must be bound after headers are read
 _d.sessions = SessionTool('before_request_body', _sessions.init)
-_d.xmlrpc = XMLRPCTool()
+_d.xmlrpc = ErrorTool(_xmlrpc.on_error)
 _d.wsgiapp = WSGIAppTool(_wsgiapp.run)
 _d.caching = CachingTool('before_handler', _caching.get, 'caching')
 _d.expires = Tool('before_finalize', _caching.expires)
