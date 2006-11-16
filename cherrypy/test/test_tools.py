@@ -17,8 +17,8 @@ def setup_server():
     # Put check_access in a custom toolbox with its own namespace
     myauthtools = cherrypy._cptools.Toolbox("myauth")
     
-    def check_access():
-        if not getattr(cherrypy.request, "login", None):
+    def check_access(default=False):
+        if not getattr(cherrypy.request, "userid", default):
             raise cherrypy.HTTPError(401)
     myauthtools.check_access = cherrypy.Tool('before_request_body', check_access)
     
@@ -154,6 +154,7 @@ def setup_server():
         def restricted(self):
             return "Welcome!"
         restricted = myauthtools.check_access()(restricted)
+        userid = restricted
         
         def err_in_onstart(self):
             return "success!"
@@ -170,6 +171,10 @@ def setup_server():
         },
         '/demo/restricted': {
             'request.show_tracebacks': False,
+        },
+        '/demo/userid': {
+            'request.show_tracebacks': False,
+            'myauth.check_access.default': True,
         },
         '/demo/errinstream': {
             'response.stream': True,
@@ -226,6 +231,10 @@ class ToolTests(helper.CPWebCase):
         # Test the "__call__" technique (compile-time decorator).
         self.getPage("/demo/restricted")
         self.assertErrorPage(401)
+        
+        # Test compile-time decorator with kwargs from config.
+        self.getPage("/demo/userid")
+        self.assertBody("Welcome!")
     
     def testGuaranteedHooks(self):
         # The 'critical' on_start_resource hook is 'failsafe' (guaranteed
