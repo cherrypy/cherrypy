@@ -164,8 +164,8 @@ def setup_server():
             raise cherrypy.InternalRedirect("cousin?t=6")
         
         def cousin(self, t):
-            return repr(cherrypy.request.redirections +
-                        [cherrypy.url(qs=cherrypy.request.query_string)])
+            assert cherrypy.request.prev.closed
+            return cherrypy.request.prev.query_string
         
         def petshop(self, user_id):
             if user_id == "parrot":
@@ -173,11 +173,10 @@ def setup_server():
                 raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=slug')
             elif user_id == "terrier":
                 # Trade it for a fish when redirecting
-                cherrypy.request.params = {"user_id": "fish"}
-                raise cherrypy.InternalRedirect('/image/getImagesByUser')
+                raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=fish')
             else:
                 # This should pass the user_id through to getImagesByUser
-                raise cherrypy.InternalRedirect('/image/getImagesByUser')
+                raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=%s' % user_id)
         
         # We support Python 2.3, but the @-deco syntax would look like this:
         # @tools.login_redir()
@@ -194,6 +193,10 @@ def setup_server():
         
         def custom_err(self):
             return "Something went horribly wrong."
+        
+        def early_ir(self, arg):
+            return "whatever"
+        early_ir._cp_config = {'hooks.before_request_body': redir_custom}
     
     class Image(Test):
         
@@ -584,39 +587,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('')
         self.assertStatus(305)
         
-        # InternalRedirect
-        self.getPage("/internalredirect/")
-        self.assertBody('hello')
-        self.assertStatus(200)
-        
-        self.getPage("/internalredirect/petshop?user_id=Sir-not-appearing-in-this-film")
-        self.assertBody('0 images for Sir-not-appearing-in-this-film')
-        self.assertStatus(200)
-        
-        self.getPage("/internalredirect/petshop?user_id=parrot")
-        self.assertBody('0 images for slug')
-        self.assertStatus(200)
-        
-        self.getPage("/internalredirect/petshop?user_id=terrier")
-        self.assertBody('0 images for fish')
-        self.assertStatus(200)
-        
-        self.getPage("/internalredirect/secure")
-        self.assertBody('Please log in')
-        self.assertStatus(200)
-        
-        # Relative path in InternalRedirect.
-        # Also tests request.redirections
-        self.getPage("/internalredirect/relative?a=3&b=5")
-        self.assertBody("['/internalredirect/relative?a=3&b=5', "
-                        "'%s/internalredirect/cousin?t=6']" % self.base())
-        self.assertStatus(200)
-        
-        # InternalRedirect on error
-        self.getPage("/internalredirect/login/illegal/extra/vpath/atoms")
-        self.assertStatus(200)
-        self.assertBody("Something went horribly wrong.")
-        
         # HTTPRedirect on error
         self.getPage("/redirect/error/")
         self.assertStatus(('302 Found', '303 See Other'))
@@ -630,6 +600,49 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.getPage("/redirect/stringify", protocol="HTTP/1.1")
             self.assertStatus(200)
             self.assertBody("(['%s/'], 303)" % self.base())
+    
+    def test_InternalRedirect(self):
+        # InternalRedirect
+        self.getPage("/internalredirect/")
+        self.assertBody('hello')
+        self.assertStatus(200)
+        
+        # Test passthrough
+        self.getPage("/internalredirect/petshop?user_id=Sir-not-appearing-in-this-film")
+        self.assertBody('0 images for Sir-not-appearing-in-this-film')
+        self.assertStatus(200)
+        
+        # Test args
+        self.getPage("/internalredirect/petshop?user_id=parrot")
+        self.assertBody('0 images for slug')
+        self.assertStatus(200)
+        
+        # Test POST
+        self.getPage("/internalredirect/petshop", method="POST",
+                     body="user_id=terrier")
+        self.assertBody('0 images for fish')
+        self.assertStatus(200)
+        
+        # Test ir before body read
+        self.getPage("/internalredirect/early_ir", method="POST",
+                     body="arg=aha!")
+        self.assertBody("Something went horribly wrong.")
+        self.assertStatus(200)
+        
+        self.getPage("/internalredirect/secure")
+        self.assertBody('Please log in')
+        self.assertStatus(200)
+        
+        # Relative path in InternalRedirect.
+        # Also tests request.prev.
+        self.getPage("/internalredirect/relative?a=3&b=5")
+        self.assertBody("a=3&b=5")
+        self.assertStatus(200)
+        
+        # InternalRedirect on error
+        self.getPage("/internalredirect/login/illegal/extra/vpath/atoms")
+        self.assertStatus(200)
+        self.assertBody("Something went horribly wrong.")
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",

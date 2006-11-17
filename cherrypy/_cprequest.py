@@ -135,6 +135,8 @@ hookpoints = ['on_start_resource', 'before_request_body',
 class Request(object):
     """An HTTP request."""
     
+    prev = None
+    
     # Conversation/connection attributes
     local = http.Host("localhost", 80)
     remote = http.Host("localhost", 1111)
@@ -157,8 +159,6 @@ class Request(object):
     process_request_body = True
     methods_with_bodies = ("POST", "PUT")
     body = None
-    body_read = False
-    headers_read = False
     
     # Dispatch attributes
     dispatch = Dispatcher()
@@ -168,7 +168,6 @@ class Request(object):
     handler = None
     toolmaps = {}
     config = None
-    recursive_redirect = False
     is_index = None
     
     hooks = HookMap(hookpoints)
@@ -176,6 +175,7 @@ class Request(object):
     error_response = cherrypy.HTTPError(500).set_response
     error_page = {}
     show_tracebacks = True
+    throws = (KeyboardInterrupt, SystemExit, cherrypy.InternalRedirect)
     throw_errors = False
     
     namespaces = {"hooks": hooks_namespace,
@@ -198,7 +198,6 @@ class Request(object):
         self.server_protocol = server_protocol
         
         self.closed = False
-        self.redirections = []
         
         # Put a *copy* of the class error_page into self.
         self.error_page = self.error_page.copy()
@@ -276,40 +275,19 @@ class Request(object):
             # path_info should be the path from the
             # app root (script_name) to the handler.
             self.script_name = self.app.script_name
-            self.path_info = path[len(self.script_name.rstrip("/")):]
+            self.path_info = pi = path[len(self.script_name.rstrip("/")):]
             
-            # Loop to allow for InternalRedirect.
-            pi = self.path_info
-            qs = self.query_string
-            while True:
-                try:
-                    self.respond(pi)
-                    break
-                except cherrypy.InternalRedirect, ir:
-                    if (ir.path in self.redirections
-                        and not self.recursive_redirect):
-                        raise RuntimeError("InternalRedirect visited the "
-                                           "same URL twice: %s" % repr(ir.path))
-                    
-                    # Add the *previous* path_info + qs to self.redirections.
-                    if qs:
-                        qs = "?" + qs
-                    self.redirections.append(pi + qs)
-                    
-                    pi = self.path_info = ir.path
-                    qs = self.query_string = ir.query_string
-                    if qs:
-                        self.params = http.parse_query_string(qs)
-        except (KeyboardInterrupt, SystemExit):
+            self.respond(pi)
+            
+        except self.throws:
             raise
         except:
             if self.throw_errors:
                 raise
             else:
+                # Failure in setup, error handler or finalize. Bypass them.
                 # Can't use handle_error because we may not have hooks yet.
                 cherrypy.log(traceback=True)
-                
-                # Failure in setup, error handler or finalize. Bypass them.
                 if self.show_tracebacks:
                     body = format_exc()
                 else:
@@ -337,9 +315,8 @@ class Request(object):
                     if self.app is None:
                         raise cherrypy.NotFound()
                     
-                    if not self.headers_read:
-                        # Get the 'Host' header, so we can do HTTPRedirects properly.
-                        self.process_headers()
+                    # Get the 'Host' header, so we can do HTTPRedirects properly.
+                    self.process_headers()
                     
                     # Make a copy of the class hooks
                     self.hooks = self.__class__.hooks.copy()
@@ -349,10 +326,9 @@ class Request(object):
                     
                     self.hooks.run('on_start_resource')
                     
-                    if not self.body_read:
-                        if self.process_request_body:
-                            if self.method not in self.methods_with_bodies:
-                                self.process_request_body = False
+                    if self.process_request_body:
+                        if self.method not in self.methods_with_bodies:
+                            self.process_request_body = False
                         
                         if self.process_request_body:
                             # Prepare the SizeCheckWrapper for the request body
@@ -375,7 +351,7 @@ class Request(object):
                     cherrypy.response.finalize()
             finally:
                 self.hooks.run('on_end_resource')
-        except (KeyboardInterrupt, SystemExit, cherrypy.InternalRedirect):
+        except self.throws:
             raise
         except:
             if self.throw_errors:
@@ -383,11 +359,6 @@ class Request(object):
             self.handle_error(sys.exc_info())
     
     def process_headers(self):
-        # Guard against re-reading body (e.g. on InternalRedirect)
-        if self.headers_read:
-            return
-        self.headers_read = True
-        
         self.params = http.parse_query_string(self.query_string)
         
         # Process the headers into self.headers
@@ -451,11 +422,6 @@ class Request(object):
     
     def process_body(self):
         """Convert request.rfile into request.params (or request.body)."""
-        # Guard against re-reading body (e.g. on InternalRedirect)
-        if self.body_read:
-            return
-        self.body_read = True
-        
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
         try:

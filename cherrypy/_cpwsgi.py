@@ -1,10 +1,68 @@
 """WSGI interface (see PEP 333)."""
 
+import StringIO as _StringIO
 import sys as _sys
 
 import cherrypy as _cherrypy
 from cherrypy import _cperror, _cpwsgiserver
 from cherrypy.lib import http as _http
+
+
+class InternalRedirector(object):
+    """WSGI middleware which handles cherrypy.InternalRedirect.
+    
+    When cherrypy.InternalRedirect is raised, this middleware traps it,
+    rewrites the WSGI environ using the new path and query_string,
+    and calls the next application again. Because the wsgi.input stream
+    may have already been consumed by the next application, the redirected
+    call will always be of HTTP method "GET", and therefore any params must
+    be passed in the InternalRedirect object's query_string attribute.
+    If you need something more complicated, make and raise your own
+    exception and your own WSGI middlewre to trap it. ;)
+    
+    It would be a bad idea to raise InternalRedirect after you've already
+    yielded response content, although an enterprising soul could choose
+    to abuse this.
+    
+    nextapp: the next application callable in the WSGI chain.
+    
+    recursive: if False (the default), each URL (path + qs) will be
+    stored, and, if the same URL is requested again, RuntimeError will
+    be raised. If 'recursive' is True, no such error will be raised.
+    """
+    
+    def __init__(self, nextapp, recursive=False):
+        self.nextapp = nextapp
+        self.recursive = recursive
+    
+    def __call__(self, environ, start_response):
+        redirections = []
+        
+        env = environ.copy()
+        path = env.get('PATH_INFO', '')
+        qs = env.get('QUERY_STRING', '')
+        
+        while True:
+            try:
+                for chunk in self.nextapp(env, start_response):
+                    yield chunk
+                break
+            except _cherrypy.InternalRedirect, ir:
+                if not self.recursive:
+                    if ir.path in redirections:
+                        raise RuntimeError("InternalRedirector visited the "
+                                           "same URL twice: %r" % ir.path)
+                    else:
+                        # Add the *previous* path_info + qs to redirections.
+                        if qs:
+                            qs = "?" + qs
+                        redirections.append(env.get('SCRIPT_NAME', '') + path + qs)
+                
+                # Munge environment and try again.
+                env['REQUEST_METHOD'] = "GET"
+                env['PATH_INFO'] = path = ir.path
+                env['QUERY_STRING'] = qs = ir.query_string
+                env['wsgi.input'] = _StringIO.StringIO()
 
 
 class CPWSGIApp(object):
@@ -25,11 +83,11 @@ class CPWSGIApp(object):
         named WSGI callable (from the pipeline) as keyword arguments.
     """
     
-    pipeline = []
+    pipeline = [('iredir', InternalRedirector)]
     head = None
     config = {}
     
-    throws = (KeyboardInterrupt, SystemExit)
+    throws = (KeyboardInterrupt, SystemExit, _cherrypy.InternalRedirect)
     
     headerNames = {'HTTP_CGI_AUTHORIZATION': 'Authorization',
                    'CONTENT_LENGTH': 'Content-Length',
@@ -76,6 +134,8 @@ class CPWSGIApp(object):
         request.multiprocess = environ['wsgi.multiprocess']
         request.wsgi_environ = environ
         request.app = self.cpapp
+        request.prev = env('cherrypy.request')
+        environ['cherrypy.request'] = request
         return request
     
     def tail(self, environ, start_response):

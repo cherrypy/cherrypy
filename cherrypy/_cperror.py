@@ -9,13 +9,11 @@ import exceptions
 class CherryPyException(exceptions.Exception):
     pass
 
+
 class InternalRedirect(CherryPyException):
     """Exception raised to switch to the handler for a different URL.
     
-    If you supply a query string, it will replace request.params.
-    If you omit the query string (no question mark), the params from the
-    original request will remain in effect.
-    To erase any query string parameters, write url + "?" with no params.
+    Any request.params must be supplied in a query string.
     """
     
     def __init__(self, path):

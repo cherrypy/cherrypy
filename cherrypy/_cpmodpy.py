@@ -58,6 +58,8 @@ resides in the global site-package this won't be needed.
 Then restart apache2 and access http://localhost:8080
 """
 
+import StringIO
+
 import cherrypy
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import http
@@ -103,6 +105,8 @@ class _ReadOnlyRequest:
             self.__dict__[method] = getattr(req, method)
 
 
+recursive = False
+
 _isSetUp = False
 def handler(req):
     from mod_python import apache
@@ -119,9 +123,7 @@ def handler(req):
         remote = http.Host(remote[0], remote[1], req.connection.remote_host or "")
         
         scheme = req.parsed_uri[0] or 'http'
-        request = cherrypy.engine.request(local, remote, scheme)
         req.get_basic_auth_pw()
-        request.login = req.user
         
         try:
             # apache.mpm_query only became available in mod_python 3.1
@@ -148,20 +150,52 @@ def handler(req):
                 forked = False
             else:
                 raise ValueError(bad_value % "multiprocess")
-        request.multithread = bool(threaded)
-        request.multiprocess = bool(forked)
         
         sn = cherrypy.tree.script_name(req.uri or "/")
         if sn is None:
             send_response(req, '404 Not Found', [], '')
         else:
-            request.app = cherrypy.tree.apps[sn]
-            
-            # Run the CherryPy Request object and obtain the response
+            app = cherrypy.tree.apps[sn]
+            method = req.method
+            path = req.uri
+            qs = req.args or ""
+            sproto = req.protocol
             headers = req.headers_in.items()
             rfile = _ReadOnlyRequest(req)
-            response = request.run(req.method, req.uri, req.args or "",
-                                   req.protocol, headers, rfile)
+            prev = None
+            
+            redirections = []
+            while True:
+                request = cherrypy.engine.request(local, remote, scheme)
+                request.login = req.user
+                request.multithread = bool(threaded)
+                request.multiprocess = bool(forked)
+                request.app = app
+                request.prev = prev
+                
+                # Run the CherryPy Request object and obtain the response
+                try:
+                    response = request.run(method, path, qs, sproto, headers, rfile)
+                    break
+                except cherrypy.InternalRedirect, ir:
+                    request.close()
+                    prev = request
+                    
+                    if not recursive:
+                        if ir.path in redirections:
+                            raise RuntimeError("InternalRedirector visited the "
+                                               "same URL twice: %r" % ir.path)
+                        else:
+                            # Add the *previous* path_info + qs to redirections.
+                            if qs:
+                                qs = "?" + qs
+                            redirections.append(sn + path + qs)
+                    
+                    # Munge environment and try again.
+                    method = "GET"
+                    path = ir.path
+                    qs = ir.query_string
+                    rfile = StringIO.StringIO()
             
             send_response(req, response.status, response.header_list, response.body)
             request.close()
