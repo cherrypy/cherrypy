@@ -64,8 +64,7 @@ def wsgiApp(environ, start_response):
         # Both IIS and Apache set REMOTE_USER, when possible.
         env = environ.get
         clientAddr = (env('REMOTE_ADDR', ''), int(env('REMOTE_PORT', -1)))
-        request = cherrypy.server.request(clientAddr, env('REMOTE_ADDR', ''),
-                                          environ['wsgi.url_scheme'])
+        request = cherrypy.server.request(clientAddr, '', environ['wsgi.url_scheme'])
         request.login = (env('LOGON_USER') or env('REMOTE_USER') or None)
         request.multithread = environ['wsgi.multithread']
         request.multiprocess = environ['wsgi.multiprocess']

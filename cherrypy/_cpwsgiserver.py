@@ -119,7 +119,7 @@ class HTTPRequest(object):
         else:
             self.environ["SERVER_PORT"] = str(self.server.bind_addr[1])
             # optional values
-            self.environ["REMOTE_HOST"] = self.addr[0]
+            # Until we do DNS lookups, don't include REMOTE_HOST
             self.environ["REMOTE_ADDR"] = self.addr[0]
             self.environ["REMOTE_PORT"] = str(self.addr[1])
         

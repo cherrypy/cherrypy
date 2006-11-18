@@ -109,7 +109,7 @@ def _cp_log_access():
     """ Default method for logging access """
     
     tmpl = '%(h)s %(l)s %(u)s [%(t)s] "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-    s = tmpl % {'h': cherrypy.request.remoteHost,
+    s = tmpl % {'h': cherrypy.request.remoteHost or cherrypy.request.remoteAddr,
                 'l': '-',
                 'u': getattr(cherrypy.request, "login", None) or "-",
                 't': logtime(),
