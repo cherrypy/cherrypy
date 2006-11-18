@@ -123,7 +123,16 @@ class Engine(object):
         
         if sys.platform == "win32":
             args = ['"%s"' % arg for arg in args]
-        os.execv(sys.executable, args)
+        
+        # Some platforms (OS X) will error if all threads are not
+        # ABSOLUTELY terminated. See http://www.cherrypy.org/ticket/581.
+        while True:
+            try:
+                os.execv(sys.executable, args)
+                break
+            except OSError, x:
+                if x.errno != 45:
+                    raise
     
     def autoreload(self):
         """Reload the process if registered files have been modified."""
