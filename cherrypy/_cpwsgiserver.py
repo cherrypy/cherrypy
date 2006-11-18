@@ -21,6 +21,7 @@ from urlparse import urlparse
 
 try:
     from OpenSSL import SSL
+    from OpenSSL import crypto
 except ImportError:
     SSL = None
 
@@ -434,9 +435,13 @@ class HTTPConnection(object):
             self.wfile = self.socket.makefile("w", self.wbufsize)
         else:
             # Assume it's an HTTPS socket wrapper
-            self.environ["wsgi.url_scheme"] = "https"
             self.rfile = SSL_fileobject(sock, "r", self.rbufsize)
             self.wfile = SSL_fileobject(sock, "w", self.wbufsize)
+            self.environ["wsgi.url_scheme"] = "https"
+            self.environ["HTTPS"] = "on"
+            sslenv = getattr(server, "ssl_environ")
+            if sslenv:
+                self.environ.update(sslenv)
         
         self.environ.update({"wsgi.input": self.rfile,
                              "SERVER_NAME": self.server.server_name,
@@ -611,11 +616,13 @@ class CherryPyWSGIServer(object):
             if self.ssl_certificate and self.ssl_private_key:
                 if SSL is None:
                     raise ImportError("You must install pyOpenSSL to use HTTPS.")
+                
                 # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
                 ctx = SSL.Context(SSL.SSLv23_METHOD)
                 ctx.use_privatekey_file(self.ssl_private_key)
                 ctx.use_certificate_file(self.ssl_certificate)
                 self.socket = SSLConnection(ctx, self.socket)
+                self.populate_ssl_environ()
             self.socket.bind(self.bind_addr)
         
         # Select the appropriate socket
@@ -758,4 +765,39 @@ class CherryPyWSGIServer(object):
                     worker.join()
                 except AssertionError:
                     pass
+    
+    def populate_ssl_environ(self):
+        """Create WSGI environ entries to be merged into each request."""
+        cert = open(self.ssl_certificate).read()
+        cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+        self.ssl_environ = {
+            # pyOpenSSL doesn't provide access to any of these AFAICT
+##            'SSL_PROTOCOL': 'SSLv2',
+##            SSL_CIPHER 	string 	The cipher specification name
+##            SSL_VERSION_INTERFACE 	string 	The mod_ssl program version
+##            SSL_VERSION_LIBRARY 	string 	The OpenSSL program version
+            }
+        
+        # Server certificate attributes
+        self.ssl_environ.update({
+            'SSL_SERVER_M_VERSION': cert.get_version(),
+            'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
+##            'SSL_SERVER_V_START': Validity of server's certificate (start time),
+##            'SSL_SERVER_V_END': Validity of server's certificate (end time),
+            })
+        
+        for prefix, dn in [("I", cert.get_issuer()),
+                           ("S", cert.get_subject())]:
+            # X509Name objects don't seem to have a way to get the
+            # complete DN string. Use str() and slice it instead.
+            dn = str(dn)[18:-2]
+            
+            wsgikey = 'SSL_SERVER_%s_DN' % prefix
+            self.ssl_environ[wsgikey] = dn
+            
+            for atom in dn.split("/"):
+                if atom:
+                    key, value = atom.split("=", 1)
+                    wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
+                    self.ssl_environ[wsgikey] = value
 

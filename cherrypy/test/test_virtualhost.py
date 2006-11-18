@@ -79,7 +79,7 @@ class VirtualHostTest(helper.CPWebCase):
         
         # Test that cherrypy.url uses the browser url, not the virtual url
         self.getPage("/url", [('Host', 'www.mydom2.com')])
-        self.assertBody("http://www.mydom2.com/nextpage")
+        self.assertBody("%s://www.mydom2.com/nextpage" % self.scheme)
 
 
 if __name__ == "__main__":
