@@ -22,6 +22,16 @@ import cherrypy
 from cherrypy.lib import http
 
 
+class PerpetualTimer(threading._Timer):
+    
+    def run(self):
+        while True:
+            self.finished.wait(self.interval)
+            if self.finished.isSet():
+                return
+            self.function(*self.args, **self.kwargs)
+
+
 class Session(object):
     """A CherryPy dict-like Session object (one per request).
     
@@ -52,19 +62,11 @@ class Session(object):
             if self._load() is not None:
                 self.id = None
     
-    def clean_cycle(self):
-        """Clean up expired sessions at regular intervals."""
-        # clean_thread is both a cancelable Timer and a flag.
-        if self.clean_thread:
-            self.clean_up()
-            t = threading.Timer(self.clean_freq, self.clean_cycle)
-            self.__class__.clean_thread = t
-            t.start()
-    
     def clean_interrupt(cls):
-        """Stop the expired-session cleaning cycle."""
+        """Stop the expired-session cleaning timer."""
         if cls.clean_thread:
             cls.clean_thread.cancel()
+            cls.clean_thread.join()
             cls.clean_thread = None
     clean_interrupt = classmethod(clean_interrupt)
     
@@ -110,13 +112,16 @@ class Session(object):
             self._data = data[0]
         self.loaded = True
         
+        # Stick the clean_thread in the class, not the instance.
+        # The instances are created and destroyed per-request.
         cls = self.__class__
         if not cls.clean_thread:
             cherrypy.engine.on_stop_engine_list.append(cls.clean_interrupt)
-            # Use the instance to call clean_cycle so tool config
-            # can be accessed inside the method.
-            cls.clean_thread = t = threading.Timer(self.clean_freq,
-                                                   self.clean_cycle)
+            # clean_up is in instancemethod and not a classmethod,
+            # so tool config can be accessed inside the method.
+            t = PerpetualTimer(self.clean_freq, self.clean_up)
+            t.setName("CP Session Cleanup")
+            cls.clean_thread = t
             t.start()
     
     def delete(self):
