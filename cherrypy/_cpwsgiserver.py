@@ -1,5 +1,6 @@
 """A high-speed, production ready, thread pooled, generic WSGI server."""
 
+import base64
 import mimetools # todo: use email
 import Queue
 import os
@@ -75,6 +76,7 @@ class HTTPRequest(object):
             return
         
         server = self.connection.server
+        self.environ["SERVER_SOFTWARE"] = "%s WSGI Server" % server.version
         
         method, path, req_protocol = request_line.strip().split(" ", 2)
         self.environ["REQUEST_METHOD"] = method
@@ -155,6 +157,12 @@ class HTTPRequest(object):
         # then all the http headers
         headers = mimetools.Message(self.rfile)
         self.environ.update(self.parse_headers(headers))
+        
+        creds = headers.getheader("Authorization", "").split(" ", 1)
+        self.environ["AUTH_TYPE"] = creds[0]
+        if creds[0].lower() == 'basic':
+            user, pw = base64.decodestring(creds[1]).split(":", 1)
+            self.environ["REMOTE_USER"] = user
         
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
