@@ -126,13 +126,19 @@ class Engine(object):
         
         # Some platforms (OS X) will error if all threads are not
         # ABSOLUTELY terminated. See http://www.cherrypy.org/ticket/581.
-        while True:
+        for trial in xrange(self.reexec_retry * 10):
             try:
                 os.execv(sys.executable, args)
-                break
+                return
             except OSError, x:
                 if x.errno != 45:
                     raise
+                time.sleep(0.1)
+        else:
+            raise
+    
+    # Number of seconds to retry reexec if os.execv fails.
+    reexec_retry = 2
     
     def autoreload(self):
         """Reload the process if registered files have been modified."""
