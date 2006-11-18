@@ -32,6 +32,16 @@ except ValueError, _signal_exc:
         raise
 
 
+class PerpetualTimer(threading._Timer):
+    
+    def run(self):
+        while True:
+            self.finished.wait(self.interval)
+            if self.finished.isSet():
+                return
+            self.function(*self.args, **self.kwargs)
+
+
 class Engine(object):
     """Application interface for (HTTP) servers, plus process controls."""
     
@@ -71,7 +81,8 @@ class Engine(object):
         
         freq = self.deadlock_poll_freq
         if freq > 0:
-            self.monitor_thread = threading.Timer(freq, self.monitor)
+            self.monitor_thread = PerpetualTimer(freq, self.monitor)
+            self.monitor_thread.setName("CPEngine Monitor")
             self.monitor_thread.start()
         
         if blocking:
@@ -162,6 +173,7 @@ class Engine(object):
             
             if self.monitor_thread:
                 self.monitor_thread.cancel()
+                self.monitor_thread.join()
                 self.monitor_thread = None
             
             self.state = STOPPED
@@ -211,13 +223,10 @@ class Engine(object):
         return req
     
     def monitor(self):
-        """Check timeout on all responses (starts a recurring Timer thread)."""
+        """Check timeout on all responses."""
         if self.state == STARTED:
             for req, resp in self.servings:
                 resp.check_timeout()
-        freq = self.deadlock_poll_freq
-        self.monitor_thread = threading.Timer(freq, self.monitor)
-        self.monitor_thread.start()
     
     def start_with_callback(self, func, args=None, kwargs=None):
         """Start the given func in a new thread, then start self and block."""
