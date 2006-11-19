@@ -478,7 +478,11 @@ class Body(object):
             # strings get wrapped in a list because iterating over a single
             # item list is much faster than iterating over every character
             # in a long string.
-            value = [value]
+            if value:
+                value = [value]
+            else:
+                # [''] doesn't evaluate to False, so replace it with [].
+                value = []
         elif isinstance(value, types.FileType):
             value = file_generator(value)
         elif value is None:
