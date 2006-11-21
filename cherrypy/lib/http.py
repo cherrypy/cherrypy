@@ -341,30 +341,27 @@ class HeaderMap(CaseInsensitiveDict):
     def output(self, protocol=(1, 1)):
         """Transform self into a list of (name, value) tuples."""
         header_list = []
-        for key, value in self.iteritems():
-            if not isinstance(value, list):
-                value = [value]
-            for v in value:
-                if isinstance(v, unicode):
-                    # HTTP/1.0 says, "Words of *TEXT may contain octets
-                    # from character sets other than US-ASCII." and
-                    # "Recipients of header field TEXT containing octets
-                    # outside the US-ASCII character set may assume that
-                    # they represent ISO-8859-1 characters."
-                    try:
-                        v = v.encode("iso-8859-1")
-                    except UnicodeEncodeError:
-                        if protocol >= (1, 1):
-                            # Encode RFC-2047 TEXT
-                            # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=").
-                            v = Header(v, 'utf-8').encode()
-                        else:
-                            raise
-                else:
-                    # This coercion should not take any time at all
-                    # if value is already of type "str".
-                    v = str(v)
-                header_list.append((key, v))
+        for key, v in self.iteritems():
+            if isinstance(v, unicode):
+                # HTTP/1.0 says, "Words of *TEXT may contain octets
+                # from character sets other than US-ASCII." and
+                # "Recipients of header field TEXT containing octets
+                # outside the US-ASCII character set may assume that
+                # they represent ISO-8859-1 characters."
+                try:
+                    v = v.encode("iso-8859-1")
+                except UnicodeEncodeError:
+                    if protocol >= (1, 1):
+                        # Encode RFC-2047 TEXT
+                        # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=").
+                        v = Header(v, 'utf-8').encode()
+                    else:
+                        raise
+            else:
+                # This coercion should not take any time at all
+                # if value is already of type "str".
+                v = str(v)
+            header_list.append((key, v))
         return header_list
 
 
