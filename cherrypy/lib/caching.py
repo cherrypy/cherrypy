@@ -75,7 +75,7 @@ class MemoryCache:
             # checks if there's space for the object
             if (obj_size < maxobj_size and total_size < maxsize):
                 # add to the expirations list and cache
-                expiration_time = time.time() + conf("tools.caching.delay", 600)
+                expiration_time = cherrypy.response.time + conf("tools.caching.delay", 600)
                 obj_key = self.key
                 bucket = self.expirations.setdefault(expiration_time, [])
                 bucket.append((obj_size, obj_key))
@@ -85,7 +85,21 @@ class MemoryCache:
 
 
 def get(invalid_methods=("POST", "PUT", "DELETE"), cache_class=MemoryCache):
-    """Try to obtain cached output. If fresh enough, raise HTTPError(304)."""
+    """Try to obtain cached output. If fresh enough, raise HTTPError(304).
+    
+    If a cached copy exists:
+        * sets request.cached = True
+        * sets response.headers to the cached values
+        * checks the cached Last-Modified response header against the
+            current If-(Un)Modified-Since request headers; raises 304
+            if necessary.
+        * sets response.status and response.body to the cached values
+        * returns True
+    
+    otherwise:
+        * sets request.cached = False
+        * returns False
+    """
     if not hasattr(cherrypy, "_cache"):
         cherrypy._cache = cache_class()
     
@@ -94,19 +108,22 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), cache_class=MemoryCache):
     # Ignore POST, PUT, DELETE.
     # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
     if request.method in invalid_methods:
-        request.cached = c = False
-    else:
-        cache_data = cherrypy._cache.get()
-        request.cached = c = bool(cache_data)
+        request.cached = False
+        return False
     
+    cache_data = cherrypy._cache.get()
+    request.cached = c = bool(cache_data)
     if c:
         response = cherrypy.response
         s, response.headers, b, create_time = cache_data
         
         # Add the required Age header
-        response.headers["Age"] = str(int(time.time() - create_time))
+        response.headers["Age"] = str(int(response.time - create_time))
         
         try:
+            # Note that validate_since depends on a Last-Modified header;
+            # this was put into the cached copy, and should have been
+            # resurrected just above (response.headers = cache_data[1]).
             cptools.validate_since()
         except cherrypy.HTTPError, x:
             if x.status == 304:
@@ -134,9 +151,8 @@ def tee_output():
         if response.headers.get('Pragma', None) != 'no-cache':
             # save the cache data
             body = ''.join([chunk for chunk in output])
-            create_time = time.time()
             cherrypy._cache.put((response.status, response.headers or {},
-                                 body, create_time))
+                                 body, response.time))
     response.body = tee(response.body)
 
 
