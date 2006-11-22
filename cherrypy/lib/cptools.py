@@ -1,5 +1,6 @@
 """Functions for builtin CherryPy tools."""
 
+import md5
 import re
 
 import cherrypy
@@ -13,9 +14,16 @@ def validate_etags(autotags=False):
     
     If autotags is True, an ETag response-header value will be provided
     from an MD5 hash of the response body (unless some other code has
-    already provided an ETag header). If False, the ETag will not be
-    automatic, and if no other code has provided an ETag value, then no
-    checks will be performed against If-Match or If-None-Match headers.
+    already provided an ETag header). If False (the default), the ETag
+    will not be automatic.
+    
+    WARNING: the autotags feature is not designed for URL's which allow
+    methods other than GET. For example, if a POST to the same URL returns
+    no content, the automatic ETag will be incorrect, breaking a fundamental
+    use for entity tags in a possibly destructive fashion. Likewise, if you
+    raise 304 Not Modified, the response body will be empty, the ETag hash
+    will be incorrect, and your application will break.
+    See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.24
     """
     response = cherrypy.response
     
@@ -23,34 +31,39 @@ def validate_etags(autotags=False):
     if hasattr(response, "ETag"):
         return
     
+    status, reason, msg = _http.valid_status(response.status)
+    
     etag = response.headers.get('ETag')
     
+    # Automatic ETag generation. See warning in docstring.
     if (not etag) and autotags:
-        import md5
-        etag = '"%s"' % md5.new(response.collapse_body()).hexdigest()
-        response.headers['ETag'] = etag
+        if status == 200:
+            etag = response.collapse_body()
+            etag = '"%s"' % md5.new(etag).hexdigest()
+            response.headers['ETag'] = etag
     
-    if etag:
-        response.ETag = etag
-        
-        status, reason, msg = _http.valid_status(response.status)
-        
+    response.ETag = etag
+    
+    # "If the request would, without the If-Match header field, result in
+    # anything other than a 2xx or 412 status, then the If-Match header
+    # MUST be ignored."
+    if status >= 200 and status <= 299:
         request = cherrypy.request
         
         conditions = request.headers.elements('If-Match') or []
         conditions = [str(x) for x in conditions]
         if conditions and not (conditions == ["*"] or etag in conditions):
-            if status >= 200 and status < 299:
-                raise cherrypy.HTTPError(412)
+            raise cherrypy.HTTPError(412, "If-Match failed: ETag %r did "
+                                     "not match %r" % (etag, conditions))
         
         conditions = request.headers.elements('If-None-Match') or []
         conditions = [str(x) for x in conditions]
         if conditions == ["*"] or etag in conditions:
-            if status >= 200 and status < 299:
-                if request.method in ("GET", "HEAD"):
-                    raise cherrypy.HTTPRedirect([], 304)
-                else:
-                    raise cherrypy.HTTPError(412)
+            if request.method in ("GET", "HEAD"):
+                raise cherrypy.HTTPRedirect([], 304)
+            else:
+                raise cherrypy.HTTPError(412, "If-None-Match failed: ETag %r "
+                                         "matched %r" % (etag, conditions))
 
 def validate_since():
     """Validate the current Last-Modified against If-Modified-Since headers.
@@ -67,12 +80,12 @@ def validate_since():
         
         since = request.headers.get('If-Unmodified-Since')
         if since and since != lastmod:
-            if (status >= 200 and status < 299) or status == 412:
+            if (status >= 200 and status <= 299) or status == 412:
                 raise cherrypy.HTTPError(412)
         
         since = request.headers.get('If-Modified-Since')
         if since and since == lastmod:
-            if (status >= 200 and status < 299) or status == 304:
+            if (status >= 200 and status <= 299) or status == 304:
                 if request.method in ("GET", "HEAD"):
                     raise cherrypy.HTTPRedirect([], 304)
                 else:

@@ -10,8 +10,12 @@ def setup_server():
             return "Oh wah ta goo Siam."
         resource.exposed = True
         
-        def fail(self):
-            raise cherrypy.HTTPError(412)
+        def fail(self, code):
+            code = int(code)
+            if 300 <= code <= 399:
+                raise cherrypy.HTTPRedirect([], code)
+            else:
+                raise cherrypy.HTTPError(code)
         fail.exposed = True
     
     conf = {'/': {'tools.etags.on': True,
@@ -28,16 +32,14 @@ class ETagTest(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Oh wah ta goo Siam.')
-        self.assertHeader('ETag')
-        for k, v in self.headers:
-            if k.lower() == 'etag':
-                etag = v
-                break
+        etag = self.assertHeader('ETag')
         
         # Test If-Match (both valid and invalid)
         self.getPage("/resource", headers=[('If-Match', etag)])
         self.assertStatus("200 OK")
         self.getPage("/resource", headers=[('If-Match', "*")])
+        self.assertStatus("200 OK")
+        self.getPage("/resource", headers=[('If-Match', "*")], method="POST")
         self.assertStatus("200 OK")
         self.getPage("/resource", headers=[('If-Match', "a bogus tag")])
         self.assertStatus("412 Precondition Failed")
@@ -52,9 +54,15 @@ class ETagTest(helper.CPWebCase):
         self.getPage("/resource", headers=[('If-None-Match', "a bogus tag")])
         self.assertStatus("200 OK")
         
-        # Test raising 412 in page handler
-        self.getPage("/fail", headers=[('If-Match', etag)])
+        # Test raising errors in page handler
+        self.getPage("/fail/412", headers=[('If-Match', etag)])
         self.assertStatus(412)
+        self.getPage("/fail/304", headers=[('If-Match', etag)])
+        self.assertStatus(304)
+        self.getPage("/fail/412", headers=[('If-None-Match', "*")])
+        self.assertStatus(412)
+        self.getPage("/fail/304", headers=[('If-None-Match', "*")])
+        self.assertStatus(304)
 
 
 if __name__ == "__main__":
