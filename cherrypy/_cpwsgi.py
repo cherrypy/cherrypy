@@ -18,7 +18,7 @@ class InternalRedirector(object):
     call will always be of HTTP method "GET", and therefore any params must
     be passed in the InternalRedirect object's query_string attribute.
     If you need something more complicated, make and raise your own
-    exception and your own WSGI middlewre to trap it. ;)
+    exception and your own WSGI middleware to trap it. ;)
     
     It would be a bad idea to raise InternalRedirect after you've already
     yielded response content, although an enterprising soul could choose
