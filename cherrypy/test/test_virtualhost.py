@@ -1,6 +1,8 @@
-
 from cherrypy.test import test
 test.prefer_parent_path()
+
+import os
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
 from cherrypy import _cpdispatch
@@ -34,6 +36,8 @@ def setup_server():
         def url(self):
             return cherrypy.url("nextpage")
         url.exposed = True
+        
+        static = cherrypy.tools.staticdir.handler(section='/static', dir=curdir)
     
     
     root = Root()
@@ -80,6 +84,11 @@ class VirtualHostTest(helper.CPWebCase):
         # Test that cherrypy.url uses the browser url, not the virtual url
         self.getPage("/url", [('Host', 'www.mydom2.com')])
         self.assertBody("%s://www.mydom2.com/nextpage" % self.scheme)
+    
+    def test_VHost_plus_Static(self):
+        self.getPage("/static/style.css", [('Host', 'www.mydom2.com')])
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/css')
 
 
 if __name__ == "__main__":
