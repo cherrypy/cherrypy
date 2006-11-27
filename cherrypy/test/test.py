@@ -12,7 +12,7 @@ called "helper.py" (in this folder); this module calls that as a library.
 
 import getopt
 import httplib
-import os, os.path
+import os
 localDir = os.path.dirname(__file__)
 serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
 import sys

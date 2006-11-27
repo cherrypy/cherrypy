@@ -1,3 +1,4 @@
+import httplib
 import os
 import sys
 import threading
@@ -293,12 +294,21 @@ def run(server, conf):
         cherrypy.engine.stop()
 
 
-def run_all(host, port):
+def run_all(host, port, ssl=False):
     conf = {'server.socket_host': host,
             'server.socket_port': port,
             'server.thread_pool': 10,
             'environment': "test_suite",
             }
+    
+    if ssl:
+        localDir = os.path.dirname(__file__)
+        serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
+        conf['server.ssl_certificate'] = serverpem
+        conf['server.ssl_private_key'] = serverpem
+        ServerStateTests.scheme == "https"
+        ServerStateTests.HTTP_CONN = httplib.HTTPSConnection
+    
     def _run(server):
         print
         print "Testing %s on %s:%s..." % (server, host, port)
@@ -324,19 +334,24 @@ if __name__ == "__main__":
     import sys
     host = '127.0.0.1'
     port = 8000
+    ssl = False
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
         if cmd in [prefix + atom for atom in ("?", "h", "help")
                    for prefix in ("", "-", "--", "\\")]:
             print
-            print "test_states.py -?             -> this help page"
-            print "test_states.py [host] [port]  -> run the tests on the given host/port"
-            print "test_states.py -localhosts [port]  -> try various localhost strings"
+            print "test_states.py -?                 -> this help page"
+            print "test_states.py [host] [port]      -> run the tests on the given host/port"
+            print "test_states.py -ssl [port]        -> run the tests using SSL on %s:port" % host
+            print "test_states.py -localhosts [port] -> try various localhost strings"
             sys.exit(0)
         if len(sys.argv) > 2:
             port = int(sys.argv[2])
         if cmd == "-localhosts":
             run_localhosts(port)
             sys.exit(0)
-        host = sys.argv[1].strip("\"'")
-    run_all(host, port)
+        if cmd == "-ssl":
+            ssl = True
+        else:
+            host = cmd.strip("\"'")
+    run_all(host, port, ssl)
