@@ -28,19 +28,19 @@ class Root:
             if cherrypy.response.timed_out:
                 cherrypy.response.timed_out = False
                 return "broken!"
-            time.sleep(0.1)
+            time.sleep(0.01)
     block_explicit.exposed = True
     
     def block_implicit(self):
-        raise cherrypy.InternalRedirect("/block_implicit")
+        time.sleep(0.5)
+        return "response.timeout = %s" % cherrypy.response.timeout
     block_implicit.exposed = True
-    block_implicit._cp_config = {'request.recursive_redirect': True}
 
 cherrypy.tree.mount(Root())
 cherrypy.config.update({
     'environment': 'test_suite',
-    'engine.deadlock_poll_freq': 1,
-    'response.timeout': 2,
+    'engine.deadlock_poll_freq': 0.1,
+    'response.timeout': 0.2,
     })
 
 class Dependency:
@@ -208,7 +208,7 @@ class ServerStateTests(helper.CPWebCase):
             self.assertBody("Hello World")
             # request.close is called async.
             while cherrypy.engine.servings:
-                time.sleep(0.1)
+                time.sleep(0.01)
             
             # Request a page that explicitly checks itself for deadlock.
             # The deadlock_timeout should be 2 secs.

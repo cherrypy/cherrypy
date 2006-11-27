@@ -63,9 +63,6 @@ class HookMap(dict):
     
     def run(self, point):
         """Execute all registered Hooks (callbacks) for the given point."""
-        if cherrypy.response.timed_out:
-            raise cherrypy.TimeoutError()
-        
         exc = None
         hooks = self[point]
         hooks.sort()
@@ -302,6 +299,9 @@ class Request(object):
         
         cherrypy.log.access()
         
+        if cherrypy.response.timed_out:
+            raise cherrypy.TimeoutError()
+        
         return cherrypy.response
     
     def respond(self, path_info):
@@ -309,9 +309,6 @@ class Request(object):
         try:
             try:
                 try:
-                    if cherrypy.response.timed_out:
-                        raise cherrypy.TimeoutError()
-                    
                     if self.app is None:
                         raise cherrypy.NotFound()
                     
@@ -433,6 +430,10 @@ class Request(object):
             # Post data is too big
             raise cherrypy.HTTPError(413)
         
+        # Note that, if headers['Content-Type'] is multipart/*,
+        # then forms.file will not exist; instead, each form[key]
+        # item will be its own file object, and will be handled
+        # by params_from_CGI_form.
         if forms.file:
             # request body was a content-type other than form params.
             self.body = forms.file
@@ -471,8 +472,6 @@ class Body(object):
             return obj._body
     
     def __set__(self, obj, value):
-        if cherrypy.response.timed_out:
-            raise cherrypy.TimeoutError()
         # Convert the given value to an iterable object.
         if isinstance(value, basestring):
             # strings get wrapped in a list because iterating over a single
@@ -527,9 +526,6 @@ class Response(object):
     
     def finalize(self):
         """Transform headers (and cookies) into cherrypy.response.header_list."""
-        if self.timed_out:
-            raise cherrypy.TimeoutError()
-        
         try:
             code, reason, _ = http.valid_status(self.status)
         except ValueError, x:
