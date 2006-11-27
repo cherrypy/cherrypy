@@ -21,9 +21,15 @@ class Root:
 
 
 if __name__ == '__main__':
-    cherrypy.config.update({"server.socket_host": sys.argv[1],
-                            "server.socket_port": int(sys.argv[2]),
-                            "log.screen": False,
-                            })
-    cherrypy.quickstart(Root())
-                        
+    conf = {"server.socket_host": sys.argv[1],
+            "server.socket_port": int(sys.argv[2]),
+            "log.screen": False,
+            }
+    
+    if sys.argv[3:] == ['-ssl']:
+        localDir = os.path.dirname(__file__)
+        serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
+        conf['server.ssl_certificate'] = serverpem
+        conf['server.ssl_private_key'] = serverpem
+    
+    cherrypy.quickstart(Root(), config={'global': conf})

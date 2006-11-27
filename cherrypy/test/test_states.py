@@ -235,8 +235,12 @@ class ServerStateTests(helper.CPWebCase):
             host = cherrypy.server.socket_host
             port = cherrypy.server.socket_port
             cherrypy._cpserver.wait_for_free_port(host, port)
-            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable,
-                      demoscript, host, str(port))
+            if self.scheme == "https":
+                os.spawnl(os.P_NOWAIT, sys.executable, sys.executable,
+                          demoscript, host, str(port), '-ssl')
+            else:
+                os.spawnl(os.P_NOWAIT, sys.executable, sys.executable,
+                          demoscript, host, str(port))
             cherrypy._cpserver.wait_for_occupied_port(host, port)
             
             try:
@@ -306,7 +310,7 @@ def run_all(host, port, ssl=False):
         serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
         conf['server.ssl_certificate'] = serverpem
         conf['server.ssl_private_key'] = serverpem
-        ServerStateTests.scheme == "https"
+        ServerStateTests.scheme = "https"
         ServerStateTests.HTTP_CONN = httplib.HTTPSConnection
     
     def _run(server):
