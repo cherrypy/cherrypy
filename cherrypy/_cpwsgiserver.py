@@ -790,14 +790,17 @@ class CherryPyWSGIServer(object):
                            ("S", cert.get_subject())]:
             # X509Name objects don't seem to have a way to get the
             # complete DN string. Use str() and slice it instead.
-            dn = str(dn)[18:-2]
+            dnstr = str(dn)[18:-2]
             
             wsgikey = 'SSL_SERVER_%s_DN' % prefix
-            self.ssl_environ[wsgikey] = dn
+            self.ssl_environ[wsgikey] = dnstr
             
-            for atom in dn.split("/"):
-                if atom:
-                    key, value = atom.split("=", 1)
+            # The DN should be of the form: /k1=v1/k2=v2, but we must allow
+            # for any value to contain slashes itself (in a URL).
+            while dnstr:
+                dnstr, value = dnstr.rsplit("=", 1)
+                dnstr, key = dnstr.rsplit("/", 1)
+                if key and value:
                     wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
                     self.ssl_environ[wsgikey] = value
 
