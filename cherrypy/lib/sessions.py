@@ -17,6 +17,7 @@ import sha
 import time
 import threading
 import types
+from warnings import warn
 
 import cherrypy
 from cherrypy.lib import http
@@ -225,6 +226,21 @@ class FileSession(Session):
     
     SESSION_PREFIX = 'session-'
     LOCK_SUFFIX = '.lock'
+    
+    def __init__(self, id=None, **kwargs):
+        Session.__init__(self, id, **kwargs)
+        
+        # Warn if any lock files exist at startup.
+        lockfiles = [fname for fname in os.listdir(self.storage_path)
+                     if (fname.startswith(self.SESSION_PREFIX)
+                         and fname.endswith(self.LOCK_SUFFIX))]
+        if lockfiles:
+            plural = ('', 's')[len(lockfiles) > 1]
+            warn("%s session lockfile%s found at startup. If you are "
+                 "only running one process, then you may need to "
+                 "manually delete the lockfiles found at %r."
+                 % (len(lockfiles), plural,
+                    os.path.abspath(self.storage_path)))
     
     def _get_file_path(self):
         return os.path.join(self.storage_path, self.SESSION_PREFIX + self.id)
