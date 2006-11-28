@@ -227,9 +227,7 @@ class FileSession(Session):
     SESSION_PREFIX = 'session-'
     LOCK_SUFFIX = '.lock'
     
-    def __init__(self, id=None, **kwargs):
-        Session.__init__(self, id, **kwargs)
-        
+    def setup(self):
         # Warn if any lock files exist at startup.
         lockfiles = [fname for fname in os.listdir(self.storage_path)
                      if (fname.startswith(self.SESSION_PREFIX)
@@ -426,9 +424,6 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     if name in request.cookie:
         id = request.cookie[name].value
     
-    if not hasattr(cherrypy, "session"):
-        cherrypy.session = cherrypy._ThreadLocalProxy('session', _def_session)
-    
     # Create and attach a new Session instance to cherrypy._serving.
     # It will possess a reference to (and lock, and lazily load)
     # the requested session data.
@@ -436,6 +431,11 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     kwargs['timeout'] = timeout
     kwargs['clean_freq'] = clean_freq
     cherrypy._serving.session = sess = globals()[storage_class](id, **kwargs)
+    
+    if not hasattr(cherrypy, "session"):
+        cherrypy.session = cherrypy._ThreadLocalProxy('session', _def_session)
+        if hasattr(sess, "setup"):
+            sess.setup()
     
     if locking == 'implicit':
         sess.acquire_lock()
