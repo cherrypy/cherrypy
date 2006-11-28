@@ -10,6 +10,7 @@ from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFoun
 from cherrypy._cperror import TimeoutError
 
 from cherrypy import _cprequest
+from cherrypy import _cpdispatch as dispatch
 from cherrypy import _cpengine
 engine = _cpengine.Engine()
 
