@@ -110,7 +110,13 @@ def unrepr(s):
     if not s:
         return s
     
-    import compiler
+    try:
+        import compiler
+    except ImportError:
+        # Fallback to eval when compiler package is not available,
+        # e.g. IronPython 1.0.
+        return eval(s)
+    
     p = compiler.parse("a=" + s)
     obj = p.getChildren()[1].getChildren()[0].getChildren()[1]
     

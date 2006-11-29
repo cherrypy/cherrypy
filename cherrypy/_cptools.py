@@ -52,6 +52,11 @@ class Tool(object):
                 setattr(self, arg, None)
         except (ImportError, AttributeError):
             pass
+        # IronPython 1.0 raises NotImplementedError because
+        # inspect.getargspec tries to access Python bytecode
+        # in co_code attribute.
+        except NotImplementedError:
+            pass
     
     def _merged_args(self, d=None):
         tm = cherrypy.request.toolmaps[self.namespace]

@@ -430,11 +430,7 @@ class HTTPConnection(object):
         # Copy the class environ into self.
         self.environ = self.environ.copy()
         
-        if type(sock) is socket.socket:
-            self.rfile = self.socket.makefile("r", self.rbufsize)
-            self.wfile = self.socket.makefile("w", self.wbufsize)
-        else:
-            # Assume it's an HTTPS socket wrapper
+        if SSL and isinstance(sock, SSL.ConnectionType):
             self.rfile = SSL_fileobject(sock, "r", self.rbufsize)
             self.wfile = SSL_fileobject(sock, "w", self.wbufsize)
             self.environ["wsgi.url_scheme"] = "https"
@@ -442,6 +438,9 @@ class HTTPConnection(object):
             sslenv = getattr(server, "ssl_environ")
             if sslenv:
                 self.environ.update(sslenv)
+        else:
+            self.rfile = self.socket.makefile("r", self.rbufsize)
+            self.wfile = self.socket.makefile("w", self.wbufsize)
         
         self.environ.update({"wsgi.input": self.rfile,
                              "SERVER_NAME": self.server.server_name,
@@ -789,7 +788,8 @@ class CherryPyWSGIServer(object):
         for prefix, dn in [("I", cert.get_issuer()),
                            ("S", cert.get_subject())]:
             # X509Name objects don't seem to have a way to get the
-            # complete DN string. Use str() and slice it instead.
+            # complete DN string. Use str() and slice it instead,
+            # because str(dn) == "<X509Name object '/C=US/ST=...'>"
             dnstr = str(dn)[18:-2]
             
             wsgikey = 'SSL_SERVER_%s_DN' % prefix
