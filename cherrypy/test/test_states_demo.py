@@ -32,4 +32,11 @@ if __name__ == '__main__':
         conf['server.ssl_certificate'] = serverpem
         conf['server.ssl_private_key'] = serverpem
     
-    cherrypy.quickstart(Root(), config={'global': conf})
+    # This is in a special order for a reason:
+    # it allows test_states to wait_for_occupied_port
+    # and then immediately call getPage without getting 503.
+    cherrypy.config.update(conf)
+    cherrypy.tree.mount(Root(), config={'global': conf})
+    cherrypy.engine.start(blocking=False)
+    cherrypy.server.quickstart()
+    cherrypy.engine.block()

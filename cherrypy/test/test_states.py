@@ -227,44 +227,59 @@ class ServerStateTests(helper.CPWebCase):
             cherrypy.server.stop()
     
     def test_4_Autoreload(self):
-        if self.server_class:
-            demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
-                                      "test_states_demo.py")
+        if not self.server_class:
+            print "skipped (no server) ",
+            return
+        
+        # Start the demo script in a new process
+        demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
+                                  "test_states_demo.py")
+        host = cherrypy.server.socket_host
+        port = cherrypy.server.socket_port
+        cherrypy._cpserver.wait_for_free_port(host, port)
+        
+        args = [sys.executable, demoscript, host, str(port)]
+        if self.scheme == "https":
+            args.append('-ssl')
+        pid = os.spawnl(os.P_NOWAIT, sys.executable, *args)
+        pid = str(pid)
+        cherrypy._cpserver.wait_for_occupied_port(host, port)
+        
+        try:
+            self.getPage("/pid")
+            assert self.body.isdigit(), self.body
+            pid = self.body
             
-            # Start the demo script in a new process
-            host = cherrypy.server.socket_host
-            port = cherrypy.server.socket_port
-            cherrypy._cpserver.wait_for_free_port(host, port)
-            if self.scheme == "https":
-                os.spawnl(os.P_NOWAIT, sys.executable, sys.executable,
-                          demoscript, host, str(port), '-ssl')
-            else:
-                os.spawnl(os.P_NOWAIT, sys.executable, sys.executable,
-                          demoscript, host, str(port))
+            # Give the autoreloader time to cache the file time.
+            time.sleep(2)
+            
+            # Touch the file
+            f = open(demoscript, 'ab')
+            f.write(" ")
+            f.close()
+            
+            # Give the autoreloader time to re-exec the process
+            time.sleep(2)
             cherrypy._cpserver.wait_for_occupied_port(host, port)
             
+            self.getPage("/pid")
+            assert self.body.isdigit(), self.body
+            self.assertNotEqual(self.body, pid)
+            pid = self.body
+        finally:
+            # Shut down the spawned process
+            self.getPage("/stop")
+        
+        try:
             try:
-                self.getPage("/pid")
-                pid = self.body
-                
-                # Give the autoreloader time to cache the file time.
-                time.sleep(2)
-                
-                # Touch the file
-                f = open(demoscript, 'ab')
-                f.write(" ")
-                f.close()
-                
-                # Give the autoreloader time to re-exec the process
-                time.sleep(2)
-                cherrypy._cpserver.wait_for_occupied_port(host, port)
-                
-                self.getPage("/pid")
-                self.assertNotEqual(self.body, pid)
-            finally:
-                # Shut down the spawned process
-                self.getPage("/stop")
-
+                # Mac, UNIX
+                print os.wait()
+            except AttributeError:
+                # Windows
+                print os.waitpid(int(pid), 0)
+        except OSError, x:
+            if x.args != (10, 'No child processes'):
+                raise
 
 db_connection = None
 
