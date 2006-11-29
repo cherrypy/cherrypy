@@ -23,7 +23,7 @@ class Application(object):
     """
     
     def __init__(self, root, script_name=""):
-        self.log = _cplogging.LogManager(id(self))
+        self.log = _cplogging.LogManager(id(self), cherrypy.log.logger_root)
         self.root = root
         self.script_name = script_name
         self.wsgiapp = _cpwsgi.CPWSGIApp(self)

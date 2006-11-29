@@ -17,14 +17,15 @@ class LogManager(object):
     error_log = None
     access_log = None
     
-    def __init__(self, appid=None):
+    def __init__(self, appid=None, logger_root="cherrypy"):
+        self.logger_root = logger_root
         self.appid = appid
         if appid is None:
-            self.error_log = logging.getLogger("cherrypy.error")
-            self.access_log = logging.getLogger("cherrypy.access")
+            self.error_log = logging.getLogger("%s.error" % logger_root)
+            self.access_log = logging.getLogger("%s.access" % logger_root)
         else:
-            self.error_log = logging.getLogger("cherrypy.error.%s" % appid)
-            self.access_log = logging.getLogger("cherrypy.access.%s" % appid)
+            self.error_log = logging.getLogger("%s.error.%s" % (logger_root, appid))
+            self.access_log = logging.getLogger("%s.access.%s" % (logger_root, appid))
         self.error_log.setLevel(logging.DEBUG)
         self.access_log.setLevel(logging.INFO)
     
