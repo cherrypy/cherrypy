@@ -74,7 +74,7 @@ class Server(object):
             httpserver = self.instance
         if httpserver is None:
             from cherrypy import _cpwsgi
-            httpserver = _cpwsgi.WSGIServer()
+            httpserver = _cpwsgi.CPWSGIServer()
         if isinstance(httpserver, basestring):
             httpserver = attributes(httpserver)()
         

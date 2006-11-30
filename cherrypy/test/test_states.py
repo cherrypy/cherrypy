@@ -332,7 +332,7 @@ def run_all(host, port, ssl=False):
         print
         print "Testing %s on %s:%s..." % (server, host, port)
         run(server, conf)
-    _run("cherrypy._cpwsgi.WSGIServer")
+    _run("cherrypy._cpwsgi.CPWSGIServer")
 
 
 def run_localhosts(port):
@@ -346,7 +346,7 @@ def run_localhosts(port):
             print
             print "Testing %s on %s:%s..." % (server, host, port)
             run(server, conf)
-        _run("cherrypy._cpwsgi.WSGIServer")
+        _run("cherrypy._cpwsgi.CPWSGIServer")
 
 
 if __name__ == "__main__":

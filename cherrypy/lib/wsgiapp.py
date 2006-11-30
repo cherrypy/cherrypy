@@ -12,7 +12,7 @@ def start_response(status, response_headers, exc_info=None):
     cherrypy.response.headers.update(headers_dict)
 
 def make_environ():
-    """grabbed some of below from _cpwsgiserver.py
+    """grabbed some of below from wsgiserver.py
     
     for hosting WSGI apps in non-WSGI environments (yikes!)
     """

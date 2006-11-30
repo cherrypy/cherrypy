@@ -82,7 +82,7 @@ class TestHarness(object):
 
 
 class CommandLineParser(object):
-    available_servers = {'wsgi': "cherrypy._cpwsgi.WSGIServer",
+    available_servers = {'wsgi': "cherrypy._cpwsgi.CPWSGIServer",
                          'cpmodpy': "cpmodpy",
                          'modpygw': "modpygw",
                          }
