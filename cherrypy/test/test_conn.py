@@ -5,6 +5,8 @@ import httplib
 import socket
 import sys
 import time
+timeout = 0.1
+
 
 import cherrypy
 from cherrypy.test import webtest
@@ -129,7 +131,7 @@ class ConnectionTests(helper.CPWebCase):
             return
         
         try:
-            httpserver.timeout = 0.1
+            httpserver.timeout = timeout
             self.PROTOCOL = "HTTP/1.1"
             
             # Make an initial request
@@ -159,7 +161,7 @@ class ConnectionTests(helper.CPWebCase):
             self.assertBody("Hello, world!")
             
             # Wait for our socket timeout
-            time.sleep(0.2)
+            time.sleep(timeout * 2)
             
             # Make another request on the same socket, which should error
             conn._output('GET /hello HTTP/1.1')
