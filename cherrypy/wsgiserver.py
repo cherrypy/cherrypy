@@ -253,7 +253,7 @@ class HTTPRequest(object):
         cl = 0
         data = StringIO.StringIO()
         while True:
-            line = self.rfile.readline().strip().split(" ", 1)
+            line = self.rfile.readline().strip().split(";", 1)
             chunk_size = int(line.pop(0), 16)
             if chunk_size <= 0:
                 break

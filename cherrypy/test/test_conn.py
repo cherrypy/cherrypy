@@ -353,8 +353,8 @@ class ConnectionTests(helper.CPWebCase):
         else:
             conn = httplib.HTTPConnection(self.HOST, self.PORT)
         
-        # Try a normal chunked request
-        body = ("8\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
+        # Try a normal chunked request (with extensions)
+        body = ("8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
                 "Content-Type: application/x-json\r\n\r\n")
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)
