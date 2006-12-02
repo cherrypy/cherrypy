@@ -25,12 +25,12 @@ def setup_server():
     def fetch_users():
         return {'test': 'test'}
 
-    conf = {'/digest': {'tools.digestauth.on': True,
-                        'tools.digestauth.realm': 'localhost',
-                        'tools.digestauth.users': fetch_users},
-            '/basic': {'tools.basicauth.on': True,
-                       'tools.basicauth.realm': 'localhost',
-                       'tools.basicauth.users': {'test': md5.new('test').hexdigest()}}}
+    conf = {'/digest': {'tools.digest_auth.on': True,
+                        'tools.digest_auth.realm': 'localhost',
+                        'tools.digest_auth.users': fetch_users},
+            '/basic': {'tools.basic_auth.on': True,
+                       'tools.basic_auth.realm': 'localhost',
+                       'tools.basic_auth.users': {'test': md5.new('test').hexdigest()}}}
     root = Root()
     root.digest = DigestProtected()
     root.basic = BasicProtected()
