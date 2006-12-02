@@ -362,6 +362,7 @@ def run():
         'test_session',
         'test_sessionauthenticate',
 ##        'test_states',
+        'test_tidy',
         'test_xmlrpc',
         'test_wsgiapps',
         'test_wsgi_ns',
