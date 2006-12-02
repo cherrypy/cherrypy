@@ -103,7 +103,7 @@ def setup_server():
     
     class DefNoIndex:
         def default(self, *args):
-            return "defnoindex:" + repr(args)
+            raise cherrypy.HTTPRedirect("contact")
         default.exposed = True
     
     # MethodDispatcher code
@@ -195,10 +195,16 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
             
             # Test *vpath when default() is defined but not index()
+            # This also tests HTTPRedirect with default.
             self.getPage("/defnoindex")
-            self.assertBody("defnoindex:()")
+            self.assertStatus((302, 303))
+            self.assertHeader('Location', '%s/contact' % self.base())
             self.getPage("/defnoindex/")
-            self.assertBody("defnoindex:()")
+            self.assertStatus((302, 303))
+            self.assertHeader('Location', '%s/defnoindex/contact' % self.base())
+            self.getPage("/defnoindex/page")
+            self.assertStatus((302, 303))
+            self.assertHeader('Location', '%s/defnoindex/contact' % self.base())
             
             self.getPage("/redirect")
             self.assertStatus('302 Found')
