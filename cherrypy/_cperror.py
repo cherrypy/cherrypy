@@ -29,7 +29,7 @@ class InternalRedirect(CherryPyException):
         #  1. a URL relative to root (e.g. "/dummy")
         #  2. a URL relative to the current path
         # Note that any query string will be discarded.
-        path = _urljoin(cherrypy.request.path_info, path)
+        path = _urljoin(request.path_info, path)
         
         # Set a 'path' member attribute so that code which traps this
         # error can have access to it.
@@ -69,7 +69,7 @@ class HTTPRedirect(CherryPyException):
         # browser support for 301 is quite messy. Do 302/303 instead. See
         # http://ppewww.ph.gla.ac.uk/~flavell/www/post-redirect.html
         if status is None:
-            if cherrypy.request.protocol >= (1, 1):
+            if request.protocol >= (1, 1):
                 status = 303
             else:
                 status = 302
@@ -272,6 +272,8 @@ def get_error_page(status, **kwargs):
             kwargs[k] = _escape(kwargs[k])
     
     template = _HTTPErrorTemplate
+    
+    # Replace the default template with a custom one?
     error_page_file = cherrypy.request.error_page.get(code, '')
     if error_page_file:
         try:

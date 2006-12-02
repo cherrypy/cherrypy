@@ -2,8 +2,6 @@
 
 __version__ = '3.0.0RC1'
 
-import os as _os
-_localdir = _os.path.dirname(__file__)
 from urlparse import urljoin as _urljoin
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, CherryPyException

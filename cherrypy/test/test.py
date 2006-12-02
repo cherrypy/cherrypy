@@ -263,7 +263,7 @@ class CommandLineParser(object):
         for morf in morfs:
             sys.stdout.write(".")
             sys.stdout.flush()
-            name = os.path.split(morf)[1]
+##            name = os.path.split(morf)[1]
             if morf.find('test') != -1:
                 continue
             try:

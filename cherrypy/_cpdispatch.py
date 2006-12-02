@@ -199,8 +199,8 @@ class MethodDispatcher(Dispatcher):
 
 class WSGIEnvProxy(object):
     
-    def __getattr__(self, key, default=None):
-        return getattr(cherrypy.request.wsgi_environ, key, default)
+    def __getattr__(self, key):
+        return getattr(cherrypy.request.wsgi_environ, key)
 
 
 class RoutesDispatcher(object):

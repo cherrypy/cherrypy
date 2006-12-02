@@ -196,8 +196,7 @@ class HTTPRequest(object):
             if method in ("POST", "PUT") and cl is None:
                 # No Content-Length header supplied. This will hang
                 # cgi.FieldStorage, since it cannot determine when to
-                # stop reading from the socket. Until we handle chunked
-                # encoding, always respond with 411 Length Required.
+                # stop reading from the socket.
                 # See http://www.cherrypy.org/ticket/493.
                 self.simple_response("411 Length Required")
                 return
@@ -456,7 +455,7 @@ class HTTPConnection(object):
             self.wfile = SSL_fileobject(sock, "w", self.wbufsize)
             self.environ["wsgi.url_scheme"] = "https"
             self.environ["HTTPS"] = "on"
-            sslenv = getattr(server, "ssl_environ")
+            sslenv = getattr(server, "ssl_environ", None)
             if sslenv:
                 self.environ.update(sslenv)
         else:
