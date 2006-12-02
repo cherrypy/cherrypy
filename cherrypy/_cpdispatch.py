@@ -131,7 +131,8 @@ class Dispatcher(object):
                     conf = getattr(defhandler, "_cp_config", {})
                     object_trail.insert(i+1, ["default", defhandler, conf, curpath])
                     request.config = set_conf()
-                    request.is_index = False
+                    # See http://www.cherrypy.org/ticket/613
+                    request.is_index = path.endswith("/")
                     return defhandler, names[i:-1]
             
             # Uncomment the next line to restrict positional params to "default".
