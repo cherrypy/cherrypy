@@ -61,6 +61,7 @@ class HTTPRequest(object):
         self.outheaders = []
         self.sent_headers = False
         self.close_connection = False
+        self.chunked_write = False
     
     def parse_request(self):
         # HTTP/1.1 connections are persistent by default. If a client
@@ -275,10 +276,21 @@ class HTTPRequest(object):
         return True
     
     def respond(self):
+        wfile = self.connection.wfile
         response = self.wsgi_app(self.environ, self.start_response)
         try:
             for line in response:
-                self.write(line)
+                if not self.sent_headers:
+                    self.sent_headers = True
+                    self.send_headers()
+                if self.chunked_write:
+                    wfile.write(hex(len(line))[2:])
+                    wfile.write("\r\n")
+                    wfile.write(line)
+                    wfile.write("\r\n")
+                else:
+                    wfile.write(line)
+                wfile.flush()
         finally:
             if hasattr(response, "close"):
                 response.close()
@@ -286,6 +298,9 @@ class HTTPRequest(object):
                 and not self.connection.server.interrupt):
             self.sent_headers = True
             self.send_headers()
+        if self.chunked_write:
+            wfile.write("0\r\n\r\n")
+            wfile.flush()
     
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
@@ -326,21 +341,27 @@ class HTTPRequest(object):
         self.connection.wfile.flush()
     
     def send_headers(self):
-        hkeys = [key.lower() for (key,value) in self.outheaders]
-        
+        hkeys = [key.lower() for (key, value) in self.outheaders]
         status = int(self.status[:3])
-        if (self.response_protocol == 'HTTP/1.1'
-            and (# Request Entity Too Large. Close conn to avoid garbage.
-                status == 413
-                # No Content-Length. Close conn to determine transfer-length.
-                or ("content-length" not in hkeys and
-                    # "All 1xx (informational), 204 (no content),
-                    # and 304 (not modified) responses MUST NOT
-                    # include a message-body."
-                    status >= 200 and status not in (204, 304)))):
-            if "connection" not in hkeys:
-                self.outheaders.append(("Connection", "close"))
-            self.close_connection = True
+        
+        if self.response_protocol == 'HTTP/1.1':
+            if status == 413:
+                # Request Entity Too Large. Close conn to avoid garbage.
+                self.close_connection = True
+            elif "content-length" not in hkeys:
+                if status in (200, 203, 206):
+                    # Use the chunked transfer-coding
+                    self.chunked_write = True
+                    self.outheaders.append(("Transfer-Encoding", "chunked"))
+                # "All 1xx (informational), 204 (no content),
+                # and 304 (not modified) responses MUST NOT
+                # include a message-body."
+                elif status >= 200 and status not in (204, 205, 304):
+                    # Close conn to determine transfer-length.
+                    self.close_connection = True
+        
+        if self.close_connection and "connection" not in hkeys:
+            self.outheaders.append(("Connection", "close"))
         
         if "date" not in hkeys:
             self.outheaders.append(("Date", rfc822.formatdate()))

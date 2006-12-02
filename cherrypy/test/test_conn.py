@@ -28,9 +28,15 @@ def setup_server():
             return "Hello, world!"
         hello.exposed = True
         
-        def stream(self):
-            for x in xrange(10):
-                yield str(x)
+        def stream(self, set_cl=False):
+            if set_cl:
+                cherrypy.response.headers['Content-Length'] = 10
+            
+            def content():
+                for x in xrange(10):
+                    yield str(x)
+            
+            return content()
         stream.exposed = True
         stream._cp_config = {'response.stream': True}
         
@@ -56,6 +62,17 @@ from cherrypy.test import helper
 
 class ConnectionTests(helper.CPWebCase):
     
+    def connect_persistent(self, auto_open=False):
+        """Set our HTTP_CONN to an instance so it persists between requests."""
+        if self.scheme == "https":
+            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
+        else:
+            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
+        # Automatically re-connect?
+        self.HTTP_CONN.auto_open = auto_open
+        self.HTTP_CONN.connect()
+        return self.HTTP_CONN
+    
     def test_HTTP11(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
             print "skipped ",
@@ -63,14 +80,7 @@ class ConnectionTests(helper.CPWebCase):
         
         self.PROTOCOL = "HTTP/1.1"
         
-        # Set our HTTP_CONN to an instance so it persists between requests.
-        if self.scheme == "https":
-            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
-        else:
-            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
-        # Don't automatically re-connect
-        self.HTTP_CONN.auto_open = False
-        self.HTTP_CONN.connect()
+        self.connect_persistent()
         
         # Make the first request and assert there's no "Connection: close".
         self.getPage("/")
@@ -84,31 +94,7 @@ class ConnectionTests(helper.CPWebCase):
         self.assertBody(pov)
         self.assertNoHeader("Connection")
         
-        # Make another, streamed request on the same connection.
-        self.getPage("/stream")
-        self.assertStatus('200 OK')
-        self.assertBody('0123456789')
-        self.assertNoHeader("Content-Length")
-        # Streamed output will either close the connection, or use
-        # chunked encoding, to determine transfer-length.
-        chunked_response = False
-        for k, v in self.headers:
-            if k.lower() == "transfer-encoding":
-                if str(v) == "chunked":
-                    chunked_response = True
-        if not chunked_response:
-            self.assertHeader("Connection", "close")
-            
-            # Make another request on the same connection, which should error.
-            self.assertRaises(httplib.NotConnected, self.getPage, "/")
-        
         # Test client-side close.
-        if self.scheme == "https":
-            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
-        else:
-            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
-        self.HTTP_CONN.auto_open = False
-        self.HTTP_CONN.connect()
         self.getPage("/page2", headers=[("Connection", "close")])
         self.assertStatus('200 OK')
         self.assertBody(pov)
@@ -116,6 +102,59 @@ class ConnectionTests(helper.CPWebCase):
         
         # Make another request on the same connection, which should error.
         self.assertRaises(httplib.NotConnected, self.getPage, "/")
+    
+    def test_Streaming_no_len(self):
+        self._streaming(set_cl=False)
+    
+    def test_Streaming_with_len(self):
+        self._streaming(set_cl=True)
+    
+    def _streaming(self, set_cl):
+        if cherrypy.server.protocol_version != "HTTP/1.1":
+            print "skipped ",
+            return
+        
+        self.PROTOCOL = "HTTP/1.1"
+        
+        self.connect_persistent()
+        
+        # Make the first request and assert there's no "Connection: close".
+        self.getPage("/")
+        self.assertStatus('200 OK')
+        self.assertBody(pov)
+        self.assertNoHeader("Connection")
+        
+        # Make another, streamed request on the same connection.
+        if set_cl:
+            # When a Content-Length is provided, the content should stream
+            # without closing the connection.
+            self.getPage("/stream?set_cl=Yes")
+            self.assertHeader("Content-Length")
+            self.assertNoHeader("Connection", "close")
+            self.assertNoHeader("Transfer-Encoding")
+        else:
+            # When no Content-Length response header is provided,
+            # streamed output will either close the connection, or use
+            # chunked encoding, to determine transfer-length.
+            self.getPage("/stream")
+            self.assertNoHeader("Content-Length")
+            
+            chunked_response = False
+            for k, v in self.headers:
+                if k.lower() == "transfer-encoding":
+                    if str(v) == "chunked":
+                        chunked_response = True
+            
+            if chunked_response:
+                self.assertNoHeader("Connection", "close")
+            else:
+                self.assertHeader("Connection", "close")
+                
+                # Make another request on the same connection, which should error.
+                self.assertRaises(httplib.NotConnected, self.getPage, "/")
+        
+        self.assertStatus('200 OK')
+        self.assertBody('0123456789')
     
     def test_HTTP11_Timeout(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
@@ -135,12 +174,7 @@ class ConnectionTests(helper.CPWebCase):
             self.PROTOCOL = "HTTP/1.1"
             
             # Make an initial request
-            if self.scheme == "https":
-                conn = httplib.HTTPSConnection(self.HOST, self.PORT)
-            else:
-                conn = httplib.HTTPConnection(self.HOST, self.PORT)
-            conn.auto_open = False
-            conn.connect()
+            conn = self.connect_persistent()
             conn.putrequest("GET", "/", skip_host=True)
             conn.putheader("Host", self.HOST)
             conn.endheaders()
@@ -183,12 +217,7 @@ class ConnectionTests(helper.CPWebCase):
             conn.close()
             
             # Make another request on a new socket, which should work
-            if self.scheme == "https":
-                conn = httplib.HTTPSConnection(self.HOST, self.PORT)
-            else:
-                conn = httplib.HTTPConnection(self.HOST, self.PORT)
-            conn.auto_open = False
-            conn.connect()
+            conn = self.connect_persistent()
             conn.putrequest("GET", "/", skip_host=True)
             conn.putheader("Host", self.HOST)
             conn.endheaders()
@@ -209,12 +238,7 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Test pipelining. httplib doesn't support this directly.
-        if self.scheme == "https":
-            conn = httplib.HTTPSConnection(self.HOST, self.PORT)
-        else:
-            conn = httplib.HTTPConnection(self.HOST, self.PORT)
-        conn.auto_open = False
-        conn.connect()
+        conn = self.connect_persistent()
         
         # Put request 1
         conn.putrequest("GET", "/hello", skip_host=True)
@@ -250,12 +274,7 @@ class ConnectionTests(helper.CPWebCase):
         
         self.PROTOCOL = "HTTP/1.1"
         
-        if self.scheme == "https":
-            conn = httplib.HTTPSConnection(self.HOST, self.PORT)
-        else:
-            conn = httplib.HTTPConnection(self.HOST, self.PORT)
-        conn.auto_open = False
-        conn.connect()
+        conn = self.connect_persistent()
         
         # Try a page without an Expect request header first.
         # Note that httplib's response.begin automatically ignores
@@ -306,13 +325,7 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Set our HTTP_CONN to an instance so it persists between requests.
-        if self.scheme == "https":
-            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
-        else:
-            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
-        # Don't automatically re-connect
-        self.HTTP_CONN.auto_open = False
-        self.HTTP_CONN.connect()
+        self.connect_persistent()
         
         # Make the first request and assert there's no "Connection: close".
         self.getPage("/")
@@ -401,12 +414,7 @@ class ConnectionTests(helper.CPWebCase):
 ##        self.assertNoHeader("Connection")
         
         # Test a keep-alive HTTP/1.0 request.
-        if self.scheme == "https":
-            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
-        else:
-            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
-        self.HTTP_CONN.auto_open = False
-        self.HTTP_CONN.connect()
+        self.connect_persistent()
         
         self.getPage("/page3", headers=[("Connection", "Keep-Alive")])
         self.assertStatus('200 OK')
