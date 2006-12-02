@@ -309,13 +309,13 @@ def trailing_slash(missing=True, extra=False):
     
     if request.is_index is True:
         if missing:
-            if pi[-1:] != '/':
+            if not pi.endswith('/'):
                 new_url = cherrypy.url(pi + '/', request.query_string)
                 raise cherrypy.HTTPRedirect(new_url)
     elif request.is_index is False:
         if extra:
             # If pi == '/', don't redirect to ''!
-            if pi[-1:] == '/' and pi != '/':
+            if pi.endswith('/') and pi != '/':
                 new_url = cherrypy.url(pi[:-1], request.query_string)
                 raise cherrypy.HTTPRedirect(new_url)
 
