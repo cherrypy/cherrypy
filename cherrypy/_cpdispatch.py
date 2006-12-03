@@ -349,6 +349,14 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domai
         if prefix:
             path_info = http.urljoin(prefix, path_info)
         
-        return next_dispatcher(path_info)
+        result = next_dispatcher(path_info)
+        
+        # Touch up staticdir config. See http://www.cherrypy.org/ticket/614.
+        section = cherrypy.request.config.get('tools.staticdir.section')
+        if section:
+            section = section[len(prefix):]
+            cherrypy.request.config['tools.staticdir.section'] = section
+        
+        return result
     return vhost_dispatch
 

@@ -5,7 +5,6 @@ import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
-from cherrypy import _cpdispatch
 
 def setup_server():
     class Root:
@@ -37,19 +36,25 @@ def setup_server():
             return cherrypy.url("nextpage")
         url.exposed = True
         
+        # Test static as a handler (section must NOT include vhost prefix)
         static = cherrypy.tools.staticdir.handler(section='/static', dir=curdir)
-    
     
     root = Root()
     root.mydom2 = VHost("Domain 2")
     root.mydom3 = VHost("Domain 3")
-    cherrypy.tree.mount(root, config={'/': {
-        'request.dispatch': _cpdispatch.VirtualHost(
-            **{'www.mydom2.com': '/mydom2',
+    hostmap = {'www.mydom2.com': '/mydom2',
                'www.mydom3.com': '/mydom3',
                'www.mydom4.com': '/dom4',
-               }),
-        }})
+               }
+    cherrypy.tree.mount(root, config={
+        '/': {'request.dispatch': cherrypy.dispatch.VirtualHost(**hostmap)},
+        # Test static in config (section must include vhost prefix)
+        '/mydom2/static2': {'tools.staticdir.on': True,
+                            'tools.staticdir.root': curdir,
+                            'tools.staticdir.dir': 'static',
+                            'tools.staticdir.index': 'index.html',
+                            },
+        })
     
     cherrypy.config.update({'environment': 'test_suite'})
 
@@ -86,9 +91,23 @@ class VirtualHostTest(helper.CPWebCase):
         self.assertBody("%s://www.mydom2.com/nextpage" % self.scheme)
     
     def test_VHost_plus_Static(self):
+        # Test static as a handler
         self.getPage("/static/style.css", [('Host', 'www.mydom2.com')])
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/css')
+        
+        # Test static in config
+        self.getPage("/static2/dirback.jpg", [('Host', 'www.mydom2.com')])
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'image/jpeg')
+        
+        # Test static config with "index" arg
+        self.getPage("/static2/", [('Host', 'www.mydom2.com')])
+        self.assertStatus('200 OK')
+        self.assertBody('Hello, world\r\n')
+        self.getPage("/static2", [('Host', 'www.mydom2.com')])
+        self.assertStatus('200 OK')
+        self.assertBody('Hello, world\r\n')
 
 
 if __name__ == "__main__":

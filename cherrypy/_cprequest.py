@@ -178,6 +178,7 @@ class Request(object):
                   "request": request_namespace,
                   "response": response_namespace,
                   "error_page": error_page_namespace,
+                  # "tools": See _cptools.Toolbox
                   }
     
     def __init__(self, local_host, remote_host, scheme="http",
