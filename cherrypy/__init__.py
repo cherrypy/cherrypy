@@ -7,8 +7,8 @@ from urlparse import urljoin as _urljoin
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect, NotFound, CherryPyException
 from cherrypy._cperror import TimeoutError
 
-from cherrypy import _cprequest
 from cherrypy import _cpdispatch as dispatch
+from cherrypy import _cprequest
 from cherrypy import _cpengine
 engine = _cpengine.Engine()
 

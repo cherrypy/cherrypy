@@ -22,7 +22,7 @@ def setup_server():
             self.population = kwargs['pop']
             return "OK"
     
-    d = cherrypy._cprequest.RoutesDispatcher()
+    d = cherrypy.dispatch.RoutesDispatcher()
     d.connect(name='hounslow', route='hounslow', controller=City('Hounslow'))
     d.connect(name='surbiton', route='surbiton', controller=City('Surbiton'),
               action='index', conditions=dict(method=['GET']))

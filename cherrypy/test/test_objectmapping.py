@@ -133,7 +133,7 @@ def setup_server():
     Root.collection = Collection()
     
     for url in script_names:
-        d = cherrypy._cprequest.MethodDispatcher()
+        d = cherrypy.dispatch.MethodDispatcher()
         conf = {'/': {'user': (url or "/").split("/")[-2]},
                 '/bymethod': {'request.dispatch': d},
                 '/collection': {'request.dispatch': d},

@@ -7,7 +7,6 @@ import time
 import types
 
 import cherrypy
-from cherrypy._cpdispatch import *
 from cherrypy import _cpcgifs
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import http
@@ -158,7 +157,7 @@ class Request(object):
     body = None
     
     # Dispatch attributes
-    dispatch = Dispatcher()
+    dispatch = cherrypy.dispatch.Dispatcher()
     script_name = ""
     path_info = "/"
     app = None
