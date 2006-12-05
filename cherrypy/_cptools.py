@@ -290,15 +290,13 @@ class Toolbox(object):
         object.__setattr__(self, name, value)
     
     def __enter__(self):
-        cherrypy.request.toolmaps[self.namespace] = {}
-        return self
-    
-    def __call__(self, k, v):
         """Populate request.toolmaps from tools specified in config."""
-        toolname, arg = k.split(".", 1)
-        map = cherrypy.request.toolmaps[self.namespace]
-        bucket = map.setdefault(toolname, {})
-        bucket[arg] = v
+        cherrypy.request.toolmaps[self.namespace] = map = {}
+        def populate(k, v):
+            toolname, arg = k.split(".", 1)
+            bucket = map.setdefault(toolname, {})
+            bucket[arg] = v
+        return populate
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Run tool._setup() for each tool in our toolmap."""
