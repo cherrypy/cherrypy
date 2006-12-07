@@ -320,6 +320,9 @@ def run_all(host, port, ssl=False):
             'environment': "test_suite",
             }
     
+    if host:
+        ServerStateTests.HOST = host
+    
     if ssl:
         localDir = os.path.dirname(__file__)
         serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
