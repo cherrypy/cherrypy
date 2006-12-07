@@ -410,7 +410,26 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
          clean_freq=5, **kwargs):
     """Initialize session object (using cookies).
     
-    Any additional kwargs will be bound to the new Session instance.
+    storage_type: one of 'ram', 'file', 'postgresql'. This will be used
+        to look up the corresponding class in cherrypy.lib.sessions
+        globals. For example, 'file' will use the FileSession class.
+    path: the 'path' value to stick in the response cookie metadata.
+    path_header: if 'path' is None (the default), then the response
+        cookie 'path' will be pulled from request.headers[path_header].
+    name: the name of the cookie.
+    timeout: the expiration timeout for the cookie.
+    domain: the cookie domain.
+    secure: if False (the default) the cookie 'secure' value will not
+        be set. If True, the cookie 'secure' value will be set (to 1).
+    locking: If 'implicit' (the default), this function will lock the
+        session for you. If 'explicit' (or any other value), you need
+        to call cherrypy.session.acquire_lock() yourself before
+        using session data.
+    clean_freq (minutes): the poll rate for expired session cleanup.
+    
+    Any additional kwargs will be bound to the new Session instance,
+    and may be specific to the storage type. See the subclass of Session
+    you're using for more information.
     """
     
     request = cherrypy.request
