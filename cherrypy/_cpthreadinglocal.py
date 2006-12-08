@@ -142,7 +142,7 @@ class _localbase(object):
 
     def __new__(cls, *args, **kw):
         self = object.__new__(cls)
-        key = '_local__key', 'thread.local.' + str(id(self))
+        key = 'thread.local.' + str(id(self))
         object.__setattr__(self, '_local__key', key)
         object.__setattr__(self, '_local__args', (args, kw))
         object.__setattr__(self, '_local__lock', RLock())
