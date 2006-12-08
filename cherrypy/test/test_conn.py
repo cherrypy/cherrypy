@@ -62,17 +62,6 @@ from cherrypy.test import helper
 
 class ConnectionTests(helper.CPWebCase):
     
-    def connect_persistent(self, auto_open=False):
-        """Set our HTTP_CONN to an instance so it persists between requests."""
-        if self.scheme == "https":
-            self.HTTP_CONN = httplib.HTTPSConnection(self.HOST, self.PORT)
-        else:
-            self.HTTP_CONN = httplib.HTTPConnection(self.HOST, self.PORT)
-        # Automatically re-connect?
-        self.HTTP_CONN.auto_open = auto_open
-        self.HTTP_CONN.connect()
-        return self.HTTP_CONN
-    
     def test_HTTP11(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
             print "skipped ",
@@ -80,7 +69,7 @@ class ConnectionTests(helper.CPWebCase):
         
         self.PROTOCOL = "HTTP/1.1"
         
-        self.connect_persistent()
+        self.persistent = True
         
         # Make the first request and assert there's no "Connection: close".
         self.getPage("/")
@@ -116,7 +105,7 @@ class ConnectionTests(helper.CPWebCase):
         
         self.PROTOCOL = "HTTP/1.1"
         
-        self.connect_persistent()
+        self.persistent = True
         
         # Make the first request and assert there's no "Connection: close".
         self.getPage("/")
@@ -174,7 +163,8 @@ class ConnectionTests(helper.CPWebCase):
             self.PROTOCOL = "HTTP/1.1"
             
             # Make an initial request
-            conn = self.connect_persistent()
+            self.persistent = True
+            conn = self.HTTP_CONN
             conn.putrequest("GET", "/", skip_host=True)
             conn.putheader("Host", self.HOST)
             conn.endheaders()
@@ -217,7 +207,8 @@ class ConnectionTests(helper.CPWebCase):
             conn.close()
             
             # Make another request on a new socket, which should work
-            conn = self.connect_persistent()
+            self.persistent = True
+            conn = self.HTTP_CONN
             conn.putrequest("GET", "/", skip_host=True)
             conn.putheader("Host", self.HOST)
             conn.endheaders()
@@ -238,7 +229,8 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Test pipelining. httplib doesn't support this directly.
-        conn = self.connect_persistent()
+        self.persistent = True
+        conn = self.HTTP_CONN
         
         # Put request 1
         conn.putrequest("GET", "/hello", skip_host=True)
@@ -274,7 +266,8 @@ class ConnectionTests(helper.CPWebCase):
         
         self.PROTOCOL = "HTTP/1.1"
         
-        conn = self.connect_persistent()
+        self.persistent = True
+        conn = self.HTTP_CONN
         
         # Try a page without an Expect request header first.
         # Note that httplib's response.begin automatically ignores
@@ -325,7 +318,8 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Set our HTTP_CONN to an instance so it persists between requests.
-        self.connect_persistent()
+        self.persistent = True
+        conn = self.HTTP_CONN
         
         # Make the first request and assert there's no "Connection: close".
         self.getPage("/")
@@ -361,10 +355,8 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         # Set our HTTP_CONN to an instance so it persists between requests.
-        if self.scheme == "https":
-            conn = httplib.HTTPSConnection(self.HOST, self.PORT)
-        else:
-            conn = httplib.HTTPConnection(self.HOST, self.PORT)
+        self.persistent = True
+        conn = self.HTTP_CONN
         
         # Try a normal chunked request (with extensions)
         body = ("8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
@@ -414,7 +406,7 @@ class ConnectionTests(helper.CPWebCase):
 ##        self.assertNoHeader("Connection")
         
         # Test a keep-alive HTTP/1.0 request.
-        self.connect_persistent()
+        self.persistent = True
         
         self.getPage("/page3", headers=[("Connection", "Keep-Alive")])
         self.assertStatus('200 OK')

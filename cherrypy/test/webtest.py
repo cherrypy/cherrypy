@@ -142,6 +142,40 @@ class WebCase(TestCase):
     HTTP_CONN = httplib.HTTPConnection
     PROTOCOL = "HTTP/1.1"
     
+    def set_persistent(self, on=True, auto_open=False):
+        """Make our HTTP_CONN persistent (or not).
+        
+        If the 'on' argument is True (the default), then self.HTTP_CONN
+        will be set to an instance of httplib.HTTPConnection (or HTTPS
+        if self.scheme is "https"). This will then persist across requests.
+        
+        We only allow for a single open connection, so if you call this
+        and we currently have an open connection, it will be closed.
+        """
+        try:
+            self.HTTP_CONN.close()
+        except (TypeError, AttributeError):
+            pass
+        
+        if self.scheme == "https":
+            cls = httplib.HTTPSConnection
+        else:
+            cls = httplib.HTTPConnection
+        
+        if on:
+            self.HTTP_CONN = cls(self.HOST, self.PORT)
+            # Automatically re-connect?
+            self.HTTP_CONN.auto_open = auto_open
+            self.HTTP_CONN.connect()
+        else:
+            self.HTTP_CONN = cls
+    
+    def _get_persistent(self):
+        return hasattr(self.HTTP_CONN, "__class__")
+    def _set_persistent(self, on=True):
+        self.set_persistent(on)
+    persistent = property(_get_persistent, _set_persistent)
+    
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
