@@ -172,6 +172,7 @@ class HTTPRequest(object):
                 self.close_connection = True
                 self.outheaders.append(("Connection", "close"))
         else:
+            # HTTP/1.0
             if headers.getheader("Connection", "") == "Keep-Alive":
                 if self.close_connection == False:
                     self.outheaders.append(("Connection", "Keep-Alive"))
@@ -704,7 +705,7 @@ class CherryPyWSGIServer(object):
             self.tick()
             if self.interrupt:
                 while self.interrupt is True:
-                    # Wait for self.stop() to complete
+                    # Wait for self.stop() to complete. See _set_interrupt.
                     time.sleep(0.1)
                 raise self.interrupt
     
