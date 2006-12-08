@@ -1,4 +1,6 @@
 import httplib
+from httplib import BadStatusLine
+
 import os
 import sys
 import threading
@@ -168,13 +170,24 @@ class ServerStateTests(helper.CPWebCase):
             # We must start the server in this, the main thread
             cherrypy.engine.start(blocking=False)
             cherrypy.server.start()
-            cherrypy.server.httpservers.keys()[0].interrupt = KeyboardInterrupt
-            while cherrypy.engine.state != 0:
-                time.sleep(0.1)
             
-            self.assertEqual(db_connection.running, False)
-            self.assertEqual(len(db_connection.threads), 0)
-            self.assertEqual(cherrypy.engine.state, 0)
+            self.persistent = True
+            try:
+                # Make the first request and assert there's no "Connection: close".
+                self.getPage("/")
+                self.assertStatus('200 OK')
+                self.assertBody("Hello World")
+                self.assertNoHeader("Connection")
+                
+                cherrypy.server.httpservers.keys()[0].interrupt = KeyboardInterrupt
+                while cherrypy.engine.state != 0:
+                    time.sleep(0.1)
+                
+                self.assertEqual(db_connection.running, False)
+                self.assertEqual(len(db_connection.threads), 0)
+                self.assertEqual(cherrypy.engine.state, 0)
+            finally:
+                self.persistent = False
             
             # Raise a keyboard interrupt in a page handler; on multithreaded
             # servers, this should occur in one of the worker threads.
@@ -183,7 +196,6 @@ class ServerStateTests(helper.CPWebCase):
             cherrypy.engine.start(blocking=False)
             cherrypy.server.start()
             
-            from httplib import BadStatusLine
             try:
                 self.getPage("/ctrlc")
             except BadStatusLine:
@@ -323,6 +335,9 @@ def run_all(host, port, ssl=False):
     if host:
         ServerStateTests.HOST = host
     
+    if port:
+        ServerStateTests.PORT = port
+    
     if ssl:
         localDir = os.path.dirname(__file__)
         serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
@@ -338,42 +353,32 @@ def run_all(host, port, ssl=False):
     _run("cherrypy._cpwsgi.CPWSGIServer")
 
 
-def run_localhosts(port):
-    for host in ("", "127.0.0.1", "localhost"):
-        conf = {'server.socket_host': host,
-                'server.socket_port': port,
-                'server.thread_pool': 10,
-                'environment': "test_suite",
-                }
-        def _run(server):
-            print
-            print "Testing %s on %s:%s..." % (server, host, port)
-            run(server, conf)
-        _run("cherrypy._cpwsgi.CPWSGIServer")
-
 
 if __name__ == "__main__":
     import sys
+    
     host = '127.0.0.1'
     port = 8000
     ssl = False
-    if len(sys.argv) > 1:
-        cmd = sys.argv[1]
-        if cmd in [prefix + atom for atom in ("?", "h", "help")
-                   for prefix in ("", "-", "--", "\\")]:
-            print
-            print "test_states.py -?                 -> this help page"
-            print "test_states.py [host] [port]      -> run the tests on the given host/port"
-            print "test_states.py -ssl [port]        -> run the tests using SSL on %s:port" % host
-            print "test_states.py -localhosts [port] -> try various localhost strings"
-            sys.exit(0)
-        if len(sys.argv) > 2:
-            port = int(sys.argv[2])
-        if cmd == "-localhosts":
-            run_localhosts(port)
-            sys.exit(0)
-        if cmd == "-ssl":
-            ssl = True
-        else:
-            host = cmd.strip("\"'")
+    
+    argv = sys.argv[1:]
+    if argv:
+        help_args = [prefix + atom for atom in ("?", "h", "help")
+                     for prefix in ("", "-", "--", "\\")]
+        
+        for arg in argv:
+            if arg in help_args:
+                print
+                print "test_states.py -?                       -> this help page"
+                print "test_states.py [-host=h] [-port=p]      -> run the tests on h:p"
+                print "test_states.py -ssl [-host=h] [-port=p] -> run the tests using SSL on h:p"
+                sys.exit(0)
+            
+            if arg == "-ssl":
+                ssl = True
+            elif arg.startswith("-host="):
+                host = arg[6:].strip("\"'")
+            elif arg.startswith("-port="):
+                port = int(arg[6:].strip())
+    
     run_all(host, port, ssl)
