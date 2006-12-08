@@ -389,6 +389,7 @@ class HTTPRequest(object):
 def _ssl_wrap_method(method):
     def ssl_method_wrapper(self, *args, **kwargs):
 ##        print (id(self), method, args, kwargs)
+        start = time.time()
         while True:
             try:
                 return method(self, *args, **kwargs)
@@ -411,7 +412,8 @@ def _ssl_wrap_method(method):
                     return ""
                 else:
                     raise
-##        raise socket.timeout()
+            if time.time() - start > self.ssl_timeout:
+                raise socket.timeout("timed out")
     return ssl_method_wrapper
 
 class SSL_fileobject(socket._fileobject):
