@@ -818,8 +818,10 @@ class CherryPyWSGIServer(object):
             # The DN should be of the form: /k1=v1/k2=v2, but we must allow
             # for any value to contain slashes itself (in a URL).
             while dnstr:
-                dnstr, value = dnstr.rsplit("=", 1)
-                dnstr, key = dnstr.rsplit("/", 1)
+                pos = dnstr.rfind("=")
+                dnstr, value = dnstr[:pos], dnstr[pos + 1:]
+                pos = dnstr.rfind("/")
+                dnstr, key = dnstr[:pos], dnstr[pos + 1:]
                 if key and value:
                     wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
                     self.ssl_environ[wsgikey] = value
