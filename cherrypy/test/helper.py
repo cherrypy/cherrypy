@@ -115,8 +115,14 @@ def _run_test_suite_thread(moduleNames, conf):
         setup = getattr(m, "setup_server", None)
         if setup:
             setup()
+        
         suite = CPTestLoader.loadTestsFromName(testmod)
         CPTestRunner.run(suite)
+        
+        teardown = getattr(m, "teardown_server", None)
+        if teardown:
+            teardown()
+        
     thread.interrupt_main()
 
 def testmain(conf=None, *args, **kwargs):
