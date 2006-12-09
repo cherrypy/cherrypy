@@ -126,8 +126,10 @@ def _cp_log_access():
     fname = cherrypy.config.get('server.log_access_file', '')
     if fname:
         f = open(fname, 'ab')
-        f.write(s + '\n')
-        f.close()
+        try:
+            f.write(s + '\n')
+        finally:
+            f.close()
 
 
 _log_severity_levels = {0: "INFO", 1: "WARNING", 2: "ERROR"}
@@ -152,8 +154,10 @@ def _cp_log_message(msg, context = '', severity = 0):
     #    os.makedirs(logdir)
     if fname:
         f = open(fname, 'ab')
-        f.write(s + '\n')
-        f.close()
+        try:
+            f.write(s + '\n')
+        finally:
+            f.close()
 
 
 _HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
