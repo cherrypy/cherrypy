@@ -287,10 +287,12 @@ def validStatus(status):
     try:
         code = int(code)
     except ValueError:
-        raise ValueError("Illegal response status from server (non-numeric).")
+        raise ValueError("Illegal response status from server "
+                         "(%s is non-numeric)." % repr(code))
     
     if code < 100 or code > 599:
-        raise ValueError("Illegal response status from server (out of range).")
+        raise ValueError("Illegal response status from server "
+                         "(%s is out of range)." % repr(code))
     
     if code not in responseCodes:
         # code is unknown but not illegal
