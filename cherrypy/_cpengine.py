@@ -8,7 +8,7 @@ import warnings
 
 import cherrypy
 from cherrypy import _cphttptools, filters
-from cherrypy.lib import autoreload, profiler, cptools
+from cherrypy.lib import autoreload, cptools
 
 # Use a flag to indicate the state of the application server.
 STOPPED = 0
@@ -61,13 +61,6 @@ class Engine(object):
         if (conf('server.thread_pool') > 1
             and conf('session.storage_type') == 'file'):
             cherrypy._sessionFileLock = threading.RLock()
-        
-        # Set up the profiler if requested.
-        if conf("profiling.on", False):
-            ppath = conf("profiling.path", "")
-            cherrypy.profiler = profiler.Profiler(ppath)
-        else:
-            cherrypy.profiler = None
         
         # Initialize the built in filters
         filters.init()
