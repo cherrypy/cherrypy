@@ -13,6 +13,10 @@ def setup_server():
         def dom4(self):
             return "Under construction"
         dom4.exposed = True
+        
+        def method(self, value):
+            return "You sent %s" % repr(value)
+        method.exposed = True
     
     class VHost:
         def __init__(self, sitename):
@@ -25,7 +29,10 @@ def setup_server():
         def somewhere(self):
             return "Over the %s rainbow" % self.sitename
         somewhere.exposed = True
-    
+        
+        def vmethod(self, value):
+            return "You sent %s" % repr(value)
+        vmethod.exposed = True
     
     cherrypy.root = Root()
     cherrypy.root.mydom2 = VHost("Domain 2")
@@ -62,6 +69,17 @@ class VirtualHostFilterTest(helper.CPWebCase):
         self.assertBody('Over the Domain 2 rainbow')
         self.getPage("/somewhere", [('Host', 'www.mydom3.com')])
         self.assertBody('Over the Domain 3 rainbow')
+        
+        # Test GET, POST, and positional params
+        self.getPage("/method?value=root")
+        self.assertBody("You sent 'root'")
+        self.getPage("/vmethod?value=dom2+GET", [('Host', 'www.mydom2.com')])
+        self.assertBody("You sent 'dom2 GET'")
+        self.getPage("/vmethod", [('Host', 'www.mydom3.com')], method="POST",
+                     body="value=dom3+POST")
+        self.assertBody("You sent 'dom3 POST'")
+        self.getPage("/vmethod/pos", [('Host', 'www.mydom3.com')])
+        self.assertBody("You sent 'pos'")
 
 
 if __name__ == "__main__":
