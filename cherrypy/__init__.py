@@ -39,15 +39,27 @@ class _ThreadLocalProxy:
         self.__dict__["__attrname__"] = attrname
     
     def __getattr__(self, name):
-        childobject = getattr(serving, self.__attrname__)
+        try:
+            childobject = getattr(serving, self.__attrname__)
+        except AttributeError:
+            raise AttributeError("cherrypy.%s has no properties outside of "
+                                 "an HTTP request." % self.__attrname__)
         return getattr(childobject, name)
     
     def __setattr__(self, name, value):
-        childobject = getattr(serving, self.__attrname__)
+        try:
+            childobject = getattr(serving, self.__attrname__)
+        except AttributeError:
+            raise AttributeError("cherrypy.%s has no properties outside of "
+                                 "an HTTP request." % self.__attrname__)
         setattr(childobject, name, value)
     
     def __delattr__(self, name):
-        childobject = getattr(serving, self.__attrname__)
+        try:
+            childobject = getattr(serving, self.__attrname__)
+        except AttributeError:
+            raise AttributeError("cherrypy.%s has no properties outside of "
+                                 "an HTTP request." % self.__attrname__)
         delattr(childobject, name)
 
 # Create request and response object (the same objects will be used
