@@ -282,16 +282,15 @@ class FileStorage:
     
     def acquire_lock(self):
         sess = cherrypy.request._session
-        file_path = self._get_file_path(cherrypy.session.id)
-        lock_file_path = file_path + self.LOCK_SUFFIX
-        self._lock_file(lock_file_path)
-        sess.locked = True
+        if not sess.locked:
+            file_path = self._get_file_path(cherrypy.session.id)
+            self._lock_file(file_path + self.LOCK_SUFFIX)
+            sess.locked = True
     
     def release_lock(self):
         sess = cherrypy.request._session
         file_path = self._get_file_path(cherrypy.session.id)
-        lock_file_path = file_path + self.LOCK_SUFFIX
-        self._unlock_file(lock_file_path)
+        self._unlock_file(file_path + self.LOCK_SUFFIX)
         sess.locked = False
     
     def clean_up(self, sess):
