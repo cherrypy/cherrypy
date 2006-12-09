@@ -62,9 +62,6 @@ class Engine(object):
             and conf('session.storage_type') == 'file'):
             cherrypy._sessionFileLock = threading.RLock()
         
-        # set cgi.maxlen which will limit the size of POST request bodies
-        cgi.maxlen = conf('server.max_request_size')
-        
         # Set up the profiler if requested.
         if conf("profiling.on", False):
             ppath = conf("profiling.path", "")

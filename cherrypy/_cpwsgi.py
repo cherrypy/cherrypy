@@ -158,19 +158,9 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
                 if path == "*":
                     path = "global"
                 
-                # Prepare the SizeCheckWrapper for the request body
-                mbs = int(cherrypy.config.get('server.max_request_body_size',
-                                              100 * 1024 * 1024, path=path))
                 if isinstance(self.rfile, httptools.SizeCheckWrapper):
-                    if mbs > 0:
-                        self.rfile.bytes_read = 0
-                        self.rfile.maxlen = mbs
-                    else:
-                        # Unwrap the rfile
-                        self.rfile = self.rfile.rfile
-                else:
-                    if mbs > 0:
-                        self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
+                    # Unwrap the rfile
+                    self.rfile = self.rfile.rfile
                 self.environ["wsgi.input"] = self.rfile
 
 

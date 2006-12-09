@@ -95,6 +95,12 @@ class Request(object):
                     
                     applyFilters('before_request_body')
                     if self.processRequestBody:
+                        # Prepare the SizeCheckWrapper for the request body
+                        mbs = int(cherrypy.config.get('server.max_request_body_size',
+                                                      100 * 1024 * 1024))
+                        if mbs > 0:
+                            self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
+                        
                         self.processBody()
                     
                     # Loop to allow for InternalRedirect.
