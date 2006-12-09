@@ -19,7 +19,7 @@ class EncodingFilter(BaseFilter):
                 cherrypy.response.headers["Content-Type"] = str(ct)
 
 
-def encode_stream(encoding):
+def encode_stream(encoding, errors='strict'):
     """Encode a streaming response body.
     
     Use a generator wrapper, and just pray it works as the stream is
@@ -27,16 +27,16 @@ def encode_stream(encoding):
     """
     def encoder(body):
         for line in body:
-            yield line.encode(encoding)
+            yield line.encode(encoding, errors)
     cherrypy.response.body = encoder(cherrypy.response.body)
     return True
 
-def encode_string(encoding):
+def encode_string(encoding, errors='strict'):
     """Encode a buffered response body."""
     try:
         body = []
         for chunk in cherrypy.response.body:
-            body.append(chunk.encode(encoding))
+            body.append(chunk.encode(encoding, errors))
         cherrypy.response.body = body
     except (LookupError, UnicodeError):
         return False
@@ -58,10 +58,11 @@ def find_acceptable_charset():
     
     failmsg = "The response could not be encoded with %s"
     
+    errors = conf('encoding_filter.errors', 'strict')
     enc = conf('encoding_filter.encoding', None)
     if enc is not None:
         # If specified, force this encoding to be used, or fail.
-        if encode(enc):
+        if encode(enc, errors):
             return enc
         else:
             raise cherrypy.HTTPError(500, failmsg % enc)
@@ -74,7 +75,7 @@ def find_acceptable_charset():
     if not encs:
         # Any character-set is acceptable.
         charsets = []
-        if encode(default_enc):
+        if encode(default_enc, errors):
             return default_enc
         else:
             raise cherrypy.HTTPError(500, failmsg % default_enc)
@@ -88,7 +89,7 @@ def find_acceptable_charset():
             iso = 'iso-8859-1'
             if iso not in charsets:
                 attempted_charsets.append(iso)
-                if encode(iso):
+                if encode(iso, errors):
                     return iso
         
         for element in encs:
@@ -97,13 +98,13 @@ def find_acceptable_charset():
                     # Matches any charset. Try our default.
                     if default_enc not in attempted_charsets:
                         attempted_charsets.append(default_enc)
-                        if encode(default_enc):
+                        if encode(default_enc, errors):
                             return default_enc
                 else:
                     encoding = element.value
                     if encoding not in attempted_charsets:
                         attempted_charsets.append(encoding)
-                        if encode(encoding):
+                        if encode(encoding, errors):
                             return encoding
     
     # No suitable encoding found.
