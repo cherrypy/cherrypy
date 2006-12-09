@@ -309,7 +309,7 @@ def setup_server():
         def index(self):
             yield "<h1>Choose your document</h1>\n"
             yield "<ul>\n"
-            for id, contents in self.documents:
+            for id, contents in self.documents.iteritems():
                 yield ("    <li><a href='/divorce/get?ID=%s'>%s</a>: %s</li>\n"
                        % (id, id, contents))
             yield "</ul>"
