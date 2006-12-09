@@ -12,8 +12,8 @@ both the client (your WebCase tests) and the server in the same process
 
 When an error occurs in the framework, call server_error. It will print
 the traceback to stdout, and keep any assertions you have from running
-(the assumption is that, if the server errors, the page output won't be
-of further significance to your tests).
+(the assumption is that, if the server errors, the page output will not
+be of further significance to your tests).
 """
 
 import os, sys, time, re
@@ -114,7 +114,7 @@ class ReloadingTestLoader(TestLoader):
                                  "not a test" % (obj,test))
             return test
         else:
-            raise ValueError("don't know how to make test from: %s" % obj)
+            raise ValueError("do not know how to make test from: %s" % obj)
 
 
 try:
@@ -139,15 +139,50 @@ except ImportError:
 class WebCase(TestCase):
     HOST = "127.0.0.1"
     PORT = 8000
-    HTTP_CONN=httplib.HTTPConnection
+    HTTP_CONN = httplib.HTTPConnection
+    PROTOCOL = "HTTP/1.1"
     
-    def getPage(self, url, headers=None, method="GET", body=None, protocol="HTTP/1.1"):
+    def set_persistent(self, on=True, auto_open=False):
+        """Make our HTTP_CONN persistent (or not).
+        
+        If the 'on' argument is True (the default), then self.HTTP_CONN
+        will be set to an instance of httplib.HTTPConnection (or HTTPS
+        if self.scheme is "https"). This will then persist across requests.
+        
+        We only allow for a single open connection, so if you call this
+        and we currently have an open connection, it will be closed.
+        """
+        try:
+            self.HTTP_CONN.close()
+        except (TypeError, AttributeError):
+            pass
+        
+        if self.scheme == "https":
+            cls = httplib.HTTPSConnection
+        else:
+            cls = httplib.HTTPConnection
+        
+        if on:
+            self.HTTP_CONN = cls(self.HOST, self.PORT)
+            # Automatically re-connect?
+            self.HTTP_CONN.auto_open = auto_open
+            self.HTTP_CONN.connect()
+        else:
+            self.HTTP_CONN = cls
+    
+    def _get_persistent(self):
+        return hasattr(self.HTTP_CONN, "__class__")
+    def _set_persistent(self, on=True):
+        self.set_persistent(on)
+    persistent = property(_get_persistent, _set_persistent)
+    
+    def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
         
         self.url = url
         result = openURL(url, headers, method, body, self.HOST, self.PORT,
-                         self.HTTP_CONN, protocol)
+                         self.HTTP_CONN, protocol or self.PROTOCOL)
         self.status, self.headers, self.body = result
         
         # Build a list of request cookies from the previous response cookies.
@@ -204,42 +239,80 @@ class WebCase(TestCase):
     def exit(self):
         sys.exit()
     
-    def __call__(self, result=None):
-        if result is None:
-            result = self.defaultTestResult()
-        result.startTest(self)
-        testMethod = getattr(self, self._TestCase__testMethodName)
-        try:
+    if sys.version_info >= (2, 5):
+        def __call__(self, result=None):
+            if result is None:
+                result = self.defaultTestResult()
+            result.startTest(self)
+            testMethod = getattr(self, self._testMethodName)
             try:
-                self.setUp()
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                result.addError(self, self._TestCase__exc_info())
-                return
-            
-            ok = 0
-            try:
-                testMethod()
-                ok = 1
-            except self.failureException:
-                result.addFailure(self, self._TestCase__exc_info())
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                result.addError(self, self._TestCase__exc_info())
-            
-            try:
-                self.tearDown()
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                result.addError(self, self._TestCase__exc_info())
+                try:
+                    self.setUp()
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    result.addError(self, self._exc_info())
+                    return
+                
                 ok = 0
-            if ok:
-                result.addSuccess(self)
-        finally:
-            result.stopTest(self)
+                try:
+                    testMethod()
+                    ok = 1
+                except self.failureException:
+                    result.addFailure(self, self._exc_info())
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    result.addError(self, self._exc_info())
+                
+                try:
+                    self.tearDown()
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    result.addError(self, self._exc_info())
+                    ok = 0
+                if ok:
+                    result.addSuccess(self)
+            finally:
+                result.stopTest(self)
+    else:
+        def __call__(self, result=None):
+            if result is None:
+                result = self.defaultTestResult()
+            result.startTest(self)
+            testMethod = getattr(self, self._TestCase__testMethodName)
+            try:
+                try:
+                    self.setUp()
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    result.addError(self, self._TestCase__exc_info())
+                    return
+                
+                ok = 0
+                try:
+                    testMethod()
+                    ok = 1
+                except self.failureException:
+                    result.addFailure(self, self._TestCase__exc_info())
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    result.addError(self, self._TestCase__exc_info())
+                
+                try:
+                    self.tearDown()
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    result.addError(self, self._TestCase__exc_info())
+                    ok = 0
+                if ok:
+                    result.addSuccess(self)
+            finally:
+                result.stopTest(self)
     
     def assertStatus(self, status, msg=None):
         """Fail if self.status != status."""
@@ -276,7 +349,7 @@ class WebCase(TestCase):
         for k, v in self.headers:
             if k.lower() == lowkey:
                 if value is None or str(value) == v:
-                    return
+                    return v
         
         if msg is None:
             if value is None:
@@ -323,6 +396,7 @@ class WebCase(TestCase):
             self._handlewebError(msg)
 
 
+methods_with_bodies = ("POST", "PUT")
 
 def cleanHeaders(headers, method, body, host, port):
     """Return request headers, with required headers added (if missing)."""
@@ -337,9 +411,12 @@ def cleanHeaders(headers, method, body, host, port):
             found = True
             break
     if not found:
-        headers.append(("Host", "%s:%s" % (host, port)))
+        if port == 80:
+            headers.append(("Host", host))
+        else:
+            headers.append(("Host", "%s:%s" % (host, port)))
     
-    if method in ("POST", "PUT"):
+    if method in methods_with_bodies:
         # Stick in default type and length headers if not present
         found = False
         for k, v in headers:
@@ -351,6 +428,26 @@ def cleanHeaders(headers, method, body, host, port):
             headers.append(("Content-Length", str(len(body or ""))))
     
     return headers
+
+
+def shb(response):
+    """Return status, headers, body the way we like from a response."""
+    h = []
+    key, value = None, None
+    for line in response.msg.headers:
+        if line:
+            if line[0] in " \t":
+                value += line.strip()
+            else:
+                if key and value:
+                    h.append((key, value))
+                key, value = line.split(":", 1)
+                key = key.strip()
+                value = value.strip()
+    if key and value:
+        h.append((key, value))
+    
+    return "%s %s" % (response.status, response.reason), h, response.read()
 
 
 def openURL(url, headers=None, method="GET", body=None,
@@ -365,12 +462,23 @@ def openURL(url, headers=None, method="GET", body=None,
     trial = 0
     while trial < 10:
         try:
-            conn = http_conn(host, port)
+            # Allow http_conn to be a class or an instance
+            if hasattr(http_conn, "host"):
+                conn = http_conn
+            else:
+                conn = http_conn(host, port)
+            
             conn._http_vsn_str = protocol
             conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
             
             # skip_accept_encoding argument added in python version 2.4
             if sys.version_info < (2, 4):
+                def putheader(self, header, value):
+                    if header == 'Accept-Encoding' and value == 'identity':
+                        return
+                    self.__class__.putheader(self, header, value)
+                import new
+                conn.putheader = new.instancemethod(putheader, conn, conn.__class__)
                 conn.putrequest(method.upper(), url, skip_host=True)
             else:
                 conn.putrequest(method.upper(), url, skip_host=True,
@@ -386,17 +494,13 @@ def openURL(url, headers=None, method="GET", body=None,
             # Handle response
             response = conn.getresponse()
             
-            status = "%s %s" % (response.status, response.reason)
+            s, h, b = shb(response)
             
-            outheaders = []
-            for line in response.msg.headers:
-                key, value = line.split(":", 1)
-                outheaders.append((key.strip(), value.strip()))
+            if not hasattr(http_conn, "host"):
+                # We made our own conn instance. Close it.
+                conn.close()
             
-            outbody = response.read()
-            
-            conn.close()
-            return status, outheaders, outbody
+            return s, h, b
         except socket.error:
             trial += 1
             if trial >= 10:
