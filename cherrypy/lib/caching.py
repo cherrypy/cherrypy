@@ -82,13 +82,22 @@ class MemoryCache:
                 self.cache[obj_key] = obj
                 self.tot_puts += 1
                 self.cursize = total_size
+    
+    def delete(self):
+        self.cache.pop(self.key)
 
 
 def get(invalid_methods=("POST", "PUT", "DELETE"), cache_class=MemoryCache):
     """Try to obtain cached output. If fresh enough, raise HTTPError(304).
     
-    If a cached copy exists:
+    If POST, PUT, or DELETE:
+        * invalidates (deletes) any cached response for this resource
+        * sets request.cached = False
+        * sets request.cacheable = False
+    
+    else if a cached copy exists:
         * sets request.cached = True
+        * sets request.cacheable = False
         * sets response.headers to the cached values
         * checks the cached Last-Modified response header against the
             current If-(Un)Modified-Since request headers; raises 304
@@ -98,6 +107,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), cache_class=MemoryCache):
     
     otherwise:
         * sets request.cached = False
+        * sets request.cacheable = True
         * returns False
     """
     if not hasattr(cherrypy, "_cache"):
@@ -105,14 +115,17 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), cache_class=MemoryCache):
     
     request = cherrypy.request
     
-    # Ignore POST, PUT, DELETE.
+    # POST, PUT, DELETE should invalidate (delete) the cached copy.
     # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
     if request.method in invalid_methods:
+        cherrypy._cache.delete()
         request.cached = False
+        request.cacheable = False
         return False
     
     cache_data = cherrypy._cache.get()
     request.cached = c = bool(cache_data)
+    request.cacheable = not c
     if c:
         response = cherrypy.response
         s, response.headers, b, create_time = cache_data
@@ -137,9 +150,6 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), cache_class=MemoryCache):
 
 
 def tee_output():
-    if cherrypy.request.cached:
-        return
-    
     response = cherrypy.response
     output = []
     def tee(body):

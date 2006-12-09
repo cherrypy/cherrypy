@@ -259,9 +259,10 @@ class CachingTool(Tool):
         if _caching.get(**kwargs):
             request.handler = None
         else:
-            # Note the devious technique here of adding hooks on the fly
-            request.hooks.attach('before_finalize', _caching.tee_output,
-                                 priority = 90)
+            if request.cacheable:
+                # Note the devious technique here of adding hooks on the fly
+                request.hooks.attach('before_finalize', _caching.tee_output,
+                                     priority = 90)
     _wrapper.priority = 20
     
     def _setup(self):

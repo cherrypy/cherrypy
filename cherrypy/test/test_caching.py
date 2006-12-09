@@ -80,11 +80,20 @@ class CacheTest(helper.CPWebCase):
         # POST, PUT, DELETE should not be cached.
         self.getPage("/", method="POST")
         self.assertBody('visit #2')
+        # The previous request should have invalidated the cache,
+        # so this request will recalc the response.
         self.getPage("/", method="GET")
-        self.assertBody('visit #2')
-        self.getPage("/", method="DELETE")
         self.assertBody('visit #3')
-
+        # ...but this request should get the cached copy.
+        self.getPage("/", method="GET")
+        self.assertBody('visit #3')
+        self.getPage("/", method="DELETE")
+        self.assertBody('visit #4')
+        # The previous request should have invalidated the cache,
+        # so this request will recalc the response.
+        self.getPage("/", method="GET")
+        self.assertBody('visit #5')
+    
     def testExpiresTool(self):
         
         # test setting an expires header
