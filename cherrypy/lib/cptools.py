@@ -130,6 +130,7 @@ def serveFile(path, contentType=None, disposition=None, name=None):
     response.headers['Content-Type'] = contentType
     
     if not modified_since(path, stat):
+        response.body = []
         return []
     
     if disposition is not None:
@@ -197,6 +198,12 @@ def serveFile(path, contentType=None, disposition=None, name=None):
         response.headers['Content-Length'] = c_len
         response.body = bodyfile
     return response.body
+serve_file = serveFile
+
+def serve_download(path, name=None):
+    """Serve 'path' as an application/x-download attachment."""
+    # This is such a common idiom I felt it deserved its own wrapper.
+    return serve_file(path, "application/x-download", "attachment", name)
 
 def fileGenerator(input, chunkSize=65536):
     """Yield the given input (a file object) in chunks (default 64k)."""
