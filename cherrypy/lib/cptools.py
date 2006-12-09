@@ -1,6 +1,5 @@
 """Tools which both CherryPy and application developers may invoke."""
 
-import inspect
 import md5
 import mimetools
 import mimetypes
@@ -24,9 +23,9 @@ def decorate(func, decorator):
     non-standard attributes (like exposed) to the newly decorated function.
     """
     newfunc = decorator(func)
-    for (k,v) in inspect.getmembers(func):
-        if not hasattr(newfunc, k):
-            setattr(newfunc, k, v)
+    for key in dir(func):
+        if not hasattr(newfunc, key):
+            setattr(newfunc, key, getattr(func, key))
     return newfunc
 
 def decorateAll(obj, decorator):
@@ -36,12 +35,13 @@ def decorateAll(obj, decorator):
     into these. This function modifies obj; there is no return value.
     """
     obj_type = type(obj)
-    for (k,v) in inspect.getmembers(obj):
-        if hasattr(obj_type, k): # only deal with user-defined attributes
-            continue
-        if callable(v) and getattr(v, "exposed", False):
-            setattr(obj, k, decorate(v, decorator))
-        decorateAll(v, decorator)
+    for key in dir(obj):
+        # only deal with user-defined attributes
+        if hasattr(obj_type, key):
+            value = getattr(obj, key)
+            if callable(value) and getattr(value, "exposed", False):
+                setattr(obj, key, decorate(value, decorator))
+            decorateAll(value, decorator)
 
 
 class ExposeItems:
