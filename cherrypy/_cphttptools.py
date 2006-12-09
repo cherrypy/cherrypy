@@ -19,7 +19,9 @@ class Request(object):
         
         remoteAddr should be the client IP address
         remotePort should be the client Port
-        remoteHost should be string of the client's IP address.
+        remoteHost: should be the client's host name. If not available
+            (because no reverse DNS lookup is performed), the client
+            IP should be provided.
         scheme should be a string, either "http" or "https".
         """
         self.remote_addr  = remoteAddr
@@ -45,8 +47,7 @@ class Request(object):
         
         requestLine should be of the form "GET /path HTTP/1.0".
         headers should be a list of (name, value) tuples.
-        rfile should be a file-like object containing the HTTP request
-            entity.
+        rfile should be a file-like object containing the HTTP request entity.
         
         When run() is done, the returned object should have 3 attributes:
           status, e.g. "200 OK"
