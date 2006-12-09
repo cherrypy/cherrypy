@@ -94,6 +94,9 @@ class MemoryCache:
             except Queue.Full:
                 # can't add because the queue is full
                 return
+    
+    def delete(self):
+        self.cache.pop(self.key)
 
 
 class CacheFilter(basefilter.BaseFilter):
@@ -112,12 +115,21 @@ class CacheFilter(basefilter.BaseFilter):
         if not cherrypy.config.get('cache_filter.on', False):
             return
         
+        request = cherrypy.request
+        
+        # POST, PUT, DELETE should invalidate (delete) the cached copy.
+        # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
+        if request.method in cherrypy.config.get("cache_filter.invalid_methods",
+                                                 ("POST", "PUT", "DELETE")):
+            cherrypy._cache.delete()
+            return
+        
         cacheData = cherrypy._cache.get()
         if cacheData:
             # found a hit! check the if-modified-since request header
             expirationTime, lastModified, obj = cacheData
             s, h, b = obj
-            modifiedSince = cherrypy.request.headers.get('If-Modified-Since', None)
+            modifiedSince = request.headers.get('If-Modified-Since', None)
             if modifiedSince is not None and modifiedSince == lastModified:
                 cherrypy._cache.totNonModified += 1
                 cherrypy.response.status = "304 Not Modified"
@@ -127,11 +139,11 @@ class CacheFilter(basefilter.BaseFilter):
                 cherrypy.response.body = None
             else:
                 # serve it & get out from the request
-                cherrypy.response.status, cherrypy.response.header_list, body = s, h, b
-                cherrypy.response.body = body
+                response = cherrypy.response
+                response.status, response.header_list, response.body = s, h, b
             raise cherrypy.RequestHandled()
         else:
-            cherrypy.request.cacheable = True
+            request.cacheable = True
     
     def before_finalize(self):
         if not cherrypy.request.cacheable:
