@@ -295,6 +295,7 @@ def run():
         'test_core',
         'test_custom_filters',
         'test_decodingencoding_filter',
+        'test_etags',
         'test_gzip_filter',
         'test_logdebuginfo_filter',
         'test_objectmapping',

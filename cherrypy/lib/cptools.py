@@ -1,6 +1,7 @@
 """Tools which both CherryPy and application developers may invoke."""
 
 import inspect
+import md5
 import mimetools
 import mimetypes
 mimetypes.init()
@@ -63,6 +64,92 @@ class ExposeItems:
     def __getattr__(self, key):
         return self.items[key]
 
+
+#                     Conditional HTTP request support                     #
+
+def validate_etags(autotags=False):
+    """Validate the current ETag against If-Match, If-None-Match headers.
+    
+    If autotags is True, an ETag response-header value will be provided
+    from an MD5 hash of the response body (unless some other code has
+    already provided an ETag header). If False (the default), the ETag
+    will not be automatic.
+    
+    WARNING: the autotags feature is not designed for URL's which allow
+    methods other than GET. For example, if a POST to the same URL returns
+    no content, the automatic ETag will be incorrect, breaking a fundamental
+    use for entity tags in a possibly destructive fashion. Likewise, if you
+    raise 304 Not Modified, the response body will be empty, the ETag hash
+    will be incorrect, and your application will break.
+    See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.24
+    """
+    response = cherrypy.response
+    
+    # Guard against being run twice.
+    if hasattr(response, "ETag"):
+        return
+    
+    status, reason, msg = httptools.validStatus(response.status)
+    
+    etag = response.headers.get('ETag')
+    
+    # Automatic ETag generation. See warning in docstring.
+    if (not etag) and autotags:
+        if status == 200:
+            etag = response.collapse_body()
+            etag = '"%s"' % md5.new(etag).hexdigest()
+            response.headers['ETag'] = etag
+    
+    response.ETag = etag
+    
+    # "If the request would, without the If-Match header field, result in
+    # anything other than a 2xx or 412 status, then the If-Match header
+    # MUST be ignored."
+    if status >= 200 and status <= 299:
+        request = cherrypy.request
+        
+        conditions = request.headers.elements('If-Match') or []
+        conditions = [str(x) for x in conditions]
+        if conditions and not (conditions == ["*"] or etag in conditions):
+            raise cherrypy.HTTPError(412, "If-Match failed: ETag %r did "
+                                     "not match %r" % (etag, conditions))
+        
+        conditions = request.headers.elements('If-None-Match') or []
+        conditions = [str(x) for x in conditions]
+        if conditions == ["*"] or etag in conditions:
+            if request.method in ("GET", "HEAD"):
+                raise cherrypy.HTTPRedirect([], 304)
+            else:
+                raise cherrypy.HTTPError(412, "If-None-Match failed: ETag %r "
+                                         "matched %r" % (etag, conditions))
+
+def validate_since():
+    """Validate the current Last-Modified against If-Modified-Since headers.
+    
+    If no code has set the Last-Modified response header, then no validation
+    will be performed.
+    """
+    response = cherrypy.response
+    lastmod = response.headers.get('Last-Modified')
+    if lastmod:
+        status, reason, msg = httptools.validStatus(response.status)
+        
+        request = cherrypy.request
+        
+        since = request.headers.get('If-Unmodified-Since')
+        if since and since != lastmod:
+            if (status >= 200 and status <= 299) or status == 412:
+                raise cherrypy.HTTPError(412)
+        
+        since = request.headers.get('If-Modified-Since')
+        if since and since == lastmod:
+            if (status >= 200 and status <= 299) or status == 304:
+                if request.method in ("GET", "HEAD"):
+                    raise cherrypy.HTTPRedirect([], 304)
+                else:
+                    raise cherrypy.HTTPError(412)
+
+
 def modified_since(path, stat=None):
     """Check whether a file has been modified since the date
     provided in 'If-Modified-Since'
@@ -86,7 +173,7 @@ def modified_since(path, stat=None):
             raise cherrypy.HTTPRedirect([], 304)
     response.headers['Last-Modified'] = strModifTime
     return True
-    
+
 def serveFile(path, contentType=None, disposition=None, name=None):
     """Set status, headers, and body in order to serve the given file.
     
@@ -129,9 +216,10 @@ def serveFile(path, contentType=None, disposition=None, name=None):
         contentType = mimetypes.types_map.get(ext, "text/plain")
     response.headers['Content-Type'] = contentType
     
-    if not modified_since(path, stat):
-        response.body = []
-        return []
+    # Set the Last-Modified response header, so that
+    # modified-since validation code can work.
+    response.headers['Last-Modified'] = httptools.HTTPDate(time.gmtime(stat.st_mtime))
+    validate_since()
     
     if disposition is not None:
         if name is None:
