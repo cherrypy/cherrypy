@@ -120,16 +120,17 @@ class Engine(object):
     
     def stop(self):
         """Stop the application server engine."""
-        for thread_ident, i in self.seen_threads.iteritems():
-            for func in self.on_stop_thread_list:
-                func(i)
-        self.seen_threads.clear()
-        
-        for func in self.on_stop_server_list:
-            func()
-        
-        self.state = STOPPED
-        cherrypy.log("CherryPy shut down", "ENGINE")
+        if self.state != STOPPED:
+            for thread_ident, i in self.seen_threads.iteritems():
+                for func in self.on_stop_thread_list:
+                    func(i)
+            self.seen_threads.clear()
+            
+            for func in self.on_stop_server_list:
+                func()
+            
+            self.state = STOPPED
+            cherrypy.log("CherryPy shut down", "ENGINE")
     
     def restart(self):
         """Restart the application server engine."""
