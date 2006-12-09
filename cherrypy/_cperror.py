@@ -1,6 +1,8 @@
 """Error classes for CherryPy."""
 
 import urllib
+import urlparse
+
 
 class Error(Exception):
     pass
@@ -32,6 +34,12 @@ class InternalRedirect(Exception):
         import cherrypy
         import cgi
         request = cherrypy.request
+        
+        # Note that urljoin will "do the right thing" whether url is:
+        #  1. a URL relative to root (e.g. "/dummy")
+        #  2. a URL relative to the current path
+        # Note that any querystring will be discarded.
+        path = urlparse.urljoin(cherrypy.request.path, path)
         
         # Set a 'path' member attribute so that code which traps this
         # error can have access to it.
@@ -65,7 +73,6 @@ class HTTPRedirect(Exception):
     """
     
     def __init__(self, urls, status=None):
-        import urlparse
         import cherrypy
         
         if isinstance(urls, basestring):

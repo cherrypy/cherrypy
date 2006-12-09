@@ -141,6 +141,12 @@ def setup_server():
         def index(self):
             raise cherrypy.InternalRedirect("/")
         
+        def relative(self):
+            raise cherrypy.InternalRedirect("cousin")
+        
+        def cousin(self):
+            return "I am a redirected page."
+        
         def petshop(self, user_id):
             if user_id == "parrot":
                 # Trade it for a slug when redirecting
@@ -572,6 +578,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/internalredirect/secure")
         self.assertBody('Please log in')
         self.assertStatus(200)
+        self.assertStatus(200)
+        
+        # Relative path in InternalRedirect
+        self.getPage("/internalredirect/relative")
+        self.assertBody('I am a redirected page.')
         
         # HTTPRedirect on error
         self.getPage("/redirect/error/")
