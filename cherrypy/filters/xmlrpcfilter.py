@@ -175,6 +175,13 @@ class XmlRpcFilter(BaseFilter):
             except cherrypy.InternalRedirect, x:
                 # Try again with the new path
                 path = x.path
+            except cherrypy.NotFound:
+                # http://www.cherrypy.org/ticket/533
+                # if a method is not found, an xmlrpclib.Fault should be returned
+                # raising an exception here will do that; see
+                # cherrypy.lib.xmlrpc.on_error
+                raise Exception('method "%s" is not supported'
+                                % cherrypy.request.rpcMethod)
         
         # See xmlrpclib documentation
         # Python's None value cannot be used in standard XML-RPC;

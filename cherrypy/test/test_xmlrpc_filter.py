@@ -96,6 +96,16 @@ class XmlRpcFilterTest(helper.CPWebCase):
                                              "for *: 'dict' and 'int'"))
         else:
             self.fail("Expected xmlrpclib.Fault")
+        
+        # http://www.cherrypy.org/ticket/533
+        # if a method is not found, an xmlrpclib.Fault should be raised
+        try:
+            proxy.non_method()
+        except Exception, x:
+            self.assertEqual(x.__class__, xmlrpclib.Fault)
+            self.assertEqual(x.faultString, 'method "non_method" is not supported')
+        else:
+            self.fail("Expected xmlrpclib.Fault")
 
 
 if __name__ == '__main__':
