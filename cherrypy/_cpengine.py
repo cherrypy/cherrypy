@@ -1,6 +1,7 @@
 """Create and manage the CherryPy application server engine."""
 
 import cgi
+import signal
 import sys
 import threading
 import time
@@ -14,6 +15,17 @@ from cherrypy.lib import autoreload, cptools
 STOPPED = 0
 STARTING = None
 STARTED = 1
+
+
+try:
+    if hasattr(signal, "SIGTERM"):
+        def SIGTERM(signum=None, frame=None):
+            cherrypy.server.stop()
+            cherrypy.engine.stop()
+        signal.signal(signal.SIGTERM, SIGTERM)
+except ValueError, _signal_exc:
+    if _signal_exc.args[0] != "signal only works in main thread":
+        raise
 
 
 class Engine(object):
