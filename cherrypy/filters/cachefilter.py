@@ -1,9 +1,10 @@
-
-import threading
+import datetime
 import Queue
+import threading
 import time
 
 import cherrypy
+from cherrypy.lib import httptools
 import basefilter
 
 
@@ -211,3 +212,45 @@ class CacheStats:
         yield "Total expires: %d\n" % cache.totExpires
         yield "Total non-modified content: %d\n" % cache.totNonModified
     index.exposed = True
+
+
+def expires(secs=0, force=False):
+    """Tool for influencing cache mechanisms using the 'Expires' header.
+    
+    'secs' must be either an int or a datetime.timedelta, and indicates the
+    number of seconds between response.time and when the response should
+    expire. The 'Expires' header will be set to (response.time + secs).
+    
+    If 'secs' is zero, the following "cache prevention" headers are also set:
+       'Pragma': 'no-cache'
+       'Cache-Control': 'no-cache'
+    
+    If 'force' is False (the default), the following headers are checked:
+    'Etag', 'Last-Modified', 'Age', 'Expires'. If any are already present,
+    none of the above response headers are set.
+    """
+    
+    response = cherrypy.response
+    
+    cacheable = False
+    if not force:
+        # some header names that indicate that the response can be cached
+        for indicator in ('Etag', 'Last-Modified', 'Age', 'Expires'):
+            if indicator in response.headers:
+                cacheable = True
+                break
+    
+    if not cacheable:
+        if isinstance(secs, datetime.timedelta):
+            secs = (86400 * secs.days) + secs.seconds
+        
+        if secs == 0:
+            if force or ("Pragma" not in response.headers):
+                response.headers["Pragma"] = "no-cache"
+            if cherrypy.response.version >= "1.1":
+                if force or ("Cache-Control" not in response.headers):
+                    response.headers["Cache-Control"] = "no-cache"
+        
+        expiry = httptools.HTTPDate(time.gmtime(response.time + secs))
+        if force or ("Expires" not in response.headers):
+            response.headers["Expires"] = expiry

@@ -3,6 +3,7 @@
 import Cookie
 import os
 import sys
+import time
 import types
 
 import cherrypy
@@ -364,6 +365,7 @@ class Response(object):
         self.status = None
         self.header_list = None
         self.body = None
+        self.time = time.time()
         
         self.headers = httptools.HeaderMap()
         self.headerMap = self.headers # Backward compatibility
@@ -371,7 +373,7 @@ class Response(object):
         self.headers.update({
             "Content-Type": content_type,
             "Server": "CherryPy/" + cherrypy.__version__,
-            "Date": httptools.HTTPDate(),
+            "Date": httptools.HTTPDate(time.gmtime(self.time)),
             "Set-Cookie": [],
             "Content-Length": None
         })
