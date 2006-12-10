@@ -76,8 +76,14 @@ def wsgiApp(environ, start_response):
                                environ['wsgi.input'])
         s, h, b = response.status, response.header_list, response.body
         exc = None
-    except (KeyboardInterrupt, SystemExit):
-        raise
+    except (KeyboardInterrupt, SystemExit), ex:
+        try:
+            if request:
+                request.close()
+        except:
+            cherrypy.log(traceback=True)
+        request = None
+        raise ex 
     except:
         if cherrypy.config.get("server.throw_errors", False):
             raise
