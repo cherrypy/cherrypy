@@ -198,5 +198,6 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
                    conf("server.thread_pool"),
                    conf("server.socket_host"),
                    request_queue_size = conf('server.socket_queue_size'),
+                   timeout = conf('server.socket_timeout'),
                    )
 

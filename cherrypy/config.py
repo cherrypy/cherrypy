@@ -18,6 +18,7 @@ default_global = {
     'server.socket_host': '',
     'server.socket_file': '',
     'server.socket_queue_size': 5,
+    'server.socket_timeout': 10,
     'server.protocol_version': 'HTTP/1.0',
     'server.log_to_screen': True,
     'server.log_tracebacks': True,
