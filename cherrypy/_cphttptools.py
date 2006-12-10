@@ -228,17 +228,11 @@ class Request(object):
     browserUrl = browser_url # Backward compatibility
     
     def processBody(self):
-        # Create a copy of headers with lowercase keys because
-        # FieldStorage doesn't work otherwise
-        lowerHeaderMap = {}
-        for key, value in self.headers.items():
-            lowerHeaderMap[key.lower()] = value
-        
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
         try:
             forms = _cpcgifs.FieldStorage(fp=self.rfile,
-                                          headers=lowerHeaderMap,
+                                          headers=self.headers,
                                           environ=methenv,
                                           keep_blank_values=1)
         except httptools.MaxSizeExceeded:
