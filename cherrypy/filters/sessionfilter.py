@@ -140,7 +140,14 @@ class SessionFilter(basefilter.BaseFilter):
 
         else:
             # No session_id yet
-            sess.session_id = sess.generate_session_id()
+            id = None
+            while id is None:
+                id = sess.generate_session_id()
+                # Assert that the generated id is not already stored.
+                if sess.session_storage.load(id) is not None:
+                    id = None
+            sess.session_id = id
+            
             sess.session_data = {'_id': sess.session_id}
             sess.on_create_session(sess.session_data)
         # Set response cookie
