@@ -153,9 +153,10 @@ class SessionFilter(basefilter.BaseFilter):
         #   the browser
         #   So we have to use the old "expires" ... sigh ...
         #cookie[cookie_name]['max-age'] = sess.session_timeout * 60
-        gmt_expiration_time = time.gmtime(time.time() +
-                (sess.session_timeout * 60))
-        cookie[cookie_name]['expires'] = httptools.HTTPDate(gmt_expiration_time)
+        if sess.session_timeout:
+            gmt_expiration_time = time.gmtime(time.time() +
+                                              (sess.session_timeout * 60))
+            cookie[cookie_name]['expires'] = httptools.HTTPDate(gmt_expiration_time)
         if cookie_domain is not None:
             cookie[cookie_name]['domain'] = cookie_domain
         if cookie_secure is True:
