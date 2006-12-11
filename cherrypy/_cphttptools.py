@@ -15,6 +15,8 @@ from cherrypy.lib import cptools, httptools, profiler
 class Request(object):
     """An HTTP request."""
     
+    is_index = None
+    
     def __init__(self, remoteAddr, remotePort, remoteHost, scheme="http"):
         """Populate a new Request object.
         
@@ -295,6 +297,8 @@ class Request(object):
             # Try a "default" method on the current leaf.
             defhandler = getattr(candidate, "default", None)
             if callable(defhandler) and getattr(defhandler, 'exposed', False):
+                # See http://www.cherrypy.org/ticket/613
+                self.is_index = objectpath.endswith("/")
                 return defhandler, names[:i+1] + ["default"], names[i+1:-1]
             
             # Uncomment the next line to restrict positional params to "default".
@@ -305,12 +309,14 @@ class Request(object):
                 if i == len(objectTrail) - 1:
                     # We found the extra ".index". Check if the original path
                     # had a trailing slash (otherwise, do a redirect).
+                    self.is_index = True
                     if not objectpath.endswith('/'):
                         atoms = self.browser_url.split("?", 1)
                         newUrl = atoms.pop(0) + '/'
                         if atoms:
                             newUrl += "?" + atoms[0]
                         raise cherrypy.HTTPRedirect(newUrl)
+                self.is_index = False
                 return candidate, names[:i+1], names[i+1:-1]
             
             if candidate in mounted_app_roots:
