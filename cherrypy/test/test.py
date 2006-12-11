@@ -299,6 +299,7 @@ def run():
         'test_etags',
         'test_gzip_filter',
         'test_logdebuginfo_filter',
+        'test_misc_tools',
         'test_objectmapping',
         'test_response_headers_filter',
         'test_static_filter',
