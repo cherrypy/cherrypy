@@ -2,7 +2,7 @@
 
 import sys
 import cherrypy
-from cherrypy import _cputil, _cpwsgiserver
+from cherrypy import _cputil, _cpwsgiserver, _cpwsgiserver3
 from cherrypy.lib import httptools
 
 
@@ -159,13 +159,6 @@ class CPHTTPRequest(_cpwsgiserver.HTTPRequest):
             cherrypy.log(traceback=True)
         else:
             if self.ready:
-                # Request header is parsed
-                script_name = self.environ.get('SCRIPT_NAME', '')
-                path_info = self.environ.get('PATH_INFO', '')
-                path = (script_name + path_info)
-                if path == "*":
-                    path = "global"
-                
                 if isinstance(self.rfile, httptools.SizeCheckWrapper):
                     # Unwrap the rfile
                     self.rfile = self.rfile.rfile
@@ -206,4 +199,86 @@ class WSGIServer(_cpwsgiserver.CherryPyWSGIServer):
                    request_queue_size = conf('server.socket_queue_size'),
                    timeout = conf('server.socket_timeout'),
                    )
+
+
+#                            Server3 components                            #
+
+
+class CPHTTPRequest3(_cpwsgiserver3.HTTPRequest):
+    
+    def parse_request(self):
+        mhs = int(cherrypy.config.get('server.max_request_header_size',
+                                      500 * 1024))
+        if mhs > 0:
+            self.rfile = httptools.SizeCheckWrapper(self.rfile, mhs)
+        
+        try:
+            _cpwsgiserver3.HTTPRequest.parse_request(self)
+        except httptools.MaxSizeExceeded:
+            self.simple_response("413 Request Entity Too Large")
+            cherrypy.log(traceback=True)
+        else:
+            if self.ready:
+                if isinstance(self.rfile, httptools.SizeCheckWrapper):
+                    # Unwrap the rfile
+                    self.rfile = self.rfile.rfile
+                self.environ["wsgi.input"] = self.rfile
+    
+    def decode_chunked(self):
+        """Decode the 'chunked' transfer coding."""
+        if isinstance(self.rfile, httptools.SizeCheckWrapper):
+            self.rfile = self.rfile.rfile
+        mbs = int(cherrypy.config.get('server.max_request_body_size',
+                                      100 * 1024 * 1024))
+        if mbs > 0:
+            self.rfile = httptools.SizeCheckWrapper(self.rfile, mbs)
+        try:
+            return _cpwsgiserver3.HTTPRequest.decode_chunked(self)
+        except httptools.MaxSizeExceeded:
+            self.simple_response("413 Request Entity Too Large")
+            cherrypy.log(traceback=True)
+            return False
+
+
+class CPHTTPConnection3(_cpwsgiserver3.HTTPConnection):
+    
+    RequestHandlerClass = CPHTTPRequest3
+
+
+class CPWSGIServer3(_cpwsgiserver3.CherryPyWSGIServer):
+    """Wrapper for _cpwsgiserver3.CherryPyWSGIServer.
+    
+    wsgiserver has been designed to not reference CherryPy in any way,
+    so that it can be used in other frameworks and applications. Therefore,
+    we wrap it here, so we can set our own mount points from cherrypy.tree.
+    """
+    
+    ConnectionClass = CPHTTPConnection3
+    
+    def __init__(self):
+        conf = cherrypy.config.get
+        
+        sockFile = cherrypy.config.get('server.socket_file')
+        if sockFile:
+            bind_addr = sockFile
+        else:
+            bind_addr = (conf("server.socket_host"), conf("server.socket_port"))
+        
+        pts = cherrypy.tree.mount_points
+        if pts:
+            apps = [(base, wsgiApp) for base in pts.keys()]
+        else:
+            apps = [("", wsgiApp)]
+        
+        s = _cpwsgiserver3.CherryPyWSGIServer
+        s.__init__(self, bind_addr, apps,
+                   conf("server.thread_pool"),
+                   conf("server.socket_host"),
+                   request_queue_size = conf('server.socket_queue_size'),
+                   timeout = conf('server.socket_timeout'),
+                   )
+        
+        self.protocol = conf("server.protocol_version")
+        self.ssl_certificate = conf("server.ssl_certificate")
+        self.ssl_private_key = conf("server.ssl_private_key")
 

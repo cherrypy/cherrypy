@@ -67,6 +67,7 @@ class TestHarness(object):
 
 class CommandLineParser(object):
     available_servers = {'wsgi': "cherrypy._cpwsgi.WSGIServer",
+                         'wsgi3': "cherrypy._cpwsgi.CPWSGIServer3",
                          'modpy': "modpy",
                          }
     default_server = "wsgi"

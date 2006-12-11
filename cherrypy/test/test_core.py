@@ -857,7 +857,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     def testMaxRequestSize(self):
         self.getPage("/", headers=[('From', "x" * 500)])
         self.assertStatus(413)
-        self.assertInBody("Request Entity Too Large")
         
         # Test for http://www.cherrypy.org/ticket/421
         # (Incorrect border condition in readline of SizeCheckWrapper).
@@ -886,7 +885,6 @@ Content-Type: text/plain
              ("Content-Length", len(b))]
         self.getPage('/upload', h, "POST", b)
         self.assertStatus(413)
-        self.assertInBody("Request Entity Too Large")
     
     def testEmptyThreadlocals(self):
         results = []
