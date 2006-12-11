@@ -349,9 +349,15 @@ class WSGIApp(object):
 
 
 # public domain "unrepr" implementation, found on the web and then improved.
-import compiler
 
 def getObj(s):
+    try:
+        import compiler
+    except ImportError:
+        # Fallback to eval when compiler package is not available,
+        # e.g. IronPython 1.0.
+        return eval(s)
+    
     s = "a=" + s
     p = compiler.parse(s)
     return p.getChildren()[1].getChildren()[0].getChildren()[1]
