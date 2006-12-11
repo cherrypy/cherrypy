@@ -57,3 +57,5 @@ class LogDebugInfoFilter(BaseFilter):
                 debuginfo += '-->'
             
             cherrypy.response.body = [body, debuginfo]
+            # Delete Content-Length header so finalize() recalcs it.
+            cherrypy.response.headers.pop("Content-Length", None)

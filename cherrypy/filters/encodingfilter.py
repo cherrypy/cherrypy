@@ -42,6 +42,8 @@ def encode_string(encoding, errors='strict'):
                 chunk = chunk.encode(encoding, errors)
             body.append(chunk)
         cherrypy.response.body = body
+        # Delete Content-Length header so finalize() recalcs it.
+        cherrypy.response.headers.pop("Content-Length", None)
     except (LookupError, UnicodeError):
         return False
     else:

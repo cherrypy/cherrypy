@@ -69,4 +69,6 @@ class NsgmlsFilter(BaseFilter):
                     new_body += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                 
                 cherrypy.response.body = new_body
+                # Delete Content-Length header so finalize() recalcs it.
+                cherrypy.response.headers.pop("Content-Length", None)
 

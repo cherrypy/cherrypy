@@ -73,6 +73,8 @@ class TidyFilter(BaseFilter):
                     newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                 
                 cherrypy.response.body = newBody
+                # Delete Content-Length header so finalize() recalcs it.
+                cherrypy.response.headers.pop("Content-Length", None)
 
             elif strictXml:
                 # The HTML is OK, but is it valid XML
@@ -93,6 +95,8 @@ class TidyFilter(BaseFilter):
                     bodyFile = StringIO.StringIO()
                     traceback.print_exc(file = bodyFile)
                     cherrypy.response.body = bodyFile.getvalue()
+                    # Delete Content-Length header so finalize() recalcs it.
+                    cherrypy.response.headers.pop("Content-Length", None)
                     
                     newBody = "Wrong XML:<br />" + cgi.escape(bodyFile.getvalue().replace('\n','<br />'))
                     newBody += '<br /><br />'
@@ -102,4 +106,6 @@ class TidyFilter(BaseFilter):
                         newBody += "%03d - "%i + cgi.escape(line).replace('\t','    ').replace(' ','&nbsp;') + '<br />'
                     
                     cherrypy.response.body = newBody
+                    # Delete Content-Length header so finalize() recalcs it.
+                    cherrypy.response.headers.pop("Content-Length", None)
 

@@ -28,6 +28,8 @@ class GzipFilter(BaseFilter):
             response.headers['Content-Encoding'] = 'gzip'
             level = cherrypy.config.get('gzip_filter.compresslevel', 9)
             response.body = self.zip_body(response.body, level)
+            # Delete Content-Length header so finalize() recalcs it.
+            response.headers.pop("Content-Length", None)
         
         acceptable = cherrypy.request.headers.elements('Accept-Encoding')
         if not acceptable:

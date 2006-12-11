@@ -60,6 +60,8 @@ class SessionAuthenticateFilter(BaseFilter):
             error_msg = check_login_and_password(login, password)
             if error_msg:
                 cherrypy.response.body = login_screen(from_page, login = login, error_msg = error_msg)
+                # Delete Content-Length header so finalize() recalcs it.
+                cherrypy.response.headers.pop("Content-Length", None)
                 cherrypy.request.execute_main = False
             else:
                 cherrypy.session[session_key] = login
@@ -78,6 +80,8 @@ class SessionAuthenticateFilter(BaseFilter):
             temp_user = not_logged_in()
         if (not cherrypy.session.get(session_key)) and not temp_user:
             cherrypy.response.body = login_screen(cherrypy.request.browser_url)
+            # Delete Content-Length header so finalize() recalcs it.
+            cherrypy.response.headers.pop("Content-Length", None)
             cherrypy.request.execute_main = False
             return
         
