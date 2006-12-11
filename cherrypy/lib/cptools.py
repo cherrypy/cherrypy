@@ -8,6 +8,7 @@ mimetypes.types_map['.dwg']='image/x-dwg'
 mimetypes.types_map['.ico']='image/x-icon'
 
 import os
+import stat as _stat
 import sys
 import time
 
@@ -203,7 +204,8 @@ def serveFile(path, contentType=None, disposition=None, name=None):
             cherrypy.log("    NOT FOUND file: %s" % path, "DEBUG")
         raise cherrypy.NotFound()
     
-    if os.path.isdir(path):
+    # Check if path is a directory.
+    if _stat.S_ISDIR(stat.st_mode):
         # Let the caller deal with it as they like.
         raise cherrypy.NotFound()
     
