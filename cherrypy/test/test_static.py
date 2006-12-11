@@ -3,12 +3,15 @@ test.prefer_parent_path()
 
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
 import threading
 
 import cherrypy
 
-
 def setup_server():
+    if not os.path.exists(has_space_filepath):
+        file(has_space_filepath, 'wb').write('Hello, world\r\n')
+        
     class Root:
         pass
 
@@ -51,6 +54,13 @@ def setup_server():
     cherrypy.tree.mount(root, config=conf)
     cherrypy.config.update({'environment': 'test_suite'})
 
+def teardown_server():
+    if os.path.exists(has_space_filepath):
+        try:
+            os.unlink(has_space_filepath)
+        except:
+            pass
+        
 from cherrypy.test import helper
 
 class StaticTest(helper.CPWebCase):
