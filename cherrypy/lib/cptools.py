@@ -366,6 +366,10 @@ class Builder:
             raise UnknownType(o.__class__.__name__)
         return m(o)
     
+    def build_CallFunc(self, o):
+        callee, args, starargs, kwargs = map(self.build, o.getChildren())
+        return callee(args, *(starargs or ()), **(kwargs or {}))
+    
     def build_List(self, o):
         return map(self.build, o.getChildren())
     
@@ -411,6 +415,15 @@ class Builder:
     def build_Getattr(self, o):
         parent = self.build(o.expr)
         return getattr(parent, o.attrname)
+    
+    def build_NoneType(self, o):
+        return None
+    
+    def build_UnarySub(self, o):
+        return -self.build_Const(o.getChildren()[0])
+    
+    def build_UnaryAdd(self, o):
+        return self.build_Const(o.getChildren()[0])
 
 
 def unrepr(s):
