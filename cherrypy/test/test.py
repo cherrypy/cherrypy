@@ -88,7 +88,6 @@ class CommandLineParser(object):
         
         longopts = ['cover', 'profile', '1.1', 'help', 'basedir=', 'port=',
                     'server=']
-        longopts.extend(self.available_servers)
         longopts.extend(self.available_tests)
         try:
             opts, args = getopt.getopt(args, "", longopts)
