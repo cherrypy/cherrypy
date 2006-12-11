@@ -86,7 +86,7 @@ class MemoryCache:
             (len(self.cache) < self.maxobjects)):
             # add to the expirationQueue & cache
             try:
-                expirationTime = time.time() + cherrypy.config.get("cache_filter.delay", 600)
+                expirationTime = cherrypy.response.time + cherrypy.config.get("cache_filter.delay", 600)
                 objKey = self.key
                 self.expirationQueue.put((expirationTime, objSize, objKey))
                 self.cache[objKey] = (expirationTime, lastModified, obj)
