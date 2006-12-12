@@ -22,7 +22,7 @@ class TestHarness(object):
     """A test harness for the CherryPy framework and CherryPy applications."""
     
     def __init__(self, tests=None, server=None, protocol="HTTP/1.1",
-                 port=8000, scheme="http", interactive=True):
+                 port=8000, scheme="http", interactive=True, host='127.0.0.1'):
         """Constructor to populate the TestHarness instance.
         
         tests should be a list of module names (strings).
@@ -31,6 +31,7 @@ class TestHarness(object):
         self.server = server
         self.protocol = protocol
         self.port = port
+        self.host = host
         self.scheme = scheme
         self.interactive = interactive
     
@@ -49,7 +50,7 @@ class TestHarness(object):
         
         if isinstance(conf, basestring):
             conf = cherrypy.config._Parser().dict_from_file(conf)
-        baseconf = {'server.socket_host': '127.0.0.1',
+        baseconf = {'server.socket_host': self.host,
                     'server.socket_port': self.port,
                     'server.thread_pool': 10,
                     'environment': "test_suite",
@@ -71,6 +72,7 @@ class TestHarness(object):
         # and we wouldn't be able to globally override the port anymore.
         from cherrypy.test import helper, webtest
         webtest.WebCase.PORT = self.port
+        webtest.WebCase.HOST = self.host
         webtest.WebCase.harness = self
         helper.CPWebCase.scheme = self.scheme
         webtest.WebCase.interactive = self.interactive
@@ -90,6 +92,7 @@ class CommandLineParser(object):
     scheme = "http"
     protocol = "HTTP/1.1"
     port = 8080
+    host = '127.0.0.1'
     cover = False
     profile = False
     validate = False
@@ -110,7 +113,7 @@ class CommandLineParser(object):
         
         longopts = ['cover', 'profile', 'validate', 'conquer', 'dumb',
                     '1.0', 'ssl', 'help',
-                    'basedir=', 'port=', 'server=']
+                    'basedir=', 'port=', 'server=', 'host=']
         longopts.extend(self.available_tests)
         try:
             opts, args = getopt.getopt(args, "", longopts)
@@ -143,6 +146,8 @@ class CommandLineParser(object):
                 self.basedir = a
             elif o == "--port":
                 self.port = int(a)
+            elif o == "--host":
+                self.host = a
             elif o == "--server":
                 if a in self.available_servers:
                     a = self.available_servers[a]
@@ -169,9 +174,9 @@ class CommandLineParser(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server=* --port=%s --1.0 --cover --basedir=path --profile --validate --conquer --dumb --tests**
+        test.py --server=* --host=%s --port=%s --1.0 --cover --basedir=path --profile --validate --conquer --dumb --tests**
         
-    """ % self.__class__.port
+    """ % (self.__class__.host, self.__class__.port)
         print '    * servers:'
         for name, val in self.available_servers.iteritems():
             if name == self.default_server:
@@ -181,6 +186,8 @@ class CommandLineParser(object):
         
         print """
     
+    --host=<name or IP addr>: use a host other than the default (%s).
+        Not yet available with mod_python servers.
     --port=<int>: use a port other than the default (%s)
     --1.0: use HTTP/1.0 servers instead of default HTTP/1.1
     
@@ -191,7 +198,7 @@ class CommandLineParser(object):
     --validate: use wsgiref.validate (builtin in Python 2.5).
     --conquer: use wsgiconq (which uses pyconquer) to trace calls.
     --dumb: turn off the interactive output features.
-    """ % self.__class__.port
+    """ % (self.__class__.host, self.__class__.port)
         
         print '    ** tests:'
         for name in self.available_tests:
@@ -318,7 +325,8 @@ class CommandLineParser(object):
             h.use_wsgi = True
         else:
             h = TestHarness(self.tests, self.server, self.protocol,
-                            self.port, self.scheme, self.interactive)
+                            self.port, self.scheme, self.interactive,
+                            self.host)
         
         success = h.run(conf)
         

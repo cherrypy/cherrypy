@@ -296,8 +296,9 @@ def setup_server():
             hMap['content-type'] = "text/html"
             hMap['content-length'] = 18
             hMap['server'] = 'CherryPy headertest'
-            hMap['location'] = ('%s://127.0.0.1:%s/headers/'
-                                % (cherrypy.request.remote.port,
+            hMap['location'] = ('%s://%s:%s/headers/'
+                                % (cherrypy.request.local.ip,
+                                   cherrypy.request.local.port,
                                    cherrypy.request.scheme))
             
             # Set a rare header for fun
@@ -480,7 +481,16 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         
         data = open(log_access_file, "rb").readlines()
-        self.assertEqual(data[0][:15], '127.0.0.1 - - [')
+        
+        host = self.HOST
+        if not host:
+            # The empty string signifies INADDR_ANY,
+            # which should respond on localhost.
+            host = "127.0.0.1"
+        intro = '%s - - [' % host
+        
+        if not data[0].startswith(intro):
+            self.fail("%r doesn't start with %r" % (data[0], intro))
         haslength = False
         for k, v in self.headers:
             if k.lower() == 'content-length':
@@ -495,7 +505,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                                  % self.prefix()):
                 self.fail(line)
         
-        self.assertEqual(data[-1][:15], '127.0.0.1 - - [')
+        if not data[-1].startswith(intro):
+            self.fail("%r doesn't start with %r" % (data[-1], intro))
         haslength = False
         for k, v in self.headers:
             if k.lower() == 'content-length':
@@ -951,7 +962,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # This hangs in rev 891 and earlier.
         lines256 = "x" * 248
         self.getPage("/",
-                     headers=[('Host', '127.0.0.1:%s' % self.PORT),
+                     headers=[('Host', '%s:%s' % (self.HOST, self.PORT)),
                               ('From', lines256)])
         
         # Test upload

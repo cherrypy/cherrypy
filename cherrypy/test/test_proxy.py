@@ -90,9 +90,13 @@ class ProxyTest(helper.CPWebCase):
                 port = ":%s" % self.PORT
             elif self.scheme == "https" and self.PORT != 443:
                 port = ":%s" % self.PORT
+            host = self.HOST
+            if host == '':
+                import socket
+                host = socket.gethostname()
             self.assertEqual(cherrypy.url("/this/new/page", script_name=sn),
                              "%s://%s%s%s/this/new/page"
-                             % (self.scheme, self.HOST, port, sn))
+                             % (self.scheme, host, port, sn))
         
         # Test trailing slash (see http://www.cherrypy.org/ticket/562).
         self.getPage("/xhost/", headers=[('X-Host', 'www.yetanother.com')])

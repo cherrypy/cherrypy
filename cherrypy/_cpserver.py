@@ -83,8 +83,6 @@ class Server(object):
         
         host = self.socket_host
         port = self.socket_port
-        if not host:
-            host = 'localhost'
         return httpserver, (host, port)
     
     def start(self):
@@ -181,6 +179,8 @@ class Server(object):
 def check_port(host, port):
     """Raise an error if the given port is not free on the given host."""
     if not host:
+        # The empty string signifies INADDR_ANY,
+        # which should respond on localhost.
         host = 'localhost'
     port = int(port)
     
@@ -208,6 +208,8 @@ def check_port(host, port):
 def wait_for_free_port(host, port):
     """Wait for the specified port to become free (drop requests)."""
     if not host:
+        # The empty string signifies INADDR_ANY,
+        # which should respond on localhost.
         host = 'localhost'
     
     for trial in xrange(50):
@@ -226,6 +228,8 @@ def wait_for_free_port(host, port):
 def wait_for_occupied_port(host, port):
     """Wait for the specified port to become active (receive requests)."""
     if not host:
+        # The empty string signifies INADDR_ANY,
+        # which should respond on localhost.
         host = 'localhost'
     
     for trial in xrange(50):

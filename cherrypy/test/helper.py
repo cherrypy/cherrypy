@@ -41,7 +41,14 @@ class CPWebCase(webtest.WebCase):
             port = ""
         else:
             port = ":%s" % self.PORT
-        return "%s://%s%s%s" % (self.scheme, self.HOST, port,
+        
+        host = self.HOST
+        if not host:
+            # The empty string signifies INADDR_ANY,
+            # which should respond on localhost.
+            host = "127.0.0.1"
+        
+        return "%s://%s%s%s" % (self.scheme, host, port,
                                 self.script_name.rstrip("/"))
     
     def exit(self):

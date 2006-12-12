@@ -95,10 +95,10 @@ class XmlRpcTest(helper.CPWebCase):
         
         # load the appropriate xmlrpc proxy
         if getattr(self.harness, "scheme", "http") == "https":
-            url = 'https://localhost:%s/xmlrpc/' % self.PORT
+            url = 'https://%s:%s/xmlrpc/' % (self.HOST, self.PORT)
             proxy = xmlrpclib.ServerProxy(url, transport=HTTPSTransport())
         else:
-            url = 'http://localhost:%s/xmlrpc/' % self.PORT
+            url = 'http://%s:%s/xmlrpc/' % (self.HOST, self.PORT)
             proxy = xmlrpclib.ServerProxy(url)
         
         # begin the tests ...

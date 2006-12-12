@@ -219,6 +219,9 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
             else:
                 host = server.socket_host
                 if not host:
+                    # The empty string signifies INADDR_ANY.
+                    # Look up the host name, which should be
+                    # the safest thing to spit out in a URL.
                     import socket
                     host = socket.gethostname()
                 port = server.socket_port

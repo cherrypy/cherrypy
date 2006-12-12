@@ -664,9 +664,16 @@ class CherryPyWSGIServer(object):
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6 addresses)
             host, port = self.bind_addr
+            flags = 0
+            if host == '':
+                # Despite the socket module docs, using '' does not
+                # allow AI_PASSIVE to work. Passing None instead
+                # returns '0.0.0.0' like we want.
+                host = None
+                flags = socket.AI_PASSIVE
             try:
                 info = socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                          socket.SOCK_STREAM)
+                                          socket.SOCK_STREAM, 0, flags)
             except socket.gaierror:
                 # Probably a DNS issue. Assume IPv4.
                 info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", self.bind_addr)]
@@ -755,6 +762,10 @@ class CherryPyWSGIServer(object):
                     if x.args[1] != "Bad file descriptor":
                         raise
                 else:
+                    # Note that we're explicitly NOT using AI_PASSIVE,
+                    # here, because we want an actual IP to touch.
+                    # localhost won't work if we've bound to a public IP,
+                    # but it would if we bound to INADDR_ANY via host = ''.
                     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
                                                   socket.SOCK_STREAM):
                         af, socktype, proto, canonname, sa = res
