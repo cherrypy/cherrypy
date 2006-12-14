@@ -145,7 +145,9 @@ def setup_server():
         
         def stringify(self):
             return str(cherrypy.HTTPRedirect("/"))
-    
+        
+        def fragment(self, frag):
+            raise cherrypy.HTTPRedirect("/some/url#%s" % frag)
     
     def login_redir():
         if not getattr(cherrypy.request, "login", None):
@@ -611,6 +613,14 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.getPage("/redirect/stringify", protocol="HTTP/1.1")
             self.assertStatus(200)
             self.assertBody("(['%s/'], 303)" % self.base())
+        
+        # check that #fragments are handled properly
+        # http://skrb.org/ietf/http_errata.html#location-fragments
+        frag = "foo"
+        self.getPage("/redirect/fragment/%s" % frag)
+        self.assertMatchesBody(r"<a href='(.*)\/some\/url\#%s'>\1\/some\/url\#%s</a>" % (frag, frag))
+        self.assert_(dict(self.headers)['Location'].endswith("#%s" % frag))
+        self.assertStatus(303)
     
     def test_InternalRedirect(self):
         # InternalRedirect
