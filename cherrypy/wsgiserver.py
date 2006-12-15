@@ -279,17 +279,17 @@ class HTTPRequest(object):
         wfile = self.connection.wfile
         response = self.wsgi_app(self.environ, self.start_response)
         try:
-            for line in response:
+            for chunk in response:
                 if not self.sent_headers:
                     self.sent_headers = True
                     self.send_headers()
                 if self.chunked_write:
-                    wfile.write(hex(len(line))[2:])
+                    wfile.write(hex(len(chunk))[2:])
                     wfile.write("\r\n")
-                    wfile.write(line)
+                    wfile.write(chunk)
                     wfile.write("\r\n")
                 else:
-                    wfile.write(line)
+                    wfile.write(chunk)
                 wfile.flush()
         finally:
             if hasattr(response, "close"):
@@ -668,7 +668,12 @@ class CherryPyWSGIServer(object):
             if host == '':
                 # Despite the socket module docs, using '' does not
                 # allow AI_PASSIVE to work. Passing None instead
-                # returns '0.0.0.0' like we want.
+                # returns '0.0.0.0' like we want. In other words:
+                #     host    AI_PASSIVE     result
+                #      ''         Y         192.168.x.y
+                #      ''         N         192.168.x.y
+                #     None        Y         0.0.0.0
+                #     None        N         127.0.0.1
                 host = None
                 flags = socket.AI_PASSIVE
             try:

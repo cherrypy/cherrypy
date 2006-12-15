@@ -8,6 +8,9 @@ from cherrypy import _cperror, wsgiserver
 from cherrypy.lib import http as _http
 
 
+#                            Internal Redirect                            #
+
+
 class InternalRedirector(object):
     """WSGI middleware which handles cherrypy.InternalRedirect.
     
@@ -36,33 +39,202 @@ class InternalRedirector(object):
         self.recursive = recursive
     
     def __call__(self, environ, start_response):
-        redirections = []
-        
-        env = environ.copy()
-        path = env.get('PATH_INFO', '')
-        qs = env.get('QUERY_STRING', '')
-        
+        return IRResponse(self.nextapp, environ, start_response, self.recursive)
+
+
+class IRResponse(object):
+    
+    def __init__(self, nextapp, environ, start_response, recursive):
+        self.redirections = []
+        self.recursive = recursive
+        self.environ = environ.copy()
+        self.nextapp = nextapp
+        self.start_response = start_response
+        self.setapp()
+    
+    def setapp(self):
         while True:
             try:
-                for chunk in self.nextapp(env, start_response):
-                    yield chunk
+                self.response = self.nextapp(self.environ, self.start_response)
+                self.iter_response = iter(self.response)
                 break
             except _cherrypy.InternalRedirect, ir:
-                if not self.recursive:
-                    if ir.path in redirections:
-                        raise RuntimeError("InternalRedirector visited the "
-                                           "same URL twice: %r" % ir.path)
-                    else:
-                        # Add the *previous* path_info + qs to redirections.
-                        if qs:
-                            qs = "?" + qs
-                        redirections.append(env.get('SCRIPT_NAME', '') + path + qs)
-                
-                # Munge environment and try again.
-                env['REQUEST_METHOD'] = "GET"
-                env['PATH_INFO'] = path = ir.path
-                env['QUERY_STRING'] = qs = ir.query_string
-                env['wsgi.input'] = _StringIO.StringIO()
+                self.setenv(ir)
+    
+    def setenv(self, ir):
+        env = self.environ
+        if not self.recursive:
+            if ir.path in self.redirections:
+                raise RuntimeError("InternalRedirector visited the "
+                                   "same URL twice: %r" % ir.path)
+            else:
+                # Add the *previous* path_info + qs to redirections.
+                sn = env.get('SCRIPT_NAME', '')
+                path = env.get('PATH_INFO', '')
+                qs = env.get('QUERY_STRING', '')
+                if qs:
+                    qs = "?" + qs
+                self.redirections.append(sn + path + qs)
+        
+        # Munge environment and try again.
+        env['REQUEST_METHOD'] = "GET"
+        env['PATH_INFO'] = ir.path
+        env['QUERY_STRING'] = ir.query_string
+        env['wsgi.input'] = _StringIO.StringIO()
+    
+    def close(self):
+        if hasattr(self.response, "close"):
+            self.response.close()
+    
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        while True:
+            try:
+                return self.iter_response.next()
+            except _cherrypy.InternalRedirect, ir:
+                self.setenv(ir)
+                self.setapp()
+
+
+
+#                           WSGI-to-CP Adapter                           #
+
+
+class AppResponse(object):
+    
+    throws = (KeyboardInterrupt, SystemExit, _cherrypy.InternalRedirect)
+    request = None
+    
+    def __init__(self, environ, start_response, cpapp):
+        try:
+            self.request = self.get_engine_request(environ, cpapp)
+            
+            meth = environ['REQUEST_METHOD']
+            path = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
+            qs = environ.get('QUERY_STRING', '')
+            rproto = environ.get('SERVER_PROTOCOL')
+            headers = self.translate_headers(environ)
+            rfile = environ['wsgi.input']
+            
+            response = self.request.run(meth, path, qs, rproto, headers, rfile)
+            s, h, b = response.status, response.header_list, response.body
+            exc = None
+        except self.throws:
+            self.close()
+            raise
+        except:
+            if getattr(self.request, "throw_errors", False):
+                self.close()
+                raise
+            
+            tb = _cperror.format_exc()
+            _cherrypy.log(tb)
+            if not getattr(self.request, "show_tracebacks", True):
+                tb = ""
+            s, h, b = _cperror.bare_error(tb)
+            exc = _sys.exc_info()
+        
+        self.iter_response = iter(b)
+        
+        try:
+            start_response(s, h, exc)
+        except self.throws:
+            self.close()
+            raise
+        except:
+            if getattr(self.request, "throw_errors", False):
+                self.close()
+                raise
+            
+            _cherrypy.log(traceback=True)
+            self.close()
+            
+            # CherryPy test suite expects bare_error body to be output,
+            # so don't call start_response (which, according to PEP 333,
+            # may raise its own error at that point).
+            s, h, b = _cperror.bare_error()
+            self.iter_response = iter(b)
+    
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        try:
+            chunk = self.iter_response.next()
+            # WSGI requires all data to be of type "str". This coercion should
+            # not take any time at all if chunk is already of type "str".
+            # If it's unicode, it could be a big performance hit (x ~500).
+            if not isinstance(chunk, str):
+                chunk = chunk.encode("ISO-8859-1")
+            return chunk
+        except self.throws:
+            raise
+        except StopIteration:
+            raise
+        except:
+            if getattr(self.request, "throw_errors", False):
+                raise
+            
+            _cherrypy.log(traceback=True)
+            
+            # CherryPy test suite expects bare_error body to be output,
+            # so don't call start_response (which, according to PEP 333,
+            # may raise its own error at that point).
+            s, h, b = _cperror.bare_error()
+            self.iter_response = iter([])
+            return "".join(b)
+    
+    def close(self):
+        if hasattr(self.request, "close"):
+            try:
+                self.request.close()
+            except:
+                _cherrypy.log(traceback=True)
+    
+    def get_engine_request(self, environ, cpapp):
+        """Return a Request object from the CherryPy Engine using environ."""
+        env = environ.get
+        
+        local = _http.Host('', int(env('SERVER_PORT', 80)),
+                           env('SERVER_NAME', ''))
+        remote = _http.Host(env('REMOTE_ADDR', ''),
+                            int(env('REMOTE_PORT', -1)),
+                            env('REMOTE_HOST', ''))
+        scheme = env('wsgi.url_scheme')
+        sproto = env('ACTUAL_SERVER_PROTOCOL', "HTTP/1.1")
+        request = _cherrypy.engine.request(local, remote, scheme, sproto)
+        
+        # LOGON_USER is served by IIS, and is the name of the
+        # user after having been mapped to a local account.
+        # Both IIS and Apache set REMOTE_USER, when possible.
+        request.login = env('LOGON_USER') or env('REMOTE_USER') or None
+        request.multithread = environ['wsgi.multithread']
+        request.multiprocess = environ['wsgi.multiprocess']
+        request.wsgi_environ = environ
+        request.app = cpapp
+        request.prev = env('cherrypy.request')
+        environ['cherrypy.request'] = request
+        return request
+    
+    headerNames = {'HTTP_CGI_AUTHORIZATION': 'Authorization',
+                   'CONTENT_LENGTH': 'Content-Length',
+                   'CONTENT_TYPE': 'Content-Type',
+                   'REMOTE_HOST': 'Remote-Host',
+                   'REMOTE_ADDR': 'Remote-Addr',
+                   }
+    
+    def translate_headers(self, environ):
+        """Translate CGI-environ header names to HTTP header names."""
+        for cgiName in environ:
+            # We assume all incoming header keys are uppercase already.
+            if cgiName in self.headerNames:
+                yield self.headerNames[cgiName], environ[cgiName]
+            elif cgiName[:5] == "HTTP_":
+                # Hackish attempt at recovering original header names.
+                translatedHeader = cgiName[5:].replace("_", "-")
+                yield translatedHeader, environ[cgiName]
 
 
 class CPWSGIApp(object):
@@ -87,26 +259,6 @@ class CPWSGIApp(object):
     head = None
     config = {}
     
-    throws = (KeyboardInterrupt, SystemExit, _cherrypy.InternalRedirect)
-    
-    headerNames = {'HTTP_CGI_AUTHORIZATION': 'Authorization',
-                   'CONTENT_LENGTH': 'Content-Length',
-                   'CONTENT_TYPE': 'Content-Type',
-                   'REMOTE_HOST': 'Remote-Host',
-                   'REMOTE_ADDR': 'Remote-Addr',
-                   }
-    
-    def translate_headers(self, environ):
-        """Translate CGI-environ header names to HTTP header names."""
-        for cgiName in environ:
-            # We assume all incoming header keys are uppercase already.
-            if cgiName in self.headerNames:
-                yield self.headerNames[cgiName], environ[cgiName]
-            elif cgiName[:5] == "HTTP_":
-                # Hackish attempt at recovering original header names.
-                translatedHeader = cgiName[5:].replace("_", "-")
-                yield translatedHeader, environ[cgiName]
-    
     def __init__(self, cpapp, pipeline=None):
         self.cpapp = cpapp
         self.pipeline = self.pipeline[:]
@@ -114,29 +266,7 @@ class CPWSGIApp(object):
             self.pipeline.extend(pipeline)
         self.config = self.config.copy()
     
-    def get_request(self, environ):
-        env = environ.get
-        
-        local = _http.Host('', int(env('SERVER_PORT', 80)),
-                           env('SERVER_NAME', ''))
-        remote = _http.Host(env('REMOTE_ADDR', ''),
-                            int(env('REMOTE_PORT', -1)),
-                            env('REMOTE_HOST', ''))
-        scheme = env('wsgi.url_scheme')
-        sproto = env('ACTUAL_SERVER_PROTOCOL', "HTTP/1.1")
-        request = _cherrypy.engine.request(local, remote, scheme, sproto)
-        
-        # LOGON_USER is served by IIS, and is the name of the
-        # user after having been mapped to a local account.
-        # Both IIS and Apache set REMOTE_USER, when possible.
-        request.login = env('LOGON_USER') or env('REMOTE_USER') or None
-        request.multithread = environ['wsgi.multithread']
-        request.multiprocess = environ['wsgi.multiprocess']
-        request.wsgi_environ = environ
-        request.app = self.cpapp
-        request.prev = env('cherrypy.request')
-        environ['cherrypy.request'] = request
-        return request
+    response_class = AppResponse
     
     def tail(self, environ, start_response):
         """WSGI application callable for the actual CherryPy application.
@@ -144,72 +274,13 @@ class CPWSGIApp(object):
         You probably shouldn't call this; call self.__call__ instead,
         so that any WSGI middleware in self.pipeline can run first.
         """
-        request = None
-        try:
-            request = self.get_request(environ)
-            
-            meth = environ['REQUEST_METHOD']
-            path = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
-            qs = environ.get('QUERY_STRING', '')
-            rproto = environ.get('SERVER_PROTOCOL')
-            headers = self.translate_headers(environ)
-            rfile = environ['wsgi.input']
-            
-            response = request.run(meth, path, qs, rproto, headers, rfile)
-            s, h, b = response.status, response.header_list, response.body
-            exc = None
-        except self.throws, ex:
-            self._close_req(request)
-            raise ex
-        except:
-            if request and request.throw_errors:
-                raise
-            
-            tb = _cperror.format_exc()
-            _cherrypy.log(tb)
-            if request and not request.show_tracebacks:
-                tb = ""
-            s, h, b = _cperror.bare_error(tb)
-            
-            exc = _sys.exc_info()
-        
-        try:
-            start_response(s, h, exc)
-            for chunk in b:
-                # WSGI requires all data to be of type "str". This coercion should
-                # not take any time at all if chunk is already of type "str".
-                # If it's unicode, it could be a big performance hit (x ~500).
-                if not isinstance(chunk, str):
-                    chunk = chunk.encode("ISO-8859-1")
-                yield chunk
-            self._close_req(request)
-        except self.throws, ex:
-            self._close_req(request)
-            raise ex
-        except:
-            _cherrypy.log(traceback=True)
-            self._close_req(request)
-            
-            # CherryPy test suite expects bare_error body to be output,
-            # so don't call start_response (which, according to PEP 333,
-            # may raise its own error at that point).
-            s, h, b = _cperror.bare_error()
-            for chunk in b:
-                if not isinstance(chunk, str):
-                    chunk = chunk.encode("ISO-8859-1")
-                yield chunk
-    
-    def _close_req(self, request):
-        if hasattr(request, "close"):
-            try:
-                request.close()
-            except:
-                _cherrypy.log(traceback=True)
+        return self.response_class(environ, start_response, self.cpapp)
     
     def __call__(self, environ, start_response):
         head = self.head
         if head is None:
             # Create and nest the WSGI apps in our pipeline (in reverse order).
+            # Then memoize the result in self.head.
             head = self.tail
             for name, callable in self.pipeline[::-1]:
                 conf = self.config.get(name, {})

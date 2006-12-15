@@ -158,6 +158,11 @@ def setup_server():
         
         def err_in_onstart(self):
             return "success!"
+        
+        def stream(self):
+            for x in xrange(100000000):
+                yield str(x)
+        stream._cp_config = {'response.stream': True}
     
     
     cherrypy.config.update({'environment': 'test_suite'})
@@ -235,6 +240,25 @@ class ToolTests(helper.CPWebCase):
         # Test compile-time decorator with kwargs from config.
         self.getPage("/demo/userid")
         self.assertBody("Welcome!")
+        
+        # Test that on_end_request is called even if the client drops.
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.putrequest("GET", "/demo/stream", skip_host=True)
+            conn.putheader("Host", self.HOST)
+            conn.endheaders()
+            # Skip the rest of the request and close the conn. This will
+            # cause the server's active socket to error, which *should*
+            # result in the request being aborted, and request.close being
+            # called all the way up the stack (including WSGI middleware),
+            # eventually calling our on_end_request hook.
+        finally:
+            self.persistent = False
+        time.sleep(0.1)
+        # Test that the on_end_request hooks was called.
+        self.getPage("/demo/ended/9")
+        self.assertBody("True")
     
     def testGuaranteedHooks(self):
         # The 'critical' on_start_resource hook is 'failsafe' (guaranteed
