@@ -469,8 +469,7 @@ def openURL(url, headers=None, method="GET", body=None,
     
     # Trying 10 times is simply in case of socket errors.
     # Normal case--it should run once.
-    trial = 0
-    while trial < 10:
+    for trial in xrange(10):
         try:
             # Allow http_conn to be a class or an instance
             if hasattr(http_conn, "host"):
@@ -512,11 +511,8 @@ def openURL(url, headers=None, method="GET", body=None,
             
             return s, h, b
         except socket.error:
-            trial += 1
-            if trial >= 10:
-                raise
-            else:
-                time.sleep(0.5)
+            time.sleep(0.5)
+    raise
 
 
 # Add any exceptions which your web framework handles
