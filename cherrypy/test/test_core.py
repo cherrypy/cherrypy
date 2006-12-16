@@ -389,11 +389,6 @@ def setup_server():
             cherrypy.request.asdf = "rassfrassin"
             return existing
     
-    def check(login, password):
-        # Dummy check_login_and_password function
-        if login != 'login' or password != 'password':
-            return u'Wrong login/password'
-    
     cherrypy.config.update({
         'log.error_file': log_file,
         'environment': 'test_suite',
@@ -619,8 +614,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         frag = "foo"
         self.getPage("/redirect/fragment/%s" % frag)
         self.assertMatchesBody(r"<a href='(.*)\/some\/url\#%s'>\1\/some\/url\#%s</a>" % (frag, frag))
-        self.assert_(dict(self.headers)['Location'].endswith("#%s" % frag))
-        self.assertStatus(303)
+        loc = self.assertHeader('Location')
+        assert loc.endswith("#%s" % frag)
+        self.assertStatus(('302 Found', '303 See Other'))
     
     def test_InternalRedirect(self):
         # InternalRedirect
