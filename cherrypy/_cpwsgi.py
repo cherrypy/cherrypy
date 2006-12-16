@@ -50,6 +50,8 @@ class IRResponse(object):
         self.environ = environ.copy()
         self.nextapp = nextapp
         self.start_response = start_response
+        self.response = None
+        self.iter_response = None
         self.setapp()
     
     def setapp(self):
@@ -57,8 +59,9 @@ class IRResponse(object):
             try:
                 self.response = self.nextapp(self.environ, self.start_response)
                 self.iter_response = iter(self.response)
-                break
+                return
             except _cherrypy.InternalRedirect, ir:
+                self.close()
                 self.setenv(ir)
     
     def setenv(self, ir):
@@ -81,6 +84,7 @@ class IRResponse(object):
         env['PATH_INFO'] = ir.path
         env['QUERY_STRING'] = ir.query_string
         env['wsgi.input'] = _StringIO.StringIO()
+        env['CONTENT_LENGTH'] = "0"
     
     def close(self):
         if hasattr(self.response, "close"):
@@ -94,6 +98,7 @@ class IRResponse(object):
             try:
                 return self.iter_response.next()
             except _cherrypy.InternalRedirect, ir:
+                self.close()
                 self.setenv(ir)
                 self.setapp()
 
@@ -259,14 +264,14 @@ class CPWSGIApp(object):
     head = None
     config = {}
     
+    response_class = AppResponse
+    
     def __init__(self, cpapp, pipeline=None):
         self.cpapp = cpapp
         self.pipeline = self.pipeline[:]
         if pipeline:
             self.pipeline.extend(pipeline)
         self.config = self.config.copy()
-    
-    response_class = AppResponse
     
     def tail(self, environ, start_response):
         """WSGI application callable for the actual CherryPy application.
