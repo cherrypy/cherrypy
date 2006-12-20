@@ -106,11 +106,19 @@ class HTTPRequest(object):
         # and doesn't need the client to request or acknowledge the close
         # (although your TCP stack might suffer for it: cf Apache's history
         # with FIN_WAIT_2).
-        request_line = self.rfile.readline()
-        if not request_line:
-            # Force self.ready = False so the connection will close.
-            self.ready = False
-            return
+        while True:
+            request_line = self.rfile.readline()
+            if not request_line:
+                # Force self.ready = False so the connection will close.
+                self.ready = False
+                return
+            elif request_line == "\r\n":
+                # "...if the server is reading the protocol stream at the
+                # beginning of a message and receives a CRLF first, it
+                # should ignore the CRLF." RFC 2616 sec 4.1
+                pass
+            else:
+                break
         
         server = self.connection.server
         self.environ["SERVER_SOFTWARE"] = "%s WSGI Server" % server.version
@@ -315,17 +323,7 @@ class HTTPRequest(object):
         response = self.wsgi_app(self.environ, self.start_response)
         try:
             for chunk in response:
-                if not self.sent_headers:
-                    self.sent_headers = True
-                    self.send_headers()
-                if self.chunked_write:
-                    wfile.write(hex(len(chunk))[2:])
-                    wfile.write("\r\n")
-                    wfile.write(chunk)
-                    wfile.write("\r\n")
-                else:
-                    wfile.write(chunk)
-                wfile.flush()
+                self.write(chunk)
         finally:
             if hasattr(response, "close"):
                 response.close()
@@ -368,12 +366,19 @@ class HTTPRequest(object):
         self.outheaders.extend(headers)
         return self.write
     
-    def write(self, d):
+    def write(self, chunk):
         if not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
-        self.connection.wfile.write(d)
-        self.connection.wfile.flush()
+        wfile = self.connection.wfile
+        if self.chunked_write:
+            wfile.write(hex(len(chunk))[2:])
+            wfile.write("\r\n")
+            wfile.write(chunk)
+            wfile.write("\r\n")
+        else:
+            wfile.write(chunk)
+        wfile.flush()
     
     def send_headers(self):
         hkeys = [key.lower() for (key, value) in self.outheaders]
