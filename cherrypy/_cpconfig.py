@@ -248,36 +248,6 @@ class Config(dict):
         _call_namespaces({k: v}, self.namespaces)
 
 
-obsolete = {
-    'server.default_content_type': 'tools.response_headers.headers',
-    'log_access_file': 'log.access_file',
-    'log_config_options': None,
-    'log_file': 'log.error_file',
-    'log_file_not_found': None,
-    'log_request_headers': 'tools.log_headers.on',
-    'log_to_screen': 'log.screen',
-    'show_tracebacks': 'request.show_tracebacks',
-    'throw_errors': 'request.throw_errors',
-    'profiler.on': 'cherrypy.tree.mount(profiler.make_app(cherrypy.Application(Root())))',
-    }
-
-deprecated = {}
-
-def check_compatibility(config):
-    """Process config and warn on each obsolete or deprecated entry."""
-    for section, map in as_dict(config).iteritems():
-        if isinstance(map, dict):
-            for k, v in map.iteritems():
-                if k in obsolete:
-                    warn("%r is obsolete. Use %r instead." % (k, v))
-                elif k in deprecated:
-                    warn("%r is deprecated. Use %r instead." % (k, v))
-        else:
-            if section in obsolete:
-                warn("%r is obsolete. Use %r instead." % (section, map))
-            elif section in deprecated:
-                warn("%r is deprecated. Use %r instead." % (section, map))
-
 
 class _Parser(ConfigParser.ConfigParser):
     """Sub-class of ConfigParser that keeps the case of options and that raises

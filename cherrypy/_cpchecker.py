@@ -15,7 +15,8 @@ class Checker(object):
             for name in dir(self):
                 if name.startswith("check_"):
                     method = getattr(self, name)
-                    method()
+                    if method and callable(method):
+                        method()
         finally:
             warnings.formatwarning = oldformatwarning
     
@@ -78,4 +79,42 @@ class Checker(object):
                     if msg:
                         warnings.warn("%s\nsection: [%s]\nroot: %r\ndir: %r"
                                       % (msg, section, root, dir))
+    
+    obsolete = {
+        'server.default_content_type': 'tools.response_headers.headers',
+        'log_access_file': 'log.access_file',
+        'log_config_options': None,
+        'log_file': 'log.error_file',
+        'log_file_not_found': None,
+        'log_request_headers': 'tools.log_headers.on',
+        'log_to_screen': 'log.screen',
+        'show_tracebacks': 'request.show_tracebacks',
+        'throw_errors': 'request.throw_errors',
+        'profiler.on': 'cherrypy.tree.mount(profiler.make_app(cherrypy.Application(Root())))',
+        }
+    
+    deprecated = {}
+    
+    def _compat(self, config):
+        """Process config and warn on each obsolete or deprecated entry."""
+        for section, conf in config.iteritems():
+            if isinstance(conf, dict):
+                for k, v in conf.iteritems():
+                    if k in self.obsolete:
+                        warnings.warn("%r is obsolete. Use %r instead.\n"
+                                      "section: [%s]" % (k, v, section))
+                    elif k in self.deprecated:
+                        warnings.warn("%r is deprecated. Use %r instead.\n"
+                                      "section: [%s]" % (k, v, section))
+            else:
+                if section in self.obsolete:
+                    warnings.warn("%r is obsolete. Use %r instead." % (section, conf))
+                elif section in self.deprecated:
+                    warnings.warn("%r is deprecated. Use %r instead." % (section, conf))
+    
+    def check_compatibility(self):
+        """Process config and warn on each obsolete or deprecated entry."""
+        self._compat(cherrypy.config)
+        for sn, app in cherrypy.tree.apps.iteritems():
+            self._compat(app.config)
 

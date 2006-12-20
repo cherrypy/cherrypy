@@ -13,7 +13,10 @@ class Root:
     pass
 
 if __name__ == '__main__':
-    conf = {'/base': {'tools.staticdir.root': thisdir},
+    conf = {'/base': {'tools.staticdir.root': thisdir,
+                      # Obsolete key.
+                      'throw_errors': True,
+                      },
             # This entry should be OK.
             '/base/static': {'tools.staticdir.on': True,
                         'tools.staticdir.dir': 'static'},
