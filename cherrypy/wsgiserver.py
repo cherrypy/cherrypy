@@ -1,3 +1,37 @@
+
+#########################################################################
+#
+# # Simplest example on how to use this module directly
+# # Without going through the CherryPy machinery
+# 
+# from cherrypy import wsgiserver
+#
+# def my_crazy_app(environ, start_response):
+#     status = '200 OK'
+#     response_headers = [('Content-type','text/plain')]
+#     start_response(status, response_headers)
+#     return ['Hello world!\n']
+#
+# # The CherryPy WSGI server can serve as many WSGI application
+# # as you want in one instance
+#
+# # Her we set our application to the script_name '/' 
+# wsgi_apps = [('/', my_crazy_app)]
+#
+# # This won't call CherryPy machinery at all
+# # Only the WSGI server which is independant from CherryPy itself
+# # Its name reflects its origin...
+# server = wsgiserver.CherryPyWSGIServer(('localhost', 8070), 
+#                                        wsgi_apps, server_name='localhost')
+#
+# # Want SSL support? Just set those attributes
+# # server.ssl_certificate = ...
+# # server.ssl_private_key = ...
+#
+# if __name__ == '__main__':
+#     server.start()
+#########################################################################
+
 """A high-speed, production ready, thread pooled, generic WSGI server."""
 
 import base64
@@ -50,6 +84,7 @@ comma_separated_headers = [
 
 class HTTPRequest(object):
     
+
     def __init__(self, connection):
         self.connection = connection
         self.rfile = self.connection.rfile
