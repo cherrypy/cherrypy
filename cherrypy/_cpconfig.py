@@ -92,17 +92,20 @@ import cherrypy
 environments = {
     "staging": {
         'engine.autoreload_on': False,
+        'engine.run_checker': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         },
     "production": {
         'engine.autoreload_on': False,
+        'engine.run_checker': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         'log.screen': False,
         },
     "test_suite": {
         'engine.autoreload_on': False,
+        'engine.run_checker': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': True,
         'log.screen': False,
@@ -224,6 +227,8 @@ class Config(dict):
             config = config.copy()
         
         if isinstance(config.get("global", None), dict):
+            if len(config) > 1:
+                cherrypy.checker.global_config_contained_paths = True
             config = config["global"]
         
         if 'environment' in config:

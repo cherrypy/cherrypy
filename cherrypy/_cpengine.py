@@ -52,6 +52,7 @@ class Engine(object):
     autoreload_on = True
     autoreload_frequency = 1
     autoreload_match = ".*"
+    run_checker = True
     
     def __init__(self):
         self.state = STOPPED
@@ -73,6 +74,9 @@ class Engine(object):
     def start(self, blocking=True):
         """Start the application engine."""
         self.state = STARTING
+        
+        if self.run_checker:
+            cherrypy.checker.checkall()
         
         for func in self.on_start_engine_list:
             func()
