@@ -545,8 +545,11 @@ class HTTPConnection(object):
         self.environ = self.environ.copy()
         
         if SSL and isinstance(sock, SSL.ConnectionType):
+            timeout = sock.gettimeout()
             self.rfile = SSL_fileobject(sock, "r", self.rbufsize)
+            self.rfile.ssl_timeout = timeout
             self.wfile = SSL_fileobject(sock, "w", self.wbufsize)
+            self.wfile.ssl_timeout = timeout
             self.environ["wsgi.url_scheme"] = "https"
             self.environ["HTTPS"] = "on"
             sslenv = getattr(server, "ssl_environ", None)
