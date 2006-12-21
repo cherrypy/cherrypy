@@ -18,12 +18,12 @@ required_python_version = '2.3'
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.0.0RC1"
+version = "3.0.0"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers=[
-    #"Development Status :: 5 - Production/Stable",
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
+    #"Development Status :: 4 - Beta",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
     "License :: Freely Distributable",
@@ -40,7 +40,7 @@ packages=[
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.0beta2/"
+download_url="http://download.cherrypy.org/cherrypy/3.0.0/"
 data_files=[
     ('cherrypy/tutorial',
         [
