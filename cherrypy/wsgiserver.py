@@ -1,38 +1,41 @@
+"""A high-speed, production ready, thread pooled, generic WSGI server.
 
-#########################################################################
-#
-# # Simplest example on how to use this module directly
-# # Without going through the CherryPy machinery
-# 
-# from cherrypy import wsgiserver
-#
-# def my_crazy_app(environ, start_response):
-#     status = '200 OK'
-#     response_headers = [('Content-type','text/plain')]
-#     start_response(status, response_headers)
-#     return ['Hello world!\n']
-#
-# # The CherryPy WSGI server can serve as many WSGI application
-# # as you want in one instance
-#
-# # Her we set our application to the script_name '/' 
-# wsgi_apps = [('/', my_crazy_app)]
-#
-# # This won't call CherryPy machinery at all
-# # Only the WSGI server which is independant from CherryPy itself
-# # Its name reflects its origin...
-# server = wsgiserver.CherryPyWSGIServer(('localhost', 8070), 
-#                                        wsgi_apps, server_name='localhost')
-#
-# # Want SSL support? Just set those attributes
-# # server.ssl_certificate = ...
-# # server.ssl_private_key = ...
-#
-# if __name__ == '__main__':
-#     server.start()
-#########################################################################
+Simplest example on how to use this module directly
+(without using CherryPy's application machinery):
 
-"""A high-speed, production ready, thread pooled, generic WSGI server."""
+    from cherrypy import wsgiserver
+    
+    def my_crazy_app(environ, start_response):
+        status = '200 OK'
+        response_headers = [('Content-type','text/plain')]
+        start_response(status, response_headers)
+        return ['Hello world!\n']
+    
+    # Here we set our application to the script_name '/' 
+    wsgi_apps = [('/', my_crazy_app)]
+    
+    server = wsgiserver.CherryPyWSGIServer(('localhost', 8070), wsgi_apps,
+                                           server_name='localhost')
+    
+    # Want SSL support? Just set these attributes
+    # server.ssl_certificate = <filename>
+    # server.ssl_private_key = <filename>
+    
+    if __name__ == '__main__':
+        server.start()
+
+This won't call the CherryPy engine (application side) at all, only the
+WSGI server, which is independant from the rest of CherryPy. Don't
+let the name "CherryPyWSGIServer" throw you; the name merely reflects
+its origin, not it's coupling.
+
+The CherryPy WSGI server can serve as many WSGI application
+as you want in one instance:
+
+    wsgi_apps = [('/', my_crazy_app), (/blog', my_blog_app)]
+
+"""
+
 
 import base64
 import mimetools # todo: use email
@@ -83,8 +86,24 @@ comma_separated_headers = [
 
 
 class HTTPRequest(object):
+    """An HTTP Request (and response).
     
-
+    A single HTTP connection may consist of multiple request/response pairs.
+    
+    connection: the HTTP Connection object which spawned this request.
+    rfile: the 'read' fileobject from the connection's socket
+    ready: when True, the request has been parsed and is ready to begin
+        generating the response. When False, signals the calling Connection
+        that the response should not be generated and the connection should
+        close.
+    close_connection: signals the calling Connection that the request
+        should close. This does not imply an error! The client and/or
+        server may each request that the connection be closed.
+    chunked_write: if True, output will be encoded with the "chunked"
+        transfer-coding. This value is set automatically inside
+        send_headers.
+    """
+    
     def __init__(self, connection):
         self.connection = connection
         self.rfile = self.connection.rfile
@@ -99,6 +118,7 @@ class HTTPRequest(object):
         self.chunked_write = False
     
     def parse_request(self):
+        """Parse the next HTTP request start-line and message-headers."""
         # HTTP/1.1 connections are persistent by default. If a client
         # requests a page, then idles (leaves the connection open),
         # then rfile.readline() will raise socket.error("timed out").
@@ -268,6 +288,7 @@ class HTTPRequest(object):
         self.ready = True
     
     def parse_headers(self, headers):
+        """Parse the given HTTP request message-headers."""
         environ = {}
         ct = headers.getheader("Content-type", "")
         if ct:
@@ -319,6 +340,7 @@ class HTTPRequest(object):
         return True
     
     def respond(self):
+        """Call the appropriate WSGI app and write its iterable output."""
         wfile = self.connection.wfile
         response = self.wsgi_app(self.environ, self.start_response)
         try:
@@ -353,6 +375,7 @@ class HTTPRequest(object):
         wfile.flush()
     
     def start_response(self, status, headers, exc_info = None):
+        """WSGI callable to begin the HTTP response."""
         if self.started_response:
             if not exc_info:
                 assert False, "Already started response"
@@ -367,6 +390,11 @@ class HTTPRequest(object):
         return self.write
     
     def write(self, chunk):
+        """WSGI callable to write unbuffered data to the client.
+        
+        This method is also used internally by start_response (to write
+        data from the iterable returned by the WSGI application).
+        """
         if not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
@@ -381,6 +409,7 @@ class HTTPRequest(object):
         wfile.flush()
     
     def send_headers(self):
+        """Assert, process, and send the HTTP response message-headers."""
         hkeys = [key.lower() for (key, value) in self.outheaders]
         status = int(self.status[:3])
         
@@ -473,6 +502,20 @@ class SSL_fileobject(socket._fileobject):
 
 
 class HTTPConnection(object):
+    """An HTTP connection (active socket).
+    
+    socket: the raw socket object (usually TCP) for this connection.
+    addr: the "bind address" for the remote end of the socket.
+        For IP sockets, this is a tuple of (REMOTE_ADDR, REMOTE_PORT).
+        For UNIX domain sockets, this will be a string.
+    server: the HTTP Server for this Connection. Usually, the server
+        object possesses a passive (server) socket which spawns multiple,
+        active (client) sockets, one for each connection.
+    
+    environ: a WSGI environ template. This will be copied for each request.
+    rfile: a fileobject for reading from the socket.
+    wfile: a fileobject for writing to the socket.
+    """
     
     rbufsize = -1
     wbufsize = -1
@@ -550,6 +593,7 @@ class HTTPConnection(object):
                 req.simple_response("500 Internal Server Error", format_exc())
     
     def close(self):
+        """Close the socket underlying this connection."""
         self.rfile.close()
         self.wfile.close()
         self.socket.close()
@@ -567,6 +611,18 @@ def format_exc(limit=None):
 _SHUTDOWNREQUEST = None
 
 class WorkerThread(threading.Thread):
+    """Thread which continuously polls a Queue for Connection objects.
+    
+    server: the HTTP Server which spawned this thread, and which owns the
+        Queue and is placing active connections into it.
+    ready: a simple flag for the calling server to know when this thread
+        has begun polling the Queue.
+    
+    Due to the timing issues of polling a Queue, a WorkerThread does not
+    check its own 'ready' flag after it has started. To stop the thread,
+    it is necessary to stick a _SHUTDOWNREQUEST object onto the Queue
+    (one for each running WorkerThread).
+    """
     
     def __init__(self, server):
         self.ready = False
@@ -590,6 +646,11 @@ class WorkerThread(threading.Thread):
 
 
 class SSLConnection:
+    """A thread-safe wrapper for an SSL.Connection.
+    
+    *args: the arguments to create the wrapped SSL.Connection(*args).
+    """
+    
     def __init__(self, *args):
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
@@ -625,6 +686,23 @@ class CherryPyWSGIServer(object):
     request_queue_size: the 'backlog' argument to socket.listen();
         specifies the maximum number of queued connections (default 5).
     timeout: the timeout in seconds for accepted connections (default 10).
+    
+    protocol: the version string to write in the Status-Line of all
+        HTTP responses. For example, "HTTP/1.1" (the default). This
+        also limits the supported features used in the response.
+    
+    
+    SSL/HTTPS
+    ---------
+    The OpenSSL module must be importable for SSL functionality.
+    You can obtain it from http://pyopenssl.sourceforge.net/
+    
+    ssl_certificate: the filename of the server SSL certificate.
+    ssl_privatekey: the filename of the server's private key file.
+    
+    If either of these is None (both are None by default), this server
+    will not use SSL. If both are given and are valid, they will be read
+    on server start and used in the SSL context for the listening socket.
     """
     
     protocol = "HTTP/1.1"
@@ -762,6 +840,7 @@ class CherryPyWSGIServer(object):
                 raise self.interrupt
     
     def tick(self):
+        """Accept a new connection and put it on the Queue."""
         try:
             s, addr = self.socket.accept()
             if not self.ready:
@@ -791,7 +870,9 @@ class CherryPyWSGIServer(object):
         self._interrupt = True
         self.stop()
         self._interrupt = interrupt
-    interrupt = property(_get_interrupt, _set_interrupt)
+    interrupt = property(_get_interrupt, _set_interrupt,
+                         doc="Set this to an Exception instance to "
+                             "interrupt the server.")
     
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
