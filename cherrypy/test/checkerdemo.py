@@ -29,5 +29,9 @@ if __name__ == '__main__':
             # Warn on dir with a relative path with no root.
             '/static3': {'tools.staticdir.on': True,
                          'tools.staticdir.dir': 'static'},
+            # Warn on unknown namespace
+            '/unknown': {'toobles.gzip.on': True},
+            # Warn special on cherrypy.<known ns>.*
+            '/cpknown': {'cherrypy.tools.encode.on': True},
             }
     cherrypy.quickstart(Root(), config=conf)

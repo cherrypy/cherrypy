@@ -112,11 +112,36 @@ class Checker(object):
                                   % (section, self.obsolete[section]))
                 elif section in self.deprecated:
                     warnings.warn("%r is deprecated. Use %r instead."
-                                  % (section, self.decprecated[section]))
+                                  % (section, self.deprecated[section]))
     
     def check_compatibility(self):
         """Process config and warn on each obsolete or deprecated entry."""
         self._compat(cherrypy.config)
         for sn, app in cherrypy.tree.apps.iteritems():
             self._compat(app.config)
-
+    
+    known_config_namespaces = ["engine", "hooks", "log", "request",
+                               "response", "server", "tools", "wsgi"]
+    
+    def _known_ns(self, config):
+        for section, conf in config.iteritems():
+            is_path_section = section.startswith("/")
+            if is_path_section and isinstance(conf, dict):
+                for k, v in conf.iteritems():
+                    atoms = k.split(".")
+                    if len(atoms) > 1:
+                        if atoms[0] not in self.known_config_namespaces:
+                            if atoms[0] == "cherrypy" and atoms[1] in self.known_config_namespaces:
+                                msg = ("The config entry %r is invalid; "
+                                       "try %r instead.\nsection: [%s]"
+                                       % (k, ".".join(atoms[1:]), section))
+                            else:
+                                msg = ("The config entry %r is invalid, because "
+                                       "the %r config namespace is unknown.\n"
+                                       "section: [%s]" % (k, atoms[0], section))
+                            warnings.warn(msg)
+    
+    def check_config_namespaces(self):
+        """Process config and warn on each unknown config namespace."""
+        for sn, app in cherrypy.tree.apps.iteritems():
+            self._known_ns(app.config)
