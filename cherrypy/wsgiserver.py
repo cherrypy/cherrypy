@@ -107,6 +107,7 @@ class HTTPRequest(object):
     def __init__(self, connection):
         self.connection = connection
         self.rfile = self.connection.rfile
+        self.wfile = self.connection.wfile
         self.environ = connection.environ.copy()
         
         self.ready = False
@@ -126,19 +127,21 @@ class HTTPRequest(object):
         # and doesn't need the client to request or acknowledge the close
         # (although your TCP stack might suffer for it: cf Apache's history
         # with FIN_WAIT_2).
-        while True:
+        request_line = self.rfile.readline()
+        if not request_line:
+            # Force self.ready = False so the connection will close.
+            self.ready = False
+            return
+        
+        if request_line == "\r\n":
+            # RFC 2616 sec 4.1: "...if the server is reading the protocol
+            # stream at the beginning of a message and receives a CRLF
+            # first, it should ignore the CRLF."
+            # But only ignore one leading line! else we enable a DoS.
             request_line = self.rfile.readline()
             if not request_line:
-                # Force self.ready = False so the connection will close.
                 self.ready = False
                 return
-            elif request_line == "\r\n":
-                # "...if the server is reading the protocol stream at the
-                # beginning of a message and receives a CRLF first, it
-                # should ignore the CRLF." RFC 2616 sec 4.1
-                pass
-            else:
-                break
         
         server = self.connection.server
         self.environ["SERVER_SOFTWARE"] = "%s WSGI Server" % server.version
@@ -332,8 +335,10 @@ class HTTPRequest(object):
                                      "(expected '\\r\\n', got %r)" % crlf)
                 return
         
+        # Grab any trailer headers
         headers = mimetools.Message(self.rfile)
         self.environ.update(self.parse_headers(headers))
+        
         data.seek(0)
         self.environ["wsgi.input"] = data
         self.environ["CONTENT_LENGTH"] = str(cl) or ""
@@ -341,7 +346,7 @@ class HTTPRequest(object):
     
     def respond(self):
         """Call the appropriate WSGI app and write its iterable output."""
-        wfile = self.connection.wfile
+        wfile = self.wfile
         response = self.wsgi_app(self.environ, self.start_response)
         try:
             for chunk in response:
@@ -360,7 +365,7 @@ class HTTPRequest(object):
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        wfile = self.connection.wfile
+        wfile = self.wfile
         wfile.write("%s %s\r\n" % (self.connection.server.protocol, status))
         wfile.write("Content-Length: %s\r\n" % len(msg))
         
@@ -398,7 +403,7 @@ class HTTPRequest(object):
         if not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
-        wfile = self.connection.wfile
+        wfile = self.wfile
         if self.chunked_write:
             wfile.write(hex(len(chunk))[2:])
             wfile.write("\r\n")
@@ -436,7 +441,7 @@ class HTTPRequest(object):
             self.outheaders.append(("Date", rfc822.formatdate()))
         
         server = self.connection.server
-        wfile = self.connection.wfile
+        wfile = self.wfile
         
         if "server" not in hkeys:
             self.outheaders.append(("Server", server.version))
@@ -464,7 +469,10 @@ def _ssl_wrap_method(method):
             try:
                 return method(self, *args, **kwargs)
             except (SSL.WantReadError, SSL.WantWriteError):
-                # Sleep and try again
+                # Sleep and try again. This is dangerous, because it means
+                # the rest of the stack has no way of differentiating
+                # between a "new handshake" error and "client dropped".
+                # Note this isn't an endless loop: there's a timeout below.
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError, e:
                 if e.args == (-1, 'Unexpected EOF'):
