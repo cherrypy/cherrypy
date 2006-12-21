@@ -92,20 +92,20 @@ import cherrypy
 environments = {
     "staging": {
         'engine.autoreload_on': False,
-        'engine.run_checker': False,
+        'engine.checker': None,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         },
     "production": {
         'engine.autoreload_on': False,
-        'engine.run_checker': False,
+        'engine.checker': None,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         'log.screen': False,
         },
     "test_suite": {
         'engine.autoreload_on': False,
-        'engine.run_checker': False,
+        'engine.checker': None,
         'tools.log_headers.on': False,
         'request.show_tracebacks': True,
         'log.screen': False,
