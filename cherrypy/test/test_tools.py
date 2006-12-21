@@ -103,8 +103,8 @@ def setup_server():
         pipe._cp_config = {'hooks.before_request_body': pipe_body}
         
         # Multiple decorators; include kwargs just for fun.
-        # XXX Note that encode must run before gzip.
-        def decorated_euro(self):
+        # Note that encode must run before gzip.
+        def decorated_euro(self, *vpath):
             yield u"Hello,"
             yield u"world"
             yield europoundUnicode
@@ -192,6 +192,10 @@ def setup_server():
         '/euro': {
             'tools.gzip.on': True,
             'tools.encode.on': True,
+        },
+        # Priority specified in config
+        '/decorated_euro/subpath': {
+            'tools.gzip.priority': 10,
         },
     }
     cherrypy.tree.mount(root, config=conf)
@@ -288,6 +292,13 @@ class ToolTests(helper.CPWebCase):
         
         self.getPage("/decorated_euro", headers=[("Accept-Encoding", "gzip")])
         self.assertInBody(zbuf.getvalue()[:3])
+        
+        # This should break because gzip's priority was lowered in conf.
+        # Of course, we don't want breakage in production apps,
+        # but it proves the priority was changed.
+        self.getPage("/decorated_euro/subpath",
+                     headers=[("Accept-Encoding", "gzip")])
+        self.assertErrorPage(500, pattern='UnicodeEncodeError')
     
     def testBareHooks(self):
         content = "bit of a pain in me gulliver"

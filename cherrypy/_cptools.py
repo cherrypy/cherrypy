@@ -100,9 +100,12 @@ class Tool(object):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        p = getattr(self.callable, "priority", self._priority)
+        conf = self._merged_args()
+        p = conf.pop("priority", None)
+        if p is None:
+            p = getattr(self.callable, "priority", self._priority)
         cherrypy.request.hooks.attach(self._point, self.callable,
-                                      priority=p, **self._merged_args())
+                                      priority=p, **conf)
 
 
 class HandlerTool(Tool):
@@ -141,9 +144,12 @@ class HandlerTool(Tool):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        p = getattr(self.callable, "priority", self._priority)
+        conf = self._merged_args()
+        p = conf.pop("priority", None)
+        if p is None:
+            p = getattr(self.callable, "priority", self._priority)
         cherrypy.request.hooks.attach(self._point, self._wrapper,
-                                      priority=p, **self._merged_args())
+                                      priority=p, **conf)
 
 
 class ErrorTool(Tool):
@@ -268,7 +274,10 @@ class CachingTool(Tool):
     def _setup(self):
         """Hook caching into cherrypy.request."""
         conf = self._merged_args()
-        cherrypy.request.hooks.attach('before_handler', self._wrapper, **conf)
+        
+        p = conf.pop("priority", None)
+        cherrypy.request.hooks.attach('before_handler', self._wrapper,
+                                      priority=p, **conf)
 
 
 
