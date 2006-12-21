@@ -24,7 +24,7 @@ from cherrypy import _cpserver
 server = _cpserver.Server()
 
 def quickstart(root, script_name="", config=None):
-    """Mount the given app, start the engine and builtin server, then block."""
+    """Mount the given root, start the engine and builtin server, then block."""
     if config:
         _global_conf_alias.update(config)
     tree.mount(root, script_name, config)
