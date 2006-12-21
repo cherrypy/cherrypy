@@ -184,8 +184,15 @@ class ConnectionTests(helper.CPWebCase):
             self.body = response.read()
             self.assertBody("Hello, world!")
             
+            if self.scheme == "https":
+                # Adjust the timeout up to cover the higher timeouts of SSL
+                # (the wsgiserver ssl_timeout default is 3 seconds)
+                tout = 4
+            else:
+                tout = timeout * 2
+            
             # Wait for our socket timeout
-            time.sleep(timeout * 2)
+            time.sleep(tout)
             
             # Make another request on the same socket, which should error
             conn._output('GET /hello HTTP/1.1')
