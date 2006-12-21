@@ -109,10 +109,10 @@ class Checker(object):
             else:
                 if section in self.obsolete:
                     warnings.warn("%r is obsolete. Use %r instead."
-                                  % (section, self.obsolete[conf]))
+                                  % (section, self.obsolete[section]))
                 elif section in self.deprecated:
                     warnings.warn("%r is deprecated. Use %r instead."
-                                  % (section, self.decprecated[conf]))
+                                  % (section, self.decprecated[section]))
     
     def check_compatibility(self):
         """Process config and warn on each obsolete or deprecated entry."""
