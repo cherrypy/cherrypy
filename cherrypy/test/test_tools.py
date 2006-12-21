@@ -2,6 +2,8 @@
 
 import gzip, StringIO
 import time
+timeout = 0.2
+
 import types
 from cherrypy.test import test
 test.prefer_parent_path()
@@ -50,10 +52,9 @@ def setup_server():
     class NadsatTool:
         
         def __init__(self):
-            self.counter = 0
             self.ended = {}
             self._name = "nadsat"
-            
+        
         def nadsat(self):
             def nadsat_it_up(body):
                 for chunk in body:
@@ -66,12 +67,12 @@ def setup_server():
         def cleanup(self):
             # This runs after the request has been completely written out.
             cherrypy.response.body = "razdrez"
-            self.ended[cherrypy.request.counter] = True
+            id = cherrypy.request.params.get("id")
+            if id:
+                self.ended[id] = True
         cleanup.failsafe = True
         
         def _setup(self):
-            cherrypy.request.counter = self.counter = self.counter + 1
-            self.ended[cherrypy.request.counter] = False
             cherrypy.request.hooks.attach('before_finalize', self.nadsat)
             cherrypy.request.hooks.attach('on_end_request', self.cleanup)
     tools.nadsat = NadsatTool()
@@ -135,16 +136,16 @@ def setup_server():
         
         _cp_config = {"tools.nadsat.on": True}
         
-        def index(self):
+        def index(self, id=None):
             return "A good piece of cherry pie"
         
         def ended(self, id):
-            return repr(tools.nadsat.ended[int(id)])
+            return repr(tools.nadsat.ended[id])
         
-        def err(self):
+        def err(self, id=None):
             raise ValueError()
         
-        def errinstream(self):
+        def errinstream(self, id=None):
             raise ValueError()
             yield "confidential"
         
@@ -159,7 +160,7 @@ def setup_server():
         def err_in_onstart(self):
             return "success!"
         
-        def stream(self):
+        def stream(self, id=None):
             for x in xrange(100000000):
                 yield str(x)
         stream._cp_config = {'response.stream': True}
@@ -208,8 +209,8 @@ from cherrypy.test import helper
 
 class ToolTests(helper.CPWebCase):
     
-    def testDemo(self):
-        self.getPage("/demo/")
+    def testHookErrors(self):
+        self.getPage("/demo/?id=1")
         # If body is "razdrez", then on_end_request is being called too early.
         self.assertBody("A horrorshow lomtick of cherry 3.14159")
         # If this fails, then on_end_request isn't being called at all.
@@ -218,7 +219,7 @@ class ToolTests(helper.CPWebCase):
         self.assertBody("True")
         
         valerr = '\n    raise ValueError()\nValueError'
-        self.getPage("/demo/err")
+        self.getPage("/demo/err?id=3")
         # If body is "razdrez", then on_end_request is being called too early.
         self.assertErrorPage(502, pattern=valerr)
         # If this fails, then on_end_request isn't being called at all.
@@ -227,7 +228,7 @@ class ToolTests(helper.CPWebCase):
         self.assertBody("True")
         
         # If body is "razdrez", then on_end_request is being called too early.
-        self.getPage("/demo/errinstream")
+        self.getPage("/demo/errinstream?id=5")
         # Because this error is raised after the response body has
         # started, the status should not change to an error status.
         self.assertStatus("200 OK")
@@ -244,25 +245,40 @@ class ToolTests(helper.CPWebCase):
         # Test compile-time decorator with kwargs from config.
         self.getPage("/demo/userid")
         self.assertBody("Welcome!")
-        
-        # Test that on_end_request is called even if the client drops.
-        self.persistent = True
+    
+    def testEndRequestOnDrop(self):
+        old_timeout = None
         try:
-            conn = self.HTTP_CONN
-            conn.putrequest("GET", "/demo/stream", skip_host=True)
-            conn.putheader("Host", self.HOST)
-            conn.endheaders()
-            # Skip the rest of the request and close the conn. This will
-            # cause the server's active socket to error, which *should*
-            # result in the request being aborted, and request.close being
-            # called all the way up the stack (including WSGI middleware),
-            # eventually calling our on_end_request hook.
+            httpserver = cherrypy.server.httpservers.keys()[0]
+            old_timeout = httpserver.timeout
+        except (AttributeError, IndexError):
+            print "skipped ",
+            return
+        
+        try:
+            httpserver.timeout = timeout
+            
+            # Test that on_end_request is called even if the client drops.
+            self.persistent = True
+            try:
+                conn = self.HTTP_CONN
+                conn.putrequest("GET", "/demo/stream?id=9", skip_host=True)
+                conn.putheader("Host", self.HOST)
+                conn.endheaders()
+                # Skip the rest of the request and close the conn. This will
+                # cause the server's active socket to error, which *should*
+                # result in the request being aborted, and request.close being
+                # called all the way up the stack (including WSGI middleware),
+                # eventually calling our on_end_request hook.
+            finally:
+                self.persistent = False
+            time.sleep(timeout * 2)
+            # Test that the on_end_request hook was called.
+            self.getPage("/demo/ended/9")
+            self.assertBody("True")
         finally:
-            self.persistent = False
-        time.sleep(0.1)
-        # Test that the on_end_request hooks was called.
-        self.getPage("/demo/ended/9")
-        self.assertBody("True")
+            if old_timeout is not None:
+                httpserver.timeout = old_timeout
     
     def testGuaranteedHooks(self):
         # The 'critical' on_start_resource hook is 'failsafe' (guaranteed
