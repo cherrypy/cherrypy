@@ -461,7 +461,12 @@ class HTTPRequest(object):
         wfile.flush()
 
 
-def _ssl_wrap_method(method):
+def _ssl_wrap_method(method, is_reader=False):
+    """Wrap the given method with SSL error-trapping.
+    
+    is_reader: if False (the default), EOF errors will be raised.
+        If True, EOF errors will return "" (to emulate normal sockets).
+    """
     def ssl_method_wrapper(self, *args, **kwargs):
 ##        print (id(self), method, args, kwargs)
         start = time.time()
@@ -475,21 +480,19 @@ def _ssl_wrap_method(method):
                 # Note this isn't an endless loop: there's a timeout below.
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError, e:
-                if e.args == (-1, 'Unexpected EOF'):
+                if is_reader and e.args == (-1, 'Unexpected EOF'):
                     return ""
                 
                 errno = e.args[0]
-                if errno not in socket_errors_to_ignore:
-                    raise socket.error(errno)
-                
-                return ""
+                if is_reader and errno in socket_errors_to_ignore:
+                    return ""
+                raise socket.error(errno)
             except SSL.Error, e:
-                if e.args == (-1, 'Unexpected EOF'):
+                if is_reader and e.args == (-1, 'Unexpected EOF'):
                     return ""
-                elif e.args[0][0][2] == 'ssl handshake failure':
+                if is_reader and e.args[0][0][2] == 'ssl handshake failure':
                     return ""
-                else:
-                    raise
+                raise
             if time.time() - start > self.ssl_timeout:
                 raise socket.timeout("timed out")
     return ssl_method_wrapper
@@ -504,9 +507,9 @@ class SSL_fileobject(socket._fileobject):
     flush = _ssl_wrap_method(socket._fileobject.flush)
     write = _ssl_wrap_method(socket._fileobject.write)
     writelines = _ssl_wrap_method(socket._fileobject.writelines)
-    read = _ssl_wrap_method(socket._fileobject.read)
-    readline = _ssl_wrap_method(socket._fileobject.readline)
-    readlines = _ssl_wrap_method(socket._fileobject.readlines)
+    read = _ssl_wrap_method(socket._fileobject.read, is_reader=True)
+    readline = _ssl_wrap_method(socket._fileobject.readline, is_reader=True)
+    readlines = _ssl_wrap_method(socket._fileobject.readlines, is_reader=True)
 
 
 class HTTPConnection(object):
