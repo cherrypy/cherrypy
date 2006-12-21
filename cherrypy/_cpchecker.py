@@ -8,7 +8,7 @@ class Checker(object):
     
     global_config_contained_paths = False
     
-    def checkall(self):
+    def __call__(self):
         oldformatwarning = warnings.formatwarning
         warnings.formatwarning = self.formatwarning
         try:
@@ -102,15 +102,17 @@ class Checker(object):
                 for k, v in conf.iteritems():
                     if k in self.obsolete:
                         warnings.warn("%r is obsolete. Use %r instead.\n"
-                                      "section: [%s]" % (k, v, section))
+                                      "section: [%s]" % (k, self.obsolete[k], section))
                     elif k in self.deprecated:
                         warnings.warn("%r is deprecated. Use %r instead.\n"
-                                      "section: [%s]" % (k, v, section))
+                                      "section: [%s]" % (k, self.deprecated[k], section))
             else:
                 if section in self.obsolete:
-                    warnings.warn("%r is obsolete. Use %r instead." % (section, conf))
+                    warnings.warn("%r is obsolete. Use %r instead."
+                                  % (section, self.obsolete[conf]))
                 elif section in self.deprecated:
-                    warnings.warn("%r is deprecated. Use %r instead." % (section, conf))
+                    warnings.warn("%r is deprecated. Use %r instead."
+                                  % (section, self.decprecated[conf]))
     
     def check_compatibility(self):
         """Process config and warn on each obsolete or deprecated entry."""
