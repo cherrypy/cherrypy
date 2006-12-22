@@ -103,7 +103,7 @@ class HTTPRequest(object):
     def __init__(self, connection):
         self.connection = connection
         self.rfile = self.connection.rfile
-        self.wfile = self.connection.wfile
+        self.sendall = self.connection.sendall
         self.environ = connection.environ.copy()
         
         self.ready = False
@@ -219,7 +219,7 @@ class HTTPRequest(object):
             self.environ["SERVER_NAME"] = location
         
         # then all the http headers
-        headers = rfc822.Message(self.rfile)
+        headers = rfc822.Message(self.rfile, seekable=0)
         self.environ.update(self.parse_headers(headers))
         
         creds = headers.getheader("Authorization", "").split(" ", 1)
@@ -332,7 +332,7 @@ class HTTPRequest(object):
                 return
         
         # Grab any trailer headers
-        headers = rfc822.Message(self.rfile)
+        headers = rfc822.Message(self.rfile, seekable=0)
         self.environ.update(self.parse_headers(headers))
         
         data.seek(0)
@@ -342,7 +342,6 @@ class HTTPRequest(object):
     
     def respond(self):
         """Call the appropriate WSGI app and write its iterable output."""
-        wfile = self.wfile
         response = self.wsgi_app(self.environ, self.start_response)
         try:
             for chunk in response:
@@ -355,25 +354,23 @@ class HTTPRequest(object):
             self.sent_headers = True
             self.send_headers()
         if self.chunked_write:
-            wfile.write("0\r\n\r\n")
-            wfile.flush()
+            self.sendall("0\r\n\r\n")
     
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        wfile = self.wfile
-        wfile.write("%s %s\r\n" % (self.connection.server.protocol, status))
-        wfile.write("Content-Length: %s\r\n" % len(msg))
+        buf = ["%s %s\r\n" % (self.connection.server.protocol, status),
+               "Content-Length: %s\r\n" % len(msg)]
         
         if status[:3] == "413" and self.response_protocol == 'HTTP/1.1':
             # Request Entity Too Large
             self.close_connection = True
-            wfile.write("Connection: close\r\n")
+            buf.append("Connection: close\r\n")
         
-        wfile.write("\r\n")
+        buf.append("\r\n")
         if msg:
-            wfile.write(msg)
-        wfile.flush()
+            buf.append(msg)
+        self.sendall("".join(buf))
     
     def start_response(self, status, headers, exc_info = None):
         """WSGI callable to begin the HTTP response."""
@@ -399,15 +396,12 @@ class HTTPRequest(object):
         if not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
-        wfile = self.wfile
         if self.chunked_write:
-            wfile.write(hex(len(chunk))[2:])
-            wfile.write("\r\n")
-            wfile.write(chunk)
-            wfile.write("\r\n")
+            buf = [hex(len(chunk))[2:],
+                   "\r\n", chunk, "\r\n"]
+            self.sendall("".join(buf))
         else:
-            wfile.write(chunk)
-        wfile.flush()
+            self.sendall(chunk)
     
     def send_headers(self):
         """Assert, process, and send the HTTP response message-headers."""
@@ -436,15 +430,14 @@ class HTTPRequest(object):
             self.outheaders.append(("Date", rfc822.formatdate()))
         
         server = self.connection.server
-        wfile = self.wfile
         
         if "server" not in hkeys:
             self.outheaders.append(("Server", server.version))
         
-        wfile.write(server.protocol + " " + self.status + "\r\n")
+        buf = [server.protocol, " ", self.status, "\r\n"]
         try:
             for k, v in self.outheaders:
-                wfile.write(k + ": " + v + "\r\n")
+                buf.append(k + ": " + v + "\r\n")
         except TypeError:
             if not isinstance(k, str):
                 raise TypeError("WSGI response header key %r is not a string.")
@@ -452,8 +445,8 @@ class HTTPRequest(object):
                 raise TypeError("WSGI response header value %r is not a string.")
             else:
                 raise
-        wfile.write("\r\n")
-        wfile.flush()
+        buf.append("\r\n")
+        self.sendall("".join(buf))
 
 
 def _ssl_wrap_method(method, is_reader=False):
@@ -520,11 +513,10 @@ class HTTPConnection(object):
     
     environ: a WSGI environ template. This will be copied for each request.
     rfile: a fileobject for reading from the socket.
-    wfile: a fileobject for writing to the socket.
+    sendall: a function for writing (+ flush) to the socket.
     """
     
     rbufsize = -1
-    wbufsize = -1
     RequestHandlerClass = HTTPRequest
     environ = {"wsgi.version": (1, 0),
                "wsgi.url_scheme": "http",
@@ -546,16 +538,15 @@ class HTTPConnection(object):
             timeout = sock.gettimeout()
             self.rfile = SSL_fileobject(sock, "r", self.rbufsize)
             self.rfile.ssl_timeout = timeout
-            self.wfile = SSL_fileobject(sock, "w", self.wbufsize)
-            self.wfile.ssl_timeout = timeout
+            self.sendall = _ssl_wrap_method(sock.sendall)
             self.environ["wsgi.url_scheme"] = "https"
             self.environ["HTTPS"] = "on"
             sslenv = getattr(server, "ssl_environ", None)
             if sslenv:
                 self.environ.update(sslenv)
         else:
-            self.rfile = self.socket.makefile("r", self.rbufsize)
-            self.wfile = self.socket.makefile("w", self.wbufsize)
+            self.rfile = sock.makefile("r", self.rbufsize)
+            self.sendall = sock.sendall
         
         self.environ.update({"wsgi.input": self.rfile,
                              "SERVER_NAME": self.server.server_name,
@@ -604,7 +595,6 @@ class HTTPConnection(object):
     def close(self):
         """Close the socket underlying this connection."""
         self.rfile.close()
-        self.wfile.close()
         self.socket.close()
 
 
