@@ -38,7 +38,6 @@ as you want in one instance:
 
 
 import base64
-import mimetools # todo: use email
 import Queue
 import os
 import re
@@ -75,15 +74,12 @@ for _ in ("EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
 socket_errors_to_ignore = dict.fromkeys(socket_errors_to_ignore).keys()
 socket_errors_to_ignore.append("timed out")
 
-# These are lowercase because mimetools.Message uses lowercase keys.
-comma_separated_headers = [
-    'accept', 'accept-charset', 'accept-encoding', 'accept-language',
-    'accept-ranges', 'allow', 'cache-control', 'connection', 'content-encoding',
-    'content-language', 'expect', 'if-match', 'if-none-match', 'pragma',
-    'proxy-authenticate', 'te', 'trailer', 'transfer-encoding', 'upgrade',
-    'vary', 'via', 'warning', 'www-authenticate',
-    ]
-
+comma_separated_headers = ['ACCEPT', 'ACCEPT-CHARSET', 'ACCEPT-ENCODING',
+    'ACCEPT-LANGUAGE', 'ACCEPT-RANGES', 'ALLOW', 'CACHE-CONTROL',
+    'CONNECTION', 'CONTENT-ENCODING', 'CONTENT-LANGUAGE', 'EXPECT',
+    'IF-MATCH', 'IF-NONE-MATCH', 'PRAGMA', 'PROXY-AUTHENTICATE', 'TE',
+    'TRAILER', 'TRANSFER-ENCODING', 'UPGRADE', 'VARY', 'VIA', 'WARNING',
+    'WWW-AUTHENTICATE']
 
 class HTTPRequest(object):
     """An HTTP Request (and response).
@@ -223,7 +219,7 @@ class HTTPRequest(object):
             self.environ["SERVER_NAME"] = location
         
         # then all the http headers
-        headers = mimetools.Message(self.rfile)
+        headers = rfc822.Message(self.rfile)
         self.environ.update(self.parse_headers(headers))
         
         creds = headers.getheader("Authorization", "").split(" ", 1)
@@ -293,27 +289,27 @@ class HTTPRequest(object):
     def parse_headers(self, headers):
         """Parse the given HTTP request message-headers."""
         environ = {}
-        ct = headers.getheader("Content-type", "")
+        ct = headers.dict.get("content-type")
         if ct:
             environ["CONTENT_TYPE"] = ct
-        cl = headers.getheader("Content-length") or ""
+        cl = headers.dict.get("content-length")
         if cl:
             environ["CONTENT_LENGTH"] = cl
         
-        # Must use keys() here for Python 2.3 (rfc822.Message had no __iter__).
-        for k in headers.keys():
-            if k in ('transfer-encoding', 'content-type', 'content-length'):
-                continue
+        for line in headers.headers:
+            if line[:1].isspace():
+                v = line.strip()
+            else:
+                k, v = line.split(":", 1)
+                k, v = k.strip().upper(), v.strip()
+                envname = "HTTP_" + k.replace("-", "_")
             
-            envname = "HTTP_" + k.upper().replace("-", "_")
             if k in comma_separated_headers:
                 existing = environ.get(envname)
                 if existing:
-                    environ[envname] = ", ".join([existing] + headers.getheaders(k))
-                else:
-                    environ[envname] = ", ".join(headers.getheaders(k))
-            else:
-                environ[envname] = headers[k]
+                    v = ", ".join((existing, v))
+            environ[envname] = v
+        
         return environ
     
     def decode_chunked(self):
@@ -336,7 +332,7 @@ class HTTPRequest(object):
                 return
         
         # Grab any trailer headers
-        headers = mimetools.Message(self.rfile)
+        headers = rfc822.Message(self.rfile)
         self.environ.update(self.parse_headers(headers))
         
         data.seek(0)
