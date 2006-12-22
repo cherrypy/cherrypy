@@ -228,7 +228,7 @@ class Config(dict):
         
         if isinstance(config.get("global", None), dict):
             if len(config) > 1:
-                cherrypy.checker.global_config_contained_paths = True
+                cherrypy.engine.checker.global_config_contained_paths = True
             config = config["global"]
         
         if 'environment' in config:
