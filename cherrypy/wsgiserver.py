@@ -423,16 +423,15 @@ class HTTPRequest(object):
                 # Request Entity Too Large. Close conn to avoid garbage.
                 self.close_connection = True
             elif "content-length" not in hkeys:
-                if status in (200, 203, 206):
+                # "All 1xx (informational), 204 (no content),
+                # and 304 (not modified) responses MUST NOT
+                # include a message-body." So no point chunking.
+                if status < 200 or status in (204, 205, 304):
+                    pass
+                else:
                     # Use the chunked transfer-coding
                     self.chunked_write = True
                     self.outheaders.append(("Transfer-Encoding", "chunked"))
-                # "All 1xx (informational), 204 (no content),
-                # and 304 (not modified) responses MUST NOT
-                # include a message-body."
-                elif status >= 200 and status not in (204, 205, 304):
-                    # Close conn to determine transfer-length.
-                    self.close_connection = True
         
         if self.close_connection and "connection" not in hkeys:
             self.outheaders.append(("Connection", "close"))
