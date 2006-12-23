@@ -47,9 +47,27 @@ __all__ = ['ABSession', 'Root', 'print_report',
 size_cache = {}
 
 class Root:
+    
     def index(self):
-        return "Hello, world\r\n"
+        return """<html>
+<head>
+    <title>CherryPy Benchmark</title>
+</head>
+<body>
+    <ul>
+        <li><a href="hello">Hello, world! (14 byte dynamic)</a></li>
+        <li><a href="static/index.html">Static file (14 bytes static)</a></li>
+        <li><form action="sizer">Response of length:
+            <input type='text' name='size' value='10' /></form>
+        </li>
+    </ul>
+</body>
+</html>"""
     index.exposed = True
+    
+    def hello(self):
+        return "Hello, world\r\n"
+    hello.exposed = True
     
     def sizer(self, size):
         resp = size_cache.get(size, None)
@@ -66,6 +84,10 @@ cherrypy.config.update({
     'server.socket_port': 8080,
     'server.max_request_header_size': 0,
     'server.max_request_body_size': 0,
+    # Cheat mode on ;)
+    'tools.log_tracebacks.on': False,
+    'tools.log_headers.on': False,
+    'tools.trailing_slash.on': False,
     })
 
 appconf = {
@@ -174,7 +196,7 @@ Finished 1000 requests
                        r'^Transfer rate:\s*([0-9.]+)'),
                       ]
     
-    def __init__(self, path=SCRIPT_NAME + "/", requests=1000, concurrency=10):
+    def __init__(self, path=SCRIPT_NAME + "/hello", requests=1000, concurrency=10):
         self.path = path
         self.requests = requests
         self.concurrency = concurrency
@@ -204,14 +226,24 @@ if sys.platform in ("win32",):
     safe_threads = (10, 20, 30, 40, 50)
 
 
-def thread_report(path=SCRIPT_NAME + "/", concurrency=safe_threads):
+def thread_report(path=SCRIPT_NAME + "/hello", concurrency=safe_threads):
     sess = ABSession(path)
     attrs, names, patterns = zip(*sess.parse_patterns)
+    avg = dict.fromkeys(attrs, 0.0)
+    
     rows = [('threads',) + names]
     for c in concurrency:
         sess.concurrency = c
         sess.run()
-        rows.append([c] + [getattr(sess, attr) for attr in attrs])
+        row = [c]
+        for attr in attrs:
+            val = getattr(sess, attr)
+            avg[attr] += float(val)
+            row.append(val)
+        rows.append(row)
+    
+    # Add a row of averages.
+    rows.append(["Average"] + [str(avg[attr] / len(concurrency)) for attr in attrs])
     return rows
 
 def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
@@ -323,6 +355,10 @@ if __name__ == '__main__':
         # Return without stopping the server, so that the pages
         # can be tested from a standard web browser.
         def run():
+            port = cherrypy.server.socket_port
+            print ("You may now open http://localhost:%s%s/" %
+                   (port, SCRIPT_NAME))
+            
             if "--null" in opts:
                 print "Using null Request object"
     else:
@@ -334,6 +370,7 @@ if __name__ == '__main__':
             try:
                 run_standard_benchmarks()
             finally:
+                cherrypy.engine.stop()
                 cherrypy.server.stop()
     
     print "Starting CherryPy app server..."
