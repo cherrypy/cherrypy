@@ -140,10 +140,11 @@ class HTTPRequest(object):
                 return
         
         server = self.connection.server
-        self.environ["SERVER_SOFTWARE"] = "%s WSGI Server" % server.version
+        environ = self.environ
+        environ["SERVER_SOFTWARE"] = "%s WSGI Server" % server.version
         
         method, path, req_protocol = request_line.strip().split(" ", 2)
-        self.environ["REQUEST_METHOD"] = method
+        environ["REQUEST_METHOD"] = method
         
         # path may be an abs_path (including "http://host.domain.tld");
         scheme, location, path, params, qs, frag = urlparse(path)
@@ -154,7 +155,7 @@ class HTTPRequest(object):
             return
         
         if scheme:
-            self.environ["wsgi.url_scheme"] = scheme
+            environ["wsgi.url_scheme"] = scheme
         if params:
             path = path + ";" + params
         
@@ -170,15 +171,15 @@ class HTTPRequest(object):
         if path == "*":
             # This means, of course, that the last wsgi_app (shortest path)
             # will always handle a URI of "*".
-            self.environ["SCRIPT_NAME"] = ""
-            self.environ["PATH_INFO"] = "*"
+            environ["SCRIPT_NAME"] = ""
+            environ["PATH_INFO"] = "*"
             self.wsgi_app = server.mount_points[-1][1]
         else:
             for mount_point, wsgi_app in server.mount_points:
                 # The mount_points list should be sorted by length, descending.
                 if path.startswith(mount_point + "/") or path == mount_point:
-                    self.environ["SCRIPT_NAME"] = mount_point
-                    self.environ["PATH_INFO"] = path[len(mount_point):]
+                    environ["SCRIPT_NAME"] = mount_point
+                    environ["PATH_INFO"] = path[len(mount_point):]
                     self.wsgi_app = wsgi_app
                     break
             else:
@@ -187,7 +188,7 @@ class HTTPRequest(object):
         
         # Note that, like wsgiref and most other WSGI servers,
         # we unquote the path but not the query string.
-        self.environ["QUERY_STRING"] = qs
+        environ["QUERY_STRING"] = qs
         
         # Compare request and server HTTP protocol versions, in case our
         # server does not support the requested protocol. Limit our output
@@ -207,42 +208,45 @@ class HTTPRequest(object):
             self.simple_response("505 HTTP Version Not Supported")
             return
         # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
-        self.environ["SERVER_PROTOCOL"] = req_protocol
+        environ["SERVER_PROTOCOL"] = req_protocol
         # set a non-standard environ entry so the WSGI app can know what
         # the *real* server protocol is (and what features to support).
         # See http://www.faqs.org/rfcs/rfc2145.html.
-        self.environ["ACTUAL_SERVER_PROTOCOL"] = server.protocol
+        environ["ACTUAL_SERVER_PROTOCOL"] = server.protocol
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
         
         # If the Request-URI was an absoluteURI, use its location atom.
         if location:
-            self.environ["SERVER_NAME"] = location
+            environ["SERVER_NAME"] = location
         
         # then all the http headers
-        headers = rfc822.Message(self.rfile, seekable=0)
-        self.environ.update(self.parse_headers(headers))
+        try:
+            self.read_headers()
+        except ValueError, ex:
+            self.simple_response("400 Bad Request", repr(ex.args))
+            return
         
-        creds = headers.getheader("Authorization", "").split(" ", 1)
-        self.environ["AUTH_TYPE"] = creds[0]
+        creds = environ.get("HTTP_AUTHORIZATION", "").split(" ", 1)
+        environ["AUTH_TYPE"] = creds[0]
         if creds[0].lower() == 'basic':
             user, pw = base64.decodestring(creds[1]).split(":", 1)
-            self.environ["REMOTE_USER"] = user
+            environ["REMOTE_USER"] = user
         
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
-            if headers.getheader("Connection", "") == "close":
+            if environ.get("HTTP_CONNECTION", "") == "close":
                 self.close_connection = True
                 self.outheaders.append(("Connection", "close"))
         else:
             # HTTP/1.0
-            if headers.getheader("Connection", "") == "Keep-Alive":
+            if environ.get("HTTP_CONNECTION", "") == "Keep-Alive":
                 if self.close_connection == False:
                     self.outheaders.append(("Connection", "Keep-Alive"))
             else:
                 self.close_connection = True
         
         # Transfer-Encoding support
-        te = headers.getheader("Transfer-Encoding", "")
+        te = environ.get("HTTP_TRANSFER_ENCODING", "")
         te = [x.strip() for x in te.split(",") if x.strip()]
         if te:
             while te:
@@ -255,7 +259,7 @@ class HTTPRequest(object):
                     self.close_connection = True
                     return
         else:
-            cl = headers.getheader("Content-length")
+            cl = environ.get("CONTENT_LENGTH")
             if method in ("POST", "PUT") and cl is None:
                 # No Content-Length header supplied. This will hang
                 # cgi.FieldStorage, since it cannot determine when to
@@ -281,23 +285,27 @@ class HTTPRequest(object):
         #
         # We used to do 3, but are now doing 1. Maybe we'll do 2 someday,
         # but it seems like it would be a big slowdown for such a rare case.
-        if headers.getheader("Expect", "") == "100-continue":
+        if environ.get("HTTP_EXPECT", "") == "100-continue":
             self.simple_response(100)
         
         self.ready = True
     
-    def parse_headers(self, headers):
-        """Parse the given HTTP request message-headers."""
-        environ = {}
-        ct = headers.dict.get("content-type")
-        if ct:
-            environ["CONTENT_TYPE"] = ct
-        cl = headers.dict.get("content-length")
-        if cl:
-            environ["CONTENT_LENGTH"] = cl
+    def read_headers(self):
+        """Read header lines from the incoming stream."""
+        environ = self.environ
         
-        for line in headers.headers:
-            if line[:1].isspace():
+        while True:
+            line = self.rfile.readline()
+            if not line:
+                # No more data--illegal end of headers
+                raise ValueError("Illegal end of headers.")
+            
+            if line == '\r\n':
+                # Normal end of headers
+                break
+            
+            if line[0] in ' \t':
+                # It's a continuation line.
                 v = line.strip()
             else:
                 k, v = line.split(":", 1)
@@ -310,7 +318,12 @@ class HTTPRequest(object):
                     v = ", ".join((existing, v))
             environ[envname] = v
         
-        return environ
+        ct = environ.pop("HTTP_CONTENT_TYPE", None)
+        if ct:
+            environ["CONTENT_TYPE"] = ct
+        cl = environ.pop("HTTP_CONTENT_LENGTH", None)
+        if cl:
+            environ["CONTENT_LENGTH"] = cl
     
     def decode_chunked(self):
         """Decode the 'chunked' transfer coding."""
@@ -332,8 +345,7 @@ class HTTPRequest(object):
                 return
         
         # Grab any trailer headers
-        headers = rfc822.Message(self.rfile, seekable=0)
-        self.environ.update(self.parse_headers(headers))
+        self.read_headers()
         
         data.seek(0)
         self.environ["wsgi.input"] = data

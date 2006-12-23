@@ -98,7 +98,9 @@ appconf = {
         'tools.staticdir.root': curdir,
         },
     }
-cherrypy.tree.mount(Root(), SCRIPT_NAME, appconf)
+app = cherrypy.tree.mount(Root(), SCRIPT_NAME, appconf)
+# Remove internalredirect (nastily on by default)
+app.wsgiapp.pipeline = []
 
 
 class NullRequest:
