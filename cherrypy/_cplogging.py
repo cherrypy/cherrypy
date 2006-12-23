@@ -45,17 +45,19 @@ class LogManager(object):
     def access(self):
         """Write to the access log."""
         request = cherrypy.request
+        remote = request.remote
         response = cherrypy.response
+        outheaders = response.headers
         tmpl = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-        s = tmpl % {'h': request.remote.name or request.remote.ip,
+        s = tmpl % {'h': remote.name or remote.ip,
                     'l': '-',
                     'u': getattr(request, "login", None) or "-",
                     't': self.time(),
                     'r': request.request_line,
                     's': response.status.split(" ", 1)[0],
-                    'b': response.headers.get('Content-Length', '') or "-",
-                    'f': request.headers.get('referer', ''),
-                    'a': request.headers.get('user-agent', ''),
+                    'b': outheaders.get('Content-Length', '') or "-",
+                    'f': outheaders.get('referer', ''),
+                    'a': outheaders.get('user-agent', ''),
                     }
         try:
             self.access_log.log(logging.INFO, s)

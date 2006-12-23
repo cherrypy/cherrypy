@@ -85,11 +85,12 @@ cherrypy.config.update({
     'server.max_request_header_size': 0,
     'server.max_request_body_size': 0,
     'engine.deadlock_poll_freq': 0,
-    # Cheat mode on ;)
-    'tools.log_tracebacks.on': False,
-    'tools.log_headers.on': False,
-    'tools.trailing_slash.on': False,
     })
+
+# Cheat mode on ;)
+del cherrypy.config['tools.log_tracebacks.on']
+del cherrypy.config['tools.log_headers.on']
+del cherrypy.config['tools.trailing_slash.on']
 
 appconf = {
     '/static': {

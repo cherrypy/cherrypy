@@ -417,7 +417,7 @@ class HTTPRequest(object):
     
     def send_headers(self):
         """Assert, process, and send the HTTP response message-headers."""
-        hkeys = [key.lower() for (key, value) in self.outheaders]
+        hkeys = [key.lower() for key, value in self.outheaders]
         status = int(self.status[:3])
         
         if self.response_protocol == 'HTTP/1.1':
@@ -448,8 +448,7 @@ class HTTPRequest(object):
         
         buf = [server.protocol, " ", self.status, "\r\n"]
         try:
-            for k, v in self.outheaders:
-                buf.append(k + ": " + v + "\r\n")
+            buf += [k + ": " + v + "\r\n" for k, v in self.outheaders]
         except TypeError:
             if not isinstance(k, str):
                 raise TypeError("WSGI response header key %r is not a string.")
