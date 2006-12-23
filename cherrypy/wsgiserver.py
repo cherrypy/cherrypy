@@ -748,22 +748,6 @@ class CherryPyWSGIServer(object):
         # trap those exceptions in whatever code block calls start().
         self._interrupt = None
         
-        def bind(family, type, proto=0):
-            """Create (or recreate) the actual socket object."""
-            self.socket = socket.socket(family, type, proto)
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            if self.ssl_certificate and self.ssl_private_key:
-                if SSL is None:
-                    raise ImportError("You must install pyOpenSSL to use HTTPS.")
-                
-                # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
-                ctx = SSL.Context(SSL.SSLv23_METHOD)
-                ctx.use_privatekey_file(self.ssl_private_key)
-                ctx.use_certificate_file(self.ssl_certificate)
-                self.socket = SSLConnection(ctx, self.socket)
-                self.populate_ssl_environ()
-            self.socket.bind(self.bind_addr)
-        
         # Select the appropriate socket
         if isinstance(self.bind_addr, basestring):
             # AF_UNIX socket
@@ -805,7 +789,7 @@ class CherryPyWSGIServer(object):
         for res in info:
             af, socktype, proto, canonname, sa = res
             try:
-                bind(af, socktype, proto)
+                self.bind(af, socktype, proto)
             except socket.error, msg:
                 if self.socket:
                     self.socket.close()
@@ -837,6 +821,23 @@ class CherryPyWSGIServer(object):
                     # Wait for self.stop() to complete. See _set_interrupt.
                     time.sleep(0.1)
                 raise self.interrupt
+    
+    def bind(self, family, type, proto=0):
+        """Create (or recreate) the actual socket object."""
+        self.socket = socket.socket(family, type, proto)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+##        self.socket.setsockopt(socket.SOL_SOCKET, socket.TCP_NODELAY, 1)
+        if self.ssl_certificate and self.ssl_private_key:
+            if SSL is None:
+                raise ImportError("You must install pyOpenSSL to use HTTPS.")
+            
+            # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
+            ctx = SSL.Context(SSL.SSLv23_METHOD)
+            ctx.use_privatekey_file(self.ssl_private_key)
+            ctx.use_certificate_file(self.ssl_certificate)
+            self.socket = SSLConnection(ctx, self.socket)
+            self.populate_ssl_environ()
+        self.socket.bind(self.bind_addr)
     
     def tick(self):
         """Accept a new connection and put it on the Queue."""

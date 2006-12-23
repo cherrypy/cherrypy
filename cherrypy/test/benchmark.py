@@ -84,6 +84,7 @@ cherrypy.config.update({
     'server.socket_port': 8080,
     'server.max_request_header_size': 0,
     'server.max_request_body_size': 0,
+    'engine.deadlock_poll_freq': 0,
     # Cheat mode on ;)
     'tools.log_tracebacks.on': False,
     'tools.log_headers.on': False,
