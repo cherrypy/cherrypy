@@ -537,7 +537,7 @@ class Response(object):
         if self.stream:
             if dict.get(headers, 'Content-Length') is None:
                 dict.pop(headers, 'Content-Length', None)
-        elif code < 200 or code in (204, 304):
+        elif code < 200 or code in (204, 205, 304):
             # "All 1xx (informational), 204 (no content),
             # and 304 (not modified) responses MUST NOT
             # include a message-body."

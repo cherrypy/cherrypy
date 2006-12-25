@@ -99,51 +99,85 @@ class ConnectionTests(helper.CPWebCase):
         self._streaming(set_cl=True)
     
     def _streaming(self, set_cl):
-        if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
-            return
-        
-        self.PROTOCOL = "HTTP/1.1"
-        
-        self.persistent = True
-        
-        # Make the first request and assert there's no "Connection: close".
-        self.getPage("/")
-        self.assertStatus('200 OK')
-        self.assertBody(pov)
-        self.assertNoHeader("Connection")
-        
-        # Make another, streamed request on the same connection.
-        if set_cl:
-            # When a Content-Length is provided, the content should stream
-            # without closing the connection.
-            self.getPage("/stream?set_cl=Yes")
-            self.assertHeader("Content-Length")
-            self.assertNoHeader("Connection", "close")
-            self.assertNoHeader("Transfer-Encoding")
-        else:
-            # When no Content-Length response header is provided,
-            # streamed output will either close the connection, or use
-            # chunked encoding, to determine transfer-length.
-            self.getPage("/stream")
-            self.assertNoHeader("Content-Length")
+        if cherrypy.server.protocol_version == "HTTP/1.1":
+            self.PROTOCOL = "HTTP/1.1"
             
-            chunked_response = False
-            for k, v in self.headers:
-                if k.lower() == "transfer-encoding":
-                    if str(v) == "chunked":
-                        chunked_response = True
+            self.persistent = True
             
-            if chunked_response:
+            # Make the first request and assert there's no "Connection: close".
+            self.getPage("/")
+            self.assertStatus('200 OK')
+            self.assertBody(pov)
+            self.assertNoHeader("Connection")
+            
+            # Make another, streamed request on the same connection.
+            if set_cl:
+                # When a Content-Length is provided, the content should stream
+                # without closing the connection.
+                self.getPage("/stream?set_cl=Yes")
+                self.assertHeader("Content-Length")
                 self.assertNoHeader("Connection", "close")
+                self.assertNoHeader("Transfer-Encoding")
+                
+                self.assertStatus('200 OK')
+                self.assertBody('0123456789')
             else:
-                self.assertHeader("Connection", "close")
+                # When no Content-Length response header is provided,
+                # streamed output will either close the connection, or use
+                # chunked encoding, to determine transfer-length.
+                self.getPage("/stream")
+                self.assertNoHeader("Content-Length")
+                self.assertStatus('200 OK')
+                self.assertBody('0123456789')
+                
+                chunked_response = False
+                for k, v in self.headers:
+                    if k.lower() == "transfer-encoding":
+                        if str(v) == "chunked":
+                            chunked_response = True
+                
+                if chunked_response:
+                    self.assertNoHeader("Connection", "close")
+                else:
+                    self.assertHeader("Connection", "close")
+                    
+                    # Make another request on the same connection, which should error.
+                    self.assertRaises(httplib.NotConnected, self.getPage, "/")
+        else:
+            self.PROTOCOL = "HTTP/1.0"
+            
+            self.persistent = True
+            
+            # Make the first request and assert Keep-Alive.
+            self.getPage("/", headers=[("Connection", "Keep-Alive")])
+            self.assertStatus('200 OK')
+            self.assertBody(pov)
+            self.assertHeader("Connection", "Keep-Alive")
+            
+            # Make another, streamed request on the same connection.
+            if set_cl:
+                # When a Content-Length is provided, the content should
+                # stream without closing the connection.
+                self.getPage("/stream?set_cl=Yes",
+                             headers=[("Connection", "Keep-Alive")])
+                self.assertHeader("Content-Length")
+                self.assertHeader("Connection", "Keep-Alive")
+                self.assertNoHeader("Transfer-Encoding")
+                self.assertStatus('200 OK')
+                self.assertBody('0123456789')
+            else:
+                # When a Content-Length is not provided,
+                # the server should close the connection.
+                self.getPage("/stream", headers=[("Connection", "Keep-Alive")])
+                self.assertStatus('200 OK')
+                self.assertBody('0123456789')
+                
+                self.assertNoHeader("Content-Length")
+                self.assertNoHeader("Connection", "Keep-Alive")
+                self.assertNoHeader("Transfer-Encoding")
                 
                 # Make another request on the same connection, which should error.
                 self.assertRaises(httplib.NotConnected, self.getPage, "/")
-        
-        self.assertStatus('200 OK')
-        self.assertBody('0123456789')
     
     def test_HTTP11_Timeout(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":

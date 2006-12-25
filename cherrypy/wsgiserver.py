@@ -236,28 +236,34 @@ class HTTPRequest(object):
         if self.response_protocol == "HTTP/1.1":
             if environ.get("HTTP_CONNECTION", "") == "close":
                 self.close_connection = True
-                self.outheaders.append(("Connection", "close"))
         else:
             # HTTP/1.0
-            if environ.get("HTTP_CONNECTION", "") == "Keep-Alive":
-                if self.close_connection == False:
-                    self.outheaders.append(("Connection", "Keep-Alive"))
-            else:
+            if environ.get("HTTP_CONNECTION", "") != "Keep-Alive":
                 self.close_connection = True
         
         # Transfer-Encoding support
-        te = environ.get("HTTP_TRANSFER_ENCODING", "")
-        te = [x.strip() for x in te.split(",") if x.strip()]
+        te = None
+        if self.response_protocol == "HTTP/1.1":
+            te = environ.get("HTTP_TRANSFER_ENCODING")
+            if te:
+                te = [x.strip().lower() for x in te.split(",") if x.strip()]
+        
+        read_chunked = False
+        
         if te:
-            while te:
-                enc = te.pop()
-                if enc.lower() == "chunked":
-                    if not self.decode_chunked():
-                        return
+            for enc in te:
+                if enc == "chunked":
+                    read_chunked = True
                 else:
+                    # Note that, even if we see "chunked", we must reject
+                    # if there is an extension we don't recognize.
                     self.simple_response("501 Unimplemented")
                     self.close_connection = True
                     return
+        
+        if read_chunked:
+            if not self.decode_chunked():
+                return
         else:
             cl = environ.get("CONTENT_LENGTH")
             if method in ("POST", "PUT") and cl is None:
@@ -420,23 +426,31 @@ class HTTPRequest(object):
         hkeys = [key.lower() for key, value in self.outheaders]
         status = int(self.status[:3])
         
-        if self.response_protocol == 'HTTP/1.1':
-            if status == 413:
-                # Request Entity Too Large. Close conn to avoid garbage.
-                self.close_connection = True
-            elif "content-length" not in hkeys:
-                # "All 1xx (informational), 204 (no content),
-                # and 304 (not modified) responses MUST NOT
-                # include a message-body." So no point chunking.
-                if status < 200 or status in (204, 205, 304):
-                    pass
-                else:
+        if status == 413:
+            # Request Entity Too Large. Close conn to avoid garbage.
+            self.close_connection = True
+        elif "content-length" not in hkeys:
+            # "All 1xx (informational), 204 (no content),
+            # and 304 (not modified) responses MUST NOT
+            # include a message-body." So no point chunking.
+            if status < 200 or status in (204, 205, 304):
+                pass
+            else:
+                if self.response_protocol == 'HTTP/1.1':
                     # Use the chunked transfer-coding
                     self.chunked_write = True
                     self.outheaders.append(("Transfer-Encoding", "chunked"))
+                else:
+                    # Closing the conn is the only way to determine len.
+                    self.close_connection = True
         
-        if self.close_connection and "connection" not in hkeys:
-            self.outheaders.append(("Connection", "close"))
+        if "connection" not in hkeys:
+            if self.response_protocol == 'HTTP/1.1':
+                if self.close_connection:
+                    self.outheaders.append(("Connection", "close"))
+            else:
+                if not self.close_connection:
+                    self.outheaders.append(("Connection", "Keep-Alive"))
         
         if "date" not in hkeys:
             self.outheaders.append(("Date", rfc822.formatdate()))
