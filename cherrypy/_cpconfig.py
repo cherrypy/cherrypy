@@ -69,6 +69,9 @@ Current namespaces:
     server:     Controls the default HTTP server via cherrypy.server.
                 These can only be declared in the global config.
     tools:      Runs and configures additional request-processing packages.
+    checker:    Controls the 'checker', which looks for common errors in
+                app state (including config) when the engine starts.
+                Global config only.
 
 The only key that does not exist in a namespace is the "environment" entry.
 This special entry 'imports' other config entries from a template stored in
@@ -92,20 +95,20 @@ import cherrypy
 environments = {
     "staging": {
         'engine.autoreload_on': False,
-        'engine.checker': None,
+        'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         },
     "production": {
         'engine.autoreload_on': False,
-        'engine.checker': None,
+        'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         'log.screen': False,
         },
     "test_suite": {
         'engine.autoreload_on': False,
-        'engine.checker': None,
+        'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': True,
         'log.screen': False,
@@ -203,6 +206,7 @@ class Config(dict):
     namespaces = {"server": lambda k, v: setattr(cherrypy.server, k, v),
                   "engine": lambda k, v: setattr(cherrypy.engine, k, v),
                   "log": lambda k, v: setattr(cherrypy.log, k, v),
+                  "checker": lambda k, v: setattr(cherrypy.checker, k, v),
                   }
     
     def __init__(self):
@@ -228,7 +232,7 @@ class Config(dict):
         
         if isinstance(config.get("global", None), dict):
             if len(config) > 1:
-                cherrypy.engine.checker.global_config_contained_paths = True
+                cherrypy.checker.global_config_contained_paths = True
             config = config["global"]
         
         if 'environment' in config:

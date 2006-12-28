@@ -269,3 +269,6 @@ from cherrypy import _cpconfig
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
+
+from cherrypy import _cpchecker
+checker = _cpchecker.Checker()

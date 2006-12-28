@@ -33,5 +33,7 @@ if __name__ == '__main__':
             '/unknown': {'toobles.gzip.on': True},
             # Warn special on cherrypy.<known ns>.*
             '/cpknown': {'cherrypy.tools.encode.on': True},
+            # Warn on mismatched types
+            '/conftype': {'request.show_tracebacks': 14},
             }
     cherrypy.quickstart(Root(), config=conf)

@@ -9,7 +9,7 @@ import threading
 import time
 
 import cherrypy
-from cherrypy import _cprequest, _cpchecker
+from cherrypy import _cprequest
 
 # Use a flag to indicate the state of the application engine.
 STOPPED = 0
@@ -52,7 +52,6 @@ class Engine(object):
     autoreload_on = True
     autoreload_frequency = 1
     autoreload_match = ".*"
-    checker = _cpchecker.Checker()
     
     def __init__(self):
         self.state = STOPPED
@@ -75,8 +74,7 @@ class Engine(object):
         """Start the application engine."""
         self.state = STARTING
         
-        if self.checker:
-            self.checker()
+        cherrypy.checker()
         
         for func in self.on_start_engine_list:
             func()
