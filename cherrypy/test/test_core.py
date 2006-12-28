@@ -598,9 +598,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/stringify", protocol="HTTP/1.0")
         self.assertStatus(200)
         self.assertBody("(['http://127.0.0.1:%s/'], 302)" % self.PORT)
-        self.getPage("/redirect/stringify", protocol="HTTP/1.1")
-        self.assertStatus(200)
-        self.assertBody("(['http://127.0.0.1:%s/'], 303)" % self.PORT)
+        
+        if cherrypy.config.get('server.socket_protocol') == 'HTTP/1.1':
+            self.getPage("/redirect/stringify", protocol="HTTP/1.1")
+            self.assertStatus(200)
+            self.assertBody("(['http://127.0.0.1:%s/'], 303)" % self.PORT)
     
     def testFlatten(self):
         for url in ["/flatten/as_string", "/flatten/as_list",
@@ -657,6 +659,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 ##        self.assertBody("THROWN ERROR: ValueError")
     
     def testRanges(self):
+        if cherrypy.config.get('server.socket_protocol') != 'HTTP/1.1':
+            print "skipped ",
+            return
+        
         self.getPage("/ranges/get_ranges?bytes=3-6")
         self.assertBody("[(3, 7)]")
         
