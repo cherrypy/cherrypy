@@ -68,6 +68,16 @@ class HTTPRequest(object):
             self.ready = False
             return
         
+        if request_line == "\r\n":
+            # RFC 2616 sec 4.1: "...if the server is reading the protocol
+            # stream at the beginning of a message and receives a CRLF
+            # first, it should ignore the CRLF."
+            # But only ignore one leading line! else we enable a DoS.
+            request_line = self.rfile.readline()
+            if not request_line:
+                self.ready = False
+                return
+        
         method, path, req_protocol = request_line.strip().split(" ", 2)
         self.environ["REQUEST_METHOD"] = method
         
