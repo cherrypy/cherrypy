@@ -19,13 +19,15 @@ import getopt
 class TestHarness(object):
     """A test harness for the CherryPy framework and CherryPy applications."""
     
-    def __init__(self, tests=None, server=None, protocol="HTTP/1.1", port=8000):
+    def __init__(self, tests=None, server=None, protocol="HTTP/1.1",
+                 port=8000, interactive=True):
         """Constructor to populate the TestHarness instance.
         
         tests should be a list of module names (strings).
         """
         self.protocol = protocol
         self.port = port
+        self.interactive = interactive
         self.server = server
         self.tests = tests or []
     
@@ -49,7 +51,7 @@ class TestHarness(object):
         baseconf.update(conf or {})
         
         baseconf['server.protocol_version'] = self.protocol
-        self._run(baseconf)
+        return self._run(baseconf)
     
     def _run(self, conf):
         # helper must be imported lazily so the coverage tool
@@ -60,9 +62,10 @@ class TestHarness(object):
         # and we wouldn't be able to globally override the port anymore.
         import helper
         webtest.WebCase.PORT = self.port
+        webtest.WebCase.interactive = self.interactive
         print
         print "Running tests:", self.server
-        helper.run_test_suite(self.tests, self.server, conf)
+        return helper.run_test_suite(self.tests, self.server, conf)
 
 
 class CommandLineParser(object):
@@ -72,6 +75,7 @@ class CommandLineParser(object):
                          }
     default_server = "wsgi"
     port = 8080
+    interactive = True
     
     def __init__(self, available_tests, args=sys.argv[1:]):
         """Constructor to populate the TestHarness instance.
@@ -87,8 +91,8 @@ class CommandLineParser(object):
         self.server = None
         self.protocol = "HTTP/1.1"
         
-        longopts = ['cover', 'profile', '1.1', 'help', 'basedir=', 'port=',
-                    'server=']
+        longopts = ['cover', 'profile', 'dumb', '1.1', 'help',
+                    'basedir=', 'port=', 'server=']
         longopts.extend(self.available_tests)
         try:
             opts, args = getopt.getopt(args, "", longopts)
@@ -107,6 +111,8 @@ class CommandLineParser(object):
                 self.cover = True
             elif o == "--profile":
                 self.profile = True
+            elif o == "--dumb":
+                self.interactive = False
             elif o == "--1.0":
                 self.protocol = "HTTP/1.0"
             elif o == "--basedir":
@@ -139,7 +145,7 @@ class CommandLineParser(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server=* --port=%s --1.1 --cover --basedir=path --profile --tests**
+        test.py --server=* --port=%s --1.1 --cover --basedir=path --profile --dumb --tests**
         
     """ % self.__class__.port
         print '    * servers:'
@@ -151,13 +157,14 @@ class CommandLineParser(object):
         
         print """
     
-    --port=<int>: use a port other than the default (%s)
-    --1.1: use HTTP/1.1 servers instead of default HTTP/1.0
+    --port=<int>: use a port other than the default (%s).
+    --1.1: use HTTP/1.1 servers instead of default HTTP/1.0.
     
-    --cover: turn on code-coverage tool
+    --cover: turn on the code-coverage tool.
     --basedir=path: display coverage stats for some path other than cherrypy.
     
-    --profile: turn on profiling tool
+    --profile: turn on the profiling tool.
+    --dumb: turn off the interactive output features.
     """ % self.__class__.port
         
         print '    ** tests:'
@@ -259,11 +266,15 @@ class CommandLineParser(object):
         
         if self.server == 'modpy':
             import modpy
-            modpy.ModPythonTestHarness(self.tests, self.server,
-                                       self.protocol, self.port).run(conf)
+            h = modpy.ModPythonTestHarness(self.tests, self.server,
+                                           self.protocol, self.port,
+                                           self.interactive)
         else:
-            TestHarness(self.tests, self.server,
-                        self.protocol, self.port).run(conf)
+            h = TestHarness(self.tests, self.server,
+                            self.protocol, self.port,
+                            self.interactive)
+        
+        success = h.run(conf)
         
         if self.profile:
             del conf['profiling.on']
@@ -273,6 +284,8 @@ class CommandLineParser(object):
         
         if self.cover:
             self.stop_coverage()
+        
+        return success
 
 
 def prefer_parent_path():
@@ -311,10 +324,12 @@ def run():
         'test_xmlrpc_filter',
         'test_wsgiapp_filter',
     ]
-    CommandLineParser(testList).run()
-    
-    print
-    raw_input('hit enter')
+    clp = CommandLineParser(testList)
+    success = clp.run()
+    if clp.interactive:
+        print
+        raw_input('hit enter')
+    sys.exit(success)
 
 
 if __name__ == '__main__':

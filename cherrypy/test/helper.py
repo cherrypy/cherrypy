@@ -98,9 +98,17 @@ def run_test_suite(moduleNames, server, conf):
     of test modules. The config, however, is reset for each module.
     """
     setConfig(conf)
+    # The Pybots automatic testing system needs the suite to exit
+    # with a non-zero value if there were any problems.
+    # Might as well stick it in the server... :/
+    cherrypy.server.test_success = True
     cherrypy.server.start_with_callback(_run_test_suite_thread,
                                         args = (moduleNames, conf),
                                         server_class = server)
+    if cherrypy.server.test_success:
+        return 0
+    else:
+        return 1
 
 def _run_test_suite_thread(moduleNames, conf):
     for testmod in moduleNames:
@@ -117,7 +125,8 @@ def _run_test_suite_thread(moduleNames, conf):
             setup()
         
         suite = CPTestLoader.loadTestsFromName(testmod)
-        CPTestRunner.run(suite)
+        result = CPTestRunner.run(suite)
+        cherrypy.server.test_success &= result.wasSuccessful()
         
         teardown = getattr(m, "teardown_server", None)
         if teardown:
