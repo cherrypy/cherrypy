@@ -3,6 +3,7 @@ test.prefer_parent_path()
 
 import cherrypy
 from cherrypy.filters.cachefilter import expires
+from cherrypy.lib.httptools import HTTPDate
 
 
 def setup_server():
@@ -15,7 +16,13 @@ def setup_server():
             msg = "visit #%s" % cherrypy.counter
             return msg
         index.exposed = True
-    
+        
+        def textplain(self):
+            cherrypy.response.headers['Content-type'] = 'text/plain'
+            cherrypy.response.headers['Last-Modified'] = HTTPDate()
+            return self.index()
+        textplain.exposed = True
+        
     class UnCached(object):
         
         use_force = False
@@ -59,10 +66,16 @@ import helper
 class CacheFilterTest(helper.CPWebCase):
     
     def testCaching(self):
+        elapsed = 0.0
         for trial in xrange(10):
             self.getPage("/")
-            # The response should be the same every time!
+            # The response should be the same every time,
+            # except for the Age response header.
             self.assertBody('visit #1')
+            if trial != 0:
+                age = int(self.assertHeader("Age"))
+                self.assert_(age >= elapsed)
+                elapsed = age
         
         # POST, PUT, DELETE should not be cached.
         self.getPage("/", method="POST")
@@ -80,7 +93,17 @@ class CacheFilterTest(helper.CPWebCase):
         # so this request will recalc the response.
         self.getPage("/", method="GET")
         self.assertBody('visit #5')
-    
+
+        # make sure that custom set Content-types get passed through on 304s
+        self.getPage("/textplain")
+        self.assertHeader("Content-type", "text/plain")
+        self.assertStatus("200 OK")
+        self.assertBody('visit #6')
+        date = self.assertHeader("Last-Modified")
+        self.getPage("/textplain", [("If-Modified-Since", date)])
+        self.assertHeader("Content-type", "text/plain")
+        self.assertStatus("304 Not Modified")
+        
     def testExpiresTool(self):
         
         # test setting an expires header

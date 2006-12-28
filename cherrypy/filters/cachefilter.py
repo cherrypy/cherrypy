@@ -117,6 +117,7 @@ class CacheFilter(basefilter.BaseFilter):
             return
         
         request = cherrypy.request
+        response = cherrypy.response
         
         # POST, PUT, DELETE should invalidate (delete) the cached copy.
         # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
@@ -129,20 +130,21 @@ class CacheFilter(basefilter.BaseFilter):
         if cacheData:
             # found a hit! check the if-modified-since request header
             expirationTime, lastModified, obj = cacheData
-            s, h, b = obj
+            s, h, b, create_time = obj
             modifiedSince = request.headers.get('If-Modified-Since', None)
             if modifiedSince is not None and modifiedSince == lastModified:
                 cherrypy._cache.totNonModified += 1
-                cherrypy.response.status = "304 Not Modified"
-                ct = h.get("Content-Type")
+                response.status = "304 Not Modified"
+                ct = h.get('Content-Type', None)
                 if ct:
-                    cherrypy.response.header_list["Content-Type"] = ct
-                cherrypy.response.body = None
+                    response.headers['Content-Type'] = ct
+                response.body = None
             else:
                 # serve it & get out from the request
                 response = cherrypy.response
-                response.status, response.header_list, response.body = s, h, b
-            raise cherrypy.RequestHandled()
+                response.status, response.headers, response.body = s, h, b
+            response.headers['Age'] = str(int(time.time() - create_time))
+            request.execute_main = False
         else:
             request.cacheable = True
     
@@ -168,9 +170,11 @@ class CacheFilter(basefilter.BaseFilter):
             lastModified = response.headers.get('Last-Modified', None)
             # save the cache data
             body = ''.join([chunk for chunk in response._cachefilter_tee])
+            create_time = time.time()
             cherrypy._cache.put(lastModified, (response.status,
-                                               response.header_list,
-                                               body))
+                                               response.headers,
+                                               body,
+                                               create_time))
 
 
 def percentual(n,d):
