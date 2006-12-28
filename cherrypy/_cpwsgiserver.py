@@ -323,9 +323,16 @@ class CherryPyWSGIServer(object):
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6 addresses)
             host, port = self.bind_addr
+            flags = 0
+            if host == '':
+                # Despite the socket module docs, using '' does not
+                # allow AI_PASSIVE to work. Passing None instead
+                # returns '0.0.0.0' like we want.
+                host = None
+                flags = socket.AI_PASSIVE
             try:
                 info = socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                          socket.SOCK_STREAM)
+                                          socket.SOCK_STREAM, 0, flags)
             except socket.gaierror:
                 # Probably a DNS issue. Assume IPv4.
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
