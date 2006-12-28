@@ -31,7 +31,7 @@ import time
 import traceback
 
 import cherrypy
-from cherrypy import _cpmodpy
+from cherrypy import _cperror, _cpmodpy
 from cherrypy.lib import http
 
 
@@ -214,7 +214,12 @@ Finished 1000 requests
     
     def run(self):
         # Parse output of ab, setting attributes on self
-        self.output = _cpmodpy.read_process(AB_PATH or "ab", self.args())
+        try:
+            self.output = _cpmodpy.read_process(AB_PATH or "ab", self.args())
+        except:
+            print _cperror.format_exc()
+            raise
+        
         for attr, name, pattern in self.parse_patterns:
             val = re.search(pattern, self.output, re.MULTILINE)
             if val:
