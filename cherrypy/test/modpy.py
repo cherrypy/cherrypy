@@ -146,11 +146,17 @@ class ModPythonTestHarness(test.TestHarness):
         # started separately for each test, and then *that* process
         # must run the setup_server() function for the test.
         # Then our process can run the actual test.
+        success = True
         for testmod in self.tests:
             try:
                 start(testmod, self.port, conf_template)
                 suite = webtest.ReloadingTestLoader().loadTestsFromName(testmod)
-                webtest.TerseTestRunner(verbosity=2).run(suite)
+                result = webtest.TerseTestRunner(verbosity=2).run(suite)
+                success &= result.wasSuccessful()
             finally:
                 stop()
+        if success:
+            return 0
+        else:
+            return 1
 
