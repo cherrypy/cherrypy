@@ -143,7 +143,7 @@ class CacheFilter(basefilter.BaseFilter):
                 # serve it & get out from the request
                 response = cherrypy.response
                 response.status, response.headers, response.body = s, h, b
-            response.headers['Age'] = str(int(time.time() - create_time))
+            response.headers['Age'] = str(int(response.time - create_time))
             request.execute_main = False
         else:
             request.cacheable = True
