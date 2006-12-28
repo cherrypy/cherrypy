@@ -140,21 +140,22 @@ class Checker(object):
     
     # ------------------------ Known Namespaces ------------------------ #
     
-    known_config_namespaces = ["checker", "engine", "hooks", "log",
-                               "request", "response", "server",
-                               "tools",
-                               "wsgi"]
+    extra_config_namespaces = []
     
     def _known_ns(self, config):
+        ns = ["wsgi"]
+        ns.extend(cherrypy.engine.request_class.namespaces.keys())
+        ns.extend(cherrypy.config.namespaces.keys())
+        ns += self.extra_config_namespaces
+        
         for section, conf in config.iteritems():
             is_path_section = section.startswith("/")
             if is_path_section and isinstance(conf, dict):
                 for k, v in conf.iteritems():
                     atoms = k.split(".")
                     if len(atoms) > 1:
-                        if atoms[0] not in self.known_config_namespaces:
-                            if (atoms[0] == "cherrypy" and
-                                    atoms[1] in self.known_config_namespaces):
+                        if atoms[0] not in ns:
+                            if (atoms[0] == "cherrypy" and atoms[1] in ns):
                                 msg = ("The config entry %r is invalid; "
                                        "try %r instead.\nsection: [%s]"
                                        % (k, ".".join(atoms[1:]), section))
