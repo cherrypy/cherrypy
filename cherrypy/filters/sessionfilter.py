@@ -423,9 +423,18 @@ class PostgreSQLStorage:
             (now,))
 
 
-def generate_session_id():
-    """ Return a new session_id """
-    return sha.new('%s' % random.random()).hexdigest()
+try:
+    os.urandom(20)
+except (AttributeError, NotImplementedError):
+    # os.urandom not available until Python 2.4. Fall back to random.random.
+    def generate_session_id():
+        """Return a new session id."""
+        return sha.new('%s' % random.random()).hexdigest()
+else:
+    def generate_session_id():
+        """Return a new session id."""
+        return os.urandom(20).encode('hex')
+
 generateSessionID = generate_session_id
 
 # Users access sessions through cherrypy.session, but we want this
