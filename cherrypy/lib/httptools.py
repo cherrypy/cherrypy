@@ -16,6 +16,7 @@ responseCodes[500] = ('Internal error',
 
 
 import cgi
+from email.Header import Header, decode_header
 import re
 import time
 import urllib
@@ -261,6 +262,15 @@ def header_elements(fieldname, fieldvalue):
     result.sort()
     return result
 
+def decode_TEXT(value):
+    """Decode RFC-2047 TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
+    atoms = decode_header(value)
+    decodedvalue = ""
+    for atom, charset in atoms:
+        if charset is not None:
+            atom = atom.decode(charset)
+        decodedvalue += atom
+    return decodedvalue
 
 def validStatus(status):
     """Return legal HTTP status Code, Reason-phrase and Message.
@@ -452,7 +462,7 @@ class HeaderMap(CaseInsensitiveDict):
     for _ in entity_fields:
         order_map[_] = 2
     
-    def sorted_list(self):
+    def sorted_list(self, protocol=(1, 0)):
         """Transform self into a sorted list of (name, value) tuples.
         
         From http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
@@ -466,8 +476,29 @@ class HeaderMap(CaseInsensitiveDict):
             order = self.order_map.get(key, 3)
             if not isinstance(valueList, list):
                 valueList = [valueList]
-            for value in valueList:
-                header_list.append((order, (key, str(value))))
+            for v in valueList:
+                
+                if isinstance(v, unicode):
+                    # HTTP/1.0 says, "Words of *TEXT may contain octets
+                    # from character sets other than US-ASCII." and
+                    # "Recipients of header field TEXT containing octets
+                    # outside the US-ASCII character set may assume that
+                    # they represent ISO-8859-1 characters."
+                    try:
+                        v = v.encode("iso-8859-1")
+                    except UnicodeEncodeError:
+                        if protocol >= (1, 1):
+                            # Encode RFC-2047 TEXT
+                            # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=").
+                            v = Header(v, 'utf-8').encode()
+                        else:
+                            raise
+                else:
+                    # This coercion should not take any time at all
+                    # if value is already of type "str".
+                    v = str(v)
+                
+                header_list.append((order, (key, v)))
         header_list.sort()
         return [item[1] for item in header_list]
 

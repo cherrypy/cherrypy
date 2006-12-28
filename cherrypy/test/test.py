@@ -91,7 +91,7 @@ class CommandLineParser(object):
         self.server = None
         self.protocol = "HTTP/1.1"
         
-        longopts = ['cover', 'profile', 'dumb', '1.1', 'help',
+        longopts = ['cover', 'profile', 'dumb', '1.0', 'help',
                     'basedir=', 'port=', 'server=']
         longopts.extend(self.available_tests)
         try:

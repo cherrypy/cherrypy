@@ -195,7 +195,7 @@ class Request(object):
             # Warning: if there is more than one header entry for cookies (AFAIK,
             # only Konqueror does that), only the last one will remain in headers
             # (but they will be correctly stored in request.simple_cookie).
-            self.headers[name] = value
+            self.headers[name] = httptools.decode_TEXT(value)
             
             # Handle cookies differently because on Konqueror, multiple
             # cookies come on different lines with the same key
@@ -426,7 +426,7 @@ class Response(object):
                 self.headers['Content-Length'] = len(content)
         
         # Transform our header dict into a sorted list of tuples.
-        self.header_list = self.headers.sorted_list()
+        self.header_list = self.headers.sorted_list(protocol=self.version)
         
         cookie = self.simple_cookie.output()
         if cookie:
