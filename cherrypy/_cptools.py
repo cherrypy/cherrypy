@@ -178,7 +178,26 @@ from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
 
 
 class SessionTool(Tool):
-    """Session Tool for CherryPy."""
+    """Session Tool for CherryPy.
+    
+    sessions.locking:
+        When 'implicit' (the default), the session will be locked for you,
+            just before running the page handler.
+        When 'early', the session will be locked before reading the request
+            body. This is off by default for safety reasons; for example,
+            a large upload would block the session, denying an AJAX
+            progress meter (see http://www.cherrypy.org/ticket/630).
+        When 'explicit' (or any other value), you need to call
+            cherrypy.session.acquire_lock() yourself before using
+            session data.
+    """
+    
+    def __init__(self):
+        # _sessions.init must be bound after headers are read
+        Tool.__init__(self, 'before_request_body', _sessions.init)
+    
+    def _lock_session(self):
+        cherrypy._serving.session.acquire_lock()
     
     def _setup(self):
         """Hook this tool into cherrypy.request.
@@ -186,9 +205,29 @@ class SessionTool(Tool):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        Tool._setup(self)
-        cherrypy.request.hooks.attach('before_finalize', _sessions.save)
-        cherrypy.request.hooks.attach('on_end_request', _sessions.close)
+        hooks = cherrypy.request.hooks
+        
+        conf = self._merged_args()
+        
+        p = conf.pop("priority", None)
+        if p is None:
+            p = getattr(self.callable, "priority", self._priority)
+        
+        hooks.attach(self._point, self.callable, priority=p, **conf)
+        
+        locking = conf.pop('locking', 'early')
+        if locking == 'implicit':
+            hooks.attach('before_handler', self._lock_session)
+        elif locking == 'early':
+            # Lock before the request body (but after _sessions.init runs!)
+            hooks.attach('before_request_body', self._lock_session,
+                         priority=60)
+        else:
+            # Don't lock
+            pass
+        
+        hooks.attach('before_finalize', _sessions.save)
+        hooks.attach('on_end_request', _sessions.close)
 
 
 class XMLRPCController(object):
@@ -332,8 +371,7 @@ _d.encode = Tool('before_finalize', encoding.encode, priority=70)
 _d.gzip = Tool('before_finalize', encoding.gzip, priority=80)
 _d.staticdir = HandlerTool(static.staticdir)
 _d.staticfile = HandlerTool(static.staticfile)
-# _sessions.init must be bound after headers are read
-_d.sessions = SessionTool('before_request_body', _sessions.init)
+_d.sessions = SessionTool()
 _d.xmlrpc = ErrorTool(_xmlrpc.on_error)
 _d.wsgiapp = WSGIAppTool(_wsgiapp.run)
 _d.caching = CachingTool('before_handler', _caching.get, 'caching')

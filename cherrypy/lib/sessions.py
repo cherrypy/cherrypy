@@ -406,8 +406,7 @@ close.priority = 90
 _def_session = RamSession()
 
 def init(storage_type='ram', path=None, path_header=None, name='session_id',
-         timeout=60, domain=None, secure=False, locking='implicit',
-         clean_freq=5, **kwargs):
+         timeout=60, domain=None, secure=False, clean_freq=5, **kwargs):
     """Initialize session object (using cookies).
     
     storage_type: one of 'ram', 'file', 'postgresql'. This will be used
@@ -421,10 +420,6 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     domain: the cookie domain.
     secure: if False (the default) the cookie 'secure' value will not
         be set. If True, the cookie 'secure' value will be set (to 1).
-    locking: If 'implicit' (the default), this function will lock the
-        session for you. If 'explicit' (or any other value), you need
-        to call cherrypy.session.acquire_lock() yourself before
-        using session data.
     clean_freq (minutes): the poll rate for expired session cleanup.
     
     Any additional kwargs will be bound to the new Session instance,
@@ -455,9 +450,6 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
         cherrypy.session = cherrypy._ThreadLocalProxy('session', _def_session)
         if hasattr(sess, "setup"):
             sess.setup()
-    
-    if locking == 'implicit':
-        sess.acquire_lock()
     
     # Set response cookie
     cookie = cherrypy.response.cookie
