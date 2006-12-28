@@ -215,7 +215,7 @@ class SessionTool(Tool):
         
         hooks.attach(self._point, self.callable, priority=p, **conf)
         
-        locking = conf.pop('locking', 'early')
+        locking = conf.pop('locking', 'implicit')
         if locking == 'implicit':
             hooks.attach('before_handler', self._lock_session)
         elif locking == 'early':
