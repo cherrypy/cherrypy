@@ -27,7 +27,6 @@ class SessionAuthenticateFilter(BaseFilter):
     
     def before_main(self):
         cherrypy.request.user = None
-        cherrypy.thread_data.user = None
 
         conf = cherrypy.config.get
         if ((not conf('session_authenticate_filter.on', False))
@@ -48,7 +47,6 @@ class SessionAuthenticateFilter(BaseFilter):
             login = cherrypy.session.get(session_key)
             cherrypy.session[session_key] = None
             cherrypy.request.user = None
-            cherrypy.thread_data.user = None
             if login and on_logout:
                 on_logout(login)
             from_page = cherrypy.request.params.get('from_page', '..')
@@ -86,7 +84,6 @@ class SessionAuthenticateFilter(BaseFilter):
             return
         
         # Everything is OK: user is logged in
-        if load_user_by_username and not cherrypy.thread_data.user:
+        if load_user_by_username and not cherrypy.request.user:
             username = temp_user or cherrypy.session[session_key]
             cherrypy.request.user = load_user_by_username(username)
-            cherrypy.thread_data.user = cherrypy.request.user
