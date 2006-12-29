@@ -92,7 +92,7 @@ class SessionFilter(basefilter.BaseFilter):
         
         clean_up_delay = conf('session_filter.clean_up_delay', 5)
         clean_up_delay = datetime.timedelta(seconds = clean_up_delay * 60)
-        
+
         cookie_name = conf('session_filter.cookie_name', 'session_id')
         cookie_domain = conf('session_filter.cookie_domain', None)
         cookie_secure = conf('session_filter.cookie_secure', False)
@@ -226,7 +226,12 @@ class RamStorage:
     
     def save(self, id, data, expiration_time):
         cherrypy._session_data_holder[id] = (data, expiration_time)
-    
+
+    def delete(self, id=None):
+        if id is None:
+            id = cherrypy.session.id
+        del cherrypy._session_data_holder[id]
+
     def acquire_lock(self):
         sess = cherrypy.request._session
         id = cherrypy.session.id
@@ -288,6 +293,15 @@ class FileStorage:
         pickle.dump((data, expiration_time), f)
         f.close()
     
+    def delete(self, id=None):
+        if id is None:
+            id = cherrypy.session.id
+        file_path = self._get_file_path(id)
+        try:
+            os.unlink(file_path)
+        except:
+            pass
+        
     def acquire_lock(self):
         sess = cherrypy.request._session
         if not sess.locked:
@@ -321,6 +335,7 @@ class FileStorage:
                     if expiration_time < now:
                         # Session expired: deleting it
                         id = fname[len(self.SESSION_PREFIX):]
+                        print file_path
                         sess.on_delete_session(data)
                         os.unlink(file_path)
                 except:
@@ -385,6 +400,11 @@ class PostgreSQLStorage:
         # Unpickle data
         data = pickle.loads(pickled_data)
         return (data, expiration_time)
+
+    def delete(self, id=None):
+        if id is None:
+            id = cherrypy.session.id
+        self.cursor.execute('delete from session where id=%s', (id,)) 
     
     def save(self, id, data, expiration_time):
         # Try to delete session if it was already there
@@ -457,6 +477,8 @@ class SessionWrapper:
             return sess.session_storage.release_lock
         elif name == 'id':
             return sess.session_id
+        elif name == 'delete':
+            return sess.session_storage.delete
 
         if sess.to_be_loaded:
             data = sess.session_storage.load(sess.session_id)
@@ -473,3 +495,10 @@ class SessionWrapper:
 
         return getattr(sess.session_data, name)
 
+def expire():
+    """Expire the current session cookie."""
+    name = cherrypy.config.get('session_filter.cookie_name', 'session_id')
+    one_year = 60 * 60 * 24 * 365
+    exp = time.gmtime(time.time() - one_year)
+    t = time.strftime("%a, %d-%b-%Y %H:%M:%S GMT", exp)
+    cherrypy.response.simple_cookie[name]['expires'] = t
