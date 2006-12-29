@@ -335,7 +335,6 @@ class FileStorage:
                     if expiration_time < now:
                         # Session expired: deleting it
                         id = fname[len(self.SESSION_PREFIX):]
-                        print file_path
                         sess.on_delete_session(data)
                         os.unlink(file_path)
                 except:
