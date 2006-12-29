@@ -1,5 +1,6 @@
 """Test the various means of instantiating and invoking filters."""
 
+import time
 import types
 import test
 test.prefer_parent_path()
@@ -102,6 +103,10 @@ def setup_server():
         def err(self):
             raise ValueError()
         
+        def stream(self):
+            for i in xrange(100000000):
+                yield str(i)
+        
         def errinstream(self):
             raise ValueError()
             yield "confidential"
@@ -133,6 +138,9 @@ def setup_server():
         '/cpfilterlist/errinstream': {
             'stream_response': True,
         },
+        '/cpfilterlist/stream': {
+            'stream_response': True,
+        },
         '/cpfilterlist/err_in_onstart': {
             # Because this isn't a dict, on_start_resource will error.
             'numerify_filter.map': "pie->3.14159"
@@ -158,7 +166,6 @@ import helper
 
 
 class FilterTests(helper.CPWebCase):
-    
     def testCPFilterList(self):
         self.getPage("/cpfilterlist/")
         # If body is "razdrez", then on_end_request is being called too early.
@@ -183,6 +190,25 @@ class FilterTests(helper.CPWebCase):
         self.assertBody("Unrecoverable error in the server.")
         # If this fails, then on_end_request isn't being called at all.
         self.getPage("/cpfilterlist/ended/5")
+        self.assertBody("True")
+
+        # Test that on_end_request is called even if the client drops.
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.putrequest('GET', '/cpfilterlist/stream', skip_host=True)
+            conn.putheader('Host', self.HOST)
+            conn.endheaders()
+            # Skip the rest of the request and close the conn. This will 
+            # cause the server's active socket to error, which *should* 
+            # result in the request being aborted, and request.close being 
+            # called all the way up the stack (including WSGI middleware), 
+            # eventually calling our on_end_request hook.
+        finally:
+            self.persistent = False
+        time.sleep(0.1)
+        # on_end_request should have been called
+        self.getPage('/cpfilterlist/ended/7')
         self.assertBody("True")
         
         # Test the config method.

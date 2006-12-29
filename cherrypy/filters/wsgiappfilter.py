@@ -135,7 +135,12 @@ class WSGIAppFilter(BaseFilter):
         environ.update(self.env_update)
 
         # run the wsgi app and have it set response.body
-        cherrypy.response.body = self.app(environ, start_response)
+        response = self.app(environ, start_response)
+        try:
+            cherrypy.response.body = response
+        finally:
+            if hasattr(response, "close"):
+                response.close()
         
         # tell CP not to handle the request further
         request.execute_main = False

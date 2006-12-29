@@ -49,6 +49,45 @@ class NullWriter(object):
     def write(self, data):
         pass
 
+class ResponseIter(object):
+    def __init__(self, request, body):
+        self.body = body
+        self.request = request
+        
+    def __iter__(self):
+        if not self.body:
+            raise StopIteration
+        try:
+            for chunk in self.body:
+                # WSGI requires all data to be of type "str". This coercion should
+                # not take any time at all if chunk is already of type "str".
+                # If it's unicode, it could be a big performance hit (x ~500).
+                if not isinstance(chunk, str):
+                    chunk = chunk.encode("ISO-8859-1")
+                yield chunk
+        except (KeyboardInterrupt, SystemExit), ex:
+            raise ex
+        except:
+            cherrypy.log(traceback=True)
+            s, h, b = _cputil.bareError()
+            # CherryPy test suite expects bareError body to be output,
+            # so don't call start_response (which, according to PEP 333,
+            # may raise its own error at that point).
+            for chunk in b:
+                # WSGI requires all data to be of type "str". This coercion should
+                # not take any time at all if chunk is already of type "str".
+                # If it's unicode, it could be a big performance hit (x ~500).
+                if not isinstance(chunk, str):
+                    chunk = chunk.encode("ISO-8859-1")
+                yield chunk
+    
+    def close(self):
+        try:
+            if self.request:
+                self.request.close()
+        except:
+            cherrypy.log(traceback=True)
+        self.request = None
 
 def wsgiApp(environ, start_response):
     """The WSGI 'application object' for CherryPy."""
@@ -86,6 +125,9 @@ def wsgiApp(environ, start_response):
         raise ex 
     except:
         if cherrypy.config.get("server.throw_errors", False):
+            if request:
+                request.close()
+                request = None
             raise
         tb = _cputil.formatExc()
         cherrypy.log(tb)
@@ -94,42 +136,10 @@ def wsgiApp(environ, start_response):
         s, h, b = _cputil.bareError(tb)
         exc = sys.exc_info()
     
-    try:
-        start_response(s, h, exc)
-        for chunk in b:
-            # WSGI requires all data to be of type "str". This coercion should
-            # not take any time at all if chunk is already of type "str".
-            # If it's unicode, it could be a big performance hit (x ~500).
-            if not isinstance(chunk, str):
-                chunk = chunk.encode("ISO-8859-1")
-            yield chunk
-        if request:
-            request.close()
-        request = None
-    except (KeyboardInterrupt, SystemExit), ex:
-        try:
-            if request:
-                request.close()
-        except:
-            cherrypy.log(traceback=True)
-        request = None
-        raise ex
-    except:
-        cherrypy.log(traceback=True)
-        try:
-            if request:
-                request.close()
-        except:
-            cherrypy.log(traceback=True)
-        request = None
-        s, h, b = _cputil.bareError()
-        # CherryPy test suite expects bareError body to be output,
-        # so don't call start_response (which, according to PEP 333,
-        # may raise its own error at that point).
-        for chunk in b:
-            if not isinstance(chunk, str):
-                chunk = chunk.encode("ISO-8859-1")
-            yield chunk
+    start_response(s, h, exc)
+    return ResponseIter(request, b)
+
+
 
 
 # Server components.
@@ -281,4 +291,5 @@ class CPWSGIServer3(_cpwsgiserver3.CherryPyWSGIServer):
         self.protocol = conf("server.protocol_version")
         self.ssl_certificate = conf("server.ssl_certificate")
         self.ssl_private_key = conf("server.ssl_private_key")
+
 

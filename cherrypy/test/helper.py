@@ -30,6 +30,7 @@ import webtest
 class CPWebCase(webtest.WebCase):
     
     mount_point = ""
+    scheme = "http"
     
     def prefix(self):
         return self.mount_point.rstrip("/")

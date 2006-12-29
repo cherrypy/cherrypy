@@ -235,10 +235,12 @@ class WorkerThread(threading.Thread):
                         if request.ready:
                             response = request.wsgi_app(request.environ,
                                                         request.start_response)
-                            for line in response:
-                                request.write(line)
-                            if hasattr(response, "close"):
-                                response.close()
+                            try:
+                                for line in response:
+                                    request.write(line)
+                            finally:
+                                if hasattr(response, "close"):
+                                    response.close()
                     except socket.error, e:
                         errno = e.args[0]
                         if errno not in socket_errors_to_ignore:
@@ -432,4 +434,5 @@ class CherryPyWSGIServer(object):
                     worker.join()
                 except AssertionError:
                     pass
+
 

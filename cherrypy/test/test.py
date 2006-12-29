@@ -158,7 +158,7 @@ class CommandLineParser(object):
         print """
     
     --port=<int>: use a port other than the default (%s).
-    --1.1: use HTTP/1.1 servers instead of default HTTP/1.0.
+    --1.0: use HTTP/1.0 servers instead of default HTTP/1.1.
     
     --cover: turn on the code-coverage tool.
     --basedir=path: display coverage stats for some path other than cherrypy.
