@@ -363,7 +363,14 @@ class HTTPRequest(object):
         response = self.wsgi_app(self.environ, self.start_response)
         try:
             for chunk in response:
-                self.write(chunk)
+                # "The start_response callable must not actually transmit
+                # the response headers. Instead, it must store them for the
+                # server or gateway to transmit only after the first
+                # iteration of the application return value that yields
+                # a NON-EMPTY string, or upon the application's first
+                # invocation of the write() callable." (PEP 333)
+                if chunk:
+                    self.write(chunk)
         finally:
             if hasattr(response, "close"):
                 response.close()
@@ -414,9 +421,9 @@ class HTTPRequest(object):
         if not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
-        if self.chunked_write and len(chunk):
-            buf = [hex(len(chunk))[2:],
-                   "\r\n", chunk, "\r\n"]
+        
+        if self.chunked_write and chunk:
+            buf = [hex(len(chunk))[2:], "\r\n", chunk, "\r\n"]
             self.sendall("".join(buf))
         else:
             self.sendall(chunk)
