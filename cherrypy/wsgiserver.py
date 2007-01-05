@@ -414,7 +414,7 @@ class HTTPRequest(object):
         if not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
-        if self.chunked_write:
+        if self.chunked_write and len(chunk):
             buf = [hex(len(chunk))[2:],
                    "\r\n", chunk, "\r\n"]
             self.sendall("".join(buf))

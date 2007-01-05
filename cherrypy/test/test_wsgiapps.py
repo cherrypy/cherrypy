@@ -19,6 +19,12 @@ def setup_server():
         for k in keys:
             output.append('%s: %s\n' % (k,environ[k]))
         return output
+
+    def test_empty_string_app(environ, start_response):
+        status = '200 OK'
+        response_headers = [('Content-type', 'text/plain')]
+        start_response(status, response_headers)
+        return ['Hello', '', ' ', '', 'world']
     
     def reversing_middleware(app):
         def _app(environ, start_response):
@@ -50,6 +56,7 @@ def setup_server():
                          }}
     cherrypy.tree.mount(HostedWSGI(), '/hosted/app0', conf0)
     cherrypy.tree.graft(test_app, '/hosted/app1')
+    cherrypy.tree.graft(test_empty_string_app, '/hosted/app3')
     
     # Set script_name explicitly to None to signal CP that it should
     # be pulled from the WSGI environ each time.
@@ -90,6 +97,11 @@ This is a wsgi app running within CherryPy!'''
         body.reverse()
         body = "".join(body)
         self.assertInBody(body)
+
+    def test_06_empty_string_app(self):
+        self.getPage("/hosted/app3")
+        self.assertHeader("Content-Type", "text/plain")
+        self.assertInBody('Hello world')
 
 if __name__ == '__main__':
     setup_server()
