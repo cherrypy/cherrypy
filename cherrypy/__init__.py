@@ -1,6 +1,6 @@
 """Global module that all modules developing with CherryPy should import."""
 
-__version__ = '3.0.0'
+__version__ = "3.0.1alpha"
 
 from urlparse import urljoin as _urljoin
 
