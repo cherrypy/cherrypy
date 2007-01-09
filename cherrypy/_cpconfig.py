@@ -17,7 +17,7 @@ and configuration data may apply to any of those three scopes:
     on the Application object itself, as 'app.config'. This is a two-level
     dict where each key is a path, or "relative URL" (for example, "/" or
     "/path/to/my/page"), and each value is a config dict. Usually, this
-    data is provided in the call to cherrypy.tree.mount(root(), config=conf),
+    data is provided in the call to tree.mount(root(), config=conf),
     although you may also use app.merge(conf).
     
     Request: each Request object possesses a single 'Request.config' dict.
@@ -105,6 +105,16 @@ environments = {
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         'log.screen': False,
+        },
+    "embedded": {
+        # For use with CherryPy embedded in another deployment stack.
+        'engine.autoreload_on': False,
+        'checker.on': False,
+        'tools.log_headers.on': False,
+        'request.show_tracebacks': False,
+        'log.screen': False,
+        'engine.SIGHUP': None,
+        'engine.SIGTERM': None,
         },
     "test_suite": {
         'engine.autoreload_on': False,

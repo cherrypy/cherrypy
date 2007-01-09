@@ -16,21 +16,6 @@ STOPPED = 0
 STARTING = None
 STARTED = 1
 
-try:
-    if hasattr(signal, "SIGHUP"):
-        def SIGHUP(signum=None, frame=None):
-            cherrypy.engine.reexec()
-        signal.signal(signal.SIGHUP, SIGHUP)
-
-    if hasattr(signal, "SIGTERM"):
-        def SIGTERM(signum=None, frame=None):
-            cherrypy.server.stop()
-            cherrypy.engine.stop()
-        signal.signal(signal.SIGTERM, SIGTERM)
-except ValueError, _signal_exc:
-    if _signal_exc.args[0] != "signal only works in main thread":
-        raise
-
 
 class PerpetualTimer(threading._Timer):
     
@@ -43,7 +28,22 @@ class PerpetualTimer(threading._Timer):
 
 
 class Engine(object):
-    """Application interface for (HTTP) servers, plus process controls."""
+    """Interface for (HTTP) applications, plus process controls.
+    
+    Servers and gateways should not instantiate Request objects directly.
+    Instead, they should ask an Engine object for a request via the
+    Engine.request method.
+    
+    Blocking is completely optional! The Engine's blocking, signal and
+    interrupt handling, privilege dropping, and autoreload features are
+    not a good idea when driving CherryPy applications from another
+    deployment tool (but an Engine is a great deployment tool itself).
+    By calling start(blocking=False), you avoid blocking and interrupt-
+    handling issues. By setting Engine.SIGHUP and Engine.SIGTERM to None,
+    you can completely disable the signal handling (and therefore disable
+    autoreloads triggered by SIGHUP). Set Engine.autoreload_on to False
+    to disable autoreload entirely.
+    """
     
     # Configurable attributes
     request_class = _cprequest.Request
@@ -80,6 +80,8 @@ class Engine(object):
             func()
         
         self.state = STARTED
+        
+        self._set_signals()
         
         freq = self.deadlock_poll_freq
         if freq > 0:
@@ -262,6 +264,30 @@ class Engine(object):
         t.start()
         
         self.start()
+    
+    
+    #                           Signal handling                           #
+    
+    SIGHUP = None
+    SIGTERM = None
+    
+    if hasattr(signal, "SIGHUP"):
+        def SIGHUP(self, signum=None, frame=None):
+            self.reexec()
+    
+    if hasattr(signal, "SIGTERM"):
+        def SIGTERM(signum=None, frame=None):
+            cherrypy.server.stop()
+            self.stop()
+    
+    def _set_signals(self):
+        if self.SIGHUP:
+            signal.signal(signal.SIGHUP, self.SIGHUP)
+        if self.SIGTERM:
+            signal.signal(signal.SIGTERM, self.SIGTERM)
+    
+    
+    #                           Drop privileges                           #
     
     # Special thanks to Gavin Baker: http://antonym.org/node/100.
     try:
