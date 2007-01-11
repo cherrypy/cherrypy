@@ -130,7 +130,7 @@ class CacheTest(helper.CPWebCase):
         # This also gives us a chance to test 0 expiry with no other headers
         self.assertHeader("Pragma", "no-cache")
         if cherrypy.server.protocol_version == "HTTP/1.1":
-            self.assertHeader("Cache-Control", "no-cache")
+            self.assertHeader("Cache-Control", "no-cache, must-revalidate")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)
         
@@ -139,7 +139,7 @@ class CacheTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertHeader("Pragma", "no-cache")
         if cherrypy.server.protocol_version == "HTTP/1.1":
-            self.assertHeader("Cache-Control", "no-cache")
+            self.assertHeader("Cache-Control", "no-cache, must-revalidate")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)
         
@@ -148,7 +148,7 @@ class CacheTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertHeader("Pragma", "no-cache")
         if cherrypy.server.protocol_version == "HTTP/1.1":
-            self.assertHeader("Cache-Control", "no-cache")
+            self.assertHeader("Cache-Control", "no-cache, must-revalidate")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)
         
@@ -158,7 +158,7 @@ class CacheTest(helper.CPWebCase):
         # overwritten here ...
         self.assertHeader("Pragma", "no-cache")
         if cherrypy.server.protocol_version == "HTTP/1.1":
-            self.assertHeader("Cache-Control", "no-cache")
+            self.assertHeader("Cache-Control", "no-cache, must-revalidate")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)
 
