@@ -129,7 +129,17 @@ hookpoints = ['on_start_resource', 'before_request_body',
 
 
 class Request(object):
-    """An HTTP request."""
+    """An HTTP request.
+    
+    This object represents the metadata of an HTTP request message;
+    that is, it contains attributes which describe the environment
+    in which the request URL, headers, and body were sent (if you
+    want tools to interpret the headers and body, those are elsewhere,
+    mostly in Tools). This 'metadata' consists of socket data,
+    transport characteristics, and the Request-Line. This object
+    also contains data regarding the configuration in effect for
+    the given URL, and the execution plan for generating a response.
+    """
     
     prev = None
     
@@ -490,7 +500,13 @@ class Body(object):
 
 
 class Response(object):
-    """An HTTP Response."""
+    """An HTTP Response, including status, headers, and body.
+    
+    Application developers should use Response.headers (a dict) to
+    set or modify HTTP response headers. When the response is finalized,
+    Response.headers is transformed into Response.header_list as
+    (key, value) tuples.
+    """
     
     # Class attributes for dev-time introspection.
     status = ""
@@ -525,7 +541,7 @@ class Response(object):
         return newbody
     
     def finalize(self):
-        """Transform headers (and cookies) into cherrypy.response.header_list."""
+        """Transform headers (and cookies) into self.header_list."""
         try:
             code, reason, _ = http.valid_status(self.status)
         except ValueError, x:

@@ -73,7 +73,7 @@ class _Builder:
         if o.name == 'False':
             return False
         
-        # See if the Name is a package or module
+        # See if the Name is a package or module. If it is, import it.
         try:
             return modules(o.name)
         except ImportError:
