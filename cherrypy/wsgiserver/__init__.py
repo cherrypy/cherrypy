@@ -401,7 +401,8 @@ class HTTPRequest(object):
         """WSGI callable to begin the HTTP response."""
         if self.started_response:
             if not exc_info:
-                assert False, "Already started response"
+                raise AssertionError("WSGI start_response called a second "
+                                     "time with no exc_info.")
             else:
                 try:
                     raise exc_info[0], exc_info[1], exc_info[2]
@@ -418,6 +419,9 @@ class HTTPRequest(object):
         This method is also used internally by start_response (to write
         data from the iterable returned by the WSGI application).
         """
+        if not self.started_response:
+            raise AssertionError("WSGI write called before start_response.")
+        
         if not self.sent_headers:
             self.sent_headers = True
             self.send_headers()
