@@ -175,7 +175,7 @@ def expires(secs=0, force=False):
     
     If 'secs' is zero, the following "cache prevention" headers are also set:
        'Pragma': 'no-cache'
-       'Cache-Control': 'no-cache'
+       'Cache-Control': 'no-cache, must-revalidate'
     
     If 'force' is False (the default), the following headers are checked:
     'Etag', 'Last-Modified', 'Age', 'Expires'. If any are already present,
@@ -183,12 +183,13 @@ def expires(secs=0, force=False):
     """
     
     response = cherrypy.response
+    headers = response.headers
     
     cacheable = False
     if not force:
         # some header names that indicate that the response can be cached
         for indicator in ('Etag', 'Last-Modified', 'Age', 'Expires'):
-            if indicator in response.headers:
+            if indicator in headers:
                 cacheable = True
                 break
     
@@ -197,12 +198,12 @@ def expires(secs=0, force=False):
             secs = (86400 * secs.days) + secs.seconds
         
         if secs == 0:
-            if force or "Pragma" not in response.headers:
-                response.headers["Pragma"] = "no-cache"
+            if force or "Pragma" not in headers:
+                headers["Pragma"] = "no-cache"
             if cherrypy.request.protocol >= (1, 1):
-                if force or "Cache-Control" not in response.headers:
-                    response.headers["Cache-Control"] = "no-cache"
+                if force or "Cache-Control" not in headers:
+                    headers["Cache-Control"] = "no-cache, must-revalidate"
         
         expiry = http.HTTPDate(response.time + secs)
-        if force or "Expires" not in response.headers:
-            response.headers["Expires"] = expiry
+        if force or "Expires" not in headers:
+            headers["Expires"] = expiry
