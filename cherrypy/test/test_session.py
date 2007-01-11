@@ -45,6 +45,10 @@ def setup_server():
             return str(c)
         index.exposed = True
         
+        def keyin(self, key):
+            return str(key in cherrypy.session)
+        keyin.exposed = True
+        
         def delete(self):
             cherrypy.session.delete()
             sessions.expire()
@@ -96,6 +100,10 @@ class SessionTest(helper.CPWebCase):
         time.sleep(1.25)
         self.getPage('/')
         self.assertBody('1')
+        
+        # Test session __contains__
+        self.getPage('/keyin?key=counter', self.cookies)
+        self.assertBody("True")
         
         # Test session delete
         self.getPage('/delete', self.cookies)
