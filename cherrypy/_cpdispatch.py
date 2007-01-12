@@ -300,7 +300,10 @@ class RoutesDispatcher(object):
             action = result.get('action', None)
             if action is not None:
                 handler = getattr(controller, action)
-        
+                # Get config from the handler 
+                if hasattr(handler, "_cp_config"): 
+                    merge(handler._cp_config)
+                    
         # Do the last path atom here so it can
         # override the controller's _cp_config.
         if last:
