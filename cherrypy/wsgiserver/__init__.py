@@ -22,7 +22,10 @@ Simplest example on how to use this module directly
     # server.ssl_private_key = <filename>
     
     if __name__ == '__main__':
-        server.start()
+        try:
+            server.start()
+        except KeyboardInterrupt:
+            server.stop()
 
 This won't call the CherryPy engine (application side) at all, only the
 WSGI server, which is independant from the rest of CherryPy. Don't
