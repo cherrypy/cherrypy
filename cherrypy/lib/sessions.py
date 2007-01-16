@@ -33,6 +33,8 @@ class PerpetualTimer(threading._Timer):
             self.function(*self.args, **self.kwargs)
 
 
+missing = object()
+
 class Session(object):
     """A CherryPy dict-like Session object (one per request).
     
@@ -140,6 +142,13 @@ class Session(object):
     def __delitem__(self, key):
         if not self.loaded: self.load()
         del self._data[key]
+    
+    def pop(self, key, default=missing):
+        if not self.loaded: self.load()
+        if default is missing:
+            return self._data.pop(key)
+        else:
+            return self._data.pop(key, default)
     
     def __contains__(self, key):
         if not self.loaded: self.load()
