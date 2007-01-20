@@ -448,3 +448,6 @@ class Host(object):
         if name is None:
             name = ip
         self.name = name
+    
+    def __repr__(self):
+        return "http.Host(%r, %r, %r)" % (self.ip, self.port, self.name)

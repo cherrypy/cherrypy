@@ -13,15 +13,26 @@ from cherrypy.lib import http
 
 
 class Hook(object):
-    """A callback and its metadata: failsafe, priority, and kwargs.
+    """A callback and its metadata: failsafe, priority, and kwargs."""
     
-    failsafe: If True, the callback is guaranteed to run even if other
-        callbacks from the same call point raise exceptions.
-    priority: Defines the order of execution for a list of Hooks.
-        Defaults to 50. Priority numbers should be limited to the
-        closed interval [0, 100], but values outside this range are
-        acceptable, as are fractional values.
-    """
+    __metaclass__ = cherrypy._AttributeDocstrings
+    
+    callback = None
+    callback__doc = """The bare callable that this Hook object is wrapping.
+    This will be called when the Hook is called."""
+    
+    failsafe = False
+    failsafe__doc = """If True, the callback is guaranteed to run even if
+    other callbacks from the same call point raise exceptions."""
+    
+    priority = 50
+    priority__doc = """Defines the order of execution for a list of Hooks.
+    Priority numbers should be limited to the closed interval [0, 100], but
+    values outside this range are acceptable, as are fractional values."""
+    
+    kwargs = {}
+    kwargs__doc = """A set of keyword arguments that will be passed
+    to the callable on each call."""
     
     def __init__(self, callback, failsafe=None, priority=None, **kwargs):
         self.callback = callback
@@ -141,48 +152,196 @@ class Request(object):
     the given URL, and the execution plan for generating a response.
     """
     
+    __metaclass__ = cherrypy._AttributeDocstrings
+    
     prev = None
+    prev__doc = """
+    The previous Request object (if any). This should be None
+    unless we are processing an InternalRedirect."""
     
     # Conversation/connection attributes
     local = http.Host("localhost", 80)
+    local__doc = \
+        "An http.Host(ip, port, hostname) object for the server socket."
+    
     remote = http.Host("localhost", 1111)
+    remote__doc = \
+        "An http.Host(ip, port, hostname) object for the client socket."
+    
     scheme = "http"
+    scheme__doc = """
+    The protocol used between client and server. In most cases,
+    this will be either 'http' or 'https'."""
+    
     server_protocol = "HTTP/1.1"
+    server_protocol__doc = """
+    The HTTP version for which the HTTP server is at least
+    conditionally compliant."""
+    
     base = ""
+    base__doc = """The 'base' (scheme + host) portion of the requested URL."""
     
     # Request-Line attributes
     request_line = ""
+    request_line__doc = """
+    The complete Request Line received from the client. This is a
+    single string consisting of the request method, URI, and protocol
+    version (joined by spaces). Any final CRLF is removed."""
+    
     method = "GET"
+    method__doc = """
+    Indicates the HTTP method to be performed on the resource identified
+    by the Request-URI. Common methods include GET, HEAD, POST, PUT, and
+    DELETE. CherryPy allows any extension method; however, various HTTP
+    servers and gateways may restrict the set of allowable methods.
+    CherryPy applications SHOULD restrict the set (on a per-URI basis)."""
+    
     query_string = ""
+    query_string__doc = """
+    The query component of the Request-URI, a string of information to be
+    interpreted by the resource. The query portion of a URI follows the
+    path component, and is spearated by a '?'. For example, the URI
+    'http://www.cherrypy.org/wiki?a=3&b=4' has the query component,
+    'a=3&b=4'."""
+    
     protocol = (1, 1)
+    protocol__doc = """The HTTP protocol version corresponding to the set
+        of features which should be allowed in the response. If BOTH
+        the client's request message AND the server's level of HTTP
+        compliance is HTTP/1.1, this attribute will be the tuple (1, 1).
+        If either is 1.0, this attribute will be the tuple (1, 0).
+        Lower HTTP protocol versions are not explicitly supported."""
+    
     params = {}
+    params__doc = """
+    A dict which combines query string (GET) and request entity (POST)
+    variables. This is populated in two stages: GET params are added
+    before the 'on_start_resource' hook, and POST params are added
+    between the 'before_request_body' and 'before_handler' hooks."""
     
     # Message attributes
     header_list = []
+    header_list__doc = """
+    A list of the HTTP request headers as (name, value) tuples.
+    In general, you should use request.headers (a dict) instead."""
+    
     headers = http.HeaderMap()
     cookie = Cookie.SimpleCookie()
+    
     rfile = None
+    rfile__doc = """
+    If the request included an entity (body), it will be available
+    as a stream in this attribute. However, the rfile will normally
+    be read for you between the 'before_request_body' hook and the
+    'before_handler' hook, and the resulting string is placed into
+    either request.params or the request.body attribute.
+    
+    You may disable the automatic consumption of the rfile by setting
+    request.process_request_body to False, either in config for the desired
+    path, or in an 'on_start_resource' or 'before_request_body' hook.
+    
+    WARNING: In almost every case, you should not attempt to read from the
+    rfile stream after CherryPy's automatic mechanism has read it. If you
+    turn off the automatic parsing of rfile, you should read exactly the
+    number of bytes specified in request.headers['Content-Length'].
+    Ignoring either of these warnings may result in a hung request thread
+    or in corruption of the next (pipelined) request.
+    """
+    
     process_request_body = True
+    process_request_body__doc = """
+    If True, the rfile (if any) is automatically read and parsed,
+    and the result placed into request.params or request.body."""
+    
     methods_with_bodies = ("POST", "PUT")
+    methods_with_bodies__doc = """
+    A sequence of HTTP methods for which CherryPy will automatically
+    attempt to read a body from the rfile."""
+    
     body = None
+    body__doc = """
+    If the request Content-Type is 'application/x-www-form-urlencoded'
+    or multipart, this will be None. Otherwise, this will contain the
+    request entity body as a string; this value is set between the
+    'before_request_body' and 'before_handler' hooks (assuming that
+    process_request_body is True)."""
     
     # Dispatch attributes
     dispatch = cherrypy.dispatch.Dispatcher()
+    
     script_name = ""
+    script_name__doc = """
+    The 'mount point' of the application which is handling this request."""
+    
     path_info = "/"
+    path_info__doc = """
+    The 'relative path' portion of the Request-URI. This is relative
+    to the script_name ('mount point') of the application which is
+    handling this request."""
+    
     app = None
+    app__doc = """The Application object which is handling this request."""
+    
     handler = None
+    handler__doc = """
+    The function, method, or other callable which CherryPy will call to
+    produce the response. The discovery of the handler and the arguments
+    it will receive are determined by the request.dispatch object.
+    By default, the handler is discovered by walking a tree of objects
+    starting at request.app.root, and is then passed all HTTP params
+    (from the query string and POST body) as keyword arguments."""
+    
     toolmaps = {}
+    toolmaps__doc = """
+    A nested dict of all Toolboxes and Tools in effect for this request,
+    of the form: {Toolbox.namespace: {Tool.name: config dict}}."""
+    
     config = None
+    config__doc = """
+    A flat dict of all configuration entries which apply to the
+    current request. These entries are collected from global config,
+    application config (based on request.path_info), and from handler
+    config (exactly how is governed by the request.dispatch object in
+    effect for this request; by default, handler config can be attached
+    anywhere in the tree between request.app.root and the final handler,
+    and inherits downward)."""
+    
     is_index = None
+    is_index__doc = """
+    This will be True if the current request is mapped to an 'index'
+    resource handler (or a 'default' handler if path_info ends with
+    a slash). The value may be used to automatically redirect the
+    user-agent to a 'more canonical' URL which either adds or removes
+    the trailing slash. See cherrypy.tools.trailing_slash."""
     
     hooks = HookMap(hookpoints)
     
     error_response = cherrypy.HTTPError(500).set_response
+    error_response__doc = """
+    The callable which will handle unexpected errors during request
+    processing. By default, it uses HTTPError(500) to return an error
+    response to the user-agent."""
+    
     error_page = {}
+    error_page__doc = """
+    A dict of {error code: response filename} pairs. The named response
+    files should be Python string-formatting templates, and can expect by
+    default to receive the keyword-formatted values 'status', 'message',
+    'traceback', and 'version'. The set of keyword values can be extended
+    by overriding HTTPError.set_response."""
+    
     show_tracebacks = True
+    show_tracebacks__doc = """
+    If True, unexpected errors encountered during request processing will
+    include a traceback in the response body."""
+    
     throws = (KeyboardInterrupt, SystemExit, cherrypy.InternalRedirect)
+    throws__doc = """The sequence of exceptions which Request.run does not trap."""
+    
     throw_errors = False
+    throw_errors__doc = """
+    If True, Request.run will not trap any errors (except HTTPRedirect and
+    HTTPError, which are more properly called 'exceptions', not errors)."""
     
     namespaces = {"hooks": hooks_namespace,
                   "request": request_namespace,
@@ -190,6 +349,21 @@ class Request(object):
                   "error_page": error_page_namespace,
                   # "tools": See _cptools.Toolbox
                   }
+    namespaces__doc = """
+    A dict of config namespace names and handlers. Each config entry must
+    begin with a namespace name; the corresponding namespace handler will
+    be called once for each config entry in that namespace, and will be
+    passed two arguments: the config key (with the namespace removed)
+    and the config value.
+    
+    Namespace handlers may be any Python callable; they may also be
+    Python 2.5-style 'context managers', in which case their __enter__
+    method should return a callable to be used as the handler.
+    See cherrypy.tools (the Toolbox class) for an example.
+    
+    Namespaces may be added at the class level and will be inherited
+    by all Request instances.
+    """
     
     def __init__(self, local_host, remote_host, scheme="http",
                  server_protocol="HTTP/1.1"):
