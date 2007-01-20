@@ -103,6 +103,24 @@ response = _ThreadLocalProxy('response', _cprequest.Response())
 thread_data = _local()
 
 
+# Monkeypatch pydoc to allow help() to go through the threadlocal proxy.
+# Jan 2007: no Googleable examples of anyone else replacing pydoc.resolve.
+# The only other way would be to change what is returned from type(request)
+# and that's not possible in pure Python (you'd have to fake ob_type).
+def _cherrypy_pydoc_resolve(thing, forceload=0):
+    """Given an object or a path to an object, get the object and its name."""
+    if isinstance(thing, _ThreadLocalProxy):
+        thing = thing._get_child()
+    return pydoc._builtin_resolve(thing, forceload)
+
+try:
+    import pydoc
+    pydoc._builtin_resolve = pydoc.resolve
+    pydoc.resolve = _cherrypy_pydoc_resolve
+except ImportError:
+    pass
+
+
 from cherrypy import _cplogging
 
 class _GlobalLogManager(_cplogging.LogManager):
