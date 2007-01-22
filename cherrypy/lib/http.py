@@ -328,6 +328,8 @@ class HeaderMap(CaseInsensitiveDict):
     
     Each key is changed on entry to str(key).title(). This allows headers
     to be case-insensitive and avoid duplicates.
+    
+    Values are header values (decoded according to RFC 2047 if necessary).
     """
     
     def elements(self, key):

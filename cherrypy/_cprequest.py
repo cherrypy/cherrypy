@@ -18,21 +18,25 @@ class Hook(object):
     __metaclass__ = cherrypy._AttributeDocstrings
     
     callback = None
-    callback__doc = """The bare callable that this Hook object is wrapping.
-    This will be called when the Hook is called."""
+    callback__doc = """
+    The bare callable that this Hook object is wrapping, which will
+    be called when the Hook is called."""
     
     failsafe = False
-    failsafe__doc = """If True, the callback is guaranteed to run even if
-    other callbacks from the same call point raise exceptions."""
+    failsafe__doc = """
+    If True, the callback is guaranteed to run even if other callbacks
+    from the same call point raise exceptions."""
     
     priority = 50
-    priority__doc = """Defines the order of execution for a list of Hooks.
-    Priority numbers should be limited to the closed interval [0, 100], but
-    values outside this range are acceptable, as are fractional values."""
+    priority__doc = """
+    Defines the order of execution for a list of Hooks. Priority numbers
+    should be limited to the closed interval [0, 100], but values outside
+    this range are acceptable, as are fractional values."""
     
     kwargs = {}
-    kwargs__doc = """A set of keyword arguments that will be passed
-    to the callable on each call."""
+    kwargs__doc = """
+    A set of keyword arguments that will be passed to the
+    callable on each call."""
     
     def __init__(self, callback, failsafe=None, priority=None, **kwargs):
         self.callback = callback
@@ -104,6 +108,10 @@ class HookMap(dict):
             newmap[k] = v[:]
         return newmap
     copy = __copy__
+    
+    def __repr__(self):
+        cls = self.__class__
+        return "%s.%s(points=%r)" % (cls.__module__, cls.__name__, self.keys())
 
 
 # Config namespace handlers
@@ -179,12 +187,12 @@ class Request(object):
     conditionally compliant."""
     
     base = ""
-    base__doc = """The 'base' (scheme + host) portion of the requested URL."""
+    base__doc = """The (scheme://host) portion of the requested URL."""
     
     # Request-Line attributes
     request_line = ""
     request_line__doc = """
-    The complete Request Line received from the client. This is a
+    The complete Request-Line received from the client. This is a
     single string consisting of the request method, URI, and protocol
     version (joined by spaces). Any final CRLF is removed."""
     
@@ -200,7 +208,7 @@ class Request(object):
     query_string__doc = """
     The query component of the Request-URI, a string of information to be
     interpreted by the resource. The query portion of a URI follows the
-    path component, and is spearated by a '?'. For example, the URI
+    path component, and is separated by a '?'. For example, the URI
     'http://www.cherrypy.org/wiki?a=3&b=4' has the query component,
     'a=3&b=4'."""
     
@@ -226,7 +234,16 @@ class Request(object):
     In general, you should use request.headers (a dict) instead."""
     
     headers = http.HeaderMap()
+    headers__doc = """
+    A dict-like object containing the request headers. Keys are header
+    names (in Title-Case format); however, you may get and set them in
+    a case-insensitive manner. That is, headers['Content-Type'] and
+    headers['content-type'] refer to the same value. Values are header
+    values (decoded according to RFC 2047 if necessary). See also:
+    http.HeaderMap, http.HeaderElement."""
+    
     cookie = Cookie.SimpleCookie()
+    cookie__doc = """See help(Cookie)."""
     
     rfile = None
     rfile__doc = """
@@ -268,6 +285,16 @@ class Request(object):
     
     # Dispatch attributes
     dispatch = cherrypy.dispatch.Dispatcher()
+    dispatch__doc = """
+    The object which looks up the 'page handler' callable and collects
+    config for the current request based on the path_info, other
+    request attributes, and the application architecture. The core
+    calls the dispatcher as early as possible, passing it a 'path_info'
+    argument.
+    
+    The default dispatcher discovers the page handler by matching path_info
+    to a hierarchical arrangement of objects, starting at request.app.root.
+    See help(cherrypy.dispatch) for more information."""
     
     script_name = ""
     script_name__doc = """
@@ -280,7 +307,8 @@ class Request(object):
     handling this request."""
     
     app = None
-    app__doc = """The Application object which is handling this request."""
+    app__doc = \
+        """The cherrypy.Application object which is handling this request."""
     
     handler = None
     handler__doc = """
@@ -309,26 +337,37 @@ class Request(object):
     is_index = None
     is_index__doc = """
     This will be True if the current request is mapped to an 'index'
-    resource handler (or a 'default' handler if path_info ends with
+    resource handler (also, a 'default' handler if path_info ends with
     a slash). The value may be used to automatically redirect the
     user-agent to a 'more canonical' URL which either adds or removes
     the trailing slash. See cherrypy.tools.trailing_slash."""
     
     hooks = HookMap(hookpoints)
+    hooks__doc = """
+    A HookMap (dict-like object) of the form: {hookpoint: [hook, ...]}.
+    Each key is a str naming the hook point, and each value is a list
+    of hooks which will be called at that hook point during this request.
+    The list of hooks is generally populated as early as possible (mostly
+    from Tools specified in config), but may be extended at any time.
+    See also: _cprequest.Hook, _cprequest.HookMap, and cherrypy.tools."""
     
     error_response = cherrypy.HTTPError(500).set_response
     error_response__doc = """
-    The callable which will handle unexpected errors during request
-    processing. By default, it uses HTTPError(500) to return an error
-    response to the user-agent."""
+    The no-arg callable which will handle unexpected, untrapped errors
+    during request processing. This is not used for expected exceptions
+    (like NotFound, HTTPError, or HTTPRedirect) which are raised in
+    response to expected conditions (those should be customized either
+    via request.error_page or by overriding HTTPError.set_response).
+    By default, error_response uses HTTPError(500) to return a generic
+    error response to the user-agent."""
     
     error_page = {}
     error_page__doc = """
     A dict of {error code: response filename} pairs. The named response
     files should be Python string-formatting templates, and can expect by
-    default to receive the keyword-formatted values 'status', 'message',
-    'traceback', and 'version'. The set of keyword values can be extended
-    by overriding HTTPError.set_response."""
+    default to receive the format values with the mapping keys 'status',
+    'message', 'traceback', and 'version'. The set of format mappings
+    can be extended by overriding HTTPError.set_response."""
     
     show_tracebacks = True
     show_tracebacks__doc = """
@@ -336,7 +375,8 @@ class Request(object):
     include a traceback in the response body."""
     
     throws = (KeyboardInterrupt, SystemExit, cherrypy.InternalRedirect)
-    throws__doc = """The sequence of exceptions which Request.run does not trap."""
+    throws__doc = \
+        """The sequence of exceptions which Request.run does not trap."""
     
     throw_errors = False
     throw_errors__doc = """
@@ -684,14 +724,41 @@ class Response(object):
     
     # Class attributes for dev-time introspection.
     status = ""
+    status__doc = """The HTTP Status-Code and Reason-Phrase."""
+    
     header_list = []
+    header_list__doc = """
+    A list of the HTTP response headers as (name, value) tuples.
+    In general, you should use response.headers (a dict) instead."""
+    
     headers = http.HeaderMap()
+    headers__doc = """
+    A dict-like object containing the response headers. Keys are header
+    names (in Title-Case format); however, you may get and set them in
+    a case-insensitive manner. That is, headers['Content-Type'] and
+    headers['content-type'] refer to the same value. Values are header
+    values (decoded according to RFC 2047 if necessary). See also:
+    http.HeaderMap, http.HeaderElement."""
+    
     cookie = Cookie.SimpleCookie()
+    cookie__doc = """See help(Cookie)."""
+    
     body = Body()
+    body__doc = """The body (entity) of the HTTP response."""
+    
     time = None
+    time__doc = """The value of time.time() when created. Use in HTTP dates."""
+    
     timeout = 300
+    timeout__doc = """Seconds after which the response will be aborted."""
+    
     timed_out = False
+    timed_out__doc = """
+    Flag to indicate the response should be aborted, because it has
+    exceeded its timeout."""
+    
     stream = False
+    stream__doc = """If False, buffer the response body."""
     
     def __init__(self):
         self.status = None
@@ -710,6 +777,7 @@ class Response(object):
         self.cookie = Cookie.SimpleCookie()
     
     def collapse_body(self):
+        """Iterate over self.body, replacing it with and returning the result."""
         newbody = ''.join([chunk for chunk in self.body])
         self.body = newbody
         return newbody
