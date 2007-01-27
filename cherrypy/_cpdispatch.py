@@ -48,6 +48,18 @@ class LateParamPageHandler(PageHandler):
 
 
 class Dispatcher(object):
+    """CherryPy Dispatcher which walks a tree of objects to find a handler.
+    
+    The tree is rooted at cherrypy.request.app.root, and each hierarchical
+    component in the path_info argument is matched to a corresponding nested
+    attribute of the root object. Matching handlers must have an 'exposed'
+    attribute which evaluates to True. The special method name "index"
+    matches a URI which ends in a slash ("/"). The special method name
+    "default" may match a portion of the path_info (but only when no longer
+    substring of the path_info matches some other object).
+    
+    This is the default, built-in dispatcher for CherryPy.
+    """
     
     def __call__(self, path_info):
         """Set handler and config for the current request."""

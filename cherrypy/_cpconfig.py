@@ -52,6 +52,10 @@ attribute. For example:
         index.exposed = True
         index._cp_config = {'request.show_tracebacks': False}
 
+Note, however, that this behavior is only guaranteed for the default
+dispatcher. Other dispatchers may have different restrictions on where
+you can attach _cp_config attributes.
+
 
 Namespaces
 ----------
@@ -69,6 +73,8 @@ Current namespaces:
     server:     Controls the default HTTP server via cherrypy.server.
                 These can only be declared in the global config.
     tools:      Runs and configures additional request-processing packages.
+    wsgi:       Adds WSGI middleware to an Application's "pipeline".
+                These can only be declared in the app's root config ("/").
     checker:    Controls the 'checker', which looks for common errors in
                 app state (including config) when the engine starts.
                 Global config only.
@@ -81,8 +87,8 @@ config, and only when you use cherrypy.config.update.
 You can define your own namespaces to be called at the Global, Application,
 or Request level, by adding a named handler to cherrypy.config.namespaces,
 app.namespaces, or cherrypy.engine.request_class.namespaces. The name can
-be any string, and the handler must be either a callable or a context
-manager.
+be any string, and the handler must be either a callable or a (Python 2.5
+style) context manager.
 """
 
 import ConfigParser
