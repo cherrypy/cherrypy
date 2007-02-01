@@ -897,6 +897,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody(b)
         
+        # Request a PUT method with an empty body.
+        # See http://www.cherrypy.org/ticket/650.
+        h = [("Content-Type", "text/plain"),
+             ("Content-Length", "0")]
+        self.getPage("/method/request_body", headers=h, method="PUT", body="")
+        self.assertBody("")
+        
         # Request a custom method with a request body
         b = ('<?xml version="1.0" encoding="utf-8" ?>\n\n'
              '<propfind xmlns="DAV:"><prop><getlastmodified/>'
