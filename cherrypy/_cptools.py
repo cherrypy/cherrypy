@@ -15,10 +15,7 @@ may only offer one if they choose):
         decorated function's _cp_config attribute.
     
     CherryPy config:
-        Hookpoints are places in the CherryPy request-handling process
-        which may hand off control to registered callbacks. The Request
-        object possesses a "hooks" attribute (a HookMap) for manipulating
-        this. If a tool exposes a "_setup" callable, it will be called
+        If a tool exposes a "_setup" callable, it will be called
         once per Request (if the feature is "turned on" via config).
 
 Tools may be implemented as any object with a namespace. The builtins

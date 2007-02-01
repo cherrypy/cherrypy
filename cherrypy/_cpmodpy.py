@@ -178,7 +178,7 @@ def handler(req):
                     response = request.run(method, path, qs, sproto, headers, rfile)
                     break
                 except cherrypy.InternalRedirect, ir:
-                    request.close()
+                    cherrypy.engine.release()
                     prev = request
                     
                     if not recursive:
@@ -198,7 +198,7 @@ def handler(req):
                     rfile = StringIO.StringIO()
             
             send_response(req, response.status, response.header_list, response.body)
-            request.close()
+            cherrypy.engine.release()
     except:
         tb = format_exc()
         cherrypy.log(tb)

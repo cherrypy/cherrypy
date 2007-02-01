@@ -192,11 +192,7 @@ class AppResponse(object):
             return "".join(b)
     
     def close(self):
-        if hasattr(self.request, "close"):
-            try:
-                self.request.close()
-            except:
-                _cherrypy.log(traceback=True)
+        _cherrypy.engine.release()
     
     def get_engine_request(self, environ, cpapp):
         """Return a Request object from the CherryPy Engine using environ."""

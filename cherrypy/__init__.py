@@ -1,4 +1,61 @@
-"""Global module that all modules developing with CherryPy should import."""
+"""CherryPy is a pythonic, object-oriented HTTP framework.
+
+
+CherryPy consists of not one, but four separate API layers.
+
+The APPLICATION LAYER is the simplest. CherryPy applications are written as
+a tree of classes and methods, where each branch in the tree corresponds to
+a branch in the URL path. Each method is a 'page handler', which receives
+GET and POST params as keyword arguments, and returns or yields the (HTML)
+body of the response. The special method name 'index' is used for paths
+that end in a slash, and the special method name 'default' is used to
+handle multiple paths via a single handler. This layer also includes:
+
+ * the 'exposed' attribute (and cherrypy.expose)
+ * cherrypy.quickstart()
+ * _cp_config attributes
+ * cherrypy.tools (including cherrypy.session)
+ * cherrypy.url()
+
+The ENVIRONMENT LAYER is used by developers at all levels. It provides
+information about the current request and response, plus the application
+and server environment, via a (default) set of top-level objects:
+
+ * cherrypy.request
+ * cherrypy.response
+ * cherrypy.engine
+ * cherrypy.server
+ * cherrypy.tree
+ * cherrypy.config
+ * cherrypy.thread_data
+ * cherrypy.log
+ * cherrypy.HTTPError, NotFound, and HTTPRedirect
+ * cherrypy.lib
+
+The EXTENSION LAYER allows advanced users to construct and share their own
+plugins. It consists of:
+
+ * Hook API
+ * Tool API
+ * Toolbox API
+ * Dispatch API
+ * Config Namespace API
+
+Finally, there is the CORE LAYER, which uses the core API's to construct
+the default components which are available at higher layers. You can think
+of the default components as the 'reference implementation' for CherryPy.
+Megaframeworks (and advanced users) may replace the default components
+with customized or extended components. The core API's are:
+
+ * Application API
+ * Engine API
+ * Request API
+ * Server API
+ * WSGI API
+
+These API's are described in the CherryPy specification:
+http://www.cherrypy.org/wiki/CherryPySpec
+"""
 
 __version__ = "3.0.1alpha"
 
@@ -132,7 +189,18 @@ except ImportError:
 # objects. In this way, we can easily dump those objects when we stop/start
 # a new HTTP conversation, yet still refer to them as module-level globals
 # in a thread-safe way.
-_serving = _local()
+class _Serving(_local):
+    """An interface for registering request and response objects."""
+    
+    def load(self, request, response):
+        self.request = request
+        self.response = response
+    
+    def clear(self):
+        """Remove all attributes of self."""
+        self.__dict__.clear()
+
+serving = _serving = _Serving()
 
 
 class _ThreadLocalProxy(object):
@@ -326,27 +394,8 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
         # This will produce very different results from the above
         # if you're using vhosts or tools.proxy.
         if base is None:
-            f = server.socket_file
-            if f:
-                base = f
-            else:
-                host = server.socket_host
-                if not host:
-                    # The empty string signifies INADDR_ANY.
-                    # Look up the host name, which should be
-                    # the safest thing to spit out in a URL.
-                    import socket
-                    host = socket.gethostname()
-                port = server.socket_port
-                if server.ssl_certificate:
-                    scheme = "https"
-                    if port != 443:
-                        host += ":%s" % port
-                else:
-                    scheme = "http"
-                    if port != 80:
-                        host += ":%s" % port
-                base = "%s://%s" % (scheme, host)
+            base = server.base()
+        
         path = (script_name or "") + path
         newurl = base + path + qs
     

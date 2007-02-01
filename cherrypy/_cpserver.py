@@ -174,6 +174,30 @@ class Server(object):
         """Restart all HTTP servers."""
         self.stop()
         self.start()
+    
+    def base(self):
+        """Return the base (scheme://host) for this server manager."""
+        if self.socket_file:
+            return self.socket_file
+        
+        host = self.socket_host
+        if not host:
+            # The empty string signifies INADDR_ANY. Look up the host name,
+            # which should be the safest thing to spit out in a URL.
+            host = socket.gethostname()
+        
+        port = self.socket_port
+        
+        if self.ssl_certificate:
+            scheme = "https"
+            if port != 443:
+                host += ":%s" % port
+        else:
+            scheme = "http"
+            if port != 80:
+                host += ":%s" % port
+        
+        return "%s://%s" % (scheme, host)
 
 
 def check_port(host, port):

@@ -205,17 +205,12 @@ class Engine(object):
     
     def wait(self):
         """Block the caller until ready to receive requests (or error)."""
-        while not self.ready:
+        while not (self.state == STARTED):
             time.sleep(.1)
-    
-    def _is_ready(self):
-        return bool(self.state == STARTED)
-    ready = property(_is_ready, doc="Return True if the engine is ready to"
-                                    " receive requests, False otherwise.")
     
     def request(self, local_host, remote_host, scheme="http",
                 server_protocol="HTTP/1.1"):
-        """Obtain an HTTP Request object.
+        """Obtain and return an HTTP Request object. (Core)
         
         local_host should be an http.Host object with the server info.
         remote_host should be an http.Host object with the client info.
@@ -236,13 +231,29 @@ class Engine(object):
                     func(i)
             req = self.request_class(local_host, remote_host, scheme,
                                      server_protocol)
-        cherrypy._serving.request = req
-        cherrypy._serving.response = resp = self.response_class()
+        resp = self.response_class()
+        cherrypy.serving.load(req, resp)
         self.servings.append((req, resp))
         return req
     
+    def release(self):
+        """Close and de-reference the current request and response. (Core)"""
+        req = cherrypy.serving.request
+        
+        try:
+            req.close()
+        except:
+            cherrypy.log(traceback=True)
+        
+        try:
+            self.servings.remove((req, cherrypy.serving.response))
+        except ValueError:
+            pass
+        
+        cherrypy.serving.clear()
+    
     def monitor(self):
-        """Check timeout on all responses."""
+        """Check timeout on all responses. (Internal)"""
         if self.state == STARTED:
             for req, resp in self.servings:
                 resp.check_timeout()
