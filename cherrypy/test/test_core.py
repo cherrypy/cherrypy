@@ -340,6 +340,9 @@ def setup_server():
             # This should be a file object (temp file),
             # which CP will just pipe back out if we tell it to.
             return cherrypy.request.body
+        
+        def reachable(self):
+            return "success"
 
     class Divorce:
         """HTTP Method handlers shouldn't collide with normal method names.
@@ -897,12 +900,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody(b)
         
-        # Request a PUT method with an empty body.
+        # Request a PUT method with no body whatsoever (not an empty one).
         # See http://www.cherrypy.org/ticket/650.
-        h = [("Content-Type", "text/plain"),
-             ("Content-Length", "0")]
-        self.getPage("/method/request_body", headers=h, method="PUT", body="")
-        self.assertBody("")
+        # Provide a C-T or webtest will provide one (and a C-L) for us.
+        h = [("Content-Type", "text/plain")]
+        self.getPage("/method/reachable", headers=h, method="PUT")
+        self.assertBody("success")
         
         # Request a custom method with a request body
         b = ('<?xml version="1.0" encoding="utf-8" ?>\n\n'
