@@ -1,4 +1,3 @@
-"""CherryPy core request/response handling."""
 
 import Cookie
 import os
@@ -390,7 +389,7 @@ class Request(object):
                   # "tools": See _cptools.Toolbox
                   }
     namespaces__doc = """
-    A dict of config namespace names and handlers. Each config entry must
+    A dict of config namespace names and handlers. Each config entry should
     begin with a namespace name; the corresponding namespace handler will
     be called once for each config entry in that namespace, and will be
     passed two arguments: the config key (with the namespace removed)
@@ -427,20 +426,13 @@ class Request(object):
         self.namespaces = self.namespaces.copy()
     
     def close(self):
+        """Run cleanup code and remove self from globals. (Core)"""
         if not self.closed:
             self.closed = True
             self.hooks.run('on_end_request')
-            
-            s = (self, cherrypy._serving.response)
-            try:
-                cherrypy.engine.servings.remove(s)
-            except ValueError:
-                pass
-            
-            cherrypy._serving.__dict__.clear()
     
     def run(self, method, path, query_string, req_protocol, headers, rfile):
-        """Process the Request.
+        """Process the Request. (Core)
         
         method, path, query_string, and req_protocol should be pulled directly
             from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
@@ -529,21 +521,22 @@ class Request(object):
         return cherrypy.response
     
     def respond(self, path_info):
-        """Generate a response for the resource at self.path_info."""
+        """Generate a response for the resource at self.path_info. (Core)"""
         try:
             try:
                 try:
                     if self.app is None:
                         raise cherrypy.NotFound()
                     
-                    # Get the 'Host' header, so we can do HTTPRedirects properly.
+                    # Get the 'Host' header, so we can HTTPRedirect properly.
                     self.process_headers()
                     
                     # Make a copy of the class hooks
                     self.hooks = self.__class__.hooks.copy()
                     self.toolmaps = {}
                     self.get_resource(path_info)
-                    cherrypy._cpconfig._call_namespaces(self.config, self.namespaces)
+                    cherrypy._cpconfig._call_namespaces(self.config,
+                                                        self.namespaces)
                     
                     self.hooks.run('on_start_resource')
                     
@@ -552,8 +545,9 @@ class Request(object):
                             self.process_request_body = False
                         
                         if self.process_request_body:
-                            # Prepare the SizeCheckWrapper for the request body
-                            mbs = cherrypy.server.max_request_body_size
+                            # Prepare the SizeCheckWrapper for the req body
+                            mbs = getattr(cherrypy.server,
+                                          "max_request_body_size", 0)
                             if mbs > 0:
                                 self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
                     
@@ -580,6 +574,7 @@ class Request(object):
             self.handle_error(sys.exc_info())
     
     def process_headers(self):
+        """Parse HTTP header data into Python structures. (Core)"""
         self.params = http.parse_query_string(self.query_string)
         
         # Process the headers into self.headers
@@ -616,7 +611,7 @@ class Request(object):
         self.base = "%s://%s" % (self.scheme, host)
     
     def get_resource(self, path):
-        """Find and call a dispatcher (which sets self.handler and .config)."""
+        """Call a dispatcher (which sets self.handler and .config). (Core)"""
         dispatch = self.dispatch
         # First, see if there is a custom dispatch at this URI. Custom
         # dispatchers can only be specified in app.config, not in _cp_config
@@ -642,7 +637,7 @@ class Request(object):
         dispatch(path)
     
     def process_body(self):
-        """Convert request.rfile into request.params (or request.body)."""
+        """Convert request.rfile into request.params (or request.body). (Core)"""
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
         try:
@@ -665,6 +660,7 @@ class Request(object):
             self.params.update(http.params_from_CGI_form(forms))
     
     def handle_error(self, exc):
+        """Handle the last exception. (Core)"""
         try:
             self.hooks.run("before_error_response")
             if self.error_response:
@@ -677,7 +673,7 @@ class Request(object):
 
 
 def file_generator(input, chunkSize=65536):
-    """Yield the given input (a file object) in chunks (default 64k)."""
+    """Yield the given input (a file object) in chunks (default 64k). (Core)"""
     chunk = input.read(chunkSize)
     while chunk:
         yield chunk
@@ -783,7 +779,7 @@ class Response(object):
         return newbody
     
     def finalize(self):
-        """Transform headers (and cookies) into self.header_list."""
+        """Transform headers (and cookies) into self.header_list. (Core)"""
         try:
             code, reason, _ = http.valid_status(self.status)
         except ValueError, x:
