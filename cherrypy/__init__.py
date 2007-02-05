@@ -158,6 +158,7 @@ from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
 
 from cherrypy import _cpdispatch as dispatch
 from cherrypy import _cprequest
+from cherrypy.lib import http as _http
 from cherrypy import _cpengine
 engine = _cpengine.Engine()
 
@@ -190,7 +191,25 @@ except ImportError:
 # a new HTTP conversation, yet still refer to them as module-level globals
 # in a thread-safe way.
 class _Serving(_local):
-    """An interface for registering request and response objects."""
+    """An interface for registering request and response objects.
+    
+    Rather than have a separate "thread local" object for the request and
+    the response, this class works as a single threadlocal container for
+    both objects.
+    """
+    
+    __metaclass__ = _AttributeDocstrings
+    
+    request = _cprequest.Request(_http.Host("localhost", 80),
+                                 _http.Host("localhost", 1111))
+    request__doc = """
+    The request object for the current thread. In the main thread,
+    and any threads which are not receiving HTTP requests, this is None."""
+    
+    response = _cprequest.Response()
+    response__doc = """
+    The response object for the current thread. In the main thread,
+    and any threads which are not receiving HTTP requests, this is None."""
     
     def load(self, request, response):
         self.request = request
@@ -205,59 +224,55 @@ serving = _serving = _Serving()
 
 class _ThreadLocalProxy(object):
     
-    __slots__ = ['__attrname__', '_default_child', '__dict__']
+    __slots__ = ['__attrname__', '__dict__']
     
-    def __init__(self, attrname, default):
+    def __init__(self, attrname):
         self.__attrname__ = attrname
-        self._default_child = default
-    
-    def _get_child(self):
-        try:
-            return getattr(_serving, self.__attrname__)
-        except AttributeError:
-            # Bind dummy instances of default objects to help introspection.
-            return self._default_child
     
     def __getattr__(self, name):
-        return getattr(self._get_child(), name)
+        child = getattr(serving, self.__attrname__)
+        return getattr(child, name)
     
     def __setattr__(self, name, value):
-        if name in ("__attrname__", "_default_child"):
+        if name in ("__attrname__", ):
             object.__setattr__(self, name, value)
         else:
-            setattr(self._get_child(), name, value)
+            child = getattr(serving, self.__attrname__)
+            setattr(child, name, value)
     
     def __delattr__(self, name):
-        delattr(self._get_child(), name)
+        child = getattr(serving, self.__attrname__)
+        delattr(child, name)
     
     def _get_dict(self):
-        childobject = self._get_child()
-        d = childobject.__class__.__dict__.copy()
-        d.update(childobject.__dict__)
+        child = getattr(serving, self.__attrname__)
+        d = child.__class__.__dict__.copy()
+        d.update(child.__dict__)
         return d
     __dict__ = property(_get_dict)
     
     def __getitem__(self, key):
-        return self._get_child()[key]
+        child = getattr(serving, self.__attrname__)
+        return child[key]
     
     def __setitem__(self, key, value):
-        self._get_child()[key] = value
+        child = getattr(serving, self.__attrname__)
+        child[key] = value
     
     def __delitem__(self, key):
-        del self._get_child()[key]
+        child = getattr(serving, self.__attrname__)
+        del child[key]
     
     def __contains__(self, key):
-        return key in self._get_child()
+        child = getattr(serving, self.__attrname__)
+        return key in child
 
 
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
-#   to the "_serving" object)
-from cherrypy.lib import http as _http
-request = _ThreadLocalProxy('request',
-                            _cprequest.Request(_http.Host("localhost", 80),
-                                               _http.Host("localhost", 1111)))
-response = _ThreadLocalProxy('response', _cprequest.Response())
+#   to the "serving" object)
+request = _ThreadLocalProxy('request')
+response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
 thread_data = _local()
@@ -270,7 +285,7 @@ thread_data = _local()
 def _cherrypy_pydoc_resolve(thing, forceload=0):
     """Given an object or a path to an object, get the object and its name."""
     if isinstance(thing, _ThreadLocalProxy):
-        thing = thing._get_child()
+        thing = getattr(serving, thing.__attrname__)
     return pydoc._builtin_resolve(thing, forceload)
 
 try:

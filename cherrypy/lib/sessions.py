@@ -36,23 +36,33 @@ class PerpetualTimer(threading._Timer):
 missing = object()
 
 class Session(object):
-    """A CherryPy dict-like Session object (one per request).
+    """A CherryPy dict-like Session object (one per request)."""
     
-    id: current session ID.
-    expiration_time (datetime): when the current session will expire.
-    timeout (minutes): used to calculate expiration_time from now.
-    clean_freq (minutes): the poll rate for expired session cleanup.
-    locked: If True, this session instance has exclusive read/write access
-        to session data.
-    loaded: If True, data has been retrieved from storage. This should
-        happen automatically on the first attempt to access session data.
-    """
+    __metaclass__ = cherrypy._AttributeDocstrings
+    
+    id = None
+    id__doc = "The current session ID."
+    
+    timeout = 60
+    timeout__doc = "Number of minutes after which to delete session data."
+    
+    locked = False
+    locked__doc = """
+    If True, this session instance has exclusive read/write access
+    to session data."""
+    
+    loaded = False
+    loaded__doc = """
+    If True, data has been retrieved from storage. This should happen
+    automatically on the first attempt to access session data."""
     
     clean_thread = None
+    clean_thread__doc = "Class-level PerpetualTimer which calls self.clean_up."
+    
+    clean_freq = 5
+    clean_freq__doc = "The poll rate for expired session cleanup in minutes."
     
     def __init__(self, id=None, **kwargs):
-        self.locked = False
-        self.loaded = False
         self._data = {}
         
         for k, v in kwargs.iteritems():
@@ -412,8 +422,6 @@ close.failsafe = True
 close.priority = 90
 
 
-_def_session = RamSession()
-
 def init(storage_type='ram', path=None, path_header=None, name='session_id',
          timeout=60, domain=None, secure=False, clean_freq=5, **kwargs):
     """Initialize session object (using cookies).
@@ -439,8 +447,9 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     request = cherrypy.request
     
     # Guard against running twice
-    if hasattr(cherrypy._serving, "session"):
+    if hasattr(request, "_session_init_flag"):
         return
+    request._session_init_flag = True
     
     # Check if request came with a session ID
     id = None
@@ -456,7 +465,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     cherrypy._serving.session = sess = globals()[storage_class](id, **kwargs)
     
     if not hasattr(cherrypy, "session"):
-        cherrypy.session = cherrypy._ThreadLocalProxy('session', _def_session)
+        cherrypy.session = cherrypy._ThreadLocalProxy('session')
         if hasattr(sess, "setup"):
             sess.setup()
     
