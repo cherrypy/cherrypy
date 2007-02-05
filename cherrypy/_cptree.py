@@ -27,19 +27,7 @@ class Application(object):
     A dict of {path: pathconf} pairs, where 'pathconf' is itself a dict
     of {key: value} pairs."""
     
-    namespaces = {}
-    namespaces__doc = """
-    A dict of config namespace names and handlers. Each config entry should
-    begin with a namespace name; the corresponding namespace handler will
-    be called once for each config entry in that namespace, and will be
-    passed two arguments: the config key (with the namespace removed)
-    and the config value.
-    
-    Namespace handlers may be any Python callable; they may also be
-    Python 2.5-style 'context managers', in which case their __enter__
-    method should return a callable to be used as the handler.
-    See cherrypy.tools (the Toolbox class) for an example.
-    """
+    namespaces = _cpconfig.NamespaceSet()
     
     log = None
     log__doc = """A LogManager instance. See _cplogging."""
@@ -80,7 +68,7 @@ class Application(object):
         _cpconfig.merge(self.config, config)
         
         # Handle namespaces specified in config.
-        _cpconfig._call_namespaces(self.config.get("/", {}), self.namespaces)
+        self.namespaces(self.config.get("/", {}))
     
     def __call__(self, environ, start_response):
         return self.wsgiapp(environ, start_response)

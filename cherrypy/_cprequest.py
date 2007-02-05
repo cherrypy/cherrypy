@@ -6,7 +6,7 @@ import time
 import types
 
 import cherrypy
-from cherrypy import _cpcgifs
+from cherrypy import _cpcgifs, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import http
 
@@ -382,27 +382,13 @@ class Request(object):
     If True, Request.run will not trap any errors (except HTTPRedirect and
     HTTPError, which are more properly called 'exceptions', not errors)."""
     
-    namespaces = {"hooks": hooks_namespace,
-                  "request": request_namespace,
-                  "response": response_namespace,
-                  "error_page": error_page_namespace,
-                  # "tools": See _cptools.Toolbox
-                  }
-    namespaces__doc = """
-    A dict of config namespace names and handlers. Each config entry should
-    begin with a namespace name; the corresponding namespace handler will
-    be called once for each config entry in that namespace, and will be
-    passed two arguments: the config key (with the namespace removed)
-    and the config value.
-    
-    Namespace handlers may be any Python callable; they may also be
-    Python 2.5-style 'context managers', in which case their __enter__
-    method should return a callable to be used as the handler.
-    See cherrypy.tools (the Toolbox class) for an example.
-    
-    Namespaces may be added at the class level and will be inherited
-    by all Request instances.
-    """
+    namespaces = _cpconfig.NamespaceSet(
+        **{"hooks": hooks_namespace,
+           "request": request_namespace,
+           "response": response_namespace,
+           "error_page": error_page_namespace,
+           # "tools": See _cptools.Toolbox
+           })
     
     def __init__(self, local_host, remote_host, scheme="http",
                  server_protocol="HTTP/1.1"):
@@ -535,8 +521,7 @@ class Request(object):
                     self.hooks = self.__class__.hooks.copy()
                     self.toolmaps = {}
                     self.get_resource(path_info)
-                    cherrypy._cpconfig._call_namespaces(self.config,
-                                                        self.namespaces)
+                    self.namespaces(self.config)
                     
                     self.hooks.run('on_start_resource')
                     
@@ -717,6 +702,8 @@ class Response(object):
     Response.headers is transformed into Response.header_list as
     (key, value) tuples.
     """
+    
+    __metaclass__ = cherrypy._AttributeDocstrings
     
     # Class attributes for dev-time introspection.
     status = ""

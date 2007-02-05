@@ -154,60 +154,78 @@ def merge(base, other):
         base.setdefault(section, {}).update(value_map)
 
 
-def _call_namespaces(config, namespaces):
-    """Iterate through config and pass it to each namespace.
+class NamespaceSet(dict):
+    """A dict of config namespace names and handlers.
     
-    'config' should be a flat dict, where keys use dots to separate
-    namespaces, and values are arbitrary.
-    'namespaces' should be a dict whose keys are strings and whose
-    values are namespace handlers.
+    Each config entry should begin with a namespace name; the corresponding
+    namespace handler will be called once for each config entry in that
+    namespace, and will be passed two arguments: the config key (with the
+    namespace removed) and the config value.
     
-    The first name in each config key is used to look up the corresponding
-    namespace handler. For example, a config entry of {'tools.gzip.on': v}
-    will call the 'tools' namespace handler with the args: ('gzip.on', v)
-    
-    Each handler may be a bare callable, or it may be a context manager
-    with __enter__ and __exit__ methods, in which case the __enter__
-    method should return the callable.
+    Namespace handlers may be any Python callable; they may also be
+    Python 2.5-style 'context managers', in which case their __enter__
+    method should return a callable to be used as the handler.
+    See cherrypy.tools (the Toolbox class) for an example.
     """
-    # Separate the given config into namespaces
-    ns_confs = {}
-    for k in config:
-        if "." in k:
-            ns, name = k.split(".", 1)
-            bucket = ns_confs.setdefault(ns, {})
-            bucket[name] = config[k]
     
-    # I chose __enter__ and __exit__ so someday this could be
-    # rewritten using Python 2.5's 'with' statement:
-    # for ns, handler in namespaces.iteritems():
-    #     with handler as callable:
-    #         for k, v in ns_confs.get(ns, {}).iteritems():
-    #             callable(k, v)
-    for ns, handler in namespaces.iteritems():
-        exit = getattr(handler, "__exit__", None)
-        if exit:
-            callable = handler.__enter__()
-            no_exc = True
-            try:
+    def __call__(self, config):
+        """Iterate through config and pass it to each namespace handler.
+        
+        'config' should be a flat dict, where keys use dots to separate
+        namespaces, and values are arbitrary.
+        
+        The first name in each config key is used to look up the corresponding
+        namespace handler. For example, a config entry of {'tools.gzip.on': v}
+        will call the 'tools' namespace handler with the args: ('gzip.on', v)
+        """
+        # Separate the given config into namespaces
+        ns_confs = {}
+        for k in config:
+            if "." in k:
+                ns, name = k.split(".", 1)
+                bucket = ns_confs.setdefault(ns, {})
+                bucket[name] = config[k]
+        
+        # I chose __enter__ and __exit__ so someday this could be
+        # rewritten using Python 2.5's 'with' statement:
+        # for ns, handler in self.iteritems():
+        #     with handler as callable:
+        #         for k, v in ns_confs.get(ns, {}).iteritems():
+        #             callable(k, v)
+        for ns, handler in self.iteritems():
+            exit = getattr(handler, "__exit__", None)
+            if exit:
+                callable = handler.__enter__()
+                no_exc = True
                 try:
-                    for k, v in ns_confs.get(ns, {}).iteritems():
-                        callable(k, v)
-                except:
-                    # The exceptional case is handled here
-                    no_exc = False
-                    if exit is None:
-                        raise
-                    if not exit(*sys.exc_info()):
-                        raise
-                    # The exception is swallowed if exit() returns true
-            finally:
-                # The normal and non-local-goto cases are handled here
-                if no_exc and exit:
-                    exit(None, None, None)
-        else:
-            for k, v in ns_confs.get(ns, {}).iteritems():
-                handler(k, v)
+                    try:
+                        for k, v in ns_confs.get(ns, {}).iteritems():
+                            callable(k, v)
+                    except:
+                        # The exceptional case is handled here
+                        no_exc = False
+                        if exit is None:
+                            raise
+                        if not exit(*sys.exc_info()):
+                            raise
+                        # The exception is swallowed if exit() returns true
+                finally:
+                    # The normal and non-local-goto cases are handled here
+                    if no_exc and exit:
+                        exit(None, None, None)
+            else:
+                for k, v in ns_confs.get(ns, {}).iteritems():
+                    handler(k, v)
+    
+    def __repr__(self):
+        return "%s.%s(%s)" % (self.__module__, self.__class__.__name__,
+                              dict.__repr__(self))
+    
+    def __copy__(self):
+        newobj = self.__class__()
+        newobj.update(self)
+        return newobj
+    copy = __copy__
 
 
 class Config(dict):
@@ -219,11 +237,12 @@ class Config(dict):
         'tools.trailing_slash.on': True,
         }
     
-    namespaces = {"server": lambda k, v: setattr(cherrypy.server, k, v),
-                  "engine": lambda k, v: setattr(cherrypy.engine, k, v),
-                  "log": lambda k, v: setattr(cherrypy.log, k, v),
-                  "checker": lambda k, v: setattr(cherrypy.checker, k, v),
-                  }
+    namespaces = NamespaceSet(
+        **{"server": lambda k, v: setattr(cherrypy.server, k, v),
+           "engine": lambda k, v: setattr(cherrypy.engine, k, v),
+           "log": lambda k, v: setattr(cherrypy.log, k, v),
+           "checker": lambda k, v: setattr(cherrypy.checker, k, v),
+           })
     
     def __init__(self):
         self.reset()
@@ -261,11 +280,11 @@ class Config(dict):
             config['tools.staticdir.section'] = "global"
         
         dict.update(self, config)
-        _call_namespaces(config, self.namespaces)
+        self.namespaces(config)
     
     def __setitem__(self, k, v):
         dict.__setitem__(self, k, v)
-        _call_namespaces({k: v}, self.namespaces)
+        self.namespaces({k: v})
 
 
 
