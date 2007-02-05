@@ -324,9 +324,9 @@ def expose(func=None, alias=None):
         return func
     
     import sys, types
-    parents = sys._getframe(1).f_locals
     if isinstance(func, (types.FunctionType, types.MethodType)):
         # expose is being called directly, before the method has been bound
+        parents = sys._getframe(1).f_locals
         return expose_(func)
     else:
         if alias is None:
@@ -335,6 +335,7 @@ def expose(func=None, alias=None):
             return func
         else:
             # expose is returning a decorator "@expose(alias=...)"
+            parents = sys._getframe(1).f_locals
             return expose_
 
 def url(path="", qs="", script_name=None, base=None, relative=False):
