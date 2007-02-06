@@ -28,8 +28,15 @@ def setup_server():
             cherrypy.session.delete() 
             sessionfilter.expire() 
             return "done" 
- 	delete.exposed = True
+        delete.exposed = True
         
+        def oncreate(self):
+            return repr(cherrypy.request.onsessdata)
+        oncreate.exposed = True
+    
+    def Session_new(*args, **kwargs):
+        cherrypy.request.onsessdata = (args, kwargs)
+    
     cherrypy.root = Root()
     cherrypy.config.update({
             'server.log_to_screen': False,
@@ -39,6 +46,7 @@ def setup_server():
             'session_filter.storage_path' : localDir,
             'session_filter.timeout': 0.017,
             'session_filter.clean_up_delay': 0.017,
+            'session_filter.on_create_session': Session_new,
     })
 
 import helper
@@ -80,6 +88,11 @@ class SessionFilterTest(helper.CPWebCase):
         f = lambda: [x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertNotEqual(f(), [])
 
+        # Test on_create_session
+        self.getPage("/oncreate")
+        # example response: "(({'_id': 'b7a7216a5335726dd4c0d6224f5f4ca9f5969dc6'},), {})"
+        self.assert_(self.body.startswith("(({'_id': '"))
+        
         # Clean up session files
         for fname in os.listdir(localDir):
             if fname.startswith('session-'):
