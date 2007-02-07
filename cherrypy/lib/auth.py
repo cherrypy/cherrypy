@@ -26,8 +26,10 @@ def check_auth(users, encrypt=None):
         # and compare it with what the user-agent provided
         if httpauth.checkResponse(ah, password, method=cherrypy.request.method,
                                   encrypt=encrypt):
+            cherrypy.request.login = ah["username"]
             return True
     
+        cherrypy.request.login = False
     return False
 
 def basic_auth(realm, users, encrypt=None):

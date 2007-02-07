@@ -228,7 +228,7 @@ Message: %(error_msg)s
                 del cherrypy.response.headers["Content-Length"]
             return True
         else:
-            cherrypy.session[self.session_key] = username
+            cherrypy.session[self.session_key] = cherrypy.request.login = username
             self.on_login(username)
             raise cherrypy.HTTPRedirect(from_page or "/")
     
@@ -238,6 +238,7 @@ Message: %(error_msg)s
         username = sess.get(self.session_key)
         sess[self.session_key] = None
         if username:
+            cherrypy.request.login = None
             self.on_logout(username)
         raise cherrypy.HTTPRedirect(from_page)
     
@@ -255,7 +256,7 @@ Message: %(error_msg)s
                 # Delete Content-Length header so finalize() recalcs it.
                 del cherrypy.response.headers["Content-Length"]
             return True
-        
+        cherrypy.request.login = username
         self.on_check(username)
     
     def run(self):

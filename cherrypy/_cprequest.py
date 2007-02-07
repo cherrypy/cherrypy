@@ -304,6 +304,12 @@ class Request(object):
     The 'relative path' portion of the Request-URI. This is relative
     to the script_name ('mount point') of the application which is
     handling this request."""
+
+    login = None
+    login__doc = """
+    When authentication is used during the request processing this is
+    set to 'False' if it failed and to the 'username' value if it succeeded.
+    The default 'None' implies that no authentication happened."""
     
     app = None
     app__doc = \

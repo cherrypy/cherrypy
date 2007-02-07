@@ -14,12 +14,12 @@ def setup_server():
 
     class DigestProtected:
         def index(self):
-            return "This is protected by Digest auth."
+            return "Hello %s, you've been authorized." % cherrypy.request.login
         index.exposed = True
 
     class BasicProtected:
         def index(self):
-            return "This is protected by Basic auth."
+            return "Hello %s, you've been authorized." % cherrypy.request.login
         index.exposed = True
 
     def fetch_users():
@@ -57,7 +57,7 @@ class HTTPAuthTest(helper.CPWebCase):
         
         self.getPage('/basic/', [('Authorization', 'Basic dGVzdDp0ZXN0')])
         self.assertStatus('200 OK')
-        self.assertBody('This is protected by Basic auth.')
+        self.assertBody("Hello test, you've been authorized.")
 
     def testDigest(self):
         self.getPage("/digest/")
@@ -111,7 +111,7 @@ class HTTPAuthTest(helper.CPWebCase):
         auth = base_auth % (nonce, response, '00000001')
         self.getPage('/digest/', [('Authorization', auth)])
         self.assertStatus('200 OK')
-        self.assertBody('This is protected by Digest auth.')
+        self.assertBody("Hello test, you've been authorized.")
             
 if __name__ == "__main__":
     setup_server()

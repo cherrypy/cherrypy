@@ -7,7 +7,7 @@ def setup_server():
     
     def check(username, password):
         # Dummy check_username_and_password function
-        if username != 'login' or password != 'password':
+        if username != 'test' or password != 'password':
             return u'Wrong login/password'
     
     class Test:
@@ -18,7 +18,7 @@ def setup_server():
                       }
         
         def index(self):
-            return "Hi, you are logged in"
+            return "Hi %s, you are logged in" % cherrypy.request.login
         index.exposed = True
     
     cherrypy.tree.mount(Test())
@@ -36,7 +36,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
         self.assertInBody('<form method="post" action="do_login">')
         
         # setup credentials
-        login_body = 'username=login&password=password&from_page=/'
+        login_body = 'username=test&password=password&from_page=/'
         
         # attempt a login
         self.getPage('/do_login', method='POST', body=login_body)
@@ -44,7 +44,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
         
         # get the page now that we are logged in
         self.getPage('/', self.cookies)
-        self.assertBody('Hi, you are logged in')
+        self.assertBody('Hi test, you are logged in')
         
         # do a logout
         self.getPage('/do_logout', self.cookies)
