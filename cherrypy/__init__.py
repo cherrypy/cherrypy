@@ -181,21 +181,21 @@ def quickstart(root, script_name="", config=None):
     server.quickstart()
     engine.start()
 
+
 try:
     from threading import local as _local
 except ImportError:
     from cherrypy._cpthreadinglocal import local as _local
 
-# Create a threadlocal object to hold the request, response, and other
-# objects. In this way, we can easily dump those objects when we stop/start
-# a new HTTP conversation, yet still refer to them as module-level globals
-# in a thread-safe way.
 class _Serving(_local):
     """An interface for registering request and response objects.
     
     Rather than have a separate "thread local" object for the request and
     the response, this class works as a single threadlocal container for
-    both objects.
+    both objects (and any others which developers wish to define). In this
+    way, we can easily dump those objects when we stop/start a new HTTP
+    conversation, yet still refer to them as module-level globals in a
+    thread-safe way.
     """
     
     __metaclass__ = _AttributeDocstrings
@@ -219,6 +219,7 @@ class _Serving(_local):
         """Remove all attributes of self."""
         self.__dict__.clear()
 
+# The name "_serving" should be removed in 3.1.
 serving = _serving = _Serving()
 
 
@@ -275,7 +276,9 @@ request = _ThreadLocalProxy('request')
 response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
-thread_data = _local()
+class _ThreadData(_local):
+    """A container for thread-specific data."""
+thread_data = _ThreadData()
 
 
 # Monkeypatch pydoc to allow help() to go through the threadlocal proxy.

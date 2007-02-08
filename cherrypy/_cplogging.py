@@ -30,7 +30,7 @@ class LogManager(object):
         self.access_log.setLevel(logging.INFO)
     
     def error(self, msg='', context='', severity=logging.DEBUG, traceback=False):
-        """Write to the 'error' log.
+        """Write to the error log.
         
         This is not just for errors! Applications may call this at any time
         to log application-specific information.
@@ -40,6 +40,11 @@ class LogManager(object):
         self.error_log.log(severity, ' '.join((self.time(), context, msg)))
     
     def __call__(self, *args, **kwargs):
+        """Write to the error log.
+        
+        This is not just for errors! Applications may call this at any time
+        to log application-specific information.
+        """
         return self.error(*args, **kwargs)
     
     def access(self):
@@ -99,7 +104,8 @@ class LogManager(object):
     def _set_screen(self, newvalue):
         self._set_screen_handler(self.error_log, newvalue)
         self._set_screen_handler(self.access_log, newvalue)
-    screen = property(_get_screen, _set_screen)
+    screen = property(_get_screen, _set_screen,
+                      doc="If True, error and access will print to stdout.")
     
     
     # -------------------------- File handlers -------------------------- #
@@ -133,7 +139,8 @@ class LogManager(object):
         return ''
     def _set_error_file(self, newvalue):
         self._set_file_handler(self.error_log, newvalue)
-    error_file = property(_get_error_file, _set_error_file)
+    error_file = property(_get_error_file, _set_error_file,
+                          doc="The filename for self.error_log.")
     
     def _get_access_file(self):
         h = self._get_builtin_handler(self.access_log, "file")
@@ -142,5 +149,6 @@ class LogManager(object):
         return ''
     def _set_access_file(self, newvalue):
         self._set_file_handler(self.access_log, newvalue)
-    access_file = property(_get_access_file, _set_access_file)
+    access_file = property(_get_access_file, _set_access_file,
+                           doc="The filename for self.access_log.")
 

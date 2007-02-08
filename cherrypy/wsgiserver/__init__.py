@@ -35,7 +35,7 @@ its origin, not it's coupling.
 The CherryPy WSGI server can serve as many WSGI applications
 as you want in one instance:
 
-    wsgi_apps = [('/', my_crazy_app), (/blog', my_blog_app)]
+    wsgi_apps = [('/', my_crazy_app), ('/blog', my_blog_app)]
 
 """
 
