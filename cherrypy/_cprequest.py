@@ -629,6 +629,18 @@ class Request(object):
     
     def process_body(self):
         """Convert request.rfile into request.params (or request.body). (Core)"""
+        if not self.headers.get("Content-Length", ""):
+            # No Content-Length header supplied (or it's 0).
+            # If we went ahead and called cgi.FieldStorage, it would hang,
+            # since it cannot determine when to stop reading from the socket.
+            # See http://www.cherrypy.org/ticket/493.
+            # See also http://www.cherrypy.org/ticket/650.
+            # Note also that we expect any HTTP server to have decoded
+            # any message-body that had a transfer-coding, and we expect
+            # the HTTP server to have supplied a Content-Length header
+            # which is valid for the decoded entity-body.
+            return
+        
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
         try:
@@ -814,4 +826,5 @@ class Response(object):
         """
         if time.time() > self.time + self.timeout:
             self.timed_out = True
+
 

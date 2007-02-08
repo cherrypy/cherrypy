@@ -267,15 +267,6 @@ class HTTPRequest(object):
         if read_chunked:
             if not self.decode_chunked():
                 return
-        else:
-            cl = environ.get("CONTENT_LENGTH")
-            if method in ("POST", "PUT") and cl is None:
-                # No Content-Length header supplied. This will hang
-                # cgi.FieldStorage, since it cannot determine when to
-                # stop reading from the socket.
-                # See http://www.cherrypy.org/ticket/493.
-                self.simple_response("411 Length Required")
-                return
         
         # From PEP 333:
         # "Servers and gateways that implement HTTP 1.1 must provide
@@ -1004,4 +995,5 @@ class CherryPyWSGIServer(object):
                 if key and value:
                     wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
                     self.ssl_environ[wsgikey] = value
+
 
