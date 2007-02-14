@@ -8,4 +8,6 @@
 
     python test.py
 
+  Or to run individual tests type:
 
+    python test.py --test_foo --test_bar

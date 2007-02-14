@@ -5,8 +5,7 @@ from sys import exc_info as _exc_info
 from urlparse import urljoin as _urljoin
 from cherrypy.lib import http as _http
 
-import exceptions
-class CherryPyException(exceptions.Exception):
+class CherryPyException(Exception):
     pass
 
 
