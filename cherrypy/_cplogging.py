@@ -151,4 +151,61 @@ class LogManager(object):
         self._set_file_handler(self.access_log, newvalue)
     access_file = property(_get_access_file, _set_access_file,
                            doc="The filename for self.access_log.")
+    
+    
+    # ------------------------- WSGI handlers ------------------------- #
+    
+    def _set_wsgi_handler(self, log, enable):
+        h = self._get_builtin_handler(log, "wsgi")
+        if enable:
+            if not h:
+                h = WSGIErrorHandler()
+                h.setLevel(logging.DEBUG)
+                h.setFormatter(logfmt)
+                h._cpbuiltin = "wsgi"
+                log.addHandler(h)
+        elif h:
+            log.handlers.remove(h)
+    
+    def _get_wsgi(self):
+        return bool(self._get_builtin_handler(self.error_log, "wsgi"))
+    
+    def _set_wsgi(self, newvalue):
+        self._set_wsgi_handler(self.error_log, newvalue)
+    wsgi = property(_get_wsgi, _set_wsgi,
+                      doc="If True, error messages will be sent to wsgi.errors.")
 
+
+class WSGIErrorHandler(logging.Handler):
+    "A handler class which writes logging records to environ['wsgi.errors']."
+    
+    def flush(self):
+        """Flushes the stream."""
+        try:
+            stream = cherrypy.request.wsgi_environ.get('wsgi.errors')
+        except AttributeError, KeyError:
+            pass
+        else:
+            stream.flush()
+    
+    def emit(self, record):
+        """Emit a record."""
+        try:
+            stream = cherrypy.request.wsgi_environ.get('wsgi.errors')
+        except AttributeError, KeyError:
+            pass
+        else:
+            try:
+                msg = self.format(record)
+                fs = "%s\n"
+                import types
+                if not hasattr(types, "UnicodeType"): #if no unicode support...
+                    stream.write(fs % msg)
+                else:
+                    try:
+                        stream.write(fs % msg)
+                    except UnicodeError:
+                        stream.write(fs % msg.encode("UTF-8"))
+                self.flush()
+            except:
+                self.handleError(record)

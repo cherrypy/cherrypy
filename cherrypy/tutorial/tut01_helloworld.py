@@ -22,14 +22,14 @@ class HelloWorld:
     index.exposed = True
 
 
+import os.path
+tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
+
 if __name__ == '__main__':
-    import os.path
-    tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
-    cherrypy.config.update(tutconf)
     # CherryPy always starts with app.root when trying to map request URIs
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().
-    cherrypy.quickstart(HelloWorld())
+    cherrypy.quickstart(HelloWorld(), config=tutconf)
 else:
     # This branch is for the test suite; you can ignore it.
-    cherrypy.tree.mount(HelloWorld())
+    cherrypy.tree.mount(HelloWorld(), config=tutconf)
