@@ -479,6 +479,11 @@ class HTTPRequest(object):
         self.sendall("".join(buf))
 
 
+class NoSSLError(Exception):
+    """Exception raised when a client speaks HTTP to an HTTPS socket."""
+    pass
+
+
 def _ssl_wrap_method(method, is_reader=False):
     """Wrap the given method with SSL error-trapping.
     
@@ -508,8 +513,18 @@ def _ssl_wrap_method(method, is_reader=False):
             except SSL.Error, e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
                     return ""
-                if is_reader and e.args[0][0][2] == 'ssl handshake failure':
+                
+                thirdarg = None
+                try:
+                    thirdarg = e.args[0][0][2]
+                except IndexError:
+                    pass
+                
+                if is_reader and thirdarg == 'ssl handshake failure':
                     return ""
+                if thirdarg == 'http request':
+                    # The client is talking HTTP to an HTTPS server.
+                    raise NoSSLError()
                 raise
             if time.time() - start > self.ssl_timeout:
                 raise socket.timeout("timed out")
@@ -618,6 +633,12 @@ class HTTPConnection(object):
             return
         except (KeyboardInterrupt, SystemExit):
             raise
+        except NoSSLError:
+            # Unwrap our sendall
+            req.sendall = self.socket._sock.sendall
+            req.simple_response("400 Bad Request",
+                                "The client sent a plain HTTP request, but "
+                                "this server only speaks HTTPS on this port.")
         except:
             if req:
                 req.simple_response("500 Internal Server Error", format_exc())
