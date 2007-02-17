@@ -46,8 +46,12 @@ class _Builder:
         return m(o)
     
     def build_CallFunc(self, o):
-        callee, args, starargs, kwargs = map(self.build, o.getChildren())
-        return callee(args, *(starargs or ()), **(kwargs or {}))
+        children = map(self.build, o.getChildren())
+        callee = children.pop(0)
+        kwargs = children.pop() or {}
+        starargs = children.pop() or ()
+        args = tuple(children) + tuple(starargs)
+        return callee(*args, **kwargs)
     
     def build_List(self, o):
         return map(self.build, o.getChildren())
