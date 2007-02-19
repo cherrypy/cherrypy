@@ -82,6 +82,14 @@ def setup_server():
         clen = int(cherrypy.request.headers['Content-Length'])
         cherrypy.request.body = cherrypy.request.rfile.read(clen)
     
+    # Assert that we can use a callable object instead of a function.
+    class Rotator(object):
+        def __call__(self, scale):
+            r = cherrypy.response
+            r.collapse_body()
+            r.body = [chr(ord(x) + scale) for x in r.body]
+    cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
+    
     class Root:
         def index(self):
             return "Howdy earth!"

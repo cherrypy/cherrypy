@@ -49,6 +49,10 @@ class Tool(object):
                 setattr(self, arg, None)
         except (ImportError, AttributeError):
             pass
+        except TypeError:
+            if hasattr(self.callable, "__call__"):
+                for arg in inspect.getargspec(self.callable.__call__)[0]:
+                    setattr(self, arg, None)
         # IronPython 1.0 raises NotImplementedError because
         # inspect.getargspec tries to access Python bytecode
         # in co_code attribute.
@@ -108,8 +112,12 @@ class Tool(object):
 class HandlerTool(Tool):
     """Tool which is called 'before main', that may skip normal handlers.
     
-    The callable provided should return True if processing should skip
-    the normal page handler, and False if it should not.
+    If the tool successfully handles the request (by setting response.body),
+    if should return True. This will cause CherryPy to skip any 'normal' page
+    handler. If the tool did not handle the request, it should return False
+    to tell CherryPy to continue on and call the normal page handler. If the
+    tool is declared AS a page handler (see the 'handler' method), returning
+    False will raise NotFound.
     """
     
     def __init__(self, callable, name=None):
