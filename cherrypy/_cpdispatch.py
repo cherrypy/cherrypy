@@ -241,10 +241,6 @@ class RoutesDispatcher(object):
         self.mapper = routes.Mapper()
         self.mapper.controller_scan = self.controllers.keys
         
-        # Since Routes' mapper.environ is not threadsafe,
-        # we must use a proxy which does JIT lookup.
-        self.mapper.environ = WSGIEnvProxy()
-    
     def connect(self, name, route, controller, **kwargs):
         self.controllers[name] = controller
         self.mapper.connect(name, route, controller=name, **kwargs)
@@ -268,11 +264,15 @@ class RoutesDispatcher(object):
         
         config = routes.request_config()
         config.mapper = self.mapper
+        # Since Routes' mapper.environ is not threadsafe,
+        # we must use a proxy which does JIT lookup.
+        config.mapper.environ = WSGIEnvProxy()
         config.host = request.headers.get('Host', None)
         config.protocol = request.scheme
         config.redirect = self.redirect
         
         result = self.mapper.match(path_info)
+        
         config.mapper_dict = result
         params = {}
         if result:
