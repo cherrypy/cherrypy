@@ -590,7 +590,7 @@ class HTTPConnection(object):
             if sslenv:
                 self.environ.update(sslenv)
         else:
-            self.rfile = sock.makefile("r", self.rbufsize)
+            self.rfile = sock.makefile("rb", self.rbufsize)
             self.sendall = sock.sendall
         
         self.environ.update({"wsgi.input": self.rfile,
