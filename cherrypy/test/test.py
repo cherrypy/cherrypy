@@ -226,8 +226,8 @@ class CommandLineParser(object):
             coverage.start()
             import cherrypy
             from cherrypy.lib import covercp
-            cherrypy.engine.hooks['start_process'].insert(0, covercp.start)
-            cherrypy.engine.hooks['start_thread'].insert(0, covercp.start)
+            cherrypy.engine.subscribe('start', covercp.start)
+            cherrypy.engine.subscribe('start_thread', covercp.start)
         except ImportError:
             coverage = None
         self.coverage = coverage
@@ -236,10 +236,8 @@ class CommandLineParser(object):
         """Stop the coverage tool, save results, and report."""
         import cherrypy
         from cherrypy.lib import covercp
-        while covercp.start in cherrypy.engine.hooks['start_process']:
-            cherrypy.engine.hooks['start_process'].remove(covercp.start)
-        while covercp.start in cherrypy.engine.hooks['start_thread']:
-            cherrypy.engine.hooks['start_thread'].remove(covercp.start)
+        cherrypy.engine.unsubscribe('start', covercp.start)
+        cherrypy.engine.unsubscribe('start_thread', covercp.start)
         if self.coverage:
             self.coverage.save()
             self.report_coverage()
