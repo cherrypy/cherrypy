@@ -329,11 +329,11 @@ class Toolbox(object):
     """A collection of Tools.
     
     This object also functions as a config namespace handler for itself.
+    Custom toolboxes should be added to each Application's toolboxes dict.
     """
     
     def __init__(self, namespace):
         self.namespace = namespace
-        cherrypy.engine.request_class.namespaces[namespace] = self
     
     def __setattr__(self, name, value):
         # If the Tool._name is None, supply it from the attribute name.

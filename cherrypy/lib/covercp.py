@@ -10,8 +10,8 @@ http://www.nedbatchelder.com/code/modules/coverage.html
 
 To turn on coverage tracing, use the following code:
 
-    cherrypy.engine.on_start_engine_list.insert(0, covercp.start)
-    cherrypy.engine.on_start_thread_list.insert(0, covercp.start)
+    cherrypy.engine.subscribe('start', covercp.start)
+    cherrypy.engine.subscribe('start_thread', covercp.start)
 
 Run your code, then use the covercp.serve() function to browse the
 results in a web browser. If you run this module from the command line,
@@ -44,6 +44,7 @@ except ImportError:
     
     def start(threadid=None):
         pass
+start.priority = 20
 
 # Guess initial depth to hide FIXME this doesn't work for non-cherrypy stuff
 import cherrypy

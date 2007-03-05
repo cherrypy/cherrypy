@@ -118,7 +118,7 @@ def wsgisetup(req):
             "log.error_file": os.path.join(curdir, "test.log"),
             "environment": "production",
             })
-        cherrypy.engine.start(blocking=False)
+        cherrypy.engine.start()
     from mod_python import apache
     return apache.OK
 

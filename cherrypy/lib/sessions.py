@@ -23,16 +23,6 @@ import cherrypy
 from cherrypy.lib import http
 
 
-class PerpetualTimer(threading._Timer):
-    
-    def run(self):
-        while True:
-            self.finished.wait(self.interval)
-            if self.finished.isSet():
-                return
-            self.function(*self.args, **self.kwargs)
-
-
 missing = object()
 
 class Session(object):
@@ -57,7 +47,7 @@ class Session(object):
     automatically on the first attempt to access session data."""
     
     clean_thread = None
-    clean_thread__doc = "Class-level PerpetualTimer which calls self.clean_up."
+    clean_thread__doc = "Class-level Monitor which calls self.clean_up."
     
     clean_freq = 5
     clean_freq__doc = "The poll rate for expired session cleanup in minutes."
@@ -74,14 +64,6 @@ class Session(object):
             # Assert that the generated id is not already stored.
             if self._load() is not None:
                 self.id = None
-    
-    def clean_interrupt(cls):
-        """Stop the expired-session cleaning timer."""
-        if cls.clean_thread:
-            cls.clean_thread.cancel()
-            cls.clean_thread.join()
-            cls.clean_thread = None
-    clean_interrupt = classmethod(clean_interrupt)
     
     def clean_up(self):
         """Clean up expired sessions."""
@@ -129,11 +111,12 @@ class Session(object):
         # The instances are created and destroyed per-request.
         cls = self.__class__
         if not cls.clean_thread:
-            cherrypy.engine.on_stop_engine_list.append(cls.clean_interrupt)
             # clean_up is in instancemethod and not a classmethod,
             # so tool config can be accessed inside the method.
-            t = PerpetualTimer(self.clean_freq, self.clean_up)
-            t.setName("CP Session Cleanup")
+            from cherrypy import pywebd
+            t = pywebd.plugins.Monitor(cherrypy.engine, self.clean_up,
+                                       "CP Session Cleanup")
+            t.frequency = self.clean_freq
             cls.clean_thread = t
             t.start()
     

@@ -15,7 +15,7 @@ class Root:
 
 
 # We will use this method from the mod_python configuration
-# as the entyr point to our application
+# as the entry point to our application
 def setup_server():
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'production',
@@ -23,7 +23,7 @@ def setup_server():
                             'show_tracebacks': False})
     # You must start the engine in a non-blocking fashion
     # so that mod_python can proceed
-    cherrypy.engine.start(blocking=False)
+    cherrypy.engine.start()
 
 ##########################################
 # mod_python settings for apache2
@@ -83,10 +83,8 @@ def setup(req):
                             "tools.ignore_headers.headers": ['Range'],
                             })
     
-    if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
-        cherrypy.engine.start(blocking=False)
-    elif cherrypy.engine.state == cherrypy._cpengine.STARTING:
-        cherrypy.engine.wait()
+    cherrypy.engine.start()
+    cherrypy.engine.wait()
     
     def cherrypy_cleanup(data):
         cherrypy.engine.stop()
@@ -166,7 +164,7 @@ def handler(req):
             
             redirections = []
             while True:
-                request = cherrypy.engine.request(local, remote, scheme)
+                request = app.get_serving(local, remote, scheme)
                 request.login = req.user
                 request.multithread = bool(threaded)
                 request.multiprocess = bool(forked)
@@ -178,7 +176,7 @@ def handler(req):
                     response = request.run(method, path, qs, sproto, headers, rfile)
                     break
                 except cherrypy.InternalRedirect, ir:
-                    cherrypy.engine.release()
+                    app.release_serving()
                     prev = request
                     
                     if not recursive:
@@ -198,7 +196,7 @@ def handler(req):
                     rfile = StringIO.StringIO()
             
             send_response(req, response.status, response.header_list, response.body)
-            cherrypy.engine.release()
+            app.release_serving()
     except:
         tb = format_exc()
         cherrypy.log(tb)

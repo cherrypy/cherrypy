@@ -113,8 +113,10 @@ class AppResponse(object):
     request = None
     
     def __init__(self, environ, start_response, cpapp):
+        self.cpapp = cpapp
+        
         try:
-            self.request = self.get_engine_request(environ, cpapp)
+            self.request = self.get_request(environ)
             
             meth = environ['REQUEST_METHOD']
             path = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
@@ -192,10 +194,11 @@ class AppResponse(object):
             return "".join(b)
     
     def close(self):
-        _cherrypy.engine.release()
+        """Close and de-reference the current request and response. (Core)"""
+        self.cpapp.release_serving()
     
-    def get_engine_request(self, environ, cpapp):
-        """Return a Request object from the CherryPy Engine using environ."""
+    def get_request(self, environ):
+        """Create a Request object using environ."""
         env = environ.get
         
         local = _http.Host('', int(env('SERVER_PORT', 80)),
@@ -205,7 +208,7 @@ class AppResponse(object):
                             env('REMOTE_HOST', ''))
         scheme = env('wsgi.url_scheme')
         sproto = env('ACTUAL_SERVER_PROTOCOL', "HTTP/1.1")
-        request = _cherrypy.engine.request(local, remote, scheme, sproto)
+        request, resp = self.cpapp.get_serving(local, remote, scheme, sproto)
         
         # LOGON_USER is served by IIS, and is the name of the
         # user after having been mapped to a local account.
@@ -214,7 +217,6 @@ class AppResponse(object):
         request.multithread = environ['wsgi.multithread']
         request.multiprocess = environ['wsgi.multiprocess']
         request.wsgi_environ = environ
-        request.app = cpapp
         request.prev = env('cherrypy.request')
         environ['cherrypy.request'] = request
         return request

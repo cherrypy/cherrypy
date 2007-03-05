@@ -149,7 +149,7 @@ Completed 800 requests
 Completed 900 requests
 
 
-Server Software:        CherryPy/3.0.1alpha
+Server Software:        CherryPy/3.1alpha
 Server Hostname:        localhost
 Server Port:            8080
 
@@ -308,7 +308,7 @@ def startup_modpython(req=None):
             if ab_opt:
                 global AB_PATH
                 AB_PATH = ab_opt
-        cherrypy.engine.start(blocking=False)
+        cherrypy.engine.start()
     if cherrypy.engine.state == cherrypy._cpengine.STARTING:
         cherrypy.engine.wait()
     return 0 # apache.OK

@@ -142,13 +142,14 @@ class Checker(object):
     
     extra_config_namespaces = []
     
-    def _known_ns(self, config):
+    def _known_ns(self, app):
         ns = ["wsgi"]
-        ns.extend(cherrypy.engine.request_class.namespaces.keys())
+        ns.extend(app.toolboxes.keys())
+        ns.extend(app.request_class.namespaces.keys())
         ns.extend(cherrypy.config.namespaces.keys())
         ns += self.extra_config_namespaces
         
-        for section, conf in config.iteritems():
+        for section, conf in app.config.iteritems():
             is_path_section = section.startswith("/")
             if is_path_section and isinstance(conf, dict):
                 for k, v in conf.iteritems():
@@ -168,7 +169,7 @@ class Checker(object):
     def check_config_namespaces(self):
         """Process config and warn on each unknown config namespace."""
         for sn, app in cherrypy.tree.apps.iteritems():
-            self._known_ns(app.config)
+            self._known_ns(app)
     
     
     # -------------------------- Config Types -------------------------- #

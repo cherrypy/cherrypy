@@ -121,6 +121,7 @@ def run_test_suite(moduleNames, server, conf):
     cherrypy.engine.test_success = True
     cherrypy.engine.start_with_callback(_run_test_suite_thread,
                                         args=(moduleNames, conf))
+    cherrypy.engine.block()
     if cherrypy.engine.test_success:
         return 0
     else:
@@ -180,24 +181,21 @@ def _run_test_suite_thread(moduleNames, conf):
         teardown = getattr(m, "teardown_server", None)
         if teardown:
             teardown()
-    thread.interrupt_main()
+    cherrypy.engine.stop()
 
 def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
     if conf is None:
         conf = {'server.socket_host': '127.0.0.1'}
     setConfig(conf)
-    try:
-        cherrypy.server.quickstart()
-        cherrypy.engine.start_with_callback(_test_main_thread)
-    except KeyboardInterrupt:
-        cherrypy.server.stop()
-        cherrypy.engine.stop()
+    cherrypy.server.quickstart()
+    cherrypy.engine.start_with_callback(_test_main_thread)
+    cherrypy.engine.block()
 
 def _test_main_thread():
     try:
         webtest.WebCase.PORT = cherrypy.server.socket_port
         webtest.main()
     finally:
-        thread.interrupt_main()
+        cherrypy.engine.stop()
 

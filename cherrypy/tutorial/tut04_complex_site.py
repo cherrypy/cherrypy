@@ -90,4 +90,5 @@ if __name__ == '__main__':
     cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
     cherrypy.server.quickstart()
     cherrypy.engine.start()
+    cherrypy.engine.block()
 

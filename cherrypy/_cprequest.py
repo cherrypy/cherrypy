@@ -393,7 +393,7 @@ class Request(object):
            "request": request_namespace,
            "response": response_namespace,
            "error_page": error_page_namespace,
-           # "tools": See _cptools.Toolbox
+           "tools": cherrypy.tools,
            })
     
     def __init__(self, local_host, remote_host, scheme="http",
@@ -549,6 +549,7 @@ class Request(object):
                     self.hooks.run('before_handler')
                     if self.handler:
                         cherrypy.response.body = self.handler()
+                    
                     self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
                 except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:

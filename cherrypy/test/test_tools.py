@@ -207,7 +207,8 @@ def setup_server():
             'tools.gzip.priority': 10,
         },
     }
-    cherrypy.tree.mount(root, config=conf)
+    app = cherrypy.tree.mount(root, config=conf)
+    app.request_class.namespaces['myauth'] = myauthtools
 
 
 #                             Client-side code                             #

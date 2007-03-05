@@ -2,11 +2,14 @@
 
 import os
 import cherrypy
-from cherrypy import _cpconfig, _cplogging, _cpwsgi, tools
+from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
 
 
 class Application(object):
     """A CherryPy Application.
+    
+    Servers and gateways should not instantiate Request objects directly.
+    Instead, they should ask an Application object for a request object.
     
     An instance of this class may also be used as a WSGI callable
     (WSGI application object) for itself.
@@ -28,12 +31,16 @@ class Application(object):
     of {key: value} pairs."""
     
     namespaces = _cpconfig.NamespaceSet()
+    toolboxes = {'tools': cherrypy.tools}
     
     log = None
     log__doc = """A LogManager instance. See _cplogging."""
     
     wsgiapp = None
     wsgiapp__doc = """A CPWSGIApp instance. See _cpwsgi."""
+    
+    request_class = _cprequest.Request
+    response_class = _cprequest.Response
     
     def __init__(self, root, script_name=""):
         self.log = _cplogging.LogManager(id(self), cherrypy.log.logger_root)
@@ -69,6 +76,34 @@ class Application(object):
         
         # Handle namespaces specified in config.
         self.namespaces(self.config.get("/", {}))
+    
+    def get_serving(self, local, remote, scheme, sproto):
+        """Create and return a Request and Response object."""
+        req = self.request_class(local, remote, scheme, sproto)
+        req.app = self
+        
+        for name, toolbox in self.toolboxes.iteritems():
+            req.namespaces[name] = toolbox
+        
+        resp = self.response_class()
+        cherrypy.serving.load(req, resp)
+        cherrypy.engine.publish('CherryPy Timeout Monitor', 'acquire()')
+        cherrypy.engine.publish('acquire_thread')
+        
+        return req, resp
+    
+    def release_serving(self):
+        """Release the current serving (request and response)."""
+        req = cherrypy.serving.request
+        
+        cherrypy.engine.publish('CherryPy Timeout Monitor', 'release()')
+        
+        try:
+            req.close()
+        except:
+            cherrypy.log(traceback=True)
+        
+        cherrypy.serving.clear()
     
     def __call__(self, environ, start_response):
         return self.wsgiapp(environ, start_response)

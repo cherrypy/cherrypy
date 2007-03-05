@@ -1,5 +1,7 @@
 import os
 import sys
+import time
+starttime = time.time()
 
 import cherrypy
 
@@ -10,13 +12,20 @@ class Root:
         return "Hello World"
     index.exposed = True
     
+    def mtimes(self):
+        return repr(cherrypy.engine.publish("Autoreloader", "mtimes"))
+    mtimes.exposed = True
+    
     def pid(self):
         return str(os.getpid())
     pid.exposed = True
     
+    def start(self):
+        return repr(starttime)
+    start.exposed = True
+    
     def stop(self):
         cherrypy.engine.stop()
-        cherrypy.server.stop()
     stop.exposed = True
 
 
@@ -37,7 +46,6 @@ if __name__ == '__main__':
     # and then immediately call getPage without getting 503.
     cherrypy.config.update(conf)
     cherrypy.tree.mount(Root(), config={'global': conf})
-    cherrypy.engine.start(blocking=False)
+    cherrypy.engine.start()
     cherrypy.server.quickstart()
     cherrypy.engine.block()
- 

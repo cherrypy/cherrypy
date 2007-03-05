@@ -93,6 +93,7 @@ class Server(object):
                              "Try server.quickstart instead.")
         for httpserver in self.httpservers:
             self._start_http(httpserver)
+        cherrypy.engine.subscribe('stop', self.stop)
     
     def _start_http(self, httpserver):
         """Start the given httpserver in a new thread."""
@@ -120,19 +121,18 @@ class Server(object):
         """HTTP servers MUST be started in new threads, so that the
         main thread persists to receive KeyboardInterrupt's. If an
         exception is raised in the httpserver's thread then it's
-        trapped here, and the httpserver(s) and engine are shut down.
+        trapped here, and the engine (and therefore our httpservers)
+        are shut down.
         """
         try:
             httpserver.start()
         except KeyboardInterrupt, exc:
             cherrypy.log("<Ctrl-C> hit: shutting down HTTP servers", "SERVER")
             self.interrupt = exc
-            self.stop()
             cherrypy.engine.stop()
         except SystemExit, exc:
             cherrypy.log("SystemExit raised: shutting down HTTP servers", "SERVER")
             self.interrupt = exc
-            self.stop()
             cherrypy.engine.stop()
             raise
     
@@ -154,7 +154,10 @@ class Server(object):
             
             # Wait for port to be occupied
             if isinstance(bind_addr, tuple):
-                wait_for_occupied_port(*bind_addr)
+                host, port = bind_addr
+                if not host or host == '0.0.0.0':
+                    host = socket.gethostname()
+                wait_for_occupied_port(host, port)
     
     def stop(self):
         """Stop all HTTP servers."""
@@ -181,7 +184,7 @@ class Server(object):
             return self.socket_file
         
         host = self.socket_host
-        if not host:
+        if not host or host == '0.0.0.0':
             # The empty string signifies INADDR_ANY. Look up the host name,
             # which should be the safest thing to spit out in a URL.
             host = socket.gethostname()

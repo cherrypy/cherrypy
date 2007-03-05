@@ -86,7 +86,7 @@ config, and only when you use cherrypy.config.update.
 
 You can define your own namespaces to be called at the Global, Application,
 or Request level, by adding a named handler to cherrypy.config.namespaces,
-app.namespaces, or cherrypy.engine.request_class.namespaces. The name can
+app.namespaces, or app.request_class.namespaces. The name can
 be any string, and the handler must be either a callable or a (Python 2.5
 style) context manager.
 """
@@ -143,11 +143,10 @@ def merge(base, other):
     """Merge one app config (from a dict, file, or filename) into another.
     
     If the given config is a filename, it will be appended to
-    cherrypy.engine.reload_files and monitored for changes.
+    the list of files to monitor for "autoreload" changes.
     """
     if isinstance(other, basestring):
-        if other not in cherrypy.engine.reload_files:
-            cherrypy.engine.reload_files.append(other)
+        cherrypy.engine.publish('Autoreloader', 'add()', other)
     
     # Load other into base
     for section, value_map in as_dict(other).iteritems():
@@ -239,7 +238,6 @@ class Config(dict):
     
     namespaces = NamespaceSet(
         **{"server": lambda k, v: setattr(cherrypy.server, k, v),
-           "engine": lambda k, v: setattr(cherrypy.engine, k, v),
            "log": lambda k, v: setattr(cherrypy.log, k, v),
            "checker": lambda k, v: setattr(cherrypy.checker, k, v),
            })
@@ -256,8 +254,7 @@ class Config(dict):
         """Update self from a dict, file or filename."""
         if isinstance(config, basestring):
             # Filename
-            if config not in cherrypy.engine.reload_files:
-                cherrypy.engine.reload_files.append(config)
+            cherrypy.engine.publish('Autoreloader', 'add()', config)
             config = _Parser().dict_from_file(config)
         elif hasattr(config, 'read'):
             # Open file object
@@ -286,6 +283,30 @@ class Config(dict):
         dict.__setitem__(self, k, v)
         self.namespaces({k: v})
 
+
+# Backward compatibility handler for the "engine" namespace.
+def _engine_namespace_handler(k, v):
+    engine = cherrypy.engine
+    if k == 'autoreload_on':
+        if v:
+            engine.autoreload.attach()
+        else:
+            engine.autoreload.detach()
+    elif k == 'autoreload_frequency':
+        engine.publish('Autoreloader', 'frequency', v)
+    elif k == 'autoreload_match':
+        engine.publish('Autoreloader', 'match', v)
+    elif k == 'reload_files':
+        engine.publish('Autoreloader', 'files', v)
+    elif k == 'deadlock_poll_freq':
+        engine.publish('CherryPy Timeout Monitor', 'frequency', v)
+    elif k == 'reexec_retry':
+        engine.publish('reexec', 'retry', v)
+    elif k == 'SIGHUP':
+        engine.listeners['SIGHUP'] = set([v])
+    elif k == 'SIGTERM':
+        engine.listeners['SIGTERM'] = set([v])
+Config.namespaces["engine"] = _engine_namespace_handler
 
 
 class _Parser(ConfigParser.ConfigParser):

@@ -60,7 +60,6 @@ def setup_server():
                 # 'value' is a type (like int or str).
                 return value(handler())
             cherrypy.request.handler = wrapper
-    cherrypy.engine.request_class.namespaces['raw'] = raw_namespace
     
     class Raw:
         
@@ -80,7 +79,9 @@ filename: os.path.join(os.getcwd(), "hello.py")
     root = Root()
     root.foo = Foo()
     root.raw = Raw()
-    cherrypy.tree.mount(root, config=ioconf)
+    app = cherrypy.tree.mount(root, config=ioconf)
+    app.request_class.namespaces['raw'] = raw_namespace
+    
     cherrypy.tree.mount(Another(), "/another")
     cherrypy.config.update({'environment': 'test_suite'})
     

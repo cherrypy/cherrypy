@@ -57,7 +57,7 @@ These API's are described in the CherryPy specification:
 http://www.cherrypy.org/wiki/CherryPySpec
 """
 
-__version__ = "3.0.1"
+__version__ = "3.1alpha"
 
 from urlparse import urljoin as _urljoin
 
@@ -76,7 +76,8 @@ class _AttributeDocstrings(type):
         a docstring for that attribute; the attribute docstring will be
         popped from the class dict and folded into the class docstring.
         
-        The naming convention for attribute docstrings is: <attrname> + "__doc".
+        The naming convention for attribute docstrings is:
+            <attrname> + "__doc".
         For example:
         
             class Thing(object):
@@ -157,14 +158,13 @@ from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
 
 from cherrypy import _cpdispatch as dispatch
-from cherrypy import _cprequest
-from cherrypy.lib import http as _http
-from cherrypy import _cpengine
-engine = _cpengine.Engine()
 
 from cherrypy import _cptools
 tools = _cptools.default_toolbox
 Tool = _cptools.Tool
+
+from cherrypy import _cprequest
+from cherrypy.lib import http as _http
 
 from cherrypy import _cptree
 tree = _cptree.Tree()
@@ -173,13 +173,51 @@ from cherrypy import _cpwsgi as wsgi
 from cherrypy import _cpserver
 server = _cpserver.Server()
 
+from cherrypy import pywebd
+engine = pywebd.engine
+
+# Timeout monitor
+class _TimeoutMonitor(pywebd.plugins.Monitor):
+    
+    def __init__(self, engine, channel=None):
+        self.servings = []
+        pywebd.plugins.Monitor.__init__(self, engine, self.run, channel)
+    
+    def acquire(self):
+        self.servings.append((serving.request, serving.response))
+    
+    def release(self):
+        try:
+            self.servings.remove((serving.request, serving.response))
+        except ValueError:
+            pass
+    
+    def run(self):
+        """Check timeout on all responses. (Internal)"""
+        for req, resp in self.servings:
+            resp.check_timeout()
+_timeout_monitor = _TimeoutMonitor(engine, "CherryPy Timeout Monitor")
+
+# Add an autoreloader (the 'engine' config namespace may detach/attach it).
+engine.autoreload = pywebd.plugins.Autoreloader(engine)
+pywebd.plugins.Reexec(engine)
+_thread_manager = pywebd.plugins.ThreadManager(engine)
+
+
 def quickstart(root, script_name="", config=None):
-    """Mount the given root, start the engine and builtin server, then block."""
+    """Mount the given root, start the builtin server (and engine), then block."""
     if config:
         _global_conf_alias.update(config)
     tree.mount(root, script_name, config)
-    server.quickstart()
+    
+    engine.subscribe('start', server.quickstart)
+    
+    s = pywebd.plugins.SignalHandler(engine)
+    s.set_handler('SIGTERM', engine.stop)
+    s.set_handler('SIGHUP', engine.restart)
+    
     engine.start()
+    engine.block()
 
 
 try:
@@ -323,7 +361,8 @@ log.screen = True
 log.error_file = ''
 # Using an access file makes CP about 10% slower. Leave off by default.
 log.access_file = ''
-
+engine.log = lambda msg, traceback=False: log.error(msg, 'ENGINE',
+                                                    traceback=traceback)
 
 #                       Helper functions for CP apps                       #
 
@@ -453,3 +492,4 @@ config = _global_conf_alias = _cpconfig.Config()
 
 from cherrypy import _cpchecker
 checker = _cpchecker.Checker()
+engine.subscribe('start', checker)
