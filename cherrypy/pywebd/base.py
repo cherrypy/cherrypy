@@ -155,9 +155,3 @@ def format_exc(exc=None):
         return ""
     return "".join(traceback.format_exception(*exc))
 
-
-try:
-    from cherrypy.pywebd import win32
-    engine = win32.Engine()
-except ImportError:
-    engine = Engine()
