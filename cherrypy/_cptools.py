@@ -58,6 +58,11 @@ class Tool(object):
         # in co_code attribute.
         except NotImplementedError:
             pass
+        # IronPython 1B1 may raise that error in some cases
+        # but if we trap it here it doesn't prevent CP from
+        # working
+        except IndexError:
+            pass
     
     def _merged_args(self, d=None):
         tm = cherrypy.request.toolmaps[self.namespace]
