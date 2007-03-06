@@ -50,17 +50,14 @@ class SubscribedObject(object):
 
 class SignalHandler(object):
     
-    def __init__(self, engine, signals=None):
-        if signals is None:
-            signals = [k for k in dir(_signal)
-                       if k.startswith('SIG') and not k.startswith('SIG_')]
-        if not isinstance(signals, dict):
-            signals = dict([(getattr(_signal, k), k) for k in signals])
-        self.signals = signals
+    def __init__(self, engine):
+        # Make a map from signal numbers to names
+        self.signals = {}
+        for k in dir(_signal):
+            if k.startswith('SIG') and not k.startswith('SIG_'):
+                self.signals[getattr(_signal, k)] = k
         
         self.engine = engine
-        for num in self.signals:
-            self.set_handler(num)
     
     def set_handler(self, signal, callback=None):
         """Register a handler for the given signal (number or name).
