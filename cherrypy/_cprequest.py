@@ -597,7 +597,7 @@ class Request(object):
             if self.protocol >= (1, 1):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
-        host = dict.__getitem__(headers, 'Host')
+        host = dict.get(headers, 'Host')
         if not host:
             host = self.local.name or self.local.ip
         self.base = "%s://%s" % (self.scheme, host)
