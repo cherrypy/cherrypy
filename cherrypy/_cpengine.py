@@ -287,7 +287,7 @@ class Engine(object):
             self.reexec()
     
     if hasattr(signal, "SIGTERM"):
-        def SIGTERM(signum=None, frame=None):
+        def SIGTERM(self, signum=None, frame=None):
             cherrypy.server.stop()
             self.stop()
     
