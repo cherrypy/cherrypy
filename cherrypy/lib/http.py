@@ -22,9 +22,7 @@ response_codes[503] = ('Service Unavailable',
 import cgi
 from email.Header import Header, decode_header
 import re
-import rfc822
-HTTPDate = rfc822.formatdate
-import time
+from rfc822 import formatdate as HTTPDate
 
 
 def urljoin(*atoms):
