@@ -39,7 +39,7 @@ cp_license="BSD"
 packages=[
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
-    "cherrypy.wsgiserver", "cherrypy.pywebd",
+    "cherrypy.wsgiserver", "cherrypy.restsrv",
 ]
 download_url="http://download.cherrypy.org/cherrypy/3.0.1/"
 data_files=[
