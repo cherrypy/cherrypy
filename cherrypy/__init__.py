@@ -173,15 +173,15 @@ from cherrypy import _cpwsgi as wsgi
 from cherrypy import _cpserver
 server = _cpserver.Server()
 
-from cherrypy import pywebd
-engine = pywebd.engine
+from cherrypy import restsrv
+engine = restsrv.engine
 
 # Timeout monitor
-class _TimeoutMonitor(pywebd.plugins.Monitor):
+class _TimeoutMonitor(restsrv.plugins.Monitor):
     
     def __init__(self, engine, channel=None):
         self.servings = []
-        pywebd.plugins.Monitor.__init__(self, engine, self.run, channel)
+        restsrv.plugins.Monitor.__init__(self, engine, self.run, channel)
     
     def acquire(self):
         self.servings.append((serving.request, serving.response))
@@ -199,9 +199,9 @@ class _TimeoutMonitor(pywebd.plugins.Monitor):
 _timeout_monitor = _TimeoutMonitor(engine, "CherryPy Timeout Monitor")
 
 # Add an autoreloader (the 'engine' config namespace may detach/attach it).
-engine.autoreload = pywebd.plugins.Autoreloader(engine)
-pywebd.plugins.Reexec(engine)
-_thread_manager = pywebd.plugins.ThreadManager(engine)
+engine.autoreload = restsrv.plugins.Autoreloader(engine)
+restsrv.plugins.Reexec(engine)
+_thread_manager = restsrv.plugins.ThreadManager(engine)
 
 
 def quickstart(root, script_name="", config=None):
@@ -212,7 +212,7 @@ def quickstart(root, script_name="", config=None):
     
     engine.subscribe('start', server.quickstart)
     
-    s = pywebd.plugins.SignalHandler(engine)
+    s = restsrv.plugins.SignalHandler(engine)
     s.set_handler('SIGTERM', engine.stop)
     s.set_handler('SIGHUP', engine.restart)
     

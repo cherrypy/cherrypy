@@ -1,4 +1,4 @@
-"""Plugins for a pywebd Engine."""
+"""Plugins for a restsrv Engine."""
 
 import os
 import re
@@ -295,7 +295,7 @@ class Monitor(SubscribedObject):
     def start(self):
         if self.frequency > 0:
             self.thread = PerpetualTimer(self.frequency, self.callback)
-            self.thread.setName("pywebd %s" % self.channel)
+            self.thread.setName("restsrv %s" % self.channel)
             self.thread.start()
     
     def stop(self):

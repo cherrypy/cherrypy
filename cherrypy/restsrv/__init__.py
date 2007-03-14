@@ -39,11 +39,11 @@ Frameworks share a single Engine object by publishing messages and
 registering (subscribing) listeners.
 """
 
-from cherrypy.pywebd import plugins
+from cherrypy.restsrv import plugins
 
 try:
-    from cherrypy.pywebd import win32
+    from cherrypy.restsrv import win32
     engine = win32.Engine()
 except ImportError:
-    from cherrypy.pywebd import base
+    from cherrypy.restsrv import base
     engine = base.Engine()

@@ -113,9 +113,9 @@ class Session(object):
         if not cls.clean_thread:
             # clean_up is in instancemethod and not a classmethod,
             # so tool config can be accessed inside the method.
-            from cherrypy import pywebd
-            t = pywebd.plugins.Monitor(cherrypy.engine, self.clean_up,
-                                       "CP Session Cleanup")
+            from cherrypy import restsrv
+            t = restsrv.plugins.Monitor(cherrypy.engine, self.clean_up,
+                                        "CP Session Cleanup")
             t.frequency = self.clean_freq
             cls.clean_thread = t
             t.start()

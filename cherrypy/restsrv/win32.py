@@ -1,4 +1,4 @@
-"""Windows service for pywebd. Requires pywin32."""
+"""Windows service for restsrv. Requires pywin32."""
 
 import win32serviceutil
 import win32service
@@ -6,7 +6,7 @@ import win32event
 import win32con
 import win32api
 
-from cherrypy.pywebd import base
+from cherrypy.restsrv import base
 
 
 class Engine(base.Engine):
@@ -51,21 +51,21 @@ class PyWebService(win32serviceutil.ServiceFramework):
     _svc_name_ = "Python Web Service"
     _svc_display_name_ = "Python Web Service"
     _svc_deps_ = None        # sequence of service names on which this depends
-    _exe_name_ = "pywebd"
+    _exe_name_ = "restsrv"
     _exe_args_ = None        # Default to no arguments
     
     # Only exists on Windows 2000 or later, ignored on windows NT
     _svc_description_ = "Python Web Service"
     
     def SvcDoRun(self):
-        from cherrypy import pywebd
-        pywebd.engine.start()
-        pywebd.engine.block()
+        from cherrypy import restsrv
+        restsrv.engine.start()
+        restsrv.engine.block()
     
     def SvcStop(self):
-        from cherrypy import pywebd
+        from cherrypy import restsrv
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        pywebd.engine.stop()
+        restsrv.engine.stop()
 
 if __name__ == '__main__':
     win32serviceutil.HandleCommandLine(PyWebService)

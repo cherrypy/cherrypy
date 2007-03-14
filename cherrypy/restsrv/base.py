@@ -1,4 +1,4 @@
-"""Base Engine class for pywebd."""
+"""Base Engine class for restsrv."""
 
 try:
     set
