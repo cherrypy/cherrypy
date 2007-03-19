@@ -388,6 +388,10 @@ class Request(object):
     If True, Request.run will not trap any errors (except HTTPRedirect and
     HTTPError, which are more properly called 'exceptions', not errors)."""
     
+    closed = False
+    closed__doc = """
+    True once the close method has been called, False otherwise."""
+    
     namespaces = _cpconfig.NamespaceSet(
         **{"hooks": hooks_namespace,
            "request": request_namespace,
@@ -418,7 +422,7 @@ class Request(object):
         self.namespaces = self.namespaces.copy()
     
     def close(self):
-        """Run cleanup code and remove self from globals. (Core)"""
+        """Run cleanup code. (Core)"""
         if not self.closed:
             self.closed = True
             self.hooks.run('on_end_request')
