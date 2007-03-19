@@ -1,6 +1,8 @@
 """Command-line front end for the restsrv daemon."""
 
 import getopt
+import os
+localDir = os.path.dirname(__file__)
 import signal
 import sys
 
@@ -27,7 +29,7 @@ def help():
     
     print """
 Usage:
-    webctl [options] command
+    restctl [options] command
     
 
 Options:
@@ -60,14 +62,15 @@ def run(args=sys.argv[1:]):
 
 
 def spawn_child(opts):
-    args = []
-    for k, v in opts:
+    restd_path = os.path.join(localDir, 'restd.py')
+    args = [sys.executable, restd_path]
+    for k, v in opts.iteritems():
         if v:
             args.append('%s=%s' % (k, v))
         else:
             args.append(k)
     
-    pid = os.spawnpv(os.P_NOWAIT, 'restd', ' '.join(args))
+    pid = os.spawnv(os.P_NOWAIT, sys.executable, args)
 
 
 def signal_child(signame):
@@ -84,8 +87,4 @@ def signal_child(signame):
 
 
 if __name__ == '__main__':
-    try:
-        run()
-    except:
-        help()
-        sys.exit(2)
+    run()

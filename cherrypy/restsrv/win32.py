@@ -1,10 +1,11 @@
 """Windows service for restsrv. Requires pywin32."""
 
-import win32serviceutil
-import win32service
-import win32event
-import win32con
+import thread
 import win32api
+import win32con
+import win32event
+import win32service
+import win32serviceutil
 
 from cherrypy.restsrv import base
 
@@ -28,8 +29,7 @@ class Engine(base.Engine):
     def block(self, interval=1):
         """Block forever (wait for stop(), KeyboardInterrupt or SystemExit)."""
         try:
-            win32event.WaitForSingleObject(self.stop_event,
-                                           win32event.INFINITE)
+            win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
         except SystemExit:
             self.log('SystemExit raised: shutting down engine')
             self.stop()

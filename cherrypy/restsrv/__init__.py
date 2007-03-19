@@ -44,6 +44,8 @@ from cherrypy.restsrv import plugins
 try:
     from cherrypy.restsrv import win32
     engine = win32.Engine()
+    del win32
 except ImportError:
     from cherrypy.restsrv import base
     engine = base.Engine()
+    del base

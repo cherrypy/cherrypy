@@ -40,7 +40,7 @@ Options:
 """ % (options.host, options.port)
 
 
-def importer(name)
+def importer(name):
     # Wrap the given 'name' in a closure.
     def _import():
         __import__(name, {}, {}, [''])
@@ -51,13 +51,13 @@ def importer(name)
 def start(opts):
     if '--project' in opts:
         # delay import until after daemonize has a chance to run
-        engine.subscribe('start', importer(opts['--project']))
+        restsrv.engine.subscribe('start', importer(opts['--project']))
     
     if 'win' not in sys.platform:
-        engine.subscribe('start', restsrv.plugins.daemonize)
+        restsrv.engine.subscribe('start', restsrv.plugins.daemonize)
     
-    engine.start()
-    engine.block()
+    restsrv.engine.start()
+    restsrv.engine.block()
 
 
 if __name__ == '__main__':
