@@ -53,9 +53,9 @@ class SignalHandler(object):
     def __init__(self, engine):
         # Make a map from signal numbers to names
         self.signals = {}
-        for k in dir(_signal):
+        for k, v in vars(_signal):
             if k.startswith('SIG') and not k.startswith('SIG_'):
-                self.signals[getattr(_signal, k)] = k
+                self.signals[v] = k
         
         self.engine = engine
     
@@ -76,11 +76,12 @@ class SignalHandler(object):
         
         # Should we do something with existing signal handlers?
         # cur = _signal.getsignal(signum)
-        _signal.signal(signum, self.handle_signal)
+        _signal.signal(signum, self._handle_signal)
         if callback is not None:
             self.engine.subscribe(signame, callback)
     
-    def handle_signal(self, signum=None, frame=None):
+    def _handle_signal(self, signum=None, frame=None):
+        """Python signal handler (self.set_handler registers it for you)."""
         self.engine.publish(self.signals[signum])
 
 
