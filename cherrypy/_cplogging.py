@@ -28,6 +28,17 @@ class LogManager(object):
             self.access_log = logging.getLogger("%s.access.%s" % (logger_root, appid))
         self.error_log.setLevel(logging.DEBUG)
         self.access_log.setLevel(logging.INFO)
+        cherrypy.engine.subscribe('graceful', self.reopen_files)
+    
+    def reopen_files(self):
+        """Close and reopen all file handlers."""
+        for log in (self.error_log, self.access_log):
+            for h in log.handlers:
+                if isinstance(h, logging.FileHandler):
+                    h.acquire()
+                    h.stream.close()
+                    h.stream = open(h.baseFilename, h.mode)
+                    h.release()
     
     def error(self, msg='', context='', severity=logging.DEBUG, traceback=False):
         """Write to the error log.
