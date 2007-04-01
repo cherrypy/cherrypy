@@ -15,6 +15,13 @@ def setup_server():
         _cp_config = {'foo': 'this',
                       'bar': 'that'}
         
+        def __init__(self):
+            cherrypy.config.namespaces['db'] = self.db_namespace
+        
+        def db_namespace(self, k, v):
+            if k == "scheme":
+                self.db = v
+        
         # @cherrypy.expose(alias=('global_', 'xyz'))
         def index(self, key):
             return cherrypy.request.config.get(key, "None")
@@ -23,6 +30,10 @@ def setup_server():
         def repr(self, key):
             return repr(cherrypy.request.config.get(key, None))
         repr.exposed = True
+        
+        def dbscheme(self):
+            return self.db
+        dbscheme.exposed = True
     
     class Foo:
         
@@ -83,10 +94,10 @@ filename: os.path.join(os.getcwd(), "hello.py")
     app.request_class.namespaces['raw'] = raw_namespace
     
     cherrypy.tree.mount(Another(), "/another")
-    cherrypy.config.update({'environment': 'test_suite'})
-    
-    # Shortcut syntax--should get put in the "global" bucket
-    cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove'})
+    cherrypy.config.update({'environment': 'test_suite',
+                            'luxuryyacht': 'throatwobblermangrove',
+                            'db.scheme': r"sqlite///memory",
+                            })
 
 
 #                             Client-side code                             #
@@ -145,6 +156,9 @@ class ConfigTests(helper.CPWebCase):
     def testCustomNamespaces(self):
         self.getPage("/raw/incr?num=12")
         self.assertBody("13")
+        
+        self.getPage("/dbscheme")
+        self.assertBody(r"sqlite///memory")
 
 
 if __name__ == '__main__':
