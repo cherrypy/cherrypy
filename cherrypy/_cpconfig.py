@@ -267,8 +267,9 @@ class Config(dict):
                 cherrypy.checker.global_config_contained_paths = True
             config = config["global"]
         
-        if 'environment' in config:
-            env = environments[config['environment']]
+        which_env = config.get('environment')
+        if which_env:
+            env = environments[which_env]
             for k in env:
                 if k not in config:
                     config[k] = env[k]
