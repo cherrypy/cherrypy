@@ -53,7 +53,7 @@ class SignalHandler(object):
     def __init__(self, engine):
         # Make a map from signal numbers to names
         self.signals = {}
-        for k, v in vars(_signal):
+        for k, v in vars(_signal).items():
             if k.startswith('SIG') and not k.startswith('SIG_'):
                 self.signals[v] = k
         
