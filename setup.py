@@ -41,7 +41,7 @@ packages=[
     "cherrypy.tutorial", "cherrypy.test",
     "cherrypy.wsgiserver", "cherrypy.restsrv",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.0.1/"
+download_url="http://download.cherrypy.org/cherrypy/3.1alpha/"
 data_files=[
     ('cherrypy/tutorial',
         [
@@ -51,8 +51,13 @@ data_files=[
             'cherrypy/tutorial/custom_error.html',
         ]
     ),
-    ('cherrypy', ['cherrypy/favicon.ico',]),
-    ('cherrypy/test', ['cherrypy/test/style.css',]),
+    ('cherrypy', ['cherrypy/favicon.ico',
+                  'cherrypy/LICENSE.txt',
+                  ]),
+    ('cherrypy/restsrv', ['cherrypy/restsrv/restctl.sh',]),
+    ('cherrypy/test', ['cherrypy/test/style.css',
+                       'cherrypy/test/test.pem',
+                       ]),
     ('cherrypy/test/static', ['cherrypy/test/static/index.html',
                               'cherrypy/test/static/dirback.jpg',]),
 ]
@@ -66,11 +71,11 @@ def main():
         s = "I'm sorry, but %s %s requires Python %s or later."
         print s % (name, version, required_python_version)
         sys.exit(1)
-    # set default location for "data_files" to platform specific "site-packages"
-    # location
+    # set default location for "data_files" to
+    # platform specific "site-packages" location
     for scheme in INSTALL_SCHEMES.values():
         scheme['data'] = scheme['purelib']
-
+    
     dist = setup(
         name=name,
         version=version,
