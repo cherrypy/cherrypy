@@ -447,6 +447,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     kwargs['clean_freq'] = clean_freq
     cherrypy._serving.session = sess = globals()[storage_class](id, **kwargs)
     
+    # Create cherrypy.session which will proxy to cherrypy._serving.session
     if not hasattr(cherrypy, "session"):
         cherrypy.session = cherrypy._ThreadLocalProxy('session')
         if hasattr(sess, "setup"):

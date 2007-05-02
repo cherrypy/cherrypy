@@ -377,11 +377,12 @@ class ThreadManager(object):
     This will register/unregister the current thread and publish to
     'start_thread' and 'stop_thread' listeners in the engine as needed.
     
-    If threads are created and destroyed by code you do not control (e.g.,
-    Apache), then, at the beginning of every HTTP request, publish to
-    'acquire_thread' only. You should not publish to 'release_thread' in
-    this case, since you do not know whether the thread will be re-used or
-    not. The engine will call 'stop_thread' listeners for you when it stops.
+    If threads are created and destroyed by code you do not control
+    (e.g., Apache), then, at the beginning of every HTTP request,
+    publish to 'acquire_thread' only. You should not publish to
+    'release_thread' in this case, since you do not know whether
+    the thread will be re-used or not. The engine will call
+    'stop_thread' listeners for you when it stops.
     """
     
     def __init__(self, engine):
@@ -393,7 +394,11 @@ class ThreadManager(object):
         engine.subscribe('graceful', self.release_all)
     
     def acquire(self):
-        """Run 'start_thread' listeners for the current thread. Idempotent."""
+        """Run 'start_thread' listeners for the current thread.
+        
+        If the current thread has already been seen, any 'start_thread'
+        listeners will not be run again.
+        """
         thread_ident = threading._get_ident()
         if thread_ident not in self.threads:
             # We can't just use _get_ident as the thread ID

@@ -21,6 +21,12 @@ def setup_server():
     cherrypy.config.update({'environment': 'production',
                             'log.screen': False,
                             'show_tracebacks': False})
+    
+    # Turn off the builtin signal handlers, which can interact
+    # in strange ways with the Apache process.
+    cherrypy.engine.SIGHUP = None
+    cherrypy.engine.SIGTERM = None
+    
     # You must start the engine in a non-blocking fashion
     # so that mod_python can proceed
     cherrypy.engine.start()
@@ -46,7 +52,7 @@ LoadModule python_module /usr/lib/apache2/modules/mod_python.so
 </Location> 
 # End
 
-The actual path to your mod_python.so is dependant of your
+The actual path to your mod_python.so is dependent on your
 environment. In this case we suppose a global mod_python
 installation on a Linux distribution such as Ubuntu.
 
