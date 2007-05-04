@@ -346,20 +346,36 @@ def XMLRPCDispatcher(next_dispatcher=Dispatcher()):
 def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domains):
     """Select a different handler based on the Host header.
     
-    Useful when running multiple sites within one CP server.
+    This can be useful when running multiple sites within one CP server.
+    It allows several domains to point to different parts of a single
+    website structure. For example:
     
-    From http://groups.google.com/group/cherrypy-users/browse_thread/thread/f393540fe278e54d:
+        http://www.mydom1.com  ->  root
+        http://www.mydom2.com  ->  root/mydom2/
+        http://www.mydom2.com:443  ->  root/secure
     
-    For various reasons I need several domains to point to different parts of a
-    single website structure as well as to their own "homepage"   EG
+    can be accomplished via:
     
-    http://www.mydom1.com  ->  root
-    http://www.mydom2.com  ->  root/mydom2/
-    http://www.mydom3.com  ->  root/mydom3/
-    http://www.mydom4.com  ->  under construction page
+        request.dispatch = cherrypy.dispatch.VirtualHost(
+            **{'www.mydom2.com': '/mydom2',
+               'www.mydom2.com:443': '/secure',
+              })
     
-    but also to have  http://www.mydom1.com/mydom2/  etc to be valid pages in
-    their own right.
+    next_dispatcher: the next dispatcher object in the dispatch chain.
+        The VirtualHost dispatcher adds a prefix to the URL and calls
+        another dispatcher. Defaults to cherrypy.dispatch.Dispatcher().
+    
+    use_x_forwarded_host: if True (the default), any "X-Forwarded-Host"
+        request header will be used instead of the "Host" header. This
+        is commonly added by HTTP servers (such as Apache) when proxying.
+    
+    **domains: a dict of {host header value: virtual prefix} pairs.
+        The incoming "Host" request header is looked up in this dict,
+        and, if a match is found, the corresponding "virtual prefix"
+        value will be prepended to the URL path before calling the
+        next dispatcher. Note that you often need separate entries
+        for "mysite.com" and "www.mysite.com". In addition, "Host"
+        headers may contain the port number.
     """
     from cherrypy.lib import http
     def vhost_dispatch(path_info):
