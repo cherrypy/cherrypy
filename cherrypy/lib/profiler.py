@@ -77,13 +77,13 @@ class Profiler(object):
         if not os.path.exists(path):
             os.makedirs(path)
     
-    def run(self, func, *args):
-        """run(func, *args). Run func, dumping profile data into self.path."""
+    def run(self, func, *args, **params):
+        """run(func, *args, **params). Dumps profile data into self.path."""
         global _count
         c = _count = _count + 1
         path = os.path.join(self.path, "cp_%04d.prof" % c)
         prof = profile.Profile()
-        result = prof.runcall(func, *args)
+        result = prof.runcall(func, *args, **params)
         prof.dump_stats(path)
         return result
     
