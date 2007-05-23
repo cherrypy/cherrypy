@@ -128,7 +128,17 @@ class Tree(object):
         self.apps = {}
     
     def mount(self, root, script_name="", config=None):
-        """Mount a new app from a root object, script_name, and config."""
+        """Mount a new app from a root object, script_name, and config.
+        
+        root: an instance of a "controller class" (a collection of page
+            handler methods) which represents the root of the application.
+        script_name: a string containing the "mount point" of the application.
+            This should start with a slash, and be the path portion of the
+            URL at which to mount the given root. For example, if root.index()
+            will handle requests to "http://host.domain.tld:8080/dept/app1/",
+            then the script_name argument would be "/dept/app1".
+        config: a file or dict containing application config.
+        """
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
         script_name = script_name.rstrip("/")
         

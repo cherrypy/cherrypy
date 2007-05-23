@@ -354,8 +354,9 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domai
         http://www.mydom2.com  ->  root/mydom2/
         http://www.mydom2.com:443  ->  root/secure
     
-    can be accomplished via:
+    can be accomplished via the following config:
     
+        [/]
         request.dispatch = cherrypy.dispatch.VirtualHost(
             **{'www.mydom2.com': '/mydom2',
                'www.mydom2.com:443': '/secure',
