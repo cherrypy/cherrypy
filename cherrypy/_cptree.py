@@ -56,7 +56,7 @@ class Application(object):
     
     script_name__doc = """
     The URI "mount point" for this app; for example, if script_name is
-    "/my/cool/app", then the URL "http://my.domain.tld/my/cool/app/page1"
+    "/my/cool/app", then the URL "http://www.example.com/my/cool/app/page1"
     might be handled by a "page1" method on the root object. If script_name
     is explicitly set to None, then the script_name will be provided
     for each call from request.wsgi_environ['SCRIPT_NAME']."""
@@ -135,7 +135,7 @@ class Tree(object):
         script_name: a string containing the "mount point" of the application.
             This should start with a slash, and be the path portion of the
             URL at which to mount the given root. For example, if root.index()
-            will handle requests to "http://host.domain.tld:8080/dept/app1/",
+            will handle requests to "http://www.example.com:8080/dept/app1/",
             then the script_name argument would be "/dept/app1".
         config: a file or dict containing application config.
         """

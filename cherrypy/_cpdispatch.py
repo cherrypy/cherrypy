@@ -350,16 +350,16 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domai
     It allows several domains to point to different parts of a single
     website structure. For example:
     
-        http://www.mydom1.com  ->  root
-        http://www.mydom2.com  ->  root/mydom2/
-        http://www.mydom2.com:443  ->  root/secure
+        http://www.domain.example  ->  root
+        http://www.domain2.example  ->  root/domain2/
+        http://www.domain2.example:443  ->  root/secure
     
     can be accomplished via the following config:
     
         [/]
         request.dispatch = cherrypy.dispatch.VirtualHost(
-            **{'www.mydom2.com': '/mydom2',
-               'www.mydom2.com:443': '/secure',
+            **{'www.domain2.example': '/domain2',
+               'www.domain2.example:443': '/secure',
               })
     
     next_dispatcher: the next dispatcher object in the dispatch chain.
@@ -375,7 +375,7 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domai
         and, if a match is found, the corresponding "virtual prefix"
         value will be prepended to the URL path before calling the
         next dispatcher. Note that you often need separate entries
-        for "mysite.com" and "www.mysite.com". In addition, "Host"
+        for "example.com" and "www.example.com". In addition, "Host"
         headers may contain the port number.
     """
     from cherrypy.lib import http

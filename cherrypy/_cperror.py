@@ -56,7 +56,7 @@ class HTTPRedirect(CherryPyException):
         abs_urls = []
         for url in urls:
             # Note that urljoin will "do the right thing" whether url is:
-            #  1. a complete URL with host (e.g. "http://www.dummy.biz/test")
+            #  1. a complete URL with host (e.g. "http://www.example.com/test")
             #  2. a URL relative to root (e.g. "/dummy")
             #  3. a URL relative to the current path
             # Note that any query string in cherrypy.request is discarded.
@@ -214,7 +214,8 @@ class TimeoutError(CherryPyException):
     pass
 
 
-_HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+_HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>

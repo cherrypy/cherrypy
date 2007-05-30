@@ -56,7 +56,7 @@ def setup_server():
         reject = accept
     
     conf = {'/referer': {'tools.referer.on': True,
-                         'tools.referer.pattern': r'http://[^/]*thisdomain\.com',
+                         'tools.referer.pattern': r'http://[^/]*example\.com',
                          },
             '/referer/reject': {'tools.referer.accept': False,
                                 'tools.referer.accept_missing': True,
@@ -92,7 +92,7 @@ class RefererTest(helper.CPWebCase):
         self.assertErrorPage(403, 'Forbidden Referer header.')
         
         self.getPage('/referer/accept',
-                     headers=[('Referer', 'http://www.thisdomain.com/')])
+                     headers=[('Referer', 'http://www.example.com/')])
         self.assertStatus(200)
         self.assertBody('Accepted!')
         
@@ -102,7 +102,7 @@ class RefererTest(helper.CPWebCase):
         self.assertBody('Accepted!')
         
         self.getPage('/referer/reject',
-                     headers=[('Referer', 'http://www.thisdomain.com/')])
+                     headers=[('Referer', 'http://www.example.com/')])
         self.assertErrorPage(403, 'Forbidden Referer header.')
 
 
