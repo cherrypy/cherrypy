@@ -674,6 +674,8 @@ class WorkerThread(threading.Thread):
     (one for each running WorkerThread).
     """
     
+    conn = None
+    
     def __init__(self, server):
         self.ready = False
         self.server = server
@@ -687,10 +689,12 @@ class WorkerThread(threading.Thread):
                 if conn is _SHUTDOWNREQUEST:
                     return
                 
+                self.conn = conn
                 try:
                     conn.communicate()
                 finally:
                     conn.close()
+                    self.conn = None
         except (KeyboardInterrupt, SystemExit), exc:
             self.server.interrupt = exc
 
@@ -766,7 +770,7 @@ class CherryPyWSGIServer(object):
     ssl_private_key = None
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-                 max=-1, request_queue_size=5, timeout=10):
+                 max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
         self.requests = Queue.Queue(max)
         
         if callable(wsgi_app):
@@ -790,6 +794,7 @@ class CherryPyWSGIServer(object):
         self._workerThreads = []
         
         self.timeout = timeout
+        self.shutdown_timeout = shutdown_timeout
     
     def start(self):
         """Run the server forever."""
@@ -871,7 +876,8 @@ class CherryPyWSGIServer(object):
                 while self.interrupt is True:
                     # Wait for self.stop() to complete. See _set_interrupt.
                     time.sleep(0.1)
-                raise self.interrupt
+                if self.interrupt:
+                    raise self.interrupt
     
     def bind(self, family, type, proto=0):
         """Create (or recreate) the actual socket object."""
@@ -968,12 +974,31 @@ class CherryPyWSGIServer(object):
         
         # Don't join currentThread (when stop is called inside a request).
         current = threading.currentThread()
+        timeout = self.shutdown_timeout
         while self._workerThreads:
             worker = self._workerThreads.pop()
             if worker is not current and worker.isAlive:
                 try:
-                    worker.join()
-                except AssertionError:
+                    if timeout is None or timeout < 0:
+                        worker.join()
+                    else:
+                        worker.join(timeout)
+                        if worker.isAlive:
+                            # We exhausted the timeout.
+                            # Forcibly shut down the socket.
+                            c = worker.conn
+                            if c and not c.rfile.closed:
+                                if SSL and isinstance(c.socket, SSL.ConnectionType):
+                                    # pyOpenSSL.socket.shutdown takes no args
+                                    c.socket.shutdown()
+                                else:
+                                    c.socket.shutdown(socket.SHUT_RD)
+                            worker.join()
+                except (AssertionError,
+                        # Ignore repeated Ctrl-C.
+                        # See http://www.cherrypy.org/ticket/691.
+                        KeyboardInterrupt), exc1:
+                    print exc1
                     pass
     
     def populate_ssl_environ(self):

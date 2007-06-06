@@ -43,7 +43,6 @@ cherrypy.tree.mount(Root())
 cherrypy.config.update({
     'environment': 'test_suite',
     'engine.deadlock_poll_freq': 0.1,
-    'response.timeout': 0.2,
     })
 
 class Dependency:
@@ -214,6 +213,8 @@ class ServerStateTests(helper.CPWebCase):
             self.assertEqual(len(db_connection.threads), 0)
     
     def test_3_Deadlocks(self):
+        cherrypy.config.update({'response.timeout': 0.2})
+        
         cherrypy.engine.start()
         cherrypy.server.start()
         try:
