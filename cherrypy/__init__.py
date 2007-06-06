@@ -345,6 +345,7 @@ try:
     import pydoc
     pydoc._builtin_resolve = pydoc.resolve
     pydoc.resolve = _cherrypy_pydoc_resolve
+    del pydoc
 except ImportError:
     pass
 
