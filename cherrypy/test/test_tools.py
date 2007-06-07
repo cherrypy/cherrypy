@@ -129,7 +129,7 @@ def setup_server():
         and adds an instance of the subclass as an attribute of root.
         """
         def __init__(cls, name, bases, dct):
-            type.__init__(name, bases, dct)
+            type.__init__(cls, name, bases, dct)
             for value in dct.itervalues():
                 if isinstance(value, types.FunctionType):
                     value.exposed = True
