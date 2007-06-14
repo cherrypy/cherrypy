@@ -277,7 +277,7 @@ class XMLRPCController(object):
     # would be if someone actually disabled the default_toolbox. Meh.
     _cp_config = {'tools.xmlrpc.on': True}
     
-    def __call__(self, *vpath, **params):
+    def default(self, *vpath, **params):
         rpcparams, rpcmethod = _xmlrpc.process_body()
         
         subhandler = self
@@ -299,9 +299,7 @@ class XMLRPCController(object):
                         conf.get('encoding', 'utf-8'),
                         conf.get('allow_none', 0))
         return cherrypy.response.body
-    __call__.exposed = True
-    
-    index = __call__
+    default.exposed = True
 
 
 class WSGIAppTool(HandlerTool):

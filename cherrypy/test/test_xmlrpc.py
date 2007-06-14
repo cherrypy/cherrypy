@@ -16,6 +16,10 @@ def setup_server():
 
     class XmlRpc(_cptools.XMLRPCController):
         
+        def foo(self):
+            return "Hello world!"
+        foo.exposed = True
+        
         def return_single_item_list(self):
             return [42]
         return_single_item_list.exposed = True
@@ -93,7 +97,13 @@ class XmlRpcTest(helper.CPWebCase):
     def testXmlRpc(self):
         
         # load the appropriate xmlrpc proxy
-        if getattr(self.harness, "scheme", "http") == "https":
+        scheme = "http"
+        try:
+            scheme = self.harness.scheme
+        except AttributeError:
+            pass
+        
+        if scheme == "https":
             url = 'https://%s:%s/xmlrpc/' % (self.HOST, self.PORT)
             proxy = xmlrpclib.ServerProxy(url, transport=HTTPSTransport())
         else:
@@ -101,6 +111,9 @@ class XmlRpcTest(helper.CPWebCase):
             proxy = xmlrpclib.ServerProxy(url)
         
         # begin the tests ...
+        self.getPage("/xmlrpc/foo")
+        self.assertBody("Hello world!")
+        
         self.assertEqual(proxy.return_single_item_list(), [42])
         self.assertNotEqual(proxy.return_single_item_list(), 'one bazillion')
         self.assertEqual(proxy.return_string(), "here is a string")
