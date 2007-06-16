@@ -130,23 +130,30 @@ class HeaderElement(object):
 q_separator = re.compile(r'; *q *=')
 
 class AcceptElement(HeaderElement):
-    """An element (with parameters) from an Accept-* header's element list."""
+    """An element (with parameters) from an Accept* header's element list.
+    
+    AcceptElement objects are comparable; the more-preferred object will be
+    "less than" the less-preferred object. They are also therefore sortable;
+    if you sort a list of AcceptElement objects, they will be listed in
+    priority order; the most preferred value will be first. Yes, it should
+    have been the other way around, but it's too late to fix now.
+    """
     
     def from_str(cls, elementstr):
         qvalue = None
         # The first "q" parameter (if any) separates the initial
-        # parameter(s) (if any) from the accept-params.
+        # media-range parameter(s) (if any) from the accept-params.
         atoms = q_separator.split(elementstr, 1)
-        initial_value = atoms.pop(0).strip()
+        media_range = atoms.pop(0).strip()
         if atoms:
             # The qvalue for an Accept header can have extensions. The other
             # headers cannot, but it's easier to parse them as if they did.
             qvalue = HeaderElement.from_str(atoms[0].strip())
         
-        ival, params = cls.parse(initial_value)
+        media_type, params = cls.parse(media_range)
         if qvalue is not None:
             params["q"] = qvalue
-        return cls(ival, params)
+        return cls(media_type, params)
     from_str = classmethod(from_str)
     
     def qvalue(self):
@@ -157,8 +164,6 @@ class AcceptElement(HeaderElement):
     qvalue = property(qvalue, doc="The qvalue, or priority, of this value.")
     
     def __cmp__(self, other):
-        # If you sort a list of AcceptElement objects, they will be listed
-        # in priority order; the most preferred value will be first.
         diff = cmp(other.qvalue, self.qvalue)
         if diff == 0:
             diff = cmp(str(other), str(self))
