@@ -337,9 +337,18 @@ class SessionAuthTool(HandlerTool):
 class CachingTool(Tool):
     """Caching Tool for CherryPy."""
     
-    def _wrapper(self, **kwargs):
+    def _wrapper(self, invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
         request = cherrypy.request
-        if _caching.get(**kwargs):
+        
+        if not hasattr(cherrypy, "_cache"):
+            # Make a process-wide Cache object.
+            cherrypy._cache = kwargs.pop("cache_class", _caching.MemoryCache)()
+            
+            # Take all remaining kwargs and set them on the Cache object.
+            for k, v in kwargs.iteritems():
+                setattr(cherrypy._cache, k, v)
+        
+        if _caching.get(invalid_methods=invalid_methods):
             request.handler = None
         else:
             if request.cacheable:
