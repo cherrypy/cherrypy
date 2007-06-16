@@ -109,9 +109,7 @@ class StaticTest(helper.CPWebCase):
         self.assertBody('Hello, world\r\n')
         # The same page should be returned even if redirected.
         self.getPage("/docroot")
-        self.assertStatus('200 OK')
-        self.assertHeader('Content-Type', 'text/html')
-        self.assertBody('Hello, world\r\n')
+        self.assertStatus((302, 303))
         
         # Check that we get an error if no .file or .dir
         self.getPage("/error/thing.html")

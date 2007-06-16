@@ -179,8 +179,10 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     handled = _attempt(filename, content_types)
     if not handled:
         # Check for an index file if a folder was requested.
-        if index and filename[-1] in (r"\/"):
+        if index:
             handled = _attempt(os.path.join(filename, index), content_types)
+            if handled:
+                cherrypy.request.is_index = filename[-1] in (r"\/")
     return handled
 
 def staticfile(filename, root=None, match="", content_types=None):
