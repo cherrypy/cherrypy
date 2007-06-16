@@ -164,9 +164,8 @@ class WebCase(TestCase):
         
         if on:
             host = self.HOST
-            if not host:
-                # The empty string signifies INADDR_ANY,
-                # which should respond on localhost.
+            if host == '0.0.0.0':
+                # INADDR_ANY, which should respond on localhost.
                 host = "127.0.0.1"
             self.HTTP_CONN = cls(host, self.PORT)
             # Automatically re-connect?
@@ -186,12 +185,7 @@ class WebCase(TestCase):
         ServerError.on = False
         
         self.url = url
-        host = self.HOST
-        if not host:
-            # The empty string signifies INADDR_ANY,
-            # which should respond on localhost.
-            host = "127.0.0.1"
-        result = openURL(url, headers, method, body, host, self.PORT,
+        result = openURL(url, headers, method, body, self.HOST, self.PORT,
                          self.HTTP_CONN, protocol or self.PROTOCOL)
         self.status, self.headers, self.body = result
         
@@ -475,6 +469,9 @@ def openURL(url, headers=None, method="GET", body=None,
             if hasattr(http_conn, "host"):
                 conn = http_conn
             else:
+                if host == '0.0.0.0':
+                    # INADDR_ANY, which should respond on localhost.
+                    host = "127.0.0.1"
                 conn = http_conn(host, port)
             
             conn._http_vsn_str = protocol

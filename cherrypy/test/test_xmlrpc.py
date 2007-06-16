@@ -88,6 +88,14 @@ class HTTPSTransport(xmlrpclib.SafeTransport):
                                           headers)
         
         self.verbose = verbose
+        
+        # Here's where we differ from the superclass. It says:
+        # try:
+        #     sock = h._conn.sock
+        # except AttributeError:
+        #     sock = None
+        # return self._parse_response(h.getfile(), sock)
+        
         return self.parse_response(h.getfile())
 
 
@@ -103,11 +111,16 @@ class XmlRpcTest(helper.CPWebCase):
         except AttributeError:
             pass
         
+        host = self.HOST
+        if host == '0.0.0.0':
+            # INADDR_ANY, which should respond on localhost.
+            host = "127.0.0.1"
+        
         if scheme == "https":
-            url = 'https://%s:%s/xmlrpc/' % (self.HOST, self.PORT)
+            url = 'https://%s:%s/xmlrpc/' % (host, self.PORT)
             proxy = xmlrpclib.ServerProxy(url, transport=HTTPSTransport())
         else:
-            url = 'http://%s:%s/xmlrpc/' % (self.HOST, self.PORT)
+            url = 'http://%s:%s/xmlrpc/' % (host, self.PORT)
             proxy = xmlrpclib.ServerProxy(url)
         
         # begin the tests ...

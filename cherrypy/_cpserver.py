@@ -28,9 +28,10 @@ class Server(object):
     ports, or protocols, etc.), you can manually register each one and then
     control them all through this object:
     
-        s1 = MyWSGIServer(host='', port=80)
+        s1 = MyWSGIServer(host='0.0.0.0', port=80)
         s2 = another.HTTPServer(host='localhost', SSL=True)
-        cherrypy.server.httpservers = {s1: ('', 80), s2: ('localhost', 443)}
+        cherrypy.server.httpservers = {s1: ('0.0.0.0', 80),
+                                       s2: ('localhost', 443)}
         # Note we do not use quickstart when we define our own httpservers
         cherrypy.server.start()
     
@@ -40,7 +41,24 @@ class Server(object):
     """
     
     socket_port = 8080
-    socket_host = ''
+    
+    _socket_host = 'localhost'
+    def _get_socket_host(self):
+        return self._socket_host
+    def _set_socket_host(self, value):
+        if not value:
+            raise ValueError("Host values of '' or None are not allowed. "
+                             "Use '0.0.0.0' instead to listen on all active "
+                             "interfaces (INADDR_ANY).")
+        self._socket_host = value
+    socket_host = property(_get_socket_host, _set_socket_host,
+        doc="""The hostname or IP address on which to listen for connections.
+        
+        Valid host values include any IPv4 or IPv6 address, any valid
+        hostname, 'localhost' as a synonym for '127.0.0.1', and '0.0.0.0'
+        as a special entry meaning "all active interfaces" (INADDR_ANY).
+        The empty string or None are not allowed.""")
+    
     socket_file = ''
     socket_queue_size = 5
     socket_timeout = 10
@@ -105,8 +123,6 @@ class Server(object):
         if isinstance(bind_addr, tuple):
             wait_for_free_port(*bind_addr)
             host, port = bind_addr
-            if not host:
-                host = '0.0.0.0'
             on_what = "%s://%s:%s/" % (scheme, host, port)
         else:
             on_what = "socket file: %s" % bind_addr
@@ -156,8 +172,9 @@ class Server(object):
             # Wait for port to be occupied
             if isinstance(bind_addr, tuple):
                 host, port = bind_addr
-                if not host or host == '0.0.0.0':
-                    host = socket.gethostname()
+                if host == '0.0.0.0':
+                    # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
+                    host = 'localhost'
                 wait_for_occupied_port(host, port)
     
     def stop(self):
@@ -185,8 +202,8 @@ class Server(object):
             return self.socket_file
         
         host = self.socket_host
-        if not host or host == '0.0.0.0':
-            # The empty string signifies INADDR_ANY. Look up the host name,
+        if host == '0.0.0.0':
+            # 0.0.0.0 is INADDR_ANY. Look up the host name,
             # which should be the safest thing to spit out in a URL.
             host = socket.gethostname()
         
@@ -207,8 +224,9 @@ class Server(object):
 def check_port(host, port):
     """Raise an error if the given port is not free on the given host."""
     if not host:
-        # The empty string signifies INADDR_ANY,
-        # which should respond on localhost.
+        raise ValueError("Host values of '' or None are not allowed.")
+    if host == '0.0.0.0':
+        # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
         host = 'localhost'
     port = int(port)
     
@@ -236,8 +254,9 @@ def check_port(host, port):
 def wait_for_free_port(host, port):
     """Wait for the specified port to become free (drop requests)."""
     if not host:
-        # The empty string signifies INADDR_ANY,
-        # which should respond on localhost.
+        raise ValueError("Host values of '' or None are not allowed.")
+    if host == '0.0.0.0':
+        # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
         host = 'localhost'
     
     for trial in xrange(50):
@@ -256,8 +275,9 @@ def wait_for_free_port(host, port):
 def wait_for_occupied_port(host, port):
     """Wait for the specified port to become active (receive requests)."""
     if not host:
-        # The empty string signifies INADDR_ANY,
-        # which should respond on localhost.
+        raise ValueError("Host values of '' or None are not allowed.")
+    if host == '0.0.0.0':
+        # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
         host = 'localhost'
     
     for trial in xrange(50):

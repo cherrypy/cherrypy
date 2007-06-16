@@ -729,8 +729,13 @@ class SSLConnection:
 class CherryPyWSGIServer(object):
     """An HTTP server for WSGI.
     
-    bind_addr: a (host, port) tuple if TCP sockets are desired;
-        for UNIX sockets, supply the filename as a string.
+    bind_addr: The interface on which to listen for connections.
+        For TCP sockets, a (host, port) tuple. Valid host values include:
+        any IPv4 or IPv6 address, any valid hostname, 'localhost' as a
+        synonym for '127.0.0.1', and '0.0.0.0' as a special entry meaning
+        "all active interfaces" (INADDR_ANY). The empty string or None
+        are not allowed.
+        For UNIX sockets, supply the filename as a string.
     wsgi_app: the WSGI 'application callable'; multiple WSGI applications
         may be passed as (script_name, callable) pairs.
     numthreads: the number of worker threads to create (default 10).
@@ -760,6 +765,7 @@ class CherryPyWSGIServer(object):
     """
     
     protocol = "HTTP/1.1"
+    _bind_addr = "localhost"
     version = "CherryPy/3.1alpha"
     ready = False
     _interrupt = None
@@ -796,6 +802,35 @@ class CherryPyWSGIServer(object):
         self.timeout = timeout
         self.shutdown_timeout = shutdown_timeout
     
+    def _get_bind_addr(self):
+        return self._bind_addr
+    def _set_bind_addr(self, value):
+        if isinstance(value, tuple) and value[0] in ('', None):
+            # Despite the socket module docs, using '' does not
+            # allow AI_PASSIVE to work. Passing None instead
+            # returns '0.0.0.0' like we want. In other words:
+            #     host    AI_PASSIVE     result
+            #      ''         Y         192.168.x.y
+            #      ''         N         192.168.x.y
+            #     None        Y         0.0.0.0
+            #     None        N         127.0.0.1
+            # But since you can get the same effect with an explicit
+            # '0.0.0.0', we deny both the empty string and None as values.
+            raise ValueError("Host values of '' or None are not allowed. "
+                             "Use '0.0.0.0' instead to listen on all active "
+                             "interfaces (INADDR_ANY).")
+        self._bind_addr = value
+    bind_addr = property(_get_bind_addr, _set_bind_addr,
+        doc="""The interface on which to listen for connections.
+        
+        For TCP sockets, a (host, port) tuple. Valid host values include:
+        any IPv4 or IPv6 address, any valid hostname, 'localhost' as a
+        synonym for '127.0.0.1', and '0.0.0.0' as a special entry meaning
+        "all active interfaces" (INADDR_ANY). The empty string or None
+        are not allowed.
+        
+        For UNIX sockets, supply the filename as a string.""")
+    
     def start(self):
         """Run the server forever."""
         # We don't have to trap KeyboardInterrupt or SystemExit here,
@@ -821,21 +856,9 @@ class CherryPyWSGIServer(object):
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6 addresses)
             host, port = self.bind_addr
-            flags = 0
-            if host == '':
-                # Despite the socket module docs, using '' does not
-                # allow AI_PASSIVE to work. Passing None instead
-                # returns '0.0.0.0' like we want. In other words:
-                #     host    AI_PASSIVE     result
-                #      ''         Y         192.168.x.y
-                #      ''         N         192.168.x.y
-                #     None        Y         0.0.0.0
-                #     None        N         127.0.0.1
-                host = None
-                flags = socket.AI_PASSIVE
             try:
                 info = socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                          socket.SOCK_STREAM, 0, flags)
+                                          socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
             except socket.gaierror:
                 # Probably a DNS issue. Assume IPv4.
                 info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", self.bind_addr)]
@@ -948,7 +971,7 @@ class CherryPyWSGIServer(object):
                     # Note that we're explicitly NOT using AI_PASSIVE,
                     # here, because we want an actual IP to touch.
                     # localhost won't work if we've bound to a public IP,
-                    # but it would if we bound to INADDR_ANY via host = ''.
+                    # but it will if we bound to '0.0.0.0' (INADDR_ANY).
                     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
                                                   socket.SOCK_STREAM):
                         af, socktype, proto, canonname, sa = res

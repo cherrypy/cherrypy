@@ -483,9 +483,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         data = open(log_access_file, "rb").readlines()
         
         host = self.HOST
-        if not host:
-            # The empty string signifies INADDR_ANY,
-            # which should respond on localhost.
+        if host == '0.0.0.0':
+            # INADDR_ANY, which should respond on localhost.
             host = "127.0.0.1"
         intro = '%s - - [' % host
         
