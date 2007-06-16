@@ -167,6 +167,9 @@ class WebCase(TestCase):
             if host == '0.0.0.0':
                 # INADDR_ANY, which should respond on localhost.
                 host = "127.0.0.1"
+            elif host == '::':
+                # IN6ADDR_ANY, which should respond on localhost.
+                host = "::1"
             self.HTTP_CONN = cls(host, self.PORT)
             # Automatically re-connect?
             self.HTTP_CONN.auto_open = auto_open
@@ -472,6 +475,9 @@ def openURL(url, headers=None, method="GET", body=None,
                 if host == '0.0.0.0':
                     # INADDR_ANY, which should respond on localhost.
                     host = "127.0.0.1"
+                elif host == '::':
+                    # IN6ADDR_ANY, which should respond on localhost.
+                    host = "::1"
                 conn = http_conn(host, port)
             
             conn._http_vsn_str = protocol

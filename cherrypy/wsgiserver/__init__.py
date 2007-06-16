@@ -730,11 +730,13 @@ class CherryPyWSGIServer(object):
     """An HTTP server for WSGI.
     
     bind_addr: The interface on which to listen for connections.
-        For TCP sockets, a (host, port) tuple. Valid host values include:
-        any IPv4 or IPv6 address, any valid hostname, 'localhost' as a
-        synonym for '127.0.0.1', and '0.0.0.0' as a special entry meaning
-        "all active interfaces" (INADDR_ANY). The empty string or None
-        are not allowed.
+        For TCP sockets, a (host, port) tuple. Host values may be any IPv4
+        or IPv6 address, or any valid hostname. The string 'localhost' is a
+        synonym for '127.0.0.1' (or '::1', if your hosts file prefers IPv6).
+        The string '0.0.0.0' is a special IPv4 entry meaning "any active
+        interface" (INADDR_ANY), and '::' is the similar IN6ADDR_ANY for
+        IPv6. The empty string or None are not allowed.
+        
         For UNIX sockets, supply the filename as a string.
     wsgi_app: the WSGI 'application callable'; multiple WSGI applications
         may be passed as (script_name, callable) pairs.
@@ -817,17 +819,18 @@ class CherryPyWSGIServer(object):
             # But since you can get the same effect with an explicit
             # '0.0.0.0', we deny both the empty string and None as values.
             raise ValueError("Host values of '' or None are not allowed. "
-                             "Use '0.0.0.0' instead to listen on all active "
-                             "interfaces (INADDR_ANY).")
+                             "Use '0.0.0.0' (IPv4) or '::' (IPv6) instead "
+                             "to listen on all active interfaces.")
         self._bind_addr = value
     bind_addr = property(_get_bind_addr, _set_bind_addr,
         doc="""The interface on which to listen for connections.
         
-        For TCP sockets, a (host, port) tuple. Valid host values include:
-        any IPv4 or IPv6 address, any valid hostname, 'localhost' as a
-        synonym for '127.0.0.1', and '0.0.0.0' as a special entry meaning
-        "all active interfaces" (INADDR_ANY). The empty string or None
-        are not allowed.
+        For TCP sockets, a (host, port) tuple. Host values may be any IPv4
+        or IPv6 address, or any valid hostname. The string 'localhost' is a
+        synonym for '127.0.0.1' (or '::1', if your hosts file prefers IPv6).
+        The string '0.0.0.0' is a special IPv4 entry meaning "any active
+        interface" (INADDR_ANY), and '::' is the similar IN6ADDR_ANY for
+        IPv6. The empty string or None are not allowed.
         
         For UNIX sockets, supply the filename as a string.""")
     

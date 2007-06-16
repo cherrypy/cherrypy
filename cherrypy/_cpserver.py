@@ -8,6 +8,17 @@ import cherrypy
 from cherrypy.lib import attributes
 
 
+def client_host(server_host):
+    """Return the host on which a client can connect to the given listener."""
+    if server_host == '0.0.0.0':
+        # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
+        return '127.0.0.1'
+    if server_host == '::':
+        # :: is IN6ADDR_ANY, which should answer on localhost.
+        return '::1'
+    return server_host
+
+
 class Server(object):
     """Manager for a set of HTTP servers.
     
@@ -54,10 +65,12 @@ class Server(object):
     socket_host = property(_get_socket_host, _set_socket_host,
         doc="""The hostname or IP address on which to listen for connections.
         
-        Valid host values include any IPv4 or IPv6 address, any valid
-        hostname, 'localhost' as a synonym for '127.0.0.1', and '0.0.0.0'
-        as a special entry meaning "all active interfaces" (INADDR_ANY).
-        The empty string or None are not allowed.""")
+        Host values may be any IPv4 or IPv6 address, or any valid hostname.
+        The string 'localhost' is a synonym for '127.0.0.1' (or '::1', if
+        your hosts file prefers IPv6). The string '0.0.0.0' is a special
+        IPv4 entry meaning "any active interface" (INADDR_ANY), and '::'
+        is the similar IN6ADDR_ANY for IPv6. The empty string or None are
+        not allowed.""")
     
     socket_file = ''
     socket_queue_size = 5
@@ -172,9 +185,6 @@ class Server(object):
             # Wait for port to be occupied
             if isinstance(bind_addr, tuple):
                 host, port = bind_addr
-                if host == '0.0.0.0':
-                    # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
-                    host = 'localhost'
                 wait_for_occupied_port(host, port)
     
     def stop(self):
@@ -202,9 +212,10 @@ class Server(object):
             return self.socket_file
         
         host = self.socket_host
-        if host == '0.0.0.0':
-            # 0.0.0.0 is INADDR_ANY. Look up the host name,
-            # which should be the safest thing to spit out in a URL.
+        if host in ('0.0.0.0', '::'):
+            # 0.0.0.0 is INADDR_ANY and :: is IN6ADDR_ANY.
+            # Look up the host name, which should be the
+            # safest thing to spit out in a URL.
             host = socket.gethostname()
         
         port = self.socket_port
@@ -225,9 +236,7 @@ def check_port(host, port):
     """Raise an error if the given port is not free on the given host."""
     if not host:
         raise ValueError("Host values of '' or None are not allowed.")
-    if host == '0.0.0.0':
-        # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
-        host = 'localhost'
+    host = client_host(host)
     port = int(port)
     
     # AF_INET or AF_INET6 socket
@@ -255,9 +264,6 @@ def wait_for_free_port(host, port):
     """Wait for the specified port to become free (drop requests)."""
     if not host:
         raise ValueError("Host values of '' or None are not allowed.")
-    if host == '0.0.0.0':
-        # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
-        host = 'localhost'
     
     for trial in xrange(50):
         try:
@@ -276,9 +282,6 @@ def wait_for_occupied_port(host, port):
     """Wait for the specified port to become active (receive requests)."""
     if not host:
         raise ValueError("Host values of '' or None are not allowed.")
-    if host == '0.0.0.0':
-        # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
-        host = 'localhost'
     
     for trial in xrange(50):
         try:

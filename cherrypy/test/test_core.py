@@ -486,6 +486,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         if host == '0.0.0.0':
             # INADDR_ANY, which should respond on localhost.
             host = "127.0.0.1"
+        if host == '::':
+            # IN6ADDR_ANY, which should respond on localhost.
+            host = "::1"
         intro = '%s - - [' % host
         
         if not data[0].startswith(intro):
