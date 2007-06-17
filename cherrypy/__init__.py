@@ -339,13 +339,12 @@ def _cherrypy_pydoc_resolve(thing, forceload=0):
     """Given an object or a path to an object, get the object and its name."""
     if isinstance(thing, _ThreadLocalProxy):
         thing = getattr(serving, thing.__attrname__)
-    return pydoc._builtin_resolve(thing, forceload)
+    return _pydoc._builtin_resolve(thing, forceload)
 
 try:
-    import pydoc
-    pydoc._builtin_resolve = pydoc.resolve
-    pydoc.resolve = _cherrypy_pydoc_resolve
-    del pydoc
+    import pydoc as _pydoc
+    _pydoc._builtin_resolve = _pydoc.resolve
+    _pydoc.resolve = _cherrypy_pydoc_resolve
 except ImportError:
     pass
 
