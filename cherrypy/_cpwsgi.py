@@ -125,7 +125,7 @@ class IRResponse(object):
                 qs = env.get('QUERY_STRING', '')
                 if qs:
                     qs = "?" + qs
-                self.redirections.append(sn + path + qs)
+                self.redirections.append(_http.urljoin(sn, path) + qs)
         
         # Munge environment and try again.
         env['REQUEST_METHOD'] = "GET"
@@ -167,7 +167,8 @@ class AppResponse(object):
             self.request = self.get_request(environ)
             
             meth = environ['REQUEST_METHOD']
-            path = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
+            path = _http.urljoin(environ.get('SCRIPT_NAME', ''),
+                                 environ.get('PATH_INFO', ''))
             qs = environ.get('QUERY_STRING', '')
             rproto = environ.get('SERVER_PROTOCOL')
             headers = self.translate_headers(environ)

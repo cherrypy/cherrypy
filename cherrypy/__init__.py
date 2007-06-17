@@ -214,6 +214,9 @@ def quickstart(root, script_name="", config=None):
         at which to mount the given root. For example, if root.index() will
         handle requests to "http://www.example.com:8080/dept/app1/", then
         the script_name argument would be "/dept/app1".
+        
+        It MUST NOT end in a slash. If the script_name refers to the root
+        of the URI, it MUST be an empty string (not "/").
     config: a file or dict containing application config. If this contains
         a [global] section, those entries will be used in the global
         (site-wide) config.

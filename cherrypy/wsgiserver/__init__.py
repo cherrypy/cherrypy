@@ -11,8 +11,8 @@ Simplest example on how to use this module directly
         start_response(status, response_headers)
         return ['Hello world!\n']
     
-    # Here we set our application to the script_name '/' 
-    wsgi_apps = [('/', my_crazy_app)]
+    # Here we set our application to the script_name ''
+    wsgi_apps = [('', my_crazy_app)]
     
     server = wsgiserver.CherryPyWSGIServer(('localhost', 8070), wsgi_apps,
                                            server_name='localhost')
@@ -739,7 +739,9 @@ class CherryPyWSGIServer(object):
         
         For UNIX sockets, supply the filename as a string.
     wsgi_app: the WSGI 'application callable'; multiple WSGI applications
-        may be passed as (script_name, callable) pairs.
+        may be passed as (script_name, callable) pairs. Script_name values
+        should not end in a slash. If the script_name refers to the root
+        of the URI, it should be an empty string (not "/").
     numthreads: the number of worker threads to create (default 10).
     server_name: the string to set for WSGI's SERVER_NAME environ entry.
         Defaults to socket.gethostname().
@@ -789,7 +791,8 @@ class CherryPyWSGIServer(object):
             # We've been handed a list of (mount_point, wsgi_app) tuples,
             # so that the server can call different wsgi_apps, and also
             # correctly set SCRIPT_NAME.
-            self.mount_points = wsgi_app
+            self.mount_points = [(mp.rstrip("/"), app)
+                                 for mp, app in wsgi_app]
         self.mount_points.sort()
         self.mount_points.reverse()
         

@@ -3,6 +3,7 @@
 import os
 import cherrypy
 from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
+from cherrypy.lib import http as _http
 
 
 class Application(object):
@@ -55,17 +56,29 @@ class Application(object):
         self.config = {}
     
     script_name__doc = """
-    The URI "mount point" for this app; for example, if script_name is
-    "/my/cool/app", then the URL "http://www.example.com/my/cool/app/page1"
-    might be handled by a "page1" method on the root object. If script_name
-    is explicitly set to None, then the script_name will be provided
-    for each call from request.wsgi_environ['SCRIPT_NAME']."""
+    The URI "mount point" for this app. A mount point is that portion of
+    the URI which is constant for all URIs that are serviced by this
+    application; it does not include scheme, host, or proxy ("virtual host")
+    portions of the URI.
+    
+    For example, if script_name is "/my/cool/app", then the URL
+    "http://www.example.com/my/cool/app/page1" might be handled by a
+    "page1" method on the root object.
+    
+    The value of script_name MUST NOT end in a slash. If the script_name
+    refers to the root of the URI, it MUST be an empty string (not "/").
+    
+    If script_name is explicitly set to None, then the script_name will be
+    provided for each call from request.wsgi_environ['SCRIPT_NAME'].
+    """
     def _get_script_name(self):
         if self._script_name is None:
             # None signals that the script name should be pulled from WSGI environ.
-            return cherrypy.request.wsgi_environ['SCRIPT_NAME']
+            return cherrypy.request.wsgi_environ['SCRIPT_NAME'].rstrip("/")
         return self._script_name
     def _set_script_name(self, value):
+        if value:
+            value = value.rstrip("/")
         self._script_name = value
     script_name = property(fget=_get_script_name, fset=_set_script_name,
                            doc=script_name__doc)
@@ -137,6 +150,9 @@ class Tree(object):
             URL at which to mount the given root. For example, if root.index()
             will handle requests to "http://www.example.com:8080/dept/app1/",
             then the script_name argument would be "/dept/app1".
+            
+            It MUST NOT end in a slash. If the script_name refers to the
+            root of the URI, it MUST be an empty string (not "/").
         config: a file or dict containing application config.
         """
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
@@ -174,7 +190,8 @@ class Tree(object):
         
         if path is None:
             try:
-                path = cherrypy.request.script_name + cherrypy.request.path_info
+                path = _http.urljoin(cherrypy.request.script_name,
+                                     cherrypy.request.path_info)
             except AttributeError:
                 return None
         
@@ -192,7 +209,8 @@ class Tree(object):
         # If you're calling this, then you're probably setting SCRIPT_NAME
         # to '' (some WSGI servers always set SCRIPT_NAME to '').
         # Try to look up the app using the full path.
-        path = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
+        path = _http.urljoin(environ.get('SCRIPT_NAME', ''),
+                             environ.get('PATH_INFO', ''))
         sn = self.script_name(path or "/")
         if sn is None:
             start_response('404 Not Found', [])

@@ -297,7 +297,11 @@ class Request(object):
     
     script_name = ""
     script_name__doc = """
-    The 'mount point' of the application which is handling this request."""
+    The 'mount point' of the application which is handling this request.
+    
+    This attribute MUST NOT end in a slash. If the script_name refers to
+    the root of the URI, it MUST be an empty string (not "/").
+    """
     
     path_info = "/"
     path_info__doc = """
@@ -484,7 +488,7 @@ class Request(object):
             # path_info should be the path from the
             # app root (script_name) to the handler.
             self.script_name = self.app.script_name
-            self.path_info = pi = path[len(self.script_name.rstrip("/")):]
+            self.path_info = pi = path[len(self.script_name):]
             
             self.respond(pi)
             

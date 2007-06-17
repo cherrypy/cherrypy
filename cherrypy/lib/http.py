@@ -26,6 +26,7 @@ from rfc822 import formatdate as HTTPDate
 
 
 def urljoin(*atoms):
+    """Return the given path *atoms, joined into a single URL."""
     url = "/".join(atoms)
     while "//" in url:
         url = url.replace("//", "/")
