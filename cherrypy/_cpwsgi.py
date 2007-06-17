@@ -8,6 +8,54 @@ from cherrypy import _cperror, wsgiserver
 from cherrypy.lib import http as _http
 
 
+class VirtualHost(object):
+    """Select a different WSGI application based on the Host header.
+    
+    This can be useful when running multiple sites within one CP server.
+    It allows several domains to point to different applications. For example:
+    
+        root = Root()
+        RootApp = cherrypy.Application(root)
+        Domain2App = cherrypy.Application(root)
+        SecureApp = cherrypy.Application(Secure())
+        
+        vhost = cherrypy._cpwsgi.VirtualHost(RootApp,
+            domains={'www.domain2.example': Domain2App,
+                     'www.domain2.example:443': SecureApp,
+                     })
+        
+        cherrypy.tree.graft(vhost)
+    
+    default: required. The default WSGI application.
+    
+    use_x_forwarded_host: if True (the default), any "X-Forwarded-Host"
+        request header will be used instead of the "Host" header. This
+        is commonly added by HTTP servers (such as Apache) when proxying.
+    
+    domains: a dict of {host header value: application} pairs.
+        The incoming "Host" request header is looked up in this dict,
+        and, if a match is found, the corresponding WSGI application
+        will be called instead of the default. Note that you often need
+        separate entries for "example.com" and "www.example.com".
+        In addition, "Host" headers may contain the port number.
+    """
+    
+    def __init__(self, default, domains=None, use_x_forwarded_host=True):
+        self.default = default
+        self.domains = domains or {}
+        self.use_x_forwarded_host = use_x_forwarded_host
+    
+    def __call__(self, environ, start_response):
+        domain = environ.get('HTTP_HOST', '')
+        if self.use_x_forwarded_host:
+            domain = environ.get("HTTP_X_FORWARDED_HOST", domain)
+        
+        nextapp = self.domains.get(domain)
+        if nextapp is None:
+            nextapp = self.default
+        return nextapp(environ, start_response)
+
+
 #                            Internal Redirect                            #
 
 
