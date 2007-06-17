@@ -1,5 +1,10 @@
 """A WSGI application interface (see PEP 333)."""
 
+try:
+    GeneratorExit
+except NameError:
+    GeneratorExit = None
+
 import sys
 import cherrypy
 from cherrypy import _cputil, _cpwsgiserver, _cpwsgiserver3
@@ -9,7 +14,8 @@ from cherrypy.lib import httptools
 def requestLine(environ):
     """Rebuild first line of the request (e.g. "GET /path HTTP/1.0")."""
     
-    resource = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
+    resource = httptools.urljoin(environ.get('SCRIPT_NAME', ''),
+                                 environ.get('PATH_INFO', ''))
     if not (resource == "*" or resource.startswith("/")):
         resource = "/" + resource
     
@@ -67,6 +73,8 @@ class ResponseIter(object):
                 yield chunk
         except (KeyboardInterrupt, SystemExit), ex:
             raise ex
+        except GeneratorExit:
+            raise
         except:
             cherrypy.log(traceback=True)
             s, h, b = _cputil.bareError()
