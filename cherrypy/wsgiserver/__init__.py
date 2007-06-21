@@ -554,7 +554,15 @@ class HTTPConnection(object):
         For UNIX domain sockets, this will be a string.
     server: the HTTP Server for this Connection. Usually, the server
         object possesses a passive (server) socket which spawns multiple,
-        active (client) sockets, one for each connection.
+        active (client) sockets, one for each connection. The server object
+        must possess the following attributes:
+        
+          * server_name: to be placed in the WSGI environ.
+          * bind_addr: either a UNIX socket (str) or a (host, port) tuple.
+          * version: a string, like "CherryPy/3.1alpha"
+          * protocol: an HTTP version string, e.g. "HTTP/1.1"
+          * mount_points: a list of [(script_name, wsgi_app)] pairs
+          * interrupt: usually None.
     
     environ: a WSGI environ template. This will be copied for each request.
     rfile: a fileobject for reading from the socket.
