@@ -35,9 +35,15 @@ class Server(object):
         cherrypy.server.socket_port = 80
         cherrypy.server.quickstart()
     
+    If you want to use an HTTP server other than the default, create it
+    and pass it to quickstart:
+    
+        s = MyCustomWSGIServer(wsgiapp, port=8080)
+        cherrypy.server.quickstart(s)
+    
     But if you need to start more than one HTTP server (to serve on multiple
     ports, or protocols, etc.), you can manually register each one and then
-    control them all through this object:
+    control them all:
     
         s1 = MyWSGIServer(host='0.0.0.0', port=80)
         s2 = another.HTTPServer(host='localhost', SSL=True)
