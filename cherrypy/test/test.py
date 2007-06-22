@@ -365,6 +365,7 @@ def run():
         'test_static',
         'test_tutorials',
         'test_virtualhost',
+        'test_safe_multipart',
         'test_session',
         'test_sessionauthenticate',
 ##        'test_states',
