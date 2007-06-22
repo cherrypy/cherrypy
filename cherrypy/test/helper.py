@@ -146,7 +146,7 @@ def sync_apps(profile=False, validate=False, conquer=False):
     apps.sort()
     apps.reverse()
     for s in cherrypy.server.httpservers:
-        s.mount_points = apps
+        s.wsgi_app.apps = apps
 
 def _run_test_suite_thread(moduleNames, conf):
     for testmod in moduleNames:

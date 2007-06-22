@@ -836,7 +836,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         hnames = [name.title() for name, val in self.headers]
         for key in ['Content-Length', 'Content-Type', 'Date',
                     'Expires', 'Location', 'Server']:
-            self.assertEqual(hnames.count(key), 1)
+            self.assertEqual(hnames.count(key), 1, self.headers)
         
         if cherrypy.server.protocol_version == "HTTP/1.1":
             # Test RFC-2047-encoded request and response header values

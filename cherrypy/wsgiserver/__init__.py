@@ -11,15 +11,20 @@ Simplest example on how to use this module directly
         start_response(status, response_headers)
         return ['Hello world!\n']
     
-    # Here we set our application to the script_name ''
-    wsgi_apps = [('', my_crazy_app)]
+    server = wsgiserver.CherryPyWSGIServer(
+                ('localhost', 8070), my_crazy_app,
+                server_name='localhost')
     
-    server = wsgiserver.CherryPyWSGIServer(('localhost', 8070), wsgi_apps,
-                                           server_name='localhost')
+The CherryPy WSGI server can serve as many WSGI applications 
+as you want in one instance:
     
-    # Want SSL support? Just set these attributes
-    # server.ssl_certificate = <filename>
-    # server.ssl_private_key = <filename>
+    wsgi_apps = [('/', my_crazy_app), ('/blog', my_blog_app)]
+    server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 80), wsgi_apps)
+    
+Want SSL support? Just set these attributes:
+    
+    server.ssl_certificate = <filename>
+    server.ssl_private_key = <filename>
     
     if __name__ == '__main__':
         try:
@@ -31,12 +36,6 @@ This won't call the CherryPy engine (application side) at all, only the
 WSGI server, which is independant from the rest of CherryPy. Don't
 let the name "CherryPyWSGIServer" throw you; the name merely reflects
 its origin, not it's coupling.
-
-The CherryPy WSGI server can serve as many WSGI applications
-as you want in one instance:
-
-    wsgi_apps = [('/', my_crazy_app), ('/blog', my_blog_app)]
-
 """
 
 
@@ -84,13 +83,62 @@ comma_separated_headers = ['ACCEPT', 'ACCEPT-CHARSET', 'ACCEPT-ENCODING',
     'TRAILER', 'TRANSFER-ENCODING', 'UPGRADE', 'VARY', 'VIA', 'WARNING',
     'WWW-AUTHENTICATE']
 
+
+class WSGIPathInfoDispatcher(object):
+    """A WSGI dispatcher for dispatch based on the PATH_INFO.
+    
+    apps: a dict or list of (path_prefix, app) pairs.
+    """
+    
+    def __init__(self, apps):
+        try:
+            apps = apps.items()
+        except AttributeError:
+            pass
+        
+        # Sort the apps by len(path), descending
+        apps.sort()
+        apps.reverse()
+        
+        # The path_prefix strings must start, but not end, with a slash.
+        # Use "" instead of "/".
+        self.apps = [(p.rstrip("/"), a) for p, a in apps]
+    
+    def __call__(self, environ, start_response):
+        path = environ["PATH_INFO"] or "/"
+        for p, app in self.apps:
+            # The apps list should be sorted by length, descending.
+            if path.startswith(p + "/") or path == p:
+                environ = environ.copy()
+                environ["SCRIPT_NAME"] = environ["SCRIPT_NAME"] + p
+                environ["PATH_INFO"] = path[len(p):]
+                return app(environ, start_response)
+        
+        start_response('404 Not Found', [('Content-Type', 'text/plain'),
+                                         ('Content-Length', '0')])
+        return ['']
+
+
 class HTTPRequest(object):
     """An HTTP Request (and response).
     
     A single HTTP connection may consist of multiple request/response pairs.
     
-    connection: the HTTP Connection object which spawned this request.
-    rfile: the 'read' fileobject from the connection's socket
+    rfile: the 'read' fileobject from the connection's socket.
+    sendall: the 'sendall' method from the connection's fileobject.
+    wsgi_app: the WSGI application to call.
+    environ: a partial WSGI environ (server and connection entries).
+        The caller MUST set the following entries:
+        * SERVER_SOFTWARE: the value to write in the "Server" response header.
+        * ACTUAL_SERVER_PROTOCOL: the value to write in the Status-Line of
+            the response. From RFC 2145: "An HTTP server SHOULD send a
+            response version equal to the highest version for which the
+            server is at least conditionally compliant, and whose major
+            version is less than or equal to the one received in the
+            request.  An HTTP server MUST NOT send a version for which
+            it is not at least conditionally compliant."
+    
+    outheaders: a list of header tuples to write in the response.
     ready: when True, the request has been parsed and is ready to begin
         generating the response. When False, signals the calling Connection
         that the response should not be generated and the connection should
@@ -103,11 +151,11 @@ class HTTPRequest(object):
         send_headers.
     """
     
-    def __init__(self, connection):
-        self.connection = connection
-        self.rfile = self.connection.rfile
-        self.sendall = self.connection.sendall
-        self.environ = connection.environ.copy()
+    def __init__(self, rfile, sendall, environ, wsgi_app):
+        self.rfile = rfile
+        self.sendall = sendall
+        self.environ = environ.copy()
+        self.wsgi_app = wsgi_app
         
         self.ready = False
         self.started_response = False
@@ -142,9 +190,7 @@ class HTTPRequest(object):
                 self.ready = False
                 return
         
-        server = self.connection.server
         environ = self.environ
-        environ["SERVER_SOFTWARE"] = "%s WSGI Server" % server.version
         
         method, path, req_protocol = request_line.strip().split(" ", 2)
         environ["REQUEST_METHOD"] = method
@@ -162,6 +208,8 @@ class HTTPRequest(object):
         if params:
             path = path + ";" + params
         
+        environ["SCRIPT_NAME"] = ""
+        
         # Unquote the path+params (e.g. "/this%20path" -> "this path").
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
         #
@@ -170,24 +218,7 @@ class HTTPRequest(object):
         # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
         atoms = [unquote(x) for x in quoted_slash.split(path)]
         path = "%2F".join(atoms)
-        
-        if path == "*":
-            # This means, of course, that the last wsgi_app (shortest path)
-            # will always handle a URI of "*".
-            environ["SCRIPT_NAME"] = ""
-            environ["PATH_INFO"] = "*"
-            self.wsgi_app = server.mount_points[-1][1]
-        else:
-            for mount_point, wsgi_app in server.mount_points:
-                # The mount_points list should be sorted by length, descending.
-                if path.startswith(mount_point + "/") or path == mount_point:
-                    environ["SCRIPT_NAME"] = mount_point
-                    environ["PATH_INFO"] = path[len(mount_point):]
-                    self.wsgi_app = wsgi_app
-                    break
-            else:
-                self.simple_response("404 Not Found")
-                return
+        environ["PATH_INFO"] = path
         
         # Note that, like wsgiref and most other WSGI servers,
         # we unquote the path but not the query string.
@@ -206,16 +237,13 @@ class HTTPRequest(object):
         # the client only understands 1.0. RFC 2616 10.5.6 says we should
         # only return 505 if the _major_ version is different.
         rp = int(req_protocol[5]), int(req_protocol[7])
-        sp = int(server.protocol[5]), int(server.protocol[7])
+        server_protocol = environ["ACTUAL_SERVER_PROTOCOL"]
+        sp = int(server_protocol[5]), int(server_protocol[7])
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
             return
         # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
         environ["SERVER_PROTOCOL"] = req_protocol
-        # set a non-standard environ entry so the WSGI app can know what
-        # the *real* server protocol is (and what features to support).
-        # See http://www.faqs.org/rfcs/rfc2145.html.
-        environ["ACTUAL_SERVER_PROTOCOL"] = server.protocol
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
         
         # If the Request-URI was an absoluteURI, use its location atom.
@@ -368,8 +396,7 @@ class HTTPRequest(object):
         finally:
             if hasattr(response, "close"):
                 response.close()
-        if (self.ready and not self.sent_headers
-                and not self.connection.server.interrupt):
+        if (self.ready and not self.sent_headers):
             self.sent_headers = True
             self.send_headers()
         if self.chunked_write:
@@ -378,7 +405,7 @@ class HTTPRequest(object):
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        buf = ["%s %s\r\n" % (self.connection.server.protocol, status),
+        buf = ["%s %s\r\n" % (self.environ['ACTUAL_SERVER_PROTOCOL'], status),
                "Content-Length: %s\r\n" % len(msg)]
         
         if status[:3] == "413" and self.response_protocol == 'HTTP/1.1':
@@ -460,12 +487,10 @@ class HTTPRequest(object):
         if "date" not in hkeys:
             self.outheaders.append(("Date", rfc822.formatdate()))
         
-        server = self.connection.server
-        
         if "server" not in hkeys:
-            self.outheaders.append(("Server", server.version))
+            self.outheaders.append(("Server", self.environ['SERVER_SOFTWARE']))
         
-        buf = [server.protocol, " ", self.status, "\r\n"]
+        buf = [self.environ['ACTUAL_SERVER_PROTOCOL'], " ", self.status, "\r\n"]
         try:
             buf += [k + ": " + v + "\r\n" for k, v in self.outheaders]
         except TypeError:
@@ -549,22 +574,9 @@ class HTTPConnection(object):
     """An HTTP connection (active socket).
     
     socket: the raw socket object (usually TCP) for this connection.
-    addr: the "bind address" for the remote end of the socket.
-        For IP sockets, this is a tuple of (REMOTE_ADDR, REMOTE_PORT).
-        For UNIX domain sockets, this will be a string.
-    server: the HTTP Server for this Connection. Usually, the server
-        object possesses a passive (server) socket which spawns multiple,
-        active (client) sockets, one for each connection. The server object
-        must possess the following attributes:
-        
-          * server_name: to be placed in the WSGI environ.
-          * bind_addr: either a UNIX socket (str) or a (host, port) tuple.
-          * version: a string, like "CherryPy/3.1alpha"
-          * protocol: an HTTP version string, e.g. "HTTP/1.1"
-          * mount_points: a list of [(script_name, wsgi_app)] pairs
-          * interrupt: usually None.
-    
+    wsgi_app: the WSGI application for this server/connection.
     environ: a WSGI environ template. This will be copied for each request.
+    
     rfile: a fileobject for reading from the socket.
     sendall: a function for writing (+ flush) to the socket.
     """
@@ -579,13 +591,13 @@ class HTTPConnection(object):
                "wsgi.errors": sys.stderr,
                }
     
-    def __init__(self, sock, addr, server):
+    def __init__(self, sock, wsgi_app, environ):
         self.socket = sock
-        self.addr = addr
-        self.server = server
+        self.wsgi_app = wsgi_app
         
         # Copy the class environ into self.
         self.environ = self.environ.copy()
+        self.environ.update(environ)
         
         if SSL and isinstance(sock, SSL.ConnectionType):
             timeout = sock.gettimeout()
@@ -601,20 +613,7 @@ class HTTPConnection(object):
             self.rfile = sock.makefile("rb", self.rbufsize)
             self.sendall = sock.sendall
         
-        self.environ.update({"wsgi.input": self.rfile,
-                             "SERVER_NAME": self.server.server_name,
-                             })
-        
-        if isinstance(self.server.bind_addr, basestring):
-            # AF_UNIX. This isn't really allowed by WSGI, which doesn't
-            # address unix domain sockets. But it's better than nothing.
-            self.environ["SERVER_PORT"] = ""
-        else:
-            self.environ["SERVER_PORT"] = str(self.server.bind_addr[1])
-            # optional values
-            # Until we do DNS lookups, omit REMOTE_HOST
-            self.environ["REMOTE_ADDR"] = self.addr[0]
-            self.environ["REMOTE_PORT"] = str(self.addr[1])
+        self.environ["wsgi.input"] = self.rfile
     
     def communicate(self):
         """Read each request and respond appropriately."""
@@ -624,7 +623,8 @@ class HTTPConnection(object):
                 # the RequestHandlerClass constructor, the error doesn't
                 # get written to the previous request.
                 req = None
-                req = self.RequestHandlerClass(self)
+                req = self.RequestHandlerClass(self.rfile, self.sendall,
+                                               self.environ, self.wsgi_app)
                 # This order of operations should guarantee correct pipelining.
                 req.parse_request()
                 if not req.ready:
@@ -747,9 +747,7 @@ class CherryPyWSGIServer(object):
         
         For UNIX sockets, supply the filename as a string.
     wsgi_app: the WSGI 'application callable'; multiple WSGI applications
-        may be passed as (script_name, callable) pairs. Script_name values
-        should not end in a slash. If the script_name refers to the root
-        of the URI, it should be an empty string (not "/").
+        may be passed as (path_prefix, app) pairs.
     numthreads: the number of worker threads to create (default 10).
     server_name: the string to set for WSGI's SERVER_NAME environ entry.
         Defaults to socket.gethostname().
@@ -782,6 +780,7 @@ class CherryPyWSGIServer(object):
     ready = False
     _interrupt = None
     ConnectionClass = HTTPConnection
+    environ = {}
     
     # Paths to certificate and private key files
     ssl_certificate = None
@@ -794,15 +793,12 @@ class CherryPyWSGIServer(object):
         if callable(wsgi_app):
             # We've been handed a single wsgi_app, in CP-2.1 style.
             # Assume it's mounted at "".
-            self.mount_points = [("", wsgi_app)]
+            self.wsgi_app = wsgi_app
         else:
-            # We've been handed a list of (mount_point, wsgi_app) tuples,
+            # We've been handed a list of (path_prefix, wsgi_app) tuples,
             # so that the server can call different wsgi_apps, and also
             # correctly set SCRIPT_NAME.
-            self.mount_points = [(mp.rstrip("/"), app)
-                                 for mp, app in wsgi_app]
-        self.mount_points.sort()
-        self.mount_points.reverse()
+            self.wsgi_app = WSGIPathInfoDispatcher(wsgi_app)
         
         self.bind_addr = bind_addr
         self.numthreads = numthreads or 1
@@ -941,7 +937,29 @@ class CherryPyWSGIServer(object):
                 return
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
-            conn = self.ConnectionClass(s, addr, self)
+            
+            environ = self.environ.copy()
+            # SERVER_SOFTWARE is common for IIS. It's also helpful for
+            # us to pass a default value for the "Server" response header.
+            environ["SERVER_SOFTWARE"] = "%s WSGI Server" % self.version
+            # set a non-standard environ entry so the WSGI app can know what
+            # the *real* server protocol is (and what features to support).
+            # See http://www.faqs.org/rfcs/rfc2145.html.
+            environ["ACTUAL_SERVER_PROTOCOL"] = self.protocol
+            environ["SERVER_NAME"] = self.server_name
+            
+            if isinstance(self.bind_addr, basestring):
+                # AF_UNIX. This isn't really allowed by WSGI, which doesn't
+                # address unix domain sockets. But it's better than nothing.
+                environ["SERVER_PORT"] = ""
+            else:
+                environ["SERVER_PORT"] = str(self.bind_addr[1])
+                # optional values
+                # Until we do DNS lookups, omit REMOTE_HOST
+                environ["REMOTE_ADDR"] = addr[0]
+                environ["REMOTE_PORT"] = str(addr[1])
+            
+            conn = self.ConnectionClass(s, self.wsgi_app, environ)
             self.requests.put(conn)
         except socket.timeout:
             # The only reason for the timeout in start() is so we can
