@@ -129,6 +129,10 @@ class HTTPRequest(object):
     wsgi_app: the WSGI application to call.
     environ: a partial WSGI environ (server and connection entries).
         The caller MUST set the following entries:
+        * All wsgi.* entries
+        * SERVER_NAME and SERVER_PORT
+        * Any SSL_* entries
+        * Any custom entries like REMOTE_ADDR and REMOTE_PORT
         * SERVER_SOFTWARE: the value to write in the "Server" response header.
         * ACTUAL_SERVER_PROTOCOL: the value to write in the Status-Line of
             the response. From RFC 2145: "An HTTP server SHOULD send a
@@ -604,11 +608,6 @@ class HTTPConnection(object):
             self.rfile = SSL_fileobject(sock, "r", self.rbufsize)
             self.rfile.ssl_timeout = timeout
             self.sendall = _ssl_wrap_method(sock.sendall)
-            self.environ["wsgi.url_scheme"] = "https"
-            self.environ["HTTPS"] = "on"
-            sslenv = getattr(server, "ssl_environ", None)
-            if sslenv:
-                self.environ.update(sslenv)
         else:
             self.rfile = sock.makefile("rb", self.rbufsize)
             self.sendall = sock.sendall
@@ -1060,7 +1059,9 @@ class CherryPyWSGIServer(object):
         """Create WSGI environ entries to be merged into each request."""
         cert = open(self.ssl_certificate).read()
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
-        self.ssl_environ = {
+        ssl_environ = {
+            "wsgi.url_scheme": "https",
+            "HTTPS": "on",
             # pyOpenSSL doesn't provide access to any of these AFAICT
 ##            'SSL_PROTOCOL': 'SSLv2',
 ##            SSL_CIPHER 	string 	The cipher specification name
@@ -1069,7 +1070,7 @@ class CherryPyWSGIServer(object):
             }
         
         # Server certificate attributes
-        self.ssl_environ.update({
+        ssl_environ.update({
             'SSL_SERVER_M_VERSION': cert.get_version(),
             'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
 ##            'SSL_SERVER_V_START': Validity of server's certificate (start time),
@@ -1084,7 +1085,7 @@ class CherryPyWSGIServer(object):
             dnstr = str(dn)[18:-2]
             
             wsgikey = 'SSL_SERVER_%s_DN' % prefix
-            self.ssl_environ[wsgikey] = dnstr
+            ssl_environ[wsgikey] = dnstr
             
             # The DN should be of the form: /k1=v1/k2=v2, but we must allow
             # for any value to contain slashes itself (in a URL).
@@ -1095,6 +1096,7 @@ class CherryPyWSGIServer(object):
                 dnstr, key = dnstr[:pos], dnstr[pos + 1:]
                 if key and value:
                     wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
-                    self.ssl_environ[wsgikey] = value
-
+                    ssl_environ[wsgikey] = value
+        
+        self.environ.update(ssl_environ)
 
