@@ -14,13 +14,24 @@ def check_auth(users, encrypt=None):
             encrypt = httpauth.DIGEST_AUTH_ENCODERS[httpauth.MD5]
         
         if callable(users):
-            users = users() # expect it to return a dictionary
-        
-        if not isinstance(users, dict):
-            raise ValueError, "Authentication users must be a dictionary"
-        
-        # fetch the user password
-        password = users.get(ah["username"], None)
+            try:
+                # backward compatibility
+                users = users() # expect it to return a dictionary
+
+                if not isinstance(users, dict):
+                    raise ValueError, "Authentication users must be a dictionary"
+                
+                # fetch the user password
+                password = users.get(ah["username"], None)
+            except TypeError:
+                # returns a password (encrypted or clear text)
+                password = users(ah["username"])
+        else:
+            if not isinstance(users, dict):
+                raise ValueError, "Authentication users must be a dictionary"
+            
+            # fetch the user password
+            password = users.get(ah["username"], None)
         
         # validate the authorization by re-computing it here
         # and compare it with what the user-agent provided
