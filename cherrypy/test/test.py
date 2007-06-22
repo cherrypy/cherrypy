@@ -174,7 +174,8 @@ class CommandLineParser(object):
         
         print """CherryPy Test Program
     Usage:
-        test.py --server=* --host=%s --port=%s --1.0 --cover --basedir=path --profile --validate --conquer --dumb --tests**
+        test.py --help --server=* --host=%s --port=%s --1.0 --ssl --cover
+            --basedir=path --profile --validate --conquer --dumb --tests**
         
     """ % (self.__class__.host, self.__class__.port)
         print '    * servers:'

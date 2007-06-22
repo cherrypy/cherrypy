@@ -124,12 +124,11 @@ class HTTPRequest(object):
     
     A single HTTP connection may consist of multiple request/response pairs.
     
-    rfile: the 'read' fileobject from the connection's socket.
     sendall: the 'sendall' method from the connection's fileobject.
     wsgi_app: the WSGI application to call.
     environ: a partial WSGI environ (server and connection entries).
         The caller MUST set the following entries:
-        * All wsgi.* entries
+        * All wsgi.* entries, including .input
         * SERVER_NAME and SERVER_PORT
         * Any SSL_* entries
         * Any custom entries like REMOTE_ADDR and REMOTE_PORT
@@ -155,8 +154,8 @@ class HTTPRequest(object):
         send_headers.
     """
     
-    def __init__(self, rfile, sendall, environ, wsgi_app):
-        self.rfile = rfile
+    def __init__(self, sendall, environ, wsgi_app):
+        self.rfile = environ['wsgi.input']
         self.sendall = sendall
         self.environ = environ.copy()
         self.wsgi_app = wsgi_app
@@ -622,8 +621,8 @@ class HTTPConnection(object):
                 # the RequestHandlerClass constructor, the error doesn't
                 # get written to the previous request.
                 req = None
-                req = self.RequestHandlerClass(self.rfile, self.sendall,
-                                               self.environ, self.wsgi_app)
+                req = self.RequestHandlerClass(self.sendall, self.environ,
+                                               self.wsgi_app)
                 # This order of operations should guarantee correct pipelining.
                 req.parse_request()
                 if not req.ready:
