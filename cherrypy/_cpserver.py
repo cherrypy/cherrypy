@@ -171,6 +171,13 @@ class Server(object):
             self.interrupt = exc
             cherrypy.engine.stop()
             raise
+        except:
+            import sys
+            self.interrupt = sys.exc_info()[1]
+            cherrypy.log("Error in HTTP server: shutting down", "SERVER",
+                         traceback=True)
+            cherrypy.engine.stop()
+            raise
     
     def wait(self, httpserver=None):
         """Wait until the HTTP server is ready to receive requests.
