@@ -366,7 +366,7 @@ class Autoreloader(Monitor):
                 else:
                     if mtime is None or mtime > oldtime:
                         # The file has been deleted or modified.
-                        self.engine.publish('reexec')
+                        self.engine.restart()
 
 
 class ThreadManager(object):
