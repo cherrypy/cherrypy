@@ -163,14 +163,15 @@ def handler(req):
             method = req.method
             path = req.uri
             qs = req.args or ""
-            sproto = req.protocol
+            reqproto = req.protocol
             headers = req.headers_in.items()
             rfile = _ReadOnlyRequest(req)
             prev = None
             
             redirections = []
             while True:
-                request = app.get_serving(local, remote, scheme)
+                request, response = app.get_serving(local, remote, scheme,
+                                                    "HTTP/1.1")
                 request.login = req.user
                 request.multithread = bool(threaded)
                 request.multiprocess = bool(forked)
@@ -179,7 +180,7 @@ def handler(req):
                 
                 # Run the CherryPy Request object and obtain the response
                 try:
-                    response = request.run(method, path, qs, sproto, headers, rfile)
+                    request.run(method, path, qs, reqproto, headers, rfile)
                     break
                 except cherrypy.InternalRedirect, ir:
                     app.release_serving()
