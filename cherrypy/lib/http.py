@@ -26,11 +26,16 @@ from rfc822 import formatdate as HTTPDate
 
 
 def urljoin(*atoms):
-    """Return the given path *atoms, joined into a single URL."""
-    url = "/".join(atoms)
+    """Return the given path *atoms, joined into a single URL.
+    
+    This will correctly join a SCRIPT_NAME and PATH_INFO into the
+    original URL, even if either atom is blank.
+    """
+    url = "/".join([x for x in atoms if x])
     while "//" in url:
         url = url.replace("//", "/")
-    return url
+    # Special-case the final url of "", and return "/" instead.
+    return url or "/"
 
 def protocol_from_http(protocol_str):
     """Return a protocol tuple from the given 'HTTP/x.y' string."""
