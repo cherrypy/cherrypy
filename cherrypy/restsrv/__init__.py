@@ -11,4 +11,4 @@ for each class.
 """
 
 from cherrypy.restsrv.wspbus import bus
-from cherrypy.restsrv import plugins
+from cherrypy.restsrv import plugins, servers
