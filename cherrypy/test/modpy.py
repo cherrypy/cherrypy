@@ -1,11 +1,11 @@
-"""Wrapper for mod_python, for use as a CherryPy HTTP server.
+"""Wrapper for mod_python, for use as a CherryPy HTTP server when testing.
 
 To autostart modpython, the "apache" executable or script must be
 on your system path, or you must override the global APACHE_PATH.
 On some platforms, "apache" may be called "apachectl" or "apache2ctl"--
 create a symlink to them if needed.
 
-If you wish to use the WSGI interface instead of our _cpmodpy interface,
+If you wish to test the WSGI interface instead of our _cpmodpy interface,
 you also need the 'modpython_gateway' module at:
 http://projects.amor.org/misc/wiki/ModPythonGateway
 
@@ -29,6 +29,9 @@ KNOWN BUGS
     transfer-coding (it passes REQUEST_CHUNKED_ERROR to ap_setup_client_block
     instead of REQUEST_CHUNKED_DECHUNK, see Apache2's http_protocol.c and
     mod_python's requestobject.c).
+8. Apache will output a "Content-Length: 0" response header even if there's
+    no response entity body. This isn't really a bug; it just differs from
+    the CherryPy default.
 """
 
 import os
@@ -116,7 +119,7 @@ def wsgisetup(req):
         import cherrypy
         cherrypy.config.update({
             "log.error_file": os.path.join(curdir, "test.log"),
-            "environment": "production",
+            "environment": "test_suite",
             })
         cherrypy.engine.start()
     from mod_python import apache
