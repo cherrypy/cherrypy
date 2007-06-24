@@ -1,4 +1,4 @@
-"""Plugins for a restsrv Engine."""
+"""Site services for use with a Web Site Process Bus."""
 
 import os
 import re
@@ -19,21 +19,21 @@ class SubscribedObject(object):
     published to that channel should be one of three types:
     
     getattr:
-        >>> values = engine.publish('thing', 'attr')
+        >>> values = bus.publish('thing', 'attr')
         Note that the 'publish' method will return a list of values
         (from potentially multiple subscribed objects).
     
     setattr:
-        >>> engine.publish('thing', 'attr', value)
+        >>> bus.publish('thing', 'attr', value)
     
-    call:
-        >>> engine.publish('thing', 'attr()', *a, **kw)
+    call an attribute:
+        >>> bus.publish('thing', 'attr()', *a, **kw)
     """
     
-    def __init__(self, engine, channel):
-        self.engine = engine
+    def __init__(self, bus, channel):
+        self.bus = bus
         self.channel = channel
-        engine.subscribe(self.channel, self.handle)
+        bus.subscribe(self.channel, self.handle)
     
     def handle(self, attr, *args, **kwargs):
         if attr.endswith("()"):
@@ -49,53 +49,84 @@ class SubscribedObject(object):
 
 
 class SignalHandler(object):
+    """Register bus channels (and listeners) for system signals.
     
-    def __init__(self, engine):
-        # Make a map from signal numbers to names
-        self.signals = {}
-        for k, v in vars(_signal).items():
-            if k.startswith('SIG') and not k.startswith('SIG_'):
-                self.signals[v] = k
+    By default, instantiating this object registers the following signals
+    and listeners:
+    
+        TERM: bus.exit
+        HUP : bus.restart
+        USR1: bus.graceful
+    """
+    
+    # Map from signal numbers to names
+    signals = {}
+    for k, v in vars(_signal).items():
+        if k.startswith('SIG') and not k.startswith('SIG_'):
+            signals[v] = k
+    del k, v
+    
+    def __init__(self, bus):
+        self.bus = bus
         
-        self.engine = engine
+        # Set default handlers
+        for sig, func in [('SIGTERM', bus.exit),
+                          ('SIGHUP', bus.restart),
+                          ('SIGUSR1', bus.graceful)]:
+            try:
+                self.set_handler(sig, func)
+            except ValueError:
+                pass
     
-    def set_handler(self, signal, callback=None):
+    def set_handler(self, signal, listener=None):
         """Register a handler for the given signal (number or name).
         
-        If the optional callback is included, it will be registered
-        as a listener for the given signal.
+        If the optional 'listener' argument is provided, it will be
+        registered as a listener for the given signal's channel.
+        
+        If the given signal name or number is not available on the current
+        platform, ValueError is raised.
         """
         if isinstance(signal, basestring):
             signum = getattr(_signal, signal, None)
             if signum is None:
-                return  # ?
+                raise ValueError("No such signal: %r" % signal)
             signame = signal
         else:
+            try:
+                signame = self.signals[signal]
+            except KeyError:
+                raise ValueError("No such signal: %r" % signal)
             signum = signal
-            signame = self.signals[signal]
         
         # Should we do something with existing signal handlers?
         # cur = _signal.getsignal(signum)
         _signal.signal(signum, self._handle_signal)
-        if callback is not None:
-            self.engine.subscribe(signame, callback)
+        if listener is not None:
+            self.bus.subscribe(signame, listener)
     
     def _handle_signal(self, signum=None, frame=None):
         """Python signal handler (self.set_handler registers it for you)."""
-        self.engine.publish(self.signals[signum])
+        self.bus.publish(self.signals[signum])
 
 
 class Reexec(SubscribedObject):
+    """A process restarter (using execv) for the 'restart' WSPBus channel.
     
-    def __init__(self, engine, retry=2):
-        self.engine = engine
+    retry: the number of seconds to wait for all parent threads to stop.
+        This is only necessary for platforms like OS X which error if all
+        threads are not absolutely terminated before calling execv.
+    """
+    
+    def __init__(self, bus, retry=2):
+        self.bus = bus
         self.retry = retry
-        engine.subscribe('reexec', self)
+        bus.subscribe('restart', self)
     
     def __call__(self):
         """Re-execute the current process."""
         args = sys.argv[:]
-        self.engine.log('Re-spawning %s' % ' '.join(args))
+        self.bus.log('Re-spawning %s' % ' '.join(args))
         args.insert(0, sys.executable)
         
         if sys.platform == 'win32':
@@ -123,8 +154,8 @@ class DropPrivileges(SubscribedObject):
     Special thanks to Gavin Baker: http://antonym.org/node/100.
     """
     
-    def __init__(self, engine):
-        self.engine = engine
+    def __init__(self, bus):
+        self.bus = bus
     
     try:
         import pwd, grp
@@ -142,7 +173,7 @@ class DropPrivileges(SubscribedObject):
                 """Drop privileges. Windows version (umask only)."""
                 if umask is not None:
                     old_umask = os.umask(umask)
-                    self.engine.log('umask old: %03o, new: %03o' %
+                    self.bus.log('umask old: %03o, new: %03o' %
                                     (old_umask, umask))
     else:
         uid = None
@@ -171,16 +202,16 @@ class DropPrivileges(SubscribedObject):
                     group = grp.getgrgid(os.getgid())[0]
                     return name, group
                 
-                self.engine.log('Started as %r/%r' % names())
+                self.bus.log('Started as %r/%r' % names())
                 if gid is not None:
                     os.setgid(gid)
                 if uid is not None:
                     os.setuid(uid)
-                self.engine.log('Running as %r/%r' % names())
+                self.bus.log('Running as %r/%r' % names())
             
             if umask is not None:
                 old_umask = os.umask(umask)
-                self.engine.log('umask old: %03o, new: %03o' %
+                self.bus.log('umask old: %03o, new: %03o' %
                                 (old_umask, umask))
     __call__.priority = 70
 
@@ -188,8 +219,13 @@ class DropPrivileges(SubscribedObject):
 def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     """Daemonize the running script.
     
+    Use this with a Web Site Process Bus via:
+        
+        bus.subscribe('start', daemonize)
+    
     When this method returns, the process is completely decoupled from the
-    parent environment."""
+    parent environment.
+    """
     
     # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
     # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
@@ -210,7 +246,8 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
             sys.exit(0)
     except OSError, exc:
         # Python raises OSError rather than returning negative numbers.
-        sys.exit("%s: fork #1 failed: (%d) %s\n" % (sys.argv[0], exc.errno, exc.strerror))
+        sys.exit("%s: fork #1 failed: (%d) %s\n"
+                 % (sys.argv[0], exc.errno, exc.strerror))
     
     os.setsid()
     
@@ -221,7 +258,8 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
             sys.stdout.close()
             sys.exit(0) # Exit second parent
     except OSError, exc:
-        sys.exit("%s: fork #2 failed: (%d) %s\n" % (sys.argv[0], exc.errno, exc.strerror))
+        sys.exit("%s: fork #2 failed: (%d) %s\n"
+                 % (sys.argv[0], exc.errno, exc.strerror))
     
     os.chdir("/")
     os.umask(0)
@@ -236,12 +274,13 @@ daemonize.priority = 10
 
 
 class PIDFile(object):
+    """Maintain a PID file via a WSPBus."""
     
-    def __init__(self, engine, pidfile):
-        self.engine = engine
+    def __init__(self, bus, pidfile):
+        self.bus = bus
         self.pidfile = pidfile
-        engine.subscribe('start', self.start)
-        engine.subscribe('stop', self.stop)
+        bus.subscribe('start', self.start)
+        bus.subscribe('stop', self.stop)
     
     def start(self):
         open(self.pidfile, "wb").write(str(os.getpid()))
@@ -257,6 +296,7 @@ class PIDFile(object):
 
 
 class PerpetualTimer(threading._Timer):
+    """A subclass of threading._Timer whose run() method repeats."""
     
     def run(self):
         while True:
@@ -267,17 +307,27 @@ class PerpetualTimer(threading._Timer):
 
 
 class Monitor(SubscribedObject):
-    """Subscriber which periodically runs a callback in a separate thread."""
+    """WSPBus listener to periodically run a callback in its own thread.
+    
+    bus: a Web Site Process Bus object.
+    callback: the function to call at intervals.
+    channel: optional. If provided, the name of the channel to use
+        for managing this object. Defaults to class.__name__,
+        so either provide a channel name or only use one instance
+        of any given subclass.
+    
+    frequency: the time in seconds between callback runs.
+    """
     
     frequency = 60
     
-    def __init__(self, engine, callback, channel=None):
+    def __init__(self, bus, callback, channel=None):
         self.callback = callback
         self.thread = None
         
         if channel is None:
             channel = self.__class__.__name__
-        SubscribedObject.__init__(self, engine, channel)
+        SubscribedObject.__init__(self, bus, channel)
         
         self.listeners = [('start', self.start),
                           ('stop', self.stop),
@@ -286,20 +336,24 @@ class Monitor(SubscribedObject):
         self.attach()
     
     def attach(self):
+        """Register this monitor as a (multi-channel) listener on the bus."""
         for point, callback in self.listeners:
-            self.engine.subscribe(point, callback)
+            self.bus.subscribe(point, callback)
     
     def detach(self):
+        """Unregister this monitor as a listener on the bus."""
         for point, callback in self.listeners:
-            self.engine.unsubscribe(point, callback)
+            self.bus.unsubscribe(point, callback)
     
     def start(self):
+        """Start our callback in its own perpetual timer thread."""
         if self.frequency > 0:
             self.thread = PerpetualTimer(self.frequency, self.callback)
             self.thread.setName("restsrv %s" % self.channel)
             self.thread.start()
     
     def stop(self):
+        """Stop our callback's perpetual timer thread."""
         if self.thread:
             if self.thread is not threading.currentThread():
                 self.thread.cancel()
@@ -307,6 +361,7 @@ class Monitor(SubscribedObject):
             self.thread = None
     
     def graceful(self):
+        """Stop the callback's perpetual timer thread and restart it."""
         self.stop()
         self.start()
 
@@ -317,18 +372,21 @@ class Autoreloader(Monitor):
     frequency = 1
     match = '.*'
     
-    def __init__(self, engine):
+    def __init__(self, bus):
         self.mtimes = {}
         self.files = set()
-        Monitor.__init__(self, engine, self.run)
+        Monitor.__init__(self, bus, self.run)
     
     def add(self, filename):
+        """Add a file to monitor for changes."""
         self.files.add(filename)
     
     def discard(self, filename):
+        """Remove a file to monitor for changes."""
         self.files.discard(filename)
     
     def start(self):
+        """Start our own perpetual timer thread for self.run."""
         self.mtimes = {}
         self.files = set()
         Monitor.start(self)
@@ -366,7 +424,7 @@ class Autoreloader(Monitor):
                 else:
                     if mtime is None or mtime > oldtime:
                         # The file has been deleted or modified.
-                        self.engine.restart()
+                        self.bus.restart()
 
 
 class ThreadManager(object):
@@ -375,23 +433,23 @@ class ThreadManager(object):
     If you have control over thread creation and destruction, publish to
     the 'acquire_thread' and 'release_thread' channels (for each thread).
     This will register/unregister the current thread and publish to
-    'start_thread' and 'stop_thread' listeners in the engine as needed.
+    'start_thread' and 'stop_thread' listeners in the bus as needed.
     
     If threads are created and destroyed by code you do not control
     (e.g., Apache), then, at the beginning of every HTTP request,
     publish to 'acquire_thread' only. You should not publish to
     'release_thread' in this case, since you do not know whether
-    the thread will be re-used or not. The engine will call
+    the thread will be re-used or not. The bus will call
     'stop_thread' listeners for you when it stops.
     """
     
-    def __init__(self, engine):
+    def __init__(self, bus):
         self.threads = {}
-        self.engine = engine
-        engine.subscribe('acquire_thread', self.acquire)
-        engine.subscribe('release_thread', self.release)
-        engine.subscribe('stop', self.release_all)
-        engine.subscribe('graceful', self.release_all)
+        self.bus = bus
+        bus.subscribe('acquire_thread', self.acquire)
+        bus.subscribe('release_thread', self.release)
+        bus.subscribe('stop', self.release_all)
+        bus.subscribe('graceful', self.release_all)
     
     def acquire(self):
         """Run 'start_thread' listeners for the current thread.
@@ -405,16 +463,17 @@ class ThreadManager(object):
             # because some platforms reuse thread ID's.
             i = len(self.threads) + 1
             self.threads[thread_ident] = i
-            self.engine.publish('start_thread', i)
+            self.bus.publish('start_thread', i)
     
     def release(self):
         """Release the current thread and run 'stop_thread' listeners."""
         thread_ident = threading._get_ident()
         i = self.threads.pop(thread_ident, None)
         if i is not None:
-            self.engine.publish('stop_thread', i)
+            self.bus.publish('stop_thread', i)
     
     def release_all(self):
+        """Release all threads and run all 'stop_thread' listeners."""
         for thread_ident, i in self.threads.iteritems():
-            self.engine.publish('stop_thread', i)
+            self.bus.publish('stop_thread', i)
         self.threads.clear()

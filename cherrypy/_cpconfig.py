@@ -302,7 +302,7 @@ def _engine_namespace_handler(k, v):
     elif k == 'deadlock_poll_freq':
         engine.publish('CherryPy Timeout Monitor', 'frequency', v)
     elif k == 'reexec_retry':
-        engine.publish('reexec', 'retry', v)
+        engine.publish('restart', 'retry', v)
     elif k == 'SIGHUP':
         engine.listeners['SIGHUP'] = set([v])
     elif k == 'SIGTERM':

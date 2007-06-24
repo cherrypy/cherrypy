@@ -170,11 +170,14 @@ from cherrypy import _cptree
 tree = _cptree.Tree()
 from cherrypy._cptree import Application
 from cherrypy import _cpwsgi as wsgi
-from cherrypy import _cpserver
-server = _cpserver.Server()
 
 from cherrypy import restsrv
-engine = restsrv.engine
+try:
+    from cherrypy.restsrv import win32 as restsrvwin
+    engine = restsrvwin.Win32Bus()
+except ImportError:
+    engine = restsrv.bus
+
 
 # Timeout monitor
 class _TimeoutMonitor(restsrv.plugins.Monitor):
@@ -202,6 +205,9 @@ _timeout_monitor = _TimeoutMonitor(engine, "CherryPy Timeout Monitor")
 engine.autoreload = restsrv.plugins.Autoreloader(engine)
 restsrv.plugins.Reexec(engine)
 _thread_manager = restsrv.plugins.ThreadManager(engine)
+
+from cherrypy import _cpserver
+server = _cpserver.Server()
 
 
 def quickstart(root, script_name="", config=None):

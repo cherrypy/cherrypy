@@ -89,8 +89,9 @@ def setup(req):
                             "tools.ignore_headers.headers": ['Range'],
                             })
     
-    cherrypy.engine.start()
-    cherrypy.engine.wait()
+    engine = cherrypy.engine
+    engine.start()
+    engine.block(engine.states.STARTED)
     
     def cherrypy_cleanup(data):
         cherrypy.engine.stop()

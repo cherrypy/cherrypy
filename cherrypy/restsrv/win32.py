@@ -7,41 +7,61 @@ import win32event
 import win32service
 import win32serviceutil
 
-from cherrypy.restsrv import base
+from cherrypy.restsrv import wspbus
 
 
-class Engine(base.Engine):
+class Win32Bus(wspbus.Bus):
+    """A Web Site Process Bus implementation for Win32.
+    
+    Instead of using time.sleep for blocking, this bus uses native
+    win32event objects.
+    """
     
     def __init__(self):
-        base.Engine.__init__(self)
-        self.stop_event = win32event.CreateEvent(None, 0, 0, None)
-        win32api.SetConsoleCtrlHandler(self.console_event)
+        self.events = {}
+        win32api.SetConsoleCtrlHandler(self._console_event)
+        wspbus.Bus.__init__(self)
     
-    def console_event(self, event):
+    def _console_event(self, event):
+        """."""
         if event in (win32con.CTRL_C_EVENT,
                      win32con.CTRL_BREAK_EVENT,
                      win32con.CTRL_CLOSE_EVENT):
-            self.log('Console event %s: shutting down engine' % event)
+            self.log('Console event %s: shutting down bus' % event)
             self.stop()
             return 1
         return 0
     
-    def block(self, interval=1):
-        """Block forever (wait for stop(), KeyboardInterrupt or SystemExit)."""
+    def _get_state_event(self, state):
+        """Return a win32event for the given state (creating it if needed)."""
         try:
-            win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
+            return self.events[state]
+        except KeyError:
+            event = win32event.CreateEvent(None, 0, 0, None)
+            self.events[state] = event
+            return event
+    
+    def _get_state(self):
+        return self._state
+    def _set_state(self, value):
+        self._state = value
+        event = self._get_state_event(value)
+        win32event.PulseEvent(event)
+    state = property(_get_state, _set_state)
+    
+    def block(self, state=wspbus.states.STOPPED, interval=1):
+        """Wait for the given state, KeyboardInterrupt or SystemExit.
+        
+        Since this class uses native win32event objects, the interval
+        argument is ignored.
+        """
+        event = self._get_state_event(state)
+        try:
+            win32event.WaitForSingleObject(event, win32event.INFINITE)
         except SystemExit:
-            self.log('SystemExit raised: shutting down engine')
+            self.log('SystemExit raised: shutting down bus')
             self.stop()
             raise
-    
-    def stop(self):
-        """Stop the engine."""
-        if self.state != base.STOPPED:
-            self.log('Engine shutting down')
-            self.publish('stop')
-            win32event.PulseEvent(self.stop_event)
-            self.state = base.STOPPED
 
 
 class _ControlCodes(dict):
@@ -88,16 +108,16 @@ class PyWebService(win32serviceutil.ServiceFramework):
     
     def SvcDoRun(self):
         from cherrypy import restsrv
-        restsrv.engine.start()
-        restsrv.engine.block()
+        restsrv.bus.start()
+        restsrv.bus.block()
     
     def SvcStop(self):
         from cherrypy import restsrv
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        restsrv.engine.stop()
+        restsrv.bus.stop()
     
     def SvcOther(self, control):
-        restsrv.engine.publish(control_codes.key_for(control))
+        restsrv.bus.publish(control_codes.key_for(control))
 
 
 if __name__ == '__main__':

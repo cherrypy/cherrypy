@@ -112,10 +112,9 @@ class Session(object):
         cls = self.__class__
         if not cls.clean_thread:
             # clean_up is in instancemethod and not a classmethod,
-            # so tool config can be accessed inside the method.
-            from cherrypy import restsrv
-            t = restsrv.plugins.Monitor(cherrypy.engine, self.clean_up,
-                                        "CP Session Cleanup")
+            # so that tool config can be accessed inside the method.
+            t = cherrypy.restsrv.plugins.Monitor(
+                    cherrypy.engine, self.clean_up, "CP Session Cleanup")
             t.frequency = self.clean_freq
             cls.clean_thread = t
             t.start()
