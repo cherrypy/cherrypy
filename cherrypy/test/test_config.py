@@ -3,7 +3,7 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
-import os
+import os, sys
 import StringIO
 import cherrypy
 
@@ -84,7 +84,7 @@ def setup_server():
     ioconf = StringIO.StringIO("""
 [/]
 neg: -1234
-filename: os.path.join(os.getcwd(), "hello.py")
+filename: os.path.join(sys.prefix, "hello.py")
 """)
     
     root = Root()
@@ -151,7 +151,7 @@ class ConfigTests(helper.CPWebCase):
         self.assertBody("-1234")
         
         self.getPage("/repr?key=filename")
-        self.assertBody(repr(os.path.join(os.getcwd(), "hello.py")))
+        self.assertBody(repr(os.path.join(sys.prefix, "hello.py")))
     
     def testCustomNamespaces(self):
         self.getPage("/raw/incr?num=12")

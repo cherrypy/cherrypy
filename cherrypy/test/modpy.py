@@ -70,6 +70,7 @@ PythonFixupHandler cherrypy.test.modpy::wsgisetup
 PythonOption testmod %s
 PythonHandler modpython_gateway::handler
 PythonOption wsgi.application cherrypy::tree
+PythonOption socket_host %s
 PythonDebug On
 """
 
@@ -81,19 +82,21 @@ Listen %s
 LoadModule python_module modules/mod_python.so
 
 SetHandler python-program
+PythonFixupHandler cherrypy.test.modpy::cpmodpysetup
 PythonHandler cherrypy._cpmodpy::handler
 PythonOption cherrypy.setup cherrypy.test.%s::setup_server
+PythonOption socket_host %s
 PythonDebug On
 """
 
-def start(testmod, port, conf_template):
+def start(testmod, host, port, conf_template):
     mpconf = CONF_PATH
     if not os.path.isabs(mpconf):
         mpconf = os.path.join(curdir, mpconf)
     
     f = open(mpconf, 'wb')
     try:
-        f.write(conf_template % (port, testmod))
+        f.write(conf_template % (port, testmod, host))
     finally:
         f.close()
     
@@ -112,16 +115,35 @@ def wsgisetup(req):
     if not loaded:
         loaded = True
         options = req.get_options()
-        modname = options['testmod']
-        mod = __import__(modname, globals(), locals(), [''])
-        mod.setup_server()
         
         import cherrypy
         cherrypy.config.update({
             "log.error_file": os.path.join(curdir, "test.log"),
             "environment": "test_suite",
+            "server.socket_host": options['socket_host'],
             })
+        
+        modname = options['testmod']
+        mod = __import__(modname, globals(), locals(), [''])
+        mod.setup_server()
+        
         cherrypy.engine.start()
+    from mod_python import apache
+    return apache.OK
+
+
+def cpmodpysetup(req):
+    global loaded
+    if not loaded:
+        loaded = True
+        options = req.get_options()
+        
+        import cherrypy
+        cherrypy.config.update({
+            "log.error_file": os.path.join(curdir, "test.log"),
+            "environment": "test_suite",
+            "server.socket_host": options['socket_host'],
+            })
     from mod_python import apache
     return apache.OK
 
@@ -152,7 +174,7 @@ class ModPythonTestHarness(test.TestHarness):
         success = True
         for testmod in self.tests:
             try:
-                start(testmod, self.port, conf_template)
+                start(testmod, self.host, self.port, conf_template)
                 suite = webtest.ReloadingTestLoader().loadTestsFromName(testmod)
                 result = webtest.TerseTestRunner(verbosity=2).run(suite)
                 success &= result.wasSuccessful()

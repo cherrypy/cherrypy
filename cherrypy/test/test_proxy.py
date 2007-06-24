@@ -6,7 +6,26 @@ import cherrypy
 script_names = ["", "/path/to/myapp"]
 
 def setup_server():
+    
+    # Set up site
+    cherrypy.config.update({
+        'environment': 'test_suite',
+        'tools.proxy.on': True,
+        'tools.proxy.base': 'www.mydomain.com',
+        })
+    
+    # Set up application
+    
     class Root:
+        
+        def __init__(self, sn):
+            # Calculate a URL outside of any requests.
+            self.thisnewpage = cherrypy.url("/this/new/page", script_name=sn)
+        
+        def pageurl(self):
+            return self.thisnewpage
+        pageurl.exposed = True
+        
         def index(self):
             raise cherrypy.HTTPRedirect('dummy')
         index.exposed = True
@@ -32,13 +51,7 @@ def setup_server():
         newurl.exposed = True
     
     for sn in script_names:
-        cherrypy.tree.mount(Root(), sn)
-    
-    cherrypy.config.update({
-        'environment': 'test_suite',
-        'tools.proxy.on': True,
-        'tools.proxy.base': 'www.mydomain.com',
-        })
+        cherrypy.tree.mount(Root(sn), sn)
 
 
 from cherrypy.test import helper
@@ -94,9 +107,10 @@ class ProxyTest(helper.CPWebCase):
             if host in ('0.0.0.0', '::'):
                 import socket
                 host = socket.gethostname()
-            self.assertEqual(cherrypy.url("/this/new/page", script_name=sn),
-                             "%s://%s%s%s/this/new/page"
-                             % (self.scheme, host, port, sn))
+            expected = ("%s://%s%s%s/this/new/page"
+                        % (self.scheme, host, port, sn))
+            self.getPage(sn + "/pageurl")
+            self.assertBody(expected)
         
         # Test trailing slash (see http://www.cherrypy.org/ticket/562).
         self.getPage("/xhost/", headers=[('X-Host', 'www.example.com')])
