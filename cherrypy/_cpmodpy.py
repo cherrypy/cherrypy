@@ -168,42 +168,45 @@ def handler(req):
             rfile = _ReadOnlyRequest(req)
             prev = None
             
-            redirections = []
-            while True:
-                request, response = app.get_serving(local, remote, scheme,
-                                                    "HTTP/1.1")
-                request.login = req.user
-                request.multithread = bool(threaded)
-                request.multiprocess = bool(forked)
-                request.app = app
-                request.prev = prev
+            try:
+                redirections = []
+                while True:
+                    request, response = app.get_serving(local, remote, scheme,
+                                                        "HTTP/1.1")
+                    request.login = req.user
+                    request.multithread = bool(threaded)
+                    request.multiprocess = bool(forked)
+                    request.app = app
+                    request.prev = prev
+                    
+                    # Run the CherryPy Request object and obtain the response
+                    try:
+                        request.run(method, path, qs, reqproto, headers, rfile)
+                        break
+                    except cherrypy.InternalRedirect, ir:
+                        app.release_serving()
+                        prev = request
+                        
+                        if not recursive:
+                            if ir.path in redirections:
+                                raise RuntimeError("InternalRedirector visited the "
+                                                   "same URL twice: %r" % ir.path)
+                            else:
+                                # Add the *previous* path_info + qs to redirections.
+                                if qs:
+                                    qs = "?" + qs
+                                redirections.append(sn + path + qs)
+                        
+                        # Munge environment and try again.
+                        method = "GET"
+                        path = ir.path
+                        qs = ir.query_string
+                        rfile = StringIO.StringIO()
                 
-                # Run the CherryPy Request object and obtain the response
-                try:
-                    request.run(method, path, qs, reqproto, headers, rfile)
-                    break
-                except cherrypy.InternalRedirect, ir:
-                    app.release_serving()
-                    prev = request
-                    
-                    if not recursive:
-                        if ir.path in redirections:
-                            raise RuntimeError("InternalRedirector visited the "
-                                               "same URL twice: %r" % ir.path)
-                        else:
-                            # Add the *previous* path_info + qs to redirections.
-                            if qs:
-                                qs = "?" + qs
-                            redirections.append(sn + path + qs)
-                    
-                    # Munge environment and try again.
-                    method = "GET"
-                    path = ir.path
-                    qs = ir.query_string
-                    rfile = StringIO.StringIO()
-            
-            send_response(req, response.status, response.header_list, response.body)
-            app.release_serving()
+                send_response(req, response.status, response.header_list,
+                              response.body, response.stream)
+            finally:
+                app.release_serving()
     except:
         tb = format_exc()
         cherrypy.log(tb)
@@ -211,7 +214,8 @@ def handler(req):
         send_response(req, s, h, b)
     return apache.OK
 
-def send_response(req, status, headers, body):
+
+def send_response(req, status, headers, body, stream=False):
     # Set response status
     req.status = int(status[:3])
     
@@ -222,6 +226,10 @@ def send_response(req, status, headers, body):
             req.content_type = value
             continue
         req.headers_out.add(header, value)
+    
+    if stream:
+        # Flush now so the status and headers are sent immediately.
+        req.flush()
     
     # Set response body
     if isinstance(body, basestring):
