@@ -809,6 +809,10 @@ class CherryPyWSGIServer(object):
         self.timeout = timeout
         self.shutdown_timeout = shutdown_timeout
     
+    def __str__(self):
+        return "%s.%s(%r)" % (self.__module__, self.__class__.__name__,
+                              self.bind_addr)
+    
     def _get_bind_addr(self):
         return self._bind_addr
     def _set_bind_addr(self, value):
