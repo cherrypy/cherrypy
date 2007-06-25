@@ -56,7 +56,7 @@ except NameError:
 import sys
 import threading
 import time
-import traceback
+import traceback as _traceback
 
 
 # Use a flag to indicate the state of the bus.
@@ -78,9 +78,9 @@ class Bus(object):
     
     def __init__(self):
         self.state = states.STOPPED
-        self.listeners = dict([(channel, set()) for channel
-                               in ('start', 'stop', 'exit',
-                                   'restart', 'graceful')])
+        self.listeners = dict(
+            [(channel, set()) for channel
+             in ('start', 'stop', 'exit', 'restart', 'graceful')])
         self._priorities = {}
     
     def subscribe(self, channel, callback, priority=None):
@@ -198,18 +198,10 @@ class Bus(object):
         return t
     
     def log(self, msg="", traceback=False):
+        """Log the given message. Append the last traceback if requested."""
         if traceback:
-            msg = '\n'.join((msg, format_exc()))
-        print msg
-
-
-def format_exc(exc=None):
-    """Return exc (or sys.exc_info if None), formatted."""
-    if exc is None:
-        exc = sys.exc_info()
-    if exc == (None, None, None):
-        return ""
-    return "".join(traceback.format_exception(*exc))
+            exc = sys.exc_info()
+            msg += "\n" + "".join(_traceback.format_exception(*exc))
+        self.publish('log', msg)
 
 bus = Bus()
-

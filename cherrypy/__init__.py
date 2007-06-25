@@ -232,11 +232,7 @@ def quickstart(root, script_name="", config=None):
     tree.mount(root, script_name, config)
     
     engine.subscribe('start', server.quickstart)
-    
-    s = restsrv.plugins.SignalHandler(engine)
-    s.set_handler('SIGTERM', engine.stop)
-    s.set_handler('SIGHUP', engine.restart)
-    
+    restsrv.plugins.SignalHandler(engine)
     engine.start()
     engine.block()
 
@@ -382,8 +378,7 @@ log.screen = True
 log.error_file = ''
 # Using an access file makes CP about 10% slower. Leave off by default.
 log.access_file = ''
-engine.log = lambda msg, traceback=False: log.error(msg, 'ENGINE',
-                                                    traceback=traceback)
+engine.subscribe('log', lambda msg: log.error(msg, 'ENGINE'))
 
 #                       Helper functions for CP apps                       #
 
