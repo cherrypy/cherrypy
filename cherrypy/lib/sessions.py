@@ -136,6 +136,10 @@ class Session(object):
         del self._data[key]
     
     def pop(self, key, default=missing):
+        """Remove the specified key and return the corresponding value.
+        If key is not found, default is returned if given,
+        otherwise KeyError is raised.
+        """
         if not self.loaded: self.load()
         if default is missing:
             return self._data.pop(key)
@@ -147,34 +151,42 @@ class Session(object):
         return key in self._data
     
     def has_key(self, key):
+        """D.has_key(k) -> True if D has a key k, else False."""
         if not self.loaded: self.load()
         return self._data.has_key(key)
     
     def get(self, key, default=None):
+        """D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None."""
         if not self.loaded: self.load()
         return self._data.get(key, default)
     
     def update(self, d):
+        """D.update(E) -> None.  Update D from E: for k in E: D[k] = E[k]."""
         if not self.loaded: self.load()
         self._data.update(d)
     
     def setdefault(self, key, default=None):
+        """D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D."""
         if not self.loaded: self.load()
         return self._data.setdefault(key, default)
     
     def clear(self):
+        """D.clear() -> None.  Remove all items from D."""
         if not self.loaded: self.load()
         self._data.clear()
     
     def keys(self):
+        """D.keys() -> list of D's keys."""
         if not self.loaded: self.load()
         return self._data.keys()
     
     def items(self):
+        """D.items() -> list of D's (key, value) pairs, as 2-tuples."""
         if not self.loaded: self.load()
         return self._data.items()
     
     def values(self):
+        """D.values() -> list of D's values."""
         if not self.loaded: self.load()
         return self._data.values()
 
@@ -209,10 +221,12 @@ class RamSession(Session):
         del self.cache[self.id]
     
     def acquire_lock(self):
+        """Acquire an exclusive lock on the currently-loaded session data."""
         self.locked = True
         self.locks.setdefault(self.id, threading.RLock()).acquire()
     
     def release_lock(self):
+        """Release the lock on the currently-loaded session data."""
         self.locks[self.id].release()
         self.locked = False
 
@@ -229,6 +243,11 @@ class FileSession(Session):
     LOCK_SUFFIX = '.lock'
     
     def setup(self):
+        """Set up the storage system for file-based sessions.
+        
+        This should only be called once per process; this will be done
+        automatically when using sessions.init (as the built-in Tool does).
+        """
         # Warn if any lock files exist at startup.
         lockfiles = [fname for fname in os.listdir(self.storage_path)
                      if (fname.startswith(self.SESSION_PREFIX)
@@ -270,6 +289,7 @@ class FileSession(Session):
             pass
     
     def acquire_lock(self, path=None):
+        """Acquire an exclusive lock on the currently-loaded session data."""
         if path is None:
             path = self._get_file_path()
         path += self.LOCK_SUFFIX
@@ -284,6 +304,7 @@ class FileSession(Session):
         self.locked = True
     
     def release_lock(self, path=None):
+        """Release the lock on the currently-loaded session data."""
         if path is None:
             path = self._get_file_path()
         os.unlink(path + self.LOCK_SUFFIX)
@@ -356,12 +377,14 @@ class PostgresqlSession(Session):
         self.cursor.execute('delete from session where id=%s', (self.id,))
    
     def acquire_lock(self):
+        """Acquire an exclusive lock on the currently-loaded session data."""
         # We use the "for update" clause to lock the row
         self.locked = True
         self.cursor.execute('select id from session where id=%s for update',
                             (self.id,))
     
     def release_lock(self):
+        """Release the lock on the currently-loaded session data."""
         # We just close the cursor and that will remove the lock
         #   introduced by the "for update" clause
         self.cursor.close()
