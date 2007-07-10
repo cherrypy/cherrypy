@@ -409,7 +409,8 @@ class HTTPRequest(object):
         """Write a simple response back to the client."""
         status = str(status)
         buf = ["%s %s\r\n" % (self.environ['ACTUAL_SERVER_PROTOCOL'], status),
-               "Content-Length: %s\r\n" % len(msg)]
+               "Content-Length: %s\r\n" % len(msg),
+               "Content-Type: text/plain\r\n"]
         
         if status[:3] == "413" and self.response_protocol == 'HTTP/1.1':
             # Request Entity Too Large
