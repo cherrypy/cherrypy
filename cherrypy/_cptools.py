@@ -65,15 +65,18 @@ class Tool(object):
             pass
     
     def _merged_args(self, d=None):
-        tm = cherrypy.request.toolmaps[self.namespace]
-        if self._name in tm:
-            conf = tm[self._name].copy()
+        if d:
+            conf = d.copy()
         else:
             conf = {}
-        if d:
-            conf.update(d)
+        
+        tm = cherrypy.request.toolmaps[self.namespace]
+        if self._name in tm:
+            conf.update(tm[self._name])
+        
         if "on" in conf:
             del conf["on"]
+        
         return conf
     
     def __call__(self, *args, **kwargs):

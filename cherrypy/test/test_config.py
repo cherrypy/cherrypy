@@ -4,7 +4,9 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import os, sys
+localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import StringIO
+
 import cherrypy
 
 
@@ -34,6 +36,9 @@ def setup_server():
         def dbscheme(self):
             return self.db
         dbscheme.exposed = True
+        
+        favicon_ico = cherrypy.tools.staticfile.handler(
+                        filename=os.path.join(localDir, '../favicon.ico'))
     
     class Foo:
         
@@ -85,7 +90,10 @@ def setup_server():
 [/]
 neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
-""")
+
+[/favicon.ico]
+tools.staticfile.filename = %r
+""" % os.path.join(localDir, 'static/dirback.jpg'))
     
     root = Root()
     root.foo = Foo()
@@ -159,6 +167,14 @@ class ConfigTests(helper.CPWebCase):
         
         self.getPage("/dbscheme")
         self.assertBody(r"sqlite///memory")
+    
+    def testHandlerToolConfigOverride(self):
+        # Assert that config overrides tool constructor args. Above, we set
+        # the favicon in the page handler to be '../favicon.ico',
+        # but then overrode it in config to be './static/dirback.jpg'.
+        self.getPage("/favicon.ico")
+        self.assertBody(open(os.path.join(localDir, "static/dirback.jpg"),
+                             "rb").read())
 
 
 if __name__ == '__main__':
