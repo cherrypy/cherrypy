@@ -45,6 +45,12 @@ class _Builder:
                             repr(o.__class__.__name__))
         return m(o)
     
+    def build_Subscript(self, o):
+        expr, flags, subs = o.getChildren()
+        expr = self.build(expr)
+        subs = self.build(subs)
+        return expr[subs]
+    
     def build_CallFunc(self, o):
         children = map(self.build, o.getChildren())
         callee = children.pop(0)
@@ -81,6 +87,13 @@ class _Builder:
         try:
             return modules(o.name)
         except ImportError:
+            pass
+        
+        # See if the Name is in __builtin__.
+        try:
+            import __builtin__
+            return getattr(__builtin__, o.name)
+        except AttributeError:
             pass
         
         raise TypeError("unrepr could not resolve the name %s" % repr(o.name))

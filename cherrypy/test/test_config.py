@@ -90,6 +90,8 @@ def setup_server():
 [/]
 neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
+thing1: cherrypy.lib.http.response_codes[404]
+thing2: __import__('cherrypy.tutorial', globals(), locals(), ['']).thing2
 
 [/favicon.ico]
 tools.staticfile.filename = %r
@@ -160,6 +162,13 @@ class ConfigTests(helper.CPWebCase):
         
         self.getPage("/repr?key=filename")
         self.assertBody(repr(os.path.join(sys.prefix, "hello.py")))
+        
+        self.getPage("/repr?key=thing1")
+        self.assertBody(repr(cherrypy.lib.http.response_codes[404]))
+        
+        self.getPage("/repr?key=thing2")
+        from cherrypy.tutorial import thing2
+        self.assertBody(repr(thing2))
     
     def testCustomNamespaces(self):
         self.getPage("/raw/incr?num=12")
