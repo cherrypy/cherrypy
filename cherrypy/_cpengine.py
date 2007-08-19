@@ -292,11 +292,14 @@ class Engine(object):
             self.stop()
     
     def _set_signals(self):
-        if self.SIGHUP:
-            signal.signal(signal.SIGHUP, self.SIGHUP)
-        if self.SIGTERM:
-            signal.signal(signal.SIGTERM, self.SIGTERM)
-    
+        try:
+            if self.SIGHUP:
+                signal.signal(signal.SIGHUP, self.SIGHUP)
+            if self.SIGTERM:
+                signal.signal(signal.SIGTERM, self.SIGTERM)
+        except ValueError, x:
+            if x.args[0] != 'signal only works in main thread':
+                raise
     
     #                           Drop privileges                           #
     
