@@ -10,6 +10,14 @@ import time
 import cherrypy
 from cherrypy.lib import sessions
 
+def http_methods_allowed(methods=['GET', 'HEAD']):
+    method = cherrypy.request.method.upper()
+    if method not in methods:
+        cherrypy.response.headers['Allow'] = ", ".join(methods)
+        raise cherrypy.HTTPError(405)
+
+cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
+
 
 def setup_server():
     class Root:
@@ -67,6 +75,11 @@ def setup_server():
         def iredir(self):
             raise cherrypy.InternalRedirect('/blah')
         iredir.exposed = True
+        
+        @cherrypy.tools.allow(methods=['GET'])
+        def restricted(self):
+            return cherrypy.request.method
+        restricted.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'test_suite'})
@@ -174,7 +187,18 @@ class SessionTest(helper.CPWebCase):
         path = os.path.join(localDir, "session-" + id)
         os.unlink(path)
         self.getPage('/testStr', self.cookies)
-
+    
+    def test_5_Error_paths(self):
+        self.getPage('/unknown/page')
+        self.assertErrorPage(404, "The path '/unknown/page' was not found.")
+        
+        # Note: this path is *not* the same as above. The above
+        # takes a normal route through the session code; this one
+        # skips the session code's before_handler and only calls
+        # before_finalize (save) and on_end (close). So the session
+        # code has to survive calling save/close without init.
+        self.getPage('/restricted', self.cookies, method='POST')
+        self.assertErrorPage(405, "Specified method is invalid for this server.")
 
 
 if __name__ == "__main__":
