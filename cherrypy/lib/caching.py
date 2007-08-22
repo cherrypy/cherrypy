@@ -6,6 +6,9 @@ import cherrypy
 from cherrypy.lib import cptools, http
 
 
+_missing = object()
+
+
 class MemoryCache:
     
     def __init__(self):
@@ -28,7 +31,10 @@ class MemoryCache:
     
     def _key(self):
         request = cherrypy.request
-        return request.config.get("tools.caching.key", cherrypy.url(qs=request.query_string))
+        key = request.config.get("tools.caching.key", _missing)
+        if key is _missing:
+            key = cherrypy.url(qs=request.query_string)
+        return key
     key = property(_key)
     
     def expire_cache(self):
@@ -84,7 +90,7 @@ class MemoryCache:
                 self.cursize = total_size
     
     def delete(self):
-        self.cache.pop(self.key)
+        self.cache.pop(self.key, None)
 
 
 def get(invalid_methods=("POST", "PUT", "DELETE"), cache_class=MemoryCache, **kwargs):
