@@ -155,6 +155,8 @@ class Checker(object):
                     atoms = k.split(".")
                     if len(atoms) > 1:
                         if atoms[0] not in ns:
+                            # Spit out a special warning if a known
+                            # namespace is preceded by "cherrypy."
                             if (atoms[0] == "cherrypy" and atoms[1] in ns):
                                 msg = ("The config entry %r is invalid; "
                                        "try %r instead.\nsection: [%s]"
@@ -164,6 +166,12 @@ class Checker(object):
                                        "the %r config namespace is unknown.\n"
                                        "section: [%s]" % (k, atoms[0], section))
                             warnings.warn(msg)
+                        elif atoms[0] == "tools":
+                            if atoms[1] not in dir(cherrypy.tools):
+                                msg = ("The config entry %r may be invalid, "
+                                       "because the %r tool was not found.\n"
+                                       "section: [%s]" % (k, atoms[1], section))
+                                warnings.warn(msg)
     
     def check_config_namespaces(self):
         """Process config and warn on each unknown config namespace."""
