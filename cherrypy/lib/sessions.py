@@ -395,6 +395,10 @@ class PostgresqlSession(Session):
 
 def save():
     """Save any changed session data."""
+    
+    if not hasattr(cherrypy._serving, "session"):
+        return
+    
     # Guard against running twice
     if hasattr(cherrypy.request, "_sessionsaved"):
         return
@@ -414,8 +418,8 @@ save.failsafe = True
 
 def close():
     """Close the session object for this request."""
-    sess = cherrypy.session
-    if sess.locked:
+    sess = getattr(cherrypy._serving, "session", None)
+    if sess and sess.locked:
         # If the session is still locked we release the lock
         sess.release_lock()
 close.failsafe = True
