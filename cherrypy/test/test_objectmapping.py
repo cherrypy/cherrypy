@@ -258,6 +258,11 @@ class ObjectMappingTest(helper.CPWebCase):
         # only the "final" index method should do so.
         self.getPage("/dir1/dir2/5/3/sir")
         self.assertBody("default for dir1, param is:('dir2', '5', '3', 'sir')")
+        
+        # try path segments with parameters
+        self.getPage("/dir1/dir2/posparam;jsessionid=D8E345")
+        self.assertBody("default for dir1, param is:('dir2', "
+                        "'posparam;jsessionid=D8E345')")
     
     def testExpose(self):
         # Test the cherrypy.expose function/decorator
