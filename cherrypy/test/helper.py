@@ -21,6 +21,7 @@ import test.py (to use TestHarness), which then calls helper.py.
 import re
 import sys
 import thread
+import warnings
 
 import cherrypy
 from cherrypy.lib import http, profiler

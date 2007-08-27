@@ -90,7 +90,7 @@ class Profiler(object):
     def statfiles(self):
         """statfiles() -> list of available profiles."""
         return [f for f in os.listdir(self.path)
-                if f.startswith("cp_") and f.endswith(".prof")]
+                if f.endswith(".prof")]
     
     def stats(self, filename, sortby='cumulative'):
         """stats(index) -> output of print_stats() for the given profile."""
