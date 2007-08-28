@@ -34,6 +34,8 @@ class Checker(object):
     
     def check_skipped_app_config(self):
         for sn, app in cherrypy.tree.apps.iteritems():
+            if not isinstance(app, cherrypy.Application):
+                continue
             if not app.config:
                 msg = "The Application mounted at %r has an empty config." % sn
                 if self.global_config_contained_paths:
@@ -49,6 +51,8 @@ class Checker(object):
         # Use the dummy Request object in the main thread.
         request = cherrypy.request
         for sn, app in cherrypy.tree.apps.iteritems():
+            if not isinstance(app, cherrypy.Application):
+                continue
             request.app = app
             for section in app.config:
                 # get_resource will populate request.config
@@ -135,6 +139,8 @@ class Checker(object):
         """Process config and warn on each obsolete or deprecated entry."""
         self._compat(cherrypy.config)
         for sn, app in cherrypy.tree.apps.iteritems():
+            if not isinstance(app, cherrypy.Application):
+                continue
             self._compat(app.config)
     
     
@@ -176,6 +182,8 @@ class Checker(object):
     def check_config_namespaces(self):
         """Process config and warn on each unknown config namespace."""
         for sn, app in cherrypy.tree.apps.iteritems():
+            if not isinstance(app, cherrypy.Application):
+                continue
             self._known_ns(app.config)
     
     
@@ -226,6 +234,8 @@ class Checker(object):
         """Assert that config values are of the same type as default values."""
         self._known_types(cherrypy.config)
         for sn, app in cherrypy.tree.apps.iteritems():
+            if not isinstance(app, cherrypy.Application):
+                continue
             self._known_types(app.config)
 
 
