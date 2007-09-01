@@ -87,6 +87,7 @@ class CommandLineParser(object):
     available_servers = {'wsgi': "cherrypy._cpwsgi.CPWSGIServer",
                          'cpmodpy': "cpmodpy",
                          'modpygw': "modpygw",
+                         'modwsgi': "modwsgi",
                          }
     default_server = "wsgi"
     scheme = "http"
@@ -323,6 +324,12 @@ class CommandLineParser(object):
                                            self.protocol, self.port,
                                            "http", self.interactive)
             h.use_wsgi = True
+        elif self.server == 'modwsgi':
+            from cherrypy.test import modwsgi
+            h = modwsgi.ModWSGITestHarness(self.tests, self.server,
+                                           self.protocol, self.port,
+                                           "http", self.interactive)
+            h.use_wsgi = True
         else:
             h = TestHarness(self.tests, self.server, self.protocol,
                             self.port, self.scheme, self.interactive,
@@ -372,7 +379,7 @@ def run():
 ##        'test_states',
         'test_tidy',
         'test_xmlrpc',
-        'test_wsgiapps',
+##        'test_wsgiapps',
         'test_wsgi_ns',
         
         # Run refleak test as late as possible to
