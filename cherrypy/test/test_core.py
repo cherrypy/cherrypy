@@ -472,7 +472,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         f.write("")
         f.close()
         
-        self.getPage("/flatten/as_string")
+        self.getPage("/flatten/as_string",
+                     headers=[('Referer', 'http://www.cherrypy.org/'),
+                              ('User-Agent', 'Mozilla/5.0')])
         self.assertBody('content')
         self.assertStatus(200)
         
@@ -499,11 +501,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 haslength = True
         line = data[-2].strip()
         if haslength:
-            if not line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7 "" ""'
+            if not line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7 '
+                                 '"http://www.cherrypy.org/" "Mozilla/5.0"'
                                  % self.prefix()):
                 self.fail(line)
         else:
-            if not line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 - "" ""'
+            if not line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 - '
+                                 '"http://www.cherrypy.org/" "Mozilla/5.0"'
                                  % self.prefix()):
                 self.fail(line)
         

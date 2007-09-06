@@ -61,6 +61,7 @@ class LogManager(object):
     def access(self):
         """Write to the access log."""
         request = cherrypy.request
+        inheaders = request.headers
         remote = request.remote
         response = cherrypy.response
         outheaders = response.headers
@@ -72,8 +73,8 @@ class LogManager(object):
                     'r': request.request_line,
                     's': response.status.split(" ", 1)[0],
                     'b': outheaders.get('Content-Length', '') or "-",
-                    'f': outheaders.get('referer', ''),
-                    'a': outheaders.get('user-agent', ''),
+                    'f': inheaders.get('Referer', ''),
+                    'a': inheaders.get('User-Agent', ''),
                     }
         try:
             self.access_log.log(logging.INFO, s)
