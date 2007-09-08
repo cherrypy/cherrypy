@@ -35,5 +35,7 @@ if __name__ == '__main__':
             '/cpknown': {'cherrypy.tools.encode.on': True},
             # Warn on mismatched types
             '/conftype': {'request.show_tracebacks': 14},
+            # Warn on 'localhost'
+            'global': {'server.socket_host': 'localhost'},
             }
     cherrypy.quickstart(Root(), config=conf)

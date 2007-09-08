@@ -5,6 +5,20 @@ import cherrypy
 
 
 class Checker(object):
+    """A checker for CherryPy sites and their mounted applications.
+    
+    on: set this to False to turn off the checker completely.
+    
+    When this object is called at engine startup, it executes each
+    of its own methods whose names start with "check_". If you wish
+    to disable selected checks, simply add a line in your global
+    config which sets the appropriate method to False:
+    
+    [global]
+    checker.check_skipped_app_config = False
+    
+    You may also dynamically add or replace check_* methods in this way.
+    """
     
     on = True
     
@@ -220,5 +234,15 @@ class Checker(object):
         self._known_types(cherrypy.config)
         for sn, app in cherrypy.tree.apps.iteritems():
             self._known_types(app.config)
-
-
+    
+    
+    # -------------------- Specific config warnings -------------------- #
+    
+    def check_localhost(self):
+        """Warn if any socket_host is 'localhost'. See #711."""
+        for k, v in cherrypy.config.iteritems():
+            if k == 'server.socket_host' and v == 'localhost':
+                warnings.warn("The use of 'localhost' as a socket host can "
+                    "cause problems on newer systems, since 'localhost' can "
+                    "map to either an IPv4 or an IPv6 address. You should "
+                    "use '127.0.0.1' or '[::1]' instead.")
