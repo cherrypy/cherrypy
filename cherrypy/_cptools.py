@@ -210,7 +210,7 @@ class SessionTool(Tool):
         Tool.__init__(self, 'before_request_body', _sessions.init)
     
     def _lock_session(self):
-        cherrypy._serving.session.acquire_lock()
+        cherrypy.serving.session.acquire_lock()
     
     def _setup(self):
         """Hook this tool into cherrypy.request.

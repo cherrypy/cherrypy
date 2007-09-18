@@ -401,7 +401,7 @@ class PostgresqlSession(Session):
 def save():
     """Save any changed session data."""
     
-    if not hasattr(cherrypy._serving, "session"):
+    if not hasattr(cherrypy.serving, "session"):
         return
     
     # Guard against running twice
@@ -423,7 +423,7 @@ save.failsafe = True
 
 def close():
     """Close the session object for this request."""
-    sess = getattr(cherrypy._serving, "session", None)
+    sess = getattr(cherrypy.serving, "session", None)
     if sess and sess.locked:
         # If the session is still locked we release the lock
         sess.release_lock()
@@ -465,15 +465,15 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     if name in request.cookie:
         id = request.cookie[name].value
     
-    # Create and attach a new Session instance to cherrypy._serving.
+    # Create and attach a new Session instance to cherrypy.serving.
     # It will possess a reference to (and lock, and lazily load)
     # the requested session data.
     storage_class = storage_type.title() + 'Session'
     kwargs['timeout'] = timeout
     kwargs['clean_freq'] = clean_freq
-    cherrypy._serving.session = sess = globals()[storage_class](id, **kwargs)
+    cherrypy.serving.session = sess = globals()[storage_class](id, **kwargs)
     
-    # Create cherrypy.session which will proxy to cherrypy._serving.session
+    # Create cherrypy.session which will proxy to cherrypy.serving.session
     if not hasattr(cherrypy, "session"):
         cherrypy.session = cherrypy._ThreadLocalProxy('session')
         if hasattr(sess, "setup"):
