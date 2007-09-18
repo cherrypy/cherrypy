@@ -41,7 +41,7 @@ def decode_params(encoding):
             # value is a list: decode each element
             decoded_params[key] = [v.decode(encoding) for v in value]
         elif isinstance(value, unicode):
-            pass
+            decoded_params[key] = value
         else:
             # value is a regular string: decode it
             decoded_params[key] = value.decode(encoding)
