@@ -274,8 +274,7 @@ class _Serving(_local):
         """Remove all attributes of self."""
         self.__dict__.clear()
 
-# The name "_serving" should be removed in 3.1.
-serving = _serving = _Serving()
+serving = _Serving()
 
 
 class _ThreadLocalProxy(object):
