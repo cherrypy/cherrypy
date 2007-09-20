@@ -34,17 +34,15 @@ def decode(encoding=None, default_encoding='utf-8'):
 def decode_params(encoding):
     decoded_params = {}
     for key, value in cherrypy.request.params.items():
-        if hasattr(value, 'file'):
-            # This is a file being uploaded: skip it
-            decoded_params[key] = value
-        elif isinstance(value, list):
-            # value is a list: decode each element
-            decoded_params[key] = [v.decode(encoding) for v in value]
-        elif isinstance(value, unicode):
-            decoded_params[key] = value
-        else:
-            # value is a regular string: decode it
-            decoded_params[key] = value.decode(encoding)
+        if not hasattr(value, 'file'):
+            # Skip the value if it is an uploaded file
+            if isinstance(value, list):
+                # value is a list: decode each element
+                value = [v.decode(encoding) for v in value]
+            elif isinstance(value, str):
+                # value is a regular string: decode it
+                value = value.decode(encoding)
+        decoded_params[key] = value
     
     # Decode all or nothing, so we can try again on error.
     cherrypy.request.params = decoded_params
