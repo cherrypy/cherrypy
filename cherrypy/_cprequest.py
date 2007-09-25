@@ -282,6 +282,16 @@ class Request(object):
     'before_request_body' and 'before_handler' hooks (assuming that
     process_request_body is True)."""
     
+    body_params = None
+    body_params__doc = """
+    If the request Content-Type is 'application/x-www-form-urlencoded' or
+    multipart, this will be a dict of the params pulled from the entity
+    body; that is, it will be the portion of request.params that come
+    from the message body (sometimes called "POST params", although they
+    can be sent with various HTTP method verbs). This value is set between
+    the 'before_request_body' and 'before_handler' hooks (assuming that
+    process_request_body is True)."""
+    
     # Dispatch attributes
     dispatch = cherrypy.dispatch.Dispatcher()
     dispatch__doc = """
@@ -669,7 +679,8 @@ class Request(object):
             # request body was a content-type other than form params.
             self.body = forms.file
         else:
-            self.params.update(http.params_from_CGI_form(forms))
+            self.body_params = p = http.params_from_CGI_form(forms)
+            self.params.update(p)
     
     def handle_error(self, exc):
         """Handle the last exception. (Core)"""
