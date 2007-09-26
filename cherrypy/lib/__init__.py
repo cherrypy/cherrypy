@@ -99,14 +99,8 @@ class _Builder:
         raise TypeError("unrepr could not resolve the name %s" % repr(o.name))
     
     def build_Add(self, o):
-        real, imag = map(self.build_Const, o.getChildren())
-        try:
-            real = float(real)
-        except TypeError:
-            raise TypeError("unrepr could not parse real %s" % repr(real))
-        if not isinstance(imag, complex) or imag.real != 0.0:
-            raise TypeError("unrepr could not parse imag %s" % repr(imag))
-        return real+imag
+        left, right = map(self.build, o.getChildren())
+        return left + right
     
     def build_Getattr(self, o):
         parent = self.build(o.expr)

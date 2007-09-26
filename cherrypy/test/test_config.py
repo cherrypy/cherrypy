@@ -92,6 +92,10 @@ neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
 thing1: cherrypy.lib.http.response_codes[404]
 thing2: __import__('cherrypy.tutorial', globals(), locals(), ['']).thing2
+complex: 3+2j
+ones: "11"
+twos: "22"
+stradd: %%(ones)s + %%(twos)s + "33"
 
 [/favicon.ico]
 tools.staticfile.filename = %r
@@ -169,6 +173,12 @@ class ConfigTests(helper.CPWebCase):
         self.getPage("/repr?key=thing2")
         from cherrypy.tutorial import thing2
         self.assertBody(repr(thing2))
+        
+        self.getPage("/repr?key=complex")
+        self.assertBody("(3+2j)")
+        
+        self.getPage("/repr?key=stradd")
+        self.assertBody(repr("112233"))
     
     def testCustomNamespaces(self):
         self.getPage("/raw/incr?num=12")
