@@ -23,21 +23,55 @@ def setup_server():
         index.exposed = True
         
         def gc_stats(self):
-            return "%s %s %s %s" % (gc.collect(),
-                                    len(get_instances(_cprequest.Request)),
-                                    len(get_instances(_cprequest.Response)),
-                                    len(gc.get_referrers(data)))
-        gc_stats.exposed = True
-        
-        def gc_objtypes(self):
-            data = {}
-            for x in gc.get_objects():
-                data[type(x)] = data.get(type(x), 0) + 1
+            output = []
             
-            data = [(v, k) for k, v in data.iteritems()]
-            data.sort()
-            return "\n".join([repr(pair) for pair in data])
-        gc_objtypes.exposed = True
+            # Uncollectable garbage
+            
+            # gc_collect isn't perfectly synchronous, because it may
+            # break reference cycles that then take time to fully
+            # finalize. Call it twice and hope for the best.
+            gc.collect()
+            unreachable = gc.collect()
+            if unreachable:
+                output.append("\n%s unreachable objects:" % unreachable)
+                trash = {}
+                for x in gc.garbage:
+                    trash[type(x)] = trash.get(type(x), 0) + 1
+                trash = [(v, k) for k, v in trash.iteritems()]
+                trash.sort()
+                for pair in trash:
+                    output.append("    " + repr(pair))
+            
+            # Request references
+            reqs = get_instances(_cprequest.Request)
+            lenreqs = len(reqs)
+            if lenreqs < 2:
+                output.append("\nMissing Request reference. Should be 1 in "
+                              "this request thread and 1 in the main thread.")
+            elif lenreqs > 2:
+                output.append("\nToo many Request references (%r)." % lenreqs)
+                for req in reqs:
+                    output.append("Referrers for %s:" % repr(req))
+                    for ref in gc.get_referrers(req):
+                        if ref is not reqs:
+                            output.append("    %s" % repr(ref))
+            
+            # Response references
+            resps = get_instances(_cprequest.Response)
+            lenresps = len(resps)
+            if lenresps < 2:
+                output.append("\nMissing Response reference. Should be 1 in "
+                              "this request thread and 1 in the main thread.")
+            elif lenresps > 2:
+                output.append("\nToo many Response references (%r)." % lenresps)
+                for resp in resps:
+                    output.append("Referrers for %s:" % repr(resp))
+                    for ref in gc.get_referrers(resp):
+                        if ref is not resps:
+                            output.append("    %s" % repr(ref))
+            
+            return "\n".join(output)
+        gc_stats.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'test_suite'})
@@ -63,11 +97,6 @@ class ReferenceTests(helper.CPWebCase):
             t.join()
         
         self.getPage("/gc_stats")
-        self.assertBody("0 1 1 1")
-        
-        # If gc_stats fails, choose "ignore" to see the type counts for
-        # all the unreachable objects in this body.
-        self.getPage("/gc_objtypes")
         self.assertBody("")
 
 

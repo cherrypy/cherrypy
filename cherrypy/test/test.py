@@ -353,9 +353,6 @@ def run():
     prefer_parent_path()
     
     testList = [
-        # Run refleak test ASAP to make debugging easier.
-        'test_refleaks',
-        
         'test_proxy',
         'test_caching',
         'test_config',
@@ -377,6 +374,10 @@ def run():
         'test_xmlrpc',
         'test_wsgiapps',
         'test_wsgi_ns',
+        
+        # Run refleak test as late as possible to
+        # catch refleaks from all exercised tests.
+        'test_refleaks',
     ]
     
     try:
