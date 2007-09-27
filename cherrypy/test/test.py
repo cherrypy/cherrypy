@@ -353,6 +353,9 @@ def run():
     prefer_parent_path()
     
     testList = [
+        # Run refleak test ASAP to make debugging easier.
+        'test_refleaks',
+        
         'test_proxy',
         'test_caching',
         'test_config',
