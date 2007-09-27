@@ -65,6 +65,7 @@ class Tool(object):
             pass
     
     def _merged_args(self, d=None):
+        """Return a dict of configuration entries for this Tool."""
         if d:
             conf = d.copy()
         else:

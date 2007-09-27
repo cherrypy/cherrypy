@@ -162,6 +162,11 @@ def setup_server():
         def index(self):
             raise cherrypy.InternalRedirect("/")
         
+        def choke(self):
+            return 3 / 0
+        choke.exposed = True
+        choke._cp_config = {'hooks.before_error_response': redir_custom}
+        
         def relative(self, a, b):
             raise cherrypy.InternalRedirect("cousin?t=6")
         
@@ -191,7 +196,6 @@ def setup_server():
         
         def login(self):
             return "Please log in"
-        login._cp_config = {'hooks.before_error_response': redir_custom}
         
         def custom_err(self):
             return "Something went horribly wrong."
@@ -199,6 +203,7 @@ def setup_server():
         def early_ir(self, arg):
             return "whatever"
         early_ir._cp_config = {'hooks.before_request_body': redir_custom}
+    
     
     class Image(Test):
         
@@ -666,7 +671,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         
         # InternalRedirect on error
-        self.getPage("/internalredirect/login/illegal/extra/vpath/atoms")
+        self.getPage("/internalredirect/choke")
         self.assertStatus(200)
         self.assertBody("Something went horribly wrong.")
     
