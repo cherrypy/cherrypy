@@ -80,7 +80,7 @@ class Root:
 cherrypy.config.update({
     'log.error.file': '',
     'environment': 'production',
-    'server.socket_host': 'localhost',
+    'server.socket_host': '127.0.0.1',
     'server.socket_port': 8080,
     'server.max_request_header_size': 0,
     'server.max_request_body_size': 0,
@@ -137,7 +137,7 @@ This is ApacheBench, Version 2.0.40-dev <$Revision: 1.121.2.1 $> apache-2.0
 Copyright (c) 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
 Copyright (c) 1998-2002 The Apache Software Foundation, http://www.apache.org/
 
-Benchmarking localhost (be patient)
+Benchmarking 127.0.0.1 (be patient)
 Completed 100 requests
 Completed 200 requests
 Completed 300 requests
@@ -150,7 +150,7 @@ Completed 900 requests
 
 
 Server Software:        CherryPy/3.1alpha
-Server Hostname:        localhost
+Server Hostname:        127.0.0.1
 Server Port:            8080
 
 Document Path:          /static/index.html
@@ -209,7 +209,7 @@ Finished 1000 requests
         port = cherrypy.server.socket_port
         assert self.concurrency > 0
         assert self.requests > 0
-        return ("-k -n %s -c %s http://localhost:%s%s" %
+        return ("-k -n %s -c %s http://127.0.0.1:%s%s" %
                 (self.requests, self.concurrency, port, self.path))
     
     def run(self):
@@ -365,7 +365,7 @@ if __name__ == '__main__':
         # can be tested from a standard web browser.
         def run():
             port = cherrypy.server.socket_port
-            print ("You may now open http://localhost:%s%s/" %
+            print ("You may now open http://127.0.0.1:%s%s/" %
                    (port, SCRIPT_NAME))
             
             if "--null" in opts:
