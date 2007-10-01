@@ -1035,13 +1035,13 @@ class CherryPyWSGIServer(object):
         timeout = self.shutdown_timeout
         while self._workerThreads:
             worker = self._workerThreads.pop()
-            if worker is not current and worker.isAlive:
+            if worker is not current and worker.isAlive():
                 try:
                     if timeout is None or timeout < 0:
                         worker.join()
                     else:
                         worker.join(timeout)
-                        if worker.isAlive:
+                        if worker.isAlive():
                             # We exhausted the timeout.
                             # Forcibly shut down the socket.
                             c = worker.conn
@@ -1056,7 +1056,6 @@ class CherryPyWSGIServer(object):
                         # Ignore repeated Ctrl-C.
                         # See http://www.cherrypy.org/ticket/691.
                         KeyboardInterrupt), exc1:
-                    print exc1
                     pass
     
     def populate_ssl_environ(self):
