@@ -970,7 +970,7 @@ class CherryPyWSGIServer(object):
         current = threading.currentThread()
         while self._workerThreads:
             worker = self._workerThreads.pop()
-            if worker is not current and worker.isAlive:
+            if worker is not current and worker.isAlive():
                 try:
                     worker.join()
                 except AssertionError:
