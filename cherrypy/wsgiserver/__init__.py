@@ -706,6 +706,98 @@ class WorkerThread(threading.Thread):
             self.server.interrupt = exc
 
 
+class ThreadPool(object):
+    """A Request Queue for the CherryPyWSGIServer which pools threads."""
+    
+    def __init__(self, server, min=10, max=-1):
+        self.server = server
+        self.min = min
+        self.max = max
+        self._threads = []
+        self._queue = Queue.Queue()
+        self.get = self._queue.get
+    
+    def start(self):
+        """Start the pool of threads."""
+        for i in xrange(self.min):
+            self._threads.append(WorkerThread(self.server))
+        for worker in self._threads:
+            worker.setName("CP WSGIServer " + worker.getName())
+            worker.start()
+        for worker in self._threads:
+            while not worker.ready:
+                time.sleep(.1)
+    
+    def _get_idle(self):
+        """Number of worker threads which are idle. Read-only."""
+        return len([t for t in self._threads if t.conn is None])
+    idle = property(_get_idle, doc=_get_idle.__doc__)
+    
+    def put(self, obj):
+        self._queue.put(obj)
+        if obj is _SHUTDOWNREQUEST:
+            return
+        
+        # Grow/shrink the pool if necessary.
+        # Remove any dead threads from our list
+        for t in self._threads:
+            if not t.isAlive():
+                self._threads.remove(t)
+    
+    def grow(self, amount):
+        """Spawn new worker threads (not above self.max)."""
+        for i in xrange(amount):
+            if self.max > 0 and len(self._threads) >= self.max:
+                break
+            worker = WorkerThread(self.server)
+            worker.setName("CP WSGIServer " + worker.getName())
+            self._threads.append(worker)
+            worker.start()
+    
+    def shrink(self, amount):
+        """Kill off worker threads (not below self.min)."""
+        for i in xrange(min(amount, len(self._threads) - self.min)):
+            # Put a number of shutdown requests on the queue equal
+            # to 'amount'. Once each of those is processed by a worker,
+            # that worker will terminate and be culled from our list
+            # in self.put.
+            self._queue.put(_SHUTDOWNREQUEST)
+    
+    def stop(self, timeout=5):
+        # Must shut down threads here so the code that calls
+        # this method can know when all threads are stopped.
+        for worker in self._threads:
+            self._queue.put(_SHUTDOWNREQUEST)
+        
+        # Don't join currentThread (when stop is called inside a request).
+        current = threading.currentThread()
+        while self._threads:
+            worker = self._threads.pop()
+            if worker is not current and worker.isAlive():
+                try:
+                    if timeout is None or timeout < 0:
+                        worker.join()
+                    else:
+                        worker.join(timeout)
+                        if worker.isAlive():
+                            # We exhausted the timeout.
+                            # Forcibly shut down the socket.
+                            c = worker.conn
+                            if c and not c.rfile.closed:
+                                if SSL and isinstance(c.socket, SSL.ConnectionType):
+                                    # pyOpenSSL.socket.shutdown takes no args
+                                    c.socket.shutdown()
+                                else:
+                                    c.socket.shutdown(socket.SHUT_RD)
+                            worker.join()
+                except (AssertionError,
+                        # Ignore repeated Ctrl-C.
+                        # See http://www.cherrypy.org/ticket/691.
+                        KeyboardInterrupt), exc1:
+                    pass
+
+
+
 class SSLConnection:
     """A thread-safe wrapper for an SSL.Connection.
     
@@ -731,6 +823,7 @@ class SSLConnection:
         finally:
             self._lock.release()
 """ % (f, f)
+
 
 
 class CherryPyWSGIServer(object):
@@ -787,7 +880,7 @@ class CherryPyWSGIServer(object):
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
-        self.requests = Queue.Queue(max)
+        self.requests = ThreadPool(self, min=numthreads or 1, max=max)
         
         if callable(wsgi_app):
             # We've been handed a single wsgi_app, in CP-2.1 style.
@@ -800,15 +893,19 @@ class CherryPyWSGIServer(object):
             self.wsgi_app = WSGIPathInfoDispatcher(wsgi_app)
         
         self.bind_addr = bind_addr
-        self.numthreads = numthreads or 1
         if not server_name:
             server_name = socket.gethostname()
         self.server_name = server_name
         self.request_queue_size = request_queue_size
-        self._workerThreads = []
         
         self.timeout = timeout
         self.shutdown_timeout = shutdown_timeout
+    
+    def _get_numthreads(self):
+        return self.requests.min
+    def _set_numthreads(self, value):
+        self.requests.min = value
+    numthreads = property(_get_numthreads, _set_numthreads)
     
     def __str__(self):
         return "%s.%s(%r)" % (self.__module__, self.__class__.__name__,
@@ -896,14 +993,7 @@ class CherryPyWSGIServer(object):
         self.socket.listen(self.request_queue_size)
         
         # Create worker threads
-        for i in xrange(self.numthreads):
-            self._workerThreads.append(WorkerThread(self))
-        for worker in self._workerThreads:
-            worker.setName("CP WSGIServer " + worker.getName())
-            worker.start()
-        for worker in self._workerThreads:
-            while not worker.ready:
-                time.sleep(.1)
+        self.requests.start()
         
         self.ready = True
         while self.ready:
@@ -1025,38 +1115,7 @@ class CherryPyWSGIServer(object):
                 sock.close()
             self.socket = None
         
-        # Must shut down threads here so the code that calls
-        # this method can know when all threads are stopped.
-        for worker in self._workerThreads:
-            self.requests.put(_SHUTDOWNREQUEST)
-        
-        # Don't join currentThread (when stop is called inside a request).
-        current = threading.currentThread()
-        timeout = self.shutdown_timeout
-        while self._workerThreads:
-            worker = self._workerThreads.pop()
-            if worker is not current and worker.isAlive():
-                try:
-                    if timeout is None or timeout < 0:
-                        worker.join()
-                    else:
-                        worker.join(timeout)
-                        if worker.isAlive():
-                            # We exhausted the timeout.
-                            # Forcibly shut down the socket.
-                            c = worker.conn
-                            if c and not c.rfile.closed:
-                                if SSL and isinstance(c.socket, SSL.ConnectionType):
-                                    # pyOpenSSL.socket.shutdown takes no args
-                                    c.socket.shutdown()
-                                else:
-                                    c.socket.shutdown(socket.SHUT_RD)
-                            worker.join()
-                except (AssertionError,
-                        # Ignore repeated Ctrl-C.
-                        # See http://www.cherrypy.org/ticket/691.
-                        KeyboardInterrupt), exc1:
-                    pass
+        self.requests.stop(self.shutdown_timeout)
     
     def populate_ssl_environ(self):
         """Create WSGI environ entries to be merged into each request."""
