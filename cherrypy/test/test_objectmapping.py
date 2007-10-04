@@ -132,8 +132,8 @@ def setup_server():
     Root.bymethod = ByMethod('another')
     Root.collection = Collection()
     
+    d = cherrypy.dispatch.MethodDispatcher()
     for url in script_names:
-        d = cherrypy.dispatch.MethodDispatcher()
         conf = {'/': {'user': (url or "/").split("/")[-2]},
                 '/bymethod': {'request.dispatch': d},
                 '/collection': {'request.dispatch': d},
@@ -149,6 +149,15 @@ def setup_server():
         index.exposed = True
     
     cherrypy.tree.mount(Isolated(), "/isolated")
+    
+    class AnotherApp:
+        
+        exposed = True
+        
+        def GET(self):
+            return "milk"
+    
+    cherrypy.tree.mount(AnotherApp(), "/app", {'/': {'request.dispatch': d}})
 
 
 from cherrypy.test import helper
@@ -308,6 +317,10 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage("/collection/silly", method="POST")
         self.getPage("/collection", method="GET")
         self.assertBody("['a', 'bit', 'silly']")
+        
+        # Test custom dispatcher set on app root (see #737).
+        self.getPage("/app")
+        self.assertBody("milk")
 
 
 if __name__ == "__main__":

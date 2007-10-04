@@ -626,7 +626,7 @@ class Request(object):
         # First, see if there is a custom dispatch at this URI. Custom
         # dispatchers can only be specified in app.config, not in _cp_config
         # (since custom dispatchers may not even have an app.root).
-        trail = path
+        trail = path or "/"
         while trail:
             nodeconf = self.app.config.get(trail, {})
             
