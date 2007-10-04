@@ -43,7 +43,10 @@ def setup_server():
         
         def setsessiontype(self, newtype):
             self.__class__._cp_config.update({'tools.sessions.storage_type': newtype})
+            if hasattr(cherrypy, "session"):
+                del cherrypy.session
         setsessiontype.exposed = True
+        setsessiontype._cp_config = {'tools.sessions.on': False}
         
         def index(self):
             sess = cherrypy.session
@@ -199,6 +202,95 @@ class SessionTest(helper.CPWebCase):
         # code has to survive calling save/close without init.
         self.getPage('/restricted', self.cookies, method='POST')
         self.assertErrorPage(405, "Specified method is invalid for this server.")
+
+
+try:
+    import memcache
+except ImportError:
+    pass
+else:
+    class MemcachedSessionTest(helper.CPWebCase):
+        
+        def test_0_Session(self):
+            self.getPage('/setsessiontype/memcached')
+            
+            self.getPage('/testStr')
+            self.assertBody('1')
+            self.getPage('/testGen', self.cookies)
+            self.assertBody('2')
+            self.getPage('/testStr', self.cookies)
+            self.assertBody('3')
+            self.getPage('/delkey?key=counter', self.cookies)
+            self.assertStatus(200)
+            
+            # Wait for the session.timeout (1.02 secs)
+            time.sleep(1.25)
+            self.getPage('/')
+            self.assertBody('1')
+            
+            # Test session __contains__
+            self.getPage('/keyin?key=counter', self.cookies)
+            self.assertBody("True")
+            
+            # Test session delete
+            self.getPage('/delete', self.cookies)
+            self.assertBody("done")
+        
+        def test_1_Concurrency(self):
+            client_thread_count = 5
+            request_count = 30
+            
+            # Get initial cookie
+            self.getPage("/")
+            self.assertBody("1")
+            cookies = self.cookies
+            
+            data_dict = {}
+            
+            def request(index):
+                for i in xrange(request_count):
+                    self.getPage("/", cookies)
+                    # Uncomment the following line to prove threads overlap.
+##                    print index,
+                if not self.body.isdigit():
+                    self.fail(self.body)
+                data_dict[index] = v = int(self.body)
+            
+            # Start <request_count> concurrent requests from
+            # each of <client_thread_count> clients
+            ts = []
+            for c in xrange(client_thread_count):
+                data_dict[c] = 0
+                t = threading.Thread(target=request, args=(c,))
+                ts.append(t)
+                t.start()
+            
+            for t in ts:
+                t.join()
+            
+            hitcount = max(data_dict.values())
+            expected = 1 + (client_thread_count * request_count)
+            self.assertEqual(hitcount, expected)
+        
+        def test_3_Redirect(self):
+            # Start a new session
+            self.getPage('/testStr')
+            self.getPage('/iredir', self.cookies)
+            self.assertBody("memcached")
+        
+        def test_5_Error_paths(self):
+            self.getPage('/unknown/page')
+            self.assertErrorPage(404, "The path '/unknown/page' was not found.")
+            
+            # Note: this path is *not* the same as above. The above
+            # takes a normal route through the session code; this one
+            # skips the session code's before_handler and only calls
+            # before_finalize (save) and on_end (close). So the session
+            # code has to survive calling save/close without init.
+            self.getPage('/restricted', self.cookies, method='POST')
+            self.assertErrorPage(405, "Specified method is invalid for this server.")
+
+
 
 
 if __name__ == "__main__":

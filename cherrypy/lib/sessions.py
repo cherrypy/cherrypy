@@ -242,23 +242,27 @@ class FileSession(Session):
     SESSION_PREFIX = 'session-'
     LOCK_SUFFIX = '.lock'
     
-    def setup(self):
+    def setup(cls, **kwargs):
         """Set up the storage system for file-based sessions.
         
         This should only be called once per process; this will be done
         automatically when using sessions.init (as the built-in Tool does).
         """
+        for k, v in kwargs.iteritems():
+            setattr(cls, k, v)
+        
         # Warn if any lock files exist at startup.
-        lockfiles = [fname for fname in os.listdir(self.storage_path)
-                     if (fname.startswith(self.SESSION_PREFIX)
-                         and fname.endswith(self.LOCK_SUFFIX))]
+        lockfiles = [fname for fname in os.listdir(cls.storage_path)
+                     if (fname.startswith(cls.SESSION_PREFIX)
+                         and fname.endswith(cls.LOCK_SUFFIX))]
         if lockfiles:
             plural = ('', 's')[len(lockfiles) > 1]
             warn("%s session lockfile%s found at startup. If you are "
                  "only running one process, then you may need to "
                  "manually delete the lockfiles found at %r."
                  % (len(lockfiles), plural,
-                    os.path.abspath(self.storage_path)))
+                    os.path.abspath(cls.storage_path)))
+    setup = classmethod(setup)
     
     def _get_file_path(self):
         return os.path.join(self.storage_path, self.SESSION_PREFIX + self.id)
@@ -396,6 +400,49 @@ class PostgresqlSession(Session):
                             (datetime.datetime.now(),))
 
 
+class MemcachedSession(Session):
+    
+    locks = {}
+    servers = ['127.0.0.1:11211']
+    
+    def setup(cls, **kwargs):
+        """Set up the storage system for memcached-based sessions.
+        
+        This should only be called once per process; this will be done
+        automatically when using sessions.init (as the built-in Tool does).
+        """
+        for k, v in kwargs.iteritems():
+            setattr(cls, k, v)
+        
+        import memcache
+        cls.cache = memcache.Client(cls.servers)
+    setup = classmethod(setup)
+    
+    def _load(self):
+        return self.cache.get(self.id)
+    
+    def _save(self, expiration_time):
+        # Send the expiration time as "Unix time" (seconds since 1/1/1970)
+        zeroday = datetime.datetime(1970, 1, 1, tzinfo=expiration_time.tzinfo)
+        td = expiration_time - zeroday
+        td = (td.days * 86400) + td.seconds
+        if not self.cache.set(self.id, (self._data, expiration_time), td):
+            raise AssertionError("Session data for id %r not set." % self.id)
+    
+    def _delete(self):
+        self.cache.delete(self.id)
+    
+    def acquire_lock(self):
+        """Acquire an exclusive lock on the currently-loaded session data."""
+        self.locked = True
+        self.locks.setdefault(self.id, threading.RLock()).acquire()
+    
+    def release_lock(self):
+        """Release the lock on the currently-loaded session data."""
+        self.locks[self.id].release()
+        self.locked = False
+
+
 # Hook functions (for CherryPy tools)
 
 def save():
@@ -465,19 +512,23 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     if name in request.cookie:
         id = request.cookie[name].value
     
+    # Find the storage class and call setup (first time only).
+    storage_class = storage_type.title() + 'Session'
+    storage_class = globals()[storage_class]
+    if not hasattr(cherrypy, "session"):
+        if hasattr(storage_class, "setup"):
+            storage_class.setup(**kwargs)
+    
     # Create and attach a new Session instance to cherrypy.serving.
     # It will possess a reference to (and lock, and lazily load)
     # the requested session data.
-    storage_class = storage_type.title() + 'Session'
     kwargs['timeout'] = timeout
     kwargs['clean_freq'] = clean_freq
-    cherrypy.serving.session = sess = globals()[storage_class](id, **kwargs)
+    cherrypy.serving.session = sess = storage_class(id, **kwargs)
     
     # Create cherrypy.session which will proxy to cherrypy.serving.session
     if not hasattr(cherrypy, "session"):
         cherrypy.session = cherrypy._ThreadLocalProxy('session')
-        if hasattr(sess, "setup"):
-            sess.setup()
     
     # Set response cookie
     cookie = cherrypy.response.cookie
