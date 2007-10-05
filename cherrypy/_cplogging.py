@@ -195,7 +195,7 @@ class WSGIErrorHandler(logging.Handler):
         """Flushes the stream."""
         try:
             stream = cherrypy.request.wsgi_environ.get('wsgi.errors')
-        except AttributeError, KeyError:
+        except (AttributeError, KeyError):
             pass
         else:
             stream.flush()
@@ -204,7 +204,7 @@ class WSGIErrorHandler(logging.Handler):
         """Emit a record."""
         try:
             stream = cherrypy.request.wsgi_environ.get('wsgi.errors')
-        except AttributeError, KeyError:
+        except (AttributeError, KeyError):
             pass
         else:
             try:
