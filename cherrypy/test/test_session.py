@@ -206,8 +206,30 @@ class SessionTest(helper.CPWebCase):
 
 try:
     import memcache
-except ImportError:
-    pass
+    import socket
+    
+    host, port = '127.0.0.1', 11211
+    for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
+                                  socket.SOCK_STREAM):
+        af, socktype, proto, canonname, sa = res
+        s = None
+        try:
+            s = socket.socket(af, socktype, proto)
+            # See http://groups.google.com/group/cherrypy-users/
+            #        browse_frm/thread/bbfe5eb39c904fe0
+            s.settimeout(1.0)
+            s.connect((host, port))
+            s.close()
+        except socket.error:
+            if s:
+                s.close()
+            raise
+        break
+except (ImportError, socket.error):
+    class MemcachedSessionTest(helper.CPWebCase):
+        
+        def test(self):
+            print "skipped",
 else:
     class MemcachedSessionTest(helper.CPWebCase):
         

@@ -113,6 +113,13 @@ class _AttributeDocstrings(type):
             2. __metaclass__ can be specified at the module global level
                for classic classes.
         
+        For various formatting reasons, you should write multiline docs
+        with a leading newline and not a trailing one:
+            
+            response__doc = """
+            The response object for the current thread. In the main thread,
+            and any threads which are not HTTP requests, this is None."""
+        
         The type of the attribute is intentionally not included, because
         that's not How Python Works. Quack.
         '''
@@ -456,7 +463,7 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
                 path = _urljoin(pi, path)
         
         if script_name is None:
-            script_name = request.app.script_name
+            script_name = request.script_name
         if base is None:
             base = request.base
         

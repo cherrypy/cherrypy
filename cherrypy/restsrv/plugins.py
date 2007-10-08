@@ -228,6 +228,7 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     """
     
     # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
+    # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
     # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
     
     # Finish up with the current stdout/stderr
