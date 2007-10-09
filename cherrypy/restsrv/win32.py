@@ -19,16 +19,30 @@ class Win32Bus(wspbus.Bus):
     
     def __init__(self):
         self.events = {}
-        win32api.SetConsoleCtrlHandler(self._console_event)
+        result = win32api.SetConsoleCtrlHandler(self._console_event, 1)
+        if result == 0:
+            self.log('Could not SetConsoleCtrlHandler (error %r)' %
+                     win32api.GetLastError())
         wspbus.Bus.__init__(self)
     
     def _console_event(self, event):
-        """."""
-        if event in (win32con.CTRL_C_EVENT,
-                     win32con.CTRL_BREAK_EVENT,
+        """The handler for console control events (like Ctrl-C)."""
+        if event in (win32con.CTRL_C_EVENT, win32con.CTRL_LOGOFF_EVENT,
+                     win32con.CTRL_BREAK_EVENT, win32con.CTRL_SHUTDOWN_EVENT,
                      win32con.CTRL_CLOSE_EVENT):
             self.log('Console event %s: shutting down bus' % event)
+            
+            # Remove this CtrlHandler so repeated Ctrl-C doesn't re-call it.
+            try:
+                result = win32api.SetConsoleCtrlHandler(self._console_event, 0)
+                if result == 0:
+                    self.log('Could not remove SetConsoleCtrlHandler (error %r)' %
+                             win32api.GetLastError())
+            except ValueError:
+                pass
+            
             self.stop()
+            # 'First to return True stops the calls'
             return 1
         return 0
     
