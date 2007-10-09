@@ -36,7 +36,7 @@ class TestHarness(object):
         self.interactive = interactive
     
     def run(self, conf=None):
-        """Run the test harness."""
+        """Run the test harness (using the given [global] conf)."""
         import cherrypy
         v = sys.version.split()[0]
         print "Python version used to run this test script:", v
@@ -49,15 +49,16 @@ class TestHarness(object):
         print
         
         if isinstance(conf, basestring):
-            conf = cherrypy.config._Parser().dict_from_file(conf)
-        baseconf = {'server.socket_host': self.host,
-                    'server.socket_port': self.port,
-                    'server.thread_pool': 10,
-                    'environment': "test_suite",
-                    }
-        baseconf.update(conf or {})
-        
-        baseconf['server.protocol_version'] = self.protocol
+            parser = cherrypy.config._Parser()
+            conf = parser.dict_from_file(conf).get('global', {})
+        else:
+            conf = conf or {}
+        baseconf = conf.copy()
+        baseconf.update({'server.socket_host': self.host,
+                         'server.socket_port': self.port,
+                         'server.protocol_version': self.protocol,
+                         'environment': "test_suite",
+                         })
         if self.scheme == "https":
             baseconf['server.ssl_certificate'] = serverpem
             baseconf['server.ssl_private_key'] = serverpem
@@ -292,22 +293,21 @@ class CommandLineParser(object):
                % (total_statements, total_executed, pc))
     
     def run(self, conf=None):
-        """Run the test harness."""
+        """Run the test harness (using the given [global] conf)."""
+        conf = conf or {}
+        
         # Start the coverage tool before importing cherrypy,
         # so module-level global statements are covered.
         if self.cover:
             self.start_coverage()
         
         if self.profile:
-            conf = conf or {}
             conf['profiling.on'] = True
         
         if self.validate:
-            conf = conf or {}
             conf['validator.on'] = True
         
         if self.conquer:
-            conf = conf or {}
             conf['conquer.on'] = True
         
         if self.server == 'cpmodpy':

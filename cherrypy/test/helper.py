@@ -102,7 +102,7 @@ def setConfig(conf):
 
 
 def run_test_suite(moduleNames, server, conf):
-    """Run the given test modules using the given server and conf.
+    """Run the given test modules using the given server and [global] conf.
     
     The server is started and stopped once, regardless of the number
     of test modules. The config, however, is reset for each module.
