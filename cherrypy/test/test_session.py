@@ -204,9 +204,9 @@ class SessionTest(helper.CPWebCase):
         self.assertErrorPage(405, "Specified method is invalid for this server.")
 
 
+import socket
 try:
     import memcache
-    import socket
     
     host, port = '127.0.0.1', 11211
     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
