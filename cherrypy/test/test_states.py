@@ -11,7 +11,8 @@ test.prefer_parent_path()
 
 import cherrypy
 engine = cherrypy.engine
-
+thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+PID_file_path = os.path.join(thisdir,'pid_for_test_daemonize')
 
 class Root:
     def index(self):
@@ -294,12 +295,65 @@ class ServerStateTests(helper.CPWebCase):
             if x.args != (10, 'No child processes'):
                 raise
 
+class DaemonizeTest(helper.CPWebCase):
+    def test_0_Daemonize(self):
+        if not self.server_class:
+            print "skipped (no server) ",
+            return
+        if os.name not in ['posix']: 
+            print "skipped (not on posix) ",
+            return
+
+
+        # Start the demo script in a new process
+        demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
+                                  "test_states_demo.py")
+        host = cherrypy.server.socket_host
+        port = cherrypy.server.socket_port
+        cherrypy._cpserver.wait_for_free_port(host, port)
+        
+        args = [sys.executable, demoscript, host, str(port), '-daemonize']
+        if self.scheme == "https":
+            args.append('-ssl')
+        # Spawn the process and wait, when this returns, the original process
+        # is finished.  If it daemonized properly, we should still be able
+        # to access pages.
+        exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
+        cherrypy._cpserver.wait_for_occupied_port(host, port)
+
+        # Give the server some time to start up
+        time.sleep(2)
+
+        # Get the PID from the file.
+        pid = int(open(PID_file_path).read())
+        try:
+            # Just get the pid of the daemonization process.
+            self.getPage("/pid")
+            self.assertStatus(200)
+            page_pid = int(self.body)
+            self.assertEqual(page_pid, pid)
+        finally:
+            # Shut down the spawned process
+            self.getPage("/stop")
+        
+        try:
+            print os.waitpid(pid, 0)
+        except OSError, x:
+            if x.args != (10, 'No child processes'):
+                raise
+
+        # Wait until here to test the exit code because we want to ensure
+        # that we wait for the daemon to finish running before we fail.
+        if exit_code != 0:
+            self.fail("Daemonized process failed to exit cleanly")
 db_connection = None
 
 def run(server, conf):
     helper.setConfig(conf)
     ServerStateTests.server_class = server
+    DaemonizeTest.server_class = server
     suite = helper.CPTestLoader.loadTestsFromTestCase(ServerStateTests)
+    daemon_suite = helper.CPTestLoader.loadTestsFromTestCase(DaemonizeTest)
     try:
         global db_connection
         db_connection = Dependency()
@@ -313,12 +367,14 @@ def run(server, conf):
             import pyconquer
         except ImportError:
             helper.CPTestRunner.run(suite)
+            helper.CPTestRunner.run(daemon_suite)
         else:
             tr = pyconquer.Logger("cherrypy")
             tr.out = open(os.path.join(os.path.dirname(__file__), "state.log"), "wb")
             try:
                 tr.start()
                 helper.CPTestRunner.run(suite)
+                helper.CPTestRunner.run(daemon_suite)
             finally:
                 tr.stop()
                 tr.out.close()
@@ -334,26 +390,24 @@ def run_all(host, port, ssl=False):
             }
     
     if host:
-        ServerStateTests.HOST = host
+        DaemonizeTest.HOST = ServerStateTests.HOST = host
     
     if port:
-        ServerStateTests.PORT = port
+        DaemonizeTest.PORT = ServerStateTests.PORT = port
     
     if ssl:
         localDir = os.path.dirname(__file__)
         serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
         conf['server.ssl_certificate'] = serverpem
         conf['server.ssl_private_key'] = serverpem
-        ServerStateTests.scheme = "https"
-        ServerStateTests.HTTP_CONN = httplib.HTTPSConnection
+        DaemonizeTest.scheme = ServerStateTests.scheme = "https"
+        DaemonizeTest.HTTP_CONN = ServerStateTests.HTTP_CONN = httplib.HTTPSConnection
     
     def _run(server):
         print
         print "Testing %s on %s:%s..." % (server, host, port)
         run(server, conf)
     _run("cherrypy._cpwsgi.CPWSGIServer")
-
-
 
 if __name__ == "__main__":
     import sys
