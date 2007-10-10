@@ -30,9 +30,6 @@ class Root:
         cherrypy.engine.stop()
     stop.exposed = True
 
-def my_daemonize():
-    daemonize(stdin="/dev/null", stdout="/home/lakin/Desktop/stdout.txt", stderr="/home/lakin/Desktop/stderr.txt")
-
 if __name__ == '__main__':
     conf = {"server.socket_host": sys.argv[1],
             "server.socket_port": int(sys.argv[2]),
@@ -58,7 +55,7 @@ if __name__ == '__main__':
                 raise SystemExit(1)
         sys.exitfunc = exitfunc
 
-        cherrypy.engine.subscribe('start', my_daemonize)
+        cherrypy.engine.subscribe('start', daemonize)
         pid_file = PIDFile(cherrypy.engine, PID_file_path)
 
     cherrypy.engine.subscribe('start', cherrypy.server.quickstart)   
