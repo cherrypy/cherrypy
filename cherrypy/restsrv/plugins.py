@@ -243,7 +243,12 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
             pass
         else:
             # This is the first parent. Exit, now that we've forked.
+            # Shutdown logging handlers (to avoid using stdout after we close it)
+            import logging
+            logging.shutdown()
             sys.stdout.close()
+            sys.stdin.close()
+            sys.stderr.close()
             sys.exit(0)
     except OSError, exc:
         # Python raises OSError rather than returning negative numbers.
@@ -256,7 +261,12 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     try:
         pid = os.fork()
         if pid > 0:
+            # Shutdown logging handlers (to avoid using stdout after we close it)
+            import logging
+            logging.shutdown()
             sys.stdout.close()
+            sys.stdin.close()
+            sys.stderr.close()
             sys.exit(0) # Exit second parent
     except OSError, exc:
         sys.exit("%s: fork #2 failed: (%d) %s\n"
