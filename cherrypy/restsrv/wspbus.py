@@ -100,6 +100,10 @@ class Bus(object):
             listeners.discard(callback)
             del self._priorities[(channel, callback)]
     
+    def register(self, plugin):
+        """Tells the plugin to attach all subscriptions to this bus."""
+        plugin._attach(self)
+
     def publish(self, channel, *args, **kwargs):
         """Return output of all subscribers for the given channel."""
         if channel not in self.listeners:
