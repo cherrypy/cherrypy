@@ -243,12 +243,6 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
             pass
         else:
             # This is the first parent. Exit, now that we've forked.
-            # Shutdown logging handlers (to avoid using stdout after we close it)
-            import logging
-            logging.shutdown()
-            sys.stdout.close()
-            sys.stdin.close()
-            sys.stderr.close()
             sys.exit(0)
     except OSError, exc:
         # Python raises OSError rather than returning negative numbers.
@@ -261,12 +255,6 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     try:
         pid = os.fork()
         if pid > 0:
-            # Shutdown logging handlers (to avoid using stdout after we close it)
-            import logging
-            logging.shutdown()
-            sys.stdout.close()
-            sys.stdin.close()
-            sys.stderr.close()
             sys.exit(0) # Exit second parent
     except OSError, exc:
         sys.exit("%s: fork #2 failed: (%d) %s\n"
@@ -278,6 +266,10 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     si = open(stdin, "r")
     so = open(stdout, "a+")
     se = open(stderr, "a+", 0)
+
+    # os.dup2(fd,fd2) will close fd2 if necessary (so we don't explicitly close
+    # stdin,stdout,stderr):
+    # http://docs.python.org/lib/os-fd-ops.html 
     os.dup2(si.fileno(), sys.stdin.fileno())
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(se.fileno(), sys.stderr.fileno())
