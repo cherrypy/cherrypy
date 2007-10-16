@@ -5,7 +5,13 @@ from sys import exc_info as _exc_info
 from urlparse import urljoin as _urljoin
 from cherrypy.lib import http as _http
 
+
 class CherryPyException(Exception):
+    pass
+
+
+class TimeoutError(CherryPyException):
+    """Exception raised when Response.timed_out is detected."""
     pass
 
 
@@ -185,13 +191,17 @@ class HTTPError(CherryPyException):
         tb = None
         if cherrypy.request.show_tracebacks:
             tb = format_exc()
-        content = get_error_page(self.status, traceback=tb,
-                                 message=self.message)
-        response.body = content
-        respheaders['Content-Length'] = len(content)
         respheaders['Content-Type'] = "text/html"
         
+        content = self.get_error_page(self.status, traceback=tb,
+                                      message=self.message)
+        response.body = content
+        respheaders['Content-Length'] = len(content)
+        
         _be_ie_unfriendly(self.status)
+    
+    def get_error_page(self, *args, **kwargs):
+        return get_error_page(*args, **kwargs)
     
     def __call__(self):
         """Use this exception as a request.handler (raise self)."""
@@ -207,11 +217,6 @@ class NotFound(HTTPError):
             path = cherrypy.request.script_name + cherrypy.request.path_info
         self.args = (path,)
         HTTPError.__init__(self, 404, "The path %r was not found." % path)
-
-
-class TimeoutError(CherryPyException):
-    """Exception raised when Response.timed_out is detected."""
-    pass
 
 
 _HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
