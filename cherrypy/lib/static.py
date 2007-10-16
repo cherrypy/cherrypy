@@ -152,6 +152,9 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     if match and not re.search(match, cherrypy.request.path_info):
         return False
     
+    # Allow the use of '~' to refer to a user's home directory.
+    dir = os.path.expanduser(dir)
+
     # If dir is relative, make absolute using "root".
     if not os.path.isabs(dir):
         if not root:
