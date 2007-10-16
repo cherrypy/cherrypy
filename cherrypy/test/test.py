@@ -102,6 +102,10 @@ class CommandLineParser(object):
     basedir = None
     interactive = True
     
+    shortopts = []
+    longopts = ['cover', 'profile', 'validate', 'conquer', 'dumb', '1.0',
+                'ssl', 'help', 'basedir=', 'port=', 'server=', 'host=']
+    
     def __init__(self, available_tests, args=sys.argv[1:]):
         """Constructor to populate the TestHarness instance.
         
@@ -112,12 +116,10 @@ class CommandLineParser(object):
         """
         self.available_tests = available_tests
         
-        longopts = ['cover', 'profile', 'validate', 'conquer', 'dumb',
-                    '1.0', 'ssl', 'help',
-                    'basedir=', 'port=', 'server=', 'host=']
+        longopts = self.longopts[:]
         longopts.extend(self.available_tests)
         try:
-            opts, args = getopt.getopt(args, "", longopts)
+            opts, args = getopt.getopt(args, self.shortopts, longopts)
         except getopt.GetoptError:
             # print help information and exit
             self.help()
