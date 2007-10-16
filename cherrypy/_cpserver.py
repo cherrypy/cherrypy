@@ -98,6 +98,7 @@ class Server(object):
         httpserver, bind_addr = self.httpserver_from_self(server)
         self.mgr.httpservers[httpserver] = bind_addr
         self.mgr.start()
+        cherrypy.engine.subscribe('stop', self.mgr.stop)
     
     def httpserver_from_self(self, httpserver=None):
         """Return a (httpserver, bind_addr) pair based on self attributes."""

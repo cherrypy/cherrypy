@@ -41,7 +41,7 @@ channel that has not been defined or has no listeners, there is no effect.
 
 In general, there should only ever be a single Bus object per process.
 Frameworks and site containers share a single Bus object by publishing
-messages and registering (subscribing) listeners.
+messages and subscribing listeners.
 
 The Bus object works as a finite state machine which models the current
 state of the process. Bus methods move it from one state to another;
@@ -100,10 +100,6 @@ class Bus(object):
             listeners.discard(callback)
             del self._priorities[(channel, callback)]
     
-    def register(self, plugin):
-        """Tells the plugin to attach all subscriptions to this bus."""
-        plugin._attach(self)
-
     def publish(self, channel, *args, **kwargs):
         """Return output of all subscribers for the given channel."""
         if channel not in self.listeners:

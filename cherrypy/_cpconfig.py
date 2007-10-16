@@ -146,7 +146,7 @@ def merge(base, other):
     the list of files to monitor for "autoreload" changes.
     """
     if isinstance(other, basestring):
-        cherrypy.engine.publish('Autoreloader', 'add()', other)
+        cherrypy.engine.autoreload.files.add(other)
     
     # Load other into base
     for section, value_map in as_dict(other).iteritems():
@@ -254,7 +254,7 @@ class Config(dict):
         """Update self from a dict, file or filename."""
         if isinstance(config, basestring):
             # Filename
-            cherrypy.engine.publish('Autoreloader', 'add()', config)
+            cherrypy.engine.autoreload.files.add(config)
             config = _Parser().dict_from_file(config)
         elif hasattr(config, 'read'):
             # Open file object
@@ -290,17 +290,17 @@ def _engine_namespace_handler(k, v):
     engine = cherrypy.engine
     if k == 'autoreload_on':
         if v:
-            engine.autoreload.attach()
+            engine.autoreload.subscribe()
         else:
-            engine.autoreload.detach()
+            engine.autoreload.unsubscribe()
     elif k == 'autoreload_frequency':
-        engine.publish('Autoreloader', 'frequency', v)
+        engine.autoreload.frequency = v
     elif k == 'autoreload_match':
-        engine.publish('Autoreloader', 'match', v)
+        engine.autoreload.match = v
     elif k == 'reload_files':
-        engine.publish('Autoreloader', 'files', v)
+        engine.autoreload.files = v
     elif k == 'deadlock_poll_freq':
-        engine.publish('CherryPy Timeout Monitor', 'frequency', v)
+        cherrypy.timeout_monitor.frequency = v
     elif k == 'reexec_retry':
         engine.publish('restart', 'retry', v)
     elif k == 'SIGHUP':

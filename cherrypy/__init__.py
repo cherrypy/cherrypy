@@ -189,9 +189,9 @@ except ImportError:
 # Timeout monitor
 class _TimeoutMonitor(restsrv.plugins.Monitor):
     
-    def __init__(self, engine, channel=None):
+    def __init__(self, engine):
         self.servings = []
-        restsrv.plugins.Monitor.__init__(self, engine, self.run, channel)
+        restsrv.plugins.Monitor.__init__(self, engine, self.run)
     
     def acquire(self):
         self.servings.append((serving.request, serving.response))
@@ -206,12 +206,12 @@ class _TimeoutMonitor(restsrv.plugins.Monitor):
         """Check timeout on all responses. (Internal)"""
         for req, resp in self.servings:
             resp.check_timeout()
-_timeout_monitor = _TimeoutMonitor(engine, "CherryPy Timeout Monitor")
+timeout_monitor = _TimeoutMonitor(engine)
 
 # Add an autoreloader (the 'engine' config namespace may detach/attach it).
 engine.autoreload = restsrv.plugins.Autoreloader(engine)
-restsrv.plugins.Reexec(engine)
-_thread_manager = restsrv.plugins.ThreadManager(engine)
+restsrv.plugins.Reexec(engine).subscribe()
+restsrv.plugins.ThreadManager(engine).subscribe()
 
 from cherrypy import _cpserver
 server = _cpserver.Server()
@@ -239,7 +239,7 @@ def quickstart(root, script_name="", config=None):
     tree.mount(root, script_name, config)
     
     engine.subscribe('start', server.quickstart)
-    restsrv.plugins.SignalHandler(engine)
+    restsrv.plugins.SignalHandler(engine).subscribe()
     engine.start()
     engine.block()
 

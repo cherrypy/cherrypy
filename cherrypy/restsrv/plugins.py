@@ -12,46 +12,29 @@ import time
 import threading
 
 
-class SubscribedObject(object):
-    """An object whose attributes are manipulable via publishing.
+class SimplePlugin(object):
+    """Plugin base class which auto-subscribes methods for known channels."""
     
-    An instance of this class will subscribe to a channel. Messages
-    published to that channel should be one of three types:
+    def subscribe(self):
+        """Register this monitor as a (multi-channel) listener on the bus."""
+        for channel in self.bus.listeners:
+            method = getattr(self, channel, None)
+            if method is not None:
+                self.bus.subscribe(channel, method)
     
-    getattr:
-        >>> values = bus.publish('thing', 'attr')
-        Note that the 'publish' method will return a list of values
-        (from potentially multiple subscribed objects).
-    
-    setattr:
-        >>> bus.publish('thing', 'attr', value)
-    
-    call an attribute:
-        >>> bus.publish('thing', 'attr()', *a, **kw)
-    """
-    
-    def __init__(self, bus, channel):
-        self.bus = bus
-        self.channel = channel
-        bus.subscribe(self.channel, self.handle)
-    
-    def handle(self, attr, *args, **kwargs):
-        if attr.endswith("()"):
-            # Call
-            return getattr(self, attr[:-2])(*args, **kwargs)
-        else:
-            if args:
-                # Set
-                return setattr(self, attr, args[0])
-            else:
-                # Get
-                return getattr(self, attr)
+    def unsubscribe(self):
+        """Unregister this monitor as a listener on the bus."""
+        for channel in self.bus.listeners:
+            method = getattr(self, channel, None)
+            if method is not None:
+                self.bus.unsubscribe(channel, method)
+
 
 
 class SignalHandler(object):
     """Register bus channels (and listeners) for system signals.
     
-    By default, instantiating this object registers the following signals
+    By default, instantiating this object subscribes the following signals
     and listeners:
     
         TERM: bus.exit
@@ -68,21 +51,24 @@ class SignalHandler(object):
     
     def __init__(self, bus):
         self.bus = bus
-        
         # Set default handlers
-        for sig, func in [('SIGTERM', bus.exit),
-                          ('SIGHUP', bus.restart),
-                          ('SIGUSR1', bus.graceful)]:
+        self.handlers = {'SIGTERM': self.bus.exit,
+                         'SIGHUP': self.bus.restart,
+                         'SIGUSR1': self.bus.graceful,
+                         }
+    
+    def subscribe(self):
+        for sig, func in self.handlers.iteritems():
             try:
                 self.set_handler(sig, func)
             except ValueError:
                 pass
     
     def set_handler(self, signal, listener=None):
-        """Register a handler for the given signal (number or name).
+        """Subscribe a handler for the given signal (number or name).
         
         If the optional 'listener' argument is provided, it will be
-        registered as a listener for the given signal's channel.
+        subscribed as a listener for the given signal's channel.
         
         If the given signal name or number is not available on the current
         platform, ValueError is raised.
@@ -106,11 +92,11 @@ class SignalHandler(object):
             self.bus.subscribe(signame, listener)
     
     def _handle_signal(self, signum=None, frame=None):
-        """Python signal handler (self.set_handler registers it for you)."""
+        """Python signal handler (self.set_handler subscribes it for you)."""
         self.bus.publish(self.signals[signum])
 
 
-class Reexec(SubscribedObject):
+class Reexec(SimplePlugin):
     """A process restarter (using execv) for the 'restart' WSPBus channel.
     
     retry: the number of seconds to wait for all parent threads to stop.
@@ -121,9 +107,8 @@ class Reexec(SubscribedObject):
     def __init__(self, bus, retry=2):
         self.bus = bus
         self.retry = retry
-        bus.subscribe('restart', self)
     
-    def __call__(self):
+    def restart(self):
         """Re-execute the current process."""
         args = sys.argv[:]
         self.bus.log('Re-spawning %s' % ' '.join(args))
@@ -148,7 +133,7 @@ class Reexec(SubscribedObject):
             raise
 
 
-class DropPrivileges(SubscribedObject):
+class DropPrivileges(SimplePlugin):
     """Drop privileges.
     
     Special thanks to Gavin Baker: http://antonym.org/node/100.
@@ -163,13 +148,13 @@ class DropPrivileges(SubscribedObject):
         try:
             os.umask
         except AttributeError:
-            def __call__(self):
+            def start(self):
                 """Drop privileges. Not implemented on this platform."""
                 raise NotImplementedError
         else:
             umask = None
             
-            def __call__(self):
+            def start(self):
                 """Drop privileges. Windows version (umask only)."""
                 if umask is not None:
                     old_umask = os.umask(umask)
@@ -180,7 +165,7 @@ class DropPrivileges(SubscribedObject):
         gid = None
         umask = None
         
-        def __call__(self):
+        def start(self):
             """Drop privileges. UNIX version (uid, gid, and umask)."""
             if not (uid is None and gid is None):
                 if uid is None:
@@ -213,77 +198,85 @@ class DropPrivileges(SubscribedObject):
                 old_umask = os.umask(umask)
                 self.bus.log('umask old: %03o, new: %03o' %
                                 (old_umask, umask))
-    __call__.priority = 70
+    start.priority = 70
 
 
-def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+class Daemonizer(SimplePlugin):
     """Daemonize the running script.
     
     Use this with a Web Site Process Bus via:
         
-        bus.subscribe('start', daemonize)
+        Daemonizer(bus).subscribe()
     
-    When this method returns, the process is completely decoupled from the
-    parent environment.
+    When this component finishes, the process is completely decoupled from
+    the parent environment.
     """
     
-    # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
-    # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
-    # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
+    def __init__(self, bus, stdin='/dev/null', stdout='/dev/null',
+                 stderr='/dev/null'):
+        self.bus = bus
+        self.stdin = stdin
+        self.stdout = stdout
+        self.stderr = stderr
     
-    # Finish up with the current stdout/stderr
-    sys.stdout.flush()
-    sys.stderr.flush()
-    
-    # Do first fork.
-    try:
-        pid = os.fork()
-        if pid == 0:
-            # This is the child process. Continue.
-            pass
-        else:
-            # This is the first parent. Exit, now that we've forked.
-            sys.exit(0)
-    except OSError, exc:
-        # Python raises OSError rather than returning negative numbers.
-        sys.exit("%s: fork #1 failed: (%d) %s\n"
-                 % (sys.argv[0], exc.errno, exc.strerror))
-    
-    os.setsid()
-    
-    # Do second fork
-    try:
-        pid = os.fork()
-        if pid > 0:
-            sys.exit(0) # Exit second parent
-    except OSError, exc:
-        sys.exit("%s: fork #2 failed: (%d) %s\n"
-                 % (sys.argv[0], exc.errno, exc.strerror))
-    
-    os.chdir("/")
-    os.umask(0)
-    
-    si = open(stdin, "r")
-    so = open(stdout, "a+")
-    se = open(stderr, "a+", 0)
+    def start(self):
+        # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
+        # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
+        # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
+        
+        # Finish up with the current stdout/stderr
+        sys.stdout.flush()
+        sys.stderr.flush()
+        
+        # Do first fork.
+        try:
+            pid = os.fork()
+            if pid == 0:
+                # This is the child process. Continue.
+                pass
+            else:
+                # This is the first parent. Exit, now that we've forked.
+                sys.exit(0)
+        except OSError, exc:
+            # Python raises OSError rather than returning negative numbers.
+            sys.exit("%s: fork #1 failed: (%d) %s\n"
+                     % (sys.argv[0], exc.errno, exc.strerror))
+        
+        os.setsid()
+        
+        # Do second fork
+        try:
+            pid = os.fork()
+            if pid > 0:
+                sys.exit(0) # Exit second parent
+        except OSError, exc:
+            sys.exit("%s: fork #2 failed: (%d) %s\n"
+                     % (sys.argv[0], exc.errno, exc.strerror))
+        
+        os.chdir("/")
+        os.umask(0)
+        
+        si = open(stdin, "r")
+        so = open(stdout, "a+")
+        se = open(stderr, "a+", 0)
 
-    # os.dup2(fd,fd2) will close fd2 if necessary (so we don't explicitly close
-    # stdin,stdout,stderr):
-    # http://docs.python.org/lib/os-fd-ops.html 
-    os.dup2(si.fileno(), sys.stdin.fileno())
-    os.dup2(so.fileno(), sys.stdout.fileno())
-    os.dup2(se.fileno(), sys.stderr.fileno())
-daemonize.priority = 10
+        # os.dup2(fd,fd2) will close fd2 if necessary (so we don't explicitly close
+        # stdin,stdout,stderr):
+        # http://docs.python.org/lib/os-fd-ops.html 
+        os.dup2(si.fileno(), sys.stdin.fileno())
+        os.dup2(so.fileno(), sys.stdout.fileno())
+        os.dup2(se.fileno(), sys.stderr.fileno())
+        
+        self.bus.log('Daemonized to PID: %s' % os.getpid())
+    start.priority = 10
 
 
-class PIDFile(object):
+class PIDFile(SimplePlugin):
     """Maintain a PID file via a WSPBus."""
     
     def __init__(self, bus, pidfile):
         self.bus = bus
         self.pidfile = pidfile
-        bus.subscribe('start', self.start)
-        bus.subscribe('stop', self.stop)
     
     def start(self):
         open(self.pidfile, "wb").write(str(os.getpid()))
@@ -309,50 +302,27 @@ class PerpetualTimer(threading._Timer):
             self.function(*self.args, **self.kwargs)
 
 
-class Monitor(SubscribedObject):
+class Monitor(SimplePlugin):
     """WSPBus listener to periodically run a callback in its own thread.
     
     bus: a Web Site Process Bus object.
     callback: the function to call at intervals.
-    channel: optional. If provided, the name of the channel to use
-        for managing this object. Defaults to class.__name__,
-        so either provide a channel name or only use one instance
-        of any given subclass.
-    
     frequency: the time in seconds between callback runs.
     """
     
     frequency = 60
     
-    def __init__(self, bus, callback, channel=None):
+    def __init__(self, bus, callback, frequency=60):
+        self.bus = bus
         self.callback = callback
+        self.frequency = frequency
         self.thread = None
-        
-        if channel is None:
-            channel = self.__class__.__name__
-        SubscribedObject.__init__(self, bus, channel)
-        
-        self.listeners = [('start', self.start),
-                          ('stop', self.stop),
-                          ('graceful', self.graceful),
-                          ]
-        self.attach()
-    
-    def attach(self):
-        """Register this monitor as a (multi-channel) listener on the bus."""
-        for point, callback in self.listeners:
-            self.bus.subscribe(point, callback)
-    
-    def detach(self):
-        """Unregister this monitor as a listener on the bus."""
-        for point, callback in self.listeners:
-            self.bus.unsubscribe(point, callback)
     
     def start(self):
         """Start our callback in its own perpetual timer thread."""
         if self.frequency > 0:
             self.thread = PerpetualTimer(self.frequency, self.callback)
-            self.thread.setName("restsrv %s" % self.channel)
+            self.thread.setName("restsrv %s" % self.__class__.__name__)
             self.thread.start()
     
     def stop(self):
@@ -375,23 +345,15 @@ class Autoreloader(Monitor):
     frequency = 1
     match = '.*'
     
-    def __init__(self, bus):
+    def __init__(self, bus, frequency=1, match='.*'):
         self.mtimes = {}
         self.files = set()
-        Monitor.__init__(self, bus, self.run)
-    
-    def add(self, filename):
-        """Add a file to monitor for changes."""
-        self.files.add(filename)
-    
-    def discard(self, filename):
-        """Remove a file to monitor for changes."""
-        self.files.discard(filename)
+        self.match = match
+        Monitor.__init__(self, bus, self.run, frequency)
     
     def start(self):
         """Start our own perpetual timer thread for self.run."""
         self.mtimes = {}
-        self.files = set()
         Monitor.start(self)
     
     def run(self):
@@ -430,7 +392,7 @@ class Autoreloader(Monitor):
                         self.bus.restart()
 
 
-class ThreadManager(object):
+class ThreadManager(SimplePlugin):
     """Manager for HTTP request threads.
     
     If you have control over thread creation and destruction, publish to
@@ -449,12 +411,8 @@ class ThreadManager(object):
     def __init__(self, bus):
         self.threads = {}
         self.bus = bus
-        bus.subscribe('acquire_thread', self.acquire)
-        bus.subscribe('release_thread', self.release)
-        bus.subscribe('stop', self.release_all)
-        bus.subscribe('graceful', self.release_all)
     
-    def acquire(self):
+    def acquire_thread(self):
         """Run 'start_thread' listeners for the current thread.
         
         If the current thread has already been seen, any 'start_thread'
@@ -468,15 +426,17 @@ class ThreadManager(object):
             self.threads[thread_ident] = i
             self.bus.publish('start_thread', i)
     
-    def release(self):
+    def release_thread(self):
         """Release the current thread and run 'stop_thread' listeners."""
         thread_ident = threading._get_ident()
         i = self.threads.pop(thread_ident, None)
         if i is not None:
             self.bus.publish('stop_thread', i)
     
-    def release_all(self):
+    def stop(self):
         """Release all threads and run all 'stop_thread' listeners."""
         for thread_ident, i in self.threads.iteritems():
             self.bus.publish('stop_thread', i)
         self.threads.clear()
+    graceful = stop
+

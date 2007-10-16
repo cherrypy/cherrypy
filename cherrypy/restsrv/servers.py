@@ -33,14 +33,17 @@ class ServerManager(object):
         self.httpservers = {}
         self.interrupt = None
     
+    def subscribe(self):
+        self.engine.subscribe('start', self.start)
+        self.engine.subscribe('stop', self.stop)
+    
     def start(self):
         """Start all registered HTTP servers."""
         self.interrupt = None
         if not self.httpservers:
-            raise ValueError("No HTTP servers have been created. ")
+            raise ValueError("No HTTP servers have been created.")
         for httpserver in self.httpservers:
             self._start_http(httpserver)
-        self.engine.subscribe('stop', self.stop)
     
     def _start_http(self, httpserver):
         """Start the given httpserver in a new thread."""
