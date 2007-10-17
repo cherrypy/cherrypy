@@ -256,9 +256,9 @@ class Daemonizer(SimplePlugin):
         os.chdir("/")
         os.umask(0)
         
-        si = open(stdin, "r")
-        so = open(stdout, "a+")
-        se = open(stderr, "a+", 0)
+        si = open(self.stdin, "r")
+        so = open(self.stdout, "a+")
+        se = open(self.stderr, "a+", 0)
 
         # os.dup2(fd,fd2) will close fd2 if necessary (so we don't explicitly close
         # stdin,stdout,stderr):
