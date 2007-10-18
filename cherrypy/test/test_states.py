@@ -12,7 +12,8 @@ test.prefer_parent_path()
 import cherrypy
 engine = cherrypy.engine
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-PID_file_path = os.path.join(thisdir,'pid_for_test_daemonize')
+PID_file_path = os.path.join(thisdir, 'pid_for_test_daemonize')
+
 
 class Root:
     def index(self):
@@ -49,11 +50,19 @@ cherrypy.config.update({
 
 class Dependency:
     
-    def __init__(self):
+    def __init__(self, bus):
+        self.bus = bus
         self.running = False
         self.startcount = 0
         self.gracecount = 0
         self.threads = {}
+    
+    def subscribe(self):
+        self.bus.subscribe('start', self.start)
+        self.bus.subscribe('stop', self.stop)
+        self.bus.subscribe('graceful', self.graceful)
+        self.bus.subscribe('start_thread', self.startthread)
+        self.bus.subscribe('stop_thread', self.stopthread)
     
     def start(self):
         self.running = True
@@ -70,6 +79,9 @@ class Dependency:
     
     def stopthread(self, thread_id):
         del self.threads[thread_id]
+
+db_connection = Dependency(engine)
+db_connection.subscribe()
 
 
 from cherrypy.test import helper
@@ -218,14 +230,14 @@ class ServerStateTests(helper.CPWebCase):
         engine.start()
         cherrypy.server.start()
         try:
-            self.assertNotEqual(cherrypy._timeout_monitor.thread, None)
+            self.assertNotEqual(cherrypy.timeout_monitor.thread, None)
             
             # Request a "normal" page.
-            self.assertEqual(cherrypy._timeout_monitor.servings, [])
+            self.assertEqual(cherrypy.timeout_monitor.servings, [])
             self.getPage("/")
             self.assertBody("Hello World")
             # request.close is called async.
-            while cherrypy._timeout_monitor.servings:
+            while cherrypy.timeout_monitor.servings:
                 print ".",
                 time.sleep(0.01)
             
@@ -295,16 +307,17 @@ class ServerStateTests(helper.CPWebCase):
             if x.args != (10, 'No child processes'):
                 raise
 
+
 class DaemonizeTest(helper.CPWebCase):
-    def test_0_Daemonize(self):
+    
+    def test_Daemonize(self):
         if not self.server_class:
             print "skipped (no server) ",
             return
         if os.name not in ['posix']: 
             print "skipped (not on posix) ",
             return
-
-
+        
         # Start the demo script in a new process
         demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
                                   "test_states_demo.py")
@@ -320,10 +333,10 @@ class DaemonizeTest(helper.CPWebCase):
         # to access pages.
         exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
         cherrypy._cpserver.wait_for_occupied_port(host, port)
-
+        
         # Give the server some time to start up
         time.sleep(2)
-
+        
         # Get the PID from the file.
         pid = int(open(PID_file_path).read())
         try:
@@ -341,12 +354,12 @@ class DaemonizeTest(helper.CPWebCase):
         except OSError, x:
             if x.args != (10, 'No child processes'):
                 raise
-
+        
         # Wait until here to test the exit code because we want to ensure
         # that we wait for the daemon to finish running before we fail.
         if exit_code != 0:
             self.fail("Daemonized process failed to exit cleanly")
-db_connection = None
+
 
 def run(server, conf):
     helper.setConfig(conf)
@@ -355,14 +368,6 @@ def run(server, conf):
     suite = helper.CPTestLoader.loadTestsFromTestCase(ServerStateTests)
     daemon_suite = helper.CPTestLoader.loadTestsFromTestCase(DaemonizeTest)
     try:
-        global db_connection
-        db_connection = Dependency()
-        engine.subscribe('start', db_connection.start)
-        engine.subscribe('stop', db_connection.stop)
-        engine.subscribe('graceful', db_connection.graceful)
-        engine.subscribe('start_thread', db_connection.startthread)
-        engine.subscribe('stop_thread', db_connection.stopthread)
-        
         try:
             import pyconquer
         except ImportError:

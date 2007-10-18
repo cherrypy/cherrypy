@@ -4,9 +4,10 @@ import time
 starttime = time.time()
 
 import cherrypy
-from cherrypy.restsrv.plugins import daemonize, PIDFile
+from cherrypy.restsrv import plugins
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-PID_file_path = os.path.join(thisdir,'pid_for_test_daemonize')
+PID_file_path = os.path.join(thisdir, 'pid_for_test_daemonize')
+
 
 class Root:
     
@@ -54,12 +55,12 @@ if __name__ == '__main__':
             except:
                 raise SystemExit(1)
         sys.exitfunc = exitfunc
-
-        cherrypy.engine.subscribe('start', daemonize)
-        pid_file = PIDFile(cherrypy.engine, PID_file_path)
-
+        
+        plugins.Daemonizer(cherrypy.engine).subscribe()
+        plugins.PIDFile(cherrypy.engine, PID_file_path).subscribe()
+    
     cherrypy.engine.subscribe('start', cherrypy.server.quickstart)   
-
+    
     # This is in a special order for a reason:
     # it allows test_states to wait_for_occupied_port
     # and then immediately call getPage without getting 503.
