@@ -189,9 +189,9 @@ except ImportError:
 # Timeout monitor
 class _TimeoutMonitor(restsrv.plugins.Monitor):
     
-    def __init__(self, engine):
+    def __init__(self, bus):
         self.servings = []
-        restsrv.plugins.Monitor.__init__(self, engine, self.run)
+        restsrv.plugins.Monitor.__init__(self, bus, self.run)
     
     def acquire(self):
         self.servings.append((serving.request, serving.response))
@@ -207,9 +207,11 @@ class _TimeoutMonitor(restsrv.plugins.Monitor):
         for req, resp in self.servings:
             resp.check_timeout()
 timeout_monitor = _TimeoutMonitor(engine)
+timeout_monitor.subscribe()
 
 # Add an autoreloader (the 'engine' config namespace may detach/attach it).
 engine.autoreload = restsrv.plugins.Autoreloader(engine)
+engine.autoreload.subscribe()
 restsrv.plugins.Reexec(engine).subscribe()
 restsrv.plugins.ThreadManager(engine).subscribe()
 

@@ -31,6 +31,7 @@ class Root:
         cherrypy.engine.stop()
     stop.exposed = True
 
+
 if __name__ == '__main__':
     conf = {"server.socket_host": sys.argv[1],
             "server.socket_port": int(sys.argv[2]),
@@ -42,10 +43,10 @@ if __name__ == '__main__':
         serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
         conf['server.ssl_certificate'] = serverpem
         conf['server.ssl_private_key'] = serverpem
-
+    
     if '-daemonize' in sys.argv[3:]:
-        # Sometimes an exception happens during exit, try to make sure we get  
-        # a non_zero exit code.
+        # Sometimes an exception happens during exit;
+        # try to make sure we get a non_zero exit code.
         old_exitfunc = sys.exitfunc
         def exitfunc():
             try:
@@ -59,7 +60,7 @@ if __name__ == '__main__':
         plugins.Daemonizer(cherrypy.engine).subscribe()
         plugins.PIDFile(cherrypy.engine, PID_file_path).subscribe()
     
-    cherrypy.engine.subscribe('start', cherrypy.server.quickstart)   
+    cherrypy.engine.subscribe('start', cherrypy.server.quickstart)
     
     # This is in a special order for a reason:
     # it allows test_states to wait_for_occupied_port
