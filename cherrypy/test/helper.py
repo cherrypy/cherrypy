@@ -56,7 +56,7 @@ class CPWebCase(webtest.WebCase):
         """Open the url. Return status, headers, body."""
         if self.script_name:
             url = http.urljoin(self.script_name, url)
-        webtest.WebCase.getPage(self, url, headers, method, body, protocol)
+        return webtest.WebCase.getPage(self, url, headers, method, body, protocol)
     
     def assertErrorPage(self, status, message=None, pattern=''):
         """Compare the response body with a built in error page.
