@@ -301,8 +301,6 @@ def _engine_namespace_handler(k, v):
         engine.autoreload.files = v
     elif k == 'deadlock_poll_freq':
         cherrypy.timeout_monitor.frequency = v
-    elif k == 'reexec_retry':
-        engine.publish('restart', 'retry', v)
     elif k == 'SIGHUP':
         engine.listeners['SIGHUP'] = set([v])
     elif k == 'SIGTERM':

@@ -35,9 +35,9 @@ of invocation scenarios:
 
 The Bus object in this package uses topic-based publish-subscribe
 messaging to accomplish all this. A few topic channels are built in
-('start', 'stop', 'exit', 'restart' and 'graceful'). Frameworks and
-site containers are free to define their own. If a message is sent to a
-channel that has not been defined or has no listeners, there is no effect.
+('start', 'stop', 'exit', and 'graceful'). Frameworks and site containers
+are free to define their own. If a message is sent to a channel that has
+not been defined or has no listeners, there is no effect.
 
 In general, there should only ever be a single Bus object per process.
 Frameworks and site containers share a single Bus object by publishing
@@ -47,8 +47,20 @@ The Bus object works as a finite state machine which models the current
 state of the process. Bus methods move it from one state to another;
 those methods then publish to subscribed listeners on the channel for
 the new state.
+
+                        O
+                        |
+                        V
+       STOPPING --> STOPPED --> X
+          A   A         |
+          |    \___     |
+          |        \    |
+          |         V   V
+        STARTED <-- STARTING
+
 """
 
+import os
 try:
     set
 except NameError:
@@ -57,8 +69,7 @@ import sys
 import threading
 import time
 import traceback as _traceback
-import os
-import exceptions
+
 
 # Use a flag to indicate the state of the bus.
 class _StateEnum(object):
@@ -76,13 +87,14 @@ class Bus(object):
     
     states = states
     state = states.STOPPED
+    execv = False
     
     def __init__(self):
         self.execv = False
         self.state = states.STOPPED
         self.listeners = dict(
             [(channel, set()) for channel
-             in ('start', 'stop', 'exit', 'restart', 'graceful')])
+             in ('start', 'stop', 'exit', 'graceful')])
         self._priorities = {}
     
     def subscribe(self, channel, callback, priority=None):
@@ -141,21 +153,18 @@ class Bus(object):
     def exit(self, status=0):
         """Stop all services and exit the process."""
         self.stop()
-        
         self.log('Bus exit')
         self.publish('exit')
         sys.exit(status)
     
     def restart(self):
-        """Restart the process (may close connections)."""
-        if self.execv:
-            raise exceptions.AssertionError("Already restarting.")
-
+        """Restart the process (may close connections).
+        
+        This method does not restart the process from the calling thread;
+        instead, it stops the bus and asks the main thread to call execv.
+        """
         self.execv = True
         self.stop()
-        
-        self.log('Bus restart')
-        self.publish('restart')
     
     def graceful(self):
         """Advise all services to reload."""
@@ -181,23 +190,31 @@ class Bus(object):
     
     def _do_execv(self):
         """Re-execute the current process."""
-        # Waiting for the child threads to finish is necessary on OS X.
+        self.execv = False
+        
+        self.log('Bus restart')
+        self.publish('exit')
+        
+        # Re-execute the current process. We must do this in the
+        # main thread (which is the only thread that should be
+        # calling block) because OS X doesn't allow execv to be
+        # called in a child thread very well.
+        # Waiting for ALL child threads to finish is necessary on OS X.
         # See: http://www.cherrypy.org/ticket/581
-        self.log("Waiting for child threads...")
-        threads = [t for t in threading.enumerate() if t != threading.currentThread()]
-        for t in threads:
-            t.join()
-
+        self.log("Waiting for child threads to terminate...")
+        for t in threading.enumerate():
+            if t != threading.currentThread():
+                t.join()
+        
         args = sys.argv[:]
         self.log('Re-spawning %s' % ' '.join(args))
         args.insert(0, sys.executable)
-
+        
         if sys.platform == 'win32':
             args = ['"%s"' % arg for arg in args]
-
+        
         os.execv(sys.executable, args)
-
-
+    
     def stop(self):
         """Stop all services."""
         self.state = states.STOPPING
