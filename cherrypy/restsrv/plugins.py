@@ -89,11 +89,14 @@ class SignalHandler(object):
         # cur = _signal.getsignal(signum)
         _signal.signal(signum, self._handle_signal)
         if listener is not None:
+            self.bus.log("Listening for %s." % signame)
             self.bus.subscribe(signame, listener)
     
     def _handle_signal(self, signum=None, frame=None):
         """Python signal handler (self.set_handler subscribes it for you)."""
-        self.bus.publish(self.signals[signum])
+        signame = self.signals[signum]
+        self.bus.log("Caught signal %s." % signame)
+        self.bus.publish(signame)
 
 
 class DropPrivileges(SimplePlugin):
@@ -199,6 +202,7 @@ class Daemonizer(SimplePlugin):
                 pass
             else:
                 # This is the first parent. Exit, now that we've forked.
+                self.bus.log('Forking once.')
                 sys.exit(0)
         except OSError, exc:
             # Python raises OSError rather than returning negative numbers.
@@ -211,6 +215,7 @@ class Daemonizer(SimplePlugin):
         try:
             pid = os.fork()
             if pid > 0:
+                self.bus.log('Forking twice.')
                 sys.exit(0) # Exit second parent
         except OSError, exc:
             sys.exit("%s: fork #2 failed: (%d) %s\n"
@@ -242,12 +247,15 @@ class PIDFile(SimplePlugin):
         self.pidfile = pidfile
     
     def start(self):
-        open(self.pidfile, "wb").write(str(os.getpid()))
+        pid = os.getpid()
+        open(self.pidfile, "wb").write(str(pid))
+        self.bus.log('PID %r written to %r.' % (pid, self.pidfile))
     start.priority = 70
     
     def stop(self):
         try:
             os.remove(self.pidfile)
+            self.bus.log('PID file removed: %r.' % self.pidfile)
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -284,9 +292,11 @@ class Monitor(SimplePlugin):
     def start(self):
         """Start our callback in its own perpetual timer thread."""
         if self.frequency > 0:
+            threadname = "restsrv %s" % self.__class__.__name__
             self.thread = PerpetualTimer(self.frequency, self.callback)
-            self.thread.setName("restsrv %s" % self.__class__.__name__)
+            self.thread.setName(threadname)
             self.thread.start()
+            self.bus.log("Started thread %r." % threadname)
     
     def stop(self):
         """Stop our callback's perpetual timer thread."""
@@ -294,6 +304,7 @@ class Monitor(SimplePlugin):
             if self.thread is not threading.currentThread():
                 self.thread.cancel()
                 self.thread.join()
+                self.bus.log("Stopped thread %r." % self.thread.getName())
             self.thread = None
     
     def graceful(self):

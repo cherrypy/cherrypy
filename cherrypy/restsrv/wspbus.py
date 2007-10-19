@@ -83,7 +83,14 @@ states.STOPPING = states.State()
 
 
 class Bus(object):
-    """Process state-machine and messenger for HTTP site deployment."""
+    """Process state-machine and messenger for HTTP site deployment.
+    
+    All listeners for a given channel are guaranteed to be called even
+    if others at the same channel fail. Each failure is logged, but
+    execution proceeds on to the next listener. The only way to stop all
+    processing from inside a listener is to raise SystemExit and stop the
+    whole server.
+    """
     
     states = states
     state = states.STOPPED
@@ -126,11 +133,6 @@ class Bus(object):
                  for listener in self.listeners[channel]]
         items.sort()
         for priority, listener in items:
-            # All listeners for a given channel are guaranteed to run even
-            # if others at the same channel fail. We will still log the
-            # failure, but proceed on to the next listener. The only way
-            # to stop all processing from one of these listeners is to
-            # raise SystemExit and stop the whole server.
             try:
                 output.append(listener(*args, **kwargs))
             except (KeyboardInterrupt, SystemExit):
