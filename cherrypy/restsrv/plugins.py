@@ -96,43 +96,6 @@ class SignalHandler(object):
         self.bus.publish(self.signals[signum])
 
 
-class Reexec(SimplePlugin):
-    """A process restarter (using execv) for the 'restart' WSPBus channel.
-    
-    retry: the number of seconds to wait for all parent threads to stop.
-        This is only necessary for platforms like OS X which error if all
-        threads are not absolutely terminated before calling execv.
-    """
-    
-    def __init__(self, bus, retry=2):
-        self.bus = bus
-        self.retry = retry
-    
-    def restart(self):
-        """Re-execute the current process."""
-        args = sys.argv[:]
-        self.bus.log('Re-spawning %s' % ' '.join(args))
-        args.insert(0, sys.executable)
-        
-        if sys.platform == 'win32':
-            args = ['"%s"' % arg for arg in args]
-        
-        # Some platforms (OS X) will error if all threads are not
-        # ABSOLUTELY terminated, and there doesn't seem to be a way
-        # around it other than waiting for the threads to stop.
-        # See http://www.cherrypy.org/ticket/581.
-        for trial in xrange(self.retry * 10):
-            try:
-                os.execv(sys.executable, args)
-                return
-            except OSError, x:
-                if x.errno != 45:
-                    raise
-                time.sleep(0.1)
-        else:
-            raise
-
-
 class DropPrivileges(SimplePlugin):
     """Drop privileges.
     
@@ -389,7 +352,10 @@ class Autoreloader(Monitor):
                 else:
                     if mtime is None or mtime > oldtime:
                         # The file has been deleted or modified.
+                        self.bus.log("Restarting because %s changed." % filename)
+                        self.thread.cancel()
                         self.bus.restart()
+                        return
 
 
 class ThreadManager(SimplePlugin):

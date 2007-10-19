@@ -72,6 +72,8 @@ class Win32Bus(wspbus.Bus):
         event = self._get_state_event(state)
         try:
             win32event.WaitForSingleObject(event, win32event.INFINITE)
+            if self.execv:
+                self._do_execv()
         except SystemExit:
             self.log('SystemExit raised: shutting down bus')
             self.stop()

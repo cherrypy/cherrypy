@@ -212,7 +212,6 @@ timeout_monitor.subscribe()
 # Add an autoreloader (the 'engine' config namespace may detach/attach it).
 engine.autoreload = restsrv.plugins.Autoreloader(engine)
 engine.autoreload.subscribe()
-restsrv.plugins.Reexec(engine).subscribe()
 restsrv.plugins.ThreadManager(engine).subscribe()
 
 from cherrypy import _cpserver

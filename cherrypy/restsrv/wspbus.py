@@ -57,7 +57,8 @@ import sys
 import threading
 import time
 import traceback as _traceback
-
+import os
+import exceptions
 
 # Use a flag to indicate the state of the bus.
 class _StateEnum(object):
@@ -77,6 +78,7 @@ class Bus(object):
     state = states.STOPPED
     
     def __init__(self):
+        self.execv = False
         self.state = states.STOPPED
         self.listeners = dict(
             [(channel, set()) for channel
@@ -146,6 +148,10 @@ class Bus(object):
     
     def restart(self):
         """Restart the process (may close connections)."""
+        if self.execv:
+            raise exceptions.AssertionError("Already restarting.")
+
+        self.execv = True
         self.stop()
         
         self.log('Bus restart')
@@ -161,6 +167,8 @@ class Bus(object):
         try:
             while self.state != state:
                 time.sleep(interval)
+            if self.execv:
+                self._do_execv()
         except (KeyboardInterrupt, IOError):
             # The time.sleep call might raise
             # "IOError: [Errno 4] Interrupted function call" on KBInt.
@@ -171,6 +179,25 @@ class Bus(object):
             self.stop()
             raise
     
+    def _do_execv(self):
+        """Re-execute the current process."""
+        # Waiting for the child threads to finish is necessary on OS X.
+        # See: http://www.cherrypy.org/ticket/581
+        self.log("Waiting for child threads...")
+        threads = [t for t in threading.enumerate() if t != threading.currentThread()]
+        for t in threads:
+            t.join()
+
+        args = sys.argv[:]
+        self.log('Re-spawning %s' % ' '.join(args))
+        args.insert(0, sys.executable)
+
+        if sys.platform == 'win32':
+            args = ['"%s"' % arg for arg in args]
+
+        os.execv(sys.executable, args)
+
+
     def stop(self):
         """Stop all services."""
         self.state = states.STOPPING
