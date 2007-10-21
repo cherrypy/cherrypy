@@ -16,12 +16,15 @@ the traceback to stdout, and keep any assertions you have from running
 be of further significance to your tests).
 """
 
-import os, sys, time, re
-import types
-import pprint
-import socket
 import httplib
+import os
+import pprint
+import re
+import socket
+import sys
+import time
 import traceback
+import types
 
 from unittest import *
 from unittest import _TextTestResult
@@ -48,9 +51,7 @@ class TerseTestRunner(TextTestRunner):
         "Run the given test case or test suite."
         # Overridden to remove unnecessary empty lines and separators
         result = self._makeResult()
-        startTime = time.time()
         test(result)
-        timeTaken = float(time.time() - startTime)
         result.printErrors()
         if not result.wasSuccessful():
             self.stream.write("FAILED (")
@@ -142,6 +143,14 @@ class WebCase(TestCase):
     HTTP_CONN = httplib.HTTPConnection
     PROTOCOL = "HTTP/1.1"
     
+    scheme = "http"
+    url = None
+    
+    status = None
+    headers = None
+    body = None
+    time = None
+    
     def set_persistent(self, on=True, auto_open=False):
         """Make our HTTP_CONN persistent (or not).
         
@@ -188,8 +197,11 @@ class WebCase(TestCase):
         ServerError.on = False
         
         self.url = url
+        self.time = None
+        start = time.time()
         result = openURL(url, headers, method, body, self.HOST, self.PORT,
                          self.HTTP_CONN, protocol or self.PROTOCOL)
+        self.time = time.time() - start
         self.status, self.headers, self.body = result
         
         # Build a list of request cookies from the previous response cookies.
