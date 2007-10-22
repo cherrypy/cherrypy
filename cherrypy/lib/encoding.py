@@ -50,7 +50,7 @@ def decode_params(encoding):
 
 # Encoding
 
-def encode(encoding=None, errors='strict'):
+def encode(encoding=None, errors='strict', text_only=True, add_charset=True):
     # Guard against running twice
     if getattr(cherrypy.request, "_encoding_attempted", False):
         return
@@ -59,10 +59,11 @@ def encode(encoding=None, errors='strict'):
     ct = cherrypy.response.headers.elements("Content-Type")
     if ct:
         ct = ct[0]
-        if ct.value.lower().startswith("text/"):
+        if (not text_only) or ct.value.lower().startswith("text/"):
             # Set "charset=..." param on response Content-Type header
             ct.params['charset'] = find_acceptable_charset(encoding, errors=errors)
-            cherrypy.response.headers["Content-Type"] = str(ct)
+            if add_charset:
+                cherrypy.response.headers["Content-Type"] = str(ct)
 
 def encode_stream(encoding, errors='strict'):
     """Encode a streaming response body.
