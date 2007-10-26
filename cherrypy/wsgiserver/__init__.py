@@ -535,10 +535,10 @@ def _ssl_wrap_method(method, is_reader=False):
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
                     return ""
                 
-                errno = e.args[0]
-                if is_reader and errno in socket_errors_to_ignore:
+                errnum = e.args[0]
+                if is_reader and errnum in socket_errors_to_ignore:
                     return ""
-                raise socket.error(errno)
+                raise socket.error(errnum)
             except SSL.Error, e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
                     return ""
@@ -632,8 +632,8 @@ class HTTPConnection(object):
                 if req.close_connection:
                     return
         except socket.error, e:
-            errno = e.args[0]
-            if errno not in socket_errors_to_ignore:
+            errnum = e.args[0]
+            if errnum not in socket_errors_to_ignore:
                 if req:
                     req.simple_response("500 Internal Server Error",
                                         format_exc())
@@ -1060,6 +1060,13 @@ class CherryPyWSGIServer(object):
             # accept() by default
             return
         except socket.error, x:
+            if hasattr(errno, "EINTR") and x.args[0] == errno.EINTR:
+                # I *think* this is right. EINTR should occur when a signal
+                # is received during the accept() call; all docs say retry
+                # the call, and I *think* I'm reading it right that Python
+                # will then go ahead and poll for and handle the signal
+                # elsewhere. See http://www.cherrypy.org/ticket/707.
+                return
             msg = x.args[1]
             if msg in ("Bad file descriptor", "Socket operation on non-socket"):
                 # Our socket was closed.
