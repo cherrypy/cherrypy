@@ -1,6 +1,7 @@
 """A CherryPy tool for hosting a foreign WSGI application."""
 
 import sys
+import warnings
 
 import cherrypy
 
@@ -50,6 +51,10 @@ def make_environ():
 
 def run(app, env=None):
     """Run the given WSGI app and set response.body to its output."""
+    warnings.warn("This module is deprecated and will be removed in "
+                  "Cherrypy 3.2. See http://www.cherrypy.org/ticket/700 "
+                  "for more information.")
+    
     try:
         environ = cherrypy.request.wsgi_environ.copy()
         environ['SCRIPT_NAME'] = cherrypy.request.script_name

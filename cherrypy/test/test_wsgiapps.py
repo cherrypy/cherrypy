@@ -42,19 +42,9 @@ def setup_server():
         index.exposed = True
     
     
-    class HostedWSGI(object):
-        _cp_config = {'tools.wsgiapp.on': True,
-                      'tools.wsgiapp.app': test_app,
-                      }
-    
     cherrypy.config.update({'environment': 'test_suite'})
     cherrypy.tree.mount(Root())
     
-    conf0 = {'/static': {'tools.staticdir.on': True,
-                         'tools.staticdir.root': curdir,
-                         'tools.staticdir.dir': 'static',
-                         }}
-    cherrypy.tree.mount(HostedWSGI(), '/hosted/app0', conf0)
     cherrypy.tree.graft(test_app, '/hosted/app1')
     cherrypy.tree.graft(test_empty_string_app, '/hosted/app3')
     
@@ -66,7 +56,7 @@ def setup_server():
 from cherrypy.test import helper
 
 
-class WSGIAppTest(helper.CPWebCase):
+class WSGIGraftTests(helper.CPWebCase):
     
     wsgi_output = '''Hello, world!
 This is a wsgi app running within CherryPy!'''
@@ -74,17 +64,6 @@ This is a wsgi app running within CherryPy!'''
     def test_01_standard_app(self):
         self.getPage("/")
         self.assertBody("I'm a regular CherryPy page handler!")
-    
-    def test_02_wrapped_wsgi(self):
-        self.getPage("/hosted/app0")
-        self.assertHeader("Content-Type", "text/plain")
-        self.assertInBody(self.wsgi_output)
-    
-    def test_03_static_subdir(self):
-        self.getPage("/hosted/app0/static/index.html")
-        self.assertStatus('200 OK')
-        self.assertHeader('Content-Type', 'text/html')
-        self.assertBody('Hello, world\r\n')
     
     def test_04_pure_wsgi(self):
         self.getPage("/hosted/app1")
