@@ -268,9 +268,11 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage("/dir1/dir2/5/3/sir")
         self.assertBody("default for dir1, param is:('dir2', '5', '3', 'sir')")
         
-        # test that extra positional args raises 404
+        # test that extra positional args raises an error.
+        # 500 for now, maybe 404 in the future.
+        # See http://www.cherrypy.org/ticket/733.
         self.getPage("/dir1/dir2/script_name/extra/stuff")
-        self.assertStatus("404 Not Found")
+        self.assertStatus(500)
     
     def testExpose(self):
         # Test the cherrypy.expose function/decorator

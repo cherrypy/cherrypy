@@ -207,7 +207,7 @@ class AppResponse(object):
         self.cpapp.release_serving()
     
     def get_response(self):
-        """Grab a request object from the engine and return its response."""
+        """Run self.request and return its response."""
         meth = self.environ['REQUEST_METHOD']
         path = _http.urljoin(self.environ.get('SCRIPT_NAME', ''),
                              self.environ.get('PATH_INFO', ''))
