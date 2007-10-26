@@ -167,11 +167,11 @@ class Request(object):
     unless we are processing an InternalRedirect."""
     
     # Conversation/connection attributes
-    local = http.Host("localhost", 80)
+    local = http.Host("127.0.0.1", 80)
     local__doc = \
         "An http.Host(ip, port, hostname) object for the server socket."
     
-    remote = http.Host("localhost", 1111)
+    remote = http.Host("127.0.0.1", 1111)
     remote__doc = \
         "An http.Host(ip, port, hostname) object for the client socket."
     

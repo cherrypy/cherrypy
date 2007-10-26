@@ -123,9 +123,9 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     if not base:
         port = cherrypy.request.local.port
         if port == 80:
-            base = 'localhost'
+            base = '127.0.0.1'
         else:
-            base = 'localhost:%s' % port
+            base = '127.0.0.1:%s' % port
     
     if base.find("://") == -1:
         # add http:// or https:// if needed

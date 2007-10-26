@@ -34,9 +34,9 @@ class Server(object):
     control them all:
     
         s1 = MyWSGIServer(host='0.0.0.0', port=80)
-        s2 = another.HTTPServer(host='localhost', SSL=True)
+        s2 = another.HTTPServer(host='127.0.0.1', SSL=True)
         cherrypy.server.httpservers = {s1: ('0.0.0.0', 80),
-                                       s2: ('localhost', 443)}
+                                       s2: ('127.0.0.1', 443)}
         # Note we do not use quickstart when we define our own httpservers
         cherrypy.server.start()
     
@@ -47,7 +47,7 @@ class Server(object):
     
     socket_port = 8080
     
-    _socket_host = 'localhost'
+    _socket_host = '127.0.0.1'
     def _get_socket_host(self):
         return self._socket_host
     def _set_socket_host(self, value):

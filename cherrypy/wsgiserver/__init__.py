@@ -12,8 +12,8 @@ Simplest example on how to use this module directly
         return ['Hello world!\n']
     
     server = wsgiserver.CherryPyWSGIServer(
-                ('localhost', 8070), my_crazy_app,
-                server_name='localhost')
+                ('0.0.0.0', 8070), my_crazy_app,
+                server_name='www.cherrypy.example')
     
 The CherryPy WSGI server can serve as many WSGI applications 
 as you want in one instance:
@@ -867,7 +867,7 @@ class CherryPyWSGIServer(object):
     """
     
     protocol = "HTTP/1.1"
-    _bind_addr = "localhost"
+    _bind_addr = "127.0.0.1"
     version = "CherryPy/3.1alpha"
     ready = False
     _interrupt = None

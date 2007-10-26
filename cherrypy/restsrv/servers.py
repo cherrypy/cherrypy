@@ -18,9 +18,9 @@ class ServerManager(object):
     control them all:
     
         s1 = MyWSGIServer(host='0.0.0.0', port=80)
-        s2 = another.HTTPServer(host='localhost', SSL=True)
+        s2 = another.HTTPServer(host='127.0.0.1', SSL=True)
         server.httpservers = {s1: ('0.0.0.0', 80),
-                              s2: ('localhost', 443)}
+                              s2: ('127.0.0.1', 443)}
         server.start()
     
     The start, wait, restart, and stop methods control all registered

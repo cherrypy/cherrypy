@@ -31,7 +31,7 @@ class HTTPTests(helper.CPWebCase):
         # By not including a Content-Length header, cgi.FieldStorage
         # will hang. Verify that CP times out the socket and responds
         # with 411 Length Required.
-        c = httplib.HTTPConnection("localhost:%s" % self.PORT)
+        c = httplib.HTTPConnection("127.0.0.1:%s" % self.PORT)
         c.request("POST", "/")
         self.assertEqual(c.getresponse().status, 411)
 

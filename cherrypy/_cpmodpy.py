@@ -61,7 +61,7 @@ your application can be found by from the user running
 the apache2 instance. Of course if your application
 resides in the global site-package this won't be needed.
 
-Then restart apache2 and access http://localhost:8080
+Then restart apache2 and access http://127.0.0.1:8080
 """
 
 import StringIO
