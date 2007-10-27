@@ -347,6 +347,8 @@ class FileStorage:
             raise SessionStoragePathNotConfiguredError()
         fileName = self.SESSION_PREFIX + id
         file_path = os.path.join(storage_path, fileName)
+        if not os.path.normpath(file_path).startswith(storage_path):
+            raise cherrypy.HTTPError(400, "Invalid session id in cookie.")
         return file_path
     
     def _lock_file(self, path):
