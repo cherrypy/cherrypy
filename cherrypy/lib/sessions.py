@@ -260,7 +260,10 @@ class FileSession(Session):
                     os.path.abspath(self.storage_path)))
     
     def _get_file_path(self):
-        return os.path.join(self.storage_path, self.SESSION_PREFIX + self.id)
+        f = os.path.join(self.storage_path, self.SESSION_PREFIX + self.id)
+        if not os.path.normpath(f).startswith(self.storage_path):
+            raise cherrypy.HTTPError(400, "Invalid session id in cookie.")
+        return f
     
     def _load(self, path=None):
         if path is None:
