@@ -363,6 +363,8 @@ def run():
         'test_tools',
         'test_encoding',
         'test_etags',
+        'test_httpauth',
+        'test_httplib',
         'test_objectmapping',
         'test_misc_tools',
         'test_static',
@@ -376,6 +378,7 @@ def run():
         'test_xmlrpc',
         'test_wsgiapps',
         'test_wsgi_ns',
+        'test_wsgi_vhost',
         
         # Run refleak test as late as possible to
         # catch refleaks from all exercised tests.
