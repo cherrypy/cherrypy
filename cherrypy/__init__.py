@@ -418,7 +418,7 @@ def expose(func=None, alias=None):
             parents = sys._getframe(1).f_locals
             return expose_
 
-def url(path="", qs="", script_name=None, base=None, relative=False):
+def url(path="", qs="", script_name=None, base=None, relative=None):
     """Create an absolute URL for the given path.
     
     If 'path' starts with a slash ('/'), this will return
@@ -437,10 +437,13 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
     If you call url(qs=cherrypy.request.query_string), you should get the
     original browser URL (assuming no internal redirections).
     
-    If relative is False (the default), the output will be an absolute URL
-    (usually including the scheme, host, vhost, and script_name).
-    If relative is True, the output will instead be a URL that is relative
-    to the current request path, perhaps including '..' atoms.
+    If relative is None or not provided, request.app.relative_urls will
+    be used (if available, else False). If False, the output will be an
+    absolute URL (including the scheme, host, vhost, and script_name).
+    If True, the output will instead be a URL that is relative to the
+    current request path, perhaps including '..' atoms. If relative is
+    the string 'server', the output will instead be a URL that is
+    relative to the server root; i.e., it will start with a slash.
     """
     if qs:
         qs = '?' + qs
@@ -494,7 +497,18 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
     
     # At this point, we should have a fully-qualified absolute URL.
     
-    if relative:
+    if relative is None:
+        relative = getattr(request.app, "relative_urls", False)
+    
+    # See http://www.ietf.org/rfc/rfc2396.txt
+    if relative == 'server':
+        # "A relative reference beginning with a single slash character is
+        # termed an absolute-path reference, as defined by <abs_path>..."
+        # This is also sometimes called "server-relative".
+        newurl = '/' + '/'.join(newurl.split('/', 3)[3:])
+    elif relative:
+        # "A relative reference that does not begin with a scheme name
+        # or a slash character is termed a relative-path reference."
         old = url().split('/')[:-1]
         new = newurl.split('/')
         while old and new:

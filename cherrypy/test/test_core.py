@@ -76,10 +76,14 @@ def setup_server():
         _cp_config = {'tools.trailing_slash.on': False}
         
         def index(self, path_info, relative=None):
-            return cherrypy.url(path_info, relative=bool(relative))
+            if relative != 'server':
+                relative = bool(relative)
+            return cherrypy.url(path_info, relative=relative)
         
         def leaf(self, path_info, relative=None):
-            return cherrypy.url(path_info, relative=bool(relative))
+            if relative != 'server':
+                relative = bool(relative)
+            return cherrypy.url(path_info, relative=relative)
     
     
     class Params(Test):
@@ -1076,6 +1080,18 @@ Content-Type: text/plain
         # Output relative to /
         self.getPage('/baseurl?path_info=/ab&relative=True')
         self.assertBody('ab')
+        
+        # absolute-path references ("server-relative")
+        # Input relative to current
+        self.getPage('/url/leaf?path_info=page1&relative=server')
+        self.assertBody('/url/page1')
+        self.getPage('/url/?path_info=page1&relative=server')
+        self.assertBody('/url/page1')
+        # Input is 'absolute'; that is, relative to script_name
+        self.getPage('/url/leaf?path_info=/page1&relative=server')
+        self.assertBody('/page1')
+        self.getPage('/url/?path_info=/page1&relative=server')
+        self.assertBody('/page1')
 
 
 if __name__ == '__main__':

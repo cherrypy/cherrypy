@@ -43,6 +43,8 @@ class Application(object):
     request_class = _cprequest.Request
     response_class = _cprequest.Response
     
+    relative_urls = False
+    
     def __init__(self, root, script_name=""):
         self.log = _cplogging.LogManager(id(self), cherrypy.log.logger_root)
         self.root = root
