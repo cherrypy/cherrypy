@@ -123,7 +123,12 @@ def get(invalid_methods=("POST", "PUT", "DELETE")):
     request.cacheable = not c
     if c:
         response = cherrypy.response
-        s, response.headers, b, create_time = cache_data
+        s, h, b, create_time = cache_data
+        
+        # Make a copy. See http://www.cherrypy.org/ticket/721
+        response.headers = rh = http.HeaderMap()
+        for k in h:
+            dict.__setitem__(rh, k, dict.__getitem__(h, k))
         
         # Add the required Age header
         response.headers["Age"] = str(int(response.time - create_time))
@@ -133,7 +138,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE")):
             # this was put into the cached copy, and should have been
             # resurrected just above (response.headers = cache_data[1]).
             cptools.validate_since()
-        except cherrypy.HTTPError, x:
+        except cherrypy.HTTPRedirect, x:
             if x.status == 304:
                 cherrypy._cache.tot_non_modified += 1
             raise

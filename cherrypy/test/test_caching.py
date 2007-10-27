@@ -5,6 +5,11 @@ import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
+from cherrypy.lib import http
+
+gif_bytes = ('GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
+             '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+             '\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x02\x03\x02\x08\t\x00;')
 
 
 def setup_server():
@@ -21,7 +26,12 @@ def setup_server():
             msg = "visit #%s" % cherrypy.counter
             return msg
         index.exposed = True
-
+        
+        def a_gif(self):
+            cherrypy.response.headers['Last-Modified'] = http.HTTPDate()
+            return gif_bytes
+        a_gif.exposed = True
+    
     class UnCached(object):
         _cp_config = {'tools.expires.on': True,
                       'tools.staticdir.on': True,
@@ -161,6 +171,27 @@ class CacheTest(helper.CPWebCase):
             self.assertHeader("Cache-Control", "no-cache, must-revalidate")
         d = self.assertHeader("Date")
         self.assertHeader("Expires", d)
+    
+    def testLastModified(self):
+        self.getPage("/a.gif")
+        self.assertStatus(200)
+        self.assertBody(gif_bytes)
+        lm1 = self.assertHeader("Last-Modified")
+        
+        # this request should get the cached copy.
+        self.getPage("/a.gif")
+        self.assertStatus(200)
+        self.assertBody(gif_bytes)
+        self.assertHeader("Age")
+        lm2 = self.assertHeader("Last-Modified")
+        self.assertEqual(lm1, lm2)
+        
+        # this request should match the cached copy, but raise 304.
+        self.getPage("/a.gif", [('If-Modified-Since', lm1)])
+        self.assertStatus(304)
+        self.assertNoHeader("Last-Modified")
+        self.assertHeader("Age")
+
 
 if __name__ == '__main__':
     setup_server()
