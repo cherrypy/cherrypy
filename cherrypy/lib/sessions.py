@@ -58,12 +58,29 @@ class Session(object):
         for k, v in kwargs.iteritems():
             setattr(self, k, v)
         
-        self.id = id
+        if id is None:
+            self.regenerate()
+        else:
+            self.id = id
+    
+    def regenerate(self):
+        """Replace the current session (with a new id)."""
+        if self.id is not None:
+            self.delete()
+        
+        old_session_was_locked = self.locked
+        if old_session_was_locked:
+            self.release_lock()
+        
+        self.id = None
         while self.id is None:
             self.id = self.generate_id()
             # Assert that the generated id is not already stored.
             if self._load() is not None:
                 self.id = None
+        
+        if old_session_was_locked:
+            self.acquire_lock()
     
     def clean_up(self):
         """Clean up expired sessions."""
@@ -489,7 +506,8 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     path_header: if 'path' is None (the default), then the response
         cookie 'path' will be pulled from request.headers[path_header].
     name: the name of the cookie.
-    timeout: the expiration timeout for the cookie.
+    timeout: the expiration timeout (in minutes) for both the cookie and
+        stored session data.
     domain: the cookie domain.
     secure: if False (the default) the cookie 'secure' value will not
         be set. If True, the cookie 'secure' value will be set (to 1).
@@ -530,10 +548,28 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     if not hasattr(cherrypy, "session"):
         cherrypy.session = cherrypy._ThreadLocalProxy('session')
     
+    set_response_cookie(path=path, path_header=path_header, name=name,
+                        timeout=timeout, domain=domain, secure=secure)
+
+
+def set_response_cookie(path=None, path_header=None, name='session_id',
+                        timeout=60, domain=None, secure=False):
+    """Set a response cookie for the client.
+    
+    path: the 'path' value to stick in the response cookie metadata.
+    path_header: if 'path' is None (the default), then the response
+        cookie 'path' will be pulled from request.headers[path_header].
+    name: the name of the cookie.
+    timeout: the expiration timeout for the cookie.
+    domain: the cookie domain.
+    secure: if False (the default) the cookie 'secure' value will not
+        be set. If True, the cookie 'secure' value will be set (to 1).
+    """
     # Set response cookie
     cookie = cherrypy.response.cookie
-    cookie[name] = sess.id
-    cookie[name]['path'] = path or request.headers.get(path_header) or '/'
+    cookie[name] = cherrypy.serving.session.id
+    cookie[name]['path'] = (path or cherrypy.request.headers.get(path_header)
+                            or '/')
     
     # We'd like to use the "max-age" param as indicated in
     # http://www.faqs.org/rfcs/rfc2109.html but IE doesn't
@@ -555,4 +591,5 @@ def expire():
     exp = time.gmtime(time.time() - one_year)
     t = time.strftime("%a, %d-%b-%Y %H:%M:%S GMT", exp)
     cherrypy.response.cookie[name]['expires'] = t
+
 

@@ -83,6 +83,11 @@ def setup_server():
         def restricted(self):
             return cherrypy.request.method
         restricted.exposed = True
+        
+        def regen(self):
+            cherrypy.tools.sessions.regenerate()
+            return "logged in"
+        regen.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'test_suite'})
@@ -202,6 +207,15 @@ class SessionTest(helper.CPWebCase):
         # code has to survive calling save/close without init.
         self.getPage('/restricted', self.cookies, method='POST')
         self.assertErrorPage(405, "Specified method is invalid for this server.")
+    
+    def test_6_regenerate(self):
+        self.getPage('/testStr')
+        # grab the cookie ID
+        id1 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        self.getPage('/regen')
+        self.assertBody('logged in')
+        id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        self.assertNotEqual(id1, id2)
 
 
 import socket

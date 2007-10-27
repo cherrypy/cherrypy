@@ -242,6 +242,19 @@ class SessionTool(Tool):
         
         hooks.attach('before_finalize', _sessions.save)
         hooks.attach('on_end_request', _sessions.close)
+        
+    def regenerate(self):
+        """Drop the current session and make a new one (with a new id)."""
+        sess = cherrypy.serving.session
+        sess.regenerate()
+        
+        # Grab cookie-relevant tool args
+        conf = dict([(k, v) for k, v in self._merged_args().iteritems()
+                     if k in ('path', 'path_header', 'name', 'timeout',
+                              'domain', 'secure')])
+        _sessions.set_response_cookie(**conf)
+
+
 
 
 class XMLRPCController(object):
