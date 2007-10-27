@@ -49,6 +49,10 @@ def setup_server():
         def upload(self, file):
             return "Size: %s" % len(file.file.read())
         upload.exposed = True
+        
+        def baseurl(self, path_info, relative=None):
+            return cherrypy.url(path_info, relative=bool(relative))
+        baseurl.exposed = True
     
     root = Root()
     
@@ -1065,6 +1069,13 @@ Content-Type: text/plain
         self.assertBody('../page1')
         self.getPage('/url/?path_info=other/../page1&relative=True')
         self.assertBody('page1')
+        
+        # Output relative to /
+        self.getPage('/baseurl?path_info=ab&relative=True')
+        self.assertBody('ab')
+        # Output relative to /
+        self.getPage('/baseurl?path_info=/ab&relative=True')
+        self.assertBody('ab')
 
 
 if __name__ == '__main__':

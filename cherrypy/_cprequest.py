@@ -325,6 +325,8 @@ class Request(object):
     set to 'False' if it failed and to the 'username' value if it succeeded.
     The default 'None' implies that no authentication happened."""
     
+    # Note that cherrypy.url uses "if request.app:" to determine whether
+    # the call is during a real HTTP request or not. So leave this None.
     app = None
     app__doc = \
         """The cherrypy.Application object which is handling this request."""

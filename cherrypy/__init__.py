@@ -492,6 +492,8 @@ def url(path="", qs="", script_name=None, base=None, relative=False):
                 atoms.append(atom)
         newurl = '/'.join(atoms)
     
+    # At this point, we should have a fully-qualified absolute URL.
+    
     if relative:
         old = url().split('/')[:-1]
         new = newurl.split('/')
