@@ -175,7 +175,8 @@ def expires(secs=0, force=False):
     number of seconds between response.time and when the response should
     expire. The 'Expires' header will be set to (response.time + secs).
     
-    If 'secs' is zero, the following "cache prevention" headers are also set:
+    If 'secs' is zero, the 'Expires' header is set one year in the past, and
+    the following "cache prevention" headers are also set:
        'Pragma': 'no-cache'
        'Cache-Control': 'no-cache, must-revalidate'
     
@@ -205,7 +206,9 @@ def expires(secs=0, force=False):
             if cherrypy.request.protocol >= (1, 1):
                 if force or "Cache-Control" not in headers:
                     headers["Cache-Control"] = "no-cache, must-revalidate"
-        
-        expiry = http.HTTPDate(response.time + secs)
+            # Set an explicit Expires date in the past.
+            expiry = http.HTTPDate(1169942400.0)
+        else:
+            expiry = http.HTTPDate(response.time + secs)
         if force or "Expires" not in headers:
             headers["Expires"] = expiry

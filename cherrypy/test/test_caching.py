@@ -141,8 +141,7 @@ class CacheTest(helper.CPWebCase):
         self.assertHeader("Pragma", "no-cache")
         if cherrypy.server.protocol_version == "HTTP/1.1":
             self.assertHeader("Cache-Control", "no-cache, must-revalidate")
-        d = self.assertHeader("Date")
-        self.assertHeader("Expires", d)
+        self.assertHeader("Expires", "Sun, 28 Jan 2007 00:00:00 GMT")
         
         # static content should now have "cache prevention" headers
         self.getPage("/expires/index.html")
@@ -150,8 +149,7 @@ class CacheTest(helper.CPWebCase):
         self.assertHeader("Pragma", "no-cache")
         if cherrypy.server.protocol_version == "HTTP/1.1":
             self.assertHeader("Cache-Control", "no-cache, must-revalidate")
-        d = self.assertHeader("Date")
-        self.assertHeader("Expires", d)
+        self.assertHeader("Expires", "Sun, 28 Jan 2007 00:00:00 GMT")
         
         # the cacheable handler should now have "cache prevention" headers
         self.getPage("/expires/cacheable")
@@ -159,8 +157,7 @@ class CacheTest(helper.CPWebCase):
         self.assertHeader("Pragma", "no-cache")
         if cherrypy.server.protocol_version == "HTTP/1.1":
             self.assertHeader("Cache-Control", "no-cache, must-revalidate")
-        d = self.assertHeader("Date")
-        self.assertHeader("Expires", d)
+        self.assertHeader("Expires", "Sun, 28 Jan 2007 00:00:00 GMT")
         
         self.getPage('/expires/dynamic')
         self.assertBody("D-d-d-dynamic!")
@@ -169,8 +166,7 @@ class CacheTest(helper.CPWebCase):
         self.assertHeader("Pragma", "no-cache")
         if cherrypy.server.protocol_version == "HTTP/1.1":
             self.assertHeader("Cache-Control", "no-cache, must-revalidate")
-        d = self.assertHeader("Date")
-        self.assertHeader("Expires", d)
+        self.assertHeader("Expires", "Sun, 28 Jan 2007 00:00:00 GMT")
     
     def testLastModified(self):
         self.getPage("/a.gif")
