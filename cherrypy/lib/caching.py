@@ -85,7 +85,7 @@ class MemoryCache:
         self.cache.pop(self.key())
 
 
-def get(invalid_methods=("POST", "PUT", "DELETE")):
+def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
     """Try to obtain cached output. If fresh enough, raise HTTPError(304).
     
     If POST, PUT, or DELETE:
