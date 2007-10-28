@@ -196,10 +196,27 @@ def compress(body, compress_level):
     yield struct.pack("<l", crc)
     yield struct.pack("<L", size & 0xFFFFFFFFL)
 
+def decompress(body):
+    import gzip, StringIO
+    
+    zbuf = StringIO.StringIO()
+    zbuf.write(body)
+    zbuf.seek(0)
+    zfile = gzip.GzipFile(mode='rb', fileobj=zbuf)
+    data = zfile.read()
+    zfile.close()
+    return data
+
+
 def gzip(compress_level=9, mime_types=['text/html', 'text/plain']):
     response = cherrypy.response
     if not response.body:
         # Response body is empty (might be a 304 for instance)
+        return
+    
+    # If returning cached content (which should already have been gzipped),
+    # don't re-zip.
+    if getattr(cherrypy.request, "cached", False):
         return
     
     acceptable = cherrypy.request.headers.elements('Accept-Encoding')

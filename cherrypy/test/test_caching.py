@@ -105,22 +105,19 @@ class CacheTest(helper.CPWebCase):
         
         # The previous request should have invalidated the cache,
         # so this request will recalc the response.
-        zbuf = StringIO.StringIO()
-        zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
-        zfile.write("visit #5")
-        zfile.close()
-        
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
-        self.assertInBody(zbuf.getvalue()[:3])
+        self.assertEqual(cherrypy.lib.encoding.decompress(self.body), "visit #5")
         
         # Now check that a second request gets the gzip header and gzipped body
+        # This also tests a bug in 3.0 to 3.0.2 whereby the cached, gzipped
+        # response body was being gzipped a second time.
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
-        self.assertInBody(zbuf.getvalue()[:3])
+        self.assertEqual(cherrypy.lib.encoding.decompress(self.body), "visit #5")
         
         # Now check that a third request that doesn't accept gzip
-        # gets another hit.
+        # skips the cache (because the 'Vary' header denies it).
         self.getPage("/", method="GET")
         self.assertNoHeader('Content-Encoding')
         self.assertBody('visit #6')
