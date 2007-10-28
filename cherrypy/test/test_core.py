@@ -795,7 +795,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/headerelements/get_elements?headername=Expect", [e])
         self.assertBody('100-continue')
         
-        self.getPage("/expect/expectation_failed", [('Content-Length', '200'), e])
+        self.getPage("/expect/expectation_failed", [e])
         self.assertStatus(417)
     
     def testHeaderElements(self):

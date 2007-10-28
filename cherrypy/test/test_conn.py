@@ -1,3 +1,5 @@
+"""Tests for TCP connection handling, including proper and timely close."""
+
 from cherrypy.test import test
 test.prefer_parent_path()
 
@@ -15,6 +17,10 @@ from cherrypy.test import webtest
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 def setup_server():
+    
+    def raise500():
+        raise cherrypy.HTTPError(500)
+    
     class Root:
         
         def index(self):
@@ -40,6 +46,10 @@ def setup_server():
         stream.exposed = True
         stream._cp_config = {'response.stream': True}
         
+        def error(self, code=500):
+            raise cherrypy.HTTPError(code)
+        error.exposed = True
+        
         def upload(self):
             return ("thanks for '%s' (%s)" %
                     (cherrypy.request.body.read(),
@@ -50,10 +60,15 @@ def setup_server():
             cherrypy.response.status = response_code
             return "Code = %s" % response_code
         custom.exposed = True
+        
+        def err_before_read(self):
+            return "ok"
+        err_before_read.exposed = True
+        err_before_read._cp_config = {'hooks.on_start_resource': raise500}
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
-        'server.max_request_body_size': 100,
+        'server.max_request_body_size': 1001,
         'environment': 'test_suite',
         })
 
@@ -344,6 +359,71 @@ class ConnectionTests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody("thanks for 'I am a small file' (text/plain)")
     
+    def test_readall_or_close(self):
+        if cherrypy.server.protocol_version != "HTTP/1.1":
+            self.PROTOCOL = "HTTP/1.0"
+        else:
+            self.PROTOCOL = "HTTP/1.1"
+        
+        if self.scheme == "https":
+            self.HTTP_CONN = httplib.HTTPSConnection
+        else:
+            self.HTTP_CONN = httplib.HTTPConnection
+        
+        self.persistent = True
+        conn = self.HTTP_CONN
+        
+        # Get a POST page with an error
+        conn.putrequest("POST", "/err_before_read", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.putheader("Content-Type", "text/plain")
+        conn.putheader("Content-Length", "1000")
+        conn.putheader("Expect", "100-continue")
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="POST")
+        
+        # ...assert and then skip the 100 response
+        version, status, reason = response._read_status()
+        self.assertEqual(status, 100)
+        while True:
+            skip = response.fp.readline().strip()
+            if not skip:
+                break
+        
+        # ...send the body
+        conn.send("x" * 1000)
+        
+        # ...get the final response
+        response.begin()
+        self.status, self.headers, self.body = webtest.shb(response)
+        self.assertStatus(500)
+        
+        # Now try a working page with an Expect header...
+        conn._output('POST /upload HTTP/1.1')
+        conn._output("Host: %s" % self.HOST)
+        conn._output("Content-Type: text/plain")
+        conn._output("Content-Length: 17")
+        conn._output("Expect: 100-continue")
+        conn._send_output()
+        response = conn.response_class(conn.sock, method="POST")
+        
+        # ...assert and then skip the 100 response
+        version, status, reason = response._read_status()
+        self.assertEqual(status, 100)
+        while True:
+            skip = response.fp.readline().strip()
+            if not skip:
+                break
+        
+        # ...send the body
+        conn.send("I am a small file")
+        
+        # ...get the final response
+        response.begin()
+        self.status, self.headers, self.body = webtest.shb(response)
+        self.assertStatus(200)
+        self.assertBody("thanks for 'I am a small file' (text/plain)")
+    
     def test_No_Message_Body(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
             print "skipped ",
@@ -412,11 +492,12 @@ class ConnectionTests(helper.CPWebCase):
         
         # Try a chunked request that exceeds server.max_request_body_size.
         # Note that the delimiters and trailer are included.
-        body = "5f\r\n" + ("x" * 95) + "\r\n0\r\n\r\n"
+        body = "3e3\r\n" + ("x" * 995) + "\r\n0\r\n\r\n"
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.putheader("Transfer-Encoding", "chunked")
         conn.putheader("Content-Type", "text/plain")
+        # Chunked requests don't need a content-length
 ##        conn.putheader("Content-Length", len(body))
         conn.endheaders()
         conn.send(body)

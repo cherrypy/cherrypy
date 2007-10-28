@@ -376,70 +376,7 @@ class HeaderMap(CaseInsensitiveDict):
         return header_list
 
 
-class MaxSizeExceeded(Exception):
-    pass
-
-class SizeCheckWrapper(object):
-    """Wraps a file-like object, raising MaxSizeExceeded if too large."""
-    
-    def __init__(self, rfile, maxlen):
-        self.rfile = rfile
-        self.maxlen = maxlen
-        self.bytes_read = 0
-    
-    def _check_length(self):
-        if self.maxlen and self.bytes_read > self.maxlen:
-            raise MaxSizeExceeded()
-    
-    def read(self, size = None):
-        data = self.rfile.read(size)
-        self.bytes_read += len(data)
-        self._check_length()
-        return data
-    
-    def readline(self, size = None):
-        if size is not None:
-            data = self.rfile.readline(size)
-            self.bytes_read += len(data)
-            self._check_length()
-            return data
-        
-        # User didn't specify a size ...
-        # We read the line in chunks to make sure it's not a 100MB line !
-        res = []
-        while True:
-            data = self.rfile.readline(256)
-            self.bytes_read += len(data)
-            self._check_length()
-            res.append(data)
-            # See http://www.cherrypy.org/ticket/421
-            if len(data) < 256 or data[-1:] == "\n":
-                return ''.join(res)
-    
-    def readlines(self, sizehint = 0):
-        # Shamelessly stolen from StringIO
-        total = 0
-        lines = []
-        line = self.readline()
-        while line:
-            lines.append(line)
-            total += len(line)
-            if 0 < sizehint <= total:
-                break
-            line = self.readline()
-        return lines
-    
-    def close(self):
-        self.rfile.close()
-    
-    def __iter__(self):
-        return self
-    
-    def next(self):
-        data = self.rfile.next()
-        self.bytes_read += len(data)
-        self._check_length()
-        return data
+from cherrypy.wsgiserver import SizeCheckWrapper, MaxSizeExceeded
 
 
 class Host(object):

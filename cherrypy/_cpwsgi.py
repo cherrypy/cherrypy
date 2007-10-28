@@ -332,30 +332,11 @@ class CPWSGIApp(object):
 
 class CPHTTPRequest(wsgiserver.HTTPRequest):
     
-    def parse_request(self):
-        mhs = _cherrypy.server.max_request_header_size
-        if mhs > 0:
-            self.rfile = _http.SizeCheckWrapper(self.rfile, mhs)
-        
-        try:
-            wsgiserver.HTTPRequest.parse_request(self)
-        except _http.MaxSizeExceeded:
-            self.simple_response("413 Request Entity Too Large")
-            _cherrypy.log(traceback=True)
-    
-    def decode_chunked(self):
-        """Decode the 'chunked' transfer coding."""
-        if isinstance(self.rfile, _http.SizeCheckWrapper):
-            self.rfile = self.rfile.rfile
-        mbs = _cherrypy.server.max_request_body_size
-        if mbs > 0:
-            self.rfile = _http.SizeCheckWrapper(self.rfile, mbs)
-        try:
-            return wsgiserver.HTTPRequest.decode_chunked(self)
-        except _http.MaxSizeExceeded:
-            self.simple_response("413 Request Entity Too Large")
-            _cherrypy.log(traceback=True)
-            return False
+    def __init__(self, sendall, environ, wsgi_app):
+        s = _cherrypy.server
+        self.max_request_header_size = s.max_request_header_size or 0
+        self.max_request_body_size = s.max_request_body_size or 0
+        wsgiserver.HTTPRequest.__init__(self, sendall, environ, wsgi_app)
 
 
 class CPHTTPConnection(wsgiserver.HTTPConnection):
@@ -364,13 +345,11 @@ class CPHTTPConnection(wsgiserver.HTTPConnection):
 
 
 class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
-    
     """Wrapper for wsgiserver.CherryPyWSGIServer.
     
     wsgiserver has been designed to not reference CherryPy in any way,
     so that it can be used in other frameworks and applications. Therefore,
     we wrap it here, so we can set our own mount points from cherrypy.tree.
-    
     """
     
     ConnectionClass = CPHTTPConnection

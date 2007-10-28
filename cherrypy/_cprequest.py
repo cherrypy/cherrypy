@@ -554,13 +554,6 @@ class Request(object):
                     if self.process_request_body:
                         if self.method not in self.methods_with_bodies:
                             self.process_request_body = False
-                        
-                        if self.process_request_body:
-                            # Prepare the SizeCheckWrapper for the req body
-                            mbs = getattr(cherrypy.server,
-                                          "max_request_body_size", 0)
-                            if mbs > 0:
-                                self.rfile = http.SizeCheckWrapper(self.rfile, mbs)
                     
                     self.hooks.run('before_request_body')
                     if self.process_request_body:
@@ -660,7 +653,7 @@ class Request(object):
             # any message-body that had a transfer-coding, and we expect
             # the HTTP server to have supplied a Content-Length header
             # which is valid for the decoded entity-body.
-            return
+            raise cherrypy.HTTPError(411)
         
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}

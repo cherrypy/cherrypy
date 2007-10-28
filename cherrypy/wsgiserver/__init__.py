@@ -119,6 +119,72 @@ class WSGIPathInfoDispatcher(object):
         return ['']
 
 
+class MaxSizeExceeded(Exception):
+    pass
+
+class SizeCheckWrapper(object):
+    """Wraps a file-like object, raising MaxSizeExceeded if too large."""
+    
+    def __init__(self, rfile, maxlen):
+        self.rfile = rfile
+        self.maxlen = maxlen
+        self.bytes_read = 0
+    
+    def _check_length(self):
+        if self.maxlen and self.bytes_read > self.maxlen:
+            raise MaxSizeExceeded()
+    
+    def read(self, size=None):
+        data = self.rfile.read(size)
+        self.bytes_read += len(data)
+        self._check_length()
+        return data
+    
+    def readline(self, size=None):
+        if size is not None:
+            data = self.rfile.readline(size)
+            self.bytes_read += len(data)
+            self._check_length()
+            return data
+        
+        # User didn't specify a size ...
+        # We read the line in chunks to make sure it's not a 100MB line !
+        res = []
+        while True:
+            data = self.rfile.readline(256)
+            self.bytes_read += len(data)
+            self._check_length()
+            res.append(data)
+            # See http://www.cherrypy.org/ticket/421
+            if len(data) < 256 or data[-1:] == "\n":
+                return ''.join(res)
+    
+    def readlines(self, sizehint=0):
+        # Shamelessly stolen from StringIO
+        total = 0
+        lines = []
+        line = self.readline()
+        while line:
+            lines.append(line)
+            total += len(line)
+            if 0 < sizehint <= total:
+                break
+            line = self.readline()
+        return lines
+    
+    def close(self):
+        self.rfile.close()
+    
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        data = self.rfile.next()
+        self.bytes_read += len(data)
+        self._check_length()
+        return data
+
+
 class HTTPRequest(object):
     """An HTTP Request (and response).
     
@@ -154,6 +220,9 @@ class HTTPRequest(object):
         send_headers.
     """
     
+    max_request_header_size = 0
+    max_request_body_size = 0
+    
     def __init__(self, sendall, environ, wsgi_app):
         self.rfile = environ['wsgi.input']
         self.sendall = sendall
@@ -170,6 +239,16 @@ class HTTPRequest(object):
     
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
+        self.rfile.maxlen = self.max_request_header_size
+        self.rfile.bytes_read = 0
+        
+        try:
+            self._parse_request()
+        except MaxSizeExceeded:
+            self.simple_response("413 Request Entity Too Large")
+            return
+    
+    def _parse_request(self):
         # HTTP/1.1 connections are persistent by default. If a client
         # requests a page, then idles (leaves the connection open),
         # then rfile.readline() will raise socket.error("timed out").
@@ -260,6 +339,7 @@ class HTTPRequest(object):
             self.simple_response("400 Bad Request", repr(ex.args))
             return
         
+        # Set AUTH_TYPE, REMOTE_USER
         creds = environ.get("HTTP_AUTHORIZATION", "").split(" ", 1)
         environ["AUTH_TYPE"] = creds[0]
         if creds[0].lower() == 'basic':
@@ -282,22 +362,18 @@ class HTTPRequest(object):
             if te:
                 te = [x.strip().lower() for x in te.split(",") if x.strip()]
         
-        read_chunked = False
+        self.chunked_read = False
         
         if te:
             for enc in te:
                 if enc == "chunked":
-                    read_chunked = True
+                    self.chunked_read = True
                 else:
                     # Note that, even if we see "chunked", we must reject
                     # if there is an extension we don't recognize.
                     self.simple_response("501 Unimplemented")
                     self.close_connection = True
                     return
-        
-        if read_chunked:
-            if not self.decode_chunked():
-                return
         
         # From PEP 333:
         # "Servers and gateways that implement HTTP 1.1 must provide
@@ -385,6 +461,29 @@ class HTTPRequest(object):
     
     def respond(self):
         """Call the appropriate WSGI app and write its iterable output."""
+        # Set rfile.maxlen to ensure we don't read past Content-Length.
+        # This will also be used to read the entire request body if errors
+        # are raised before the app can read the body.
+        if self.chunked_read:
+            # If chunked, Content-Length will be 0.
+            self.rfile.maxlen = self.max_request_body_size
+        else:
+            cl = int(self.environ.get("CONTENT_LENGTH", 0))
+            self.rfile.maxlen = min(cl, self.max_request_body_size)
+        self.rfile.bytes_read = 0
+        
+        try:
+            self._respond()
+        except MaxSizeExceeded:
+            self.simple_response("413 Request Entity Too Large")
+            return
+    
+    def _respond(self):
+        if self.chunked_read:
+            if not self.decode_chunked():
+                self.close_connection = True
+                return
+        
         response = self.wsgi_app(self.environ, self.start_response)
         try:
             for chunk in response:
@@ -399,6 +498,7 @@ class HTTPRequest(object):
         finally:
             if hasattr(response, "close"):
                 response.close()
+        
         if (self.ready and not self.sent_headers):
             self.sent_headers = True
             self.send_headers()
@@ -487,6 +587,23 @@ class HTTPRequest(object):
             else:
                 if not self.close_connection:
                     self.outheaders.append(("Connection", "Keep-Alive"))
+        
+        if (not self.close_connection) and (not self.chunked_read):
+            # Read any remaining request body data on the socket.
+            # "If an origin server receives a request that does not include an
+            # Expect request-header field with the "100-continue" expectation,
+            # the request includes a request body, and the server responds
+            # with a final status code before reading the entire request body
+            # from the transport connection, then the server SHOULD NOT close
+            # the transport connection until it has read the entire request,
+            # or until the client closes the connection. Otherwise, the client
+            # might not reliably receive the response message. However, this
+            # requirement is not be construed as preventing a server from
+            # defending itself against denial-of-service attacks, or from
+            # badly broken client implementations."
+            size = self.rfile.maxlen - self.rfile.bytes_read
+            if size > 0:
+                self.rfile.read(size)
         
         if "date" not in hkeys:
             self.outheaders.append(("Date", rfc822.formatdate()))
@@ -612,7 +729,11 @@ class HTTPConnection(object):
             self.rfile = sock.makefile("rb", self.rbufsize)
             self.sendall = sock.sendall
         
-        self.environ["wsgi.input"] = self.rfile
+        # Wrap wsgi.input but not HTTPConnection.rfile itself.
+        # We're also not setting maxlen yet; we'll do that separately
+        # for headers and body for each iteration of self.communicate
+        # (if maxlen is 0 the wrapper doesn't check length).
+        self.environ["wsgi.input"] = SizeCheckWrapper(self.rfile, 0)
     
     def communicate(self):
         """Read each request and respond appropriately."""
@@ -624,13 +745,16 @@ class HTTPConnection(object):
                 req = None
                 req = self.RequestHandlerClass(self.sendall, self.environ,
                                                self.wsgi_app)
+                
                 # This order of operations should guarantee correct pipelining.
                 req.parse_request()
                 if not req.ready:
                     return
+                
                 req.respond()
                 if req.close_connection:
                     return
+        
         except socket.error, e:
             errnum = e.args[0]
             if errnum not in socket_errors_to_ignore:
