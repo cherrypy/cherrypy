@@ -79,10 +79,11 @@ def setup_server():
             raise cherrypy.InternalRedirect('/blah')
         iredir.exposed = True
         
-        @cherrypy.tools.allow(methods=['GET'])
         def restricted(self):
             return cherrypy.request.method
         restricted.exposed = True
+        restricted._cp_config = {'tools.allow.on': True,
+                                 'tools.allow.methods': ['GET']}
         
         def regen(self):
             cherrypy.tools.sessions.regenerate()
