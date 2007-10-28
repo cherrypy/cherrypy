@@ -88,6 +88,7 @@ class CommandLineParser(object):
     available_servers = {'wsgi': "cherrypy._cpwsgi.CPWSGIServer",
                          'cpmodpy': "cpmodpy",
                          'modpygw': "modpygw",
+                         'modwsgi': "modwsgi",
                          }
     default_server = "wsgi"
     scheme = "http"
@@ -321,6 +322,12 @@ class CommandLineParser(object):
         elif self.server == 'modpygw':
             from cherrypy.test import modpy
             h = modpy.ModPythonTestHarness(self.tests, self.server,
+                                           self.protocol, self.port,
+                                           "http", self.interactive)
+            h.use_wsgi = True
+        elif self.server == 'modwsgi':
+            from cherrypy.test import modwsgi
+            h = modwsgi.ModWSGITestHarness(self.tests, self.server,
                                            self.protocol, self.port,
                                            "http", self.interactive)
             h.use_wsgi = True
