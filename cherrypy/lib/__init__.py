@@ -128,7 +128,7 @@ def unrepr(s):
         # e.g. IronPython 1.0.
         return eval(s)
     
-    p = compiler.parse("a=" + s)
+    p = compiler.parse("__tempvalue__ = " + s)
     obj = p.getChildren()[1].getChildren()[0].getChildren()[1]
     
     return _Builder().build(obj)

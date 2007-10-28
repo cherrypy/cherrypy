@@ -343,8 +343,9 @@ class _Parser(ConfigParser.ConfigParser):
                 try:
                     value = unrepr(value)
                 except Exception, x:
-                    msg = ("Config error in section: %s, option: %s, value: %s" %
-                           (repr(section), repr(option), repr(value)))
+                    msg = ("Config error in section: %r, option: %r, "
+                           "value: %r. Config values must be valid Python." %
+                           (section, option, value))
                     raise ValueError(msg, x.__class__.__name__, x.args)
                 result[section][option] = value
         return result
