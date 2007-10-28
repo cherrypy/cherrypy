@@ -66,11 +66,11 @@ class HTTPAuthTest(helper.CPWebCase):
 
     def testBasic(self):
         self.getPage("/basic/")
-        self.assertStatus('401 Unauthorized')
+        self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="localhost"')
 
         self.getPage('/basic/', [('Authorization', 'Basic dGVzdDp0ZX60')])
-        self.assertStatus('401 Unauthorized')
+        self.assertStatus(401)
         
         self.getPage('/basic/', [('Authorization', 'Basic dGVzdDp0ZXN0')])
         self.assertStatus('200 OK')
@@ -78,11 +78,11 @@ class HTTPAuthTest(helper.CPWebCase):
 
     def testBasic2(self):
         self.getPage("/basic2/")
-        self.assertStatus('401 Unauthorized')
+        self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="localhost"')
 
         self.getPage('/basic2/', [('Authorization', 'Basic dGVzdDp0ZX60')])
-        self.assertStatus('401 Unauthorized')
+        self.assertStatus(401)
         
         self.getPage('/basic2/', [('Authorization', 'Basic dGVzdDp0ZXN0')])
         self.assertStatus('200 OK')
@@ -90,7 +90,7 @@ class HTTPAuthTest(helper.CPWebCase):
 
     def testDigest(self):
         self.getPage("/digest/")
-        self.assertStatus('401 Unauthorized')
+        self.assertStatus(401)
         
         value = None
         for k, v in self.headers:
