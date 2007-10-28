@@ -370,7 +370,8 @@ class PostgresqlSession(Session):
     You must provide your own get_db function.
     """
     
-    def __init__(self):
+    def __init__(self, id=None, **kwargs):
+        Session.__init__(self, id, **kwargs)
         self.db = self.get_db()
         self.cursor = self.db.cursor()
     
