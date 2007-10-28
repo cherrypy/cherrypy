@@ -1,8 +1,10 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import gzip
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+import StringIO
 
 import cherrypy
 from cherrypy.lib import http
@@ -68,7 +70,8 @@ def setup_server():
     
     cherrypy.tree.mount(Root())
     cherrypy.tree.mount(UnCached(), "/expires")
-    cherrypy.config.update({'environment': 'test_suite'})
+    cherrypy.config.update({'environment': 'test_suite',
+                            'tools.gzip.on': True})
 
 
 from cherrypy.test import helper
@@ -99,10 +102,28 @@ class CacheTest(helper.CPWebCase):
         self.assertBody('visit #3')
         self.getPage("/", method="DELETE")
         self.assertBody('visit #4')
+        
         # The previous request should have invalidated the cache,
         # so this request will recalc the response.
+        zbuf = StringIO.StringIO()
+        zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
+        zfile.write("visit #5")
+        zfile.close()
+        
+        self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
+        self.assertHeader('Content-Encoding', 'gzip')
+        self.assertInBody(zbuf.getvalue()[:3])
+        
+        # Now check that a second request gets the gzip header and gzipped body
+        self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
+        self.assertHeader('Content-Encoding', 'gzip')
+        self.assertInBody(zbuf.getvalue()[:3])
+        
+        # Now check that a third request that doesn't accept gzip
+        # gets another hit.
         self.getPage("/", method="GET")
-        self.assertBody('visit #5')
+        self.assertNoHeader('Content-Encoding')
+        self.assertBody('visit #6')
     
     def testExpiresTool(self):
         

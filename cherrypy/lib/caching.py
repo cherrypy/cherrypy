@@ -123,9 +123,28 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
     request.cacheable = not c
     if c:
         response = cherrypy.response
-        s, h, b, create_time = cache_data
+        s, h, b, create_time, original_req_headers = cache_data
         
-        # Make a copy. See http://www.cherrypy.org/ticket/721
+        # Check 'Vary' selecting headers. If any headers mentioned in "Vary"
+        # differ between the cached and current request, bail out and
+        # let the rest of CP handle the request. This should properly
+        # mimic the behavior of isolated caches as RFC 2616 assumes:
+        # "If the selecting request header fields for the cached entry
+        # do not match the selecting request header fields of the new
+        # request, then the cache MUST NOT use a cached entry to satisfy
+        # the request unless it first relays the new request to the origin
+        # server in a conditional request and the server responds with
+        # 304 (Not Modified), including an entity tag or Content-Location
+        # that indicates the entity to be used.
+        # TODO: can we store multiple variants based on Vary'd headers?
+        for header_element in h.elements('Vary'):
+            key = header_element.value
+            if original_req_headers[key] != request.headers.get(key, 'missing'):
+                request.cached = False
+                request.cacheable = True
+                return False
+        
+        # Copy the response headers. See http://www.cherrypy.org/ticket/721.
         response.headers = rh = http.HeaderMap()
         for k in h:
             dict.__setitem__(rh, k, dict.__getitem__(h, k))
@@ -161,8 +180,16 @@ def tee_output():
         if response.headers.get('Pragma', None) != 'no-cache':
             # save the cache data
             body = ''.join(output)
+            vary = [he.value for he in
+                    cherrypy.response.headers.elements('Vary')]
+            if vary:
+                sel_headers = dict([(k, v) for k, v
+                                    in cherrypy.request.headers.iteritems()
+                                    if k in vary])
+            else:
+                sel_headers = {}
             cherrypy._cache.put((response.status, response.headers or {},
-                                 body, response.time))
+                                 body, response.time, sel_headers))
     
     response = cherrypy.response
     response.body = tee(response.body)

@@ -117,6 +117,7 @@ class EncodingTests(helper.CPWebCase):
         self.getPage('/gzip/', headers=[("Accept-Encoding", "gzip")])
         self.assertInBody(zbuf.getvalue()[:3])
         self.assertHeader("Vary", "Accept-Encoding")
+        self.assertHeader("Content-Encoding", "gzip")
         
         # Test when gzip is denied.
         self.getPage('/gzip/', headers=[("Accept-Encoding", "identity")])
