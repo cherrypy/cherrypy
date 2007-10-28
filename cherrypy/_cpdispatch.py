@@ -218,12 +218,6 @@ class MethodDispatcher(Dispatcher):
             request.handler = cherrypy.NotFound()
 
 
-class WSGIEnvProxy(object):
-    
-    def __getattr__(self, key):
-        return getattr(cherrypy.request.wsgi_environ, key)
-
-
 class RoutesDispatcher(object):
     """A Routes based dispatcher for CherryPy."""
     
@@ -264,9 +258,8 @@ class RoutesDispatcher(object):
         
         config = routes.request_config()
         config.mapper = self.mapper
-        # Since Routes' mapper.environ is not threadsafe,
-        # we must use a proxy which does JIT lookup.
-        config.mapper.environ = WSGIEnvProxy()
+        if hasattr(cherrypy.request, 'wsgi_environ'):
+            config.environ = cherrypy.request.wsgi_environ
         config.host = request.headers.get('Host', None)
         config.protocol = request.scheme
         config.redirect = self.redirect
