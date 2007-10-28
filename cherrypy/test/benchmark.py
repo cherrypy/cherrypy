@@ -147,7 +147,7 @@ Completed 800 requests
 Completed 900 requests
 
 
-Server Software:        CherryPy/3.1alpha
+Server Software:        CherryPy/3.1beta
 Server Hostname:        127.0.0.1
 Server Port:            8080
 

@@ -41,7 +41,7 @@ packages=[
     "cherrypy.tutorial", "cherrypy.test",
     "cherrypy.wsgiserver", "cherrypy.restsrv",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.1alpha/"
+download_url="http://download.cherrypy.org/cherrypy/3.1beta/"
 data_files=[
     ('cherrypy/tutorial',
         [

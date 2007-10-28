@@ -992,7 +992,7 @@ class CherryPyWSGIServer(object):
     
     protocol = "HTTP/1.1"
     _bind_addr = "127.0.0.1"
-    version = "CherryPy/3.1alpha"
+    version = "CherryPy/3.1beta"
     ready = False
     _interrupt = None
     ConnectionClass = HTTPConnection
