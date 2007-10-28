@@ -82,7 +82,7 @@ class MemoryCache:
                 self.cursize = total_size
     
     def delete(self):
-        self.cache.pop(self.key())
+        self.cache.pop(self.key(), None)
 
 
 def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
