@@ -72,6 +72,16 @@ def setup_server():
             
             return "\n".join(output)
         gc_stats.exposed = True
+        
+        def gc_objtypes(self):
+           data = {}
+           for x in gc.get_objects():
+               data[type(x)] = data.get(type(x), 0) + 1
+            
+           data = [(v, k) for k, v in data.iteritems()]
+           data.sort()
+           return "\n".join([repr(pair) for pair in data])
+        gc_objtypes.exposed = True 
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'test_suite'})
@@ -98,6 +108,12 @@ class ReferenceTests(helper.CPWebCase):
         
         self.getPage("/gc_stats")
         self.assertBody("")
+        
+        if self.body != "":
+            # If gc_stats fails, choose "ignore" to see the type counts for
+            # all the unreachable objects in this body.
+            self.getPage("/gc_objtypes")
+            print self.body
 
 
 if __name__ == '__main__':
