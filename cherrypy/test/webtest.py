@@ -338,13 +338,13 @@ class WebCase(TestCase):
         if isinstance(status, basestring):
             if not self.status == status:
                 if msg is None:
-                    msg = 'Status (%s) != %s' % (`self.status`, `status`)
+                    msg = 'Status (%r) != %r' % (self.status, status)
                 self._handlewebError(msg)
         elif isinstance(status, int):
             code = int(self.status[:3])
             if code != status:
                 if msg is None:
-                    msg = 'Status (%s) != %s' % (`self.status`, `status`)
+                    msg = 'Status (%r) != %r' % (self.status, status)
                 self._handlewebError(msg)
         else:
             # status is a tuple or list.
@@ -359,7 +359,7 @@ class WebCase(TestCase):
                     break
             if not match:
                 if msg is None:
-                    msg = 'Status (%s) not in %s' % (`self.status`, `status`)
+                    msg = 'Status (%r) not in %r' % (self.status, status)
                 self._handlewebError(msg)
     
     def assertHeader(self, key, value=None, msg=None):
@@ -372,9 +372,9 @@ class WebCase(TestCase):
         
         if msg is None:
             if value is None:
-                msg = '%s not in headers' % `key`
+                msg = '%r not in headers' % key
             else:
-                msg = '%s:%s not in headers' % (`key`, `value`)
+                msg = '%r:%r not in headers' % (key, value)
         self._handlewebError(msg)
     
     def assertNoHeader(self, key, msg=None):
@@ -383,35 +383,35 @@ class WebCase(TestCase):
         matches = [k for k, v in self.headers if k.lower() == lowkey]
         if matches:
             if msg is None:
-                msg = '%s in headers' % `key`
+                msg = '%r in headers' % key
             self._handlewebError(msg)
     
     def assertBody(self, value, msg=None):
         """Fail if value != self.body."""
         if value != self.body:
             if msg is None:
-                msg = 'expected body:\n%s\n\nactual body:\n%s' % (`value`, `self.body`)
+                msg = 'expected body:\n%r\n\nactual body:\n%r' % (value, self.body)
             self._handlewebError(msg)
     
     def assertInBody(self, value, msg=None):
         """Fail if value not in self.body."""
         if value not in self.body:
             if msg is None:
-                msg = '%s not in body' % `value`
+                msg = '%r not in body' % value
             self._handlewebError(msg)
     
     def assertNotInBody(self, value, msg=None):
         """Fail if value in self.body."""
         if value in self.body:
             if msg is None:
-                msg = '%s found in body' % `value`
+                msg = '%r found in body' % value
             self._handlewebError(msg)
     
     def assertMatchesBody(self, pattern, msg=None, flags=0):
         """Fail if value (a regex pattern) is not in self.body."""
         if re.search(pattern, self.body, flags) is None:
             if msg is None:
-                msg = 'No match for %s in body' % `pattern`
+                msg = 'No match for %r in body' % pattern
             self._handlewebError(msg)
 
 
