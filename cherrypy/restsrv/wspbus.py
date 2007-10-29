@@ -149,7 +149,15 @@ class Bus(object):
         """Start all services."""
         self.state = states.STARTING
         self.log('Bus starting')
-        self.publish('start')
+        try:
+            self.publish('start')
+        except:
+            try:
+                self.stop()
+            except:
+                # Any stop errors will be logged inside publish().
+                pass
+            raise
         self.state = states.STARTED
     
     def exit(self, status=0):

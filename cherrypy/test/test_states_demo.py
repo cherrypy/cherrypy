@@ -62,6 +62,9 @@ if __name__ == '__main__':
     
     cherrypy.engine.subscribe('start', cherrypy.server.quickstart)
     
+    if '-starterror' in sys.argv[3:]:
+        cherrypy.engine.subscribe('start', lambda: 1/0)
+    
     # This is in a special order for a reason:
     # it allows test_states to wait_for_occupied_port
     # and then immediately call getPage without getting 503.
