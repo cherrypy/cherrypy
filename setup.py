@@ -18,12 +18,12 @@ required_python_version = '2.3'
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.1a1"
+version = "3.1b1"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers=[
-    "Development Status :: 5 - Production/Stable",
-    #"Development Status :: 4 - Beta",
+    #"Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
     "License :: Freely Distributable",
