@@ -19,22 +19,44 @@ def setup_server():
         for k in keys:
             output.append('%s: %s\n' % (k,environ[k]))
         return output
-
+    
     def test_empty_string_app(environ, start_response):
         status = '200 OK'
         response_headers = [('Content-type', 'text/plain')]
         start_response(status, response_headers)
         return ['Hello', '', ' ', '', 'world']
     
-    def reversing_middleware(app):
-        def _app(environ, start_response):
+    
+    class WSGIResponse(object):
+        
+        def __init__(self, appresults):
+            self.appresults = appresults
+            self.iter = iter(appresults)
+        
+        def __iter__(self):
+            return self
+        
+        def next(self):
+            return self.iter.next()
+        
+        def close(self):
+            if hasattr(self.appresults, "close"):
+                self.appresults.close()
+    
+    
+    class ReversingMiddleware(object):
+        
+        def __init__(self, app):
+            self.app = app
+        
+        def __call__(self, environ, start_response):
             results = app(environ, start_response)
-            if not isinstance(results, basestring):
-                results = "".join(results)
-            results = list(results)
-            results.reverse()
-            return ["".join(results)]
-        return _app
+            class Reverser(WSGIResponse):
+                def next(this):
+                    line = list(this.iter.next())
+                    line.reverse()
+                    return "".join(line)
+            return Reverser(results)
     
     class Root:
         def index(self):
@@ -51,7 +73,7 @@ def setup_server():
     # Set script_name explicitly to None to signal CP that it should
     # be pulled from the WSGI environ each time.
     app = cherrypy.Application(Root(), script_name=None)
-    cherrypy.tree.graft(reversing_middleware(app), '/hosted/app2')
+    cherrypy.tree.graft(ReversingMiddleware(app), '/hosted/app2')
 
 from cherrypy.test import helper
 

@@ -6,6 +6,23 @@ import cherrypy
 
 def setup_server():
     
+    class WSGIResponse(object):
+        
+        def __init__(self, appresults):
+            self.appresults = appresults
+            self.iter = iter(appresults)
+        
+        def __iter__(self):
+            return self
+        
+        def next(self):
+            return self.iter.next()
+        
+        def close(self):
+            if hasattr(self.appresults, "close"):
+                self.appresults.close()
+    
+    
     class ChangeCase(object):
         
         def __init__(self, app, to=None):
@@ -13,16 +30,27 @@ def setup_server():
             self.to = to
         
         def __call__(self, environ, start_response):
-            res = ''.join(self.app(environ, start_response))
-            return [getattr(res, self.to)()]
+            res = self.app(environ, start_response)
+            class CaseResults(WSGIResponse):
+                def next(this):
+                    return getattr(this.iter.next(), self.to)()
+            return CaseResults(res)
     
-    def replace(app, map={}):
-        def replace_app(environ, start_response):
-            for line in app(environ, start_response):
-                for k, v in map.iteritems():
-                    line = line.replace(k, v)
-                yield line
-        return replace_app
+    class Replacer(object):
+        
+        def __init__(self, app, map={}):
+            self.app = app
+            self.map = map
+        
+        def __call__(self, environ, start_response):
+            res = self.app(environ, start_response)
+            class ReplaceResults(WSGIResponse):
+                def next(this):
+                    line = this.iter.next()
+                    for k, v in self.map.iteritems():
+                        line = line.replace(k, v)
+                    return line
+            return ReplaceResults(res)
     
     class Root(object):
         
@@ -31,7 +59,7 @@ def setup_server():
         index.exposed = True
     
     
-    root_conf = {'wsgi.pipeline': [('replace', replace)],
+    root_conf = {'wsgi.pipeline': [('replace', Replacer)],
                  'wsgi.replace.map': {'L': 'X', 'l': 'r'},
                  }
     
