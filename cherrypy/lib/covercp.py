@@ -195,7 +195,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
     for name in dirs:
         newpath = os.path.join(path, name)
         
-        if newpath.startswith(base):
+        if newpath.lower().startswith(base):
             relpath = newpath[len(base):]
             yield "| " * relpath.count(os.sep)
             yield "<a class='directory' href='menu?base=%s&exclude=%s'>%s</a>\n" % \
@@ -205,7 +205,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
             yield chunk
     
     # Now list the files
-    if path.startswith(base):
+    if path.lower().startswith(base):
         relpath = path[len(base):]
         files = [k for k, v in root.iteritems() if not v]
         files.sort()
