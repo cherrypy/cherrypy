@@ -151,13 +151,19 @@ class Bus(object):
         self.log('Bus starting')
         try:
             self.publish('start')
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
+            start_trace =  _traceback.format_exc()
+            e_info = sys.exc_info()
             try:
                 self.stop()
             except:
                 # Any stop errors will be logged inside publish().
                 pass
-            raise
+            self.log("Exception that caused shutdown: %s" % start_trace)
+            raise e_info[0], e_info[1], e_info[2]
+
         self.state = states.STARTED
     
     def exit(self, status=0):
