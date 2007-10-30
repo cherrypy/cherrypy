@@ -96,11 +96,13 @@ class LogManager(object):
     
     # ------------------------- Screen handlers ------------------------- #
     
-    def _set_screen_handler(self, log, enable):
+    def _set_screen_handler(self, log, enable, stream=None):
         h = self._get_builtin_handler(log, "screen")
         if enable:
             if not h:
-                h = logging.StreamHandler(sys.stdout)
+                if stream is None:
+                    stream=sys.stdout
+                h = logging.StreamHandler(stream)
                 h.setLevel(logging.DEBUG)
                 h.setFormatter(logfmt)
                 h._cpbuiltin = "screen"
@@ -114,7 +116,7 @@ class LogManager(object):
         return bool(has_h)
     
     def _set_screen(self, newvalue):
-        self._set_screen_handler(self.error_log, newvalue)
+        self._set_screen_handler(self.error_log, newvalue, stream=sys.stderr)
         self._set_screen_handler(self.access_log, newvalue)
     screen = property(_get_screen, _set_screen,
                       doc="If True, error and access will print to stdout.")
