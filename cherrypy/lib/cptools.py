@@ -296,6 +296,24 @@ def log_request_headers():
     h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.header_list]
     cherrypy.log('\nRequest Headers:\n' + '\n'.join(h), "HTTP")
 
+def log_hooks():
+    """Write request.hooks to the cherrypy error log."""
+    msg = []
+    # Sort by the standard points if possible.
+    from cherrypy import _cprequest
+    points = _cprequest.hookpoints
+    for k in cherrypy.request.hooks.keys():
+        if k not in points:
+            points.append(k)
+    
+    for k in points:
+        msg.append("    %s:" % k)
+        v = cherrypy.request.hooks.get(k, [])
+        v.sort()
+        for h in v:
+            msg.append("        %r" % h)
+    cherrypy.log('\nRequest Hooks:\n' + '\n'.join(msg), "HTTP")
+
 def redirect(url='', internal=True):
     """Raise InternalRedirect or HTTPRedirect to the given url."""
     if internal:

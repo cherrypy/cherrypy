@@ -1,6 +1,10 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import os
+localDir = os.path.dirname(__file__)
+logfile = os.path.join(localDir, "test_misc_tools.log")
+
 import cherrypy
 from cherrypy import tools
 
@@ -20,6 +24,7 @@ def setup_server():
             'tools.response_headers.on': True,
             'tools.response_headers.headers': [("Content-Language", "fr"),
                                                ('Content-Type', 'text/plain')],
+            'tools.log_hooks.on': True,
             }
     
     
@@ -67,7 +72,8 @@ def setup_server():
     root.referer = Referer()
     root.accept = Accept()
     cherrypy.tree.mount(root, config=conf)
-    cherrypy.config.update({'environment': 'test_suite'})
+    cherrypy.config.update({'environment': 'test_suite',
+                            'log.error_file': logfile})
 
 
 from cherrypy.test import helper

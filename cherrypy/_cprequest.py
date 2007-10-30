@@ -56,6 +56,14 @@ class Hook(object):
     def __call__(self):
         """Run self.callback(**self.kwargs)."""
         return self.callback(**self.kwargs)
+    
+    def __repr__(self):
+        cls = self.__class__
+        return ("%s.%s(callback=%r, failsafe=%r, priority=%r, %s)"
+                % (cls.__module__, cls.__name__, self.callback,
+                   self.failsafe, self.priority,
+                   ", ".join(['%s=%r' % (k, v)
+                              for k, v in self.kwargs.iteritems()])))
 
 
 class HookMap(dict):
