@@ -164,7 +164,7 @@ class DropPrivileges(SimplePlugin):
                 old_umask = os.umask(umask)
                 self.bus.log('umask old: %03o, new: %03o' %
                                 (old_umask, umask))
-    start.priority = 70
+    start.priority = 75
 
 
 class Daemonizer(SimplePlugin):
@@ -186,6 +186,15 @@ class Daemonizer(SimplePlugin):
         self.stderr = stderr
     
     def start(self):
+        # forking has issues with threads:
+        # http://www.opengroup.org/onlinepubs/000095399/functions/fork.html
+        # " ... The general problem with making fork() work in a multi-threaded world
+        #  is what to do with all of the threads. ... "
+        # So we check for active threads:
+        if threading.activeCount() != 1:
+            self.bus.log('There are more than one active threads. Daemonizing now may cause strange failures.')
+            self.bus.log(str(threading.enumerate()))
+
         # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
         # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
@@ -236,7 +245,7 @@ class Daemonizer(SimplePlugin):
         os.dup2(se.fileno(), sys.stderr.fileno())
         
         self.bus.log('Daemonized to PID: %s' % os.getpid())
-    start.priority = 10
+    start.priority = 65
 
 
 class PIDFile(SimplePlugin):
@@ -297,6 +306,7 @@ class Monitor(SimplePlugin):
             self.thread.setName(threadname)
             self.thread.start()
             self.bus.log("Started thread %r." % threadname)
+    start.priority = 70
     
     def stop(self):
         """Stop our callback's perpetual timer thread."""
@@ -329,6 +339,7 @@ class Autoreloader(Monitor):
         """Start our own perpetual timer thread for self.run."""
         self.mtimes = {}
         Monitor.start(self)
+    start.priority = 70 
     
     def run(self):
         """Reload the process if registered files have been modified."""

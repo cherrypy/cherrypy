@@ -135,8 +135,13 @@ class Bus(object):
         for priority, listener in items:
             try:
                 output.append(listener(*args, **kwargs))
-            except (KeyboardInterrupt, SystemExit):
+            except KeyboardInterrupt:
                 raise
+            except SystemExit, e:
+                # If we have previous errors ensure the exit code is non-zero
+                if exc and e.code == 0:
+                    e.code = 1
+                raise 
             except:
                 self.log("Error in %r listener %r" % (channel, listener),
                          traceback=True)
