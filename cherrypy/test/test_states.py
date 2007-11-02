@@ -327,6 +327,28 @@ class ServerStateTests(helper.CPWebCase):
         if exit_code == 0:
             self.fail("Process failed to return nonzero exit code.")
 
+    def test_6_Start_Error_With_Daemonize(self):
+        if not self.server_class:
+            print "skipped (no server) ",
+            return
+        
+        # Start the demo script in a new process
+        demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
+                                  "test_states_demo.py")
+        host = cherrypy.server.socket_host
+        port = cherrypy.server.socket_port
+        
+        # If a process errors during start, it should stop the engine
+        # and exit with a non-zero exit code, even if we daemonize soon
+        # thereafter.
+        args = [sys.executable, demoscript, host, str(port), '-starterror', '-daemonize']
+        if self.scheme == "https":
+            args.append('-ssl')
+        exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
+        if exit_code == 0:
+            self.fail("Process failed to return nonzero exit code.")
+        time.sleep(2) # Wait for the daemonized process to exit.
+
 
 class DaemonizeTest(helper.CPWebCase):
     

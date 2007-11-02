@@ -36,6 +36,7 @@ if __name__ == '__main__':
     conf = {"server.socket_host": sys.argv[1],
             "server.socket_port": int(sys.argv[2]),
             "log.screen": False,
+            "log.error_file": os.path.join(thisdir, 'test_states_demo.error.log'),
             }
     
     if '-ssl' in sys.argv[3:]:
@@ -60,10 +61,10 @@ if __name__ == '__main__':
         plugins.Daemonizer(cherrypy.engine).subscribe()
         plugins.PIDFile(cherrypy.engine, PID_file_path).subscribe()
     
-    cherrypy.engine.subscribe('start', cherrypy.server.quickstart)
+    cherrypy.engine.subscribe('start', cherrypy.server.quickstart, priority=75)
     
     if '-starterror' in sys.argv[3:]:
-        cherrypy.engine.subscribe('start', lambda: 1/0)
+        cherrypy.engine.subscribe('start', lambda: 1/0, priority=6)
     
     # This is in a special order for a reason:
     # it allows test_states to wait_for_occupied_port
