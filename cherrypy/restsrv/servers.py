@@ -44,6 +44,7 @@ class ServerManager(object):
             raise ValueError("No HTTP servers have been created.")
         for httpserver in self.httpservers:
             self._start_http(httpserver)
+    start.priority = 75
     
     def _start_http(self, httpserver):
         """Start the given httpserver in a new thread."""
