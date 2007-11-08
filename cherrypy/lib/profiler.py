@@ -78,7 +78,7 @@ class Profiler(object):
             os.makedirs(path)
     
     def run(self, func, *args, **params):
-        """run(func, *args, **params). Dumps profile data into self.path."""
+        """Dump profile data into self.path."""
         global _count
         c = _count = _count + 1
         path = os.path.join(self.path, "cp_%04d.prof" % c)
