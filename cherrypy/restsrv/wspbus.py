@@ -141,7 +141,7 @@ class Bus(object):
                 # If we have previous errors ensure the exit code is non-zero
                 if exc and e.code == 0:
                     e.code = 1
-                raise 
+                raise
             except:
                 self.log("Error in %r listener %r" % (channel, listener),
                          traceback=True)
@@ -153,9 +153,11 @@ class Bus(object):
     def start(self):
         """Start all services."""
         self.state = states.STARTING
-        self.log('Bus starting')
+        self.log('Bus STARTING')
         try:
             self.publish('start')
+            self.state = states.STARTED
+            self.log('Bus STARTED')
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -168,8 +170,6 @@ class Bus(object):
                 pass
             self.log("Exception that caused shutdown: %s" % start_trace)
             raise e_info[0], e_info[1], e_info[2]
-
-        self.state = states.STARTED
     
     def exit(self, status=0):
         """Stop all services and exit the process."""
@@ -239,9 +239,10 @@ class Bus(object):
     def stop(self):
         """Stop all services."""
         self.state = states.STOPPING
-        self.log('Bus stopping')
+        self.log('Bus STOPPING')
         self.publish('stop')
         self.state = states.STOPPED
+        self.log('Bus STOPPED')
     
     def start_with_callback(self, func, args=None, kwargs=None):
         """Start 'func' in a new thread T, then start self (and return T)."""
