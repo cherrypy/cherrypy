@@ -46,13 +46,13 @@ def start(opts):
         def _import():
             __import__(opts['--project'], {}, {}, [''])
         _import.priority = 20
-        restsrv.engine.subscribe('start', _import)
+        restsrv.bus.subscribe('start', _import)
     
     if 'win' not in sys.platform:
-        restsrv.engine.subscribe('start', restsrv.plugins.daemonize)
+        restsrv.bus.subscribe('start', restsrv.plugins.daemonize)
     
-    restsrv.engine.start()
-    restsrv.engine.block()
+    restsrv.bus.start()
+    restsrv.bus.block()
 
 
 if __name__ == '__main__':

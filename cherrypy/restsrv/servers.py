@@ -28,14 +28,14 @@ class ServerManager(object):
     """
     
     
-    def __init__(self, engine):
-        self.engine = engine
+    def __init__(self, bus):
+        self.bus = bus
         self.httpservers = {}
         self.interrupt = None
     
     def subscribe(self):
-        self.engine.subscribe('start', self.start)
-        self.engine.subscribe('stop', self.stop)
+        self.bus.subscribe('start', self.start)
+        self.bus.subscribe('stop', self.stop)
     
     def start(self):
         """Start all registered HTTP servers."""
@@ -61,32 +61,32 @@ class ServerManager(object):
         t.start()
         
         self.wait(httpserver)
-        self.engine.log("Serving on %s" % on_what)
+        self.bus.log("Serving on %s" % on_what)
     
     def _start_http_thread(self, httpserver):
         """HTTP servers MUST be started in new threads, so that the
         main thread persists to receive KeyboardInterrupt's. If an
         exception is raised in the httpserver's thread then it's
-        trapped here, and the engine (and therefore our httpservers)
+        trapped here, and the bus (and therefore our httpservers)
         are shut down.
         """
         try:
             httpserver.start()
         except KeyboardInterrupt, exc:
-            self.engine.log("<Ctrl-C> hit: shutting down HTTP servers")
+            self.bus.log("<Ctrl-C> hit: shutting down HTTP servers")
             self.interrupt = exc
-            self.engine.stop()
+            self.bus.stop()
         except SystemExit, exc:
-            self.engine.log("SystemExit raised: shutting down HTTP servers")
+            self.bus.log("SystemExit raised: shutting down HTTP servers")
             self.interrupt = exc
-            self.engine.stop()
+            self.bus.stop()
             raise
         except:
             import sys
             self.interrupt = sys.exc_info()[1]
-            self.engine.log("Error in HTTP server: shutting down",
+            self.bus.log("Error in HTTP server: shutting down",
                             traceback=True)
-            self.engine.stop()
+            self.bus.stop()
             raise
     
     def wait(self, httpserver=None):
@@ -118,7 +118,7 @@ class ServerManager(object):
             # Wait for the socket to be truly freed.
             if isinstance(bind_addr, tuple):
                 wait_for_free_port(*bind_addr)
-            self.engine.log("HTTP Server %s shut down" % httpserver)
+            self.bus.log("HTTP Server %s shut down" % httpserver)
     
     def restart(self):
         """Restart all HTTP servers."""
