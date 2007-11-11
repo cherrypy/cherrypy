@@ -1,5 +1,6 @@
 """Windows service for restsrv. Requires pywin32."""
 
+import os
 import thread
 import win32api
 import win32con
@@ -51,7 +52,9 @@ class Win32Bus(wspbus.Bus):
         try:
             return self.events[state]
         except KeyError:
-            event = win32event.CreateEvent(None, 0, 0, None)
+            event = win32event.CreateEvent(None, 0, 0,
+                                           u"WSPBus %s Event (pid=%r)" %
+                                           (state.name, os.getpid()))
             self.events[state] = event
             return event
     
@@ -69,6 +72,10 @@ class Win32Bus(wspbus.Bus):
         Since this class uses native win32event objects, the interval
         argument is ignored.
         """
+        # Don't wait for an event that beat us to the punch ;)
+        if self.state == state:
+            return
+        
         event = self._get_state_event(state)
         try:
             win32event.WaitForSingleObject(event, win32event.INFINITE)

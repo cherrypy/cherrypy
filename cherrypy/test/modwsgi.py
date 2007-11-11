@@ -140,6 +140,7 @@ def application(environ, start_response):
             "engine.SIGHUP": None,
             "engine.SIGTERM": None,
             })
+        cherrypy.server.unsubscribe()
         cherrypy.engine.start(blocking=False)
     return cherrypy.tree(environ, start_response)
 

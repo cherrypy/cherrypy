@@ -1,83 +1,83 @@
-"""Manage a set of HTTP servers."""
+"""Adapt an HTTP server."""
 
 import socket
 import threading
 import time
 
 
-class ServerManager(object):
-    """Manager for a set of HTTP servers.
-    
-    This is both a container and controller for HTTP servers and gateways,
-    which are kept in Server.httpservers, a dictionary of the form:
-    {httpserver: bind_addr} where 'bind_addr' is usually a (host, port)
-    tuple.
+class ServerAdapter(object):
+    """Adapter for an HTTP server.
     
     If you need to start more than one HTTP server (to serve on multiple
     ports, or protocols, etc.), you can manually register each one and then
-    control them all:
+    start them all with bus.start:
     
-        s1 = MyWSGIServer(host='0.0.0.0', port=80)
-        s2 = another.HTTPServer(host='127.0.0.1', SSL=True)
-        server.httpservers = {s1: ('0.0.0.0', 80),
-                              s2: ('127.0.0.1', 443)}
-        server.start()
-    
-    The start, wait, restart, and stop methods control all registered
-    httpserver objects at once.
+        s1 = ServerAdapter(bus, MyWSGIServer(host='0.0.0.0', port=80))
+        s2 = ServerAdapter(bus, another.HTTPServer(host='127.0.0.1', SSL=True))
+        s1.subscribe()
+        s2.subscribe()
+        bus.start()
     """
     
-    
-    def __init__(self, bus):
+    def __init__(self, bus, httpserver=None, bind_addr=None):
         self.bus = bus
-        self.httpservers = {}
+        self.httpserver = httpserver
+        self.bind_addr = bind_addr
         self.interrupt = None
+        self.running = False
     
     def subscribe(self):
         self.bus.subscribe('start', self.start)
         self.bus.subscribe('stop', self.stop)
     
-    def start(self):
-        """Start all registered HTTP servers."""
-        self.interrupt = None
-        if not self.httpservers:
-            raise ValueError("No HTTP servers have been created.")
-        for httpserver in self.httpservers:
-            self._start_http(httpserver)
-    start.priority = 75
+    def unsubscribe(self):
+        self.bus.unsubscribe('start', self.start)
+        self.bus.unsubscribe('stop', self.stop)
     
-    def _start_http(self, httpserver):
-        """Start the given httpserver in a new thread."""
-        bind_addr = self.httpservers[httpserver]
-        if isinstance(bind_addr, tuple):
-            wait_for_free_port(*bind_addr)
-            host, port = bind_addr
+    def start(self):
+        """Start the HTTP server."""
+        if isinstance(self.bind_addr, tuple):
+            host, port = self.bind_addr
             on_what = "%s:%s" % (host, port)
         else:
-            on_what = "socket file: %s" % bind_addr
+            on_what = "socket file: %s" % self.bind_addr
         
-        t = threading.Thread(target=self._start_http_thread, args=(httpserver,))
+        if self.running:
+            self.bus.log("Already serving on %s" % on_what)
+            return
+        
+        self.interrupt = None
+        if not self.httpserver:
+            raise ValueError("No HTTP server has been created.")
+        
+        # Start the httpserver in a new thread.
+        if isinstance(self.bind_addr, tuple):
+            wait_for_free_port(*self.bind_addr)
+        
+        t = threading.Thread(target=self._start_http_thread)
         t.setName("HTTPServer " + t.getName())
         t.start()
         
-        self.wait(httpserver)
+        self.wait()
+        self.running = True
         self.bus.log("Serving on %s" % on_what)
+    start.priority = 75
     
-    def _start_http_thread(self, httpserver):
-        """HTTP servers MUST be started in new threads, so that the
+    def _start_http_thread(self):
+        """HTTP servers MUST be running in new threads, so that the
         main thread persists to receive KeyboardInterrupt's. If an
         exception is raised in the httpserver's thread then it's
-        trapped here, and the bus (and therefore our httpservers)
+        trapped here, and the bus (and therefore our httpserver)
         are shut down.
         """
         try:
-            httpserver.start()
+            self.httpserver.start()
         except KeyboardInterrupt, exc:
-            self.bus.log("<Ctrl-C> hit: shutting down HTTP servers")
+            self.bus.log("<Ctrl-C> hit: shutting down HTTP server")
             self.interrupt = exc
             self.bus.stop()
         except SystemExit, exc:
-            self.bus.log("SystemExit raised: shutting down HTTP servers")
+            self.bus.log("SystemExit raised: shutting down HTTP server")
             self.interrupt = exc
             self.bus.stop()
             raise
@@ -85,43 +85,38 @@ class ServerManager(object):
             import sys
             self.interrupt = sys.exc_info()[1]
             self.bus.log("Error in HTTP server: shutting down",
-                            traceback=True)
+                         traceback=True)
             self.bus.stop()
             raise
     
-    def wait(self, httpserver=None):
-        """Wait until the HTTP server is ready to receive requests.
+    def wait(self):
+        """Wait until the HTTP server is ready to receive requests."""
+        while not getattr(self.httpserver, "ready", False):
+            if self.interrupt:
+                raise self.interrupt
+            time.sleep(.1)
         
-        If no httpserver is specified, wait for all registered httpservers.
-        """
-        if httpserver is None:
-            httpservers = self.httpservers.items()
-        else:
-            httpservers = [(httpserver, self.httpservers[httpserver])]
-        
-        for httpserver, bind_addr in httpservers:
-            while not getattr(httpserver, "ready", False):
-                if self.interrupt:
-                    raise self.interrupt
-                time.sleep(.1)
-            
-            # Wait for port to be occupied
-            if isinstance(bind_addr, tuple):
-                host, port = bind_addr
-                wait_for_occupied_port(host, port)
+        # Wait for port to be occupied
+        if isinstance(self.bind_addr, tuple):
+            host, port = self.bind_addr
+            wait_for_occupied_port(host, port)
     
     def stop(self):
-        """Stop all HTTP servers."""
-        for httpserver, bind_addr in self.httpservers.items():
-            # httpstop() MUST block until the server is *truly* stopped.
-            httpserver.stop()
+        """Stop the HTTP server."""
+        if self.running:
+            # stop() MUST block until the server is *truly* stopped.
+            self.httpserver.stop()
             # Wait for the socket to be truly freed.
-            if isinstance(bind_addr, tuple):
-                wait_for_free_port(*bind_addr)
-            self.bus.log("HTTP Server %s shut down" % httpserver)
+            if isinstance(self.bind_addr, tuple):
+                wait_for_free_port(*self.bind_addr)
+            self.running = False
+            self.bus.log("HTTP Server %s shut down" % self.httpserver)
+        else:
+            self.bus.log("HTTP Server %s already shut down" % self.httpserver)
+    stop.priority = 25
     
     def restart(self):
-        """Restart all HTTP servers."""
+        """Restart the HTTP server."""
         self.stop()
         self.start()
 

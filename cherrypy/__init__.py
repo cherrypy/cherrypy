@@ -212,10 +212,14 @@ timeout_monitor.subscribe()
 # Add an autoreloader (the 'engine' config namespace may detach/attach it).
 engine.autoreload = restsrv.plugins.Autoreloader(engine)
 engine.autoreload.subscribe()
+
 restsrv.plugins.ThreadManager(engine).subscribe()
+
+signal_handler = restsrv.plugins.SignalHandler(engine)
 
 from cherrypy import _cpserver
 server = _cpserver.Server()
+server.subscribe()
 
 
 def quickstart(root, script_name="", config=None):
@@ -239,8 +243,7 @@ def quickstart(root, script_name="", config=None):
         _global_conf_alias.update(config)
     tree.mount(root, script_name, config)
     
-    engine.subscribe('start', server.quickstart)
-    restsrv.plugins.SignalHandler(engine).subscribe()
+    signal_handler.subscribe()
     engine.start()
     engine.block()
 
@@ -385,7 +388,10 @@ log.screen = True
 log.error_file = ''
 # Using an access file makes CP about 10% slower. Leave off by default.
 log.access_file = ''
-engine.subscribe('log', lambda msg: log.error(msg, 'ENGINE'))
+
+def _buslog(msg):
+    log.error(msg, 'ENGINE')
+engine.subscribe('log', _buslog)
 
 #                       Helper functions for CP apps                       #
 

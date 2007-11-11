@@ -16,14 +16,14 @@ class SimplePlugin(object):
     """Plugin base class which auto-subscribes methods for known channels."""
     
     def subscribe(self):
-        """Register this monitor as a (multi-channel) listener on the bus."""
+        """Register this object as a (multi-channel) listener on the bus."""
         for channel in self.bus.listeners:
             method = getattr(self, channel, None)
             if method is not None:
                 self.bus.subscribe(channel, method)
     
     def unsubscribe(self):
-        """Unregister this monitor as a listener on the bus."""
+        """Unregister this object as a listener on the bus."""
         for channel in self.bus.listeners:
             method = getattr(self, channel, None)
             if method is not None:
@@ -188,13 +188,14 @@ class Daemonizer(SimplePlugin):
     def start(self):
         # forking has issues with threads:
         # http://www.opengroup.org/onlinepubs/000095399/functions/fork.html
-        # " ... The general problem with making fork() work in a multi-threaded world
-        #  is what to do with all of the threads. ... "
+        # "The general problem with making fork() work in a multi-threaded
+        #  world is what to do with all of the threads..."
         # So we check for active threads:
         if threading.activeCount() != 1:
-            self.bus.log('There are more than one active threads. Daemonizing now may cause strange failures.')
+            self.bus.log('There are more than one active threads. '
+                         'Daemonizing now may cause strange failures.')
             self.bus.log(str(threading.enumerate()))
-
+        
         # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
         # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
@@ -301,16 +302,21 @@ class Monitor(SimplePlugin):
     def start(self):
         """Start our callback in its own perpetual timer thread."""
         if self.frequency > 0:
-            threadname = "restsrv %s" % self.__class__.__name__
-            self.thread = PerpetualTimer(self.frequency, self.callback)
-            self.thread.setName(threadname)
-            self.thread.start()
-            self.bus.log("Started thread %r." % threadname)
+            if self.thread is None:
+                threadname = "restsrv %s" % self.__class__.__name__
+                self.thread = PerpetualTimer(self.frequency, self.callback)
+                self.thread.setName(threadname)
+                self.thread.start()
+                self.bus.log("Started thread %r." % threadname)
+            else:
+                self.bus.log("Thread %r already started." % threadname)
     start.priority = 70
     
     def stop(self):
         """Stop our callback's perpetual timer thread."""
-        if self.thread:
+        if self.thread is None:
+            self.bus.log("No thread running for %s." % self.__class__.__name__)
+        else:
             if self.thread is not threading.currentThread():
                 self.thread.cancel()
                 self.thread.join()
@@ -337,7 +343,8 @@ class Autoreloader(Monitor):
     
     def start(self):
         """Start our own perpetual timer thread for self.run."""
-        self.mtimes = {}
+        if self.thread is None:
+            self.mtimes = {}
         Monitor.start(self)
     start.priority = 70 
     

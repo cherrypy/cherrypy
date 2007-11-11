@@ -55,7 +55,7 @@ def read_process(cmd, args=""):
     return output
 
 
-APACHE_PATH = "apache"
+APACHE_PATH = "httpd"
 CONF_PATH = "test_mp.conf"
 
 conf_modpython_gateway = """
@@ -127,6 +127,7 @@ def wsgisetup(req):
         mod = __import__(modname, globals(), locals(), [''])
         mod.setup_server()
         
+        cherrypy.server.unsubscribe()
         cherrypy.engine.start()
     from mod_python import apache
     return apache.OK

@@ -89,6 +89,7 @@ def setup(req):
                             "tools.ignore_headers.headers": ['Range'],
                             })
     
+    cherrypy.server.unsubscribe()
     cherrypy.engine.start()
     
     def cherrypy_cleanup(data):

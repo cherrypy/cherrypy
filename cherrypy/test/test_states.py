@@ -196,7 +196,7 @@ class ServerStateTests(helper.CPWebCase):
                 self.assertBody("Hello World")
                 self.assertNoHeader("Connection")
                 
-                cherrypy.server.httpservers.keys()[0].interrupt = KeyboardInterrupt
+                cherrypy.server.httpserver.interrupt = KeyboardInterrupt
                 engine.block()
                 
                 self.assertEqual(db_connection.running, False)
@@ -327,32 +327,10 @@ class ServerStateTests(helper.CPWebCase):
         if exit_code == 0:
             self.fail("Process failed to return nonzero exit code.")
 
-    def test_6_Start_Error_With_Daemonize(self):
-        if not self.server_class:
-            print "skipped (no server) ",
-            return
-        
-        # Start the demo script in a new process
-        demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
-                                  "test_states_demo.py")
-        host = cherrypy.server.socket_host
-        port = cherrypy.server.socket_port
-        
-        # If a process errors during start, it should stop the engine
-        # and exit with a non-zero exit code, even if we daemonize soon
-        # thereafter.
-        args = [sys.executable, demoscript, host, str(port), '-starterror', '-daemonize']
-        if self.scheme == "https":
-            args.append('-ssl')
-        exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
-        if exit_code == 0:
-            self.fail("Process failed to return nonzero exit code.")
-        time.sleep(2) # Wait for the daemonized process to exit.
 
-
-class DaemonizeTest(helper.CPWebCase):
+class DaemonizeTests(helper.CPWebCase):
     
-    def test_Daemonize(self):
+    def test_1_Daemonize(self):
         if not self.server_class:
             print "skipped (no server) ",
             return
@@ -401,14 +379,39 @@ class DaemonizeTest(helper.CPWebCase):
         # that we wait for the daemon to finish running before we fail.
         if exit_code != 0:
             self.fail("Daemonized process failed to exit cleanly")
+    
+    def test_2_Start_Error_With_Daemonize(self):
+        if not self.server_class:
+            print "skipped (no server) ",
+            return
+        if os.name not in ['posix']: 
+            print "skipped (not on posix) ",
+            return
+        
+        # Start the demo script in a new process
+        demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
+                                  "test_states_demo.py")
+        host = cherrypy.server.socket_host
+        port = cherrypy.server.socket_port
+        
+        # If a process errors during start, it should stop the engine
+        # and exit with a non-zero exit code, even if we daemonize soon
+        # thereafter.
+        args = [sys.executable, demoscript, host, str(port), '-starterror', '-daemonize']
+        if self.scheme == "https":
+            args.append('-ssl')
+        exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
+        if exit_code == 0:
+            self.fail("Process failed to return nonzero exit code.")
+        time.sleep(2) # Wait for the daemonized process to exit.
 
 
 def run(server, conf):
     helper.setConfig(conf)
     ServerStateTests.server_class = server
-    DaemonizeTest.server_class = server
+    DaemonizeTests.server_class = server
     suite = helper.CPTestLoader.loadTestsFromTestCase(ServerStateTests)
-    daemon_suite = helper.CPTestLoader.loadTestsFromTestCase(DaemonizeTest)
+    daemon_suite = helper.CPTestLoader.loadTestsFromTestCase(DaemonizeTests)
     try:
         try:
             import pyconquer
@@ -437,18 +440,18 @@ def run_all(host, port, ssl=False):
             }
     
     if host:
-        DaemonizeTest.HOST = ServerStateTests.HOST = host
+        DaemonizeTests.HOST = ServerStateTests.HOST = host
     
     if port:
-        DaemonizeTest.PORT = ServerStateTests.PORT = port
+        DaemonizeTests.PORT = ServerStateTests.PORT = port
     
     if ssl:
         localDir = os.path.dirname(__file__)
         serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
         conf['server.ssl_certificate'] = serverpem
         conf['server.ssl_private_key'] = serverpem
-        DaemonizeTest.scheme = ServerStateTests.scheme = "https"
-        DaemonizeTest.HTTP_CONN = ServerStateTests.HTTP_CONN = httplib.HTTPSConnection
+        DaemonizeTests.scheme = ServerStateTests.scheme = "https"
+        DaemonizeTests.HTTP_CONN = ServerStateTests.HTTP_CONN = httplib.HTTPSConnection
     
     def _run(server):
         print

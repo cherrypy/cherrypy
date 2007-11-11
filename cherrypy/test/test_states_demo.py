@@ -28,6 +28,11 @@ class Root:
     start.exposed = True
     
     def stop(self):
+        # This handler might be called before the engine is STARTED if an
+        # HTTP worker thread handles it before the HTTP server returns
+        # control to engine.start. We avoid that race condition here
+        # by waiting for the Bus to be STARTED.
+        cherrypy.engine.block(state=cherrypy.engine.states.STARTED)
         cherrypy.engine.stop()
     stop.exposed = True
 
@@ -37,6 +42,7 @@ if __name__ == '__main__':
             "server.socket_port": int(sys.argv[2]),
             "log.screen": False,
             "log.error_file": os.path.join(thisdir, 'test_states_demo.error.log'),
+            "log.access_file": os.path.join(thisdir, 'test_states_demo.access.log'),
             }
     
     if '-ssl' in sys.argv[3:]:
@@ -60,8 +66,6 @@ if __name__ == '__main__':
         
         plugins.Daemonizer(cherrypy.engine).subscribe()
         plugins.PIDFile(cherrypy.engine, PID_file_path).subscribe()
-    
-    cherrypy.engine.subscribe('start', cherrypy.server.quickstart, priority=75)
     
     if '-starterror' in sys.argv[3:]:
         cherrypy.engine.subscribe('start', lambda: 1/0, priority=6)

@@ -74,7 +74,14 @@ import traceback as _traceback
 # Use a flag to indicate the state of the bus.
 class _StateEnum(object):
     class State(object):
-        pass
+        name = None
+        def __repr__(self):
+            return "states.%s" % self.name
+    
+    def __setattr__(self, key, value):
+        if isinstance(value, self.State):
+            value.name = key
+        object.__setattr__(self, key, value)
 states = _StateEnum()
 states.STOPPED = states.State()
 states.STARTING = states.State()

@@ -258,7 +258,7 @@ class ToolTests(helper.CPWebCase):
     def testEndRequestOnDrop(self):
         old_timeout = None
         try:
-            httpserver = cherrypy.server.httpservers.keys()[0]
+            httpserver = cherrypy.server.httpserver
             old_timeout = httpserver.timeout
         except (AttributeError, IndexError):
             print "skipped ",

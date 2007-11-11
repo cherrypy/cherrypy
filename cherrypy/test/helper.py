@@ -109,7 +109,7 @@ def run_test_suite(moduleNames, server, conf):
     """
     cherrypy.config.reset()
     setConfig(conf)
-    cherrypy.server.quickstart(server)
+    cherrypy.signal_handler.subscribe()
     # The Pybots automatic testing system needs the suite to exit
     # with a non-zero value if there were any problems.
     # Might as well stick it in the engine... :/
@@ -146,8 +146,7 @@ def sync_apps(profile=False, validate=False, conquer=False):
         apps.append((base, app))
     apps.sort()
     apps.reverse()
-    for s in cherrypy.server.httpservers:
-        s.wsgi_app.apps = apps
+    cherrypy.server.httpserver.wsgi_app.apps = apps
 
 def _run_test_suite_thread(moduleNames, conf):
     for testmod in moduleNames:
