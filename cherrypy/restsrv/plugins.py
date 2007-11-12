@@ -107,6 +107,7 @@ class DropPrivileges(SimplePlugin):
     
     def __init__(self, bus):
         self.bus = bus
+        self.finalized = False
     
     try:
         import pwd, grp
@@ -122,10 +123,16 @@ class DropPrivileges(SimplePlugin):
             
             def start(self):
                 """Drop privileges. Windows version (umask only)."""
-                if umask is not None:
-                    old_umask = os.umask(umask)
-                    self.bus.log('umask old: %03o, new: %03o' %
-                                    (old_umask, umask))
+                if self.finalized:
+                    self.bus.log('umask already set to: %03o' % umask)
+                else:
+                    if umask is None:
+                        self.bus.log('umask not set')
+                    else:
+                        old_umask = os.umask(umask)
+                        self.bus.log('umask old: %03o, new: %03o' %
+                                     (old_umask, umask))
+                    self.finalized = True
     else:
         uid = None
         gid = None
@@ -133,7 +140,9 @@ class DropPrivileges(SimplePlugin):
         
         def start(self):
             """Drop privileges. UNIX version (uid, gid, and umask)."""
-            if not (uid is None and gid is None):
+            if uid is None and gid is None:
+                self.bus.log('uid/gid not set')
+            else:
                 if uid is None:
                     uid = None
                 elif isinstance(uid, basestring):
@@ -153,17 +162,26 @@ class DropPrivileges(SimplePlugin):
                     group = grp.getgrgid(os.getgid())[0]
                     return name, group
                 
-                self.bus.log('Started as %r/%r' % names())
-                if gid is not None:
-                    os.setgid(gid)
-                if uid is not None:
-                    os.setuid(uid)
-                self.bus.log('Running as %r/%r' % names())
+                if self.finalized:
+                    self.bus.log('Already running as: %r/%r' % names())
+                else:
+                    self.bus.log('Started as %r/%r' % names())
+                    if gid is not None:
+                        os.setgid(gid)
+                    if uid is not None:
+                        os.setuid(uid)
+                    self.bus.log('Running as %r/%r' % names())
             
-            if umask is not None:
-                old_umask = os.umask(umask)
-                self.bus.log('umask old: %03o, new: %03o' %
-                                (old_umask, umask))
+            if self.finalized:
+                self.bus.log('umask already set to: %03o' % umask)
+            else:
+                if umask is None:
+                    self.bus.log('umask not set')
+                else:
+                    old_umask = os.umask(umask)
+                    self.bus.log('umask old: %03o, new: %03o' %
+                                 (old_umask, umask))
+                self.finalized = True
     start.priority = 75
 
 
@@ -184,17 +202,21 @@ class Daemonizer(SimplePlugin):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
+        self.finalized = False
     
     def start(self):
+        if self.finalized:
+            self.bus.log('Already deamonized.')
+        
         # forking has issues with threads:
         # http://www.opengroup.org/onlinepubs/000095399/functions/fork.html
         # "The general problem with making fork() work in a multi-threaded
         #  world is what to do with all of the threads..."
         # So we check for active threads:
         if threading.activeCount() != 1:
-            self.bus.log('There are more than one active threads. '
-                         'Daemonizing now may cause strange failures.')
-            self.bus.log(str(threading.enumerate()))
+            self.bus.log('There are %r active threads. '
+                         'Daemonizing now may cause strange failures.' %
+                         threading.enumerate())
         
         # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
@@ -246,6 +268,7 @@ class Daemonizer(SimplePlugin):
         os.dup2(se.fileno(), sys.stderr.fileno())
         
         self.bus.log('Daemonized to PID: %s' % os.getpid())
+        self.finalized = True
     start.priority = 65
 
 
@@ -255,14 +278,19 @@ class PIDFile(SimplePlugin):
     def __init__(self, bus, pidfile):
         self.bus = bus
         self.pidfile = pidfile
+        self.finalized = False
     
     def start(self):
         pid = os.getpid()
-        open(self.pidfile, "wb").write(str(pid))
-        self.bus.log('PID %r written to %r.' % (pid, self.pidfile))
+        if self.finalized:
+            self.bus.log('PID %r already written to %r.' % (pid, self.pidfile))
+        else:
+            open(self.pidfile, "wb").write(str(pid))
+            self.bus.log('PID %r written to %r.' % (pid, self.pidfile))
+            self.finalized = True
     start.priority = 70
     
-    def stop(self):
+    def exit(self):
         try:
             os.remove(self.pidfile)
             self.bus.log('PID file removed: %r.' % self.pidfile)

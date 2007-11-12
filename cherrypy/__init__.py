@@ -180,8 +180,8 @@ from cherrypy import _cpwsgi as wsgi
 
 from cherrypy import restsrv
 try:
-    from cherrypy.restsrv import win32 as restsrvwin
-    engine = restsrvwin.Win32Bus()
+    from cherrypy.restsrv import win32 as _restsrvwin
+    engine = _restsrvwin.Win32Bus()
 except ImportError:
     engine = restsrv.bus
 

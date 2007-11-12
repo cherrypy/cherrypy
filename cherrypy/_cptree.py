@@ -57,6 +57,10 @@ class Application(object):
         
         self.config = {}
     
+    def __repr__(self):
+        return "%s.%s(%r, %r)" % (self.__module__, self.__class__.__name__,
+                                  self.root, self.script_name)
+    
     script_name__doc = """
     The URI "mount point" for this app. A mount point is that portion of
     the URI which is constant for all URIs that are serviced by this
