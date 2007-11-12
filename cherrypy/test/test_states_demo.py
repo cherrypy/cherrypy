@@ -73,11 +73,7 @@ if __name__ == '__main__':
     # This is in a special order for a reason:
     # it allows test_states to wait_for_occupied_port
     # and then immediately call getPage without getting 503.
-    try:
-        cherrypy.config.update(conf)
-        cherrypy.tree.mount(Root(), config={'global': conf})
-        cherrypy.engine.start()
-        cherrypy.engine.block()
-        sys.exit(0)
-    except Exception:
-        sys.exit(1)
+    cherrypy.config.update(conf)
+    cherrypy.tree.mount(Root(), config={'global': conf})
+    cherrypy.engine.start()
+    cherrypy.engine.block()
