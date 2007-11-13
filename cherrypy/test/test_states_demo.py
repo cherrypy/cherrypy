@@ -75,5 +75,8 @@ if __name__ == '__main__':
     # and then immediately call getPage without getting 503.
     cherrypy.config.update(conf)
     cherrypy.tree.mount(Root(), config={'global': conf})
-    cherrypy.engine.start()
+    try:
+        cherrypy.engine.start()
+    except ZeroDivisionError:
+        sys.exit(1)
     cherrypy.engine.block()

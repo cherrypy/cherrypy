@@ -420,7 +420,7 @@ def run(server, conf):
             helper.CPTestRunner.run(daemon_suite)
         else:
             tr = pyconquer.Logger("cherrypy")
-            tr.out = open(os.path.join(os.path.dirname(__file__), "state.log"), "wb")
+            tr.out = open(os.path.join(os.path.dirname(__file__), "test_states_conquer.log"), "wb")
             try:
                 tr.start()
                 helper.CPTestRunner.run(suite)

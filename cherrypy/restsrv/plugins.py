@@ -411,6 +411,7 @@ class Autoreloader(Monitor):
                         # The file has been deleted or modified.
                         self.bus.log("Restarting because %s changed." % filename)
                         self.thread.cancel()
+                        self.bus.log("Stopped thread %r." % self.thread.getName())
                         self.bus.restart()
                         return
 
