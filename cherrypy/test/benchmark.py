@@ -377,7 +377,7 @@ if __name__ == '__main__':
             try:
                 run_standard_benchmarks()
             finally:
-                cherrypy.engine.stop()
+                cherrypy.engine.exit()
                 cherrypy.server.stop()
     
     print "Starting CherryPy app server..."

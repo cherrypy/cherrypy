@@ -27,14 +27,14 @@ class Root:
         return repr(starttime)
     start.exposed = True
     
-    def stop(self):
+    def exit(self):
         # This handler might be called before the engine is STARTED if an
         # HTTP worker thread handles it before the HTTP server returns
         # control to engine.start. We avoid that race condition here
         # by waiting for the Bus to be STARTED.
-        cherrypy.engine.block(state=cherrypy.engine.states.STARTED)
-        cherrypy.engine.stop()
-    stop.exposed = True
+        cherrypy.engine.wait(state=cherrypy.engine.states.STARTED)
+        cherrypy.engine.exit()
+    exit.exposed = True
 
 
 if __name__ == '__main__':

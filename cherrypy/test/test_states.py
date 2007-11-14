@@ -134,15 +134,15 @@ class ServerStateTests(helper.CPWebCase):
             self.getPage("/")
             self.assertStatus(503)
         
-        # Block the main thread now and verify that stop() works.
-        def stoptest():
+        # Block the main thread now and verify that exit() works.
+        def exittest():
             self.getPage("/")
             self.assertBody("Hello World")
-            engine.stop()
+            engine.exit()
         cherrypy.server.start()
-        engine.start_with_callback(stoptest)
+        engine.start_with_callback(exittest)
         engine.block()
-        self.assertEqual(engine.state, engine.states.STOPPED)
+        self.assertEqual(engine.state, engine.states.EXITING)
     
     def test_1_Restart(self):
         cherrypy.server.start()
@@ -201,7 +201,7 @@ class ServerStateTests(helper.CPWebCase):
                 
                 self.assertEqual(db_connection.running, False)
                 self.assertEqual(len(db_connection.threads), 0)
-                self.assertEqual(engine.state, engine.states.STOPPED)
+                self.assertEqual(engine.state, engine.states.EXITING)
             finally:
                 self.persistent = False
             
@@ -253,7 +253,7 @@ class ServerStateTests(helper.CPWebCase):
             self.assertStatus(500)
             self.assertInBody("raise cherrypy.TimeoutError()")
         finally:
-            engine.stop()
+            engine.exit()
     
     def test_4_Autoreload(self):
         if not self.server_class:
@@ -294,7 +294,7 @@ class ServerStateTests(helper.CPWebCase):
             self.assert_(float(self.body) > start)
         finally:
             # Shut down the spawned process
-            self.getPage("/stop")
+            self.getPage("/exit")
         
         try:
             try:
@@ -367,7 +367,7 @@ class DaemonizeTests(helper.CPWebCase):
             self.assertEqual(page_pid, pid)
         finally:
             # Shut down the spawned process
-            self.getPage("/stop")
+            self.getPage("/exit")
         
         try:
             print os.waitpid(pid, 0)
@@ -429,7 +429,7 @@ def run(server, conf):
                 tr.stop()
                 tr.out.close()
     finally:
-        engine.stop()
+        engine.exit()
 
 
 def run_all(host, port, ssl=False):

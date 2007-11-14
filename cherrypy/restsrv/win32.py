@@ -42,7 +42,7 @@ class Win32Bus(wspbus.Bus):
             except ValueError:
                 pass
             
-            self.stop()
+            self.exit()
             # 'First to return True stops the calls'
             return 1
         return 0
@@ -66,25 +66,16 @@ class Win32Bus(wspbus.Bus):
         win32event.PulseEvent(event)
     state = property(_get_state, _set_state)
     
-    def block(self, state=wspbus.states.STOPPED, interval=1):
+    def wait(self, state, interval=0.1):
         """Wait for the given state, KeyboardInterrupt or SystemExit.
         
         Since this class uses native win32event objects, the interval
         argument is ignored.
         """
         # Don't wait for an event that beat us to the punch ;)
-        if self.state == state:
-            return
-        
-        event = self._get_state_event(state)
-        try:
+        if self.state != state:
+            event = self._get_state_event(state)
             win32event.WaitForSingleObject(event, win32event.INFINITE)
-            if self.execv:
-                self._do_execv()
-        except SystemExit:
-            self.log('SystemExit raised: shutting down bus')
-            self.stop()
-            raise
 
 
 class _ControlCodes(dict):
@@ -137,7 +128,7 @@ class PyWebService(win32serviceutil.ServiceFramework):
     def SvcStop(self):
         from cherrypy import restsrv
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        restsrv.bus.stop()
+        restsrv.bus.exit()
     
     def SvcOther(self, control):
         restsrv.bus.publish(control_codes.key_for(control))

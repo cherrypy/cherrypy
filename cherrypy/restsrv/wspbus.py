@@ -51,7 +51,7 @@ the new state.
                         O
                         |
                         V
-       STOPPING --> STOPPED --> X
+       STOPPING --> STOPPED --> EXITING -> X
           A   A         |
           |    \___     |
           |        \    |
@@ -87,6 +87,7 @@ states.STOPPED = states.State()
 states.STARTING = states.State()
 states.STARTED = states.State()
 states.STOPPING = states.State()
+states.EXITING = states.State()
 
 
 class Bus(object):
@@ -171,19 +172,20 @@ class Bus(object):
             start_trace =  _traceback.format_exc()
             e_info = sys.exc_info()
             try:
-                self.stop()
+                self.exit()
             except:
-                # Any stop errors will be logged inside publish().
+                # Any stop/exit errors will be logged inside publish().
                 pass
             self.log("Exception that caused shutdown: %s" % start_trace)
             raise e_info[0], e_info[1], e_info[2]
     
-    def exit(self, status=0):
-        """Stop all services and exit the process."""
+    def exit(self):
+        """Stop all services and prepare to exit the process."""
         self.stop()
+        
+        self.state = states.EXITING
         self.log('Bus exit')
         self.publish('exit')
-        sys.exit(status)
     
     def restart(self):
         """Restart the process (may close connections).
@@ -192,52 +194,56 @@ class Bus(object):
         instead, it stops the bus and asks the main thread to call execv.
         """
         self.execv = True
-        self.stop()
+        self.exit()
     
     def graceful(self):
         """Advise all services to reload."""
         self.log('Bus graceful')
         self.publish('graceful')
     
-    def block(self, state=states.STOPPED, interval=0.1):
-        """Wait for the given state, KeyboardInterrupt or SystemExit."""
+    def block(self, interval=0.1):
+        """Wait for the EXITING state, KeyboardInterrupt or SystemExit."""
         try:
-            while self.state != state:
-                time.sleep(interval)
-            if self.execv:
-                self._do_execv()
+            self.wait(states.EXITING, interval=interval)
         except (KeyboardInterrupt, IOError):
             # The time.sleep call might raise
             # "IOError: [Errno 4] Interrupted function call" on KBInt.
             self.log('Keyboard Interrupt: shutting down bus')
-            self.stop()
+            self.exit()
         except SystemExit:
             self.log('SystemExit raised: shutting down bus')
-            self.stop()
+            self.exit()
             raise
-    
-    def _do_execv(self):
-        """Re-execute the current process."""
-        self.execv = False
         
-        self.log('Bus restart')
-        self.publish('exit')
-        
-        # Re-execute the current process. We must do this in the
-        # main thread (which is the only thread that should be
-        # calling block) because OS X doesn't allow execv to be
-        # called in a child thread very well.
         # Waiting for ALL child threads to finish is necessary on OS X.
-        # See: http://www.cherrypy.org/ticket/581
+        # See http://www.cherrypy.org/ticket/581.
+        # It's also good to let them all shut down before allowing
+        # the main thread to call atexit handlers.
+        # See http://www.cherrypy.org/ticket/751.
         self.log("Waiting for child threads to terminate...")
         for t in threading.enumerate():
-            if t != threading.currentThread():
+            if (t != threading.currentThread() and t.isAlive()
+                # Note that any dummy (external) threads are always daemonic.
+                and not t.isDaemon()):
                 t.join()
         
+        if self.execv:
+            self._do_execv()
+    
+    def wait(self, state, interval=0.1):
+        """Wait for the given state."""
+        while self.state != state:
+            time.sleep(interval)
+    
+    def _do_execv(self):
+        """Re-execute the current process.
+        
+        This must be called from the main thread, because certain platforms
+        (OS X) don't allow execv to be called in a child thread very well.
+        """
         args = sys.argv[:]
         self.log('Re-spawning %s' % ' '.join(args))
         args.insert(0, sys.executable)
-        
         if sys.platform == 'win32':
             args = ['"%s"' % arg for arg in args]
         
@@ -260,7 +266,7 @@ class Bus(object):
         args = (func,) + args
         
         def _callback(func, *a, **kw):
-            self.block(states.STARTED)
+            self.wait(states.STARTED)
             func(*a, **kw)
         t = threading.Thread(target=_callback, args=args, kwargs=kwargs)
         t.setName('Bus Callback ' + t.getName())

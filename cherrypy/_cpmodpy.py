@@ -93,7 +93,7 @@ def setup(req):
     cherrypy.engine.start()
     
     def cherrypy_cleanup(data):
-        cherrypy.engine.stop()
+        cherrypy.engine.exit()
     try:
         from mod_python import apache
         # apache.register_cleanup wasn't available until 3.1.4.

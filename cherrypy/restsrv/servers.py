@@ -75,18 +75,18 @@ class ServerAdapter(object):
         except KeyboardInterrupt, exc:
             self.bus.log("<Ctrl-C> hit: shutting down HTTP server")
             self.interrupt = exc
-            self.bus.stop()
+            self.bus.exit()
         except SystemExit, exc:
             self.bus.log("SystemExit raised: shutting down HTTP server")
             self.interrupt = exc
-            self.bus.stop()
+            self.bus.exit()
             raise
         except:
             import sys
             self.interrupt = sys.exc_info()[1]
             self.bus.log("Error in HTTP server: shutting down",
                          traceback=True)
-            self.bus.stop()
+            self.bus.exit()
             raise
     
     def wait(self):

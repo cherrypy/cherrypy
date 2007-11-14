@@ -149,33 +149,35 @@ def sync_apps(profile=False, validate=False, conquer=False):
     cherrypy.server.httpserver.wsgi_app.apps = apps
 
 def _run_test_suite_thread(moduleNames, conf):
-    for testmod in moduleNames:
-        # Must run each module in a separate suite,
-        # because each module uses/overwrites cherrypy globals.
-        cherrypy.tree = cherrypy._cptree.Tree()
-        cherrypy.config.reset()
-        setConfig(conf)
-        
-        m = __import__(testmod, globals(), locals())
-        setup = getattr(m, "setup_server", None)
-        if setup:
-            setup()
-        
-        # The setup functions probably mounted new apps.
-        # Tell our server about them.
-        sync_apps(profile=conf.get("profiling.on", False),
-                  validate=conf.get("validator.on", False),
-                  conquer=conf.get("conquer.on", False),
-                  )
-        
-        suite = CPTestLoader.loadTestsFromName(testmod)
-        result = CPTestRunner.run(suite)
-        cherrypy.engine.test_success &= result.wasSuccessful()
-        
-        teardown = getattr(m, "teardown_server", None)
-        if teardown:
-            teardown()
-    cherrypy.engine.stop()
+    try:
+        for testmod in moduleNames:
+            # Must run each module in a separate suite,
+            # because each module uses/overwrites cherrypy globals.
+            cherrypy.tree = cherrypy._cptree.Tree()
+            cherrypy.config.reset()
+            setConfig(conf)
+            
+            m = __import__(testmod, globals(), locals())
+            setup = getattr(m, "setup_server", None)
+            if setup:
+                setup()
+            
+            # The setup functions probably mounted new apps.
+            # Tell our server about them.
+            sync_apps(profile=conf.get("profiling.on", False),
+                      validate=conf.get("validator.on", False),
+                      conquer=conf.get("conquer.on", False),
+                      )
+            
+            suite = CPTestLoader.loadTestsFromName(testmod)
+            result = CPTestRunner.run(suite)
+            cherrypy.engine.test_success &= result.wasSuccessful()
+            
+            teardown = getattr(m, "teardown_server", None)
+            if teardown:
+                teardown()
+    finally:
+        cherrypy.engine.exit()
 
 def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
@@ -191,5 +193,5 @@ def _test_main_thread():
         webtest.WebCase.PORT = cherrypy.server.socket_port
         webtest.main()
     finally:
-        cherrypy.engine.stop()
+        cherrypy.engine.exit()
 
