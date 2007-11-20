@@ -15,6 +15,9 @@ import threading
 class SimplePlugin(object):
     """Plugin base class which auto-subscribes methods for known channels."""
     
+    def __init__(self, bus):
+        self.bus = bus
+    
     def subscribe(self):
         """Register this object as a (multi-channel) listener on the bus."""
         for channel in self.bus.listeners:
@@ -106,7 +109,7 @@ class DropPrivileges(SimplePlugin):
     """
     
     def __init__(self, bus):
-        self.bus = bus
+        SimplePlugin.__init__(self, bus)
         self.finalized = False
     
     try:
@@ -198,7 +201,7 @@ class Daemonizer(SimplePlugin):
     
     def __init__(self, bus, stdin='/dev/null', stdout='/dev/null',
                  stderr='/dev/null'):
-        self.bus = bus
+        SimplePlugin.__init__(self, bus)
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
@@ -276,7 +279,7 @@ class PIDFile(SimplePlugin):
     """Maintain a PID file via a WSPBus."""
     
     def __init__(self, bus, pidfile):
-        self.bus = bus
+        SimplePlugin.__init__(self, bus)
         self.pidfile = pidfile
         self.finalized = False
     
@@ -322,7 +325,7 @@ class Monitor(SimplePlugin):
     frequency = 60
     
     def __init__(self, bus, callback, frequency=60):
-        self.bus = bus
+        SimplePlugin.__init__(self, bus)
         self.callback = callback
         self.frequency = frequency
         self.thread = None
@@ -434,7 +437,7 @@ class ThreadManager(SimplePlugin):
     
     def __init__(self, bus):
         self.threads = {}
-        self.bus = bus
+        SimplePlugin.__init__(self, bus)
         self.bus.listeners.setdefault('acquire_thread', set())
         self.bus.listeners.setdefault('release_thread', set())
     
