@@ -178,7 +178,7 @@ class HTTPError(CherryPyException):
         if self.status != 416:
             # A server sending a response with status code 416 (Requested
             # range not satisfiable) SHOULD include a Content-Range field
-            # with a byte-range- resp-spec of "*". The instance-length
+            # with a byte-range-resp-spec of "*". The instance-length
             # specifies the current length of the selected resource.
             # A response with status code 206 (Partial Content) MUST NOT
             # include a Content-Range field with a byte-range- resp-spec of "*".

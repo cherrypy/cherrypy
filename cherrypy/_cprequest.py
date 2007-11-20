@@ -801,7 +801,7 @@ class Response(object):
         self.cookie = Cookie.SimpleCookie()
     
     def collapse_body(self):
-        """Iterate over self.body, replacing it with and returning the result."""
+        """Collapse self.body to a single string; replace it and return it."""
         newbody = ''.join([chunk for chunk in self.body])
         self.body = newbody
         return newbody

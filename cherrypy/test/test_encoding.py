@@ -75,6 +75,7 @@ class EncodingTests(helper.CPWebCase):
         
         # Ask for utf-16.
         self.getPage('/mao_zedong', [('Accept-Charset', 'utf-16')])
+        self.assertHeader('Content-Type', 'text/html;charset=utf-16')
         self.assertBody(sing16)
         
         # Ask for multiple encodings. ISO-8859-1 should fail, and utf-16
