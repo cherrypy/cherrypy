@@ -416,6 +416,11 @@ class Request(object):
     closed__doc = """
     True once the close method has been called, False otherwise."""
     
+    stage = None
+    stage__doc = """
+    A string containing the stage reached in the request-handling process.
+    This is useful when debugging a live server with hung requests."""
+    
     namespaces = _cpconfig.NamespaceSet(
         **{"hooks": hooks_namespace,
            "request": request_namespace,
@@ -444,12 +449,16 @@ class Request(object):
         
         # Put a *copy* of the class namespaces into self.
         self.namespaces = self.namespaces.copy()
+        
+        self.stage = None
     
     def close(self):
         """Run cleanup code. (Core)"""
         if not self.closed:
             self.closed = True
+            self.stage = 'on_end_request'
             self.hooks.run('on_end_request')
+            self.stage = 'close'
     
     def run(self, method, path, query_string, req_protocol, headers, rfile):
         """Process the Request. (Core)
@@ -469,7 +478,7 @@ class Request(object):
         attributes to build the outbound stream.
         
         """
-        
+        self.stage = 'run'
         try:
             self.error_response = cherrypy.HTTPError(500).set_response
             
@@ -510,6 +519,7 @@ class Request(object):
             self.script_name = self.app.script_name
             self.path_info = pi = path[len(self.script_name):]
             
+            self.stage = 'respond'
             self.respond(pi)
             
         except self.throws:
@@ -549,35 +559,44 @@ class Request(object):
                         raise cherrypy.NotFound()
                     
                     # Get the 'Host' header, so we can HTTPRedirect properly.
+                    self.stage = 'process_headers'
                     self.process_headers()
                     
                     # Make a copy of the class hooks
                     self.hooks = self.__class__.hooks.copy()
                     self.toolmaps = {}
+                    self.stage = 'get_resource'
                     self.get_resource(path_info)
                     self.namespaces(self.config)
                     
+                    self.stage = 'on_start_resource'
                     self.hooks.run('on_start_resource')
                     
                     if self.process_request_body:
                         if self.method not in self.methods_with_bodies:
                             self.process_request_body = False
                     
+                    self.stage = 'before_request_body'
                     self.hooks.run('before_request_body')
                     if self.process_request_body:
                         self.process_body()
                     
+                    self.stage = 'before_handler'
                     self.hooks.run('before_handler')
                     if self.handler:
+                        self.stage = 'handler'
                         cherrypy.response.body = self.handler()
                     
+                    self.stage = 'before_finalize'
                     self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
                 except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
                     inst.set_response()
+                    self.stage = 'before_finalize (HTTPError)'
                     self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
             finally:
+                self.stage = 'on_end_resource'
                 self.hooks.run('on_end_resource')
         except self.throws:
             raise
