@@ -196,7 +196,12 @@ class Daemonizer(SimplePlugin):
         Daemonizer(bus).subscribe()
     
     When this component finishes, the process is completely decoupled from
-    the parent environment.
+    the parent environment.  Please note that when this component is used,
+    the return code from the parent process will always be 0, even if a
+    startup error occured, unless that error was during the daemonizing process. 
+    If you use this plugin to Daemonize, don't use the return code as an accurate
+    indication of whether the process fully started.  In fact, that return code
+    only indicates if the process succesfully finished the first fork.
     """
     
     def __init__(self, bus, stdin='/dev/null', stdout='/dev/null',
@@ -238,7 +243,7 @@ class Daemonizer(SimplePlugin):
             else:
                 # This is the first parent. Exit, now that we've forked.
                 self.bus.log('Forking once.')
-                sys.exit(0)
+                os._exit(0)
         except OSError, exc:
             # Python raises OSError rather than returning negative numbers.
             sys.exit("%s: fork #1 failed: (%d) %s\n"
@@ -251,7 +256,7 @@ class Daemonizer(SimplePlugin):
             pid = os.fork()
             if pid > 0:
                 self.bus.log('Forking twice.')
-                sys.exit(0) # Exit second parent
+                os._exit(0) # Exit second parent
         except OSError, exc:
             sys.exit("%s: fork #2 failed: (%d) %s\n"
                      % (sys.argv[0], exc.errno, exc.strerror))
