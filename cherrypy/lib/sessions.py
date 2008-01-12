@@ -132,7 +132,7 @@ class Session(object):
             cherrypy.engine.on_stop_engine_list.append(cls.clean_interrupt)
             # clean_up is in instancemethod and not a classmethod,
             # so tool config can be accessed inside the method.
-            t = PerpetualTimer(self.clean_freq, self.clean_up)
+            t = PerpetualTimer(self.clean_freq * 60, self.clean_up)
             t.setName("CP Session Cleanup")
             cls.clean_thread = t
             t.start()
