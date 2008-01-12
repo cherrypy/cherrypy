@@ -184,7 +184,6 @@ def testmain(conf=None):
     if conf is None:
         conf = {'server.socket_host': '127.0.0.1'}
     setConfig(conf)
-    cherrypy.server.quickstart()
     cherrypy.engine.start_with_callback(_test_main_thread)
     cherrypy.engine.block()
 

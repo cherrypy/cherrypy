@@ -1,6 +1,7 @@
 """Manage HTTP servers with CherryPy."""
 
 import socket
+import warnings
 
 import cherrypy
 from cherrypy.lib import attributes
@@ -18,13 +19,7 @@ class Server(ServerAdapter):
     quickstart. For example:
     
         cherrypy.server.socket_port = 80
-        cherrypy.server.quickstart()
-    
-    If you want to use an HTTP server other than the default, create it
-    and pass it to quickstart:
-    
-        s = MyCustomWSGIServer(wsgiapp, port=8080)
-        cherrypy.server.quickstart(s)
+        cherrypy.quickstart()
     """
     
     socket_port = 8080
@@ -65,14 +60,10 @@ class Server(ServerAdapter):
         ServerAdapter.__init__(self, cherrypy.engine)
     
     def quickstart(self, server=None):
-        """Start from defaults. MUST be called from the main thread.
-        
-        This function works like CherryPy 2's server.start(). It loads and
-        starts an httpserver based on the given server object (if provided)
-        and attributes of self.
-        """
-        self.httpserver, self.bind_addr = self.httpserver_from_self(server)
-        self.start()
+        """This does nothing now and will be removed in 3.2."""
+        warnings.warn('quickstart does nothing now and will be removed in '
+                      '3.2. Call cherrypy.engine.start() instead.',
+                      DeprecationWarning)
     
     def httpserver_from_self(self, httpserver=None):
         """Return a (httpserver, bind_addr) pair based on self attributes."""

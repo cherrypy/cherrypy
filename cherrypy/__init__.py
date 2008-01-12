@@ -222,7 +222,7 @@ server = _cpserver.Server()
 server.subscribe()
 
 
-def quickstart(root, script_name="", config=None):
+def quickstart(root=None, script_name="", config=None):
     """Mount the given root, start the builtin server (and engine), then block.
     
     root: an instance of a "controller class" (a collection of page handler
@@ -241,7 +241,9 @@ def quickstart(root, script_name="", config=None):
     """
     if config:
         _global_conf_alias.update(config)
-    tree.mount(root, script_name, config)
+    
+    if root is not None:
+        tree.mount(root, script_name, config)
     
     signal_handler.subscribe()
     engine.start()

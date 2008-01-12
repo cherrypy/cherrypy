@@ -72,8 +72,6 @@ cherrypy.tree.mount(HTTPErrorDemo())
 
 
 if __name__ == '__main__':
-    # Start the CherryPy server.
-    cherrypy.config.update(os.path.join(os.path.dirname(__file__), 'tutorial.conf'))
-    cherrypy.server.quickstart()
-    cherrypy.engine.start()
-    cherrypy.engine.block()
+    import os.path
+    thisdir = os.path.dirname(__file__)
+    cherrypy.quickstart(config=os.path.join(thisdir, 'tutorial.conf'))
