@@ -49,7 +49,7 @@ def get_ranges(headervalue, content_length):
     if applied against a Python string, is requesting resource[3:7]. This
     function will return the list [(3, 7)].
     
-    If this function return an empty list, you should return HTTP 416.
+    If this function returns an empty list, you should return HTTP 416.
     """
     
     if not headervalue:
@@ -112,7 +112,7 @@ class HeaderElement(object):
         """Transform 'token;key=val' to ('token', {'key': 'val'})."""
         # Split the element into a value and parameters. The 'value' may
         # be of the form, "token=token", but we don't split that here.
-        atoms = [x.strip() for x in elementstr.split(";")]
+        atoms = [x.strip() for x in elementstr.split(";") if x.strip()]
         initial_value = atoms.pop(0).strip()
         params = {}
         for atom in atoms:

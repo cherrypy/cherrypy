@@ -845,6 +845,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody("da\n"
                         "en-gb;q=0.8\n"
                         "en;q=0.7")
+        
+        # Test malformed header parsing. See http://www.cherrypy.org/ticket/763.
+        self.getPage("/headerelements/get_elements?headername=Content-Type",
+                     # Note the illegal trailing ";"
+                     headers=[('Content-Type', 'text/html; charset=utf-8;')])
+        self.assertStatus(200)
+        self.assertBody("text/html;charset=utf-8")
     
     def testHeaders(self):
         # Tests that each header only appears once, regardless of case.
@@ -889,7 +896,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/headers/Content-Type",
                      headers=[("Content-type", "application/json")])
         self.assertBody("application/json")
-        
+    
     def testHTTPMethods(self):
         helper.webtest.methods_with_bodies = ("POST", "PUT", "PROPFIND")
         
