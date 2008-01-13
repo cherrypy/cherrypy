@@ -165,6 +165,7 @@ class Checker(object):
     def _known_ns(self, app):
         ns = ["wsgi"]
         ns.extend(app.toolboxes.keys())
+        ns.extend(app.namespaces.keys())
         ns.extend(app.request_class.namespaces.keys())
         ns.extend(cherrypy.config.namespaces.keys())
         ns += self.extra_config_namespaces
