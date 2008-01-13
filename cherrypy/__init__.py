@@ -182,6 +182,10 @@ from cherrypy import restsrv
 try:
     from cherrypy.restsrv import win32 as _restsrvwin
     engine = _restsrvwin.Win32Bus()
+    _console_control_handler = _restsrvwin.ConsoleCtrlHandler(engine)
+    # If you don't want a ConsoleControlHandler,
+    # unsubscribe this before calling engine.start().
+    _console_control_handler.subscribe()
 except ImportError:
     engine = restsrv.bus
 

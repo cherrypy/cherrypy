@@ -8,44 +8,72 @@ import win32event
 import win32service
 import win32serviceutil
 
-from cherrypy.restsrv import wspbus
+from cherrypy.restsrv import wspbus, plugins
+
+
+class ConsoleCtrlHandler(plugins.SimplePlugin):
+    """A WSPBus plugin for handling Win32 console events (like Ctrl-C)."""
+    
+    def __init__(self, bus):
+        self.is_set = False
+        plugins.SimplePlugin.__init__(self, bus)
+    
+    def start(self):
+        if self.is_set:
+            return
+        
+        result = win32api.SetConsoleCtrlHandler(self.handle, 1)
+        if result == 0:
+            self.bus.log('Could not SetConsoleCtrlHandler (error %r)' %
+                         win32api.GetLastError())
+        else:
+            self.is_set = True
+    
+    def stop(self):
+        if not self.is_set:
+            return
+        
+        try:
+            result = win32api.SetConsoleCtrlHandler(self.handle, 0)
+        except ValueError:
+            # "ValueError: The object has not been registered"
+            result = 1
+        
+        if result == 0:
+            self.bus.log('Could not remove SetConsoleCtrlHandler (error %r)' %
+                         win32api.GetLastError())
+        else:
+            self.is_set = False
+    
+    def handle(self, event):
+        """Handle console control events (like Ctrl-C)."""
+        if event in (win32con.CTRL_C_EVENT, win32con.CTRL_LOGOFF_EVENT,
+                     win32con.CTRL_BREAK_EVENT, win32con.CTRL_SHUTDOWN_EVENT,
+                     win32con.CTRL_CLOSE_EVENT):
+            self.bus.log('Console event %s: shutting down bus' % event)
+            
+            # Remove self immediately so repeated Ctrl-C doesn't re-call it.
+            try:
+                self.stop()
+            except ValueError:
+                pass
+            
+            self.bus.exit()
+            # 'First to return True stops the calls'
+            return 1
+        return 0
 
 
 class Win32Bus(wspbus.Bus):
     """A Web Site Process Bus implementation for Win32.
     
     Instead of using time.sleep for blocking, this bus uses native
-    win32event objects.
+    win32event objects. It also responds to console events.
     """
     
     def __init__(self):
         self.events = {}
-        result = win32api.SetConsoleCtrlHandler(self._console_event, 1)
-        if result == 0:
-            self.log('Could not SetConsoleCtrlHandler (error %r)' %
-                     win32api.GetLastError())
         wspbus.Bus.__init__(self)
-    
-    def _console_event(self, event):
-        """The handler for console control events (like Ctrl-C)."""
-        if event in (win32con.CTRL_C_EVENT, win32con.CTRL_LOGOFF_EVENT,
-                     win32con.CTRL_BREAK_EVENT, win32con.CTRL_SHUTDOWN_EVENT,
-                     win32con.CTRL_CLOSE_EVENT):
-            self.log('Console event %s: shutting down bus' % event)
-            
-            # Remove this CtrlHandler so repeated Ctrl-C doesn't re-call it.
-            try:
-                result = win32api.SetConsoleCtrlHandler(self._console_event, 0)
-                if result == 0:
-                    self.log('Could not remove SetConsoleCtrlHandler (error %r)' %
-                             win32api.GetLastError())
-            except ValueError:
-                pass
-            
-            self.exit()
-            # 'First to return True stops the calls'
-            return 1
-        return 0
     
     def _get_state_event(self, state):
         """Return a win32event for the given state (creating it if needed)."""
