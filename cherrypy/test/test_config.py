@@ -78,7 +78,6 @@ class ConfigTests(helper.CPWebCase):
     
     def testConfig(self):
         tests = [
-            ('*',        'luxuryyacht', 'throatwobblermangrove'),
             ('/',        'nex', 'None'),
             ('/',        'foo', 'this'),
             ('/',        'bar', 'that'),
