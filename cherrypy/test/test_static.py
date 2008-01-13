@@ -110,6 +110,9 @@ class StaticTest(helper.CPWebCase):
         # The same page should be returned even if redirected.
         self.getPage("/docroot")
         self.assertStatus((302, 303))
+        self.assertHeader('Location', '%s/docroot/' % self.base())
+        self.assertBody("This resource can be found at <a href='%s/docroot/'>"
+                        "%s/docroot/</a>." % (self.base(), self.base()))
         
         # Check that we get an error if no .file or .dir
         self.getPage("/error/thing.html")

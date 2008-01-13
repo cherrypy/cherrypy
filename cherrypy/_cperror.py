@@ -112,6 +112,9 @@ class HTTPRedirect(CherryPyException):
                    307: "This resource has moved temporarily to <a href='%s'>%s</a>.",
                    }[status]
             response.body = "<br />\n".join([msg % (u, u) for u in self.urls])
+            # Previous code may have set C-L, so we have to reset it
+            # (allow finalize to set it).
+            response.headers.pop('Content-Length', None)
         elif status == 304:
             # Not Modified.
             # "The response MUST include the following header fields:
@@ -128,11 +131,15 @@ class HTTPRedirect(CherryPyException):
             
             # "The 304 response MUST NOT contain a message-body."
             response.body = None
+            # Previous code may have set C-L, so we have to reset it.
+            response.headers.pop('Content-Length', None)
         elif status == 305:
             # Use Proxy.
             # self.urls[0] should be the URI of the proxy.
             response.headers['Location'] = self.urls[0]
             response.body = None
+            # Previous code may have set C-L, so we have to reset it.
+            response.headers.pop('Content-Length', None)
         else:
             raise ValueError("The %s status code is unknown." % status)
     
