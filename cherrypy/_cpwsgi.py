@@ -16,7 +16,9 @@ def requestLine(environ):
     
     resource = httptools.urljoin(environ.get('SCRIPT_NAME', ''),
                                  environ.get('PATH_INFO', ''))
-    if not (resource == "*" or resource.startswith("/")):
+    if resource == "/*":
+        resource = "*"
+    elif not resource.startswith("/"):
         resource = "/" + resource
     
     qString = environ.get('QUERY_STRING')
