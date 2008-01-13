@@ -25,8 +25,8 @@ def setup_server():
         _cp_config = {'tools.sessions.on': True,
                       'tools.sessions.storage_type' : 'ram',
                       'tools.sessions.storage_path' : localDir,
-                      'tools.sessions.timeout': 0.017,    # 1.02 secs
-                      'tools.sessions.clean_freq': 0.017,
+                      'tools.sessions.timeout': (1.0 / 60),
+                      'tools.sessions.clean_freq': (1.0 / 60),
                       }
         
         def testGen(self):
@@ -98,6 +98,12 @@ from cherrypy.test import helper
 
 class SessionTest(helper.CPWebCase):
     
+    def tearDown(self):
+        # Clean up sessions.
+        for fname in os.listdir(localDir):
+            if fname.startswith(sessions.FileSession.SESSION_PREFIX):
+                os.unlink(os.path.join(localDir, fname))
+    
     def test_0_Session(self):
         self.getPage('/testStr')
         self.assertBody('1')
@@ -118,8 +124,8 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/delkey?key=counter', self.cookies)
         self.assertStatus(200)
         
-        # Wait for the session.timeout (1.02 secs)
-        time.sleep(1.25)
+        # Wait for the session.timeout (1 second)
+        time.sleep(2)
         self.getPage('/')
         self.assertBody('1')
         
@@ -217,6 +223,17 @@ class SessionTest(helper.CPWebCase):
         self.assertBody('logged in')
         id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
         self.assertNotEqual(id1, id2)
+        
+        self.getPage('/testStr')
+        # grab the cookie ID
+        id1 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        self.getPage('/testStr',
+                     headers=[('Cookie',
+                               'session_id=maliciousid; '
+                               'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
+        id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        self.assertNotEqual(id1, id2)
+        self.assertNotEqual(id2, 'maliciousid')
 
 
 import socket
@@ -260,7 +277,7 @@ else:
             self.getPage('/delkey?key=counter', self.cookies)
             self.assertStatus(200)
             
-            # Wait for the session.timeout (1.02 secs)
+            # Wait for the session.timeout (1 second)
             time.sleep(1.25)
             self.getPage('/')
             self.assertBody('1')

@@ -30,8 +30,18 @@ class Session(object):
     
     __metaclass__ = cherrypy._AttributeDocstrings
     
-    id = None
+    _id = None
+    id_observers = None
+    id_observers__doc = "A list of callbacks to which to pass new id's."
+    
     id__doc = "The current session ID."
+    def _get_id(self):
+        return self._id
+    def _set_id(self, value):
+        self._id = value
+        for o in self.id_observers:
+            o(value)
+    id = property(_get_id, _set_id, doc=id__doc)
     
     timeout = 60
     timeout__doc = "Number of minutes after which to delete session data."
@@ -53,6 +63,7 @@ class Session(object):
     clean_freq__doc = "The poll rate for expired session cleanup in minutes."
     
     def __init__(self, id=None, **kwargs):
+        self.id_observers = []
         self._data = {}
         
         for k, v in kwargs.iteritems():
@@ -62,6 +73,11 @@ class Session(object):
             self.regenerate()
         else:
             self.id = id
+            if self._load() is None:
+                # Expired or malicious session. Make a new one.
+                # See http://www.cherrypy.org/ticket/709.
+                self.id = None
+                self.regenerate()
     
     def regenerate(self):
         """Replace the current session (with a new id)."""
@@ -118,7 +134,7 @@ class Session(object):
         data = self._load()
         # data is either None or a tuple (session_data, expiration_time)
         if data is None or data[1] < datetime.datetime.now():
-            # Expired session: flush session data (but keep the same id)
+            # Expired session: flush session data
             self._data = {}
         else:
             self._data = data[0]
@@ -547,6 +563,10 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     kwargs['timeout'] = timeout
     kwargs['clean_freq'] = clean_freq
     cherrypy.serving.session = sess = storage_class(id, **kwargs)
+    def update_cookie(id):
+        """Update the cookie every time the session id changes."""
+        cherrypy.response.cookie[name] = id
+    sess.id_observers.append(update_cookie)
     
     # Create cherrypy.session which will proxy to cherrypy.serving.session
     if not hasattr(cherrypy, "session"):
