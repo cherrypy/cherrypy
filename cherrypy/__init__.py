@@ -1,6 +1,6 @@
 """Global module that all modules developing with CherryPy should import."""
 
-__version__ = '2.2.2rc2'
+__version__ = '2.3'
 
 import datetime
 import sys

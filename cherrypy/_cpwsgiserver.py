@@ -271,7 +271,7 @@ class CherryPyWSGIServer(object):
     timeout: the timeout in seconds for accepted connections (default 10).
     """
     
-    version = "CherryPy/2.2.2rc2"
+    version = "CherryPy/2.3"
     protocol = "HTTP/1.0"
     ready = False
     interrupt = None

@@ -38,7 +38,7 @@ packages=[
     "cherrypy", "cherrypy.lib", "cherrypy.lib.filter",
     "cherrypy.tutorial", "cherrypy.test", "cherrypy.filters",
 ]
-download_url="http://download.cherrypy.org/cherrypy/2.2.2rc2/"
+download_url="http://download.cherrypy.org/cherrypy/2.3/"
 data_files=[
     ('cherrypy/tutorial',
         [
