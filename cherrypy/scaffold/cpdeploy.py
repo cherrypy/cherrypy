@@ -1,5 +1,11 @@
 #! /usr/bin/env python
-"""Deployment script for <MyProject> (a CherryPy application)."""
+"""Deployment script for <MyProject> (a CherryPy application).
+
+Run this from the command-line and give it a --config argument:
+
+    python cpdeploy.py --config=example.conf
+
+"""
 
 import os
 local_dir = os.path.join(os.getcwd(), os.path.dirname(__file__))

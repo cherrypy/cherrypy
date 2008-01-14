@@ -1,4 +1,16 @@
-"""<MyProject>, a CherryPy application."""
+"""<MyProject>, a CherryPy application.
+
+Use this as a base for creating new CherryPy applications. When you want
+to make a new app, copy and paste this folder to some other location
+(maybe site-packages) and rename it to the name of your project,
+then tweak as desired.
+
+Even before any tweaking, this should serve a few demonstration pages.
+Change to this directory and run:
+
+    python cpdeploy.py --config=example.conf
+
+"""
 
 import cherrypy
 from cherrypy import tools, url
