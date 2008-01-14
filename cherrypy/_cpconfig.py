@@ -93,7 +93,6 @@ style) context manager.
 
 import ConfigParser
 import sys
-from warnings import warn
 
 import cherrypy
 
