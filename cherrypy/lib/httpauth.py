@@ -141,9 +141,14 @@ def _parseDigestAuthorization (auth_params):
         if not params.has_key(k):
             return None
 
-    # If qop is sent then cnonce and cn MUST be present
-    if params.has_key("qop") and not params.has_key("cnonce") \
-                                  and params.has_key("cn"):
+    # If qop is sent then cnonce and nc MUST be present
+    if params.has_key("qop") and not (params.has_key("cnonce") \
+                                      and params.has_key("nc")):
+        return None
+
+    # If qop is not sent, neither cnonce nor nc can be present
+    if (params.has_key("cnonce") or params.has_key("nc")) and \
+       not params.has_key("qop"):
         return None
 
     return params
