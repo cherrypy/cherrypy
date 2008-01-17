@@ -20,6 +20,7 @@ cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
 
 
 def setup_server():
+    
     class Root:
         
         _cp_config = {'tools.sessions.on': True,
@@ -28,6 +29,10 @@ def setup_server():
                       'tools.sessions.timeout': (1.0 / 60),
                       'tools.sessions.clean_freq': (1.0 / 60),
                       }
+        
+        def clear(self):
+            cherrypy.session.cache.clear()
+        clear.exposed = True
         
         def testGen(self):
             counter = cherrypy.session.get('counter', 0) + 1
@@ -89,6 +94,10 @@ def setup_server():
             cherrypy.tools.sessions.regenerate()
             return "logged in"
         regen.exposed = True
+        
+        def length(self):
+            return str(len(cherrypy.session))
+        length.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'test_suite'})
@@ -105,12 +114,16 @@ class SessionTest(helper.CPWebCase):
                 os.unlink(os.path.join(localDir, fname))
     
     def test_0_Session(self):
+        self.getPage('/clear')
+        
         self.getPage('/testStr')
         self.assertBody('1')
         self.getPage('/testGen', self.cookies)
         self.assertBody('2')
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
+        self.getPage('/length', self.cookies)
+        self.assertBody('1')
         self.getPage('/delkey?key=counter', self.cookies)
         self.assertStatus(200)
         
@@ -128,13 +141,23 @@ class SessionTest(helper.CPWebCase):
         time.sleep(2)
         self.getPage('/')
         self.assertBody('1')
+        self.getPage('/length', self.cookies)
+        self.assertBody('1')
         
         # Test session __contains__
         self.getPage('/keyin?key=counter', self.cookies)
         self.assertBody("True")
+        cookieset1 = self.cookies
+        
+        # Make a new session and test __len__ again
+        self.getPage('/')
+        self.getPage('/length', self.cookies)
+        self.assertBody('2')
         
         # Test session delete
         self.getPage('/delete', self.cookies)
+        self.assertBody("done")
+        self.getPage('/delete', cookieset1)
         self.assertBody("done")
         f = lambda: [x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertEqual(f(), [])
@@ -172,8 +195,8 @@ class SessionTest(helper.CPWebCase):
 ##                print index,
             data_dict[index] = v = int(self.body)
         
-        # Start <request_count> concurrent requests from
-        # each of <client_thread_count> clients
+        # Start <request_count> requests from each of
+        # <client_thread_count> concurrent clients
         ts = []
         for c in xrange(client_thread_count):
             data_dict[c] = 0

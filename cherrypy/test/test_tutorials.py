@@ -117,6 +117,7 @@ class TutorialTest(helper.CPWebCase):
         self.getPage('/hendrik')
         self.assertBody('Hendrik Mans, CherryPy co-developer & crazy German '
                         '(<a href="./">back</a>)')
+    
     def test07Sessions(self):
         self.getPage("/load_tut_module/tut07_sessions")
         self.getPage("/sessions")

@@ -262,6 +262,10 @@ class RamSession(Session):
         """Release the lock on the currently-loaded session data."""
         self.locks[self.id].release()
         self.locked = False
+    
+    def __len__(self):
+        """Return the number of active sessions."""
+        return len(self.cache)
 
 
 class FileSession(Session):
@@ -371,6 +375,12 @@ class FileSession(Session):
                             os.unlink(path)
                 finally:
                     self.release_lock(path)
+    
+    def __len__(self):
+        """Return the number of active sessions."""
+        return len([fname for fname in os.listdir(self.storage_path)
+                    if (fname.startswith(self.SESSION_PREFIX)
+                        and not fname.endswith(self.LOCK_SUFFIX))])
 
 
 class PostgresqlSession(Session):

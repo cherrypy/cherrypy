@@ -338,6 +338,10 @@ class _ThreadLocalProxy(object):
     def __contains__(self, key):
         child = getattr(serving, self.__attrname__)
         return key in child
+    
+    def __len__(self):
+        child = getattr(serving, self.__attrname__)
+        return len(child)
 
 
 # Create request and response object (the same objects will be used
