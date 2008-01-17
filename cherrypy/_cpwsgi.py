@@ -363,9 +363,7 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
             bind_addr = (server.socket_host, server.socket_port)
         
         s = wsgiserver.CherryPyWSGIServer
-        # We could just pass cherrypy.tree, but by passing tree.apps,
-        # we get correct SCRIPT_NAMEs as early as possible.
-        s.__init__(self, bind_addr, _cherrypy.tree.apps,
+        s.__init__(self, bind_addr, _cherrypy.tree,
                    server.thread_pool,
                    server.socket_host,
                    request_queue_size = server.socket_queue_size,

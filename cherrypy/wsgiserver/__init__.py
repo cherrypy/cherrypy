@@ -16,10 +16,10 @@ Simplest example on how to use this module directly
                 server_name='www.cherrypy.example')
     
 The CherryPy WSGI server can serve as many WSGI applications 
-as you want in one instance:
+as you want in one instance by using a WSGIPathInfoDispatcher:
     
-    wsgi_apps = [('/', my_crazy_app), ('/blog', my_blog_app)]
-    server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 80), wsgi_apps)
+    d = WSGIPathInfoDispatcher({'/': my_crazy_app, '/blog': my_blog_app})
+    server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 80), d)
     
 Want SSL support? Just set these attributes:
     
@@ -35,7 +35,7 @@ Want SSL support? Just set these attributes:
 This won't call the CherryPy engine (application side) at all, only the
 WSGI server, which is independant from the rest of CherryPy. Don't
 let the name "CherryPyWSGIServer" throw you; the name merely reflects
-its origin, not it's coupling.
+its origin, not its coupling.
 """
 
 
@@ -56,6 +56,7 @@ import time
 import traceback
 from urllib import unquote
 from urlparse import urlparse
+import warnings
 
 try:
     from OpenSSL import SSL
@@ -1014,6 +1015,10 @@ class CherryPyWSGIServer(object):
             # We've been handed a list of (path_prefix, wsgi_app) tuples,
             # so that the server can call different wsgi_apps, and also
             # correctly set SCRIPT_NAME.
+            warnings.warn("The ability to pass multiple apps is deprecated "
+                          "and will be removed in 3.2. You should explicitly "
+                          "include a WSGIPathInfoDispatcher instead.",
+                          DeprecationWarning)
             self.wsgi_app = WSGIPathInfoDispatcher(wsgi_app)
         
         self.bind_addr = bind_addr

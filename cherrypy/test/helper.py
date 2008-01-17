@@ -123,30 +123,24 @@ def run_test_suite(moduleNames, server, conf):
         return 1
 
 def sync_apps(profile=False, validate=False, conquer=False):
-    apps = []
-    for base, app in cherrypy.tree.apps.iteritems():
-        if base == "/":
-            base = ""
-        if profile:
-            app = profiler.make_app(app, aggregate=False)
-        if conquer:
-            try:
-                import wsgiconq
-            except ImportError:
-                warnings.warn("Error importing wsgiconq. pyconquer will not run.")
-            else:
-                app = wsgiconq.WSGILogger(app)
-        if validate:
-            try:
-                from wsgiref import validate
-            except ImportError:
-                warnings.warn("Error importing wsgiref. The validator will not run.")
-            else:
-                app = validate.validator(app)
-        apps.append((base, app))
-    apps.sort()
-    apps.reverse()
-    cherrypy.server.httpserver.wsgi_app.apps = apps
+    app = cherrypy.tree
+    if profile:
+        app = profiler.make_app(app, aggregate=False)
+    if conquer:
+        try:
+            import wsgiconq
+        except ImportError:
+            warnings.warn("Error importing wsgiconq. pyconquer will not run.")
+        else:
+            app = wsgiconq.WSGILogger(app)
+    if validate:
+        try:
+            from wsgiref import validate
+        except ImportError:
+            warnings.warn("Error importing wsgiref. The validator will not run.")
+        else:
+            app = validate.validator(app)
+    cherrypy.server.httpserver.wsgi_app = app
 
 def _run_test_suite_thread(moduleNames, conf):
     try:
