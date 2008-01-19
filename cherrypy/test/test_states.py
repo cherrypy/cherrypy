@@ -101,7 +101,6 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(len(db_connection.threads), 0)
         
         # Test server start
-        cherrypy.server.quickstart(self.server_class)
         engine.start()
         self.assertEqual(engine.state, engine.states.STARTED)
         
