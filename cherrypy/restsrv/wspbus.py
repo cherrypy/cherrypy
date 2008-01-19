@@ -60,6 +60,7 @@ the new state.
 
 """
 
+import atexit
 import os
 try:
     set
@@ -69,6 +70,7 @@ import sys
 import threading
 import time
 import traceback as _traceback
+import warnings
 
 
 # Use a flag to indicate the state of the bus.
@@ -158,8 +160,20 @@ class Bus(object):
             raise
         return output
     
+    def _clean_exit(self):
+        """An atexit handler which asserts the Bus is not running."""
+        if self.state != states.EXITING:
+            warnings.warn(
+                "The main thread is exiting, but the Bus is in the %r state; "
+                "shutting it down automatically now. You must either call "
+                "bus.block() after start(), or call bus.exit() before the "
+                "main thread exits." % self.state, RuntimeWarning)
+            self.exit()
+    
     def start(self):
         """Start all services."""
+        atexit.register(self._clean_exit)
+        
         self.state = states.STARTING
         self.log('Bus STARTING')
         try:
