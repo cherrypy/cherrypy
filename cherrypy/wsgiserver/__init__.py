@@ -65,17 +65,28 @@ except ImportError:
     SSL = None
 
 import errno
-socket_errors_to_ignore = []
-# Not all of these names will be defined for every platform.
-for _ in ("EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
-          "EHOSTDOWN", "EHOSTUNREACH",
-          "WSAECONNABORTED", "WSAECONNREFUSED", "WSAECONNRESET",
-          "WSAENETRESET", "WSAETIMEDOUT"):
-    if _ in dir(errno):
-        socket_errors_to_ignore.append(getattr(errno, _))
-# de-dupe the list
-socket_errors_to_ignore = dict.fromkeys(socket_errors_to_ignore).keys()
+
+def plat_specific_errors(*errnames):
+    """Return error numbers for all errors in errnames on this platform.
+    
+    The 'errno' module contains different global constants depending on
+    the specific platform (OS). This function will return the list of
+    numeric values for a given list of potential names.
+    """
+    errno_names = dir(errno)
+    nums = [getattr(errno, k) for k in errnames if k in errno_names]
+    # de-dupe the list
+    return dict.fromkeys(nums).keys()
+
+socket_errors_to_ignore = plat_specific_errors(
+    "EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
+    "EHOSTDOWN", "EHOSTUNREACH",
+    "WSAECONNABORTED", "WSAECONNREFUSED", "WSAECONNRESET",
+    "WSAENETRESET", "WSAETIMEDOUT")
 socket_errors_to_ignore.append("timed out")
+
+socket_errors_nonblocking = plat_specific_errors(
+    'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
 
 comma_separated_headers = ['ACCEPT', 'ACCEPT-CHARSET', 'ACCEPT-ENCODING',
     'ACCEPT-LANGUAGE', 'ACCEPT-RANGES', 'ALLOW', 'CACHE-CONTROL',
