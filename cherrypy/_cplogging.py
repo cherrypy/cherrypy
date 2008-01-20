@@ -2,6 +2,8 @@
 
 import datetime
 import logging
+# Silence the no-handlers "warning" (stderr write!) in stdlib logging
+logging.Logger.manager.emittedNoHandlerWarning = 1
 logfmt = logging.Formatter("%(message)s")
 import os
 import rfc822
