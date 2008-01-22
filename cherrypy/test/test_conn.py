@@ -215,8 +215,8 @@ class ConnectionTests(helper.CPWebCase):
             self.persistent = True
             conn = self.HTTP_CONN
             # Make the socket nonblocking so it can timeout
-            conn.connect()
-            conn.sock.settimeout(0.1)
+##            conn.connect()
+##            conn.sock.settimeout(0.1)
             conn.putrequest("GET", "/", skip_host=True)
             conn.putheader("Host", self.HOST)
             conn.endheaders()
