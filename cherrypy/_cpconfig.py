@@ -92,6 +92,10 @@ style) context manager.
 """
 
 import ConfigParser
+try:
+    set
+except NameError:
+    from sets import Set as set
 import sys
 
 import cherrypy
