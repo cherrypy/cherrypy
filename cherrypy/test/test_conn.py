@@ -4,6 +4,7 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import httplib
+import urllib
 import socket
 import sys
 import time
@@ -12,6 +13,7 @@ timeout = 0.1
 
 import cherrypy
 from cherrypy.test import webtest
+from cherrypy import _cperror
 
 
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
@@ -65,6 +67,10 @@ def setup_server():
             return "ok"
         err_before_read.exposed = True
         err_before_read._cp_config = {'hooks.on_start_resource': raise500}
+
+        def one_megabyte_of_a(self):
+            return ["a" * 1024] * 1024
+        one_megabyte_of_a.exposed = True
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
@@ -538,6 +544,18 @@ class ConnectionTests(helper.CPWebCase):
         # Apache, for example, may emit a Connection header even for HTTP/1.0
 ##        self.assertNoHeader("Connection")
 
+    def test_598(self):
+        remote_data_conn = urllib.urlopen('http://%s:%s/one_megabyte_of_a/' % (self.HOST, self.PORT,))
+        received_data = remote_data_conn.read(512)
+        time.sleep(6.0)
+        remaining = 1024*1024 - 512
+        received_data = ' '
+        while remaining and received_data:
+            received_data = remote_data_conn.read(remaining)
+            remaining -= len(received_data)
+       
+        self.assertTrue(received_data) 
+        self.assertEqual(remaining, 0) 
 
 if __name__ == "__main__":
     setup_server()
