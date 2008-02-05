@@ -288,8 +288,8 @@ class Config(dict):
         self.namespaces({k: v})
 
 
-# Backward compatibility handler for the "engine" namespace.
 def _engine_namespace_handler(k, v):
+    """Backward compatibility handler for the "engine" namespace."""
     engine = cherrypy.engine
     if k == 'autoreload_on':
         if v:
@@ -309,6 +309,13 @@ def _engine_namespace_handler(k, v):
     elif k == 'SIGTERM':
         engine.listeners['SIGTERM'] = set([v])
 Config.namespaces["engine"] = _engine_namespace_handler
+
+
+def _tree_namespace_handler(k, v):
+    """Namespace handler for the 'tree' config namespace."""
+    cherrypy.tree.graft(v, v.script_name)
+    cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name))
+Config.namespaces["tree"] = _tree_namespace_handler
 
 
 class _Parser(ConfigParser.ConfigParser):
