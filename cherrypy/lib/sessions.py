@@ -398,8 +398,19 @@ class PostgresqlSession(Session):
     
     def __init__(self, id=None, **kwargs):
         Session.__init__(self, id, **kwargs)
-        self.db = self.get_db()
         self.cursor = self.db.cursor()
+    
+    def setup(cls, **kwargs):
+        """Set up the storage system for Postgres-based sessions.
+        
+        This should only be called once per process; this will be done
+        automatically when using sessions.init (as the built-in Tool does).
+        """
+        for k, v in kwargs.iteritems():
+            setattr(cls, k, v)
+        
+        self.db = self.get_db()
+    setup = classmethod(setup)
     
     def __del__(self):
         if self.cursor:
