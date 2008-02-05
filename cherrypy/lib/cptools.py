@@ -1,5 +1,6 @@
 """Functions for builtin CherryPy tools."""
 
+import logging
 import md5
 import re
 
@@ -164,7 +165,7 @@ response_headers.failsafe = True
 
 def referer(pattern, accept=True, accept_missing=False, error=403,
             message='Forbidden Referer header.'):
-    """Raise HTTPError if Referer header does not pass our test.
+    """Raise HTTPError if Referer header does/does not match the given pattern.
     
     pattern: a regular expression pattern to test against the Referer.
     accept: if True, the Referer must match the pattern; if False,
@@ -286,10 +287,10 @@ to this function:
                  for k in dir(SessionAuth) if not k.startswith("__")])
 
 
-def log_traceback():
+def log_traceback(severity=logging.DEBUG):
     """Write the last error's traceback to the cherrypy error log."""
     from cherrypy import _cperror
-    cherrypy.log(_cperror.format_exc(), "HTTP")
+    cherrypy.log(_cperror.format_exc(), "HTTP", severity=severity)
 
 def log_request_headers():
     """Write request headers to the cherrypy error log."""
