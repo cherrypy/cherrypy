@@ -307,13 +307,21 @@ def _checkDigestResponse(auth_map, password, method = "GET", A1 = None, **kwargs
      entity_body - when 'qop' is set to 'auth-int' you MUST provide the
                    raw data you are going to send to the client (usually the
                    HTML page.
+     request_uri - the uri from the request line compared with the 'uri'
+                   directive of the authorization map. They must represent
+                   the same resource (unused at this time).
     """
+
+    if auth_map['realm'] != kwargs.get('realm', None):
+        return False
 
     response =  _computeDigestResponse(auth_map, password, method, A1,**kwargs)
 
     return response == auth_map["response"]
 
 def _checkBasicResponse (auth_map, password, method='GET', encrypt=None, **kwargs):
+    # Note that the Basic response doesn't provide the realm value so we cannot
+    # test it
     try:
         return encrypt(auth_map["password"], auth_map["username"]) == password
     except TypeError:

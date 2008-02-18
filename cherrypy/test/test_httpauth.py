@@ -129,11 +129,21 @@ class HTTPAuthTest(helper.CPWebCase):
         elif tokens['qop'] != '"auth"':
             self._handlewebError(bad_value_msg % ('qop', '"auth"', tokens['qop']))
 
-            # now let's see if what 
+        # Test a wrong 'realm' value
+        base_auth = 'Digest username="test", realm="wrong realm", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
+
+        auth = base_auth % (nonce, '', '00000001')
+        params = httpauth.parseAuthorization(auth)
+        response = httpauth._computeDigestResponse(params, 'test')
+        
+        auth = base_auth % (nonce, response, '00000001')
+        self.getPage('/digest/', [('Authorization', auth)])
+        self.assertStatus('401 Unauthorized')
+
+        # Test that must pass
         base_auth = 'Digest username="test", realm="localhost", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
 
         auth = base_auth % (nonce, '', '00000001')
-                
         params = httpauth.parseAuthorization(auth)
         response = httpauth._computeDigestResponse(params, 'test')
         
