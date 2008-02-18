@@ -320,7 +320,7 @@ class RoutesDispatcher(object):
             
             action = result.get('action', None)
             if action is not None:
-                handler = getattr(controller, action)
+                handler = getattr(controller, action, None)
                 # Get config from the handler 
                 if hasattr(handler, "_cp_config"): 
                     merge(handler._cp_config)
