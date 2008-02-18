@@ -314,7 +314,10 @@ def _checkDigestResponse(auth_map, password, method = "GET", A1 = None, **kwargs
     return response == auth_map["response"]
 
 def _checkBasicResponse (auth_map, password, method='GET', encrypt=None, **kwargs):
-    return encrypt(auth_map["password"]) == password
+    try:
+        return encrypt(auth_map["password"], auth_map["username"]) == password
+    except TypeError:
+        return encrypt(auth_map["password"]) == password
 
 AUTH_RESPONSES = {
     "basic": _checkBasicResponse,
