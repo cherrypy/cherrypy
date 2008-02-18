@@ -8,6 +8,10 @@ import cherrypy
 
 
 def setup_server():
+
+    class Dummy:
+        def index(self):
+            return "I said good day!"
     
     class City:
         
@@ -30,6 +34,7 @@ def setup_server():
               action='index', conditions=dict(method=['GET']))
     d.mapper.connect('surbiton', controller='surbiton',
                      action='update', conditions=dict(method=['POST']))
+    d.connect('main', ':action', controller=Dummy())
     
     conf = {'/': {'request.dispatch': d}}
     cherrypy.tree.mount(root=None, config=conf)
@@ -44,6 +49,9 @@ class RoutesDispatchTest(helper.CPWebCase):
         self.getPage("/hounslow")
         self.assertStatus("200 OK")
         self.assertBody("Welcome to Hounslow, pop. 10000")
+        
+        self.getPage("/foo")
+        self.assertStatus("404 Not Found")
         
         self.getPage("/surbiton")
         self.assertStatus("200 OK")
