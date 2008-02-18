@@ -55,7 +55,7 @@ class Application(object):
         self.namespaces["log"] = lambda k, v: setattr(self.log, k, v)
         self.namespaces["wsgi"] = self.wsgiapp.namespace_handler
         
-        self.config = {}
+        self.config = self.__class__.config.copy()
     
     def __repr__(self):
         return "%s.%s(%r, %r)" % (self.__module__, self.__class__.__name__,
