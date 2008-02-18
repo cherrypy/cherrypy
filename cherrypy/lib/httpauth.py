@@ -309,6 +309,9 @@ def _checkDigestResponse(auth_map, password, method = "GET", A1 = None, **kwargs
                    HTML page.
     """
 
+    if auth_map['realm'] != kwargs.get('realm', None):
+        return False
+    
     response =  _computeDigestResponse(auth_map, password, method, A1,**kwargs)
 
     return response == auth_map["response"]
