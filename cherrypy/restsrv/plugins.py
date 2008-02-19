@@ -175,7 +175,8 @@ class DropPrivileges(SimplePlugin):
                              current_ids())
         else:
             if self.uid is None and self.gid is None:
-                self.bus.log('uid/gid not set')
+                if pwd or grp:
+                    self.bus.log('uid/gid not set')
             else:
                 self.bus.log('Started as uid: %r gid: %r' % current_ids())
                 if self.gid is not None:
