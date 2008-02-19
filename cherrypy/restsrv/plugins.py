@@ -102,89 +102,101 @@ class SignalHandler(object):
         self.bus.publish(signame)
 
 
+
+try:
+    import pwd, grp
+except ImportError:
+    pwd, grp = None, None
+
+
 class DropPrivileges(SimplePlugin):
-    """Drop privileges.
+    """Drop privileges. uid/gid arguments not available on Windows.
     
     Special thanks to Gavin Baker: http://antonym.org/node/100.
     """
     
-    def __init__(self, bus):
+    def __init__(self, bus, umask=None, uid=None, gid=None):
         SimplePlugin.__init__(self, bus)
         self.finalized = False
+        self.uid = uid
+        self.gid = gid
+        self.umask = umask
     
-    try:
-        import pwd, grp
-    except ImportError:
-        try:
-            os.umask
-        except AttributeError:
-            def start(self):
-                """Drop privileges. Not implemented on this platform."""
-                raise NotImplementedError
-        else:
-            umask = None
-            
-            def start(self):
-                """Drop privileges. Windows version (umask only)."""
-                if self.finalized:
-                    self.bus.log('umask already set to: %03o' % umask)
-                else:
-                    if umask is None:
-                        self.bus.log('umask not set')
-                    else:
-                        old_umask = os.umask(umask)
-                        self.bus.log('umask old: %03o, new: %03o' %
-                                     (old_umask, umask))
-                    self.finalized = True
-    else:
-        uid = None
-        gid = None
-        umask = None
+    def _get_uid(self):
+        return self._uid
+    def _set_uid(self, val):
+        if val is not None:
+            if pwd is None:
+                self.bus.log("pwd module not available; ignoring uid.")
+                val = None
+            elif isinstance(val, basestring):
+                val = pwd.getpwnam(val)[2]
+        self._uid = val
+    uid = property(_get_uid, _set_uid, doc="The uid under which to run.")
+    
+    def _get_gid(self):
+        return self._gid
+    def _set_gid(self, val):
+        if val is not None:
+            if grp is None:
+                self.bus.log("grp module not available; ignoring gid.")
+                val = None
+            elif isinstance(val, basestring):
+                val = grp.getgrnam(val)[2]
+        self._gid = val
+    gid = property(_get_gid, _set_gid, doc="The gid under which to run.")
+    
+    def _get_umask(self):
+        return self._umask
+    def _set_umask(self, val):
+        if val is not None:
+            try:
+                os.umask
+            except AttributeError:
+                self.bus.log("umask function not available; ignoring umask.")
+                val = None
+        self._umask = val
+    umask = property(_get_umask, _set_umask, doc="The umask under which to run.")
+    
+    def start(self):
+        # uid/gid
+        def current_ids():
+            """Return the current (uid, gid) if available."""
+            name, group = None, None
+            if pwd:
+                name = pwd.getpwuid(os.getuid())[0]
+            if grp:
+                group = grp.getgrgid(os.getgid())[0]
+            return name, group
         
-        def start(self):
-            """Drop privileges. UNIX version (uid, gid, and umask)."""
-            if uid is None and gid is None:
+        if self.finalized:
+            if not (self.uid is None and self.gid is None):
+                self.bus.log('Already running as uid: %r gid: %r' %
+                             current_ids())
+        else:
+            if self.uid is None and self.gid is None:
                 self.bus.log('uid/gid not set')
             else:
-                if uid is None:
-                    uid = None
-                elif isinstance(uid, basestring):
-                    uid = pwd.getpwnam(uid)[2]
-                else:
-                    uid = uid
-                
-                if gid is None:
-                    gid = None
-                elif isinstance(gid, basestring):
-                    gid = grp.getgrnam(gid)[2]
-                else:
-                    gid = gid
-                
-                def names():
-                    name = pwd.getpwuid(os.getuid())[0]
-                    group = grp.getgrgid(os.getgid())[0]
-                    return name, group
-                
-                if self.finalized:
-                    self.bus.log('Already running as: %r/%r' % names())
-                else:
-                    self.bus.log('Started as %r/%r' % names())
-                    if gid is not None:
-                        os.setgid(gid)
-                    if uid is not None:
-                        os.setuid(uid)
-                    self.bus.log('Running as %r/%r' % names())
-            
-            if self.finalized:
-                self.bus.log('umask already set to: %03o' % umask)
+                self.bus.log('Started as uid: %r gid: %r' % current_ids())
+                if self.gid is not None:
+                    os.setgid(gid)
+                if self.uid is not None:
+                    os.setuid(uid)
+                self.bus.log('Running as uid: %r gid: %r' % current_ids())
+        
+        # umask
+        if self.finalized:
+            if self.umask is not None:
+                self.bus.log('umask already set to: %03o' % self.umask)
+        else:
+            if self.umask is None:
+                self.bus.log('umask not set')
             else:
-                if umask is None:
-                    self.bus.log('umask not set')
-                else:
-                    old_umask = os.umask(umask)
-                    self.bus.log('umask old: %03o, new: %03o' %
-                                 (old_umask, umask))
-                self.finalized = True
+                old_umask = os.umask(self.umask)
+                self.bus.log('umask old: %03o, new: %03o' %
+                             (old_umask, self.umask))
+        
+        self.finalized = True
     start.priority = 75
 
 
@@ -196,12 +208,13 @@ class Daemonizer(SimplePlugin):
         Daemonizer(bus).subscribe()
     
     When this component finishes, the process is completely decoupled from
-    the parent environment.  Please note that when this component is used,
-    the return code from the parent process will always be 0, even if a
-    startup error occured, unless that error was during the daemonizing process. 
-    If you use this plugin to Daemonize, don't use the return code as an accurate
-    indication of whether the process fully started.  In fact, that return code
-    only indicates if the process succesfully finished the first fork.
+    the parent environment. Please note that when this component is used,
+    the return code from the parent process will still be 0 if a startup
+    error occurs in the forked children. Errors in the initial daemonizing
+    process still return proper exit codes. Therefore, if you use this
+    plugin to daemonize, don't use the return code as an accurate indicator
+    of whether the process fully started. In fact, that return code only
+    indicates if the process succesfully finished the first fork.
     """
     
     def __init__(self, bus, stdin='/dev/null', stdout='/dev/null',
@@ -268,9 +281,9 @@ class Daemonizer(SimplePlugin):
         so = open(self.stdout, "a+")
         se = open(self.stderr, "a+", 0)
 
-        # os.dup2(fd,fd2) will close fd2 if necessary (so we don't explicitly close
-        # stdin,stdout,stderr):
-        # http://docs.python.org/lib/os-fd-ops.html 
+        # os.dup2(fd, fd2) will close fd2 if necessary,
+        # so we don't explicitly close stdin/out/err.
+        # See http://docs.python.org/lib/os-fd-ops.html
         os.dup2(si.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
