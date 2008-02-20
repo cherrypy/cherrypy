@@ -1,9 +1,4 @@
-"""Tests for managing HTTP issues (malformed requests, etc).
-
-Some of these tests check timeouts, etcetera, and therefore take a long
-time to run. Therefore, this module should probably not be included in
-the 'comprehensive' test suite (test.py).
-"""
+"""Tests for managing HTTP issues (malformed requests, etc)."""
 
 from cherrypy.test import test
 test.prefer_parent_path()

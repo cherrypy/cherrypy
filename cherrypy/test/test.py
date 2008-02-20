@@ -370,6 +370,7 @@ def run():
         'test_tools',
         'test_encoding',
         'test_etags',
+        'test_http',
         'test_httpauth',
         'test_httplib',
         'test_objectmapping',
