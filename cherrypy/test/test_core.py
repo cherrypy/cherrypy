@@ -3,13 +3,15 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import os
+localDir = os.path.dirname(__file__)
+import types
+
 import cherrypy
 from cherrypy import _cptools, tools
 from cherrypy.lib import http, static
-import types
 
-import os
-localDir = os.path.dirname(__file__)
+
 log_file = os.path.join(localDir, "test.log")
 log_access_file = os.path.join(localDir, "access.log")
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
@@ -925,6 +927,26 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/method/request_body", headers=h, method="PUT", body=b)
         self.assertStatus(200)
         self.assertBody(b)
+        
+        # Request a PUT method with a file body but no Content-Type.
+        # See http://www.cherrypy.org/ticket/790.
+        b = "one thing on top of another"
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+##            conn.set_debuglevel(10)
+            conn.putrequest("PUT", "/method/request_body", skip_host=True)
+            conn.putheader("Host", self.HOST)
+            conn.putheader('Content-Length', str(len(b)))
+            conn.endheaders()
+            conn.send(b)
+            response = conn.response_class(conn.sock, method="PUT")
+            response.begin()
+            self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(b)
+        finally:
+            self.persistent = False
         
         # Request a PUT method with no body whatsoever (not an empty one).
         # See http://www.cherrypy.org/ticket/650.

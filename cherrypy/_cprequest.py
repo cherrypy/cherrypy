@@ -685,8 +685,18 @@ class Request(object):
         # FieldStorage only recognizes POST, so fake it.
         methenv = {'REQUEST_METHOD': "POST"}
         try:
+            # If the headers are missing "Content-Type" then add one
+            # with an empty value.  This ensures that FieldStorage
+            # won't parse the request body for params if the client
+            # didn't provide a "Content-Type" header.
+            if 'Content-Type' not in self.headers:
+                h = self.headers.copy()
+                h['Content-Type'] = 'application/octet-stream'
+            else:
+                h = self.headers
+            
             forms = _cpcgifs.FieldStorage(fp=self.rfile,
-                                          headers=self.headers,
+                                          headers=h,
                                           environ=methenv,
                                           keep_blank_values=1)
         except http.MaxSizeExceeded:
