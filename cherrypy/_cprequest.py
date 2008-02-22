@@ -690,8 +690,8 @@ class Request(object):
             # won't parse the request body for params if the client
             # didn't provide a "Content-Type" header.
             if 'Content-Type' not in self.headers:
-                h = self.headers.copy()
-                h['Content-Type'] = 'application/octet-stream'
+                h = http.HeaderMap(self.headers.items())
+                h['Content-Type'] = ''
             else:
                 h = self.headers
             
