@@ -188,7 +188,7 @@ class WebCase(TestCase):
     
     def _get_persistent(self):
         return hasattr(self.HTTP_CONN, "__class__")
-    def _set_persistent(self, on=True):
+    def _set_persistent(self, on):
         self.set_persistent(on)
     persistent = property(_get_persistent, _set_persistent)
     
