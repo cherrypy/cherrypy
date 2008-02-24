@@ -438,10 +438,10 @@ class HTTPRequest(object):
             environ[envname] = v
         
         ct = environ.pop("HTTP_CONTENT_TYPE", None)
-        if ct:
+        if ct is not None:
             environ["CONTENT_TYPE"] = ct
         cl = environ.pop("HTTP_CONTENT_LENGTH", None)
-        if cl:
+        if cl is not None:
             environ["CONTENT_LENGTH"] = cl
     
     def decode_chunked(self):
