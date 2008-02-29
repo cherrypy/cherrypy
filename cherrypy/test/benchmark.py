@@ -378,7 +378,6 @@ if __name__ == '__main__':
                 run_standard_benchmarks()
             finally:
                 cherrypy.engine.exit()
-                cherrypy.server.stop()
     
     print "Starting CherryPy app server..."
     
@@ -399,5 +398,5 @@ if __name__ == '__main__':
             cherrypy.server.request_class = NullRequest
             cherrypy.server.response_class = NullResponse
         
-        # This will block
         cherrypy.engine.start_with_callback(run)
+        cherrypy.engine.block()
