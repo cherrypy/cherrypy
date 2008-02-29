@@ -285,6 +285,9 @@ class FileSession(Session):
         This should only be called once per process; this will be done
         automatically when using sessions.init (as the built-in Tool does).
         """
+        if 'storage_path' in kwargs:
+            kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
+        
         for k, v in kwargs.iteritems():
             setattr(cls, k, v)
         
@@ -297,8 +300,7 @@ class FileSession(Session):
             warn("%s session lockfile%s found at startup. If you are "
                  "only running one process, then you may need to "
                  "manually delete the lockfiles found at %r."
-                 % (len(lockfiles), plural,
-                    os.path.abspath(cls.storage_path)))
+                 % (len(lockfiles), plural, cls.storage_path))
     setup = classmethod(setup)
     
     def _get_file_path(self):
