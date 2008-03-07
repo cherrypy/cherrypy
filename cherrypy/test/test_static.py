@@ -24,12 +24,14 @@ def setup_server():
         def dynamic(self):
             return "This is a DYNAMIC page"
         dynamic.exposed = True
-
-
+    
+    
+    cherrypy.config.update({'environment': 'test_suite'})
+    
     root = Root()
     root.static = Static()
     
-    conf = {
+    rootconf = {
         '/static': {
             'tools.staticdir.on': True,
             'tools.staticdir.dir': 'static',
@@ -50,9 +52,23 @@ def setup_server():
             'request.show_tracebacks': True,
         },
         }
+    rootApp = cherrypy.Application(root)
+    rootApp.merge(rootconf)
     
-    cherrypy.tree.mount(root, config=conf)
-    cherrypy.config.update({'environment': 'test_suite'})
+    test_app_conf = {
+        '/test': {
+            'tools.staticdir.index': 'index.html',
+            'tools.staticdir.on': True,
+            'tools.staticdir.root': curdir,
+            'tools.staticdir.dir': 'static',
+            },
+        }
+    testApp = cherrypy.Application(Static())
+    testApp.merge(test_app_conf)
+    
+    vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
+    cherrypy.tree.graft(vhost)
+
 
 def teardown_server():
     if os.path.exists(has_space_filepath):
@@ -91,7 +107,8 @@ class StaticTest(helper.CPWebCase):
         #   into \r\n on Windows when extracting the CherryPy tarball so
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
-        
+    
+    def test_fallthrough(self):
         # Test that NotFound will then try dynamic handlers (see [878]).
         self.getPage("/static/dynamic")
         self.assertBody("This is a DYNAMIC page")
@@ -101,7 +118,8 @@ class StaticTest(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('You want the Baron? You can have the Baron!')
-        
+    
+    def test_index(self):
         # Check a directory via "staticdir.index".
         self.getPage("/docroot/")
         self.assertStatus('200 OK')
@@ -113,17 +131,20 @@ class StaticTest(helper.CPWebCase):
         self.assertHeader('Location', '%s/docroot/' % self.base())
         self.assertBody("This resource can be found at <a href='%s/docroot/'>"
                         "%s/docroot/</a>." % (self.base(), self.base()))
-        
+    
+    def test_config_errors(self):
         # Check that we get an error if no .file or .dir
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
         self.assertInBody("TypeError: staticdir() takes at least 2 "
                           "arguments (0 given)")
-        
+    
+    def test_security(self):
         # Test up-level security
         self.getPage("/static/../../test/style.css")
         self.assertStatus((400, 403))
-        
+    
+    def test_modif(self):
         # Test modified-since on a reasonably-large file
         self.getPage("/static/dirback.jpg")
         self.assertStatus("200 OK")
@@ -138,6 +159,13 @@ class StaticTest(helper.CPWebCase):
         self.assertNoHeader("Content-Length")
         self.assertNoHeader("Content-Disposition")
         self.assertBody("")
+    
+    def test_755_vhost(self):
+        self.getPage("/test/", [('Host', 'virt.net')])
+        self.assertStatus(200)
+        self.getPage("/test", [('Host', 'virt.net')])
+        self.assertStatus((302, 303))
+        self.assertHeader('Location', 'http://virt.net/test/')
 
 
 if __name__ == "__main__":
