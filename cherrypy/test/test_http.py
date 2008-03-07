@@ -13,7 +13,7 @@ def encode_multipart_formdata(files):
     
     files: a sequence of (name, filename, value) tuples for multipart uploads.
     """
-    BOUNDARY = '----------ThIs_Is_tHe_bouNdaRY_$'
+    BOUNDARY = '________ThIs_Is_tHe_bouNdaRY_$'
     L = []
     for key, filename, value in files:
         L.append('--' + BOUNDARY)
@@ -44,7 +44,8 @@ def setup_server():
         post_multipart.exposed = True
     
     cherrypy.tree.mount(Root())
-    cherrypy.config.update({'environment': 'test_suite'})
+    cherrypy.config.update({'environment': 'test_suite',
+                            'server.max_request_body_size': 30000000})
 
 
 from cherrypy.test import helper
