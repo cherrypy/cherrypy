@@ -46,6 +46,7 @@ class TestHarness(object):
         else:
             ssl = ""
         print "HTTP server version", self.protocol, ssl
+        print "PID:", os.getpid()
         print
         
         if isinstance(conf, basestring):

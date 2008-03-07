@@ -207,6 +207,8 @@ Finished 1000 requests
         port = cherrypy.server.socket_port
         assert self.concurrency > 0
         assert self.requests > 0
+        # Don't use "localhost".
+        # Cf http://mail.python.org/pipermail/python-win32/2008-March/007050.html
         return ("-k -n %s -c %s http://127.0.0.1:%s%s" %
                 (self.requests, self.concurrency, port, self.path))
     
