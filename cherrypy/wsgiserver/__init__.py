@@ -36,12 +36,50 @@ This won't call the CherryPy engine (application side) at all, only the
 WSGI server, which is independant from the rest of CherryPy. Don't
 let the name "CherryPyWSGIServer" throw you; the name merely reflects
 its origin, not its coupling.
+
+For those of you wanting to understand internals of this module, here's the
+basic call flow. The server's listening thread runs a very tight loop,
+sticking incoming connections onto a Queue:
+
+    server = CherryPyWSGIServer(...)
+    server.start()
+    while True:
+        tick()
+        # This blocks until a request comes in:
+        child = socket.accept()
+        conn = HTTPConnection(child, ...)
+        server.requests.put(conn)
+
+Worker threads are kept in a pool and poll the Queue, popping off and then
+handling each connection in turn. Each connection can consist of an arbitrary
+number of requests and their responses, so we run a nested loop:
+
+    while True:
+        conn = server.requests.get()
+        conn.communicate()
+        ->  while True:
+                req = HTTPRequest(...)
+                req.parse_request()
+                ->  # Read the Request-Line, e.g. "GET /page HTTP/1.1"
+                    req.rfile.readline()
+                    req.read_headers()
+                req.respond()
+                ->  response = wsgi_app(...)
+                    try:
+                        for chunk in response:
+                            if chunk:
+                                req.write(chunk)
+                    finally:
+                        if hasattr(response, "close"):
+                            response.close()
+                if req.close_connection:
+                    return
 """
 
 
 import base64
-import Queue
 import os
+import Queue
 import re
 quoted_slash = re.compile("(?i)%2F")
 import rfc822
@@ -202,7 +240,7 @@ class HTTPRequest(object):
     
     A single HTTP connection may consist of multiple request/response pairs.
     
-    sendall: the 'sendall' method from the connection's fileobject.
+    send: the 'send' method from the connection's socket object.
     wsgi_app: the WSGI application to call.
     environ: a partial WSGI environ (server and connection entries).
         The caller MUST set the following entries:
@@ -235,9 +273,9 @@ class HTTPRequest(object):
     max_request_header_size = 0
     max_request_body_size = 0
     
-    def __init__(self, sendall, environ, wsgi_app):
+    def __init__(self, send, environ, wsgi_app):
         self.rfile = environ['wsgi.input']
-        self.sendall = sendall
+        self.send = send
         self.environ = environ.copy()
         self.wsgi_app = wsgi_app
         
@@ -569,6 +607,16 @@ class HTTPRequest(object):
         else:
             self.sendall(chunk)
     
+    def sendall(self, data):
+        """Sendall for non-blocking sockets."""
+        while data:
+            try:
+                bytes_sent = self.send(data)
+                data = data[bytes_sent:]
+            except socket.error, e:
+                if e.args[0] not in socket_errors_nonblocking:
+                    raise
+    
     def send_headers(self):
         """Assert, process, and send the HTTP response message-headers."""
         hkeys = [key.lower() for key, value in self.outheaders]
@@ -642,18 +690,162 @@ class NoSSLError(Exception):
     pass
 
 
-def _ssl_wrap_method(method, is_reader=False):
-    """Wrap the given method with SSL error-trapping.
+class CP_fileobject(socket._fileobject):
+    """Faux file object attached to a socket object."""
+
+    def recv(self, size):
+        return self._sock.recv(size)
+
+    def sendall(self, data):
+        """Sendall for non-blocking sockets."""
+        while data:
+            try:
+                bytes_sent = self._sock.send(data)
+                data = data[bytes_sent:]
+            except socket.error, e:
+                if e.args[0] not in socket_errors_nonblocking:
+                    raise
+
+    def send(self, data):
+        return self._sock.send(data)
     
-    is_reader: if False (the default), EOF errors will be raised.
-        If True, EOF errors will return "" (to emulate normal sockets).
-    """
-    def ssl_method_wrapper(self, *args, **kwargs):
-##        print (id(self), method, args, kwargs)
+    def flush(self):
+        if self._wbuf:
+            buffer = "".join(self._wbuf)
+            self._wbuf = []
+            self.sendall(buffer)
+    
+    def read(self, size=-1):
+        data = self._rbuf
+        if size < 0:
+            # Read until EOF
+            buffers = []
+            if data:
+                buffers.append(data)
+            self._rbuf = ""
+            if self._rbufsize <= 1:
+                recv_size = self.default_bufsize
+            else:
+                recv_size = self._rbufsize
+            
+            while True:
+                data = self.recv(recv_size)
+                if not data:
+                    break
+                buffers.append(data)
+            return "".join(buffers)
+        else:
+            # Read until size bytes or EOF seen, whichever comes first
+            buf_len = len(data)
+            if buf_len >= size:
+                self._rbuf = data[size:]
+                return data[:size]
+            buffers = []
+            if data:
+                buffers.append(data)
+            self._rbuf = ""
+            while True:
+                left = size - buf_len
+                recv_size = max(self._rbufsize, left)
+                data = self.recv(recv_size)
+                if not data:
+                    break
+                buffers.append(data)
+                n = len(data)
+                if n >= left:
+                    self._rbuf = data[left:]
+                    buffers[-1] = data[:left]
+                    break
+                buf_len += n
+            return "".join(buffers)
+
+    def readline(self, size=-1):
+        data = self._rbuf
+        if size < 0:
+            # Read until \n or EOF, whichever comes first
+            if self._rbufsize <= 1:
+                # Speed up unbuffered case
+                assert data == ""
+                buffers = []
+                while data != "\n":
+                    data = self.recv(1)
+                    if not data:
+                        break
+                    buffers.append(data)
+                return "".join(buffers)
+            nl = data.find('\n')
+            if nl >= 0:
+                nl += 1
+                self._rbuf = data[nl:]
+                return data[:nl]
+            buffers = []
+            if data:
+                buffers.append(data)
+            self._rbuf = ""
+            while True:
+                data = self.recv(self._rbufsize)
+                if not data:
+                    break
+                buffers.append(data)
+                nl = data.find('\n')
+                if nl >= 0:
+                    nl += 1
+                    self._rbuf = data[nl:]
+                    buffers[-1] = data[:nl]
+                    break
+            return "".join(buffers)
+        else:
+            # Read until size bytes or \n or EOF seen, whichever comes first
+            nl = data.find('\n', 0, size)
+            if nl >= 0:
+                nl += 1
+                self._rbuf = data[nl:]
+                return data[:nl]
+            buf_len = len(data)
+            if buf_len >= size:
+                self._rbuf = data[size:]
+                return data[:size]
+            buffers = []
+            if data:
+                buffers.append(data)
+            self._rbuf = ""
+            while True:
+                data = self.recv(self._rbufsize)
+                if not data:
+                    break
+                buffers.append(data)
+                left = size - buf_len
+                nl = data.find('\n', 0, left)
+                if nl >= 0:
+                    nl += 1
+                    self._rbuf = data[nl:]
+                    buffers[-1] = data[:nl]
+                    break
+                n = len(data)
+                if n >= left:
+                    self._rbuf = data[left:]
+                    buffers[-1] = data[:left]
+                    break
+                buf_len += n
+            return "".join(buffers)
+    
+
+class SSL_fileobject(CP_fileobject):
+    """SSL file object attached to a socket object."""
+    
+    ssl_timeout = 3
+    ssl_retry = .01
+    
+    def _safe_call(self, is_reader, call, *args, **kwargs):
+        """Wrap the given call with SSL error-trapping.
+        
+        is_reader: if False EOF errors will be raised. If True, EOF errors
+            will return "" (to emulate normal sockets).
+        """
         start = time.time()
         while True:
             try:
-                return method(self, *args, **kwargs)
+                return call(*args, **kwargs)
             except (SSL.WantReadError, SSL.WantWriteError):
                 # Sleep and try again. This is dangerous, because it means
                 # the rest of the stack has no way of differentiating
@@ -684,23 +876,19 @@ def _ssl_wrap_method(method, is_reader=False):
                     # The client is talking HTTP to an HTTPS server.
                     raise NoSSLError()
                 raise
+            except:
+                raise
             if time.time() - start > self.ssl_timeout:
                 raise socket.timeout("timed out")
-    return ssl_method_wrapper
 
-class SSL_fileobject(socket._fileobject):
-    """Faux file object attached to a socket object."""
-    
-    ssl_timeout = 3
-    ssl_retry = .01
-    
-    close = _ssl_wrap_method(socket._fileobject.close)
-    flush = _ssl_wrap_method(socket._fileobject.flush)
-    write = _ssl_wrap_method(socket._fileobject.write)
-    writelines = _ssl_wrap_method(socket._fileobject.writelines)
-    read = _ssl_wrap_method(socket._fileobject.read, is_reader=True)
-    readline = _ssl_wrap_method(socket._fileobject.readline, is_reader=True)
-    readlines = _ssl_wrap_method(socket._fileobject.readlines, is_reader=True)
+    def recv(self, *args, **kwargs):
+        return self._safe_call(True, super(SSL_fileobject, self).recv, *args, **kwargs)
+
+    def sendall(self, *args, **kwargs):
+        return self._safe_call(False, super(SSL_fileobject, self).sendall, *args, **kwargs)
+
+    def send(self, *args, **kwargs):
+        return self._safe_call(False, super(SSL_fileobject, self).send, *args, **kwargs)
 
 
 class HTTPConnection(object):
@@ -711,7 +899,7 @@ class HTTPConnection(object):
     environ: a WSGI environ template. This will be copied for each request.
     
     rfile: a fileobject for reading from the socket.
-    sendall: a function for writing (+ flush) to the socket.
+    send: a function for writing (+ flush) to the socket.
     """
     
     rbufsize = -1
@@ -736,10 +924,10 @@ class HTTPConnection(object):
             timeout = sock.gettimeout()
             self.rfile = SSL_fileobject(sock, "r", self.rbufsize)
             self.rfile.ssl_timeout = timeout
-            self.sendall = _ssl_wrap_method(sock.sendall)
+            self.send = self.rfile.send
         else:
-            self.rfile = sock.makefile("rb", self.rbufsize)
-            self.sendall = sock.sendall
+            self.rfile = CP_fileobject(sock, "rb", self.rbufsize)
+            self.send = sock.send
         
         # Wrap wsgi.input but not HTTPConnection.rfile itself.
         # We're also not setting maxlen yet; we'll do that separately
@@ -755,7 +943,7 @@ class HTTPConnection(object):
                 # the RequestHandlerClass constructor, the error doesn't
                 # get written to the previous request.
                 req = None
-                req = self.RequestHandlerClass(self.sendall, self.environ,
+                req = self.RequestHandlerClass(self.send, self.environ,
                                                self.wsgi_app)
                 
                 # This order of operations should guarantee correct pipelining.
@@ -771,24 +959,41 @@ class HTTPConnection(object):
             errnum = e.args[0]
             if errnum not in socket_errors_to_ignore:
                 if req:
+                    fd = open("ssl_errors.txt", "a")
+                    fd.write("1" * 80)
+                    fd.write("\n")
+                    fd.write(str(type(e)))
+                    fd.write(format_exc())
                     req.simple_response("500 Internal Server Error",
                                         format_exc())
             return
         except (KeyboardInterrupt, SystemExit):
             raise
         except NoSSLError:
-            # Unwrap our sendall
-            req.sendall = self.socket._sock.sendall
+            # Unwrap our send
+            req.send = self.socket._sock.send
             req.simple_response("400 Bad Request",
                                 "The client sent a plain HTTP request, but "
                                 "this server only speaks HTTPS on this port.")
-        except:
+        except Exception, e:
             if req:
+                fd = open("ssl_errors.txt", "a")
+                fd.write("2" * 80)
+                fd.write("\n")
+                fd.write(format_exc())
                 req.simple_response("500 Internal Server Error", format_exc())
     
     def close(self):
         """Close the socket underlying this connection."""
         self.rfile.close()
+        
+        # Python's socket module does NOT call close on the kernel socket
+        # when you call socket.close(). We do so manually here because we
+        # want this server to send a FIN TCP segment immediately. Note this
+        # must be called *before* calling socket.close(), because the latter
+        # drops its reference to the kernel socket.
+        self.socket._sock.close()
+        
         self.socket.close()
 
 

@@ -5,7 +5,7 @@ test.prefer_parent_path()
 
 import httplib
 import cherrypy
-import md5, mimetypes
+import mimetypes
 
 
 def encode_multipart_formdata(files):
@@ -38,9 +38,22 @@ def setup_server():
         index.exposed = True
         
         def post_multipart(self, file):
-            # compute and return md5 of posted file
+            """Return a summary ("a * 65536\nb * 65536") of the uploaded file."""
             contents = file.file.read()
-            return md5.md5(contents).hexdigest()
+            summary = []
+            curchar = ""
+            count = 0
+            for c in contents:
+                if c == curchar:
+                    count += 1
+                else:
+                    if count:
+                        summary.append("%s * %d" % (curchar, count))
+                    count = 1
+                    curchar = c
+            if count:
+                summary.append("%s * %d" % (curchar, count))
+            return ", ".join(summary)
         post_multipart.exposed = True
     
     cherrypy.tree.mount(Root())
@@ -56,14 +69,17 @@ class HTTPTests(helper.CPWebCase):
         # By not including a Content-Length header, cgi.FieldStorage
         # will hang. Verify that CP times out the socket and responds
         # with 411 Length Required.
-        c = httplib.HTTPConnection("127.0.0.1:%s" % self.PORT)
+        if self.scheme == "https":
+            c = httplib.HTTPSConnection("127.0.0.1:%s" % self.PORT)
+        else:
+            c = httplib.HTTPConnection("127.0.0.1:%s" % self.PORT)
         c.request("POST", "/")
         self.assertEqual(c.getresponse().status, 411)
     
     def test_post_multipart(self):
+        alphabet = "abcdefghijklmnopqrstuvwxyz"
         # generate file contents for a large post
-        contents = "abcdefghijklmnopqrstuvwxyz" * 1000000
-        post_md5 = md5.md5(contents).hexdigest()
+        contents = "".join([c * 65536 for c in alphabet])
         
         # encode as multipart form data
         files=[('file', 'file.txt', contents)]
@@ -84,7 +100,8 @@ class HTTPTests(helper.CPWebCase):
         self.assertEqual(errcode, 200)
         
         response_body = c.file.read()
-        self.assertEquals(post_md5, response_body)
+        self.assertEquals(", ".join(["%s * 65536" % c for c in alphabet]),
+                          response_body)
 
 
 if __name__ == '__main__':

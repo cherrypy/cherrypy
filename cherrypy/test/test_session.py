@@ -1,6 +1,7 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import httplib
 import os
 localDir = os.path.dirname(__file__)
 import sys
@@ -189,11 +190,22 @@ class SessionTest(helper.CPWebCase):
         data_dict = {}
         
         def request(index):
+            if self.scheme == 'https':
+                c = httplib.HTTPSConnection('127.0.0.1:%s' % self.PORT)
+            else:
+                c = httplib.HTTPConnection('127.0.0.1:%s' % self.PORT)
             for i in xrange(request_count):
-                self.getPage("/", cookies)
+                c.putrequest('GET', '/')
+                for k, v in cookies:
+                    c.putheader(k, v)
+                c.endheaders()
+                response = c.getresponse()
+                self.assertEqual(response.status, 200)
+                body = response.read()
+                self.failUnless(body.isdigit())
                 # Uncomment the following line to prove threads overlap.
 ##                print index,
-            data_dict[index] = v = int(self.body)
+            data_dict[index] = max(data_dict[index], int(body))
         
         # Start <request_count> requests from each of
         # <client_thread_count> concurrent clients
