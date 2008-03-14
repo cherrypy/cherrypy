@@ -545,7 +545,8 @@ class ConnectionTests(helper.CPWebCase):
 ##        self.assertNoHeader("Connection")
 
     def test_598(self):
-        remote_data_conn = urllib.urlopen('http://%s:%s/one_megabyte_of_a/' % (self.HOST, self.PORT,))
+        remote_data_conn = urllib.urlopen('%s://%s:%s/one_megabyte_of_a/' %
+                                          (self.scheme, self.HOST, self.PORT,))
         received_data = remote_data_conn.read(512)
         time.sleep(6.0)
         remaining = 1024*1024 - 512
