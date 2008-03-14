@@ -1,4 +1,3 @@
-import mimetools
 import mimetypes
 mimetypes.init()
 mimetypes.types_map['.dwg']='image/x-dwg'
@@ -93,6 +92,7 @@ def serve_file(path, content_type=None, disposition=None, name=None):
             else:
                 # Return a multipart/byteranges response.
                 response.status = "206 Partial Content"
+                import mimetools
                 boundary = mimetools.choose_boundary()
                 ct = "multipart/byteranges; boundary=%s" % boundary
                 response.headers['Content-Type'] = ct
