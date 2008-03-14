@@ -1018,8 +1018,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertHeader('Set-Cookie', 'Last=Piranha;')
     
     def testMaxRequestSize(self):
-        self.getPage("/", headers=[('From', "x" * 500)])
-        self.assertStatus(413)
+        for size in (500, 5000, 50000):
+            self.getPage("/", headers=[('From', "x" * 500)])
+            self.assertStatus(413)
         
         # Test for http://www.cherrypy.org/ticket/421
         # (Incorrect border condition in readline of SizeCheckWrapper).
