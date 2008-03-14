@@ -273,9 +273,9 @@ class HTTPRequest(object):
     max_request_header_size = 0
     max_request_body_size = 0
     
-    def __init__(self, send, environ, wsgi_app):
+    def __init__(self, wfile, environ, wsgi_app):
         self.rfile = environ['wsgi.input']
-        self.send = send
+        self.wfile = wfile
         self.environ = environ.copy()
         self.wsgi_app = wsgi_app
         
@@ -553,7 +553,7 @@ class HTTPRequest(object):
             self.sent_headers = True
             self.send_headers()
         if self.chunked_write:
-            self.sendall("0\r\n\r\n")
+            self.wfile.sendall("0\r\n\r\n")
     
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
@@ -570,7 +570,7 @@ class HTTPRequest(object):
         buf.append("\r\n")
         if msg:
             buf.append(msg)
-        self.sendall("".join(buf))
+        self.wfile.sendall("".join(buf))
     
     def start_response(self, status, headers, exc_info = None):
         """WSGI callable to begin the HTTP response."""
@@ -603,19 +603,9 @@ class HTTPRequest(object):
         
         if self.chunked_write and chunk:
             buf = [hex(len(chunk))[2:], "\r\n", chunk, "\r\n"]
-            self.sendall("".join(buf))
+            self.wfile.sendall("".join(buf))
         else:
-            self.sendall(chunk)
-    
-    def sendall(self, data):
-        """Sendall for non-blocking sockets."""
-        while data:
-            try:
-                bytes_sent = self.send(data)
-                data = data[bytes_sent:]
-            except socket.error, e:
-                if e.args[0] not in socket_errors_nonblocking:
-                    raise
+            self.wfile.sendall(chunk)
     
     def send_headers(self):
         """Assert, process, and send the HTTP response message-headers."""
@@ -682,7 +672,7 @@ class HTTPRequest(object):
             else:
                 raise
         buf.append("\r\n")
-        self.sendall("".join(buf))
+        self.wfile.sendall("".join(buf))
 
 
 class NoSSLError(Exception):
@@ -700,7 +690,7 @@ class CP_fileobject(socket._fileobject):
         """Sendall for non-blocking sockets."""
         while data:
             try:
-                bytes_sent = self._sock.send(data)
+                bytes_sent = self.send(data)
                 data = data[bytes_sent:]
             except socket.error, e:
                 if e.args[0] not in socket_errors_nonblocking:
@@ -871,13 +861,19 @@ class SSL_fileobject(CP_fileobject):
                     pass
                 
                 if is_reader and thirdarg == 'ssl handshake failure':
+                    # Return "" to simulate EOF which will close the conn.
                     return ""
                 if thirdarg == 'http request':
                     # The client is talking HTTP to an HTTPS server.
                     raise NoSSLError()
-                raise
+                if is_reader and thirdarg == 'decryption failed or bad record mac':
+                    # Return "" to simulate EOF which will close the conn.
+                    return ""
+                else:
+                    raise
             except:
                 raise
+            
             if time.time() - start > self.ssl_timeout:
                 raise socket.timeout("timed out")
 
@@ -922,12 +918,13 @@ class HTTPConnection(object):
         
         if SSL and isinstance(sock, SSL.ConnectionType):
             timeout = sock.gettimeout()
-            self.rfile = SSL_fileobject(sock, "r", self.rbufsize)
+            self.rfile = SSL_fileobject(sock, "rb", self.rbufsize)
             self.rfile.ssl_timeout = timeout
-            self.send = self.rfile.send
+            self.wfile = SSL_fileobject(sock, "wb", -1)
+            self.wfile.ssl_timeout = timeout
         else:
             self.rfile = CP_fileobject(sock, "rb", self.rbufsize)
-            self.send = sock.send
+            self.wfile = CP_fileobject(sock, "wb", -1)
         
         # Wrap wsgi.input but not HTTPConnection.rfile itself.
         # We're also not setting maxlen yet; we'll do that separately
@@ -943,7 +940,7 @@ class HTTPConnection(object):
                 # the RequestHandlerClass constructor, the error doesn't
                 # get written to the previous request.
                 req = None
-                req = self.RequestHandlerClass(self.send, self.environ,
+                req = self.RequestHandlerClass(self.wfile, self.environ,
                                                self.wsgi_app)
                 
                 # This order of operations should guarantee correct pipelining.
@@ -970,17 +967,17 @@ class HTTPConnection(object):
         except (KeyboardInterrupt, SystemExit):
             raise
         except NoSSLError:
-            # Unwrap our send
-            req.send = self.socket._sock.send
+            # Unwrap our wfile
+            req.wfile = CP_fileobject(self.socket, "wb", -1)
             req.simple_response("400 Bad Request",
                                 "The client sent a plain HTTP request, but "
                                 "this server only speaks HTTPS on this port.")
         except Exception, e:
+            fd = open("ssl_errors.txt", "a")
+            fd.write("2" * 80)
+            fd.write("\n")
+            fd.write(format_exc())
             if req:
-                fd = open("ssl_errors.txt", "a")
-                fd.write("2" * 80)
-                fd.write("\n")
-                fd.write(format_exc())
                 req.simple_response("500 Internal Server Error", format_exc())
     
     def close(self):
