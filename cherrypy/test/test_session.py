@@ -115,6 +115,7 @@ class SessionTest(helper.CPWebCase):
                 os.unlink(os.path.join(localDir, fname))
     
     def test_0_Session(self):
+        self.getPage('/setsessiontype/ram')
         self.getPage('/clear')
         
         self.getPage('/testStr')
@@ -188,6 +189,7 @@ class SessionTest(helper.CPWebCase):
         cookies = self.cookies
         
         data_dict = {}
+        errors = []
         
         def request(index):
             if self.scheme == 'https':
@@ -200,12 +202,13 @@ class SessionTest(helper.CPWebCase):
                     c.putheader(k, v)
                 c.endheaders()
                 response = c.getresponse()
-                self.assertEqual(response.status, 200)
                 body = response.read()
-                self.failUnless(body.isdigit())
+                if response.status != 200 or not body.isdigit():
+                    errors.append((response.status, body))
+                else:
+                    data_dict[index] = max(data_dict[index], int(body))
                 # Uncomment the following line to prove threads overlap.
 ##                print index,
-            data_dict[index] = max(data_dict[index], int(body))
         
         # Start <request_count> requests from each of
         # <client_thread_count> concurrent clients
@@ -221,6 +224,9 @@ class SessionTest(helper.CPWebCase):
         
         hitcount = max(data_dict.values())
         expected = 1 + (client_thread_count * request_count)
+        
+        for e in errors:
+            print e
         self.assertEqual(hitcount, expected)
     
     def test_3_Redirect(self):
@@ -309,6 +315,9 @@ else:
             self.assertBody('2')
             self.getPage('/testStr', self.cookies)
             self.assertBody('3')
+            self.getPage('/length', self.cookies)
+            self.assertErrorPage(500)
+            self.assertInBody("NotImplementedError")
             self.getPage('/delkey?key=counter', self.cookies)
             self.assertStatus(200)
             
@@ -378,7 +387,6 @@ else:
             # code has to survive calling save/close without init.
             self.getPage('/restricted', self.cookies, method='POST')
             self.assertErrorPage(405, "Specified method is invalid for this server.")
-
 
 
 

@@ -462,7 +462,13 @@ class PostgresqlSession(Session):
 
 class MemcachedSession(Session):
     
+    # The most popular memcached client for Python isn't thread-safe.
+    # Wrap all .get and .set operations in a single lock.
+    mc_lock = threading.RLock()
+    
+    # This is a seperate set of locks per session id.
     locks = {}
+    
     servers = ['127.0.0.1:11211']
     
     def setup(cls, **kwargs):
@@ -479,15 +485,21 @@ class MemcachedSession(Session):
     setup = classmethod(setup)
     
     def _load(self):
-        return self.cache.get(self.id)
+        self.mc_lock.acquire()
+        try:
+            return self.cache.get(self.id)
+        finally:
+            self.mc_lock.release()
     
     def _save(self, expiration_time):
         # Send the expiration time as "Unix time" (seconds since 1/1/1970)
-        zeroday = datetime.datetime(1970, 1, 1, tzinfo=expiration_time.tzinfo)
-        td = expiration_time - zeroday
-        td = (td.days * 86400) + td.seconds
-        if not self.cache.set(self.id, (self._data, expiration_time), td):
-            raise AssertionError("Session data for id %r not set." % self.id)
+        td = int(time.mktime(expiration_time.timetuple()))
+        self.mc_lock.acquire()
+        try:
+            if not self.cache.set(self.id, (self._data, expiration_time), td):
+                raise AssertionError("Session data for id %r not set." % self.id)
+        finally:
+            self.mc_lock.release()
     
     def _delete(self):
         self.cache.delete(self.id)
@@ -501,6 +513,10 @@ class MemcachedSession(Session):
         """Release the lock on the currently-loaded session data."""
         self.locks[self.id].release()
         self.locked = False
+    
+    def __len__(self):
+        """Return the number of active sessions."""
+        raise NotImplementedError
 
 
 # Hook functions (for CherryPy tools)
@@ -531,7 +547,7 @@ save.failsafe = True
 def close():
     """Close the session object for this request."""
     sess = getattr(cherrypy.serving, "session", None)
-    if sess and sess.locked:
+    if getattr(sess, "locked", False):
         # If the session is still locked we release the lock
         sess.release_lock()
 close.failsafe = True
