@@ -246,8 +246,22 @@ class Bus(object):
     
     def wait(self, state, interval=0.1):
         """Wait for the given state."""
-        while self.state != state:
-            time.sleep(interval)
+        def _wait():
+            while self.state != state:
+                time.sleep(interval)
+        
+        # From http://psyco.sourceforge.net/psycoguide/bugs.html:
+        # "The compiled machine code does not include the regular polling
+        # done by Python, meaning that a KeyboardInterrupt will not be
+        # detected before execution comes back to the regular Python
+        # interpreter. Your program cannot be interrupted if caught
+        # into an infinite Psyco-compiled loop."
+        try:
+            sys.modules['psyco'].cannotcompile(_wait)
+        except (KeyError, AttributeError):
+            pass
+        
+        _wait()
     
     def _do_execv(self):
         """Re-execute the current process.
