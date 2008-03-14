@@ -165,7 +165,7 @@ class StaticTest(helper.CPWebCase):
         self.assertStatus(200)
         self.getPage("/test", [('Host', 'virt.net')])
         self.assertStatus((302, 303))
-        self.assertHeader('Location', 'http://virt.net/test/')
+        self.assertHeader('Location', self.scheme + '://virt.net/test/')
 
 
 if __name__ == "__main__":
