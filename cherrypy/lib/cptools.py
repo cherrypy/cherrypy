@@ -313,7 +313,8 @@ def log_hooks():
         v.sort()
         for h in v:
             msg.append("        %r" % h)
-    cherrypy.log('\nRequest Hooks:\n' + '\n'.join(msg), "HTTP")
+    cherrypy.log('\nRequest Hooks for ' + cherrypy.url() +
+                 ':\n' + '\n'.join(msg), "HTTP")
 
 def redirect(url='', internal=True):
     """Raise InternalRedirect or HTTPRedirect to the given url."""
