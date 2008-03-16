@@ -178,24 +178,25 @@ tree = _cptree.Tree()
 from cherrypy._cptree import Application
 from cherrypy import _cpwsgi as wsgi
 
-from cherrypy import restsrv
+from cherrypy import process
 try:
-    from cherrypy.restsrv import win32 as _restsrvwin
-    engine = _restsrvwin.Win32Bus()
-    _console_control_handler = _restsrvwin.ConsoleCtrlHandler(engine)
+    from cherrypy.process import win32
+    engine = win32.Win32Bus()
+    _console_control_handler = win32.ConsoleCtrlHandler(engine)
     # If you don't want a ConsoleControlHandler,
     # unsubscribe this before calling engine.start().
     _console_control_handler.subscribe()
+    del win32
 except ImportError:
-    engine = restsrv.bus
+    engine = process.bus
 
 
 # Timeout monitor
-class _TimeoutMonitor(restsrv.plugins.Monitor):
+class _TimeoutMonitor(process.plugins.Monitor):
     
     def __init__(self, bus):
         self.servings = []
-        restsrv.plugins.Monitor.__init__(self, bus, self.run)
+        process.plugins.Monitor.__init__(self, bus, self.run)
     
     def acquire(self):
         self.servings.append((serving.request, serving.response))
@@ -214,12 +215,12 @@ timeout_monitor = _TimeoutMonitor(engine)
 timeout_monitor.subscribe()
 
 # Add an autoreloader (the 'engine' config namespace may detach/attach it).
-engine.autoreload = restsrv.plugins.Autoreloader(engine)
+engine.autoreload = process.plugins.Autoreloader(engine)
 engine.autoreload.subscribe()
 
-restsrv.plugins.ThreadManager(engine).subscribe()
+process.plugins.ThreadManager(engine).subscribe()
 
-signal_handler = restsrv.plugins.SignalHandler(engine)
+signal_handler = process.plugins.SignalHandler(engine)
 
 from cherrypy import _cpserver
 server = _cpserver.Server()

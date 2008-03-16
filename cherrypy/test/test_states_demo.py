@@ -4,7 +4,7 @@ import time
 starttime = time.time()
 
 import cherrypy
-from cherrypy.restsrv import plugins
+from cherrypy.process import plugins
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 PID_file_path = os.path.join(thisdir, 'pid_for_test_daemonize')
 

@@ -11,7 +11,7 @@ import os
 local_dir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
-from cherrypy.restsrv.plugins import Daemonizer, PIDFile
+from cherrypy.process.plugins import Daemonizer, PIDFile
 
 # TODO: Change this to import your project root.
 from cherrypy import scaffold

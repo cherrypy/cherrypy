@@ -1,4 +1,4 @@
-"""Windows service for restsrv. Requires pywin32."""
+"""Windows service. Requires pywin32."""
 
 import os
 import thread
@@ -8,7 +8,7 @@ import win32event
 import win32service
 import win32serviceutil
 
-from cherrypy.restsrv import wspbus, plugins
+from cherrypy.process import wspbus, plugins
 
 
 class ConsoleCtrlHandler(plugins.SimplePlugin):
@@ -142,24 +142,24 @@ class PyWebService(win32serviceutil.ServiceFramework):
     _svc_name_ = "Python Web Service"
     _svc_display_name_ = "Python Web Service"
     _svc_deps_ = None        # sequence of service names on which this depends
-    _exe_name_ = "restsrv"
+    _exe_name_ = "pywebsvc"
     _exe_args_ = None        # Default to no arguments
     
     # Only exists on Windows 2000 or later, ignored on windows NT
     _svc_description_ = "Python Web Service"
     
     def SvcDoRun(self):
-        from cherrypy import restsrv
-        restsrv.bus.start()
-        restsrv.bus.block()
+        from cherrypy import process
+        process.bus.start()
+        process.bus.block()
     
     def SvcStop(self):
-        from cherrypy import restsrv
+        from cherrypy import process
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        restsrv.bus.exit()
+        process.bus.exit()
     
     def SvcOther(self, control):
-        restsrv.bus.publish(control_codes.key_for(control))
+        process.bus.publish(control_codes.key_for(control))
 
 
 if __name__ == '__main__':

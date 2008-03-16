@@ -352,7 +352,7 @@ class Monitor(SimplePlugin):
     def start(self):
         """Start our callback in its own perpetual timer thread."""
         if self.frequency > 0:
-            threadname = "restsrv %s" % self.__class__.__name__
+            threadname = self.__class__.__name__
             if self.thread is None:
                 self.thread = PerpetualTimer(self.frequency, self.callback)
                 self.thread.setName(threadname)

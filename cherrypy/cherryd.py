@@ -5,7 +5,7 @@ import getopt
 import sys
 
 import cherrypy
-from cherrypy.restsrv import plugins
+from cherrypy.process import plugins
 
 
 shortopts = ["d", "e"]

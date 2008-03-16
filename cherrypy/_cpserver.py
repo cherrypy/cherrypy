@@ -8,7 +8,7 @@ from cherrypy.lib import attributes
 
 # We import * because we want to export check_port
 # et al as attributes of this module.
-from cherrypy.restsrv.servers import *
+from cherrypy.process.servers import *
 
 
 class Server(ServerAdapter):
