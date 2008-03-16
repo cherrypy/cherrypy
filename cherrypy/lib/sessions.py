@@ -73,7 +73,7 @@ class Session(object):
             self.regenerate()
         else:
             self.id = id
-            if self._load() is None:
+            if not self._exists():
                 # Expired or malicious session. Make a new one.
                 # See http://www.cherrypy.org/ticket/709.
                 self.id = None
@@ -92,7 +92,7 @@ class Session(object):
         while self.id is None:
             self.id = self.generate_id()
             # Assert that the generated id is not already stored.
-            if self._load() is not None:
+            if self._exists():
                 self.id = None
         
         if old_session_was_locked:
@@ -244,6 +244,9 @@ class RamSession(Session):
                 except KeyError:
                     pass
     
+    def _exists(self):
+        return self.id in self.cache
+    
     def _load(self):
         return self.cache.get(self.id)
     
@@ -269,7 +272,7 @@ class RamSession(Session):
 
 
 class FileSession(Session):
-    """ Implementation of the File backend for sessions
+    """Implementation of the File backend for sessions
     
     storage_path: the folder where session data will be saved. Each session
         will be saved as pickle.dump(data, expiration_time) in its own file;
@@ -308,6 +311,10 @@ class FileSession(Session):
         if not os.path.normpath(f).startswith(self.storage_path):
             raise cherrypy.HTTPError(400, "Invalid session id in cookie.")
         return f
+    
+    def _exists(self):
+        path = self._get_file_path()
+        return os.path.exists(path)
     
     def _load(self, path=None):
         if path is None:
@@ -419,6 +426,13 @@ class PostgresqlSession(Session):
             self.cursor.close()
         self.db.commit()
     
+    def _exists(self):
+        # Select session data from table
+        self.cursor.execute('select data, expiration_time from session '
+                            'where id=%s', (self.id,))
+        rows = self.cursor.fetchall()
+        return bool(rows)
+    
     def _load(self):
         # Select session data from table
         self.cursor.execute('select data, expiration_time from session '
@@ -483,6 +497,13 @@ class MemcachedSession(Session):
         import memcache
         cls.cache = memcache.Client(cls.servers)
     setup = classmethod(setup)
+    
+    def _exists(self):
+        self.mc_lock.acquire()
+        try:
+            return bool(self.cache.get(self.id))
+        finally:
+            self.mc_lock.release()
     
     def _load(self):
         self.mc_lock.acquire()
