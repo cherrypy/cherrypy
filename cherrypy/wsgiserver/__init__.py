@@ -680,6 +680,11 @@ class NoSSLError(Exception):
     pass
 
 
+class FatalSSLAlert(Exception):
+    """Exception raised when the SSL implementation signals a fatal alert."""
+    pass
+
+
 class CP_fileobject(socket._fileobject):
     """Faux file object attached to a socket object."""
 
@@ -860,17 +865,10 @@ class SSL_fileobject(CP_fileobject):
                 except IndexError:
                     pass
                 
-                if is_reader and thirdarg == 'ssl handshake failure':
-                    # Return "" to simulate EOF which will close the conn.
-                    return ""
                 if thirdarg == 'http request':
                     # The client is talking HTTP to an HTTPS server.
                     raise NoSSLError()
-                if is_reader and thirdarg == 'decryption failed or bad record mac':
-                    # Return "" to simulate EOF which will close the conn.
-                    return ""
-                else:
-                    raise
+                raise FatalSSLAlert(*e.args)
             except:
                 raise
             
@@ -956,16 +954,14 @@ class HTTPConnection(object):
             errnum = e.args[0]
             if errnum not in socket_errors_to_ignore:
                 if req:
-                    fd = open("ssl_errors.txt", "a")
-                    fd.write("1" * 80)
-                    fd.write("\n")
-                    fd.write(str(type(e)))
-                    fd.write(format_exc())
                     req.simple_response("500 Internal Server Error",
                                         format_exc())
             return
         except (KeyboardInterrupt, SystemExit):
             raise
+        except FatalSSLAlert, e:
+            # Close the connection.
+            return
         except NoSSLError:
             # Unwrap our wfile
             req.wfile = CP_fileobject(self.socket, "wb", -1)
@@ -973,10 +969,6 @@ class HTTPConnection(object):
                                 "The client sent a plain HTTP request, but "
                                 "this server only speaks HTTPS on this port.")
         except Exception, e:
-            fd = open("ssl_errors.txt", "a")
-            fd.write("2" * 80)
-            fd.write("\n")
-            fd.write(format_exc())
             if req:
                 req.simple_response("500 Internal Server Error", format_exc())
     
