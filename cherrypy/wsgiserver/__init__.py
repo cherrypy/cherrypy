@@ -117,10 +117,14 @@ def plat_specific_errors(*errnames):
     return dict.fromkeys(nums).keys()
 
 socket_errors_to_ignore = plat_specific_errors(
-    "EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
+    "EPIPE",
+    "ETIMEDOUT", "WSAETIMEDOUT",
+    "ECONNREFUSED", "WSAECONNREFUSED",
+    "ECONNRESET", "WSAECONNRESET",
+    "ECONNABORTED", "WSAECONNABORTED",
+    "ENETRESET", "WSAENETRESET",
     "EHOSTDOWN", "EHOSTUNREACH",
-    "WSAECONNABORTED", "WSAECONNREFUSED", "WSAECONNRESET",
-    "WSAENETRESET", "WSAETIMEDOUT")
+    )
 socket_errors_to_ignore.append("timed out")
 
 socket_errors_nonblocking = plat_specific_errors(
@@ -1407,6 +1411,9 @@ class CherryPyWSGIServer(object):
                 return
             if msg == "Resource temporarily unavailable":
                 # Just try again. See http://www.cherrypy.org/ticket/479.
+                return
+            if msg == "Software caused connection abort":
+                # See http://www.cherrypy.org/ticket/686.
                 return
             raise
     
