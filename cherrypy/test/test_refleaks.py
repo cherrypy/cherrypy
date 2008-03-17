@@ -4,7 +4,9 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import gc
+import httplib
 import threading
+
 import cherrypy
 from cherrypy import _cprequest
 
@@ -84,8 +86,17 @@ class ReferenceTests(helper.CPWebCase):
     
     def test_threadlocal_garbage(self):
         def getpage():
-            self.getPage('/')
-            self.assertBody("Hello world!")
+            if self.scheme == 'https':
+                c = httplib.HTTPSConnection('127.0.0.1:%s' % self.PORT)
+            else:
+                c = httplib.HTTPConnection('127.0.0.1:%s' % self.PORT)
+            try:
+                c.request('GET', '/')
+                resp = c.getresponse()
+                self.assertEqual(resp.status, 200)
+                self.assertEqual(resp.read(), "Hello world!")
+            finally:
+                c.close()
         
         ts = []
         for _ in range(25):
