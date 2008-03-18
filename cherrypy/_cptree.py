@@ -45,7 +45,7 @@ class Application(object):
     
     relative_urls = False
     
-    def __init__(self, root, script_name=""):
+    def __init__(self, root, script_name="", config=None):
         self.log = _cplogging.LogManager(id(self), cherrypy.log.logger_root)
         self.root = root
         self.script_name = script_name
@@ -56,6 +56,8 @@ class Application(object):
         self.namespaces["wsgi"] = self.wsgiapp.namespace_handler
         
         self.config = self.__class__.config.copy()
+        if config:
+            self.merge(config)
     
     def __repr__(self):
         return "%s.%s(%r, %r)" % (self.__module__, self.__class__.__name__,

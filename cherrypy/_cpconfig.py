@@ -65,6 +65,8 @@ Current namespaces:
 
     engine:     Controls the 'application engine', including autoreload.
                 These can only be declared in the global config.
+    tree:       Grafts cherrypy.Application objects onto cherrypy.tree.
+                These can only be declared in the global config.
     hooks:      Declares additional request-processing functions.
     log:        Configures the logging for each application.
                 These can only be declared in the global or / config.
@@ -314,7 +316,7 @@ Config.namespaces["engine"] = _engine_namespace_handler
 def _tree_namespace_handler(k, v):
     """Namespace handler for the 'tree' config namespace."""
     cherrypy.tree.graft(v, v.script_name)
-    cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name))
+    cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name or "/"))
 Config.namespaces["tree"] = _tree_namespace_handler
 
 

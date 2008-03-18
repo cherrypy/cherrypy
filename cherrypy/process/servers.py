@@ -121,6 +121,38 @@ class ServerAdapter(object):
         self.start()
 
 
+class FlupFCGIServer(object):
+    """Adapter for a flup.server.fcgi.WSGIServer."""
+    
+    def __init__(self, *args, **kwargs):
+        from flup.server.fcgi import WSGIServer
+        self.fcgiserver = WSGIServer(*args, **kwargs)
+        # TODO: report this bug upstream to flup.
+        # If we don't set _oldSIGs on Windows, we get:
+        #   File "C:\Python24\Lib\site-packages\flup\server\threadedserver.py",
+        #   line 108, in run
+        #     self._restoreSignalHandlers()
+        #   File "C:\Python24\Lib\site-packages\flup\server\threadedserver.py",
+        #   line 156, in _restoreSignalHandlers
+        #     for signum,handler in self._oldSIGs:
+        #   AttributeError: 'WSGIServer' object has no attribute '_oldSIGs'
+        self.fcgiserver._oldSIGs = []
+        self.ready = False
+    
+    def start(self):
+        """Start the FCGI server."""
+        self.ready = True
+        self.fcgiserver.run()
+    
+    def stop(self):
+        """Stop the HTTP server."""
+        self.ready = False
+        # Forcibly stop the fcgi server main event loop.
+        self.fcgiserver._keepGoing = False
+        # Force all worker threads to die off.
+        self.fcgiserver._threadPool.maxSpare = 0
+
+
 def client_host(server_host):
     """Return the host on which a client can connect to the given listener."""
     if server_host == '0.0.0.0':

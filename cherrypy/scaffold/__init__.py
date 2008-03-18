@@ -8,7 +8,7 @@ then tweak as desired.
 Even before any tweaking, this should serve a few demonstration pages.
 Change to this directory and run:
 
-    python cpdeploy.py --config=example.conf
+    python cherrypy\cherryd cherrypy\scaffold\site.conf
 
 """
 
