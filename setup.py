@@ -39,10 +39,25 @@ cp_license="BSD"
 packages=[
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
-    "cherrypy.wsgiserver", "cherrypy.restsrv",
+    "cherrypy.wsgiserver", "cherrypy.process",
 ]
 download_url="http://download.cherrypy.org/cherrypy/3.1.0beta3/"
 data_files=[
+    ('cherrypy', ['cherrypy/cherryd',
+                  'cherrypy/favicon.ico',
+                  'cherrypy/LICENSE.txt',
+                  ]),
+    ('cherrypy/process', []),
+    ('cherrypy/scaffold', ['cherrypy/scaffold/example.conf',
+                           'cherrypy/scaffold/site.conf',
+                           ]),
+    ('cherrypy/scaffold/static', ['made_with_cherrypy_small.png',
+                                  ]),
+    ('cherrypy/test', ['cherrypy/test/style.css',
+                       'cherrypy/test/test.pem',
+                       ]),
+    ('cherrypy/test/static', ['cherrypy/test/static/index.html',
+                              'cherrypy/test/static/dirback.jpg',]),
     ('cherrypy/tutorial',
         [
             'cherrypy/tutorial/tutorial.conf',
@@ -51,15 +66,6 @@ data_files=[
             'cherrypy/tutorial/custom_error.html',
         ]
     ),
-    ('cherrypy', ['cherrypy/favicon.ico',
-                  'cherrypy/LICENSE.txt',
-                  ]),
-    ('cherrypy/restsrv', ['cherrypy/restsrv/restctl.sh',]),
-    ('cherrypy/test', ['cherrypy/test/style.css',
-                       'cherrypy/test/test.pem',
-                       ]),
-    ('cherrypy/test/static', ['cherrypy/test/static/index.html',
-                              'cherrypy/test/static/dirback.jpg',]),
 ]
 ###############################################################################
 # end arguments for setup
