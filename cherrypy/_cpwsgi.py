@@ -349,7 +349,8 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
     
     wsgiserver has been designed to not reference CherryPy in any way,
     so that it can be used in other frameworks and applications. Therefore,
-    we wrap it here, so we can set our own mount points from cherrypy.tree.
+    we wrap it here, so we can set our own mount points from cherrypy.tree
+    and apply some attributes from config -> cherrypy.server -> wsgiserver.
     """
     
     ConnectionClass = CPHTTPConnection
@@ -371,6 +372,7 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
                    shutdown_timeout = server.shutdown_timeout,
                    )
         self.protocol = server.protocol_version
+        self.nodelay = server.nodelay
         self.ssl_certificate = server.ssl_certificate
         self.ssl_private_key = server.ssl_private_key
 

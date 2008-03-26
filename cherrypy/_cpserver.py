@@ -55,6 +55,7 @@ class Server(ServerAdapter):
     instance = None
     ssl_certificate = None
     ssl_private_key = None
+    nodelay = True
     
     def __init__(self):
         ServerAdapter.__init__(self, cherrypy.engine)

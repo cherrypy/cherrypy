@@ -1182,6 +1182,9 @@ class CherryPyWSGIServer(object):
         specifies the maximum number of queued connections (default 5).
     timeout: the timeout in seconds for accepted connections (default 10).
     
+    nodelay: if True (the default since 3.1), sets the TCP_NODELAY socket
+        option.
+    
     protocol: the version string to write in the Status-Line of all
         HTTP responses. For example, "HTTP/1.1" (the default). This
         also limits the supported features used in the response.
@@ -1205,6 +1208,9 @@ class CherryPyWSGIServer(object):
     version = "CherryPy/3.1.0beta3"
     ready = False
     _interrupt = None
+    
+    nodelay = True
+    
     ConnectionClass = HTTPConnection
     environ = {}
     
@@ -1347,7 +1353,8 @@ class CherryPyWSGIServer(object):
         """Create (or recreate) the actual socket object."""
         self.socket = socket.socket(family, type, proto)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-##        self.socket.setsockopt(socket.SOL_SOCKET, socket.TCP_NODELAY, 1)
+        if self.nodelay:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.TCP_NODELAY, 1)
         if self.ssl_certificate and self.ssl_private_key:
             if SSL is None:
                 raise ImportError("You must install pyOpenSSL to use HTTPS.")
