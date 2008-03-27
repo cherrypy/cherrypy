@@ -51,7 +51,7 @@ data_files=[
     ('cherrypy/scaffold', ['cherrypy/scaffold/example.conf',
                            'cherrypy/scaffold/site.conf',
                            ]),
-    ('cherrypy/scaffold/static', ['made_with_cherrypy_small.png',
+    ('cherrypy/scaffold/static', ['cherrypy/scaffold/static/made_with_cherrypy_small.png',
                                   ]),
     ('cherrypy/test', ['cherrypy/test/style.css',
                        'cherrypy/test/test.pem',
