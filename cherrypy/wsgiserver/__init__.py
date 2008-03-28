@@ -1354,7 +1354,7 @@ class CherryPyWSGIServer(object):
         self.socket = socket.socket(family, type, proto)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if self.nodelay:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.TCP_NODELAY, 1)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         if self.ssl_certificate and self.ssl_private_key:
             if SSL is None:
                 raise ImportError("You must install pyOpenSSL to use HTTPS.")
