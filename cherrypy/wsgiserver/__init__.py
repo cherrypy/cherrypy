@@ -116,8 +116,12 @@ def plat_specific_errors(*errnames):
     # de-dupe the list
     return dict.fromkeys(nums).keys()
 
+socket_error_eintr = plat_specific_errors("EINTR", "WSAEINTR")
+
 socket_errors_to_ignore = plat_specific_errors(
     "EPIPE",
+    "EBADF", "WSAEBADF",
+    "ENOTSOCK", "WSAENOTSOCK",
     "ETIMEDOUT", "WSAETIMEDOUT",
     "ECONNREFUSED", "WSAECONNREFUSED",
     "ECONNRESET", "WSAECONNRESET",
@@ -691,10 +695,7 @@ class FatalSSLAlert(Exception):
 
 class CP_fileobject(socket._fileobject):
     """Faux file object attached to a socket object."""
-
-    def recv(self, size):
-        return self._sock.recv(size)
-
+    
     def sendall(self, data):
         """Sendall for non-blocking sockets."""
         while data:
@@ -704,7 +705,7 @@ class CP_fileobject(socket._fileobject):
             except socket.error, e:
                 if e.args[0] not in socket_errors_nonblocking:
                     raise
-
+    
     def send(self, data):
         return self._sock.send(data)
     
@@ -714,13 +715,18 @@ class CP_fileobject(socket._fileobject):
             self._wbuf = []
             self.sendall(buffer)
     
+    def recv(self, size):
+        while True:
+            try:
+                return self._sock.recv(size)
+            except socket.error, e:
+                if e.args[0] not in socket_errors_nonblocking:
+                    raise
+    
     def read(self, size=-1):
-        data = self._rbuf
         if size < 0:
             # Read until EOF
-            buffers = []
-            if data:
-                buffers.append(data)
+            buffers = [self._rbuf]
             self._rbuf = ""
             if self._rbufsize <= 1:
                 recv_size = self.default_bufsize
@@ -735,6 +741,7 @@ class CP_fileobject(socket._fileobject):
             return "".join(buffers)
         else:
             # Read until size bytes or EOF seen, whichever comes first
+            data = self._rbuf
             buf_len = len(data)
             if buf_len >= size:
                 self._rbuf = data[size:]
@@ -845,11 +852,13 @@ class SSL_fileobject(CP_fileobject):
         while True:
             try:
                 return call(*args, **kwargs)
-            except (SSL.WantReadError, SSL.WantWriteError):
+            except SSL.WantReadError:
                 # Sleep and try again. This is dangerous, because it means
                 # the rest of the stack has no way of differentiating
                 # between a "new handshake" error and "client dropped".
                 # Note this isn't an endless loop: there's a timeout below.
+                time.sleep(self.ssl_retry)
+            except SSL.WantWriteError:
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError, e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
@@ -880,8 +889,15 @@ class SSL_fileobject(CP_fileobject):
                 raise socket.timeout("timed out")
 
     def recv(self, *args, **kwargs):
-        return self._safe_call(True, super(SSL_fileobject, self).recv, *args, **kwargs)
-
+        buf = []
+        r = super(SSL_fileobject, self).recv
+        while True:
+            data = self._safe_call(True, r, *args, **kwargs)
+            buf.append(data)
+            p = self._sock.pending()
+            if not p:
+                return "".join(buf)
+    
     def sendall(self, *args, **kwargs):
         return self._safe_call(False, super(SSL_fileobject, self).sendall, *args, **kwargs)
 
@@ -1405,21 +1421,18 @@ class CherryPyWSGIServer(object):
             # accept() by default
             return
         except socket.error, x:
-            if hasattr(errno, "EINTR") and x.args[0] == errno.EINTR:
+            if x.args[0] in socket_error_eintr:
                 # I *think* this is right. EINTR should occur when a signal
                 # is received during the accept() call; all docs say retry
                 # the call, and I *think* I'm reading it right that Python
                 # will then go ahead and poll for and handle the signal
                 # elsewhere. See http://www.cherrypy.org/ticket/707.
                 return
-            msg = x.args[1]
-            if msg in ("Bad file descriptor", "Socket operation on non-socket"):
-                # Our socket was closed.
-                return
-            if msg == "Resource temporarily unavailable":
+            if x.args[0] in socket_errors_nonblocking:
                 # Just try again. See http://www.cherrypy.org/ticket/479.
                 return
-            if msg == "Software caused connection abort":
+            if x.args[0] in socket_errors_to_ignore:
+                # Our socket was closed.
                 # See http://www.cherrypy.org/ticket/686.
                 return
             raise
