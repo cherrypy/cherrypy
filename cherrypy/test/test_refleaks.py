@@ -25,7 +25,7 @@ def setup_server():
         index.exposed = True
         
         def gc_stats(self):
-            output = []
+            output = ["Statistics:"]
             
             # Uncollectable garbage
             
@@ -85,18 +85,25 @@ from cherrypy.test import helper
 class ReferenceTests(helper.CPWebCase):
     
     def test_threadlocal_garbage(self):
+        success = []
+        
         def getpage():
+            host = '127.0.0.1:%s' % self.PORT
             if self.scheme == 'https':
-                c = httplib.HTTPSConnection('127.0.0.1:%s' % self.PORT)
+                c = httplib.HTTPSConnection(host)
             else:
-                c = httplib.HTTPConnection('127.0.0.1:%s' % self.PORT)
+                c = httplib.HTTPConnection(host)
             try:
-                c.request('GET', '/')
-                resp = c.getresponse()
-                self.assertEqual(resp.status, 200)
-                self.assertEqual(resp.read(), "Hello world!")
+                c.putrequest('GET', '/', skip_host=0)
+                c.putheader('Host', host)
+                c.endheaders()
+                response = c.getresponse()
+                body = response.read()
+                self.assertEqual(response.status, 200)
+                self.assertEqual(body, "Hello world!")
             finally:
                 c.close()
+            success.append(True)
         
         ts = []
         for _ in range(25):
@@ -107,8 +114,10 @@ class ReferenceTests(helper.CPWebCase):
         for t in ts:
             t.join()
         
+        self.assertEqual(len(success), 25)
+        
         self.getPage("/gc_stats")
-        self.assertBody("")
+        self.assertBody("Statistics:")
 
 
 if __name__ == '__main__':
