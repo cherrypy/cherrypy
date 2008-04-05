@@ -289,8 +289,7 @@ to this function:
 
 def log_traceback(severity=logging.DEBUG):
     """Write the last error's traceback to the cherrypy error log."""
-    from cherrypy import _cperror
-    cherrypy.log(_cperror.format_exc(), "HTTP", severity=severity)
+    cherrypy.log("", "HTTP", severity=severity, traceback=True)
 
 def log_request_headers():
     """Write request headers to the cherrypy error log."""

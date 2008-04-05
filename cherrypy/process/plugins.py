@@ -127,7 +127,8 @@ class DropPrivileges(SimplePlugin):
     def _set_uid(self, val):
         if val is not None:
             if pwd is None:
-                self.bus.log("pwd module not available; ignoring uid.")
+                self.bus.log("pwd module not available; ignoring uid.",
+                             level=30)
                 val = None
             elif isinstance(val, basestring):
                 val = pwd.getpwnam(val)[2]
@@ -139,7 +140,8 @@ class DropPrivileges(SimplePlugin):
     def _set_gid(self, val):
         if val is not None:
             if grp is None:
-                self.bus.log("grp module not available; ignoring gid.")
+                self.bus.log("grp module not available; ignoring gid.",
+                             level=30)
                 val = None
             elif isinstance(val, basestring):
                 val = grp.getgrnam(val)[2]
@@ -153,7 +155,8 @@ class DropPrivileges(SimplePlugin):
             try:
                 os.umask
             except AttributeError:
-                self.bus.log("umask function not available; ignoring umask.")
+                self.bus.log("umask function not available; ignoring umask.",
+                             level=30)
                 val = None
         self._umask = val
     umask = property(_get_umask, _set_umask, doc="The umask under which to run.")
@@ -176,7 +179,7 @@ class DropPrivileges(SimplePlugin):
         else:
             if self.uid is None and self.gid is None:
                 if pwd or grp:
-                    self.bus.log('uid/gid not set')
+                    self.bus.log('uid/gid not set', level=30)
             else:
                 self.bus.log('Started as uid: %r gid: %r' % current_ids())
                 if self.gid is not None:
@@ -191,7 +194,7 @@ class DropPrivileges(SimplePlugin):
                 self.bus.log('umask already set to: %03o' % self.umask)
         else:
             if self.umask is None:
-                self.bus.log('umask not set')
+                self.bus.log('umask not set', level=30)
             else:
                 old_umask = os.umask(self.umask)
                 self.bus.log('umask old: %03o, new: %03o' %
@@ -238,7 +241,7 @@ class Daemonizer(SimplePlugin):
         if threading.activeCount() != 1:
             self.bus.log('There are %r active threads. '
                          'Daemonizing now may cause strange failures.' %
-                         threading.enumerate())
+                         threading.enumerate(), level=30)
         
         # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)

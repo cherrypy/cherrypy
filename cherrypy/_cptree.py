@@ -122,7 +122,7 @@ class Application(object):
         try:
             req.close()
         except:
-            cherrypy.log(traceback=True)
+            cherrypy.log(traceback=True, severity=40)
         
         cherrypy.serving.clear()
     

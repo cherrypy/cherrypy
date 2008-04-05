@@ -42,7 +42,7 @@ class LogManager(object):
                     h.stream = open(h.baseFilename, h.mode)
                     h.release()
     
-    def error(self, msg='', context='', severity=logging.DEBUG, traceback=False):
+    def error(self, msg='', context='', severity=logging.INFO, traceback=False):
         """Write to the error log.
         
         This is not just for errors! Applications may call this at any time
@@ -103,7 +103,7 @@ class LogManager(object):
         if enable:
             if not h:
                 if stream is None:
-                    stream=sys.stdout
+                    stream=sys.stderr
                 h = logging.StreamHandler(stream)
                 h.setLevel(logging.DEBUG)
                 h.setFormatter(logfmt)
@@ -121,7 +121,7 @@ class LogManager(object):
         self._set_screen_handler(self.error_log, newvalue, stream=sys.stderr)
         self._set_screen_handler(self.access_log, newvalue)
     screen = property(_get_screen, _set_screen,
-                      doc="If True, error and access will print to stdout.")
+                      doc="If True, error and access will print to stderr.")
     
     
     # -------------------------- File handlers -------------------------- #

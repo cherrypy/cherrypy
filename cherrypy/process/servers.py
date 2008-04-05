@@ -85,7 +85,7 @@ class ServerAdapter(object):
             import sys
             self.interrupt = sys.exc_info()[1]
             self.bus.log("Error in HTTP server: shutting down",
-                         traceback=True)
+                         traceback=True, level=40)
             self.bus.exit()
             raise
     

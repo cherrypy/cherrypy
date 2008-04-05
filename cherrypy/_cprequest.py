@@ -103,7 +103,7 @@ class HookMap(dict):
                     exc = sys.exc_info()[1]
                 except:
                     exc = sys.exc_info()[1]
-                    cherrypy.log(traceback=True)
+                    cherrypy.log(traceback=True, severity=40)
         if exc:
             raise
     
@@ -530,7 +530,7 @@ class Request(object):
             else:
                 # Failure in setup, error handler or finalize. Bypass them.
                 # Can't use handle_error because we may not have hooks yet.
-                cherrypy.log(traceback=True)
+                cherrypy.log(traceback=True, severity=40)
                 if self.show_tracebacks:
                     body = format_exc()
                 else:

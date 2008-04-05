@@ -400,8 +400,8 @@ log.error_file = ''
 # Using an access file makes CP about 10% slower. Leave off by default.
 log.access_file = ''
 
-def _buslog(msg):
-    log.error(msg, 'ENGINE')
+def _buslog(msg, level):
+    log.error(msg, 'ENGINE', severity=level)
 engine.subscribe('log', _buslog)
 
 #                       Helper functions for CP apps                       #

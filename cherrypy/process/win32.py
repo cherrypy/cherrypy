@@ -25,7 +25,7 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
         result = win32api.SetConsoleCtrlHandler(self.handle, 1)
         if result == 0:
             self.bus.log('Could not SetConsoleCtrlHandler (error %r)' %
-                         win32api.GetLastError())
+                         win32api.GetLastError(), level=40)
         else:
             self.is_set = True
     
@@ -41,7 +41,7 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
         
         if result == 0:
             self.bus.log('Could not remove SetConsoleCtrlHandler (error %r)' %
-                         win32api.GetLastError())
+                         win32api.GetLastError(), level=40)
         else:
             self.is_set = False
     

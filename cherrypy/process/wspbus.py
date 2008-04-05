@@ -154,7 +154,7 @@ class Bus(object):
                 raise
             except:
                 self.log("Error in %r listener %r" % (channel, listener),
-                         traceback=True)
+                         level=40, traceback=True)
                 exc = sys.exc_info()[1]
         if exc:
             raise
@@ -183,8 +183,8 @@ class Bus(object):
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            self.log("Shutting down due to error in start listener:\n%s" %
-                     _traceback.format_exc())
+            self.log("Shutting down due to error in start listener:",
+                     level=40, traceback=True)
             e_info = sys.exc_info()
             try:
                 self.exit()
@@ -304,11 +304,11 @@ class Bus(object):
         
         return t
     
-    def log(self, msg="", traceback=False):
+    def log(self, msg="", level=20, traceback=False):
         """Log the given message. Append the last traceback if requested."""
         if traceback:
             exc = sys.exc_info()
             msg += "\n" + "".join(_traceback.format_exception(*exc))
-        self.publish('log', msg)
+        self.publish('log', msg, level)
 
 bus = Bus()

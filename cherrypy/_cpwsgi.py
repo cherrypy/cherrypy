@@ -94,7 +94,7 @@ class AppResponse(object):
                 raise
             
             tb = _cperror.format_exc()
-            _cherrypy.log(tb)
+            _cherrypy.log(tb, severity=40)
             if not getattr(self.request, "show_tracebacks", True):
                 tb = ""
             s, h, b = _cperror.bare_error(tb)
@@ -114,7 +114,7 @@ class AppResponse(object):
                 self.close()
                 raise
             
-            _cherrypy.log(traceback=True)
+            _cherrypy.log(traceback=True, severity=40)
             self.close()
             
             # CherryPy test suite expects bare_error body to be output,
@@ -193,7 +193,7 @@ class AppResponse(object):
                 self.close()
                 raise
             
-            _cherrypy.log(traceback=True)
+            _cherrypy.log(traceback=True, severity=40)
             
             # CherryPy test suite expects bare_error body to be output,
             # so don't call start_response (which, according to PEP 333,
