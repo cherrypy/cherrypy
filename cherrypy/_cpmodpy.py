@@ -64,6 +64,7 @@ resides in the global site-package this won't be needed.
 Then restart apache2 and access http://127.0.0.1:8080
 """
 
+import logging
 import StringIO
 
 import cherrypy
@@ -75,27 +76,50 @@ from cherrypy.lib import http
 # ------------------------------ Request-handling
 
 
+
 def setup(req):
+    from mod_python import apache
+    
     # Run any setup function defined by a "PythonOption cherrypy.setup" directive.
     options = req.get_options()
     if 'cherrypy.setup' in options:
-        modname, fname = options['cherrypy.setup'].split('::')
-        mod = __import__(modname, globals(), locals(), [fname])
-        func = getattr(mod, fname)
-        func()
+        atoms = options['cherrypy.setup'].split('::', 1)
+        if len(atoms) == 1:
+            mod = __import__(atoms[0], globals(), locals())
+        else:
+            modname, fname = atoms
+            mod = __import__(modname, globals(), locals(), [fname])
+            func = getattr(mod, fname)
+            func()
     
     cherrypy.config.update({'log.screen': False,
                             "tools.ignore_headers.on": True,
                             "tools.ignore_headers.headers": ['Range'],
                             })
     
+    cherrypy._console_control_handler.unsubscribe()
+    cherrypy.engine.autoreload.unsubscribe()
     cherrypy.server.unsubscribe()
+    
+    def _log(msg, level):
+        newlevel = apache.APLOG_ERR
+        if logging.DEBUG >= level:
+            newlevel = apache.APLOG_DEBUG
+        elif logging.INFO >= level:
+            newlevel = apache.APLOG_INFO
+        elif logging.WARNING >= level:
+            newlevel = apache.APLOG_WARNING
+        # On Windows, req.server is required or the msg will vanish. See
+        # http://www.modpython.org/pipermail/mod_python/2003-October/014291.html.
+        # Also, "When server is not specified...LogLevel does not apply..."
+        apache.log_error(msg, newlevel, req.server)
+    cherrypy.engine.subscribe('log', _log)
+    
     cherrypy.engine.start()
     
     def cherrypy_cleanup(data):
         cherrypy.engine.exit()
     try:
-        from mod_python import apache
         # apache.register_cleanup wasn't available until 3.1.4.
         apache.register_cleanup(cherrypy_cleanup)
     except AttributeError:
@@ -209,7 +233,7 @@ def handler(req):
                 app.release_serving()
     except:
         tb = format_exc()
-        cherrypy.log(tb)
+        cherrypy.log(tb, 'MOD_PYTHON', severity=logging.ERROR)
         s, h, b = bare_error()
         send_response(req, s, h, b)
     return apache.OK
