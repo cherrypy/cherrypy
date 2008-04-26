@@ -135,17 +135,9 @@ class _AttributeDocstrings(type):
                 if hasattr(cls, name):
                     delattr(cls, name)
                 
-                # Get an inspect-style docstring if possible (usually so).
-                val = dct[name]
-                try:
-                    import inspect
-                    val = inspect.getdoc(property(doc=val)).strip()
-                except:
-                    pass
-                
-                # Indent the docstring.
-                val = '\n'.join(['    ' + line.rstrip()
-                                 for line in val.split('\n')])
+                # Make a uniformly-indented docstring from it.
+                val = '\n'.join(['    ' + line.strip()
+                                 for line in dct[name].split('\n')])
                 
                 # Get the default value.
                 attrname = name[:-5]

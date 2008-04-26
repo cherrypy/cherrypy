@@ -25,6 +25,16 @@ are generally either modules or instances of the tools.Tool class.
 import cherrypy
 
 
+def _getargs(func):
+    """Return the names of all static arguments to the given function."""
+    # Use this instead of importing inspect for less mem overhead.
+    import types
+    if isinstance(func, types.MethodType):
+        func = func.im_func
+    co = func.func_code
+    return co.co_varnames[:co.co_argcount]
+
+
 class Tool(object):
     """A registered function for use with CherryPy request-processing hooks.
     
@@ -44,23 +54,19 @@ class Tool(object):
     def _setargs(self):
         """Copy func parameter names to obj attributes."""
         try:
-            import inspect
-            for arg in inspect.getargspec(self.callable)[0]:
+            for arg in _getargs(self.callable):
                 setattr(self, arg, None)
-        except (ImportError, AttributeError):
-            pass
-        except TypeError:
+        except (TypeError, AttributeError):
             if hasattr(self.callable, "__call__"):
-                for arg in inspect.getargspec(self.callable.__call__)[0]:
+                for arg in _getargs(self.callable.__call__):
                     setattr(self, arg, None)
         # IronPython 1.0 raises NotImplementedError because
         # inspect.getargspec tries to access Python bytecode
         # in co_code attribute.
         except NotImplementedError:
             pass
-        # IronPython 1B1 may raise that error in some cases
-        # but if we trap it here it doesn't prevent CP from
-        # working
+        # IronPython 1B1 may raise IndexError in some cases,
+        # but if we trap it here it doesn't prevent CP from working.
         except IndexError:
             pass
     
