@@ -1057,7 +1057,11 @@ class WorkerThread(threading.Thread):
 
 
 class ThreadPool(object):
-    """A Request Queue for the CherryPyWSGIServer which pools threads."""
+    """A Request Queue for the CherryPyWSGIServer which pools threads.
+    
+    ThreadPool objects must provide min, get(), put(obj), start()
+    and stop(timeout) attributes.
+    """
     
     def __init__(self, server, min=10, max=-1):
         self.server = server
@@ -1487,7 +1491,7 @@ class CherryPyWSGIServer(object):
     
     def populate_ssl_environ(self):
         """Create WSGI environ entries to be merged into each request."""
-        cert = open(self.ssl_certificate).read()
+        cert = open(self.ssl_certificate, 'rb').read()
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
         ssl_environ = {
             "wsgi.url_scheme": "https",

@@ -61,7 +61,7 @@ class LogManager(object):
         return self.error(*args, **kwargs)
     
     def access(self):
-        """Write to the access log."""
+        """Write to the access log (in Apache/NCSA Combined Log format)."""
         request = cherrypy.request
         inheaders = request.headers
         remote = request.remote
