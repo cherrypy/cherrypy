@@ -1091,12 +1091,6 @@ class ThreadPool(object):
         self._queue.put(obj)
         if obj is _SHUTDOWNREQUEST:
             return
-        
-        # Grow/shrink the pool if necessary.
-        # Remove any dead threads from our list
-        for t in self._threads:
-            if not t.isAlive():
-                self._threads.remove(t)
     
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
@@ -1110,12 +1104,20 @@ class ThreadPool(object):
     
     def shrink(self, amount):
         """Kill off worker threads (not below self.min)."""
-        for i in xrange(min(amount, len(self._threads) - self.min)):
-            # Put a number of shutdown requests on the queue equal
-            # to 'amount'. Once each of those is processed by a worker,
-            # that worker will terminate and be culled from our list
-            # in self.put.
-            self._queue.put(_SHUTDOWNREQUEST)
+        # Grow/shrink the pool if necessary.
+        # Remove any dead threads from our list
+        for t in self._threads:
+            if not t.isAlive():
+                self._threads.remove(t)
+                amount -= 1
+        
+        if amount > 0:
+            for i in xrange(min(amount, len(self._threads) - self.min)):
+                # Put a number of shutdown requests on the queue equal
+                # to 'amount'. Once each of those is processed by a worker,
+                # that worker will terminate and be culled from our list
+                # in self.put.
+                self._queue.put(_SHUTDOWNREQUEST)
     
     def stop(self, timeout=5):
         # Must shut down threads here so the code that calls
