@@ -145,7 +145,9 @@ def response_namespace(k, v):
 
 def error_page_namespace(k, v):
     """Attach error pages declared in config."""
-    cherrypy.request.error_page[int(k)] = v
+    if k != 'default':
+        k = int(k)
+    cherrypy.request.error_page[k] = v
 
 
 hookpoints = ['on_start_resource', 'before_request_body',
@@ -392,11 +394,27 @@ class Request(object):
     
     error_page = {}
     error_page__doc = """
-    A dict of {error code: response filename} pairs. The named response
-    files should be Python string-formatting templates, and can expect by
-    default to receive the format values with the mapping keys 'status',
-    'message', 'traceback', and 'version'. The set of format mappings
-    can be extended by overriding HTTPError.set_response."""
+    A dict of {error code: response filename or callable} pairs.
+    
+    The error code must be an int representing a given HTTP error code,
+    or the string 'default', which will be used if no matching entry
+    is found for a given numeric code.
+    
+    If a filename is provided, the file should contain a Python string-
+    formatting template, and can expect by default to receive format 
+    values with the mapping keys %(status)s, %(message)s, %(traceback)s,
+    and %(version)s. The set of format mappings can be extended by
+    overriding HTTPError.set_response.
+    
+    If a callable is provided, it will be called by default with keyword 
+    arguments 'status', 'message', 'traceback', and 'version', as for a
+    string-formatting template. The callable must return a string which
+    will be set to response.body. It may also override headers or perform
+    any other processing.
+    
+    If no entry is given for an error code, and no 'default' entry exists,
+    a default template will be used.
+    """
     
     show_tracebacks = True
     show_tracebacks__doc = """
@@ -715,7 +733,7 @@ class Request(object):
             self.params.update(p)
     
     def handle_error(self, exc):
-        """Handle the last exception. (Core)"""
+        """Handle the last unanticipated exception. (Core)"""
         try:
             self.hooks.run("before_error_response")
             if self.error_response:
@@ -881,5 +899,6 @@ class Response(object):
         """
         if time.time() > self.time + self.timeout:
             self.timed_out = True
+
 
 
