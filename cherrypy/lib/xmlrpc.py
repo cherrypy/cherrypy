@@ -36,7 +36,9 @@ def _set_response(body):
 
 def respond(body, encoding='utf-8', allow_none=0):
     import xmlrpclib
-    _set_response(xmlrpclib.dumps((body,), methodresponse=1,
+    if not isinstance(body, xmlrpclib.Fault):
+        body = (body,)
+    _set_response(xmlrpclib.dumps(body, methodresponse=1,
                                   encoding=encoding,
                                   allow_none=allow_none))
 

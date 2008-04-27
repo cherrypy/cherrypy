@@ -60,6 +60,10 @@ def setup_server():
             return num * 2
         test_argument_passing.exposed = True
 
+        def test_returning_Fault(self):
+            return xmlrpclib.Fault(1, "custom Fault response")
+        test_returning_Fault.exposed = True
+
     root = Root()
     root.xmlrpc = XmlRpc()
     cherrypy.tree.mount(root, config={'/': {
@@ -153,7 +157,7 @@ class XmlRpcTest(helper.CPWebCase):
                                              "for *: 'dict' and 'int'"))
         else:
             self.fail("Expected xmlrpclib.Fault")
-
+        
         # http://www.cherrypy.org/ticket/533
         # if a method is not found, an xmlrpclib.Fault should be raised
         try:
@@ -161,6 +165,15 @@ class XmlRpcTest(helper.CPWebCase):
         except Exception, x:
             self.assertEqual(x.__class__, xmlrpclib.Fault)
             self.assertEqual(x.faultString, 'method "non_method" is not supported')
+        else:
+            self.fail("Expected xmlrpclib.Fault")
+        
+        # Test returning a Fault from the page handler.
+        try:
+            proxy.test_returning_Fault()
+        except Exception, x:
+            self.assertEqual(x.__class__, xmlrpclib.Fault)
+            self.assertEqual(x.faultString, ("custom Fault response"))
         else:
             self.fail("Expected xmlrpclib.Fault")
 
