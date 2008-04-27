@@ -144,23 +144,24 @@ class TutorialTest(helper.CPWebCase):
         self.getPage("/load_tut_module/tut09_files")
         
         # Test upload
+        filesize = 5
         h = [("Content-type", "multipart/form-data; boundary=x"),
-             ("Content-Length", "110")]
+             ("Content-Length", str(105 + filesize))]
         b = """--x
 Content-Disposition: form-data; name="myFile"; filename="hello.txt"
 Content-Type: text/plain
 
-hello
+%s
 --x--
-"""
+""" % ("a" * filesize)
         self.getPage('/upload', h, "POST", b)
         self.assertBody('''<html>
         <body>
-            myFile length: 5<br />
+            myFile length: %d<br />
             myFile filename: hello.txt<br />
             myFile mime-type: text/plain
         </body>
-        </html>''')
+        </html>''' % filesize)
     
         # Test download
         self.getPage('/download')
