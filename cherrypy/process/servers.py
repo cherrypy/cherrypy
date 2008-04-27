@@ -163,7 +163,7 @@ def client_host(server_host):
         return '::1'
     return server_host
 
-def check_port(host, port):
+def check_port(host, port, timeout=1.0):
     """Raise an error if the given port is not free on the given host."""
     if not host:
         raise ValueError("Host values of '' or None are not allowed.")
@@ -180,7 +180,7 @@ def check_port(host, port):
             s = socket.socket(af, socktype, proto)
             # See http://groups.google.com/group/cherrypy-users/
             #        browse_frm/thread/bbfe5eb39c904fe0
-            s.settimeout(1.0)
+            s.settimeout(timeout)
             s.connect((host, port))
             s.close()
             raise IOError("Port %s is in use on %s; perhaps the previous "
@@ -197,10 +197,11 @@ def wait_for_free_port(host, port):
     
     for trial in xrange(50):
         try:
-            check_port(host, port)
+            # we are expecting a free port, so reduce the timeout
+            check_port(host, port, timeout=0.1)
         except IOError:
             # Give the old server thread time to free the port.
-            time.sleep(.1)
+            time.sleep(0.1)
         else:
             return
     
