@@ -406,10 +406,11 @@ class HTTPRequest(object):
         
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
+            # Both server and client are HTTP/1.1
             if environ.get("HTTP_CONNECTION", "") == "close":
                 self.close_connection = True
         else:
-            # HTTP/1.0
+            # Either the server or client (or both) are HTTP/1.0
             if environ.get("HTTP_CONNECTION", "") != "Keep-Alive":
                 self.close_connection = True
         
@@ -640,9 +641,11 @@ class HTTPRequest(object):
         
         if "connection" not in hkeys:
             if self.response_protocol == 'HTTP/1.1':
+                # Both server and client are HTTP/1.1 or better
                 if self.close_connection:
                     self.outheaders.append(("Connection", "close"))
             else:
+                # Server and/or client are HTTP/1.0
                 if not self.close_connection:
                     self.outheaders.append(("Connection", "Keep-Alive"))
         
