@@ -17,7 +17,8 @@ def serve_file(path, content_type=None, disposition=None, name=None):
     """Set status, headers, and body in order to serve the given file.
     
     The Content-Type header will be set to the content_type arg, if provided.
-    If not provided, the Content-Type will be guessed by its extension.
+    If not provided, the Content-Type will be guessed by the file extension
+    of the 'path' argument.
     
     If disposition is not None, the Content-Disposition header will be set
     to "<disposition>; filename=<name>". If name is None, it will be set
