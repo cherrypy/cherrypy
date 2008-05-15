@@ -370,9 +370,10 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_readall_or_close(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            self.PROTOCOL = "HTTP/1.0"
-        else:
-            self.PROTOCOL = "HTTP/1.1"
+            print "skipped ",
+            return
+        
+        self.PROTOCOL = "HTTP/1.1"
         
         if self.scheme == "https":
             self.HTTP_CONN = httplib.HTTPSConnection
