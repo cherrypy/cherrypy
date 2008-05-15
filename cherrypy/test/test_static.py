@@ -129,8 +129,8 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/docroot")
         self.assertStatus((302, 303))
         self.assertHeader('Location', '%s/docroot/' % self.base())
-        self.assertBody("This resource can be found at <a href='%s/docroot/'>"
-                        "%s/docroot/</a>." % (self.base(), self.base()))
+        self.assertMatchesBody("This resource .* at <a href='%s/docroot/'>"
+                               "%s/docroot/</a>." % (self.base(), self.base()))
     
     def test_config_errors(self):
         # Check that we get an error if no .file or .dir
