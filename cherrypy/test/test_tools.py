@@ -90,10 +90,26 @@ def setup_server():
             r.body = [chr(ord(x) + scale) for x in r.body]
     cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
     
+    def stream_handler(next_handler, *args, **kwargs):
+        cherrypy.response.output = o = StringIO.StringIO()
+        try:
+            response = next_handler(*args, **kwargs)
+            # Ignore the response and return our accumulated output instead.
+            return o.getvalue()
+        finally:
+            o.close()
+    cherrypy.tools.streamer = cherrypy._cptools.HandlerWrapperTool(stream_handler)
+    
     class Root:
         def index(self):
             return "Howdy earth!"
         index.exposed = True
+        
+        def tarfile(self):
+            cherrypy.response.output.write('I am ')
+            cherrypy.response.output.write('a tarfile')
+        tarfile.exposed = True
+        tarfile._cp_config = {'tools.streamer.on': True}
         
         def euro(self):
             hooks = list(cherrypy.request.hooks['before_finalize'])
@@ -206,6 +222,8 @@ def setup_server():
         '/decorated_euro/subpath': {
             'tools.gzip.priority': 10,
         },
+        # Handler wrappers
+        '/tarfile': {'tools.streamer.on': True}
     }
     app = cherrypy.tree.mount(root, config=conf)
     app.request_class.namespaces['myauth'] = myauthtools
@@ -332,6 +350,10 @@ class ToolTests(helper.CPWebCase):
                               ("Content-Type", "text/plain")],
                      method="POST", body=content)
         self.assertBody(content)
+    
+    def testHandlerWrapperTool(self):
+        self.getPage("/tarfile")
+        self.assertBody("I am a tarfile")
 
 
 if __name__ == '__main__':

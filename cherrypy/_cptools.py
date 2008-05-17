@@ -172,6 +172,37 @@ class HandlerTool(Tool):
                                       priority=p, **conf)
 
 
+class HandlerWrapperTool(Tool):
+    """Tool which wraps request.handler in a provided wrapper function.
+    
+    The 'newhandler' arg must be a handler wrapper function that takes a
+    'next_handler' argument, plus *args and **kwargs. Like all page handler
+    functions, it must return an iterable for use as cherrypy.response.body.
+    
+    For example, to allow your 'inner' page handlers to return dicts
+    which then get interpolated into a template:
+    
+        def interpolator(next_handler, *args, **kwargs):
+            filename = cherrypy.request.config.get('template')
+            cherrypy.response.template = env.get_template(filename)
+            response_dict = next_handler(*args, **kwargs)
+            return cherrypy.response.template.render(**response_dict)
+        cherrypy.tools.jinja = HandlerWrapperTool(interpolator)
+    """
+    
+    def __init__(self, newhandler, point='before_handler', name=None, priority=50):
+        self.newhandler = newhandler
+        self._point = point
+        self._name = name
+        self._priority = priority
+    
+    def callable(self):
+        innerfunc = cherrypy.request.handler
+        def wrap(*args, **kwargs):
+            return self.newhandler(innerfunc, *args, **kwargs)
+        cherrypy.request.handler = wrap
+
+
 class ErrorTool(Tool):
     """Tool which is used to replace the default request.error_response."""
     
