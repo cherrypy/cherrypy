@@ -53,6 +53,9 @@ def setup_server():
         error.exposed = True
         
         def upload(self):
+            if not cherrypy.request.method == 'POST':
+                raise AssertionError("'POST' != request.method %r" %
+                                     cherrypy.request.method)
             return ("thanks for '%s' (%s)" %
                     (cherrypy.request.body.read(),
                      cherrypy.request.headers['Content-Type']))
@@ -275,6 +278,7 @@ class ConnectionTests(helper.CPWebCase):
             self.assertEqual(response.status, 200)
             self.body = response.read()
             self.assertBody(pov)
+            conn.close()
         finally:
             if old_timeout is not None:
                 httpserver.timeout = old_timeout
@@ -367,6 +371,7 @@ class ConnectionTests(helper.CPWebCase):
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(200)
         self.assertBody("thanks for 'I am a small file' (text/plain)")
+        conn.close()
     
     def test_readall_or_close(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
@@ -380,59 +385,65 @@ class ConnectionTests(helper.CPWebCase):
         else:
             self.HTTP_CONN = httplib.HTTPConnection
         
-        self.persistent = True
-        conn = self.HTTP_CONN
-        
-        # Get a POST page with an error
-        conn.putrequest("POST", "/err_before_read", skip_host=True)
-        conn.putheader("Host", self.HOST)
-        conn.putheader("Content-Type", "text/plain")
-        conn.putheader("Content-Length", "1000")
-        conn.putheader("Expect", "100-continue")
-        conn.endheaders()
-        response = conn.response_class(conn.sock, method="POST")
-        
-        # ...assert and then skip the 100 response
-        version, status, reason = response._read_status()
-        self.assertEqual(status, 100)
-        while True:
-            skip = response.fp.readline().strip()
-            if not skip:
-                break
-        
-        # ...send the body
-        conn.send("x" * 1000)
-        
-        # ...get the final response
-        response.begin()
-        self.status, self.headers, self.body = webtest.shb(response)
-        self.assertStatus(500)
-        
-        # Now try a working page with an Expect header...
-        conn._output('POST /upload HTTP/1.1')
-        conn._output("Host: %s" % self.HOST)
-        conn._output("Content-Type: text/plain")
-        conn._output("Content-Length: 17")
-        conn._output("Expect: 100-continue")
-        conn._send_output()
-        response = conn.response_class(conn.sock, method="POST")
-        
-        # ...assert and then skip the 100 response
-        version, status, reason = response._read_status()
-        self.assertEqual(status, 100)
-        while True:
-            skip = response.fp.readline().strip()
-            if not skip:
-                break
-        
-        # ...send the body
-        conn.send("I am a small file")
-        
-        # ...get the final response
-        response.begin()
-        self.status, self.headers, self.body = webtest.shb(response)
-        self.assertStatus(200)
-        self.assertBody("thanks for 'I am a small file' (text/plain)")
+        # Test a max of 0 (the default) and then reset to what it was above.
+        old_max = cherrypy.server.max_request_body_size
+        for new_max in (0, old_max):
+            cherrypy.server.max_request_body_size = new_max
+            
+            self.persistent = True
+            conn = self.HTTP_CONN
+            
+            # Get a POST page with an error
+            conn.putrequest("POST", "/err_before_read", skip_host=True)
+            conn.putheader("Host", self.HOST)
+            conn.putheader("Content-Type", "text/plain")
+            conn.putheader("Content-Length", "1000")
+            conn.putheader("Expect", "100-continue")
+            conn.endheaders()
+            response = conn.response_class(conn.sock, method="POST")
+            
+            # ...assert and then skip the 100 response
+            version, status, reason = response._read_status()
+            self.assertEqual(status, 100)
+            while True:
+                skip = response.fp.readline().strip()
+                if not skip:
+                    break
+            
+            # ...send the body
+            conn.send("x" * 1000)
+            
+            # ...get the final response
+            response.begin()
+            self.status, self.headers, self.body = webtest.shb(response)
+            self.assertStatus(500)
+            
+            # Now try a working page with an Expect header...
+            conn._output('POST /upload HTTP/1.1')
+            conn._output("Host: %s" % self.HOST)
+            conn._output("Content-Type: text/plain")
+            conn._output("Content-Length: 17")
+            conn._output("Expect: 100-continue")
+            conn._send_output()
+            response = conn.response_class(conn.sock, method="POST")
+            
+            # ...assert and then skip the 100 response
+            version, status, reason = response._read_status()
+            self.assertEqual(status, 100)
+            while True:
+                skip = response.fp.readline().strip()
+                if not skip:
+                    break
+            
+            # ...send the body
+            conn.send("I am a small file")
+            
+            # ...get the final response
+            response.begin()
+            self.status, self.headers, self.body = webtest.shb(response)
+            self.assertStatus(200)
+            self.assertBody("thanks for 'I am a small file' (text/plain)")
+            conn.close()
     
     def test_No_Message_Body(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
@@ -443,7 +454,6 @@ class ConnectionTests(helper.CPWebCase):
         
         # Set our HTTP_CONN to an instance so it persists between requests.
         self.persistent = True
-        conn = self.HTTP_CONN
         
         # Make the first request and assert there's no "Connection: close".
         self.getPage("/")
@@ -515,6 +525,7 @@ class ConnectionTests(helper.CPWebCase):
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(413)
         self.assertBody("")
+        conn.close()
     
     def test_HTTP10(self):
         self.PROTOCOL = "HTTP/1.0"
@@ -544,7 +555,7 @@ class ConnectionTests(helper.CPWebCase):
         self.assertBody(pov)
         # Apache, for example, may emit a Connection header even for HTTP/1.0
 ##        self.assertNoHeader("Connection")
-
+    
     def test_598(self):
         remote_data_conn = urllib.urlopen('%s://%s:%s/one_megabyte_of_a/' %
                                           (self.scheme, self.HOST, self.PORT,))
@@ -556,8 +567,10 @@ class ConnectionTests(helper.CPWebCase):
             received_data = remote_data_conn.read(remaining)
             remaining -= len(received_data)
        
-        self.assertTrue(received_data) 
-        self.assertEqual(remaining, 0) 
+        self.assertTrue(received_data)
+        self.assertEqual(remaining, 0)
+        remote_data_conn.close()
+
 
 if __name__ == "__main__":
     setup_server()

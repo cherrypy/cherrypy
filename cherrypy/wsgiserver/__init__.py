@@ -528,7 +528,10 @@ class HTTPRequest(object):
             self.rfile.maxlen = self.max_request_body_size
         else:
             cl = int(self.environ.get("CONTENT_LENGTH", 0))
-            self.rfile.maxlen = min(cl, self.max_request_body_size)
+            if self.max_request_body_size:
+                self.rfile.maxlen = min(cl, self.max_request_body_size)
+            else:
+                self.rfile.maxlen = cl
         self.rfile.bytes_read = 0
         
         try:
