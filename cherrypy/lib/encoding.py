@@ -209,6 +209,17 @@ def decompress(body):
 
 
 def gzip(compress_level=9, mime_types=['text/html', 'text/plain']):
+    """Try to gzip the response body if Content-Type in mime_types.
+    
+    cherrypy.response.headers['Content-Type'] must be set to one of the
+    values in the mime_types arg before calling this function.
+    
+    No compression is performed if any of the following hold:
+        * The client sends no Accept-Encoding request header
+        * No 'gzip' or 'x-gzip' is present in the Accept-Encoding header
+        * No 'gzip' or 'x-gzip' with a qvalue > 0 is present
+        * The 'identity' value is given with a qvalue > 0.
+    """
     response = cherrypy.response
     if not response.body:
         # Response body is empty (might be a 304 for instance)
