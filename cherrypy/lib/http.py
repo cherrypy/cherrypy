@@ -20,7 +20,6 @@ response_codes[503] = ('Service Unavailable',
 
 
 import cgi
-from email.Header import Header, decode_header
 import re
 from rfc822 import formatdate as HTTPDate
 
@@ -196,6 +195,7 @@ def header_elements(fieldname, fieldvalue):
 
 def decode_TEXT(value):
     """Decode RFC-2047 TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
+    from email.Header import decode_header
     atoms = decode_header(value)
     decodedvalue = ""
     for atom, charset in atoms:
@@ -365,6 +365,7 @@ class HeaderMap(CaseInsensitiveDict):
                     if protocol >= (1, 1):
                         # Encode RFC-2047 TEXT
                         # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=").
+                        from email.Header import Header
                         v = Header(v, 'utf-8').encode()
                     else:
                         raise
