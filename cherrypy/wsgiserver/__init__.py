@@ -978,7 +978,10 @@ class HTTPConnection(object):
         
         except socket.error, e:
             errnum = e.args[0]
-            if errnum not in socket_errors_to_ignore:
+            if errnum == 'timed out':
+                if req:
+                    req.simple_response("408 Request Timeout")
+            elif errnum not in socket_errors_to_ignore:
                 if req:
                     req.simple_response("500 Internal Server Error",
                                         format_exc())

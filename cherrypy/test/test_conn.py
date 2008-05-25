@@ -223,9 +223,6 @@ class ConnectionTests(helper.CPWebCase):
             # Make an initial request
             self.persistent = True
             conn = self.HTTP_CONN
-            # Make the socket nonblocking so it can timeout
-##            conn.connect()
-##            conn.sock.settimeout(0.1)
             conn.putrequest("GET", "/", skip_host=True)
             conn.putheader("Host", self.HOST)
             conn.endheaders()
@@ -268,6 +265,28 @@ class ConnectionTests(helper.CPWebCase):
             conn.close()
             
             # Make another request on a new socket, which should work
+            self.persistent = True
+            conn = self.HTTP_CONN
+            conn.putrequest("GET", "/", skip_host=True)
+            conn.putheader("Host", self.HOST)
+            conn.endheaders()
+            response = conn.response_class(conn.sock, method="GET")
+            response.begin()
+            self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(pov)
+            
+            # Make another request on the same socket,
+            # but timeout on the headers
+            conn.send('GET /hello HTTP/1.1')
+            # Wait for our socket timeout
+            time.sleep(timeout * 2)
+            response = conn.response_class(conn.sock, method="GET")
+            response.begin()
+            self.assertEqual(response.status, 408)
+            conn.close()
+            
+            # Retry the request on a new connection, which should work
             self.persistent = True
             conn = self.HTTP_CONN
             conn.putrequest("GET", "/", skip_host=True)
