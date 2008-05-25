@@ -700,22 +700,21 @@ class Request(object):
             # which is valid for the decoded entity-body.
             raise cherrypy.HTTPError(411)
         
-        # FieldStorage only recognizes POST, so fake it.
-        methenv = {'REQUEST_METHOD': "POST"}
+        # If the headers are missing "Content-Type" then add one
+        # with an empty value.  This ensures that FieldStorage
+        # won't parse the request body for params if the client
+        # didn't provide a "Content-Type" header.
+        if 'Content-Type' not in self.headers:
+            h = http.HeaderMap(self.headers.items())
+            h['Content-Type'] = ''
+        else:
+            h = self.headers
+        
         try:
-            # If the headers are missing "Content-Type" then add one
-            # with an empty value.  This ensures that FieldStorage
-            # won't parse the request body for params if the client
-            # didn't provide a "Content-Type" header.
-            if 'Content-Type' not in self.headers:
-                h = http.HeaderMap(self.headers.items())
-                h['Content-Type'] = ''
-            else:
-                h = self.headers
-            
             forms = _cpcgifs.FieldStorage(fp=self.rfile,
                                           headers=h,
-                                          environ=methenv,
+                                          # FieldStorage only recognizes POST.
+                                          environ={'REQUEST_METHOD': "POST"},
                                           keep_blank_values=1)
         except http.MaxSizeExceeded:
             # Post data is too big

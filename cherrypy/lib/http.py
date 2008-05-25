@@ -377,7 +377,7 @@ class HeaderMap(CaseInsensitiveDict):
         return header_list
 
 
-from cherrypy.wsgiserver import SizeCheckWrapper, MaxSizeExceeded
+from cherrypy.wsgiserver import MaxSizeExceeded
 
 
 class Host(object):
