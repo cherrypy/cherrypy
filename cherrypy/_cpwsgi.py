@@ -320,6 +320,8 @@ class CPWSGIApp(object):
             # in code (passed to self.__init__) that deployers can add to
             # (but not remove) via config.
             self.pipeline.extend(v)
+        elif k == "response_class":
+            self.response_class = v
         else:
             name, arg = k.split(".", 1)
             bucket = self.config.setdefault(name, {})
