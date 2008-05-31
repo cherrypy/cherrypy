@@ -621,7 +621,7 @@ class Request(object):
         except:
             if self.throw_errors:
                 raise
-            self.handle_error(sys.exc_info())
+            self.handle_error()
     
     def process_headers(self):
         """Parse HTTP header data into Python structures. (Core)"""
@@ -731,7 +731,7 @@ class Request(object):
             self.body_params = p = http.params_from_CGI_form(forms)
             self.params.update(p)
     
-    def handle_error(self, exc):
+    def handle_error(self):
         """Handle the last unanticipated exception. (Core)"""
         try:
             self.hooks.run("before_error_response")
