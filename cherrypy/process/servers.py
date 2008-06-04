@@ -1,7 +1,5 @@
 """Adapt an HTTP server."""
 
-import socket
-import threading
 import time
 
 
@@ -54,6 +52,7 @@ class ServerAdapter(object):
         if isinstance(self.bind_addr, tuple):
             wait_for_free_port(*self.bind_addr)
         
+        import threading
         t = threading.Thread(target=self._start_http_thread)
         t.setName("HTTPServer " + t.getName())
         t.start()
@@ -169,6 +168,8 @@ def check_port(host, port, timeout=1.0):
         raise ValueError("Host values of '' or None are not allowed.")
     host = client_host(host)
     port = int(port)
+    
+    import socket
     
     # AF_INET or AF_INET6 socket
     # Get the correct address family for our host (allows IPv6 addresses)

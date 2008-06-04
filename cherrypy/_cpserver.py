@@ -1,6 +1,5 @@
 """Manage HTTP servers with CherryPy."""
 
-import socket
 import warnings
 
 import cherrypy
@@ -100,6 +99,7 @@ class Server(ServerAdapter):
             # 0.0.0.0 is INADDR_ANY and :: is IN6ADDR_ANY.
             # Look up the host name, which should be the
             # safest thing to spit out in a URL.
+            import socket
             host = socket.gethostname()
         
         port = self.socket_port
