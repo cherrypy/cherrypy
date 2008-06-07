@@ -170,6 +170,7 @@ def setup_server():
             raise ValueError()
         
         def errinstream(self, id=None):
+            yield "nonconfidential"
             raise ValueError()
             yield "confidential"
         
@@ -255,11 +256,18 @@ class ToolTests(helper.CPWebCase):
         self.assertBody("True")
         
         # If body is "razdrez", then on_end_request is being called too early.
-        self.getPage("/demo/errinstream?id=5")
-        # Because this error is raised after the response body has
-        # started, the status should not change to an error status.
-        self.assertStatus("200 OK")
-        self.assertBody("Unrecoverable error in the server.")
+        if cherrypy.server.protocol_version == "HTTP/1.0":
+            self.getPage("/demo/errinstream?id=5")
+            # Because this error is raised after the response body has
+            # started, the status should not change to an error status.
+            self.assertStatus("200 OK")
+            self.assertBody("nonconfidential")
+        else:
+            # Because this error is raised after the response body has
+            # started, and because it's chunked output, an error is raised by
+            # the HTTP client when it encounters incomplete output.
+            self.assertRaises(ValueError, self.getPage,
+                              "/demo/errinstream?id=5")
         # If this fails, then on_end_request isn't being called at all.
         time.sleep(0.1)
         self.getPage("/demo/ended/5")

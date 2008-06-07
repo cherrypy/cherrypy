@@ -74,12 +74,11 @@ class AppResponse(object):
         self.setapp()
     
     def setapp(self):
-        # Stage 1: by whatever means necessary, obtain a status, header
-        #          set and body, with an optional exception object.
         try:
             self.request = self.get_request()
             s, h, b = self.get_response()
-            exc = None
+            self.iter_response = iter(b)
+            self.start_response(s, h)
         except self.throws:
             self.close()
             raise
@@ -98,30 +97,19 @@ class AppResponse(object):
             if not getattr(self.request, "show_tracebacks", True):
                 tb = ""
             s, h, b = _cperror.bare_error(tb)
-            exc = _sys.exc_info()
-        
-        self.iter_response = iter(b)
-        
-        # Stage 2: now that we have a status, header set, and body,
-        #          finish the WSGI conversation by calling start_response.
-        try:
-            self.start_response(s, h, exc)
-        except self.throws:
-            self.close()
-            raise
-        except:
-            if getattr(self.request, "throw_errors", False):
+            self.iter_response = iter(b)
+            
+            try:
+                self.start_response(s, h, _sys.exc_info())
+            except:
+                # "The application must not trap any exceptions raised by
+                # start_response, if it called start_response with exc_info.
+                # Instead, it should allow such exceptions to propagate
+                # back to the server or gateway."
+                # But we still log and call close() to clean up ourselves.
+                _cherrypy.log(traceback=True, severity=40)
                 self.close()
                 raise
-            
-            _cherrypy.log(traceback=True, severity=40)
-            self.close()
-            
-            # CherryPy test suite expects bare_error body to be output,
-            # so don't call start_response (which, according to PEP 333,
-            # may raise its own error at that point).
-            s, h, b = _cperror.bare_error()
-            self.iter_response = iter(b)
     
     def iredirect(self, path, query_string):
         """Doctor self.environ and perform an internal redirect.
@@ -193,13 +181,26 @@ class AppResponse(object):
                 self.close()
                 raise
             
-            _cherrypy.log(traceback=True, severity=40)
-            
-            # CherryPy test suite expects bare_error body to be output,
-            # so don't call start_response (which, according to PEP 333,
-            # may raise its own error at that point).
-            s, h, b = _cperror.bare_error()
+            tb = _cperror.format_exc()
+            _cherrypy.log(tb, severity=40)
+            if not getattr(self.request, "show_tracebacks", True):
+                tb = ""
+            s, h, b = _cperror.bare_error(tb)
+            # Empty our iterable (so future calls raise StopIteration)
             self.iter_response = iter([])
+            
+            try:
+                self.start_response(s, h, _sys.exc_info())
+            except:
+                # "The application must not trap any exceptions raised by
+                # start_response, if it called start_response with exc_info.
+                # Instead, it should allow such exceptions to propagate
+                # back to the server or gateway."
+                # But we still log and call close() to clean up ourselves.
+                _cherrypy.log(traceback=True, severity=40)
+                self.close()
+                raise
+            
             return "".join(b)
     
     def close(self):

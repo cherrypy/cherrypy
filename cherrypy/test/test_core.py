@@ -717,11 +717,17 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.getPage("/error/page_yield")
             self.assertErrorPage(500, pattern=valerr)
             
-            self.getPage("/error/page_streamed")
-            # Because this error is raised after the response body has
-            # started, the status should not change to an error status.
-            self.assertStatus(200)
-            self.assertBody("word upUnrecoverable error in the server.")
+            if cherrypy.server.protocol_version == "HTTP/1.0":
+                self.getPage("/error/page_streamed")
+                # Because this error is raised after the response body has
+                # started, the status should not change to an error status.
+                self.assertStatus(200)
+                self.assertBody("word up")
+            else:
+                # Under HTTP/1.1, the chunked transfer-coding is used.
+                # The HTTP client will choke when the output is incomplete.
+                self.assertRaises(ValueError, self.getPage,
+                                  "/error/page_streamed")
             
             # No traceback should be present
             self.getPage("/error/cause_err_in_finalize")

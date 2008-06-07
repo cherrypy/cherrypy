@@ -144,10 +144,16 @@ class EncodingTests(helper.CPWebCase):
         # readable page, since 1) the gzip header is already set,
         # and 2) we may have already written some of the body.
         # The fix is to never stream yields when using gzip.
-        self.getPage('/gzip/noshow_stream',
-                     headers=[("Accept-Encoding", "gzip")])
-        self.assertHeader('Content-Encoding', 'gzip')
-        self.assertMatchesBody(r"Unrecoverable error in the server.$")
+        if cherrypy.server.protocol_version == "HTTP/1.0":
+            self.getPage('/gzip/noshow_stream',
+                         headers=[("Accept-Encoding", "gzip")])
+            self.assertHeader('Content-Encoding', 'gzip')
+            self.assertInBody('\x1f\x8b\x08\x00')
+        else:
+            # The wsgiserver will simply stop sending data, and the HTTP client
+            # will error due to an incomplete chunk-encoded stream.
+            self.assertRaises(ValueError, self.getPage, '/gzip/noshow_stream',
+                              headers=[("Accept-Encoding", "gzip")])
 
 
 if __name__ == "__main__":

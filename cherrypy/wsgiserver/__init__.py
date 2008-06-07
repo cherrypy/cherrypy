@@ -537,7 +537,8 @@ class HTTPRequest(object):
         try:
             self._respond()
         except MaxSizeExceeded:
-            self.simple_response("413 Request Entity Too Large")
+            if not self.sent_headers:
+                self.simple_response("413 Request Entity Too Large")
             return
     
     def _respond(self):
@@ -586,15 +587,21 @@ class HTTPRequest(object):
     
     def start_response(self, status, headers, exc_info = None):
         """WSGI callable to begin the HTTP response."""
-        if self.started_response:
-            if not exc_info:
-                raise AssertionError("WSGI start_response called a second "
-                                     "time with no exc_info.")
-            else:
-                try:
-                    raise exc_info[0], exc_info[1], exc_info[2]
-                finally:
-                    exc_info = None
+        # "The application may call start_response more than once,
+        # if and only if the exc_info argument is provided."
+        if self.started_response and not exc_info:
+            raise AssertionError("WSGI start_response called a second "
+                                 "time with no exc_info.")
+        
+        # "if exc_info is provided, and the HTTP headers have already been
+        # sent, start_response must raise an error, and should raise the
+        # exc_info tuple."
+        if self.sent_headers:
+            try:
+                raise exc_info[0], exc_info[1], exc_info[2]
+            finally:
+                exc_info = None
+        
         self.started_response = True
         self.status = status
         self.outheaders.extend(headers)
@@ -979,10 +986,10 @@ class HTTPConnection(object):
         except socket.error, e:
             errnum = e.args[0]
             if errnum == 'timed out':
-                if req:
+                if req and not req.sent_headers:
                     req.simple_response("408 Request Timeout")
             elif errnum not in socket_errors_to_ignore:
-                if req:
+                if req and not req.sent_headers:
                     req.simple_response("500 Internal Server Error",
                                         format_exc())
             return
@@ -994,11 +1001,12 @@ class HTTPConnection(object):
         except NoSSLError:
             # Unwrap our wfile
             req.wfile = CP_fileobject(self.socket, "wb", -1)
-            req.simple_response("400 Bad Request",
-                                "The client sent a plain HTTP request, but "
-                                "this server only speaks HTTPS on this port.")
+            if req and not req.sent_headers:
+                req.simple_response("400 Bad Request",
+                    "The client sent a plain HTTP request, but "
+                    "this server only speaks HTTPS on this port.")
         except Exception, e:
-            if req:
+            if req and not req.sent_headers:
                 req.simple_response("500 Internal Server Error", format_exc())
     
     def close(self):
