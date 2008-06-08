@@ -115,7 +115,13 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     request = cherrypy.request
     
     if scheme:
-        scheme = request.headers.get(scheme, None)
+        s = request.headers.get(scheme, None)
+        if s == 'on' and 'ssl' in scheme.lower():
+            # This handles e.g. webfaction's 'X-Forwarded-Ssl: on' header
+            scheme = 'https'
+        else:
+            # This is for lighttpd/pound/Mongrel's 'X-Forwarded-Proto: https'
+            scheme = s
     if not scheme:
         scheme = request.base[:request.base.find("://")]
     

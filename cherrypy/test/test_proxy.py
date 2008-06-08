@@ -45,6 +45,11 @@ def setup_server():
             return cherrypy.request.base
         base.exposed = True
         
+        def ssl(self):
+            return cherrypy.request.base
+        ssl.exposed = True
+        ssl._cp_config = {'tools.proxy.scheme': 'X-Forwarded-Ssl'}
+        
         def newurl(self):
             return ("Browse to <a href='%s'>this page</a>."
                     % cherrypy.url("/this/new/page"))
@@ -84,6 +89,10 @@ class ProxyTest(helper.CPWebCase):
         
         # Test X-Forwarded-Proto (lighttpd)
         self.getPage("/base", headers=[('X-Forwarded-Proto', 'https')])
+        self.assertBody("https://www.mydomain.test")
+        
+        # Test X-Forwarded-Ssl (webfaction?)
+        self.getPage("/ssl", headers=[('X-Forwarded-Ssl', 'on')])
         self.assertBody("https://www.mydomain.test")
         
         # Test cherrypy.url()
