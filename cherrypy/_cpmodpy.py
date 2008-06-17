@@ -97,7 +97,8 @@ def setup(req):
                             "tools.ignore_headers.headers": ['Range'],
                             })
     
-    cherrypy._console_control_handler.unsubscribe()
+    if hasattr(cherrypy, '_console_control_handler'):
+        cherrypy._console_control_handler.unsubscribe()
     cherrypy.engine.autoreload.unsubscribe()
     cherrypy.server.unsubscribe()
     
