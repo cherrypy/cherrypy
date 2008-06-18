@@ -25,6 +25,10 @@ def setup_server():
             return sing8
         utf8.exposed = True
         utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
+        
+        def reqparams(self, *args, **kwargs):
+            return repr(cherrypy.request.params)
+        reqparams.exposed = True
     
     class GZIP:
         def index(self):
@@ -67,6 +71,10 @@ class EncodingTests(helper.CPWebCase):
         europoundUtf8 = europoundUnicode.encode('utf-8')
         self.getPage('/?param=%s' % europoundUtf8)
         self.assertBody(europoundUtf8)
+        
+        # Make sure that encoded utf8 gets parsed correctly
+        self.getPage("/reqparams?q=%C2%A3")
+        self.assertBody(r"{'q': '\xc2\xa3'}")
     
     def testEncoding(self):
         # Default encoding should be utf-8
