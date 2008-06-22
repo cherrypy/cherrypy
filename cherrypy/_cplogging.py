@@ -18,6 +18,8 @@ class LogManager(object):
     appid = None
     error_log = None
     access_log = None
+    access_log_format = \
+        '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
     
     def __init__(self, appid=None, logger_root="cherrypy"):
         self.logger_root = logger_root
@@ -61,25 +63,44 @@ class LogManager(object):
         return self.error(*args, **kwargs)
     
     def access(self):
-        """Write to the access log (in Apache/NCSA Combined Log format)."""
+        """Write to the access log (in Apache/NCSA Combined Log format).
+        
+        Like Apache started doing in 2.0.46, non-printable and other special
+        characters in %r (and we expand that to all parts) are escaped using
+        \\xhh sequences, where hh stands for the hexadecimal representation
+        of the raw byte. Exceptions from this rule are " and \\, which are
+        escaped by prepending a backslash, and all whitespace characters,
+        which are written in their C-style notation (\\n, \\t, etc).
+        """
         request = cherrypy.request
-        inheaders = request.headers
         remote = request.remote
         response = cherrypy.response
         outheaders = response.headers
-        tmpl = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-        s = tmpl % {'h': remote.name or remote.ip,
-                    'l': '-',
-                    'u': getattr(request, "login", None) or "-",
-                    't': self.time(),
-                    'r': request.request_line,
-                    's': response.status.split(" ", 1)[0],
-                    'b': outheaders.get('Content-Length', '') or "-",
-                    'f': inheaders.get('Referer', ''),
-                    'a': inheaders.get('User-Agent', ''),
-                    }
+        inheaders = request.headers
+        
+        atoms = {'h': remote.name or remote.ip,
+                 'l': '-',
+                 'u': getattr(request, "login", None) or "-",
+                 't': self.time(),
+                 'r': request.request_line,
+                 's': response.status.split(" ", 1)[0],
+                 'b': outheaders.get('Content-Length', '') or "-",
+                 'f': inheaders.get('Referer', ''),
+                 'a': inheaders.get('User-Agent', ''),
+                 }
+        for k, v in atoms.items():
+            if isinstance(v, unicode):
+                v = v.encode('utf8')
+            elif not isinstance(v, str):
+                v = str(v)
+            # Fortunately, repr(str) escapes unprintable chars, \n, \t, etc
+            # and backslash for us. All we have to do is strip the quotes.
+            v = repr(v)[1:-1]
+            # Escape double-quote.
+            atoms[k] = v.replace('"', '\\"')
+        
         try:
-            self.access_log.log(logging.INFO, s)
+            self.access_log.log(logging.INFO, self.access_log_format % atoms)
         except:
             self(traceback=True)
     

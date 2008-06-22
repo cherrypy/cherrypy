@@ -374,6 +374,7 @@ def run():
         'test_http',
         'test_httpauth',
         'test_httplib',
+        'test_logging',
         'test_objectmapping',
         'test_misc_tools',
         'test_static',

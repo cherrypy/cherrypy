@@ -12,8 +12,6 @@ from cherrypy import _cptools, tools
 from cherrypy.lib import http, static
 
 
-log_file = os.path.join(localDir, "test.log")
-log_access_file = os.path.join(localDir, "access.log")
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
@@ -418,13 +416,11 @@ def setup_server():
             return existing
     
     cherrypy.config.update({
-        'log.error_file': log_file,
         'environment': 'test_suite',
         'server.max_request_body_size': 200,
         'server.max_request_header_size': 500,
         })
     appconf = {
-        '/': {'log.access_file': log_access_file},
         '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
         }
     cherrypy.tree.mount(root, config=appconf)
@@ -488,79 +484,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(500)
         msg = "Illegal response status from server ('error' is non-numeric)."
         self.assertErrorPage(500, msg)
-    
-    def testLogging(self):
-        f = open(log_access_file, "wb")
-        f.write("")
-        f.close()
-        f = open(log_file, "wb")
-        f.write("")
-        f.close()
-        
-        self.getPage("/flatten/as_string",
-                     headers=[('Referer', 'http://www.cherrypy.org/'),
-                              ('User-Agent', 'Mozilla/5.0')])
-        self.assertBody('content')
-        self.assertStatus(200)
-        
-        self.getPage("/flatten/as_yield")
-        self.assertBody('content')
-        self.assertStatus(200)
-        
-        data = open(log_access_file, "rb").readlines()
-        
-        host = self.HOST
-        if host == '0.0.0.0':
-            # INADDR_ANY, which should respond on localhost.
-            host = "127.0.0.1"
-        if host == '::':
-            # IN6ADDR_ANY, which should respond on localhost.
-            host = "::1"
-        intro = '%s - - [' % host
-        
-        if not data[0].startswith(intro):
-            self.fail("%r doesn't start with %r" % (data[0], intro))
-        haslength = False
-        for k, v in self.headers:
-            if k.lower() == 'content-length':
-                haslength = True
-        line = data[-2].strip()
-        if haslength:
-            if not line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 7 '
-                                 '"http://www.cherrypy.org/" "Mozilla/5.0"'
-                                 % self.prefix()):
-                self.fail(line)
-        else:
-            if not line.endswith('] "GET %s/flatten/as_string HTTP/1.1" 200 - '
-                                 '"http://www.cherrypy.org/" "Mozilla/5.0"'
-                                 % self.prefix()):
-                self.fail(line)
-        
-        if not data[-1].startswith(intro):
-            self.fail("%r doesn't start with %r" % (data[-1], intro))
-        haslength = False
-        for k, v in self.headers:
-            if k.lower() == 'content-length':
-                haslength = True
-        line = data[-1].strip()
-        if haslength:
-            self.assert_(line.endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 7 "" ""'
-                                          % self.prefix()))
-        else:
-            self.assert_(line.endswith('] "GET %s/flatten/as_yield HTTP/1.1" 200 - "" ""'
-                                          % self.prefix()))
-        
-        ignore = helper.webtest.ignored_exceptions
-        ignore.append(ValueError)
-        try:
-            # Test that tracebacks get written to the error log.
-            self.getPage("/error/page_method")
-            self.assertInBody("raise ValueError()")
-            data = open(log_file, "rb").readlines()
-            self.assertEqual(data[0].strip().endswith('HTTP Traceback (most recent call last):'), True)
-            self.assertEqual(data[-3].strip().endswith('raise ValueError()'), True)
-        finally:
-            ignore.pop()
     
     def testSlashes(self):
         # Test that requests for index methods without a trailing slash
