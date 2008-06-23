@@ -94,15 +94,24 @@ class Profiler(object):
     
     def stats(self, filename, sortby='cumulative'):
         """stats(index) -> output of print_stats() for the given profile."""
-        s = pstats.Stats(os.path.join(self.path, filename))
-        s.strip_dirs()
-        s.sort_stats(sortby)
-        oldout = sys.stdout
-        try:
-            sys.stdout = sio = StringIO.StringIO()
+        sio = StringIO.StringIO()
+        if sys.version_info >= (2, 5):
+            s = pstats.Stats(os.path.join(self.path, filename), stream=sio)
+            s.strip_dirs()
+            s.sort_stats(sortby)
             s.print_stats()
-        finally:
-            sys.stdout = oldout
+        else:
+            # pstats.Stats before Python 2.5 didn't take a 'stream' arg,
+            # but just printed to stdout. So re-route stdout.
+            s = pstats.Stats(os.path.join(self.path, filename))
+            s.strip_dirs()
+            s.sort_stats(sortby)
+            oldout = sys.stdout
+            try:
+                sys.stdout = sio
+                s.print_stats()
+            finally:
+                sys.stdout = oldout
         response = sio.getvalue()
         sio.close()
         return response
