@@ -5,11 +5,11 @@ import cherrypy
 from cherrypy.process import plugins, servers
 
 
-def start(configfile=None, daemonize=False, environment=None,
+def start(configfiles=None, daemonize=False, environment=None,
           fastcgi=False, pidfile=None):
     """Subscribe all engine plugins and start the engine."""
-    if configfile:
-        cherrypy.config.update(configfile)
+    for c in configfiles or []:
+        cherrypy.config.update(c)
     
     engine = cherrypy.engine
     
@@ -49,8 +49,8 @@ if __name__ == '__main__':
     from optparse import OptionParser
     
     p = OptionParser()
-    p.add_option('-c', '--config', dest='config',
-                 help="specify a config file")
+    p.add_option('-c', '--config', action="append", dest='config',
+                 help="specify config file(s)")
     p.add_option('-d', action="store_true", dest='daemonize',
                  help="run the server as a daemon")
     p.add_option('-e', '--environment', dest='environment', default=None,

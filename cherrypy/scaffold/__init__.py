@@ -8,7 +8,7 @@ then tweak as desired.
 Even before any tweaking, this should serve a few demonstration pages.
 Change to this directory and run:
 
-    python cherrypy\cherryd cherrypy\scaffold\site.conf
+    python cherrypy\cherryd -c cherrypy\scaffold\site.conf
 
 """
 
