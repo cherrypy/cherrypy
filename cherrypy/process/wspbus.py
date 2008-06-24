@@ -200,6 +200,9 @@ class Bus(object):
         self.state = states.EXITING
         self.log('Bus EXITING')
         self.publish('exit')
+        # This isn't strictly necessary, but it's better than seeing
+        # "Waiting for child threads to terminate..." and then nothing.
+        self.log('Bus EXITED')
     
     def restart(self):
         """Restart the process (may close connections).

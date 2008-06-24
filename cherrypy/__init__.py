@@ -174,10 +174,7 @@ from cherrypy import process
 try:
     from cherrypy.process import win32
     engine = win32.Win32Bus()
-    _console_control_handler = win32.ConsoleCtrlHandler(engine)
-    # If you don't want a ConsoleControlHandler,
-    # unsubscribe this before calling engine.start().
-    _console_control_handler.subscribe()
+    engine.console_control_handler = win32.ConsoleCtrlHandler(engine)
     del win32
 except ImportError:
     engine = process.bus
@@ -203,16 +200,17 @@ class _TimeoutMonitor(process.plugins.Monitor):
         """Check timeout on all responses. (Internal)"""
         for req, resp in self.servings:
             resp.check_timeout()
-timeout_monitor = _TimeoutMonitor(engine)
-timeout_monitor.subscribe()
+engine.timeout_monitor = _TimeoutMonitor(engine)
+engine.timeout_monitor.subscribe()
 
-# Add an autoreloader (the 'engine' config namespace may detach/attach it).
 engine.autoreload = process.plugins.Autoreloader(engine)
 engine.autoreload.subscribe()
 
-process.plugins.ThreadManager(engine).subscribe()
+engine.thread_manager = process.plugins.ThreadManager(engine)
+engine.thread_manager.subscribe()
 
-signal_handler = process.plugins.SignalHandler(engine)
+engine.signal_handler = process.plugins.SignalHandler(engine)
+
 
 from cherrypy import _cpserver
 server = _cpserver.Server()
@@ -242,7 +240,11 @@ def quickstart(root=None, script_name="", config=None):
     if root is not None:
         tree.mount(root, script_name, config)
     
-    signal_handler.subscribe()
+    if hasattr(engine, "signal_handler"):
+        engine.signal_handler.subscribe()
+    if hasattr(engine, "console_control_handler"):
+        engine.console_control_handler.subscribe()
+    
     engine.start()
     engine.block()
 

@@ -21,15 +21,6 @@ def setup_server():
     cherrypy.config.update({'environment': 'production',
                             'log.screen': False,
                             'show_tracebacks': False})
-    
-    # Turn off the builtin signal handlers, which can interact
-    # in strange ways with the Apache process.
-    cherrypy.engine.SIGHUP = None
-    cherrypy.engine.SIGTERM = None
-    
-    # You must start the engine in a non-blocking fashion
-    # so that mod_python can proceed
-    cherrypy.engine.start()
 
 ##########################################
 # mod_python settings for apache2
@@ -97,9 +88,12 @@ def setup(req):
                             "tools.ignore_headers.headers": ['Range'],
                             })
     
-    if hasattr(cherrypy, '_console_control_handler'):
-        cherrypy._console_control_handler.unsubscribe()
-    cherrypy.engine.autoreload.unsubscribe()
+    engine = cherrypy.engine
+    if hasattr(engine, "signal_handler"):
+        engine.signal_handler.unsubscribe()
+    if hasattr(engine, "console_control_handler"):
+        engine.console_control_handler.unsubscribe()
+    engine.autoreload.unsubscribe()
     cherrypy.server.unsubscribe()
     
     def _log(msg, level):
@@ -114,12 +108,12 @@ def setup(req):
         # http://www.modpython.org/pipermail/mod_python/2003-October/014291.html.
         # Also, "When server is not specified...LogLevel does not apply..."
         apache.log_error(msg, newlevel, req.server)
-    cherrypy.engine.subscribe('log', _log)
+    engine.subscribe('log', _log)
     
-    cherrypy.engine.start()
+    engine.start()
     
     def cherrypy_cleanup(data):
-        cherrypy.engine.exit()
+        engine.exit()
     try:
         # apache.register_cleanup wasn't available until 3.1.4.
         apache.register_cleanup(cherrypy_cleanup)

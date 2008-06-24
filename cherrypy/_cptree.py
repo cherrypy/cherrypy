@@ -108,7 +108,7 @@ class Application(object):
         
         resp = self.response_class()
         cherrypy.serving.load(req, resp)
-        cherrypy.timeout_monitor.acquire()
+        cherrypy.engine.timeout_monitor.acquire()
         cherrypy.engine.publish('acquire_thread')
         
         return req, resp
@@ -117,7 +117,7 @@ class Application(object):
         """Release the current serving (request and response)."""
         req = cherrypy.serving.request
         
-        cherrypy.timeout_monitor.release()
+        cherrypy.engine.timeout_monitor.release()
         
         try:
             req.close()

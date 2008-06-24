@@ -229,14 +229,14 @@ class ServerStateTests(helper.CPWebCase):
         engine.start()
         cherrypy.server.start()
         try:
-            self.assertNotEqual(cherrypy.timeout_monitor.thread, None)
+            self.assertNotEqual(engine.timeout_monitor.thread, None)
             
             # Request a "normal" page.
-            self.assertEqual(cherrypy.timeout_monitor.servings, [])
+            self.assertEqual(engine.timeout_monitor.servings, [])
             self.getPage("/")
             self.assertBody("Hello World")
             # request.close is called async.
-            while cherrypy.timeout_monitor.servings:
+            while engine.timeout_monitor.servings:
                 print ".",
                 time.sleep(0.01)
             

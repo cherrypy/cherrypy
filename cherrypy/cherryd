@@ -25,7 +25,10 @@ def start(configfiles=None, daemonize=False, environment=None,
     if pidfile:
         plugins.PIDFile(engine, pidfile).subscribe()
     
-    cherrypy.signal_handler.subscribe()
+    if hasattr(engine, "signal_handler"):
+        engine.signal_handler.subscribe()
+    if hasattr(engine, "console_control_handler"):
+        engine.console_control_handler.subscribe()
     
     if fastcgi:
         # turn off autoreload when using fastcgi

@@ -360,9 +360,9 @@ class Monitor(SimplePlugin):
                 self.thread = PerpetualTimer(self.frequency, self.callback)
                 self.thread.setName(threadname)
                 self.thread.start()
-                self.bus.log("Started thread %r." % threadname)
+                self.bus.log("Started monitor thread %r." % threadname)
             else:
-                self.bus.log("Thread %r already started." % threadname)
+                self.bus.log("Monitor thread %r already started." % threadname)
     start.priority = 70
     
     def stop(self):

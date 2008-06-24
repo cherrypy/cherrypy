@@ -109,15 +109,19 @@ def run_test_suite(moduleNames, server, conf):
     """
     cherrypy.config.reset()
     setConfig(conf)
-    cherrypy.signal_handler.subscribe()
+    engine = cherrypy.engine
+    if hasattr(engine, "signal_handler"):
+        engine.signal_handler.subscribe()
+    if hasattr(engine, "console_control_handler"):
+        engine.console_control_handler.subscribe()
     # The Pybots automatic testing system needs the suite to exit
     # with a non-zero value if there were any problems.
     # Might as well stick it in the engine... :/
-    cherrypy.engine.test_success = True
-    cherrypy.engine.start_with_callback(_run_test_suite_thread,
-                                        args=(moduleNames, conf))
-    cherrypy.engine.block()
-    if cherrypy.engine.test_success:
+    engine.test_success = True
+    engine.start_with_callback(_run_test_suite_thread,
+                               args=(moduleNames, conf))
+    engine.block()
+    if engine.test_success:
         return 0
     else:
         return 1
