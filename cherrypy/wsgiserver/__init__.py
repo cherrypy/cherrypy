@@ -397,6 +397,11 @@ class HTTPRequest(object):
             self.simple_response("400 Bad Request", repr(ex.args))
             return
         
+        mrbs = self.max_request_body_size
+        if mrbs and int(environ.get("CONTENT_LENGTH", 0)) > mrbs:
+            self.simple_response("413 Request Entity Too Large")
+            return
+        
         # Set AUTH_TYPE, REMOTE_USER
         creds = environ.get("HTTP_AUTHORIZATION", "").split(" ", 1)
         environ["AUTH_TYPE"] = creds[0]

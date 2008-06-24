@@ -546,6 +546,22 @@ class ConnectionTests(helper.CPWebCase):
         self.assertBody("")
         conn.close()
     
+    def test_Content_Length(self):
+        # Try a non-chunked request where Content-Length exceeds
+        # server.max_request_body_size. Assert error before body send.
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("POST", "/upload", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.putheader("Content-Type", "text/plain")
+        conn.putheader("Content-Length", 9999)
+        conn.endheaders()
+        response = conn.getresponse()
+        self.status, self.headers, self.body = webtest.shb(response)
+        self.assertStatus(413)
+        self.assertBody("")
+        conn.close()
+    
     def test_HTTP10(self):
         self.PROTOCOL = "HTTP/1.0"
         if self.scheme == "https":
