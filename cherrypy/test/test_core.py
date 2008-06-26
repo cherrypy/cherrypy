@@ -5,6 +5,7 @@ test.prefer_parent_path()
 
 import os
 localDir = os.path.dirname(__file__)
+import sys
 import types
 
 import cherrypy
@@ -414,6 +415,10 @@ def setup_server():
             existing = repr(getattr(cherrypy.request, "asdf", None))
             cherrypy.request.asdf = "rassfrassin"
             return existing
+    
+    if sys.version_info >= (2, 5):
+        from cherrypy.test import py25
+        Root.expose_dec = py25.ExposeExamples()
     
     cherrypy.config.update({
         'environment': 'test_suite',
@@ -1071,6 +1076,47 @@ Content-Type: text/plain
         self.assertBody('/page1')
         self.getPage('/url/?path_info=/page1&relative=server')
         self.assertBody('/page1')
+    
+    def test_expose_decorator(self):
+        if not sys.version_info >= (2, 5):
+            print "skipped (Python 2.5+ only)",
+            return
+        
+        # Test @expose
+        self.getPage("/expose_dec/no_call")
+        self.assertStatus(200)
+        self.assertBody("Mr E. R. Bradshaw")
+        
+        # Test @expose()
+        self.getPage("/expose_dec/call_empty")
+        self.assertStatus(200)
+        self.assertBody("Mrs. B.J. Smegma")
+        
+        # Test @expose("alias")
+        self.getPage("/expose_dec/call_alias")
+        self.assertStatus(200)
+        self.assertBody("Mr Nesbitt")
+        # Does the original name work?
+        self.getPage("/expose_dec/nesbitt")
+        self.assertStatus(200)
+        self.assertBody("Mr Nesbitt")
+        
+        # Test @expose(["alias1", "alias2"])
+        self.getPage("/expose_dec/alias1")
+        self.assertStatus(200)
+        self.assertBody("Mr Ken Andrews")
+        self.getPage("/expose_dec/alias2")
+        self.assertStatus(200)
+        self.assertBody("Mr Ken Andrews")
+        # Does the original name work?
+        self.getPage("/expose_dec/andrews")
+        self.assertStatus(200)
+        self.assertBody("Mr Ken Andrews")
+        
+        # Test @expose(alias="alias")
+        self.getPage("/expose_dec/alias3")
+        self.assertStatus(200)
+        self.assertBody("Mr. and Mrs. Watson")
 
 
 if __name__ == '__main__':

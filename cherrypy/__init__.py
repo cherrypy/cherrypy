@@ -403,7 +403,6 @@ engine.subscribe('log', _buslog)
 
 def expose(func=None, alias=None):
     """Expose the function, optionally providing an alias or set of aliases."""
-    
     def expose_(func):
         func.exposed = True
         if alias is not None:
@@ -416,18 +415,31 @@ def expose(func=None, alias=None):
     
     import sys, types
     if isinstance(func, (types.FunctionType, types.MethodType)):
-        # expose is being called directly, before the method has been bound
-        parents = sys._getframe(1).f_locals
-        return expose_(func)
-    else:
         if alias is None:
-            # expose is being called as a decorator "@expose"
+            # @expose
             func.exposed = True
             return func
         else:
-            # expose is returning a decorator "@expose(alias=...)"
+            # func = expose(func, alias)
+            parents = sys._getframe(1).f_locals
+            return expose_(func)
+    elif func is None:
+        if alias is None:
+            # @expose()
             parents = sys._getframe(1).f_locals
             return expose_
+        else:
+            # @expose(alias="alias") or
+            # @expose(alias=["alias1", "alias2"])
+            parents = sys._getframe(1).f_locals
+            return expose_
+    else:
+        # @expose("alias") or
+        # @expose(["alias1", "alias2"])
+        parents = sys._getframe(1).f_locals
+        alias = func
+        return expose_
+
 
 def url(path="", qs="", script_name=None, base=None, relative=None):
     """Create an absolute URL for the given path.
