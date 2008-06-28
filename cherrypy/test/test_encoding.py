@@ -74,7 +74,7 @@ class EncodingTests(helper.CPWebCase):
         
         # Make sure that encoded utf8 gets parsed correctly
         self.getPage("/reqparams?q=%C2%A3")
-        self.assertBody(r"{'q': '\xc2\xa3'}")
+        self.assertBody(r"{'q': u'\xa3'}")
     
     def testEncoding(self):
         # Default encoding should be utf-8
