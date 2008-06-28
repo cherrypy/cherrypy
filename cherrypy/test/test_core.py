@@ -949,7 +949,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody(data)
     
     def testCookies(self):
-        import sys
         if sys.version_info >= (2, 5):
             self.getPage("/cookies/single?name=First",
                          [('Cookie', 'First=Dinsdale;')])

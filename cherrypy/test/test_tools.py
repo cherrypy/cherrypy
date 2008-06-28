@@ -1,6 +1,8 @@
 """Test the various means of instantiating and invoking tools."""
 
-import gzip, StringIO
+import gzip
+import StringIO
+import sys
 import time
 timeout = 0.2
 
@@ -229,6 +231,10 @@ def setup_server():
     app = cherrypy.tree.mount(root, config=conf)
     app.request_class.namespaces['myauth'] = myauthtools
 
+    if sys.version_info >= (2, 5):
+        from cherrypy.test import py25
+        root.tooldecs = py25.ToolExamples()
+
 
 #                             Client-side code                             #
 
@@ -362,6 +368,14 @@ class ToolTests(helper.CPWebCase):
     def testHandlerWrapperTool(self):
         self.getPage("/tarfile")
         self.assertBody("I am a tarfile")
+    
+    def testToolWithConfig(self):
+        if not sys.version_info >= (2, 5):
+            print "skipped (Python 2.5+ only)",
+            return
+        
+        self.getPage('/tooldecs/blah')
+        self.assertHeader('Content-Type', 'application/data')
 
 
 if __name__ == '__main__':
