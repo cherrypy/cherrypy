@@ -70,8 +70,8 @@ class Server(ServerAdapter):
         if httpserver is None:
             httpserver = self.instance
         if httpserver is None:
-            from cherrypy import _cpwsgi
-            httpserver = _cpwsgi.CPWSGIServer()
+            from cherrypy import _cpwsgi_server
+            httpserver = _cpwsgi_server.CPWSGIServer()
         if isinstance(httpserver, basestring):
             httpserver = attributes(httpserver)()
         

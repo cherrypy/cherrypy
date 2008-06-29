@@ -716,9 +716,12 @@ class Request(object):
                                           # FieldStorage only recognizes POST.
                                           environ={'REQUEST_METHOD': "POST"},
                                           keep_blank_values=1)
-        except http.MaxSizeExceeded:
-            # Post data is too big
-            raise cherrypy.HTTPError(413)
+        except Exception, e:
+            if e.__class__.__name__ == 'MaxSizeExceeded':
+                # Post data is too big
+                raise cherrypy.HTTPError(413)
+            else:
+                raise
         
         # Note that, if headers['Content-Type'] is multipart/*,
         # then forms.file will not exist; instead, each form[key]
