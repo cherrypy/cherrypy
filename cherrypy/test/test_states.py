@@ -15,6 +15,82 @@ thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 PID_file_path = os.path.join(thisdir, 'pid_for_test_daemonize')
 
 
+def write_conf(scheme='http', starterror=False):
+    if scheme.lower() == 'https':
+        serverpem = os.path.join(thisdir, 'test.pem')
+        ssl = """
+server.ssl_certificate: r'%s'
+server.ssl_private_key: r'%s'
+""" % (serverpem, serverpem)
+    else:
+        ssl = ""
+    
+    if starterror:
+        starterror = "starterror: True"
+    else:
+        starterror = ""
+    
+    conffile = open(os.path.join(thisdir, 'test_states.conf'), 'wb')
+    conffile.write("""[global]
+server.socket_host: '%(host)s'
+server.socket_port: %(port)s
+log.screen: False
+log.error_file: r'%(error_log)s'
+log.access_file: r'%(access_log)s'
+%(ssl)s
+%(starterror)s
+""" % {'host': host,
+       'port': port,
+       'error_log': os.path.join(thisdir, 'test_states_demo.error.log'),
+       'access_log': os.path.join(thisdir, 'test_states_demo.access.log'),
+       'ssl': ssl,
+       'starterror': starterror,
+       })
+    conffile.close()
+
+
+def spawn_cp(configfile=os.path.join(thisdir, 'test_states.conf'),
+             wait=False, daemonize=False):
+    """Start cherryd in a subprocess."""
+    host = cherrypy.server.socket_host
+    port = cherrypy.server.socket_port
+    cherrypy._cpserver.wait_for_free_port(host, port)
+    
+    args = [sys.executable, os.path.join(thisdir, '..', 'cherryd'),
+            '-c', configfile, '-i', 'cherrypy.test.test_states_demo']
+    
+    if sys.platform != 'win32':
+        args.append('-p')
+        args.append(PID_file_path)
+    
+    # Spawn the process and wait, when this returns, the original process
+    # is finished.  If it daemonized properly, we should still be able
+    # to access pages.
+    if daemonize:
+        args.append('-d')
+    
+    if wait:
+        result = os.spawnl(os.P_WAIT, sys.executable, *args)
+    else:
+        result = os.spawnl(os.P_NOWAIT, sys.executable, *args)
+        cherrypy._cpserver.wait_for_occupied_port(host, port)
+    
+    return result
+
+def wait(pid):
+    """Wait for the process with the given pid to exit."""
+    try:
+        try:
+            # Mac, UNIX
+            os.wait()
+        except AttributeError:
+            # Windows
+            os.waitpid(pid, 0)
+    except OSError, x:
+        if x.args != (10, 'No child processes'):
+            raise
+
+
 class Root:
     def index(self):
         return "Hello World"
@@ -260,18 +336,8 @@ class ServerStateTests(helper.CPWebCase):
             return
         
         # Start the demo script in a new process
-        demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
-                                  "test_states_demo.py")
-        host = cherrypy.server.socket_host
-        port = cherrypy.server.socket_port
-        cherrypy._cpserver.wait_for_free_port(host, port)
-        
-        args = [sys.executable, demoscript, host, str(port)]
-        if self.scheme == "https":
-            args.append('-ssl')
-        pid = os.spawnl(os.P_NOWAIT, sys.executable, *args)
-        cherrypy._cpserver.wait_for_occupied_port(host, port)
-        
+        write_conf(scheme=self.scheme)
+        pid = spawn_cp()
         try:
             self.getPage("/start")
             start = float(self.body)
@@ -280,7 +346,7 @@ class ServerStateTests(helper.CPWebCase):
             time.sleep(2)
             
             # Touch the file
-            os.utime(demoscript, None)
+            os.utime(os.path.join(thisdir, "test_states_demo.py"), None)
             
             # Give the autoreloader time to re-exec the process
             time.sleep(2)
@@ -294,42 +360,24 @@ class ServerStateTests(helper.CPWebCase):
         finally:
             # Shut down the spawned process
             self.getPage("/exit")
-        
-        try:
-            try:
-                # Mac, UNIX
-                print os.wait()
-            except AttributeError:
-                # Windows
-                print os.waitpid(pid, 0)
-        except OSError, x:
-            if x.args != (10, 'No child processes'):
-                raise
+        wait(pid)
     
     def test_5_Start_Error(self):
         if not self.server_class:
             print "skipped (no server) ",
             return
         
-        # Start the demo script in a new process
-        demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
-                                  "test_states_demo.py")
-        host = cherrypy.server.socket_host
-        port = cherrypy.server.socket_port
-        
         # If a process errors during start, it should stop the engine
         # and exit with a non-zero exit code.
-        args = [sys.executable, demoscript, host, str(port), '-starterror']
-        if self.scheme == "https":
-            args.append('-ssl')
-        exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
+        write_conf(scheme=self.scheme, starterror=True)
+        exit_code = spawn_cp(wait=True)
         if exit_code == 0:
             self.fail("Process failed to return nonzero exit code.")
 
 
 class DaemonizeTests(helper.CPWebCase):
     
-    def test_1_Daemonize(self):
+    def test_daemonize(self):
         if not self.server_class:
             print "skipped (no server) ",
             return
@@ -338,20 +386,11 @@ class DaemonizeTests(helper.CPWebCase):
             return
         
         # Start the demo script in a new process
-        demoscript = os.path.join(os.getcwd(), os.path.dirname(__file__),
-                                  "test_states_demo.py")
-        host = cherrypy.server.socket_host
-        port = cherrypy.server.socket_port
-        cherrypy._cpserver.wait_for_free_port(host, port)
-        
-        args = [sys.executable, demoscript, host, str(port), '-daemonize']
-        if self.scheme == "https":
-            args.append('-ssl')
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
-        exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
-        cherrypy._cpserver.wait_for_occupied_port(host, port)
+        write_conf(scheme=self.scheme)
+        exit_code = spawn_cp(wait=True, daemonize=True)
         
         # Give the server some time to start up
         time.sleep(2)
@@ -367,17 +406,12 @@ class DaemonizeTests(helper.CPWebCase):
         finally:
             # Shut down the spawned process
             self.getPage("/exit")
-        
-        try:
-            print os.waitpid(pid, 0)
-        except OSError, x:
-            if x.args != (10, 'No child processes'):
-                raise
+        wait(pid)
         
         # Wait until here to test the exit code because we want to ensure
         # that we wait for the daemon to finish running before we fail.
         if exit_code != 0:
-            self.fail("Daemonized process failed to exit cleanly")
+            self.fail("Daemonized parent process failed to exit cleanly.")
 
 
 def run(server, conf):

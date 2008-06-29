@@ -4,9 +4,6 @@ import time
 starttime = time.time()
 
 import cherrypy
-from cherrypy.process import plugins
-thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-PID_file_path = os.path.join(thisdir, 'pid_for_test_daemonize')
 
 
 class Root:
@@ -36,47 +33,9 @@ class Root:
         cherrypy.engine.exit()
     exit.exposed = True
 
+def starterror():
+    if cherrypy.config.get('starterror', False):
+        zerodiv = 1 / 0
+cherrypy.engine.subscribe('start', starterror, priority=6)
 
-if __name__ == '__main__':
-    conf = {"server.socket_host": sys.argv[1],
-            "server.socket_port": int(sys.argv[2]),
-            "log.screen": False,
-            "log.error_file": os.path.join(thisdir, 'test_states_demo.error.log'),
-            "log.access_file": os.path.join(thisdir, 'test_states_demo.access.log'),
-            }
-    
-    if '-ssl' in sys.argv[3:]:
-        localDir = os.path.dirname(__file__)
-        serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
-        conf['server.ssl_certificate'] = serverpem
-        conf['server.ssl_private_key'] = serverpem
-    
-    if '-daemonize' in sys.argv[3:]:
-        # Sometimes an exception happens during exit;
-        # try to make sure we get a non_zero exit code.
-        old_exitfunc = sys.exitfunc
-        def exitfunc():
-            try:
-                old_exitfunc()
-            except SystemExit:
-                raise
-            except:
-                raise SystemExit(1)
-        sys.exitfunc = exitfunc
-        
-        plugins.Daemonizer(cherrypy.engine).subscribe()
-        plugins.PIDFile(cherrypy.engine, PID_file_path).subscribe()
-    
-    if '-starterror' in sys.argv[3:]:
-        cherrypy.engine.subscribe('start', lambda: 1/0, priority=6)
-    
-    # This is in a special order for a reason:
-    # it allows test_states to wait_for_occupied_port
-    # and then immediately call getPage without getting 503.
-    cherrypy.config.update(conf)
-    cherrypy.tree.mount(Root(), config={'global': conf})
-    try:
-        cherrypy.engine.start()
-    except ZeroDivisionError:
-        sys.exit(1)
-    cherrypy.engine.block()
+cherrypy.tree.mount(Root(), '/', {'/': {}})
