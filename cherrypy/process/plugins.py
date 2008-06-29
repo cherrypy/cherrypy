@@ -56,7 +56,7 @@ class SignalHandler(object):
         self.bus = bus
         # Set default handlers
         self.handlers = {'SIGTERM': self.bus.exit,
-                         'SIGHUP': self.bus.restart,
+                         'SIGHUP': self.handle_SIGHUP,
                          'SIGUSR1': self.bus.graceful,
                          }
     
@@ -100,7 +100,15 @@ class SignalHandler(object):
         signame = self.signals[signum]
         self.bus.log("Caught signal %s." % signame)
         self.bus.publish(signame)
-
+    
+    def handle_SIGHUP(self):
+        if os.isatty(sys.stdin.fileno()):
+            # not daemonized (may be foreground or background)
+            self.bus.log("SIGHUP caught but not daemonized. Exiting.")
+            self.bus.exit()
+        else:
+            self.bus.log("SIGHUP caught while daemonized. Restarting.")
+            self.bus.restart()
 
 
 try:

@@ -375,7 +375,7 @@ class ServerStateTests(helper.CPWebCase):
             self.fail("Process failed to return nonzero exit code.")
 
 
-class DaemonizeTests(helper.CPWebCase):
+class PluginTests(helper.CPWebCase):
     
     def test_daemonize(self):
         if not self.server_class:
@@ -385,7 +385,6 @@ class DaemonizeTests(helper.CPWebCase):
             print "skipped (not on posix) ",
             return
         
-        # Start the demo script in a new process
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
@@ -414,25 +413,93 @@ class DaemonizeTests(helper.CPWebCase):
             self.fail("Daemonized parent process failed to exit cleanly.")
 
 
+class SignalHandlingTests(helper.CPWebCase):
+    
+    def test_SIGHUP_tty(self):
+        # When not daemonized, SIGHUP should shut down the server.
+        if not self.server_class:
+            print "skipped (no server) ",
+            return
+        
+        try:
+            from signal import SIGHUP
+        except ImportError:
+            print "skipped (no SIGHUP) ",
+            return
+        
+        # Spawn the process.
+        write_conf(scheme=self.scheme)
+        pid = spawn_cp(wait=False, daemonize=False)
+        # Send a SIGHUP
+        os.kill(pid, signal.SIGHUP)
+        # This might hang if things aren't working right, but meh.
+        wait(pid)
+    
+    def test_SIGHUP_daemonized(self):
+        # When daemonized, SIGHUP should restart the server.
+        if not self.server_class:
+            print "skipped (no server) ",
+            return
+        
+        try:
+            from signal import SIGHUP
+        except ImportError:
+            print "skipped (no SIGHUP) ",
+            return
+        
+        if os.name not in ['posix']: 
+            print "skipped (not on posix) ",
+            return
+        
+        # Spawn the process and wait, when this returns, the original process
+        # is finished.  If it daemonized properly, we should still be able
+        # to access pages.
+        write_conf(scheme=self.scheme)
+        exit_code = spawn_cp(wait=True, daemonize=True)
+        
+        # Give the server some time to start up
+        time.sleep(2)
+        
+        # Get the PID from the file.
+        pid = int(open(PID_file_path).read())
+        try:
+            # Send a SIGHUP
+            os.kill(pid, signal.SIGHUP)
+            # Give the server some time to restart
+            time.sleep(2)
+            self.getPage("/pid")
+            self.assertStatus(200)
+            new_pid = int(self.body)
+            self.assertNotEqual(new_pid, pid)
+        finally:
+            # Shut down the spawned process
+            self.getPage("/exit")
+        wait(new_pid)
+
+
+
+cases = [v for v in globals().values()
+         if isinstance(v, type) and issubclass(v, helper.CPWebCase)]
+
 def run(server, conf):
     helper.setConfig(conf)
-    ServerStateTests.server_class = server
-    DaemonizeTests.server_class = server
-    suite = helper.CPTestLoader.loadTestsFromTestCase(ServerStateTests)
-    daemon_suite = helper.CPTestLoader.loadTestsFromTestCase(DaemonizeTests)
+    for tc in cases:
+        tc.server_class = server
+    suites = [helper.CPTestLoader.loadTestsFromTestCase(tc) for tc in
+              (ServerStateTests, PluginTests, SignalHandlingTests)]
     try:
         try:
             import pyconquer
         except ImportError:
-            helper.CPTestRunner.run(suite)
-            helper.CPTestRunner.run(daemon_suite)
+            for suite in suites:
+                helper.CPTestRunner.run(suite)
         else:
             tr = pyconquer.Logger("cherrypy")
             tr.out = open(os.path.join(os.path.dirname(__file__), "test_states_conquer.log"), "wb")
             try:
                 tr.start()
-                helper.CPTestRunner.run(suite)
-                helper.CPTestRunner.run(daemon_suite)
+                for suite in suites:
+                    helper.CPTestRunner.run(suite)
             finally:
                 tr.stop()
                 tr.out.close()
@@ -448,18 +515,21 @@ def run_all(host, port, ssl=False):
             }
     
     if host:
-        DaemonizeTests.HOST = ServerStateTests.HOST = host
+        for tc in cases:
+            tc.HOST = host
     
     if port:
-        DaemonizeTests.PORT = ServerStateTests.PORT = port
+        for tc in cases:
+            tc.PORT = port
     
     if ssl:
         localDir = os.path.dirname(__file__)
         serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
         conf['server.ssl_certificate'] = serverpem
         conf['server.ssl_private_key'] = serverpem
-        DaemonizeTests.scheme = ServerStateTests.scheme = "https"
-        DaemonizeTests.HTTP_CONN = ServerStateTests.HTTP_CONN = httplib.HTTPSConnection
+        for tc in cases:
+            tc.scheme = "https"
+            tc.HTTP_CONN = httplib.HTTPSConnection
     
     def _run(server):
         print
