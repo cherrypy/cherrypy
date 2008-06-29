@@ -59,6 +59,8 @@ class SignalHandler(object):
                          'SIGHUP': self.handle_SIGHUP,
                          'SIGUSR1': self.bus.graceful,
                          }
+        
+        self._previous_handlers = {}
     
     def subscribe(self):
         for sig, func in self.handlers.iteritems():
@@ -66,6 +68,22 @@ class SignalHandler(object):
                 self.set_handler(sig, func)
             except ValueError:
                 pass
+    
+    def unsubscribe(self):
+        for sig, handler in self._previous_handlers.iteritems():
+            signame = self.signals[sig]
+            
+            if handler is None:
+                self.bus.log("Restoring %s handler to SIG_DFL." % signame)
+                handler = _signal.SIG_DFL
+            else:
+                self.bus.log("Restoring %s handler %r." % (signame, handler))
+            
+            try:
+                _signal.signal(sig, handler)
+            except ValueError:
+                self.bus.log("Unable to restore %s handler %r." %
+                             (signame, handler))
     
     def set_handler(self, signal, listener=None):
         """Subscribe a handler for the given signal (number or name).
@@ -88,9 +106,9 @@ class SignalHandler(object):
                 raise ValueError("No such signal: %r" % signal)
             signum = signal
         
-        # Should we do something with existing signal handlers?
-        # cur = _signal.getsignal(signum)
-        _signal.signal(signum, self._handle_signal)
+        prev = _signal.signal(signum, self._handle_signal)
+        self._previous_handlers[signum] = prev
+        
         if listener is not None:
             self.bus.log("Listening for %s." % signame)
             self.bus.subscribe(signame, listener)

@@ -75,6 +75,12 @@ def spawn_cp(configfile=os.path.join(thisdir, 'test_states.conf'),
         result = os.spawnl(os.P_NOWAIT, sys.executable, *args)
         cherrypy._cpserver.wait_for_occupied_port(host, port)
     
+    # Give the engine a wee bit more time to finish STARTING
+    if daemonize:
+        time.sleep(2)
+    else:
+        time.sleep(1)
+    
     return result
 
 def wait(pid):
@@ -158,6 +164,10 @@ class Dependency:
 
 db_connection = Dependency(engine)
 db_connection.subscribe()
+
+
+
+# ------------ Enough helpers. Time for real live test cases. ------------ #
 
 
 from cherrypy.test import helper
@@ -391,9 +401,6 @@ class PluginTests(helper.CPWebCase):
         write_conf(scheme=self.scheme)
         exit_code = spawn_cp(wait=True, daemonize=True)
         
-        # Give the server some time to start up
-        time.sleep(2)
-        
         # Get the PID from the file.
         pid = int(open(PID_file_path).read())
         try:
@@ -430,8 +437,6 @@ class SignalHandlingTests(helper.CPWebCase):
         # Spawn the process.
         write_conf(scheme=self.scheme)
         pid = spawn_cp(wait=False, daemonize=False)
-        # Give the engine a wee bit more time to finish STARTING
-        time.sleep(1)
         # Send a SIGHUP
         os.kill(pid, SIGHUP)
         # This might hang if things aren't working right, but meh.
@@ -459,9 +464,6 @@ class SignalHandlingTests(helper.CPWebCase):
         write_conf(scheme=self.scheme)
         exit_code = spawn_cp(wait=True, daemonize=True)
         
-        # Give the server some time to start up
-        time.sleep(2)
-        
         # Get the PID from the file.
         pid = int(open(PID_file_path).read())
         try:
@@ -477,7 +479,70 @@ class SignalHandlingTests(helper.CPWebCase):
             # Shut down the spawned process
             self.getPage("/exit")
         wait(new_pid)
-
+    
+    def test_SIGTERM(self):
+        # SIGTERM should shut down the server whether daemonized or not.
+        if not self.server_class:
+            print "skipped (no server) ",
+            return
+        
+        try:
+            from signal import SIGTERM
+        except ImportError:
+            print "skipped (no SIGTERM) ",
+            return
+        
+        try:
+            from os import kill
+        except ImportError:
+            print "skipped (no os.kill) ",
+            return
+        
+        # Spawn a normal, undaemonized process.
+        write_conf(scheme=self.scheme)
+        pid = spawn_cp(wait=False, daemonize=False)
+        # Send a SIGTERM
+        os.kill(pid, SIGTERM)
+        # This might hang if things aren't working right, but meh.
+        wait(pid)
+        
+        if os.name in ['posix']: 
+            # Spawn a daemonized process and test again.
+            exit_code = spawn_cp(wait=True, daemonize=True)
+            # Send a SIGTERM
+            pid = int(open(PID_file_path).read())
+            os.kill(pid, SIGTERM)
+            # This might hang if things aren't working right, but meh.
+            wait(pid)
+    
+    def test_signal_handler_unsubscribe(self):
+        if not self.server_class:
+            print "skipped (no server) ",
+            return
+        
+        try:
+            from signal import SIGTERM
+        except ImportError:
+            print "skipped (no SIGTERM) ",
+            return
+        
+        try:
+            from os import kill
+        except ImportError:
+            print "skipped (no os.kill) ",
+            return
+        
+        # Spawn a normal, undaemonized process.
+        write_conf(scheme=self.scheme)
+        pid = spawn_cp(wait=False, daemonize=False)
+        self.getPage("/unsub_sig")
+        self.assertBody("OK")
+        os.kill(pid, SIGTERM)
+        wait(pid)
+        # Assert the old handler ran.
+        errlog = os.path.join(thisdir, 'test_states_demo.error.log')
+        self.assertEqual(open(errlog, 'rb').readlines()[-1],
+                         "I am an old SIGTERM handler.")
 
 
 cases = [v for v in globals().values()
