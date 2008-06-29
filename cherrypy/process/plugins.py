@@ -70,8 +70,8 @@ class SignalHandler(object):
                 pass
     
     def unsubscribe(self):
-        for sig, handler in self._previous_handlers.iteritems():
-            signame = self.signals[sig]
+        for signum, handler in self._previous_handlers.iteritems():
+            signame = self.signals[signum]
             
             if handler is None:
                 self.bus.log("Restoring %s handler to SIG_DFL." % signame)
@@ -80,10 +80,10 @@ class SignalHandler(object):
                 self.bus.log("Restoring %s handler %r." % (signame, handler))
             
             try:
-                _signal.signal(sig, handler)
+                _signal.signal(signum, handler)
             except ValueError:
                 self.bus.log("Unable to restore %s handler %r." %
-                             (signame, handler))
+                             (signame, handler), traceback=True)
     
     def set_handler(self, signal, listener=None):
         """Subscribe a handler for the given signal (number or name).
@@ -397,9 +397,10 @@ class Monitor(SimplePlugin):
             self.bus.log("No thread running for %s." % self.__class__.__name__)
         else:
             if self.thread is not threading.currentThread():
+                name = self.thread.getName()
                 self.thread.cancel()
                 self.thread.join()
-                self.bus.log("Stopped thread %r." % self.thread.getName())
+                self.bus.log("Stopped thread %r." % name)
             self.thread = None
     
     def graceful(self):

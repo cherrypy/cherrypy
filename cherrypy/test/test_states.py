@@ -15,7 +15,7 @@ thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 PID_file_path = os.path.join(thisdir, 'pid_for_test_daemonize')
 
 
-def write_conf(scheme='http', starterror=False):
+def write_conf(scheme='http', extra=""):
     if scheme.lower() == 'https':
         serverpem = os.path.join(thisdir, 'test.pem')
         ssl = """
@@ -25,11 +25,6 @@ server.ssl_private_key: r'%s'
     else:
         ssl = ""
     
-    if starterror:
-        starterror = "starterror: True"
-    else:
-        starterror = ""
-    
     conffile = open(os.path.join(thisdir, 'test_states.conf'), 'wb')
     conffile.write("""[global]
 server.socket_host: '%(host)s'
@@ -38,13 +33,13 @@ log.screen: False
 log.error_file: r'%(error_log)s'
 log.access_file: r'%(access_log)s'
 %(ssl)s
-%(starterror)s
+%(extra)s
 """ % {'host': host,
        'port': port,
        'error_log': os.path.join(thisdir, 'test_states_demo.error.log'),
        'access_log': os.path.join(thisdir, 'test_states_demo.access.log'),
        'ssl': ssl,
-       'starterror': starterror,
+       'extra': extra,
        })
     conffile.close()
 
@@ -379,7 +374,7 @@ class ServerStateTests(helper.CPWebCase):
         
         # If a process errors during start, it should stop the engine
         # and exit with a non-zero exit code.
-        write_conf(scheme=self.scheme, starterror=True)
+        write_conf(scheme=self.scheme, extra="starterror: True")
         exit_code = spawn_cp(wait=True)
         if exit_code == 0:
             self.fail("Process failed to return nonzero exit code.")
@@ -533,16 +528,15 @@ class SignalHandlingTests(helper.CPWebCase):
             return
         
         # Spawn a normal, undaemonized process.
-        write_conf(scheme=self.scheme)
+        write_conf(scheme=self.scheme, extra="unsubsig: True")
         pid = spawn_cp(wait=False, daemonize=False)
-        self.getPage("/unsub_sig")
-        self.assertBody("OK")
         os.kill(pid, SIGTERM)
         wait(pid)
         # Assert the old handler ran.
         errlog = os.path.join(thisdir, 'test_states_demo.error.log')
-        self.assertEqual(open(errlog, 'rb').readlines()[-1],
-                         "I am an old SIGTERM handler.")
+        target_line = open(errlog, 'rb').readlines()[-10]
+        if not "I am an old SIGTERM handler." in target_line:
+            self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
 
 
 cases = [v for v in globals().values()

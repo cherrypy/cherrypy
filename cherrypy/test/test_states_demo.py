@@ -33,24 +33,26 @@ class Root:
         cherrypy.engine.exit()
     exit.exposed = True
     
-    def unsub_sig(self):
-        cherrypy.engine.signal_handler.unsubscribe()
-        return "OK"
-    unsub_sig.exposed = True
-
 try:
-    from signal import SIGTERM
+    from signal import signal, SIGTERM
 except ImportError:
     pass
 else:
     def old_term_handler(signum=None, frame=None):
         cherrypy.log("I am an old SIGTERM handler.")
-    _signal.signal(SIGTERM, old_term_handler)
+        sys.exit(0)
+    signal(SIGTERM, old_term_handler)
+
+def unsub_sig():
+    if cherrypy.config.get('unsubsig', False):
+        cherrypy.engine.signal_handler.unsubscribe()
+cherrypy.engine.subscribe('start', unsub_sig, priority=100)
 
 
 def starterror():
     if cherrypy.config.get('starterror', False):
         zerodiv = 1 / 0
 cherrypy.engine.subscribe('start', starterror, priority=6)
+
 
 cherrypy.tree.mount(Root(), '/', {'/': {}})
