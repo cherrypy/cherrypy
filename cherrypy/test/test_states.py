@@ -430,8 +430,10 @@ class SignalHandlingTests(helper.CPWebCase):
         # Spawn the process.
         write_conf(scheme=self.scheme)
         pid = spawn_cp(wait=False, daemonize=False)
+        # Give the engine a wee bit more time to finish STARTING
+        time.sleep(1)
         # Send a SIGHUP
-        os.kill(pid, signal.SIGHUP)
+        os.kill(pid, SIGHUP)
         # This might hang if things aren't working right, but meh.
         wait(pid)
     
@@ -464,7 +466,7 @@ class SignalHandlingTests(helper.CPWebCase):
         pid = int(open(PID_file_path).read())
         try:
             # Send a SIGHUP
-            os.kill(pid, signal.SIGHUP)
+            os.kill(pid, SIGHUP)
             # Give the server some time to restart
             time.sleep(2)
             self.getPage("/pid")
