@@ -8,7 +8,7 @@ import urllib
 import socket
 import sys
 import time
-timeout = 0.1
+timeout = 1
 
 
 import cherrypy
@@ -224,7 +224,7 @@ class ConnectionTests(helper.CPWebCase):
         response.begin()
         self.assertEqual(response.status, 200)
         self.body = response.read()
-        self.assertBody("0.1")
+        self.assertBody(str(timeout))
         
         # Make a second request on the same socket
         conn._output('GET /hello HTTP/1.1')
@@ -237,7 +237,7 @@ class ConnectionTests(helper.CPWebCase):
         self.assertBody("Hello, world!")
         
         # Wait for our socket timeout
-        time.sleep(timeout * 10)
+        time.sleep(timeout * 2)
         
         # Make another request on the same socket, which should error
         conn._output('GET /hello HTTP/1.1')
@@ -252,9 +252,10 @@ class ConnectionTests(helper.CPWebCase):
                 self.fail("Writing to timed out socket didn't fail"
                           " as it should have: %s" % sys.exc_info()[1])
         else:
-            self.fail("Writing to timed out socket didn't fail"
-                      " as it should have: %s" %
-                      response.read())
+            if response.status != 408:
+                self.fail("Writing to timed out socket didn't fail"
+                          " as it should have: %s" %
+                          response.read())
         
         conn.close()
         
@@ -274,7 +275,7 @@ class ConnectionTests(helper.CPWebCase):
         # but timeout on the headers
         conn.send('GET /hello HTTP/1.1')
         # Wait for our socket timeout
-        time.sleep(timeout * 10)
+        time.sleep(timeout * 2)
         response = conn.response_class(conn.sock, method="GET")
         response.begin()
         self.assertEqual(response.status, 408)
@@ -585,15 +586,19 @@ class ConnectionTests(helper.CPWebCase):
     def test_598(self):
         remote_data_conn = urllib.urlopen('%s://%s:%s/one_megabyte_of_a/' %
                                           (self.scheme, self.HOST, self.PORT,))
-        received_data = remote_data_conn.read(512)
-        time.sleep(6.0)
-        remaining = 1024*1024 - 512
-        received_data = ' '
-        while remaining and received_data:
-            received_data = remote_data_conn.read(remaining)
-            remaining -= len(received_data)
+        buf = remote_data_conn.read(512)
+        time.sleep(timeout * 0.6)
+        remaining = (1024 * 1024) - 512
+        while remaining:
+            data = remote_data_conn.read(remaining)
+            if not data:
+                break
+            else:
+                buf += data
+            remaining -= len(data)
        
-        self.assertTrue(received_data)
+        self.assertEqual(len(buf), 1024 * 1024)
+        self.assertEqual(buf, "a" * 1024 * 1024)
         self.assertEqual(remaining, 0)
         remote_data_conn.close()
 

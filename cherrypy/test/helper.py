@@ -181,8 +181,8 @@ def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
     if '--server' in sys.argv:
         # Run the test module server-side only; wait for Ctrl-C to break.
-        if conf is None:
-            conf = {'server.socket_host': '0.0.0.0'}
+        conf = conf or {}
+        conf['server.socket_host'] = '0.0.0.0'
         setConfig(conf)
         cherrypy.engine.start()
         cherrypy.engine.block()
@@ -200,8 +200,8 @@ def testmain(conf=None):
                 break
         else:
             # Run normally (both server and client in same process).
-            if conf is None:
-                conf = {'server.socket_host': '127.0.0.1'}
+            conf = conf or {}
+            conf['server.socket_host'] = '127.0.0.1'
             setConfig(conf)
             cherrypy.engine.start_with_callback(_test_main_thread)
             cherrypy.engine.block()
