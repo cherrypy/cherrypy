@@ -88,14 +88,13 @@ class ReferenceTests(helper.CPWebCase):
         success = []
         
         def getpage():
-            host = '127.0.0.1:%s' % self.PORT
+            host = '%s:%s' % (self.HOST, self.PORT)
             if self.scheme == 'https':
                 c = httplib.HTTPSConnection(host)
             else:
                 c = httplib.HTTPConnection(host)
             try:
-                c.putrequest('GET', '/', skip_host=0)
-                c.putheader('Host', host)
+                c.putrequest('GET', '/')
                 c.endheaders()
                 response = c.getresponse()
                 body = response.read()
@@ -105,8 +104,9 @@ class ReferenceTests(helper.CPWebCase):
                 c.close()
             success.append(True)
         
+        ITERATIONS = 25
         ts = []
-        for _ in range(25):
+        for _ in range(ITERATIONS):
             t = threading.Thread(target=getpage)
             ts.append(t)
             t.start()
@@ -114,7 +114,7 @@ class ReferenceTests(helper.CPWebCase):
         for t in ts:
             t.join()
         
-        self.assertEqual(len(success), 25)
+        self.assertEqual(len(success), ITERATIONS)
         
         self.getPage("/gc_stats")
         self.assertBody("Statistics:")
@@ -122,4 +122,4 @@ class ReferenceTests(helper.CPWebCase):
 
 if __name__ == '__main__':
     setup_server()
-    helper.testmain()
+    helper.testmain({'server.socket_queue_size': 10})
