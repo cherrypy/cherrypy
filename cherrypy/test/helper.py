@@ -18,9 +18,12 @@ import test.py (to use TestHarness), which then calls helper.py.
 # requirements. So don't go moving functions from here into test.py,
 # or vice-versa, unless you *really* know what you're doing.
 
+import os
+thisdir = os.path.abspath(os.path.dirname(__file__))
 import re
 import sys
 import thread
+import time
 import warnings
 
 import cherrypy
@@ -179,13 +182,18 @@ def _run_test_suite_thread(moduleNames, conf):
 
 def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
+    engine = cherrypy.engine
     if '--server' in sys.argv:
         # Run the test module server-side only; wait for Ctrl-C to break.
         conf = conf or {}
         conf['server.socket_host'] = '0.0.0.0'
         setConfig(conf)
-        cherrypy.engine.start()
-        cherrypy.engine.block()
+        if hasattr(engine, "signal_handler"):
+            engine.signal_handler.subscribe()
+        if hasattr(engine, "console_control_handler"):
+            engine.console_control_handler.subscribe()
+        engine.start()
+        engine.block()
     else:
         for arg in sys.argv:
             if arg.startswith('--client='):
@@ -203,8 +211,8 @@ def testmain(conf=None):
             conf = conf or {}
             conf['server.socket_host'] = '127.0.0.1'
             setConfig(conf)
-            cherrypy.engine.start_with_callback(_test_main_thread)
-            cherrypy.engine.block()
+            engine.start_with_callback(_test_main_thread)
+            engine.block()
 
 def _test_main_thread():
     try:
@@ -212,4 +220,104 @@ def _test_main_thread():
         webtest.main()
     finally:
         cherrypy.engine.exit()
+
+
+
+# --------------------------- Spawning helpers --------------------------- #
+
+
+class CPProcess(object):
+    
+    pid_file = os.path.join(thisdir, 'test.pid')
+    config_file = os.path.join(thisdir, 'test.conf')
+    config_template = """[global]
+server.socket_host: '%(host)s'
+server.socket_port: %(port)s
+log.screen: False
+log.error_file: r'%(error_log)s'
+log.access_file: r'%(access_log)s'
+%(ssl)s
+%(extra)s
+"""
+    error_log = os.path.join(thisdir, 'test.error.log')
+    access_log = os.path.join(thisdir, 'test.access.log')
+    
+    def __init__(self, wait=False, daemonize=False, ssl=False):
+        self.wait = wait
+        self.daemonize = daemonize
+        self.ssl = ssl
+        self.host = cherrypy.server.socket_host
+        self.port = cherrypy.server.socket_port
+    
+    def write_conf(self, extra=""):
+        if self.ssl:
+            serverpem = os.path.join(thisdir, 'test.pem')
+            ssl = """
+server.ssl_certificate: r'%s'
+server.ssl_private_key: r'%s'
+""" % (serverpem, serverpem)
+        else:
+            ssl = ""
+        
+        f = open(self.config_file, 'wb')
+        f.write(self.config_template %
+                {'host': self.host,
+                 'port': self.port,
+                 'error_log': self.error_log,
+                 'access_log': self.access_log,
+                 'ssl': ssl,
+                 'extra': extra,
+                 })
+        f.close()
+    
+    def start(self, imports=None):
+        """Start cherryd in a subprocess."""
+        cherrypy._cpserver.wait_for_free_port(self.host, self.port)
+        
+        args = [sys.executable, os.path.join(thisdir, '..', 'cherryd'),
+                '-c', self.config_file, '-p', self.pid_file]
+        
+        if not isinstance(imports, (list, tuple)):
+            imports = [imports]
+        for i in imports:
+            if i:
+                args.append('-i')
+                args.append(i)
+        
+        if self.daemonize:
+            args.append('-d')
+        
+        if self.wait:
+            self.exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
+        else:
+            os.spawnl(os.P_NOWAIT, sys.executable, *args)
+            cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
+        
+        # Give the engine a wee bit more time to finish STARTING
+        if self.daemonize:
+            time.sleep(2)
+        else:
+            time.sleep(1)
+    
+    def get_pid(self):
+        return int(open(self.pid_file, 'rb').read())
+    
+    def join(self):
+        """Wait for the process to exit."""
+        try:
+            try:
+                # Mac, UNIX
+                os.wait()
+            except AttributeError:
+                # Windows
+                try:
+                    pid = self.get_pid()
+                except IOError:
+                    # Assume the subprocess deleted the pidfile on shutdown.
+                    pass
+                else:
+                    os.waitpid(pid, 0)
+        except OSError, x:
+            if x.args != (10, 'No child processes'):
+                raise
 

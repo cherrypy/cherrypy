@@ -12,84 +12,6 @@ test.prefer_parent_path()
 import cherrypy
 engine = cherrypy.engine
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-PID_file_path = os.path.join(thisdir, 'pid_for_test_daemonize')
-
-
-def write_conf(scheme='http', extra=""):
-    if scheme.lower() == 'https':
-        serverpem = os.path.join(thisdir, 'test.pem')
-        ssl = """
-server.ssl_certificate: r'%s'
-server.ssl_private_key: r'%s'
-""" % (serverpem, serverpem)
-    else:
-        ssl = ""
-    
-    conffile = open(os.path.join(thisdir, 'test_states.conf'), 'wb')
-    conffile.write("""[global]
-server.socket_host: '%(host)s'
-server.socket_port: %(port)s
-log.screen: False
-log.error_file: r'%(error_log)s'
-log.access_file: r'%(access_log)s'
-%(ssl)s
-%(extra)s
-""" % {'host': host,
-       'port': port,
-       'error_log': os.path.join(thisdir, 'test_states_demo.error.log'),
-       'access_log': os.path.join(thisdir, 'test_states_demo.access.log'),
-       'ssl': ssl,
-       'extra': extra,
-       })
-    conffile.close()
-
-
-def spawn_cp(configfile=os.path.join(thisdir, 'test_states.conf'),
-             wait=False, daemonize=False):
-    """Start cherryd in a subprocess."""
-    host = cherrypy.server.socket_host
-    port = cherrypy.server.socket_port
-    cherrypy._cpserver.wait_for_free_port(host, port)
-    
-    args = [sys.executable, os.path.join(thisdir, '..', 'cherryd'),
-            '-c', configfile, '-i', 'cherrypy.test.test_states_demo']
-    
-    if sys.platform != 'win32':
-        args.append('-p')
-        args.append(PID_file_path)
-    
-    # Spawn the process and wait, when this returns, the original process
-    # is finished.  If it daemonized properly, we should still be able
-    # to access pages.
-    if daemonize:
-        args.append('-d')
-    
-    if wait:
-        result = os.spawnl(os.P_WAIT, sys.executable, *args)
-    else:
-        result = os.spawnl(os.P_NOWAIT, sys.executable, *args)
-        cherrypy._cpserver.wait_for_occupied_port(host, port)
-    
-    # Give the engine a wee bit more time to finish STARTING
-    if daemonize:
-        time.sleep(2)
-    else:
-        time.sleep(1)
-    
-    return result
-
-def wait(pid):
-    """Wait for the process with the given pid to exit."""
-    try:
-        try:
-            # Mac, UNIX
-            os.wait()
-        except AttributeError:
-            # Windows
-            os.waitpid(pid, 0)
-    except OSError, x:
-        if x.args != (10, 'No child processes'):
-            raise
 
 
 class Root:
@@ -341,8 +263,9 @@ class ServerStateTests(helper.CPWebCase):
             return
         
         # Start the demo script in a new process
-        write_conf(scheme=self.scheme)
-        pid = spawn_cp()
+        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p.write_conf()
+        p.start(imports='cherrypy.test.test_states_demo')
         try:
             self.getPage("/start")
             start = float(self.body)
@@ -357,15 +280,12 @@ class ServerStateTests(helper.CPWebCase):
             time.sleep(2)
             cherrypy._cpserver.wait_for_occupied_port(host, port)
             
-            self.getPage("/pid")
-            pid = int(self.body)
-            
             self.getPage("/start")
             self.assert_(float(self.body) > start)
         finally:
             # Shut down the spawned process
             self.getPage("/exit")
-        wait(pid)
+        p.join()
     
     def test_5_Start_Error(self):
         if not self.server_class:
@@ -374,9 +294,11 @@ class ServerStateTests(helper.CPWebCase):
         
         # If a process errors during start, it should stop the engine
         # and exit with a non-zero exit code.
-        write_conf(scheme=self.scheme, extra="starterror: True")
-        exit_code = spawn_cp(wait=True)
-        if exit_code == 0:
+        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
+                             wait=True)
+        p.write_conf(extra="starterror: True")
+        p.start(imports='cherrypy.test.test_states_demo')
+        if p.exit_code == 0:
             self.fail("Process failed to return nonzero exit code.")
 
 
@@ -393,25 +315,24 @@ class PluginTests(helper.CPWebCase):
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
-        write_conf(scheme=self.scheme)
-        exit_code = spawn_cp(wait=True, daemonize=True)
-        
-        # Get the PID from the file.
-        pid = int(open(PID_file_path).read())
+        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
+                             wait=True, daemonize=True)
+        p.write_conf()
+        p.start(imports='cherrypy.test.test_states_demo')
         try:
             # Just get the pid of the daemonization process.
             self.getPage("/pid")
             self.assertStatus(200)
             page_pid = int(self.body)
-            self.assertEqual(page_pid, pid)
+            self.assertEqual(page_pid, p.get_pid())
         finally:
             # Shut down the spawned process
             self.getPage("/exit")
-        wait(pid)
+        p.join()
         
         # Wait until here to test the exit code because we want to ensure
         # that we wait for the daemon to finish running before we fail.
-        if exit_code != 0:
+        if p.exit_code != 0:
             self.fail("Daemonized parent process failed to exit cleanly.")
 
 
@@ -430,12 +351,13 @@ class SignalHandlingTests(helper.CPWebCase):
             return
         
         # Spawn the process.
-        write_conf(scheme=self.scheme)
-        pid = spawn_cp(wait=False, daemonize=False)
+        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p.write_conf()
+        p.start(imports='cherrypy.test.test_states_demo')
         # Send a SIGHUP
-        os.kill(pid, SIGHUP)
+        os.kill(p.get_pid(), SIGHUP)
         # This might hang if things aren't working right, but meh.
-        wait(pid)
+        p.join()
     
     def test_SIGHUP_daemonized(self):
         # When daemonized, SIGHUP should restart the server.
@@ -456,11 +378,12 @@ class SignalHandlingTests(helper.CPWebCase):
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
-        write_conf(scheme=self.scheme)
-        exit_code = spawn_cp(wait=True, daemonize=True)
+        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
+                             wait=True, daemonize=True)
+        p.write_conf()
+        p.start(imports='cherrypy.test.test_states_demo')
         
-        # Get the PID from the file.
-        pid = int(open(PID_file_path).read())
+        pid = p.get_pid()
         try:
             # Send a SIGHUP
             os.kill(pid, SIGHUP)
@@ -473,7 +396,7 @@ class SignalHandlingTests(helper.CPWebCase):
         finally:
             # Shut down the spawned process
             self.getPage("/exit")
-        wait(new_pid)
+        p.join()
     
     def test_SIGTERM(self):
         # SIGTERM should shut down the server whether daemonized or not.
@@ -494,21 +417,24 @@ class SignalHandlingTests(helper.CPWebCase):
             return
         
         # Spawn a normal, undaemonized process.
-        write_conf(scheme=self.scheme)
-        pid = spawn_cp(wait=False, daemonize=False)
+        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p.write_conf()
+        p.start(imports='cherrypy.test.test_states_demo')
         # Send a SIGTERM
-        os.kill(pid, SIGTERM)
+        os.kill(p.get_pid(), SIGTERM)
         # This might hang if things aren't working right, but meh.
-        wait(pid)
+        p.join()
         
         if os.name in ['posix']: 
             # Spawn a daemonized process and test again.
-            exit_code = spawn_cp(wait=True, daemonize=True)
+            p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
+                                 wait=True, daemonize=True)
+            p.write_conf()
+            p.start(imports='cherrypy.test.test_states_demo')
             # Send a SIGTERM
-            pid = int(open(PID_file_path).read())
-            os.kill(pid, SIGTERM)
+            os.kill(p.get_pid(), SIGTERM)
             # This might hang if things aren't working right, but meh.
-            wait(pid)
+            p.join()
     
     def test_signal_handler_unsubscribe(self):
         if not self.server_class:
@@ -528,13 +454,16 @@ class SignalHandlingTests(helper.CPWebCase):
             return
         
         # Spawn a normal, undaemonized process.
-        write_conf(scheme=self.scheme, extra="unsubsig: True")
-        pid = spawn_cp(wait=False, daemonize=False)
-        os.kill(pid, SIGTERM)
-        wait(pid)
+        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p.write_conf(extra="unsubsig: True")
+        p.start(imports='cherrypy.test.test_states_demo')
+        # Send a SIGTERM
+        os.kill(p.get_pid(), SIGTERM)
+        # This might hang if things aren't working right, but meh.
+        p.join()
+        
         # Assert the old handler ran.
-        errlog = os.path.join(thisdir, 'test_states_demo.error.log')
-        target_line = open(errlog, 'rb').readlines()[-10]
+        target_line = open(p.error_log, 'rb').readlines()[-10]
         if not "I am an old SIGTERM handler." in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
 
