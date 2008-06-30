@@ -80,10 +80,14 @@ class SignalHandler(object):
                 self.bus.log("Restoring %s handler %r." % (signame, handler))
             
             try:
-                _signal.signal(signum, handler)
+                our_handler = _signal.signal(signum, handler)
+                if our_handler is None:
+                    self.bus.log("Restored old %s handler %r, but our "
+                                 "handler was not registered." %
+                                 (signame, handler), level=30)
             except ValueError:
                 self.bus.log("Unable to restore %s handler %r." %
-                             (signame, handler), traceback=True)
+                             (signame, handler), level=40, traceback=True)
     
     def set_handler(self, signal, listener=None):
         """Subscribe a handler for the given signal (number or name).
