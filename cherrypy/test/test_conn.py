@@ -36,6 +36,10 @@ def setup_server():
             return "Hello, world!"
         hello.exposed = True
         
+        def timeout(self, t):
+            return str(cherrypy.server.httpserver.timeout)
+        timeout.exposed = True
+        
         def stream(self, set_cl=False):
             if set_cl:
                 cherrypy.response.headers['Content-Length'] = 10
@@ -208,99 +212,86 @@ class ConnectionTests(helper.CPWebCase):
             print "skipped ",
             return
         
-        old_timeout = None
-        try:
-            httpserver = cherrypy.server.httpserver
-            old_timeout = httpserver.timeout
-        except (AttributeError, IndexError):
-            print "skipped ",
-            return
+        self.PROTOCOL = "HTTP/1.1"
         
+        # Make an initial request
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("GET", "/timeout?t=%s" % timeout, skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 200)
+        self.body = response.read()
+        self.assertBody("0.1")
+        
+        # Make a second request on the same socket
+        conn._output('GET /hello HTTP/1.1')
+        conn._output("Host: %s" % self.HOST)
+        conn._send_output()
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 200)
+        self.body = response.read()
+        self.assertBody("Hello, world!")
+        
+        # Wait for our socket timeout
+        time.sleep(timeout * 10)
+        
+        # Make another request on the same socket, which should error
+        conn._output('GET /hello HTTP/1.1')
+        conn._output("Host: %s" % self.HOST)
+        conn._send_output()
+        response = conn.response_class(conn.sock, method="GET")
         try:
-            httpserver.timeout = timeout
-            self.PROTOCOL = "HTTP/1.1"
-            
-            # Make an initial request
-            self.persistent = True
-            conn = self.HTTP_CONN
-            conn.putrequest("GET", "/", skip_host=True)
-            conn.putheader("Host", self.HOST)
-            conn.endheaders()
-            response = conn.response_class(conn.sock, method="GET")
             response.begin()
-            self.assertEqual(response.status, 200)
-            self.body = response.read()
-            self.assertBody(pov)
-            
-            # Make a second request on the same socket
-            conn._output('GET /hello HTTP/1.1')
-            conn._output("Host: %s" % self.HOST)
-            conn._send_output()
-            response = conn.response_class(conn.sock, method="GET")
-            response.begin()
-            self.assertEqual(response.status, 200)
-            self.body = response.read()
-            self.assertBody("Hello, world!")
-            
-            # Wait for our socket timeout
-            time.sleep(timeout * 2)
-            
-            # Make another request on the same socket, which should error
-            conn._output('GET /hello HTTP/1.1')
-            conn._output("Host: %s" % self.HOST)
-            conn._send_output()
-            response = conn.response_class(conn.sock, method="GET")
-            try:
-                response.begin()
-            except:
-                if not isinstance(sys.exc_info()[1],
-                                  (socket.error, httplib.BadStatusLine)):
-                    self.fail("Writing to timed out socket didn't fail"
-                              " as it should have: %s" % sys.exc_info()[1])
-            else:
+        except:
+            if not isinstance(sys.exc_info()[1],
+                              (socket.error, httplib.BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
-                          " as it should have: %s" %
-                          response.read())
-            
-            conn.close()
-            
-            # Make another request on a new socket, which should work
-            self.persistent = True
-            conn = self.HTTP_CONN
-            conn.putrequest("GET", "/", skip_host=True)
-            conn.putheader("Host", self.HOST)
-            conn.endheaders()
-            response = conn.response_class(conn.sock, method="GET")
-            response.begin()
-            self.assertEqual(response.status, 200)
-            self.body = response.read()
-            self.assertBody(pov)
-            
-            # Make another request on the same socket,
-            # but timeout on the headers
-            conn.send('GET /hello HTTP/1.1')
-            # Wait for our socket timeout
-            time.sleep(timeout * 2)
-            response = conn.response_class(conn.sock, method="GET")
-            response.begin()
-            self.assertEqual(response.status, 408)
-            conn.close()
-            
-            # Retry the request on a new connection, which should work
-            self.persistent = True
-            conn = self.HTTP_CONN
-            conn.putrequest("GET", "/", skip_host=True)
-            conn.putheader("Host", self.HOST)
-            conn.endheaders()
-            response = conn.response_class(conn.sock, method="GET")
-            response.begin()
-            self.assertEqual(response.status, 200)
-            self.body = response.read()
-            self.assertBody(pov)
-            conn.close()
-        finally:
-            if old_timeout is not None:
-                httpserver.timeout = old_timeout
+                          " as it should have: %s" % sys.exc_info()[1])
+        else:
+            self.fail("Writing to timed out socket didn't fail"
+                      " as it should have: %s" %
+                      response.read())
+        
+        conn.close()
+        
+        # Make another request on a new socket, which should work
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("GET", "/", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 200)
+        self.body = response.read()
+        self.assertBody(pov)
+        
+        # Make another request on the same socket,
+        # but timeout on the headers
+        conn.send('GET /hello HTTP/1.1')
+        # Wait for our socket timeout
+        time.sleep(timeout * 10)
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 408)
+        conn.close()
+        
+        # Retry the request on a new connection, which should work
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("GET", "/", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 200)
+        self.body = response.read()
+        self.assertBody(pov)
+        conn.close()
     
     def test_HTTP11_pipelining(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
@@ -609,4 +600,5 @@ class ConnectionTests(helper.CPWebCase):
 
 if __name__ == "__main__":
     setup_server()
-    helper.testmain()
+    helper.testmain({'server.socket_timeout': timeout,
+                     'server.socket_host': '127.0.0.1'})
