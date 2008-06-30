@@ -179,11 +179,32 @@ def _run_test_suite_thread(moduleNames, conf):
 
 def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
-    if conf is None:
-        conf = {'server.socket_host': '127.0.0.1'}
-    setConfig(conf)
-    cherrypy.engine.start_with_callback(_test_main_thread)
-    cherrypy.engine.block()
+    if '--server' in sys.argv:
+        # Run the test module server-side only; wait for Ctrl-C to break.
+        if conf is None:
+            conf = {'server.socket_host': '0.0.0.0'}
+        setConfig(conf)
+        cherrypy.engine.start()
+        cherrypy.engine.block()
+    else:
+        for arg in sys.argv:
+            if arg.startswith('--client='):
+                # Run the test module client-side only.
+                sys.argv.remove(arg)
+                conf = conf or {}
+                conf['server.socket_host'] = host = arg.split('=', 1)[1].strip()
+                setConfig(conf)
+                webtest.WebCase.HOST = host
+                webtest.WebCase.PORT = cherrypy.server.socket_port
+                webtest.main()
+                break
+        else:
+            # Run normally (both server and client in same process).
+            if conf is None:
+                conf = {'server.socket_host': '127.0.0.1'}
+            setConfig(conf)
+            cherrypy.engine.start_with_callback(_test_main_thread)
+            cherrypy.engine.block()
 
 def _test_main_thread():
     try:
