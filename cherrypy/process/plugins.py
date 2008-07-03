@@ -21,6 +21,7 @@ class SimplePlugin(object):
     def subscribe(self):
         """Register this object as a (multi-channel) listener on the bus."""
         for channel in self.bus.listeners:
+            # Subscribe self.start, self.exit, etc. if present.
             method = getattr(self, channel, None)
             if method is not None:
                 self.bus.subscribe(channel, method)
@@ -28,6 +29,7 @@ class SimplePlugin(object):
     def unsubscribe(self):
         """Unregister this object as a listener on the bus."""
         for channel in self.bus.listeners:
+            # Unsubscribe self.start, self.exit, etc. if present.
             method = getattr(self, channel, None)
             if method is not None:
                 self.bus.unsubscribe(channel, method)

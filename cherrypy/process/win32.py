@@ -71,8 +71,7 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
 class Win32Bus(wspbus.Bus):
     """A Web Site Process Bus implementation for Win32.
     
-    Instead of using time.sleep for blocking, this bus uses native
-    win32event objects. It also responds to console events.
+    Instead of time.sleep, this bus blocks using native win32event objects.
     """
     
     def __init__(self):
