@@ -35,6 +35,7 @@ KNOWN BUGS
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
+import sys
 import time
 
 from cherrypy.test import test
@@ -53,12 +54,17 @@ def read_process(cmd, args=""):
     return output
 
 
-APACHE_PATH = "apache"
+if sys.platform == 'win32':
+    APACHE_PATH = "httpd"
+else:
+    APACHE_PATH = "apache"
+
 CONF_PATH = "test_mw.conf"
 
 conf_modwsgi = """
 # Apache2 server conf file for testing CherryPy with modpython_gateway.
 
+ServerName 127.0.0.1
 DocumentRoot "/"
 Listen %%s
 LoadModule wsgi_module modules/mod_wsgi.so
@@ -140,7 +146,5 @@ def application(environ, start_response):
             "engine.SIGHUP": None,
             "engine.SIGTERM": None,
             })
-        cherrypy.server.unsubscribe()
-        cherrypy.engine.start(blocking=False)
     return cherrypy.tree(environ, start_response)
 
