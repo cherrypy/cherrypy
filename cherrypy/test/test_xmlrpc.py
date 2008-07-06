@@ -68,6 +68,7 @@ def setup_server():
     root.xmlrpc = XmlRpc()
     cherrypy.tree.mount(root, config={'/': {
         'request.dispatch': cherrypy.dispatch.XMLRPCDispatcher(),
+        'tools.xmlrpc.allow_none': 0,
         }})
     cherrypy.config.update({'environment': 'test_suite'})
 
