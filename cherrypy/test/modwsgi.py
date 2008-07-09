@@ -33,12 +33,13 @@ KNOWN BUGS
 """
 
 import os
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+curdir = os.path.abspath(os.path.dirname(__file__))
 import re
 import sys
 import time
 
-from cherrypy.test import test
+import cherrypy
+from cherrypy.test import test, webtest
 
 
 def read_process(cmd, args=""):
@@ -61,18 +62,30 @@ else:
 
 CONF_PATH = "test_mw.conf"
 
-conf_modwsgi = """
+conf_modwsgi = r"""
 # Apache2 server conf file for testing CherryPy with modpython_gateway.
 
 ServerName 127.0.0.1
 DocumentRoot "/"
-Listen %%s
+Listen %(port)s
+
+AllowEncodedSlashes On
+LoadModule rewrite_module modules/mod_rewrite.so
+RewriteEngine on
+RewriteMap escaping int:escape
+
+LoadModule log_config_module modules/mod_log_config.so
+LogFormat "%%h %%l %%u %%t \"%%r\" %%>s %%b \"%%{Referer}i\" \"%%{User-agent}i\"" combined
+CustomLog "%(curdir)s/apache.access.log" combined
+ErrorLog "%(curdir)s/apache.error.log"
+LogLevel debug
+
 LoadModule wsgi_module modules/mod_wsgi.so
 LoadModule env_module modules/mod_env.so
 
-WSGIScriptAlias / %s
-SetEnv testmod %%s
-""" % os.path.join(curdir, 'modwsgi.py')
+WSGIScriptAlias / "%(curdir)s/modwsgi.py"
+SetEnv testmod %(testmod)s
+"""
 
 
 def start(testmod, port, conf_template):
@@ -82,7 +95,9 @@ def start(testmod, port, conf_template):
     
     f = open(mpconf, 'wb')
     try:
-        f.write(conf_template % (port, testmod))
+        output = (conf_template %
+                  {'port': port, 'testmod': testmod, 'curdir': curdir})
+        f.write(output)
     finally:
         f.close()
     
@@ -119,7 +134,12 @@ class ModWSGITestHarness(test.TestHarness):
         for testmod in self.tests:
             try:
                 start(testmod, self.port, conf_template)
+                cherrypy._cpserver.wait_for_occupied_port("127.0.0.1", self.port)
                 suite = webtest.ReloadingTestLoader().loadTestsFromName(testmod)
+                # Make a request so mod_wsgi starts up our app.
+                # If we don't, concurrent initial requests will 404.
+                webtest.openURL('/ihopetheresnodefault', port=self.port)
+                time.sleep(1)
                 result = webtest.TerseTestRunner(verbosity=2).run(suite)
                 success &= result.wasSuccessful()
             finally:
@@ -141,7 +161,8 @@ def application(environ, start_response):
         mod.setup_server()
         
         cherrypy.config.update({
-            "log.error_file": os.path.join(curdir, "test.log"),
+            "log.error_file": os.path.join(curdir, "test.error.log"),
+            "log.access_file": os.path.join(curdir, "test.access.log"),
             "environment": "test_suite",
             "engine.SIGHUP": None,
             "engine.SIGTERM": None,
