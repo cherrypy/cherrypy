@@ -36,14 +36,18 @@ def start(configfiles=None, daemonize=False, environment=None,
         engine.console_control_handler.subscribe()
     
     if fastcgi:
-        # turn off autoreload when using fastcgi
-        cherrypy.config.update({'autoreload.on': False})
+        # Turn off autoreload when using fastcgi.
+        cherrypy.config.update({'engine.autoreload_on': False})
         
         cherrypy.server.unsubscribe()
         
-        fastcgi_port = cherrypy.config.get('server.socket_port', 4000)
-        fastcgi_bindaddr = cherrypy.config.get('server.socket_host', '0.0.0.0')
-        bindAddress = (fastcgi_bindaddr, fastcgi_port)
+        sock_file = cherrypy.config.get('server.socket_file', None)
+        if sock_file:
+            bindAddress = sock_file
+        else:
+            fastcgi_port = cherrypy.config.get('server.socket_port', 4000)
+            fastcgi_bindaddr = cherrypy.config.get('server.socket_host', '0.0.0.0')
+            bindAddress = (fastcgi_bindaddr, fastcgi_port)
         f = servers.FlupFCGIServer(application=cherrypy.tree, bindAddress=bindAddress)
         s = servers.ServerAdapter(engine, httpserver=f, bind_addr=bindAddress)
         s.subscribe()

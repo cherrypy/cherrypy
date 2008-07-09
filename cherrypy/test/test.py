@@ -90,6 +90,7 @@ class CommandLineParser(object):
                          'cpmodpy': "cpmodpy",
                          'modpygw': "modpygw",
                          'modwsgi': "modwsgi",
+                         'modfcgid': "modfcgid",
                          }
     default_server = "wsgi"
     scheme = "http"
@@ -332,6 +333,11 @@ class CommandLineParser(object):
                                            self.protocol, self.port,
                                            "http", self.interactive)
             h.use_wsgi = True
+        elif self.server == 'modfcgid':
+            from cherrypy.test import modfcgid
+            h = modfcgid.FCGITestHarness(self.tests, self.server,
+                                         self.protocol, self.port,
+                                         "http", self.interactive)
         else:
             h = TestHarness(self.tests, self.server, self.protocol,
                             self.port, self.scheme, self.interactive,
