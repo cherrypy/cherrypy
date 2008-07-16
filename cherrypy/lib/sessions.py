@@ -282,14 +282,19 @@ class FileSession(Session):
     SESSION_PREFIX = 'session-'
     LOCK_SUFFIX = '.lock'
     
+    def __init__(self, id=None, **kwargs):
+        # The 'storage_path' arg is required for file-based sessions.
+        kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
+        Session.__init__(self, id=id, **kwargs)
+    
     def setup(cls, **kwargs):
         """Set up the storage system for file-based sessions.
         
         This should only be called once per process; this will be done
         automatically when using sessions.init (as the built-in Tool does).
         """
-        if 'storage_path' in kwargs:
-            kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
+        # The 'storage_path' arg is required for file-based sessions.
+        kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
         
         for k, v in kwargs.iteritems():
             setattr(cls, k, v)
