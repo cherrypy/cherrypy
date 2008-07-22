@@ -135,6 +135,7 @@ class FlupFCGIServer(object):
         #   line 156, in _restoreSignalHandlers
         #     for signum,handler in self._oldSIGs:
         #   AttributeError: 'WSGIServer' object has no attribute '_oldSIGs'
+        self.fcgiserver._installSignalHandlers = lambda: None
         self.fcgiserver._oldSIGs = []
         self.ready = False
     
@@ -150,6 +151,39 @@ class FlupFCGIServer(object):
         self.fcgiserver._keepGoing = False
         # Force all worker threads to die off.
         self.fcgiserver._threadPool.maxSpare = 0
+
+
+class FlupSCGIServer(object):
+    """Adapter for a flup.server.scgi.WSGIServer."""
+    
+    def __init__(self, *args, **kwargs):
+        from flup.server.scgi import WSGIServer
+        self.scgiserver = WSGIServer(*args, **kwargs)
+        # TODO: report this bug upstream to flup.
+        # If we don't set _oldSIGs on Windows, we get:
+        #   File "C:\Python24\Lib\site-packages\flup\server\threadedserver.py",
+        #   line 108, in run
+        #     self._restoreSignalHandlers()
+        #   File "C:\Python24\Lib\site-packages\flup\server\threadedserver.py",
+        #   line 156, in _restoreSignalHandlers
+        #     for signum,handler in self._oldSIGs:
+        #   AttributeError: 'WSGIServer' object has no attribute '_oldSIGs'
+        self.scgiserver._installSignalHandlers = lambda: None
+        self.scgiserver._oldSIGs = []
+        self.ready = False
+    
+    def start(self):
+        """Start the SCGI server."""
+        self.ready = True
+        self.scgiserver.run()
+    
+    def stop(self):
+        """Stop the HTTP server."""
+        self.ready = False
+        # Forcibly stop the scgi server main event loop.
+        self.scgiserver._keepGoing = False
+        # Force all worker threads to die off.
+        self.scgiserver._threadPool.maxSpare = 0
 
 
 def client_host(server_host):
