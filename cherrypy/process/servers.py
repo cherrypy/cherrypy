@@ -124,8 +124,16 @@ class FlupFCGIServer(object):
     """Adapter for a flup.server.fcgi.WSGIServer."""
     
     def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.ready = False
+    
+    def start(self):
+        """Start the FCGI server."""
+        # We have to instantiate the server class here because its __init__
+        # starts a threadpool. If we do it too early, daemonize won't work.
         from flup.server.fcgi import WSGIServer
-        self.fcgiserver = WSGIServer(*args, **kwargs)
+        self.fcgiserver = WSGIServer(*self.args, **self.kwargs)
         # TODO: report this bug upstream to flup.
         # If we don't set _oldSIGs on Windows, we get:
         #   File "C:\Python24\Lib\site-packages\flup\server\threadedserver.py",
@@ -137,10 +145,6 @@ class FlupFCGIServer(object):
         #   AttributeError: 'WSGIServer' object has no attribute '_oldSIGs'
         self.fcgiserver._installSignalHandlers = lambda: None
         self.fcgiserver._oldSIGs = []
-        self.ready = False
-    
-    def start(self):
-        """Start the FCGI server."""
         self.ready = True
         self.fcgiserver.run()
     
@@ -157,6 +161,14 @@ class FlupSCGIServer(object):
     """Adapter for a flup.server.scgi.WSGIServer."""
     
     def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.ready = False
+    
+    def start(self):
+        """Start the SCGI server."""
+        # We have to instantiate the server class here because its __init__
+        # starts a threadpool. If we do it too early, daemonize won't work.
         from flup.server.scgi import WSGIServer
         self.scgiserver = WSGIServer(*args, **kwargs)
         # TODO: report this bug upstream to flup.
@@ -170,10 +182,6 @@ class FlupSCGIServer(object):
         #   AttributeError: 'WSGIServer' object has no attribute '_oldSIGs'
         self.scgiserver._installSignalHandlers = lambda: None
         self.scgiserver._oldSIGs = []
-        self.ready = False
-    
-    def start(self):
-        """Start the SCGI server."""
         self.ready = True
         self.scgiserver.run()
     
