@@ -170,7 +170,7 @@ class FlupSCGIServer(object):
         # We have to instantiate the server class here because its __init__
         # starts a threadpool. If we do it too early, daemonize won't work.
         from flup.server.scgi import WSGIServer
-        self.scgiserver = WSGIServer(*args, **kwargs)
+        self.scgiserver = WSGIServer(*self.args, **self.kwargs)
         # TODO: report this bug upstream to flup.
         # If we don't set _oldSIGs on Windows, we get:
         #   File "C:\Python24\Lib\site-packages\flup\server\threadedserver.py",
