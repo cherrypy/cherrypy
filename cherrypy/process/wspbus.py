@@ -153,9 +153,13 @@ class Bus(object):
                     e.code = 1
                 raise
             except:
-                self.log("Error in %r listener %r" % (channel, listener),
-                         level=40, traceback=True)
                 exc = sys.exc_info()[1]
+                if channel == 'log':
+                    # Assume any further messages to 'log' will fail.
+                    pass
+                else:
+                    self.log("Error in %r listener %r" % (channel, listener),
+                             level=40, traceback=True)
         if exc:
             raise
         return output
