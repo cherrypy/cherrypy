@@ -39,6 +39,8 @@ import re
 import sys
 import time
 
+import cherrypy
+from cherrypy.process import plugins, servers
 from cherrypy.test import test
 
 
@@ -70,10 +72,10 @@ Options ExecCGI
 SetHandler fastcgi-script
 RewriteEngine On
 RewriteRule ^(.*)$ /fastcgi.pyc [L]
-FastCgiServer "%(server)s" -port 4000
+FastCgiExternalServer "%(server)s" -host 127.0.0.1:4000
 """
 
-def start(testmod, host, port, conf_template):
+def start_apache(host, port, conf_template):
     fcgiconf = CONF_PATH
     if not os.path.isabs(fcgiconf):
         fcgiconf = os.path.join(curdir, fcgiconf)
@@ -89,53 +91,6 @@ def start(testmod, host, port, conf_template):
     finally:
         f.close()
     
-    # Write the .py file to import testmod and run setup_server
-    # Import it immediately so we get a .pyc file.
-    f = open(os.path.join(curdir, 'fastcgi.py'), 'wb')
-    try:
-        f.write("""import cherrypy
-from cherrypy.process import plugins, servers
-from cherrypy.test import %s
-
-if hasattr(%s, 'setup_server'):
-    %s.setup_server()
-
-def run():
-    cherrypy.config.update(%r)
-    
-    engine = cherrypy.engine
-    cherrypy.config.update({'environment': 'test_suite'})
-    
-    if hasattr(engine, "signal_handler"):
-        engine.signal_handler.subscribe()
-    if hasattr(engine, "console_control_handler"):
-        engine.console_control_handler.subscribe()
-    
-    # Turn off autoreload when using fastcgi.
-    cherrypy.config.update({'engine.autoreload_on': False})
-    cherrypy.server.unsubscribe()
-    bindAddress = ('127.0.0.1', 4000)
-    f = servers.FlupFCGIServer(application=cherrypy.tree, bindAddress=bindAddress)
-    s = servers.ServerAdapter(engine, httpserver=f, bind_addr=bindAddress)
-    s.subscribe()
-    
-    # Always start the engine; this will start all other services
-    try:
-        engine.start()
-    except:
-        # Assume the error has been logged already via bus.log.
-        sys.exit(1)
-    else:
-        engine.block()
-
-if __name__ == '__main__':
-    run()
-""" % (testmod, testmod, testmod, os.path.join(curdir, 'test.conf')))
-    finally:
-        f.close()
-    from cherrypy.test import fastcgi
-    reload(fastcgi)
-    
     result = read_process(APACHE_PATH, "-k start -f %s" % fcgiconf)
     if result:
         print result
@@ -149,29 +104,12 @@ class FCGITestHarness(test.TestHarness):
     """TestHarness for fcgid and CherryPy."""
     
     def _run(self, conf):
-        from cherrypy.test import webtest
-        webtest.WebCase.PORT = self.port
-        webtest.WebCase.harness = self
-        webtest.WebCase.scheme = "http"
-        webtest.WebCase.interactive = self.interactive
-        print
-        print "Running tests:", self.server
-        
-        conf_template = conf_fcgid
-        
-        # Since cherryd is run by the Apache process, Apache must be
-        # started separately for each test.
-        success = True
-        for testmod in self.tests:
-            try:
-                start(testmod, self.host, self.port, conf_template)
-                suite = webtest.ReloadingTestLoader().loadTestsFromName(testmod)
-                result = webtest.TerseTestRunner(verbosity=2).run(suite)
-                success &= result.wasSuccessful()
-            finally:
-                stop()
-        if success:
-            return 0
-        else:
-            return 1
+        cherrypy.server.httpserver = servers.FlupFCGIServer(
+            application=cherrypy.tree, bindAddress=('127.0.0.1', 4000))
+        cherrypy.server.httpserver.bind_addr = ('127.0.0.1', 4000)
+        try:
+            start_apache(self.host, self.port, conf_fcgid)
+            return test.TestHarness._run(self, conf)
+        finally:
+            stop()
 
