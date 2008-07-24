@@ -43,7 +43,7 @@ def start(configfiles=None, daemonize=False, environment=None,
     elif fastcgi or scgi:
         # Turn off autoreload when using fastcgi or scgi.
         cherrypy.config.update({'engine.autoreload_on': False})
-        
+        # Turn off the default HTTP server (which is subscribed by default).
         cherrypy.server.unsubscribe()
         
         sock_file = cherrypy.config.get('server.socket_file', None)
