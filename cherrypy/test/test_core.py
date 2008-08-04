@@ -98,6 +98,40 @@ def setup_server():
         def default(self, *args, **kwargs):
             return "args: %s kwargs: %s" % (args, kwargs)
 
+    class ParamErrors(Test):
+
+        def one_positional(self, param1):
+            return "data"
+        one_positional.exposed = True
+
+        def one_positional_args(self, param1, *args):
+            return "data"
+        one_positional_args.exposed = True
+
+        def one_positional_args_kwargs(self, param1, *args, **kwargs):
+            return "data"
+        one_positional_args_kwargs.exposed = True
+
+        def one_positional_kwargs(self, param1, **kwargs):
+            return "data"
+        one_positional_kwargs.exposed = True
+
+        def no_positional(self):
+            return "data"
+        no_positional.exposed = True
+
+        def no_positional_args(self, *args):
+            return "data"
+        no_positional_args.exposed = True
+
+        def no_positional_args_kwargs(self, *args, **kwargs):
+            return "data"
+        no_positional_args_kwargs.exposed = True
+
+        def no_positional_kwargs(self, **kwargs):
+            return "data"
+        no_positional_kwargs.exposed = True
+
 
     class Status(Test):
         
@@ -443,15 +477,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         self.getPage("/params/?thing=a&thing=b&thing=c")
         self.assertBody("['a', 'b', 'c']")
-        
+
         # Test friendly error message when given params are not accepted.
-        ignore = helper.webtest.ignored_exceptions
-        ignore.append(TypeError)
-        try:
-            self.getPage("/params/?notathing=meeting")
-            self.assertInBody("index() got an unexpected keyword argument 'notathing'")
-        finally:
-            ignore.pop()
+        self.getPage("/params/?notathing=meeting")
+        self.assertInBody("Missing parameters: thing")
+        self.getPage("/params/?thing=meeting&notathing=meeting")
+        self.assertInBody("Unexpected query string parameters: notathing")
         
         # Test "% HEX HEX"-encoded URL, param keys, and values
         self.getPage("/params/%d4%20%e3/cheese?Gruy%E8re=Bulgn%e9ville")
@@ -466,7 +497,82 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # Test coordinates sent by <img ismap>
         self.getPage("/params/ismap?223,114")
         self.assertBody("Coordinates: 223, 114")
-    
+
+    def testParamErrors(self):
+
+        # test that all of the handlers work when given 
+        # the correct parameters in order to ensure that the
+        # errors below aren't coming from some other source.
+        for uri in (
+                '/paramerrors/one_positional?param1=foo',
+                '/paramerrors/one_positional_args?param1=foo',
+                '/paramerrors/one_positional_args/foo',
+                '/paramerrors/one_positional_args/foo/bar/baz',
+                '/paramerrors/one_positional_args_kwargs?param1=foo&param2=bar',
+                '/paramerrors/one_positional_args_kwargs/foo?param2=bar&param3=baz',
+                '/paramerrors/one_positional_args_kwargs/foo/bar/baz?param2=bar&param3=baz',
+                '/paramerrors/one_positional_kwargs?param1=foo&param2=bar&param3=baz',
+                '/paramerrors/one_positional_kwargs/foo?param4=foo&param2=bar&param3=baz',
+                '/paramerrors/no_positional',
+                '/paramerrors/no_positional_args/foo',
+                '/paramerrors/no_positional_args/foo/bar/baz',
+                '/paramerrors/no_positional_args_kwargs?param1=foo&param2=bar',
+                '/paramerrors/no_positional_args_kwargs/foo?param2=bar',
+                '/paramerrors/no_positional_args_kwargs/foo/bar/baz?param2=bar&param3=baz',
+                '/paramerrors/no_positional_kwargs?param1=foo&param2=bar',
+            ):
+            self.getPage(uri)
+            self.assertStatus(200)
+
+        # query string parameters are part of the URI, so if they are wrong
+        # for a particular handler, the status MUST be a 404.
+        for uri in (
+                '/paramerrors/one_positional',
+                '/paramerrors/one_positional?foo=foo',
+                '/paramerrors/one_positional/foo/bar/baz',
+                '/paramerrors/one_positional/foo?param1=foo',
+                '/paramerrors/one_positional/foo?param1=foo&param2=foo',
+                '/paramerrors/one_positional_args/foo?param1=foo&param2=foo',
+                '/paramerrors/one_positional_args/foo/bar/baz?param2=foo',
+                '/paramerrors/one_positional_args_kwargs/foo/bar/baz?param1=bar&param3=baz',
+                '/paramerrors/one_positional_kwargs/foo?param1=foo&param2=bar&param3=baz',
+                '/paramerrors/no_positional/boo',
+                '/paramerrors/no_positional?param1=foo',
+                '/paramerrors/no_positional_args/boo?param1=foo',
+                '/paramerrors/no_positional_kwargs/boo?param1=foo',
+            ):
+            self.getPage(uri)
+            self.assertStatus(404)
+
+        # if body parameters are wrong, a 400 must be returned.
+        for uri, body in (
+                ('/paramerrors/one_positional/foo', 'param1=foo',),
+                ('/paramerrors/one_positional/foo', 'param1=foo&param2=foo',),
+                ('/paramerrors/one_positional_args/foo', 'param1=foo&param2=foo',),
+                ('/paramerrors/one_positional_args/foo/bar/baz', 'param2=foo',),
+                ('/paramerrors/one_positional_args_kwargs/foo/bar/baz', 'param1=bar&param3=baz',),
+                ('/paramerrors/one_positional_kwargs/foo', 'param1=foo&param2=bar&param3=baz',),
+                ('/paramerrors/no_positional', 'param1=foo',),
+                ('/paramerrors/no_positional_args/boo', 'param1=foo',),
+            ):
+            self.getPage(uri, method='POST', body=body)
+            self.assertStatus(400)
+
+
+        # even if body parameters are wrong, if we get the uri wrong, then 
+        # it's a 404
+        for uri, body in (
+                ('/paramerrors/one_positional?param2=foo', 'param1=foo',),
+                ('/paramerrors/one_positional/foo/bar', 'param2=foo',),
+                ('/paramerrors/one_positional_args/foo/bar?param2=foo', 'param3=foo',),
+                ('/paramerrors/one_positional_kwargs/foo/bar', 'param2=bar&param3=baz',),
+                ('/paramerrors/no_positional?param1=foo', 'param2=foo',),
+                ('/paramerrors/no_positional_args/boo?param2=foo', 'param1=foo',),
+            ):
+            self.getPage(uri, method='POST', body=body)
+            self.assertStatus(404)
+
+
     def testStatus(self):
         self.getPage("/status/")
         self.assertBody('normal')
