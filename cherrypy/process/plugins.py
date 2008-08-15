@@ -233,7 +233,10 @@ class DropPrivileges(SimplePlugin):
                              (old_umask, self.umask))
         
         self.finalized = True
-    start.priority = 75
+    # This is slightly higher than the priority for server.start
+    # in order to facilitate the most common use: starting on a low
+    # port (which requires root) and then dropping to another user.
+    start.priority = 77
 
 
 class Daemonizer(SimplePlugin):
