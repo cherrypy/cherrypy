@@ -303,7 +303,7 @@ def _engine_namespace_handler(k, v):
     elif k == 'autoreload_match':
         engine.autoreload.match = v
     elif k == 'reload_files':
-        engine.autoreload.files = v
+        engine.autoreload.files = set(v)
     elif k == 'deadlock_poll_freq':
         engine.timeout_monitor.frequency = v
     elif k == 'SIGHUP':
