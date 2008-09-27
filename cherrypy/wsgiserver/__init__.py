@@ -1449,7 +1449,8 @@ class CherryPyWSGIServer(object):
             environ = self.environ.copy()
             # SERVER_SOFTWARE is common for IIS. It's also helpful for
             # us to pass a default value for the "Server" response header.
-            environ["SERVER_SOFTWARE"] = "%s WSGI Server" % self.version
+            if environ.get("SERVER_SOFTWARE") is None:
+                environ["SERVER_SOFTWARE"] = "%s WSGI Server" % self.version
             # set a non-standard environ entry so the WSGI app can know what
             # the *real* server protocol is (and what features to support).
             # See http://www.faqs.org/rfcs/rfc2145.html.
