@@ -407,13 +407,6 @@ class HTTPRequest(object):
             self.simple_response("413 Request Entity Too Large")
             return
         
-        # Set AUTH_TYPE, REMOTE_USER
-        creds = environ.get("HTTP_AUTHORIZATION", "").split(" ", 1)
-        environ["AUTH_TYPE"] = creds[0]
-        if creds[0].lower() == 'basic':
-            user, pw = base64.decodestring(creds[1]).split(":", 1)
-            environ["REMOTE_USER"] = user
-        
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
             # Both server and client are HTTP/1.1
