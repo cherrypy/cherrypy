@@ -252,9 +252,14 @@ class Bus(object):
             self._do_execv()
     
     def wait(self, state, interval=0.1):
-        """Wait for the given state."""
+        """Wait for the given state(s)."""
+        if isinstance(state, (tuple, list)):
+            states = state
+        else:
+            states = [state]
+        
         def _wait():
-            while self.state != state:
+            while self.state not in states:
                 time.sleep(interval)
         
         # From http://psyco.sourceforge.net/psycoguide/bugs.html:
