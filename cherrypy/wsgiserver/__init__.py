@@ -332,7 +332,12 @@ class HTTPRequest(object):
         
         environ = self.environ
         
-        method, path, req_protocol = request_line.strip().split(" ", 2)
+        try:
+            method, path, req_protocol = request_line.strip().split(" ", 2)
+        except ValueError:
+            self.simple_response(400, "Malformed Request-Line")
+            return
+        
         environ["REQUEST_METHOD"] = method
         
         # path may be an abs_path (including "http://host.domain.tld");
@@ -588,7 +593,12 @@ class HTTPRequest(object):
         buf.append("\r\n")
         if msg:
             buf.append(msg)
-        self.wfile.sendall("".join(buf))
+        
+        try:
+            self.wfile.sendall("".join(buf))
+        except socket.error, x:
+            if x.args[0] not in socket_errors_to_ignore:
+                raise
     
     def start_response(self, status, headers, exc_info = None):
         """WSGI callable to begin the HTTP response."""

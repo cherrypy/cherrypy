@@ -103,6 +103,20 @@ class HTTPTests(helper.CPWebCase):
         self.assertEquals(", ".join(["%s * 65536" % c for c in alphabet]),
                           response_body)
 
+    def test_malformed_request_line(self):
+        # Test missing version in Request-Line
+        if self.scheme == 'https':
+            c = httplib.HTTPSConnection('127.0.0.1:%s' % self.PORT)
+        else:
+            c = httplib.HTTPConnection('127.0.0.1:%s' % self.PORT)
+        c._output('GET /')
+        c._send_output()
+        response = c.response_class(c.sock, strict=c.strict, method='GET')
+        response.begin()
+        self.assertEqual(response.status, 400)
+        self.assertEqual(response.fp.read(), "Malformed Request-Line")
+        c.close()
+
 
 if __name__ == '__main__':
     setup_server()
