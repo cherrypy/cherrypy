@@ -15,15 +15,12 @@ class Root:
 
 
 # We will use this method from the mod_python configuration
-# as the entyr point to our application
+# as the entry point to our application
 def setup_server():
-    cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'production',
                             'log.screen': False,
                             'show_tracebacks': False})
-    # You must start the engine in a non-blocking fashion
-    # so that mod_python can proceed
-    cherrypy.engine.start(blocking=False)
+    cherrypy.tree.mount(Root())
 
 ##########################################
 # mod_python settings for apache2
