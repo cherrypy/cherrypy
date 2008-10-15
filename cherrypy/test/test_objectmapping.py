@@ -1,4 +1,5 @@
 from cherrypy.test import test
+from cherrypy._cptree import Application
 test.prefer_parent_path()
 
 import cherrypy
@@ -322,6 +323,21 @@ class ObjectMappingTest(helper.CPWebCase):
         # Test custom dispatcher set on app root (see #737).
         self.getPage("/app")
         self.assertBody("milk")
+
+    def testTreeMounting(self):
+
+        # When mounting an application instance, 
+        # we can't specify a script name in the call to mount.
+        a = Application(object(), '/somewhere')
+        self.assertRaises(ValueError, cherrypy.tree.mount, a, '/somewhereelse')
+
+        try:
+            cherrypy.tree.mount(a)
+        except ValueError:
+            self.fail("cherrypy.tree.mount incorrectly raised a ValueError")
+
+
+
 
 
 if __name__ == "__main__":
