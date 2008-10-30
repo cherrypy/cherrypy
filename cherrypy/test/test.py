@@ -382,6 +382,7 @@ def run():
         'test_httplib',
         'test_logging',
         'test_objectmapping',
+        'test_dynamicobjectmapping',
         'test_misc_tools',
         'test_static',
         'test_tutorials',

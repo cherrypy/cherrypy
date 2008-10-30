@@ -227,12 +227,21 @@ class Dispatcher(object):
         
         node = root
         names = [x for x in path.strip('/').split('/') if x] + ['index']
-        for name in names:
+        iternames = names[:]
+        while iternames:
+            name = iternames[0]
             # map to legal Python identifiers (replace '.' with '_')
             objname = name.replace('.', '_')
             
             nodeconf = {}
-            node = getattr(node, objname, None)
+            subnode = getattr(node, objname, None)
+            if subnode is None:
+                dispatch = getattr(node, 'dispatch', None)
+                if dispatch and callable(dispatch):
+                    subnode = dispatch(vpath=iternames)
+            name = iternames.pop(0)
+            node = subnode
+
             if node is not None:
                 # Get _cp_config attached to this node.
                 if hasattr(node, "_cp_config"):
