@@ -331,6 +331,14 @@ class ObjectMappingTest(helper.CPWebCase):
         a = Application(object(), '/somewhere')
         self.assertRaises(ValueError, cherrypy.tree.mount, a, '/somewhereelse')
 
+        # When mounting an application instance, 
+        # we can't specify a script name in the call to mount.
+        a = Application(object(), '/somewhere')
+        try:
+            cherrypy.tree.mount(a, '/somewhere')
+        except ValueError:
+            self.fail("tree.mount must allow script_names which are the same")
+
         try:
             cherrypy.tree.mount(a)
         except ValueError:
