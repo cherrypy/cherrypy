@@ -237,7 +237,8 @@ class Dispatcher(object):
             subnode = getattr(node, objname, None)
             if subnode is None:
                 dispatch = getattr(node, 'dispatch', None)
-                if dispatch and callable(dispatch):
+                if dispatch and callable(dispatch) and not \
+                        getattr(dispatch, 'exposed', False):
                     subnode = dispatch(vpath=iternames)
             name = iternames.pop(0)
             node = subnode

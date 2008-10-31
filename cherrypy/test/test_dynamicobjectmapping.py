@@ -224,6 +224,11 @@ class DynamicObjectMappingTest(helper.CPWebCase):
             self.getPage('/2/2/dispatch')
             self.assertBody('SubSubRoot dispatch')
 
+            # The exposed dispatch will not be called as a dispatch
+            # method.
+            self.getPage('/2/2/foo/foo')
+            self.assertBody("SubSubRoot default")
+
             # Dynamic dispatch will fail here for the subsubnodes
             # so the SubRoot gets called
             self.getPage('/1/asdf/')
