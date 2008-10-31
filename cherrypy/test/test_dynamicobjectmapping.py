@@ -21,6 +21,10 @@ def setup_server():
             return "SubSubRoot handler"
         handler.exposed = True
 
+        def dispatch(self):
+            return "SubSubRoot dispatch"
+        dispatch.exposed = True
+
     subsubnodes = {
         '1': SubSubRoot(),
         '2': SubSubRoot(),
@@ -216,6 +220,9 @@ class DynamicObjectMappingTest(helper.CPWebCase):
 
             self.getPage('/2/2/handler')
             self.assertBody('SubSubRoot handler')
+
+            self.getPage('/2/2/dispatch')
+            self.assertBody('SubSubRoot dispatch')
 
             # Dynamic dispatch will fail here for the subsubnodes
             # so the SubRoot gets called
