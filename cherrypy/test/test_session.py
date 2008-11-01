@@ -99,6 +99,15 @@ def setup_server():
         def length(self):
             return str(len(cherrypy.session))
         length.exposed = True
+        
+        def session_cookie(self):
+            cherrypy.session.load()
+            return cherrypy.session.id
+        session_cookie.exposed = True
+        session_cookie._cp_config = {
+            'tools.sessions.path': '/session_cookie',
+            'tools.sessions.name': 'temp',
+            'tools.sessions.persistent': False}
     
     cherrypy.tree.mount(Root())
     cherrypy.config.update({'environment': 'test_suite'})
@@ -120,6 +129,11 @@ class SessionTest(helper.CPWebCase):
         
         self.getPage('/testStr')
         self.assertBody('1')
+        cookie_parts = dict([p.strip().split('=')
+                             for p in self.cookies[0][1].split(";")])
+        # Assert there is an 'expires' param
+        self.assertEqual(set(cookie_parts.keys()),
+                         set(['session_id', 'expires', 'Path']))
         self.getPage('/testGen', self.cookies)
         self.assertBody('2')
         self.getPage('/testStr', self.cookies)
@@ -275,6 +289,57 @@ class SessionTest(helper.CPWebCase):
         id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
         self.assertNotEqual(id1, id2)
         self.assertNotEqual(id2, 'maliciousid')
+    
+    def test_7_session_cookies(self):
+        self.getPage('/setsessiontype/ram')
+        self.getPage('/session_cookie')
+        # grab the cookie ID
+        cookie_parts = dict([p.strip().split('=') for p in self.cookies[0][1].split(";")])
+        # Assert there is no 'expires' param
+        self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
+        id1 = cookie_parts['temp']
+        self.assertEqual(sessions.RamSession.cache.keys(), [id1])
+        
+        # Send another request in the same "browser session".
+        self.getPage('/session_cookie', self.cookies)
+        cookie_parts = dict([p.strip().split('=') for p in self.cookies[0][1].split(";")])
+        # Assert there is no 'expires' param
+        self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
+        self.assertBody(id1)
+        self.assertEqual(sessions.RamSession.cache.keys(), [id1])
+        
+        # Wait 0.5 seconds to separate the two sessions
+        time.sleep(0.5)
+        
+        # Simulate a browser close by just not sending the cookies
+        self.getPage('/session_cookie')
+        # grab the cookie ID
+        cookie_parts = dict([p.strip().split('=') for p in self.cookies[0][1].split(";")])
+        # Assert there is no 'expires' param
+        self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
+        # Assert a new id has been generated...
+        id2 = cookie_parts['temp']
+        self.assertNotEqual(id1, id2)
+        self.assertEqual(set(sessions.RamSession.cache.keys()), set([id1, id2]))
+        # Wait for the session.timeout on the first session (1 second)
+        time.sleep(1)
+        cache = sessions.RamSession.cache.keys()
+        if cache != [id2]:
+            if set(cache) == set([id1, id2]):
+                self.fail("The first session did not time out.")
+            elif not cache:
+                self.fail("The second session may have been cleaned up "
+                          "prematurely, but it may just be thread timing.")
+            else:
+                self.fail("Unknown session id in cache: %r", cache)
+        # Wait for the session.timeout on the second session (1 second)
+        time.sleep(1)
+        cache = sessions.RamSession.cache.keys()
+        if cache:
+            if cache == [id2]:
+                self.fail("The second session did not time out.")
+            else:
+                self.fail("Unknown session id in cache: %r", cache)
 
 
 import socket
