@@ -491,7 +491,7 @@ def openURL(url, headers=None, method="GET", body=None,
                     # IN6ADDR_ANY, which should respond on localhost.
                     host = "::1"
                 conn = http_conn(host, port)
-            
+
             conn._http_vsn_str = protocol
             conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
             

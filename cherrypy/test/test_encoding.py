@@ -1,7 +1,9 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import sys
 import gzip, StringIO
+from httplib import IncompleteRead
 import cherrypy
 europoundUnicode = u'\x80\xa3'
 europoundUtf8 = u'\x80\xa3'.encode('utf-8')
@@ -160,9 +162,12 @@ class EncodingTests(helper.CPWebCase):
         else:
             # The wsgiserver will simply stop sending data, and the HTTP client
             # will error due to an incomplete chunk-encoded stream.
-            self.assertRaises(ValueError, self.getPage, '/gzip/noshow_stream',
-                              headers=[("Accept-Encoding", "gzip")])
-
+            if sys.version_info[:2] >= (2, 6) or sys.version_info[:3] >= (2, 5, 2):
+                self.assertRaises(IncompleteRead, self.getPage, '/gzip/noshow_stream',
+                                  headers=[("Accept-Encoding", "gzip")])
+            else:
+                self.assertRaises(ValueError, self.getPage, '/gzip/noshow_stream',
+                                  headers=[("Accept-Encoding", "gzip")])
 
 if __name__ == "__main__":
     setup_server()
