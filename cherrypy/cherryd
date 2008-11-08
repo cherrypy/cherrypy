@@ -10,7 +10,7 @@ from cherrypy.process import plugins, servers
 def start(configfiles=None, daemonize=False, environment=None,
           fastcgi=False, pidfile=None, imports=None):
     """Subscribe all engine plugins and start the engine."""
-    for i in imports:
+    for i in imports or []:
         exec "import %s" % i
     
     for c in configfiles or []:
