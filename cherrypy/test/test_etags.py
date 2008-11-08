@@ -17,9 +17,15 @@ def setup_server():
             else:
                 raise cherrypy.HTTPError(code)
         fail.exposed = True
+        
+        def unicoded(self):
+            return u'I am a \u1ee4nicode string.'
+        unicoded.exposed = True
+        unicoded._cp_config = {'tools.encode.on': True}
     
     conf = {'/': {'tools.etags.on': True,
-                  'tools.etags.autotags': True}}
+                  'tools.etags.autotags': True,
+                  }}
     cherrypy.tree.mount(Root(), config=conf)
     cherrypy.config.update({'environment': 'test_suite'})
 
@@ -27,7 +33,7 @@ from cherrypy.test import helper
 
 class ETagTest(helper.CPWebCase):
     
-    def testETags(self):
+    def test_etags(self):
         self.getPage("/resource")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
@@ -53,6 +59,11 @@ class ETagTest(helper.CPWebCase):
         self.assertStatus(304)
         self.getPage("/resource", headers=[('If-None-Match', "a bogus tag")])
         self.assertStatus("200 OK")
+    
+    def test_errors(self):
+        self.getPage("/resource")
+        self.assertStatus(200)
+        etag = self.assertHeader('ETag')
         
         # Test raising errors in page handler
         self.getPage("/fail/412", headers=[('If-Match', etag)])
@@ -63,6 +74,14 @@ class ETagTest(helper.CPWebCase):
         self.assertStatus(412)
         self.getPage("/fail/304", headers=[('If-None-Match', "*")])
         self.assertStatus(304)
+    
+    def test_unicode_body(self):
+        self.getPage("/unicoded")
+        self.assertStatus(200)
+        etag1 = self.assertHeader('ETag')
+        self.getPage("/unicoded", headers=[('If-Match', etag1)])
+        self.assertStatus(200)
+        self.assertHeader('ETag', etag1)
 
 
 if __name__ == "__main__":
