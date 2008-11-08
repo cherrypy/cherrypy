@@ -49,6 +49,10 @@ class TestHarness(object):
         print "PID:", os.getpid()
         print
         
+        # Override these in _run as needed:
+        cherrypy.server.using_wsgi = True
+        cherrypy.server.using_apache = False
+        
         if isinstance(conf, basestring):
             parser = cherrypy.config._Parser()
             conf = parser.dict_from_file(conf).get('global', {})

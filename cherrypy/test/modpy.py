@@ -169,8 +169,10 @@ class ModPythonTestHarness(test.TestHarness):
         print "Running tests:", self.server
         
         if self.use_wsgi:
+            cherrypy.server.using_wsgi = True
             conf_template = conf_modpython_gateway
         else:
+            cherrypy.server.using_wsgi = False
             conf_template = conf_cpmodpy
         
         # mod_python, since it runs in the Apache process, must be

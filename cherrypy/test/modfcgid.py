@@ -104,6 +104,7 @@ class FCGITestHarness(test.TestHarness):
     """TestHarness for fcgid and CherryPy."""
     
     def _run(self, conf):
+        cherrypy.server.using_wsgi = True
         cherrypy.server.using_apache = True
         cherrypy.server.httpserver = servers.FlupFCGIServer(
             application=cherrypy.tree, bindAddress=('127.0.0.1', 4000))

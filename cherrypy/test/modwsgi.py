@@ -116,6 +116,7 @@ class ModWSGITestHarness(test.TestHarness):
     use_wsgi = True
     
     def _run(self, conf):
+        cherrypy.server.using_wsgi = True
         cherrypy.server.using_apache = True
         
         from cherrypy.test import webtest
