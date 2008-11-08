@@ -40,6 +40,7 @@ packages=[
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
     "cherrypy.wsgiserver", "cherrypy.process",
+    "cherrypy.scaffold",
 ]
 download_url="http://download.cherrypy.org/cherrypy/3.1.0/"
 data_files=[
