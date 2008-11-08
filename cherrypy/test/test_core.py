@@ -17,7 +17,7 @@ from cherrypy.lib import http, static
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
-                        "TRACE", "CONNECT", "PROPFIND")
+                        "TRACE", "PROPFIND")
 
 
 def setup_server():
@@ -384,7 +384,7 @@ def setup_server():
         
         def index(self):
             m = cherrypy.request.method
-            if m in defined_http_methods:
+            if m in defined_http_methods or m == "CONNECT":
                 return m
             
             if m == "LINK":
@@ -588,9 +588,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         msg = "Illegal response status from server (781 is out of range)."
         self.assertErrorPage(500, msg)
         
-        self.getPage("/status/unknown")
-        self.assertBody('funky')
-        self.assertStatus(431)
+        if not getattr(cherrypy.server, 'using_apache', False):
+            self.getPage("/status/unknown")
+            self.assertBody('funky')
+            self.assertStatus(431)
         
         self.getPage("/status/bad")
         self.assertStatus(500)
@@ -752,7 +753,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.getPage("/error/page_yield")
             self.assertErrorPage(500, pattern=valerr)
             
-            if cherrypy.server.protocol_version == "HTTP/1.0":
+            if (cherrypy.server.protocol_version == "HTTP/1.0" or
+                getattr(cherrypy.server, "using_apache", False)):
                 self.getPage("/error/page_streamed")
                 # Because this error is raised after the response body has
                 # started, the status should not change to an error status.
@@ -795,8 +797,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                "IOError: [Errno 2] No such file or directory: 'nonexistent.html'")
         self.assertInBody(msg)
         
-        if (hasattr(self, 'harness') and
-            "modpython" in self.harness.__class__.__name__.lower()):
+        if getattr(cherrypy.server, "using_apache", False):
             pass
         else:
             # Test throw_errors (ticket #186).
@@ -960,7 +961,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                      headers=[("Content-type", "application/json")])
         self.assertBody("application/json")
     
-    def testHTTPMethods(self):
+    def test_basic_HTTPMethods(self):
         helper.webtest.methods_with_bodies = ("POST", "PUT", "PROPFIND")
         
         # Test that all defined HTTP methods work.
@@ -1045,6 +1046,14 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('<h1>Choose your document</h1>\n<ul>\n</ul>')
         self.assertStatus(200)
     
+    def test_CONNECT_method(self):
+        if getattr(cherrypy.server, "using_apache", False):
+            print "skipped due to known Apache differences...",
+            return
+        
+        self.getPage("/method/", method="CONNECT")
+        self.assertBody("CONNECT")
+    
     def testFavicon(self):
         # favicon.ico is served by staticfile.
         icofilename = os.path.join(localDir, "../favicon.ico")
@@ -1078,6 +1087,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertHeader('Set-Cookie', 'Last=Piranha;')
     
     def testMaxRequestSize(self):
+        if getattr(cherrypy.server, "using_apache", False):
+            print "skipped due to known Apache differences...",
+            return
+        
         for size in (500, 5000, 50000):
             self.getPage("/", headers=[('From', "x" * 500)])
             self.assertStatus(413)

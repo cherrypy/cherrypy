@@ -154,7 +154,8 @@ class EncodingTests(helper.CPWebCase):
         # readable page, since 1) the gzip header is already set,
         # and 2) we may have already written some of the body.
         # The fix is to never stream yields when using gzip.
-        if cherrypy.server.protocol_version == "HTTP/1.0":
+        if (cherrypy.server.protocol_version == "HTTP/1.0" or
+            getattr(cherrypy.server, "using_apache", False)):
             self.getPage('/gzip/noshow_stream',
                          headers=[("Accept-Encoding", "gzip")])
             self.assertHeader('Content-Encoding', 'gzip')

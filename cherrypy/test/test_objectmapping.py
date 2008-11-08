@@ -220,16 +220,17 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertStatus('302 Found')
             self.assertHeader('Location', '%s/dir1/' % self.base())
             
-            # Test that we can use URL's which aren't all valid Python identifiers
-            # This should also test the %XX-unquoting of URL's.
-            self.getPage("/Von%20B%fclow?ID=14")
-            self.assertBody("ID is 14")
-            
-            # Test that %2F in the path doesn't get unquoted too early;
-            # that is, it should not be used to separate path components.
-            # See ticket #393.
-            self.getPage("/page%2Fname")
-            self.assertBody("default:('page/name',)")
+            if not getattr(cherrypy.server, "using_apache", False):
+                # Test that we can use URL's which aren't all valid Python identifiers
+                # This should also test the %XX-unquoting of URL's.
+                self.getPage("/Von%20B%fclow?ID=14")
+                self.assertBody("ID is 14")
+                
+                # Test that %2F in the path doesn't get unquoted too early;
+                # that is, it should not be used to separate path components.
+                # See ticket #393.
+                self.getPage("/page%2Fname")
+                self.assertBody("default:('page/name',)")
             
             self.getPage("/dir1/dir2/script_name")
             self.assertBody(url)

@@ -263,7 +263,8 @@ class ToolTests(helper.CPWebCase):
         self.assertBody("True")
         
         # If body is "razdrez", then on_end_request is being called too early.
-        if cherrypy.server.protocol_version == "HTTP/1.0":
+        if (cherrypy.server.protocol_version == "HTTP/1.0" or
+            getattr(cherrypy.server, "using_apache", False)):
             self.getPage("/demo/errinstream?id=5")
             # Because this error is raised after the response body has
             # started, the status should not change to an error status.

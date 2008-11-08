@@ -104,6 +104,10 @@ class HTTPTests(helper.CPWebCase):
                           response_body)
 
     def test_malformed_request_line(self):
+        if getattr(cherrypy.server, "using_apache", False):
+            print "skipped due to known Apache differences...",
+            return
+        
         # Test missing version in Request-Line
         if self.scheme == 'https':
             c = httplib.HTTPSConnection('127.0.0.1:%s' % self.PORT)
