@@ -19,26 +19,6 @@ DEFAULT_URL     = "http://www.python.org/packages/source/s/setuptools/"
 
 import sys, os
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def use_setuptools(
     version=DEFAULT_VERSION, download_base=DEFAULT_URL, to_dir=os.curdir
 ):
@@ -111,16 +91,6 @@ def download_setuptools(
 
     return os.path.realpath(saveto)
 
-
-
-
-
-
-
-
-
-
-
 def main(argv, version=DEFAULT_VERSION):
     """Install or upgrade setuptools and EasyInstall"""
 
@@ -161,4 +131,3 @@ def main(argv, version=DEFAULT_VERSION):
             print '(Run "ez_setup.py -U setuptools" to reinstall or upgrade.)'
 if __name__=='__main__':
     main(sys.argv[1:])
-

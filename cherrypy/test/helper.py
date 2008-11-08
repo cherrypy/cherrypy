@@ -147,7 +147,17 @@ def sync_apps(profile=False, validate=False, conquer=False):
             warnings.warn("Error importing wsgiref. The validator will not run.")
         else:
             app = validate.validator(app)
-    cherrypy.server.httpserver.wsgi_app = app
+    
+    h = cherrypy.server.httpserver
+    if hasattr(h, 'wsgi_app'):
+        # CherryPy's wsgiserver
+        h.wsgi_app = app
+    elif hasattr(h, 'fcgiserver'):
+        # flup's WSGIServer
+        h.fcgiserver.application = app
+    elif hasattr(h, 'scgiserver'):
+        # flup's WSGIServer
+        h.scgiserver.application = app
 
 def _run_test_suite_thread(moduleNames, conf):
     try:
