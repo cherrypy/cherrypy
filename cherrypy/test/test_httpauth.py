@@ -138,7 +138,7 @@ class HTTPAuthTest(helper.CPWebCase):
         
         auth = base_auth % (nonce, response, '00000001')
         self.getPage('/digest/', [('Authorization', auth)])
-        self.assertStatus('401 Unauthorized')
+        self.assertStatus(401)
 
         # Test that must pass
         base_auth = 'Digest username="test", realm="localhost", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'

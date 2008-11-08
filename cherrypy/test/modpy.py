@@ -61,6 +61,7 @@ CONF_PATH = "test_mp.conf"
 conf_modpython_gateway = """
 # Apache2 server conf file for testing CherryPy with modpython_gateway.
 
+ServerName 127.0.0.1
 DocumentRoot "/"
 Listen %s
 LoadModule python_module modules/mod_python.so
@@ -77,6 +78,7 @@ PythonDebug On
 conf_cpmodpy = """
 # Apache2 server conf file for testing CherryPy with _cpmodpy.
 
+ServerName 127.0.0.1
 DocumentRoot "/"
 Listen %s
 LoadModule python_module modules/mod_python.so
@@ -155,6 +157,9 @@ class ModPythonTestHarness(test.TestHarness):
     use_wsgi = False
     
     def _run(self, conf):
+        import cherrypy
+        cherrypy.server.using_apache = True
+        
         from cherrypy.test import webtest
         webtest.WebCase.PORT = self.port
         webtest.WebCase.harness = self

@@ -170,9 +170,12 @@ class ConfigTests(helper.CPWebCase):
         self.getPage("/repr?key=thing1")
         self.assertBody(repr(cherrypy.lib.http.response_codes[404]))
         
-        self.getPage("/repr?key=thing2")
-        from cherrypy.tutorial import thing2
-        self.assertBody(repr(thing2))
+        if not getattr(cherrypy.server, "using_apache", False):
+            # The object ID's won't match up when using Apache, since the
+            # server and client are running in different processes.
+            self.getPage("/repr?key=thing2")
+            from cherrypy.tutorial import thing2
+            self.assertBody(repr(thing2))
         
         self.getPage("/repr?key=complex")
         self.assertBody("(3+2j)")

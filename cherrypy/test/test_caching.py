@@ -204,7 +204,8 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/a.gif", [('If-Modified-Since', lm1)])
         self.assertStatus(304)
         self.assertNoHeader("Last-Modified")
-        self.assertHeader("Age")
+        if not getattr(cherrypy.server, "using_apache", False):
+            self.assertHeader("Age")
 
 
 if __name__ == '__main__':
