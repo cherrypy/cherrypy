@@ -192,6 +192,20 @@ class WebCase(TestCase):
         self.set_persistent(on)
     persistent = property(_get_persistent, _set_persistent)
     
+    def interface(self):
+        """Return an IP address for a client connection.
+        
+        If the server is listening on '0.0.0.0' (INADDR_ANY)
+        or '::' (IN6ADDR_ANY), this will return the proper localhost."""
+        host = self.HOST
+        if host == '0.0.0.0':
+            # INADDR_ANY, which should respond on localhost.
+            return "127.0.0.1"
+        if host == '::':
+            # IN6ADDR_ANY, which should respond on localhost.
+            return "::1"
+        return host
+    
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False

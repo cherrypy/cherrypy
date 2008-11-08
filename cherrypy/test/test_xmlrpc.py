@@ -116,19 +116,11 @@ class XmlRpcTest(helper.CPWebCase):
         except AttributeError:
             pass
         
-        host = self.HOST
-        if host == '0.0.0.0':
-            # INADDR_ANY, which should respond on localhost.
-            host = "127.0.0.1"
-        if host == '::':
-            # IN6ADDR_ANY, which should respond on localhost.
-            host = "::1"
-        
         if scheme == "https":
-            url = 'https://%s:%s/xmlrpc/' % (host, self.PORT)
+            url = 'https://%s:%s/xmlrpc/' % (self.interface(), self.PORT)
             proxy = xmlrpclib.ServerProxy(url, transport=HTTPSTransport())
         else:
-            url = 'http://%s:%s/xmlrpc/' % (host, self.PORT)
+            url = 'http://%s:%s/xmlrpc/' % (self.interface(), self.PORT)
             proxy = xmlrpclib.ServerProxy(url)
         
         # begin the tests ...

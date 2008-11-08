@@ -207,9 +207,9 @@ class SessionTest(helper.CPWebCase):
         
         def request(index):
             if self.scheme == 'https':
-                c = httplib.HTTPSConnection('127.0.0.1:%s' % self.PORT)
+                c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
             else:
-                c = httplib.HTTPConnection('127.0.0.1:%s' % self.PORT)
+                c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
             for i in xrange(request_count):
                 c.putrequest('GET', '/')
                 for k, v in cookies:

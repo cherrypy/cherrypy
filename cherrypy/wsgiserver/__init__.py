@@ -1615,6 +1615,18 @@ class CherryPyWSGIServer(object):
             ctx.use_certificate_file(self.ssl_certificate)
             self.socket = SSLConnection(ctx, self.socket)
             self.populate_ssl_environ()
+            
+            # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
+            # activate dual-stack. See http://www.cherrypy.org/ticket/871.
+            if (not isinstance(self.bind_addr, basestring)
+                and self.bind_addr[0] == '::' and family == socket.AF_INET6):
+                try:
+                    self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+                except (AttributeError, socket.error):
+                    # Apparently, the socket option is not available in
+                    # this machine's TCP stack
+                    pass
+        
         self.socket.bind(self.bind_addr)
     
     def tick(self):
