@@ -88,7 +88,7 @@ class ReferenceTests(helper.CPWebCase):
         success = []
         
         def getpage():
-            host = '%s:%s' % (self.HOST, self.PORT)
+            host = '%s:%s' % (self.interface(), self.PORT)
             if self.scheme == 'https':
                 c = httplib.HTTPSConnection(host)
             else:

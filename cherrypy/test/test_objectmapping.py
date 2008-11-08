@@ -244,7 +244,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.script_name = ""
         
         # Test absoluteURI's in the Request-Line
-        self.getPage('http://127.0.0.1/')
+        self.getPage('http://%s:%s/' % (self.interface(), self.PORT))
         self.assertBody('world')
         
         # Test that the "isolated" app doesn't leak url's into the root app.

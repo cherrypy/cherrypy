@@ -70,9 +70,9 @@ class HTTPTests(helper.CPWebCase):
         # will hang. Verify that CP times out the socket and responds
         # with 411 Length Required.
         if self.scheme == "https":
-            c = httplib.HTTPSConnection("127.0.0.1:%s" % self.PORT)
+            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTPConnection("127.0.0.1:%s" % self.PORT)
+            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.request("POST", "/")
         self.assertEqual(c.getresponse().status, 411)
     
@@ -87,9 +87,9 @@ class HTTPTests(helper.CPWebCase):
         
         # post file
         if self.scheme == 'https':
-            c = httplib.HTTPS('127.0.0.1:%s' % self.PORT)
+            c = httplib.HTTPS('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTP('127.0.0.1:%s' % self.PORT)
+            c = httplib.HTTP('%s:%s' % (self.interface(), self.PORT))
         c.putrequest('POST', '/post_multipart')
         c.putheader('Content-Type', content_type)
         c.putheader('Content-Length', str(len(body)))
@@ -110,9 +110,9 @@ class HTTPTests(helper.CPWebCase):
         
         # Test missing version in Request-Line
         if self.scheme == 'https':
-            c = httplib.HTTPSConnection('127.0.0.1:%s' % self.PORT)
+            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTPConnection('127.0.0.1:%s' % self.PORT)
+            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c._output('GET /')
         c._send_output()
         response = c.response_class(c.sock, strict=c.strict, method='GET')

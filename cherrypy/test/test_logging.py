@@ -79,14 +79,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.assertBody('content')
         self.assertStatus(200)
         
-        host = self.HOST
-        if host == '0.0.0.0':
-            # INADDR_ANY, which should respond on localhost.
-            host = "127.0.0.1"
-        if host == '::':
-            # IN6ADDR_ANY, which should respond on localhost.
-            host = "::1"
-        intro = '%s - - [' % host
+        intro = '%s - - [' % self.interface()
         
         self.assertLog(-1, intro)
         
@@ -105,14 +98,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.assertBody('content')
         self.assertStatus(200)
         
-        host = self.HOST
-        if host == '0.0.0.0':
-            # INADDR_ANY, which should respond on localhost.
-            host = "127.0.0.1"
-        if host == '::':
-            # IN6ADDR_ANY, which should respond on localhost.
-            host = "::1"
-        intro = '%s - - [' % host
+        intro = '%s - - [' % self.interface()
         
         self.assertLog(-1, intro)
         if [k for k, v in self.headers if k.lower() == 'content-length']:
