@@ -652,7 +652,8 @@ class HTTPRequest(object):
             if status < 200 or status in (204, 205, 304):
                 pass
             else:
-                if self.response_protocol == 'HTTP/1.1':
+                if (self.response_protocol == 'HTTP/1.1'
+                    and self.environ["REQUEST_METHOD"] != 'HEAD'):
                     # Use the chunked transfer-coding
                     self.chunked_write = True
                     self.outheaders.append(("Transfer-Encoding", "chunked"))

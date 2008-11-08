@@ -171,6 +171,12 @@ class ConnectionTests(helper.CPWebCase):
                     
                     # Make another request on the same connection, which should error.
                     self.assertRaises(httplib.NotConnected, self.getPage, "/")
+                
+                # Try HEAD. See http://www.cherrypy.org/ticket/864.
+                self.getPage("/stream", method='HEAD')
+                self.assertStatus('200 OK')
+                self.assertBody('')
+                self.assertNoHeader("Transfer-Encoding")
         else:
             self.PROTOCOL = "HTTP/1.0"
             
