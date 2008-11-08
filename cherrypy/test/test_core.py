@@ -761,12 +761,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             else:
                 # Under HTTP/1.1, the chunked transfer-coding is used.
                 # The HTTP client will choke when the output is incomplete.
-                if sys.version_info[:2] >= (2, 6) or sys.version_info[:3] >= (2, 5, 2):
-                    self.assertRaises(IncompleteRead, self.getPage,
-                                      "/error/page_streamed")
-                else:
-                    self.assertRaises(ValueError, self.getPage,
-                                      "/error/page_streamed")
+                self.assertRaises((ValueError, IncompleteRead), self.getPage,
+                                  "/error/page_streamed")
             
             # No traceback should be present
             self.getPage("/error/cause_err_in_finalize")

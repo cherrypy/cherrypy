@@ -273,12 +273,8 @@ class ToolTests(helper.CPWebCase):
             # Because this error is raised after the response body has
             # started, and because it's chunked output, an error is raised by
             # the HTTP client when it encounters incomplete output.
-            if sys.version_info[:2] >= (2, 6) or sys.version_info[:3] >= (2, 5, 2):
-                self.assertRaises(IncompleteRead, self.getPage,
-                                  "/demo/errinstream?id=5")
-            else:
-                self.assertRaises(ValueError, self.getPage,
-                                  "/demo/errinstream?id=5")
+            self.assertRaises((ValueError, IncompleteRead), self.getPage,
+                              "/demo/errinstream?id=5")
         # If this fails, then on_end_request isn't being called at all.
         time.sleep(0.1)
         self.getPage("/demo/ended/5")

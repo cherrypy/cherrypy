@@ -162,12 +162,9 @@ class EncodingTests(helper.CPWebCase):
         else:
             # The wsgiserver will simply stop sending data, and the HTTP client
             # will error due to an incomplete chunk-encoded stream.
-            if sys.version_info[:2] >= (2, 6) or sys.version_info[:3] >= (2, 5, 2):
-                self.assertRaises(IncompleteRead, self.getPage, '/gzip/noshow_stream',
-                                  headers=[("Accept-Encoding", "gzip")])
-            else:
-                self.assertRaises(ValueError, self.getPage, '/gzip/noshow_stream',
-                                  headers=[("Accept-Encoding", "gzip")])
+            self.assertRaises((ValueError, IncompleteRead), self.getPage,
+                              '/gzip/noshow_stream',
+                              headers=[("Accept-Encoding", "gzip")])
 
 if __name__ == "__main__":
     setup_server()
