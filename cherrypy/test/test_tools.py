@@ -3,6 +3,7 @@
 import gzip
 import StringIO
 import sys
+from httplib import IncompleteRead
 import time
 timeout = 0.2
 
@@ -272,7 +273,7 @@ class ToolTests(helper.CPWebCase):
             # Because this error is raised after the response body has
             # started, and because it's chunked output, an error is raised by
             # the HTTP client when it encounters incomplete output.
-            self.assertRaises(ValueError, self.getPage,
+            self.assertRaises((ValueError, IncompleteRead), self.getPage,
                               "/demo/errinstream?id=5")
         # If this fails, then on_end_request isn't being called at all.
         time.sleep(0.1)

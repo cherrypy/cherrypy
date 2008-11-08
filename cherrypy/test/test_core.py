@@ -7,6 +7,7 @@ import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
+from httplib import IncompleteRead
 
 import cherrypy
 from cherrypy import _cptools, tools
@@ -760,7 +761,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             else:
                 # Under HTTP/1.1, the chunked transfer-coding is used.
                 # The HTTP client will choke when the output is incomplete.
-                self.assertRaises(ValueError, self.getPage,
+                self.assertRaises((ValueError, IncompleteRead), self.getPage,
                                   "/error/page_streamed")
             
             # No traceback should be present
