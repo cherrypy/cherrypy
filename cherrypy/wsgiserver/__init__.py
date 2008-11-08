@@ -746,7 +746,8 @@ if not _fileobject_uses_str_type:
                 try:
                     return self._sock.recv(size)
                 except socket.error, e:
-                    if e.args[0] not in socket_errors_nonblocking:
+                    if (e.args[0] not in socket_errors_nonblocking
+                        and e.args[0] not in socket_error_eintr):
                         raise
 
         def read(self, size=-1):
@@ -923,7 +924,8 @@ else:
                 try:
                     return self._sock.recv(size)
                 except socket.error, e:
-                    if e.args[0] not in socket_errors_nonblocking:
+                    if (e.args[0] not in socket_errors_nonblocking
+                        and e.args[0] not in socket_error_eintr):
                         raise
 
         def read(self, size=-1):
