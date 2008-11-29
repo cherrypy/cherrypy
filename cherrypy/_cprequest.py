@@ -561,7 +561,10 @@ class Request(object):
             # HEAD requests MUST NOT return a message-body in the response.
             cherrypy.response.body = []
         
-        cherrypy.log.access()
+        try:
+            cherrypy.log.access()
+        except:
+            cherrypy.log.error(traceback=True)
         
         if cherrypy.response.timed_out:
             raise cherrypy.TimeoutError()
