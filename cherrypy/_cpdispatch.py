@@ -24,7 +24,12 @@ class PageHandler(object):
         try:
             return self.callable(*self.args, **self.kwargs)
         except TypeError, x:
-            test_callable_spec(self.callable, self.args, self.kwargs)
+            try:
+                test_callable_spec(self.callable, self.args, self.kwargs)
+            except cherrypy.HTTPError, error:
+                raise error
+            except:
+                raise x
             raise
 
 
