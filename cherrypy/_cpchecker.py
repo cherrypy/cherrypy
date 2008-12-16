@@ -46,6 +46,20 @@ class Checker(object):
     # This value should be set inside _cpconfig.
     global_config_contained_paths = False
     
+    def check_app_config_entries_dont_start_with_script_name(self):
+        for sn, app in cherrypy.tree.apps.iteritems():
+            if not isinstance(app, cherrypy.Application):
+                continue
+            if not app.config:
+                continue
+            if sn == '':
+                continue
+            for key in app.config.keys():
+                if key.startswith(sn):
+                    warnings.warn(
+                        "The application mounted at %r has config " \
+                        "entries that start with its script name: %r" % (sn, key))
+
     def check_skipped_app_config(self):
         for sn, app in cherrypy.tree.apps.iteritems():
             if not isinstance(app, cherrypy.Application):
