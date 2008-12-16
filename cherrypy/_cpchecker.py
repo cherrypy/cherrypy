@@ -54,8 +54,10 @@ class Checker(object):
                 continue
             if sn == '':
                 continue
+            sn_atoms = sn.strip("/").split("/")
             for key in app.config.keys():
-                if key.startswith(sn):
+                key_atoms = key.strip("/").split("/")
+                if key_atoms[:len(sn_atoms)] == sn_atoms:
                     warnings.warn(
                         "The application mounted at %r has config " \
                         "entries that start with its script name: %r" % (sn, key))
