@@ -12,6 +12,7 @@ from httplib import IncompleteRead
 import cherrypy
 from cherrypy import _cptools, tools
 from cherrypy.lib import http, static
+from cherrypy._cpdispatch import test_callable_spec
 
 
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
@@ -99,6 +100,12 @@ def setup_server():
         def default(self, *args, **kwargs):
             return "args: %s kwargs: %s" % (args, kwargs)
 
+
+    class ParamErrorsCallable(object):
+        exposed = True
+        def __call__(self):
+            return "data"
+
     class ParamErrors(Test):
 
         def one_positional(self, param1):
@@ -132,6 +139,12 @@ def setup_server():
         def no_positional_kwargs(self, **kwargs):
             return "data"
         no_positional_kwargs.exposed = True
+
+        callable_object = ParamErrorsCallable()
+
+        def raise_type_error(self, **kwargs):
+            raise TypeError, "Client Error"
+        raise_type_error.exposed = True
 
 
     class Status(Test):
@@ -521,6 +534,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 '/paramerrors/no_positional_args_kwargs/foo?param2=bar',
                 '/paramerrors/no_positional_args_kwargs/foo/bar/baz?param2=bar&param3=baz',
                 '/paramerrors/no_positional_kwargs?param1=foo&param2=bar',
+                '/paramerrors/callable_object',
             ):
             self.getPage(uri)
             self.assertStatus(200)
@@ -541,6 +555,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 '/paramerrors/no_positional?param1=foo',
                 '/paramerrors/no_positional_args/boo?param1=foo',
                 '/paramerrors/no_positional_kwargs/boo?param1=foo',
+                '/paramerrors/callable_object?param1=foo',
+                '/paramerrors/callable_object/boo',
             ):
             self.getPage(uri)
             self.assertStatus(404)
@@ -555,6 +571,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 ('/paramerrors/one_positional_kwargs/foo', 'param1=foo&param2=bar&param3=baz',),
                 ('/paramerrors/no_positional', 'param1=foo',),
                 ('/paramerrors/no_positional_args/boo', 'param1=foo',),
+                ('/paramerrors/callable_object', 'param1=foo',),
             ):
             self.getPage(uri, method='POST', body=body)
             self.assertStatus(400)
@@ -569,10 +586,19 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 ('/paramerrors/one_positional_kwargs/foo/bar', 'param2=bar&param3=baz',),
                 ('/paramerrors/no_positional?param1=foo', 'param2=foo',),
                 ('/paramerrors/no_positional_args/boo?param2=foo', 'param1=foo',),
+                ('/paramerrors/callable_object?param2=bar', 'param1=foo',),
             ):
             self.getPage(uri, method='POST', body=body)
             self.assertStatus(404)
 
+        # In the case that a handler raises a TypeError we should
+        # let that type error through.
+        for uri in (
+                '/paramerrors/raise_type_error',
+            ):
+            self.getPage(uri, method='POST', body=body)
+            self.assertStatus(500)
+            self.assertTrue('Client Error', self.body)
 
     def testStatus(self):
         self.getPage("/status/")
