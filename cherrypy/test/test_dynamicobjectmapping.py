@@ -43,7 +43,7 @@ def setup_server():
             return "SubRoot handler"
         handler.exposed = True
 
-        def dispatch(self, vpath):
+        def _cp_dispatch(self, vpath):
             return subsubnodes.get(vpath[0], None)
 
     subnodes = {
@@ -63,7 +63,7 @@ def setup_server():
             return "handler"
         handler.exposed = True
 
-        def dispatch(self, vpath):
+        def _cp_dispatch(self, vpath):
             return subnodes.get(vpath[0])
 
     #--------------------------------------------------------------------------
@@ -100,7 +100,7 @@ def setup_server():
         def GET(self):
             return unicode(sorted(user_lookup.keys()))
 
-        def dispatch(self, vpath):
+        def dynamic_dispatch(self, vpath):
             try:
                 id = int(vpath[0])
             except ValueError:
@@ -155,14 +155,15 @@ def setup_server():
 
     Root.users = UserContainerNode()
 
-    md = cherrypy.dispatch.MethodDispatcher()
+    md = cherrypy.dispatch.MethodDispatcher('dynamic_dispatch')
     for url in script_names:
         conf = {'/': {
-                    'user': (url or "/").split("/")[-2]
+                    'user': (url or "/").split("/")[-2],
                 },
                 '/users': {
-                    'request.dispatch': md},
-                }
+                    'request.dispatch': md
+                },
+            }
         cherrypy.tree.mount(Root(), url, conf)
 
     cherrypy.config.update({'environment': "test_suite"})

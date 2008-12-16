@@ -194,7 +194,18 @@ class Dispatcher(object):
     
     This is the default, built-in dispatcher for CherryPy.
     """
+    __metaclass__ = cherrypy._AttributeDocstrings
+
+    dispatch_method_name = '_cp_dispatch'
+    dispatch_method_name__doc = """
+    The name of the dispatch method that nodes may optionally implement
+    to provide their own dynamic dispatch algorithm.
+    """
     
+    def __init__(self, dispatch_method_name = None):
+        if dispatch_method_name:
+            self.dispatch_method_name = dispatch_method_name
+
     def __call__(self, path_info):
         """Set handler and config for the current request."""
         request = cherrypy.request
@@ -229,6 +240,7 @@ class Dispatcher(object):
         request = cherrypy.request
         app = request.app
         root = app.root
+        dispatch_name = self.dispatch_method_name
         
         # Get config for the root object/path.
         curpath = ""
@@ -250,7 +262,7 @@ class Dispatcher(object):
             nodeconf = {}
             subnode = getattr(node, objname, None)
             if subnode is None:
-                dispatch = getattr(node, 'dispatch', None)
+                dispatch = getattr(node, dispatch_name, None)
                 if dispatch and callable(dispatch) and not \
                         getattr(dispatch, 'exposed', False):
                     subnode = dispatch(vpath=iternames)
