@@ -33,36 +33,6 @@ class PageHandler(object):
             raise
 
 
-def getargspec(obj):
-    """Get the names and default values of a callable's
-       arguments
-
-    A tuple of four things is returned: (args, varargs,
-    varkw, defaults).
-      - args is a list of the argument names (it may
-        contain nested lists).
-      - varargs and varkw are the names of the * and
-        ** arguments or None.
-      - defaults is a tuple of default argument values
-        or None if there are no default arguments; if
-        this tuple has n elements, they correspond to
-        the last n elements listed in args.
-
-    Unlike inspect.getargspec(), can return argument
-    specification for functions, methods, callable
-    objects, and classes.  Does not support builtin
-    functions or methods.
-    """
-    try:
-        return inspect.getargspec(obj)
-    except TypeError:
-        if isinstance(obj, object) and hasattr(obj, '__call__'):
-            return getargspec(obj.__call__)
-
-        # If it wasn't one of our own types, re-raise 
-        # the original error
-        raise
-
 def test_callable_spec(callable, callable_args, callable_kwargs):
     """
     Inspect callable and test to see if the given args are suitable for it.
@@ -82,7 +52,15 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
     incorrect, then a 404 Not Found should be raised. Conversely the body
     parameters are part of the request; if they are invalid a 400 Bad Request.
     """
-    (args, varargs, varkw, defaults) = getargspec(callable)
+    try:
+        (args, varargs, varkw, defaults) = inspect.getargspec(callable)
+    except TypeError:
+        if isinstance(callable, object) and hasattr(callable, '__call__'):
+            (args, varargs, varkw, defaults) = inspect.getargspec(callable.__call__)
+        else:
+            # If it wasn't one of our own types, re-raise 
+            # the original error
+            raise
 
     if args and args[0] == 'self':
         args = args[1:]
