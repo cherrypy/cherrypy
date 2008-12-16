@@ -33,34 +33,6 @@ class PageHandler(object):
             raise
 
 
-# Taken from: http://kbyanc.blogspot.com/2007/07/python-more-generic-getargspec.html
-# License found at: http://kbyanc.blogspot.com/2007/08/license-for-code-posted-on-my-blog.html
-# Modified by Lakin Wecker (c) 2008:
-#  - don't remove the implicit 'self' argument
-#  - Be a bit more Pythonic and shorter
-#  - Classes can't be handlers because their __init__ can't return anything, don't bother.
-# the getargspect function below is licensed under the following license:
-"""
-Copyright (c) 2007, Kelly Yancey
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-"""
 def getargspec(obj):
     """Get the names and default values of a callable's
        arguments
@@ -84,12 +56,7 @@ def getargspec(obj):
     try:
         return inspect.getargspec(obj)
     except TypeError:
-        if hasattr(obj, 'im_func'):
-            # NB: We use im_func so we work with
-            #     instancemethod objects also.
-            spec = list(inspect.getargspec(obj.im_func))
-            return spec
-        elif isinstance(obj, object) and hasattr(obj, '__call__'):
+        if isinstance(obj, object) and hasattr(obj, '__call__'):
             return getargspec(obj.__call__)
 
         # If it wasn't one of our own types, re-raise 
