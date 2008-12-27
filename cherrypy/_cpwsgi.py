@@ -78,7 +78,7 @@ class AppResponse(object):
             self.request = self.get_request()
             s, h, b = self.get_response()
             self.iter_response = iter(b)
-            self.start_response(s, h)
+            self.write = self.start_response(s, h)
         except self.throws:
             self.close()
             raise
