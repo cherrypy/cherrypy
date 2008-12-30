@@ -493,11 +493,19 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody("['a', 'b', 'c']")
 
         # Test friendly error message when given params are not accepted.
+        cherrypy.config.update({"request.show_mismatched_params": True})
         self.getPage("/params/?notathing=meeting")
         self.assertInBody("Missing parameters: thing")
         self.getPage("/params/?thing=meeting&notathing=meeting")
         self.assertInBody("Unexpected query string parameters: notathing")
         
+        # Test ability to turn off friendly error messages
+        cherrypy.config.update({"request.show_mismatched_params": False})
+        self.getPage("/params/?notathing=meeting")
+        self.assertInBody("Not Found")
+        self.getPage("/params/?thing=meeting&notathing=meeting")
+        self.assertInBody("Not Found")
+
         # Test "% HEX HEX"-encoded URL, param keys, and values
         self.getPage("/params/%d4%20%e3/cheese?Gruy%E8re=Bulgn%e9ville")
         self.assertBody(r"args: ('\xd4 \xe3', 'cheese') "
@@ -541,55 +549,81 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
         # query string parameters are part of the URI, so if they are wrong
         # for a particular handler, the status MUST be a 404.
-        for uri in (
-                '/paramerrors/one_positional',
-                '/paramerrors/one_positional?foo=foo',
-                '/paramerrors/one_positional/foo/bar/baz',
-                '/paramerrors/one_positional/foo?param1=foo',
-                '/paramerrors/one_positional/foo?param1=foo&param2=foo',
-                '/paramerrors/one_positional_args/foo?param1=foo&param2=foo',
-                '/paramerrors/one_positional_args/foo/bar/baz?param2=foo',
-                '/paramerrors/one_positional_args_kwargs/foo/bar/baz?param1=bar&param3=baz',
-                '/paramerrors/one_positional_kwargs/foo?param1=foo&param2=bar&param3=baz',
-                '/paramerrors/no_positional/boo',
-                '/paramerrors/no_positional?param1=foo',
-                '/paramerrors/no_positional_args/boo?param1=foo',
-                '/paramerrors/no_positional_kwargs/boo?param1=foo',
-                '/paramerrors/callable_object?param1=foo',
-                '/paramerrors/callable_object/boo',
+        error_msgs = [
+                'Missing parameters',
+                'Nothing matches the given URI',
+                'Multiple values for parameters',
+                'Unexpected query string parameters',
+                'Unexpected body parameters',
+            ]
+        for uri, msg in (
+            ('/paramerrors/one_positional', error_msgs[0]),
+            ('/paramerrors/one_positional?foo=foo', error_msgs[0]),
+            ('/paramerrors/one_positional/foo/bar/baz', error_msgs[1]),
+            ('/paramerrors/one_positional/foo?param1=foo', error_msgs[2]),
+            ('/paramerrors/one_positional/foo?param1=foo&param2=foo', error_msgs[2]),
+            ('/paramerrors/one_positional_args/foo?param1=foo&param2=foo', error_msgs[2]),
+            ('/paramerrors/one_positional_args/foo/bar/baz?param2=foo', error_msgs[3]),
+            ('/paramerrors/one_positional_args_kwargs/foo/bar/baz?param1=bar&param3=baz', error_msgs[2]),
+            ('/paramerrors/one_positional_kwargs/foo?param1=foo&param2=bar&param3=baz', error_msgs[2]),
+            ('/paramerrors/no_positional/boo', error_msgs[1]),
+            ('/paramerrors/no_positional?param1=foo', error_msgs[3]),
+            ('/paramerrors/no_positional_args/boo?param1=foo', error_msgs[3]),
+            ('/paramerrors/no_positional_kwargs/boo?param1=foo', error_msgs[1]),
+            ('/paramerrors/callable_object?param1=foo', error_msgs[3]),
+            ('/paramerrors/callable_object/boo', error_msgs[1]),
             ):
-            self.getPage(uri)
-            self.assertStatus(404)
+            for show_mismatched_params in (True, False):
+                cherrypy.config.update({'request.show_mismatched_params': show_mismatched_params})
+                self.getPage(uri)
+                self.assertStatus(404)
+                if show_mismatched_params:
+                    self.assertInBody(msg)
+                else:
+                    self.assertInBody("Not Found")
 
         # if body parameters are wrong, a 400 must be returned.
-        for uri, body in (
-                ('/paramerrors/one_positional/foo', 'param1=foo',),
-                ('/paramerrors/one_positional/foo', 'param1=foo&param2=foo',),
-                ('/paramerrors/one_positional_args/foo', 'param1=foo&param2=foo',),
-                ('/paramerrors/one_positional_args/foo/bar/baz', 'param2=foo',),
-                ('/paramerrors/one_positional_args_kwargs/foo/bar/baz', 'param1=bar&param3=baz',),
-                ('/paramerrors/one_positional_kwargs/foo', 'param1=foo&param2=bar&param3=baz',),
-                ('/paramerrors/no_positional', 'param1=foo',),
-                ('/paramerrors/no_positional_args/boo', 'param1=foo',),
-                ('/paramerrors/callable_object', 'param1=foo',),
+        for uri, body, msg in (
+                ('/paramerrors/one_positional/foo', 'param1=foo', error_msgs[2]),
+                ('/paramerrors/one_positional/foo', 'param1=foo&param2=foo', error_msgs[2]),
+                ('/paramerrors/one_positional_args/foo', 'param1=foo&param2=foo', error_msgs[2]),
+                ('/paramerrors/one_positional_args/foo/bar/baz', 'param2=foo', error_msgs[4]),
+                ('/paramerrors/one_positional_args_kwargs/foo/bar/baz', 'param1=bar&param3=baz', error_msgs[2]),
+                ('/paramerrors/one_positional_kwargs/foo', 'param1=foo&param2=bar&param3=baz', error_msgs[2]),
+                ('/paramerrors/no_positional', 'param1=foo', error_msgs[4]),
+                ('/paramerrors/no_positional_args/boo', 'param1=foo', error_msgs[4]),
+                ('/paramerrors/callable_object', 'param1=foo', error_msgs[4]),
             ):
-            self.getPage(uri, method='POST', body=body)
-            self.assertStatus(400)
+            for show_mismatched_params in (True, False):
+                cherrypy.config.update({'request.show_mismatched_params': show_mismatched_params})
+                self.getPage(uri, method='POST', body=body)
+                self.assertStatus(400)
+                if show_mismatched_params:
+                    self.assertInBody(msg)
+                else:
+                    self.assertInBody("Bad Request")
 
 
         # even if body parameters are wrong, if we get the uri wrong, then 
         # it's a 404
-        for uri, body in (
-                ('/paramerrors/one_positional?param2=foo', 'param1=foo',),
-                ('/paramerrors/one_positional/foo/bar', 'param2=foo',),
-                ('/paramerrors/one_positional_args/foo/bar?param2=foo', 'param3=foo',),
-                ('/paramerrors/one_positional_kwargs/foo/bar', 'param2=bar&param3=baz',),
-                ('/paramerrors/no_positional?param1=foo', 'param2=foo',),
-                ('/paramerrors/no_positional_args/boo?param2=foo', 'param1=foo',),
-                ('/paramerrors/callable_object?param2=bar', 'param1=foo',),
+        for uri, body, msg in (
+                ('/paramerrors/one_positional?param2=foo', 'param1=foo', error_msgs[3]),
+                ('/paramerrors/one_positional/foo/bar', 'param2=foo', error_msgs[1]),
+                ('/paramerrors/one_positional_args/foo/bar?param2=foo', 'param3=foo', error_msgs[3]),
+                ('/paramerrors/one_positional_kwargs/foo/bar', 'param2=bar&param3=baz', error_msgs[1]),
+                ('/paramerrors/no_positional?param1=foo', 'param2=foo', error_msgs[3]),
+                ('/paramerrors/no_positional_args/boo?param2=foo', 'param1=foo', error_msgs[3]),
+                ('/paramerrors/callable_object?param2=bar', 'param1=foo', error_msgs[3]),
             ):
-            self.getPage(uri, method='POST', body=body)
-            self.assertStatus(404)
+            for show_mismatched_params in (True, False):
+                cherrypy.config.update({'request.show_mismatched_params': show_mismatched_params})
+                self.getPage(uri, method='POST', body=body)
+                self.assertStatus(404)
+                if show_mismatched_params:
+                    self.assertInBody(msg)
+                else:
+                    self.assertInBody("Not Found")
+
 
         # In the case that a handler raises a TypeError we should
         # let that type error through.

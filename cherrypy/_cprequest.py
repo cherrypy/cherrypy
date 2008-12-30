@@ -420,6 +420,11 @@ class Request(object):
     show_tracebacks__doc = """
     If True, unexpected errors encountered during request processing will
     include a traceback in the response body."""
+
+    show_mismatched_params = True
+    show_mismatched_params__doc = """
+    If True, mismatched parameters encountered during PageHandler invocation
+    processing will be included in the response body."""
     
     throws = (KeyboardInterrupt, SystemExit, cherrypy.InternalRedirect)
     throws__doc = \

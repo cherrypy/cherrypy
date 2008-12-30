@@ -109,12 +109,14 @@ environments = {
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
+        'request.show_mismatched_params': False,
         },
     "production": {
         'engine.autoreload_on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
+        'request.show_mismatched_params': False,
         'log.screen': False,
         },
     "embedded": {
@@ -123,6 +125,7 @@ environments = {
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
+        'request.show_mismatched_params': False,
         'log.screen': False,
         'engine.SIGHUP': None,
         'engine.SIGTERM': None,
@@ -132,6 +135,7 @@ environments = {
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': True,
+        'request.show_mismatched_params': True,
         'log.screen': False,
         },
     }
