@@ -96,6 +96,7 @@ def main():
         packages=packages,
         download_url=download_url,
         data_files=data_files,
+        scripts=[os.path.join("cherrypy", "cherryd")],
     )
 
 
