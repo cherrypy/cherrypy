@@ -1,4 +1,4 @@
-"""Basic tests for the CherryPy core: request handling."""
+"""Tests for various MIME issues, including the safe_multipart Tool."""
 
 from cherrypy.test import test
 test.prefer_parent_path()
@@ -12,6 +12,10 @@ def setup_server():
     safemime.init()
     
     class Root:
+        
+        def multipart(self, parts):
+            return repr(parts)
+        multipart.exposed = True
         
         def flashupload(self, Filedata, Upload, Filename):
             return ("Upload: %r, Filename: %r, Filedata: %r" %
@@ -29,6 +33,40 @@ def setup_server():
 #                             Client-side code                             #
 
 from cherrypy.test import helper
+
+class MultipartTest(helper.CPWebCase):
+    
+    def test_multipart(self):
+        text_part = "This is the text version"
+        html_part = """<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+ <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+
+This is the <strong>HTML</strong> version
+</body>
+</html>
+"""
+        body = """--123456789
+Content-Type: text/plain; charset='ISO-8859-1'
+Content-Transfer-Encoding: 7bit
+
+%s
+--123456789
+Content-Type: text/html; charset='ISO-8859-1'
+
+%s
+--123456789--
+""" % (text_part, html_part)
+        headers = [
+            ('Content-Type', 'multipart/mixed; boundary=123456789'),
+            ('Content-Length', len(body)),
+            ]
+        self.getPage('/multipart', headers, "POST", body)
+        self.assertBody(repr([text_part, html_part]))
+
 
 class SafeMultipartHandlingTest(helper.CPWebCase):
     

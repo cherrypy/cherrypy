@@ -273,6 +273,11 @@ def params_from_CGI_form(form):
     params = {}
     for key in form.keys():
         value_list = form[key]
+        if key is None:
+            # multipart/* message parts that have no Content-Disposition
+            # have a .name of None, but Python kwarg keys must be strings.
+            # See http://www.cherrypy.org/ticket/890.
+            key = 'parts'
         if isinstance(value_list, list):
             params[key] = []
             for item in value_list:

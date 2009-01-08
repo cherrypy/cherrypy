@@ -736,7 +736,7 @@ class Request(object):
         # item will be its own file object, and will be handled
         # by params_from_CGI_form.
         if forms.file:
-            # request body was a content-type other than form params.
+            # request body was a content-type other than multipart.
             self.body = forms.file
         else:
             self.body_params = p = http.params_from_CGI_form(forms)
