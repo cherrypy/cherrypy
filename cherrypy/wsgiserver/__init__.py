@@ -1447,12 +1447,27 @@ class CherryPyWSGIServer(object):
     The OpenSSL module must be importable for SSL functionality.
     You can obtain it from http://pyopenssl.sourceforge.net/
     
-    ssl_certificate: the filename of the server SSL certificate.
-    ssl_privatekey: the filename of the server's private key file.
+    There are two ways to use SSL:
     
-    If either of these is None (both are None by default), this server
-    will not use SSL. If both are given and are valid, they will be read
-    on server start and used in the SSL context for the listening socket.
+    Method One:
+        ssl_context: an instance of SSL.Context.
+        
+        If this is not None, it is assumed to be an SSL.Context instance,
+        and will be passed to SSL.Connection on bind(). The developer is
+        responsible for forming a valid Context object. This approach is
+        to be preferred for more flexibility, e.g. if the cert and key are
+        streams instead of files, or need decryption, or SSL.SSLv3_METHOD
+        is desired instead of the default SSL.SSLv23_METHOD, etc. Consult
+        the pyOpenSSL documentation for complete options.
+    
+    Method Two (shortcut):
+        ssl_certificate: the filename of the server SSL certificate.
+        ssl_privatekey: the filename of the server's private key file.
+        
+        Both are None by default. If ssl_context is None, but ssl_privatekey
+        and ssl_certificate are both given and valid, they will be read on
+        server start, and self.ssl_context will be automatically created
+        from them.
     """
     
     protocol = "HTTP/1.1"
@@ -1466,7 +1481,10 @@ class CherryPyWSGIServer(object):
     ConnectionClass = HTTPConnection
     environ = {}
     
-    # Paths to certificate and private key files
+    # An SSL.Context instance...
+    ssl_context = None
+    
+    # ...or paths to certificate and private key files
     ssl_certificate = None
     ssl_private_key = None
     
@@ -1608,27 +1626,31 @@ class CherryPyWSGIServer(object):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if self.nodelay:
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        if self.ssl_certificate and self.ssl_private_key:
+        
+        if (self.ssl_context is None and
+            self.ssl_certificate and self.ssl_private_key):
             if SSL is None:
                 raise ImportError("You must install pyOpenSSL to use HTTPS.")
             
             # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
-            ctx = SSL.Context(SSL.SSLv23_METHOD)
-            ctx.use_privatekey_file(self.ssl_private_key)
-            ctx.use_certificate_file(self.ssl_certificate)
-            self.socket = SSLConnection(ctx, self.socket)
+            self.ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+            self.ssl_context.use_privatekey_file(self.ssl_private_key)
+            self.ssl_context.use_certificate_file(self.ssl_certificate)
+        
+        if self.ssl_context is not None:
+            self.socket = SSLConnection(self.ssl_context, self.socket)
             self.populate_ssl_environ()
-            
-            # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
-            # activate dual-stack. See http://www.cherrypy.org/ticket/871.
-            if (not isinstance(self.bind_addr, basestring)
-                and self.bind_addr[0] == '::' and family == socket.AF_INET6):
-                try:
-                    self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-                except (AttributeError, socket.error):
-                    # Apparently, the socket option is not available in
-                    # this machine's TCP stack
-                    pass
+        
+        # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
+        # activate dual-stack. See http://www.cherrypy.org/ticket/871.
+        if (not isinstance(self.bind_addr, basestring)
+            and self.bind_addr[0] == '::' and family == socket.AF_INET6):
+            try:
+                self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+            except (AttributeError, socket.error):
+                # Apparently, the socket option is not available in
+                # this machine's TCP stack
+                pass
         
         self.socket.bind(self.bind_addr)
     
@@ -1738,8 +1760,6 @@ class CherryPyWSGIServer(object):
     
     def populate_ssl_environ(self):
         """Create WSGI environ entries to be merged into each request."""
-        cert = open(self.ssl_certificate, 'rb').read()
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
         ssl_environ = {
             "wsgi.url_scheme": "https",
             "HTTPS": "on",
@@ -1750,34 +1770,37 @@ class CherryPyWSGIServer(object):
 ##            SSL_VERSION_LIBRARY 	string 	The OpenSSL program version
             }
         
-        # Server certificate attributes
-        ssl_environ.update({
-            'SSL_SERVER_M_VERSION': cert.get_version(),
-            'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
-##            'SSL_SERVER_V_START': Validity of server's certificate (start time),
-##            'SSL_SERVER_V_END': Validity of server's certificate (end time),
-            })
-        
-        for prefix, dn in [("I", cert.get_issuer()),
-                           ("S", cert.get_subject())]:
-            # X509Name objects don't seem to have a way to get the
-            # complete DN string. Use str() and slice it instead,
-            # because str(dn) == "<X509Name object '/C=US/ST=...'>"
-            dnstr = str(dn)[18:-2]
+        if self.ssl_certificate:
+            # Server certificate attributes
+            cert = open(self.ssl_certificate, 'rb').read()
+            cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+            ssl_environ.update({
+                'SSL_SERVER_M_VERSION': cert.get_version(),
+                'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
+##                'SSL_SERVER_V_START': Validity of server's certificate (start time),
+##                'SSL_SERVER_V_END': Validity of server's certificate (end time),
+                })
             
-            wsgikey = 'SSL_SERVER_%s_DN' % prefix
-            ssl_environ[wsgikey] = dnstr
-            
-            # The DN should be of the form: /k1=v1/k2=v2, but we must allow
-            # for any value to contain slashes itself (in a URL).
-            while dnstr:
-                pos = dnstr.rfind("=")
-                dnstr, value = dnstr[:pos], dnstr[pos + 1:]
-                pos = dnstr.rfind("/")
-                dnstr, key = dnstr[:pos], dnstr[pos + 1:]
-                if key and value:
-                    wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
-                    ssl_environ[wsgikey] = value
+            for prefix, dn in [("I", cert.get_issuer()),
+                               ("S", cert.get_subject())]:
+                # X509Name objects don't seem to have a way to get the
+                # complete DN string. Use str() and slice it instead,
+                # because str(dn) == "<X509Name object '/C=US/ST=...'>"
+                dnstr = str(dn)[18:-2]
+                
+                wsgikey = 'SSL_SERVER_%s_DN' % prefix
+                ssl_environ[wsgikey] = dnstr
+                
+                # The DN should be of the form: /k1=v1/k2=v2, but we must allow
+                # for any value to contain slashes itself (in a URL).
+                while dnstr:
+                    pos = dnstr.rfind("=")
+                    dnstr, value = dnstr[:pos], dnstr[pos + 1:]
+                    pos = dnstr.rfind("/")
+                    dnstr, key = dnstr[:pos], dnstr[pos + 1:]
+                    if key and value:
+                        wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
+                        ssl_environ[wsgikey] = value
         
         self.environ.update(ssl_environ)
 
