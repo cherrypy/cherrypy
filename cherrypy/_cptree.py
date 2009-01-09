@@ -165,6 +165,14 @@ class Tree(object):
             root of the URI, it MUST be an empty string (not "/").
         config: a file or dict containing application config.
         """
+        if script_name is None:
+            raise TypeError(
+                "The 'script_name' argument may not be None. Application "
+                "objects may, however, possess a script_name of None (in "
+                "order to inpect the WSGI environ for SCRIPT_NAME upon each "
+                "request). You cannot mount such Applications on this Tree; "
+                "you must pass them to a WSGI server interface directly.")
+        
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
         script_name = script_name.rstrip("/")
         
