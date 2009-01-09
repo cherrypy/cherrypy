@@ -243,10 +243,15 @@ class Bus(object):
         # See http://www.cherrypy.org/ticket/751.
         self.log("Waiting for child threads to terminate...")
         for t in threading.enumerate():
-            if (t != threading.currentThread() and t.isAlive()
+            if t != threading.currentThread() and t.isAlive():
                 # Note that any dummy (external) threads are always daemonic.
-                and not t.isDaemon()):
-                t.join()
+                if hasattr(threading.Thread, "daemon"):
+                    # Python 2.6+
+                    d = t.daemon
+                else:
+                    d = t.isDaemon()
+                if not d:
+                    t.join()
         
         if self.execv:
             self._do_execv()

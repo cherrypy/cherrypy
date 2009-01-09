@@ -39,7 +39,7 @@ class Checker(object):
             finally:
                 warnings.formatwarning = oldformatwarning
     
-    def formatwarning(self, message, category, filename, lineno):
+    def formatwarning(self, message, category, filename, lineno, line=None):
         """Function to format a warning."""
         return "CherryPy Checker:\n%s\n\n" % message
     
