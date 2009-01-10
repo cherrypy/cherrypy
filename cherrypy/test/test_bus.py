@@ -108,6 +108,66 @@ class BusMethodTests(unittest.TestCase):
         finally:
             # Exit so the atexit handler doesn't complain.
             b.exit()
+    
+    def test_stop(self):
+        b = wspbus.Bus()
+        self.log(b)
+        
+        self.responses = []
+        num = 3
+        for index in range(num):
+            b.subscribe('stop', self.get_listener('stop', index))
+        
+        b.stop()
+        
+        # The stop method MUST call all 'stop' listeners.
+        self.assertEqual(set(self.responses),
+                         set([msg % (i, 'stop', None) for i in range(num)]))
+        # The stop method MUST move the state to STOPPED
+        self.assertEqual(b.state, b.states.STOPPED)
+        # The stop method MUST log its states.
+        self.assertLog(['Bus STOPPING', 'Bus STOPPED'])
+    
+    def test_graceful(self):
+        b = wspbus.Bus()
+        self.log(b)
+        
+        self.responses = []
+        num = 3
+        for index in range(num):
+            b.subscribe('graceful', self.get_listener('graceful', index))
+        
+        b.graceful()
+        
+        # The graceful method MUST call all 'graceful' listeners.
+        self.assertEqual(set(self.responses),
+                         set([msg % (i, 'graceful', None) for i in range(num)]))
+        # The graceful method MUST log its states.
+        self.assertLog(['Bus graceful'])
+    
+    def test_exit(self):
+        b = wspbus.Bus()
+        self.log(b)
+        
+        self.responses = []
+        num = 3
+        for index in range(num):
+            b.subscribe('stop', self.get_listener('stop', index))
+            b.subscribe('exit', self.get_listener('exit', index))
+        
+        b.exit()
+        
+        # The exit method MUST call all 'stop' listeners,
+        # and then all 'exit' listeners.
+        self.assertEqual(set(self.responses),
+                         set([msg % (i, 'stop', None) for i in range(num)] +
+                             [msg % (i, 'exit', None) for i in range(num)]))
+        # The exit method MUST move the state to EXITING
+        self.assertEqual(b.state, b.states.EXITING)
+        # The exit method MUST log its states.
+        self.assertLog(['Bus STOPPING', 'Bus STOPPED', 'Bus EXITING', 'Bus EXITED'])
+    
+    # TODO: restart, block, wait, start_with_callback, log
 
 
 if __name__ == "__main__":
