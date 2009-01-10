@@ -118,7 +118,7 @@ class Session(object):
         """Save session data."""
         try:
             # If session data has never been loaded then it's never been
-            #   accessed: no need to delete it
+            #   accessed: no need to save it
             if self.loaded:
                 t = datetime.timedelta(seconds = self.timeout * 60)
                 expiration_time = datetime.datetime.now() + t
