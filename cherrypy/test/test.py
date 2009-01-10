@@ -373,6 +373,7 @@ def run():
     prefer_parent_path()
     
     testList = [
+        'test_bus',
         'test_proxy',
         'test_caching',
         'test_config',
