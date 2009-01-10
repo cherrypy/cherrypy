@@ -326,25 +326,33 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertBody("milk")
 
     def testTreeMounting(self):
-
+        class Root(object):
+            def hello(self):
+                return "Hello world!"
+            hello.exposed = True
+        
         # When mounting an application instance, 
-        # we can't specify a script name in the call to mount.
-        a = Application(object(), '/somewhere')
+        # we can't specify a different script name in the call to mount.
+        a = Application(Root(), '/somewhere')
         self.assertRaises(ValueError, cherrypy.tree.mount, a, '/somewhereelse')
-
-        # When mounting an application instance, 
-        # we can't specify a script name in the call to mount.
-        a = Application(object(), '/somewhere')
-        try:
-            cherrypy.tree.mount(a, '/somewhere')
-        except ValueError:
-            self.fail("tree.mount must allow script_names which are the same")
-
-        try:
-            cherrypy.tree.mount(a)
-        except ValueError:
-            self.fail("cherrypy.tree.mount incorrectly raised a ValueError")
-
+        
+        # When mounting an application instance...
+        a = Application(Root(), '/somewhere')
+        # ...we MUST allow in identical script name in the call to mount...
+        cherrypy.tree.mount(a, '/somewhere')
+        self.getPage('/somewhere/hello')
+        self.assertStatus(200)
+        # ...and MUST allow a missing script_name.
+        del cherrypy.tree.apps['/somewhere']
+        cherrypy.tree.mount(a)
+        self.getPage('/somewhere/hello')
+        self.assertStatus(200)
+        
+        # In addition, we MUST be able to create an Application using
+        # script_name == None for access to the wsgi_environ.
+        a = Application(Root(), script_name=None)
+        # However, this does not apply to tree.mount
+        self.assertRaises(TypeError, cherrypy.tree.mount, a, None)
 
 
 
