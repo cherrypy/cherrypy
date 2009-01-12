@@ -59,7 +59,11 @@ __all__ = ("digestAuth", "basicAuth", "doAuth", "checkResponse",
            "calculateNonce", "SUPPORTED_QOP")
 
 ################################################################################
-import md5
+try:
+    # Python 2.5+
+    from hashlib import md5
+except ImportError:
+    from md5 import new as md5
 import time
 import base64
 import urllib2
@@ -76,8 +80,8 @@ SUPPORTED_QOP = (AUTH, AUTH_INT)
 # doAuth
 #
 DIGEST_AUTH_ENCODERS = {
-    MD5: lambda val: md5.new (val).hexdigest (),
-    MD5_SESS: lambda val: md5.new (val).hexdigest (),
+    MD5: lambda val: md5(val).hexdigest(),
+    MD5_SESS: lambda val: md5(val).hexdigest(),
 #    SHA: lambda val: sha.new (val).hexdigest (),
 }
 
