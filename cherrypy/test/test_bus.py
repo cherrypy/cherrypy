@@ -1,6 +1,8 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import threading
+import time
 import unittest
 
 import cherrypy
@@ -167,9 +169,31 @@ class BusMethodTests(unittest.TestCase):
         # The exit method MUST log its states.
         self.assertLog(['Bus STOPPING', 'Bus STOPPED', 'Bus EXITING', 'Bus EXITED'])
     
-    # TODO: restart, block, wait, start_with_callback, log
+    def test_block(self):
+        b = wspbus.Bus()
+        self.log(b)
+        
+        def f():
+            time.sleep(1)
+            b.exit()
+        def g():
+            time.sleep(2)
+        threading.Thread(target=f).start()
+        threading.Thread(target=g).start()
+        self.assertEqual(len(threading.enumerate()), 3)
+        
+        b.block()
+        
+        # The block method MUST wait for the EXITING state.
+        self.assertEqual(b.state, b.states.EXITING)
+        # The block method MUST wait for ALL non-main threads to finish.
+        self.assertEqual(len(threading.enumerate()), 1)
+        self.assertLog(['Bus STOPPING', 'Bus STOPPED',
+                        'Bus EXITING', 'Bus EXITED',
+                        'Waiting for child threads to terminate...'])
+    
+    # TODO: restart, wait, start_with_callback, log
 
 
 if __name__ == "__main__":
-    setup_server()
-    helper.testmain()
+    unittest.main()
