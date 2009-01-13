@@ -1204,6 +1204,11 @@ Content-Type: text/plain
         self.assertBody('%s/url/page1' % self.base())
         self.getPage('/url/?path_info=page1')
         self.assertBody('%s/url/page1' % self.base())
+        # Other host header
+        host = 'www.mydomain.example'
+        self.getPage('/url/leaf?path_info=page1',
+                     headers=[('Host', host)])
+        self.assertBody('http://%s/url/page1' % host)
         
         # Input is 'absolute'; that is, relative to script_name
         self.getPage('/url/leaf?path_info=/page1')
