@@ -169,15 +169,34 @@ class BusMethodTests(unittest.TestCase):
         # The exit method MUST log its states.
         self.assertLog(['Bus STOPPING', 'Bus STOPPED', 'Bus EXITING', 'Bus EXITED'])
     
+    def test_wait(self):
+        b = wspbus.Bus()
+        
+        def f(method):
+            time.sleep(0.2)
+            getattr(b, method)()
+        
+        for method, states in [('start', [b.states.STARTED]),
+                               ('stop', [b.states.STOPPED]),
+                               ('start', [b.states.STARTING, b.states.STARTED]),
+                               ('exit', [b.states.EXITING]),
+                               ]:
+            threading.Thread(target=f, args=(method,)).start()
+            b.wait(states)
+            
+            # The wait method MUST wait for the given state(s).
+            if b.state not in states:
+                self.fail("State %r not in %r" % (b.state, states))
+    
     def test_block(self):
         b = wspbus.Bus()
         self.log(b)
         
         def f():
-            time.sleep(1)
+            time.sleep(0.2)
             b.exit()
         def g():
-            time.sleep(2)
+            time.sleep(0.4)
         threading.Thread(target=f).start()
         threading.Thread(target=g).start()
         self.assertEqual(len(threading.enumerate()), 3)
@@ -192,7 +211,50 @@ class BusMethodTests(unittest.TestCase):
                         'Bus EXITING', 'Bus EXITED',
                         'Waiting for child threads to terminate...'])
     
-    # TODO: restart, wait, start_with_callback, log
+    def test_start_with_callback(self):
+        b = wspbus.Bus()
+        self.log(b)
+        try:
+            events = []
+            def f(*args, **kwargs):
+                events.append(("f", args, kwargs))
+            def g():
+                events.append("g")
+            b.subscribe("start", g)
+            b.start_with_callback(f, (1, 3, 5), {"foo": "bar"})
+            # Give wait() time to run f()
+            time.sleep(0.2)
+            
+            # The callback method MUST wait for the STARTED state.
+            self.assertEqual(b.state, b.states.STARTED)
+            # The callback method MUST run after all start methods.
+            self.assertEqual(events, ["g", ("f", (1, 3, 5), {"foo": "bar"})])
+        finally:
+            b.exit()
+    
+    def test_log(self):
+        b = wspbus.Bus()
+        self.log(b)
+        self.assertLog([])
+        
+        # Try a normal message.
+        expected = []
+        for msg in ["O mah darlin'"] * 3 + ["Clementiiiiiiiine"]:
+            b.log(msg)
+            expected.append(msg)
+            self.assertLog(expected)
+        
+        # Try an error message
+        try:
+            foo
+        except NameError:
+            b.log("You are lost and gone forever", traceback=True)
+            lastmsg = self._log_entries[-1]
+            if "Traceback" not in lastmsg or "NameError" not in lastmsg:
+                self.fail("Last log message %r did not contain "
+                          "the expected traceback." % lastmsg)
+        else:
+            self.fail("NameError was not raised as expected.")
 
 
 if __name__ == "__main__":
