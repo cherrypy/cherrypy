@@ -196,7 +196,11 @@ class Request(object):
     conditionally compliant."""
     
     base = ""
-    base__doc = """The (scheme://host) portion of the requested URL."""
+    base__doc = """The (scheme://host) portion of the requested URL.
+    In some cases (e.g. when proxying via mod_rewrite), this may contain
+    path segments which cherrypy.url uses when constructing url's, but
+    which otherwise are ignored by CherryPy. Regardless, this value
+    MUST NOT end in a slash."""
     
     # Request-Line attributes
     request_line = ""

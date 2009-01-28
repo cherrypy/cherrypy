@@ -108,7 +108,8 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     If you want the new request.base to include path info (not just the host),
     you must explicitly set base to the full base path, and ALSO set 'local'
     to '', so that the X-Forwarded-Host request header (which never includes
-    path info) does not override it.
+    path info) does not override it. Regardless, the value for 'base' MUST
+    NOT end in a slash.
     
     cherrypy.request.remote.ip (the IP address of the client) will be
     rewritten if the header specified by the 'remote' arg is valid.
