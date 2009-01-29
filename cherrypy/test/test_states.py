@@ -91,13 +91,10 @@ from cherrypy.test import helper
 
 class ServerStateTests(helper.CPWebCase):
     
+    def setUp(self):
+        cherrypy.server.socket_timeout = 0.1
+    
     def test_0_NormalStateFlow(self):
-        if not self.server_class:
-            # Without having called "engine.start()", we should
-            # get a 503 Service Unavailable response.
-            self.getPage("/")
-            self.assertStatus(503)
-        
         # And our db_connection should not be running
         self.assertEqual(db_connection.running, False)
         self.assertEqual(db_connection.startcount, 0)
@@ -107,10 +104,9 @@ class ServerStateTests(helper.CPWebCase):
         engine.start()
         self.assertEqual(engine.state, engine.states.STARTED)
         
-        if self.server_class:
-            host = cherrypy.server.socket_host
-            port = cherrypy.server.socket_port
-            self.assertRaises(IOError, cherrypy._cpserver.check_port, host, port)
+        host = cherrypy.server.socket_host
+        port = cherrypy.server.socket_port
+        self.assertRaises(IOError, cherrypy._cpserver.check_port, host, port)
         
         # The db_connection should be running now
         self.assertEqual(db_connection.running, True)
@@ -128,13 +124,6 @@ class ServerStateTests(helper.CPWebCase):
         # Verify that our custom stop function was called
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
-        
-        if not self.server_class:
-            # Once the engine has stopped, we should get a 503
-            # error again. (If we were running an HTTP server,
-            # then the connection should not even be processed).
-            self.getPage("/")
-            self.assertStatus(503)
         
         # Block the main thread now and verify that exit() works.
         def exittest():
@@ -183,48 +172,46 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(len(db_connection.threads), 0)
     
     def test_2_KeyboardInterrupt(self):
-        if self.server_class:
+        # Raise a keyboard interrupt in the HTTP server's main thread.
+        # We must start the server in this, the main thread
+        engine.start()
+        cherrypy.server.start()
+        
+        self.persistent = True
+        try:
+            # Make the first request and assert there's no "Connection: close".
+            self.getPage("/")
+            self.assertStatus('200 OK')
+            self.assertBody("Hello World")
+            self.assertNoHeader("Connection")
             
-            # Raise a keyboard interrupt in the HTTP server's main thread.
-            # We must start the server in this, the main thread
-            engine.start()
-            cherrypy.server.start()
-            
-            self.persistent = True
-            try:
-                # Make the first request and assert there's no "Connection: close".
-                self.getPage("/")
-                self.assertStatus('200 OK')
-                self.assertBody("Hello World")
-                self.assertNoHeader("Connection")
-                
-                cherrypy.server.httpserver.interrupt = KeyboardInterrupt
-                engine.block()
-                
-                self.assertEqual(db_connection.running, False)
-                self.assertEqual(len(db_connection.threads), 0)
-                self.assertEqual(engine.state, engine.states.EXITING)
-            finally:
-                self.persistent = False
-            
-            # Raise a keyboard interrupt in a page handler; on multithreaded
-            # servers, this should occur in one of the worker threads.
-            # This should raise a BadStatusLine error, since the worker
-            # thread will just die without writing a response.
-            engine.start()
-            cherrypy.server.start()
-            
-            try:
-                self.getPage("/ctrlc")
-            except BadStatusLine:
-                pass
-            else:
-                print self.body
-                self.fail("AssertionError: BadStatusLine not raised")
-            
+            cherrypy.server.httpserver.interrupt = KeyboardInterrupt
             engine.block()
+            
             self.assertEqual(db_connection.running, False)
             self.assertEqual(len(db_connection.threads), 0)
+            self.assertEqual(engine.state, engine.states.EXITING)
+        finally:
+            self.persistent = False
+        
+        # Raise a keyboard interrupt in a page handler; on multithreaded
+        # servers, this should occur in one of the worker threads.
+        # This should raise a BadStatusLine error, since the worker
+        # thread will just die without writing a response.
+        engine.start()
+        cherrypy.server.start()
+        
+        try:
+            self.getPage("/ctrlc")
+        except BadStatusLine:
+            pass
+        else:
+            print self.body
+            self.fail("AssertionError: BadStatusLine not raised")
+        
+        engine.block()
+        self.assertEqual(db_connection.running, False)
+        self.assertEqual(len(db_connection.threads), 0)
     
     def test_3_Deadlocks(self):
         cherrypy.config.update({'response.timeout': 0.2})
@@ -258,10 +245,6 @@ class ServerStateTests(helper.CPWebCase):
             engine.exit()
     
     def test_4_Autoreload(self):
-        if not self.server_class:
-            print "skipped (no server) ",
-            return
-        
         # Start the demo script in a new process
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
         p.write_conf()
@@ -278,6 +261,8 @@ class ServerStateTests(helper.CPWebCase):
             
             # Give the autoreloader time to re-exec the process
             time.sleep(2)
+            host = cherrypy.server.socket_host
+            port = cherrypy.server.socket_port
             cherrypy._cpserver.wait_for_occupied_port(host, port)
             
             self.getPage("/start")
@@ -288,10 +273,6 @@ class ServerStateTests(helper.CPWebCase):
         p.join()
     
     def test_5_Start_Error(self):
-        if not self.server_class:
-            print "skipped (no server) ",
-            return
-        
         # If a process errors during start, it should stop the engine
         # and exit with a non-zero exit code.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
@@ -305,9 +286,6 @@ class ServerStateTests(helper.CPWebCase):
 class PluginTests(helper.CPWebCase):
     
     def test_daemonize(self):
-        if not self.server_class:
-            print "skipped (no server) ",
-            return
         if os.name not in ['posix']: 
             print "skipped (not on posix) ",
             return
@@ -340,10 +318,6 @@ class SignalHandlingTests(helper.CPWebCase):
     
     def test_SIGHUP_tty(self):
         # When not daemonized, SIGHUP should shut down the server.
-        if not self.server_class:
-            print "skipped (no server) ",
-            return
-        
         try:
             from signal import SIGHUP
         except ImportError:
@@ -361,10 +335,6 @@ class SignalHandlingTests(helper.CPWebCase):
     
     def test_SIGHUP_daemonized(self):
         # When daemonized, SIGHUP should restart the server.
-        if not self.server_class:
-            print "skipped (no server) ",
-            return
-        
         try:
             from signal import SIGHUP
         except ImportError:
@@ -400,10 +370,6 @@ class SignalHandlingTests(helper.CPWebCase):
     
     def test_SIGTERM(self):
         # SIGTERM should shut down the server whether daemonized or not.
-        if not self.server_class:
-            print "skipped (no server) ",
-            return
-        
         try:
             from signal import SIGTERM
         except ImportError:
@@ -437,10 +403,6 @@ class SignalHandlingTests(helper.CPWebCase):
             p.join()
     
     def test_signal_handler_unsubscribe(self):
-        if not self.server_class:
-            print "skipped (no server) ",
-            return
-        
         try:
             from signal import SIGTERM
         except ImportError:
@@ -468,90 +430,6 @@ class SignalHandlingTests(helper.CPWebCase):
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
 
 
-cases = [v for v in globals().values()
-         if isinstance(v, type) and issubclass(v, helper.CPWebCase)]
-
-def run(server, conf):
-    helper.setConfig(conf)
-    for tc in cases:
-        tc.server_class = server
-    suites = [helper.CPTestLoader.loadTestsFromTestCase(tc) for tc in
-              (ServerStateTests, PluginTests, SignalHandlingTests)]
-    try:
-        try:
-            import pyconquer
-        except ImportError:
-            for suite in suites:
-                helper.CPTestRunner.run(suite)
-        else:
-            tr = pyconquer.Logger("cherrypy")
-            tr.out = open(os.path.join(os.path.dirname(__file__), "test_states_conquer.log"), "wb")
-            try:
-                tr.start()
-                for suite in suites:
-                    helper.CPTestRunner.run(suite)
-            finally:
-                tr.stop()
-                tr.out.close()
-    finally:
-        engine.exit()
-
-
-def run_all(host, port, ssl=False):
-    conf = {'server.socket_host': host,
-            'server.socket_port': port,
-            'server.thread_pool': 10,
-            'environment': "test_suite",
-            }
-    
-    if host:
-        for tc in cases:
-            tc.HOST = host
-    
-    if port:
-        for tc in cases:
-            tc.PORT = port
-    
-    if ssl:
-        localDir = os.path.dirname(__file__)
-        serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
-        conf['server.ssl_certificate'] = serverpem
-        conf['server.ssl_private_key'] = serverpem
-        for tc in cases:
-            tc.scheme = "https"
-            tc.HTTP_CONN = httplib.HTTPSConnection
-    
-    def _run(server):
-        print
-        print "Testing %s on %s:%s..." % (server, host, port)
-        run(server, conf)
-    _run("cherrypy._cpwsgi.CPWSGIServer")
-
 if __name__ == "__main__":
-    import sys
-    
-    host = '127.0.0.1'
-    port = 8000
-    ssl = False
-    
-    argv = sys.argv[1:]
-    if argv:
-        help_args = [prefix + atom for atom in ("?", "h", "help")
-                     for prefix in ("", "-", "--", "\\")]
-        
-        for arg in argv:
-            if arg in help_args:
-                print
-                print "test_states.py -?                       -> this help page"
-                print "test_states.py [-host=h] [-port=p]      -> run the tests on h:p"
-                print "test_states.py -ssl [-host=h] [-port=p] -> run the tests using SSL on h:p"
-                sys.exit(0)
-            
-            if arg == "-ssl":
-                ssl = True
-            elif arg.startswith("-host="):
-                host = arg[6:].strip("\"'")
-            elif arg.startswith("-port="):
-                port = int(arg[6:].strip())
-    
-    run_all(host, port, ssl)
+    test.unittest.testmain()
+

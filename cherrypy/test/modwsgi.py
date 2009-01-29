@@ -88,69 +88,41 @@ SetEnv testmod %(testmod)s
 """
 
 
-def start(testmod, port, conf_template):
-    mpconf = CONF_PATH
-    if not os.path.isabs(mpconf):
-        mpconf = os.path.join(curdir, mpconf)
+class ServerControl(object):
+    """Server Controller for ModWSGI and CherryPy."""
     
-    f = open(mpconf, 'wb')
-    try:
-        output = (conf_template %
-                  {'port': port, 'testmod': testmod, 'curdir': curdir})
-        f.write(output)
-    finally:
-        f.close()
+    def __init__(self, host, port, template=conf_modwsgi):
+        self.host = host
+        self.port = port
+        self.template = template
     
-    result = read_process(APACHE_PATH, "-k start -f %s" % mpconf)
-    if result:
-        print result
-
-def stop():
-    """Gracefully shutdown a server that is serving forever."""
-    read_process(APACHE_PATH, "-k stop")
-
-
-class ModWSGITestHarness(test.TestHarness):
-    """TestHarness for ModWSGI and CherryPy."""
-    
-    use_wsgi = True
-    
-    def _run(self, conf):
-        cherrypy.server.using_wsgi = True
-        cherrypy.server.using_apache = True
+    def start(self, modulename):
+        mpconf = CONF_PATH
+        if not os.path.isabs(mpconf):
+            mpconf = os.path.join(curdir, mpconf)
         
-        from cherrypy.test import webtest
-        webtest.WebCase.PORT = self.port
-        webtest.WebCase.harness = self
-        webtest.WebCase.scheme = "http"
-        webtest.WebCase.interactive = self.interactive
-        print
-        print "Running tests:", self.server
+        f = open(mpconf, 'wb')
+        try:
+            output = (self.template %
+                      {'port': self.port, 'testmod': modulename,
+                       'curdir': curdir})
+            f.write(output)
+        finally:
+            f.close()
         
-        conf_template = conf_modwsgi
+        result = read_process(APACHE_PATH, "-k start -f %s" % mpconf)
+        if result:
+            print result
         
-        # mod_wsgi, since it runs in the Apache process, must be
-        # started separately for each test, and then *that* process
-        # must run the setup_server() function for the test.
-        # Then our process can run the actual test.
-        success = True
-        for testmod in self.tests:
-            try:
-                start(testmod, self.port, conf_template)
-                cherrypy._cpserver.wait_for_occupied_port("127.0.0.1", self.port)
-                suite = webtest.ReloadingTestLoader().loadTestsFromName(testmod)
-                # Make a request so mod_wsgi starts up our app.
-                # If we don't, concurrent initial requests will 404.
-                webtest.openURL('/ihopetheresnodefault', port=self.port)
-                time.sleep(1)
-                result = webtest.TerseTestRunner(verbosity=2).run(suite)
-                success &= result.wasSuccessful()
-            finally:
-                stop()
-        if success:
-            return 0
-        else:
-            return 1
+        # Make a request so mod_wsgi starts up our app.
+        # If we don't, concurrent initial requests will 404.
+        cherrypy._cpserver.wait_for_occupied_port("127.0.0.1", self.port)
+        webtest.openURL('/ihopetheresnodefault', port=self.port)
+        time.sleep(1)
+    
+    def stop(self):
+        """Gracefully shutdown a server that is serving forever."""
+        read_process(APACHE_PATH, "-k stop")
 
 
 loaded = False

@@ -64,6 +64,7 @@ conf_fcgid = """
 # Apache2 server conf file for testing CherryPy with mod_fcgid.
 
 DocumentRoot "%(root)s"
+ServerName 127.0.0.1
 Listen %(port)s
 LoadModule fastcgi_module modules/mod_fastcgi.dll
 LoadModule rewrite_module modules/mod_rewrite.so
@@ -75,43 +76,47 @@ RewriteRule ^(.*)$ /fastcgi.pyc [L]
 FastCgiExternalServer "%(server)s" -host 127.0.0.1:4000
 """
 
-def start_apache(host, port, conf_template):
-    fcgiconf = CONF_PATH
-    if not os.path.isabs(fcgiconf):
-        fcgiconf = os.path.join(curdir, fcgiconf)
+class ServerControl(test.LocalServer):
     
-    # Write the Apache conf file.
-    f = open(fcgiconf, 'wb')
-    try:
-        server = repr(os.path.join(curdir, 'fastcgi.pyc'))[1:-1]
-        output = conf_template % {'port': port, 'root': curdir,
-                                  'server': server}
-        output = output.replace('\r\n', '\n')
-        f.write(output)
-    finally:
-        f.close()
+    template = conf_fcgid
     
-    result = read_process(APACHE_PATH, "-k start -f %s" % fcgiconf)
-    if result:
-        print result
-
-def stop():
-    """Gracefully shutdown a server that is serving forever."""
-    read_process(APACHE_PATH, "-k stop")
-
-
-class FCGITestHarness(test.TestHarness):
-    """TestHarness for fcgid and CherryPy."""
+    def __str__(self):
+        return "FCGI Server on %s:%s" % (self.host, self.port)
     
-    def _run(self, conf):
-        cherrypy.server.using_wsgi = True
-        cherrypy.server.using_apache = True
+    def start(self, modulename):
         cherrypy.server.httpserver = servers.FlupFCGIServer(
             application=cherrypy.tree, bindAddress=('127.0.0.1', 4000))
         cherrypy.server.httpserver.bind_addr = ('127.0.0.1', 4000)
+        # For FCGI, we both start apache...
+        self.start_apache()
+        # ...and our local server
+        test.LocalServer.start(self, modulename)
+    
+    def start_apache(self):
+        fcgiconf = CONF_PATH
+        if not os.path.isabs(fcgiconf):
+            fcgiconf = os.path.join(curdir, fcgiconf)
+        
+        # Write the Apache conf file.
+        f = open(fcgiconf, 'wb')
         try:
-            start_apache(self.host, self.port, conf_fcgid)
-            return test.TestHarness._run(self, conf)
+            server = repr(os.path.join(curdir, 'fastcgi.pyc'))[1:-1]
+            output = self.template % {'port': self.port, 'root': curdir,
+                                      'server': server}
+            output = output.replace('\r\n', '\n')
+            f.write(output)
         finally:
-            stop()
+            f.close()
+        
+        result = read_process(APACHE_PATH, "-k start -f %s" % fcgiconf)
+        if result:
+            print result
+    
+    def stop(self):
+        """Gracefully shutdown a server that is serving forever."""
+        read_process(APACHE_PATH, "-k stop")
+        test.LocalServer.stop(self)
+    
+    def sync_apps(self):
+        cherrypy.server.httpserver.fcgiserver.application = self.get_app()
 

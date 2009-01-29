@@ -52,9 +52,6 @@ class CPWebCase(webtest.WebCase):
     def exit(self):
         sys.exit()
     
-    def tearDown(self):
-        pass
-    
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url. Return status, headers, body."""
         if self.script_name:
@@ -95,141 +92,47 @@ class CPWebCase(webtest.WebCase):
 CPTestLoader = webtest.ReloadingTestLoader()
 CPTestRunner = webtest.TerseTestRunner(verbosity=2)
 
-def setConfig(conf):
-    """Set the global config using a copy of conf."""
-    if isinstance(conf, basestring):
-        # assume it's a filename
-        cherrypy.config.update(conf)
-    else:
-        cherrypy.config.update(conf.copy())
 
-
-def run_test_suite(moduleNames, server, conf):
+def run_test_suite(moduleNames, conf, server):
     """Run the given test modules using the given server and [global] conf.
     
-    The server is started and stopped once, regardless of the number
-    of test modules. The config, however, is reset for each module.
+    The 'server' arg should be an object with 'start' and 'stop' methods.
+    See test/test.py.
     """
-    cherrypy.config.reset()
-    setConfig(conf)
-    engine = cherrypy.engine
-    if hasattr(engine, "signal_handler"):
-        engine.signal_handler.subscribe()
-    if hasattr(engine, "console_control_handler"):
-        engine.console_control_handler.subscribe()
     # The Pybots automatic testing system needs the suite to exit
     # with a non-zero value if there were any problems.
-    # Might as well stick it in the engine... :/
-    engine.test_success = True
-    engine.start_with_callback(_run_test_suite_thread,
-                               args=(moduleNames, conf))
-    engine.block()
-    if engine.test_success:
+    test_success = True
+    
+    for testmod in moduleNames:
+        # Set up the test environment.
+        cherrypy.config.reset()
+        cherrypy.config.update(conf)
+        webtest.WebCase.PORT = cherrypy.config.get('server.socket_port')
+        webtest.WebCase.HOST = cherrypy.config.get('server.socket_host')
+        if cherrypy.config.get('server.ssl_certificate', ''):
+            CPWebCase.scheme = 'https'
+        
+        m = __import__(testmod, globals(), locals())
+        suite = CPTestLoader.loadTestsFromName(testmod)
+        setup = getattr(m, "setup_server", None)
+        if setup: server.start(testmod)
+        try:
+            result = CPTestRunner.run(suite)
+            test_success &= result.wasSuccessful()
+        finally:
+            if setup: server.stop()
+    
+    if test_success:
         return 0
     else:
         return 1
 
-def sync_apps(profile=False, validate=False, conquer=False):
-    app = cherrypy.tree
-    if profile:
-        app = profiler.make_app(app, aggregate=False)
-    if conquer:
-        try:
-            import wsgiconq
-        except ImportError:
-            warnings.warn("Error importing wsgiconq. pyconquer will not run.")
-        else:
-            app = wsgiconq.WSGILogger(app)
-    if validate:
-        try:
-            from wsgiref import validate
-        except ImportError:
-            warnings.warn("Error importing wsgiref. The validator will not run.")
-        else:
-            app = validate.validator(app)
-    
-    h = cherrypy.server.httpserver
-    if hasattr(h, 'wsgi_app'):
-        # CherryPy's wsgiserver
-        h.wsgi_app = app
-    elif hasattr(h, 'fcgiserver'):
-        # flup's WSGIServer
-        h.fcgiserver.application = app
-    elif hasattr(h, 'scgiserver'):
-        # flup's WSGIServer
-        h.scgiserver.application = app
-
-def _run_test_suite_thread(moduleNames, conf):
-    try:
-        for testmod in moduleNames:
-            # Must run each module in a separate suite,
-            # because each module uses/overwrites cherrypy globals.
-            cherrypy.tree = cherrypy._cptree.Tree()
-            cherrypy.config.reset()
-            setConfig(conf)
-            
-            m = __import__(testmod, globals(), locals())
-            setup = getattr(m, "setup_server", None)
-            if setup:
-                setup()
-            
-            # The setup functions probably mounted new apps.
-            # Tell our server about them.
-            sync_apps(profile=conf.get("profiling.on", False),
-                      validate=conf.get("validator.on", False),
-                      conquer=conf.get("conquer.on", False),
-                      )
-            
-            suite = CPTestLoader.loadTestsFromName(testmod)
-            result = CPTestRunner.run(suite)
-            cherrypy.engine.test_success &= result.wasSuccessful()
-            
-            teardown = getattr(m, "teardown_server", None)
-            if teardown:
-                teardown()
-    finally:
-        cherrypy.engine.exit()
-
 def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
-    engine = cherrypy.engine
-    if '--server' in sys.argv:
-        # Run the test module server-side only; wait for Ctrl-C to break.
-        conf = conf or {}
-        conf['server.socket_host'] = '0.0.0.0'
-        setConfig(conf)
-        if hasattr(engine, "signal_handler"):
-            engine.signal_handler.subscribe()
-        if hasattr(engine, "console_control_handler"):
-            engine.console_control_handler.subscribe()
-        engine.start()
-        engine.block()
-    else:
-        for arg in sys.argv:
-            if arg.startswith('--client='):
-                # Run the test module client-side only.
-                sys.argv.remove(arg)
-                conf = conf or {}
-                conf['server.socket_host'] = host = arg.split('=', 1)[1].strip()
-                setConfig(conf)
-                webtest.WebCase.HOST = host
-                webtest.WebCase.PORT = cherrypy.server.socket_port
-                webtest.main()
-                break
-        else:
-            # Run normally (both server and client in same process).
-            conf = conf or {}
-            conf['server.socket_host'] = '127.0.0.1'
-            setConfig(conf)
-            engine.start_with_callback(_test_main_thread)
-            engine.block()
-
-def _test_main_thread():
-    try:
-        webtest.WebCase.PORT = cherrypy.server.socket_port
-        webtest.main()
-    finally:
-        cherrypy.engine.exit()
+    conf = conf or {}
+    conf['server.socket_host'] = '127.0.0.1'
+    CPWebCase.baseconf = conf
+    webtest.main()
 
 
 

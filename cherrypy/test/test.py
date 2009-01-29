@@ -16,6 +16,7 @@ import os
 localDir = os.path.dirname(__file__)
 serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
 import sys
+import warnings
 
 
 class TestHarness(object):
@@ -49,10 +50,6 @@ class TestHarness(object):
         print "PID:", os.getpid()
         print
         
-        # Override these in _run as needed:
-        cherrypy.server.using_wsgi = True
-        cherrypy.server.using_apache = False
-        
         if isinstance(conf, basestring):
             parser = cherrypy.config._Parser()
             conf = parser.dict_from_file(conf).get('global', {})
@@ -67,9 +64,7 @@ class TestHarness(object):
         if self.scheme == "https":
             baseconf['server.ssl_certificate'] = serverpem
             baseconf['server.ssl_private_key'] = serverpem
-        return self._run(baseconf)
-    
-    def _run(self, conf):
+        
         # helper must be imported lazily so the coverage tool
         # can run against module-level statements within cherrypy.
         # Also, we have to do "from cherrypy.test import helper",
@@ -77,16 +72,81 @@ class TestHarness(object):
         # would stick a second instance of webtest in sys.modules,
         # and we wouldn't be able to globally override the port anymore.
         from cherrypy.test import helper, webtest
-        webtest.WebCase.PORT = self.port
-        webtest.WebCase.HOST = self.host
-        webtest.WebCase.harness = self
-        helper.CPWebCase.scheme = self.scheme
         webtest.WebCase.interactive = self.interactive
         if self.scheme == "https":
             webtest.WebCase.HTTP_CONN = httplib.HTTPSConnection
         print
         print "Running tests:", self.server
-        return helper.run_test_suite(self.tests, self.server, conf)
+        
+        return helper.run_test_suite(self.tests, baseconf, self.server)
+
+
+class LocalServer(object):
+    """Server Controller for the builtin WSGI server."""
+    
+    def __init__(self, host, port, profile, validate, conquer):
+        self.host = host
+        self.port = port
+        self.profile = profile
+        self.validate = validate
+        self.conquer = conquer
+    
+    def __str__(self):
+        return "Builtin WSGI Server on %s:%s" % (self.host, self.port)
+    
+    def start(self, modulename):
+        """Load and start the HTTP server."""
+        import cherrypy
+        
+        # Replace the Tree wholesale.
+        cherrypy.tree = cherrypy._cptree.Tree()
+        
+        m = __import__(modulename, globals(), locals())
+        setup = getattr(m, "setup_server", None)
+        setup()
+        
+        engine = cherrypy.engine
+        if hasattr(engine, "signal_handler"):
+            engine.signal_handler.subscribe()
+        if hasattr(engine, "console_control_handler"):
+            engine.console_control_handler.subscribe()
+        engine.start()
+        
+        # The setup functions probably mounted new apps.
+        # Tell our server about them.
+        self.sync_apps()
+    
+    def stop(self):
+        import cherrypy
+        cherrypy.engine.exit()
+    
+    def sync_apps(self):
+        """Hook a new WSGI app into the origin server."""
+        import cherrypy
+        cherrypy.server.httpserver.wsgi_app = self.get_app()
+    
+    def get_app(self):
+        """Obtain a new (decorated) WSGI app to hook into the origin server."""
+        import cherrypy
+        app = cherrypy.tree
+        if self.profile:
+            app = profiler.make_app(app, aggregate=False)
+        if self.conquer:
+            try:
+                import wsgiconq
+            except ImportError:
+                warnings.warn("Error importing wsgiconq. pyconquer will not run.")
+            else:
+                app = wsgiconq.WSGILogger(app)
+        if self.validate:
+            try:
+                from wsgiref import validate
+            except ImportError:
+                warnings.warn("Error importing wsgiref. The validator will not run.")
+            else:
+                app = validate.validator(app)
+        
+        return app
 
 
 class CommandLineParser(object):
@@ -310,43 +370,38 @@ class CommandLineParser(object):
         if self.cover:
             self.start_coverage()
         
-        if self.profile:
-            conf['profiling.on'] = True
-        
-        if self.validate:
-            conf['validator.on'] = True
-        
-        if self.conquer:
-            conf['conquer.on'] = True
-        
+        import cherrypy
         if self.server == 'cpmodpy':
             from cherrypy.test import modpy
-            h = modpy.ModPythonTestHarness(self.tests, self.server,
-                                           self.protocol, self.port,
-                                           "http", self.interactive)
-            h.use_wsgi = False
+            server = modpy.ServerControl(self.host, self.port,
+                                         modpy.conf_cpmodpy)
+            cherrypy.server.using_apache = True
+            cherrypy.server.using_wsgi = False
         elif self.server == 'modpygw':
             from cherrypy.test import modpy
-            h = modpy.ModPythonTestHarness(self.tests, self.server,
-                                           self.protocol, self.port,
-                                           "http", self.interactive)
-            h.use_wsgi = True
+            server = modpy.ServerControl(self.host, self.port,
+                                         modpy.conf_modpython_gateway)
+            cherrypy.server.using_apache = True
+            cherrypy.server.using_wsgi = True
         elif self.server == 'modwsgi':
             from cherrypy.test import modwsgi
-            h = modwsgi.ModWSGITestHarness(self.tests, self.server,
-                                           self.protocol, self.port,
-                                           "http", self.interactive)
-            h.use_wsgi = True
+            server = modwsgi.ServerControl(self.host, self.port)
+            cherrypy.server.using_apache = True
+            cherrypy.server.using_wsgi = True
         elif self.server == 'modfcgid':
             from cherrypy.test import modfcgid
-            h = modfcgid.FCGITestHarness(self.tests, self.server,
-                                         self.protocol, self.port,
-                                         "http", self.interactive)
+            server = modfcgid.ServerControl(self.host, self.port, self.profile,
+                                            self.validate, self.conquer)
+            cherrypy.server.using_apache = True
+            cherrypy.server.using_wsgi = True
         else:
-            h = TestHarness(self.tests, self.server, self.protocol,
-                            self.port, self.scheme, self.interactive,
-                            self.host)
+            server = LocalServer(self.host, self.port, self.profile,
+                                 self.validate, self.conquer)
+            cherrypy.server.using_apache = False
+            cherrypy.server.using_wsgi = True
         
+        h = TestHarness(self.tests, server, self.protocol, self.port,
+                        self.scheme, self.interactive, self.host)
         success = h.run(conf)
         
         if self.profile:
@@ -373,6 +428,7 @@ def run():
     prefer_parent_path()
     
     testList = [
+        'test_bus',
         'test_proxy',
         'test_caching',
         'test_config',
@@ -394,7 +450,7 @@ def run():
         'test_mime',
         'test_session',
         'test_sessionauthenticate',
-##        'test_states',
+        'test_states',
         'test_tidy',
         'test_xmlrpc',
         'test_wsgiapps',
