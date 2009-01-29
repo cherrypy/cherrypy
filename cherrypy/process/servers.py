@@ -150,11 +150,11 @@ class FlupFCGIServer(object):
     
     def stop(self):
         """Stop the HTTP server."""
-        self.ready = False
         # Forcibly stop the fcgi server main event loop.
         self.fcgiserver._keepGoing = False
         # Force all worker threads to die off.
-        self.fcgiserver._threadPool.maxSpare = 0
+        self.fcgiserver._threadPool.maxSpare = self.fcgiserver._threadPool._idleCount
+        self.ready = False
 
 
 class FlupSCGIServer(object):
