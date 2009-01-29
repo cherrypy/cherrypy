@@ -49,10 +49,6 @@ def setup_server():
                                     [('Content-Type', newct)]})
         defct.exposed = True
         
-        def upload(self, file):
-            return "Size: %s" % len(file.file.read())
-        upload.exposed = True
-        
         def baseurl(self, path_info, relative=None):
             return cherrypy.url(path_info, relative=bool(relative))
         baseurl.exposed = True
@@ -468,11 +464,7 @@ def setup_server():
         from cherrypy.test import py25
         Root.expose_dec = py25.ExposeExamples()
     
-    cherrypy.config.update({
-        'environment': 'test_suite',
-        'server.max_request_body_size': 200,
-        'server.max_request_header_size': 500,
-        })
+    cherrypy.config.update({'environment': 'test_suite'})
     appconf = {
         '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
         }
@@ -1145,43 +1137,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                           ])
             self.assertHeader('Set-Cookie', 'First=Dinsdale;')
             self.assertHeader('Set-Cookie', 'Last=Piranha;')
-    
-    def testMaxRequestSize(self):
-        if getattr(cherrypy.server, "using_apache", False):
-            print "skipped due to known Apache differences...",
-            return
-        
-        for size in (500, 5000, 50000):
-            self.getPage("/", headers=[('From', "x" * 500)])
-            self.assertStatus(413)
-        
-        # Test for http://www.cherrypy.org/ticket/421
-        # (Incorrect border condition in readline of SizeCheckWrapper).
-        # This hangs in rev 891 and earlier.
-        lines256 = "x" * 248
-        self.getPage("/",
-                     headers=[('Host', '%s:%s' % (self.HOST, self.PORT)),
-                              ('From', lines256)])
-        
-        # Test upload
-        body = """--x
-Content-Disposition: form-data; name="file"; filename="hello.txt"
-Content-Type: text/plain
-
-%s
---x--
-"""
-        b = body % ("x" * 96)
-        h = [("Content-type", "multipart/form-data; boundary=x"),
-             ("Content-Length", len(b))]
-        self.getPage('/upload', h, "POST", b)
-        self.assertBody('Size: 96')
-        
-        b = body % ("x" * 200)
-        h = [("Content-type", "multipart/form-data; boundary=x"),
-             ("Content-Length", len(b))]
-        self.getPage('/upload', h, "POST", b)
-        self.assertStatus(413)
     
     def testEmptyThreadlocals(self):
         results = []

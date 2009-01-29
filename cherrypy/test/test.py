@@ -451,6 +451,7 @@ def run():
         'test_session',
         'test_sessionauthenticate',
         'test_states',
+        'test_config_server',
         'test_tidy',
         'test_xmlrpc',
         'test_wsgiapps',
