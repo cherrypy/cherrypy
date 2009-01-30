@@ -34,6 +34,8 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
     def __init__(self, server_adapter=cherrypy.server):
         self.server_adapter = server_adapter
         
+        # We have to make custom subclasses of wsgiserver internals here
+        # so that our server.* attributes get applied to every request.
         class _CPHTTPRequest(wsgiserver.HTTPRequest):
             def __init__(self, sendall, environ, wsgi_app):
                 s = server_adapter
