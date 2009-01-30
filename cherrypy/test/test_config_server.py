@@ -14,7 +14,7 @@ def setup_server():
     
     class Root:
         def index(self):
-            return "Hello, world!"
+            return cherrypy.request.wsgi_environ['SERVER_PORT']
         index.exposed = True
         
         def upload(self, file):
@@ -29,6 +29,14 @@ def setup_server():
         'server.socket_port': 9876,
         'server.max_request_body_size': 200,
         'server.max_request_header_size': 500,
+        
+        # Test explicit server.instance
+        'server.2.instance': 'cherrypy._cpwsgi_server.CPWSGIServer',
+        'server.2.socket_port': 9877,
+        
+        # Test non-numeric <servername>
+        # Also test default server.instance = builtin server
+        'server.yetanother.socket_port': 9878,
         })
 
 
@@ -42,7 +50,15 @@ class ServerConfigTests(helper.CPWebCase):
     
     def testBasicConfig(self):
         self.getPage("/")
-        self.assertBody("Hello, world!")
+        self.assertBody(str(self.PORT))
+    
+    def testAdditionalServers(self):
+        self.PORT = 9877
+        self.getPage("/")
+        self.assertBody(str(self.PORT))
+        self.PORT = 9878
+        self.getPage("/")
+        self.assertBody(str(self.PORT))
     
     def testMaxRequestSize(self):
         if getattr(cherrypy.server, "using_apache", False):

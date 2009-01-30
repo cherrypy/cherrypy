@@ -31,26 +31,37 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
     
     ConnectionClass = CPHTTPConnection
     
-    def __init__(self):
-        server = cherrypy.server
-        sockFile = server.socket_file
+    def __init__(self, server_adapter=cherrypy.server):
+        self.server_adapter = server_adapter
+        
+        class _CPHTTPRequest(wsgiserver.HTTPRequest):
+            def __init__(self, sendall, environ, wsgi_app):
+                s = server_adapter
+                self.max_request_header_size = s.max_request_header_size or 0
+                self.max_request_body_size = s.max_request_body_size or 0
+                wsgiserver.HTTPRequest.__init__(self, sendall, environ, wsgi_app)
+        class _CPHTTPConnection(wsgiserver.HTTPConnection):
+            RequestHandlerClass = _CPHTTPRequest
+        self.ConnectionClass = _CPHTTPConnection
+        
+        sockFile = self.server_adapter.socket_file
         if sockFile:
             bind_addr = sockFile
         else:
-            bind_addr = (server.socket_host, server.socket_port)
+            bind_addr = (self.server_adapter.socket_host, self.server_adapter.socket_port)
         
         s = wsgiserver.CherryPyWSGIServer
         s.__init__(self, bind_addr, cherrypy.tree,
-                   server.thread_pool,
-                   server.socket_host,
-                   max = server.thread_pool_max,
-                   request_queue_size = server.socket_queue_size,
-                   timeout = server.socket_timeout,
-                   shutdown_timeout = server.shutdown_timeout,
+                   self.server_adapter.thread_pool,
+                   self.server_adapter.socket_host,
+                   max = self.server_adapter.thread_pool_max,
+                   request_queue_size = self.server_adapter.socket_queue_size,
+                   timeout = self.server_adapter.socket_timeout,
+                   shutdown_timeout = self.server_adapter.shutdown_timeout,
                    )
-        self.protocol = server.protocol_version
-        self.nodelay = server.nodelay
-        self.ssl_context = server.ssl_context
-        self.ssl_certificate = server.ssl_certificate
-        self.ssl_private_key = server.ssl_private_key
+        self.protocol = self.server_adapter.protocol_version
+        self.nodelay = self.server_adapter.nodelay
+        self.ssl_context = self.server_adapter.ssl_context
+        self.ssl_certificate = self.server_adapter.ssl_certificate
+        self.ssl_private_key = self.server_adapter.ssl_private_key
 

@@ -246,8 +246,7 @@ class Config(dict):
         }
     
     namespaces = NamespaceSet(
-        **{"server": lambda k, v: setattr(cherrypy.server, k, v),
-           "log": lambda k, v: setattr(cherrypy.log, k, v),
+        **{"log": lambda k, v: setattr(cherrypy.log, k, v),
            "checker": lambda k, v: setattr(cherrypy.checker, k, v),
            })
     
@@ -293,6 +292,33 @@ class Config(dict):
         dict.__setitem__(self, k, v)
         self.namespaces({k: v})
 
+
+def _server_namespace_handler(k, v):
+    """Config handler for the "server" namespace."""
+    atoms = k.split(".", 1)
+    if len(atoms) > 1:
+        # Special-case config keys of the form 'server.servername.socket_port'
+        # to configure additional HTTP servers.
+        if not hasattr(cherrypy, "servers"):
+            cherrypy.servers = {}
+        
+        servername, k = atoms
+        if servername not in cherrypy.servers:
+            from cherrypy import _cpserver
+            cherrypy.servers[servername] = _cpserver.Server()
+            # On by default, but 'on = False' can unsubscribe it (see below).
+            cherrypy.servers[servername].subscribe()
+        
+        if k == 'on':
+            if v:
+                cherrypy.servers[servername].subscribe()
+            else:
+                cherrypy.servers[servername].unsubscribe()
+        else:
+            setattr(cherrypy.servers[servername], k, v)
+    else:
+        setattr(cherrypy.server, k, v)
+Config.namespaces["server"] = _server_namespace_handler
 
 def _engine_namespace_handler(k, v):
     """Backward compatibility handler for the "engine" namespace."""

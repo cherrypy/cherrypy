@@ -73,9 +73,10 @@ class Server(ServerAdapter):
             httpserver = self.instance
         if httpserver is None:
             from cherrypy import _cpwsgi_server
-            httpserver = _cpwsgi_server.CPWSGIServer()
+            httpserver = _cpwsgi_server.CPWSGIServer(self)
         if isinstance(httpserver, basestring):
-            httpserver = attributes(httpserver)()
+            # Is anyone using this? Can I add an arg?
+            httpserver = attributes(httpserver)(self)
         
         if self.socket_file:
             return httpserver, self.socket_file
