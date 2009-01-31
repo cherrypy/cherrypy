@@ -139,7 +139,7 @@ class LogManager(object):
     
     def _set_screen(self, newvalue):
         self._set_screen_handler(self.error_log, newvalue, stream=sys.stderr)
-        self._set_screen_handler(self.access_log, newvalue)
+        self._set_screen_handler(self.access_log, newvalue, stream=sys.stdout)
     screen = property(_get_screen, _set_screen,
                       doc="If True, error and access will print to stderr.")
     
