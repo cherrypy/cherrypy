@@ -293,6 +293,9 @@ def setup_server():
         _cp_config = {'tools.log_tracebacks.on': True,
                       }
         
+        def reason_phrase(self):
+            raise cherrypy.HTTPError("410 Gone fishin'")
+        
         def custom(self, err='404'):
             raise cherrypy.HTTPError(int(err), "No, <b>really</b>, not found!")
         custom._cp_config = {'error_page.404': os.path.join(localDir, "static/index.html"),
@@ -824,6 +827,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertErrorPage(500, msg, None)
         finally:
             ignore.pop()
+        
+        # Test HTTPError with a reason-phrase in the status arg.
+        self.getPage('/error/reason_phrase')
+        self.assertStatus("410 Gone fishin'")
         
         # Test custom error page for a specific error.
         self.getPage("/error/custom")

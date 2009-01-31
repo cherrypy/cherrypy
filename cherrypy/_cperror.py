@@ -184,12 +184,18 @@ class HTTPError(CherryPyException):
     """
     
     def __init__(self, status=500, message=None):
-        self.status = status = int(status)
-        if status < 400 or status > 599:
+        self.status = status
+        try:
+            self.code, self.reason, defaultmsg = _http.valid_status(status)
+        except ValueError, x:
+            raise cherrypy.HTTPError(500, x.args[0])
+        
+        if self.code < 400 or self.code > 599:
             raise ValueError("status must be between 400 and 599.")
+        
         # See http://www.python.org/dev/peps/pep-0352/
         # self.message = message
-        self._message = message
+        self._message = message or defaultmsg
         CherryPyException.__init__(self, status, message)
     
     def set_response(self):
@@ -202,7 +208,7 @@ class HTTPError(CherryPyException):
         
         response = cherrypy.response
         
-        clean_headers(self.status)
+        clean_headers(self.code)
         
         # In all cases, finalize will be called after this method,
         # so don't bother cleaning up response values here.
@@ -217,7 +223,7 @@ class HTTPError(CherryPyException):
         response.body = content
         response.headers['Content-Length'] = len(content)
         
-        _be_ie_unfriendly(self.status)
+        _be_ie_unfriendly(self.code)
     
     def get_error_page(self, *args, **kwargs):
         return get_error_page(*args, **kwargs)

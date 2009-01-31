@@ -209,7 +209,7 @@ def valid_status(status):
     
     The status arg must be an int, or a str that begins with an int.
     
-    If status is an int, or a str and  no reason-phrase is supplied,
+    If status is an int, or a str and no reason-phrase is supplied,
     a default reason-phrase will be provided.
     """
     
