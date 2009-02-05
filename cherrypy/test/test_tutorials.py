@@ -28,7 +28,7 @@ def setup_server():
         app.root.sessions = sessions
         app.root.traceback_setting = traceback_setting
         
-        helper.sync_apps()
+        test.sync_apps()
     load_tut_module.exposed = True
     
     def sessions():

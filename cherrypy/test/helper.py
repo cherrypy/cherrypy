@@ -104,16 +104,13 @@ def run_test_suite(moduleNames, conf, server):
     test_success = True
     
     for testmod in moduleNames:
-        # Set up the test environment.
         cherrypy.config.reset()
         cherrypy.config.update(conf)
-        webtest.WebCase.PORT = cherrypy.config.get('server.socket_port')
-        webtest.WebCase.HOST = cherrypy.config.get('server.socket_host')
-        if cherrypy.config.get('server.ssl_certificate', ''):
-            CPWebCase.scheme = 'https'
+        setup_client()
         
         m = __import__(testmod, globals(), locals())
         suite = CPTestLoader.loadTestsFromName(testmod)
+        
         setup = getattr(m, "setup_server", None)
         if setup: server.start(testmod)
         try:
@@ -127,12 +124,26 @@ def run_test_suite(moduleNames, conf, server):
     else:
         return 1
 
+def setup_client():
+    """Set up the WebCase classes to match the server's socket settings."""
+    webtest.WebCase.PORT = cherrypy.server.socket_port
+    webtest.WebCase.HOST = cherrypy.server.socket_host
+    if cherrypy.server.ssl_certificate:
+        CPWebCase.scheme = 'https'
+
 def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
-    conf = conf or {}
-    conf['server.socket_host'] = '127.0.0.1'
-    CPWebCase.baseconf = conf
-    webtest.main()
+    cherrypy.server.socket_host = '127.0.0.1'
+    setup_client()
+    
+    from cherrypy.test.test import LocalServer
+    server = LocalServer(cherrypy.server.socket_host, cherrypy.server.socket_port,
+                         False, False, False)
+    server.start()
+    try:
+        return webtest.main()
+    finally:
+        server.stop()
 
 
 

@@ -333,6 +333,10 @@ class HTTPRequest(object):
                 self.ready = False
                 return
         
+        if not request_line.endswith('\r\n'):
+            self.simple_response(400, "HTTP requires CRLF terminators")
+            return
+        
         environ = self.environ
         
         try:
@@ -402,7 +406,7 @@ class HTTPRequest(object):
         try:
             self.read_headers()
         except ValueError, ex:
-            self.simple_response("400 Bad Request", repr(ex.args))
+            self.simple_response("400 Bad Request", ex.args[0])
             return
         
         mrbs = self.max_request_body_size
@@ -475,6 +479,8 @@ class HTTPRequest(object):
             if line == '\r\n':
                 # Normal end of headers
                 break
+            if not line.endswith('\r\n'):
+                raise ValueError("HTTP requires CRLF terminators")
             
             if line[0] in ' \t':
                 # It's a continuation line.

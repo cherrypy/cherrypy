@@ -82,13 +82,14 @@ def setup_server():
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
         'server.max_request_body_size': 1001,
+        'server.socket_timeout': timeout,
         'environment': 'test_suite',
         })
 
 
 from cherrypy.test import helper
 
-class ConnectionTests(helper.CPWebCase):
+class ConnectionCloseTests(helper.CPWebCase):
     
     def test_HTTP11(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
@@ -212,6 +213,38 @@ class ConnectionTests(helper.CPWebCase):
                 
                 # Make another request on the same connection, which should error.
                 self.assertRaises(httplib.NotConnected, self.getPage, "/")
+    
+    def test_HTTP10_KeepAlive(self):
+        self.PROTOCOL = "HTTP/1.0"
+        if self.scheme == "https":
+            self.HTTP_CONN = httplib.HTTPSConnection
+        else:
+            self.HTTP_CONN = httplib.HTTPConnection
+        
+        # Test a normal HTTP/1.0 request.
+        self.getPage("/page2")
+        self.assertStatus('200 OK')
+        self.assertBody(pov)
+        # Apache, for example, may emit a Connection header even for HTTP/1.0
+##        self.assertNoHeader("Connection")
+        
+        # Test a keep-alive HTTP/1.0 request.
+        self.persistent = True
+        
+        self.getPage("/page3", headers=[("Connection", "Keep-Alive")])
+        self.assertStatus('200 OK')
+        self.assertBody(pov)
+        self.assertHeader("Connection", "Keep-Alive")
+        
+        # Remove the keep-alive header again.
+        self.getPage("/page3")
+        self.assertStatus('200 OK')
+        self.assertBody(pov)
+        # Apache, for example, may emit a Connection header even for HTTP/1.0
+##        self.assertNoHeader("Connection")
+
+
+class PipelineTests(helper.CPWebCase):
     
     def test_HTTP11_Timeout(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
@@ -389,6 +422,9 @@ class ConnectionTests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody("thanks for 'I am a small file' (text/plain)")
         conn.close()
+
+
+class ConnectionTests(helper.CPWebCase):
     
     def test_readall_or_close(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
@@ -560,35 +596,6 @@ class ConnectionTests(helper.CPWebCase):
         self.assertBody("")
         conn.close()
     
-    def test_HTTP10(self):
-        self.PROTOCOL = "HTTP/1.0"
-        if self.scheme == "https":
-            self.HTTP_CONN = httplib.HTTPSConnection
-        else:
-            self.HTTP_CONN = httplib.HTTPConnection
-        
-        # Test a normal HTTP/1.0 request.
-        self.getPage("/page2")
-        self.assertStatus('200 OK')
-        self.assertBody(pov)
-        # Apache, for example, may emit a Connection header even for HTTP/1.0
-##        self.assertNoHeader("Connection")
-        
-        # Test a keep-alive HTTP/1.0 request.
-        self.persistent = True
-        
-        self.getPage("/page3", headers=[("Connection", "Keep-Alive")])
-        self.assertStatus('200 OK')
-        self.assertBody(pov)
-        self.assertHeader("Connection", "Keep-Alive")
-        
-        # Remove the keep-alive header again.
-        self.getPage("/page3")
-        self.assertStatus('200 OK')
-        self.assertBody(pov)
-        # Apache, for example, may emit a Connection header even for HTTP/1.0
-##        self.assertNoHeader("Connection")
-    
     def test_598(self):
         remote_data_conn = urllib.urlopen('%s://%s:%s/one_megabyte_of_a/' %
                                           (self.scheme, self.HOST, self.PORT,))
@@ -609,7 +616,29 @@ class ConnectionTests(helper.CPWebCase):
         remote_data_conn.close()
 
 
+class BadRequestTests(helper.CPWebCase):
+    
+    def test_No_CRLF(self):
+        self.persistent = True
+        
+        conn = self.HTTP_CONN
+        conn.send('GET /hello HTTP/1.1\n\n')
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.body = response.read()
+        self.assertBody("HTTP requires CRLF terminators")
+        conn.close()
+        
+        conn.connect()
+        conn.send('GET /hello HTTP/1.1\r\n\n')
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.body = response.read()
+        self.assertBody("HTTP requires CRLF terminators")
+        conn.close()
+
+
+
 if __name__ == "__main__":
     setup_server()
-    helper.testmain({'server.socket_timeout': timeout,
-                     'server.socket_host': '127.0.0.1'})
+    helper.testmain()

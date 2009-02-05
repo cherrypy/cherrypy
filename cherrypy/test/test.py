@@ -94,16 +94,22 @@ class LocalServer(object):
     def __str__(self):
         return "Builtin WSGI Server on %s:%s" % (self.host, self.port)
     
-    def start(self, modulename):
+    def start(self, modulename=None):
         """Load and start the HTTP server."""
         import cherrypy
         
-        # Replace the Tree wholesale.
-        cherrypy.tree = cherrypy._cptree.Tree()
-        
-        m = __import__(modulename, globals(), locals())
-        setup = getattr(m, "setup_server", None)
-        setup()
+        if modulename:
+            # Replace the Tree wholesale.
+            cherrypy.tree = cherrypy._cptree.Tree()
+            
+            # Unhook httpserver so cherrypy.server.start() creates a new
+            # one (with config from setup_server, if declared).
+            cherrypy.server.httpserver = None
+            cherrypy.tree = cherrypy._cptree.Tree()
+            
+            m = __import__(modulename, globals(), locals())
+            setup = getattr(m, "setup_server", None)
+            setup()
         
         engine = cherrypy.engine
         if hasattr(engine, "signal_handler"):
@@ -400,6 +406,9 @@ class CommandLineParser(object):
             cherrypy.server.using_apache = False
             cherrypy.server.using_wsgi = True
         
+        if cherrypy.server.using_apache and 'test_conn' in self.tests:
+            self.tests.remove('test_conn')
+        
         h = TestHarness(self.tests, server, self.protocol, self.port,
                         self.scheme, self.interactive, self.host)
         success = h.run(conf)
@@ -432,7 +441,7 @@ def run():
         'test_proxy',
         'test_caching',
         'test_config',
-##        'test_conn',
+        'test_conn',
         'test_core',
         'test_tools',
         'test_encoding',

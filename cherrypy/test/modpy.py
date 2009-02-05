@@ -98,6 +98,9 @@ class ServerControl(object):
         self.port = port
         self.template = template
     
+    def __str__(self):
+        return "ModPython Server on %s:%s" % (self.host, self.port)
+    
     def start(self, modulename):
         mpconf = CONF_PATH
         if not os.path.isabs(mpconf):
