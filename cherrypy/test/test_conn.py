@@ -83,7 +83,6 @@ def setup_server():
     cherrypy.config.update({
         'server.max_request_body_size': 1001,
         'server.socket_timeout': timeout,
-        'environment': 'test_suite',
         })
 
 
@@ -640,5 +639,4 @@ class BadRequestTests(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

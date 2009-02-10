@@ -70,7 +70,6 @@ def setup_server():
         'request.dispatch': cherrypy.dispatch.XMLRPCDispatcher(),
         'tools.xmlrpc.allow_none': 0,
         }})
-    cherrypy.config.update({'environment': 'test_suite'})
 
 
 class HTTPSTransport(xmlrpclib.SafeTransport):
@@ -172,6 +171,5 @@ class XmlRpcTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()
 

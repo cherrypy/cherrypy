@@ -63,8 +63,6 @@ def setup_server():
                  'wsgi.replace.map': {'L': 'X', 'l': 'r'},
                  }
     
-    cherrypy.config.update({'environment': 'test_suite'})
-    
     app = cherrypy.Application(Root())
     app.wsgiapp.pipeline.append(('changecase', ChangeCase))
     app.wsgiapp.config['changecase'] = {'to': 'upper'}
@@ -86,6 +84,5 @@ class WSGI_Namespace_Test(helper.CPWebCase):
         self.assertBody("HERRO WORRD!")
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()
 

@@ -26,8 +26,6 @@ def setup_server():
         dynamic.exposed = True
     
     
-    cherrypy.config.update({'environment': 'test_suite'})
-    
     root = Root()
     root.static = Static()
     
@@ -169,5 +167,4 @@ class StaticTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

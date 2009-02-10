@@ -141,8 +141,6 @@ def setup_server():
                 }
         cherrypy.tree.mount(Root(), url, conf)
     
-    cherrypy.config.update({'environment': "test_suite"})
-    
     
     class Isolated:
         def index(self):
@@ -358,5 +356,4 @@ class ObjectMappingTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

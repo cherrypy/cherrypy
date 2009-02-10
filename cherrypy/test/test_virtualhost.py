@@ -55,8 +55,7 @@ def setup_server():
                             'tools.staticdir.index': 'index.html',
                             },
         })
-    
-    cherrypy.config.update({'environment': 'test_suite'})
+
 
 from cherrypy.test import helper
 
@@ -111,5 +110,4 @@ class VirtualHostTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

@@ -20,11 +20,25 @@ def setup_server():
         def upload(self, file):
             return "Size: %s" % len(file.file.read())
         upload.exposed = True
+        
+        def tinyupload(self, maxlen):
+            cherrypy.request.rfile.maxlen = int(maxlen)
+            cl = int(cherrypy.request.headers['Content-Length'])
+            try:
+                body = cherrypy.request.rfile.read(cl)
+            except Exception, e:
+                if e.__class__.__name__ == 'MaxSizeExceeded':
+                    # Post data is too big
+                    raise cherrypy.HTTPError(413)
+                else:
+                    raise
+            return body
+        tinyupload.exposed = True
+        tinyupload._cp_config = {'request.process_request_body': False}
     
     cherrypy.tree.mount(Root())
     
     cherrypy.config.update({
-        'environment': 'test_suite',
         'server.socket_host': '0.0.0.0',
         'server.socket_port': 9876,
         'server.max_request_body_size': 200,
@@ -59,6 +73,17 @@ class ServerConfigTests(helper.CPWebCase):
         self.PORT = 9878
         self.getPage("/")
         self.assertBody(str(self.PORT))
+    
+    def testMaxRequestSizePerHandler(self):
+        if getattr(cherrypy.server, "using_apache", False):
+            print "skipped due to known Apache differences...",
+            return
+        
+        self.getPage('/tinyupload?maxlen=100', method="POST", body="x" * 100)
+        self.assertStatus(200)
+        self.assertBody("x" * 100)
+        self.getPage('/tinyupload?maxlen=100', method="POST", body="x" * 101)
+        self.assertStatus(413)
     
     def testMaxRequestSize(self):
         if getattr(cherrypy.server, "using_apache", False):
@@ -100,5 +125,4 @@ Content-Type: text/plain
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()

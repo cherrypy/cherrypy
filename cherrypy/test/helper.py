@@ -133,13 +133,16 @@ def setup_client():
 
 def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
+    # Comment me out to see ENGINE messages etc. when running a test standalone.
+    cherrypy.config.update({'environment': "test_suite"})
+    
     cherrypy.server.socket_host = '127.0.0.1'
     setup_client()
     
     from cherrypy.test.test import LocalServer
     server = LocalServer(cherrypy.server.socket_host, cherrypy.server.socket_port,
                          False, False, False)
-    server.start()
+    server.start('__main__')
     try:
         return webtest.main()
     finally:

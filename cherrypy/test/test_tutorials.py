@@ -204,11 +204,8 @@ Content-Type: text/plain
 
 
 if __name__ == "__main__":
-    conf = {'server.socket_host': '127.0.0.1',
-            'server.socket_port': 8080,
-            'server.thread_pool': 10,
-            'environment': "test_suite",
-            }
-    cherrypy.config.update(conf)
-    setup_server()
-    helper.testmain()
+    helper.testmain({
+        'server.socket_host': '127.0.0.1',
+        'server.socket_port': 8080,
+        'server.thread_pool': 10,
+        })

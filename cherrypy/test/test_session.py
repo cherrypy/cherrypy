@@ -110,7 +110,6 @@ def setup_server():
             'tools.sessions.persistent': False}
     
     cherrypy.tree.mount(Root())
-    cherrypy.config.update({'environment': 'test_suite'})
 
 
 from cherrypy.test import helper
@@ -456,5 +455,4 @@ else:
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

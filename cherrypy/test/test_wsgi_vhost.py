@@ -16,8 +16,6 @@ def setup_server():
         index.exposed = True
     
     
-    cherrypy.config.update({'environment': 'test_suite'})
-    
     default = cherrypy.Application(None)
     
     domains = {}
@@ -44,6 +42,5 @@ class WSGI_VirtualHost_Test(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()
 

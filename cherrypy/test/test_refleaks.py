@@ -76,7 +76,6 @@ def setup_server():
         gc_stats.exposed = True
     
     cherrypy.tree.mount(Root())
-    cherrypy.config.update({'environment': 'test_suite'})
 
 
 from cherrypy.test import helper
@@ -121,5 +120,4 @@ class ReferenceTests(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain({'server.socket_queue_size': 10})

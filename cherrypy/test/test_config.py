@@ -108,8 +108,7 @@ tools.staticfile.filename = %r
     app.request_class.namespaces['raw'] = raw_namespace
     
     cherrypy.tree.mount(Another(), "/another")
-    cherrypy.config.update({'environment': 'test_suite',
-                            'luxuryyacht': 'throatwobblermangrove',
+    cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove',
                             'db.scheme': r"sqlite///memory",
                             })
 
@@ -200,5 +199,4 @@ class ConfigTests(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()

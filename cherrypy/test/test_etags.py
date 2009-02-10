@@ -27,7 +27,6 @@ def setup_server():
                   'tools.etags.autotags': True,
                   }}
     cherrypy.tree.mount(Root(), config=conf)
-    cherrypy.config.update({'environment': 'test_suite'})
 
 from cherrypy.test import helper
 
@@ -85,5 +84,4 @@ class ETagTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

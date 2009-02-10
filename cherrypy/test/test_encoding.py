@@ -53,7 +53,6 @@ def setup_server():
         noshow_stream._cp_config = {'response.stream': True}
     
     cherrypy.config.update({
-            'environment': 'test_suite',
             'tools.encode.on': True,
             'tools.decode.on': True,
     })
@@ -168,5 +167,4 @@ class EncodingTests(helper.CPWebCase):
                               headers=[("Accept-Encoding", "gzip")])
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

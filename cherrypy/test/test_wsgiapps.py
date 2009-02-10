@@ -64,7 +64,6 @@ def setup_server():
         index.exposed = True
     
     
-    cherrypy.config.update({'environment': 'test_suite'})
     cherrypy.tree.mount(Root())
     
     cherrypy.tree.graft(test_app, '/hosted/app1')
@@ -117,6 +116,5 @@ This is a wsgi app running within CherryPy!'''
         self.assertInBody('Hello world')
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()
 

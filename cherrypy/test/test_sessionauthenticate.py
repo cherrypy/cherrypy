@@ -32,7 +32,6 @@ def setup_server():
         index.exposed = True
     
     cherrypy.tree.mount(Test())
-    cherrypy.config.update({'environment': 'test_suite'})
 
 
 from cherrypy.test import helper
@@ -66,6 +65,5 @@ class SessionAuthenticateTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()
 

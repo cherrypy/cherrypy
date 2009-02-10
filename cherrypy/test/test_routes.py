@@ -38,7 +38,6 @@ def setup_server():
     
     conf = {'/': {'request.dispatch': d}}
     cherrypy.tree.mount(root=None, config=conf)
-    cherrypy.config.update({'environment': 'test_suite'})
 
 
 from cherrypy.test import helper
@@ -66,6 +65,5 @@ class RoutesDispatchTest(helper.CPWebCase):
         self.assertBody("Welcome to Surbiton, pop. 1327")
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()
 

@@ -52,7 +52,6 @@ def setup_server():
     root.basic = BasicProtected()
     root.basic2 = BasicProtected2()
     cherrypy.tree.mount(root, config=conf)
-    cherrypy.config.update({'environment': 'test_suite'})
 
 from cherrypy.test import helper
 
@@ -153,5 +152,4 @@ class HTTPAuthTest(helper.CPWebCase):
         self.assertBody("Hello test, you've been authorized.")
             
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

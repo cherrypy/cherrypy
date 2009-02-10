@@ -23,10 +23,7 @@ def setup_server():
         flashupload.exposed = True
         flashupload._cp_config = {'tools.safe_multipart.on': True}
     
-    cherrypy.config.update({
-        'environment': 'test_suite',
-        'server.max_request_body_size': 0,
-        })
+    cherrypy.config.update({'server.max_request_body_size': 0})
     cherrypy.tree.mount(Root())
 
 
@@ -109,5 +106,4 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()

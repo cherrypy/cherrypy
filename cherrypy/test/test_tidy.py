@@ -40,7 +40,6 @@ def setup_server():
             yield "<body>Normal body</body></html>"
         warning.exposed = True
     
-    cherrypy.config.update({'environment': 'test_suite'})
     cherrypy.tree.mount(Root())
 
 
@@ -73,5 +72,4 @@ class TidyTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

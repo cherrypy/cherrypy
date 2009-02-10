@@ -70,8 +70,7 @@ def setup_server():
     
     cherrypy.tree.mount(Root())
     cherrypy.tree.mount(UnCached(), "/expires")
-    cherrypy.config.update({'environment': 'test_suite',
-                            'tools.gzip.on': True})
+    cherrypy.config.update({'tools.gzip.on': True})
 
 
 from cherrypy.test import helper
@@ -209,6 +208,5 @@ class CacheTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()
 

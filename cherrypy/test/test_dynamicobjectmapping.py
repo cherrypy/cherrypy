@@ -166,8 +166,6 @@ def setup_server():
             }
         cherrypy.tree.mount(Root(), url, conf)
 
-    cherrypy.config.update({'environment': "test_suite"})
-
 
 from cherrypy.test import helper
 
@@ -300,5 +298,4 @@ class DynamicObjectMappingTest(helper.CPWebCase):
         self.assertHeader('Allow', 'GET, HEAD, POST')
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()

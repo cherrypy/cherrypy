@@ -9,7 +9,6 @@ def setup_server():
     
     # Set up site
     cherrypy.config.update({
-        'environment': 'test_suite',
         'tools.proxy.on': True,
         'tools.proxy.base': 'www.mydomain.test',
         })
@@ -128,5 +127,4 @@ class ProxyTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()

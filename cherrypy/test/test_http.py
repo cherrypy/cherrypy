@@ -57,8 +57,7 @@ def setup_server():
         post_multipart.exposed = True
     
     cherrypy.tree.mount(Root())
-    cherrypy.config.update({'environment': 'test_suite',
-                            'server.max_request_body_size': 30000000})
+    cherrypy.config.update({'server.max_request_body_size': 30000000})
 
 
 from cherrypy.test import helper
@@ -123,5 +122,4 @@ class HTTPTests(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()

@@ -467,7 +467,6 @@ def setup_server():
         from cherrypy.test import py25
         Root.expose_dec = py25.ExposeExamples()
     
-    cherrypy.config.update({'environment': 'test_suite'})
     appconf = {
         '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
         }
@@ -1270,5 +1269,4 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()

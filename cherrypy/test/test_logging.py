@@ -59,7 +59,6 @@ def setup_server():
 
     cherrypy.config.update({'log.error_file': error_log,
                             'log.access_file': access_log,
-                            'environment': 'test_suite',
                             })
     cherrypy.tree.mount(root)
 
@@ -151,5 +150,4 @@ class ErrorLogTests(helper.CPWebCase, logtest.LogCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()

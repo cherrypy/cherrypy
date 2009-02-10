@@ -194,8 +194,6 @@ def setup_server():
         stream._cp_config = {'response.stream': True}
     
     
-    cherrypy.config.update({'environment': 'test_suite'})
-    
     conf = {
         # METHOD THREE:
         # Declare Tools in detached config
@@ -381,6 +379,5 @@ class ToolTests(helper.CPWebCase):
 
 
 if __name__ == '__main__':
-    setup_server()
     helper.testmain()
 

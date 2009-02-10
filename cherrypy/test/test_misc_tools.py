@@ -72,8 +72,7 @@ def setup_server():
     root.referer = Referer()
     root.accept = Accept()
     cherrypy.tree.mount(root, config=conf)
-    cherrypy.config.update({'environment': 'test_suite',
-                            'log.error_file': logfile})
+    cherrypy.config.update({'log.error_file': logfile})
 
 
 from cherrypy.test import helper
@@ -178,5 +177,4 @@ class AcceptTest(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    setup_server()
     helper.testmain()
