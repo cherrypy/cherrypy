@@ -4,6 +4,8 @@ test.prefer_parent_path()
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
+bigfile_filepath = os.path.join(curdir, "static", "bigfile.log")
+BIGFILE_SIZE = 1024 * 1024
 import threading
 
 import cherrypy
@@ -11,24 +13,17 @@ import cherrypy
 def setup_server():
     if not os.path.exists(has_space_filepath):
         file(has_space_filepath, 'wb').write('Hello, world\r\n')
-    
-    bfname = os.path.join(curdir, "static", "bigfile.log")
+    if not os.path.exists(bigfile_filepath):
+        file(bigfile_filepath, 'wb').write("x" * BIGFILE_SIZE)
     
     class Root:
         
-        def bigfile(self, size):
-            f = open(bfname, 'wb')
-            f.write("x" * int(size))
-            f.close()
-            
+        def bigfile(self):
             from cherrypy.lib import static
-            self.f = static.serve_file(bfname)
+            self.f = static.serve_file(bigfile_filepath)
             return self.f
         bigfile.exposed = True
-        bigfile._cp_config = {
-            'response.stream': True,
-            'hooks.on_end_request': lambda: os.remove(bfname)
-            }
+        bigfile._cp_config = {'response.stream': True}
         
         def tell(self):
             return `self.f.input.tell()`
@@ -88,12 +83,15 @@ def setup_server():
 
 
 def teardown_server():
-    if os.path.exists(has_space_filepath):
-        try:
-            os.unlink(has_space_filepath)
-        except:
-            pass
-        
+    for f in (has_space_filepath, bigfile_filepath):
+        if os.path.exists(f):
+            try:
+                os.unlink(f)
+            except:
+                pass
+
+
+
 from cherrypy.test import helper
 
 class StaticTest(helper.CPWebCase):
@@ -190,12 +188,11 @@ class StaticTest(helper.CPWebCase):
             return
         
         self.PROTOCOL = "HTTP/1.1"
-        size = (1024 * 1024)
         
         # Make an initial request
         self.persistent = True
         conn = self.HTTP_CONN
-        conn.putrequest("GET", "/bigfile?size=%d" % size, skip_host=True)
+        conn.putrequest("GET", "/bigfile", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         response = conn.response_class(conn.sock, method="GET")
@@ -203,7 +200,7 @@ class StaticTest(helper.CPWebCase):
         self.assertEqual(response.status, 200)
         
         body = ''
-        remaining = size
+        remaining = BIGFILE_SIZE
         # By this point, the webserver has already written one chunk to
         # the socket and queued another. So we start with i=1.
         i = 1
@@ -219,9 +216,40 @@ class StaticTest(helper.CPWebCase):
             body += data
             remaining -= len(data)
         
-        if body != "x" * size:
-            self.fail("Body != 'x' * %d. Got %r instead." % (size, body))
+        if body != "x" * BIGFILE_SIZE:
+            self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
+                      (BIGFILE_SIZE, body[:50], len(body)))
         conn.close()
+    
+    def test_file_stream_deadlock(self):
+        if cherrypy.server.protocol_version != "HTTP/1.1":
+            print "skipped ",
+            return
+        
+        self.PROTOCOL = "HTTP/1.1"
+        
+        # Make an initial request but abort early.
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("GET", "/bigfile", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 200)
+        body = response.fp.read(65536)
+        if body != "x" * 65536:
+            self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
+                      (65536, body[:50], len(body)))
+        response.close()
+        conn.close()
+        
+        # Make a second request, which should fetch the whole file.
+        self.persistent = False
+        self.getPage("/bigfile")
+        if self.body != "x" * BIGFILE_SIZE:
+            self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
+                      (BIGFILE_SIZE, self.body[:50], len(body)))
 
 
 if __name__ == "__main__":
