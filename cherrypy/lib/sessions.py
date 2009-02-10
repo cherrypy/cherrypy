@@ -285,6 +285,7 @@ class FileSession(Session):
     
     SESSION_PREFIX = 'session-'
     LOCK_SUFFIX = '.lock'
+    pickle_protocol = pickle.HIGHEST_PROTOCOL
     
     def __init__(self, id=None, **kwargs):
         # The 'storage_path' arg is required for file-based sessions.
@@ -340,7 +341,7 @@ class FileSession(Session):
     def _save(self, expiration_time):
         f = open(self._get_file_path(), "wb")
         try:
-            pickle.dump((self._data, expiration_time), f)
+            pickle.dump((self._data, expiration_time), f, self.pickle_protocol)
         finally:
             f.close()
     
@@ -414,6 +415,8 @@ class PostgresqlSession(Session):
     You must provide your own get_db function.
     """
     
+    pickle_protocol = pickle.HIGHEST_PROTOCOL
+    
     def __init__(self, id=None, **kwargs):
         Session.__init__(self, id, **kwargs)
         self.cursor = self.db.cursor()
@@ -455,7 +458,7 @@ class PostgresqlSession(Session):
         return data, expiration_time
     
     def _save(self, expiration_time):
-        pickled_data = pickle.dumps(self._data)
+        pickled_data = pickle.dumps(self._data, self.pickle_protocol)
         self.cursor.execute('update session set data = %s, '
                             'expiration_time = %s where id = %s',
                             (pickled_data, expiration_time, self.id))
