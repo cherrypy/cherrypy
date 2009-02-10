@@ -11,10 +11,29 @@ import cherrypy
 def setup_server():
     if not os.path.exists(has_space_filepath):
         file(has_space_filepath, 'wb').write('Hello, world\r\n')
-        
+    
+    bfname = os.path.join(curdir, "static", "bigfile.log")
+    
     class Root:
-        pass
-
+        
+        def bigfile(self, size):
+            f = open(bfname, 'wb')
+            f.write("x" * int(size))
+            f.close()
+            
+            from cherrypy.lib import static
+            self.f = static.serve_file(bfname)
+            return self.f
+        bigfile.exposed = True
+        bigfile._cp_config = {
+            'response.stream': True,
+            'hooks.on_end_request': lambda: os.remove(bfname)
+            }
+        
+        def tell(self):
+            return `self.f.input.tell()`
+        tell.exposed = True
+    
     class Static:
         
         def index(self):
@@ -164,6 +183,45 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/test", [('Host', 'virt.net')])
         self.assertStatus((302, 303))
         self.assertHeader('Location', self.scheme + '://virt.net/test/')
+    
+    def test_file_stream(self):
+        if cherrypy.server.protocol_version != "HTTP/1.1":
+            print "skipped ",
+            return
+        
+        self.PROTOCOL = "HTTP/1.1"
+        size = (1024 * 1024)
+        
+        # Make an initial request
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("GET", "/bigfile?size=%d" % size, skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 200)
+        
+        body = ''
+        remaining = size
+        # By this point, the webserver has already written one chunk to
+        # the socket and queued another. So we start with i=1.
+        i = 1
+        while remaining > 0:
+            i += 1
+            s, h, b = helper.webtest.openURL(
+                "/tell", headers=[], host=self.HOST, port=self.PORT)
+            if remaining != 65536:
+                self.assertEqual(long(b), 65536 * i)
+            data = response.fp.read(65536)
+            if not data:
+                break
+            body += data
+            remaining -= len(data)
+        
+        if body != "x" * size:
+            self.fail("Body != 'x' * %d. Got %r instead." % (size, body))
+        conn.close()
 
 
 if __name__ == "__main__":

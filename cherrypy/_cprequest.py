@@ -869,6 +869,9 @@ class Response(object):
         
         headers = self.headers
         if self.stream:
+            # The upshot: wsgiserver will chunk the response if
+            # you pop Content-Length (or set it explicitly to None).
+            # Note that lib.static sets C-L to the file's st_size.
             if dict.get(headers, 'Content-Length') is None:
                 dict.pop(headers, 'Content-Length', None)
         elif code < 200 or code in (204, 205, 304):

@@ -134,13 +134,23 @@ def unrepr(s):
     return _Builder().build(obj)
 
 
-def file_generator(input, chunkSize=65536):
+class file_generator(object):
     """Yield the given input (a file object) in chunks (default 64k). (Core)"""
-    chunk = input.read(chunkSize)
-    while chunk:
-        yield chunk
-        chunk = input.read(chunkSize)
-    input.close()
+    
+    def __init__(self, input, chunkSize=65536):
+        self.input = input
+        self.chunkSize = chunkSize
+    
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        chunk = self.input.read(self.chunkSize)
+        if chunk:
+            return chunk
+        else:
+            self.input.close()
+            raise StopIteration()
 
 
 def file_generator_limited(fileobj, count, chunk_size=65536):

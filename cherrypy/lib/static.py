@@ -31,8 +31,8 @@ def serve_file(path, content_type=None, disposition=None, name=None):
     # If path is relative, users should fix it by making path absolute.
     # That is, CherryPy should not guess where the application root is.
     # It certainly should *not* use cwd (since CP may be invoked from a
-    # variety of paths). If using tools.static, you can make your relative
-    # paths become absolute by supplying a value for "tools.static.root".
+    # variety of paths). If using tools.staticdir, you can make your relative
+    # paths become absolute by supplying a value for "tools.staticdir.root".
     if not os.path.isabs(path):
         raise ValueError("'%s' is not an absolute path." % path)
     
@@ -79,6 +79,7 @@ def serve_file(path, content_type=None, disposition=None, name=None):
             response.headers['Content-Range'] = "bytes */%s" % c_len
             message = "Invalid Range (first-byte-pos greater than Content-Length)"
             raise cherrypy.HTTPError(416, message)
+        
         if r:
             if len(r) == 1:
                 # Return a single-part response.
@@ -122,12 +123,10 @@ def serve_file(path, content_type=None, disposition=None, name=None):
                     # Apache compatibility:
                     yield "\r\n"
                 response.body = file_ranges()
-        else:
-            response.headers['Content-Length'] = c_len
-            response.body = bodyfile
-    else:
-        response.headers['Content-Length'] = c_len
-        response.body = bodyfile
+            return response.body
+    
+    response.headers['Content-Length'] = c_len
+    response.body = bodyfile
     return response.body
 
 def serve_download(path, name=None):
