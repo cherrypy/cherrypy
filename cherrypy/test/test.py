@@ -110,6 +110,7 @@ class LocalServer(object):
             m = __import__(modulename, globals(), locals())
             setup = getattr(m, "setup_server", None)
             setup()
+            self.teardown = getattr(m, "teardown_server", None)
         
         engine = cherrypy.engine
         if hasattr(engine, "signal_handler"):
@@ -123,6 +124,8 @@ class LocalServer(object):
         self.sync_apps()
     
     def stop(self):
+        if self.teardown:
+            self.teardown()
         import cherrypy
         cherrypy.engine.exit()
     
