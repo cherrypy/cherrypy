@@ -30,6 +30,21 @@ from unittest import *
 from unittest import _TextTestResult
 
 
+
+def interface(host):
+    """Return an IP address for a client connection given the server host.
+    
+    If the server is listening on '0.0.0.0' (INADDR_ANY)
+    or '::' (IN6ADDR_ANY), this will return the proper localhost."""
+    if host == '0.0.0.0':
+        # INADDR_ANY, which should respond on localhost.
+        return "127.0.0.1"
+    if host == '::':
+        # IN6ADDR_ANY, which should respond on localhost.
+        return "::1"
+    return host
+
+
 class TerseTestResult(_TextTestResult):
     
     def printErrors(self):
@@ -151,6 +166,18 @@ class WebCase(TestCase):
     body = None
     time = None
     
+    def get_conn(self, auto_open=False):
+        """Return a connection to our HTTP server."""
+        if self.scheme == "https":
+            cls = httplib.HTTPSConnection
+        else:
+            cls = httplib.HTTPConnection
+        conn = cls(self.interface(), self.PORT)
+        # Automatically re-connect?
+        conn.auto_open = auto_open
+        conn.connect()
+        return conn
+    
     def set_persistent(self, on=True, auto_open=False):
         """Make our HTTP_CONN persistent (or not).
         
@@ -166,25 +193,13 @@ class WebCase(TestCase):
         except (TypeError, AttributeError):
             pass
         
-        if self.scheme == "https":
-            cls = httplib.HTTPSConnection
-        else:
-            cls = httplib.HTTPConnection
-        
         if on:
-            host = self.HOST
-            if host == '0.0.0.0':
-                # INADDR_ANY, which should respond on localhost.
-                host = "127.0.0.1"
-            elif host == '::':
-                # IN6ADDR_ANY, which should respond on localhost.
-                host = "::1"
-            self.HTTP_CONN = cls(host, self.PORT)
-            # Automatically re-connect?
-            self.HTTP_CONN.auto_open = auto_open
-            self.HTTP_CONN.connect()
+            self.HTTP_CONN = self.get_conn(auto_open=auto_open)
         else:
-            self.HTTP_CONN = cls
+            if self.scheme == "https":
+                self.HTTP_CONN = httplib.HTTPSConnection
+            else:
+                self.HTTP_CONN = httplib.HTTPConnection
     
     def _get_persistent(self):
         return hasattr(self.HTTP_CONN, "__class__")
@@ -197,14 +212,7 @@ class WebCase(TestCase):
         
         If the server is listening on '0.0.0.0' (INADDR_ANY)
         or '::' (IN6ADDR_ANY), this will return the proper localhost."""
-        host = self.HOST
-        if host == '0.0.0.0':
-            # INADDR_ANY, which should respond on localhost.
-            return "127.0.0.1"
-        if host == '::':
-            # IN6ADDR_ANY, which should respond on localhost.
-            return "::1"
-        return host
+        return interface(self.HOST)
     
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url with debugging support. Return status, headers, body."""
@@ -498,13 +506,7 @@ def openURL(url, headers=None, method="GET", body=None,
             if hasattr(http_conn, "host"):
                 conn = http_conn
             else:
-                if host == '0.0.0.0':
-                    # INADDR_ANY, which should respond on localhost.
-                    host = "127.0.0.1"
-                elif host == '::':
-                    # IN6ADDR_ANY, which should respond on localhost.
-                    host = "::1"
-                conn = http_conn(host, port)
+                conn = http_conn(interface(host), port)
 
             conn._http_vsn_str = protocol
             conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
