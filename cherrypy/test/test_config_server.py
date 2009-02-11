@@ -5,7 +5,9 @@ test.prefer_parent_path()
 
 import os, sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+import socket
 import StringIO
+import time
 
 import cherrypy
 
@@ -43,6 +45,7 @@ def setup_server():
         'server.socket_port': 9876,
         'server.max_request_body_size': 200,
         'server.max_request_header_size': 500,
+        'server.socket_timeout': 0.5,
         
         # Test explicit server.instance
         'server.2.instance': 'cherrypy._cpwsgi_server.CPWSGIServer',
@@ -121,6 +124,42 @@ Content-Type: text/plain
              ("Content-Length", len(b))]
         self.getPage('/upload', h, "POST", b)
         self.assertStatus(413)
+    
+    def test_socket_timeout(self):
+        if cherrypy.server.protocol_version != "HTTP/1.1":
+            print "skipped ",
+            return
+        
+        self.PROTOCOL = "HTTP/1.1"
+        
+        # Put request 1
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("GET", "/", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        body = response.read()
+        self.assertEqual(response.status, 200)
+        
+        time.sleep(cherrypy.server.socket_timeout)
+        
+        # Put next request
+        try:
+            conn._output('GET /hello HTTP/1.1')
+            conn._output("Host: %s" % self.HOST)
+            conn._send_output()
+            response = conn.response_class(conn.sock, method="GET")
+            response.begin()
+            body = response.read()
+            self.assertEqual(response.status, 200)
+        except socket.error:
+            pass
+        else:
+            self.fail("Socket did not time out as it should have.")
+        
+        conn.close()
 
 
 
