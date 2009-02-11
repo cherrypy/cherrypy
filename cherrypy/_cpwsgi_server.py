@@ -46,16 +46,14 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
             RequestHandlerClass = _CPHTTPRequest
         self.ConnectionClass = _CPHTTPConnection
         
-        sockFile = self.server_adapter.socket_file
-        if sockFile:
-            bind_addr = sockFile
-        else:
-            bind_addr = (self.server_adapter.socket_host, self.server_adapter.socket_port)
+        server_name = (self.server_adapter.socket_host or
+                       self.server_adapter.socket_file or
+                       None)
         
         s = wsgiserver.CherryPyWSGIServer
-        s.__init__(self, bind_addr, cherrypy.tree,
+        s.__init__(self, server_adapter.bind_addr, cherrypy.tree,
                    self.server_adapter.thread_pool,
-                   self.server_adapter.socket_host,
+                   server_name,
                    max = self.server_adapter.thread_pool_max,
                    request_queue_size = self.server_adapter.socket_queue_size,
                    timeout = self.server_adapter.socket_timeout,

@@ -34,7 +34,9 @@ class ServerAdapter(object):
     
     def start(self):
         """Start the HTTP server."""
-        if isinstance(self.bind_addr, tuple):
+        if self.bind_addr is None:
+            on_what = "unknown interface (dynamic?)"
+        elif isinstance(self.bind_addr, tuple):
             host, port = self.bind_addr
             on_what = "%s:%s" % (host, port)
         else:
@@ -124,6 +126,13 @@ class FlupFCGIServer(object):
     """Adapter for a flup.server.fcgi.WSGIServer."""
     
     def __init__(self, *args, **kwargs):
+        if kwargs.get('bindAddress', None) is None:
+            import socket
+            if not hasattr(socket.socket, 'fromfd'):
+                raise ValueError(
+                    'Dynamic FCGI server not available on this platform. '
+                    'You must use a static or external one by providing a '
+                    'legal bindAddress.')
         self.args = args
         self.kwargs = kwargs
         self.ready = False

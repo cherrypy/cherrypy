@@ -27,8 +27,8 @@ class Server(ServerAdapter):
     def _get_socket_host(self):
         return self._socket_host
     def _set_socket_host(self, value):
-        if not value:
-            raise ValueError("Host values of '' or None are not allowed. "
+        if value == '':
+            raise ValueError("The empty string ('') is not an allowed value. "
                              "Use '0.0.0.0' instead to listen on all active "
                              "interfaces (INADDR_ANY).")
         self._socket_host = value
@@ -42,7 +42,7 @@ class Server(ServerAdapter):
         is the similar IN6ADDR_ANY for IPv6. The empty string or None are
         not allowed.""")
     
-    socket_file = ''
+    socket_file = None
     socket_queue_size = 5
     socket_timeout = 10
     shutdown_timeout = 5
@@ -77,13 +77,7 @@ class Server(ServerAdapter):
         if isinstance(httpserver, basestring):
             # Is anyone using this? Can I add an arg?
             httpserver = attributes(httpserver)(self)
-        
-        if self.socket_file:
-            return httpserver, self.socket_file
-        
-        host = self.socket_host
-        port = self.socket_port
-        return httpserver, (host, port)
+        return httpserver, self.bind_addr
     
     def start(self):
         """Start the HTTP server."""
@@ -92,8 +86,33 @@ class Server(ServerAdapter):
         ServerAdapter.start(self)
     start.priority = 75
     
+    def _get_bind_addr(self):
+        if self.socket_file:
+            return self.socket_file
+        if self.socket_host is None and self.socket_port is None:
+            return None
+        return (self.socket_host, self.socket_port)
+    def _set_bind_addr(self, value):
+        if value is None:
+            self.socket_file = None
+            self.socket_host = None
+            self.socket_port = None
+        elif isinstance(value, basestring):
+            self.socket_file = value
+            self.socket_host = None
+            self.socket_port = None
+        else:
+            try:
+                self.socket_host, self.socket_port = value
+                self.socket_file = None
+            except ValueError:
+                raise ValueError("bind_addr must be a (host, port) tuple "
+                                 "(for TCP sockets) or a string (for Unix "
+                                 "domain sockets), not %r" % value)
+    bind_addr = property(_get_bind_addr, _set_bind_addr)
+    
     def base(self):
-        """Return the base (scheme://host) for this server."""
+        """Return the base (scheme://host[:port] or sock file) for this server."""
         if self.socket_file:
             return self.socket_file
         
