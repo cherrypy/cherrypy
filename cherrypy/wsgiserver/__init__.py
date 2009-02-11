@@ -345,6 +345,7 @@ class HTTPRequest(object):
             self.simple_response(400, "Malformed Request-Line")
             return
         
+        environ["REQUEST_URI"] = path
         environ["REQUEST_METHOD"] = method
         
         # path may be an abs_path (including "http://host.domain.tld");
@@ -397,10 +398,6 @@ class HTTPRequest(object):
         # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
         environ["SERVER_PROTOCOL"] = req_protocol
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
-        
-        # If the Request-URI was an absoluteURI, use its location atom.
-        if location:
-            environ["SERVER_NAME"] = location
         
         # then all the http headers
         try:
