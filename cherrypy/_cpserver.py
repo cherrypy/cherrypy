@@ -59,7 +59,10 @@ class Server(ServerAdapter):
     nodelay = True
     
     def __init__(self):
-        ServerAdapter.__init__(self, cherrypy.engine)
+        self.bus = cherrypy.engine
+        self.httpserver = None
+        self.interrupt = None
+        self.running = False
     
     def quickstart(self, server=None):
         """This does nothing now and will be removed in 3.2."""
