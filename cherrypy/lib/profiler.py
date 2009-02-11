@@ -52,9 +52,8 @@ except ImportError:
     pstats = None
     import warnings
     msg = ("Your installation of Python does not have a profile module. "
-           "If you're on Debian, you can apt-get python2.4-profiler from "
-           "non-free in a separate step. See http://www.cherrypy.org/wiki/"
-           "ProfilingOnDebian for details.")
+           "If you're on Debian, try `sudo apt-get install python-profiler`. "
+           "See http://www.cherrypy.org/wiki/ProfilingOnDebian for details.")
     warnings.warn(msg)
 
 import os, os.path
