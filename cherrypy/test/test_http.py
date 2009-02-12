@@ -120,6 +120,23 @@ class HTTPTests(helper.CPWebCase):
         self.assertEqual(response.fp.read(), "Malformed Request-Line")
         c.close()
 
+    def test_http_over_https(self):
+        if self.scheme != 'https':
+            print "skipped (not running HTTPS)...",
+            return
+        
+        # Try connecting without SSL.
+        conn = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        conn.putrequest("GET", "/", skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 400)
+        self.body = response.read()
+        self.assertBody("The client sent a plain HTTP request, but this "
+                        "server only speaks HTTPS on this port.")
+
 
 if __name__ == '__main__':
     helper.testmain()
