@@ -63,5 +63,6 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
         self.nodelay = self.server_adapter.nodelay
         self.ssl_context = self.server_adapter.ssl_context
         self.ssl_certificate = self.server_adapter.ssl_certificate
+        self.ssl_certificate_chain = self.server_adapter.ssl_certificate_chain
         self.ssl_private_key = self.server_adapter.ssl_private_key
 

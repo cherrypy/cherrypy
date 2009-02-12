@@ -1471,6 +1471,10 @@ class CherryPyWSGIServer(object):
         and ssl_certificate are both given and valid, they will be read on
         server start, and self.ssl_context will be automatically created
         from them.
+        
+        ssl_certificate_chain: (optional) the filename of CA's intermediate
+            certificate bundle. This is needed for cheaper "chained root" SSL
+            certificates, and should be left as None if not required.
     """
     
     protocol = "HTTP/1.1"
@@ -1489,11 +1493,13 @@ class CherryPyWSGIServer(object):
     
     # ...or paths to certificate and private key files
     ssl_certificate = None
+    ssl_certificate_chain = None
     ssl_private_key = None
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
         self.requests = ThreadPool(self, min=numthreads or 1, max=max)
+        self.environ = self.environ.copy()
         
         if callable(wsgi_app):
             # We've been handed a single wsgi_app, in CP-2.1 style.
@@ -1638,6 +1644,8 @@ class CherryPyWSGIServer(object):
             # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
             self.ssl_context = SSL.Context(SSL.SSLv23_METHOD)
             self.ssl_context.use_privatekey_file(self.ssl_private_key)
+            if self.ssl_certificate_chain:
+                self.ssl_context.load_verify_locations(self.ssl_certificate_chain)
             self.ssl_context.use_certificate_file(self.ssl_certificate)
         
         if self.ssl_context is not None:

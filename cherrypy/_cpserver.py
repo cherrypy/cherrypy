@@ -55,6 +55,7 @@ class Server(ServerAdapter):
     instance = None
     ssl_context = None
     ssl_certificate = None
+    ssl_certificate_chain = None
     ssl_private_key = None
     nodelay = True
     
