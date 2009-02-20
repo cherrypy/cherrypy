@@ -24,6 +24,10 @@ def setup_server():
         def index(self):
             return "hello"
         index.exposed = True
+        
+        def scheme(self):
+            return cherrypy.request.scheme
+        scheme.exposed = True
     
     root = Root()
     
@@ -268,6 +272,10 @@ def setup_server():
 from cherrypy.test import helper
 
 class RequestObjectTests(helper.CPWebCase):
+    
+    def test_scheme(self):
+        self.getPage("/scheme")
+        self.assertBody(self.scheme)
     
     def testParams(self):
         self.getPage("/params/?thing=a")
