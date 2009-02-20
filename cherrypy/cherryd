@@ -84,7 +84,13 @@ if __name__ == '__main__':
                  help="specify modules to import")
     p.add_option('-p', '--pidfile', dest='pidfile', default=None,
                  help="store the process id in the given file")
+    p.add_option('-P', '--Path', action="append", dest='Path',
+                 help="add the given paths to sys.path")
     options, args = p.parse_args()
+    
+    if options.Path:
+        for p in options.Path:
+            sys.path.insert(0, p)
     
     start(options.config, options.daemonize,
           options.environment, options.fastcgi, options.scgi, options.pidfile,
