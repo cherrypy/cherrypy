@@ -456,6 +456,7 @@ def run():
         'test_objectmapping',
         'test_dynamicobjectmapping',
         'test_misc_tools',
+        'test_request_obj',
         'test_static',
         'test_tutorials',
         'test_virtualhost',
