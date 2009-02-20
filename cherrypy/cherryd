@@ -16,6 +16,9 @@ def start(configfiles=None, daemonize=False, environment=None,
     
     for c in configfiles or []:
         cherrypy.config.update(c)
+        # If there's only one app mounted, merge config into it.
+        if len(cherrypy.tree.apps) == 1:
+            cherrypy.tree.apps.values()[0].merge(c)
     
     engine = cherrypy.engine
     
