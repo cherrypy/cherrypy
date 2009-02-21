@@ -333,7 +333,7 @@ def redirect(url='', internal=True):
     else:
         raise cherrypy.HTTPRedirect(url)
 
-def trailing_slash(missing=True, extra=False):
+def trailing_slash(missing=True, extra=False, status=None):
     """Redirect if path_info has (missing|extra) trailing slash."""
     request = cherrypy.request
     pi = request.path_info
@@ -342,13 +342,13 @@ def trailing_slash(missing=True, extra=False):
         if missing:
             if not pi.endswith('/'):
                 new_url = cherrypy.url(pi + '/', request.query_string)
-                raise cherrypy.HTTPRedirect(new_url)
+                raise cherrypy.HTTPRedirect(new_url, status=status)
     elif request.is_index is False:
         if extra:
             # If pi == '/', don't redirect to ''!
             if pi.endswith('/') and pi != '/':
                 new_url = cherrypy.url(pi[:-1], request.query_string)
-                raise cherrypy.HTTPRedirect(new_url)
+                raise cherrypy.HTTPRedirect(new_url, status=status)
 
 def flatten():
     """Wrap response.body in a generator that recursively iterates over body.
