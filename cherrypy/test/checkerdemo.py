@@ -39,5 +39,7 @@ if __name__ == '__main__':
             '/web': {'tools.unknown.on': True},
             # Warn on 'localhost'
             'global': {'server.socket_host': 'localhost'},
+            # Warn on '[name]'
+            '[/extra_brackets]': {},
             }
     cherrypy.quickstart(Root(), config=conf)

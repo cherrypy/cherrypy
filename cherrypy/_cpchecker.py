@@ -77,6 +77,20 @@ class Checker(object):
                 warnings.warn(msg)
                 return
     
+    def check_app_config_brackets(self):
+        for sn, app in cherrypy.tree.apps.iteritems():
+            if not isinstance(app, cherrypy.Application):
+                continue
+            if not app.config:
+                continue
+            for key in app.config.keys():
+                if key.startswith("[") or key.endswith("]"):
+                    warnings.warn(
+                        "The application mounted at %r has config " \
+                        "section names with extraneous brackets: %r. "
+                        "Config *files* need brackets; config *dicts* "
+                        "(e.g. passed to tree.mount) do not." % (sn, key))
+    
     def check_static_paths(self):
         # Use the dummy Request object in the main thread.
         request = cherrypy.request
