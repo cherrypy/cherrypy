@@ -159,7 +159,14 @@ def merge(base, other):
     
     # Load other into base
     for section, value_map in as_dict(other).iteritems():
+        if not isinstance(value_map, dict):
+            raise ValueError(
+                "Application config must include section headers, but the "
+                "config you tried to merge doesn't have any sections. "
+                "Wrap your config in another dict with paths as section "
+                "headers, for example: {'/': config}.")
         base.setdefault(section, {}).update(value_map)
+
 
 
 class NamespaceSet(dict):
