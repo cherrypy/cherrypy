@@ -311,6 +311,12 @@ class RequestObjectTests(helper.CPWebCase):
         # Test coordinates sent by <img ismap>
         self.getPage("/params/ismap?223,114")
         self.assertBody("Coordinates: 223, 114")
+        
+        # Test "name[key]" dict-like params
+        self.getPage("/params/dictlike?a[1]=1&a[2]=2&b=foo&b[bar]=baz")
+        self.assertBody(
+            "args: ('dictlike',) "
+            "kwargs: {'a[1]': '1', 'b[bar]': 'baz', 'b': 'foo', 'a[2]': '2'}")
 
     def testParamErrors(self):
 
