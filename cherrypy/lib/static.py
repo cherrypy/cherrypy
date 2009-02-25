@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 mimetypes.init()
 mimetypes.types_map['.dwg']='image/x-dwg'
@@ -192,6 +193,9 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     
     # If branch is "", filename will end in a slash
     filename = os.path.join(dir, branch)
+    cherrypy.log('Checking file %r to fulfill %r' %
+                 (filename, cherrypy.request.path_info),
+                 context='tools.staticdir', severity=logging.DEBUG)
     
     # There's a chance that the branch pulled from the URL might
     # have ".." or similar uplevel attacks in it. Check that the final
