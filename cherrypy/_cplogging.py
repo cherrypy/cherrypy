@@ -30,7 +30,7 @@ class LogManager(object):
         else:
             self.error_log = logging.getLogger("%s.error.%s" % (logger_root, appid))
             self.access_log = logging.getLogger("%s.access.%s" % (logger_root, appid))
-        self.error_log.setLevel(logging.DEBUG)
+        self.error_log.setLevel(logging.INFO)
         self.access_log.setLevel(logging.INFO)
         cherrypy.engine.subscribe('graceful', self.reopen_files)
     
