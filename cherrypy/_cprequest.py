@@ -292,9 +292,9 @@ class Request(object):
     body__doc = """
     If the request Content-Type is 'application/x-www-form-urlencoded'
     or multipart, this will be None. Otherwise, this will contain the
-    request entity body as a string; this value is set between the
-    'before_request_body' and 'before_handler' hooks (assuming that
-    process_request_body is True)."""
+    request entity body as an open file object (which you can .read());
+    this value is set between the 'before_request_body' and 'before_handler'
+    hooks (assuming that process_request_body is True)."""
     
     body_params = None
     body_params__doc = """
