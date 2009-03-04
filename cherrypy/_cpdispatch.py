@@ -374,6 +374,10 @@ class MethodDispatcher(Dispatcher):
             if func is None and meth == "HEAD":
                 func = getattr(resource, "GET", None)
             if func:
+                # Grab any _cp_config on the subhandler.
+                if hasattr(func, "_cp_config"):
+                    request.config.update(func._cp_config)
+                
                 # Decode any leftover %2F in the virtual_path atoms.
                 vpath = [x.replace("%2F", "/") for x in vpath]
                 request.handler = LateParamPageHandler(func, *vpath)
