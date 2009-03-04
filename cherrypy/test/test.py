@@ -107,7 +107,12 @@ class LocalServer(object):
             cherrypy.server.httpserver = None
             cherrypy.tree = cherrypy._cptree.Tree()
             
-            m = __import__(modulename, globals(), locals())
+            if '.' in modulename:
+                package, test_name = modulename.rsplit('.', 1)
+                p = __import__(package, globals(), locals(), fromlist=[test_name])
+                m = getattr(p, test_name)
+            else:
+                m = __import__(modulename, globals(), locals())
             setup = getattr(m, "setup_server", None)
             setup()
             self.teardown = getattr(m, "teardown_server", None)

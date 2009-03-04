@@ -110,7 +110,7 @@ class ReloadingTestLoader(TestLoader):
                             parts = unused_parts
                             break
                         except ImportError:
-                            unused_parts.append(parts_copy[-1])
+                            unused_parts.insert(0,parts_copy[-1])
                             del parts_copy[-1]
                             if not parts_copy:
                                 raise

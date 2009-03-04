@@ -108,7 +108,7 @@ def run_test_suite(moduleNames, conf, server):
         cherrypy.config.update(conf)
         setup_client()
         
-        if testmod.count('.') > 0:
+        if '.' in testmod:
             package, test_name = testmod.rsplit('.', 1)
             p = __import__(package, globals(), locals(), fromlist=[test_name])
             m = getattr(p, test_name)
