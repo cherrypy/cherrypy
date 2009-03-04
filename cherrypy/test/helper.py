@@ -108,7 +108,12 @@ def run_test_suite(moduleNames, conf, server):
         cherrypy.config.update(conf)
         setup_client()
         
-        m = __import__(testmod, globals(), locals())
+        if testmod.count('.') > 0:
+            package, test_name = testmod.rsplit('.', 1)
+            p = __import__(package, globals(), locals(), fromlist=[test_name])
+            m = getattr(p, test_name)
+        else:
+            m = __import__(testmod, globals(), locals())
         suite = CPTestLoader.loadTestsFromName(testmod)
         
         setup = getattr(m, "setup_server", None)

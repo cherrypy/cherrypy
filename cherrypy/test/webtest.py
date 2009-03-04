@@ -92,6 +92,7 @@ class ReloadingTestLoader(TestLoader):
         The method optionally resolves the names relative to a given module.
         """
         parts = name.split('.')
+        unused_parts = []
         if module is None:
             if not parts:
                 raise ValueError("incomplete test name: %s" % name)
@@ -101,12 +102,15 @@ class ReloadingTestLoader(TestLoader):
                     target = ".".join(parts_copy)
                     if target in sys.modules:
                         module = reload(sys.modules[target])
+                        parts = unused_parts
                         break
                     else:
                         try:
                             module = __import__(target)
+                            parts = unused_parts
                             break
                         except ImportError:
+                            unused_parts.append(parts_copy[-1])
                             del parts_copy[-1]
                             if not parts_copy:
                                 raise
