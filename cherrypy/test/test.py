@@ -114,7 +114,8 @@ class LocalServer(object):
             else:
                 m = __import__(modulename, globals(), locals())
             setup = getattr(m, "setup_server", None)
-            setup()
+            if setup:
+                setup()
             self.teardown = getattr(m, "teardown_server", None)
         
         engine = cherrypy.engine

@@ -14,39 +14,6 @@ engine = cherrypy.engine
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
-class Root:
-    def index(self):
-        return "Hello World"
-    index.exposed = True
-    
-    def ctrlc(self):
-        raise KeyboardInterrupt()
-    ctrlc.exposed = True
-    
-    def graceful(self):
-        engine.graceful()
-        return "app was (gracefully) restarted succesfully"
-    graceful.exposed = True
-    
-    def block_explicit(self):
-        while True:
-            if cherrypy.response.timed_out:
-                cherrypy.response.timed_out = False
-                return "broken!"
-            time.sleep(0.01)
-    block_explicit.exposed = True
-    
-    def block_implicit(self):
-        time.sleep(0.5)
-        return "response.timeout = %s" % cherrypy.response.timeout
-    block_implicit.exposed = True
-
-cherrypy.tree.mount(Root())
-cherrypy.config.update({
-    'environment': 'test_suite',
-    'engine.deadlock_poll_freq': 0.1,
-    })
-
 class Dependency:
     
     def __init__(self, bus):
@@ -80,7 +47,42 @@ class Dependency:
         del self.threads[thread_id]
 
 db_connection = Dependency(engine)
-db_connection.subscribe()
+
+def setup_server():
+    class Root:
+        def index(self):
+            return "Hello World"
+        index.exposed = True
+        
+        def ctrlc(self):
+            raise KeyboardInterrupt()
+        ctrlc.exposed = True
+        
+        def graceful(self):
+            engine.graceful()
+            return "app was (gracefully) restarted succesfully"
+        graceful.exposed = True
+        
+        def block_explicit(self):
+            while True:
+                if cherrypy.response.timed_out:
+                    cherrypy.response.timed_out = False
+                    return "broken!"
+                time.sleep(0.01)
+        block_explicit.exposed = True
+        
+        def block_implicit(self):
+            time.sleep(0.5)
+            return "response.timeout = %s" % cherrypy.response.timeout
+        block_implicit.exposed = True
+
+    cherrypy.tree.mount(Root())
+    cherrypy.config.update({
+        'environment': 'test_suite',
+        'engine.deadlock_poll_freq': 0.1,
+        })
+
+    db_connection.subscribe()
 
 
 
@@ -95,9 +97,10 @@ class ServerStateTests(helper.CPWebCase):
         cherrypy.server.socket_timeout = 0.1
     
     def test_0_NormalStateFlow(self):
-        # And our db_connection should not be running
+        engine.stop()
+        # Our db_connection should not be running
         self.assertEqual(db_connection.running, False)
-        self.assertEqual(db_connection.startcount, 0)
+        self.assertEqual(db_connection.startcount, 1)
         self.assertEqual(len(db_connection.threads), 0)
         
         # Test server start
@@ -110,7 +113,7 @@ class ServerStateTests(helper.CPWebCase):
         
         # The db_connection should be running now
         self.assertEqual(db_connection.running, True)
-        self.assertEqual(db_connection.startcount, 1)
+        self.assertEqual(db_connection.startcount, 2)
         self.assertEqual(len(db_connection.threads), 0)
         
         self.getPage("/")
@@ -431,5 +434,5 @@ class SignalHandlingTests(helper.CPWebCase):
 
 
 if __name__ == "__main__":
-    test.unittest.testmain()
+    helper.testmain()
 
