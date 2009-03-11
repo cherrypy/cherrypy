@@ -277,8 +277,14 @@ Message: %(error_msg)s
         if path.endswith('login_screen'):
             return self.login_screen(**request.params)
         elif path.endswith('do_login'):
+            if request.method != 'POST':
+                cherrypy.response.headers['Allow'] = "POST"
+                raise cherrypy.HTTPError(405)
             return self.do_login(**request.params)
         elif path.endswith('do_logout'):
+            if request.method != 'POST':
+                cherrypy.response.headers['Allow'] = "POST"
+                raise cherrypy.HTTPError(405)
             return self.do_logout(**request.params)
         else:
             return self.do_check()

@@ -76,7 +76,10 @@ class HTTPRedirect(CherryPyException):
         # http://www.alanflavell.org.uk/www/post-redirect.html
         if status is None:
             if request.protocol >= (1, 1):
-                status = 303
+                if request.method in ('GET', 'HEAD'):
+                    status = 303
+                else:
+                    status = 307
             else:
                 status = 302
         else:

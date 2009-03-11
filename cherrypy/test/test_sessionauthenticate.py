@@ -49,15 +49,15 @@ class SessionAuthenticateTest(helper.CPWebCase):
         
         # attempt a login
         self.getPage('/do_login', method='POST', body=login_body)
-        self.assertStatus((302, 303))
+        self.assertStatus((302, 307))
         
         # get the page now that we are logged in
         self.getPage('/', self.cookies)
         self.assertBody('Hi test, you are logged in')
         
         # do a logout
-        self.getPage('/do_logout', self.cookies)
-        self.assertStatus((302, 303))
+        self.getPage('/do_logout', self.cookies, method='POST')
+        self.assertStatus((302, 307))
         
         # verify we are logged out
         self.getPage('/', self.cookies)
