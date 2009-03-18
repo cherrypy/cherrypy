@@ -60,8 +60,9 @@ def serve_file(path, content_type=None, disposition=None, name=None):
         i = path.rfind('.')
         if i != -1:
             ext = path[i:].lower()
-        content_type = mimetypes.types_map.get(ext, "text/plain")
-    response.headers['Content-Type'] = content_type
+        content_type = mimetypes.types_map.get(ext, None)
+    if content_type is not None:
+        response.headers['Content-Type'] = content_type
     
     if disposition is not None:
         if name is None:
