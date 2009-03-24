@@ -106,7 +106,7 @@ class VirtualHostTest(helper.CPWebCase):
         self.assertBody('Hello, world\r\n')
         # Since tools.trailing_slash is on by default, this should redirect
         self.getPage("/static2", [('Host', 'www.mydom2.com')])
-        self.assertStatus((302, 303))
+        self.assertStatus(301)
 
 
 if __name__ == "__main__":

@@ -142,9 +142,9 @@ class StaticTest(helper.CPWebCase):
         self.assertBody('Hello, world\r\n')
         # The same page should be returned even if redirected.
         self.getPage("/docroot")
-        self.assertStatus((302, 303))
+        self.assertStatus(301)
         self.assertHeader('Location', '%s/docroot/' % self.base())
-        self.assertMatchesBody("This resource .* at <a href='%s/docroot/'>"
+        self.assertMatchesBody("This resource .* <a href='%s/docroot/'>"
                                "%s/docroot/</a>." % (self.base(), self.base()))
     
     def test_config_errors(self):
@@ -179,7 +179,7 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/test/", [('Host', 'virt.net')])
         self.assertStatus(200)
         self.getPage("/test", [('Host', 'virt.net')])
-        self.assertStatus((302, 303))
+        self.assertStatus(301)
         self.assertHeader('Location', self.scheme + '://virt.net/test/')
     
     def test_file_stream(self):

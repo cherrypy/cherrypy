@@ -49,7 +49,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
         
         # attempt a login
         self.getPage('/do_login', method='POST', body=login_body)
-        self.assertStatus((302, 307))
+        self.assertStatus((302, 303))
         
         # get the page now that we are logged in
         self.getPage('/', self.cookies)
@@ -57,7 +57,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
         
         # do a logout
         self.getPage('/do_logout', self.cookies, method='POST')
-        self.assertStatus((302, 307))
+        self.assertStatus((302, 303))
         
         # verify we are logged out
         self.getPage('/', self.cookies)

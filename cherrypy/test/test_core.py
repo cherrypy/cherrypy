@@ -274,7 +274,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # get redirected to the same URI path with a trailing slash.
         # Make sure GET params are preserved.
         self.getPage("/redirect?id=3")
-        self.assertStatus(('302 Found', '303 See Other'))
+        self.assertStatus(301)
         self.assertInBody("<a href='%s/redirect/?id=3'>"
                           "%s/redirect/?id=3</a>" % (self.base(), self.base()))
         
@@ -282,7 +282,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             # Corner case: the "trailing slash" redirect could be tricky if
             # we're using a virtual root and the URI is "/vroot" (no slash).
             self.getPage("")
-            self.assertStatus(('302 Found', '303 See Other'))
+            self.assertStatus(301)
             self.assertInBody("<a href='%s/'>%s/</a>" %
                               (self.base(), self.base()))
         
@@ -290,7 +290,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # get redirected to the same URI path WITHOUT a trailing slash.
         # Make sure GET params are preserved.
         self.getPage("/redirect/by_code/?code=307")
-        self.assertStatus(('302 Found', '303 See Other'))
+        self.assertStatus(301)
         self.assertInBody("<a href='%s/redirect/by_code?code=307'>"
                           "%s/redirect/by_code?code=307</a>"
                           % (self.base(), self.base()))

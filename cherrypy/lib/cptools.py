@@ -348,13 +348,13 @@ def trailing_slash(missing=True, extra=False, status=None):
         if missing:
             if not pi.endswith('/'):
                 new_url = cherrypy.url(pi + '/', request.query_string)
-                raise cherrypy.HTTPRedirect(new_url, status=status)
+                raise cherrypy.HTTPRedirect(new_url, status=status or 301)
     elif request.is_index is False:
         if extra:
             # If pi == '/', don't redirect to ''!
             if pi.endswith('/') and pi != '/':
                 new_url = cherrypy.url(pi[:-1], request.query_string)
-                raise cherrypy.HTTPRedirect(new_url, status=status)
+                raise cherrypy.HTTPRedirect(new_url, status=status or 301)
 
 def flatten():
     """Wrap response.body in a generator that recursively iterates over body.

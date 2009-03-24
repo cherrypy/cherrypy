@@ -190,12 +190,12 @@ class ObjectMappingTest(helper.CPWebCase):
             
             # Test omitted trailing slash (should be redirected by default).
             self.getPage("/dir1/dir2")
-            self.assertStatus((302, 303))
+            self.assertStatus(301)
             self.assertHeader('Location', '%s/dir1/dir2/' % self.base())
             
             # Test extra trailing slash (should be redirected if configured).
             self.getPage("/dir1/myMethod/")
-            self.assertStatus((302, 303))
+            self.assertStatus(301)
             self.assertHeader('Location', '%s/dir1/myMethod' % self.base())
             
             # Test that default method must be exposed in order to match.
