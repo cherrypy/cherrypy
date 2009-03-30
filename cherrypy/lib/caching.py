@@ -186,12 +186,9 @@ def tee_output():
             body = ''.join(output)
             vary = [he.value for he in
                     cherrypy.response.headers.elements('Vary')]
-            if vary:
-                sel_headers = dict([(k, v) for k, v
-                                    in cherrypy.request.headers.iteritems()
-                                    if k in vary])
-            else:
-                sel_headers = {}
+            sel_headers = dict([(k, v) for k, v
+                                in cherrypy.request.headers.iteritems()
+                                if k in vary])
             cherrypy._cache.put((response.status, response.headers or {},
                                  body, response.time, sel_headers))
     
