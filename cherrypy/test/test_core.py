@@ -480,6 +480,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                           ])
             self.assertHeader('Set-Cookie', 'First=Dinsdale')
             self.assertHeader('Set-Cookie', 'Last=Piranha')
+            
+            self.getPage("/cookies/single?name=Something-With:Colon",
+                [('Cookie', 'Something-With:Colon=some-value')])
+            self.assertStatus(400)
         else:
             self.getPage("/cookies/single?name=First",
                          [('Cookie', 'First=Dinsdale;')])
