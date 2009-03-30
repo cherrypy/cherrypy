@@ -221,6 +221,9 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
         * The 'identity' value is given with a qvalue > 0.
     """
     response = cherrypy.response
+    
+    set_vary_header(response, "Accept-Encoding")
+    
     if not response.body:
         # Response body is empty (might be a 304 for instance)
         return
@@ -249,8 +252,7 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
             if coding.qvalue == 0:
                 return
             if ct in mime_types:
-                set_vary_header(response)
-                
+                # Return a generator that compresses the page
                 response.headers['Content-Encoding'] = 'gzip'
                 response.body = compress(response.body, compress_level)
                 if response.headers.has_key("Content-Length"):
@@ -259,10 +261,9 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
             return
     cherrypy.HTTPError(406, "identity, gzip").set_response()
 
-def set_vary_header(response):
-    # Return a generator that compresses the page
+def set_vary_header(response, header_name):
     varies = response.headers.get("Vary", "")
     varies = [x.strip() for x in varies.split(",") if x.strip()]
-    if "Accept-Encoding" not in varies:
-        varies.append("Accept-Encoding")
+    if header_name not in varies:
+        varies.append(header_name)
     response.headers['Vary'] = ", ".join(varies)

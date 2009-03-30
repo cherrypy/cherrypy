@@ -33,6 +33,18 @@ def setup_server():
             cherrypy.response.headers['Last-Modified'] = http.HTTPDate()
             return gif_bytes
         a_gif.exposed = True
+
+    class VaryHeaderCachingServer:
+        
+        _cp_config = {'tools.caching.on': True,
+            'tools.response_headers.on': True,
+            'tools.response_headers.headers': [('Vary', 'Content-Encoding')],
+            }
+        
+        def index(self):
+            msg = "Always Coca-cola"
+            return msg
+        index.exposed = True
     
     class UnCached(object):
         _cp_config = {'tools.expires.on': True,
@@ -70,6 +82,7 @@ def setup_server():
     
     cherrypy.tree.mount(Root())
     cherrypy.tree.mount(UnCached(), "/expires")
+    cherrypy.tree.mount(VaryHeaderCachingServer(), "/varying_headers")
     cherrypy.config.update({'tools.gzip.on': True})
 
 
@@ -92,6 +105,8 @@ class CacheTest(helper.CPWebCase):
         # POST, PUT, DELETE should not be cached.
         self.getPage("/", method="POST")
         self.assertBody('visit #2')
+        # Because gzip is turned on, the Vary header should always Vary for content-encoding
+        self.assertHeader('Vary', 'Content-Encoding')
         # The previous request should have invalidated the cache,
         # so this request will recalc the response.
         self.getPage("/", method="GET")
@@ -106,6 +121,7 @@ class CacheTest(helper.CPWebCase):
         # so this request will recalc the response.
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
+        self.assertHeader('Vary')
         self.assertEqual(cherrypy.lib.encoding.decompress(self.body), "visit #5")
         
         # Now check that a second request gets the gzip header and gzipped body
@@ -121,6 +137,11 @@ class CacheTest(helper.CPWebCase):
         self.assertNoHeader('Content-Encoding')
         self.assertBody('visit #6')
     
+    def testVaryHeader(self):
+        self.getPage("/varying_headers/")
+        self.assertStatus("200 OK")
+        self.assertHeader('Vary', 'Our-Varying-Header')
+
     def testExpiresTool(self):
         
         # test setting an expires header
