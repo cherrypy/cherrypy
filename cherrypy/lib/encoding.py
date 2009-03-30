@@ -2,7 +2,7 @@ import struct
 import time
 
 import cherrypy
-
+from cherrypy.lib import set_vary_header
 
 def decode(encoding=None, default_encoding='utf-8'):
     """Decode cherrypy.request.params from str to unicode objects."""
@@ -261,9 +261,3 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
             return
     cherrypy.HTTPError(406, "identity, gzip").set_response()
 
-def set_vary_header(response, header_name):
-    varies = response.headers.get("Vary", "")
-    varies = [x.strip() for x in varies.split(",") if x.strip()]
-    if header_name not in varies:
-        varies.append(header_name)
-    response.headers['Vary'] = ", ".join(varies)
