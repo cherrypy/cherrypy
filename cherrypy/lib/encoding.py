@@ -249,12 +249,7 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
             if coding.qvalue == 0:
                 return
             if ct in mime_types:
-                # Return a generator that compresses the page
-                varies = response.headers.get("Vary", "")
-                varies = [x.strip() for x in varies.split(",") if x.strip()]
-                if "Accept-Encoding" not in varies:
-                    varies.append("Accept-Encoding")
-                response.headers['Vary'] = ", ".join(varies)
+                set_vary_header(response)
                 
                 response.headers['Content-Encoding'] = 'gzip'
                 response.body = compress(response.body, compress_level)
@@ -263,3 +258,11 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
                     del response.headers["Content-Length"]
             return
     cherrypy.HTTPError(406, "identity, gzip").set_response()
+
+def set_vary_header(response):
+    # Return a generator that compresses the page
+    varies = response.headers.get("Vary", "")
+    varies = [x.strip() for x in varies.split(",") if x.strip()]
+    if "Accept-Encoding" not in varies:
+        varies.append("Accept-Encoding")
+    response.headers['Vary'] = ", ".join(varies)
