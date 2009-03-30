@@ -38,7 +38,7 @@ def setup_server():
         
         _cp_config = {'tools.caching.on': True,
             'tools.response_headers.on': True,
-            'tools.response_headers.headers': [('Vary', 'Content-Encoding')],
+            'tools.response_headers.headers': [('Vary', 'Our-Varying-Header')],
             }
         
         def index(self):
