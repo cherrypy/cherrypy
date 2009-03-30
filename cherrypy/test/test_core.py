@@ -953,25 +953,23 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     def testCookies(self):
         import sys
         if sys.version_info >= (2, 5):
-            self.getPage("/cookies/single?name=First",
-                         [('Cookie', 'First=Dinsdale;')])
-            self.assertHeader('Set-Cookie', 'First=Dinsdale')
-            
-            self.getPage("/cookies/multiple?names=First&names=Last",
-                         [('Cookie', 'First=Dinsdale; Last=Piranha;'),
-                          ])
-            self.assertHeader('Set-Cookie', 'First=Dinsdale')
-            self.assertHeader('Set-Cookie', 'Last=Piranha')
+            header_value = lambda x: x
         else:
-            self.getPage("/cookies/single?name=First",
-                         [('Cookie', 'First=Dinsdale;')])
-            self.assertHeader('Set-Cookie', 'First=Dinsdale;')
-            
-            self.getPage("/cookies/multiple?names=First&names=Last",
-                         [('Cookie', 'First=Dinsdale; Last=Piranha;'),
-                          ])
-            self.assertHeader('Set-Cookie', 'First=Dinsdale;')
-            self.assertHeader('Set-Cookie', 'Last=Piranha;')
+            header_value = lambda x: x+';'
+       
+        self.getPage("/cookies/single?name=First",
+                     [('Cookie', 'First=Dinsdale;')])
+        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
+       
+        self.getPage("/cookies/multiple?names=First&names=Last",
+                     [('Cookie', 'First=Dinsdale; Last=Piranha;'),
+                      ])
+        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
+        self.assertHeader('Set-Cookie', header_value('Last=Piranha'))
+       
+        self.getPage("/cookies/single?name=Something-With:Colon",
+            [('Cookie', 'Something-With:Colon=some-value')])
+        self.assertStatus(400)
     
     def testMaxRequestSize(self):
         self.getPage("/", headers=[('From', "x" * 500)])
