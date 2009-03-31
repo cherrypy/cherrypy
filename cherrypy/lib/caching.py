@@ -11,27 +11,29 @@ class VaryHeaderAwareStore():
         #  URI and then by "Vary" header values
         self.uri_store = {}
     
-    def get_key_from_request(self, request):
+    def get_key_from_request(self, request, response=None):
         """The key into the index needs to be some combination of
         the URI and the request headers indicated by the response
         as Varying in a normalized (e.g. sorted) format."""
         # First, get a cached response for the URI
         uri = VaryHeaderUnawareStore.get_key_from_request(request)
         try:
-            orig_resp = self._get_any_response(uri)
+            cached_resp = self._get_any_response(uri)
+            response_headers = cached_resp[1]
         except KeyError:
-            return None # return a key that always misses
-        vary_header_values = self._get_vary_header_values(request, orig_resp)
-        return uri, vary_header_values
+            response_headers = response.headers
+        vary_header_values = self._get_vary_header_values(request, response_headers)
+        return uri, '|'.join(vary_header_values)
 
-    def _get_vary_header_values(request, response):
-        s, h, b, create_time, original_request_headers = response
+    def _get_vary_header_values(request, response_headers):
+        h = response_headers
         vary_header_names = [e.value for e in h.elements('Vary')]
+        vary_header_names.sort()
         vary_header_values = [
             request.headers.get(h_name, '')
             for h_name in vary_header_names]
         return vary_header_values
-
+    _get_vary_header_values = staticmethod(_get_vary_header_values)
 
     def _get_any_response(self, uri):
         """
@@ -53,7 +55,7 @@ class VaryHeaderAwareStore():
         
     def get(self, key, *args, **kwargs):
         uri, h_vals = key
-        vary_store = self.uri_store.get(uri)
+        vary_store = self.uri_store.get(uri, {})
         return vary_store.get(h_vals, *args, **kwargs)
         
     def __setitem__(self, key, value):
@@ -72,9 +74,13 @@ class VaryHeaderAwareStore():
     def pop(self, key, *args, **kwargs):
         item = self.get(key, *args, **kwargs)
         del self[key]
+    
+    def __len__(self):
+        lengths = [len(store) for store in self.uri_store.values()]
+        return sum(lengths)
 
 class VaryHeaderUnawareStore(dict):
-    def get_key_from_request(request):
+    def get_key_from_request(request, response=None):
         return cherrypy.url(qs=request.query_string)
     get_key_from_request = staticmethod(get_key_from_request)
 
@@ -108,7 +114,12 @@ class MemoryCache:
         self.cursize = 0
     
     def key(self):
-        return self.store.get_key_from_request(cherrypy.request)
+        request = cherrypy.request
+        try:
+            response = cherrypy.response
+        except AttributeError:
+            response = None
+        return self.store.get_key_from_request(request, response)
     
     def expire_cache(self):
         # expire_cache runs in a separate thread which the servers are
