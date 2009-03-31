@@ -201,33 +201,24 @@ class VariableSubstitutionTests(unittest.TestCase):
     
     def test_config(self):
         import StringIO
-	from textwrap import dedent
-	
+        from textwrap import dedent
+    
         # variable substitution with [DEFAULT]
-        conf = dedent("""\
+        conf = dedent("""
         [DEFAULT]
         dir = "/some/dir"
+        my.dir = %(dir)s + "/sub"
 
         [my]
-        my.dir = "%(dir)s/my/dir"
+        my.dir = %(dir)s + "/my/dir"
+        my.dir2 = %(my.dir)s + '/dir2'
+
         """)
 
         fp = StringIO.StringIO(conf)
 
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config["my"]["my.dir"], "/some/dir/my/dir")
-
-        # variable substitution with Python code
-        conf = dedent("""\
-        [my]
-        my.dir = "%(dir)s/my/dir"
-        my.dir2 = "%(my.dir)s/dir2"
-        """)
-	
-        fp = StringIO.StringIO(conf)
-	
-        cherrypy.config.update_vars({'dir': '/some/dir'})
-        cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config["my"]["my.dir2"], "/some/dir/my/dir/dir2")
 
 if __name__ == '__main__':
