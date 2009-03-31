@@ -106,7 +106,7 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/", method="POST")
         self.assertBody('visit #2')
         # Because gzip is turned on, the Vary header should always Vary for content-encoding
-        self.assertHeader('Vary', 'Content-Encoding')
+        self.assertHeader('Vary', 'Accept-Encoding')
         # The previous request should have invalidated the cache,
         # so this request will recalc the response.
         self.getPage("/", method="GET")
