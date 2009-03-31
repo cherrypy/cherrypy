@@ -140,7 +140,7 @@ class CacheTest(helper.CPWebCase):
     def testVaryHeader(self):
         self.getPage("/varying_headers/")
         self.assertStatus("200 OK")
-        self.assertHeader('Vary', 'Our-Varying-Header')
+        self.assertHeaderItemValue('Vary', 'Our-Varying-Header')
 
     def testExpiresTool(self):
         
