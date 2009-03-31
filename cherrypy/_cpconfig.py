@@ -243,6 +243,8 @@ class NamespaceSet(dict):
     copy = __copy__
 
 
+_vars = {} # holds interpolation vars
+
 class Config(dict):
     """The 'global' configuration data for the entire CherryPy process."""
     
@@ -295,6 +297,13 @@ class Config(dict):
         dict.update(self, config)
         self.namespaces(config)
     
+    def update_vars(self, vars):
+        """Update interpolation vars from the given vars.
+        """
+        if not isinstance(vars, dict):
+            raise TypeError
+        _vars.update(vars)
+
     def __setitem__(self, k, v):
         dict.__setitem__(self, k, v)
         self.namespaces({k: v})
@@ -391,24 +400,52 @@ class _Parser(ConfigParser.ConfigParser):
                 self._read(fp, filename)
             finally:
                 fp.close()
+
+    def _unrepr(self, section, option, value):
+
+        if not isinstance(value, basestring) or option == '__name__':
+            return value
+
+        from cherrypy.lib import unrepr
+
+        try:
+            return unrepr(value)
+        except Exception, x:
+            msg = ("Config error in section: %r, option: %r, "
+                   "value: %r. Config values must be valid Python." %
+                  (section, option, value))
+        raise ValueError(msg, x.__class__.__name__, x.args)
+
+    def _read(self, fp, fpname):
+        
+        ConfigParser.ConfigParser._read(self, fp, fpname)
+
+        # convert [DEFAULT] values
+        for k, v in self._defaults.items():
+            self._defaults[k] = self._unrepr(ConfigParser.DEFAULTSECT, k, v)
+
+        # convert all other sections
+        for s, opts in self._sections.items():
+            for k, v in opts.items():
+                opts[k] = self._unrepr(s, k, v)
+
+    def _interpolate(self, section, option, rawval, vars):
+        d = vars.copy()
+        d.update(_vars)
+        try:
+            return ConfigParser.ConfigParser._interpolate(self, section, option, rawval, d)
+        except TypeError:
+            return rawval
     
     def as_dict(self, raw=False, vars=None):
         """Convert an INI file to a dictionary"""
         # Load INI file into a dict
-        from cherrypy.lib import unrepr
         result = {}
         for section in self.sections():
             if section not in result:
                 result[section] = {}
             for option in self.options(section):
                 value = self.get(section, option, raw, vars)
-                try:
-                    value = unrepr(value)
-                except Exception, x:
-                    msg = ("Config error in section: %r, option: %r, "
-                           "value: %r. Config values must be valid Python." %
-                           (section, option, value))
-                    raise ValueError(msg, x.__class__.__name__, x.args)
                 result[section][option] = value
         return result
     
@@ -419,4 +456,3 @@ class _Parser(ConfigParser.ConfigParser):
             self.read(file)
         return self.as_dict()
 
-del ConfigParser
