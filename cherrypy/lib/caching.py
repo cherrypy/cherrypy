@@ -7,42 +7,63 @@ from cherrypy.lib import cptools, http
 
 class VaryHeaderAwareStore():
     def __init__(self):
-        # keep a dictionary of cached responses indexed both by URI
-        #  and by "Vary" header values
-        self.uri_cache = {}
-        self.vary_cache = {}
+        # keep a nested dictionary of cached responses indexed first by
+        #  URI and then by "Vary" header values
+        self.uri_store = {}
     
-    def get_key_from_request(request):
+    def get_key_from_request(self, request):
         """The key into the index needs to be some combination of
         the URI and the request headers indicated by the response
         as Varying in a normalized (e.g. sorted) format."""
         # First, get a cached response for the URI
         uri = VaryHeaderUnawareStore.get_key_from_request(request)
-        orig_resp = self.uri_cache[uri]
+        orig_resp = self._get_any_response(uri)
         s, h, b, create_time, original_request_headers = orig_resp
         vary_header_names = [e.value for e in h.elements('Vary')]
         vary_header_values = [
             request.headers.get(h_name, '')
             for h_name in vary_header_names]
         return uri, vary_header_values
-    
-    def __getitem__(self, *args, **kwargs):
-        return self.vary_cache.get(*args, **kwargs)
+
+    def _get_any_response(self, uri):
+        """
+        When a request for a URI comes in, we need to check
+        if it is already in the cache, but the response hasn't
+        yet been generated to determine the vary headers.
+        We can assume the Vary headers do not change for a
+        given URI, so use the Vary headers from a previous
+        response (any will do).
+        """
+        vary_store = self.uri_store.get(uri)
+        if not vary_store:
+            # No values exist for this URI
+            raise KeyError(uri)
+        return vary_store.values()[0]
+
+    def __getitem__(self, key):
+        return self.get(key)
+        
+    def get(self, key, *args, **kwargs):
+        uri, h_vals = key
+        vary_store = self.uri_store.get(uri)
+        return vary_store.get(h_vals, *args, **kwargs)
         
     def __setitem__(self, key, value):
         uri, h_vals = key
-        self.uri_cache[uri] = value
-        self.vary_cache[key] = value
+        vary_store = self.uri_store.setdefault(uri, {})
+        vary_store[h_vals] = value
     
     def __delitem__(self, key):
         uri, h_vals = key
-        del self.uri_cache[uri]  # maybe not
-        del self.vary_cache[key]
+        vary_store = self.uri_store[uri]
+        del vary_store[h_vals]
+        if not vary_store:
+            # if the vary store is empty, delete the URI entry also
+            del self.uri_store[uri]
     
-    def pop(self, *args, **kwargs):
-        pass 
-        
-    get_key_from_request = staticmethod(get_key_from_request)
+    def pop(self, key, *args, **kwargs):
+        item = self.get(key, *args, **kwargs)
+        del self[key]
 
 class VaryHeaderUnawareStore(dict):
     def get_key_from_request(request):
@@ -69,7 +90,7 @@ class MemoryCache:
     
     def clear(self):
         """Reset the cache to its initial, empty state."""
-        self.store = VaryHeaderUnawareStore()
+        self.store = VaryHeaderAwareStore()
         self.expirations = {}
         self.tot_puts = 0
         self.tot_gets = 0
