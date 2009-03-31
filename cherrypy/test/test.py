@@ -458,6 +458,7 @@ def run():
         'test_http',
         'test_httpauth',
         'test_httplib',
+        'test_json',
         'test_logging',
         'test_objectmapping',
         'test_dynamicobjectmapping',

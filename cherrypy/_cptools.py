@@ -223,7 +223,7 @@ class ErrorTool(Tool):
 
 #                              Builtin tools                              #
 
-from cherrypy.lib import cptools, encoding, auth, static, tidy
+from cherrypy.lib import cptools, encoding, auth, static, tidy, jsontools
 from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
 from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
 
@@ -488,5 +488,7 @@ _d.trailing_slash = Tool('before_handler', cptools.trailing_slash, priority=60)
 _d.flatten = Tool('before_finalize', cptools.flatten)
 _d.accept = Tool('on_start_resource', cptools.accept)
 _d.redirect = Tool('on_start_resource', cptools.redirect)
+_d.json_in = Tool('before_handler', jsontools.json_in, priority=30)
+_d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
 
 del _d, cptools, encoding, auth, static, tidy
