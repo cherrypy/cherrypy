@@ -6,6 +6,10 @@ import cherrypy
 from cherrypy.lib import cptools, http
 
 class VaryHeaderAwareStore():
+    """
+    A cache store that honors the Vary headers and keeps
+    a separate cached copy for each.
+    """
     def __init__(self):
         # keep a nested dictionary of cached responses indexed first by
         #  URI and then by "Vary" header values
@@ -18,9 +22,12 @@ class VaryHeaderAwareStore():
         # First, get a cached response for the URI
         uri = VaryHeaderUnawareStore.get_key_from_request(request)
         try:
+            # Try to get the cached response from the uri
             cached_resp = self._get_any_response(uri)
             response_headers = cached_resp[1]
         except KeyError:
+            # if the cached response isn't available, use the immediate
+            #  response
             response_headers = response.headers
         vary_header_values = self._get_vary_header_values(request, response_headers)
         return uri, '|'.join(vary_header_values)
@@ -211,25 +218,6 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
     if c:
         response = cherrypy.response
         s, h, b, create_time, original_req_headers = cache_data
-        
-        # Check 'Vary' selecting headers. If any headers mentioned in "Vary"
-        # differ between the cached and current request, bail out and
-        # let the rest of CP handle the request. This should properly
-        # mimic the behavior of isolated caches as RFC 2616 assumes:
-        # "If the selecting request header fields for the cached entry
-        # do not match the selecting request header fields of the new
-        # request, then the cache MUST NOT use a cached entry to satisfy
-        # the request unless it first relays the new request to the origin
-        # server in a conditional request and the server responds with
-        # 304 (Not Modified), including an entity tag or Content-Location
-        # that indicates the entity to be used.
-        # TODO: can we store multiple variants based on Vary'd headers?
-        for header_element in h.elements('Vary'):
-            key = header_element.value
-            if original_req_headers.get(key, 'missing') != request.headers.get(key, 'missing'):
-                request.cached = False
-                request.cacheable = True
-                return False
         
         # Copy the response headers. See http://www.cherrypy.org/ticket/721.
         response.headers = rh = http.HeaderMap()
