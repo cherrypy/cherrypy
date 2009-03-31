@@ -5,6 +5,26 @@ import time
 import cherrypy
 from cherrypy.lib import cptools, http
 
+class VaryHeaderAwareStore():
+    def __init__(self):
+        # keep a dictionary of cached responses indexed both by URI
+        #  and by "Vary" header values
+        self.uri_cache = {}
+        self.vary_cache = {}
+    
+    def get_key_from_request(request):
+        """The key into the index needs to be some combination of
+        the URI and the request headers indicated by the response
+        as Varying in a normalized (e.g. sorted) format."""
+        # First, get a cached response for the URI
+        raise NotImplementedError()
+        
+    get_key_from_request = staticmethod(get_key_from_request)
+
+class VaryHeaderUnawareStore(dict):
+    def get_key_from_request(request):
+        return cherrypy.url(qs=request.query_string)
+    get_key_from_request = staticmethod(get_key_from_request)
 
 class MemoryCache:
     
@@ -26,7 +46,7 @@ class MemoryCache:
     
     def clear(self):
         """Reset the cache to its initial, empty state."""
-        self.cache = {}
+        self.store = VaryHeaderUnawareStore()
         self.expirations = {}
         self.tot_puts = 0
         self.tot_gets = 0
@@ -36,7 +56,7 @@ class MemoryCache:
         self.cursize = 0
     
     def key(self):
-        return cherrypy.url(qs=cherrypy.request.query_string)
+        return self.store.get_key_from_request(cherrypy.request)
     
     def expire_cache(self):
         # expire_cache runs in a separate thread which the servers are
@@ -49,7 +69,7 @@ class MemoryCache:
                 if expiration_time <= now:
                     for obj_size, obj_key in objects:
                         try:
-                            del self.cache[obj_key]
+                            del self.store[obj_key]
                             self.tot_expires += 1
                             self.cursize -= obj_size
                         except KeyError:
@@ -61,7 +81,7 @@ class MemoryCache:
     def get(self):
         """Return the object if in the cache, else None."""
         self.tot_gets += 1
-        cache_item = self.cache.get(self.key(), None)
+        cache_item = self.store.get(self.key(), None)
         if cache_item:
             self.tot_hist += 1
             return cache_item
@@ -69,7 +89,7 @@ class MemoryCache:
             return None
     
     def put(self, obj):
-        if len(self.cache) < self.maxobjects:
+        if len(self.store) < self.maxobjects:
             # Size check no longer includes header length
             obj_size = len(obj[2])
             total_size = self.cursize + obj_size
@@ -81,12 +101,12 @@ class MemoryCache:
                 obj_key = self.key()
                 bucket = self.expirations.setdefault(expiration_time, [])
                 bucket.append((obj_size, obj_key))
-                self.cache[obj_key] = obj
+                self.store[obj_key] = obj
                 self.tot_puts += 1
                 self.cursize = total_size
     
     def delete(self):
-        self.cache.pop(self.key(), None)
+        self.store.pop(self.key(), None)
 
 
 def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
