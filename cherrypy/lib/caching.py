@@ -17,13 +17,21 @@ class VaryHeaderAwareStore():
         as Varying in a normalized (e.g. sorted) format."""
         # First, get a cached response for the URI
         uri = VaryHeaderUnawareStore.get_key_from_request(request)
-        orig_resp = self._get_any_response(uri)
-        s, h, b, create_time, original_request_headers = orig_resp
+        try:
+            orig_resp = self._get_any_response(uri)
+        except KeyError:
+            return None # return a key that always misses
+        vary_header_values = self._get_vary_header_values(request, orig_resp)
+        return uri, vary_header_values
+
+    def _get_vary_header_values(request, response):
+        s, h, b, create_time, original_request_headers = response
         vary_header_names = [e.value for e in h.elements('Vary')]
         vary_header_values = [
             request.headers.get(h_name, '')
             for h_name in vary_header_names]
-        return uri, vary_header_values
+        return vary_header_values
+
 
     def _get_any_response(self, uri):
         """
