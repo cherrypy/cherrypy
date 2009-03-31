@@ -143,7 +143,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
         # TODO: can we store multiple variants based on Vary'd headers?
         for header_element in h.elements('Vary'):
             key = header_element.value
-            if original_req_headers[key] != request.headers.get(key, 'missing'):
+            if original_req_headers.get(key, 'missing') != request.headers.get(key, 'missing'):
                 request.cached = False
                 request.cacheable = True
                 return False
