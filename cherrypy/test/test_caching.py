@@ -5,6 +5,7 @@ import gzip
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import StringIO
+from itertools import count
 
 import cherrypy
 from cherrypy.lib import http
@@ -34,16 +35,18 @@ def setup_server():
             return gif_bytes
         a_gif.exposed = True
 
-    class VaryHeaderCachingServer:
+    class VaryHeaderCachingServer(object):
         
         _cp_config = {'tools.caching.on': True,
             'tools.response_headers.on': True,
             'tools.response_headers.headers': [('Vary', 'Our-Varying-Header')],
             }
         
+        def __init__(self):
+            self.counter = count(1)
+        
         def index(self):
-            msg = "Always Coca-cola"
-            return msg
+            return "visit #%s" % self.counter.next()
         index.exposed = True
     
     class UnCached(object):
@@ -141,7 +144,23 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/varying_headers/")
         self.assertStatus("200 OK")
         self.assertHeaderItemValue('Vary', 'Our-Varying-Header')
+        self.assertBody('visit #1')
 
+        #Now check that diffrent 'Vary'-fields don't evict eachother.
+        # This test creates a 2 requests with different 'Our-Varying-Header'
+        # and then test if the first one still exists.
+        self.getPage("/varying_headers/", headers=[('Our-Varying-Header', 'request 2')])
+        self.assertStatus("200 OK")
+        self.assertBody('visit #2')
+        
+        self.getPage("/varying_headers/", headers=[('Our-Varying-Header', 'request 2')])
+        self.assertStatus("200 OK")
+        self.assertBody('visit #2')
+        
+        self.getPage("/varying_headers/")
+        self.assertStatus("200 OK")
+        self.assertBody('visit #1')
+        
     def testExpiresTool(self):
         
         # test setting an expires header
