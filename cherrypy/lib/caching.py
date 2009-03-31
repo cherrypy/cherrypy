@@ -17,7 +17,30 @@ class VaryHeaderAwareStore():
         the URI and the request headers indicated by the response
         as Varying in a normalized (e.g. sorted) format."""
         # First, get a cached response for the URI
-        raise NotImplementedError()
+        uri = VaryHeaderUnawareStore.get_key_from_request(request)
+        orig_resp = self.uri_cache[uri]
+        s, h, b, create_time, original_request_headers = orig_resp
+        vary_header_names = [e.value for e in h.elements('Vary')]
+        vary_header_values = [
+            request.headers.get(h_name, '')
+            for h_name in vary_header_names]
+        return uri, vary_header_values
+    
+    def __getitem__(self, *args, **kwargs):
+        return self.vary_cache.get(*args, **kwargs)
+        
+    def __setitem__(self, key, value):
+        uri, h_vals = key
+        self.uri_cache[uri] = value
+        self.vary_cache[key] = value
+    
+    def __delitem__(self, key):
+        uri, h_vals = key
+        del self.uri_cache[uri]  # maybe not
+        del self.vary_cache[key]
+    
+    def pop(self, *args, **kwargs):
+        pass 
         
     get_key_from_request = staticmethod(get_key_from_request)
 
