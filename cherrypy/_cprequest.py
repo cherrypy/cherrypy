@@ -141,7 +141,12 @@ def request_namespace(k, v):
 
 def response_namespace(k, v):
     """Attach response attributes declared in config."""
-    setattr(cherrypy.response, k, v)
+    # Provides config entries to set default response headers
+    # http://cherrypy.org/ticket/889
+    if k[:8] == 'headers.':
+    	cherrypy.response.headers[k.split('.', 1)[1]] = v
+    else:
+    	setattr(cherrypy.response, k, v)
 
 def error_page_namespace(k, v):
     """Attach error pages declared in config."""
