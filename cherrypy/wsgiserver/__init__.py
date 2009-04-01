@@ -65,17 +65,24 @@ except ImportError:
     SSL = None
 
 import errno
+
+socket_error_eintr = plat_specific_errors("EINTR", "WSAEINTR")
+
 socket_errors_to_ignore = []
 # Not all of these names will be defined for every platform.
 for _ in ("EPIPE", "ETIMEDOUT", "ECONNREFUSED", "ECONNRESET",
           "EHOSTDOWN", "EHOSTUNREACH",
           "WSAECONNABORTED", "WSAECONNREFUSED", "WSAECONNRESET",
-          "WSAENETRESET", "WSAETIMEDOUT"):
+          "WSAENETRESET", "WSAETIMEDOUT", "EBADF", "WSAEBADF",
+          "ENOTSOCK", "WSAENOTSOCK"):
     if _ in dir(errno):
         socket_errors_to_ignore.append(getattr(errno, _))
 # de-dupe the list
 socket_errors_to_ignore = dict.fromkeys(socket_errors_to_ignore).keys()
 socket_errors_to_ignore.append("timed out")
+
+socket_errors_nonblocking = plat_specific_errors(
+        'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
 
 comma_separated_headers = ['ACCEPT', 'ACCEPT-CHARSET', 'ACCEPT-ENCODING',
     'ACCEPT-LANGUAGE', 'ACCEPT-RANGES', 'ALLOW', 'CACHE-CONTROL',
@@ -906,12 +913,19 @@ class CherryPyWSGIServer(object):
             # accept() by default
             return
         except socket.error, x:
-            msg = x.args[1]
-            if msg in ("Bad file descriptor", "Socket operation on non-socket"):
-                # Our socket was closed.
+            if x.args[0] in socket_error_eintr:
+                # I *think* this is right. EINTR should occur when a signal
+                # is received during the accept() call; all docs say retry
+                # the call, and I *think* I'm reading it right that Python
+                # will then go ahead and poll for and handle the signal
+                # elsewhere. See http://www.cherrypy.org/ticket/707.
                 return
-            if msg == "Resource temporarily unavailable":
+            if x.args[0] in socket_errors_nonblocking:
                 # Just try again. See http://www.cherrypy.org/ticket/479.
+                return
+            if x.args[0] in socket_errors_to_ignore:
+                # Our socket was closed.
+                # See http://www.cherrypy.org/ticket/686.
                 return
             raise
     
@@ -936,7 +950,9 @@ class CherryPyWSGIServer(object):
                 try:
                     host, port = sock.getsockname()[:2]
                 except socket.error, x:
-                    if x.args[1] != "Bad file descriptor":
+                    if x.args[0] in socket_errors_to_ignore:
+                        # Changed to use error code and not message
+                        # See http://www.cherrypy.org/ticket/860.
                         raise
                 else:
                     # Note that we're explicitly NOT using AI_PASSIVE,
