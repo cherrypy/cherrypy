@@ -38,7 +38,7 @@ def decode_params(encoding):
             # Skip the value if it is an uploaded file
             if isinstance(value, list):
                 # value is a list: decode each element
-                value = [v.decode(encoding) for v in value]
+                value = [v.decode(encoding) if isinstance(v, str) else v for v in value]
             elif isinstance(value, str):
                 # value is a regular string: decode it
                 value = value.decode(encoding)
