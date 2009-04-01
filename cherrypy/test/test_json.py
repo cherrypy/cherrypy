@@ -3,9 +3,10 @@ test.prefer_parent_path()
 
 import cherrypy
 
-try:
-    import simplejson
-
+from cherrypy.lib.jsontools import json
+if json is None:
+    print "skipped (simplejson not found) ",
+else:
     def setup_server():
         class Root(object):
             def plain(self):
@@ -66,9 +67,6 @@ try:
             self.getPage("/json_post", method="POST", headers=headers, body=body)
             self.assertStatus(400, 'Invalid JSON document')
 
-except:
-    print "skipped (simplejson not found) ",
-        
 if __name__ == '__main__':
     helper.testmain()
 
