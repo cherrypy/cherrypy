@@ -50,6 +50,11 @@ def setup_server():
         index.exposed = True
         nex = index
         
+        def silly(self):
+            return 'Hello world'
+        silly.exposed = True
+        silly._cp_config = {'response.headers.X-silly': 'sillyval'}
+            
         def bar(self, key):
             return `cherrypy.request.config.get(key, None)`
         bar.exposed = True
@@ -181,6 +186,11 @@ class ConfigTests(helper.CPWebCase):
         
         self.getPage("/repr?key=stradd")
         self.assertBody(repr("112233"))
+
+    def testRespNamespaces(self):
+        self.getPage("/foo/silly")
+        self.assertHeader('X-silly', 'sillyval')
+        self.assertBody('Hello world')
     
     def testCustomNamespaces(self):
         self.getPage("/raw/incr?num=12")
