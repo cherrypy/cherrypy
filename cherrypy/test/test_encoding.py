@@ -131,16 +131,18 @@ class EncodingTests(helper.CPWebCase):
         
         # Test when gzip is denied.
         self.getPage('/gzip/', headers=[("Accept-Encoding", "identity")])
-        self.assertNoHeader("Vary")
+        self.assertHeader("Vary", "Accept-Encoding")
+        self.assertNoHeader("Content-Encoding")
         self.assertBody("Hello, world")
         
         self.getPage('/gzip/', headers=[("Accept-Encoding", "gzip;q=0")])
-        self.assertNoHeader("Vary")
+        self.assertHeader("Vary", "Accept-Encoding")
+        self.assertNoHeader("Content-Encoding")
         self.assertBody("Hello, world")
         
         self.getPage('/gzip/', headers=[("Accept-Encoding", "*;q=0")])
         self.assertStatus(406)
-        self.assertNoHeader("Vary")
+        self.assertNoHeader("Content-Encoding")
         self.assertErrorPage(406, "identity, gzip")
         
         # Test for ticket #147
