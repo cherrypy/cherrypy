@@ -1753,7 +1753,7 @@ class CherryPyWSGIServer(object):
                 try:
                     host, port = sock.getsockname()[:2]
                 except socket.error, x:
-                    if x.args[0] in socket_errors_to_ignore:
+                    if x.args[0] not in socket_errors_to_ignore:
                         # Changed to use error code and not message
                         # See http://www.cherrypy.org/ticket/860.
                         raise
