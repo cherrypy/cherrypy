@@ -199,14 +199,21 @@ class Bus(object):
     
     def exit(self):
         """Stop all services and prepare to exit the process."""
-        self.stop()
-        
-        self.state = states.EXITING
-        self.log('Bus EXITING')
-        self.publish('exit')
-        # This isn't strictly necessary, but it's better than seeing
-        # "Waiting for child threads to terminate..." and then nothing.
-        self.log('Bus EXITED')
+        try:
+            self.stop()
+            
+            self.state = states.EXITING
+            self.log('Bus EXITING')
+            self.publish('exit')
+            # This isn't strictly necessary, but it's better than seeing
+            # "Waiting for child threads to terminate..." and then nothing.
+            self.log('Bus EXITED')
+        except:
+            # This method is often called asynchronously (whether thread,
+            # signal handler, console handler, or atexit handler), so we
+            # can't just let exceptions propagate out unhandled.
+            # Assume it's been logged and just die.
+            os._exit(70) # EX_SOFTWARE
     
     def restart(self):
         """Restart the process (may close connections).
@@ -223,7 +230,14 @@ class Bus(object):
         self.publish('graceful')
     
     def block(self, interval=0.1):
-        """Wait for the EXITING state, KeyboardInterrupt or SystemExit."""
+        """Wait for the EXITING state, KeyboardInterrupt or SystemExit.
+        
+        This function is intended to be called only by the main thread.
+        After waiting for the EXITING state, it also waits for all threads
+        to terminate, and then calls os.execv if self.execv is True. This
+        design allows another thread to call bus.restart, yet have the main
+        thread perform the actual execv call (required on some platforms).
+        """
         try:
             self.wait(states.EXITING, interval=interval)
         except (KeyboardInterrupt, IOError):
