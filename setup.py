@@ -18,7 +18,7 @@ required_python_version = '2.3'
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.1.1"
+version = "3.1.2"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers=[
@@ -42,7 +42,7 @@ packages=[
     "cherrypy.wsgiserver", "cherrypy.process",
     "cherrypy.scaffold",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.1.1/"
+download_url="http://download.cherrypy.org/cherrypy/3.1.2/"
 data_files=[
     ('cherrypy', ['cherrypy/cherryd',
                   'cherrypy/favicon.ico',

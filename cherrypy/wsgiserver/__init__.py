@@ -1468,7 +1468,7 @@ class CherryPyWSGIServer(object):
     
     protocol = "HTTP/1.1"
     _bind_addr = "127.0.0.1"
-    version = "CherryPy/3.1.1"
+    version = "CherryPy/3.1.2"
     ready = False
     _interrupt = None
     
