@@ -93,17 +93,61 @@ be any string, and the handler must be either a callable or a (Python 2.5
 style) context manager.
 """
 
-import ConfigParser
 try:
     set
 except NameError:
     from sets import Set as set
-import sys
 
 import cherrypy
+from cherrypy.lib import reprconf
+
+# Deprecated in  CherryPy 3.2--remove in 3.3
+NamespaceSet = reprconf.NamespaceSet
+
+def merge(base, other):
+    """Merge one app config (from a dict, file, or filename) into another.
+    
+    If the given config is a filename, it will be appended to
+    the list of files to monitor for "autoreload" changes.
+    """
+    if isinstance(other, basestring):
+        cherrypy.engine.autoreload.files.add(other)
+    
+    # Load other into base
+    for section, value_map in reprconf.as_dict(other).iteritems():
+        if not isinstance(value_map, dict):
+            raise ValueError(
+                "Application config must include section headers, but the "
+                "config you tried to merge doesn't have any sections. "
+                "Wrap your config in another dict with paths as section "
+                "headers, for example: {'/': config}.")
+        base.setdefault(section, {}).update(value_map)
 
 
-environments = {
+class Config(reprconf.Config):
+    """The 'global' configuration data for the entire CherryPy process."""
+    
+    def update(self, config):
+        """Update self from a dict, file or filename."""
+        if isinstance(config, basestring):
+            # Filename
+            cherrypy.engine.autoreload.files.add(config)
+        
+        reprconf.Config.update(self, config)
+    
+    def _apply(self, config):
+        """Update self from a dict."""
+        if isinstance(config.get("global", None), dict):
+            if len(config) > 1:
+                cherrypy.checker.global_config_contained_paths = True
+            config = config["global"]
+        if 'tools.staticdir.dir' in config:
+            config['tools.staticdir.section'] = "global"
+        
+        reprconf.Config._apply(self, config)
+
+
+Config.environments = environments = {
     "staging": {
         'engine.autoreload_on': False,
         'checker.on': False,
@@ -139,165 +183,6 @@ environments = {
         'log.screen': False,
         },
     }
-
-def as_dict(config):
-    """Return a dict from 'config' whether it is a dict, file, or filename."""
-    if isinstance(config, basestring):
-        config = _Parser().dict_from_file(config)
-    elif hasattr(config, 'read'):
-        config = _Parser().dict_from_file(config)
-    return config
-
-def merge(base, other):
-    """Merge one app config (from a dict, file, or filename) into another.
-    
-    If the given config is a filename, it will be appended to
-    the list of files to monitor for "autoreload" changes.
-    """
-    if isinstance(other, basestring):
-        cherrypy.engine.autoreload.files.add(other)
-    
-    # Load other into base
-    for section, value_map in as_dict(other).iteritems():
-        if not isinstance(value_map, dict):
-            raise ValueError(
-                "Application config must include section headers, but the "
-                "config you tried to merge doesn't have any sections. "
-                "Wrap your config in another dict with paths as section "
-                "headers, for example: {'/': config}.")
-        base.setdefault(section, {}).update(value_map)
-
-
-
-class NamespaceSet(dict):
-    """A dict of config namespace names and handlers.
-    
-    Each config entry should begin with a namespace name; the corresponding
-    namespace handler will be called once for each config entry in that
-    namespace, and will be passed two arguments: the config key (with the
-    namespace removed) and the config value.
-    
-    Namespace handlers may be any Python callable; they may also be
-    Python 2.5-style 'context managers', in which case their __enter__
-    method should return a callable to be used as the handler.
-    See cherrypy.tools (the Toolbox class) for an example.
-    """
-    
-    def __call__(self, config):
-        """Iterate through config and pass it to each namespace handler.
-        
-        'config' should be a flat dict, where keys use dots to separate
-        namespaces, and values are arbitrary.
-        
-        The first name in each config key is used to look up the corresponding
-        namespace handler. For example, a config entry of {'tools.gzip.on': v}
-        will call the 'tools' namespace handler with the args: ('gzip.on', v)
-        """
-        # Separate the given config into namespaces
-        ns_confs = {}
-        for k in config:
-            if "." in k:
-                ns, name = k.split(".", 1)
-                bucket = ns_confs.setdefault(ns, {})
-                bucket[name] = config[k]
-        
-        # I chose __enter__ and __exit__ so someday this could be
-        # rewritten using Python 2.5's 'with' statement:
-        # for ns, handler in self.iteritems():
-        #     with handler as callable:
-        #         for k, v in ns_confs.get(ns, {}).iteritems():
-        #             callable(k, v)
-        for ns, handler in self.iteritems():
-            exit = getattr(handler, "__exit__", None)
-            if exit:
-                callable = handler.__enter__()
-                no_exc = True
-                try:
-                    try:
-                        for k, v in ns_confs.get(ns, {}).iteritems():
-                            callable(k, v)
-                    except:
-                        # The exceptional case is handled here
-                        no_exc = False
-                        if exit is None:
-                            raise
-                        if not exit(*sys.exc_info()):
-                            raise
-                        # The exception is swallowed if exit() returns true
-                finally:
-                    # The normal and non-local-goto cases are handled here
-                    if no_exc and exit:
-                        exit(None, None, None)
-            else:
-                for k, v in ns_confs.get(ns, {}).iteritems():
-                    handler(k, v)
-    
-    def __repr__(self):
-        return "%s.%s(%s)" % (self.__module__, self.__class__.__name__,
-                              dict.__repr__(self))
-    
-    def __copy__(self):
-        newobj = self.__class__()
-        newobj.update(self)
-        return newobj
-    copy = __copy__
-
-
-class Config(dict):
-    """The 'global' configuration data for the entire CherryPy process."""
-    
-    defaults = {
-        'tools.log_tracebacks.on': True,
-        'tools.log_headers.on': True,
-        'tools.trailing_slash.on': True,
-        }
-    
-    namespaces = NamespaceSet(
-        **{"log": lambda k, v: setattr(cherrypy.log, k, v),
-           "checker": lambda k, v: setattr(cherrypy.checker, k, v),
-           })
-    
-    def __init__(self):
-        self.reset()
-    
-    def reset(self):
-        """Reset self to default values."""
-        self.clear()
-        dict.update(self, self.defaults)
-    
-    def update(self, config):
-        """Update self from a dict, file or filename."""
-        if isinstance(config, basestring):
-            # Filename
-            cherrypy.engine.autoreload.files.add(config)
-            config = _Parser().dict_from_file(config)
-        elif hasattr(config, 'read'):
-            # Open file object
-            config = _Parser().dict_from_file(config)
-        else:
-            config = config.copy()
-        
-        if isinstance(config.get("global", None), dict):
-            if len(config) > 1:
-                cherrypy.checker.global_config_contained_paths = True
-            config = config["global"]
-        
-        which_env = config.get('environment')
-        if which_env:
-            env = environments[which_env]
-            for k in env:
-                if k not in config:
-                    config[k] = env[k]
-        
-        if 'tools.staticdir.dir' in config:
-            config['tools.staticdir.section'] = "global"
-        
-        dict.update(self, config)
-        self.namespaces(config)
-    
-    def __setitem__(self, k, v):
-        dict.__setitem__(self, k, v)
-        self.namespaces({k: v})
 
 
 def _server_namespace_handler(k, v):
@@ -369,54 +254,3 @@ def _tree_namespace_handler(k, v):
     cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name or "/"))
 Config.namespaces["tree"] = _tree_namespace_handler
 
-
-class _Parser(ConfigParser.ConfigParser):
-    """Sub-class of ConfigParser that keeps the case of options and that raises
-    an exception if the file cannot be read.
-    """
-    
-    def optionxform(self, optionstr):
-        return optionstr
-    
-    def read(self, filenames):
-        if isinstance(filenames, basestring):
-            filenames = [filenames]
-        for filename in filenames:
-            # try:
-            #     fp = open(filename)
-            # except IOError:
-            #     continue
-            fp = open(filename)
-            try:
-                self._read(fp, filename)
-            finally:
-                fp.close()
-    
-    def as_dict(self, raw=False, vars=None):
-        """Convert an INI file to a dictionary"""
-        # Load INI file into a dict
-        from cherrypy.lib import unrepr
-        result = {}
-        for section in self.sections():
-            if section not in result:
-                result[section] = {}
-            for option in self.options(section):
-                value = self.get(section, option, raw, vars)
-                try:
-                    value = unrepr(value)
-                except Exception, x:
-                    msg = ("Config error in section: %r, option: %r, "
-                           "value: %r. Config values must be valid Python." %
-                           (section, option, value))
-                    raise ValueError(msg, x.__class__.__name__, x.args)
-                result[section][option] = value
-        return result
-    
-    def dict_from_file(self, file):
-        if hasattr(file, 'read'):
-            self.readfp(file)
-        else:
-            self.read(file)
-        return self.as_dict()
-
-del ConfigParser

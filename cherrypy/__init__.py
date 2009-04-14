@@ -555,6 +555,13 @@ from cherrypy import _cpconfig
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
+config.defaults = {
+    'tools.log_tracebacks.on': True,
+    'tools.log_headers.on': True,
+    'tools.trailing_slash.on': True,
+    }
+config.namespaces["log"] = lambda k, v: setattr(log, k, v)
+config.namespaces["checker"] = lambda k, v: setattr(checker, k, v)
 
 from cherrypy import _cpchecker
 checker = _cpchecker.Checker()
