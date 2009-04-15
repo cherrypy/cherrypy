@@ -108,14 +108,21 @@ class NamespaceSet(dict):
 
 
 class Config(dict):
-    """A dict-like set of configuration data, with defaults and namespaces."""
+    """A dict-like set of configuration data, with defaults and namespaces.
+    
+    May take a file, filename, or dict.
+    """
     
     defaults = {}
     environments = {}
     namespaces = NamespaceSet()
     
-    def __init__(self):
+    def __init__(self, file=None, **kwargs):
         self.reset()
+        if file is not None:
+            self.update(file)
+        if kwargs:
+            self.update(kwargs)
     
     def reset(self):
         """Reset self to default values."""
