@@ -37,6 +37,8 @@ if __name__ == '__main__':
             '/conftype': {'request.show_tracebacks': 14},
             # Warn on unknown tool.
             '/web': {'tools.unknown.on': True},
+            # Warn on server.* in app config.
+            '/app1': {'server.socket_host': '0.0.0.0'},
             # Warn on 'localhost'
             'global': {'server.socket_host': 'localhost'},
             # Warn on '[name]'

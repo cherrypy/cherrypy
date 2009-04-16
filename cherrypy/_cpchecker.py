@@ -61,7 +61,26 @@ class Checker(object):
                     warnings.warn(
                         "The application mounted at %r has config " \
                         "entries that start with its script name: %r" % (sn, key))
-
+    
+    def check_site_config_entries_in_app_config(self):
+        for sn, app in cherrypy.tree.apps.iteritems():
+            if not isinstance(app, cherrypy.Application):
+                continue
+            
+            msg = []
+            for section, entries in app.config.iteritems():
+                if section.startswith('/'):
+                    for key, value in entries.iteritems():
+                        if key.startswith("server."):
+                            msg.append("[%s] %s = %s" % (section, key, value))
+            if msg:
+                msg.insert(0,
+                    "The application mounted at %r contains the following "
+                    "config entries, which are only allowed in site-wide "
+                    "config. Move them to a [global] section and pass them "
+                    "to cherrypy.config.update() instead of tree.mount()." % sn)
+                warnings.warn(os.linesep.join(msg))
+    
     def check_skipped_app_config(self):
         for sn, app in cherrypy.tree.apps.iteritems():
             if not isinstance(app, cherrypy.Application):
