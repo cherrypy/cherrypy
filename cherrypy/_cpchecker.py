@@ -71,8 +71,9 @@ class Checker(object):
             for section, entries in app.config.iteritems():
                 if section.startswith('/'):
                     for key, value in entries.iteritems():
-                        if key.startswith("server."):
-                            msg.append("[%s] %s = %s" % (section, key, value))
+                        for n in ("engine.", "server.", "tree.", "checker."):
+                            if key.startswith(n):
+                                msg.append("[%s] %s = %s" % (section, key, value))
             if msg:
                 msg.insert(0,
                     "The application mounted at %r contains the following "
