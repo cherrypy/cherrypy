@@ -437,18 +437,21 @@ class Autoreloader(Monitor):
         Monitor.start(self)
     start.priority = 70 
     
-    def run(self):
-        """Reload the process if registered files have been modified."""
-        sysfiles = set()
+    def sysfiles(self):
+        """Return a Set of filenames which the Autoreloader will monitor."""
+        files = set()
         for k, m in sys.modules.items():
             if re.match(self.match, k):
                 if hasattr(m, '__loader__'):
                     if hasattr(m.__loader__, 'archive'):
                         k = m.__loader__.archive
                 k = getattr(m, '__file__', None)
-                sysfiles.add(k)
-        
-        for filename in sysfiles | self.files:
+                files.add(k)
+        return files
+    
+    def run(self):
+        """Reload the process if registered files have been modified."""
+        for filename in self.sysfiles() | self.files:
             if filename:
                 if filename.endswith('.pyc'):
                     filename = filename[:-1]
