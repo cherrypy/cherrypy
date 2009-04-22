@@ -35,6 +35,9 @@ def _getargs(func):
     return co.co_varnames[:co.co_argcount]
 
 
+_attr_error = ("CherryPy Tools cannot be turned on directly. Instead, turn them "
+               "on via config, or use them as decorators on your page handlers.")
+
 class Tool(object):
     """A registered function for use with CherryPy request-processing hooks.
     
@@ -50,6 +53,12 @@ class Tool(object):
         self._priority = priority
         self.__doc__ = self.callable.__doc__
         self._setargs()
+    
+    def _get_on(self):
+        raise AttributeError(_attr_error)
+    def _set_on(self, value):
+        raise AttributeError(_attr_error)
+    on = property(_get_on, _set_on)
     
     def _setargs(self):
         """Copy func parameter names to obj attributes."""

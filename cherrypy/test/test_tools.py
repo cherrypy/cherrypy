@@ -229,7 +229,7 @@ def setup_server():
     }
     app = cherrypy.tree.mount(root, config=conf)
     app.request_class.namespaces['myauth'] = myauthtools
-
+    
     if sys.version_info >= (2, 5):
         from cherrypy.test import py25
         root.tooldecs = py25.ToolExamples()
@@ -376,6 +376,24 @@ class ToolTests(helper.CPWebCase):
         
         self.getPage('/tooldecs/blah')
         self.assertHeader('Content-Type', 'application/data')
+    
+    def testWarnToolOn(self):
+        # get
+        try:
+            numon = cherrypy.tools.numerify.on
+        except AttributeError:
+            pass
+        else:
+            raise AssertionError("Tool.on did not error as it should have.")
+        
+        # set
+        try:
+            cherrypy.tools.numerify.on = True
+        except AttributeError:
+            pass
+        else:
+            raise AssertionError("Tool.on did not error as it should have.")
+
 
 
 if __name__ == '__main__':
