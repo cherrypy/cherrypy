@@ -313,7 +313,6 @@ class CommandLineParser(object):
             import cherrypy
             from cherrypy.lib import covercp
             cherrypy.engine.subscribe('start', covercp.start)
-            cherrypy.engine.subscribe('start_thread', covercp.start)
         except ImportError:
             coverage = None
         self.coverage = coverage
@@ -323,7 +322,6 @@ class CommandLineParser(object):
         import cherrypy
         from cherrypy.lib import covercp
         cherrypy.engine.unsubscribe('start', covercp.start)
-        cherrypy.engine.unsubscribe('start_thread', covercp.start)
         if self.coverage:
             self.coverage.save()
             self.report_coverage()
