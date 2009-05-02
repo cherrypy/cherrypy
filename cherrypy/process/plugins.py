@@ -442,11 +442,11 @@ class Autoreloader(Monitor):
         files = set()
         for k, m in sys.modules.items():
             if re.match(self.match, k):
-                if hasattr(m, '__loader__'):
-                    if hasattr(m.__loader__, 'archive'):
-                        k = m.__loader__.archive
-                k = getattr(m, '__file__', None)
-                files.add(k)
+                if hasattr(m, '__loader__') and hasattr(m.__loader__, 'archive'):
+                    f = m.__loader__.archive
+                else:
+                    f = getattr(m, '__file__', None)
+                files.add(f)
         return files
     
     def run(self):

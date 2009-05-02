@@ -380,7 +380,7 @@ def accept(media=None):
     If 'media' is None (the default), no test will be performed.
     
     If 'media' is provided, it should be the Content-Type value (as a string)
-    or values (as a list or tuple of strings) which the current request
+    or values (as a list or tuple of strings) which the current resource
     can emit. The client's acceptable media ranges (as declared in the
     Accept request header) will be matched in order to these Content-Type
     values; the first such string is returned. That is, the return value
