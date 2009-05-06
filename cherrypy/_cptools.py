@@ -497,6 +497,7 @@ _d.trailing_slash = Tool('before_handler', cptools.trailing_slash, priority=60)
 _d.flatten = Tool('before_finalize', cptools.flatten)
 _d.accept = Tool('on_start_resource', cptools.accept)
 _d.redirect = Tool('on_start_resource', cptools.redirect)
+_d.autovary = Tool('on_start_resource', cptools.autovary, priority=0)
 _d.json_in = Tool('before_handler', jsontools.json_in, priority=30)
 _d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
 

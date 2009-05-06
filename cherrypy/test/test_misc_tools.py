@@ -60,17 +60,34 @@ def setup_server():
         accept.exposed = True
         reject = accept
     
+    class AutoVary:
+        def index(self):
+            # Read a header directly with 'get'
+            ae = cherrypy.request.headers.get('Accept-Encoding')
+            # Read a header directly with '__getitem__'
+            cl = cherrypy.request.headers['Host']
+            # Read a header directly with '__contains__'
+            hasif = 'If-Modified-Since' in cherrypy.request.headers
+            # Read a header directly with 'has_key'
+            has = cherrypy.request.headers.has_key('Range')
+            # Call a lib function
+            mtype = tools.accept.callable(['text/html', 'text/plain'])
+            return "Hello, world!"
+        index.exposed = True
+    
     conf = {'/referer': {'tools.referer.on': True,
                          'tools.referer.pattern': r'http://[^/]*example\.com',
                          },
             '/referer/reject': {'tools.referer.accept': False,
                                 'tools.referer.accept_missing': True,
                                 },
+            '/autovary': {'tools.autovary.on': True},
             }
     
     root = Root()
     root.referer = Referer()
     root.accept = Accept()
+    root.autovary = AutoVary()
     cherrypy.tree.mount(root, config=conf)
     cherrypy.config.update({'log.error_file': logfile})
 
@@ -174,6 +191,13 @@ class AcceptTest(helper.CPWebCase):
                              "But this resource only emits these media types: "
                              "text/html, text/plain.")
 
+
+class AutoVaryTest(helper.CPWebCase):
+
+    def testAutoVary(self):
+        self.getPage('/autovary/')
+        self.assertHeader(
+            "Vary", 'Accept, Accept-Encoding, Host, If-Modified-Since, Range')
 
 
 if __name__ == "__main__":

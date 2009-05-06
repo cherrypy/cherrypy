@@ -8,6 +8,11 @@ except ImportError:
     from md5 import new as md5
 import re
 
+try:
+    set
+except NameError:
+    from sets import Set as set
+
 import cherrypy
 from cherrypy.lib import http as _http
 
@@ -436,4 +441,45 @@ def accept(media=None):
     msg += (" But this resource only emits these media types: %s." %
             ", ".join(media))
     raise cherrypy.HTTPError(406, msg)
+
+
+class MonitoredHeaderMap(_http.HeaderMap):
+    
+    def __init__(self):
+        self.accessed_headers = set()
+    
+    def __getitem__(self, key):
+        self.accessed_headers.add(key)
+        return _http.HeaderMap.__getitem__(self, key)
+    
+    def __contains__(self, key):
+        self.accessed_headers.add(key)
+        return _http.HeaderMap.__contains__(self, key)
+    
+    def get(self, key, default=None):
+        self.accessed_headers.add(key)
+        return _http.HeaderMap.get(self, key, default=default)
+    
+    def has_key(self, key):
+        self.accessed_headers.add(key)
+        return _http.HeaderMap.has_key(self, key)
+
+
+def autovary():
+    """Auto-populate the Vary response header based on request.header access."""
+    req_h = cherrypy.request.headers
+    cherrypy.request.headers = MonitoredHeaderMap()
+    cherrypy.request.headers.update(req_h)
+    
+    def set_response_header():
+        resp_h = cherrypy.response.headers
+        v = set([e.value for e in resp_h.elements('Vary')])
+        v |= cherrypy.request.headers.accessed_headers
+        v = list(v)
+        v.sort()
+        resp_h['Vary'] = ', '.join(v)
+    cherrypy.request.hooks.attach(
+        'before_finalize', set_response_header, 95)
+
+
 
