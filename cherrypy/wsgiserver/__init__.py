@@ -150,17 +150,17 @@ class WSGIPathInfoDispatcher(object):
     
     apps: a dict or list of (path_prefix, app) pairs.
     """
-    
+
     def __init__(self, apps):
         try:
             apps = apps.items()
         except AttributeError:
             pass
-        
+
         # Sort the apps by len(path), descending
-        apps.sort()
+        apps.sort(cmp=lambda x,y: cmp(len(x[0]), len(y[0])))
         apps.reverse()
-        
+
         # The path_prefix strings must start, but not end, with a slash.
         # Use "" instead of "/".
         self.apps = [(p.rstrip("/"), a) for p, a in apps]
