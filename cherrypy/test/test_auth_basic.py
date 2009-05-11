@@ -39,10 +39,10 @@ def setup_server():
 
     conf = {'/basic': {'tools.auth_basic.on': True,
                        'tools.auth_basic.realm': 'wonderland',
-                       'tools.auth_basic.checkpassword_func': auth_basic.checkpassword_dict(userpassdict)},
+                       'tools.auth_basic.checkpassword': auth_basic.checkpassword_dict(userpassdict)},
             '/basic2': {'tools.auth_basic.on': True,
                         'tools.auth_basic.realm': 'wonderland',
-                        'tools.auth_basic.checkpassword_func': checkpasshash},
+                        'tools.auth_basic.checkpassword': checkpasshash},
            }
 
     root = Root()

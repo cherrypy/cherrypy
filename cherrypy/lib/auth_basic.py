@@ -5,14 +5,14 @@
 __doc__ = """Module auth_basic.py provides a CherryPy 3.x tool which implements
 the server-side of HTTP Basic Access Authentication, as described in RFC 2617.
 
-Example usage, using the built-in checkpassword function which uses a dict
+Example usage, using the built-in checkpassword_dict function which uses a dict
 as the credentials store:
 
-userpassdict = {'bird' : 'bebop'}
+userpassdict = {'bird' : 'bebop', 'ornette' : 'wayout'}
 checkpassword = cherrypy.lib.auth_basic.checkpassword_dict(userpassdict)
 basic_auth = {'tools.auth_basic.on': True,
               'tools.auth_basic.realm': 'earth',
-              'tools.auth_basic.checkpassword_func': checkpassword,
+              'tools.auth_basic.checkpassword': checkpassword,
 }
 app_config = { '/' : basic_auth }
 """
@@ -31,7 +31,7 @@ def checkpassword_dict(user_password_dict):
 
     If you want a simple dictionary-based authentication scheme, use
     checkpassword_dict(my_credentials_dict) as the value for the
-    checkpassword_func argument to basic_auth().
+    checkpassword argument to basic_auth().
     """
     def checkpassword(realm, user, password):
         p = user_password_dict.get(user)
@@ -40,7 +40,7 @@ def checkpassword_dict(user_password_dict):
     return checkpassword
 
 
-def basic_auth(realm, checkpassword_func):
+def basic_auth(realm, checkpassword):
     """basic_auth is a CherryPy tool which hooks at before_handler to perform
     HTTP Basic Access Authentication, as specified in RFC 2617.
 
@@ -53,12 +53,13 @@ def basic_auth(realm, checkpassword_func):
     Arguments:
     realm: a string containing the authentication realm.
 
-    checkpassword_func: a function which checks the authentication credentials.
+    checkpassword: a callable which checks the authentication credentials.
         Its signature is checkpassword(realm, username, password). where
         username and password are the values obtained from the request's
-        'authorization' header.  If authentication succeeds, checkpassword_func
+        'authorization' header.  If authentication succeeds, checkpassword
         returns True, else it returns False.
     """
+
     if '"' in realm:
         raise ValueError, 'Realm cannot contain the " (quote) character.'
 
@@ -70,7 +71,7 @@ def basic_auth(realm, checkpassword_func):
                 # since CherryPy claims compability with Python 2.3, we must use
                 # the legacy API of base64
                 username, password = base64.decodestring(params).split(':', 1)
-                if checkpassword_func(realm, username, password):
+                if checkpassword(realm, username, password):
                     cherrypy.request.login = username
                     return # successful authentication
         except (ValueError, binascii.Error): # split() error, base64.decodestring() error

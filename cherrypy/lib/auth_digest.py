@@ -5,14 +5,14 @@
 __doc__ = """An implementation of the server-side of HTTP Digest Access
 Authentication, which is described in RFC 2617.
 
-Example usage, using the built-in get_ha1 function which uses a dict
+Example usage, using the built-in get_ha1_dict_plain function which uses a dict
 of plaintext passwords as the credentials store:
 
 userpassdict = {'alice' : '4x5istwelve'}
 get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(userpassdict)
 digest_auth = {'tools.auth_digest.on': True,
                'tools.auth_digest.realm': 'wonderland',
-               'tools.auth_digest.get_ha1_func': get_ha1,
+               'tools.auth_digest.get_ha1': get_ha1,
                'tools.auth_digest.key': 'a565c27146791cfb',
 }
 app_config = { '/' : digest_auth }
@@ -51,7 +51,7 @@ def get_ha1_dict_plain(user_password_dict):
 
     If you want a simple dictionary-based authentication scheme, with plaintext
     passwords, use get_ha1_dict_plain(my_userpass_dict) as the value for the
-    get_ha1_func argument to digest_auth().
+    get_ha1 argument to digest_auth().
     """
     def get_ha1(realm, username):
         password = user_password_dict.get(username)
@@ -67,7 +67,7 @@ def get_ha1_dict(user_ha1_dict):
 
     If you want a dictionary-based authentication scheme, but with
     pre-computed HA1 hashes instead of plain-text passwords, use
-    getpass_dict_ha1(my_userha1_dict) as the value for the get_ha1_func
+    get_ha1_dict(my_userha1_dict) as the value for the get_ha1
     argument to digest_auth().
     """
     def get_ha1(realm, username):
@@ -85,7 +85,7 @@ def get_ha1_file_htdigest(filename):
 
     If you want to use an Apache htdigest file as the credentials store,
     then use get_ha1_file_htdigest(my_htdigest_file) as the value for the
-    get_ha1_func argument to digest_auth().  It is recommended that the filename
+    get_ha1 argument to digest_auth().  It is recommended that the filename
     argument be an absolute path, to avoid problems.
     """
     def get_ha1(realm, username):
@@ -293,7 +293,7 @@ def www_authenticate(realm, key, algorithm='MD5', nonce=None, qop=qop_auth, stal
     return s
 
 
-def digest_auth(realm, get_ha1_func, key, debug=False):
+def digest_auth(realm, get_ha1, key, debug=False):
     """digest_auth is a CherryPy tool which hooks at before_handler to perform
     HTTP Digest Access Authentication, as specified in RFC 2617.
 
@@ -306,7 +306,7 @@ def digest_auth(realm, get_ha1_func, key, debug=False):
     Arguments:
     realm: a string containing the authentication realm.
 
-    get_ha1_func: a function which looks up a username in a credentials store
+    get_ha1: a callable which looks up a username in a credentials store
         and returns the HA1 string, which is defined in the RFC to be
         MD5(username : realm : password).  The function's signature is:
             get_ha1(realm, username)
@@ -329,7 +329,7 @@ def digest_auth(realm, get_ha1_func, key, debug=False):
             TRACE(str(auth))
 
         if auth.validate_nonce(realm, key):
-            ha1 = get_ha1_func(realm, auth.username)
+            ha1 = get_ha1(realm, auth.username)
             if ha1 is not None:
                 # note that for request.body to be available we need to hook in at
                 # before_handler, not on_start_resource like 3.1.x digest_auth does.

@@ -27,7 +27,7 @@ def setup_server():
 	get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(fetch_users())
     conf = {'/digest': {'tools.auth_digest.on': True,
                         'tools.auth_digest.realm': 'localhost',
-                        'tools.auth_digest.get_ha1_func': get_ha1,
+                        'tools.auth_digest.get_ha1': get_ha1,
                         'tools.auth_digest.key': 'a565c27146791cfb',
                         'tools.auth_digest.debug': 'True'}}
 
@@ -86,7 +86,7 @@ class DigestAuthTest(helper.CPWebCase):
         elif tokens['qop'] != '"auth"':
             self._handlewebError(bad_value_msg % ('qop', '"auth"', tokens['qop']))
 
-        get_ha1_func = auth_digest.get_ha1_dict_plain({'test' : 'test'})
+        get_ha1 = auth_digest.get_ha1_dict_plain({'test' : 'test'})
 
         # Test user agent response with a wrong value for 'realm'
         base_auth = 'Digest username="test", realm="wrong realm", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
@@ -94,7 +94,7 @@ class DigestAuthTest(helper.CPWebCase):
         auth_header = base_auth % (nonce, '11111111111111111111111111111111', '00000001')
         auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
         # calculate the response digest
-    	ha1 = get_ha1_func(auth.realm, 'test')
+    	ha1 = get_ha1(auth.realm, 'test')
         response = auth.request_digest(ha1)
         # send response with correct response digest, but wrong realm
         auth_header = base_auth % (nonce, response, '00000001')
@@ -107,7 +107,7 @@ class DigestAuthTest(helper.CPWebCase):
         auth_header = base_auth % (nonce, '11111111111111111111111111111111', '00000001')
         auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
         # calculate the response digest
-    	ha1 = get_ha1_func('localhost', 'test')
+    	ha1 = get_ha1('localhost', 'test')
         response = auth.request_digest(ha1)
         # send response with correct response digest
         auth_header = base_auth % (nonce, response, '00000001')
