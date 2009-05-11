@@ -235,6 +235,7 @@ class ErrorTool(Tool):
 from cherrypy.lib import cptools, encoding, auth, static, tidy, jsontools
 from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
 from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
+from cherrypy.lib import auth_basic, auth_digest
 
 
 class SessionTool(Tool):
@@ -500,5 +501,7 @@ _d.redirect = Tool('on_start_resource', cptools.redirect)
 _d.autovary = Tool('on_start_resource', cptools.autovary, priority=0)
 _d.json_in = Tool('before_handler', jsontools.json_in, priority=30)
 _d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
+_d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
+_d.auth_digest = Tool('before_handler', auth_digest.digest_auth, priority=1)
 
 del _d, cptools, encoding, auth, static, tidy
