@@ -73,6 +73,14 @@ import traceback as _traceback
 import warnings
 
 
+# Here I save the value of os.getcwd(), which, if I am imported early enough,
+# will be the directory from which the startup script was run.  This is needed
+# by _do_execv(), to change back to the original directory before execv()ing a
+# new process.  This is a defense against the application having changed the
+# current working directory (which could make sys.executable "not found" if
+# sys.executable is a relative-path, and/or cause other problems).
+_startup_cwd = os.getcwd()
+
 # Use a flag to indicate the state of the bus.
 class _StateEnum(object):
     class State(object):
@@ -305,7 +313,8 @@ class Bus(object):
         args.insert(0, sys.executable)
         if sys.platform == 'win32':
             args = ['"%s"' % arg for arg in args]
-        
+
+        os.chdir(_startup_cwd)
         os.execv(sys.executable, args)
     
     def stop(self):

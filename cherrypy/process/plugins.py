@@ -11,6 +11,24 @@ import sys
 import time
 import threading
 
+# _module__file__base is used by Autoreload to make
+# absolute any filenames retrieved from sys.modules which are not
+# already absolute paths.  This is to work around Python's quirk
+# of importing the startup script and using a relative filename
+# for it in sys.modules.
+#
+# Autoreload examines sys.modules afresh every time it runs. If an application
+# changes the current directory by executing os.chdir(), then the next time
+# Autoreload runs, it will not be able to find any filenames which are
+# not absolute paths, because the current directory is not the same as when the
+# module was first imported.  Autoreload will then wrongly conclude the file has
+# "changed", and initiate the shutdown/re-exec sequence.
+# See ticket #917.
+# For this workaround to have a decent probability of success, this module
+# needs to be imported as early as possible, before the app has much chance
+# to change the working directory.
+_module__file__base = os.getcwd()
+
 
 class SimplePlugin(object):
     """Plugin base class which auto-subscribes methods for known channels."""
@@ -446,6 +464,9 @@ class Autoreloader(Monitor):
                     f = m.__loader__.archive
                 else:
                     f = getattr(m, '__file__', None)
+                    if f is not None and not os.path.isabs(f):
+                        # ensure absolute paths so a os.chdir() in the app doesn't break me
+                        f = os.path.normpath(os.path.join(_module__file__base, f))
                 files.add(f)
         return files
     
