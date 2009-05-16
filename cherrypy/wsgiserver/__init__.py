@@ -1180,7 +1180,7 @@ class HTTPConnection(object):
         
         except socket.error, e:
             errnum = e.args[0]
-            if errnum == 'timed out':
+            if req.ready and errnum == 'timed out':
                 if req and not req.sent_headers:
                     req.simple_response("408 Request Timeout")
             elif errnum not in socket_errors_to_ignore:
