@@ -291,6 +291,7 @@ class HTTPRequest(object):
         self.wsgi_app = wsgi_app
         
         self.ready = False
+        self.started_request = False
         self.started_response = False
         self.status = ""
         self.outheaders = []
@@ -318,6 +319,9 @@ class HTTPRequest(object):
         # (although your TCP stack might suffer for it: cf Apache's history
         # with FIN_WAIT_2).
         request_line = self.rfile.readline()
+        # Set started_request to True so communicate() knows to send 408
+        # from here on out.
+        self.started_request = True
         if not request_line:
             # Force self.ready = False so the connection will close.
             self.ready = False
@@ -1172,6 +1176,9 @@ class HTTPConnection(object):
                 # This order of operations should guarantee correct pipelining.
                 req.parse_request()
                 if not req.ready:
+                    # Something went wrong in the parsing (and the server has
+                    # probably already made a simple_response). Return and
+                    # let the conn close.
                     return
                 
                 req.respond()
@@ -1180,8 +1187,11 @@ class HTTPConnection(object):
         
         except socket.error, e:
             errnum = e.args[0]
-            if req.ready and errnum == 'timed out':
-                if req and not req.sent_headers:
+            if errnum == 'timed out':
+                # Don't send a 408 if there is no outstanding request; only
+                # if we're in the middle of a request.
+                # See http://www.cherrypy.org/ticket/853
+                if req and req.started_request and not req.sent_headers:
                     req.simple_response("408 Request Timeout")
             elif errnum not in socket_errors_to_ignore:
                 if req and not req.sent_headers:
