@@ -30,7 +30,7 @@ class LogManager(object):
         else:
             self.error_log = logging.getLogger("%s.error.%s" % (logger_root, appid))
             self.access_log = logging.getLogger("%s.access.%s" % (logger_root, appid))
-        self.error_log.setLevel(logging.WARNING)
+        self.error_log.setLevel(logging.INFO)
         self.access_log.setLevel(logging.INFO)
         cherrypy.engine.subscribe('graceful', self.reopen_files)
     
@@ -44,7 +44,7 @@ class LogManager(object):
                     h.stream = open(h.baseFilename, h.mode)
                     h.release()
     
-    def error(self, msg='', context='', severity=logging.ERROR, traceback=False):
+    def error(self, msg='', context='', severity=logging.INFO, traceback=False):
         """Write to the error log.
         
         This is not just for errors! Applications may call this at any time
