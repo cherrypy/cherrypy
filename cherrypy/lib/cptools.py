@@ -309,7 +309,7 @@ to this function:
                  for k in dir(SessionAuth) if not k.startswith("__")])
 
 
-def log_traceback(severity=logging.DEBUG):
+def log_traceback(severity=logging.ERROR):
     """Write the last error's traceback to the cherrypy error log."""
     cherrypy.log("", "HTTP", severity=severity, traceback=True)
 
