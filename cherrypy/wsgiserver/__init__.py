@@ -1690,6 +1690,14 @@ class CherryPyWSGIServer(object):
         """Accept a new connection and put it on the Queue."""
         try:
             s, addr = self.socket.accept()
+            if addr is None: # sometimes this can happen
+                # figure out if AF_INET or AF_INET6.
+                if len(s.getsockname()) == 2:
+                    # AF_INET
+                    addr = ('0.0.0.0', 0)
+                else:
+                    # AF_INET6
+                    addr = ('::', 0)
             prevent_socket_inheritance(s)
             if not self.ready:
                 return
