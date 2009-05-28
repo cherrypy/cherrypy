@@ -35,6 +35,10 @@ def setup_server():
             cherrypy.session.cache.clear()
         clear.exposed = True
         
+        def data(self):
+            return `cherrypy.session._data`
+        data.exposed = True
+        
         def testGen(self):
             counter = cherrypy.session.get('counter', 0) + 1
             cherrypy.session['counter'] = counter
@@ -125,6 +129,12 @@ class SessionTest(helper.CPWebCase):
     def test_0_Session(self):
         self.getPage('/setsessiontype/ram')
         self.getPage('/clear')
+        
+        self.getPage('/data')
+        self.assertBody('{}')
+        c = self.cookies[0]
+        self.getPage('/data', self.cookies)
+        self.assertEqual(self.cookies[0], c)
         
         self.getPage('/testStr')
         self.assertBody('1')
