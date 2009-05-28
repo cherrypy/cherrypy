@@ -60,6 +60,7 @@ http://www.cherrypy.org/wiki/CherryPySpec
 __version__ = "3.2.0"
 
 from urlparse import urljoin as _urljoin
+from urllib import urlencode as _urlencode
 
 
 class _AttributeDocstrings(type):
@@ -472,6 +473,8 @@ def url(path="", qs="", script_name=None, base=None, relative=None):
     the string 'server', the output will instead be a URL that is
     relative to the server root; i.e., it will start with a slash.
     """
+    if isinstance(qs, (tuple, list, dict)):
+        qs = _urlencode(qs)
     if qs:
         qs = '?' + qs
     
