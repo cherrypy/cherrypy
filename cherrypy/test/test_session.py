@@ -36,6 +36,7 @@ def setup_server():
         clear.exposed = True
         
         def data(self):
+            cherrypy.session['aha'] = 'foo'
             return `cherrypy.session._data`
         data.exposed = True
         
@@ -130,8 +131,10 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/setsessiontype/ram')
         self.getPage('/clear')
         
+        # Test that a normal request gets the same id in the cookies.
+        # Note: this wouldn't work if /data didn't load the session.
         self.getPage('/data')
-        self.assertBody('{}')
+        self.assertBody("{'aha': 'foo'}")
         c = self.cookies[0]
         self.getPage('/data', self.cookies)
         self.assertEqual(self.cookies[0], c)
@@ -147,8 +150,10 @@ class SessionTest(helper.CPWebCase):
         self.assertBody('2')
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
+        self.getPage('/data', self.cookies)
+        self.assertBody("{'aha': 'foo', 'counter': 3}")
         self.getPage('/length', self.cookies)
-        self.assertBody('1')
+        self.assertBody('2')
         self.getPage('/delkey?key=counter', self.cookies)
         self.assertStatus(200)
         
