@@ -445,7 +445,7 @@ test_case_name: "test_signal_handler_unsubscribe"
         
         # Assert the old handler ran.
         target_line = open(p.error_log, 'rb').readlines()[-10]
-        if not b"I am an old SIGTERM handler." in target_line:
+        if not "I am an old SIGTERM handler." in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
 
 
