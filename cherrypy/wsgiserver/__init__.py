@@ -703,7 +703,25 @@ class HTTPRequest(object):
         
         buf = [self.environ['ACTUAL_SERVER_PROTOCOL'], " ", self.status, "\r\n"]
         try:
-            buf += [k + ": " + v + "\r\n" for k, v in self.outheaders]
+            for k, v in self.outheaders:
+                k = k.encode("ISO-8859-1")
+                # HTTP/1.0 says, "Words of *TEXT may contain octets 
+                # from character sets other than US-ASCII." and 
+                # "Recipients of header field TEXT containing octets 
+                # outside the US-ASCII character set may assume that 
+                # they represent ISO-8859-1 characters." 
+                try: 
+                    v = v.encode("ISO-8859-1")
+                except UnicodeEncodeError:
+                    if self.response_protocol == "HTTP/1.1":
+                        # Encode RFC-2047 TEXT 
+                        # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?="). 
+                        from email.Header import Header
+                        v = Header(v, 'utf-8').encode()
+                    else:
+                        raise
+                 
+                buf += [k + b": " + v + b"\r\n"]
         except TypeError:
             if not isinstance(k, str):
                 raise TypeError("WSGI response header key %r is not a string.")
