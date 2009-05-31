@@ -81,7 +81,7 @@ class VirtualHostTest(helper.CPWebCase):
         self.assertBody("You sent 'dom2 GET'")
         self.getPage("/vmethod", [('Host', 'www.mydom3.com')], method="POST",
                      body="value=dom3+POST")
-        self.assertBody("You sent 'dom3 POST'")
+        self.assertBody("You sent u'dom3 POST'")
         self.getPage("/vmethod/pos", [('Host', 'www.mydom3.com')])
         self.assertBody("You sent 'pos'")
         

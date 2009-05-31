@@ -81,7 +81,7 @@ class FileDemo(object):
                 break
             size += len(data)
         
-        return out % (size, myFile.filename, myFile.type)
+        return out % (size, myFile.filename, myFile.content_type)
     upload.exposed = True
     
     def download(self):

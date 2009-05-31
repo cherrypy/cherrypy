@@ -119,7 +119,7 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
     if not varargs and vararg_usage > 0:
         raise cherrypy.HTTPError(404)
 
-    body_params = cherrypy.request.body_params or {}
+    body_params = cherrypy.request.body.params or {}
     body_params = set(body_params.keys())
     qs_params = set(callable_kwargs.keys()) - body_params
 

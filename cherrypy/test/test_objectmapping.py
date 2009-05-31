@@ -307,7 +307,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertHeader('Allow', 'GET, HEAD, POST')
         
         self.getPage("/bymethod")
-        self.assertBody("['another', 'one']")
+        self.assertBody("['another', u'one']")
         self.assertHeader('Allow', 'GET, HEAD, POST')
         
         self.getPage("/bymethod", method="PUT")

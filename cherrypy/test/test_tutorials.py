@@ -147,13 +147,12 @@ class TutorialTest(helper.CPWebCase):
         filesize = 5
         h = [("Content-type", "multipart/form-data; boundary=x"),
              ("Content-Length", str(105 + filesize))]
-        b = """--x
-Content-Disposition: form-data; name="myFile"; filename="hello.txt"
-Content-Type: text/plain
-
-%s
---x--
-""" % ("a" * filesize)
+        b = '--x\n' + \
+            'Content-Disposition: form-data; name="myFile"; filename="hello.txt"\r\n' + \
+            'Content-Type: text/plain\r\n' + \
+            '\r\n' + \
+            'a' * filesize + '\n' + \
+            '--x--\n'
         self.getPage('/upload', h, "POST", b)
         self.assertBody('''<html>
         <body>
