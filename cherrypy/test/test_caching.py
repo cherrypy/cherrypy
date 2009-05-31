@@ -4,7 +4,6 @@ test.prefer_parent_path()
 import gzip
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-import StringIO
 from itertools import count
 
 import cherrypy

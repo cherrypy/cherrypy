@@ -30,11 +30,6 @@ import os, os.path
 localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
 
 try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
-
-try:
     from coverage import the_coverage as coverage
     def start():
         coverage.start()
