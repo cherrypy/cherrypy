@@ -721,7 +721,7 @@ class HTTPRequest(object):
                     else:
                         raise
                  
-                buf += [k + b": " + v + b"\r\n"]
+                buf += [k + ": " + v + "\r\n"]
         except TypeError:
             if not isinstance(k, str):
                 raise TypeError("WSGI response header key %r is not a string.")

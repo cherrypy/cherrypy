@@ -4,9 +4,10 @@ import os
 import sys
 import time
 import types
+import warnings
 
 import cherrypy
-from cherrypy import _cpcgifs, _cpconfig
+from cherrypy import _cpreqbody, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil, file_generator
 
@@ -262,6 +263,9 @@ class Request(object):
     
     cookie = Cookie.SimpleCookie()
     cookie__doc = """See help(Cookie)."""
+    
+    body = None
+    body__doc = """See help(cherrypy.request.body)"""
     
     rfile = None
     rfile__doc = """
@@ -541,8 +545,11 @@ class Request(object):
             self.request_line = '%s %s %s' % (method, url, req_protocol)
             
             self.header_list = list(headers)
-            self.rfile = rfile
             self.headers = httputil.HeaderMap()
+            
+            self.rfile = rfile
+            self.body = None
+            
             self.cookie = Cookie.SimpleCookie()
             self.handler = None
             
@@ -607,6 +614,9 @@ class Request(object):
                     self.stage = 'on_start_resource'
                     self.hooks.run('on_start_resource')
                     
+                    self.body = _cpreqbody.RequestBody(
+                        self.rfile, self.headers, request_params=self.params)
+                    
                     if self.process_request_body:
                         if self.method not in self.methods_with_bodies:
                             self.process_request_body = False
@@ -614,7 +624,7 @@ class Request(object):
                     self.stage = 'before_request_body'
                     self.hooks.run('before_request_body')
                     if self.process_request_body:
-                        self.process_body()
+                        self.body.process()
                     
                     self.stage = 'before_handler'
                     self.hooks.run('before_handler')
@@ -707,54 +717,6 @@ class Request(object):
         # dispatch() should set self.handler and self.config
         dispatch(path)
     
-    def process_body(self):
-        """Convert request.rfile into request.params (or request.body). (Core)"""
-        if not self.headers.get("Content-Length", ""):
-            # No Content-Length header supplied (or it's 0).
-            # If we went ahead and called cgi.FieldStorage, it would hang,
-            # since it cannot determine when to stop reading from the socket.
-            # See http://www.cherrypy.org/ticket/493.
-            # See also http://www.cherrypy.org/ticket/650.
-            # Note also that we expect any HTTP server to have decoded
-            # any message-body that had a transfer-coding, and we expect
-            # the HTTP server to have supplied a Content-Length header
-            # which is valid for the decoded entity-body.
-            raise cherrypy.HTTPError(411)
-        
-        # If the headers are missing "Content-Type" then add one
-        # with an empty value.  This ensures that FieldStorage
-        # won't parse the request body for params if the client
-        # didn't provide a "Content-Type" header.
-        if 'Content-Type' not in self.headers:
-            h = httputil.HeaderMap(self.headers.items())
-            h['Content-Type'] = ''
-        else:
-            h = self.headers
-        
-        try:
-            forms = _cpcgifs.FieldStorage(fp=self.rfile,
-                                          headers=h,
-                                          # FieldStorage only recognizes POST.
-                                          environ={'REQUEST_METHOD': "POST"},
-                                          keep_blank_values=1)
-        except Exception, e:
-            if e.__class__.__name__ == 'MaxSizeExceeded':
-                # Post data is too big
-                raise cherrypy.HTTPError(413)
-            else:
-                raise
-        
-        # Note that, if headers['Content-Type'] is multipart/*,
-        # then forms.file will not exist; instead, each form[key]
-        # item will be its own file object, and will be handled
-        # by params_from_CGI_form.
-        if forms.file:
-            # request body was a content-type other than multipart.
-            self.body = forms.file
-        else:
-            self.body_params = p = httputil.params_from_CGI_form(forms)
-            self.params.update(p)
-    
     def handle_error(self):
         """Handle the last unanticipated exception. (Core)"""
         try:
@@ -766,9 +728,30 @@ class Request(object):
         except cherrypy.HTTPRedirect, inst:
             inst.set_response()
             cherrypy.response.finalize()
+    
+    # ------------------------- Properties ------------------------- #
+    
+    def _get_body_params(self):
+        warnings.warn(
+                "body_params is deprecated in CherryPy 3.2, will be removed in "
+                "CherryPy 3.3.",
+                DeprecationWarning
+            )
+        return self.body.params
+    body_params = property(_get_body_params,
+                      doc= """
+    If the request Content-Type is 'application/x-www-form-urlencoded' or
+    multipart, this will be a dict of the params pulled from the entity
+    body; that is, it will be the portion of request.params that come
+    from the message body (sometimes called "POST params", although they
+    can be sent with various HTTP method verbs). This value is set between
+    the 'before_request_body' and 'before_handler' hooks (assuming that
+    process_request_body is True).
+    
+    Deprecated in 3.2, will be removed for 3.3""")
 
 
-class Body(object):
+class ResponseBody(object):
     """The body of the HTTP response (the response entity)."""
     
     def __get__(self, obj, objclass=None):
@@ -828,7 +811,7 @@ class Response(object):
     cookie = Cookie.SimpleCookie()
     cookie__doc = """See help(Cookie)."""
     
-    body = Body()
+    body = ResponseBody()
     body__doc = """The body (entity) of the HTTP response."""
     
     time = None

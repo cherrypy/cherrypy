@@ -112,7 +112,10 @@ class HeaderElement(object):
         # Split the element into a value and parameters. The 'value' may
         # be of the form, "token=token", but we don't split that here.
         atoms = [x.strip() for x in elementstr.split(";") if x.strip()]
-        initial_value = atoms.pop(0).strip()
+        if not atoms:
+            initial_value = ''
+        else:
+            initial_value = atoms.pop(0).strip()
         params = {}
         for atom in atoms:
             atom = [x.strip() for x in atom.split("=", 1) if x.strip()]
@@ -179,12 +182,11 @@ def header_elements(fieldname, fieldvalue):
     """Return a HeaderElement list from a comma-separated header str."""
     
     if not fieldvalue:
-        return None
-    headername = fieldname.lower()
+        return []
     
     result = []
     for element in fieldvalue.split(","):
-        if headername.startswith("accept") or headername == 'te':
+        if fieldname.startswith("Accept") or fieldname == 'TE':
             hv = AcceptElement.from_str(element)
         else:
             hv = HeaderElement.from_str(element)
@@ -269,31 +271,6 @@ def parse_query_string(query_string, keep_blank_values=True):
                 pm[key] = val[0]
     return pm
 
-def params_from_CGI_form(form):
-    params = {}
-    for key in form.keys():
-        value_list = form[key]
-        if key is None:
-            # multipart/* message parts that have no Content-Disposition
-            # have a .name of None, but Python kwarg keys must be strings.
-            # See http://www.cherrypy.org/ticket/890.
-            key = 'parts'
-        if isinstance(value_list, list):
-            params[key] = []
-            for item in value_list:
-                if item.filename is not None:
-                    value = item # It's a file upload
-                else:
-                    value = item.value # It's a regular field
-                params[key].append(value)
-        else:
-            if value_list.filename is not None:
-                value = value_list # It's a file upload
-            else:
-                value = value_list.value # It's a regular field
-            params[key] = value
-    return params
-
 
 class CaseInsensitiveDict(dict):
     """A case-insensitive dict subclass.
@@ -352,12 +329,10 @@ class HeaderMap(CaseInsensitiveDict):
     """
     
     def elements(self, key):
-        """Return a list of HeaderElements for the given header (or None)."""
+        """Return a sorted list of HeaderElements for the given header."""
         key = str(key).title()
-        h = self.get(key)
-        if h is None:
-            return []
-        return header_elements(key, h)
+        value = self.get(key)
+        return header_elements(key, value)
     
     def output(self, protocol=(1, 1)):
         """Transform self into a list of (name, value) tuples."""

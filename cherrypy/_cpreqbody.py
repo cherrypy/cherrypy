@@ -1,7 +1,6 @@
-from email.parser import FeedParser
-import io
 import re
 import tempfile
+from urllib import unquote_plus
 
 import cherrypy
 from cherrypy._cperror import MaxSizeExceeded
@@ -10,22 +9,9 @@ from cherrypy.lib import httputil
 
 # -------------------------------- Processors -------------------------------- #
 
-def unquote_plus(bs):
-    """Bytes version of urllib.parse.unquote_plus."""
-    bs = bs.replace(b'+', b' ')
-    atoms = bs.split(b'%')
-    for i in range(1, len(atoms)):
-        item = atoms[i]
-        try:
-            pct = int(item[:2], 16)
-            atoms[i] = bytes([pct]) + item[2:]
-        except ValueError:
-            pass
-    return b''.join(atoms)
-
 def process_urlencoded(entity):
     """Read application/x-www-form-urlencoded data into entity.params."""
-    if not entity.headers.get("Content-Length", ""):
+    if not entity.headers.get(u"Content-Length", u""):
         # No Content-Length header supplied (or it's 0).
         # If we went ahead and called rfile.read(), it would hang,
         # since it cannot determine when to stop reading from the socket.
@@ -39,14 +25,14 @@ def process_urlencoded(entity):
     
     params = entity.params
     qs = entity.fp.read()
-    for aparam in qs.split(b'&'):
-        for pair in aparam.split(b';'):
+    for aparam in qs.split(u'&'):
+        for pair in aparam.split(u';'):
             if not pair:
                 continue
             
-            atoms = pair.split(b'=', 1)
+            atoms = pair.split(u'=', 1)
             if len(atoms) == 1:
-                atoms.append(b'')
+                atoms.append(u'')
             
             key = unquote_plus(atoms[0]).decode(entity.encoding)
             value = unquote_plus(atoms[1]).decode(entity.encoding)
@@ -60,18 +46,18 @@ def process_urlencoded(entity):
 
 def process_multipart(entity):
     """Read all multipart parts into entity.parts."""
-    ib = ""
-    if 'boundary' in entity.content_type.params:
+    ib = u""
+    if u'boundary' in entity.content_type.params:
         # http://tools.ietf.org/html/rfc2046#section-5.1.1
         # "The grammar for parameters on the Content-type field is such that it
         # is often necessary to enclose the boundary parameter values in quotes
         # on the Content-type line"
-        ib = entity.content_type.params['boundary'].strip('"')
+        ib = entity.content_type.params['boundary'].strip(u'"')
     
-    if not re.match("^[ -~]{0,200}[!-~]$", ib):
-        raise ValueError('Invalid boundary in multipart form: %r' % (ib,))
+    if not re.match(u"^[ -~]{0,200}[!-~]$", ib):
+        raise ValueError(u'Invalid boundary in multipart form: %r' % (ib,))
     
-    ib = bytes('--' + ib, 'ascii')
+    ib = (u'--' + ib).encode('ascii')
     
     # Find the first marker
     while True:
@@ -117,7 +103,7 @@ def _old_process_multipart(entity):
     params = entity.params
     
     for part in entity.parts:
-        key = 'parts' if part.name is None else part.name
+        key = u'parts' if part.name is None else part.name
         
         if part.filename is None:
             # It's a regular field
@@ -139,11 +125,13 @@ def _old_process_multipart(entity):
 # --------------------------------- Entities --------------------------------- #
 
 
-class Entity(object, metaclass=cherrypy._AttributeDocstrings):
+class Entity(object):
     """An HTTP request body, or MIME multipart body."""
     
+    __metaclass__ = cherrypy._AttributeDocstrings
+    
     params = None
-    params__doc = """
+    params__doc = u"""
     If the request Content-Type is 'application/x-www-form-urlencoded' or
     multipart, this will be a dict of the params pulled from the entity
     body; that is, it will be the portion of request.params that come
@@ -152,17 +140,17 @@ class Entity(object, metaclass=cherrypy._AttributeDocstrings):
     the 'before_request_body' and 'before_handler' hooks (assuming that
     process_request_body is True)."""
 
-    default_content_type = 'application/x-www-form-urlencoded'
+    default_content_type = u'application/x-www-form-urlencoded'
     # http://tools.ietf.org/html/rfc2046#section-4.1.2:
     # "The default character set, which must be assumed in the
     # absence of a charset parameter, is US-ASCII."
-    default_text_encoding = 'us-ascii'
+    default_text_encoding = u'us-ascii'
     # For MIME multiparts, if the payload has no charset, leave as bytes.
     default_encoding = None
     force_encoding = None
-    processors = {'application/x-www-form-urlencoded': process_urlencoded,
-                  'multipart/form-data': process_multipart_form_data,
-                  'multipart': process_multipart,
+    processors = {u'application/x-www-form-urlencoded': process_urlencoded,
+                  u'multipart/form-data': process_multipart_form_data,
+                  u'multipart': process_multipart,
                   }
     
     def __init__(self, fp, headers, params=None, parts=None):
@@ -183,7 +171,7 @@ class Entity(object, metaclass=cherrypy._AttributeDocstrings):
         self.parts = parts
         
         # Content-Type
-        self.content_type = headers.elements('Content-Type')
+        self.content_type = headers.elements(u'Content-Type')
         if self.content_type:
             self.content_type = self.content_type[0]
         else:
@@ -195,7 +183,7 @@ class Entity(object, metaclass=cherrypy._AttributeDocstrings):
         
         # Length
         self.length = None
-        clen = headers.get('Content-Length', None)
+        clen = headers.get(u'Content-Length', None)
         if clen is not None:
             try:
                 self.length = int(clen)
@@ -205,16 +193,16 @@ class Entity(object, metaclass=cherrypy._AttributeDocstrings):
         # Content-Disposition
         self.name = None
         self.filename = None
-        disp = headers.elements('Content-Disposition')
+        disp = headers.elements(u'Content-Disposition')
         if disp:
             disp = disp[0]
             if 'name' in disp.params:
                 self.name = disp.params['name']
-                if self.name.startswith('"') and self.name.endswith('"'):
+                if self.name.startswith(u'"') and self.name.endswith(u'"'):
                     self.name = self.name[1:-1]
             if 'filename' in disp.params:
                 self.filename = disp.params['filename']
-                if self.filename.startswith('"') and self.filename.endswith('"'):
+                if self.filename.startswith(u'"') and self.filename.endswith(u'"'):
                     self.filename = self.filename[1:-1]
     
     def best_encoding(self):
@@ -222,10 +210,10 @@ class Entity(object, metaclass=cherrypy._AttributeDocstrings):
         if self.force_encoding:
             return self.force_encoding
         
-        encoding = self.content_type.params.get("charset", None)
+        encoding = self.content_type.params.get(u"charset", None)
         if not encoding:
             ct = self.content_type.value.lower()
-            if ct.lower().startswith("text/"):
+            if ct.lower().startswith(u"text/"):
                 return self.default_text_encoding
         
         return encoding or self.default_encoding
@@ -242,7 +230,7 @@ class Entity(object, metaclass=cherrypy._AttributeDocstrings):
     def __iter__(self):
         return self
     
-    def __next__(self):
+    def next(self):
         line = self.readline()
         if not line:
             raise StopIteration
@@ -279,7 +267,7 @@ class Entity(object, metaclass=cherrypy._AttributeDocstrings):
         try:
             proc = self.processors[ct]
         except KeyError:
-            toptype = ct.split('/', 1)[0]
+            toptype = ct.split(u'/', 1)[0]
             try:
                 proc = self.processors[toptype]
             except KeyError:
@@ -300,10 +288,10 @@ class Entity(object, metaclass=cherrypy._AttributeDocstrings):
 class Part(Entity):
     """A MIME part entity, part of a multipart entity."""
     
-    default_content_type = 'text/plain; charset=us-ascii'
+    default_content_type = u'text/plain; charset=us-ascii'
     # "The default character set, which must be assumed in the absence of a
     # charset parameter, is US-ASCII."
-    default_encoding = 'us-ascii'
+    default_encoding = u'us-ascii'
     # This is the default in stdlib cgi. We may want to increase it.
     maxrambytes = 1000
     
@@ -324,41 +312,41 @@ class Part(Entity):
             line = fp.readline()
             if not line:
                 # No more data--illegal end of headers
-                raise EOFError("Illegal end of headers.")
+                raise EOFError(u"Illegal end of headers.")
             
-            if line == b'\r\n':
+            if line == '\r\n':
                 # Normal end of headers
                 break
-            if not line.endswith(b'\r\n'):
-                raise ValueError("MIME requires CRLF terminators: %r" % line)
+            if not line.endswith('\r\n'):
+                raise ValueError(u"MIME requires CRLF terminators: %r" % line)
             
-            if line[0] in b' \t':
+            if line[0] in ' \t':
                 # It's a continuation line.
-                v = line.strip().decode('ISO-8859-1')
+                v = line.strip().decode(u'ISO-8859-1')
             else:
-                k, v = line.split(b":", 1)
-                k = k.strip().decode('ISO-8859-1')
-                v = v.strip().decode('ISO-8859-1')
+                k, v = line.split(":", 1)
+                k = k.strip().decode(u'ISO-8859-1')
+                v = v.strip().decode(u'ISO-8859-1')
             
             existing = headers.get(k)
             if existing:
-                v = ", ".join((existing, v))
+                v = u", ".join((existing, v))
             headers[k] = v
         
         return headers
     read_headers = classmethod(read_headers)
     
     def read_lines_to_boundary(self, fp=None):
-        endmarker = self.boundary + b"--"
-        delim = b""
+        endmarker = self.boundary + "--"
+        delim = ""
         prev_lf = True
         lines = []
         seen = 0
         while True:
             line = self.fp.readline(1<<16)
             if not line:
-                raise EOFError("Illegal end of multipart body.")
-            if line.startswith(b"--") and prev_lf:
+                raise EOFError(u"Illegal end of multipart body.")
+            if line.startswith("--") and prev_lf:
                 strippedline = line.strip()
                 if strippedline == self.boundary:
                     break
@@ -368,16 +356,16 @@ class Part(Entity):
             
             line = delim + line
             
-            if line.endswith(b"\r\n"):
-                delim = b"\r\n"
+            if line.endswith("\r\n"):
+                delim = "\r\n"
                 line = line[:-2]
                 prev_lf = True
-            elif line.endswith(b"\n"):
-                delim = b"\n"
+            elif line.endswith("\n"):
+                delim = "\n"
                 line = line[:-1]
                 prev_lf = True
             else:
-                delim = b""
+                delim = ""
                 prev_lf = False
             
             if fp is None:
@@ -391,7 +379,7 @@ class Part(Entity):
                 fp.write(line)
         
         if fp is None:
-            result = b''.join(lines)
+            result = ''.join(lines)
             if self.encoding is not None:
                 result = result.decode(self.encoding)
             return result
@@ -405,7 +393,7 @@ class Part(Entity):
             self.file = self.read_into_file()
         else:
             result = self.read_lines_to_boundary()
-            if isinstance(result, (bytes, str)):
+            if isinstance(result, basestring):
                 self.value = result
             else:
                 self.file = result
@@ -420,12 +408,12 @@ class Part(Entity):
 
 class SizedReader:
     
-    def __init__(self, fp, length, maxbytes, bufsize=io.DEFAULT_BUFFER_SIZE):
+    def __init__(self, fp, length, maxbytes, bufsize=8192):
         # Wrap our fp in a buffer so peek() works
         self.fp = fp
         self.length = length
         self.maxbytes = maxbytes
-        self.buffer = b''
+        self.buffer = ''
         self.bufsize = bufsize
         self.bytes_read = 0
         self.done = False
@@ -460,7 +448,7 @@ class SizedReader:
                 remaining = size
         if remaining == 0:
             self.done = True
-            return b'' if fp is None else None
+            return '' if fp is None else None
         
         chunks = []
         
@@ -468,7 +456,7 @@ class SizedReader:
         if self.buffer:
             if remaining is inf:
                 data = self.buffer
-                self.buffer = b''
+                self.buffer = ''
             else:
                 data = self.buffer[:remaining]
                 self.buffer = self.buffer[remaining:]
@@ -508,7 +496,7 @@ class SizedReader:
                 fp.write(data)
         
         if fp is None:
-            return b''.join(chunks)
+            return ''.join(chunks)
     
     def readline(self, size=None):
         """Read a line from the request body and return it."""
@@ -520,7 +508,7 @@ class SizedReader:
             data = self.read(chunksize)
             if not data:
                 break
-            pos = data.find(b'\n') + 1
+            pos = data.find('\n') + 1
             if pos:
                 chunks.append(data[:pos])
                 remainder = data[pos:]
@@ -529,7 +517,7 @@ class SizedReader:
                 break
             else:
                 chunks.append(data)
-        return b''.join(chunks)
+        return ''.join(chunks)
     
     def readlines(self, sizehint=None):
         """Read lines from the request body and return them."""
@@ -556,15 +544,15 @@ class RequestBody(Entity):
     
     # Don't parse the request body at all if the client didn't provide
     # a Content-Type header. See http://www.cherrypy.org/ticket/790
-    default_content_type = ''
+    default_content_type = u''
     
-    default_encoding = 'utf-8'
+    default_encoding = u'utf-8'
     # http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
     # When no explicit charset parameter is provided by the
     # sender, media subtypes of the "text" type are defined
     # to have a default charset value of "ISO-8859-1" when
     # received via HTTP.
-    default_text_encoding = 'ISO-8859-1'
+    default_text_encoding = u'ISO-8859-1'
     bufsize = 8 * 1024
     maxbytes = None
     
@@ -573,13 +561,12 @@ class RequestBody(Entity):
         self.fp = SizedReader(self.fp, self.length,
                               self.maxbytes, bufsize=self.bufsize)
         # Temporary fix while deprecating passing .parts as .params.
-        self.processors['multipart'] = _old_process_multipart
-
+        self.processors[u'multipart'] = _old_process_multipart
+        
         if request_params is None:
             request_params = {}
         self.request_params = request_params
-        
-
+    
     def process(self):
         """Include body params in request params."""
         # "The presence of a message-body in a request is signaled by the
@@ -589,7 +576,7 @@ class RequestBody(Entity):
         # however, app developers are responsible in that case to set
         # cherrypy.request.process_body to False so this method isn't called.
         h = cherrypy.request.headers
-        if 'Content-Length' not in h and 'Transfer-Encoding' not in h:
+        if u'Content-Length' not in h and u'Transfer-Encoding' not in h:
             raise cherrypy.HTTPError(411)
         
         super(RequestBody, self).process()
@@ -598,9 +585,14 @@ class RequestBody(Entity):
         # add them in here.
         request_params = self.request_params
         for key, value in self.params.items():
+            # Python 2 only: keyword arguments must be byte strings (type 'str').
+            if isinstance(key, unicode):
+                key = key.encode('ISO-8859-1')
+            
             if key in request_params:
                 if not isinstance(request_params[key], list):
                     request_params[key] = [request_params[key]]
                 request_params[key].append(value)
             else:
                 request_params[key] = value
+

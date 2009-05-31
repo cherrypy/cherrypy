@@ -11,6 +11,11 @@ class CherryPyException(Exception):
     pass
 
 
+class MaxSizeExceeded(CherryPyException):
+    """Exception raised when the request body is longer than allowed."""
+    pass
+
+
 class TimeoutError(CherryPyException):
     """Exception raised when Response.timed_out is detected."""
     pass
@@ -351,7 +356,7 @@ def _be_ie_unfriendly(status):
             # in one chunk or it will still get replaced! Bah.
             content = content + (" " * (s - l))
         response.body = content
-        response.headers['Content-Length'] = len(content)
+        response.headers[u'Content-Length'] = str(len(content))
 
 
 def format_exc(exc=None):
@@ -382,6 +387,8 @@ def bare_error(extrabody=None):
     
     body = "Unrecoverable error in the server."
     if extrabody is not None:
+        if not isinstance(extrabody, str): 
+            extrabody = extrabody.encode('utf-8')
         body += "\n" + extrabody
     
     return ("500 Internal Server Error",
