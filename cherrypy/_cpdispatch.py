@@ -540,7 +540,7 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domai
         for "example.com" and "www.example.com". In addition, "Host"
         headers may contain the port number.
     """
-    from cherrypy.lib import http
+    from cherrypy.lib import httputil
     def vhost_dispatch(path_info):
         header = cherrypy.request.headers.get
         
@@ -550,7 +550,7 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domai
         
         prefix = domains.get(domain, "")
         if prefix:
-            path_info = http.urljoin(prefix, path_info)
+            path_info = httputil.urljoin(prefix, path_info)
         
         result = next_dispatcher(path_info)
         

@@ -60,7 +60,7 @@ import StringIO
 
 import cherrypy
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import http
+from cherrypy.lib import httputil
 
 
 
@@ -141,9 +141,9 @@ def handler(req):
         
         # Obtain a Request object from CherryPy
         local = req.connection.local_addr
-        local = http.Host(local[0], local[1], req.connection.local_host or "")
+        local = httputil.Host(local[0], local[1], req.connection.local_host or "")
         remote = req.connection.remote_addr
-        remote = http.Host(remote[0], remote[1], req.connection.remote_host or "")
+        remote = httputil.Host(remote[0], remote[1], req.connection.remote_host or "")
         
         scheme = req.parsed_uri[0] or 'http'
         req.get_basic_auth_pw()

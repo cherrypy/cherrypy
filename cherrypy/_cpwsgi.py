@@ -5,7 +5,7 @@ import sys as _sys
 
 import cherrypy as _cherrypy
 from cherrypy import _cperror
-from cherrypy.lib import http as _http
+from cherrypy.lib import httputil as _httputil
 
 
 class VirtualHost(object):
@@ -210,7 +210,7 @@ class AppResponse(object):
     def get_response(self):
         """Run self.request and return its response."""
         meth = self.environ['REQUEST_METHOD']
-        path = _http.urljoin(self.environ.get('SCRIPT_NAME', ''),
+        path = _httputil.urljoin(self.environ.get('SCRIPT_NAME', ''),
                              self.environ.get('PATH_INFO', ''))
         qs = self.environ.get('QUERY_STRING', '')
         rproto = self.environ.get('SERVER_PROTOCOL')
@@ -223,9 +223,9 @@ class AppResponse(object):
         """Create a Request object using environ."""
         env = self.environ.get
         
-        local = _http.Host('', int(env('SERVER_PORT', 80)),
+        local = _httputil.Host('', int(env('SERVER_PORT', 80)),
                            env('SERVER_NAME', ''))
-        remote = _http.Host(env('REMOTE_ADDR', ''),
+        remote = _httputil.Host(env('REMOTE_ADDR', ''),
                             int(env('REMOTE_PORT', -1)),
                             env('REMOTE_HOST', ''))
         scheme = env('wsgi.url_scheme')

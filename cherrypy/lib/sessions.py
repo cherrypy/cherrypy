@@ -24,7 +24,7 @@ import types
 from warnings import warn
 
 import cherrypy
-from cherrypy.lib import http
+from cherrypy.lib import httputil
 
 
 missing = object()
@@ -687,7 +687,7 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
     # the browser. So we have to use the old "expires" ... sigh ...
 ##    cookie[name]['max-age'] = timeout * 60
     if timeout:
-        cookie[name]['expires'] = http.HTTPDate(time.time() + (timeout * 60))
+        cookie[name]['expires'] = httputil.HTTPDate(time.time() + (timeout * 60))
     if domain is not None:
         cookie[name]['domain'] = domain
     if secure:

@@ -164,7 +164,7 @@ tools = _cptools.default_toolbox
 Tool = _cptools.Tool
 
 from cherrypy import _cprequest
-from cherrypy.lib import http as _http
+from cherrypy.lib import httputil as _httputil
 
 from cherrypy import _cptree
 tree = _cptree.Tree()
@@ -268,8 +268,8 @@ class _Serving(_local):
     
     __metaclass__ = _AttributeDocstrings
     
-    request = _cprequest.Request(_http.Host("127.0.0.1", 80),
-                                 _http.Host("127.0.0.1", 1111))
+    request = _cprequest.Request(_httputil.Host("127.0.0.1", 80),
+                                 _httputil.Host("127.0.0.1", 1111))
     request__doc = """
     The request object for the current thread. In the main thread,
     and any threads which are not receiving HTTP requests, this is None."""

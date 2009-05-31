@@ -95,7 +95,7 @@ def setup_server():
 [/]
 neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
-thing1: cherrypy.lib.http.response_codes[404]
+thing1: cherrypy.lib.httputil.response_codes[404]
 thing2: __import__('cherrypy.tutorial', globals(), locals(), ['']).thing2
 complex: 3+2j
 ones: "11"
@@ -172,7 +172,7 @@ class ConfigTests(helper.CPWebCase):
         self.assertBody(repr(os.path.join(sys.prefix, "hello.py")))
         
         self.getPage("/repr?key=thing1")
-        self.assertBody(repr(cherrypy.lib.http.response_codes[404]))
+        self.assertBody(repr(cherrypy.lib.httputil.response_codes[404]))
         
         if not getattr(cherrypy.server, "using_apache", False):
             # The object ID's won't match up when using Apache, since the

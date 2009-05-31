@@ -4,7 +4,7 @@ from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
 from urlparse import urljoin as _urljoin
-from cherrypy.lib import http as _http
+from cherrypy.lib import httputil as _httputil
 
 
 class CherryPyException(Exception):
@@ -186,7 +186,7 @@ class HTTPError(CherryPyException):
     def __init__(self, status=500, message=None):
         self.status = status
         try:
-            self.code, self.reason, defaultmsg = _http.valid_status(status)
+            self.code, self.reason, defaultmsg = _httputil.valid_status(status)
         except ValueError, x:
             raise cherrypy.HTTPError(500, x.args[0])
         
@@ -282,7 +282,7 @@ def get_error_page(status, **kwargs):
     import cherrypy
     
     try:
-        code, reason, message = _http.valid_status(status)
+        code, reason, message = _httputil.valid_status(status)
     except ValueError, x:
         raise cherrypy.HTTPError(500, x.args[0])
     

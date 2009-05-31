@@ -8,7 +8,7 @@ import StringIO
 from itertools import count
 
 import cherrypy
-from cherrypy.lib import http
+from cherrypy.lib import httputil
 
 gif_bytes = ('GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
              '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
@@ -31,7 +31,7 @@ def setup_server():
         index.exposed = True
         
         def a_gif(self):
-            cherrypy.response.headers['Last-Modified'] = http.HTTPDate()
+            cherrypy.response.headers['Last-Modified'] = httputil.HTTPDate()
             return gif_bytes
         a_gif.exposed = True
 

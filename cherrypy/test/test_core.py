@@ -11,7 +11,7 @@ from httplib import IncompleteRead
 
 import cherrypy
 from cherrypy import _cptools, tools
-from cherrypy.lib import http, static
+from cherrypy.lib import httputil, static
 from cherrypy._cpdispatch import test_callable_spec
 
 
@@ -213,7 +213,7 @@ def setup_server():
     class Ranges(Test):
         
         def get_ranges(self, bytes):
-            return repr(http.get_ranges('bytes=%s' % bytes, 8))
+            return repr(httputil.get_ranges('bytes=%s' % bytes, 8))
         
         def slice_file(self):
             path = os.path.join(os.getcwd(), os.path.dirname(__file__))

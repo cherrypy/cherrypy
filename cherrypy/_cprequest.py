@@ -8,7 +8,7 @@ import types
 import cherrypy
 from cherrypy import _cpcgifs, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import http, file_generator
+from cherrypy.lib import httputil, file_generator
 
 
 class Hook(object):
@@ -182,13 +182,13 @@ class Request(object):
     unless we are processing an InternalRedirect."""
     
     # Conversation/connection attributes
-    local = http.Host("127.0.0.1", 80)
+    local = httputil.Host("127.0.0.1", 80)
     local__doc = \
-        "An http.Host(ip, port, hostname) object for the server socket."
+        "An httputil.Host(ip, port, hostname) object for the server socket."
     
-    remote = http.Host("127.0.0.1", 1111)
+    remote = httputil.Host("127.0.0.1", 1111)
     remote__doc = \
-        "An http.Host(ip, port, hostname) object for the client socket."
+        "An httputil.Host(ip, port, hostname) object for the client socket."
     
     scheme = "http"
     scheme__doc = """
@@ -251,14 +251,14 @@ class Request(object):
     A list of the HTTP request headers as (name, value) tuples.
     In general, you should use request.headers (a dict) instead."""
     
-    headers = http.HeaderMap()
+    headers = httputil.HeaderMap()
     headers__doc = """
     A dict-like object containing the request headers. Keys are header
     names (in Title-Case format); however, you may get and set them in
     a case-insensitive manner. That is, headers['Content-Type'] and
     headers['content-type'] refer to the same value. Values are header
     values (decoded according to RFC 2047 if necessary). See also:
-    http.HeaderMap, http.HeaderElement."""
+    httputil.HeaderMap, httputil.HeaderElement."""
     
     cookie = Cookie.SimpleCookie()
     cookie__doc = """See help(Cookie)."""
@@ -465,8 +465,8 @@ class Request(object):
                  server_protocol="HTTP/1.1"):
         """Populate a new Request object.
         
-        local_host should be an http.Host object with the server info.
-        remote_host should be an http.Host object with the client info.
+        local_host should be an httputil.Host object with the server info.
+        remote_host should be an httputil.Host object with the client info.
         scheme should be a string, either "http" or "https".
         """
         self.local = local_host
@@ -542,7 +542,7 @@ class Request(object):
             
             self.header_list = list(headers)
             self.rfile = rfile
-            self.headers = http.HeaderMap()
+            self.headers = httputil.HeaderMap()
             self.cookie = Cookie.SimpleCookie()
             self.handler = None
             
@@ -642,7 +642,7 @@ class Request(object):
     
     def process_headers(self):
         """Parse HTTP header data into Python structures. (Core)"""
-        self.params = http.parse_query_string(self.query_string)
+        self.params = httputil.parse_query_string(self.query_string)
         
         # Process the headers into self.headers
         headers = self.headers
@@ -656,7 +656,7 @@ class Request(object):
             # only Konqueror does that), only the last one will remain in headers
             # (but they will be correctly stored in request.cookie).
             if "=?" in value:
-                dict.__setitem__(headers, name, http.decode_TEXT(value))
+                dict.__setitem__(headers, name, httputil.decode_TEXT(value))
             else:
                 dict.__setitem__(headers, name, value)
             
@@ -726,7 +726,7 @@ class Request(object):
         # won't parse the request body for params if the client
         # didn't provide a "Content-Type" header.
         if 'Content-Type' not in self.headers:
-            h = http.HeaderMap(self.headers.items())
+            h = httputil.HeaderMap(self.headers.items())
             h['Content-Type'] = ''
         else:
             h = self.headers
@@ -752,7 +752,7 @@ class Request(object):
             # request body was a content-type other than multipart.
             self.body = forms.file
         else:
-            self.body_params = p = http.params_from_CGI_form(forms)
+            self.body_params = p = httputil.params_from_CGI_form(forms)
             self.params.update(p)
     
     def handle_error(self):
@@ -816,14 +816,14 @@ class Response(object):
     A list of the HTTP response headers as (name, value) tuples.
     In general, you should use response.headers (a dict) instead."""
     
-    headers = http.HeaderMap()
+    headers = httputil.HeaderMap()
     headers__doc = """
     A dict-like object containing the response headers. Keys are header
     names (in Title-Case format); however, you may get and set them in
     a case-insensitive manner. That is, headers['Content-Type'] and
     headers['content-type'] refer to the same value. Values are header
     values (decoded according to RFC 2047 if necessary). See also:
-    http.HeaderMap, http.HeaderElement."""
+    httputil.HeaderMap, httputil.HeaderElement."""
     
     cookie = Cookie.SimpleCookie()
     cookie__doc = """See help(Cookie)."""
@@ -851,13 +851,13 @@ class Response(object):
         self._body = []
         self.time = time.time()
         
-        self.headers = http.HeaderMap()
+        self.headers = httputil.HeaderMap()
         # Since we know all our keys are titled strings, we can
         # bypass HeaderMap.update and get a big speed boost.
         dict.update(self.headers, {
             "Content-Type": 'text/html',
             "Server": "CherryPy/" + cherrypy.__version__,
-            "Date": http.HTTPDate(self.time),
+            "Date": httputil.HTTPDate(self.time),
         })
         self.cookie = Cookie.SimpleCookie()
     
@@ -870,7 +870,7 @@ class Response(object):
     def finalize(self):
         """Transform headers (and cookies) into self.header_list. (Core)"""
         try:
-            code, reason, _ = http.valid_status(self.status)
+            code, reason, _ = httputil.valid_status(self.status)
         except ValueError, x:
             raise cherrypy.HTTPError(500, x.args[0])
         

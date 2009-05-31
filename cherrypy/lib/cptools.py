@@ -14,7 +14,7 @@ except NameError:
     from sets import Set as set
 
 import cherrypy
-from cherrypy.lib import http as _http
+from cherrypy.lib import httputil as _httputil
 
 
 #                     Conditional HTTP request support                     #
@@ -41,7 +41,7 @@ def validate_etags(autotags=False):
     if hasattr(response, "ETag"):
         return
     
-    status, reason, msg = _http.valid_status(response.status)
+    status, reason, msg = _httputil.valid_status(response.status)
     
     etag = response.headers.get('ETag')
     
@@ -84,7 +84,7 @@ def validate_since():
     response = cherrypy.response
     lastmod = response.headers.get('Last-Modified')
     if lastmod:
-        status, reason, msg = _http.valid_status(response.status)
+        status, reason, msg = _httputil.valid_status(response.status)
         
         request = cherrypy.request
         
@@ -443,26 +443,26 @@ def accept(media=None):
     raise cherrypy.HTTPError(406, msg)
 
 
-class MonitoredHeaderMap(_http.HeaderMap):
+class MonitoredHeaderMap(_httputil.HeaderMap):
     
     def __init__(self):
         self.accessed_headers = set()
     
     def __getitem__(self, key):
         self.accessed_headers.add(key)
-        return _http.HeaderMap.__getitem__(self, key)
+        return _httputil.HeaderMap.__getitem__(self, key)
     
     def __contains__(self, key):
         self.accessed_headers.add(key)
-        return _http.HeaderMap.__contains__(self, key)
+        return _httputil.HeaderMap.__contains__(self, key)
     
     def get(self, key, default=None):
         self.accessed_headers.add(key)
-        return _http.HeaderMap.get(self, key, default=default)
+        return _httputil.HeaderMap.get(self, key, default=default)
     
     def has_key(self, key):
         self.accessed_headers.add(key)
-        return _http.HeaderMap.has_key(self, key)
+        return _httputil.HeaderMap.has_key(self, key)
 
 
 def autovary():

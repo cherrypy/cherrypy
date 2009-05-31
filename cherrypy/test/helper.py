@@ -27,7 +27,7 @@ import time
 import warnings
 
 import cherrypy
-from cherrypy.lib import http, profiler
+from cherrypy.lib import httputil, profiler
 from cherrypy.test import webtest
 
 
@@ -55,7 +55,7 @@ class CPWebCase(webtest.WebCase):
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url. Return status, headers, body."""
         if self.script_name:
-            url = http.urljoin(self.script_name, url)
+            url = httputil.urljoin(self.script_name, url)
         return webtest.WebCase.getPage(self, url, headers, method, body, protocol)
     
     def assertErrorPage(self, status, message=None, pattern=''):

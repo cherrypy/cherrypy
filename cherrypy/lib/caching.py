@@ -3,7 +3,7 @@ import threading
 import time
 
 import cherrypy
-from cherrypy.lib import cptools, http
+from cherrypy.lib import cptools, httputil
 
 class VaryHeaderAwareStore():
     """
@@ -220,7 +220,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
         s, h, b, create_time, original_req_headers = cache_data
         
         # Copy the response headers. See http://www.cherrypy.org/ticket/721.
-        response.headers = rh = http.HeaderMap()
+        response.headers = rh = httputil.HeaderMap()
         for k in h:
             dict.__setitem__(rh, k, dict.__getitem__(h, k))
         
@@ -306,8 +306,8 @@ def expires(secs=0, force=False):
                 if force or "Cache-Control" not in headers:
                     headers["Cache-Control"] = "no-cache, must-revalidate"
             # Set an explicit Expires date in the past.
-            expiry = http.HTTPDate(1169942400.0)
+            expiry = httputil.HTTPDate(1169942400.0)
         else:
-            expiry = http.HTTPDate(response.time + secs)
+            expiry = httputil.HTTPDate(response.time + secs)
         if force or "Expires" not in headers:
             headers["Expires"] = expiry
