@@ -234,7 +234,7 @@ class ErrorTool(Tool):
 
 from cherrypy.lib import cptools, encoding, auth, static, tidy, jsontools
 from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
-from cherrypy.lib import caching as _caching, wsgiapp as _wsgiapp
+from cherrypy.lib import caching as _caching
 from cherrypy.lib import auth_basic, auth_digest
 
 
@@ -366,30 +366,6 @@ class XMLRPCController(object):
     default.exposed = True
 
 
-class WSGIAppTool(HandlerTool):
-    """A tool for running any WSGI middleware/application within CP.
-    
-    Here are the parameters:
-    
-    wsgi_app - any wsgi application callable
-    env_update - a dictionary with arbitrary keys and values to be
-                 merged with the WSGI environ dictionary.
-    
-    Example:
-    
-    class Whatever:
-        _cp_config = {'tools.wsgiapp.on': True,
-                      'tools.wsgiapp.app': some_app,
-                      'tools.wsgiapp.env': app_environ,
-                      }
-    """
-    
-    def _setup(self):
-        # Keep request body intact so the wsgi app can have its way with it.
-        cherrypy.request.process_request_body = False
-        HandlerTool._setup(self)
-
-
 class SessionAuthTool(HandlerTool):
     
     def _setargs(self):
@@ -485,7 +461,6 @@ _d.staticdir = HandlerTool(static.staticdir)
 _d.staticfile = HandlerTool(static.staticfile)
 _d.sessions = SessionTool()
 _d.xmlrpc = ErrorTool(_xmlrpc.on_error)
-_d.wsgiapp = WSGIAppTool(_wsgiapp.run)
 _d.caching = CachingTool('before_handler', _caching.get, 'caching')
 _d.expires = Tool('before_finalize', _caching.expires)
 _d.tidy = Tool('before_finalize', tidy.tidy)
