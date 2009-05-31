@@ -50,19 +50,14 @@ try:
 except ImportError:
     profile = None
     pstats = None
-    import warnings
-    msg = ("Your installation of Python does not have a profile module. "
-           "If you're on Debian, try `sudo apt-get install python-profiler`. "
-           "See http://www.cherrypy.org/wiki/ProfilingOnDebian for details.")
-    warnings.warn(msg)
 
 import os, os.path
 import sys
 
 try:
-    import cStringIO as StringIO
+    from cStringIO import StringIO
 except ImportError:
-    import StringIO
+    from StringIO import StringIO
 
 
 _count = 0
@@ -93,7 +88,7 @@ class Profiler(object):
     
     def stats(self, filename, sortby='cumulative'):
         """stats(index) -> output of print_stats() for the given profile."""
-        sio = StringIO.StringIO()
+        sio = StringIO()
         if sys.version_info >= (2, 5):
             s = pstats.Stats(os.path.join(self.path, filename), stream=sio)
             s.strip_dirs()
@@ -168,6 +163,12 @@ class make_app:
             a single file. If False (the default), each HTTP request will
             dump its profile data into a separate file.
         """
+        if profile is None or pstats is None:
+            msg = ("Your installation of Python does not have a profile module. "
+                   "If you're on Debian, try `sudo apt-get install python-profiler`. "
+                   "See http://www.cherrypy.org/wiki/ProfilingOnDebian for details.")
+            warnings.warn(msg)
+        
         self.nextapp = nextapp
         self.aggregate = aggregate
         if aggregate:
@@ -185,6 +186,12 @@ class make_app:
 
 
 def serve(path=None, port=8080):
+    if profile is None or pstats is None:
+        msg = ("Your installation of Python does not have a profile module. "
+               "If you're on Debian, try `sudo apt-get install python-profiler`. "
+               "See http://www.cherrypy.org/wiki/ProfilingOnDebian for details.")
+        warnings.warn(msg)
+    
     import cherrypy
     cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
