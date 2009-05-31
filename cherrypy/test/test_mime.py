@@ -1,4 +1,4 @@
-"""Tests for various MIME issues, including the safe_multipart Tool."""
+"""Tests for various MIME issues."""
 
 from cherrypy.test import test
 test.prefer_parent_path()
@@ -7,9 +7,6 @@ import cherrypy
 
 
 def setup_server():
-    
-    from cherrypy.lib import safemime
-    safemime.init()
     
     class Root:
         
@@ -21,7 +18,6 @@ def setup_server():
             return ("Upload: %r, Filename: %r, Filedata: %r" %
                     (Upload, Filename, Filedata.file.read()))
         flashupload.exposed = True
-        flashupload._cp_config = {'tools.safe_multipart.on': True}
     
     cherrypy.config.update({'server.max_request_body_size': 0})
     cherrypy.tree.mount(Root())
@@ -34,8 +30,8 @@ from cherrypy.test import helper
 class MultipartTest(helper.CPWebCase):
     
     def test_multipart(self):
-        text_part = "This is the text version"
-        html_part = """<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+        text_part = u"This is the text version"
+        html_part = u"""<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
@@ -46,17 +42,17 @@ This is the <strong>HTML</strong> version
 </body>
 </html>
 """
-        body = """--123456789
-Content-Type: text/plain; charset='ISO-8859-1'
-Content-Transfer-Encoding: 7bit
-
-%s
---123456789
-Content-Type: text/html; charset='ISO-8859-1'
-
-%s
---123456789--
-""" % (text_part, html_part)
+        body = '\r\n'.join([
+            "--123456789",
+            "Content-Type: text/plain; charset='ISO-8859-1'",
+            "Content-Transfer-Encoding: 7bit",
+            "",
+            text_part,
+            "--123456789",
+            "Content-Type: text/html; charset='ISO-8859-1'",
+            "",
+            html_part,
+            "--123456789--"])
         headers = [
             ('Content-Type', 'multipart/mixed; boundary=123456789'),
             ('Content-Length', len(body)),
@@ -101,7 +97,7 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
             '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6--'
             )
         self.getPage('/flashupload', headers, "POST", body)
-        self.assertBody("Upload: 'Submit Query', Filename: '.project', "
+        self.assertBody("Upload: u'Submit Query', Filename: u'.project', "
                         "Filedata: %r" % filedata)
 
 
