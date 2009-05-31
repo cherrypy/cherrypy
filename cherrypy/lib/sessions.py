@@ -190,7 +190,7 @@ class Session(object):
     def has_key(self, key):
         """D.has_key(k) -> True if D has a key k, else False."""
         if not self.loaded: self.load()
-        return self._data.has_key(key)
+        return key in self._data
     
     def get(self, key, default=None):
         """D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None."""
