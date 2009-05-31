@@ -2,7 +2,7 @@
 
 import cgi
 import os
-import StringIO
+from StringIO import StringIO
 import traceback
 
 import cherrypy
@@ -79,7 +79,7 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None,
         
         if new_errs:
             response.body = wrong_content('<br />'.join(new_errs), orig_body)
-            if response.headers.has_key("Content-Length"):
+            if "Content-Length" in response.headers:
                 # Delete Content-Length header so finalize() recalcs it.
                 del response.headers["Content-Length"]
             return
@@ -95,23 +95,23 @@ def tidy(temp_dir, tidy_path, strict_xml=False, errors_to_ignore=None,
                 enctag = '<?xml version="1.0" encoding="%s"?>' % encoding
                 orig_body = enctag + orig_body
             
-            f = StringIO.StringIO(orig_body)
+            f = StringIO(orig_body)
             try:
                 tree = parse(f)
             except:
                 # Wrong XML
-                body_file = StringIO.StringIO()
+                body_file = StringIO()
                 traceback.print_exc(file = body_file)
                 body_file = '<br />'.join(body_file.getvalue())
                 response.body = wrong_content(body_file, orig_body, "XML")
-                if response.headers.has_key("Content-Length"):
+                if "Content-Length" in response.headers:
                     # Delete Content-Length header so finalize() recalcs it.
                     del response.headers["Content-Length"]
                 return
         
         if use_output:
             response.body = [output]
-            if response.headers.has_key("Content-Length"):
+            if "Content-Length" in response.headers:
                 # Delete Content-Length header so finalize() recalcs it.
                 del response.headers["Content-Length"]
 
@@ -178,7 +178,7 @@ def nsgmls(temp_dir, nsgmls_path, catalog_path, errors_to_ignore=None):
         
         if new_errs:
             response.body = wrong_content('<br />'.join(new_errs), orig_body)
-            if response.headers.has_key("Content-Length"):
+            if "Content-Length" in response.headers:
                 # Delete Content-Length header so finalize() recalcs it.
                 del response.headers["Content-Length"]
 
