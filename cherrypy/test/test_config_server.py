@@ -106,60 +106,25 @@ class ServerConfigTests(helper.CPWebCase):
                               ('From', lines256)])
         
         # Test upload
-        body = """--x
-Content-Disposition: form-data; name="file"; filename="hello.txt"
-Content-Type: text/plain
-
-%s
---x--
-"""
-        b = body % ("x" * 96)
+        body = '\r\n'.join([
+            '--x',
+            'Content-Disposition: form-data; name="file"; filename="hello.txt"',
+            'Content-Type: text/plain',
+            '',
+            '%s',
+            '--x--'])
+        partlen = 200 - len(body)
+        b = body % ("x" * partlen)
         h = [("Content-type", "multipart/form-data; boundary=x"),
              ("Content-Length", len(b))]
         self.getPage('/upload', h, "POST", b)
-        self.assertBody('Size: 96')
+        self.assertBody('Size: %d' % partlen)
         
         b = body % ("x" * 200)
         h = [("Content-type", "multipart/form-data; boundary=x"),
              ("Content-Length", len(b))]
         self.getPage('/upload', h, "POST", b)
         self.assertStatus(413)
-    
-    def test_socket_timeout(self):
-        if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
-            return
-        
-        self.PROTOCOL = "HTTP/1.1"
-        
-        # Put request 1
-        self.persistent = True
-        conn = self.HTTP_CONN
-        conn.putrequest("GET", "/", skip_host=True)
-        conn.putheader("Host", self.HOST)
-        conn.endheaders()
-        response = conn.response_class(conn.sock, method="GET")
-        response.begin()
-        body = response.read()
-        self.assertEqual(response.status, 200)
-        
-        time.sleep(cherrypy.server.socket_timeout)
-        
-        # Put next request
-        try:
-            conn._output('GET /hello HTTP/1.1')
-            conn._output("Host: %s" % self.HOST)
-            conn._send_output()
-            response = conn.response_class(conn.sock, method="GET")
-            response.begin()
-            body = response.read()
-            self.assertEqual(response.status, 200)
-        except socket.error:
-            pass
-        else:
-            self.fail("Socket did not time out as it should have.")
-        
-        conn.close()
 
 
 
