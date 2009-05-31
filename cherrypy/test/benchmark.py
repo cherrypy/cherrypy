@@ -301,7 +301,7 @@ def startup_modpython(req=None):
     """Start the CherryPy app server in 'serverless' mode (for modpython/WSGI)."""
     if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
         if req:
-            if req.get_options().has_key("nullreq"):
+            if "nullreq" in req.get_options():
                 cherrypy.engine.request_class = NullRequest
                 cherrypy.engine.response_class = NullResponse
             ab_opt = req.get_options().get("ab", "")
