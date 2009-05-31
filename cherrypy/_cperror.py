@@ -188,7 +188,7 @@ class HTTPError(CherryPyException):
         try:
             self.code, self.reason, defaultmsg = _httputil.valid_status(status)
         except ValueError, x:
-            raise cherrypy.HTTPError(500, x.args[0])
+            raise cherrypy.__class__(500, x.args[0])
         
         if self.code < 400 or self.code > 599:
             raise ValueError("status must be between 400 and 599.")
