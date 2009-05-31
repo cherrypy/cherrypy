@@ -266,6 +266,9 @@ class Checker(object):
         
         def traverse(obj, namespace):
             for name in dir(obj):
+                # Hack for 3.2's warning about body_params
+                if name == 'body_params':
+                    continue
                 vtype = type(getattr(obj, name, None))
                 if vtype in builtins:
                     self.known_config_types[namespace + "." + name] = vtype
