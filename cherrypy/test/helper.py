@@ -165,6 +165,7 @@ class CPProcess(object):
     config_template = """[global]
 server.socket_host: '%(host)s'
 server.socket_port: %(port)s
+checker.on: False
 log.screen: False
 log.error_file: r'%(error_log)s'
 log.access_file: r'%(access_log)s'
@@ -174,12 +175,12 @@ log.access_file: r'%(access_log)s'
     error_log = os.path.join(thisdir, 'test.error.log')
     access_log = os.path.join(thisdir, 'test.access.log')
     
-    def __init__(self, wait=False, daemonize=False, ssl=False):
+    def __init__(self, wait=False, daemonize=False, ssl=False, socket_host=None, socket_port=None):
         self.wait = wait
         self.daemonize = daemonize
         self.ssl = ssl
-        self.host = cherrypy.server.socket_host
-        self.port = cherrypy.server.socket_port
+        self.host = socket_host or cherrypy.server.socket_host
+        self.port = socket_port or cherrypy.server.socket_port
     
     def write_conf(self, extra=""):
         if self.ssl:

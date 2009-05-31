@@ -250,7 +250,8 @@ class ServerStateTests(helper.CPWebCase):
     def test_4_Autoreload(self):
         # Start the demo script in a new process
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
-        p.write_conf()
+        p.write_conf(
+                extra='test_case_name: "test_4_Autoreload"')
         p.start(imports='cherrypy.test.test_states_demo')
         try:
             self.getPage("/start")
@@ -280,7 +281,11 @@ class ServerStateTests(helper.CPWebCase):
         # and exit with a non-zero exit code.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
                              wait=True)
-        p.write_conf(extra="starterror: True")
+        p.write_conf(
+                extra="""starterror: True
+test_case_name: "test_5_Start_Error"
+"""
+        )
         p.start(imports='cherrypy.test.test_states_demo')
         if p.exit_code == 0:
             self.fail("Process failed to return nonzero exit code.")
@@ -292,13 +297,17 @@ class PluginTests(helper.CPWebCase):
         if os.name not in ['posix']: 
             print "skipped (not on posix) ",
             return
-        
+        self.HOST = '127.0.0.1'
+        self.PORT = 8081
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
-                             wait=True, daemonize=True)
-        p.write_conf()
+                             wait=True, daemonize=True,
+                             socket_host='127.0.0.1',
+                             socket_port=8081)
+        p.write_conf(
+             extra='test_case_name: "test_daemonize"')
         p.start(imports='cherrypy.test.test_states_demo')
         try:
             # Just get the pid of the daemonization process.
@@ -329,7 +338,8 @@ class SignalHandlingTests(helper.CPWebCase):
         
         # Spawn the process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
-        p.write_conf()
+        p.write_conf(
+                extra='test_case_name: "test_SIGHUP_tty"')
         p.start(imports='cherrypy.test.test_states_demo')
         # Send a SIGHUP
         os.kill(p.get_pid(), SIGHUP)
@@ -353,7 +363,8 @@ class SignalHandlingTests(helper.CPWebCase):
         # to access pages.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
                              wait=True, daemonize=True)
-        p.write_conf()
+        p.write_conf(
+             extra='test_case_name: "test_SIGHUP_daemonized"')
         p.start(imports='cherrypy.test.test_states_demo')
         
         pid = p.get_pid()
@@ -387,7 +398,8 @@ class SignalHandlingTests(helper.CPWebCase):
         
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
-        p.write_conf()
+        p.write_conf(
+                extra='test_case_name: "test_SIGTERM"')
         p.start(imports='cherrypy.test.test_states_demo')
         # Send a SIGTERM
         os.kill(p.get_pid(), SIGTERM)
@@ -398,7 +410,8 @@ class SignalHandlingTests(helper.CPWebCase):
             # Spawn a daemonized process and test again.
             p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
                                  wait=True, daemonize=True)
-            p.write_conf()
+            p.write_conf(
+                 extra='test_case_name: "test_SIGTERM_2"')
             p.start(imports='cherrypy.test.test_states_demo')
             # Send a SIGTERM
             os.kill(p.get_pid(), SIGTERM)
@@ -420,7 +433,10 @@ class SignalHandlingTests(helper.CPWebCase):
         
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
-        p.write_conf(extra="unsubsig: True")
+        p.write_conf(
+            extra="""unsubsig: True
+test_case_name: "test_signal_handler_unsubscribe"
+""")
         p.start(imports='cherrypy.test.test_states_demo')
         # Send a SIGTERM
         os.kill(p.get_pid(), SIGTERM)
@@ -429,7 +445,7 @@ class SignalHandlingTests(helper.CPWebCase):
         
         # Assert the old handler ran.
         target_line = open(p.error_log, 'rb').readlines()[-10]
-        if not "I am an old SIGTERM handler." in target_line:
+        if not b"I am an old SIGTERM handler." in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
 
 
