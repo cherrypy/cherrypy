@@ -3,7 +3,7 @@
 import os
 import cherrypy
 from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
-from cherrypy.lib import httputil as _httputil
+from cherrypy.lib import httputil
 
 
 class Application(object):
@@ -209,11 +209,10 @@ class Tree(object):
         
         If path is None, cherrypy.request is used.
         """
-        
         if path is None:
             try:
-                path = _httputil.urljoin(cherrypy.request.script_name,
-                                     cherrypy.request.path_info)
+                path = httputil.urljoin(cherrypy.request.script_name,
+                                        cherrypy.request.path_info)
             except AttributeError:
                 return None
         
@@ -231,8 +230,8 @@ class Tree(object):
         # If you're calling this, then you're probably setting SCRIPT_NAME
         # to '' (some WSGI servers always set SCRIPT_NAME to '').
         # Try to look up the app using the full path.
-        path = _httputil.urljoin(environ.get('SCRIPT_NAME', ''),
-                             environ.get('PATH_INFO', ''))
+        path = httputil.urljoin(environ.get('SCRIPT_NAME', ''),
+                                environ.get('PATH_INFO', ''))
         sn = self.script_name(path or "/")
         if sn is None:
             start_response('404 Not Found', [])
