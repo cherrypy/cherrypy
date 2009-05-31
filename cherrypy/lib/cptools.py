@@ -465,11 +465,13 @@ class MonitoredHeaderMap(_httputil.HeaderMap):
         return _httputil.HeaderMap.has_key(self, key)
 
 
-def autovary(ignore=set(['Content-Disposition', 'Content-Length', 'Content-Type'])):
+def autovary(ignore=None):
     """Auto-populate the Vary response header based on request.header access."""
     req_h = cherrypy.request.headers
     cherrypy.request.headers = MonitoredHeaderMap()
     cherrypy.request.headers.update(req_h)
+    if ignore is None:
+        ignore = set(['Content-Disposition', 'Content-Length', 'Content-Type'])
     
     def set_response_header():
         resp_h = cherrypy.response.headers
