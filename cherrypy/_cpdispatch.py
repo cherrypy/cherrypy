@@ -124,7 +124,6 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
     qs_params = set(callable_kwargs.keys()) - body_params
 
     if multiple_args:
-
         if qs_params.intersection(set(multiple_args)):
             # If any of the multiple parameters came from the query string then
             # it's a 404 Not Found
