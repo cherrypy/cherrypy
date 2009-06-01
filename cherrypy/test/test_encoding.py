@@ -2,9 +2,10 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import sys
-import gzip, StringIO
+import gzip
 from httplib import IncompleteRead
 import cherrypy
+from cherrypy.py3util import StringIO
 europoundUnicode = u'\x80\xa3'
 sing = u"\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?"
 sing8 = sing.encode('utf-8')
@@ -124,7 +125,7 @@ class EncodingTests(helper.CPWebCase):
         self.assertStatus("406 Not Acceptable")
     
     def testGzip(self):
-        zbuf = StringIO.StringIO()
+        zbuf = StringIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write("Hello, world")
         zfile.close()

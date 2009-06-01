@@ -1,4 +1,4 @@
-"""Tests for various MIME issues."""
+"""Tests for various MIME issues, including the safe_multipart Tool."""
 
 from cherrypy.test import test
 test.prefer_parent_path()

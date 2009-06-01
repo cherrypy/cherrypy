@@ -1,9 +1,9 @@
 """WSGI interface (see PEP 333)."""
 
-import StringIO as _StringIO
 import sys as _sys
 
 import cherrypy as _cherrypy
+from cherrypy.py3util import StringIO
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 
@@ -150,7 +150,7 @@ class AppResponse(object):
         env['REQUEST_METHOD'] = "GET"
         env['PATH_INFO'] = path
         env['QUERY_STRING'] = query_string
-        env['wsgi.input'] = _StringIO.StringIO()
+        env['wsgi.input'] = StringIO()
         env['CONTENT_LENGTH'] = "0"
         
         self.setapp()

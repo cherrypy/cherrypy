@@ -56,9 +56,9 @@ Then restart apache2 and access http://127.0.0.1:8080
 """
 
 import logging
-import StringIO
 
 import cherrypy
+from cherrypy.py3util import StringIO
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
 
@@ -220,7 +220,7 @@ def handler(req):
                         method = "GET"
                         path = ir.path
                         qs = ir.query_string
-                        rfile = StringIO.StringIO()
+                        rfile = StringIO()
                 
                 send_response(req, response.status, response.header_list,
                               response.body, response.stream)

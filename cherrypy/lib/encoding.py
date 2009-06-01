@@ -193,9 +193,10 @@ def compress(body, compress_level):
 
 
 def decompress(body):
-    import gzip, StringIO
+    import gzip
+    from cherrypy.py3util import StringIO
     
-    zbuf = StringIO.StringIO()
+    zbuf = StringIO()
     zbuf.write(body)
     zbuf.seek(0)
     zfile = gzip.GzipFile(mode='rb', fileobj=zbuf)

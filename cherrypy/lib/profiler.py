@@ -54,11 +54,7 @@ except ImportError:
 import os, os.path
 import sys
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
-
+from cherrypy.py3util import StringIO
 
 _count = 0
 

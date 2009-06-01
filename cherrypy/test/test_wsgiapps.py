@@ -14,7 +14,7 @@ def setup_server():
         start_response(status, response_headers)
         output = ['Hello, world!\n',
                   'This is a wsgi app running within CherryPy!\n\n']
-        keys = environ.keys()
+        keys = list(environ.keys())
         keys.sort()
         for k in keys:
             output.append('%s: %s\n' % (k,environ[k]))

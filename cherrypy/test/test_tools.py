@@ -1,7 +1,6 @@
 """Test the various means of instantiating and invoking tools."""
 
 import gzip
-import StringIO
 import sys
 from httplib import IncompleteRead
 import time
@@ -12,6 +11,7 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import cherrypy
+from cherrypy.py3util import StringIO
 from cherrypy import tools
 
 
@@ -94,7 +94,7 @@ def setup_server():
     cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
     
     def stream_handler(next_handler, *args, **kwargs):
-        cherrypy.response.output = o = StringIO.StringIO()
+        cherrypy.response.output = o = StringIO()
         try:
             response = next_handler(*args, **kwargs)
             # Ignore the response and return our accumulated output instead.
@@ -335,7 +335,7 @@ class ToolTests(helper.CPWebCase):
     
     def testCombinedTools(self):
         expectedResult = (u"Hello,world" + europoundUnicode).encode('utf-8')
-        zbuf = StringIO.StringIO()
+        zbuf = StringIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write(expectedResult)
         zfile.close()
@@ -344,7 +344,7 @@ class ToolTests(helper.CPWebCase):
                                         ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
         self.assertInBody(zbuf.getvalue()[:3])
         
-        zbuf = StringIO.StringIO()
+        zbuf = StringIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=6)
         zfile.write(expectedResult)
         zfile.close()

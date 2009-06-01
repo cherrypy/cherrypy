@@ -5,9 +5,9 @@ test.prefer_parent_path()
 
 import os, sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-import StringIO
 
 import cherrypy
+from cherrypy.py3util import StringIO
 import unittest
 
 def setup_server():
@@ -95,7 +95,7 @@ def setup_server():
         incr.exposed = True
         incr._cp_config = {'raw.input.map': {'num': int}}
     
-    ioconf = StringIO.StringIO("""
+    ioconf = StringIO("""
 [/]
 neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
@@ -164,7 +164,7 @@ class ConfigTests(helper.CPWebCase):
             'foo': 'this3',
             'bax': 'this4',
             }
-        for key, expected in expectedconf.iteritems():
+        for key, expected in expectedconf.items():
             self.getPage("/foo/bar?key=" + key)
             self.assertBody(repr(expected))
     
@@ -214,7 +214,6 @@ class ConfigTests(helper.CPWebCase):
 class VariableSubstitutionTests(unittest.TestCase):
     
     def test_config(self):
-        import StringIO
         from textwrap import dedent
     
         # variable substitution with [DEFAULT]
@@ -229,7 +228,7 @@ class VariableSubstitutionTests(unittest.TestCase):
 
         """)
 
-        fp = StringIO.StringIO(conf)
+        fp = StringIO(conf)
 
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config["my"]["my.dir"], "/some/dir/my/dir")

@@ -6,11 +6,9 @@ test.prefer_parent_path()
 import os, sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import socket
-import StringIO
 import time
 
 import cherrypy
-
 
 def setup_server():
     

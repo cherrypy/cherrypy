@@ -101,7 +101,7 @@ def setup_server():
         callable_object = ParamErrorsCallable()
 
         def raise_type_error(self, **kwargs):
-            raise TypeError, "Client Error"
+            raise TypeError("Client Error")
         raise_type_error.exposed = True
 
 

@@ -19,7 +19,7 @@ def setup_server():
     default = cherrypy.Application(None)
     
     domains = {}
-    for year in xrange(1997, 2008):
+    for year in range(1997, 2008):
         app = cherrypy.Application(ClassOfRoot('Class of %s' % year))
         domains['www.classof%s.example' % year] = app
     
@@ -36,7 +36,7 @@ class WSGI_VirtualHost_Test(helper.CPWebCase):
             cherrypy.py3print("skipped (not using WSGI)...", end=' ')
             return
         
-        for year in xrange(1997, 2008):
+        for year in range(1997, 2008):
             self.getPage("/", headers=[('Host', 'www.classof%s.example' % year)])
             self.assertBody("Welcome to the Class of %s website!" % year)
 

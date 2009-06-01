@@ -10,3 +10,8 @@ def py3print(*args, **kwargs):
     output = sep.join(['%s' % arg for arg in args]) + end
     file.write(output)
 
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+

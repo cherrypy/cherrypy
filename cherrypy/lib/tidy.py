@@ -2,7 +2,7 @@
 
 import cgi
 import os
-from StringIO import StringIO
+from cherrypy.py3util import StringIO
 import traceback
 
 import cherrypy
