@@ -22,7 +22,6 @@ import os
 thisdir = os.path.abspath(os.path.dirname(__file__))
 import re
 import sys
-import thread
 import time
 import warnings
 
