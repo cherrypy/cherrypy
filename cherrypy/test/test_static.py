@@ -26,7 +26,7 @@ def setup_server():
         bigfile._cp_config = {'response.stream': True}
         
         def tell(self):
-            return `self.f.input.tell()`
+            return repr(self.f.input.tell())
         tell.exposed = True
     
     class Static:
@@ -152,7 +152,7 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
         self.assertInBody("TypeError: staticdir() takes at least 2 "
-                          "arguments (0 given)")
+                          "positional arguments (0 given)")
     
     def test_security(self):
         # Test up-level security
