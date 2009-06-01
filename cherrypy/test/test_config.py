@@ -56,7 +56,7 @@ def setup_server():
         silly._cp_config = {'response.headers.X-silly': 'sillyval'}
             
         def bar(self, key):
-            return `cherrypy.request.config.get(key, None)`
+            return repr(cherrypy.request.config.get(key, None))
         bar.exposed = True
         bar._cp_config = {'foo': 'this3', 'bax': 'this4'}
     
@@ -162,7 +162,7 @@ class ConfigTests(helper.CPWebCase):
             }
         for key, expected in expectedconf.iteritems():
             self.getPage("/foo/bar?key=" + key)
-            self.assertBody(`expected`)
+            self.assertBody(repr(expected))
     
     def testUnrepr(self):
         self.getPage("/repr?key=neg")
