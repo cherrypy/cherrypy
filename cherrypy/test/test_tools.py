@@ -90,7 +90,7 @@ def setup_server():
         def __call__(self, scale):
             r = cherrypy.response
             r.collapse_body()
-            r.body = [chr(ord(x) + scale) for x in r.body]
+            r.body = [chr((ord(x) + scale) % 256) for x in r.body[0]]
     cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
     
     def stream_handler(next_handler, *args, **kwargs):
@@ -140,7 +140,7 @@ def setup_server():
             yield europoundUnicode
         decorated_euro.exposed = True
         decorated_euro = tools.gzip(compress_level=6)(decorated_euro)
-        decorated_euro = tools.encode(errors='ignore')(decorated_euro)
+        decorated_euro = tools.rotator(scale=3)(decorated_euro)
     
     root = Root()
     
@@ -352,12 +352,13 @@ class ToolTests(helper.CPWebCase):
         self.getPage("/decorated_euro", headers=[("Accept-Encoding", "gzip")])
         self.assertInBody(zbuf.getvalue()[:3])
         
-        # This should break because gzip's priority was lowered in conf.
+        # This returns a different value because gzip's priority was
+        # lowered in conf, allowing the rotator to run after gzip.
         # Of course, we don't want breakage in production apps,
         # but it proves the priority was changed.
         self.getPage("/decorated_euro/subpath",
                      headers=[("Accept-Encoding", "gzip")])
-        self.assertErrorPage(500, pattern='UnicodeEncodeError')
+        self.assertInBody(''.join([chr((ord(x) + 3) % 256) for x in zbuf.getvalue()]))
     
     def testBareHooks(self):
         content = "bit of a pain in me gulliver"
