@@ -24,7 +24,7 @@ def setup_server():
         return {'test': 'test'}
 
 
-	get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(fetch_users())
+    get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(fetch_users())
     conf = {'/digest': {'tools.auth_digest.on': True,
                         'tools.auth_digest.realm': 'localhost',
                         'tools.auth_digest.get_ha1': get_ha1,
@@ -94,7 +94,7 @@ class DigestAuthTest(helper.CPWebCase):
         auth_header = base_auth % (nonce, '11111111111111111111111111111111', '00000001')
         auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
         # calculate the response digest
-    	ha1 = get_ha1(auth.realm, 'test')
+        ha1 = get_ha1(auth.realm, 'test')
         response = auth.request_digest(ha1)
         # send response with correct response digest, but wrong realm
         auth_header = base_auth % (nonce, response, '00000001')
@@ -107,7 +107,7 @@ class DigestAuthTest(helper.CPWebCase):
         auth_header = base_auth % (nonce, '11111111111111111111111111111111', '00000001')
         auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
         # calculate the response digest
-    	ha1 = get_ha1('localhost', 'test')
+        ha1 = get_ha1('localhost', 'test')
         response = auth.request_digest(ha1)
         # send response with correct response digest
         auth_header = base_auth % (nonce, response, '00000001')
