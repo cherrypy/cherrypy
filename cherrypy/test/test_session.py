@@ -37,7 +37,7 @@ def setup_server():
         
         def data(self):
             cherrypy.session['aha'] = 'foo'
-            return `cherrypy.session._data`
+            return repr(cherrypy.session._data)
         data.exposed = True
         
         def testGen(self):
