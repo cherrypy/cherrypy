@@ -444,6 +444,8 @@ def run():
     prefer_parent_path()
     
     testList = [
+        'test_auth_basic',
+        'test_auth_digest',
         'test_bus',
         'test_proxy',
         'test_caching',

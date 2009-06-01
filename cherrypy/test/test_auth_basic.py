@@ -57,7 +57,7 @@ class BasicAuthTest(helper.CPWebCase):
     def testPublic(self):
         self.getPage("/")
         self.assertStatus('200 OK')
-        self.assertHeader('Content-Type', 'text/html')
+        self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('This is public.')
 
     def testBasic(self):

@@ -49,6 +49,8 @@ class LogCase(object):
         
         p = "    Show: [L]og [M]arker [P]attern; [I]gnore, [R]aise, or sys.e[X]it >> "
         print p,
+        # ARGH!
+        sys.stdout.flush()
         while True:
             i = getchar().upper()
             if i not in "MPLIRX":

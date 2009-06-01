@@ -250,6 +250,8 @@ class WebCase(TestCase):
         
         p = "    Show: [B]ody [H]eaders [S]tatus [U]RL; [I]gnore, [R]aise, or sys.e[X]it >> "
         print p,
+        # ARGH!
+        sys.stdout.flush()
         while True:
             i = getchar().upper()
             if i not in "BHSUIRX":
