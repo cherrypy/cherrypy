@@ -230,7 +230,7 @@ class ServerStateTests(helper.CPWebCase):
             self.assertBody("Hello World")
             # request.close is called async.
             while engine.timeout_monitor.servings:
-                checks.py3print(".", end=' ')
+                cherrypy.py3print(".", end=' ')
                 time.sleep(0.01)
             
             # Request a page that explicitly checks itself for deadlock.
@@ -295,7 +295,7 @@ class PluginTests(helper.CPWebCase):
     
     def test_daemonize(self):
         if os.name not in ['posix']: 
-            checks.py3print("skipped (not on posix) ", end=' ')
+            cherrypy.py3print("skipped (not on posix) ", end=' ')
             return
         self.HOST = '127.0.0.1'
         self.PORT = 8081
@@ -333,7 +333,7 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGHUP
         except ImportError:
-            checks.py3print("skipped (no SIGHUP) ", end=' ')
+            cherrypy.py3print("skipped (no SIGHUP) ", end=' ')
             return
         
         # Spawn the process.
@@ -351,11 +351,11 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGHUP
         except ImportError:
-            checks.py3print("skipped (no SIGHUP) ", end=' ')
+            cherrypy.py3print("skipped (no SIGHUP) ", end=' ')
             return
         
         if os.name not in ['posix']: 
-            checks.py3print("skipped (not on posix) ", end=' ')
+            cherrypy.py3print("skipped (not on posix) ", end=' ')
             return
         
         # Spawn the process and wait, when this returns, the original process
@@ -387,13 +387,13 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGTERM
         except ImportError:
-            checks.py3print("skipped (no SIGTERM) ", end=' ')
+            cherrypy.py3print("skipped (no SIGTERM) ", end=' ')
             return
         
         try:
             from os import kill
         except ImportError:
-            checks.py3print("skipped (no os.kill) ", end=' ')
+            cherrypy.py3print("skipped (no os.kill) ", end=' ')
             return
         
         # Spawn a normal, undaemonized process.
@@ -422,13 +422,13 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGTERM
         except ImportError:
-            checks.py3print("skipped (no SIGTERM) ", end=' ')
+            cherrypy.py3print("skipped (no SIGTERM) ", end=' ')
             return
         
         try:
             from os import kill
         except ImportError:
-            checks.py3print("skipped (no os.kill) ", end=' ')
+            cherrypy.py3print("skipped (no os.kill) ", end=' ')
             return
         
         # Spawn a normal, undaemonized process.
