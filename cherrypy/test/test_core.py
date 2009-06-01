@@ -421,7 +421,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         if cherrypy.server.protocol_version == "HTTP/1.1":
             self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])
             self.assertStatus(206)
-            self.assertHeader("Content-Type", "text/html")
+            self.assertHeader("Content-Type", "text/html;charset=utf-8")
             self.assertHeader("Content-Range", "bytes 2-5/14")
             self.assertBody("llo,")
             
@@ -491,10 +491,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     
     def testDefaultContentType(self):
         self.getPage('/')
-        self.assertHeader('Content-Type', 'text/html')
+        self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.getPage('/defct/plain')
         self.getPage('/')
-        self.assertHeader('Content-Type', 'text/plain')
+        self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
         self.getPage('/defct/html')
     
     def test_cherrypy_url(self):

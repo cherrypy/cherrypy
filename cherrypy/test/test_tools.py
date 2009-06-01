@@ -117,8 +117,10 @@ def setup_server():
         def euro(self):
             hooks = list(cherrypy.request.hooks['before_finalize'])
             hooks.sort()
-            assert [x.callback.__name__ for x in hooks] == ['encode', 'gzip']
-            assert [x.priority for x in hooks] == [70, 80]
+            cbnames = [x.callback.__name__ for x in hooks]
+            assert cbnames == ['gzip'], cbnames
+            priorities = [x.priority for x in hooks]
+            assert priorities == [80], priorities
             yield u"Hello,"
             yield u"world"
             yield europoundUnicode

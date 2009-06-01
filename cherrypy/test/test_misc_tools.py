@@ -99,12 +99,12 @@ class ResponseHeadersTest(helper.CPWebCase):
     def testResponseHeadersDecorator(self):
         self.getPage('/')
         self.assertHeader("Content-Language", "en-GB")
-        self.assertHeader('Content-Type', 'text/plain')
+        self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
 
     def testResponseHeaders(self):
         self.getPage('/other')
         self.assertHeader("Content-Language", "fr")
-        self.assertHeader('Content-Type', 'text/plain')
+        self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
 
 
 class RefererTest(helper.CPWebCase):

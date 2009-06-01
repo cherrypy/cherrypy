@@ -69,12 +69,16 @@ def setup_server():
     
     def raw_namespace(key, value):
         if key == 'input.map':
-            params = cherrypy.request.params
-            for name, coercer in value.iteritems():
-                try:
-                    params[name] = coercer(params[name])
-                except KeyError:
-                    pass
+            handler = cherrypy.request.handler
+            def wrapper():
+                params = cherrypy.request.params
+                for name, coercer in list(value.items()):
+                    try:
+                        params[name] = coercer(params[name])
+                    except KeyError:
+                        pass
+                return handler()
+            cherrypy.request.handler = wrapper
         elif key == 'output':
             handler = cherrypy.request.handler
             def wrapper():

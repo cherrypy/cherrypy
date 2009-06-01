@@ -19,8 +19,9 @@ response_codes[503] = ('Service Unavailable',
                       'maintenance of the server.')
 
 
-import cgi
 import re
+import urllib
+
 from rfc822 import formatdate as HTTPDate
 
 
@@ -250,9 +251,56 @@ def valid_status(status):
     return code, reason, message
 
 
+def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
+    """Parse a query given as a string argument.
+
+    Arguments:
+
+    qs: URL-encoded query string to be parsed
+
+    keep_blank_values: flag indicating whether blank values in
+        URL encoded queries should be treated as blank strings.  A
+        true value indicates that blanks should be retained as blank
+        strings.  The default false value indicates that blank values
+        are to be ignored and treated as if they were  not included.
+
+    strict_parsing: flag indicating what to do with parsing errors. If
+        false (the default), errors are silently ignored. If true,
+        errors raise a ValueError exception.
+
+    Returns a dict, as G-d intended.
+    """
+    pairs = [s2 for s1 in qs.split('&') for s2 in s1.split(';')]
+    d = {}
+    for name_value in pairs:
+        if not name_value and not strict_parsing:
+            continue
+        nv = name_value.split('=', 1)
+        if len(nv) != 2:
+            if strict_parsing:
+                raise ValueError("bad query field: %r" % (name_value,))
+            # Handle case of a control-name with no equal sign
+            if keep_blank_values:
+                nv.append('')
+            else:
+                continue
+        if len(nv[1]) or keep_blank_values:
+            name = urllib.unquote(nv[0].replace('+', ' '))
+            name = name.decode(encoding, 'strict')
+            value = urllib.unquote(nv[1].replace('+', ' '))
+            value = value.decode(encoding, 'strict')
+            if name in d:
+                if not isinstance(d[name], list):
+                    d[name] = [d[name]]
+                d[name].append(value)
+            else:
+                d[name] = value
+    return d
+
+
 image_map_pattern = re.compile(r"[0-9]+,[0-9]+")
 
-def parse_query_string(query_string, keep_blank_values=True):
+def parse_query_string(query_string, keep_blank_values=True, encoding='utf-8'):
     """Build a params dictionary from a query_string.
     
     Duplicate key/value pairs in the provided query_string will be
@@ -265,10 +313,7 @@ def parse_query_string(query_string, keep_blank_values=True):
         pm = query_string.split(",")
         pm = {'x': int(pm[0]), 'y': int(pm[1])}
     else:
-        pm = cgi.parse_qs(query_string, keep_blank_values)
-        for key, val in pm.items():
-            if len(val) == 1:
-                pm[key] = val[0]
+        pm = _parse_qs(query_string, keep_blank_values, encoding=encoding)
     return pm
 
 

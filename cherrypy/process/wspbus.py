@@ -35,9 +35,9 @@ of invocation scenarios:
 
 The Bus object in this package uses topic-based publish-subscribe
 messaging to accomplish all this. A few topic channels are built in
-('start', 'stop', 'exit', and 'graceful'). Frameworks and site containers
-are free to define their own. If a message is sent to a channel that has
-not been defined or has no listeners, there is no effect.
+('start', 'stop', 'exit', 'graceful', 'log', and 'main'). Frameworks and
+site containers are free to define their own. If a message is sent to a
+channel that has not been defined or has no listeners, there is no effect.
 
 In general, there should only ever be a single Bus object per process.
 Frameworks and site containers share a single Bus object by publishing
@@ -119,7 +119,7 @@ class Bus(object):
         self.state = states.STOPPED
         self.listeners = dict(
             [(channel, set()) for channel
-             in ('start', 'stop', 'exit', 'graceful', 'log')])
+             in ('start', 'stop', 'exit', 'graceful', 'log', 'main')])
         self._priorities = {}
     
     def subscribe(self, channel, callback, priority=None):
@@ -247,7 +247,7 @@ class Bus(object):
         thread perform the actual execv call (required on some platforms).
         """
         try:
-            self.wait(states.EXITING, interval=interval)
+            self.wait(states.EXITING, interval=interval, channel='main')
         except (KeyboardInterrupt, IOError):
             # The time.sleep call might raise
             # "IOError: [Errno 4] Interrupted function call" on KBInt.
@@ -278,7 +278,7 @@ class Bus(object):
         if self.execv:
             self._do_execv()
     
-    def wait(self, state, interval=0.1):
+    def wait(self, state, interval=0.1, channel=None):
         """Wait for the given state(s)."""
         if isinstance(state, (tuple, list)):
             states = state
@@ -288,6 +288,7 @@ class Bus(object):
         def _wait():
             while self.state not in states:
                 time.sleep(interval)
+                self.publish(channel)
         
         # From http://psyco.sourceforge.net/psycoguide/bugs.html:
         # "The compiled machine code does not include the regular polling

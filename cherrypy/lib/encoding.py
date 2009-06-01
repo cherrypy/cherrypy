@@ -1,174 +1,164 @@
 import struct
 import time
+import types
 
 import cherrypy
+from cherrypy.lib import file_generator
 from cherrypy.lib import set_vary_header
 
-def decode(encoding=None, default_encoding='utf-8'):
-    """Decode cherrypy.request.params from str to unicode objects."""
-    if not encoding:
-        ct = cherrypy.request.headers.elements("Content-Type")
+
+class ResponseEncoder:
+    
+    default_encoding = 'utf-8'
+    failmsg = "Response body could not be encoded with %r."
+    encoding = None
+    errors = 'strict'
+    text_only = True
+    add_charset = True
+    
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        
+        self.attempted_charsets = set()
+        
+        if cherrypy.request.handler is not None:
+            # Replace request.handler with self
+            self.oldhandler = cherrypy.request.handler
+            cherrypy.request.handler = self
+    
+    def encode_stream(self, encoding):
+        """Encode a streaming response body.
+        
+        Use a generator wrapper, and just pray it works as the stream is
+        being written out.
+        """
+        if encoding in self.attempted_charsets:
+            return False
+        self.attempted_charsets.add(encoding)
+        
+        def encoder(body):
+            for chunk in body:
+                if isinstance(chunk, unicode):
+                    chunk = chunk.encode(encoding, self.errors)
+                yield chunk
+        self.body = encoder(self.body)
+        return True
+    
+    def encode_string(self, encoding):
+        """Encode a buffered response body."""
+        if encoding in self.attempted_charsets:
+            return False
+        self.attempted_charsets.add(encoding)
+        
+        try:
+            body = []
+            for chunk in self.body:
+                if isinstance(chunk, unicode):
+                    chunk = chunk.encode(encoding, self.errors)
+                body.append(chunk)
+            self.body = body
+        except (LookupError, UnicodeError):
+            return False
+        else:
+            return True
+    
+    def find_acceptable_charset(self):
+        response = cherrypy.response
+        
+        if cherrypy.response.stream:
+            encoder = self.encode_stream
+        else:
+            encoder = self.encode_string
+            if "Content-Length" in response.headers:
+                # Delete Content-Length header so finalize() recalcs it.
+                # Encoded strings may be of different lengths from their
+                # unicode equivalents, and even from each other. For example:
+                # >>> t = u"\u7007\u3040"
+                # >>> len(t)
+                # 2
+                # >>> len(t.encode("UTF-8"))
+                # 6
+                # >>> len(t.encode("utf7"))
+                # 8
+                del response.headers["Content-Length"]
+        
+        # Parse the Accept-Charset request header, and try to provide one
+        # of the requested charsets (in order of user preference).
+        encs = cherrypy.request.headers.elements('Accept-Charset')
+        charsets = [enc.value.lower() for enc in encs]
+        
+        if self.encoding is not None:
+            # If specified, force this encoding to be used, or fail.
+            encoding = self.encoding.lower()
+            if (not charsets) or "*" in charsets or encoding in charsets:
+                if encoder(encoding):
+                    return encoding
+        else:
+            if not encs:
+                # Any character-set is acceptable.
+                if encoder(self.default_encoding):
+                    return self.default_encoding
+                else:
+                    raise cherrypy.HTTPError(500, self.failmsg % self.default_encoding)
+            else:
+                if "*" not in charsets:
+                    # If no "*" is present in an Accept-Charset field, then all
+                    # character sets not explicitly mentioned get a quality
+                    # value of 0, except for ISO-8859-1, which gets a quality
+                    # value of 1 if not explicitly mentioned.
+                    iso = 'iso-8859-1'
+                    if iso not in charsets:
+                        if encoder(iso):
+                            return iso
+                
+                for element in encs:
+                    if element.qvalue > 0:
+                        if element.value == "*":
+                            # Matches any charset. Try our default.
+                            if encoder(self.default_encoding):
+                                return self.default_encoding
+                        else:
+                            encoding = element.value
+                            if encoder(encoding):
+                                return encoding
+        
+        # No suitable encoding found.
+        ac = cherrypy.request.headers.get('Accept-Charset')
+        if ac is None:
+            msg = "Your client did not send an Accept-Charset header."
+        else:
+            msg = "Your client sent this Accept-Charset header: %s." % ac
+        msg += " We tried these charsets: %s." % ", ".join(self.attempted_charsets)
+        raise cherrypy.HTTPError(406, msg)
+    
+    def __call__(self, *args, **kwargs):
+        self.body = self.oldhandler(*args, **kwargs)
+        
+        if isinstance(self.body, basestring):
+            # strings get wrapped in a list because iterating over a single
+            # item list is much faster than iterating over every character
+            # in a long string.
+            if self.body:
+                self.body = [self.body]
+            else:
+                # [''] doesn't evaluate to False, so replace it with [].
+                self.body = []
+        elif isinstance(self.body, types.FileType):
+            self.body = file_generator(self.body)
+        elif self.body is None:
+            self.body = []
+        
+        ct = cherrypy.response.headers.elements("Content-Type")
         if ct:
             ct = ct[0]
-            encoding = ct.params.get("charset", None)
-            if (not encoding) and ct.value.lower().startswith("text/"):
-                # http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
-                # When no explicit charset parameter is provided by the
-                # sender, media subtypes of the "text" type are defined
-                # to have a default charset value of "ISO-8859-1" when
-                # received via HTTP.
-                encoding = "ISO-8859-1"
+            if (not self.text_only) or ct.value.lower().startswith("text/"):
+                # Set "charset=..." param on response Content-Type header
+                ct.params['charset'] = self.find_acceptable_charset()
+                if self.add_charset:
+                    cherrypy.response.headers["Content-Type"] = str(ct)
         
-        if not encoding:
-            encoding = default_encoding
-    
-    try:
-        decode_params(encoding)
-    except UnicodeDecodeError:
-        # IE and Firefox don't supply a charset when submitting form
-        # params with a CT of application/x-www-form-urlencoded.
-        # So after all our guessing, it could *still* be wrong.
-        # Start over with ISO-8859-1, since that seems to be preferred.
-        decode_params("ISO-8859-1")
-
-def decode_params(encoding):
-    decoded_params = {}
-    for key, value in cherrypy.request.params.items():
-        if not hasattr(value, 'file'):
-            # Skip the value if it is an uploaded file
-            if isinstance(value, list):
-                # value is a list: decode each element
-                value = [v.decode(encoding) if isinstance(v, str) else v for v in value]
-            elif isinstance(value, str):
-                # value is a regular string: decode it
-                value = value.decode(encoding)
-        decoded_params[key] = value
-    
-    # Decode all or nothing, so we can try again on error.
-    cherrypy.request.params = decoded_params
-
-
-# Encoding
-
-def encode(encoding=None, errors='strict', text_only=True, add_charset=True):
-    # Guard against running twice
-    if getattr(cherrypy.request, "_encoding_attempted", False):
-        return
-    cherrypy.request._encoding_attempted = True
-    
-    ct = cherrypy.response.headers.elements("Content-Type")
-    if ct:
-        ct = ct[0]
-        if (not text_only) or ct.value.lower().startswith("text/"):
-            # Set "charset=..." param on response Content-Type header
-            ct.params['charset'] = find_acceptable_charset(encoding, errors=errors)
-            if add_charset:
-                cherrypy.response.headers["Content-Type"] = str(ct)
-
-def encode_stream(encoding, errors='strict'):
-    """Encode a streaming response body.
-    
-    Use a generator wrapper, and just pray it works as the stream is
-    being written out.
-    """
-    def encoder(body):
-        for chunk in body:
-            if isinstance(chunk, unicode):
-                chunk = chunk.encode(encoding, errors)
-            yield chunk
-    cherrypy.response.body = encoder(cherrypy.response.body)
-    return True
-
-def encode_string(encoding, errors='strict'):
-    """Encode a buffered response body."""
-    try:
-        body = []
-        for chunk in cherrypy.response.body:
-            if isinstance(chunk, unicode):
-                chunk = chunk.encode(encoding, errors)
-            body.append(chunk)
-        cherrypy.response.body = body
-    except (LookupError, UnicodeError):
-        return False
-    else:
-        return True
-
-def find_acceptable_charset(encoding=None, default_encoding='utf-8', errors='strict'):
-    response = cherrypy.response
-    
-    if cherrypy.response.stream:
-        encoder = encode_stream
-    else:
-        response.collapse_body()
-        encoder = encode_string
-        if response.headers.has_key("Content-Length"):
-            # Delete Content-Length header so finalize() recalcs it.
-            # Encoded strings may be of different lengths from their
-            # unicode equivalents, and even from each other. For example:
-            # >>> t = u"\u7007\u3040"
-            # >>> len(t)
-            # 2
-            # >>> len(t.encode("UTF-8"))
-            # 6
-            # >>> len(t.encode("utf7"))
-            # 8
-            del response.headers["Content-Length"]
-    
-    # Parse the Accept-Charset request header, and try to provide one
-    # of the requested charsets (in order of user preference).
-    encs = cherrypy.request.headers.elements('Accept-Charset')
-    charsets = [enc.value.lower() for enc in encs]
-    attempted_charsets = []
-    
-    if encoding is not None:
-        # If specified, force this encoding to be used, or fail.
-        encoding = encoding.lower()
-        if (not charsets) or "*" in charsets or encoding in charsets:
-            if encoder(encoding, errors):
-                return encoding
-    else:
-        if not encs:
-            # Any character-set is acceptable.
-            if encoder(default_encoding, errors):
-                return default_encoding
-            else:
-                raise cherrypy.HTTPError(500, failmsg % default_encoding)
-        else:
-            if "*" not in charsets:
-                # If no "*" is present in an Accept-Charset field, then all
-                # character sets not explicitly mentioned get a quality
-                # value of 0, except for ISO-8859-1, which gets a quality
-                # value of 1 if not explicitly mentioned.
-                iso = 'iso-8859-1'
-                if iso not in charsets:
-                    attempted_charsets.append(iso)
-                    if encoder(iso, errors):
-                        return iso
-            
-            for element in encs:
-                if element.qvalue > 0:
-                    if element.value == "*":
-                        # Matches any charset. Try our default.
-                        if default_encoding not in attempted_charsets:
-                            attempted_charsets.append(default_encoding)
-                            if encoder(default_encoding, errors):
-                                return default_encoding
-                    else:
-                        encoding = element.value
-                        if encoding not in attempted_charsets:
-                            attempted_charsets.append(encoding)
-                            if encoder(encoding, errors):
-                                return encoding
-    
-    # No suitable encoding found.
-    ac = cherrypy.request.headers.get('Accept-Charset')
-    if ac is None:
-        msg = "Your client did not send an Accept-Charset header."
-    else:
-        msg = "Your client sent this Accept-Charset header: %s." % ac
-    msg += " We tried these charsets: %s." % ", ".join(attempted_charsets)
-    raise cherrypy.HTTPError(406, msg)
-
+        return self.body
 
 # GZIP
 
@@ -176,12 +166,14 @@ def compress(body, compress_level):
     """Compress 'body' at the given compress_level."""
     import zlib
     
-    yield '\037\213'      # magic header
-    yield '\010'         # compression method
-    yield '\0'
-    yield struct.pack("<L", long(time.time()))
-    yield '\002'
-    yield '\377'
+    # See http://www.gzip.org/zlib/rfc-gzip.html
+    yield '\x1f\x8b'       # ID1 and ID2: gzip marker
+    yield '\x08'           # CM: compression method
+    yield '\x00'           # FLG: none set
+    # MTIME: 4 bytes
+    yield struct.pack("<L", int(time.time()) & 0xFFFFFFFFL)
+    yield '\x02'           # XFL: max compression, slowest algo
+    yield '\xff'           # OS: unknown
     
     crc = zlib.crc32("")
     size = 0
@@ -193,8 +185,12 @@ def compress(body, compress_level):
         crc = zlib.crc32(line, crc)
         yield zobj.compress(line)
     yield zobj.flush()
-    yield struct.pack("<l", crc)
+    
+    # CRC32: 4 bytes
+    yield struct.pack("<L", crc & 0xFFFFFFFFL)
+    # ISIZE: 4 bytes
     yield struct.pack("<L", size & 0xFFFFFFFFL)
+
 
 def decompress(body):
     import gzip, StringIO

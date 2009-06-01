@@ -231,6 +231,15 @@ class Request(object):
     'http://www.cherrypy.org/wiki?a=3&b=4' has the query component,
     'a=3&b=4'."""
     
+    query_string_encoding = 'utf8'
+    query_string_encoding__doc = """
+    The encoding expected for query string arguments. If a query string
+    is provided that cannot be decoded with this encoding, 404 is raised
+    (since technically it's a different URI). If you want arbitrary
+    encodings to not error, set this to 'Latin-1'; you can then encode
+    back to bytes and re-decode to whatever encoding you like later.
+    """
+    
     protocol = (1, 1)
     protocol__doc = """The HTTP protocol version corresponding to the set
         of features which should be allowed in the response. If BOTH
@@ -521,6 +530,7 @@ class Request(object):
             self.method = method
             path = path or "/"
             self.query_string = query_string or ''
+            self.params = {}
             
             # Compare request and server HTTP protocol versions, in case our
             # server does not support the requested protocol. Limit our output
@@ -614,24 +624,29 @@ class Request(object):
                     self.stage = 'on_start_resource'
                     self.hooks.run('on_start_resource')
                     
+                    # Parse the querystring
+                    self.stage = 'process_query_string'
+                    self.process_query_string()
+                    
+                    # Process the body
                     self.body = _cpreqbody.RequestBody(
                         self.rfile, self.headers, request_params=self.params)
-                    
                     if self.process_request_body:
                         if self.method not in self.methods_with_bodies:
                             self.process_request_body = False
-                    
                     self.stage = 'before_request_body'
                     self.hooks.run('before_request_body')
                     if self.process_request_body:
                         self.body.process()
                     
+                    # Run the handler
                     self.stage = 'before_handler'
                     self.hooks.run('before_handler')
                     if self.handler:
                         self.stage = 'handler'
                         cherrypy.response.body = self.handler()
                     
+                    # Finalize
                     self.stage = 'before_finalize'
                     self.hooks.run('before_finalize')
                     cherrypy.response.finalize()
@@ -650,10 +665,26 @@ class Request(object):
                 raise
             self.handle_error()
     
+    def process_query_string(self):
+        """Parse the query string into Python structures. (Core)"""
+        try:
+            p = httputil.parse_query_string(
+                self.query_string, encoding=self.query_string_encoding)
+        except UnicodeDecodeError:
+            raise cherrypy.HTTPError(
+                404, "The given query string could not be processed. Query "
+                "strings for this resource must be encoded with %r." %
+                self.query_string_encoding)
+        
+        # Python 2 only: keyword arguments must be byte strings (type 'str').
+        for key, value in p.items():
+            if isinstance(key, unicode):
+                del p[key]
+                p[key.encode(self.query_string_encoding)] = value
+        self.params.update(p)
+    
     def process_headers(self):
         """Parse HTTP header data into Python structures. (Core)"""
-        self.params = httputil.parse_query_string(self.query_string)
-        
         # Process the headers into self.headers
         headers = self.headers
         for name, value in self.header_list:

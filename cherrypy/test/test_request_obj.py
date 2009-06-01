@@ -56,6 +56,7 @@ def setup_server():
         
         def default(self, *args, **kwargs):
             return "args: %s kwargs: %s" % (args, kwargs)
+        default._cp_config = {'request.query_string_encoding': 'latin1'}
 
 
     class ParamErrorsCallable(object):
@@ -279,10 +280,10 @@ class RequestObjectTests(helper.CPWebCase):
     
     def testParams(self):
         self.getPage("/params/?thing=a")
-        self.assertBody("'a'")
+        self.assertBody("u'a'")
         
         self.getPage("/params/?thing=a&thing=b&thing=c")
-        self.assertBody("['a', 'b', 'c']")
+        self.assertBody("[u'a', u'b', u'c']")
 
         # Test friendly error message when given params are not accepted.
         cherrypy.config.update({"request.show_mismatched_params": True})
@@ -301,12 +302,12 @@ class RequestObjectTests(helper.CPWebCase):
         # Test "% HEX HEX"-encoded URL, param keys, and values
         self.getPage("/params/%d4%20%e3/cheese?Gruy%E8re=Bulgn%e9ville")
         self.assertBody(r"args: ('\xd4 \xe3', 'cheese') "
-                        r"kwargs: {'Gruy\xe8re': 'Bulgn\xe9ville'}")
+                        r"kwargs: {'Gruy\xe8re': u'Bulgn\xe9ville'}")
         
         # Make sure that encoded = and & get parsed correctly
         self.getPage("/params/code?url=http%3A//cherrypy.org/index%3Fa%3D1%26b%3D2")
         self.assertBody(r"args: ('code',) "
-                        r"kwargs: {'url': 'http://cherrypy.org/index?a=1&b=2'}")
+                        r"kwargs: {'url': u'http://cherrypy.org/index?a=1&b=2'}")
         
         # Test coordinates sent by <img ismap>
         self.getPage("/params/ismap?223,114")
@@ -316,7 +317,7 @@ class RequestObjectTests(helper.CPWebCase):
         self.getPage("/params/dictlike?a[1]=1&a[2]=2&b=foo&b[bar]=baz")
         self.assertBody(
             "args: ('dictlike',) "
-            "kwargs: {'a[1]': '1', 'b[bar]': 'baz', 'b': 'foo', 'a[2]': '2'}")
+            "kwargs: {'a[1]': u'1', 'b[bar]': u'baz', 'b': u'foo', 'a[2]': u'2'}")
 
     def testParamErrors(self):
 

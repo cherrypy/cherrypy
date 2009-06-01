@@ -35,7 +35,7 @@ class ETagTest(helper.CPWebCase):
     def test_etags(self):
         self.getPage("/resource")
         self.assertStatus('200 OK')
-        self.assertHeader('Content-Type', 'text/html')
+        self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('Oh wah ta goo Siam.')
         etag = self.assertHeader('ETag')
         

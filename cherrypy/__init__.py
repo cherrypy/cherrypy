@@ -562,6 +562,7 @@ config.defaults = {
     'tools.log_tracebacks.on': True,
     'tools.log_headers.on': True,
     'tools.trailing_slash.on': True,
+    'tools.encode.on': True
     }
 config.namespaces["log"] = lambda k, v: setattr(log, k, v)
 config.namespaces["checker"] = lambda k, v: setattr(checker, k, v)

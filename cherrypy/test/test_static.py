@@ -131,7 +131,7 @@ class StaticTest(helper.CPWebCase):
         # Check a directory via fall-through to dynamic handler.
         self.getPage("/static/")
         self.assertStatus('200 OK')
-        self.assertHeader('Content-Type', 'text/html')
+        self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('You want the Baron? You can have the Baron!')
     
     def test_index(self):
