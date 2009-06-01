@@ -42,6 +42,8 @@ def setup_server():
             raise IndexError()
             yield "Here be dragons"
         noshow.exposed = True
+        # Turn encoding off so the gzip tool is the one doing the collapse.
+        noshow._cp_config = {'tools.encode.on': False}
         
         def noshow_stream(self):
             # Test for ticket #147, where yield showed no exceptions (content-
@@ -121,7 +123,7 @@ class EncodingTests(helper.CPWebCase):
         self.getPage('/utf8', [('Accept-Charset', 'us-ascii, ISO-8859-1')])
         self.assertStatus("406 Not Acceptable")
     
-    def _testGzip(self):
+    def testGzip(self):
         zbuf = StringIO.StringIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write("Hello, world")
