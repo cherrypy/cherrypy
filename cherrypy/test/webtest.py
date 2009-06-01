@@ -283,7 +283,8 @@ class WebCase(TestCase):
             elif i == "X":
                 self.exit()
             cherrypy.py3print(p, end=' ')
-    
+            # ARGH
+            sys.stdout.flush()    
     def exit(self):
         sys.exit()
     
