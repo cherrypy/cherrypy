@@ -197,7 +197,7 @@ class AutoVaryTest(helper.CPWebCase):
     def testAutoVary(self):
         self.getPage('/autovary/')
         self.assertHeader(
-            "Vary", 'Accept, Accept-Encoding, Host, If-Modified-Since, Range')
+            "Vary", 'Accept, Accept-Charset, Accept-Encoding, Host, If-Modified-Since, Range')
 
 
 if __name__ == "__main__":
