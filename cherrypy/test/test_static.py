@@ -152,7 +152,7 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
         self.assertInBody("TypeError: staticdir() takes at least 2 "
-                          "positional arguments (0 given)")
+                          "arguments (0 given)")
     
     def test_security(self):
         # Test up-level security
