@@ -65,12 +65,6 @@ class Server(ServerAdapter):
         self.interrupt = None
         self.running = False
     
-    def quickstart(self, server=None):
-        """This does nothing now and will be removed in 3.2."""
-        warnings.warn('quickstart does nothing now and will be removed in '
-                      '3.2. Call cherrypy.engine.start() instead.',
-                      DeprecationWarning)
-    
     def httpserver_from_self(self, httpserver=None):
         """Return a (httpserver, bind_addr) pair based on self attributes."""
         if httpserver is None:
