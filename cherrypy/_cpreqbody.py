@@ -406,6 +406,14 @@ class Part(Entity):
         return fp
 
 
+class Infinity(object):
+    def __cmp__(self, other):
+        return 1
+    def __sub__(self, other):
+        return self
+inf = Infinity()
+
+
 class SizedReader:
     
     def __init__(self, fp, length, maxbytes, bufsize=8192):
@@ -435,7 +443,6 @@ class SizedReader:
         supports the 'write' method; all bytes read will be written to the fp,
         and None is returned.
         """
-        inf = float('inf')
         
         if self.length is None:
             if size is None:
