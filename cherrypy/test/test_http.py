@@ -37,6 +37,11 @@ def setup_server():
             return "Hello world!"
         index.exposed = True
         
+        def no_body(self, *args, **kwargs):
+            return "Hello world!"
+        no_body.exposed = True
+        no_body._cp_config = {'request.process_request_body': False}
+        
         def post_multipart(self, file):
             """Return a summary ("a * 65536\nb * 65536") of the uploaded file."""
             contents = file.file.read()
@@ -64,16 +69,37 @@ from cherrypy.test import helper
 
 class HTTPTests(helper.CPWebCase):
     
-    def test_sockets(self):
-        # By not including a Content-Length header, cgi.FieldStorage
-        # will hang. Verify that CP times out the socket and responds
+    def test_no_content_length(self):
+        # "The presence of a message-body in a request is signaled by the
+        # inclusion of a Content-Length or Transfer-Encoding header field in
+        # the request's message-headers."
+        # 
+        # Send a message with neither header and no body. Even though
+        # the request is of method POST, this should be OK because we set
+        # request.process_request_body to False for our handler.
+        if self.scheme == "https":
+            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.request("POST", "/no_body")
+        response = c.getresponse()
+        self.body = response.fp.read()
+        self.status = str(response.status)
+        self.assertStatus(200)
+        self.assertBody(b'Hello world!')
+        
+        # Now send a message that has no Content-Length, but does send a body.
+        # Verify that CP times out the socket and responds
         # with 411 Length Required.
         if self.scheme == "https":
             c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
             c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.request("POST", "/")
-        self.assertEqual(c.getresponse().status, 411)
+        response = c.getresponse()
+        self.body = response.fp.read()
+        self.status = str(response.status)
+        self.assertStatus(411)
     
     def test_post_multipart(self):
         alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -86,21 +112,20 @@ class HTTPTests(helper.CPWebCase):
         
         # post file
         if self.scheme == 'https':
-            c = httplib.HTTPS('%s:%s' % (self.interface(), self.PORT))
+            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTP('%s:%s' % (self.interface(), self.PORT))
+            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest('POST', '/post_multipart')
         c.putheader('Content-Type', content_type)
         c.putheader('Content-Length', str(len(body)))
         c.endheaders()
         c.send(body)
         
-        errcode, errmsg, headers = c.getreply()
-        self.assertEqual(errcode, 200)
-        
-        response_body = c.file.read()
-        self.assertEquals(", ".join(["%s * 65536" % c for c in alphabet]),
-                          response_body)
+        response = c.getresponse()
+        self.body = response.fp.read()
+        self.status = str(response.status)
+        self.assertStatus(200)
+        self.assertBody(", ".join(["%s * 65536" % c for c in alphabet]))
 
     def test_malformed_request_line(self):
         if getattr(cherrypy.server, "using_apache", False):
@@ -117,7 +142,7 @@ class HTTPTests(helper.CPWebCase):
         response = c.response_class(c.sock, strict=c.strict, method='GET')
         response.begin()
         self.assertEqual(response.status, 400)
-        self.assertEqual(response.fp.read(), "Malformed Request-Line")
+        self.assertEqual(response.fp.read(22), b"Malformed Request-Line")
         c.close()
 
     def test_http_over_https(self):
