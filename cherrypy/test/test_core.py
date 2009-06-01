@@ -224,12 +224,14 @@ def setup_server():
         
         def single(self, name):
             cookie = cherrypy.request.cookie[name]
-            cherrypy.response.cookie[name] = cookie.value
+            # Python2's SimpleCookie.__setitem__ won't take unicode keys.
+            cherrypy.response.cookie[str(name)] = cookie.value
         
         def multiple(self, names):
             for name in names:
                 cookie = cherrypy.request.cookie[name]
-                cherrypy.response.cookie[name] = cookie.value
+                # Python2's SimpleCookie.__setitem__ won't take unicode keys.
+                cherrypy.response.cookie[str(name)] = cookie.value
 
 
     if sys.version_info >= (2, 5):
