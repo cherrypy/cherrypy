@@ -184,7 +184,7 @@ class StaticTest(helper.CPWebCase):
     
     def test_file_stream(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"
@@ -223,7 +223,7 @@ class StaticTest(helper.CPWebCase):
     
     def test_file_stream_deadlock(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"

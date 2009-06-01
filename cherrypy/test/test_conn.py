@@ -92,7 +92,7 @@ class ConnectionCloseTests(helper.CPWebCase):
     
     def test_HTTP11(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"
@@ -247,7 +247,7 @@ class PipelineTests(helper.CPWebCase):
     
     def test_HTTP11_Timeout(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"
@@ -334,7 +334,7 @@ class PipelineTests(helper.CPWebCase):
     
     def test_HTTP11_pipelining(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"
@@ -372,7 +372,7 @@ class PipelineTests(helper.CPWebCase):
     
     def test_100_Continue(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"
@@ -427,7 +427,7 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_readall_or_close(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"
@@ -499,7 +499,7 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_No_Message_Body(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"
@@ -529,13 +529,13 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_Chunked_Encoding(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         if (hasattr(self, 'harness') and
             "modpython" in self.harness.__class__.__name__.lower()):
             # mod_python forbids chunked encoding
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.PROTOCOL = "HTTP/1.1"

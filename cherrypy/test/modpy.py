@@ -116,7 +116,7 @@ class ServerControl(object):
         
         result = read_process(APACHE_PATH, "-k start -f %s" % mpconf)
         if result:
-            print result
+            cherrypy.py3print(result)
     
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""

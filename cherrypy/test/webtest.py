@@ -242,38 +242,38 @@ class WebCase(TestCase):
     console_height = 30
     
     def _handlewebError(self, msg):
-        print
-        print "    ERROR:", msg
+        cherrypy.py3print()
+        cherrypy.py3print("    ERROR:", msg)
         
         if not self.interactive:
             raise self.failureException(msg)
         
         p = "    Show: [B]ody [H]eaders [S]tatus [U]RL; [I]gnore, [R]aise, or sys.e[X]it >> "
-        print p,
+        cherrypy.py3print(p, end=' ')
         # ARGH!
         sys.stdout.flush()
         while True:
             i = getchar().upper()
             if i not in "BHSUIRX":
                 continue
-            print i.upper()  # Also prints new line
+            cherrypy.py3print(i.upper())  # Also prints new line
             if i == "B":
                 for x, line in enumerate(self.body.splitlines()):
                     if (x + 1) % self.console_height == 0:
                         # The \r and comma should make the next line overwrite
-                        print "<-- More -->\r",
+                        cherrypy.py3print("<-- More -->\r", end=' ')
                         m = getchar().lower()
                         # Erase our "More" prompt
-                        print "            \r",
+                        cherrypy.py3print("            \r", end=' ')
                         if m == "q":
                             break
-                    print line
+                    cherrypy.py3print(line)
             elif i == "H":
                 pprint.pprint(self.headers)
             elif i == "S":
-                print self.status
+                cherrypy.py3print(self.status)
             elif i == "U":
-                print self.url
+                cherrypy.py3print(self.url)
             elif i == "I":
                 # return without raising the normal exception
                 return
@@ -281,7 +281,7 @@ class WebCase(TestCase):
                 raise self.failureException(msg)
             elif i == "X":
                 self.exit()
-            print p,
+            cherrypy.py3print(p, end=' ')
     
     def exit(self):
         sys.exit()
@@ -589,7 +589,7 @@ def server_error(exc=None):
         return False
     else:
         ServerError.on = True
-        print
-        print "".join(traceback.format_exception(*exc))
+        cherrypy.py3print()
+        cherrypy.py3print("".join(traceback.format_exception(*exc)))
         return True
 

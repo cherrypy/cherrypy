@@ -49,7 +49,7 @@ class TidyTest(helper.CPWebCase):
 
     def test_Tidy_Tool(self):
         if not os.path.exists(tidy_path) and not os.path.exists(tidy_path + ".exe"):
-            print "skipped (tidy not found) ",
+            cherrypy.py3print("skipped (tidy not found) ", end=' ')
             return
         
         self.getPage('/validhtml')

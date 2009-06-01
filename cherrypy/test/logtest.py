@@ -41,36 +41,36 @@ class LogCase(object):
     markerPrefix = "test suite marker: "
     
     def _handleLogError(self, msg, data, marker, pattern):
-        print
-        print "    ERROR:", msg
+        cherrypy.py3print()
+        cherrypy.py3print("    ERROR:", msg)
         
         if not self.interactive:
             raise self.failureException(msg)
         
         p = "    Show: [L]og [M]arker [P]attern; [I]gnore, [R]aise, or sys.e[X]it >> "
-        print p,
-        # ARGH!
+        cherrypy.py3print(p, end=' ')
+        # ARGH
         sys.stdout.flush()
         while True:
             i = getchar().upper()
             if i not in "MPLIRX":
                 continue
-            print i.upper()  # Also prints new line
+            cherrypy.py3print(i.upper())  # Also prints new line
             if i == "L":
                 for x, line in enumerate(data):
                     if (x + 1) % self.console_height == 0:
                         # The \r and comma should make the next line overwrite
-                        print "<-- More -->\r",
+                        cherrypy.py3print("<-- More -->\r", end=' ')
                         m = getchar().lower()
                         # Erase our "More" prompt
-                        print "            \r",
+                        cherrypy.py3print("            \r", end=' ')
                         if m == "q":
                             break
-                    print line.rstrip()
+                    cherrypy.py3print(line.rstrip())
             elif i == "M":
-                print repr(marker or self.lastmarker)
+                cherrypy.py3print(repr(marker or self.lastmarker))
             elif i == "P":
-                print repr(pattern)
+                cherrypy.py3print(repr(pattern))
             elif i == "I":
                 # return without raising the normal exception
                 return
@@ -78,7 +78,7 @@ class LogCase(object):
                 raise self.failureException(msg)
             elif i == "X":
                 self.exit()
-            print p,
+            cherrypy.py3print(p, end=' ')
     
     def exit(self):
         sys.exit()

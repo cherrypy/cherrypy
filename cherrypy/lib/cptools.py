@@ -240,7 +240,7 @@ Message: %(error_msg)s
         if error_msg:
             body = self.login_screen(from_page, username, error_msg)
             cherrypy.response.body = body
-            if cherrypy.response.headers.has_key("Content-Length"):
+            if "Content-Length" in cherrypy.response.headers:
                 # Delete Content-Length header so finalize() recalcs it.
                 del cherrypy.response.headers["Content-Length"]
             return True
@@ -269,7 +269,7 @@ Message: %(error_msg)s
             sess[self.session_key] = username = self.anonymous()
         if not username:
             cherrypy.response.body = self.login_screen(cherrypy.url(qs=request.query_string))
-            if cherrypy.response.headers.has_key("Content-Length"):
+            if "Content-Length" in cherrypy.response.headers:
                 # Delete Content-Length header so finalize() recalcs it.
                 del cherrypy.response.headers["Content-Length"]
             return True
@@ -297,7 +297,7 @@ Message: %(error_msg)s
 
 def session_auth(**kwargs):
     sa = SessionAuth()
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         setattr(sa, k, v)
     return sa.run()
 session_auth.__doc__ = """Session authentication hook.

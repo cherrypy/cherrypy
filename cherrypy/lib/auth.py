@@ -13,13 +13,13 @@ def check_auth(users, encrypt=None, realm=None):
         if not encrypt:
             encrypt = httpauth.DIGEST_AUTH_ENCODERS[httpauth.MD5]
         
-        if callable(users):
+        if hasattr(users, '__call__'):
             try:
                 # backward compatibility
                 users = users() # expect it to return a dictionary
 
                 if not isinstance(users, dict):
-                    raise ValueError, "Authentication users must be a dictionary"
+                    raise ValueError("Authentication users must be a dictionary")
                 
                 # fetch the user password
                 password = users.get(ah["username"], None)
@@ -28,7 +28,7 @@ def check_auth(users, encrypt=None, realm=None):
                 password = users(ah["username"])
         else:
             if not isinstance(users, dict):
-                raise ValueError, "Authentication users must be a dictionary"
+                raise ValueError("Authentication users must be a dictionary")
             
             # fetch the user password
             password = users.get(ah["username"], None)

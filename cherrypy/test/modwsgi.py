@@ -115,7 +115,7 @@ class ServerControl(object):
         
         result = read_process(APACHE_PATH, "-k start -f %s" % mpconf)
         if result:
-            print result
+            cherrypy.py3print(result)
         
         # Make a request so mod_wsgi starts up our app.
         # If we don't, concurrent initial requests will 404.

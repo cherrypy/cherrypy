@@ -76,7 +76,7 @@ class WSGI_Namespace_Test(helper.CPWebCase):
     
     def test_pipeline(self):
         if not cherrypy.server.httpserver:
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         self.getPage("/")

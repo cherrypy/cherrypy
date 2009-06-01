@@ -142,17 +142,17 @@ def _parseDigestAuthorization (auth_params):
     # Check for required parameters
     required = ["username", "realm", "nonce", "uri", "response"]
     for k in required:
-        if not params.has_key(k):
+        if k not in params:
             return None
 
     # If qop is sent then cnonce and nc MUST be present
-    if params.has_key("qop") and not (params.has_key("cnonce") \
-                                      and params.has_key("nc")):
+    if "qop" in params and not ("cnonce" in params \
+                                      and "nc" in params):
         return None
 
     # If qop is not sent, neither cnonce nor nc can be present
-    if (params.has_key("cnonce") or params.has_key("nc")) and \
-       not params.has_key("qop"):
+    if ("cnonce" in params or "nc" in params) and \
+       "qop" not in params:
         return None
 
     return params

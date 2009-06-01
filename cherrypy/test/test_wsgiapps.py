@@ -89,7 +89,7 @@ This is a wsgi app running within CherryPy!'''
     def test_04_pure_wsgi(self):
         import cherrypy
         if not cherrypy.server.using_wsgi:
-            print "skipped (not using WSGI)...",
+            cherrypy.py3print("skipped (not using WSGI)...", end=' ')
             return
         self.getPage("/hosted/app1")
         self.assertHeader("Content-Type", "text/plain")
@@ -98,7 +98,7 @@ This is a wsgi app running within CherryPy!'''
     def test_05_wrapped_cp_app(self):
         import cherrypy
         if not cherrypy.server.using_wsgi:
-            print "skipped (not using WSGI)...",
+            cherrypy.py3print("skipped (not using WSGI)...", end=' ')
             return
         self.getPage("/hosted/app2/")
         body = list("I'm a regular CherryPy page handler!")
@@ -109,7 +109,7 @@ This is a wsgi app running within CherryPy!'''
     def test_06_empty_string_app(self):
         import cherrypy
         if not cherrypy.server.using_wsgi:
-            print "skipped (not using WSGI)...",
+            cherrypy.py3print("skipped (not using WSGI)...", end=' ')
             return
         self.getPage("/hosted/app3")
         self.assertHeader("Content-Type", "text/plain")

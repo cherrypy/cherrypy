@@ -20,7 +20,7 @@ app_config = { '/' : basic_auth }
 __author__ = 'visteya'
 __date__ = 'April 2009'
 
-
+import binascii
 import base64
 import cherrypy
 
@@ -61,7 +61,7 @@ def basic_auth(realm, checkpassword):
     """
 
     if '"' in realm:
-        raise ValueError, 'Realm cannot contain the " (quote) character.'
+        raise ValueError('Realm cannot contain the " (quote) character.')
 
     auth_header = cherrypy.request.headers.get('authorization')
     if auth_header is not None:

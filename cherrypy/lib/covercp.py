@@ -185,7 +185,7 @@ def _percent(statements, missing):
 def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
     
     # Show the directory name and any of our children
-    dirs = [k for k, v in root.iteritems() if v]
+    dirs = [k for k, v in root.items() if v]
     dirs.sort()
     for name in dirs:
         newpath = os.path.join(path, name)
@@ -202,7 +202,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
     # Now list the files
     if path.lower().startswith(base):
         relpath = path[len(base):]
-        files = [k for k, v in root.iteritems() if not v]
+        files = [k for k, v in root.items() if not v]
         files.sort()
         for name in files:
             newpath = os.path.join(path, name)
@@ -252,7 +252,7 @@ def get_tree(base, exclude):
     """Return covered module names as a nested dict."""
     tree = {}
     coverage.get_ready()
-    runs = coverage.cexecuted.keys()
+    runs = list(coverage.cexecuted.keys())
     if runs:
         for path in runs:
             if not _skip_file(path, exclude) and not os.path.isdir(path):

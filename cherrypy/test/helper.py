@@ -75,7 +75,7 @@ class CPWebCase(webtest.WebCase):
                               esc('<pre id="traceback">') + '(.*)' + esc('</pre>'))
         m = re.match(epage, self.body, re.DOTALL)
         if not m:
-            self._handlewebError('Error page does not match\n' + page)
+            self._handlewebError('Error page does not match; expected:\n' + page)
             return
         
         # Now test the pattern against the traceback

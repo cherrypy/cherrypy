@@ -217,7 +217,7 @@ Finished 1000 requests
         try:
             self.output = _cpmodpy.read_process(AB_PATH or "ab", self.args())
         except:
-            print _cperror.format_exc()
+            cherrypy.py3print(_cperror.format_exc())
             raise
         
         for attr, name, pattern in self.parse_patterns:
@@ -237,7 +237,7 @@ if sys.platform in ("win32",):
 
 def thread_report(path=SCRIPT_NAME + "/hello", concurrency=safe_threads):
     sess = ABSession(path)
-    attrs, names, patterns = zip(*sess.parse_patterns)
+    attrs, names, patterns = list(zip(*sess.parse_patterns))
     avg = dict.fromkeys(attrs, 0.0)
     
     rows = [('threads',) + names]
@@ -258,7 +258,7 @@ def thread_report(path=SCRIPT_NAME + "/hello", concurrency=safe_threads):
 def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
                concurrency=50):
     sess = ABSession(concurrency=concurrency)
-    attrs, names, patterns = zip(*sess.parse_patterns)
+    attrs, names, patterns = list(zip(*sess.parse_patterns))
     rows = [('bytes',) + names]
     for sz in sizes:
         sess.path = "%s/sizer?size=%s" % (SCRIPT_NAME, sz)
@@ -272,25 +272,25 @@ def print_report(rows):
         lengths = [len(str(row[i])) for row in rows]
         widths.append(max(lengths))
     for row in rows:
-        print
+        cherrypy.py3print()
         for i, val in enumerate(row):
-            print str(val).rjust(widths[i]), "|",
-    print
+            cherrypy.py3print(str(val).rjust(widths[i]), "|", end=' ')
+    cherrypy.py3print()
 
 
 def run_standard_benchmarks():
-    print
-    print ("Client Thread Report (1000 requests, 14 byte response body, "
+    cherrypy.py3print()
+    cherrypy.py3print("Client Thread Report (1000 requests, 14 byte response body, "
            "%s server threads):" % cherrypy.server.thread_pool)
     print_report(thread_report())
     
-    print
-    print ("Client Thread Report (1000 requests, 14 bytes via staticdir, "
+    cherrypy.py3print()
+    cherrypy.py3print("Client Thread Report (1000 requests, 14 bytes via staticdir, "
            "%s server threads):" % cherrypy.server.thread_pool)
     print_report(thread_report("%s/static/index.html" % SCRIPT_NAME))
     
-    print
-    print ("Size Report (1000 requests, 50 client threads, "
+    cherrypy.py3print()
+    cherrypy.py3print("Size Report (1000 requests, 50 client threads, "
            "%s server threads):" % cherrypy.server.thread_pool)
     print_report(size_report())
 
@@ -315,7 +315,7 @@ def startup_modpython(req=None):
 
 
 def run_modpython(use_wsgi=False):
-    print "Starting mod_python..."
+    cherrypy.py3print("Starting mod_python...")
     pyopts = []
     
     # Pass the null and ab=path options through Apache
@@ -350,11 +350,11 @@ if __name__ == '__main__':
         switches, args = getopt.getopt(sys.argv[1:], "", longopts)
         opts = dict(switches)
     except getopt.GetoptError:
-        print __doc__
+        cherrypy.py3print(__doc__)
         sys.exit(2)
     
     if "--help" in opts:
-        print __doc__
+        cherrypy.py3print(__doc__)
         sys.exit(0)
     
     if "--ab" in opts:
@@ -365,23 +365,23 @@ if __name__ == '__main__':
         # can be tested from a standard web browser.
         def run():
             port = cherrypy.server.socket_port
-            print ("You may now open http://127.0.0.1:%s%s/" %
+            cherrypy.py3print("You may now open http://127.0.0.1:%s%s/" %
                    (port, SCRIPT_NAME))
             
             if "--null" in opts:
-                print "Using null Request object"
+                cherrypy.py3print("Using null Request object")
     else:
         def run():
             end = time.time() - start
-            print "Started in %s seconds" % end
+            cherrypy.py3print("Started in %s seconds" % end)
             if "--null" in opts:
-                print "\nUsing null Request object"
+                cherrypy.py3print("\nUsing null Request object")
             try:
                 run_standard_benchmarks()
             finally:
                 cherrypy.engine.exit()
     
-    print "Starting CherryPy app server..."
+    cherrypy.py3print("Starting CherryPy app server...")
     
     class NullWriter(object):
         """Suppresses the printing of socket errors."""

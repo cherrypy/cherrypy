@@ -5,7 +5,7 @@ import time
 import cherrypy
 from cherrypy.lib import cptools, httputil
 
-class VaryHeaderAwareStore():
+class VaryHeaderAwareStore:
     """
     A cache store that honors the Vary headers and keeps
     a separate cached copy for each.

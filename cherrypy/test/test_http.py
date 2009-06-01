@@ -86,7 +86,7 @@ class HTTPTests(helper.CPWebCase):
         self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(200)
-        self.assertBody(b'Hello world!')
+        self.assertBody('Hello world!')
         
         # Now send a message that has no Content-Length, but does send a body.
         # Verify that CP times out the socket and responds
@@ -129,7 +129,7 @@ class HTTPTests(helper.CPWebCase):
 
     def test_malformed_request_line(self):
         if getattr(cherrypy.server, "using_apache", False):
-            print "skipped due to known Apache differences...",
+            cherrypy.py3print("skipped due to known Apache differences...", end=' ')
             return
         
         # Test missing version in Request-Line
@@ -142,12 +142,12 @@ class HTTPTests(helper.CPWebCase):
         response = c.response_class(c.sock, strict=c.strict, method='GET')
         response.begin()
         self.assertEqual(response.status, 400)
-        self.assertEqual(response.fp.read(22), b"Malformed Request-Line")
+        self.assertEqual(response.fp.read(22), "Malformed Request-Line")
         c.close()
 
     def test_http_over_https(self):
         if self.scheme != 'https':
-            print "skipped (not running HTTPS)...",
+            cherrypy.py3print("skipped (not running HTTPS)...", end=' ')
             return
         
         # Try connecting without SSL.

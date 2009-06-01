@@ -33,7 +33,7 @@ class WSGI_VirtualHost_Test(helper.CPWebCase):
     
     def test_welcome(self):
         if not cherrypy.server.using_wsgi:
-            print "skipped (not using WSGI)...",
+            cherrypy.py3print("skipped (not using WSGI)...", end=' ')
             return
         
         for year in xrange(1997, 2008):

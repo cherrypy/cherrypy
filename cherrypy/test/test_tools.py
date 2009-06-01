@@ -295,7 +295,7 @@ class ToolTests(helper.CPWebCase):
             httpserver = cherrypy.server.httpserver
             old_timeout = httpserver.timeout
         except (AttributeError, IndexError):
-            print "skipped ",
+            cherrypy.py3print("skipped ", end=' ')
             return
         
         try:
@@ -374,7 +374,7 @@ class ToolTests(helper.CPWebCase):
     
     def testToolWithConfig(self):
         if not sys.version_info >= (2, 5):
-            print "skipped (Python 2.5+ only)",
+            cherrypy.py3print("skipped (Python 2.5+ only)", end=' ')
             return
         
         self.getPage('/tooldecs/blah')
