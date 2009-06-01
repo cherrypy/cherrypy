@@ -242,6 +242,7 @@ class WebCase(TestCase):
     console_height = 30
     
     def _handlewebError(self, msg):
+        import cherrypy
         cherrypy.py3print()
         cherrypy.py3print("    ERROR:", msg)
         

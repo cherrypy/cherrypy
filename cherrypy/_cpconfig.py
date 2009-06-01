@@ -126,15 +126,15 @@ def merge(base, other):
 
 class Config(reprconf.Config):
     """The 'global' configuration data for the entire CherryPy process."""
-    
+
     def update(self, config):
         """Update self from a dict, file or filename."""
         if isinstance(config, basestring):
             # Filename
             cherrypy.engine.autoreload.files.add(config)
-        
+
         reprconf.Config.update(self, config)
-    
+
     def _apply(self, config):
         """Update self from a dict."""
         if isinstance(config.get("global", None), dict):
@@ -143,7 +143,7 @@ class Config(reprconf.Config):
             config = config["global"]
         if 'tools.staticdir.dir' in config:
             config['tools.staticdir.section'] = "global"
-        
+
         reprconf.Config._apply(self, config)
 
 
@@ -236,10 +236,10 @@ def _engine_namespace_handler(k, v):
         plugin, attrname = k.split(".", 1)
         plugin = getattr(engine, plugin)
         if attrname == 'on':
-            if v and callable(getattr(plugin, 'subscribe', None)):
+            if v and hasattr(getattr(plugin, 'subscribe', None), '__call__'):
                 plugin.subscribe()
                 return
-            elif (not v) and callable(getattr(plugin, 'unsubscribe', None)):
+            elif (not v) and hasattr(getattr(plugin, 'unsubscribe', None), '__call__'):
                 plugin.unsubscribe()
                 return
         setattr(plugin, attrname, v)

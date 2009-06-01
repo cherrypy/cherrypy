@@ -179,7 +179,7 @@ class Tree(object):
         if isinstance(root, Application):
             app = root
             if script_name != "" and script_name != app.script_name:
-                raise ValueError, "Cannot specify a different script name and pass an Application instance to cherrypy.mount"
+                raise ValueError("Cannot specify a different script name and pass an Application instance to cherrypy.mount")
             script_name = app.script_name
         else:
             app = Application(root, script_name)
