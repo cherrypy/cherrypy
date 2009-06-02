@@ -716,8 +716,11 @@ class HTTPRequest(object):
                     if self.response_protocol == "HTTP/1.1":
                         # Encode RFC-2047 TEXT 
                         # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?="). 
-                        from email.Header import Header
-                        v = Header(v, 'utf-8').encode()
+                        # We do our own here instead of using the email module
+                        # because we never want to fold lines--folding has
+                        # been deprecated by the HTTP working group.
+                        from binascii import b2a_base64
+                        v = '=?utf-8?b?%s?=' % b2a_base64(v.encode('utf-8')).strip('\n')
                     else:
                         raise
                  

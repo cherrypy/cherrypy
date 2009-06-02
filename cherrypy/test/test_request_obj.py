@@ -192,8 +192,9 @@ def setup_server():
         
         def ifmatch(self):
             val = cherrypy.request.headers['If-Match']
+            assert isinstance(val, unicode)
             cherrypy.response.headers['ETag'] = val
-            return repr(val)
+            return val
     
     
     class HeaderElements(Test):
@@ -592,19 +593,20 @@ class RequestObjectTests(helper.CPWebCase):
             c = u"=E2=84=ABngstr=C3=B6m"
             self.getPage("/headers/ifmatch", [('If-Match', u'=?utf-8?q?%s?=' % c)])
             # The body should be utf-8 encoded.
-            self.assertBody("u'\xe2\x84\xabngstr\xc3\xb6m'")
+            self.assertBody("\xe2\x84\xabngstr\xc3\xb6m")
             # But the Etag header should be RFC-2047 encoded (binary)
             self.assertHeader("ETag", u'=?utf-8?b?4oSrbmdzdHLDtm0=?=')
             
             # Test a *LONG* RFC-2047-encoded request and response header value
             self.getPage("/headers/ifmatch",
                          [('If-Match', u'=?utf-8?q?%s?=' % (c * 10))])
-            self.assertBody("'" + (u"\xe2\x84\xabngstr\xc3\xb6m" * 10) + "'")
+            self.assertBody("\xe2\x84\xabngstr\xc3\xb6m" * 10)
             # Note: this is different output for Python3, but it decodes fine.
             etag = self.assertHeader("ETag",
-                u'=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm3ihKtu?=\n'
-                u' =?utf-8?b?Z3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ry?=\n'
-                u' =?utf-8?b?w7Zt4oSrbmdzdHLDtm0=?=')
+                '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                '4oSrbmdzdHLDtm0=?=')
             self.assertEqual(httputil.decode_TEXT(etag), u * 10)
     
     def test_header_presence(self):
