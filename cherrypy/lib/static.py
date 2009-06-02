@@ -104,7 +104,7 @@ def serve_file(path, content_type=None, disposition=None, name=None):
                 boundary = mimetools.choose_boundary()
                 ct = "multipart/byteranges; boundary=%s" % boundary
                 response.headers['Content-Type'] = ct
-                if response.headers.has_key("Content-Length"):
+                if "Content-Length" in response.headers:
                     # Delete Content-Length header so finalize() recalcs it.
                     del response.headers["Content-Length"]
                 

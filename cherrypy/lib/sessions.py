@@ -70,7 +70,7 @@ class Session(object):
         self.id_observers = []
         self._data = {}
         
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(self, k, v)
         
         if id is None:
@@ -301,7 +301,7 @@ class FileSession(Session):
         # The 'storage_path' arg is required for file-based sessions.
         kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
         
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(cls, k, v)
         
         # Warn if any lock files exist at startup.
@@ -427,7 +427,7 @@ class PostgresqlSession(Session):
         This should only be called once per process; this will be done
         automatically when using sessions.init (as the built-in Tool does).
         """
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(cls, k, v)
         
         self.db = self.get_db()
@@ -503,7 +503,7 @@ class MemcachedSession(Session):
         This should only be called once per process; this will be done
         automatically when using sessions.init (as the built-in Tool does).
         """
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(cls, k, v)
         
         import memcache

@@ -55,7 +55,9 @@ class VaryHeaderAwareStore:
         if not vary_store:
             # No values exist for this URI
             raise KeyError(uri)
-        return vary_store.values()[0]
+        # Return the first value
+        for s in vary_store.values():
+            return s
 
     def __getitem__(self, key):
         return self.get(key)
@@ -258,7 +260,7 @@ def tee_output():
             vary = [he.value for he in
                     cherrypy.response.headers.elements('Vary')]
             sel_headers = dict([(k, v) for k, v
-                                in cherrypy.request.headers.iteritems()
+                                in cherrypy.request.headers.items()
                                 if k in vary])
             cherrypy._cache.put((response.status, response.headers or {},
                                  body, response.time, sel_headers))

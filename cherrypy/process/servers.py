@@ -247,7 +247,7 @@ def wait_for_free_port(host, port):
     if not host:
         raise ValueError("Host values of '' or None are not allowed.")
     
-    for trial in xrange(50):
+    for trial in range(50):
         try:
             # we are expecting a free port, so reduce the timeout
             check_port(host, port, timeout=0.1)
@@ -264,7 +264,7 @@ def wait_for_occupied_port(host, port):
     if not host:
         raise ValueError("Host values of '' or None are not allowed.")
     
-    for trial in xrange(50):
+    for trial in range(50):
         try:
             check_port(host, port)
         except IOError:

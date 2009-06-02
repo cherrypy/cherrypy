@@ -128,7 +128,7 @@ class _ControlCodes(dict):
     
     def key_for(self, obj):
         """For the given value, return its corresponding key."""
-        for key, val in self.iteritems():
+        for key, val in self.items():
             if val is obj:
                 return key
         raise ValueError("The given object could not be found: %r" % obj)

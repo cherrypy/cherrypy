@@ -18,7 +18,7 @@ response_codes[503] = ('Service Unavailable',
                       'request due to a temporary overloading or '
                       'maintenance of the server.')
 
-
+from cherrypy.py3util import sorted, reversed
 import re
 import urllib
 
@@ -62,7 +62,7 @@ def get_ranges(headervalue, content_length):
         if start:
             if not stop:
                 stop = content_length - 1
-            start, stop = map(int, (start, stop))
+            start, stop = int(start), int(stop)
             if start >= content_length:
                 # From rfc 2616 sec 14.16:
                 # "If the server receives a request (other than one
@@ -100,6 +100,9 @@ class HeaderElement(object):
         if params is None:
             params = {}
         self.params = params
+    
+    def __cmp__(self, other):
+        return cmp(self.value, other.value)
     
     def __unicode__(self):
         p = [";%s=%s" % (k, v) for k, v in self.params.iteritems()]
@@ -173,15 +176,14 @@ class AcceptElement(HeaderElement):
     qvalue = property(qvalue, doc="The qvalue, or priority, of this value.")
     
     def __cmp__(self, other):
-        diff = cmp(other.qvalue, self.qvalue)
+        diff = cmp(self.qvalue, other.qvalue)
         if diff == 0:
-            diff = cmp(str(other), str(self))
+            diff = cmp(str(self), str(other))
         return diff
 
 
 def header_elements(fieldname, fieldvalue):
-    """Return a HeaderElement list from a comma-separated header str."""
-    
+    """Return a sorted HeaderElement list from a comma-separated header str."""
     if not fieldvalue:
         return []
     
@@ -193,8 +195,7 @@ def header_elements(fieldname, fieldvalue):
             hv = HeaderElement.from_str(element)
         result.append(hv)
     
-    result.sort()
-    return result
+    return list(reversed(sorted(result)))
 
 def decode_TEXT(value):
     """Decode RFC-2047 TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
@@ -382,7 +383,7 @@ class HeaderMap(CaseInsensitiveDict):
     def output(self, protocol=(1, 1)):
         """Transform self into a list of (name, value) tuples."""
         header_list = []
-        for key, v in self.iteritems():
+        for key, v in self.items():
             header_list.append((key, unicode(v)))
         return header_list
 

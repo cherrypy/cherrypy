@@ -114,13 +114,13 @@ class ServerConfigTests(helper.CPWebCase):
         partlen = 200 - len(body)
         b = body % ("x" * partlen)
         h = [("Content-type", "multipart/form-data; boundary=x"),
-             ("Content-Length", len(b))]
+             ("Content-Length", "%s" % len(b))]
         self.getPage('/upload', h, "POST", b)
         self.assertBody('Size: %d' % partlen)
         
         b = body % ("x" * 200)
         h = [("Content-type", "multipart/form-data; boundary=x"),
-             ("Content-Length", len(b))]
+             ("Content-Length", "%s" % len(b))]
         self.getPage('/upload', h, "POST", b)
         self.assertStatus(413)
 

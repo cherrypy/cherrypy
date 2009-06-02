@@ -94,7 +94,7 @@ class CacheTest(helper.CPWebCase):
 
     def testCaching(self):
         elapsed = 0.0
-        for trial in xrange(10):
+        for trial in range(10):
             self.getPage("/")
             # The response should be the same every time,
             # except for the Age response header.

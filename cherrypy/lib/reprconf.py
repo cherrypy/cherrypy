@@ -71,14 +71,14 @@ class NamespaceSet(dict):
         #     with handler as callable:
         #         for k, v in ns_confs.get(ns, {}).iteritems():
         #             callable(k, v)
-        for ns, handler in self.iteritems():
+        for ns, handler in self.items():
             exit = getattr(handler, "__exit__", None)
             if exit:
                 callable = handler.__enter__()
                 no_exc = True
                 try:
                     try:
-                        for k, v in ns_confs.get(ns, {}).iteritems():
+                        for k, v in ns_confs.get(ns, {}).items():
                             callable(k, v)
                     except:
                         # The exceptional case is handled here
@@ -93,7 +93,7 @@ class NamespaceSet(dict):
                     if no_exc and exit:
                         exit(None, None, None)
             else:
-                for k, v in ns_confs.get(ns, {}).iteritems():
+                for k, v in ns_confs.get(ns, {}).items():
                     handler(k, v)
     
     def __repr__(self):

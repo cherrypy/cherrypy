@@ -15,3 +15,11 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+def sorted(lst):
+    newlst = list(lst)
+    newlst.sort()
+    return newlst
+
+def reversed(lst):
+    newlst = list(lst)
+    return iter(newlst[::-1])

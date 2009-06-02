@@ -42,4 +42,3 @@ def set_vary_header(response, header_name):
     if header_name not in varies:
         varies.append(header_name)
     response.headers['Vary'] = ", ".join(varies)
-

@@ -3,7 +3,7 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
-import httplib
+from httplib import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
 import urllib
 import socket
 import sys
@@ -45,7 +45,7 @@ def setup_server():
                 cherrypy.response.headers['Content-Length'] = 10
             
             def content():
-                for x in xrange(10):
+                for x in range(10):
                     yield str(x)
             
             return content()
@@ -118,7 +118,7 @@ class ConnectionCloseTests(helper.CPWebCase):
         self.assertHeader("Connection", "close")
         
         # Make another request on the same connection, which should error.
-        self.assertRaises(httplib.NotConnected, self.getPage, "/")
+        self.assertRaises(NotConnected, self.getPage, "/")
     
     def test_Streaming_no_len(self):
         self._streaming(set_cl=False)
@@ -170,7 +170,7 @@ class ConnectionCloseTests(helper.CPWebCase):
                     self.assertHeader("Connection", "close")
                     
                     # Make another request on the same connection, which should error.
-                    self.assertRaises(httplib.NotConnected, self.getPage, "/")
+                    self.assertRaises(NotConnected, self.getPage, "/")
                 
                 # Try HEAD. See http://www.cherrypy.org/ticket/864.
                 self.getPage("/stream", method='HEAD')
@@ -211,14 +211,14 @@ class ConnectionCloseTests(helper.CPWebCase):
                 self.assertNoHeader("Transfer-Encoding")
                 
                 # Make another request on the same connection, which should error.
-                self.assertRaises(httplib.NotConnected, self.getPage, "/")
+                self.assertRaises(NotConnected, self.getPage, "/")
     
     def test_HTTP10_KeepAlive(self):
         self.PROTOCOL = "HTTP/1.0"
         if self.scheme == "https":
-            self.HTTP_CONN = httplib.HTTPSConnection
+            self.HTTP_CONN = HTTPSConnection
         else:
-            self.HTTP_CONN = httplib.HTTPConnection
+            self.HTTP_CONN = HTTPConnection
         
         # Test a normal HTTP/1.0 request.
         self.getPage("/page2")
@@ -329,7 +329,7 @@ class PipelineTests(helper.CPWebCase):
             response.begin()
         except:
             if not isinstance(sys.exc_info()[1],
-                              (socket.error, httplib.BadStatusLine)):
+                              (socket.error, BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
                           " as it should have: %s" % sys.exc_info()[1])
         else:
@@ -362,7 +362,7 @@ class PipelineTests(helper.CPWebCase):
             response.begin()
         except:
             if not isinstance(sys.exc_info()[1],
-                              (socket.error, httplib.BadStatusLine)):
+                              (socket.error, BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
                           " as it should have: %s" % sys.exc_info()[1])
         else:
@@ -401,7 +401,7 @@ class PipelineTests(helper.CPWebCase):
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         
-        for trial in xrange(5):
+        for trial in range(5):
             # Put next request
             conn._output('GET /hello HTTP/1.1')
             conn._output("Host: %s" % self.HOST)
@@ -486,9 +486,9 @@ class ConnectionTests(helper.CPWebCase):
         self.PROTOCOL = "HTTP/1.1"
         
         if self.scheme == "https":
-            self.HTTP_CONN = httplib.HTTPSConnection
+            self.HTTP_CONN = HTTPSConnection
         else:
-            self.HTTP_CONN = httplib.HTTPConnection
+            self.HTTP_CONN = HTTPConnection
         
         # Test a max of 0 (the default) and then reset to what it was above.
         old_max = cherrypy.server.max_request_body_size
@@ -607,7 +607,7 @@ class ConnectionTests(helper.CPWebCase):
         # Note that this is somewhat malformed:
         # we shouldn't be sending Content-Length.
         # RFC 2616 says the server should ignore it.
-        conn.putheader("Content-Length", len(body))
+        conn.putheader("Content-Length", "%s" % len(body))
         conn.endheaders()
         conn.send(body)
         response = conn.getresponse()
@@ -640,7 +640,7 @@ class ConnectionTests(helper.CPWebCase):
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.putheader("Content-Type", "text/plain")
-        conn.putheader("Content-Length", 9999)
+        conn.putheader("Content-Length", "9999")
         conn.endheaders()
         response = conn.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)

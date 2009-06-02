@@ -83,14 +83,14 @@ class SignalHandler(object):
         self._previous_handlers = {}
     
     def subscribe(self):
-        for sig, func in self.handlers.iteritems():
+        for sig, func in self.handlers.items():
             try:
                 self.set_handler(sig, func)
             except ValueError:
                 pass
     
     def unsubscribe(self):
-        for signum, handler in self._previous_handlers.iteritems():
+        for signum, handler in self._previous_handlers.items():
             signame = self.signals[signum]
             
             if handler is None:
@@ -546,7 +546,7 @@ class ThreadManager(SimplePlugin):
     
     def stop(self):
         """Release all threads and run all 'stop_thread' listeners."""
-        for thread_ident, i in self.threads.iteritems():
+        for thread_ident, i in self.threads.items():
             self.bus.publish('stop_thread', i)
         self.threads.clear()
     graceful = stop

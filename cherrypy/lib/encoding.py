@@ -195,7 +195,6 @@ def compress(body, compress_level):
     # ISIZE: 4 bytes
     yield struct.pack("<L", size & 0xFFFFFFFFL)
 
-
 def decompress(body):
     import gzip
     from cherrypy.py3util import StringIO
@@ -256,7 +255,7 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
                 # Return a generator that compresses the page
                 response.headers['Content-Encoding'] = 'gzip'
                 response.body = compress(response.body, compress_level)
-                if response.headers.has_key("Content-Length"):
+                if "Content-Length" in response.headers:
                     # Delete Content-Length header so finalize() recalcs it.
                     del response.headers["Content-Length"]
             return
