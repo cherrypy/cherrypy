@@ -166,7 +166,7 @@ def clean_headers(status):
     for key in ["Accept-Ranges", "Age", "ETag", "Location", "Retry-After",
                 "Vary", "Content-Encoding", "Content-Length", "Expires",
                 "Content-Location", "Content-MD5", "Last-Modified"]:
-        if respheaders.has_key(key):
+        if key in respheaders:
             del respheaders[key]
     
     if status != 416:
@@ -176,7 +176,7 @@ def clean_headers(status):
         # specifies the current length of the selected resource.
         # A response with status code 206 (Partial Content) MUST NOT
         # include a Content-Range field with a byte-range- resp-spec of "*".
-        if respheaders.has_key("Content-Range"):
+        if "Content-Range" in respheaders:
             del respheaders["Content-Range"]
 
 
