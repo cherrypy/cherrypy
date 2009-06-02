@@ -438,7 +438,7 @@ class WebCase(TestCase):
         """Fail if value not in self.body."""
         if value not in self.body:
             if msg is None:
-                msg = '%r not in body' % value
+                msg = '%r not in body: %s' % (value, self.body)
             self._handlewebError(msg)
     
     def assertNotInBody(self, value, msg=None):
