@@ -25,14 +25,14 @@ def process_urlencoded(entity):
     
     params = entity.params
     qs = entity.fp.read()
-    for aparam in qs.split(u'&'):
-        for pair in aparam.split(u';'):
+    for aparam in qs.split('&'):
+        for pair in aparam.split(';'):
             if not pair:
                 continue
             
-            atoms = pair.split(u'=', 1)
+            atoms = pair.split('=', 1)
             if len(atoms) == 1:
-                atoms.append(u'')
+                atoms.append('')
             
             key = unquote_plus(atoms[0]).decode(entity.encoding)
             value = unquote_plus(atoms[1]).decode(entity.encoding)

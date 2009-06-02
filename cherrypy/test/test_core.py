@@ -162,7 +162,8 @@ def setup_server():
                 raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=fish')
             else:
                 # This should pass the user_id through to getImagesByUser
-                raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=%s' % user_id)
+                raise cherrypy.InternalRedirect(
+                    '/image/getImagesByUser?user_id=%s' % str(user_id))
         
         # We support Python 2.3, but the @-deco syntax would look like this:
         # @tools.login_redir()
