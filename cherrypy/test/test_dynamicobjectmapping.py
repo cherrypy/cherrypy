@@ -98,7 +98,9 @@ def setup_server():
             return "POST %d" % make_user(name)
 
         def GET(self):
-            return unicode(sorted(user_lookup.keys()))
+            keys = user_lookup.keys()
+            keys.sort()
+            return unicode(keys)
 
         def dynamic_dispatch(self, vpath):
             try:

@@ -103,7 +103,10 @@ def _old_process_multipart(entity):
     params = entity.params
     
     for part in entity.parts:
-        key = u'parts' if part.name is None else part.name
+        if part.name is None:
+            key = u'parts'
+        else:
+            key = part.name
         
         if part.filename is None:
             # It's a regular field
@@ -455,7 +458,10 @@ class SizedReader:
                 remaining = size
         if remaining == 0:
             self.done = True
-            return '' if fp is None else None
+            if fp is None:
+                return ''
+            else:
+                return None
         
         chunks = []
         

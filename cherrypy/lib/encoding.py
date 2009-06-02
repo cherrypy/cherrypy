@@ -1,3 +1,7 @@
+try:
+    set
+except NameError:
+    from sets import Set as set
 import struct
 import time
 import types

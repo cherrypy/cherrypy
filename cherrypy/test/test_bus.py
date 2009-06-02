@@ -1,6 +1,10 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+try:
+    set
+except NameError:
+    from sets import Set as set
 import threading
 import time
 import unittest
