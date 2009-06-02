@@ -114,7 +114,7 @@ def merge(base, other):
         cherrypy.engine.autoreload.files.add(other)
     
     # Load other into base
-    for section, value_map in reprconf.as_dict(other).iteritems():
+    for section, value_map in reprconf.as_dict(other).items():
         if not isinstance(value_map, dict):
             raise ValueError(
                 "Application config must include section headers, but the "

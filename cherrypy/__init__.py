@@ -127,10 +127,7 @@ class _AttributeDocstrings(type):
         
         newdoc = [cls.__doc__ or ""]
         
-        dctnames = dct.keys()
-        dctnames.sort()
-        
-        for name in dctnames:
+        for name in sorted(dct.keys()):
             if name.endswith("__doc"):
                 # Remove the magic doc attribute.
                 if hasattr(cls, name):
@@ -154,6 +151,7 @@ class _AttributeDocstrings(type):
         cls.__doc__ = "\n\n".join(newdoc)
 
 
+from cherrypy.py3util import sorted
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
 

@@ -608,4 +608,3 @@ class RequestBody(Entity):
                 request_params[key].append(value)
             else:
                 request_params[key] = value
-

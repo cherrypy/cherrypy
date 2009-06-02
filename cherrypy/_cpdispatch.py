@@ -91,7 +91,7 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
 
     missing_args = []
     multiple_args = []
-    for key, usage in arg_usage.iteritems():
+    for key, usage in arg_usage.items():
         if usage == 0:
             missing_args.append(key)
         elif usage > 1:
@@ -302,7 +302,7 @@ class Dispatcher(object):
         
         # Try successive objects (reverse order)
         num_candidates = len(object_trail) - 1
-        for i in xrange(num_candidates, -1, -1):
+        for i in range(num_candidates, -1, -1):
             
             name, candidate, nodeconf, curpath = object_trail[i]
             if candidate is None:

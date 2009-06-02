@@ -27,11 +27,11 @@ class InternalRedirect(CherryPyException):
     Any request.params must be supplied in a query string.
     """
     
-    def __init__(self, path):
+    def __init__(self, path, query_string=""):
         import cherrypy
         request = cherrypy.request
         
-        self.query_string = ""
+        self.query_string = query_string
         if "?" in path:
             # Separate any params included in the path
             path, self.query_string = path.split("?", 1)
@@ -103,7 +103,7 @@ class HTTPRedirect(CherryPyException):
         response.status = status = self.status
         
         if status in (300, 301, 302, 303, 307):
-            response.headers['Content-Type'] = "text/html"
+            response.headers['Content-Type'] = "text/html;charset=utf-8"
             # "The ... URI SHOULD be given by the Location field
             # in the response."
             response.headers['Location'] = self.urls[0]
@@ -193,7 +193,7 @@ class HTTPError(CherryPyException):
         try:
             self.code, self.reason, defaultmsg = _httputil.valid_status(status)
         except ValueError, x:
-            raise cherrypy.__class__(500, x.args[0])
+            raise self.__class__(500, x.args[0])
         
         if self.code < 400 or self.code > 599:
             raise ValueError("status must be between 400 and 599.")
@@ -221,7 +221,7 @@ class HTTPError(CherryPyException):
         tb = None
         if cherrypy.request.show_tracebacks:
             tb = format_exc()
-        response.headers['Content-Type'] = "text/html"
+        response.headers['Content-Type'] = "text/html;charset=utf-8"
         
         content = self.get_error_page(self.status, traceback=tb,
                                       message=self._message)
@@ -316,7 +316,7 @@ def get_error_page(status, **kwargs):
             if callable(error_page):
                 return error_page(**kwargs)
             else:
-                return file(error_page, 'rb').read() % kwargs
+                return open(error_page, 'rb').read() % kwargs
         except:
             e = _format_exception(*_exc_info())[-1]
             m = kwargs['message']

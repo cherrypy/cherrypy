@@ -64,7 +64,7 @@ class Hook(object):
                 % (cls.__module__, cls.__name__, self.callback,
                    self.failsafe, self.priority,
                    ", ".join(['%s=%r' % (k, v)
-                              for k, v in self.kwargs.iteritems()])))
+                              for k, v in self.kwargs.items()])))
 
 
 class HookMap(dict):
@@ -112,7 +112,7 @@ class HookMap(dict):
         newmap = self.__class__()
         # We can't just use 'update' because we want copies of the
         # mutable values (each is a list) as well.
-        for k, v in self.iteritems():
+        for k, v in self.items():
             newmap[k] = v[:]
         return newmap
     copy = __copy__
@@ -601,6 +601,9 @@ class Request(object):
             raise cherrypy.TimeoutError()
         
         return cherrypy.response
+    
+    # Uncomment for stage debugging
+    # stage = property(lambda self: self._stage, lambda self, v: print(v))
     
     def respond(self, path_info):
         """Generate a response for the resource at self.path_info. (Core)"""
