@@ -12,13 +12,14 @@ def start(configfiles=None, daemonize=False, environment=None,
     """Subscribe all engine plugins and start the engine."""
     sys.path = [''] + sys.path
     for i in imports or []:
-        exec "import %s" % i
+        exec("import %s" % i)
     
     for c in configfiles or []:
         cherrypy.config.update(c)
         # If there's only one app mounted, merge config into it.
         if len(cherrypy.tree.apps) == 1:
-            cherrypy.tree.apps.values()[0].merge(c)
+            for app in cherrypy.tree.apps.values():
+                app.merge(c)
     
     engine = cherrypy.engine
     

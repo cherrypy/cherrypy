@@ -114,7 +114,7 @@ class Tool(object):
                 f._cp_config = {}
             subspace = self.namespace + "." + self._name + "."
             f._cp_config[subspace + "on"] = True
-            for k, v in kwargs.iteritems():
+            for k, v in kwargs.items():
                 f._cp_config[subspace + k] = v
             return f
         return tool_decorator
@@ -296,7 +296,7 @@ class SessionTool(Tool):
         sess.regenerate()
         
         # Grab cookie-relevant tool args
-        conf = dict([(k, v) for k, v in self._merged_args().iteritems()
+        conf = dict([(k, v) for k, v in self._merged_args().items()
                      if k in ('path', 'path_header', 'name', 'timeout',
                               'domain', 'secure')])
         _sessions.set_response_cookie(**conf)
@@ -356,7 +356,7 @@ class XMLRPCController(object):
             # if a method is not found, an xmlrpclib.Fault should be returned
             # raising an exception here will do that; see
             # cherrypy.lib.xmlrpc.on_error
-            raise Exception, 'method "%s" is not supported' % attr
+            raise Exception('method "%s" is not supported' % attr)
         
         conf = cherrypy.request.toolmaps['tools'].get("xmlrpc", {})
         _xmlrpc.respond(body,
@@ -385,7 +385,7 @@ class CachingTool(Tool):
             cherrypy._cache = kwargs.pop("cache_class", _caching.MemoryCache)()
             
             # Take all remaining kwargs and set them on the Cache object.
-            for k, v in kwargs.iteritems():
+            for k, v in kwargs.items():
                 setattr(cherrypy._cache, k, v)
         
         if _caching.get(invalid_methods=invalid_methods):

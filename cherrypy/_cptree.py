@@ -103,7 +103,7 @@ class Application(object):
         req = self.request_class(local, remote, scheme, sproto)
         req.app = self
         
-        for name, toolbox in self.toolboxes.iteritems():
+        for name, toolbox in self.toolboxes.items():
             req.namespaces[name] = toolbox
         
         resp = self.response_class()
