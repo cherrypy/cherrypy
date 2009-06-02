@@ -246,6 +246,49 @@ class ConnectionCloseTests(helper.CPWebCase):
 class PipelineTests(helper.CPWebCase):
     
     def test_HTTP11_Timeout(self):
+        # If we timeout without sending any data,
+        # the server will close the conn with a 408.
+        if cherrypy.server.protocol_version != "HTTP/1.1":
+            cherrypy.py3print("skipped ", end=' ')
+            return
+        
+        self.PROTOCOL = "HTTP/1.1"
+        
+        # Connect but send nothing.
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.auto_open = False
+        conn.connect()
+        
+        # Wait for our socket timeout
+        time.sleep(timeout * 2)
+        
+        # The request should have returned 408 already.
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 408)
+        conn.close()
+        
+        # Connect but send half the headers only.
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.auto_open = False
+        conn.connect()
+        conn.send('GET /hello HTTP/1.1')
+        conn.send(("Host: %s" % self.HOST).encode('ascii'))
+        
+        # Wait for our socket timeout
+        time.sleep(timeout * 2)
+        
+        # The conn should have already sent 408.
+        response = conn.response_class(conn.sock, method="GET")
+        response.begin()
+        self.assertEqual(response.status, 408)
+        conn.close()
+    
+    def test_HTTP11_Timeout_after_request(self):
+        # If we timeout after at least one request has succeeded,
+        # the server will close the conn without 408.
         if cherrypy.server.protocol_version != "HTTP/1.1":
             cherrypy.py3print("skipped ", end=' ')
             return
@@ -315,8 +358,18 @@ class PipelineTests(helper.CPWebCase):
         # Wait for our socket timeout
         time.sleep(timeout * 2)
         response = conn.response_class(conn.sock, method="GET")
-        response.begin()
-        self.assertEqual(response.status, 408)
+        try:
+            response.begin()
+        except:
+            if not isinstance(sys.exc_info()[1],
+                              (socket.error, httplib.BadStatusLine)):
+                self.fail("Writing to timed out socket didn't fail"
+                          " as it should have: %s" % sys.exc_info()[1])
+        else:
+            self.fail("Writing to timed out socket didn't fail"
+                      " as it should have: %s" %
+                      response.read())
+        
         conn.close()
         
         # Retry the request on a new connection, which should work

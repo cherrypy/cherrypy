@@ -11,7 +11,7 @@ from httplib import IncompleteRead
 
 import cherrypy
 from cherrypy import _cptools, tools
-from cherrypy.lib import static
+from cherrypy.lib import static, httputil
 from cherrypy._cpdispatch import test_callable_spec
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
@@ -566,31 +566,7 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody("text/html;charset=utf-8")
     
-    def testHeaders(self):
-        # Tests that each header only appears once, regardless of case.
-        self.getPage("/headers/doubledheaders")
-        self.assertBody("double header test")
-        hnames = [name.title() for name, val in self.headers]
-        for key in ['Content-Length', 'Content-Type', 'Date',
-                    'Expires', 'Location', 'Server']:
-            self.assertEqual(hnames.count(key), 1, self.headers)
-        
-        if cherrypy.server.protocol_version == "HTTP/1.1":
-            # Test RFC-2047-encoded request and response header values
-            c = "=E2=84=ABngstr=C3=B6m"
-            self.getPage("/headers/ifmatch", [('If-Match', '=?utf-8?q?%s?=' % c)])
-            self.assertBody("u'\\u212bngstr\\xf6m'")
-            self.assertHeader("ETag", '=?utf-8?b?4oSrbmdzdHLDtm0=?=')
-            
-            # Test a *LONG* RFC-2047-encoded request and response header value
-            self.getPage("/headers/ifmatch",
-                         [('If-Match', '=?utf-8?q?%s?=' % (c * 10))])
-            self.assertBody("u'%s'" % ('\\u212bngstr\\xf6m' * 10))
-            self.assertHeader("ETag",
-                              '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm0=?='
-                              '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm0=?='
-                              '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2bQ==?=')
-        
+    def test_repeated_headers(self):
         # Test that two request headers are collapsed into one.
         # See http://www.cherrypy.org/ticket/542.
         self.getPage("/headers/Accept-Charset",
@@ -598,6 +574,40 @@ class RequestObjectTests(helper.CPWebCase):
                               ("Accept-Charset", "unicode-1-1;q=0.8")])
         self.assertBody("iso-8859-5, unicode-1-1;q=0.8")
         
+        # Tests that each header only appears once, regardless of case.
+        self.getPage("/headers/doubledheaders")
+        self.assertBody("double header test")
+        hnames = [name.title() for name, val in self.headers]
+        for key in ['Content-Length', 'Content-Type', 'Date',
+                    'Expires', 'Location', 'Server']:
+            self.assertEqual(hnames.count(key), 1, self.headers)
+    
+    def test_encoded_headers(self):
+        # First, make sure the innards work like expected.
+        self.assertEqual(httputil.decode_TEXT(u"=?utf-8?q?f=C3=BCr?="), u"f\xfcr")
+        
+        if cherrypy.server.protocol_version == "HTTP/1.1":
+            # Test RFC-2047-encoded request and response header values
+            u = u'\u212bngstr\xf6m'
+            c = u"=E2=84=ABngstr=C3=B6m"
+            self.getPage("/headers/ifmatch", [('If-Match', u'=?utf-8?q?%s?=' % c)])
+            # The body should be utf-8 encoded.
+            self.assertBody("u'\xe2\x84\xabngstr\xc3\xb6m'")
+            # But the Etag header should be RFC-2047 encoded (binary)
+            self.assertHeader("ETag", u'=?utf-8?b?4oSrbmdzdHLDtm0=?=')
+            
+            # Test a *LONG* RFC-2047-encoded request and response header value
+            self.getPage("/headers/ifmatch",
+                         [('If-Match', u'=?utf-8?q?%s?=' % (c * 10))])
+            self.assertBody("'" + (u"\xe2\x84\xabngstr\xc3\xb6m" * 10) + "'")
+            # Note: this is different output for Python3, but it decodes fine.
+            etag = self.assertHeader("ETag",
+                u'=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm3ihKtu?=\n'
+                u' =?utf-8?b?Z3N0csO2beKEq25nc3Ryw7Zt4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ry?=\n'
+                u' =?utf-8?b?w7Zt4oSrbmdzdHLDtm0=?=')
+            self.assertEqual(httputil.decode_TEXT(etag), u * 10)
+    
+    def test_header_presence(self):
         # If we don't pass a Content-Type header, it should not be present
         # in cherrypy.request.headers
         self.getPage("/headers/Content-Type",
