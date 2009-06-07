@@ -9,6 +9,7 @@ BIGFILE_SIZE = 1024 * 1024
 import threading
 
 import cherrypy
+from cherrypy.lib import static
 
 def setup_server():
     if not os.path.exists(has_space_filepath):
@@ -28,6 +29,11 @@ def setup_server():
         def tell(self):
             return repr(self.f.input.tell())
         tell.exposed = True
+        
+        def fileobj(self):
+            f = open(os.path.join(curdir, 'style.css'), 'rb')
+            return static.serve_fileobj(f, content_type='text/css')
+        fileobj.exposed = True
     
     class Static:
         
@@ -181,6 +187,12 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/test", [('Host', 'virt.net')])
         self.assertStatus(301)
         self.assertHeader('Location', self.scheme + '://virt.net/test/')
+    
+    def test_serve_file_fileobj(self):
+        self.getPage("/fileobj")
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/css;charset=utf-8')
+        self.assertMatchesBody('^Dummy stylesheet')
     
     def test_file_stream(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":

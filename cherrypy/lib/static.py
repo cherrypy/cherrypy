@@ -17,7 +17,7 @@ from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
 def serve_file(path, content_type=None, disposition=None, name=None):
-    """Set status, headers, and body in order to serve the given file.
+    """Set status, headers, and body in order to serve the given path.
     
     The Content-Type header will be set to the content_type arg, if provided.
     If not provided, the Content-Type will be guessed by the file extension
@@ -72,15 +72,56 @@ def serve_file(path, content_type=None, disposition=None, name=None):
     
     # Set Content-Length and use an iterable (file object)
     #   this way CP won't load the whole file in memory
-    c_len = st.st_size
-    bodyfile = open(path, 'rb')
+    content_length = st.st_size
+    fileobj = open(path, 'rb')
+    return _serve_fileobj(fileobj, content_type, content_length)
+
+def serve_fileobj(fileobj, content_type=None, disposition=None, name=None):
+    """Set status, headers, and body in order to serve the given file object.
+    
+    The Content-Type header will be set to the content_type arg, if provided.
+    
+    If disposition is not None, the Content-Disposition header will be set
+    to "<disposition>; filename=<name>". If name is None, 'filename' will
+    not be set. If disposition is None, no Content-Disposition header will
+    be written.
+    """
+    
+    response = cherrypy.response
+    
+    st = os.fstat(fileobj.fileno())
+    
+    # Set the Last-Modified response header, so that
+    # modified-since validation code can work.
+    response.headers['Last-Modified'] = httputil.HTTPDate(st.st_mtime)
+    cptools.validate_since()
+    
+    if content_type is not None:
+        response.headers['Content-Type'] = content_type
+    
+    if disposition is not None:
+        if name is None:
+            cd = disposition
+        else:
+            cd = '%s; filename="%s"' % (disposition, name)
+        response.headers["Content-Disposition"] = cd
+    
+    # Set Content-Length and use an iterable (file object)
+    #   this way CP won't load the whole file in memory
+    content_length = st.st_size
+    return _serve_fileobj(fileobj, content_type, content_length)
+
+def _serve_fileobj(fileobj, content_type, content_length):
+    """Internal. Set response.body to the given file object, perhaps ranged."""
+    response = cherrypy.response
     
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
     if cherrypy.request.protocol >= (1, 1):
         response.headers["Accept-Ranges"] = "bytes"
-        r = httputil.get_ranges(cherrypy.request.headers.get('Range'), c_len)
+        r = httputil.get_ranges(cherrypy.request.headers.get('Range'),
+                                content_length)
         if r == []:
-            response.headers['Content-Range'] = "bytes */%s" % c_len
+            response.headers['Content-Range'] = "bytes */%s" % content_length
             message = "Invalid Range (first-byte-pos greater than Content-Length)"
             raise cherrypy.HTTPError(416, message)
         
@@ -88,15 +129,15 @@ def serve_file(path, content_type=None, disposition=None, name=None):
             if len(r) == 1:
                 # Return a single-part response.
                 start, stop = r[0]
-                if stop > c_len:
-                    stop = c_len
+                if stop > content_length:
+                    stop = content_length
                 r_len = stop - start
                 response.status = "206 Partial Content"
-                response.headers['Content-Range'] = ("bytes %s-%s/%s" %
-                                                       (start, stop - 1, c_len))
+                response.headers['Content-Range'] = (
+                    "bytes %s-%s/%s" % (start, stop - 1, content_length))
                 response.headers['Content-Length'] = r_len
-                bodyfile.seek(start)
-                response.body = file_generator_limited(bodyfile, r_len)
+                fileobj.seek(start)
+                response.body = file_generator_limited(fileobj, r_len)
             else:
                 # Return a multipart/byteranges response.
                 response.status = "206 Partial Content"
@@ -116,9 +157,9 @@ def serve_file(path, content_type=None, disposition=None, name=None):
                         yield "--" + boundary
                         yield "\r\nContent-type: %s" % content_type
                         yield ("\r\nContent-range: bytes %s-%s/%s\r\n\r\n"
-                               % (start, stop - 1, c_len))
-                        bodyfile.seek(start)
-                        for chunk in file_generator_limited(bodyfile, stop-start):
+                               % (start, stop - 1, content_length))
+                        fileobj.seek(start)
+                        for chunk in file_generator_limited(fileobj, stop-start):
                             yield chunk
                         yield "\r\n"
                     # Final boundary
@@ -129,8 +170,8 @@ def serve_file(path, content_type=None, disposition=None, name=None):
                 response.body = file_ranges()
             return response.body
     
-    response.headers['Content-Length'] = c_len
-    response.body = bodyfile
+    response.headers['Content-Length'] = content_length
+    response.body = fileobj
     return response.body
 
 def serve_download(path, name=None):
