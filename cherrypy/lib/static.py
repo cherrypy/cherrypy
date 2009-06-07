@@ -89,12 +89,16 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None):
     
     response = cherrypy.response
     
-    st = os.fstat(fileobj.fileno())
-    
-    # Set the Last-Modified response header, so that
-    # modified-since validation code can work.
-    response.headers['Last-Modified'] = httputil.HTTPDate(st.st_mtime)
-    cptools.validate_since()
+    try:
+        st = os.fstat(fileobj.fileno())
+    except AttributeError:
+        content_length = None
+    else:
+        # Set the Last-Modified response header, so that
+        # modified-since validation code can work.
+        response.headers['Last-Modified'] = httputil.HTTPDate(st.st_mtime)
+        cptools.validate_since()
+        content_length = st.st_size
     
     if content_type is not None:
         response.headers['Content-Type'] = content_type
@@ -106,9 +110,6 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None):
             cd = '%s; filename="%s"' % (disposition, name)
         response.headers["Content-Disposition"] = cd
     
-    # Set Content-Length and use an iterable (file object)
-    #   this way CP won't load the whole file in memory
-    content_length = st.st_size
     return _serve_fileobj(fileobj, content_type, content_length)
 
 def _serve_fileobj(fileobj, content_type, content_length):
@@ -170,6 +171,8 @@ def _serve_fileobj(fileobj, content_type, content_length):
                 response.body = file_ranges()
             return response.body
     
+    # Set Content-Length and use an iterable (file object)
+    #   this way CP won't load the whole file in memory
     response.headers['Content-Length'] = content_length
     response.body = fileobj
     return response.body

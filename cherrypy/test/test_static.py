@@ -1,6 +1,11 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+try:
+    import cStringIO as StringIO
+except ImportError:
+    import StringIO
+
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
@@ -34,6 +39,11 @@ def setup_server():
             f = open(os.path.join(curdir, 'style.css'), 'rb')
             return static.serve_fileobj(f, content_type='text/css')
         fileobj.exposed = True
+        
+        def stringio(self):
+            f = StringIO.StringIO('Fee\nfie\nfo\nfum')
+            return static.serve_fileobj(f, content_type='text/plain')
+        stringio.exposed = True
     
     class Static:
         
@@ -188,11 +198,18 @@ class StaticTest(helper.CPWebCase):
         self.assertStatus(301)
         self.assertHeader('Location', self.scheme + '://virt.net/test/')
     
-    def test_serve_file_fileobj(self):
+    def test_serve_fileobj(self):
         self.getPage("/fileobj")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/css;charset=utf-8')
         self.assertMatchesBody('^Dummy stylesheet')
+    
+    def test_serve_stringio(self):
+        self.getPage("/stringio")
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
+        self.assertHeader('Content-Length', 14)
+        self.assertMatchesBody('Fee\nfie\nfo\nfum')
     
     def test_file_stream(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
