@@ -66,7 +66,7 @@ except ImportError:
     from md5 import new as md5
 import time
 import base64
-import urllib2
+from urllib2 import parse_http_list, parse_keqv_list
 
 MD5 = "MD5"
 MD5_SESS = "MD5-sess"
@@ -134,8 +134,8 @@ def doAuth (realm):
 #
 def _parseDigestAuthorization (auth_params):
     # Convert the auth params to a dict
-    items = urllib2.parse_http_list (auth_params)
-    params = urllib2.parse_keqv_list (items)
+    items = parse_http_list(auth_params)
+    params = parse_keqv_list(items)
 
     # Now validate the params
 

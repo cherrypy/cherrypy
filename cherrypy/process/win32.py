@@ -1,7 +1,6 @@
 """Windows service. Requires pywin32."""
 
 import os
-import thread
 import win32api
 import win32con
 import win32event
@@ -84,7 +83,7 @@ class Win32Bus(wspbus.Bus):
             return self.events[state]
         except KeyError:
             event = win32event.CreateEvent(None, 0, 0,
-                                           u"WSPBus %s Event (pid=%r)" %
+                                           "WSPBus %s Event (pid=%r)" %
                                            (state.name, os.getpid()))
             self.events[state] = event
             return event

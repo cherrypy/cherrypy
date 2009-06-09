@@ -13,14 +13,14 @@ class file_generator(object):
     def __iter__(self):
         return self
     
-    def next(self):
+    def __next__(self):
         chunk = self.input.read(self.chunkSize)
         if chunk:
             return chunk
         else:
             self.input.close()
             raise StopIteration()
-
+    next = __next__
 
 def file_generator_limited(fileobj, count, chunk_size=65536):
     """Yield the given file object in chunks, stopping after `count`

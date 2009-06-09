@@ -18,7 +18,7 @@ by adding a named handler to Config.namespaces. The name can be any string,
 and the handler must be either a callable or a context manager.
 """
 
-import ConfigParser
+from ConfigParser import ConfigParser
 try:
     set
 except NameError:
@@ -45,6 +45,7 @@ class NamespaceSet(dict):
     Namespace handlers may be any Python callable; they may also be
     Python 2.5-style 'context managers', in which case their __enter__
     method should return a callable to be used as the handler.
+    See cherrypy.tools (the Toolbox class) for an example.
     """
     
     def __call__(self, config):
@@ -158,7 +159,7 @@ class Config(dict):
         self.namespaces({k: v})
 
 
-class Parser(ConfigParser.ConfigParser):
+class Parser(ConfigParser):
     """Sub-class of ConfigParser that keeps the case of options and that raises
     an exception if the file cannot be read.
     """
@@ -249,27 +250,28 @@ class _Builder:
         return tuple(self.build_List(o))
     
     def build_Name(self, o):
-        if o.name == 'None':
+        name = o.name
+        if name == 'None':
             return None
-        if o.name == 'True':
+        if name == 'True':
             return True
-        if o.name == 'False':
+        if name == 'False':
             return False
         
         # See if the Name is a package or module. If it is, import it.
         try:
-            return modules(o.name)
+            return modules(name)
         except ImportError:
             pass
         
-        # See if the Name is in __builtin__.
+        # See if the Name is in builtins.
         try:
             import __builtin__
-            return getattr(__builtin__, o.name)
+            return getattr(__builtin__, name)
         except AttributeError:
             pass
         
-        raise TypeError("unrepr could not resolve the name %s" % repr(o.name))
+        raise TypeError("unrepr could not resolve the name %s" % repr(name))
     
     def build_Add(self, o):
         left, right = map(self.build, o.getChildren())
@@ -289,11 +291,8 @@ class _Builder:
         return self.build(o.getChildren()[0])
 
 
-def unrepr(s):
-    """Return a Python object compiled from a string."""
-    if not s:
-        return s
-    
+def _astnode(s):
+    """Return a Python ast Node compiled from a string."""
     try:
         import compiler
     except ImportError:
@@ -302,8 +301,14 @@ def unrepr(s):
         return eval(s)
     
     p = compiler.parse("__tempvalue__ = " + s)
-    obj = p.getChildren()[1].getChildren()[0].getChildren()[1]
+    return p.getChildren()[1].getChildren()[0].getChildren()[1]
     
+
+def unrepr(s):
+    """Return a Python object compiled from a string."""
+    if not s:
+        return s
+    obj = _astnode(s)
     return _Builder().build(obj)
 
 
@@ -322,7 +327,7 @@ def attributes(full_attribute_name):
     """Load a module and retrieve an attribute of that module."""
     
     # Parse out the path, module, and attribute
-    last_dot = full_attribute_name.rfind(u".")
+    last_dot = full_attribute_name.rfind(".")
     attr_name = full_attribute_name[last_dot + 1:]
     mod_path = full_attribute_name[:last_dot]
     

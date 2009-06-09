@@ -18,9 +18,9 @@ from cherrypy.lib import static
 
 def setup_server():
     if not os.path.exists(has_space_filepath):
-        file(has_space_filepath, 'wb').write('Hello, world\r\n')
+        open(has_space_filepath, 'wb').write('Hello, world\r\n')
     if not os.path.exists(bigfile_filepath):
-        file(bigfile_filepath, 'wb').write("x" * BIGFILE_SIZE)
+        open(bigfile_filepath, 'wb').write("x" * BIGFILE_SIZE)
     
     class Root:
         

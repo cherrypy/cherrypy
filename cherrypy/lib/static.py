@@ -10,7 +10,7 @@ import os
 import re
 import stat
 import time
-import urllib
+from urllib import unquote
 
 import cherrypy
 from cherrypy.lib import cptools, httputil, file_generator_limited
@@ -236,7 +236,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
         section = "/"
     section = section.rstrip(r"\/")
     branch = cherrypy.request.path_info[len(section) + 1:]
-    branch = urllib.unquote(branch.lstrip(r"\/"))
+    branch = unquote(branch.lstrip(r"\/"))
     
     # If branch is "", filename will end in a slash
     filename = os.path.join(dir, branch)

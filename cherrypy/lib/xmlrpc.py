@@ -35,15 +35,15 @@ def _set_response(body):
 
 
 def respond(body, encoding='utf-8', allow_none=0):
-    import xmlrpclib
-    if not isinstance(body, xmlrpclib.Fault):
+    from xmlrpclib import Fault, dumps
+    if not isinstance(body, Fault):
         body = (body,)
-    _set_response(xmlrpclib.dumps(body, methodresponse=1,
-                                  encoding=encoding,
-                                  allow_none=allow_none))
+    _set_response(dumps(body, methodresponse=1,
+                        encoding=encoding,
+                        allow_none=allow_none))
 
 def on_error(*args, **kwargs):
     body = str(sys.exc_info()[1])
-    import xmlrpclib
-    _set_response(xmlrpclib.dumps(xmlrpclib.Fault(1, body)))
+    from xmlrpclib import Fault, dumps
+    _set_response(dumps(Fault(1, body)))
 

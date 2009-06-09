@@ -11,7 +11,7 @@ called "helper.py" (in this folder); this module calls that as a library.
 
 
 import getopt
-import httplib
+from httplib import HTTPSConnection
 import os
 localDir = os.path.dirname(__file__)
 serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
@@ -74,7 +74,7 @@ class TestHarness(object):
         from cherrypy.test import helper, webtest
         webtest.WebCase.interactive = self.interactive
         if self.scheme == "https":
-            webtest.WebCase.HTTP_CONN = httplib.HTTPSConnection
+            webtest.WebCase.HTTP_CONN = HTTPSConnection
         cherrypy.py3print()
         cherrypy.py3print("Running tests:", self.server)
         

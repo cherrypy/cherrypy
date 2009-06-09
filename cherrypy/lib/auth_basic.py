@@ -70,7 +70,8 @@ def basic_auth(realm, checkpassword):
             if scheme.lower() == 'basic':
                 # since CherryPy claims compability with Python 2.3, we must use
                 # the legacy API of base64
-                username, password = base64.decodestring(params).split(':', 1)
+                username_password = base64.decodestring(params)
+                username, password = username_password.split(':', 1)
                 if checkpassword(realm, username, password):
                     cherrypy.request.login = username
                     return # successful authentication

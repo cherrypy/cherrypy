@@ -27,9 +27,11 @@ try:
 except ImportError:
     # Python 2.4 and earlier
     from md5 import new as md5
+md5_hex = lambda s: md5(s).hexdigest()
+
 import time
 import base64
-import urllib2
+from urllib2 import parse_http_list, parse_keqv_list
 
 import cherrypy
 
@@ -56,7 +58,7 @@ def get_ha1_dict_plain(user_password_dict):
     def get_ha1(realm, username):
         password = user_password_dict.get(username)
         if password:
-            return md5('%s:%s:%s' % (username, realm, password)).hexdigest()
+            return md5_hex('%s:%s:%s' % (username, realm, password))
         return None
 
     return get_ha1
@@ -113,14 +115,14 @@ def synthesize_nonce(s, key, timestamp=None):
     """
     if timestamp is None:
         timestamp = int(time.time())
-    h = md5('%s:%s:%s' % (timestamp, s, key)).hexdigest()
+    h = md5_hex('%s:%s:%s' % (timestamp, s, key))
     nonce = '%s:%s' % (timestamp, h)
     return nonce
 
 
 def H(s):
     """The hash function H"""
-    return md5(s).hexdigest()
+    return md5_hex(s)
 
 
 class HttpDigestAuthorization (object):
@@ -142,8 +144,8 @@ class HttpDigestAuthorization (object):
         self.auth_header = auth_header
 
         # make a dict of the params
-        items = urllib2.parse_http_list(params)
-        paramsd = urllib2.parse_keqv_list(items)
+        items = parse_http_list(params)
+        paramsd = parse_keqv_list(items)
 
         self.realm = paramsd.get('realm')
         self.username = paramsd.get('username')

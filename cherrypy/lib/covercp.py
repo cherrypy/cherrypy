@@ -25,7 +25,7 @@ it will call serve() for you.
 import re
 import sys
 import cgi
-import urllib
+from urllib import quote_plus
 import os, os.path
 localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
 
@@ -194,7 +194,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
             relpath = newpath[len(base):]
             yield "| " * relpath.count(os.sep)
             yield "<a class='directory' href='menu?base=%s&exclude=%s'>%s</a>\n" % \
-                   (newpath, urllib.quote_plus(exclude), name)
+                   (newpath, quote_plus(exclude), name)
         
         for chunk in _show_branch(root[name], base, newpath, pct, showpct, exclude):
             yield chunk
@@ -290,7 +290,7 @@ class CoverStats(object):
         for atom in atoms:
             path += atom + os.sep
             yield ("<a href='menu?base=%s&exclude=%s'>%s</a> %s"
-                   % (path, urllib.quote_plus(exclude), atom, os.sep))
+                   % (path, quote_plus(exclude), atom, os.sep))
         yield "</div>"
         
         yield "<div id='tree'>"
