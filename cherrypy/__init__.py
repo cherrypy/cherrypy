@@ -565,6 +565,8 @@ config.defaults = {
     }
 config.namespaces["log"] = lambda k, v: setattr(log, k, v)
 config.namespaces["checker"] = lambda k, v: setattr(checker, k, v)
+# Must reset to get our defaults applied.
+config.reset()
 
 from cherrypy import _cpchecker
 checker = _cpchecker.Checker()
