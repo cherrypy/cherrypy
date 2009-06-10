@@ -85,6 +85,13 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None):
     to "<disposition>; filename=<name>". If name is None, 'filename' will
     not be set. If disposition is None, no Content-Disposition header will
     be written.
+
+    CAUTION: If the request contains a 'Range' header, one or more seek()s will
+    be performed on the file object.  This may cause undesired behavior if
+    the file object is not seekable.  It could also produce undesired results
+    if the caller set the read position of the file object prior to calling
+    serve_fileobj(), expecting that the data would be served starting from that
+    position.
     """
     
     response = cherrypy.response
