@@ -706,7 +706,6 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
 ##    cookie[name]['max-age'] = timeout * 60
     if timeout:
         e = time.time() + (timeout * 60)
-        cookie[name]._expires_time = e
         cookie[name]['expires'] = httputil.HTTPDate(e)
     if domain is not None:
         cookie[name]['domain'] = domain
@@ -719,7 +718,6 @@ def expire():
     name = cherrypy.request.config.get('tools.sessions.name', 'session_id')
     one_year = 60 * 60 * 24 * 365
     e = time.time() - one_year
-    cherrypy.response.cookie[name]._expires_time = e
     cherrypy.response.cookie[name]['expires'] = httputil.HTTPDate(e)
 
 

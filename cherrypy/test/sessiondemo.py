@@ -61,7 +61,7 @@ function init() {
     
     // Warn if response cookie expires is not close to one hour in the future.
     // Yes, we want this to happen when wit hit the 'Expire' link, too.
-    var expires = %(expires)s;
+    var expires = Date.parse("%(expires)s") / 1000;
     var onehour = (60 * 60);
     if (Math.abs(expires - (bunixtime + onehour)) > fudge_seconds) {
         diff = Math.floor(expires - bunixtime);
@@ -106,6 +106,11 @@ class Root(object):
             if cherrypy.session.regenerated:
                 changemsg.append('Application generated a new session.')
         
+        try:
+            expires = cherrypy.response.cookie['session_id']['expires']
+        except KeyError:
+            expires = ''
+        
         return page % {
             'sessionid': cherrypy.session.id,
             'changemsg': '<br>'.join(changemsg),
@@ -117,7 +122,7 @@ class Root(object):
             'cpversion': cherrypy.__version__,
             'pyversion': sys.version,
             # We set this in lib.sessions.set_response_cookie:
-            'expires': cherrypy.response.cookie['session_id']._expires_time,
+            'expires': expires,
             }
     
     def index(self):
