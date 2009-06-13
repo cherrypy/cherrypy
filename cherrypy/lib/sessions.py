@@ -66,6 +66,17 @@ class Session(object):
     clean_freq = 5
     clean_freq__doc = "The poll rate for expired session cleanup in minutes."
     
+    originalid = None
+    originalid__doc = "The session id passed by the client. May be missing or unsafe."
+    
+    missing = False
+    missing__doc = "True if the session requested by the client did not exist."
+    
+    regenerated = False
+    regenerated__doc = """
+    True if the application called session.regenerate(). This is not set by
+    internal calls to regenerate the session id."""
+    
     def __init__(self, id=None, **kwargs):
         self.id_observers = []
         self._data = {}
@@ -73,18 +84,25 @@ class Session(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
         
+        self.originalid = id
+        self.missing = False
         if id is None:
-            self.regenerate()
+            self._regenerate()
         else:
             self.id = id
             if not self._exists():
                 # Expired or malicious session. Make a new one.
                 # See http://www.cherrypy.org/ticket/709.
                 self.id = None
-                self.regenerate()
+                self.missing = True
+                self._regenerate()
     
     def regenerate(self):
         """Replace the current session (with a new id)."""
+        self.regenerated = True
+        self._regenerate()
+    
+    def _regenerate(self):
         if self.id is not None:
             self.delete()
         
@@ -258,7 +276,7 @@ class RamSession(Session):
         self.cache[self.id] = (self._data, expiration_time)
     
     def _delete(self):
-        del self.cache[self.id]
+        self.cache.pop(self.id, None)
     
     def acquire_lock(self):
         """Acquire an exclusive lock on the currently-loaded session data."""
@@ -687,7 +705,9 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
     # the browser. So we have to use the old "expires" ... sigh ...
 ##    cookie[name]['max-age'] = timeout * 60
     if timeout:
-        cookie[name]['expires'] = httputil.HTTPDate(time.time() + (timeout * 60))
+        e = time.time() + (timeout * 60)
+        cookie[name]._expires_time = e
+        cookie[name]['expires'] = httputil.HTTPDate(e)
     if domain is not None:
         cookie[name]['domain'] = domain
     if secure:
@@ -698,8 +718,8 @@ def expire():
     """Expire the current session cookie."""
     name = cherrypy.request.config.get('tools.sessions.name', 'session_id')
     one_year = 60 * 60 * 24 * 365
-    exp = time.gmtime(time.time() - one_year)
-    t = time.strftime("%a, %d-%b-%Y %H:%M:%S GMT", exp)
-    cherrypy.response.cookie[name]['expires'] = t
+    e = time.time() - one_year
+    cherrypy.response.cookie[name]._expires_time = e
+    cherrypy.response.cookie[name]['expires'] = httputil.HTTPDate(e)
 
 
