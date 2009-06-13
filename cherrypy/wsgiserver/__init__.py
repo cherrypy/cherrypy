@@ -77,7 +77,6 @@ number of requests and their responses, so we run a nested loop:
 """
 
 
-import base64
 import os
 import Queue
 import re
@@ -704,26 +703,6 @@ class HTTPRequest(object):
         buf = [self.environ['ACTUAL_SERVER_PROTOCOL'], " ", self.status, "\r\n"]
         try:
             for k, v in self.outheaders:
-                k = k.encode("ISO-8859-1")
-                # HTTP/1.0 says, "Words of *TEXT may contain octets 
-                # from character sets other than US-ASCII." and 
-                # "Recipients of header field TEXT containing octets 
-                # outside the US-ASCII character set may assume that 
-                # they represent ISO-8859-1 characters." 
-                try: 
-                    v = v.encode("ISO-8859-1")
-                except UnicodeEncodeError:
-                    if self.response_protocol == "HTTP/1.1":
-                        # Encode RFC-2047 TEXT 
-                        # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?="). 
-                        # We do our own here instead of using the email module
-                        # because we never want to fold lines--folding has
-                        # been deprecated by the HTTP working group.
-                        from binascii import b2a_base64
-                        v = '=?utf-8?b?%s?=' % b2a_base64(v.encode('utf-8')).strip('\n')
-                    else:
-                        raise
-                 
                 buf += [k + ": " + v + "\r\n"]
         except TypeError:
             if not isinstance(k, str):

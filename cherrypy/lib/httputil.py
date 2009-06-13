@@ -383,8 +383,33 @@ class HeaderMap(CaseInsensitiveDict):
     def output(self, protocol=(1, 1)):
         """Transform self into a list of (name, value) tuples."""
         header_list = []
-        for key, v in self.items():
-            header_list.append((key, unicode(v)))
+        for k, v in self.items():
+            if isinstance(k, unicode):
+                k = k.encode("ISO-8859-1")
+            
+            if not isinstance(v, basestring):
+                v = str(v)
+            
+            if isinstance(v, unicode):
+                # HTTP/1.0 says, "Words of *TEXT may contain octets 
+                # from character sets other than US-ASCII." and 
+                # "Recipients of header field TEXT containing octets 
+                # outside the US-ASCII character set may assume that 
+                # they represent ISO-8859-1 characters." 
+                try:
+                    v = v.encode("ISO-8859-1")
+                except UnicodeEncodeError:
+                    if protocol == (1, 1):
+                        # Encode RFC-2047 TEXT 
+                        # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?="). 
+                        # We do our own here instead of using the email module
+                        # because we never want to fold lines--folding has
+                        # been deprecated by the HTTP working group.
+                        from binascii import b2a_base64
+                        v = '=?utf-8?b?%s?=' % b2a_base64(v.encode('utf-8')).strip('\n')
+                    else:
+                        raise
+            header_list.append((k, v))
         return header_list
 
 

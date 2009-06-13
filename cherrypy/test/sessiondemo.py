@@ -121,7 +121,6 @@ class Root(object):
             'serverunixtime': calendar.timegm(datetime.utcnow().timetuple()),
             'cpversion': cherrypy.__version__,
             'pyversion': sys.version,
-            # We set this in lib.sessions.set_response_cookie:
             'expires': expires,
             }
     
