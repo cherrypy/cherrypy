@@ -77,13 +77,17 @@ class LogManager(object):
         response = cherrypy.response
         outheaders = response.headers
         inheaders = request.headers
+        if response.output_status is None:
+            status = "-"
+        else:
+            status = response.output_status.split(" ", 1)[0]
         
         atoms = {'h': remote.name or remote.ip,
                  'l': '-',
                  'u': getattr(request, "login", None) or "-",
                  't': self.time(),
                  'r': request.request_line,
-                 's': response.status.split(" ", 1)[0],
+                 's': status,
                  'b': outheaders.get('Content-Length', '') or "-",
                  'f': inheaders.get('Referer', ''),
                  'a': inheaders.get('User-Agent', ''),
