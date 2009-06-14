@@ -169,7 +169,8 @@ class Session(object):
             # clean_up is in instancemethod and not a classmethod,
             # so that tool config can be accessed inside the method.
             t = cherrypy.process.plugins.Monitor(
-                cherrypy.engine, self.clean_up, self.clean_freq * 60)
+                cherrypy.engine, self.clean_up, self.clean_freq * 60,
+                name='Session cleanup')
             t.subscribe()
             cls.clean_thread = t
             t.start()
@@ -256,7 +257,7 @@ class RamSession(Session):
         """Clean up expired sessions."""
         now = datetime.datetime.now()
         for id, (data, expiration_time) in self.cache.items():
-            if expiration_time < now:
+            if expiration_time <= now:
                 try:
                     del self.cache[id]
                 except KeyError:

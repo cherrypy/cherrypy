@@ -386,7 +386,13 @@ class PerpetualTimer(threading._Timer):
             self.finished.wait(self.interval)
             if self.finished.isSet():
                 return
-            self.function(*self.args, **self.kwargs)
+            try:
+                self.function(*self.args, **self.kwargs)
+            except Exception, x:
+                self.bus.log("Error in perpetual timer thread function %r." %
+                             self.function, level=40, traceback=True)
+                # Quit on first error to avoid massive logs.
+                raise
 
 
 class Monitor(SimplePlugin):
@@ -399,18 +405,20 @@ class Monitor(SimplePlugin):
     
     frequency = 60
     
-    def __init__(self, bus, callback, frequency=60):
+    def __init__(self, bus, callback, frequency=60, name=None):
         SimplePlugin.__init__(self, bus)
         self.callback = callback
         self.frequency = frequency
         self.thread = None
+        self.name = name
     
     def start(self):
         """Start our callback in its own perpetual timer thread."""
         if self.frequency > 0:
-            threadname = self.__class__.__name__
+            threadname = self.name or self.__class__.__name__
             if self.thread is None:
                 self.thread = PerpetualTimer(self.frequency, self.callback)
+                self.thread.bus = self.bus
                 self.thread.setName(threadname)
                 self.thread.start()
                 self.bus.log("Started monitor thread %r." % threadname)
@@ -421,7 +429,7 @@ class Monitor(SimplePlugin):
     def stop(self):
         """Stop our callback's perpetual timer thread."""
         if self.thread is None:
-            self.bus.log("No thread running for %s." % self.__class__.__name__)
+            self.bus.log("No thread running for %s." % self.name or self.__class__.__name__)
         else:
             if self.thread is not threading.currentThread():
                 name = self.thread.getName()
