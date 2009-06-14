@@ -2,7 +2,10 @@
 
 import cgi
 import os
-from cherrypy.py3util import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 import traceback
 
 import cherrypy

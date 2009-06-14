@@ -5,7 +5,7 @@ import cherrypy
 
 from cherrypy.lib.jsontools import json
 if json is None:
-    cherrypy.py3print("skipped (simplejson not found) ", end=' ')
+    print "skipped (simplejson not found) "
 else:
     def setup_server():
         class Root(object):

@@ -1,4 +1,8 @@
 try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+try:
     set
 except NameError:
     from sets import Set as set
@@ -197,7 +201,6 @@ def compress(body, compress_level):
 
 def decompress(body):
     import gzip
-    from cherrypy.py3util import StringIO
     
     zbuf = StringIO()
     zbuf.write(body)

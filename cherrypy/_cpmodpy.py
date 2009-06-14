@@ -56,12 +56,14 @@ Then restart apache2 and access http://127.0.0.1:8080
 """
 
 import logging
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 
 import cherrypy
-from cherrypy.py3util import StringIO
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
-
 
 
 # ------------------------------ Request-handling

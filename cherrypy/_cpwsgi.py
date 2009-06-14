@@ -3,7 +3,10 @@
 import sys as _sys
 
 import cherrypy as _cherrypy
-from cherrypy.py3util import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 

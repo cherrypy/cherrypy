@@ -236,7 +236,7 @@ class SessionTest(helper.CPWebCase):
                 else:
                     data_dict[index] = max(data_dict[index], int(body))
                 # Uncomment the following line to prove threads overlap.
-##                cherrypy.py3print(index, end=' ')
+##                print index,
         
         # Start <request_count> requests from each of
         # <client_thread_count> concurrent clients
@@ -254,7 +254,7 @@ class SessionTest(helper.CPWebCase):
         expected = 1 + (client_thread_count * request_count)
         
         for e in errors:
-            cherrypy.py3print(e)
+            print(e)
         self.assertEqual(hitcount, expected)
     
     def test_3_Redirect(self):
@@ -381,7 +381,7 @@ except (ImportError, socket.error):
     class MemcachedSessionTest(helper.CPWebCase):
         
         def test(self):
-            cherrypy.py3print("skipped", end=' ')
+            return self.skip("memcached not reachable ")
 else:
     class MemcachedSessionTest(helper.CPWebCase):
         
@@ -428,7 +428,7 @@ else:
                 for i in xrange(request_count):
                     self.getPage("/", cookies)
                     # Uncomment the following line to prove threads overlap.
-##                    cherrypy.py3print(index, end=' ')
+##                    print index,
                 if not self.body.isdigit():
                     self.fail(self.body)
                 data_dict[index] = v = int(self.body)

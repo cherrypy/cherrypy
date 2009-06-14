@@ -3,6 +3,8 @@
 import sys
 import time
 
+import cherrypy
+
 
 try:
     # On Windows, msvcrt.getch reads a single char without output.
@@ -41,36 +43,36 @@ class LogCase(object):
     markerPrefix = "test suite marker: "
     
     def _handleLogError(self, msg, data, marker, pattern):
-        cherrypy.py3print()
-        cherrypy.py3print("    ERROR:", msg)
+        print("")
+        print("    ERROR: %s" % msg)
         
         if not self.interactive:
             raise self.failureException(msg)
         
         p = "    Show: [L]og [M]arker [P]attern; [I]gnore, [R]aise, or sys.e[X]it >> "
-        cherrypy.py3print(p, end=' ')
+        print p,
         # ARGH
         sys.stdout.flush()
         while True:
             i = getchar().upper()
             if i not in "MPLIRX":
                 continue
-            cherrypy.py3print(i.upper())  # Also prints new line
+            print(i.upper())  # Also prints new line
             if i == "L":
                 for x, line in enumerate(data):
                     if (x + 1) % self.console_height == 0:
                         # The \r and comma should make the next line overwrite
-                        cherrypy.py3print("<-- More -->\r", end=' ')
+                        print "<-- More -->\r",
                         m = getchar().lower()
                         # Erase our "More" prompt
-                        cherrypy.py3print("            \r", end=' ')
+                        print "            \r",
                         if m == "q":
                             break
-                    cherrypy.py3print(line.rstrip())
+                    print(line.rstrip())
             elif i == "M":
-                cherrypy.py3print(repr(marker or self.lastmarker))
+                print(repr(marker or self.lastmarker))
             elif i == "P":
-                cherrypy.py3print(repr(pattern))
+                print(repr(pattern))
             elif i == "I":
                 # return without raising the normal exception
                 return
@@ -78,7 +80,7 @@ class LogCase(object):
                 raise self.failureException(msg)
             elif i == "X":
                 self.exit()
-            cherrypy.py3print(p, end=' ')
+            print p,
     
     def exit(self):
         sys.exit()

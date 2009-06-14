@@ -163,6 +163,6 @@ class ContactManager:
     reset.exposed = True
 
 
-cherrypy.py3print("If you're running this application for the first time, please go to http://localhost:8080/reset once in order to create the database!")
+print("If you're running this application for the first time, please go to http://localhost:8080/reset once in order to create the database!")
 
 cherrypy.quickstart(ContactManager())

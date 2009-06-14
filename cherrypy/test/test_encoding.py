@@ -1,11 +1,16 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
-import sys
 import gzip
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 from httplib import IncompleteRead
+import sys
+
 import cherrypy
-from cherrypy.py3util import StringIO
+
 europoundUnicode = u'\x80\xa3'
 sing = u"\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?"
 sing8 = sing.encode('utf-8')

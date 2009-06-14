@@ -76,8 +76,7 @@ class WSGI_Namespace_Test(helper.CPWebCase):
     
     def test_pipeline(self):
         if not cherrypy.server.httpserver:
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.getPage("/")
         # If body is "HEXXO WORXD!", the middleware was applied out of order.

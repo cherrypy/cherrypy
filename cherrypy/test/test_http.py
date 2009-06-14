@@ -129,8 +129,7 @@ class HTTPTests(helper.CPWebCase):
 
     def test_malformed_request_line(self):
         if getattr(cherrypy.server, "using_apache", False):
-            cherrypy.py3print("skipped due to known Apache differences...", end=' ')
-            return
+            return self.skip("skipped due to known Apache differences...")
         
         # Test missing version in Request-Line
         if self.scheme == 'https':
@@ -147,8 +146,7 @@ class HTTPTests(helper.CPWebCase):
 
     def test_http_over_https(self):
         if self.scheme != 'https':
-            cherrypy.py3print("skipped (not running HTTPS)...", end=' ')
-            return
+            return self.skip("skipped (not running HTTPS)... ")
         
         # Try connecting without SSL.
         conn = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))

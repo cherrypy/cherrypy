@@ -110,7 +110,7 @@ class ServerControl(test.LocalServer):
         
         result = read_process(APACHE_PATH, "-k start -f %s" % fcgiconf)
         if result:
-            cherrypy.py3print(result)
+            print(result)
     
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""

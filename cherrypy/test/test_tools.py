@@ -1,6 +1,10 @@
 """Test the various means of instantiating and invoking tools."""
 
 import gzip
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 import sys
 from httplib import IncompleteRead
 import time
@@ -11,7 +15,6 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import cherrypy
-from cherrypy.py3util import StringIO
 from cherrypy import tools
 
 
@@ -295,8 +298,7 @@ class ToolTests(helper.CPWebCase):
             httpserver = cherrypy.server.httpserver
             old_timeout = httpserver.timeout
         except (AttributeError, IndexError):
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         try:
             httpserver.timeout = timeout
@@ -374,8 +376,7 @@ class ToolTests(helper.CPWebCase):
     
     def testToolWithConfig(self):
         if not sys.version_info >= (2, 5):
-            cherrypy.py3print("skipped (Python 2.5+ only)", end=' ')
-            return
+            return self.skip("skipped (Python 2.5+ only)")
         
         self.getPage('/tooldecs/blah')
         self.assertHeader('Content-Type', 'application/data')

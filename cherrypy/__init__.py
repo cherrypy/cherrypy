@@ -550,7 +550,6 @@ def url(path="", qs="", script_name=None, base=None, relative=None):
     
     return newurl
 
-from cherrypy.py3util import py3print
 
 # import _cpconfig last so it can reference other top-level objects
 from cherrypy import _cpconfig

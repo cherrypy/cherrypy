@@ -6,9 +6,13 @@ test.prefer_parent_path()
 import os, sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
-import cherrypy
-from cherrypy.py3util import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 import unittest
+
+import cherrypy
 
 def setup_server():
     

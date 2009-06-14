@@ -569,8 +569,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     
     def test_expose_decorator(self):
         if not sys.version_info >= (2, 5):
-            cherrypy.py3print("skipped (Python 2.5+ only)", end=' ')
-            return
+            return self.skip("skipped (Python 2.5+ only) ")
         
         # Test @expose
         self.getPage("/expose_dec/no_call")

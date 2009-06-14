@@ -40,15 +40,15 @@ class TestHarness(object):
         """Run the test harness (using the given [global] conf)."""
         import cherrypy
         v = sys.version.split()[0]
-        cherrypy.py3print("Python version used to run this test script:", v)
-        cherrypy.py3print("CherryPy version", cherrypy.__version__)
+        print("Python version used to run this test script: %s" % v)
+        print("CherryPy version: %s" % cherrypy.__version__)
         if self.scheme == "https":
-            ssl = "(ssl)"
+            ssl = " (ssl)"
         else:
             ssl = ""
-        cherrypy.py3print("HTTP server version", self.protocol, ssl)
-        cherrypy.py3print("PID:", os.getpid())
-        cherrypy.py3print()
+        print("HTTP server version: %s%s" % (self.protocol, ssl))
+        print("PID: %s" % os.getpid())
+        print("")
         
         if isinstance(conf, basestring):
             parser = cherrypy.config._Parser()
@@ -75,8 +75,8 @@ class TestHarness(object):
         webtest.WebCase.interactive = self.interactive
         if self.scheme == "https":
             webtest.WebCase.HTTP_CONN = HTTPSConnection
-        cherrypy.py3print()
-        cherrypy.py3print("Running tests:", self.server)
+        print("")
+        print("Running tests: %s" % self.server)
         
         return helper.run_test_suite(self.tests, baseconf, self.server)
 
@@ -245,7 +245,7 @@ class CommandLineParser(object):
         import cherrypy
         if self.cover and self.profile:
             # Print error message and exit
-            cherrypy.py3print('Error: you cannot run the profiler and the '
+            print('Error: you cannot run the profiler and the '
                    'coverage tool at the same time.')
             sys.exit(2)
         
@@ -259,20 +259,20 @@ class CommandLineParser(object):
         """Print help for test.py command-line options."""
         
         import cherrypy
-        cherrypy.py3print("""CherryPy Test Program
+        print("""CherryPy Test Program
     Usage:
         test.py --help --server=* --host=%s --port=%s --1.0 --ssl --cover
             --basedir=path --profile --validate --conquer --dumb --tests**
         
     """ % (self.__class__.host, self.__class__.port))
-        cherrypy.py3print('    * servers:')
+        print('    * servers:')
         for name, val in self.available_servers.items():
             if name == self.default_server:
-                cherrypy.py3print('        --server=%s: %s (default)' % (name, val))
+                print('        --server=%s: %s (default)' % (name, val))
             else:
-                cherrypy.py3print('        --server=%s: %s' % (name, val))
+                print('        --server=%s: %s' % (name, val))
         
-        cherrypy.py3print("""
+        print("""
     
     --host=<name or IP addr>: use a host other than the default (%s).
         Not yet available with mod_python servers.
@@ -288,9 +288,9 @@ class CommandLineParser(object):
     --dumb: turn off the interactive output features.
     """ % (self.__class__.host, self.__class__.port))
         
-        cherrypy.py3print('    ** tests:')
+        print('    ** tests:')
         for name in self.available_tests:
-            cherrypy.py3print('        --' + name)
+            print('        --' + name)
     
     def start_coverage(self):
         """Start the coverage tool.
@@ -327,7 +327,7 @@ class CommandLineParser(object):
         if self.coverage:
             self.coverage.save()
             self.report_coverage()
-            cherrypy.py3print("run cherrypy/lib/covercp.py as a script to serve "
+            print("run cherrypy/lib/covercp.py as a script to serve "
                    "coverage results on port 8080")
     
     def report_coverage(self):
@@ -350,8 +350,8 @@ class CommandLineParser(object):
         total_statements = 0
         total_executed = 0
         
-        cherrypy.py3print()
-        cherrypy.py3print("CODE COVERAGE (this might take a while)", end=' ')
+        print("")
+        sys.stdout.write("CODE COVERAGE (this might take a while)")
         for morf in morfs:
             sys.stdout.write(".")
             sys.stdout.flush()
@@ -374,7 +374,7 @@ class CommandLineParser(object):
         if total_statements > 0:
             pc = 100.0 * total_executed / total_statements
         
-        cherrypy.py3print("\nTotal: %s Covered: %s Percent: %2d%%"
+        print("\nTotal: %s Covered: %s Percent: %2d%%"
                % (total_statements, total_executed, pc))
     
     def run(self, conf=None):
@@ -424,8 +424,8 @@ class CommandLineParser(object):
         success = h.run(conf)
         
         if self.profile:
-            cherrypy.py3print()
-            cherrypy.py3print("run /cherrypy/lib/profiler.py as a script to serve "
+            print("")
+            print("run /cherrypy/lib/profiler.py as a script to serve "
                    "profiling results on port 8080")
         
         if self.cover:
@@ -496,7 +496,7 @@ def run():
     success = clp.run()
     import cherrypy
     if clp.interactive:
-        cherrypy.py3print()
+        print("")
         raw_input('hit enter')
     sys.exit(success)
 

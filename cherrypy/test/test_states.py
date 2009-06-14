@@ -209,7 +209,7 @@ class ServerStateTests(helper.CPWebCase):
         except BadStatusLine:
             pass
         else:
-            cherrypy.py3print(self.body)
+            print(self.body)
             self.fail("AssertionError: BadStatusLine not raised")
         
         engine.block()
@@ -230,7 +230,7 @@ class ServerStateTests(helper.CPWebCase):
             self.assertBody("Hello World")
             # request.close is called async.
             while engine.timeout_monitor.servings:
-                cherrypy.py3print(".", end=' ')
+                print ".",
                 time.sleep(0.01)
             
             # Request a page that explicitly checks itself for deadlock.
@@ -295,8 +295,7 @@ class PluginTests(helper.CPWebCase):
     
     def test_daemonize(self):
         if os.name not in ['posix']: 
-            cherrypy.py3print("skipped (not on posix) ", end=' ')
-            return
+            return self.skip("skipped (not on posix) ")
         self.HOST = '127.0.0.1'
         self.PORT = 8081
         # Spawn the process and wait, when this returns, the original process
@@ -333,8 +332,7 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGHUP
         except ImportError:
-            cherrypy.py3print("skipped (no SIGHUP) ", end=' ')
-            return
+            return self.skip("skipped (no SIGHUP) ")
         
         # Spawn the process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
@@ -351,12 +349,10 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGHUP
         except ImportError:
-            cherrypy.py3print("skipped (no SIGHUP) ", end=' ')
-            return
+            return self.skip("skipped (no SIGHUP) ")
         
         if os.name not in ['posix']: 
-            cherrypy.py3print("skipped (not on posix) ", end=' ')
-            return
+            return self.skip("skipped (not on posix) ")
         
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
@@ -387,14 +383,12 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGTERM
         except ImportError:
-            cherrypy.py3print("skipped (no SIGTERM) ", end=' ')
-            return
+            return self.skip("skipped (no SIGTERM) ")
         
         try:
             from os import kill
         except ImportError:
-            cherrypy.py3print("skipped (no os.kill) ", end=' ')
-            return
+            return self.skip("skipped (no os.kill) ")
         
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
@@ -422,14 +416,12 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGTERM
         except ImportError:
-            cherrypy.py3print("skipped (no SIGTERM) ", end=' ')
-            return
+            return self.skip("skipped (no SIGTERM) ")
         
         try:
             from os import kill
         except ImportError:
-            cherrypy.py3print("skipped (no os.kill) ", end=' ')
-            return
+            return self.skip("skipped (no os.kill) ")
         
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))

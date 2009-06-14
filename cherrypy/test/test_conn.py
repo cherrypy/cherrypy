@@ -92,8 +92,7 @@ class ConnectionCloseTests(helper.CPWebCase):
     
     def test_HTTP11(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.PROTOCOL = "HTTP/1.1"
         
@@ -249,8 +248,7 @@ class PipelineTests(helper.CPWebCase):
         # If we timeout without sending any data,
         # the server will close the conn with a 408.
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.PROTOCOL = "HTTP/1.1"
         
@@ -290,8 +288,7 @@ class PipelineTests(helper.CPWebCase):
         # If we timeout after at least one request has succeeded,
         # the server will close the conn without 408.
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.PROTOCOL = "HTTP/1.1"
         
@@ -387,8 +384,7 @@ class PipelineTests(helper.CPWebCase):
     
     def test_HTTP11_pipelining(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.PROTOCOL = "HTTP/1.1"
         
@@ -425,8 +421,7 @@ class PipelineTests(helper.CPWebCase):
     
     def test_100_Continue(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.PROTOCOL = "HTTP/1.1"
         
@@ -480,8 +475,7 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_readall_or_close(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.PROTOCOL = "HTTP/1.1"
         
@@ -552,8 +546,7 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_No_Message_Body(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.PROTOCOL = "HTTP/1.1"
         
@@ -582,14 +575,12 @@ class ConnectionTests(helper.CPWebCase):
     
     def test_Chunked_Encoding(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         if (hasattr(self, 'harness') and
             "modpython" in self.harness.__class__.__name__.lower()):
             # mod_python forbids chunked encoding
-            cherrypy.py3print("skipped ", end=' ')
-            return
+            return self.skip()
         
         self.PROTOCOL = "HTTP/1.1"
         

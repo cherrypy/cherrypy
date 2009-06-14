@@ -57,6 +57,9 @@ class CPWebCase(webtest.WebCase):
             url = httputil.urljoin(self.script_name, url)
         return webtest.WebCase.getPage(self, url, headers, method, body, protocol)
     
+    def skip(self, msg='skipped '):
+        sys.stdout.write(msg)
+    
     def assertErrorPage(self, status, message=None, pattern=''):
         """Compare the response body with a built in error page.
         
@@ -83,7 +86,9 @@ class CPWebCase(webtest.WebCase):
             if m and m.group(1):
                 self._handlewebError('Error page contains traceback')
         else:
-            if (m is None) or (not re.search(re.escape(pattern), m.group(1))):
+            if (m is None) or (
+                not re.search(re.escape(pattern),
+                              m.group(1))):
                 msg = 'Error page does not contain %s in traceback'
                 self._handlewebError(msg % repr(pattern))
 
@@ -191,15 +196,16 @@ server.ssl_private_key: r'%s'
         else:
             ssl = ""
         
+        conf = self.config_template % {
+            'host': self.host,
+            'port': self.port,
+            'error_log': self.error_log,
+            'access_log': self.access_log,
+            'ssl': ssl,
+            'extra': extra,
+            }
         f = open(self.config_file, 'wb')
-        f.write(self.config_template %
-                {'host': self.host,
-                 'port': self.port,
-                 'error_log': self.error_log,
-                 'access_log': self.access_log,
-                 'ssl': ssl,
-                 'extra': extra,
-                 })
+        f.write(conf)
         f.close()
     
     def start(self, imports=None):

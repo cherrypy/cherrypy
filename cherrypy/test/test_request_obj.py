@@ -709,8 +709,7 @@ class RequestObjectTests(helper.CPWebCase):
     
     def test_CONNECT_method(self):
         if getattr(cherrypy.server, "using_apache", False):
-            cherrypy.py3print("skipped due to known Apache differences...", end=' ')
-            return
+            return self.skip("skipped due to known Apache differences... ")
         
         self.getPage("/method/", method="CONNECT")
         self.assertBody("CONNECT")

@@ -77,8 +77,7 @@ class ServerConfigTests(helper.CPWebCase):
     
     def testMaxRequestSizePerHandler(self):
         if getattr(cherrypy.server, "using_apache", False):
-            cherrypy.py3print("skipped due to known Apache differences...", end=' ')
-            return
+            return self.skip("skipped due to known Apache differences... ")
         
         self.getPage('/tinyupload?maxlen=100', method="POST", body="x" * 100)
         self.assertStatus(200)
@@ -88,8 +87,7 @@ class ServerConfigTests(helper.CPWebCase):
     
     def testMaxRequestSize(self):
         if getattr(cherrypy.server, "using_apache", False):
-            cherrypy.py3print("skipped due to known Apache differences...", end=' ')
-            return
+            return self.skip("skipped due to known Apache differences... ")
         
         for size in (500, 5000, 50000):
             self.getPage("/", headers=[('From', "x" * 500)])
