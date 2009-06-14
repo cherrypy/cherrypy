@@ -149,17 +149,17 @@ class WSGIPathInfoDispatcher(object):
     
     apps: a dict or list of (path_prefix, app) pairs.
     """
-
+    
     def __init__(self, apps):
         try:
             apps = apps.items()
         except AttributeError:
             pass
-
+        
         # Sort the apps by len(path), descending
         apps.sort(cmp=lambda x,y: cmp(len(x[0]), len(y[0])))
         apps.reverse()
-
+  
         # The path_prefix strings must start, but not end, with a slash.
         # Use "" instead of "/".
         self.apps = [(p.rstrip("/"), a) for p, a in apps]
@@ -706,9 +706,9 @@ class HTTPRequest(object):
                 buf += [k + ": " + v + "\r\n"]
         except TypeError:
             if not isinstance(k, str):
-                raise TypeError("WSGI response header key %r is not a string.")
+                raise TypeError("WSGI response header key %r is not a byte string.")
             if not isinstance(v, str):
-                raise TypeError("WSGI response header value %r is not a string.")
+                raise TypeError("WSGI response header value %r is not a byte string.")
             else:
                 raise
         buf.append("\r\n")

@@ -6,6 +6,7 @@
 # FuManChu will personally hang you up by your thumbs and submit you
 # to a public caning.
 
+from binascii import b2a_base64
 from BaseHTTPServer import BaseHTTPRequestHandler
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
@@ -374,13 +375,15 @@ class HeaderMap(CaseInsensitiveDict):
     Values are header values (decoded according to RFC 2047 if necessary).
     """
     
+    protocol=(1, 1)
+    
     def elements(self, key):
         """Return a sorted list of HeaderElements for the given header."""
         key = str(key).title()
         value = self.get(key)
         return header_elements(key, value)
     
-    def output(self, protocol=(1, 1)):
+    def output(self):
         """Transform self into a list of (name, value) tuples."""
         header_list = []
         for k, v in self.items():
@@ -391,28 +394,31 @@ class HeaderMap(CaseInsensitiveDict):
                 v = str(v)
             
             if isinstance(v, unicode):
-                # HTTP/1.0 says, "Words of *TEXT may contain octets 
-                # from character sets other than US-ASCII." and 
-                # "Recipients of header field TEXT containing octets 
-                # outside the US-ASCII character set may assume that 
-                # they represent ISO-8859-1 characters." 
-                try:
-                    v = v.encode("ISO-8859-1")
-                except UnicodeEncodeError:
-                    if protocol == (1, 1):
-                        # Encode RFC-2047 TEXT 
-                        # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?="). 
-                        # We do our own here instead of using the email module
-                        # because we never want to fold lines--folding has
-                        # been deprecated by the HTTP working group.
-                        from binascii import b2a_base64
-                        v = '=?utf-8?b?%s?=' % b2a_base64(v.encode('utf-8')).strip('\n')
-                    else:
-                        raise
+                v = self.encode(v)
             header_list.append((k, v))
         return header_list
-
-
+    
+    def encode(self, v):
+        """Return the given header value, encoded for HTTP output."""
+        # HTTP/1.0 says, "Words of *TEXT may contain octets 
+        # from character sets other than US-ASCII." and 
+        # "Recipients of header field TEXT containing octets 
+        # outside the US-ASCII character set may assume that 
+        # they represent ISO-8859-1 characters." 
+        try:
+            v = v.encode("ISO-8859-1")
+        except UnicodeEncodeError:
+            if self.protocol == (1, 1):
+                # Encode RFC-2047 TEXT 
+                # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?="). 
+                # We do our own here instead of using the email module
+                # because we never want to fold lines--folding has
+                # been deprecated by the HTTP working group.
+                v = b2a_base64(v.encode('utf-8'))
+                v = ('=?utf-8?b?' + v.strip('\n') + '?=')
+            else:
+                raise
+        return v
 
 class Host(object):
     """An internet address.
