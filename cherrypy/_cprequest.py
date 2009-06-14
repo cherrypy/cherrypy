@@ -1,5 +1,5 @@
 
-import Cookie
+from Cookie import SimpleCookie, CookieError
 import os
 import sys
 import time
@@ -145,9 +145,9 @@ def response_namespace(k, v):
     # Provides config entries to set default response headers
     # http://cherrypy.org/ticket/889
     if k[:8] == 'headers.':
-    	cherrypy.response.headers[k.split('.', 1)[1]] = v
+        cherrypy.response.headers[k.split('.', 1)[1]] = v
     else:
-    	setattr(cherrypy.response, k, v)
+        setattr(cherrypy.response, k, v)
 
 def error_page_namespace(k, v):
     """Attach error pages declared in config."""
@@ -270,7 +270,7 @@ class Request(object):
     values (decoded according to RFC 2047 if necessary). See also:
     httputil.HeaderMap, httputil.HeaderElement."""
     
-    cookie = Cookie.SimpleCookie()
+    cookie = SimpleCookie()
     cookie__doc = """See help(Cookie)."""
     
     body = None
@@ -511,6 +511,7 @@ class Request(object):
         method, path, query_string, and req_protocol should be pulled directly
             from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
         path should be %XX-unquoted, but query_string should not be.
+            They both MUST be byte strings, not unicode strings.
         headers should be a list of (name, value) tuples.
         rfile should be a file-like object containing the HTTP request entity.
         
@@ -547,6 +548,7 @@ class Request(object):
             rp = int(req_protocol[5]), int(req_protocol[7])
             sp = int(self.server_protocol[5]), int(self.server_protocol[7])
             self.protocol = min(rp, sp)
+            cherrypy.response.headers.protocol = self.protocol
             
             # Rebuild first line of the request (e.g. "GET /path HTTP/1.0").
             url = path
@@ -560,7 +562,7 @@ class Request(object):
             self.rfile = rfile
             self.body = None
             
-            self.cookie = Cookie.SimpleCookie()
+            self.cookie = SimpleCookie()
             self.handler = None
             
             # path_info should be the path from the
@@ -586,7 +588,7 @@ class Request(object):
                     body = ""
                 r = bare_error(body)
                 response = cherrypy.response
-                response.status, response.header_list, response.body = r
+                response.output_status, response.header_list, response.body = r
         
         if self.method == "HEAD":
             # HEAD requests MUST NOT return a message-body in the response.
@@ -709,7 +711,7 @@ class Request(object):
             if name == 'Cookie':
                 try:
                     self.cookie.load(value)
-                except Cookie.CookieError:
+                except CookieError:
                     msg = "Illegal cookie name %s" % value.split('=')[0]
                     raise cherrypy.HTTPError(400, msg)
         
@@ -842,7 +844,7 @@ class Response(object):
     values (decoded according to RFC 2047 if necessary). See also:
     httputil.HeaderMap, httputil.HeaderElement."""
     
-    cookie = Cookie.SimpleCookie()
+    cookie = SimpleCookie()
     cookie__doc = """See help(Cookie)."""
     
     body = ResponseBody()
@@ -876,11 +878,13 @@ class Response(object):
             "Server": "CherryPy/" + cherrypy.__version__,
             "Date": httputil.HTTPDate(self.time),
         })
-        self.cookie = Cookie.SimpleCookie()
+        self.cookie = SimpleCookie()
     
     def collapse_body(self):
         """Collapse self.body to a single string; replace it and return it."""
-        newbody = ''.join([chunk for chunk in self.body])
+        newbody = ''
+        for chunk in self.body:
+            newbody += chunk
         self.body = newbody
         return newbody
     
@@ -891,9 +895,10 @@ class Response(object):
         except ValueError, x:
             raise cherrypy.HTTPError(500, x.args[0])
         
-        self.status = "%s %s" % (code, reason)
-        
         headers = self.headers
+        
+        self.output_status = str(code) + " " + headers.encode(reason)
+        
         if self.stream:
             # The upshot: wsgiserver will chunk the response if
             # you pop Content-Length (or set it explicitly to None).
@@ -914,7 +919,7 @@ class Response(object):
                 dict.__setitem__(headers, 'Content-Length', len(content))
         
         # Transform our header dict into a list of tuples.
-        self.header_list = h = headers.output(cherrypy.request.protocol)
+        self.header_list = h = headers.output()
         
         cookie = self.cookie.output()
         if cookie:
@@ -923,6 +928,10 @@ class Response(object):
                     # Python 2.4 emits cookies joined by LF but 2.5+ by CRLF.
                     line = line[:-1]
                 name, value = line.split(": ", 1)
+                if isinstance(name, unicode):
+                    name = name.encode("ISO-8859-1")
+                if isinstance(value, unicode):
+                    value = headers.encode(value)
                 h.append((name, value))
     
     def check_timeout(self):

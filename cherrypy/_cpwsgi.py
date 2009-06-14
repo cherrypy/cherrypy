@@ -165,7 +165,7 @@ class AppResponse(object):
             # not take any time at all if chunk is already of type "str".
             # If it's unicode, it could be a big performance hit (x ~500).
             if not isinstance(chunk, str):
-                chunk = chunk.encode("ISO-8859-1")
+                chunk = unicode(chunk).encode("ISO-8859-1")
             return chunk
         except self.throws:
             self.close()
@@ -217,7 +217,7 @@ class AppResponse(object):
         headers = self.translate_headers(self.environ)
         rfile = self.environ['wsgi.input']
         response = self.request.run(meth, path, qs, rproto, headers, rfile)
-        return response.status, response.header_list, response.body
+        return response.output_status, response.header_list, response.body
     
     def get_request(self):
         """Create a Request object using environ."""

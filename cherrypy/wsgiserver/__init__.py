@@ -76,7 +76,7 @@ number of requests and their responses, so we run a nested loop:
                     return
 """
 
-
+CRLF = '\r\n'
 import os
 import Queue
 import re
@@ -159,7 +159,7 @@ class WSGIPathInfoDispatcher(object):
         # Sort the apps by len(path), descending
         apps.sort(cmp=lambda x,y: cmp(len(x[0]), len(y[0])))
         apps.reverse()
-  
+        
         # The path_prefix strings must start, but not end, with a slash.
         # Use "" instead of "/".
         self.apps = [(p.rstrip("/"), a) for p, a in apps]
@@ -326,7 +326,7 @@ class HTTPRequest(object):
             self.ready = False
             return
         
-        if request_line == "\r\n":
+        if request_line == CRLF:
             # RFC 2616 sec 4.1: "...if the server is reading the protocol
             # stream at the beginning of a message and receives a CRLF
             # first, it should ignore the CRLF."
@@ -336,35 +336,38 @@ class HTTPRequest(object):
                 self.ready = False
                 return
         
-        if not request_line.endswith('\r\n'):
+        if not request_line.endswith(CRLF):
             self.simple_response(400, "HTTP requires CRLF terminators")
             return
         
         environ = self.environ
         
         try:
-            method, path, req_protocol = request_line.strip().split(" ", 2)
+            method, uri, req_protocol = request_line.strip().split(" ", 2)
         except ValueError:
             self.simple_response(400, "Malformed Request-Line")
             return
         
-        environ["REQUEST_URI"] = path
+        environ["REQUEST_URI"] = uri
         environ["REQUEST_METHOD"] = method
         
-        # path may be an abs_path (including "http://host.domain.tld");
-        scheme, location, path, params, qs, frag = urlparse(path)
-        
-        if frag:
+        # uri may be an abs_path (including "http://host.domain.tld");
+        scheme, authority, path = self.parse_request_uri(uri)
+        if '#' in path:
             self.simple_response("400 Bad Request",
                                  "Illegal #fragment in Request-URI.")
             return
         
         if scheme:
             environ["wsgi.url_scheme"] = scheme
-        if params:
-            path = path + ";" + params
         
         environ["SCRIPT_NAME"] = ""
+        
+        qs = ''
+        if '?' in path:
+            path, qs = path.split('?', 1)
+        
+        uri_enc = environ.get('REQUEST_URI_ENCODING', 'utf-8')
         
         # Unquote the path+params (e.g. "/this%20path" -> "this path").
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
@@ -372,12 +375,16 @@ class HTTPRequest(object):
         # But note that "...a URI must be separated into its components
         # before the escaped characters within those components can be
         # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
-        atoms = [unquote(x) for x in quoted_slash.split(path)]
+        try:
+            atoms = [unquote(x) for x in quoted_slash.split(path)]
+        except ValueError, ex:
+            self.simple_response("400 Bad Request", ex.args[0])
+            return
         path = "%2F".join(atoms)
         environ["PATH_INFO"] = path
         
         # Note that, like wsgiref and most other WSGI servers,
-        # we unquote the path but not the query string.
+        # we "% HEX HEX"-unquote the path but not the query string.
         environ["QUERY_STRING"] = qs
         
         # Compare request and server HTTP protocol versions, in case our
@@ -395,6 +402,7 @@ class HTTPRequest(object):
         rp = int(req_protocol[5]), int(req_protocol[7])
         server_protocol = environ["ACTUAL_SERVER_PROTOCOL"]
         sp = int(server_protocol[5]), int(server_protocol[7])
+
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
             return
@@ -465,6 +473,46 @@ class HTTPRequest(object):
             self.simple_response(100)
         
         self.ready = True
+
+    def parse_request_uri(self, uri):
+        """Parse a Request-URI into (scheme, authority, path).
+        
+        Note that Request-URI's must be one of:
+            
+            Request-URI    = "*" | absoluteURI | abs_path | authority
+        
+        Therefore, a Request-URI which starts with a double forward-slash
+        cannot be a "net_path":
+        
+            net_path      = "//" authority [ abs_path ]
+        
+        Instead, it must be interpreted as an "abs_path" with an empty first
+        path segment:
+        
+            abs_path      = "/"  path_segments
+            path_segments = segment *( "/" segment )
+            segment       = *pchar *( ";" param )
+            param         = *pchar
+        """
+        if uri == "*":
+            return None, None, uri
+        
+        i = uri.find('://')
+        if i > 0:
+            # An absoluteURI.
+            # If there's a scheme (and it must be http or https), then:
+            # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query ]]
+            scheme, remainder = uri[:i].lower(), uri[i + 3:]
+            authority, path = remainder.split("/", 1)
+            return scheme, authority, path
+        
+        if uri.startswith('/'):
+            # An abs_path.
+            return None, None, uri
+        else:
+            # An authority.
+            return None, uri, None
+    
     
     def read_headers(self):
         """Read header lines from the incoming stream."""
@@ -476,10 +524,10 @@ class HTTPRequest(object):
                 # No more data--illegal end of headers
                 raise ValueError("Illegal end of headers.")
             
-            if line == '\r\n':
+            if line == CRLF:
                 # Normal end of headers
                 break
-            if not line.endswith('\r\n'):
+            if not line.endswith(CRLF):
                 raise ValueError("HTTP requires CRLF terminators")
             
             if line[0] in ' \t':
@@ -516,10 +564,10 @@ class HTTPRequest(object):
             cl += chunk_size
             data.write(self.rfile.read(chunk_size))
             crlf = self.rfile.read(2)
-            if crlf != "\r\n":
+            if crlf != CRLF:
                 self.simple_response("400 Bad Request",
                                      "Bad chunked transfer coding "
-                                     "(expected '\\r\\n', got %r)" % crlf)
+                                     "(expected '\\r\\n', got " + repr(crlf) + ")")
                 return
         
         # Grab any trailer headers
@@ -569,6 +617,8 @@ class HTTPRequest(object):
                 # a NON-EMPTY string, or upon the application's first
                 # invocation of the write() callable." (PEP 333)
                 if chunk:
+                    if isinstance(chunk, unicode):
+                        chunk = chunk.encode('ISO-8859-1')
                     self.write(chunk)
         finally:
             if hasattr(response, "close"):
@@ -592,8 +642,10 @@ class HTTPRequest(object):
             self.close_connection = True
             buf.append("Connection: close\r\n")
         
-        buf.append("\r\n")
+        buf.append(CRLF)
         if msg:
+            if isinstance(msg, unicode):
+                msg = msg.encode("ISO-8859-1")
             buf.append(msg)
         
         try:
@@ -638,7 +690,7 @@ class HTTPRequest(object):
             self.send_headers()
         
         if self.chunked_write and chunk:
-            buf = [hex(len(chunk))[2:], "\r\n", chunk, "\r\n"]
+            buf = [hex(len(chunk))[2:], CRLF, chunk, CRLF]
             self.wfile.sendall("".join(buf))
         else:
             self.wfile.sendall(chunk)
@@ -700,10 +752,11 @@ class HTTPRequest(object):
         if "server" not in hkeys:
             self.outheaders.append(("Server", self.environ['SERVER_SOFTWARE']))
         
-        buf = [self.environ['ACTUAL_SERVER_PROTOCOL'], " ", self.status, "\r\n"]
+        buf = [self.environ['ACTUAL_SERVER_PROTOCOL'] +
+               " " + self.status + CRLF]
         try:
             for k, v in self.outheaders:
-                buf += [k + ": " + v + "\r\n"]
+                buf.append(k + ": " + v + "\r\n")
         except TypeError:
             if not isinstance(k, str):
                 raise TypeError("WSGI response header key %r is not a byte string.")
@@ -711,7 +764,7 @@ class HTTPRequest(object):
                 raise TypeError("WSGI response header value %r is not a byte string.")
             else:
                 raise
-        buf.append("\r\n")
+        buf.append(CRLF)
         self.wfile.sendall("".join(buf))
 
 
@@ -1164,6 +1217,7 @@ class HTTPConnection(object):
     
     def communicate(self):
         """Read each request and respond appropriately."""
+        request_seen = False
         try:
             while True:
                 # (re)set req to None so that if something goes wrong in
@@ -1181,18 +1235,22 @@ class HTTPConnection(object):
                     # let the conn close.
                     return
                 
+                request_seen = True
                 req.respond()
                 if req.close_connection:
                     return
-        
         except socket.error, e:
             errnum = e.args[0]
             if errnum == 'timed out':
-                # Don't send a 408 if there is no outstanding request; only
-                # if we're in the middle of a request.
+                # Don't error if we're between requests; only error
+                # if 1) no request has been started at all, or 2) we're
+                # in the middle of a request.
                 # See http://www.cherrypy.org/ticket/853
-                if req and req.started_request and not req.sent_headers:
-                    req.simple_response("408 Request Timeout")
+                if (not request_seen) or (req and req.started_request):
+                    # Don't bother writing the 408 if the response
+                    # has already started being written.
+                    if req and not req.sent_headers:
+                        req.simple_response("408 Request Timeout")
             elif errnum not in socket_errors_to_ignore:
                 if req and not req.sent_headers:
                     req.simple_response("500 Internal Server Error",
@@ -1306,7 +1364,7 @@ class ThreadPool(object):
     
     def start(self):
         """Start the pool of threads."""
-        for i in xrange(self.min):
+        for i in range(self.min):
             self._threads.append(WorkerThread(self.server))
         for worker in self._threads:
             worker.setName("CP WSGIServer " + worker.getName())
@@ -1327,7 +1385,7 @@ class ThreadPool(object):
     
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
-        for i in xrange(amount):
+        for i in range(amount):
             if self.max > 0 and len(self._threads) >= self.max:
                 break
             worker = WorkerThread(self.server)
@@ -1345,7 +1403,7 @@ class ThreadPool(object):
                 amount -= 1
         
         if amount > 0:
-            for i in xrange(min(amount, len(self._threads) - self.min)):
+            for i in range(min(amount, len(self._threads) - self.min)):
                 # Put a number of shutdown requests on the queue equal
                 # to 'amount'. Once each of those is processed by a worker,
                 # that worker will terminate and be culled from our list
@@ -1405,13 +1463,13 @@ class SSLConnection:
               'sock_shutdown', 'get_peer_certificate', 'want_read',
               'want_write', 'set_connect_state', 'set_accept_state',
               'connect_ex', 'sendall', 'settimeout'):
-        exec """def %s(self, *args):
+        exec("""def %s(self, *args):
         self._lock.acquire()
         try:
             return self._ssl_conn.%s(*args)
         finally:
             self._lock.release()
-""" % (f, f)
+""" % (f, f))
 
 
 try:
@@ -1522,19 +1580,7 @@ class CherryPyWSGIServer(object):
         self.requests = ThreadPool(self, min=numthreads or 1, max=max)
         self.environ = self.environ.copy()
         
-        if callable(wsgi_app):
-            # We've been handed a single wsgi_app, in CP-2.1 style.
-            # Assume it's mounted at "".
-            self.wsgi_app = wsgi_app
-        else:
-            # We've been handed a list of (path_prefix, wsgi_app) tuples,
-            # so that the server can call different wsgi_apps, and also
-            # correctly set SCRIPT_NAME.
-            warnings.warn("The ability to pass multiple apps is deprecated "
-                          "and will be removed in 3.2. You should explicitly "
-                          "include a WSGIPathInfoDispatcher instead.",
-                          DeprecationWarning)
-            self.wsgi_app = WSGIPathInfoDispatcher(wsgi_app)
+        self.wsgi_app = wsgi_app
         
         self.bind_addr = bind_addr
         if not server_name:
@@ -1630,7 +1676,7 @@ class CherryPyWSGIServer(object):
                 continue
             break
         if not self.socket:
-            raise socket.error, msg
+            raise socket.error(msg)
         
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
