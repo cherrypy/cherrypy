@@ -72,7 +72,6 @@ import time
 import traceback as _traceback
 import warnings
 
-
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed
 # by _do_execv(), to change back to the original directory before execv()ing a
@@ -80,6 +79,26 @@ import warnings
 # current working directory (which could make sys.executable "not found" if
 # sys.executable is a relative-path, and/or cause other problems).
 _startup_cwd = os.getcwd()
+
+class ChannelFailures(Exception):
+    delimiter = '\n'
+    
+    def __init__(self, *args, **kwargs):
+        super(ChannelFailures, self).__init__(*args, **kwargs)
+        self._exceptions = list()
+    
+    def handle_exception(self):
+        self._exceptions.append(sys.exc_info())
+    
+    def get_instances(self):
+        return [instance for cls, instance, traceback in self._exceptions]
+    
+    def __str__(self):
+        exception_strings = map(repr, self.get_instances())
+        return self.delimiter.join(exception_strings)
+    
+    def __nonzero__(self):
+        return bool(self._exceptions)
 
 # Use a flag to indicate the state of the bus.
 class _StateEnum(object):
@@ -144,7 +163,7 @@ class Bus(object):
         if channel not in self.listeners:
             return []
         
-        exc = None
+        exc = ChannelFailures()
         output = []
         
         items = [(self._priorities[(channel, listener)], listener)
@@ -161,7 +180,7 @@ class Bus(object):
                     e.code = 1
                 raise
             except:
-                exc = sys.exc_info()[1]
+                exc.handle_exception()
                 if channel == 'log':
                     # Assume any further messages to 'log' will fail.
                     pass
@@ -169,7 +188,7 @@ class Bus(object):
                     self.log("Error in %r listener %r" % (channel, listener),
                              level=40, traceback=True)
         if exc:
-            raise
+            raise exc
         return output
     
     def _clean_exit(self):
