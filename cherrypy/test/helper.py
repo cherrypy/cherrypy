@@ -58,7 +58,7 @@ class CPWebCase(webtest.WebCase):
         return webtest.WebCase.getPage(self, url, headers, method, body, protocol)
     
     def skip(self, msg='skipped '):
-        sys.stdout.write(msg)
+        sys.stderr.write(msg)
     
     def assertErrorPage(self, status, message=None, pattern=''):
         """Compare the response body with a built in error page.

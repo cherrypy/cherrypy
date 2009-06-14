@@ -1,7 +1,7 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
-import httplib
+from httplib import HTTPConnection, HTTPSConnection
 import os
 localDir = os.path.dirname(__file__)
 import sys
@@ -56,6 +56,11 @@ def setup_server():
             self.__class__._cp_config.update({'tools.sessions.storage_type': newtype})
             if hasattr(cherrypy, "session"):
                 del cherrypy.session
+            cls = getattr(sessions, newtype.title() + 'Session')
+            if cls.clean_thread:
+                cls.clean_thread.stop()
+                cls.clean_thread.unsubscribe()
+                del cls.clean_thread
         setsessiontype.exposed = True
         setsessiontype._cp_config = {'tools.sessions.on': False}
         
@@ -106,6 +111,7 @@ def setup_server():
         length.exposed = True
         
         def session_cookie(self):
+            # Must load() to start the clean thread.
             cherrypy.session.load()
             return cherrypy.session.id
         session_cookie.exposed = True
@@ -221,10 +227,10 @@ class SessionTest(helper.CPWebCase):
         
         def request(index):
             if self.scheme == 'https':
-                c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+                c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
             else:
-                c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-            for i in xrange(request_count):
+                c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+            for i in range(request_count):
                 c.putrequest('GET', '/')
                 for k, v in cookies:
                     c.putheader(k, v)
@@ -241,7 +247,7 @@ class SessionTest(helper.CPWebCase):
         # Start <request_count> requests from each of
         # <client_thread_count> concurrent clients
         ts = []
-        for c in xrange(client_thread_count):
+        for c in range(client_thread_count):
             data_dict[c] = 0
             t = threading.Thread(target=request, args=(c,))
             ts.append(t)
@@ -306,6 +312,7 @@ class SessionTest(helper.CPWebCase):
     
     def test_7_session_cookies(self):
         self.getPage('/setsessiontype/ram')
+        self.getPage('/clear')
         self.getPage('/session_cookie')
         # grab the cookie ID
         cookie_parts = dict([p.strip().split('=') for p in self.cookies[0][1].split(";")])
@@ -322,9 +329,6 @@ class SessionTest(helper.CPWebCase):
         self.assertBody(id1)
         self.assertEqual(sessions.RamSession.cache.keys(), [id1])
         
-        # Wait 0.5 seconds to separate the two sessions
-        time.sleep(0.5)
-        
         # Simulate a browser close by just not sending the cookies
         self.getPage('/session_cookie')
         # grab the cookie ID
@@ -335,19 +339,9 @@ class SessionTest(helper.CPWebCase):
         id2 = cookie_parts['temp']
         self.assertNotEqual(id1, id2)
         self.assertEqual(set(sessions.RamSession.cache.keys()), set([id1, id2]))
-        # Wait for the session.timeout on the first session (1 second)
-        time.sleep(1)
-        cache = sessions.RamSession.cache.keys()
-        if cache != [id2]:
-            if set(cache) == set([id1, id2]):
-                self.fail("The first session did not time out.")
-            elif not cache:
-                self.fail("The second session may have been cleaned up "
-                          "prematurely, but it may just be thread timing.")
-            else:
-                self.fail("Unknown session id in cache: %r", cache)
-        # Wait for the session.timeout on the second session (1 second)
-        time.sleep(1)
+        
+        # Wait for the session.timeout on both sessions
+        time.sleep(2.5)
         cache = sessions.RamSession.cache.keys()
         if cache:
             if cache == [id2]:
@@ -425,7 +419,7 @@ else:
             data_dict = {}
             
             def request(index):
-                for i in xrange(request_count):
+                for i in range(request_count):
                     self.getPage("/", cookies)
                     # Uncomment the following line to prove threads overlap.
 ##                    print index,
@@ -436,7 +430,7 @@ else:
             # Start <request_count> concurrent requests from
             # each of <client_thread_count> clients
             ts = []
-            for c in xrange(client_thread_count):
+            for c in range(client_thread_count):
                 data_dict[c] = 0
                 t = threading.Thread(target=request, args=(c,))
                 ts.append(t)
