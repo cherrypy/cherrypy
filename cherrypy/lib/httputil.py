@@ -19,7 +19,6 @@ response_codes[503] = ('Service Unavailable',
                       'request due to a temporary overloading or '
                       'maintenance of the server.')
 
-from cherrypy.py3util import sorted, reversed
 import re
 import urllib
 
@@ -195,8 +194,9 @@ def header_elements(fieldname, fieldvalue):
         else:
             hv = HeaderElement.from_str(element)
         result.append(hv)
-    
-    return list(reversed(sorted(result)))
+    result.sort()
+    result.reverse()
+    return result
 
 def decode_TEXT(value):
     """Decode RFC-2047 TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
