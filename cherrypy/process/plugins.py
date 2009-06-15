@@ -336,7 +336,7 @@ class Daemonizer(SimplePlugin):
         
         si = open(self.stdin, "r")
         so = open(self.stdout, "a+")
-        se = open(self.stderr, "a+", 0)
+        se = open(self.stderr, "a+")
 
         # os.dup2(fd, fd2) will close fd2 if necessary,
         # so we don't explicitly close stdin/out/err.
