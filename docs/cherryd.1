@@ -1,0 +1,263 @@
+.\" Man page generated from reStructuredText.
+.TH cherryd 1 "2009-06-15" "3.2.0" "web"
+.SH NAME
+cherryd \- Starts the CherryPy HTTP server as a daemon
+
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level magin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+
+.SH SYNOPSIS
+\fBcherryd\fP [\-d] [\-f | \-s] [\-e ENV_NAME] [\-p PIDFILE_PATH] [\-P DIRPATH] [\-c CONFIG_FILE] \-i MODULE_NAME
+
+
+.SH DESCRIPTION
+\fBcherryd\fP is a Python script which starts the CherryPy webserver as a daemon.
+
+
+.SH OPTIONS
+.INDENT 0.0
+
+.TP
+.BI \-c\  CONFIG_FILE ,\ \-\-config\fn= CONFIG_FILE
+Specifies a config file which is to be read and merged into the
+CherryPy site\-wide config dict.  This option may be specified
+multiple times.  For each CONFIG_FILE specified, \fBcherryd\fP will perform
+\fBcherrypy.config.update()\fP.
+
+
+.TP
+.B \-d
+Run the server as a daemon.
+
+
+.TP
+.BI \-e\  ENV_NAME ,\ \-\-environment\fn= ENV_NAME
+Specifies the name of an environment to be applied.  An environment is a
+canned set of configuration entries.  See \fI\%ENVIRONMENTS\fP below for a
+list of the built\-in environments.
+
+
+.TP
+.B \-f
+Start a fastcgi server instead of the default HTTP server.
+
+
+.TP
+.B \-s
+Start a scgi server instead of the default HTTP server.
+
+
+.TP
+.BI \-i\  MODULE_NAME ,\ \-\-import\fn= MODULE_NAME
+Specifies a module to import.  This option may be specified multiple times.
+For each MODULE_NAME specified, \fBcherryd\fP will import the module.  This
+is how you tell \fBcherryd\fP to run your application\'s startup code.
+For all practical purposes, \fB\-i\fP is not optional; you will always need to
+specify at least one module.
+
+
+.TP
+.BI \-p\  PIDFILE_PATH ,\ \-\-pidfile\fn= PIDFILE_PATH
+Store the process id in PIDFILE_PATH.
+
+
+.TP
+.BI \-P\  DIRPATH ,\ \-\-Path\  DIRPATH
+Specifies a directory to be inserted at the head of \fBsys.path\fP.  DIRPATH
+should be an absolute path.  This option may be specified multiple times.
+\fBcherryd\fP inserts all the specified DIRPATHs into \fBsys.path\fP before it
+attempts to import modules specified with \fB\-i\fP.
+
+.UNINDENT
+For a terse summary of the options, run \fBcherryd \-\-help\fP.
+
+
+.SH EXAMPLES
+A site\-wide configuration file \fBsite.conf\fP:
+
+.INDENT 0.0
+.INDENT 3.5
+
+[global]
+.br
+server.socket_host = "0.0.0.0"
+.br
+server.socket_port = 8008
+.br
+engine.autoreload_on = False
+.br
+
+.UNINDENT
+.UNINDENT
+The application startup code in \fBstartup.py\fP:
+
+.INDENT 0.0
+.INDENT 3.5
+
+import cherrypy
+.br
+import my_controller
+.br
+cherrypy.log.error_file = \'/var/tmp/myapp\-error.log\'
+.br
+cherrypy.log.access_file = \'/var/tmp/myapp\-access.log\'
+.br
+config_root = { \'tools.encode.encoding\' : \'utf\-8\', }
+.br
+app_conf = { \'/\' : config_root }
+.br
+cherrypy.tree.mount(my_controller.Root(), script_name=\'\', config=app_conf)
+.br
+
+.UNINDENT
+.UNINDENT
+A corresponding \fBcherryd\fP command line:
+
+.INDENT 0.0
+.INDENT 3.5
+
+cherryd \-d \-c site.conf \-i startup \-p /var/log/cherrypy/my_app.pid
+.br
+
+.UNINDENT
+.UNINDENT
+
+.SH DROPPING PRIVILEGES
+If you want to serve your web application on TCP port 80 (or any port lower than
+1024), the CherryPy HTTP server needs to start as root in order to bind to the
+port.  Running a web application as root is reckless, so the application should
+drop privileges from root to some other user and group.  The application must do
+this itself, as \fBcherryd\fP does not do it for you.
+
+To drop privileges, put the following lines into your startup code,
+substituting appropriate values for \fBumask\fP, \fBuid\fP and \fBgid\fP:
+
+.INDENT 0.0
+.INDENT 3.5
+
+from cherrypy.process.plugins import DropPrivileges
+.br
+DropPrivileges(cherrypy.engine, umask=022, uid=\'nobody\', gid=\'nogroup\').subscribe()
+.br
+
+.UNINDENT
+.UNINDENT
+Note that the values for \fBuid\fP and \fBgid\fP may be either user and group
+names, or uid and gid integers.
+
+Note that you must disable the engine Autoreload plugin, because the way
+Autoreload works is by \fBexec()\fPing a new instance of the running process,
+replacing the current instance.  Since root privileges are already dropped, the
+new process instance will fail when it tries to perform a privileged operation
+such as binding to a low\-numbered TCP port.
+
+
+.SH ENVIRONMENTS
+These are the built\-in environment configurations:
+
+
+.SS staging
+.INDENT 0.0
+.INDENT 3.5
+
+\'engine.autoreload_on\': False,
+.br
+\'checker.on\': False,
+.br
+\'tools.log_headers.on\': False,
+.br
+\'request.show_tracebacks\': False,
+.br
+\'request.show_mismatched_params\': False,
+.br
+
+.UNINDENT
+.UNINDENT
+
+.SS production
+.INDENT 0.0
+.INDENT 3.5
+
+\'engine.autoreload_on\': False,
+.br
+\'checker.on\': False,
+.br
+\'tools.log_headers.on\': False,
+.br
+\'request.show_tracebacks\': False,
+.br
+\'request.show_mismatched_params\': False,
+.br
+\'log.screen\': False,
+.br
+
+.UNINDENT
+.UNINDENT
+
+.SS embedded
+.INDENT 0.0
+.INDENT 3.5
+
+# For use with CherryPy embedded in another deployment stack, e.g. Apache mod_wsgi.
+.br
+\'engine.autoreload_on\': False,
+.br
+\'checker.on\': False,
+.br
+\'tools.log_headers.on\': False,
+.br
+\'request.show_tracebacks\': False,
+.br
+\'request.show_mismatched_params\': False,
+.br
+\'log.screen\': False,
+.br
+\'engine.SIGHUP\': None,
+.br
+\'engine.SIGTERM\': None,
+.br
+
+.UNINDENT
+.UNINDENT
+
+.SH BUGS
+\fBcherryd\fP should probably accept command\-line options \fB\-\-uid\fP, \fB\-\-gid\fP, and
+\fB\-\-umask\fP, and handle dropping privileges itself.
+
+
+.SH AUTHOR
+fumanchu
+
+.nf
+cherrypy.org
+.fi
+
+.SH COPYRIGHT
+This man page is placed in the public domain
+
+.\" Generated by docutils manpage writer on 2009-06-15 15:07.
+.\" 
