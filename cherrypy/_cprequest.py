@@ -882,9 +882,10 @@ class Response(object):
     
     def collapse_body(self):
         """Collapse self.body to a single string; replace it and return it."""
-        newbody = ''
-        for chunk in self.body:
-            newbody += chunk
+        if isinstance(self.body, basestring):
+            return self.body
+
+        newbody = ''.join([chunk for chunk in self.body])
         self.body = newbody
         return newbody
     
