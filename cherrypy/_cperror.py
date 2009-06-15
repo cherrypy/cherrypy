@@ -222,11 +222,11 @@ class HTTPError(CherryPyException):
         if cherrypy.request.show_tracebacks:
             tb = format_exc()
         response.headers['Content-Type'] = "text/html;charset=utf-8"
+        response.headers.pop('Content-Length', None)
         
         content = self.get_error_page(self.status, traceback=tb,
                                       message=self._message)
         response.body = content
-        response.headers['Content-Length'] = len(content)
         
         _be_ie_unfriendly(self.code)
     
