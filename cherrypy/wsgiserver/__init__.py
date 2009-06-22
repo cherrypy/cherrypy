@@ -557,7 +557,13 @@ class HTTPRequest(object):
         data = StringIO.StringIO()
         while True:
             line = self.rfile.readline().strip().split(";", 1)
-            chunk_size = int(line.pop(0), 16)
+            try:
+                chunk_size = line.pop(0)
+                chunk_size = int(chunk_size, 16)
+            except ValueError:
+                self.simple_response("400 Bad Request",
+                     "Bad chunked transfer size: " + repr(chunk_size))
+                return
             if chunk_size <= 0:
                 break
 ##            if line: chunk_extension = line[0]

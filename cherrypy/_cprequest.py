@@ -134,26 +134,26 @@ def hooks_namespace(k, v):
         v = cherrypy.lib.attributes(v)
     if not isinstance(v, Hook):
         v = Hook(v)
-    cherrypy.request.hooks[hookpoint].append(v)
+    cherrypy.serving.request.hooks[hookpoint].append(v)
 
 def request_namespace(k, v):
     """Attach request attributes declared in config."""
-    setattr(cherrypy.request, k, v)
+    setattr(cherrypy.serving.request, k, v)
 
 def response_namespace(k, v):
     """Attach response attributes declared in config."""
     # Provides config entries to set default response headers
     # http://cherrypy.org/ticket/889
     if k[:8] == 'headers.':
-        cherrypy.response.headers[k.split('.', 1)[1]] = v
+        cherrypy.serving.response.headers[k.split('.', 1)[1]] = v
     else:
-        setattr(cherrypy.response, k, v)
+        setattr(cherrypy.serving.response, k, v)
 
 def error_page_namespace(k, v):
     """Attach error pages declared in config."""
     if k != 'default':
         k = int(k)
-    cherrypy.request.error_page[k] = v
+    cherrypy.serving.request.error_page[k] = v
 
 
 hookpoints = ['on_start_resource', 'before_request_body',
@@ -524,6 +524,7 @@ class Request(object):
         attributes to build the outbound stream.
         
         """
+        response = cherrypy.serving.response
         self.stage = 'run'
         try:
             self.error_response = cherrypy.HTTPError(500).set_response
@@ -548,7 +549,7 @@ class Request(object):
             rp = int(req_protocol[5]), int(req_protocol[7])
             sp = int(self.server_protocol[5]), int(self.server_protocol[7])
             self.protocol = min(rp, sp)
-            cherrypy.response.headers.protocol = self.protocol
+            response.headers.protocol = self.protocol
             
             # Rebuild first line of the request (e.g. "GET /path HTTP/1.0").
             url = path
@@ -587,28 +588,28 @@ class Request(object):
                 else:
                     body = ""
                 r = bare_error(body)
-                response = cherrypy.response
                 response.output_status, response.header_list, response.body = r
         
         if self.method == "HEAD":
             # HEAD requests MUST NOT return a message-body in the response.
-            cherrypy.response.body = []
+            response.body = []
         
         try:
             cherrypy.log.access()
         except:
             cherrypy.log.error(traceback=True)
         
-        if cherrypy.response.timed_out:
+        if response.timed_out:
             raise cherrypy.TimeoutError()
         
-        return cherrypy.response
+        return response
     
     # Uncomment for stage debugging
     # stage = property(lambda self: self._stage, lambda self, v: print(v))
     
     def respond(self, path_info):
         """Generate a response for the resource at self.path_info. (Core)"""
+        response = cherrypy.serving.response
         try:
             try:
                 try:
@@ -649,17 +650,17 @@ class Request(object):
                     self.hooks.run('before_handler')
                     if self.handler:
                         self.stage = 'handler'
-                        cherrypy.response.body = self.handler()
+                        response.body = self.handler()
                     
                     # Finalize
                     self.stage = 'before_finalize'
                     self.hooks.run('before_finalize')
-                    cherrypy.response.finalize()
+                    response.finalize()
                 except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
                     inst.set_response()
                     self.stage = 'before_finalize (HTTPError)'
                     self.hooks.run('before_finalize')
-                    cherrypy.response.finalize()
+                    response.finalize()
             finally:
                 self.stage = 'on_end_resource'
                 self.hooks.run('on_end_resource')
@@ -760,10 +761,10 @@ class Request(object):
             if self.error_response:
                 self.error_response()
             self.hooks.run("after_error_response")
-            cherrypy.response.finalize()
+            cherrypy.serving.response.finalize()
         except cherrypy.HTTPRedirect, inst:
             inst.set_response()
-            cherrypy.response.finalize()
+            cherrypy.serving.response.finalize()
     
     # ------------------------- Properties ------------------------- #
     

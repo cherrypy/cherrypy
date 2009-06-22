@@ -123,9 +123,9 @@ class MemoryCache:
         self.cursize = 0
     
     def key(self):
-        request = cherrypy.request
+        request = cherrypy.serving.request
         try:
-            response = cherrypy.response
+            response = cherrypy.serving.response
         except AttributeError:
             response = None
         return self.store.get_key_from_request(request, response)
@@ -169,7 +169,7 @@ class MemoryCache:
             # checks if there's space for the object
             if (obj_size < self.maxobj_size and total_size < self.maxsize):
                 # add to the expirations list and cache
-                expiration_time = cherrypy.response.time + self.delay
+                expiration_time = cherrypy.serving.response.time + self.delay
                 obj_key = self.key()
                 bucket = self.expirations.setdefault(expiration_time, [])
                 bucket.append((obj_size, obj_key))
@@ -204,7 +204,8 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
         * sets request.cacheable = True
         * returns False
     """
-    request = cherrypy.request
+    request = cherrypy.serving.request
+    response = cherrypy.serving.response
     
     # POST, PUT, DELETE should invalidate (delete) the cached copy.
     # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
@@ -218,7 +219,6 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
     request.cached = c = bool(cache_data)
     request.cacheable = not c
     if c:
-        response = cherrypy.response
         s, h, b, create_time, original_req_headers = cache_data
         
         # Copy the response headers. See http://www.cherrypy.org/ticket/721.
@@ -257,15 +257,14 @@ def tee_output():
         if response.headers.get('Pragma', None) != 'no-cache':
             # save the cache data
             body = ''.join(output)
-            vary = [he.value for he in
-                    cherrypy.response.headers.elements('Vary')]
+            vary = [he.value for he in response.headers.elements('Vary')]
             sel_headers = dict([(k, v) for k, v
-                                in cherrypy.request.headers.items()
+                                in cherrypy.serving.request.headers.items()
                                 if k in vary])
             cherrypy._cache.put((response.status, response.headers or {},
                                  body, response.time, sel_headers))
     
-    response = cherrypy.response
+    response = cherrypy.serving.response
     response.body = tee(response.body)
 
 
@@ -286,7 +285,7 @@ def expires(secs=0, force=False):
     none of the above response headers are set.
     """
     
-    response = cherrypy.response
+    response = cherrypy.serving.response
     headers = response.headers
     
     cacheable = False
@@ -304,7 +303,7 @@ def expires(secs=0, force=False):
         if secs == 0:
             if force or "Pragma" not in headers:
                 headers["Pragma"] = "no-cache"
-            if cherrypy.request.protocol >= (1, 1):
+            if cherrypy.serving.request.protocol >= (1, 1):
                 if force or "Cache-Control" not in headers:
                     headers["Cache-Control"] = "no-cache, must-revalidate"
             # Set an explicit Expires date in the past.

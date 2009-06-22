@@ -29,11 +29,11 @@ class ResponseEncoder:
             setattr(self, k, v)
         
         self.attempted_charsets = set()
-        
-        if cherrypy.request.handler is not None:
+        request = cherrypy.serving.request
+        if request.handler is not None:
             # Replace request.handler with self
-            self.oldhandler = cherrypy.request.handler
-            cherrypy.request.handler = self
+            self.oldhandler = request.handler
+            request.handler = self
     
     def encode_stream(self, encoding):
         """Encode a streaming response body.
@@ -72,9 +72,10 @@ class ResponseEncoder:
             return True
     
     def find_acceptable_charset(self):
-        response = cherrypy.response
+        request = cherrypy.serving.request
+        response = cherrypy.serving.response
         
-        if cherrypy.response.stream:
+        if response.stream:
             encoder = self.encode_stream
         else:
             encoder = self.encode_string
@@ -93,7 +94,7 @@ class ResponseEncoder:
         
         # Parse the Accept-Charset request header, and try to provide one
         # of the requested charsets (in order of user preference).
-        encs = cherrypy.request.headers.elements('Accept-Charset')
+        encs = request.headers.elements('Accept-Charset')
         charsets = [enc.value.lower() for enc in encs]
         
         if self.encoding is not None:
@@ -132,7 +133,7 @@ class ResponseEncoder:
                                 return encoding
         
         # No suitable encoding found.
-        ac = cherrypy.request.headers.get('Accept-Charset')
+        ac = request.headers.get('Accept-Charset')
         if ac is None:
             msg = "Your client did not send an Accept-Charset header."
         else:
@@ -141,6 +142,7 @@ class ResponseEncoder:
         raise cherrypy.HTTPError(406, msg)
     
     def __call__(self, *args, **kwargs):
+        response = cherrypy.serving.response
         self.body = self.oldhandler(*args, **kwargs)
         
         if isinstance(self.body, basestring):
@@ -157,14 +159,14 @@ class ResponseEncoder:
         elif self.body is None:
             self.body = []
         
-        ct = cherrypy.response.headers.elements("Content-Type")
+        ct = response.headers.elements("Content-Type")
         if ct:
             ct = ct[0]
             if (not self.text_only) or ct.value.lower().startswith("text/"):
                 # Set "charset=..." param on response Content-Type header
                 ct.params['charset'] = self.find_acceptable_charset()
                 if self.add_charset:
-                    cherrypy.response.headers["Content-Type"] = str(ct)
+                    response.headers["Content-Type"] = str(ct)
         
         return self.body
 
@@ -223,7 +225,8 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
         * No 'gzip' or 'x-gzip' with a qvalue > 0 is present
         * The 'identity' value is given with a qvalue > 0.
     """
-    response = cherrypy.response
+    request = cherrypy.serving.request
+    response = cherrypy.serving.response
     
     set_vary_header(response, "Accept-Encoding")
     
@@ -233,10 +236,10 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
     
     # If returning cached content (which should already have been gzipped),
     # don't re-zip.
-    if getattr(cherrypy.request, "cached", False):
+    if getattr(request, "cached", False):
         return
     
-    acceptable = cherrypy.request.headers.elements('Accept-Encoding')
+    acceptable = request.headers.elements('Accept-Encoding')
     if not acceptable:
         # If no Accept-Encoding field is present in a request,
         # the server MAY assume that the client will accept any

@@ -86,7 +86,7 @@ class Tool(object):
         else:
             conf = {}
         
-        tm = cherrypy.request.toolmaps[self.namespace]
+        tm = cherrypy.serving.request.toolmaps[self.namespace]
         if self._name in tm:
             conf.update(tm[self._name])
         
@@ -129,8 +129,8 @@ class Tool(object):
         p = conf.pop("priority", None)
         if p is None:
             p = getattr(self.callable, "priority", self._priority)
-        cherrypy.request.hooks.attach(self._point, self.callable,
-                                      priority=p, **conf)
+        cherrypy.serving.request.hooks.attach(self._point, self.callable,
+                                              priority=p, **conf)
 
 
 class HandlerTool(Tool):
@@ -159,13 +159,13 @@ class HandlerTool(Tool):
             handled = self.callable(*args, **self._merged_args(kwargs))
             if not handled:
                 raise cherrypy.NotFound()
-            return cherrypy.response.body
+            return cherrypy.serving.response.body
         handle_func.exposed = True
         return handle_func
     
     def _wrapper(self, **kwargs):
         if self.callable(**kwargs):
-            cherrypy.request.handler = None
+            cherrypy.serving.request.handler = None
     
     def _setup(self):
         """Hook this tool into cherrypy.request.
@@ -177,8 +177,8 @@ class HandlerTool(Tool):
         p = conf.pop("priority", None)
         if p is None:
             p = getattr(self.callable, "priority", self._priority)
-        cherrypy.request.hooks.attach(self._point, self._wrapper,
-                                      priority=p, **conf)
+        cherrypy.serving.request.hooks.attach(self._point, self._wrapper,
+                                              priority=p, **conf)
 
 
 class HandlerWrapperTool(Tool):
@@ -206,10 +206,10 @@ class HandlerWrapperTool(Tool):
         self._priority = priority
     
     def callable(self):
-        innerfunc = cherrypy.request.handler
+        innerfunc = cherrypy.serving.request.handler
         def wrap(*args, **kwargs):
             return self.newhandler(innerfunc, *args, **kwargs)
-        cherrypy.request.handler = wrap
+        cherrypy.serving.request.handler = wrap
 
 
 class ErrorTool(Tool):
@@ -227,7 +227,7 @@ class ErrorTool(Tool):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        cherrypy.request.error_response = self._wrapper
+        cherrypy.serving.request.error_response = self._wrapper
 
 
 #                              Builtin tools                              #
@@ -266,7 +266,7 @@ class SessionTool(Tool):
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
-        hooks = cherrypy.request.hooks
+        hooks = cherrypy.serving.request.hooks
         
         conf = self._merged_args()
         
@@ -358,11 +358,11 @@ class XMLRPCController(object):
             # cherrypy.lib.xmlrpc.on_error
             raise Exception('method "%s" is not supported' % attr)
         
-        conf = cherrypy.request.toolmaps['tools'].get("xmlrpc", {})
+        conf = cherrypy.serving.request.toolmaps['tools'].get("xmlrpc", {})
         _xmlrpc.respond(body,
                         conf.get('encoding', 'utf-8'),
                         conf.get('allow_none', 0))
-        return cherrypy.response.body
+        return cherrypy.serving.response.body
     default.exposed = True
 
 
@@ -378,7 +378,7 @@ class CachingTool(Tool):
     """Caching Tool for CherryPy."""
     
     def _wrapper(self, invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
-        request = cherrypy.request
+        request = cherrypy.serving.request
         
         if not hasattr(cherrypy, "_cache"):
             # Make a process-wide Cache object.
@@ -402,8 +402,8 @@ class CachingTool(Tool):
         conf = self._merged_args()
         
         p = conf.pop("priority", None)
-        cherrypy.request.hooks.attach('before_handler', self._wrapper,
-                                      priority=p, **conf)
+        cherrypy.serving.request.hooks.attach('before_handler', self._wrapper,
+                                              priority=p, **conf)
 
 
 
@@ -427,7 +427,7 @@ class Toolbox(object):
     
     def __enter__(self):
         """Populate request.toolmaps from tools specified in config."""
-        cherrypy.request.toolmaps[self.namespace] = map = {}
+        cherrypy.serving.request.toolmaps[self.namespace] = map = {}
         def populate(k, v):
             toolname, arg = k.split(".", 1)
             bucket = map.setdefault(toolname, {})
@@ -436,7 +436,7 @@ class Toolbox(object):
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Run tool._setup() for each tool in our toolmap."""
-        map = cherrypy.request.toolmaps.get(self.namespace)
+        map = cherrypy.serving.request.toolmaps.get(self.namespace)
         if map:
             for name, settings in map.items():
                 if settings.get("on", False):

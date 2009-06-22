@@ -72,9 +72,9 @@ class LogManager(object):
         escaped by prepending a backslash, and all whitespace characters,
         which are written in their C-style notation (\\n, \\t, etc).
         """
-        request = cherrypy.request
+        request = cherrypy.serving.request
         remote = request.remote
-        response = cherrypy.response
+        response = cherrypy.serving.response
         outheaders = response.headers
         inheaders = request.headers
         if response.output_status is None:
@@ -88,9 +88,9 @@ class LogManager(object):
                  't': self.time(),
                  'r': request.request_line,
                  's': status,
-                 'b': outheaders.get('Content-Length', '') or "-",
-                 'f': inheaders.get('Referer', ''),
-                 'a': inheaders.get('User-Agent', ''),
+                 'b': dict.get(outheaders, 'Content-Length', '') or "-",
+                 'f': dict.get(inheaders, 'Referer', ''),
+                 'a': dict.get(inheaders, 'User-Agent', ''),
                  }
         for k, v in atoms.items():
             if isinstance(v, unicode):
@@ -220,7 +220,7 @@ class WSGIErrorHandler(logging.Handler):
     def flush(self):
         """Flushes the stream."""
         try:
-            stream = cherrypy.request.wsgi_environ.get('wsgi.errors')
+            stream = cherrypy.serving.request.wsgi_environ.get('wsgi.errors')
         except (AttributeError, KeyError):
             pass
         else:
@@ -229,7 +229,7 @@ class WSGIErrorHandler(logging.Handler):
     def emit(self, record):
         """Emit a record."""
         try:
-            stream = cherrypy.request.wsgi_environ.get('wsgi.errors')
+            stream = cherrypy.serving.request.wsgi_environ.get('wsgi.errors')
         except (AttributeError, KeyError):
             pass
         else:

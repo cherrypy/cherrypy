@@ -588,7 +588,7 @@ class RequestBody(Entity):
         # It is possible to send a POST request with no body, for example;
         # however, app developers are responsible in that case to set
         # cherrypy.request.process_body to False so this method isn't called.
-        h = cherrypy.request.headers
+        h = cherrypy.serving.request.headers
         if u'Content-Length' not in h and u'Transfer-Encoding' not in h:
             raise cherrypy.HTTPError(411)
         

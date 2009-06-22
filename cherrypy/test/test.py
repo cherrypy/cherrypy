@@ -18,6 +18,8 @@ serverpem = os.path.join(os.getcwd(), localDir, 'test.pem')
 import sys
 import warnings
 
+from cherrypy.lib import profiler
+
 
 class TestHarness(object):
     """A test harness for the CherryPy framework and CherryPy applications."""
@@ -152,7 +154,7 @@ class LocalServer(object):
             except ImportError:
                 warnings.warn("Error importing wsgiconq. pyconquer will not run.")
             else:
-                app = wsgiconq.WSGILogger(app)
+                app = wsgiconq.WSGILogger(app, c_calls=True)
         if self.validate:
             try:
                 from wsgiref import validate

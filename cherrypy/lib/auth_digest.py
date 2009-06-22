@@ -298,16 +298,16 @@ def www_authenticate(realm, key, algorithm='MD5', nonce=None, qop=qop_auth, stal
 def digest_auth(realm, get_ha1, key, debug=False):
     """digest_auth is a CherryPy tool which hooks at before_handler to perform
     HTTP Digest Access Authentication, as specified in RFC 2617.
-
+    
     If the request has an 'authorization' header with a 'Digest' scheme, this
     tool authenticates the credentials supplied in that header.  If
     the request has no 'authorization' header, or if it does but the scheme is
     not "Digest", or if authentication fails, the tool sends a 401 response with
     a 'WWW-Authenticate' Digest header.
-
+    
     Arguments:
     realm: a string containing the authentication realm.
-
+    
     get_ha1: a callable which looks up a username in a credentials store
         and returns the HA1 string, which is defined in the RFC to be
         MD5(username : realm : password).  The function's signature is:
@@ -315,27 +315,28 @@ def digest_auth(realm, get_ha1, key, debug=False):
         where username is obtained from the request's 'authorization' header.
         If username is not found in the credentials store, get_ha1() returns
         None.
-
+    
     key: a secret string known only to the server, used in the synthesis of nonces.
     """
-
-    auth_header = cherrypy.request.headers.get('authorization')
+    request = cherrypy.serving.request
+    
+    auth_header = request.headers.get('authorization')
     nonce_is_stale = False
     if auth_header is not None:
         try:
-            auth = HttpDigestAuthorization(auth_header, cherrypy.request.method, debug=debug)
+            auth = HttpDigestAuthorization(auth_header, request.method, debug=debug)
         except ValueError, e:
             raise cherrypy.HTTPError(400, 'Bad Request: %s' % e)
-
+        
         if debug:
             TRACE(str(auth))
-
+        
         if auth.validate_nonce(realm, key):
             ha1 = get_ha1(realm, auth.username)
             if ha1 is not None:
                 # note that for request.body to be available we need to hook in at
                 # before_handler, not on_start_resource like 3.1.x digest_auth does.
-                digest = auth.request_digest(ha1, entity_body=cherrypy.request.body)
+                digest = auth.request_digest(ha1, entity_body=request.body)
                 if digest == auth.response: # authenticated
                     if debug:
                         TRACE("digest matches auth.response")
@@ -343,15 +344,15 @@ def digest_auth(realm, get_ha1, key, debug=False):
                     # The choice of ten minutes' lifetime for nonce is somewhat arbitrary
                     nonce_is_stale = auth.is_nonce_stale(max_age_seconds=600)
                     if not nonce_is_stale:
-                        cherrypy.request.login = auth.username
+                        request.login = auth.username
                         if debug:
                             TRACE("authentication of %s successful" % auth.username)
                         return
-
+    
     # Respond with 401 status and a WWW-Authenticate header
     header = www_authenticate(realm, key, stale=nonce_is_stale)
     if debug:
         TRACE(header)
-    cherrypy.response.headers['WWW-Authenticate'] = header
+    cherrypy.serving.response.headers['WWW-Authenticate'] = header
     raise cherrypy.HTTPError(401, "You are not authorized to access that resource")
 

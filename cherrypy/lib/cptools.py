@@ -35,7 +35,7 @@ def validate_etags(autotags=False):
     will be incorrect, and your application will break.
     See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.24
     """
-    response = cherrypy.response
+    response = cherrypy.serving.response
     
     # Guard against being run twice.
     if hasattr(response, "ETag"):
@@ -58,7 +58,7 @@ def validate_etags(autotags=False):
     # anything other than a 2xx or 412 status, then the If-Match header
     # MUST be ignored."
     if status >= 200 and status <= 299:
-        request = cherrypy.request
+        request = cherrypy.serving.request
         
         conditions = request.headers.elements('If-Match') or []
         conditions = [str(x) for x in conditions]
@@ -81,12 +81,12 @@ def validate_since():
     If no code has set the Last-Modified response header, then no validation
     will be performed.
     """
-    response = cherrypy.response
+    response = cherrypy.serving.response
     lastmod = response.headers.get('Last-Modified')
     if lastmod:
         status, reason, msg = _httputil.valid_status(response.status)
         
-        request = cherrypy.request
+        request = cherrypy.serving.request
         
         since = request.headers.get('If-Unmodified-Since')
         if since and since != lastmod:
@@ -122,7 +122,7 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     want to rewrite remote.ip, set the 'remote' arg to an empty string.
     """
     
-    request = cherrypy.request
+    request = cherrypy.serving.request
     
     if scheme:
         s = request.headers.get(scheme, None)
@@ -138,7 +138,7 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     if local:
         base = request.headers.get(local, base)
     if not base:
-        port = cherrypy.request.local.port
+        port = request.local.port
         if port == 80:
             base = '127.0.0.1'
         else:
@@ -166,7 +166,7 @@ def ignore_headers(headers=('Range',)):
     for example, Apache duplicates the work that CP does for 'Range'
     headers, and will doubly-truncate the response.
     """
-    request = cherrypy.request
+    request = cherrypy.serving.request
     for name in headers:
         if name in request.headers:
             del request.headers[name]
@@ -175,7 +175,7 @@ def ignore_headers(headers=('Range',)):
 def response_headers(headers=None):
     """Set headers on the response."""
     for name, value in (headers or []):
-        cherrypy.response.headers[name] = value
+        cherrypy.serving.response.headers[name] = value
 response_headers.failsafe = True
 
 
@@ -191,7 +191,7 @@ def referer(pattern, accept=True, accept_missing=False, error=403,
     message: a string to include in the response body on failure.
     """
     try:
-        match = bool(re.match(pattern, cherrypy.request.headers['Referer']))
+        match = bool(re.match(pattern, cherrypy.serving.request.headers['Referer']))
         if accept == match:
             return
     except KeyError:
@@ -236,16 +236,18 @@ Message: %(error_msg)s
     
     def do_login(self, username, password, from_page='..', **kwargs):
         """Login. May raise redirect, or return True if request handled."""
+        response = cherrypy.serving.response
         error_msg = self.check_username_and_password(username, password)
         if error_msg:
             body = self.login_screen(from_page, username, error_msg)
-            cherrypy.response.body = body
-            if "Content-Length" in cherrypy.response.headers:
+            response.body = body
+            if "Content-Length" in response.headers:
                 # Delete Content-Length header so finalize() recalcs it.
-                del cherrypy.response.headers["Content-Length"]
+                del response.headers["Content-Length"]
             return True
         else:
-            cherrypy.session[self.session_key] = cherrypy.request.login = username
+            cherrypy.serving.request.login = username
+            cherrypy.session[self.session_key] = username
             self.on_login(username)
             raise cherrypy.HTTPRedirect(from_page or "/")
     
@@ -255,40 +257,43 @@ Message: %(error_msg)s
         username = sess.get(self.session_key)
         sess[self.session_key] = None
         if username:
-            cherrypy.request.login = None
+            cherrypy.serving.request.login = None
             self.on_logout(username)
         raise cherrypy.HTTPRedirect(from_page)
     
     def do_check(self):
         """Assert username. May raise redirect, or return True if request handled."""
         sess = cherrypy.session
-        request = cherrypy.request
+        request = cherrypy.serving.request
+        response = cherrypy.serving.response
         
         username = sess.get(self.session_key)
         if not username:
             sess[self.session_key] = username = self.anonymous()
         if not username:
-            cherrypy.response.body = self.login_screen(cherrypy.url(qs=request.query_string))
-            if "Content-Length" in cherrypy.response.headers:
+            response.body = self.login_screen(cherrypy.url(qs=request.query_string))
+            if "Content-Length" in response.headers:
                 # Delete Content-Length header so finalize() recalcs it.
-                del cherrypy.response.headers["Content-Length"]
+                del response.headers["Content-Length"]
             return True
-        cherrypy.request.login = username
+        request.login = username
         self.on_check(username)
     
     def run(self):
-        request = cherrypy.request
+        request = cherrypy.serving.request
+        response = cherrypy.serving.response
+        
         path = request.path_info
         if path.endswith('login_screen'):
             return self.login_screen(**request.params)
         elif path.endswith('do_login'):
             if request.method != 'POST':
-                cherrypy.response.headers['Allow'] = "POST"
+                response.headers['Allow'] = "POST"
                 raise cherrypy.HTTPError(405)
             return self.do_login(**request.params)
         elif path.endswith('do_logout'):
             if request.method != 'POST':
-                cherrypy.response.headers['Allow'] = "POST"
+                response.headers['Allow'] = "POST"
                 raise cherrypy.HTTPError(405)
             return self.do_logout(**request.params)
         else:
@@ -315,22 +320,24 @@ def log_traceback(severity=logging.ERROR):
 
 def log_request_headers():
     """Write request headers to the cherrypy error log."""
-    h = ["  %s: %s" % (k, v) for k, v in cherrypy.request.header_list]
+    h = ["  %s: %s" % (k, v) for k, v in cherrypy.serving.request.header_list]
     cherrypy.log('\nRequest Headers:\n' + '\n'.join(h), "HTTP")
 
 def log_hooks():
     """Write request.hooks to the cherrypy error log."""
+    request = cherrypy.serving.request
+    
     msg = []
     # Sort by the standard points if possible.
     from cherrypy import _cprequest
     points = _cprequest.hookpoints
-    for k in cherrypy.request.hooks.keys():
+    for k in request.hooks.keys():
         if k not in points:
             points.append(k)
     
     for k in points:
         msg.append("    %s:" % k)
-        v = cherrypy.request.hooks.get(k, [])
+        v = request.hooks.get(k, [])
         v.sort()
         for h in v:
             msg.append("        %r" % h)
@@ -346,7 +353,7 @@ def redirect(url='', internal=True):
 
 def trailing_slash(missing=True, extra=False, status=None):
     """Redirect if path_info has (missing|extra) trailing slash."""
-    request = cherrypy.request
+    request = cherrypy.serving.request
     pi = request.path_info
     
     if request.is_index is True:
@@ -375,7 +382,7 @@ def flatten():
             else:
                 for y in flattener(x):
                     yield y 
-    response = cherrypy.response
+    response = cherrypy.serving.response
     response.body = flattener(response.body)
 
 
@@ -407,10 +414,11 @@ def accept(media=None):
         return
     if isinstance(media, basestring):
         media = [media]
+    request = cherrypy.serving.request
     
     # Parse the Accept request header, and try to match one
     # of the requested media-ranges (in order of preference).
-    ranges = cherrypy.request.headers.elements('Accept')
+    ranges = request.headers.elements('Accept')
     if not ranges:
         # Any media type is acceptable.
         return media[0]
@@ -433,7 +441,7 @@ def accept(media=None):
                         return element.value
     
     # No suitable media-range found.
-    ah = cherrypy.request.headers.get('Accept')
+    ah = request.headers.get('Accept')
     if ah is None:
         msg = "Your client did not send an Accept header."
     else:
@@ -467,22 +475,23 @@ class MonitoredHeaderMap(_httputil.HeaderMap):
 
 def autovary(ignore=None):
     """Auto-populate the Vary response header based on request.header access."""
-    req_h = cherrypy.request.headers
-    cherrypy.request.headers = MonitoredHeaderMap()
-    cherrypy.request.headers.update(req_h)
+    request = cherrypy.serving.request
+    
+    req_h = request.headers
+    request.headers = MonitoredHeaderMap()
+    request.headers.update(req_h)
     if ignore is None:
         ignore = set(['Content-Disposition', 'Content-Length', 'Content-Type'])
     
     def set_response_header():
-        resp_h = cherrypy.response.headers
+        resp_h = cherrypy.serving.response.headers
         v = set([e.value for e in resp_h.elements('Vary')])
-        v = v.union(cherrypy.request.headers.accessed_headers)
+        v = v.union(request.headers.accessed_headers)
         v = v.difference(ignore)
         v = list(v)
         v.sort()
         resp_h['Vary'] = ', '.join(v)
-    cherrypy.request.hooks.attach(
-        'before_finalize', set_response_header, 95)
+    request.hooks.attach('before_finalize', set_response_header, 95)
 
 
 

@@ -20,7 +20,7 @@ else:
     json_encode = json.JSONEncoder().iterencode
 
 def json_in(*args, **kwargs):
-    request = cherrypy.request
+    request = cherrypy.serving.request
     _h = request.headers
     if ('Content-Type' not in _h
             or _h.elements('Content-Type')[0].value != 'application/json'):
@@ -37,8 +37,8 @@ def json_in(*args, **kwargs):
     request.json = json
 
 def json_out(*args, **kwargs):
-    request = cherrypy.request
-    response = cherrypy.response
+    request = cherrypy.serving.request
+    response = cherrypy.serving.response
 
     real_handler = request.handler
     def json_handler(*args, **kwargs):

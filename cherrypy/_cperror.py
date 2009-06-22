@@ -29,7 +29,7 @@ class InternalRedirect(CherryPyException):
     
     def __init__(self, path, query_string=""):
         import cherrypy
-        request = cherrypy.request
+        request = cherrypy.serving.request
         
         self.query_string = query_string
         if "?" in path:
@@ -60,7 +60,7 @@ class HTTPRedirect(CherryPyException):
     
     def __init__(self, urls, status=None):
         import cherrypy
-        request = cherrypy.request
+        request = cherrypy.serving.request
         
         if isinstance(urls, basestring):
             urls = [urls]
@@ -99,7 +99,7 @@ class HTTPRedirect(CherryPyException):
         HTTPRedirect object and set its output without *raising* the exception.
         """
         import cherrypy
-        response = cherrypy.response
+        response = cherrypy.serving.response
         response.status = status = self.status
         
         if status in (300, 301, 302, 303, 307):
@@ -158,7 +158,7 @@ def clean_headers(status):
     """Remove any headers which should not apply to an error response."""
     import cherrypy
     
-    response = cherrypy.response
+    response = cherrypy.serving.response
     
     # Remove headers which applied to the original content,
     # but do not apply to the error page.
@@ -211,7 +211,7 @@ class HTTPError(CherryPyException):
         """
         import cherrypy
         
-        response = cherrypy.response
+        response = cherrypy.serving.response
         
         clean_headers(self.code)
         
@@ -219,7 +219,7 @@ class HTTPError(CherryPyException):
         # so don't bother cleaning up response values here.
         response.status = self.status
         tb = None
-        if cherrypy.request.show_tracebacks:
+        if cherrypy.serving.request.show_tracebacks:
             tb = format_exc()
         response.headers['Content-Type'] = "text/html;charset=utf-8"
         response.headers.pop('Content-Length', None)
@@ -244,7 +244,8 @@ class NotFound(HTTPError):
     def __init__(self, path=None):
         if path is None:
             import cherrypy
-            path = cherrypy.request.script_name + cherrypy.request.path_info
+            request = cherrypy.serving.request
+            path = request.script_name + request.path_info
         self.args = (path,)
         HTTPError.__init__(self, 404, "The path %r was not found." % path)
 
@@ -309,7 +310,7 @@ def get_error_page(status, **kwargs):
             kwargs[k] = _escape(kwargs[k])
     
     # Use a custom template or callable for the error page?
-    pages = cherrypy.request.error_page
+    pages = cherrypy.serving.request.error_page
     error_page = pages.get(code) or pages.get('default')
     if error_page:
         try:
@@ -337,7 +338,7 @@ _ie_friendly_error_sizes = {
 
 def _be_ie_unfriendly(status):
     import cherrypy
-    response = cherrypy.response
+    response = cherrypy.serving.response
     
     # For some statuses, Internet Explorer 5+ shows "friendly error
     # messages" instead of our response.body if the body is smaller

@@ -59,11 +59,12 @@ def basic_auth(realm, checkpassword):
         'authorization' header.  If authentication succeeds, checkpassword
         returns True, else it returns False.
     """
-
+    
     if '"' in realm:
         raise ValueError('Realm cannot contain the " (quote) character.')
-
-    auth_header = cherrypy.request.headers.get('authorization')
+    request = cherrypy.serving.request
+    
+    auth_header = request.headers.get('authorization')
     if auth_header is not None:
         try:
             scheme, params = auth_header.split(' ', 1)
@@ -73,12 +74,12 @@ def basic_auth(realm, checkpassword):
                 username_password = base64.decodestring(params)
                 username, password = username_password.split(':', 1)
                 if checkpassword(realm, username, password):
-                    cherrypy.request.login = username
+                    request.login = username
                     return # successful authentication
         except (ValueError, binascii.Error): # split() error, base64.decodestring() error
             raise cherrypy.HTTPError(400, 'Bad Request')
-
+    
     # Respond with 401 status and a WWW-Authenticate header
-    cherrypy.response.headers['www-authenticate'] = 'Basic realm="%s"' % realm
+    cherrypy.serving.response.headers['www-authenticate'] = 'Basic realm="%s"' % realm
     raise cherrypy.HTTPError(401, "You are not authorized to access that resource")
 

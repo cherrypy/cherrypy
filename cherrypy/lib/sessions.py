@@ -578,21 +578,23 @@ def save():
     
     if not hasattr(cherrypy.serving, "session"):
         return
+    request = cherrypy.serving.request
+    response = cherrypy.serving.response
     
     # Guard against running twice
-    if hasattr(cherrypy.request, "_sessionsaved"):
+    if hasattr(request, "_sessionsaved"):
         return
-    cherrypy.request._sessionsaved = True
+    request._sessionsaved = True
     
-    if cherrypy.response.stream:
+    if response.stream:
         # If the body is being streamed, we have to save the data
         #   *after* the response has been written out
-        cherrypy.request.hooks.attach('on_end_request', cherrypy.session.save)
+        request.hooks.attach('on_end_request', cherrypy.session.save)
     else:
         # If the body is not being streamed, we save the data now
         # (so we can release the lock).
-        if isinstance(cherrypy.response.body, types.GeneratorType):
-            cherrypy.response.collapse_body()
+        if isinstance(response.body, types.GeneratorType):
+            response.collapse_body()
         cherrypy.session.save()
 save.failsafe = True
 
@@ -635,7 +637,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     you're using for more information.
     """
     
-    request = cherrypy.request
+    request = cherrypy.serving.request
     
     # Guard against running twice
     if hasattr(request, "_session_init_flag"):
@@ -662,7 +664,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     cherrypy.serving.session = sess = storage_class(id, **kwargs)
     def update_cookie(id):
         """Update the cookie every time the session id changes."""
-        cherrypy.response.cookie[name] = id
+        cherrypy.serving.response.cookie[name] = id
     sess.id_observers.append(update_cookie)
     
     # Create cherrypy.session which will proxy to cherrypy.serving.session
@@ -695,9 +697,9 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
         be set. If True, the cookie 'secure' value will be set (to 1).
     """
     # Set response cookie
-    cookie = cherrypy.response.cookie
+    cookie = cherrypy.serving.response.cookie
     cookie[name] = cherrypy.serving.session.id
-    cookie[name]['path'] = (path or cherrypy.request.headers.get(path_header)
+    cookie[name]['path'] = (path or cherrypy.serving.request.headers.get(path_header)
                             or '/')
     
     # We'd like to use the "max-age" param as indicated in
@@ -716,9 +718,9 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
 
 def expire():
     """Expire the current session cookie."""
-    name = cherrypy.request.config.get('tools.sessions.name', 'session_id')
+    name = cherrypy.serving.request.config.get('tools.sessions.name', 'session_id')
     one_year = 60 * 60 * 24 * 365
     e = time.time() - one_year
-    cherrypy.response.cookie[name]['expires'] = httputil.HTTPDate(e)
+    cherrypy.serving.response.cookie[name]['expires'] = httputil.HTTPDate(e)
 
 

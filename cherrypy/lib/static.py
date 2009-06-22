@@ -29,7 +29,7 @@ def serve_file(path, content_type=None, disposition=None, name=None):
     header will be written.
     """
     
-    response = cherrypy.response
+    response = cherrypy.serving.response
     
     # If path is relative, users should fix it by making path absolute.
     # That is, CherryPy should not guess where the application root is.
@@ -94,7 +94,7 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None):
     position.
     """
     
-    response = cherrypy.response
+    response = cherrypy.serving.response
     
     try:
         st = os.fstat(fileobj.fileno())
@@ -121,13 +121,13 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None):
 
 def _serve_fileobj(fileobj, content_type, content_length):
     """Internal. Set response.body to the given file object, perhaps ranged."""
-    response = cherrypy.response
+    response = cherrypy.serving.response
     
     # HTTP/1.0 didn't have Range/Accept-Ranges headers, or the 206 code
-    if cherrypy.request.protocol >= (1, 1):
+    request = cherrypy.serving.request
+    if request.protocol >= (1, 1):
         response.headers["Accept-Ranges"] = "bytes"
-        r = httputil.get_ranges(cherrypy.request.headers.get('Range'),
-                                content_length)
+        r = httputil.get_ranges(request.headers.get('Range'), content_length)
         if r == []:
             response.headers['Content-Range'] = "bytes */%s" % content_length
             message = "Invalid Range (first-byte-pos greater than Content-Length)"
@@ -221,10 +221,11 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     '/home/me', the Request-URI is 'myapp', and the index arg is
     'index.html', the file '/home/me/myapp/index.html' will be sought.
     """
-    if cherrypy.request.method not in ('GET', 'HEAD'):
+    request = cherrypy.serving.request
+    if request.method not in ('GET', 'HEAD'):
         return False
     
-    if match and not re.search(match, cherrypy.request.path_info):
+    if match and not re.search(match, request.path_info):
         return False
     
     # Allow the use of '~' to refer to a user's home directory.
@@ -242,13 +243,13 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
     if section == 'global':
         section = "/"
     section = section.rstrip(r"\/")
-    branch = cherrypy.request.path_info[len(section) + 1:]
+    branch = request.path_info[len(section) + 1:]
     branch = unquote(branch.lstrip(r"\/"))
     
     # If branch is "", filename will end in a slash
     filename = os.path.join(dir, branch)
     cherrypy.log('Checking file %r to fulfill %r' %
-                 (filename, cherrypy.request.path_info),
+                 (filename, request.path_info),
                  context='tools.staticdir', severity=logging.DEBUG)
     
     # There's a chance that the branch pulled from the URL might
@@ -263,7 +264,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index=""):
         if index:
             handled = _attempt(os.path.join(filename, index), content_types)
             if handled:
-                cherrypy.request.is_index = filename[-1] in (r"\/")
+                request.is_index = filename[-1] in (r"\/")
     return handled
 
 def staticfile(filename, root=None, match="", content_types=None):
@@ -277,10 +278,11 @@ def staticfile(filename, root=None, match="", content_types=None):
     a string (e.g. "gif") and 'content-type' is the value to write
     out in the Content-Type response header (e.g. "image/gif").
     """
-    if cherrypy.request.method not in ('GET', 'HEAD'):
+    request = cherrypy.serving.request
+    if request.method not in ('GET', 'HEAD'):
         return False
     
-    if match and not re.search(match, cherrypy.request.path_info):
+    if match and not re.search(match, request.path_info):
         return False
     
     # If filename is relative, make absolute using "root".

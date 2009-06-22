@@ -4,9 +4,10 @@ from cherrypy.lib import httpauth
 
 def check_auth(users, encrypt=None, realm=None):
     """If an authorization header contains credentials, return True, else False."""
-    if 'authorization' in cherrypy.request.headers:
+    request = cherrypy.serving.request
+    if 'authorization' in request.headers:
         # make sure the provided credentials are correctly set
-        ah = httpauth.parseAuthorization(cherrypy.request.headers['authorization'])
+        ah = httpauth.parseAuthorization(request.headers['authorization'])
         if ah is None:
             raise cherrypy.HTTPError(400, 'Bad Request')
         
@@ -17,7 +18,7 @@ def check_auth(users, encrypt=None, realm=None):
             try:
                 # backward compatibility
                 users = users() # expect it to return a dictionary
-
+                
                 if not isinstance(users, dict):
                     raise ValueError("Authentication users must be a dictionary")
                 
@@ -35,12 +36,12 @@ def check_auth(users, encrypt=None, realm=None):
         
         # validate the authorization by re-computing it here
         # and compare it with what the user-agent provided
-        if httpauth.checkResponse(ah, password, method=cherrypy.request.method,
+        if httpauth.checkResponse(ah, password, method=request.method,
                                   encrypt=encrypt, realm=realm):
-            cherrypy.request.login = ah["username"]
+            request.login = ah["username"]
             return True
-    
-        cherrypy.request.login = False
+        
+        request.login = False
     return False
 
 def basic_auth(realm, users, encrypt=None):
@@ -55,7 +56,7 @@ def basic_auth(realm, users, encrypt=None):
         return
     
     # inform the user-agent this path is protected
-    cherrypy.response.headers['www-authenticate'] = httpauth.basicAuth(realm)
+    cherrypy.serving.response.headers['www-authenticate'] = httpauth.basicAuth(realm)
     
     raise cherrypy.HTTPError(401, "You are not authorized to access that resource") 
 
@@ -69,7 +70,7 @@ def digest_auth(realm, users):
         return
     
     # inform the user-agent this path is protected
-    cherrypy.response.headers['www-authenticate'] = httpauth.digestAuth(realm)
+    cherrypy.serving.response.headers['www-authenticate'] = httpauth.digestAuth(realm)
     
     raise cherrypy.HTTPError(401, "You are not authorized to access that resource") 
  

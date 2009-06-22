@@ -82,7 +82,7 @@ class Application(object):
     def _get_script_name(self):
         if self._script_name is None:
             # None signals that the script name should be pulled from WSGI environ.
-            return cherrypy.request.wsgi_environ['SCRIPT_NAME'].rstrip("/")
+            return cherrypy.serving.request.wsgi_environ['SCRIPT_NAME'].rstrip("/")
         return self._script_name
     def _set_script_name(self, value):
         if value:
@@ -211,8 +211,9 @@ class Tree(object):
         """
         if path is None:
             try:
-                path = httputil.urljoin(cherrypy.request.script_name,
-                                        cherrypy.request.path_info)
+                request = cherrypy.serving.request
+                path = httputil.urljoin(request.script_name,
+                                        request.path_info)
             except AttributeError:
                 return None
         
