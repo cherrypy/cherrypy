@@ -137,6 +137,8 @@ class MemoryCache:
         # See tickets #99 and #180 for more information.
         while time:
             now = time.time()
+            # Must make a copy of expirations so it doesn't change size
+            # during iteration
             for expiration_time, objects in self.expirations.items():
                 if expiration_time <= now:
                     for obj_size, obj_key in objects:

@@ -6,7 +6,6 @@ import logging
 logging.Logger.manager.emittedNoHandlerWarning = 1
 logfmt = logging.Formatter("%(message)s")
 import os
-import rfc822
 import sys
 
 import cherrypy
@@ -111,7 +110,9 @@ class LogManager(object):
     def time(self):
         """Return now() in Apache Common Log Format (no timezone)."""
         now = datetime.datetime.now()
-        month = rfc822._monthnames[now.month - 1].capitalize()
+        monthnames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
+                      'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+        month = monthnames[now.month - 1].capitalize()
         return ('[%02d/%s/%04d:%02d:%02d:%02d]' %
                 (now.day, month, now.year, now.hour, now.minute, now.second))
     

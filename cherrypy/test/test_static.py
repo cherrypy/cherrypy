@@ -1,6 +1,7 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+from httplib import HTTPConnection, HTTPSConnection
 try:
     import cStringIO as StringIO
 except ImportError:
@@ -32,7 +33,9 @@ def setup_server():
         bigfile._cp_config = {'response.stream': True}
         
         def tell(self):
-            return repr(self.f.input.tell())
+            if self.f.input.closed:
+                return ''
+            return repr(self.f.input.tell()).rstrip('L')
         tell.exposed = True
         
         def fileobj(self):
@@ -229,20 +232,42 @@ class StaticTest(helper.CPWebCase):
         
         body = ''
         remaining = BIGFILE_SIZE
-        # By this point, the webserver has already written one chunk to
-        # the socket and queued another. So we start with i=1.
-        i = 1
         while remaining > 0:
-            i += 1
-            s, h, b = helper.webtest.openURL(
-                "/tell", headers=[], host=self.HOST, port=self.PORT)
-            if remaining != 65536:
-                self.assertEqual(long(b), 65536 * i)
             data = response.fp.read(65536)
             if not data:
                 break
             body += data
             remaining -= len(data)
+            
+            if self.scheme == "https":
+                newconn = HTTPSConnection
+            else:
+                newconn = HTTPConnection
+            s, h, b = helper.webtest.openURL(
+                "/tell", headers=[], host=self.HOST, port=self.PORT,
+                http_conn=newconn)
+            if not b:
+                # The file was closed on the server.
+                tell_position = BIGFILE_SIZE
+            else:
+                tell_position = int(b)
+            
+            expected = len(body)
+            if tell_position >= BIGFILE_SIZE:
+                # We can't exactly control how much content the server asks for.
+                # Fudge it by only checking the first half of the reads.
+                if expected < (BIGFILE_SIZE / 2):
+                    self.fail(
+                        "The file should have advanced to position %r, but has "
+                        "already advanced to the end of the file. It may not be "
+                        "streamed as intended, or at the wrong chunk size (64k)" %
+                        expected)
+            elif tell_position < expected:
+                self.fail(
+                    "The file should have advanced to position %r, but has "
+                    "only advanced to position %r. It may not be streamed "
+                    "as intended, or at the wrong chunk size (65536)" %
+                    (expected, tell_position))
         
         if body != "x" * BIGFILE_SIZE:
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %

@@ -217,7 +217,7 @@ Finished 1000 requests
         try:
             self.output = _cpmodpy.read_process(AB_PATH or "ab", self.args())
         except:
-            print(_cperror.format_exc())
+            print _cperror.format_exc()
             raise
         
         for attr, name, pattern in self.parse_patterns:
@@ -246,7 +246,7 @@ def thread_report(path=SCRIPT_NAME + "/hello", concurrency=safe_threads):
         sess.run()
         row = [c]
         for attr in attrs:
-            val = getattr(sess, attr)
+            val = float(getattr(sess, attr))
             avg[attr] += float(val)
             row.append(val)
         rows.append(row)
@@ -377,7 +377,11 @@ if __name__ == '__main__':
             if "--null" in opts:
                 print("\nUsing null Request object")
             try:
-                run_standard_benchmarks()
+                try:
+                    run_standard_benchmarks()
+                except:
+                    print _cperror.format_exc()
+                    raise
             finally:
                 cherrypy.engine.exit()
     

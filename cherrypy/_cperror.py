@@ -117,7 +117,8 @@ class HTTPRedirect(CherryPyException):
                    303: "This resource can be found at <a href='%s'>%s</a>.",
                    307: "This resource has moved temporarily to <a href='%s'>%s</a>.",
                    }[status]
-            response.body = "<br />\n".join([msg % (u, u) for u in self.urls])
+            msgs = [msg % (u, u) for u in self.urls]
+            response.body = "<br />\n".join(msgs)
             # Previous code may have set C-L, so we have to reset it
             # (allow finalize to set it).
             response.headers.pop('Content-Length', None)

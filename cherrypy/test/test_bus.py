@@ -70,7 +70,7 @@ class PublishSubscribeTests(unittest.TestCase):
             b.subscribe(channel, lambda: None, priority=20)
         
         for channel in channels:
-            self.assertRaises(TypeError, b.publish, channel, 123)
+            self.assertRaises(wspbus.ChannelFailures, b.publish, channel, 123)
             expected.append(msg % (1, channel, 123))
         
         self.assertEqual(self.responses, expected)
