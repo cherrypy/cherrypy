@@ -213,7 +213,7 @@ def decompress(body):
     return data
 
 
-def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
+def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
     """Try to gzip the response body if Content-Type in mime_types.
     
     cherrypy.response.headers['Content-Type'] must be set to one of the
@@ -232,11 +232,15 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
     
     if not response.body:
         # Response body is empty (might be a 304 for instance)
+        if debug:
+            cherrypy.log('No response body', context='GZIP')
         return
     
     # If returning cached content (which should already have been gzipped),
     # don't re-zip.
     if getattr(request, "cached", False):
+        if debug:
+            cherrypy.log('Not gzipping cached response', context='GZIP')
         return
     
     acceptable = request.headers.elements('Accept-Encoding')
@@ -248,22 +252,42 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain']):
         # the "identity" content-coding, unless it has additional
         # information that a different content-coding is meaningful
         # to the client.
+        if debug:
+            cherrypy.log('No Accept-Encoding', context='GZIP')
         return
     
     ct = response.headers.get('Content-Type', '').split(';')[0]
     for coding in acceptable:
         if coding.value == 'identity' and coding.qvalue != 0:
+            if debug:
+                cherrypy.log('Non-zero identity qvalue: %r' % coding,
+                             context='GZIP')
             return
         if coding.value in ('gzip', 'x-gzip'):
             if coding.qvalue == 0:
+                if debug:
+                    cherrypy.log('Zero gzip qvalue: %r' % coding,
+                                 context='GZIP')
                 return
-            if ct in mime_types:
-                # Return a generator that compresses the page
-                response.headers['Content-Encoding'] = 'gzip'
-                response.body = compress(response.body, compress_level)
-                if "Content-Length" in response.headers:
-                    # Delete Content-Length header so finalize() recalcs it.
-                    del response.headers["Content-Length"]
+            
+            if ct not in mime_types:
+                if debug:
+                    cherrypy.log('Content-Type %r not in mime_types %r' %
+                                 (ct, mime_types), context='GZIP')
+                return
+            
+            if debug:
+                cherrypy.log('Gzipping', context='GZIP')
+            # Return a generator that compresses the page
+            response.headers['Content-Encoding'] = 'gzip'
+            response.body = compress(response.body, compress_level)
+            if "Content-Length" in response.headers:
+                # Delete Content-Length header so finalize() recalcs it.
+                del response.headers["Content-Length"]
+            
             return
+    
+    if debug:
+        cherrypy.log('No acceptable encoding found.', context='GZIP')
     cherrypy.HTTPError(406, "identity, gzip").set_response()
 
