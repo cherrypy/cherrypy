@@ -39,6 +39,10 @@ def setup_server():
         def confvalue(self):
             return cherrypy.request.config.get("user")
         confvalue.exposed = True
+        
+        def redirect_via_url(self, path):
+            raise cherrypy.HTTPRedirect(cherrypy.url(path))
+        redirect_via_url.exposed = True
     
     def mapped_func(self, ID=None):
         return "ID is %s" % ID
@@ -258,6 +262,30 @@ class ObjectMappingTest(helper.CPWebCase):
         # mounted at /foo. See http://www.cherrypy.org/ticket/573
         self.getPage("/foobar")
         self.assertBody("bar")
+    
+    def test_redir_using_url(self):
+        for url in script_names:
+            prefix = self.script_name = url
+            
+            # Test the absolute path to the parent (leading slash)
+            self.getPage('/redirect_via_url?path=./')
+            self.assertStatus(('302 Found', '303 See Other'))
+            self.assertHeader('Location', '%s/' % self.base())
+            
+            # Test the relative path to the parent (no leading slash)
+            self.getPage('/redirect_via_url?path=./')
+            self.assertStatus(('302 Found', '303 See Other'))
+            self.assertHeader('Location', '%s/' % self.base())
+            
+            # Test the absolute path to the parent (leading slash)
+            self.getPage('/redirect_via_url/?path=./')
+            self.assertStatus(('302 Found', '303 See Other'))
+            self.assertHeader('Location', '%s/' % self.base())
+            
+            # Test the relative path to the parent (no leading slash)
+            self.getPage('/redirect_via_url/?path=./')
+            self.assertStatus(('302 Found', '303 See Other'))
+            self.assertHeader('Location', '%s/' % self.base())
     
     def testPositionalParams(self):
         self.getPage("/dir1/dir2/posparam/18/24/hut/hike")
