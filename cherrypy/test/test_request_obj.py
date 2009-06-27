@@ -12,7 +12,6 @@ from httplib import IncompleteRead
 import cherrypy
 from cherrypy import _cptools, tools
 from cherrypy.lib import static, httputil
-from cherrypy._cpdispatch import test_callable_spec
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
                         "TRACE", "PROPFIND")

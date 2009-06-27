@@ -12,7 +12,6 @@ from httplib import IncompleteRead
 import cherrypy
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
-from cherrypy._cpdispatch import test_callable_spec
 
 
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
