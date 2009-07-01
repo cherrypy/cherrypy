@@ -765,9 +765,9 @@ class HTTPRequest(object):
                 buf.append(k + ": " + v + "\r\n")
         except TypeError:
             if not isinstance(k, str):
-                raise TypeError("WSGI response header key %r is not a byte string.")
+                raise TypeError("WSGI response header key %r is not a byte string." % k)
             if not isinstance(v, str):
-                raise TypeError("WSGI response header value %r is not a byte string.")
+                raise TypeError("WSGI response header value %r is not a byte string." % v)
             else:
                 raise
         buf.append(CRLF)
