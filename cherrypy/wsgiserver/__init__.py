@@ -21,16 +21,7 @@ as you want in one instance by using a WSGIPathInfoDispatcher:
     d = WSGIPathInfoDispatcher({'/': my_crazy_app, '/blog': my_blog_app})
     server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 80), d)
     
-Want SSL support? Just set these attributes:
-    
-    server.ssl_certificate = <filename>
-    server.ssl_private_key = <filename>
-    
-    if __name__ == '__main__':
-        try:
-            server.start()
-        except KeyboardInterrupt:
-            server.stop()
+Want SSL support? Just set server.ssl_adapter to an SSLAdapter instance.
 
 This won't call the CherryPy engine (application side) at all, only the
 WSGI server, which is independant from the rest of CherryPy. Don't
@@ -98,12 +89,6 @@ from urllib import unquote
 from urlparse import urlparse
 import warnings
 
-try:
-    from OpenSSL import SSL
-    from OpenSSL import crypto
-except ImportError:
-    SSL = None
-
 import errno
 
 def plat_specific_errors(*errnames):
@@ -132,6 +117,7 @@ socket_errors_to_ignore = plat_specific_errors(
     "EHOSTDOWN", "EHOSTUNREACH",
     )
 socket_errors_to_ignore.append("timed out")
+socket_errors_to_ignore.append("The read operation timed out")
 
 socket_errors_nonblocking = plat_specific_errors(
     'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
@@ -1105,75 +1091,6 @@ else:
                         break
                     buf_len += n
                 return "".join(buffers)
-    
-
-class SSL_fileobject(CP_fileobject):
-    """SSL file object attached to a socket object."""
-    
-    ssl_timeout = 3
-    ssl_retry = .01
-    
-    def _safe_call(self, is_reader, call, *args, **kwargs):
-        """Wrap the given call with SSL error-trapping.
-        
-        is_reader: if False EOF errors will be raised. If True, EOF errors
-            will return "" (to emulate normal sockets).
-        """
-        start = time.time()
-        while True:
-            try:
-                return call(*args, **kwargs)
-            except SSL.WantReadError:
-                # Sleep and try again. This is dangerous, because it means
-                # the rest of the stack has no way of differentiating
-                # between a "new handshake" error and "client dropped".
-                # Note this isn't an endless loop: there's a timeout below.
-                time.sleep(self.ssl_retry)
-            except SSL.WantWriteError:
-                time.sleep(self.ssl_retry)
-            except SSL.SysCallError, e:
-                if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ""
-                
-                errnum = e.args[0]
-                if is_reader and errnum in socket_errors_to_ignore:
-                    return ""
-                raise socket.error(errnum)
-            except SSL.Error, e:
-                if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ""
-                
-                thirdarg = None
-                try:
-                    thirdarg = e.args[0][0][2]
-                except IndexError:
-                    pass
-                
-                if thirdarg == 'http request':
-                    # The client is talking HTTP to an HTTPS server.
-                    raise NoSSLError()
-                raise FatalSSLAlert(*e.args)
-            except:
-                raise
-            
-            if time.time() - start > self.ssl_timeout:
-                raise socket.timeout("timed out")
-
-    def recv(self, *args, **kwargs):
-        buf = []
-        r = super(SSL_fileobject, self).recv
-        while True:
-            data = self._safe_call(True, r, *args, **kwargs)
-            buf.append(data)
-            p = self._sock.pending()
-            if not p:
-                return "".join(buf)
-    
-    def sendall(self, *args, **kwargs):
-        return self._safe_call(False, super(SSL_fileobject, self).sendall, *args, **kwargs)
-
-    def send(self, *args, **kwargs):
-        return self._safe_call(False, super(SSL_fileobject, self).send, *args, **kwargs)
 
 
 class HTTPConnection(object):
@@ -1197,7 +1114,7 @@ class HTTPConnection(object):
                "wsgi.errors": sys.stderr,
                }
     
-    def __init__(self, sock, wsgi_app, environ):
+    def __init__(self, sock, wsgi_app, environ, makefile=CP_fileobject):
         self.socket = sock
         self.wsgi_app = wsgi_app
         
@@ -1205,15 +1122,8 @@ class HTTPConnection(object):
         self.environ = self.environ.copy()
         self.environ.update(environ)
         
-        if SSL and isinstance(sock, SSL.ConnectionType):
-            timeout = sock.gettimeout()
-            self.rfile = SSL_fileobject(sock, "rb", self.rbufsize)
-            self.rfile.ssl_timeout = timeout
-            self.wfile = SSL_fileobject(sock, "wb", -1)
-            self.wfile.ssl_timeout = timeout
-        else:
-            self.rfile = CP_fileobject(sock, "rb", self.rbufsize)
-            self.wfile = CP_fileobject(sock, "wb", -1)
+        self.rfile = makefile(sock, "rb", self.rbufsize)
+        self.wfile = makefile(sock, "wb", -1)
         
         # Wrap wsgi.input but not HTTPConnection.rfile itself.
         # We're also not setting maxlen yet; we'll do that separately
@@ -1256,15 +1166,23 @@ class HTTPConnection(object):
                     # Don't bother writing the 408 if the response
                     # has already started being written.
                     if req and not req.sent_headers:
-                        req.simple_response("408 Request Timeout")
+                        try:
+                            req.simple_response("408 Request Timeout")
+                        except FatalSSLAlert:
+                            # Close the connection.
+                            return
             elif errnum not in socket_errors_to_ignore:
                 if req and not req.sent_headers:
-                    req.simple_response("500 Internal Server Error",
-                                        format_exc())
+                    try:
+                        req.simple_response("500 Internal Server Error",
+                                            format_exc())
+                    except FatalSSLAlert:
+                        # Close the connection.
+                        return
             return
         except (KeyboardInterrupt, SystemExit):
             raise
-        except FatalSSLAlert, e:
+        except FatalSSLAlert:
             # Close the connection.
             return
         except NoSSLError:
@@ -1275,9 +1193,13 @@ class HTTPConnection(object):
                     "The client sent a plain HTTP request, but "
                     "this server only speaks HTTPS on this port.")
                 self.linger = True
-        except Exception, e:
+        except Exception:
             if req and not req.sent_headers:
-                req.simple_response("500 Internal Server Error", format_exc())
+                try:
+                    req.simple_response("500 Internal Server Error", format_exc())
+                except FatalSSLAlert:
+                    # Close the connection.
+                    return
     
     linger = False
     
@@ -1291,7 +1213,8 @@ class HTTPConnection(object):
             # want this server to send a FIN TCP segment immediately. Note this
             # must be called *before* calling socket.close(), because the latter
             # drops its reference to the kernel socket.
-            self.socket._sock.close()
+            if hasattr(self.socket, '_sock'):
+                self.socket._sock.close()
             self.socket.close()
         else:
             # On the other hand, sometimes we want to hang around for a bit
@@ -1437,11 +1360,7 @@ class ThreadPool(object):
                             # Forcibly shut down the socket.
                             c = worker.conn
                             if c and not c.rfile.closed:
-                                if SSL and isinstance(c.socket, SSL.ConnectionType):
-                                    # pyOpenSSL.socket.shutdown takes no args
-                                    c.socket.shutdown()
-                                else:
-                                    c.socket.shutdown(socket.SHUT_RD)
+                                c.socket.shutdown(socket.SHUT_RD)
                             worker.join()
                 except (AssertionError,
                         # Ignore repeated Ctrl-C.
@@ -1449,33 +1368,6 @@ class ThreadPool(object):
                         KeyboardInterrupt), exc1:
                     pass
 
-
-
-class SSLConnection:
-    """A thread-safe wrapper for an SSL.Connection.
-    
-    *args: the arguments to create the wrapped SSL.Connection(*args).
-    """
-    
-    def __init__(self, *args):
-        self._ssl_conn = SSL.Connection(*args)
-        self._lock = threading.RLock()
-    
-    for f in ('get_context', 'pending', 'send', 'write', 'recv', 'read',
-              'renegotiate', 'bind', 'listen', 'connect', 'accept',
-              'setblocking', 'fileno', 'shutdown', 'close', 'get_cipher_list',
-              'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
-              'makefile', 'get_app_data', 'set_app_data', 'state_string',
-              'sock_shutdown', 'get_peer_certificate', 'want_read',
-              'want_write', 'set_connect_state', 'set_accept_state',
-              'connect_ex', 'sendall', 'settimeout'):
-        exec("""def %s(self, *args):
-        self._lock.acquire()
-        try:
-            return self._ssl_conn.%s(*args)
-        finally:
-            self._lock.release()
-""" % (f, f))
 
 
 try:
@@ -1498,6 +1390,20 @@ else:
         fd = sock.fileno()
         old_flags = fcntl.fcntl(fd, fcntl.F_GETFD)
         fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
+
+
+class SSLAdapter(object):
+    
+    def __init__(self, certificate, private_key, certificate_chain=None):
+        self.certificate = certificate
+        self.private_key = private_key
+        self.certificate_chain = certificate_chain
+    
+    def wrap(self, sock):
+        raise NotImplemented
+    
+    def makefile(self, sock, mode='r', bufsize=-1):
+        raise NotImplemented
 
 
 class CherryPyWSGIServer(object):
@@ -1532,34 +1438,10 @@ class CherryPyWSGIServer(object):
     
     SSL/HTTPS
     ---------
-    The OpenSSL module must be importable for SSL functionality.
-    You can obtain it from http://pyopenssl.sourceforge.net/
-    
-    There are two ways to use SSL:
-    
-    Method One:
-        ssl_context: an instance of SSL.Context.
-        
-        If this is not None, it is assumed to be an SSL.Context instance,
-        and will be passed to SSL.Connection on bind(). The developer is
-        responsible for forming a valid Context object. This approach is
-        to be preferred for more flexibility, e.g. if the cert and key are
-        streams instead of files, or need decryption, or SSL.SSLv3_METHOD
-        is desired instead of the default SSL.SSLv23_METHOD, etc. Consult
-        the pyOpenSSL documentation for complete options.
-    
-    Method Two (shortcut):
-        ssl_certificate: the filename of the server SSL certificate.
-        ssl_privatekey: the filename of the server's private key file.
-        
-        Both are None by default. If ssl_context is None, but ssl_privatekey
-        and ssl_certificate are both given and valid, they will be read on
-        server start, and self.ssl_context will be automatically created
-        from them.
-        
-        ssl_certificate_chain: (optional) the filename of CA's intermediate
-            certificate bundle. This is needed for cheaper "chained root" SSL
-            certificates, and should be left as None if not required.
+    You must have an ssl library installed and set self.ssl_adapter to an
+    instance of SSLAdapter (or a subclass) which provides the methods:
+        wrap(sock) -> wrapped socket, ssl environ dict
+        makefile(sock, mode='r', bufsize=-1) -> socket file object
     """
     
     protocol = "HTTP/1.1"
@@ -1573,13 +1455,7 @@ class CherryPyWSGIServer(object):
     ConnectionClass = HTTPConnection
     environ = {}
     
-    # An SSL.Context instance...
-    ssl_context = None
-    
-    # ...or paths to certificate and private key files
-    ssl_certificate = None
-    ssl_certificate_chain = None
-    ssl_private_key = None
+    ssl_adapter = None
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
@@ -1709,21 +1585,8 @@ class CherryPyWSGIServer(object):
         if self.nodelay:
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         
-        if (self.ssl_context is None and
-            self.ssl_certificate and self.ssl_private_key):
-            if SSL is None:
-                raise ImportError("You must install pyOpenSSL to use HTTPS.")
-            
-            # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
-            self.ssl_context = SSL.Context(SSL.SSLv23_METHOD)
-            self.ssl_context.use_privatekey_file(self.ssl_private_key)
-            if self.ssl_certificate_chain:
-                self.ssl_context.load_verify_locations(self.ssl_certificate_chain)
-            self.ssl_context.use_certificate_file(self.ssl_certificate)
-        
-        if self.ssl_context is not None:
-            self.socket = SSLConnection(self.ssl_context, self.socket)
-            self.populate_ssl_environ()
+        if self.ssl_adapter is not None:
+            self.socket = self.ssl_adapter.bind(self.socket)
         
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See http://www.cherrypy.org/ticket/871.
@@ -1742,17 +1605,10 @@ class CherryPyWSGIServer(object):
         """Accept a new connection and put it on the Queue."""
         try:
             s, addr = self.socket.accept()
-            if addr is None: # sometimes this can happen
-                # figure out if AF_INET or AF_INET6.
-                if len(s.getsockname()) == 2:
-                    # AF_INET
-                    addr = ('0.0.0.0', 0)
-                else:
-                    # AF_INET6
-                    addr = ('::', 0)
-            prevent_socket_inheritance(s)
             if not self.ready:
                 return
+            
+            prevent_socket_inheritance(s)
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
             
@@ -1775,10 +1631,27 @@ class CherryPyWSGIServer(object):
                 environ["SERVER_PORT"] = str(self.bind_addr[1])
                 # optional values
                 # Until we do DNS lookups, omit REMOTE_HOST
+                if addr is None: # sometimes this can happen
+                    # figure out if AF_INET or AF_INET6.
+                    if len(s.getsockname()) == 2:
+                        # AF_INET
+                        addr = ('0.0.0.0', 0)
+                    else:
+                        # AF_INET6
+                        addr = ('::', 0)
                 environ["REMOTE_ADDR"] = addr[0]
                 environ["REMOTE_PORT"] = str(addr[1])
             
-            conn = self.ConnectionClass(s, self.wsgi_app, environ)
+            makefile = CP_fileobject
+            # if ssl cert and key are set, we try to be a secure HTTP server
+            if self.ssl_adapter is not None:
+                s, ssl_env = self.ssl_adapter.wrap(s)
+                if not s:
+                    return
+                environ.update(ssl_env)
+                makefile = self.ssl_adapter.makefile
+            
+            conn = self.ConnectionClass(s, self.wsgi_app, environ, makefile)
             self.requests.put(conn)
         except socket.timeout:
             # The only reason for the timeout in start() is so we can
@@ -1851,50 +1724,4 @@ class CherryPyWSGIServer(object):
             self.socket = None
         
         self.requests.stop(self.shutdown_timeout)
-    
-    def populate_ssl_environ(self):
-        """Create WSGI environ entries to be merged into each request."""
-        ssl_environ = {
-            "wsgi.url_scheme": "https",
-            "HTTPS": "on",
-            # pyOpenSSL doesn't provide access to any of these AFAICT
-##            'SSL_PROTOCOL': 'SSLv2',
-##            SSL_CIPHER 	string 	The cipher specification name
-##            SSL_VERSION_INTERFACE 	string 	The mod_ssl program version
-##            SSL_VERSION_LIBRARY 	string 	The OpenSSL program version
-            }
-        
-        if self.ssl_certificate:
-            # Server certificate attributes
-            cert = open(self.ssl_certificate, 'rb').read()
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
-            ssl_environ.update({
-                'SSL_SERVER_M_VERSION': cert.get_version(),
-                'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
-##                'SSL_SERVER_V_START': Validity of server's certificate (start time),
-##                'SSL_SERVER_V_END': Validity of server's certificate (end time),
-                })
-            
-            for prefix, dn in [("I", cert.get_issuer()),
-                               ("S", cert.get_subject())]:
-                # X509Name objects don't seem to have a way to get the
-                # complete DN string. Use str() and slice it instead,
-                # because str(dn) == "<X509Name object '/C=US/ST=...'>"
-                dnstr = str(dn)[18:-2]
-                
-                wsgikey = 'SSL_SERVER_%s_DN' % prefix
-                ssl_environ[wsgikey] = dnstr
-                
-                # The DN should be of the form: /k1=v1/k2=v2, but we must allow
-                # for any value to contain slashes itself (in a URL).
-                while dnstr:
-                    pos = dnstr.rfind("=")
-                    dnstr, value = dnstr[:pos], dnstr[pos + 1:]
-                    pos = dnstr.rfind("/")
-                    dnstr, key = dnstr[:pos], dnstr[pos + 1:]
-                    if key and value:
-                        wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
-                        ssl_environ[wsgikey] = value
-        
-        self.environ.update(ssl_environ)
 

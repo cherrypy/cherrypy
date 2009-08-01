@@ -57,6 +57,7 @@ class Server(ServerAdapter):
     ssl_certificate = None
     ssl_certificate_chain = None
     ssl_private_key = None
+    ssl_module = 'pyopenssl'
     nodelay = True
     
     def __init__(self):

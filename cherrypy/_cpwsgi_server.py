@@ -1,6 +1,7 @@
 """WSGI server interface (see PEP 333). This adds some CP-specific bits to
 the framework-agnostic wsgiserver package.
 """
+import sys
 
 import cherrypy
 from cherrypy import wsgiserver
@@ -61,8 +62,48 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
                    )
         self.protocol = self.server_adapter.protocol_version
         self.nodelay = self.server_adapter.nodelay
-        self.ssl_context = self.server_adapter.ssl_context
-        self.ssl_certificate = self.server_adapter.ssl_certificate
-        self.ssl_certificate_chain = self.server_adapter.ssl_certificate_chain
-        self.ssl_private_key = self.server_adapter.ssl_private_key
+        
+        if self.server_adapter.ssl_context:
+            adapter_class = self.get_ssl_adapter_class()
+            s.ssl_adapter = adapter_class(self.server_adapter.ssl_certificate,
+                                          self.server_adapter.ssl_private_key,
+                                          self.server_adapter.ssl_certificate_chain)
+            s.ssl_adapter.context = self.server_adapter.ssl_context
+        elif self.server_adapter.ssl_certificate:
+            adapter_class = self.get_ssl_adapter_class()
+            s.ssl_adapter = adapter_class(self.server_adapter.ssl_certificate,
+                                          self.server_adapter.ssl_private_key,
+                                          self.server_adapter.ssl_certificate_chain)
+    
+    def get_ssl_adapter_class(self):
+        adname = (self.server_adapter.ssl_module or 'pyopenssl').lower()
+        adapter = ssl_adapters[adname]
+        if isinstance(adapter, basestring):
+            last_dot = adapter.rfind(".")
+            attr_name = adapter[last_dot + 1:]
+            mod_path = adapter[:last_dot]
+            
+            try:
+                mod = sys.modules[mod_path]
+                if mod is None:
+                    raise KeyError()
+            except KeyError:
+                # The last [''] is important.
+                mod = __import__(mod_path, globals(), locals(), [''])
+            
+            # Let an AttributeError propagate outward.
+            try:
+                adapter = getattr(mod, attr_name)
+            except AttributeError:
+                raise AttributeError("'%s' object has no attribute '%s'"
+                                     % (mod_path, attr_name))
+        
+        return adapter
+
+# These may either be wsgiserver.SSLAdapter subclasses or the string names
+# of such classes (in which case they will be lazily loaded).
+ssl_adapters = {
+    'builtin': 'cherrypy.wsgiserver.ssl_builtin.BuiltinSSLAdapter',
+    'pyopenssl': 'cherrypy.wsgiserver.ssl_pyopenssl.pyOpenSSLAdapter',
+    }
 

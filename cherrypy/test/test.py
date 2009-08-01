@@ -125,6 +125,7 @@ class LocalServer(object):
             engine.signal_handler.subscribe()
         if hasattr(engine, "console_control_handler"):
             engine.console_control_handler.subscribe()
+        #engine.subscribe('log', lambda msg, level: sys.stderr.write(msg + os.linesep))
         engine.start()
         
         # The setup functions probably mounted new apps.
