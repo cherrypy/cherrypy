@@ -378,9 +378,10 @@ from cherrypy import _cplogging
 class _GlobalLogManager(_cplogging.LogManager):
     
     def __call__(self, *args, **kwargs):
-        try:
+        # Do NOT use try/except here. See http://www.cherrypy.org/ticket/945
+        if hasattr(request, 'app') and hasattr(request.app, 'log'):
             log = request.app.log
-        except AttributeError:
+        else:
             log = self
         return log.error(*args, **kwargs)
     
