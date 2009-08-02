@@ -1360,7 +1360,11 @@ class ThreadPool(object):
                             # Forcibly shut down the socket.
                             c = worker.conn
                             if c and not c.rfile.closed:
-                                c.socket.shutdown(socket.SHUT_RD)
+                                try:
+                                    c.socket.shutdown(socket.SHUT_RD)
+                                except TypeError:
+                                    # pyOpenSSL sockets don't take an arg
+                                    c.socket.shutdown()
                             worker.join()
                 except (AssertionError,
                         # Ignore repeated Ctrl-C.
