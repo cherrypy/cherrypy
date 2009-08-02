@@ -1,7 +1,12 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
-import md5, sha
+try:
+    # Python 2.5+
+    from hashlib import md5, sha1 as sha
+except ImportError:
+    from md5 import new as md5
+    from sha import new as sha
 
 import cherrypy
 from cherrypy.lib import httpauth
@@ -31,17 +36,17 @@ def setup_server():
         return {'test': 'test'}
 
     def sha_password_encrypter(password):
-        return sha.new(password).hexdigest()
+        return sha(password).hexdigest()
     
     def fetch_password(username):
-        return sha.new('test').hexdigest()
+        return sha('test').hexdigest()
 
     conf = {'/digest': {'tools.digest_auth.on': True,
                         'tools.digest_auth.realm': 'localhost',
                         'tools.digest_auth.users': fetch_users},
             '/basic': {'tools.basic_auth.on': True,
                        'tools.basic_auth.realm': 'localhost',
-                       'tools.basic_auth.users': {'test': md5.new('test').hexdigest()}},
+                       'tools.basic_auth.users': {'test': md5('test').hexdigest()}},
             '/basic2': {'tools.basic_auth.on': True,
                         'tools.basic_auth.realm': 'localhost',
                         'tools.basic_auth.users': fetch_password,
