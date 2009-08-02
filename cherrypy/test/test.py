@@ -120,13 +120,7 @@ class LocalServer(object):
                 setup()
             self.teardown = getattr(m, "teardown_server", None)
         
-        engine = cherrypy.engine
-        if hasattr(engine, "signal_handler"):
-            engine.signal_handler.subscribe()
-        if hasattr(engine, "console_control_handler"):
-            engine.console_control_handler.subscribe()
-        #engine.subscribe('log', lambda msg, level: sys.stderr.write(msg + os.linesep))
-        engine.start()
+        cherrypy.engine.start()
         
         # The setup functions probably mounted new apps.
         # Tell our server about them.
@@ -418,6 +412,12 @@ class CommandLineParser(object):
                                  self.validate, self.conquer)
             cherrypy.server.using_apache = False
             cherrypy.server.using_wsgi = True
+            engine = cherrypy.engine
+            if hasattr(engine, "signal_handler"):
+                engine.signal_handler.subscribe()
+            if hasattr(engine, "console_control_handler"):
+                engine.console_control_handler.subscribe()
+            #engine.subscribe('log', lambda msg, level: sys.stderr.write(msg + os.linesep))
         
         if cherrypy.server.using_apache and 'test_conn' in self.tests:
             self.tests.remove('test_conn')
