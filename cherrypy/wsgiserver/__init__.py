@@ -1645,7 +1645,23 @@ class CherryPyWSGIServer(object):
             makefile = CP_fileobject
             # if ssl cert and key are set, we try to be a secure HTTP server
             if self.ssl_adapter is not None:
-                s, ssl_env = self.ssl_adapter.wrap(s)
+                try:
+                    s, ssl_env = self.ssl_adapter.wrap(s)
+                except NoSSLError:
+                    msg = ("The client sent a plain HTTP request, but "
+                           "this server only speaks HTTPS on this port.")
+                    buf = ["%s 400 Bad Request\r\n" % self.protocol,
+                           "Content-Length: %s\r\n" % len(msg),
+                           "Content-Type: text/plain\r\n\r\n",
+                           msg]
+                    
+                    wfile = CP_fileobject(s, "wb", -1)
+                    try:
+                        wfile.sendall("".join(buf))
+                    except socket.error, x:
+                        if x.args[0] not in socket_errors_to_ignore:
+                            raise
+                    return
                 if not s:
                     return
                 environ.update(ssl_env)

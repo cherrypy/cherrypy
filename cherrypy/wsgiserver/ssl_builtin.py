@@ -46,10 +46,7 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
             elif e.errno == ssl.SSL_ERROR_SSL:
                 if e.args[1].endswith('http request'):
                     # The client is speaking HTTP to an HTTPS server.
-                    # We used to respond with a 'please use HTTPS'
-                    # message with pyOpenSSL, but I can't figure out
-                    # how to do that with the builtin ssl module. TODO.
-                    return None, {}
+                    raise wsgiserver.NoSSLError
             raise
         return s, self.get_environ(s)
     
