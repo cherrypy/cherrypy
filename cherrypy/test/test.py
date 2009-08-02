@@ -273,13 +273,13 @@ class CommandLineParser(object):
     
     --host=<name or IP addr>: use a host other than the default (%s).
         Not yet available with mod_python servers.
-    --port=<int>: use a port other than the default (%s)
-    --1.0: use HTTP/1.0 servers instead of default HTTP/1.1
+    --port=<int>: use a port other than the default (%s).
+    --1.0: use HTTP/1.0 servers instead of default HTTP/1.1.
     
-    --cover: turn on code-coverage tool
+    --cover: turn on code-coverage tool.
     --basedir=path: display coverage stats for some path other than cherrypy.
     
-    --profile: turn on profiling tool
+    --profile: turn on profiling tool.
     --validate: use wsgiref.validate (builtin in Python 2.5).
     --conquer: use wsgiconq (which uses pyconquer) to trace calls.
     --dumb: turn off the interactive output features.

@@ -19,7 +19,7 @@ from cherrypy.lib import httputil as _httputil
 
 #                     Conditional HTTP request support                     #
 
-def validate_etags(autotags=False):
+def validate_etags(autotags=False, debug=False):
     """Validate the current ETag against If-Match, If-None-Match headers.
     
     If autotags is True, an ETag response-header value will be provided
@@ -46,29 +46,49 @@ def validate_etags(autotags=False):
     etag = response.headers.get('ETag')
     
     # Automatic ETag generation. See warning in docstring.
-    if (not etag) and autotags:
-        if status == 200:
-            etag = response.collapse_body()
-            etag = '"%s"' % md5(etag).hexdigest()
-            response.headers['ETag'] = etag
+    if etag:
+        if debug:
+            cherrypy.log('ETag already set: %s' % etag, 'TOOLS.ETAGS')
+    elif not autotags:
+        if debug:
+            cherrypy.log('Autotags off', 'TOOLS.ETAGS')
+    elif status != 200:
+        if debug:
+            cherrypy.log('Status not 200', 'TOOLS.ETAGS')
+    else:
+        etag = response.collapse_body()
+        etag = '"%s"' % md5(etag).hexdigest()
+        if debug:
+            cherrypy.log('Setting ETag: %s' % etag, 'TOOLS.ETAGS')
+        response.headers['ETag'] = etag
     
     response.ETag = etag
     
     # "If the request would, without the If-Match header field, result in
     # anything other than a 2xx or 412 status, then the If-Match header
     # MUST be ignored."
+    if debug:
+        cherrypy.log('Status: %s' % status, 'TOOLS.ETAGS')
     if status >= 200 and status <= 299:
         request = cherrypy.serving.request
         
         conditions = request.headers.elements('If-Match') or []
         conditions = [str(x) for x in conditions]
+        if debug:
+            cherrypy.log('If-Match conditions: %s' % repr(conditions),
+                         'TOOLS.ETAGS')
         if conditions and not (conditions == ["*"] or etag in conditions):
             raise cherrypy.HTTPError(412, "If-Match failed: ETag %r did "
                                      "not match %r" % (etag, conditions))
         
         conditions = request.headers.elements('If-None-Match') or []
         conditions = [str(x) for x in conditions]
+        if debug:
+            cherrypy.log('If-None-Match conditions: %s' % repr(conditions),
+                         'TOOLS.ETAGS')
         if conditions == ["*"] or etag in conditions:
+            if debug:
+                cherrypy.log('request.method: %s' % request.method, 'TOOLS.ETAGS')
             if request.method in ("GET", "HEAD"):
                 raise cherrypy.HTTPRedirect([], 304)
             else:
@@ -105,7 +125,7 @@ def validate_since():
 #                                Tool code                                #
 
 def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
-          scheme='X-Forwarded-Proto'):
+          scheme='X-Forwarded-Proto', debug=False):
     """Change the base URL (scheme://host[:port][/path]).
     
     For running a CP server behind Apache, lighttpd, or other HTTP server.
@@ -126,6 +146,8 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     
     if scheme:
         s = request.headers.get(scheme, None)
+        if debug:
+            cherrypy.log('Testing scheme %r:%r' % (scheme, s), 'TOOLS.PROXY')
         if s == 'on' and 'ssl' in scheme.lower():
             # This handles e.g. webfaction's 'X-Forwarded-Ssl: on' header
             scheme = 'https'
@@ -136,7 +158,11 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
         scheme = request.base[:request.base.find("://")]
     
     if local:
-        base = request.headers.get(local, base)
+        lbase = request.headers.get(local, None)
+        if debug:
+            cherrypy.log('Testing local %r:%r' % (local, lbase), 'TOOLS.PROXY')
+        if lbase is not None:
+            base = lbase
     if not base:
         port = request.local.port
         if port == 80:
@@ -152,6 +178,8 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     
     if remote:
         xff = request.headers.get(remote)
+        if debug:
+            cherrypy.log('Testing remote %r:%r' % (remote, xff), 'TOOLS.PROXY')
         if xff:
             if remote == 'X-Forwarded-For':
                 # See http://bob.pythonmac.org/archives/2005/09/23/apache-x-forwarded-for-caveat/
@@ -172,7 +200,7 @@ def ignore_headers(headers=('Range',)):
             del request.headers[name]
 
 
-def response_headers(headers=None):
+def response_headers(headers=None, debug=False):
     """Set headers on the response."""
     for name, value in (headers or []):
         cherrypy.serving.response.headers[name] = value
@@ -205,6 +233,7 @@ class SessionAuth(object):
     """Assert that the user is logged in."""
     
     session_key = "username"
+    debug = False
     
     def check_username_and_password(self, username, password):
         pass
@@ -270,12 +299,20 @@ Message: %(error_msg)s
         username = sess.get(self.session_key)
         if not username:
             sess[self.session_key] = username = self.anonymous()
+            if self.debug:
+                cherrypy.log('No session[username], trying anonymous', 'TOOLS.SESSAUTH')
         if not username:
-            response.body = self.login_screen(cherrypy.url(qs=request.query_string))
+            url = cherrypy.url(qs=request.query_string)
+            if self.debug:
+                cherrypy.log('No username, routing to login_screen with '
+                             'from_page %r' % url, 'TOOLS.SESSAUTH')
+            response.body = self.login_screen(url)
             if "Content-Length" in response.headers:
                 # Delete Content-Length header so finalize() recalcs it.
                 del response.headers["Content-Length"]
             return True
+        if self.debug:
+            cherrypy.log('Setting request.login to %r' % username, 'TOOLS.SESSAUTH')
         request.login = username
         self.on_check(username)
     
@@ -285,18 +322,28 @@ Message: %(error_msg)s
         
         path = request.path_info
         if path.endswith('login_screen'):
+            if self.debug:
+                cherrypy.log('routing %r to login_screen' % path, 'TOOLS.SESSAUTH')
             return self.login_screen(**request.params)
         elif path.endswith('do_login'):
             if request.method != 'POST':
                 response.headers['Allow'] = "POST"
+                if self.debug:
+                    cherrypy.log('do_login requires POST', 'TOOLS.SESSAUTH')
                 raise cherrypy.HTTPError(405)
+            if self.debug:
+                cherrypy.log('routing %r to do_login' % path, 'TOOLS.SESSAUTH')
             return self.do_login(**request.params)
         elif path.endswith('do_logout'):
             if request.method != 'POST':
                 response.headers['Allow'] = "POST"
                 raise cherrypy.HTTPError(405)
+            if self.debug:
+                cherrypy.log('routing %r to do_logout' % path, 'TOOLS.SESSAUTH')
             return self.do_logout(**request.params)
         else:
+            if self.debug:
+                cherrypy.log('No special path, running do_check', 'TOOLS.SESSAUTH')
             return self.do_check()
 
 
@@ -314,16 +361,16 @@ to this function:
                  for k in dir(SessionAuth) if not k.startswith("__")])
 
 
-def log_traceback(severity=logging.ERROR):
+def log_traceback(severity=logging.ERROR, debug=False):
     """Write the last error's traceback to the cherrypy error log."""
     cherrypy.log("", "HTTP", severity=severity, traceback=True)
 
-def log_request_headers():
+def log_request_headers(debug=False):
     """Write request headers to the cherrypy error log."""
     h = ["  %s: %s" % (k, v) for k, v in cherrypy.serving.request.header_list]
     cherrypy.log('\nRequest Headers:\n' + '\n'.join(h), "HTTP")
 
-def log_hooks():
+def log_hooks(debug=False):
     """Write request.hooks to the cherrypy error log."""
     request = cherrypy.serving.request
     
@@ -344,8 +391,12 @@ def log_hooks():
     cherrypy.log('\nRequest Hooks for ' + cherrypy.url() +
                  ':\n' + '\n'.join(msg), "HTTP")
 
-def redirect(url='', internal=True):
+def redirect(url='', internal=True, debug=False):
     """Raise InternalRedirect or HTTPRedirect to the given url."""
+    if debug:
+        cherrypy.log('Redirecting %sto: %s' %
+                     ({True: 'internal ', False: ''}[internal], url),
+                     'TOOLS.REDIRECT')
     if internal:
         raise cherrypy.InternalRedirect(url)
     else:
@@ -491,7 +542,8 @@ def autovary(ignore=None):
         v = list(v)
         v.sort()
         resp_h['Vary'] = ', '.join(v)
-    request.hooks.attach('before_finalize', set_response_header, 95)
+    request.hooks.attach(
+        'before_finalize', set_response_header, 95)
 
 
 

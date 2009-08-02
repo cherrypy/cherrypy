@@ -23,6 +23,7 @@ class ResponseEncoder:
     errors = 'strict'
     text_only = True
     add_charset = True
+    debug = False
     
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -32,6 +33,8 @@ class ResponseEncoder:
         request = cherrypy.serving.request
         if request.handler is not None:
             # Replace request.handler with self
+            if self.debug:
+                cherrypy.log('Replacing request.handler', 'TOOLS.ENCODE')
             self.oldhandler = request.handler
             request.handler = self
     
@@ -75,6 +78,8 @@ class ResponseEncoder:
         request = cherrypy.serving.request
         response = cherrypy.serving.response
         
+        if self.debug:
+            cherrypy.log('response.stream %r' % response.stream, 'TOOLS.ENCODE')
         if response.stream:
             encoder = self.encode_stream
         else:
@@ -96,15 +101,24 @@ class ResponseEncoder:
         # of the requested charsets (in order of user preference).
         encs = request.headers.elements('Accept-Charset')
         charsets = [enc.value.lower() for enc in encs]
+        if self.debug:
+            cherrypy.log('charsets %s' % repr(charsets), 'TOOLS.ENCODE')
         
         if self.encoding is not None:
             # If specified, force this encoding to be used, or fail.
             encoding = self.encoding.lower()
+            if self.debug:
+                cherrypy.log('Specified encoding %r' % encoding, 'TOOLS.ENCODE')
             if (not charsets) or "*" in charsets or encoding in charsets:
+                if self.debug:
+                    cherrypy.log('Attempting encoding %r' % encoding, 'TOOLS.ENCODE')
                 if encoder(encoding):
                     return encoding
         else:
             if not encs:
+                if self.debug:
+                    cherrypy.log('Attempting default encoding %r' %
+                                 self.default_encoding, 'TOOLS.ENCODE')
                 # Any character-set is acceptable.
                 if encoder(self.default_encoding):
                     return self.default_encoding
@@ -118,6 +132,9 @@ class ResponseEncoder:
                     # value of 1 if not explicitly mentioned.
                     iso = 'iso-8859-1'
                     if iso not in charsets:
+                        if self.debug:
+                            cherrypy.log('Attempting ISO-8859-1 encoding',
+                                         'TOOLS.ENCODE')
                         if encoder(iso):
                             return iso
                 
@@ -125,10 +142,16 @@ class ResponseEncoder:
                     if element.qvalue > 0:
                         if element.value == "*":
                             # Matches any charset. Try our default.
+                            if self.debug:
+                                cherrypy.log('Attempting default encoding due '
+                                             'to %r' % element, 'TOOLS.ENCODE')
                             if encoder(self.default_encoding):
                                 return self.default_encoding
                         else:
                             encoding = element.value
+                            if self.debug:
+                                cherrypy.log('Attempting encoding %r (qvalue >'
+                                             '0)' % element, 'TOOLS.ENCODE')
                             if encoder(encoding):
                                 return encoding
         
@@ -160,12 +183,34 @@ class ResponseEncoder:
             self.body = []
         
         ct = response.headers.elements("Content-Type")
+        if self.debug:
+            cherrypy.log('Content-Type: %r' % ct, 'TOOLS.ENCODE')
         if ct:
-            ct = ct[0]
-            if (not self.text_only) or ct.value.lower().startswith("text/"):
+            if self.text_only:
+                ct = ct[0]
+                if ct.value.lower().startswith("text/"):
+                    if self.debug:
+                        cherrypy.log('Content-Type %r starts with "text/"' % ct,
+                                     'TOOLS.ENCODE')
+                    do_find = True
+                else:
+                    if self.debug:
+                        cherrypy.log('Not finding because Content-Type %r does '
+                                     'not start with "text/"' % ct,
+                                     'TOOLS.ENCODE')
+                    do_find = False
+            else:
+                if self.debug:
+                    cherrypy.log('Finding because not text_only', 'TOOLS.ENCODE')
+                do_find = True
+            
+            if do_find:
                 # Set "charset=..." param on response Content-Type header
                 ct.params['charset'] = self.find_acceptable_charset()
                 if self.add_charset:
+                    if self.debug:
+                        cherrypy.log('Setting Content-Type %r' % ct,
+                                     'TOOLS.ENCODE')
                     response.headers["Content-Type"] = str(ct)
         
         return self.body
@@ -233,14 +278,14 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
     if not response.body:
         # Response body is empty (might be a 304 for instance)
         if debug:
-            cherrypy.log('No response body', context='GZIP')
+            cherrypy.log('No response body', context='TOOLS.GZIP')
         return
     
     # If returning cached content (which should already have been gzipped),
     # don't re-zip.
     if getattr(request, "cached", False):
         if debug:
-            cherrypy.log('Not gzipping cached response', context='GZIP')
+            cherrypy.log('Not gzipping cached response', context='TOOLS.GZIP')
         return
     
     acceptable = request.headers.elements('Accept-Encoding')
@@ -253,7 +298,7 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
         # information that a different content-coding is meaningful
         # to the client.
         if debug:
-            cherrypy.log('No Accept-Encoding', context='GZIP')
+            cherrypy.log('No Accept-Encoding', context='TOOLS.GZIP')
         return
     
     ct = response.headers.get('Content-Type', '').split(';')[0]
@@ -261,23 +306,23 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
         if coding.value == 'identity' and coding.qvalue != 0:
             if debug:
                 cherrypy.log('Non-zero identity qvalue: %r' % coding,
-                             context='GZIP')
+                             context='TOOLS.GZIP')
             return
         if coding.value in ('gzip', 'x-gzip'):
             if coding.qvalue == 0:
                 if debug:
                     cherrypy.log('Zero gzip qvalue: %r' % coding,
-                                 context='GZIP')
+                                 context='TOOLS.GZIP')
                 return
             
             if ct not in mime_types:
                 if debug:
                     cherrypy.log('Content-Type %r not in mime_types %r' %
-                                 (ct, mime_types), context='GZIP')
+                                 (ct, mime_types), context='TOOLS.GZIP')
                 return
             
             if debug:
-                cherrypy.log('Gzipping', context='GZIP')
+                cherrypy.log('Gzipping', context='TOOLS.GZIP')
             # Return a generator that compresses the page
             response.headers['Content-Encoding'] = 'gzip'
             response.body = compress(response.body, compress_level)
