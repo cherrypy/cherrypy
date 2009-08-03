@@ -6,7 +6,11 @@ Run:
 to install this package.
 """
 
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
 from distutils.command.install import INSTALL_SCHEMES
 import sys
 import os
@@ -18,12 +22,12 @@ required_python_version = '2.3'
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.2.0"
+version = "3.2.0alpha"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers=[
     #"Development Status :: 5 - Production/Stable",
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 3 - Alpha Development Status",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
     "License :: Freely Distributable",
@@ -42,7 +46,7 @@ packages=[
     "cherrypy.wsgiserver", "cherrypy.process",
     "cherrypy.scaffold",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.1.0/"
+download_url="http://download.cherrypy.org/cherrypy/3.2.0/"
 data_files=[
     ('cherrypy', ['cherrypy/cherryd',
                   'cherrypy/favicon.ico',
