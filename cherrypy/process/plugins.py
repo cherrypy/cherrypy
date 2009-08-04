@@ -9,6 +9,7 @@ except NameError:
 import signal as _signal
 import sys
 import time
+import thread
 import threading
 
 # _module__file__base is used by Autoreload to make
@@ -537,7 +538,7 @@ class ThreadManager(SimplePlugin):
         If the current thread has already been seen, any 'start_thread'
         listeners will not be run again.
         """
-        thread_ident = threading._get_ident()
+        thread_ident = thread.get_ident()
         if thread_ident not in self.threads:
             # We can't just use _get_ident as the thread ID
             # because some platforms reuse thread ID's.
