@@ -143,7 +143,24 @@ class HTTPTests(helper.CPWebCase):
         self.assertEqual(response.status, 400)
         self.assertEqual(response.fp.read(22), "Malformed Request-Line")
         c.close()
-
+    
+    def test_malformed_header(self):
+        if self.scheme == 'https':
+            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest('GET', '/')
+        c.putheader('Content-Type', 'text/plain')
+        # See http://www.cherrypy.org/ticket/941 
+        c._output('Re, 1.2.3.4#015#012')
+        c.endheaders()
+        
+        response = c.getresponse()
+        self.body = response.fp.read()
+        self.status = str(response.status)
+        self.assertStatus(400)
+        self.assertBody("Illegal header line.")
+    
     def test_http_over_https(self):
         if self.scheme != 'https':
             return self.skip("skipped (not running HTTPS)... ")

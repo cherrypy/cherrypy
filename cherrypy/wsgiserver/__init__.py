@@ -527,7 +527,10 @@ class HTTPRequest(object):
                 # It's a continuation line.
                 v = line.strip()
             else:
-                k, v = line.split(":", 1)
+                try:
+                    k, v = line.split(":", 1)
+                except ValueError:
+                    raise ValueError("Illegal header line.")
                 k, v = k.strip().upper(), v.strip()
                 envname = "HTTP_" + k.replace("-", "_")
             
