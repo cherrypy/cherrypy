@@ -456,7 +456,14 @@ class HTTPRequest(object):
         # We used to do 3, but are now doing 1. Maybe we'll do 2 someday,
         # but it seems like it would be a big slowdown for such a rare case.
         if environ.get("HTTP_EXPECT", "") == "100-continue":
-            self.simple_response(100)
+            # Don't use simple_response here, because it emits headers
+            # we don't want. See http://www.cherrypy.org/ticket/951
+            msg = "%s 100 Continue\r\n\r\n" % self.environ['ACTUAL_SERVER_PROTOCOL']
+            try:
+                self.wfile.sendall(msg)
+            except socket.error, x:
+                if x.args[0] not in socket_errors_to_ignore:
+                    raise
         
         self.ready = True
 

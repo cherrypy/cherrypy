@@ -456,8 +456,10 @@ class PipelineTests(helper.CPWebCase):
         version, status, reason = response._read_status()
         self.assertEqual(status, 100)
         while True:
-            skip = response.fp.readline().strip()
-            if not skip:
+            line = response.fp.readline().strip()
+            if line:
+                self.fail("100 Continue should not output any headers. Got %r" % line)
+            else:
                 break
         
         # ...send the body
