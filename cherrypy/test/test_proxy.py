@@ -73,6 +73,11 @@ class ProxyTest(helper.CPWebCase):
         self.assertHeader('Location', "http://www.example.test/dummy")
         self.getPage("/", headers=[('X-Forwarded-Host', 'www.example.test')])
         self.assertHeader('Location', "%s://www.example.test/dummy" % self.scheme)
+        # Test multiple X-Forwarded-Host headers
+        self.getPage("/", headers=[
+            ('X-Forwarded-Host', 'http://www.example.test, www.cherrypy.test'),
+            ])
+        self.assertHeader('Location', "http://www.example.test/dummy")
         
         # Test X-Forwarded-For (Apache2)
         self.getPage("/remoteip",

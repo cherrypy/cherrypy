@@ -162,7 +162,7 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
         if debug:
             cherrypy.log('Testing local %r:%r' % (local, lbase), 'TOOLS.PROXY')
         if lbase is not None:
-            base = lbase
+            base = lbase.split(',')[0]
     if not base:
         port = request.local.port
         if port == 80:
