@@ -119,7 +119,9 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
         scheme = request.base[:request.base.find("://")]
     
     if local:
-        base = request.headers.get(local, base)
+        lbase = request.headers.get(local, None)
+        if lbase is not None:
+            base = lbase.split(',')[0]
     if not base:
         port = cherrypy.request.local.port
         if port == 80:
