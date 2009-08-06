@@ -183,7 +183,7 @@ class MemoryCache:
         self.store.pop(self.key(), None)
 
 
-def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
+def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
     """Try to obtain cached output. If fresh enough, raise HTTPError(304).
     
     If POST, PUT, or DELETE:
@@ -212,6 +212,9 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
     # POST, PUT, DELETE should invalidate (delete) the cached copy.
     # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
     if request.method in invalid_methods:
+        if debug:
+            cherrypy.log('request.method %r in invalid_methods %r' %
+                         (request.method, invalid_methods), 'TOOLS.CACHING')
         cherrypy._cache.delete()
         request.cached = False
         request.cacheable = False
@@ -221,6 +224,8 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
     request.cached = c = bool(cache_data)
     request.cacheable = not c
     if c:
+        if debug:
+            cherrypy.log('Reading response from cache', 'TOOLS.CACHING')
         s, h, b, create_time, original_req_headers = cache_data
         
         # Copy the response headers. See http://www.cherrypy.org/ticket/721.
@@ -244,6 +249,9 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), **kwargs):
         # serve it & get out from the request
         response.status = s
         response.body = b
+    else:
+        if debug:
+            cherrypy.log('request is not cached', 'TOOLS.CACHING')
     return c
 
 
@@ -270,7 +278,7 @@ def tee_output():
     response.body = tee(response.body)
 
 
-def expires(secs=0, force=False):
+def expires(secs=0, force=False, debug=False):
     """Tool for influencing cache mechanisms using the 'Expires' header.
     
     'secs' must be either an int or a datetime.timedelta, and indicates the
@@ -298,12 +306,17 @@ def expires(secs=0, force=False):
                 cacheable = True
                 break
     
-    if not cacheable:
+    if not cacheable and not force:
+        if debug:
+            cherrypy.log('request is not cacheable', 'TOOLS.EXPIRES')
+    else:
+        if debug:
+            cherrypy.log('request is cacheable', 'TOOLS.EXPIRES')
         if isinstance(secs, datetime.timedelta):
             secs = (86400 * secs.days) + secs.seconds
         
         if secs == 0:
-            if force or "Pragma" not in headers:
+            if force or ("Pragma" not in headers):
                 headers["Pragma"] = "no-cache"
             if cherrypy.serving.request.protocol >= (1, 1):
                 if force or "Cache-Control" not in headers:

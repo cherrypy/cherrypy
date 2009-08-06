@@ -50,17 +50,22 @@ def setup_server():
     
     class UnCached(object):
         _cp_config = {'tools.expires.on': True,
+                      'tools.expires.secs': 60,
                       'tools.staticdir.on': True,
                       'tools.staticdir.dir': 'static',
                       'tools.staticdir.root': curdir,
                       }
 
         def force(self):
+            cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
             self._cp_config['tools.expires.force'] = True
+            self._cp_config['tools.expires.secs'] = 0
             return "being forceful"
         force.exposed = True
+        force._cp_config = {'tools.expires.secs': 0}
 
         def dynamic(self):
+            cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
             cherrypy.response.headers['Cache-Control'] = 'private'
             return "D-d-d-dynamic!"
         dynamic.exposed = True
@@ -71,6 +76,7 @@ def setup_server():
         cacheable.exposed = True
 
         def specific(self):
+            cherrypy.response.headers['Etag'] = 'need_this_to_make_me_cacheable'
             return "I am being specific"
         specific.exposed = True
         specific._cp_config = {'tools.expires.secs': 86400}
@@ -78,6 +84,7 @@ def setup_server():
         class Foo(object):pass
         
         def wrongtype(self):
+            cherrypy.response.headers['Etag'] = 'need_this_to_make_me_cacheable'
             return "Woops"
         wrongtype.exposed = True
         wrongtype._cp_config = {'tools.expires.secs': Foo()}
@@ -161,7 +168,6 @@ class CacheTest(helper.CPWebCase):
         self.assertBody('visit #1')
         
     def testExpiresTool(self):
-        
         # test setting an expires header
         self.getPage("/expires/specific")
         self.assertStatus("200 OK")
@@ -177,6 +183,7 @@ class CacheTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertNoHeader("Pragma")
         self.assertNoHeader("Cache-Control")
+        self.assertHeader("Expires")
         
         # dynamic content that sets indicators should not have
         # "cache prevention" headers
@@ -184,11 +191,13 @@ class CacheTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertNoHeader("Pragma")
         self.assertNoHeader("Cache-Control")
+        self.assertHeader("Expires")
         
         self.getPage('/expires/dynamic')
         self.assertBody("D-d-d-dynamic!")
         # the Cache-Control header should be untouched
         self.assertHeader("Cache-Control", "private")
+        self.assertHeader("Expires")
         
         # configure the tool to ignore indicators and replace existing headers
         self.getPage("/expires/force")
