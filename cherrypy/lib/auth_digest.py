@@ -43,7 +43,7 @@ valid_algorithms = ('MD5', 'MD5-sess')
 
 
 def TRACE(msg):
-    cherrypy.log(msg, context='auth_digest')
+    cherrypy.log(msg, context='TOOLS.AUTH_DIGEST')
 
 # Three helper functions for users of the tool, providing three variants
 # of get_ha1() functions for three different kinds of credential stores.

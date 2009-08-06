@@ -77,6 +77,8 @@ class Session(object):
     True if the application called session.regenerate(). This is not set by
     internal calls to regenerate the session id."""
     
+    debug=False
+    
     def __init__(self, id=None, **kwargs):
         self.id_observers = []
         self._data = {}
@@ -87,10 +89,15 @@ class Session(object):
         self.originalid = id
         self.missing = False
         if id is None:
+            if self.debug:
+                cherrypy.log('No id given; making a new one', 'TOOLS.SESSIONS')
             self._regenerate()
         else:
             self.id = id
             if not self._exists():
+                if self.debug:
+                    cherrypy.log('Expired or malicious session %r; '
+                                 'making a new one' % id, 'TOOLS.SESSIONS')
                 # Expired or malicious session. Make a new one.
                 # See http://www.cherrypy.org/ticket/709.
                 self.id = None
@@ -144,6 +151,9 @@ class Session(object):
             if self.loaded:
                 t = datetime.timedelta(seconds = self.timeout * 60)
                 expiration_time = datetime.datetime.now() + t
+                if self.debug:
+                    cherrypy.log('Saving with expiry %s' % expiration_time,
+                                 'TOOLS.SESSIONS')
                 self._save(expiration_time)
             
         finally:
@@ -156,7 +166,8 @@ class Session(object):
         data = self._load()
         # data is either None or a tuple (session_data, expiration_time)
         if data is None or data[1] < datetime.datetime.now():
-            # Expired session: flush session data
+            if self.debug:
+                cherrypy.log('Expired session, flushing data', 'TOOLS.SESSIONS')
             self._data = {}
         else:
             self._data = data[0]
@@ -610,7 +621,7 @@ close.priority = 90
 
 def init(storage_type='ram', path=None, path_header=None, name='session_id',
          timeout=60, domain=None, secure=False, clean_freq=5,
-         persistent=True, **kwargs):
+         persistent=True, debug=False, **kwargs):
     """Initialize session object (using cookies).
     
     storage_type: one of 'ram', 'file', 'postgresql'. This will be used
@@ -648,6 +659,9 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     id = None
     if name in request.cookie:
         id = request.cookie[name].value
+        if debug:
+            cherrypy.log('ID obtained from request.cookie: %r' % id,
+                         'TOOLS.SESSIONS')
     
     # Find the storage class and call setup (first time only).
     storage_class = storage_type.title() + 'Session'
@@ -662,6 +676,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     kwargs['timeout'] = timeout
     kwargs['clean_freq'] = clean_freq
     cherrypy.serving.session = sess = storage_class(id, **kwargs)
+    sess.debug = debug
     def update_cookie(id):
         """Update the cookie every time the session id changes."""
         cherrypy.serving.response.cookie[name] = id

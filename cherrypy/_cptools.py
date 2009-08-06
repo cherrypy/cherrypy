@@ -205,7 +205,7 @@ class HandlerWrapperTool(Tool):
         self._name = name
         self._priority = priority
     
-    def callable(self):
+    def callable(self, debug=False):
         innerfunc = cherrypy.serving.request.handler
         def wrap(*args, **kwargs):
             return self.newhandler(innerfunc, *args, **kwargs)

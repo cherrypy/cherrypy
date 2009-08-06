@@ -187,7 +187,7 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
             request.remote.ip = xff
 
 
-def ignore_headers(headers=('Range',)):
+def ignore_headers(headers=('Range',), debug=False):
     """Delete request headers whose field names are included in 'headers'.
     
     This is a useful tool for working behind certain HTTP servers;
@@ -197,18 +197,24 @@ def ignore_headers(headers=('Range',)):
     request = cherrypy.serving.request
     for name in headers:
         if name in request.headers:
+            if debug:
+                cherrypy.log('Ignoring request header %r' % name,
+                             'TOOLS.IGNORE_HEADERS')
             del request.headers[name]
 
 
 def response_headers(headers=None, debug=False):
     """Set headers on the response."""
+    if debug:
+        cherrypy.log('Setting response headers: %s' % repr(headers),
+                     'TOOLS.RESPONSE_HEADERS')
     for name, value in (headers or []):
         cherrypy.serving.response.headers[name] = value
 response_headers.failsafe = True
 
 
 def referer(pattern, accept=True, accept_missing=False, error=403,
-            message='Forbidden Referer header.'):
+            message='Forbidden Referer header.', debug=False):
     """Raise HTTPError if Referer header does/does not match the given pattern.
     
     pattern: a regular expression pattern to test against the Referer.
@@ -219,10 +225,16 @@ def referer(pattern, accept=True, accept_missing=False, error=403,
     message: a string to include in the response body on failure.
     """
     try:
-        match = bool(re.match(pattern, cherrypy.serving.request.headers['Referer']))
+        ref = cherrypy.serving.request.headers['Referer']
+        match = bool(re.match(pattern, ref))
+        if debug:
+            cherrypy.log('Referer %r matches %r' % (ref, pattern),
+                         'TOOLS.REFERER')
         if accept == match:
             return
     except KeyError:
+        if debug:
+            cherrypy.log('No Referer header', 'TOOLS.REFERER')
         if accept_missing:
             return
     
@@ -402,11 +414,15 @@ def redirect(url='', internal=True, debug=False):
     else:
         raise cherrypy.HTTPRedirect(url)
 
-def trailing_slash(missing=True, extra=False, status=None):
+def trailing_slash(missing=True, extra=False, status=None, debug=False):
     """Redirect if path_info has (missing|extra) trailing slash."""
     request = cherrypy.serving.request
     pi = request.path_info
     
+    if debug:
+        cherrypy.log('is_index: %r, missing: %r, extra: %r, path_info: %r' %
+                     (request.is_index, missing, extra, path_info),
+                     'TOOLS.TRAILING_SLASH')
     if request.is_index is True:
         if missing:
             if not pi.endswith('/'):
@@ -419,7 +435,7 @@ def trailing_slash(missing=True, extra=False, status=None):
                 new_url = cherrypy.url(pi[:-1], request.query_string)
                 raise cherrypy.HTTPRedirect(new_url, status=status or 301)
 
-def flatten():
+def flatten(debug=False):
     """Wrap response.body in a generator that recursively iterates over body.
     
     This allows cherrypy.response.body to consist of 'nested generators';
@@ -427,17 +443,22 @@ def flatten():
     """
     import types
     def flattener(input):
+        numchunks = 0
         for x in input:
             if not isinstance(x, types.GeneratorType):
+                numchunks += 1
                 yield x
             else:
                 for y in flattener(x):
-                    yield y 
+                    numchunks += 1
+                    yield y
+        if debug:
+            cherrypy.log('Flattened %d chunks' % numchunks, 'TOOLS.FLATTEN')
     response = cherrypy.serving.response
     response.body = flattener(response.body)
 
 
-def accept(media=None):
+def accept(media=None, debug=False):
     """Return the client's preferred media-type (from the given Content-Types).
     
     If 'media' is None (the default), no test will be performed.
@@ -472,6 +493,8 @@ def accept(media=None):
     ranges = request.headers.elements('Accept')
     if not ranges:
         # Any media type is acceptable.
+        if debug:
+            cherrypy.log('No Accept header elements', 'TOOLS.ACCEPT')
         return media[0]
     else:
         # Note that 'ranges' is sorted in order of preference
@@ -479,16 +502,24 @@ def accept(media=None):
             if element.qvalue > 0:
                 if element.value == "*/*":
                     # Matches any type or subtype
+                    if debug:
+                        cherrypy.log('Match due to */*', 'TOOLS.ACCEPT')
                     return media[0]
                 elif element.value.endswith("/*"):
                     # Matches any subtype
                     mtype = element.value[:-1]  # Keep the slash
                     for m in media:
                         if m.startswith(mtype):
+                            if debug:
+                                cherrypy.log('Match due to %s' % element.value,
+                                             'TOOLS.ACCEPT')
                             return m
                 else:
                     # Matches exact value
                     if element.value in media:
+                        if debug:
+                            cherrypy.log('Match due to %s' % element.value,
+                                         'TOOLS.ACCEPT')
                         return element.value
     
     # No suitable media-range found.
@@ -524,7 +555,7 @@ class MonitoredHeaderMap(_httputil.HeaderMap):
         return _httputil.HeaderMap.has_key(self, key)
 
 
-def autovary(ignore=None):
+def autovary(ignore=None, debug=False):
     """Auto-populate the Vary response header based on request.header access."""
     request = cherrypy.serving.request
     
@@ -537,13 +568,13 @@ def autovary(ignore=None):
     def set_response_header():
         resp_h = cherrypy.serving.response.headers
         v = set([e.value for e in resp_h.elements('Vary')])
+        if debug:
+            cherrypy.log('Accessed headers: %s' % request.headers.accessed_headers,
+                         'TOOLS.AUTOVARY')
         v = v.union(request.headers.accessed_headers)
         v = v.difference(ignore)
         v = list(v)
         v.sort()
         resp_h['Vary'] = ', '.join(v)
-    request.hooks.attach(
-        'before_finalize', set_response_header, 95)
-
-
+    request.hooks.attach('before_finalize', set_response_header, 95)
 

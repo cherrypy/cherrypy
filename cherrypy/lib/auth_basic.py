@@ -40,7 +40,7 @@ def checkpassword_dict(user_password_dict):
     return checkpassword
 
 
-def basic_auth(realm, checkpassword):
+def basic_auth(realm, checkpassword, debug=False):
     """basic_auth is a CherryPy tool which hooks at before_handler to perform
     HTTP Basic Access Authentication, as specified in RFC 2617.
 
@@ -74,6 +74,8 @@ def basic_auth(realm, checkpassword):
                 username_password = base64.decodestring(params)
                 username, password = username_password.split(':', 1)
                 if checkpassword(realm, username, password):
+                    if debug:
+                        cherrypy.log('Auth succeeded', 'TOOLS.AUTH_BASIC')
                     request.login = username
                     return # successful authentication
         except (ValueError, binascii.Error): # split() error, base64.decodestring() error
