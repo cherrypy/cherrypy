@@ -1,3 +1,39 @@
+"""Request body processing for CherryPy.
+
+When an HTTP request includes an entity body, it is often desirable to
+provide that information to applications in a form other than the raw bytes.
+Different content types demand different approaches. Examples:
+
+ * For a GIF file, we want the raw bytes in a stream.
+ * An HTML form is better parsed into its component fields, and each text field
+    decoded from bytes to unicode.
+ * A JSON body should be deserialized into a Python dict or list.
+
+When the request contains a Content-Type header, the media type is used as a
+key to look up a value in the 'request.body.processors' dict. If the full media
+type is not found, then the major type is tried; for example, if no processor
+is found for the 'image/jpeg' type, then we look for a processor for the 'image'
+types altogether. If neither the full type nor the major type has a matching
+processor, then a default processor is used (self.default_proc). For most
+types, this means no processing is done, and the body is left unread as a
+raw byte stream. Processors are configurable in an 'on_start_resource' hook.
+
+Some processors, especially those for the 'text' types, attempt to decode bytes
+to unicode. If the Content-Type request header includes a 'charset' parameter,
+this is used to decode the entity. Otherwise, one or more default charsets may
+be attempted, although this decision is up to each processor. If a processor
+successfully decodes an Entity or Part, it should set the 'charset' attribute
+on the Entity or Part to the name of the successful charset, so that
+applications can easily re-encode or transcode the value if they wish.
+
+If the Content-Type of the request entity is of major type 'multipart', then
+the above parsing process, and possibly a decoding process, is performed for
+each part.
+
+For both the full entity and multipart parts, a Content-Disposition header may
+be used to fill .name and .filename attributes on the request.body or the Part.
+"""
+
 import re
 import tempfile
 from urllib import unquote_plus
@@ -23,26 +59,48 @@ def process_urlencoded(entity):
         # which is valid for the decoded entity-body.
         raise cherrypy.HTTPError(411)
     
-    params = entity.params
     qs = entity.fp.read()
-    for aparam in qs.split('&'):
-        for pair in aparam.split(';'):
-            if not pair:
-                continue
-            
-            atoms = pair.split('=', 1)
-            if len(atoms) == 1:
-                atoms.append('')
-            
-            key = unquote_plus(atoms[0]).decode(entity.encoding)
-            value = unquote_plus(atoms[1]).decode(entity.encoding)
-            
-            if key in params:
-                if not isinstance(params[key], list):
-                    params[key] = [params[key]]
-                params[key].append(value)
-            else:
-                params[key] = value
+    for charset in entity.attempt_charsets:
+        try:
+            params = {}
+            for aparam in qs.split('&'):
+                for pair in aparam.split(';'):
+                    if not pair:
+                        continue
+                    
+                    atoms = pair.split('=', 1)
+                    if len(atoms) == 1:
+                        atoms.append('')
+                    
+                    key = unquote_plus(atoms[0]).decode(charset)
+                    value = unquote_plus(atoms[1]).decode(charset)
+                    
+                    if key in params:
+                        if not isinstance(params[key], list):
+                            params[key] = [params[key]]
+                        params[key].append(value)
+                    else:
+                        params[key] = value
+        except UnicodeDecodeError:
+            pass
+        else:
+            entity.charset = charset
+            break
+    else:
+        raise cherrypy.HTTPError(
+            400, "The request entity could not be decoded. The following "
+            "charsets were attempted: %s" % repr(entity.attempt_charsets))
+        
+    # Now that all values have been successfully parsed and decoded,
+    # apply them to the entity.params dict.
+    for key, value in params.iteritems():
+        if key in entity.params:
+            if not isinstance(entity.params[key], list):
+                entity.params[key] = [entity.params[key]]
+            entity.params[key].append(value)
+        else:
+            entity.params[key] = value
+
 
 def process_multipart(entity):
     """Read all multipart parts into entity.parts."""
@@ -142,15 +200,13 @@ class Entity(object):
     can be sent with various HTTP method verbs). This value is set between
     the 'before_request_body' and 'before_handler' hooks (assuming that
     process_request_body is True)."""
-
+    
     default_content_type = u'application/x-www-form-urlencoded'
     # http://tools.ietf.org/html/rfc2046#section-4.1.2:
     # "The default character set, which must be assumed in the
     # absence of a charset parameter, is US-ASCII."
-    default_text_encoding = u'us-ascii'
-    # For MIME multiparts, if the payload has no charset, leave as bytes.
-    default_encoding = None
-    force_encoding = None
+    # However, many browsers send data in utf-8 with no charset.
+    attempt_charsets = [u'utf-8']
     processors = {u'application/x-www-form-urlencoded': process_urlencoded,
                   u'multipart/form-data': process_multipart_form_data,
                   u'multipart': process_multipart,
@@ -181,8 +237,14 @@ class Entity(object):
             self.content_type = httputil.HeaderElement.from_str(
                 self.default_content_type)
         
-        # Encoding
-        self.encoding = self.best_encoding()
+        # Copy the class 'attempt_charsets', prepending any Content-Type charset
+        dec = self.content_type.params.get(u"charset", None)
+        if dec:
+            dec = dec.decode('ISO-8859-1')
+            self.attempt_charsets = [dec] + [c for c in self.attempt_charsets
+                                             if c != dec]
+        else:
+            self.attempt_charsets = self.attempt_charsets[:]
         
         # Length
         self.length = None
@@ -207,19 +269,6 @@ class Entity(object):
                 self.filename = disp.params['filename']
                 if self.filename.startswith(u'"') and self.filename.endswith(u'"'):
                     self.filename = self.filename[1:-1]
-    
-    def best_encoding(self):
-        """Return the best encoding based on Content-Type (and defaults)."""
-        if self.force_encoding:
-            return self.force_encoding
-        
-        encoding = self.content_type.params.get(u"charset", None)
-        if not encoding:
-            ct = self.content_type.value.lower()
-            if ct.lower().startswith(u"text/"):
-                return self.default_text_encoding
-        
-        return encoding or self.default_encoding
     
     def read(self, size=None, fp=None):
         return self.fp.read(size, fp)
@@ -279,7 +328,6 @@ class Entity(object):
             self.default_proc()
         else:
             proc(self)
-
     
     def default_proc(self):
         # Leave the fp alone for someone else to read. This works fine
@@ -291,10 +339,10 @@ class Entity(object):
 class Part(Entity):
     """A MIME part entity, part of a multipart entity."""
     
-    default_content_type = u'text/plain; charset=us-ascii'
+    default_content_type = u'text/plain'
     # "The default character set, which must be assumed in the absence of a
     # charset parameter, is US-ASCII."
-    default_encoding = u'us-ascii'
+    attempt_charsets = [u'us-ascii', u'utf-8']
     # This is the default in stdlib cgi. We may want to increase it.
     maxrambytes = 1000
     
@@ -383,9 +431,18 @@ class Part(Entity):
         
         if fp is None:
             result = ''.join(lines)
-            if self.encoding is not None:
-                result = result.decode(self.encoding)
-            return result
+            for charset in self.attempt_charsets:
+                try:
+                    result = result.decode(charset)
+                except UnicodeDecodeError:
+                    pass
+                else:
+                    self.charset = charset
+                    return result
+            else:
+                raise cherrypy.HTTPError(
+                    400, "The request entity could not be decoded. The following "
+                    "charsets were attempted: %s" % repr(self.attempt_charsets))
         else:
             fp.seek(0)
             return fp
@@ -559,18 +616,24 @@ class RequestBody(Entity):
     # a Content-Type header. See http://www.cherrypy.org/ticket/790
     default_content_type = u''
     
-    default_encoding = u'utf-8'
-    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
-    # When no explicit charset parameter is provided by the
-    # sender, media subtypes of the "text" type are defined
-    # to have a default charset value of "ISO-8859-1" when
-    # received via HTTP.
-    default_text_encoding = u'ISO-8859-1'
     bufsize = 8 * 1024
     maxbytes = None
     
     def __init__(self, fp, headers, params=None, request_params=None):
         Entity.__init__(self, fp, headers, params)
+        
+        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
+        # When no explicit charset parameter is provided by the
+        # sender, media subtypes of the "text" type are defined
+        # to have a default charset value of "ISO-8859-1" when
+        # received via HTTP.
+        if self.content_type.value.startswith('text/'):
+            for c in (u'ISO-8859-1', u'iso-8859-1', u'Latin-1', u'latin-1'):
+                if c in self.attempt_charsets:
+                    break
+            else:
+                self.attempt_charsets.append(u'ISO-8859-1')
+        
         self.fp = SizedReader(self.fp, self.length,
                               self.maxbytes, bufsize=self.bufsize)
         # Temporary fix while deprecating passing .parts as .params.

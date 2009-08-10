@@ -138,7 +138,11 @@ def hooks_namespace(k, v):
 
 def request_namespace(k, v):
     """Attach request attributes declared in config."""
-    setattr(cherrypy.serving.request, k, v)
+    # Provides config entries to set request.body attrs (like attempt_charsets).
+    if k[:5] == 'body.':
+        setattr(cherrypy.serving.request.body, k[5:], v)
+    else:
+        setattr(cherrypy.serving.request, k, v)
 
 def response_namespace(k, v):
     """Attach response attributes declared in config."""
