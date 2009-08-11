@@ -77,4 +77,3 @@ def digest_auth(realm, users, debug=False):
     cherrypy.serving.response.headers['www-authenticate'] = httpauth.digestAuth(realm)
     
     raise cherrypy.HTTPError(401, "You are not authorized to access that resource")
-

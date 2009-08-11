@@ -34,7 +34,8 @@ def setup_server():
         utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
         
         def reqparams(self, *args, **kwargs):
-            return repr(cherrypy.request.params)
+            return ', '.join([": ".join((k, v)).encode('utf8')
+                             for k, v in cherrypy.request.params.items()])
         reqparams.exposed = True
     
     class GZIP:
@@ -61,7 +62,8 @@ def setup_server():
     
     class Decode:
         def extra_charset(self, *args, **kwargs):
-            return repr(cherrypy.request.params)
+            return ', '.join([": ".join((k, v)).encode('utf8')
+                             for k, v in cherrypy.request.params.items()])
         extra_charset.exposed = True
         extra_charset._cp_config = {
             'tools.decode.on': True,
@@ -69,7 +71,8 @@ def setup_server():
             }
         
         def force_charset(self, *args, **kwargs):
-            return repr(cherrypy.request.params)
+            return ', '.join([": ".join((k, v)).encode('utf8')
+                             for k, v in cherrypy.request.params.items()])
         force_charset.exposed = True
         force_charset._cp_config = {
             'tools.decode.on': True,
@@ -96,7 +99,7 @@ class EncodingTests(helper.CPWebCase):
         # Encoded utf8 query strings MUST be parsed correctly.
         # Here, q is the POUND SIGN U+00A3 encoded in utf8 and then %HEX
         self.getPage("/reqparams?q=%C2%A3")
-        self.assertBody(r"{'q': u'\xa3'}")
+        self.assertBody("q: \xc2\xa3")
         
         # Query strings that are incorrectly encoded MUST raise 404.
         # Here, q is the POUND SIGN U+00A3 encoded in latin1 and then %HEX
@@ -125,7 +128,7 @@ class EncodingTests(helper.CPWebCase):
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(r"{'q': u'\xa3'}")
+        self.assertBody("q: \xc2\xa3")
         
         # ...and in utf16, which is not in the default attempt_charsets list:
         body = "\xff\xfeq\x00=\xff\xfe\xa3\x00"
@@ -134,7 +137,7 @@ class EncodingTests(helper.CPWebCase):
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(r"{'q': u'\xa3'}")
+        self.assertBody("q: \xc2\xa3")
         
         # Entities that are incorrectly encoded MUST raise 400.
         # Here, q is the POUND SIGN U+00A3 encoded in utf16, but
@@ -159,7 +162,7 @@ class EncodingTests(helper.CPWebCase):
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(r"{'q': u'\xa3'}")
+        self.assertBody("q: \xc2\xa3")
         
         # An extra charset should be tried first, and continue to other default
         # charsets if it doesn't match.
@@ -170,7 +173,7 @@ class EncodingTests(helper.CPWebCase):
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(r"{'q': u'\xa3'}")
+        self.assertBody("q: \xc2\xa3")
         
         # An extra charset should error if force is True and it doesn't match.
         # Here, we force utf-16 as a charset but still pass a utf-8 body.
@@ -203,7 +206,7 @@ class EncodingTests(helper.CPWebCase):
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(r"{'text': u'ab\u201cc', 'submit': u'Create'}")
+        self.assertBody("text: ab\xe2\x80\x9cc, submit: Create")
     
     def test_multipart_decoding_no_charset(self):
         # Test the decoding of a multipart entity when the charset (utf8) is
@@ -222,7 +225,7 @@ class EncodingTests(helper.CPWebCase):
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(r"{'text': u'\u201c', 'submit': u'Create'}")
+        self.assertBody("text: \xe2\x80\x9c, submit: Create")
     
     def test_multipart_decoding_no_successful_charset(self):
         # Test the decoding of a multipart entity when the charset (utf16) is

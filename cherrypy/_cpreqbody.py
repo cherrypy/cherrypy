@@ -93,7 +93,7 @@ def process_urlencoded(entity):
         
     # Now that all values have been successfully parsed and decoded,
     # apply them to the entity.params dict.
-    for key, value in params.iteritems():
+    for key, value in params.items():
         if key in entity.params:
             if not isinstance(entity.params[key], list):
                 entity.params[key] = [entity.params[key]]

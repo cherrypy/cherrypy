@@ -132,7 +132,6 @@ class Config(reprconf.Config):
         if isinstance(config, basestring):
             # Filename
             cherrypy.engine.autoreload.files.add(config)
-
         reprconf.Config.update(self, config)
 
     def _apply(self, config):
@@ -143,8 +142,21 @@ class Config(reprconf.Config):
             config = config["global"]
         if 'tools.staticdir.dir' in config:
             config['tools.staticdir.section'] = "global"
-
         reprconf.Config._apply(self, config)
+    
+    def __call__(self, *args, **kwargs):
+        """Decorator for page handlers to set _cp_config."""
+        if args:
+            raise TypeError(
+                "The cherrypy.config decorator does not accept positional "
+                "arguments; you must use keyword arguments.")
+        def tool_decorator(f):
+            if not hasattr(f, "_cp_config"):
+                f._cp_config = {}
+            for k, v in kwargs.items():
+                f._cp_config[k] = v
+            return f
+        return tool_decorator
 
 
 Config.environments = environments = {
@@ -253,4 +265,5 @@ def _tree_namespace_handler(k, v):
     cherrypy.tree.graft(v, v.script_name)
     cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name or "/"))
 Config.namespaces["tree"] = _tree_namespace_handler
+
 
