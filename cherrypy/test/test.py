@@ -478,7 +478,6 @@ def run():
         'test_sessionauthenticate',
         'test_states',
         'test_config_server',
-        'test_tidy',
         'test_xmlrpc',
         'test_wsgiapps',
         'test_wsgi_ns',

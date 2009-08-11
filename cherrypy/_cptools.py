@@ -23,6 +23,7 @@ are generally either modules or instances of the tools.Tool class.
 """
 
 import cherrypy
+import warnings
 
 
 def _getargs(func):
@@ -232,7 +233,7 @@ class ErrorTool(Tool):
 
 #                              Builtin tools                              #
 
-from cherrypy.lib import cptools, encoding, auth, static, tidy, jsontools
+from cherrypy.lib import cptools, encoding, auth, static, jsontools
 from cherrypy.lib import sessions as _sessions, xmlrpc as _xmlrpc
 from cherrypy.lib import caching as _caching
 from cherrypy.lib import auth_basic, auth_digest
@@ -444,6 +445,26 @@ class Toolbox(object):
                     tool._setup()
 
 
+class DeprecatedTool(Tool):
+    
+    _name = None
+    warnmsg = "This Tool is deprecated."
+    
+    def __init__(self, point, warnmsg=None):
+        self.point = point
+        if warnmsg is not None:
+            self.warnmsg = warnmsg
+    
+    def __call__(self, *args, **kwargs):
+        warnings.warn(self.warnmsg)
+        def tool_decorator(f):
+            return f
+        return tool_decorator
+    
+    def _setup(self):
+        warnings.warn(self.warnmsg)
+
+
 default_toolbox = _d = Toolbox("tools")
 _d.session_auth = SessionAuthTool(cptools.session_auth)
 _d.proxy = Tool('before_request_body', cptools.proxy, priority=30)
@@ -463,8 +484,12 @@ _d.sessions = SessionTool()
 _d.xmlrpc = ErrorTool(_xmlrpc.on_error)
 _d.caching = CachingTool('before_handler', _caching.get, 'caching')
 _d.expires = Tool('before_finalize', _caching.expires)
-_d.tidy = Tool('before_finalize', tidy.tidy)
-_d.nsgmls = Tool('before_finalize', tidy.nsgmls)
+_d.tidy = DeprecatedTool('before_finalize',
+    "The tidy tool has been removed from the standard distribution of CherryPy. "
+    "The most recent version can be found at http://tools.cherrypy.org/browser.")
+_d.nsgmls = DeprecatedTool('before_finalize',
+    "The nsgmls tool has been removed from the standard distribution of CherryPy. "
+    "The most recent version can be found at http://tools.cherrypy.org/browser.")
 _d.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
 _d.referer = Tool('before_request_body', cptools.referer)
 _d.basic_auth = Tool('on_start_resource', auth.basic_auth)
@@ -479,4 +504,4 @@ _d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
 _d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
 _d.auth_digest = Tool('before_handler', auth_digest.digest_auth, priority=1)
 
-del _d, cptools, encoding, auth, static, tidy
+del _d, cptools, encoding, auth, static
