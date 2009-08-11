@@ -73,17 +73,18 @@ from cherrypy.lib import httputil
 def setup(req):
     from mod_python import apache
     
-    # Run any setup function defined by a "PythonOption cherrypy.setup" directive.
+    # Run any setup functions defined by a "PythonOption cherrypy.setup" directive.
     options = req.get_options()
     if 'cherrypy.setup' in options:
-        atoms = options['cherrypy.setup'].split('::', 1)
-        if len(atoms) == 1:
-            mod = __import__(atoms[0], globals(), locals())
-        else:
-            modname, fname = atoms
-            mod = __import__(modname, globals(), locals(), [fname])
-            func = getattr(mod, fname)
-            func()
+        for function in options['cherrypy.setup'].split():
+            atoms = options['cherrypy.setup'].split('::', 1)
+            if len(atoms) == 1:
+                mod = __import__(atoms[0], globals(), locals())
+            else:
+                modname, fname = atoms
+                mod = __import__(modname, globals(), locals(), [fname])
+                func = getattr(mod, fname)
+                func()
     
     cherrypy.config.update({'log.screen': False,
                             "tools.ignore_headers.on": True,
