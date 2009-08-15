@@ -237,8 +237,7 @@ def quickstart(root=None, script_name="", config=None):
     if config:
         _global_conf_alias.update(config)
     
-    if root is not None:
-        tree.mount(root, script_name, config)
+    tree.mount(root, script_name, config)
     
     if hasattr(engine, "signal_handler"):
         engine.signal_handler.subscribe()
