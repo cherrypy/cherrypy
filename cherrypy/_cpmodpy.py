@@ -77,7 +77,7 @@ def setup(req):
     options = req.get_options()
     if 'cherrypy.setup' in options:
         for function in options['cherrypy.setup'].split():
-            atoms = options['cherrypy.setup'].split('::', 1)
+            atoms = function.split('::', 1)
             if len(atoms) == 1:
                 mod = __import__(atoms[0], globals(), locals())
             else:
