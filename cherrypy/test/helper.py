@@ -18,6 +18,7 @@ import test.py (to use TestHarness), which then calls helper.py.
 # requirements. So don't go moving functions from here into test.py,
 # or vice-versa, unless you *really* know what you're doing.
 
+import datetime
 import os
 thisdir = os.path.abspath(os.path.dirname(__file__))
 import re
@@ -91,6 +92,21 @@ class CPWebCase(webtest.WebCase):
                               m.group(1))):
                 msg = 'Error page does not contain %s in traceback'
                 self._handlewebError(msg % repr(pattern))
+    
+    date_tolerance = 2
+    
+    def assertEqualDates(self, dt1, dt2, seconds=None):
+        """Assert abs(dt1 - dt2) is within Y seconds."""
+        if seconds is None:
+            seconds = self.date_tolerance
+        
+        if dt1 > dt2:
+            diff = dt1 - dt2
+        else:
+            diff = dt2 - dt1
+        if not diff < datetime.timedelta(seconds=seconds):
+            raise AssertionError('%r and %r are not within %r seconds.' %
+                                 (dt1, dt2, seconds))
 
 
 CPTestLoader = webtest.ReloadingTestLoader()
