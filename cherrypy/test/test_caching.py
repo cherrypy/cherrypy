@@ -1,10 +1,15 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
+import datetime
 import gzip
+from itertools import count
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-from itertools import count
+import sys
+import threading
+import time
+import urllib
 
 import cherrypy
 from cherrypy.lib import httputil
@@ -22,6 +27,7 @@ def setup_server():
         
         def __init__(self):
             cherrypy.counter = 0
+            self.longlock = threading.Lock()
         
         def index(self):
             cherrypy.counter += 1
@@ -33,7 +39,20 @@ def setup_server():
             cherrypy.response.headers['Last-Modified'] = httputil.HTTPDate()
             return gif_bytes
         a_gif.exposed = True
-
+        
+        def long_process(self, seconds='1'):
+            try:
+                self.longlock.acquire()
+                time.sleep(float(seconds))
+            finally:
+                self.longlock.release()
+            return 'success!'
+        long_process.exposed = True
+        
+        def clear_cache(self, path):
+            cherrypy._cache.store[cherrypy.request.base + path].clear()
+        clear_cache.exposed = True
+    
     class VaryHeaderCachingServer(object):
         
         _cp_config = {'tools.caching.on': True,
@@ -151,10 +170,10 @@ class CacheTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertHeaderItemValue('Vary', 'Our-Varying-Header')
         self.assertBody('visit #1')
-
-        #Now check that diffrent 'Vary'-fields don't evict eachother.
-        # This test creates a 2 requests with different 'Our-Varying-Header'
-        # and then test if the first one still exists.
+        
+        # Now check that different 'Vary'-fields don't evict each other.
+        # This test creates 2 requests with different 'Our-Varying-Header'
+        # and then tests if the first one still exists.
         self.getPage("/varying_headers/", headers=[('Our-Varying-Header', 'request 2')])
         self.assertStatus("200 OK")
         self.assertBody('visit #2')
@@ -253,6 +272,33 @@ class CacheTest(helper.CPWebCase):
         self.assertNoHeader("Last-Modified")
         if not getattr(cherrypy.server, "using_apache", False):
             self.assertHeader("Age")
+    
+    def test_antistampede(self):
+        SECONDS = 4
+        # We MUST make an initial synchronous request in order to create the
+        # AntiStampedeCache object, and populate its selecting_headers,
+        # before the actual stampede.
+        self.getPage("/long_process?seconds=%d" % SECONDS)
+        self.assertBody('success!')
+        self.getPage("/clear_cache?path=" +
+            urllib.quote('/long_process?seconds=%d' % SECONDS, safe=''))
+        self.assertStatus(200)
+        sys.stdout.write("prepped... ")
+        sys.stdout.flush()
+        
+        start = datetime.datetime.now()
+        def run():
+            self.getPage("/long_process?seconds=%d" % SECONDS)
+            # The response should be the same every time
+            self.assertBody('success!')
+        ts = [threading.Thread(target=run) for i in xrange(100)]
+        for t in ts:
+            t.start()
+        for t in ts:
+            t.join()
+        self.assertEqualDates(start, datetime.datetime.now(),
+                              # Allow a second for our thread/TCP overhead etc.
+                              seconds=SECONDS + 1)
 
 
 if __name__ == '__main__':
