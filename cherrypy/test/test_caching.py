@@ -26,14 +26,20 @@ def setup_server():
         _cp_config = {'tools.caching.on': True}
         
         def __init__(self):
-            cherrypy.counter = 0
+            self.counter = 0
+            self.control_counter = 0
             self.longlock = threading.Lock()
         
         def index(self):
-            cherrypy.counter += 1
-            msg = "visit #%s" % cherrypy.counter
+            self.counter += 1
+            msg = "visit #%s" % self.counter
             return msg
         index.exposed = True
+        
+        def control(self):
+            self.control_counter += 1
+            return "visit #%s" % self.control_counter
+        control.exposed = True
         
         def a_gif(self):
             cherrypy.response.headers['Last-Modified'] = httputil.HTTPDate()
@@ -299,6 +305,29 @@ class CacheTest(helper.CPWebCase):
         self.assertEqualDates(start, datetime.datetime.now(),
                               # Allow a second for our thread/TCP overhead etc.
                               seconds=SECONDS + 1)
+    
+    def test_cache_control(self):
+        self.getPage("/control")
+        self.assertBody('visit #1')
+        self.getPage("/control")
+        self.assertBody('visit #1')
+        
+        self.getPage("/control", headers=[('Cache-Control', 'no-cache')])
+        self.assertBody('visit #2')
+        self.getPage("/control")
+        self.assertBody('visit #2')
+        
+        self.getPage("/control", headers=[('Pragma', 'no-cache')])
+        self.assertBody('visit #3')
+        self.getPage("/control")
+        self.assertBody('visit #3')
+        
+        time.sleep(1)
+        self.getPage("/control", headers=[('Cache-Control', 'max-age=0')])
+        self.assertBody('visit #4')
+        self.getPage("/control")
+        self.assertBody('visit #4')
+
 
 
 if __name__ == '__main__':

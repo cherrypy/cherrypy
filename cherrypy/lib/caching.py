@@ -204,7 +204,6 @@ class MemoryCache(Cache):
                 uricache[tuple(header_values)] = variant
                 self.tot_puts += 1
                 self.cursize = total_size
-                return
     
     def delete(self):
         """Remove ALL cached variants of the current resource."""
@@ -258,14 +257,44 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
         request.cacheable = False
         return False
     
+    if 'no-cache' in [e.value for e in request.headers.elements('Pragma')]:
+        request.cached = False
+        request.cacheable = True
+        return False
+    
     cache_data = cherrypy._cache.get()
     request.cached = bool(cache_data)
     request.cacheable = not request.cached
     if request.cached:
         # Serve the cached copy.
+        max_age = cherrypy._cache.delay
+        for v in [e.value for e in request.headers.elements('Cache-Control')]:
+            atoms = v.split('=', 1)
+            directive = atoms.pop(0)
+            if directive == 'max-age':
+                if len(atoms) != 1 or not atoms[0].isdigit():
+                    raise cherrypy.HTTPError(400, "Invalid Cache-Control header")
+                max_age = int(atoms[0])
+                break
+            elif directive == 'no-cache':
+                if debug:
+                    cherrypy.log('Ignoring cache due to Cache-Control: no-cache',
+                                 'TOOLS.CACHING')
+                request.cached = False
+                request.cacheable = True
+                return False
+        
         if debug:
             cherrypy.log('Reading response from cache', 'TOOLS.CACHING')
         s, h, b, create_time = cache_data
+        age = int(response.time - create_time)
+        if (age > max_age):
+            if debug:
+                cherrypy.log('Ignoring cache due to age > %d' % max_age,
+                             'TOOLS.CACHING')
+            request.cached = False
+            request.cacheable = True
+            return False
         
         # Copy the response headers. See http://www.cherrypy.org/ticket/721.
         response.headers = rh = httputil.HeaderMap()
@@ -273,7 +302,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
             dict.__setitem__(rh, k, dict.__getitem__(h, k))
         
         # Add the required Age header
-        response.headers["Age"] = str(int(response.time - create_time))
+        response.headers["Age"] = str(age)
         
         try:
             # Note that validate_since depends on a Last-Modified header;
@@ -295,19 +324,27 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
 
 
 def tee_output():
+    request = cherrypy.serving.request
+    if 'no-store' in request.headers.values('Cache-Control'):
+        return
+    
     def tee(body):
         """Tee response.body into a list."""
+        if ('no-cache' in response.headers.values('Pragma') or
+            'no-store' in response.headers.values('Cache-Control')):
+            for chunk in body:
+                yield chunk
+            return
+        
         output = []
         for chunk in body:
             output.append(chunk)
             yield chunk
         
-        # Might as well do this here; why cache if the body isn't consumed?
-        if response.headers.get('Pragma', None) != 'no-cache':
-            # save the cache data
-            body = ''.join(output)
-            cherrypy._cache.put((response.status, response.headers or {},
-                                 body, response.time), len(body))
+        # save the cache data
+        body = ''.join(output)
+        cherrypy._cache.put((response.status, response.headers or {},
+                             body, response.time), len(body))
     
     response = cherrypy.serving.response
     response.body = tee(response.body)

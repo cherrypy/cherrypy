@@ -383,6 +383,10 @@ class HeaderMap(CaseInsensitiveDict):
         value = self.get(key)
         return header_elements(key, value)
     
+    def values(self, key):
+        """Return a sorted list of HeaderElement.value for the given header."""
+        return [e.value for e in self.elements(key)]
+    
     def output(self):
         """Transform self into a list of (name, value) tuples."""
         header_list = []
