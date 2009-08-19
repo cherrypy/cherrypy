@@ -85,10 +85,12 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
             varkw_usage += 1
             extra_kwargs.add(key)
 
+    # figure out which args have defaults.
+    args_with_defaults = args[-len(defaults or []):]
     for i, val in enumerate(defaults or []):
         # Defaults take effect only when the arg hasn't been used yet.
-        if arg_usage[args[i]] == 0:
-            arg_usage[args[i]] += 1
+        if arg_usage[args_with_defaults[i]] == 0:
+            arg_usage[args_with_defaults[i]] += 1
 
     missing_args = []
     multiple_args = []

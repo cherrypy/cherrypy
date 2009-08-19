@@ -103,6 +103,9 @@ def setup_server():
             raise TypeError("Client Error")
         raise_type_error.exposed = True
 
+        def raise_type_error_with_default_param(self, x, y=None):
+            return '%d' % 'a' # throw an exception
+        raise_type_error_with_default_param.exposed = True
 
     def callable_error_page(status, **kwargs):
         return "Error %s - Well, I'm very sorry but you haven't paid!" % status
@@ -423,13 +426,14 @@ class RequestObjectTests(helper.CPWebCase):
                 else:
                     self.assertInBody("Not Found")
 
-
         # In the case that a handler raises a TypeError we should
         # let that type error through.
         for uri in (
                 '/paramerrors/raise_type_error',
+                '/paramerrors/raise_type_error_with_default_param?x=0',
+                '/paramerrors/raise_type_error_with_default_param?x=0&y=0',
             ):
-            self.getPage(uri, method='POST', body=body)
+            self.getPage(uri, method='GET')
             self.assertStatus(500)
             self.assertTrue('Client Error', self.body)
 
