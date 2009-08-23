@@ -33,13 +33,8 @@ def json_in(force=True, debug=False):
             raise cherrypy.HTTPError(400, 'Invalid JSON document')
     if force:
         request.body.processors.clear()
-        def default_proc():
-            # Leave the fp alone for someone else to read. This works fine
-            # for request.body, but the Part subclasses need to override this
-            # so they can move on to the next part.
-            raise cherrypy.HTTPError(
-                415, 'Expected an application/json content type')
-        request.body.default_proc = default_proc
+        request.body.default_proc = cherrypy.HTTPError(
+            415, 'Expected an application/json content type')
     request.body.processors[u'application/json'] = json_processor
 
 def json_out(debug=False):
