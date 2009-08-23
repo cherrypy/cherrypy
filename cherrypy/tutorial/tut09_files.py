@@ -72,8 +72,8 @@ class FileDemo(object):
         
         # Although this just counts the file length, it demonstrates
         # how to read large files in chunks instead of all at once.
-        # CherryPy uses Python's cgi module to read the uploaded file
-        # into a temporary file; myFile.file.read reads from that.
+        # CherryPy reads the uploaded file into a temporary file;
+        # myFile.file.read reads from that.
         size = 0
         while True:
             data = myFile.file.read(8192)

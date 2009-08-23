@@ -55,15 +55,20 @@ else:
 
         def test_json_input(self):
             body = '[13, "c"]'
-            headers = [('Content-Type', 'application/json'), ('Content-Length', str(len(body)))]
+            headers = [('Content-Type', 'application/json'),
+                       ('Content-Length', str(len(body)))]
             self.getPage("/json_post", method="POST", headers=headers, body=body)
             self.assertBody('ok')
-
-            self.getPage("/json_post")
+            
+            body = '[13, "c"]'
+            headers = [('Content-Type', 'text/plain'),
+                       ('Content-Length', str(len(body)))]
+            self.getPage("/json_post", method="POST", headers=headers, body=body)
             self.assertStatus(415, 'Expected an application/json content type')
-
+            
             body = '[13, -]'
-            headers = [('Content-Type', 'application/json'), ('Content-Length', str(len(body)))]
+            headers = [('Content-Type', 'application/json'),
+                       ('Content-Length', str(len(body)))]
             self.getPage("/json_post", method="POST", headers=headers, body=body)
             self.assertStatus(400, 'Invalid JSON document')
 

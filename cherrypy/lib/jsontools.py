@@ -19,30 +19,37 @@ else:
     json_decode = json.JSONDecoder().decode
     json_encode = json.JSONEncoder().iterencode
 
-def json_in(*args, **kwargs):
+def json_in(force=True, debug=False):
     request = cherrypy.serving.request
-    _h = request.headers
-    if ('Content-Type' not in _h
-            or _h.elements('Content-Type')[0].value != 'application/json'):
-        raise cherrypy.HTTPError(415, 'Expected an application/json content type')
+    def json_processor(entity):
+        """Read application/json data into request.json."""
+        if not entity.headers.get(u"Content-Length", u""):
+            raise cherrypy.HTTPError(411)
+        
+        body = entity.fp.read()
+        try:
+            request.json = json_decode(body)
+        except ValueError:
+            raise cherrypy.HTTPError(400, 'Invalid JSON document')
+    if force:
+        request.body.processors.clear()
+        def default_proc():
+            # Leave the fp alone for someone else to read. This works fine
+            # for request.body, but the Part subclasses need to override this
+            # so they can move on to the next part.
+            raise cherrypy.HTTPError(
+                415, 'Expected an application/json content type')
+        request.body.default_proc = default_proc
+    request.body.processors[u'application/json'] = json_processor
 
-    length = int(request.headers['Content-Length'])
-    body = request.body.read(length)
-
-    try:
-        json = json_decode(body)
-    except ValueError:
-        raise cherrypy.HTTPError(400, 'Invalid JSON document')
-
-    request.json = json
-
-def json_out(*args, **kwargs):
+def json_out(debug=False):
     request = cherrypy.serving.request
     response = cherrypy.serving.response
-
+    
     real_handler = request.handler
     def json_handler(*args, **kwargs):
         response.headers['Content-Type'] = 'application/json'
         value = real_handler(*args, **kwargs)
         return json_encode(value)
     request.handler = json_handler
+
