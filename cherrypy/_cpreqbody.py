@@ -270,8 +270,11 @@ class Entity(object):
                 if self.filename.startswith(u'"') and self.filename.endswith(u'"'):
                     self.filename = self.filename[1:-1]
     
-    def read(self, size=None, fp=None):
-        return self.fp.read(size, fp)
+    # The 'type' attribute is deprecated in 3.2; remove it in 3.3.
+    type = property(lambda self: self.content_type)
+    
+    def read(self, size=None, fp_out=None):
+        return self.fp.read(size, fp_out)
     
     def readline(self, size=None):
         return self.fp.readline(size)
@@ -288,12 +291,12 @@ class Entity(object):
             raise StopIteration
         return line
     
-    def read_into_file(self, fp=None):
-        """Read the request body into fp (or make_file() if None). Return fp."""
-        if fp is None:
-            fp = self.make_file()
-        self.read(fp=fp)
-        return fp
+    def read_into_file(self, fp_out=None):
+        """Read the request body into fp_out (or make_file() if None). Return fp_out."""
+        if fp_out is None:
+            fp_out = self.make_file()
+        self.read(fp_out=fp_out)
+        return fp_out
     
     def make_file(self):
         """Return a file into which the request body will be read.
@@ -387,7 +390,16 @@ class Part(Entity):
         return headers
     read_headers = classmethod(read_headers)
     
-    def read_lines_to_boundary(self, fp=None):
+    def read_lines_to_boundary(self, fp_out=None):
+        """Read bytes from self.fp and return or write them to a file.
+        
+        If the 'fp_out' argument is None (the default), all bytes read are
+        returned in a single byte string.
+        
+        If the 'fp_out' argument is not None, it must be a file-like object that
+        supports the 'write' method; all bytes read will be written to the fp,
+        and that fp is returned.
+        """
         endmarker = self.boundary + "--"
         delim = ""
         prev_lf = True
@@ -419,17 +431,17 @@ class Part(Entity):
                 delim = ""
                 prev_lf = False
             
-            if fp is None:
+            if fp_out is None:
                 lines.append(line)
                 seen += len(line)
                 if seen > self.maxrambytes:
-                    fp = self.make_file()
+                    fp_out = self.make_file()
                     for line in lines:
-                        fp.write(line)
+                        fp_out.write(line)
             else:
-                fp.write(line)
+                fp_out.write(line)
         
-        if fp is None:
+        if fp_out is None:
             result = ''.join(lines)
             for charset in self.attempt_charsets:
                 try:
@@ -444,8 +456,8 @@ class Part(Entity):
                     400, "The request entity could not be decoded. The following "
                     "charsets were attempted: %s" % repr(self.attempt_charsets))
         else:
-            fp.seek(0)
-            return fp
+            fp_out.seek(0)
+            return fp_out
     
     def default_proc(self):
         if self.filename:
@@ -458,12 +470,12 @@ class Part(Entity):
             else:
                 self.file = result
     
-    def read_into_file(self, fp=None):
-        """Read the request body into fp (or make_file() if None). Return fp."""
-        if fp is None:
-            fp = self.make_file()
-        self.read_lines_to_boundary(fp=fp)
-        return fp
+    def read_into_file(self, fp_out=None):
+        """Read the request body into fp_out (or make_file() if None). Return fp_out."""
+        if fp_out is None:
+            fp_out = self.make_file()
+        self.read_lines_to_boundary(fp_out=fp_out)
+        return fp_out
 
 
 class Infinity(object):
@@ -486,7 +498,7 @@ class SizedReader:
         self.bytes_read = 0
         self.done = False
     
-    def read(self, size=None, fp=None):
+    def read(self, size=None, fp_out=None):
         """Read bytes from the request body and return or write them to a file.
         
         A number of bytes less than or equal to the 'size' argument are read
@@ -496,10 +508,10 @@ class SizedReader:
         specifies fewer bytes than requested, or 3) the number of bytes read
         exceeds self.maxbytes (in which case, MaxSizeExceeded is raised).
         
-        If the 'fp' argument is None (the default), all bytes read are returned
-        in a single byte string.
+        If the 'fp_out' argument is None (the default), all bytes read are
+        returned in a single byte string.
         
-        If the 'fp' argument is not None, it must be a file-like object that
+        If the 'fp_out' argument is not None, it must be a file-like object that
         supports the 'write' method; all bytes read will be written to the fp,
         and None is returned.
         """
@@ -515,7 +527,7 @@ class SizedReader:
                 remaining = size
         if remaining == 0:
             self.done = True
-            if fp is None:
+            if fp_out is None:
                 return ''
             else:
                 return None
@@ -539,10 +551,10 @@ class SizedReader:
                 raise MaxSizeExceeded()
             
             # Store the data.
-            if fp is None:
+            if fp_out is None:
                 chunks.append(data)
             else:
-                fp.write(data)
+                fp_out.write(data)
         
         # Read bytes from the socket.
         while remaining > 0:
@@ -560,12 +572,12 @@ class SizedReader:
                 raise MaxSizeExceeded()
             
             # Store the data.
-            if fp is None:
+            if fp_out is None:
                 chunks.append(data)
             else:
-                fp.write(data)
+                fp_out.write(data)
         
-        if fp is None:
+        if fp_out is None:
             return ''.join(chunks)
     
     def readline(self, size=None):
