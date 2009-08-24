@@ -129,7 +129,7 @@ def process_multipart(entity):
     
     # Read all parts
     while True:
-        part = Part.from_fp(entity.fp, ib)
+        part = entity.part_class.from_fp(entity.fp, ib)
         entity.parts.append(part)
         part.process()
         if part.fp.done:
@@ -215,7 +215,6 @@ class Entity(object):
     def __init__(self, fp, headers, params=None, parts=None):
         # Make an instance-specific copy of the class processors
         # so Tools, etc. can replace them per-request.
-        # TODO: that makes it easy for request.body but not Parts. Fix.
         self.processors = self.processors.copy()
         
         self.fp = fp
@@ -476,6 +475,8 @@ class Part(Entity):
             fp_out = self.make_file()
         self.read_lines_to_boundary(fp_out=fp_out)
         return fp_out
+
+Entity.part_class = Part
 
 
 class Infinity(object):
