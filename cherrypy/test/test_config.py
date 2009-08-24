@@ -41,6 +41,11 @@ def setup_server():
             return self.db
         dbscheme.exposed = True
         
+        def plain(self, x):
+            return x
+        plain.exposed = True
+        plain._cp_config = {'request.body.attempt_charsets': ['utf-16']}
+        
         favicon_ico = cherrypy.tools.staticfile.handler(
                         filename=os.path.join(localDir, '../favicon.ico'))
     
@@ -214,7 +219,15 @@ class ConfigTests(helper.CPWebCase):
         self.getPage("/favicon.ico")
         self.assertBody(open(os.path.join(localDir, "static/dirback.jpg"),
                              "rb").read())
-                             
+    
+    def test_request_body_namespace(self):
+        self.getPage("/plain", method='POST', headers=[
+            ('Content-Type', 'application/x-www-form-urlencoded'),
+            ('Content-Length', 13)],
+            body='\xff\xfex\x00=\xff\xfea\x00b\x00c\x00')
+        self.assertBody("abc")
+
+
 class VariableSubstitutionTests(unittest.TestCase):
     
     def test_config(self):

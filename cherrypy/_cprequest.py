@@ -627,8 +627,13 @@ class Request(object):
                     # Make a copy of the class hooks
                     self.hooks = self.__class__.hooks.copy()
                     self.toolmaps = {}
+                    
                     self.stage = 'get_resource'
                     self.get_resource(path_info)
+                    
+                    self.body = _cpreqbody.RequestBody(
+                        self.rfile, self.headers, request_params=self.params)
+                    
                     self.namespaces(self.config)
                     
                     self.stage = 'on_start_resource'
@@ -639,8 +644,6 @@ class Request(object):
                     self.process_query_string()
                     
                     # Process the body
-                    self.body = _cpreqbody.RequestBody(
-                        self.rfile, self.headers, request_params=self.params)
                     if self.process_request_body:
                         if self.method not in self.methods_with_bodies:
                             self.process_request_body = False
