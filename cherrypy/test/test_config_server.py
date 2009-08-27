@@ -21,20 +21,10 @@ def setup_server():
             return "Size: %s" % len(file.file.read())
         upload.exposed = True
         
-        def tinyupload(self, maxlen):
-            cherrypy.request.rfile.maxlen = int(maxlen)
-            cl = int(cherrypy.request.headers['Content-Length'])
-            try:
-                body = cherrypy.request.rfile.read(cl)
-            except Exception, e:
-                if e.__class__.__name__ == 'MaxSizeExceeded':
-                    # Post data is too big
-                    raise cherrypy.HTTPError(413)
-                else:
-                    raise
-            return body
+        def tinyupload(self):
+            return cherrypy.request.body.read()
         tinyupload.exposed = True
-        tinyupload._cp_config = {'request.process_request_body': False}
+        tinyupload._cp_config = {'request.body.maxbytes': 100}
     
     cherrypy.tree.mount(Root())
     
@@ -68,6 +58,8 @@ class ServerConfigTests(helper.CPWebCase):
         self.assertBody(str(self.PORT))
     
     def testAdditionalServers(self):
+        if self.scheme == 'https':
+            return self.skip("not available under ssl")
         self.PORT = 9877
         self.getPage("/")
         self.assertBody(str(self.PORT))
@@ -79,10 +71,17 @@ class ServerConfigTests(helper.CPWebCase):
         if getattr(cherrypy.server, "using_apache", False):
             return self.skip("skipped due to known Apache differences... ")
         
-        self.getPage('/tinyupload?maxlen=100', method="POST", body="x" * 100)
+        self.getPage('/tinyupload', method="POST",
+                     headers=[('Content-Type', 'text/plain'),
+                              ('Content-Length', '100')],
+                     body="x" * 100)
         self.assertStatus(200)
         self.assertBody("x" * 100)
-        self.getPage('/tinyupload?maxlen=100', method="POST", body="x" * 101)
+        
+        self.getPage('/tinyupload', method="POST",
+                     headers=[('Content-Type', 'text/plain'),
+                              ('Content-Length', '101')],
+                     body="x" * 101)
         self.assertStatus(413)
     
     def testMaxRequestSize(self):

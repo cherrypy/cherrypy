@@ -59,6 +59,7 @@ class Server(ServerAdapter):
     ssl_private_key = None
     ssl_module = 'pyopenssl'
     nodelay = True
+    wsgi_version = (1, 0)
     
     def __init__(self):
         self.bus = cherrypy.engine

@@ -223,7 +223,7 @@ class ConfigTests(helper.CPWebCase):
     def test_request_body_namespace(self):
         self.getPage("/plain", method='POST', headers=[
             ('Content-Type', 'application/x-www-form-urlencoded'),
-            ('Content-Length', 13)],
+            ('Content-Length', '13')],
             body='\xff\xfex\x00=\xff\xfea\x00b\x00c\x00')
         self.assertBody("abc")
 

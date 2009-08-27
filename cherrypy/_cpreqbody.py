@@ -39,7 +39,6 @@ import tempfile
 from urllib import unquote_plus
 
 import cherrypy
-from cherrypy._cperror import MaxSizeExceeded
 from cherrypy.lib import httputil
 
 
@@ -507,7 +506,7 @@ class SizedReader:
         self.bytes_read. The number may be smaller than 'size' when 1) the
         client sends fewer bytes, 2) the 'Content-Length' request header
         specifies fewer bytes than requested, or 3) the number of bytes read
-        exceeds self.maxbytes (in which case, MaxSizeExceeded is raised).
+        exceeds self.maxbytes (in which case, 413 is raised).
         
         If the 'fp_out' argument is None (the default), all bytes read are
         returned in a single byte string.
@@ -549,7 +548,7 @@ class SizedReader:
             # Check lengths.
             self.bytes_read += datalen
             if self.maxbytes and self.bytes_read > self.maxbytes:
-                raise MaxSizeExceeded()
+                raise cherrypy.HTTPError(413)
             
             # Store the data.
             if fp_out is None:
@@ -570,7 +569,7 @@ class SizedReader:
             # Check lengths.
             self.bytes_read += datalen
             if self.maxbytes and self.bytes_read > self.maxbytes:
-                raise MaxSizeExceeded()
+                raise cherrypy.HTTPError(413)
             
             # Store the data.
             if fp_out is None:
@@ -647,8 +646,6 @@ class RequestBody(Entity):
             else:
                 self.attempt_charsets.append(u'ISO-8859-1')
         
-        self.fp = SizedReader(self.fp, self.length,
-                              self.maxbytes, bufsize=self.bufsize)
         # Temporary fix while deprecating passing .parts as .params.
         self.processors[u'multipart'] = _old_process_multipart
         
@@ -668,6 +665,8 @@ class RequestBody(Entity):
         if u'Content-Length' not in h and u'Transfer-Encoding' not in h:
             raise cherrypy.HTTPError(411)
         
+        self.fp = SizedReader(self.fp, self.length,
+                              self.maxbytes, bufsize=self.bufsize)
         super(RequestBody, self).process()
         
         # Body params should also be a part of the request_params

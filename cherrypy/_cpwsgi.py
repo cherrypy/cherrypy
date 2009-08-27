@@ -11,6 +11,24 @@ from cherrypy import _cperror
 from cherrypy.lib import httputil
 
 
+def downgrade_wsgi_11_to_10(environ):
+    """Return a new environ dict for WSGI 1.0 from the given WSGI 1.1 environ."""
+    env10 = {}
+    
+    enc = environ[u'wsgi.url_encoding']
+    for key in [u"PATH_INFO", u"SCRIPT_NAME", u"QUERY_STRING"]:
+        env10[str(key)] = environ[key].encode(enc)
+    
+    for k, v in environ.items():
+        if k in [u'PATH_INFO', u'SCRIPT_NAME', u'QUERY_STRING']:
+            continue
+        if isinstance(v, unicode) and k not in [u'REQUEST_URI', u'wsgi.input']:
+            v = v.encode('ISO-8859-1')
+        env10[k.encode('ISO-8859-1')] = v
+    
+    return env10
+
+
 class VirtualHost(object):
     """Select a different WSGI application based on the Host header.
     
@@ -71,6 +89,8 @@ class AppResponse(object):
     def __init__(self, environ, start_response, cpapp, recursive=False):
         self.redirections = []
         self.recursive = recursive
+        if environ.get(u'wsgi.version') == (1, 1):
+            environ = downgrade_wsgi_11_to_10(environ)
         self.environ = environ
         self.start_response = start_response
         self.cpapp = cpapp
@@ -164,8 +184,9 @@ class AppResponse(object):
     def next(self):
         try:
             chunk = self.iter_response.next()
-            # WSGI requires all data to be of type "str". This coercion should
-            # not take any time at all if chunk is already of type "str".
+            # WSGI 1.x requires all response data to be of type "str".
+            # This coercion should not take any time at all if chunk is
+            # already of type "str".
             # If it's unicode, it could be a big performance hit (x ~500).
             if not isinstance(chunk, str):
                 chunk = unicode(chunk).encode("ISO-8859-1")
@@ -229,8 +250,8 @@ class AppResponse(object):
         local = httputil.Host('', int(env('SERVER_PORT', 80)),
                            env('SERVER_NAME', ''))
         remote = httputil.Host(env('REMOTE_ADDR', ''),
-                            int(env('REMOTE_PORT', -1)),
-                            env('REMOTE_HOST', ''))
+                               int(env('REMOTE_PORT', -1)),
+                               env('REMOTE_HOST', ''))
         scheme = env('wsgi.url_scheme')
         sproto = env('ACTUAL_SERVER_PROTOCOL', "HTTP/1.1")
         request, resp = self.cpapp.get_serving(local, remote, scheme, sproto)

@@ -24,7 +24,7 @@ as you want in one instance by using a WSGIPathInfoDispatcher:
 Want SSL support? Just set server.ssl_adapter to an SSLAdapter instance.
 
 This won't call the CherryPy engine (application side) at all, only the
-WSGI server, which is independant from the rest of CherryPy. Don't
+WSGI server, which is independent from the rest of CherryPy. Don't
 let the name "CherryPyWSGIServer" throw you; the name merely reflects
 its origin, not its coupling.
 
@@ -231,6 +231,62 @@ class SizeCheckWrapper(object):
         return data
 
 
+class KnownLengthRFile(object):
+    """Wraps a file-like object, returning an empty string when exhausted."""
+    
+    def __init__(self, rfile, content_length):
+        self.rfile = rfile
+        self.remaining = content_length
+    
+    def read(self, size=None):
+        if self.remaining == 0:
+            return ''
+        if size is None:
+            size = self.remaining
+        else:
+            size = min(size, self.remaining)
+        
+        data = self.rfile.read(size)
+        self.remaining -= len(data)
+        return data
+    
+    def readline(self, size=None):
+        if self.remaining == 0:
+            return ''
+        if size is None:
+            size = self.remaining
+        else:
+            size = min(size, self.remaining)
+        
+        data = self.rfile.readline(size)
+        self.remaining -= len(data)
+        return data
+    
+    def readlines(self, sizehint=0):
+        # Shamelessly stolen from StringIO
+        total = 0
+        lines = []
+        line = self.readline(sizehint)
+        while line:
+            lines.append(line)
+            total += len(line)
+            if 0 < sizehint <= total:
+                break
+            line = self.readline(sizehint)
+        return lines
+    
+    def close(self):
+        self.rfile.close()
+    
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        data = next(self.rfile)
+        self.remaining -= len(data)
+        return data
+
+
 class HTTPRequest(object):
     """An HTTP Request (and response).
     
@@ -239,8 +295,12 @@ class HTTPRequest(object):
     send: the 'send' method from the connection's socket object.
     wsgi_app: the WSGI application to call.
     environ: a partial WSGI environ (server and connection entries).
-        The caller MUST set the following entries:
-        * All wsgi.* entries, including .input
+        Because this server supports both WSGI 1.0 and 1.1, this attribute is
+        neither; instead, it has unicode keys and byte string values. It is
+        converted to the appropriate WSGI version when the WSGI app is called.
+        
+        The caller MUST set the following entries (because this class doesn't):
+        * All wsgi.* entries except .input and .url_encoding
         * SERVER_NAME and SERVER_PORT
         * Any SSL_* entries
         * Any custom entries like REMOTE_ADDR and REMOTE_PORT
@@ -269,8 +329,9 @@ class HTTPRequest(object):
     max_request_header_size = 0
     max_request_body_size = 0
     
-    def __init__(self, wfile, environ, wsgi_app):
-        self.rfile = environ['wsgi.input']
+    def __init__(self, rfile, wfile, environ, wsgi_app):
+        self._rfile = rfile
+        self.rfile = rfile
         self.wfile = wfile
         self.environ = environ.copy()
         self.wsgi_app = wsgi_app
@@ -286,9 +347,7 @@ class HTTPRequest(object):
     
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
-        self.rfile.maxlen = self.max_request_header_size
-        self.rfile.bytes_read = 0
-        
+        self.rfile = SizeCheckWrapper(self._rfile, self.max_request_header_size)
         try:
             self._parse_request()
         except MaxSizeExceeded:
@@ -304,6 +363,7 @@ class HTTPRequest(object):
         # (although your TCP stack might suffer for it: cf Apache's history
         # with FIN_WAIT_2).
         request_line = self.rfile.readline()
+        
         # Set started_request to True so communicate() knows to send 408
         # from here on out.
         self.started_request = True
@@ -353,8 +413,6 @@ class HTTPRequest(object):
         if '?' in path:
             path, qs = path.split('?', 1)
         
-        uri_enc = environ.get('REQUEST_URI_ENCODING', 'utf-8')
-        
         # Unquote the path+params (e.g. "/this%20path" -> "this path").
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
         #
@@ -388,7 +446,7 @@ class HTTPRequest(object):
         rp = int(req_protocol[5]), int(req_protocol[7])
         server_protocol = environ["ACTUAL_SERVER_PROTOCOL"]
         sp = int(server_protocol[5]), int(server_protocol[7])
-
+        
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
             return
@@ -458,7 +516,7 @@ class HTTPRequest(object):
         if environ.get("HTTP_EXPECT", "") == "100-continue":
             # Don't use simple_response here, because it emits headers
             # we don't want. See http://www.cherrypy.org/ticket/951
-            msg = "%s 100 Continue\r\n\r\n" % self.environ['ACTUAL_SERVER_PROTOCOL']
+            msg = self.environ['ACTUAL_SERVER_PROTOCOL'] + " 100 Continue\r\n\r\n"
             try:
                 self.wfile.sendall(msg)
             except socket.error, x:
@@ -466,7 +524,7 @@ class HTTPRequest(object):
                     raise
         
         self.ready = True
-
+    
     def parse_request_uri(self, uri):
         """Parse a Request-URI into (scheme, authority, path).
         
@@ -531,7 +589,8 @@ class HTTPRequest(object):
                     k, v = line.split(":", 1)
                 except ValueError:
                     raise ValueError("Illegal header line.")
-                k, v = k.strip().upper(), v.strip()
+                k = k.strip().decode('ISO-8859-1').upper()
+                v = v.strip()
                 envname = "HTTP_" + k.replace("-", "_")
             
             if k in comma_separated_headers:
@@ -549,6 +608,7 @@ class HTTPRequest(object):
     
     def decode_chunked(self):
         """Decode the 'chunked' transfer coding."""
+        self.rfile = SizeCheckWrapper(self._rfile, self.max_request_body_size)
         cl = 0
         data = StringIO.StringIO()
         while True:
@@ -568,48 +628,45 @@ class HTTPRequest(object):
             crlf = self.rfile.read(2)
             if crlf != CRLF:
                 self.simple_response("400 Bad Request",
-                                     "Bad chunked transfer coding "
-                                     "(expected '\\r\\n', got " + repr(crlf) + ")")
+                     "Bad chunked transfer coding (expected '\\r\\n', "
+                     "got " + repr(crlf) + ")")
                 return
         
         # Grab any trailer headers
         self.read_headers()
         
         data.seek(0)
-        self.environ["wsgi.input"] = data
+        self.rfile = data
         self.environ["CONTENT_LENGTH"] = str(cl) or ""
         return True
     
     def respond(self):
         """Call the appropriate WSGI app and write its iterable output."""
-        # Set rfile.maxlen to ensure we don't read past Content-Length.
-        # This will also be used to read the entire request body if errors
-        # are raised before the app can read the body.
         if self.chunked_read:
             # If chunked, Content-Length will be 0.
-            self.rfile.maxlen = self.max_request_body_size
+            try:
+                if not self.decode_chunked():
+                    self.close_connection = True
+                    return
+            except MaxSizeExceeded:
+                self.simple_response("413 Request Entity Too Large")
+                return
         else:
             cl = int(self.environ.get("CONTENT_LENGTH", 0))
-            if self.max_request_body_size:
-                self.rfile.maxlen = min(cl, self.max_request_body_size)
-            else:
-                self.rfile.maxlen = cl
-        self.rfile.bytes_read = 0
+            if self.max_request_body_size and self.max_request_body_size < cl:
+                if not self.sent_headers:
+                    self.simple_response("413 Request Entity Too Large")
+                return
+            self.rfile = KnownLengthRFile(self._rfile, cl)
         
-        try:
-            self._respond()
-        except MaxSizeExceeded:
-            if not self.sent_headers:
-                self.simple_response("413 Request Entity Too Large")
-            return
+        self.environ["wsgi.input"] = self.rfile
+        self._respond()
     
     def _respond(self):
-        if self.chunked_read:
-            if not self.decode_chunked():
-                self.close_connection = True
-                return
-        
-        response = self.wsgi_app(self.environ, self.start_response)
+        env = self.get_version_specific_environ()
+        #for k, v in sorted(env.items()):
+        #    print(k, '=', v)
+        response = self.wsgi_app(env, self.start_response)
         try:
             for chunk in response:
                 # "The start_response callable must not actually transmit
@@ -632,10 +689,45 @@ class HTTPRequest(object):
         if self.chunked_write:
             self.wfile.sendall("0\r\n\r\n")
     
+    def get_version_specific_environ(self):
+        """Return a new environ dict targeting the given wsgi.version"""
+        # Note that our internal environ type has keys decoded with ISO-8859-1
+        # but byte string values.
+        if self.environ["wsgi.version"] == (1, 0):
+            # Encode all keys.
+            env10 = {}
+            for k, v in self.environ.items():
+                if isinstance(k, unicode):
+                    k = k.encode('ISO-8859-1')
+                env10[k] = v
+            return env10
+        
+        env11 = self.environ.copy()
+        
+        # Request-URI
+        env11.setdefault('wsgi.url_encoding', 'utf-8')
+        try:
+            for key in ["PATH_INFO", "SCRIPT_NAME", "QUERY_STRING"]:
+                env11[key] = self.environ[key].decode(env11['wsgi.url_encoding'])
+        except UnicodeDecodeError:
+            # Fall back to latin 1 so apps can transcode if needed.
+            env11['wsgi.url_encoding'] = 'ISO-8859-1'
+            for key in ["PATH_INFO", "SCRIPT_NAME", "QUERY_STRING"]:
+                env11[key] = self.environ[key].decode(env11['wsgi.url_encoding'])
+        
+        for k, v in sorted(env11.items()):
+            if isinstance(v, str) and k not in (
+                'REQUEST_URI', 'PATH_INFO', 'SCRIPT_NAME', 'QUERY_STRING',
+                'wsgi.input'):
+                env11[k] = v.decode('ISO-8859-1')
+        
+        return env11
+    
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        buf = ["%s %s\r\n" % (self.environ['ACTUAL_SERVER_PROTOCOL'], status),
+        buf = [self.environ['ACTUAL_SERVER_PROTOCOL'] + " " +
+               status + CRLF,
                "Content-Length: %s\r\n" % len(msg),
                "Content-Type: text/plain\r\n"]
         
@@ -744,9 +836,9 @@ class HTTPRequest(object):
             # requirement is not be construed as preventing a server from
             # defending itself against denial-of-service attacks, or from
             # badly broken client implementations."
-            size = self.rfile.maxlen - self.rfile.bytes_read
-            if size > 0:
-                self.rfile.read(size)
+            remaining = getattr(self.rfile, 'remaining', 0)
+            if remaining > 0:
+                self.rfile.read(remaining)
         
         if "date" not in hkeys:
             self.outheaders.append(("Date", rfc822.formatdate()))
@@ -1116,8 +1208,7 @@ class HTTPConnection(object):
     
     rbufsize = -1
     RequestHandlerClass = HTTPRequest
-    environ = {"wsgi.version": (1, 0),
-               "wsgi.url_scheme": "http",
+    environ = {"wsgi.url_scheme": "http",
                "wsgi.multithread": True,
                "wsgi.multiprocess": False,
                "wsgi.run_once": False,
@@ -1134,12 +1225,6 @@ class HTTPConnection(object):
         
         self.rfile = makefile(sock, "rb", self.rbufsize)
         self.wfile = makefile(sock, "wb", -1)
-        
-        # Wrap wsgi.input but not HTTPConnection.rfile itself.
-        # We're also not setting maxlen yet; we'll do that separately
-        # for headers and body for each iteration of self.communicate
-        # (if maxlen is 0 the wrapper doesn't check length).
-        self.environ["wsgi.input"] = SizeCheckWrapper(self.rfile, 0)
     
     def communicate(self):
         """Read each request and respond appropriately."""
@@ -1150,8 +1235,8 @@ class HTTPConnection(object):
                 # the RequestHandlerClass constructor, the error doesn't
                 # get written to the previous request.
                 req = None
-                req = self.RequestHandlerClass(self.wfile, self.environ,
-                                               self.wsgi_app)
+                req = self.RequestHandlerClass(
+                    self.rfile, self.wfile, self.environ, self.wsgi_app)
                 
                 # This order of operations should guarantee correct pipelining.
                 req.parse_request()

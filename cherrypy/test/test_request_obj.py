@@ -244,7 +244,7 @@ def setup_server():
         def index(self):
             yield "<h1>Choose your document</h1>\n"
             yield "<ul>\n"
-            for id, contents in self.documents.iteritems():
+            for id, contents in self.documents.items():
                 yield ("    <li><a href='/divorce/get?ID=%s'>%s</a>: %s</li>\n"
                        % (id, id, contents))
             yield "</ul>"
@@ -660,7 +660,6 @@ class RequestObjectTests(helper.CPWebCase):
         self.persistent = True
         try:
             conn = self.HTTP_CONN
-##            conn.set_debuglevel(10)
             conn.putrequest("PUT", "/method/request_body", skip_host=True)
             conn.putheader("Host", self.HOST)
             conn.putheader('Content-Length', str(len(b)))

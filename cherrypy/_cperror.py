@@ -11,11 +11,6 @@ class CherryPyException(Exception):
     pass
 
 
-class MaxSizeExceeded(CherryPyException):
-    """Exception raised when the request body is longer than allowed."""
-    pass
-
-
 class TimeoutError(CherryPyException):
     """Exception raised when Response.timed_out is detected."""
     pass
@@ -248,7 +243,7 @@ class NotFound(HTTPError):
             request = cherrypy.serving.request
             path = request.script_name + request.path_info
         self.args = (path,)
-        HTTPError.__init__(self, 404, "The path %r was not found." % path)
+        HTTPError.__init__(self, 404, "The path '%s' was not found." % path)
 
 
 _HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
