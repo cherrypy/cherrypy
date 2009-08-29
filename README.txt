@@ -1,4 +1,4 @@
-* To install, just type (python-2.3 or later needed):
+* To install, change to the directory where setup.py is located and type (python-2.3 or later needed):
 
     python setup.py install
 
