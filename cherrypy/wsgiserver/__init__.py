@@ -1552,7 +1552,7 @@ class CherryPyWSGIServer(object):
     nodelay = True
     
     ConnectionClass = HTTPConnection
-    environ = {}
+    environ = {"wsgi.version": (1, 0)}
     
     ssl_adapter = None
     
