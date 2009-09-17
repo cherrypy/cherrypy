@@ -249,6 +249,13 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage('http://%s:%s/' % (self.interface(), self.PORT))
         self.assertBody('world')
         
+        self.getPage('http://%s:%s/abs/?service=http://192.168.0.1/x/y/z' %
+                     (self.interface(), self.PORT))
+        self.assertBody("default:('abs',)")
+        
+        self.getPage('/rel/?service=http://192.168.120.121:8000/x/y/z')
+        self.assertBody("default:('rel',)")
+        
         # Test that the "isolated" app doesn't leak url's into the root app.
         # If it did leak, Root.default() would answer with
         #   "default:('isolated', 'doesnt', 'exist')".

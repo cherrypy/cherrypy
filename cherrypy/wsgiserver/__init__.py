@@ -549,7 +549,7 @@ class HTTPRequest(object):
             return None, None, uri
         
         i = uri.find('://')
-        if i > 0:
+        if i > 0 and '?' not in uri[:i]:
             # An absoluteURI.
             # If there's a scheme (and it must be http or https), then:
             # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query ]]
