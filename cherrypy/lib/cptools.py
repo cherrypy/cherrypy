@@ -421,7 +421,7 @@ def trailing_slash(missing=True, extra=False, status=None, debug=False):
     
     if debug:
         cherrypy.log('is_index: %r, missing: %r, extra: %r, path_info: %r' %
-                     (request.is_index, missing, extra, path_info),
+                     (request.is_index, missing, extra, request.path_info),
                      'TOOLS.TRAILING_SLASH')
     if request.is_index is True:
         if missing:
