@@ -88,13 +88,12 @@ SetEnv testmod %(testmod)s
 """
 
 
-class ServerControl(object):
+class ModWSGISupervisor(test.Supervisor):
     """Server Controller for ModWSGI and CherryPy."""
     
-    def __init__(self, host, port, template=conf_modwsgi):
-        self.host = host
-        self.port = port
-        self.template = template
+    using_apache = True
+    using_wsgi = True
+    template=conf_modwsgi
     
     def __str__(self):
         return "ModWSGI Server on %s:%s" % (self.host, self.port)

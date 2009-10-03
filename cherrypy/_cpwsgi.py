@@ -11,18 +11,15 @@ from cherrypy import _cperror
 from cherrypy.lib import httputil
 
 
-def downgrade_wsgi_11_to_10(environ):
-    """Return a new environ dict for WSGI 1.0 from the given WSGI 1.1 environ."""
+def downgrade_wsgi_u0_to_10(environ):
+    """Return a new environ dict for WSGI 1.0 from the given WSGI u.0 environ."""
     env10 = {}
     
-    enc = environ[u'wsgi.url_encoding']
-    for key in [u"PATH_INFO", u"SCRIPT_NAME", u"QUERY_STRING"]:
-        env10[str(key)] = environ[key].encode(enc)
-    
+    url_encoding = environ[u'wsgi.url_encoding']
     for k, v in environ.items():
         if k in [u'PATH_INFO', u'SCRIPT_NAME', u'QUERY_STRING']:
-            continue
-        if isinstance(v, unicode) and k not in [u'REQUEST_URI', u'wsgi.input']:
+            v = v.encode(url_encoding)
+        elif isinstance(v, unicode):
             v = v.encode('ISO-8859-1')
         env10[k.encode('ISO-8859-1')] = v
     
@@ -89,8 +86,8 @@ class AppResponse(object):
     def __init__(self, environ, start_response, cpapp, recursive=False):
         self.redirections = []
         self.recursive = recursive
-        if environ.get(u'wsgi.version') == (1, 1):
-            environ = downgrade_wsgi_11_to_10(environ)
+        if environ.get(u'wsgi.version') == (u'u', 0):
+            environ = downgrade_wsgi_u0_to_10(environ)
         self.environ = environ
         self.start_response = start_response
         self.cpapp = cpapp

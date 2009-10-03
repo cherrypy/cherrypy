@@ -91,12 +91,11 @@ PythonOption socket_host %(host)s
 PythonDebug On
 """
 
-class ServerControl(object):
+class ModPythonSupervisor(test.Supervisor):
     
-    def __init__(self, host, port, template):
-        self.host = host
-        self.port = port
-        self.template = template
+    using_apache = True
+    using_wsgi = False
+    template = None
     
     def __str__(self):
         return "ModPython Server on %s:%s" % (self.host, self.port)

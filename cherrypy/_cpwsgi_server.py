@@ -8,17 +8,11 @@ from cherrypy import wsgiserver
 
 
 class CPHTTPRequest(wsgiserver.HTTPRequest):
-    
-    def __init__(self, rfile, wfile, environ, wsgi_app):
-        s = cherrypy.server
-        self.max_request_header_size = s.max_request_header_size or 0
-        self.max_request_body_size = s.max_request_body_size or 0
-        wsgiserver.HTTPRequest.__init__(self, rfile, wfile, environ, wsgi_app)
+    pass
 
 
 class CPHTTPConnection(wsgiserver.HTTPConnection):
-    
-    RequestHandlerClass = CPHTTPRequest
+    pass
 
 
 class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
@@ -30,27 +24,16 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
     and apply some attributes from config -> cherrypy.server -> wsgiserver.
     """
     
-    ConnectionClass = CPHTTPConnection
-    
     def __init__(self, server_adapter=cherrypy.server):
         self.server_adapter = server_adapter
-        
-        # We have to make custom subclasses of wsgiserver internals here
-        # so that our server.* attributes get applied to every request.
-        class _CPHTTPRequest(wsgiserver.HTTPRequest):
-            def __init__(self, rfile, wfile, environ, wsgi_app):
-                s = server_adapter
-                self.max_request_header_size = s.max_request_header_size or 0
-                self.max_request_body_size = s.max_request_body_size or 0
-                wsgiserver.HTTPRequest.__init__(self, rfile, wfile, environ, wsgi_app)
-        class _CPHTTPConnection(wsgiserver.HTTPConnection):
-            RequestHandlerClass = _CPHTTPRequest
-        self.ConnectionClass = _CPHTTPConnection
+        self.max_request_header_size = self.server_adapter.max_request_header_size or 0
+        self.max_request_body_size = self.server_adapter.max_request_body_size or 0
         
         server_name = (self.server_adapter.socket_host or
                        self.server_adapter.socket_file or
                        None)
         
+        self.wsgi_version = self.server_adapter.wsgi_version
         s = wsgiserver.CherryPyWSGIServer
         s.__init__(self, server_adapter.bind_addr, cherrypy.tree,
                    self.server_adapter.thread_pool,
@@ -63,49 +46,19 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
         self.protocol = self.server_adapter.protocol_version
         self.nodelay = self.server_adapter.nodelay
         
-        self.environ["wsgi.version"] = self.server_adapter.wsgi_version
-        
+        ssl_module = self.server_adapter.ssl_module or 'pyopenssl'
         if self.server_adapter.ssl_context:
-            adapter_class = self.get_ssl_adapter_class()
-            s.ssl_adapter = adapter_class(self.server_adapter.ssl_certificate,
-                                          self.server_adapter.ssl_private_key,
-                                          self.server_adapter.ssl_certificate_chain)
-            s.ssl_adapter.context = self.server_adapter.ssl_context
+            adapter_class = wsgiserver.get_ssl_adapter_class(ssl_module)
+            self.ssl_adapter = adapter_class(
+                self.server_adapter.ssl_certificate,
+                self.server_adapter.ssl_private_key,
+                self.server_adapter.ssl_certificate_chain)
+            self.ssl_adapter.context = self.server_adapter.ssl_context
         elif self.server_adapter.ssl_certificate:
-            adapter_class = self.get_ssl_adapter_class()
-            s.ssl_adapter = adapter_class(self.server_adapter.ssl_certificate,
-                                          self.server_adapter.ssl_private_key,
-                                          self.server_adapter.ssl_certificate_chain)
-    
-    def get_ssl_adapter_class(self):
-        adname = (self.server_adapter.ssl_module or 'pyopenssl').lower()
-        adapter = ssl_adapters[adname]
-        if isinstance(adapter, basestring):
-            last_dot = adapter.rfind(".")
-            attr_name = adapter[last_dot + 1:]
-            mod_path = adapter[:last_dot]
-            
-            try:
-                mod = sys.modules[mod_path]
-                if mod is None:
-                    raise KeyError()
-            except KeyError:
-                # The last [''] is important.
-                mod = __import__(mod_path, globals(), locals(), [''])
-            
-            # Let an AttributeError propagate outward.
-            try:
-                adapter = getattr(mod, attr_name)
-            except AttributeError:
-                raise AttributeError("'%s' object has no attribute '%s'"
-                                     % (mod_path, attr_name))
-        
-        return adapter
+            adapter_class = wsgiserver.get_ssl_adapter_class(ssl_module)
+            self.ssl_adapter = adapter_class(
+                self.server_adapter.ssl_certificate,
+                self.server_adapter.ssl_private_key,
+                self.server_adapter.ssl_certificate_chain)
 
-# These may either be wsgiserver.SSLAdapter subclasses or the string names
-# of such classes (in which case they will be lazily loaded).
-ssl_adapters = {
-    'builtin': 'cherrypy.wsgiserver.ssl_builtin.BuiltinSSLAdapter',
-    'pyopenssl': 'cherrypy.wsgiserver.ssl_pyopenssl.pyOpenSSLAdapter',
-    }
 

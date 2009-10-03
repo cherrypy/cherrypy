@@ -46,18 +46,6 @@ from cherrypy.lib import httputil
 
 def process_urlencoded(entity):
     """Read application/x-www-form-urlencoded data into entity.params."""
-    if not entity.headers.get(u"Content-Length", u""):
-        # No Content-Length header supplied (or it's 0).
-        # If we went ahead and called rfile.read(), it would hang,
-        # since it cannot determine when to stop reading from the socket.
-        # See http://www.cherrypy.org/ticket/493.
-        # See also http://www.cherrypy.org/ticket/650.
-        # Note also that we expect any HTTP server to have decoded
-        # any message-body that had a transfer-coding, and we expect
-        # the HTTP server to have supplied a Content-Length header
-        # which is valid for the decoded entity-body.
-        raise cherrypy.HTTPError(411)
-    
     qs = entity.fp.read()
     for charset in entity.attempt_charsets:
         try:
@@ -247,7 +235,8 @@ class Entity(object):
         # Length
         self.length = None
         clen = headers.get(u'Content-Length', None)
-        if clen is not None:
+        # If Transfer-Encoding is 'chunked', ignore any Content-Length.
+        if clen is not None and 'chunked' not in headers.get(u'Transfer-Encoding', ''):
             try:
                 self.length = int(clen)
             except ValueError:
@@ -412,7 +401,7 @@ class Part(Entity):
                 if strippedline == self.boundary:
                     break
                 if strippedline == endmarker:
-                    self.fp.done = True
+                    self.fp.finish()
                     break
             
             line = delim + line
@@ -486,9 +475,15 @@ class Infinity(object):
 inf = Infinity()
 
 
+comma_separated_headers = ['Accept', 'Accept-Charset', 'Accept-Encoding',
+    'Accept-Language', 'Accept-Ranges', 'Allow', 'Cache-Control', 'Connection',
+    'Content-Encoding', 'Content-Language', 'Expect', 'If-Match',
+    'If-None-Match', 'Pragma', 'Proxy-Authenticate', 'Te', 'Trailer',
+    'Transfer-Encoding', 'Upgrade', 'Vary', 'Via', 'Warning', 'Www-Authenticate']
+
 class SizedReader:
     
-    def __init__(self, fp, length, maxbytes, bufsize=8192):
+    def __init__(self, fp, length, maxbytes, bufsize=8192, has_trailers=False):
         # Wrap our fp in a buffer so peek() works
         self.fp = fp
         self.length = length
@@ -497,6 +492,7 @@ class SizedReader:
         self.bufsize = bufsize
         self.bytes_read = 0
         self.done = False
+        self.has_trailers = has_trailers
     
     def read(self, size=None, fp_out=None):
         """Read bytes from the request body and return or write them to a file.
@@ -526,7 +522,7 @@ class SizedReader:
             if size and size < remaining:
                 remaining = size
         if remaining == 0:
-            self.done = True
+            self.finish()
             if fp_out is None:
                 return ''
             else:
@@ -559,9 +555,12 @@ class SizedReader:
         # Read bytes from the socket.
         while remaining > 0:
             chunksize = min(remaining, self.bufsize)
-            data = self.fp.read(chunksize)
+            try:
+                data = self.fp.read(chunksize)
+            except IOError:
+                raise cherrypy.HTTPError(413)
             if not data:
-                self.done = True
+                self.finish()
                 break
             datalen = len(data)
             remaining -= datalen
@@ -620,6 +619,32 @@ class SizedReader:
             if seen >= sizehint:
                 break
         return lines
+    
+    def finish(self):
+        self.done = True
+        if self.has_trailers and hasattr(self.fp, 'read_trailer_lines'):
+            self.trailers = {}
+            
+            try:
+                for line in self.fp.read_trailer_lines():
+                    if line[0] in ' \t':
+                        # It's a continuation line.
+                        v = line.strip()
+                    else:
+                        try:
+                            k, v = line.split(":", 1)
+                        except ValueError:
+                            raise ValueError("Illegal header line.")
+                        k = k.strip().title()
+                        v = v.strip()
+                    
+                    if k in comma_separated_headers:
+                        existing = self.trailers.get(envname)
+                        if existing:
+                            v = ", ".join((existing, v))
+                    self.trailers[k] = v
+            except IOError:
+                raise cherrypy.HTTPError(413)
 
 
 class RequestBody(Entity):
@@ -666,7 +691,8 @@ class RequestBody(Entity):
             raise cherrypy.HTTPError(411)
         
         self.fp = SizedReader(self.fp, self.length,
-                              self.maxbytes, bufsize=self.bufsize)
+                              self.maxbytes, bufsize=self.bufsize,
+                              has_trailers='Trailer' in h)
         super(RequestBody, self).process()
         
         # Body params should also be a part of the request_params
@@ -683,3 +709,4 @@ class RequestBody(Entity):
                 request_params[key].append(value)
             else:
                 request_params[key] = value
+

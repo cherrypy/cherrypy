@@ -1,4 +1,4 @@
-"""A high-speed, production ready, thread pooled, generic WSGI server.
+"""A high-speed, production ready, thread pooled, generic HTTP server.
 
 Simplest example on how to use this module directly
 (without using CherryPy's application machinery):
@@ -24,7 +24,7 @@ as you want in one instance by using a WSGIPathInfoDispatcher:
 Want SSL support? Just set server.ssl_adapter to an SSLAdapter instance.
 
 This won't call the CherryPy engine (application side) at all, only the
-WSGI server, which is independent from the rest of CherryPy. Don't
+HTTP server, which is independent from the rest of CherryPy. Don't
 let the name "CherryPyWSGIServer" throw you; the name merely reflects
 its origin, not its coupling.
 
@@ -53,9 +53,9 @@ number of requests and their responses, so we run a nested loop:
                 req.parse_request()
                 ->  # Read the Request-Line, e.g. "GET /page HTTP/1.1"
                     req.rfile.readline()
-                    req.read_headers()
+                    read_headers(req.rfile, req.inheaders)
                 req.respond()
-                ->  response = wsgi_app(...)
+                ->  response = app(...)
                     try:
                         for chunk in response:
                             if chunk:
@@ -122,47 +122,61 @@ socket_errors_to_ignore.append("The read operation timed out")
 socket_errors_nonblocking = plat_specific_errors(
     'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
 
-comma_separated_headers = ['ACCEPT', 'ACCEPT-CHARSET', 'ACCEPT-ENCODING',
-    'ACCEPT-LANGUAGE', 'ACCEPT-RANGES', 'ALLOW', 'CACHE-CONTROL',
-    'CONNECTION', 'CONTENT-ENCODING', 'CONTENT-LANGUAGE', 'EXPECT',
-    'IF-MATCH', 'IF-NONE-MATCH', 'PRAGMA', 'PROXY-AUTHENTICATE', 'TE',
-    'TRAILER', 'TRANSFER-ENCODING', 'UPGRADE', 'VARY', 'VIA', 'WARNING',
-    'WWW-AUTHENTICATE']
+comma_separated_headers = ['Accept', 'Accept-Charset', 'Accept-Encoding',
+    'Accept-Language', 'Accept-Ranges', 'Allow', 'Cache-Control',
+    'Connection', 'Content-Encoding', 'Content-Language', 'Expect',
+    'If-Match', 'If-None-Match', 'Pragma', 'Proxy-Authenticate', 'TE',
+    'Trailer', 'Transfer-Encoding', 'Upgrade', 'Vary', 'Via', 'Warning',
+    'WWW-Authenticate']
 
 
-class WSGIPathInfoDispatcher(object):
-    """A WSGI dispatcher for dispatch based on the PATH_INFO.
+def read_headers(rfile, hdict=None):
+    """Read headers from the given stream into the given header dict.
     
-    apps: a dict or list of (path_prefix, app) pairs.
+    If hdict is None, a new header dict is created. Returns the populated
+    header dict.
+    
+    Headers which are repeated are folded together using a comma if their
+    specification so dictates.
+    
+    This function raises ValueError when the read bytes violate the HTTP spec.
+    You should probably return "400 Bad Request" if this happens.
     """
+    if hdict is None:
+        hdict = {}
     
-    def __init__(self, apps):
-        try:
-            apps = apps.items()
-        except AttributeError:
-            pass
+    while True:
+        line = rfile.readline()
+        if not line:
+            # No more data--illegal end of headers
+            raise ValueError("Illegal end of headers.")
         
-        # Sort the apps by len(path), descending
-        apps.sort(cmp=lambda x,y: cmp(len(x[0]), len(y[0])))
-        apps.reverse()
+        if line == CRLF:
+            # Normal end of headers
+            break
+        if not line.endswith(CRLF):
+            raise ValueError("HTTP requires CRLF terminators")
         
-        # The path_prefix strings must start, but not end, with a slash.
-        # Use "" instead of "/".
-        self.apps = [(p.rstrip("/"), a) for p, a in apps]
+        if line[0] in ' \t':
+            # It's a continuation line.
+            v = line.strip()
+        else:
+            try:
+                k, v = line.split(":", 1)
+            except ValueError:
+                raise ValueError("Illegal header line.")
+            # TODO: what about TE and WWW-Authenticate?
+            k = k.strip().title()
+            v = v.strip()
+            hname = k
+        
+        if k in comma_separated_headers:
+            existing = hdict.get(hname)
+            if existing:
+                v = ", ".join((existing, v))
+        hdict[hname] = v
     
-    def __call__(self, environ, start_response):
-        path = environ["PATH_INFO"] or "/"
-        for p, app in self.apps:
-            # The apps list should be sorted by length, descending.
-            if path.startswith(p + "/") or path == p:
-                environ = environ.copy()
-                environ["SCRIPT_NAME"] = environ["SCRIPT_NAME"] + p
-                environ["PATH_INFO"] = path[len(p):]
-                return app(environ, start_response)
-        
-        start_response('404 Not Found', [('Content-Type', 'text/plain'),
-                                         ('Content-Length', '0')])
-        return ['']
+    return hdict
 
 
 class MaxSizeExceeded(Exception):
@@ -287,32 +301,167 @@ class KnownLengthRFile(object):
         return data
 
 
+class ChunkedRFile(object):
+    """Wraps a file-like object, returning an empty string when exhausted.
+    
+    This class is intended to provide a conforming wsgi.input value for
+    request entities that have been encoded with the 'chunked' transfer
+    encoding.
+    """
+    
+    def __init__(self, rfile, maxlen, bufsize=8192):
+        self.rfile = rfile
+        self.maxlen = maxlen
+        self.bytes_read = 0
+        self.buffer = ''
+        self.bufsize = bufsize
+        self.closed = False
+    
+    def _fetch(self):
+        if self.closed:
+            return
+        
+        line = self.rfile.readline()
+        self.bytes_read += len(line)
+        
+        if self.maxlen and self.bytes_read > self.maxlen:
+            raise IOError("Request Entity Too Large")
+        
+        line = line.strip().split(";", 1)
+        
+        try:
+            chunk_size = line.pop(0)
+            chunk_size = int(chunk_size, 16)
+        except ValueError:
+            raise ValueError("Bad chunked transfer size: " + repr(chunk_size))
+        
+        if chunk_size <= 0:
+            self.closed = True
+            return
+        
+##            if line: chunk_extension = line[0]
+        
+        if self.maxlen and self.bytes_read + chunk_size > self.maxlen:
+            raise IOError("Request Entity Too Large")
+        
+        chunk = self.rfile.read(chunk_size)
+        self.bytes_read += len(chunk)
+        self.buffer += chunk
+        
+        crlf = self.rfile.read(2)
+        if crlf != CRLF:
+            raise ValueError(
+                 "Bad chunked transfer coding (expected '\\r\\n', "
+                 "got " + repr(crlf) + ")")
+    
+    def read(self, size=None):
+        data = ''
+        while True:
+            if size and len(data) >= size:
+                return data
+            
+            if not self.buffer:
+                self._fetch()
+                if not self.buffer:
+                    # EOF
+                    return data
+            
+            if size:
+                remaining = size - len(data)
+                data += self.buffer[:remaining]
+                self.buffer = self.buffer[remaining:]
+            else:
+                data += self.buffer
+    
+    def readline(self, size=None):
+        data = ''
+        while True:
+            if size and len(data) >= size:
+                return data
+            
+            if not self.buffer:
+                self._fetch()
+                if not self.buffer:
+                    # EOF
+                    return data
+            
+            newline_pos = self.buffer.find('\n')
+            if size:
+                if newline_pos == -1:
+                    remaining = size - len(data)
+                    data += self.buffer[:remaining]
+                    self.buffer = self.buffer[remaining:]
+                else:
+                    remaining = min(size - len(data), newline_pos)
+                    data += self.buffer[:remaining]
+                    self.buffer = self.buffer[remaining:]
+            else:
+                if newline_pos == -1:
+                    data += self.buffer
+                else:
+                    data += self.buffer[:newline_pos]
+                    self.buffer = self.buffer[newline_pos:]
+    
+    def readlines(self, sizehint=0):
+        # Shamelessly stolen from StringIO
+        total = 0
+        lines = []
+        line = self.readline(sizehint)
+        while line:
+            lines.append(line)
+            total += len(line)
+            if 0 < sizehint <= total:
+                break
+            line = self.readline(sizehint)
+        return lines
+    
+    def read_trailer_lines(self):
+        if not self.closed:
+            raise ValueError(
+                "Cannot read trailers until the request body has been read.")
+        
+        while True:
+            line = self.rfile.readline()
+            if not line:
+                # No more data--illegal end of headers
+                raise ValueError("Illegal end of headers.")
+            
+            self.bytes_read += len(line)
+            if self.maxlen and self.bytes_read > self.maxlen:
+                raise IOError("Request Entity Too Large")
+            
+            if line == CRLF:
+                # Normal end of headers
+                break
+            if not line.endswith(CRLF):
+                raise ValueError("HTTP requires CRLF terminators")
+            
+            yield line
+    
+    def close(self):
+        self.rfile.close()
+    
+    def __iter__(self):
+        # Shamelessly stolen from StringIO
+        total = 0
+        line = self.readline(sizehint)
+        while line:
+            yield line
+            total += len(line)
+            if 0 < sizehint <= total:
+                break
+            line = self.readline(sizehint)
+
+
 class HTTPRequest(object):
     """An HTTP Request (and response).
     
     A single HTTP connection may consist of multiple request/response pairs.
     
-    send: the 'send' method from the connection's socket object.
-    wsgi_app: the WSGI application to call.
-    environ: a partial WSGI environ (server and connection entries).
-        Because this server supports both WSGI 1.0 and 1.1, this attribute is
-        neither; instead, it has unicode keys and byte string values. It is
-        converted to the appropriate WSGI version when the WSGI app is called.
-        
-        The caller MUST set the following entries (because this class doesn't):
-        * All wsgi.* entries except .input and .url_encoding
-        * SERVER_NAME and SERVER_PORT
-        * Any SSL_* entries
-        * Any custom entries like REMOTE_ADDR and REMOTE_PORT
-        * SERVER_SOFTWARE: the value to write in the "Server" response header.
-        * ACTUAL_SERVER_PROTOCOL: the value to write in the Status-Line of
-            the response. From RFC 2145: "An HTTP server SHOULD send a
-            response version equal to the highest version for which the
-            server is at least conditionally compliant, and whose major
-            version is less than or equal to the one received in the
-            request.  An HTTP server MUST NOT send a version for which
-            it is not at least conditionally compliant."
+    server: the Server object which is receiving this request.
+    conn: the HTTPConnection object on which this request connected.
     
+    inheaders: a dict of request headers.
     outheaders: a list of header tuples to write in the response.
     ready: when True, the request has been parsed and is ready to begin
         generating the response. When False, signals the calling Connection
@@ -326,19 +475,17 @@ class HTTPRequest(object):
         send_headers.
     """
     
-    max_request_header_size = 0
-    max_request_body_size = 0
-    
-    def __init__(self, rfile, wfile, environ, wsgi_app):
-        self._rfile = rfile
-        self.rfile = rfile
-        self.wfile = wfile
-        self.environ = environ.copy()
-        self.wsgi_app = wsgi_app
+    def __init__(self, server, conn):
+        self.server= server
+        self.conn = conn
         
         self.ready = False
         self.started_request = False
-        self.started_response = False
+        self.scheme = "http"
+        if self.server.ssl_adapter is not None:
+            self.scheme = "https"
+        self.inheaders = {}
+        
         self.status = ""
         self.outheaders = []
         self.sent_headers = False
@@ -347,7 +494,8 @@ class HTTPRequest(object):
     
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
-        self.rfile = SizeCheckWrapper(self._rfile, self.max_request_header_size)
+        self.rfile = SizeCheckWrapper(self.conn.rfile,
+                                      self.server.max_request_header_size)
         try:
             self._parse_request()
         except MaxSizeExceeded:
@@ -386,16 +534,14 @@ class HTTPRequest(object):
             self.simple_response(400, "HTTP requires CRLF terminators")
             return
         
-        environ = self.environ
-        
         try:
             method, uri, req_protocol = request_line.strip().split(" ", 2)
         except ValueError:
             self.simple_response(400, "Malformed Request-Line")
             return
         
-        environ["REQUEST_URI"] = uri
-        environ["REQUEST_METHOD"] = method
+        self.uri = uri
+        self.method = method
         
         # uri may be an abs_path (including "http://host.domain.tld");
         scheme, authority, path = self.parse_request_uri(uri)
@@ -405,31 +551,30 @@ class HTTPRequest(object):
             return
         
         if scheme:
-            environ["wsgi.url_scheme"] = scheme
-        
-        environ["SCRIPT_NAME"] = ""
+            self.scheme = scheme
         
         qs = ''
         if '?' in path:
             path, qs = path.split('?', 1)
         
-        # Unquote the path+params (e.g. "/this%20path" -> "this path").
+        # Unquote the path+params (e.g. "/this%20path" -> "/this path").
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
         #
         # But note that "...a URI must be separated into its components
         # before the escaped characters within those components can be
         # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
+        # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
         try:
             atoms = [unquote(x) for x in quoted_slash.split(path)]
         except ValueError, ex:
             self.simple_response("400 Bad Request", ex.args[0])
             return
         path = "%2F".join(atoms)
-        environ["PATH_INFO"] = path
+        self.path = path
         
-        # Note that, like wsgiref and most other WSGI servers,
+        # Note that, like wsgiref and most other HTTP servers,
         # we "% HEX HEX"-unquote the path but not the query string.
-        environ["QUERY_STRING"] = qs
+        self.qs = qs
         
         # Compare request and server HTTP protocol versions, in case our
         # server does not support the requested protocol. Limit our output
@@ -444,42 +589,40 @@ class HTTPRequest(object):
         # the client only understands 1.0. RFC 2616 10.5.6 says we should
         # only return 505 if the _major_ version is different.
         rp = int(req_protocol[5]), int(req_protocol[7])
-        server_protocol = environ["ACTUAL_SERVER_PROTOCOL"]
-        sp = int(server_protocol[5]), int(server_protocol[7])
+        sp = int(self.server.protocol[5]), int(self.server.protocol[7])
         
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
             return
-        # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
-        environ["SERVER_PROTOCOL"] = req_protocol
+        self.request_protocol = req_protocol
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
         
         # then all the http headers
         try:
-            self.read_headers()
+            read_headers(self.rfile, self.inheaders)
         except ValueError, ex:
             self.simple_response("400 Bad Request", ex.args[0])
             return
         
-        mrbs = self.max_request_body_size
-        if mrbs and int(environ.get("CONTENT_LENGTH", 0)) > mrbs:
+        mrbs = self.server.max_request_body_size
+        if mrbs and int(self.inheaders.get("Content-Length", 0)) > mrbs:
             self.simple_response("413 Request Entity Too Large")
             return
         
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
             # Both server and client are HTTP/1.1
-            if environ.get("HTTP_CONNECTION", "") == "close":
+            if self.inheaders.get("Connection", "") == "close":
                 self.close_connection = True
         else:
             # Either the server or client (or both) are HTTP/1.0
-            if environ.get("HTTP_CONNECTION", "") != "Keep-Alive":
+            if self.inheaders.get("Connection", "") != "Keep-Alive":
                 self.close_connection = True
         
         # Transfer-Encoding support
         te = None
         if self.response_protocol == "HTTP/1.1":
-            te = environ.get("HTTP_TRANSFER_ENCODING")
+            te = self.inheaders.get("Transfer-Encoding")
             if te:
                 te = [x.strip().lower() for x in te.split(",") if x.strip()]
         
@@ -513,12 +656,12 @@ class HTTPRequest(object):
         #
         # We used to do 3, but are now doing 1. Maybe we'll do 2 someday,
         # but it seems like it would be a big slowdown for such a rare case.
-        if environ.get("HTTP_EXPECT", "") == "100-continue":
+        if self.inheaders.get("Expect", "") == "100-continue":
             # Don't use simple_response here, because it emits headers
             # we don't want. See http://www.cherrypy.org/ticket/951
-            msg = self.environ['ACTUAL_SERVER_PROTOCOL'] + " 100 Continue\r\n\r\n"
+            msg = self.server.protocol + " 100 Continue\r\n\r\n"
             try:
-                self.wfile.sendall(msg)
+                self.conn.wfile.sendall(msg)
             except socket.error, x:
                 if x.args[0] not in socket_errors_to_ignore:
                     raise
@@ -564,169 +707,31 @@ class HTTPRequest(object):
             # An authority.
             return None, uri, None
     
-    
-    def read_headers(self):
-        """Read header lines from the incoming stream."""
-        environ = self.environ
-        
-        while True:
-            line = self.rfile.readline()
-            if not line:
-                # No more data--illegal end of headers
-                raise ValueError("Illegal end of headers.")
-            
-            if line == CRLF:
-                # Normal end of headers
-                break
-            if not line.endswith(CRLF):
-                raise ValueError("HTTP requires CRLF terminators")
-            
-            if line[0] in ' \t':
-                # It's a continuation line.
-                v = line.strip()
-            else:
-                try:
-                    k, v = line.split(":", 1)
-                except ValueError:
-                    raise ValueError("Illegal header line.")
-                k = k.strip().decode('ISO-8859-1').upper()
-                v = v.strip()
-                envname = "HTTP_" + k.replace("-", "_")
-            
-            if k in comma_separated_headers:
-                existing = environ.get(envname)
-                if existing:
-                    v = ", ".join((existing, v))
-            environ[envname] = v
-        
-        ct = environ.pop("HTTP_CONTENT_TYPE", None)
-        if ct is not None:
-            environ["CONTENT_TYPE"] = ct
-        cl = environ.pop("HTTP_CONTENT_LENGTH", None)
-        if cl is not None:
-            environ["CONTENT_LENGTH"] = cl
-    
-    def decode_chunked(self):
-        """Decode the 'chunked' transfer coding."""
-        self.rfile = SizeCheckWrapper(self._rfile, self.max_request_body_size)
-        cl = 0
-        data = StringIO.StringIO()
-        while True:
-            line = self.rfile.readline().strip().split(";", 1)
-            try:
-                chunk_size = line.pop(0)
-                chunk_size = int(chunk_size, 16)
-            except ValueError:
-                self.simple_response("400 Bad Request",
-                     "Bad chunked transfer size: " + repr(chunk_size))
-                return
-            if chunk_size <= 0:
-                break
-##            if line: chunk_extension = line[0]
-            cl += chunk_size
-            data.write(self.rfile.read(chunk_size))
-            crlf = self.rfile.read(2)
-            if crlf != CRLF:
-                self.simple_response("400 Bad Request",
-                     "Bad chunked transfer coding (expected '\\r\\n', "
-                     "got " + repr(crlf) + ")")
-                return
-        
-        # Grab any trailer headers
-        self.read_headers()
-        
-        data.seek(0)
-        self.rfile = data
-        self.environ["CONTENT_LENGTH"] = str(cl) or ""
-        return True
-    
     def respond(self):
-        """Call the appropriate WSGI app and write its iterable output."""
+        """Call the gateway and write its iterable output."""
+        mrbs = self.server.max_request_body_size
         if self.chunked_read:
-            # If chunked, Content-Length will be 0.
-            try:
-                if not self.decode_chunked():
-                    self.close_connection = True
-                    return
-            except MaxSizeExceeded:
-                self.simple_response("413 Request Entity Too Large")
-                return
+            self.rfile = ChunkedRFile(self.conn.rfile, mrbs)
         else:
-            cl = int(self.environ.get("CONTENT_LENGTH", 0))
-            if self.max_request_body_size and self.max_request_body_size < cl:
+            cl = int(self.inheaders.get("Content-Length", 0))
+            if mrbs and mrbs < cl:
                 if not self.sent_headers:
                     self.simple_response("413 Request Entity Too Large")
                 return
-            self.rfile = KnownLengthRFile(self._rfile, cl)
+            self.rfile = KnownLengthRFile(self.conn.rfile, cl)
         
-        self.environ["wsgi.input"] = self.rfile
-        self._respond()
-    
-    def _respond(self):
-        env = self.get_version_specific_environ()
-        #for k, v in sorted(env.items()):
-        #    print(k, '=', v)
-        response = self.wsgi_app(env, self.start_response)
-        try:
-            for chunk in response:
-                # "The start_response callable must not actually transmit
-                # the response headers. Instead, it must store them for the
-                # server or gateway to transmit only after the first
-                # iteration of the application return value that yields
-                # a NON-EMPTY string, or upon the application's first
-                # invocation of the write() callable." (PEP 333)
-                if chunk:
-                    if isinstance(chunk, unicode):
-                        chunk = chunk.encode('ISO-8859-1')
-                    self.write(chunk)
-        finally:
-            if hasattr(response, "close"):
-                response.close()
+        self.server.gateway(self).respond()
         
         if (self.ready and not self.sent_headers):
             self.sent_headers = True
             self.send_headers()
         if self.chunked_write:
-            self.wfile.sendall("0\r\n\r\n")
-    
-    def get_version_specific_environ(self):
-        """Return a new environ dict targeting the given wsgi.version"""
-        # Note that our internal environ type has keys decoded with ISO-8859-1
-        # but byte string values.
-        if self.environ["wsgi.version"] == (1, 0):
-            # Encode all keys.
-            env10 = {}
-            for k, v in self.environ.items():
-                if isinstance(k, unicode):
-                    k = k.encode('ISO-8859-1')
-                env10[k] = v
-            return env10
-        
-        env11 = self.environ.copy()
-        
-        # Request-URI
-        env11.setdefault('wsgi.url_encoding', 'utf-8')
-        try:
-            for key in ["PATH_INFO", "SCRIPT_NAME", "QUERY_STRING"]:
-                env11[key] = self.environ[key].decode(env11['wsgi.url_encoding'])
-        except UnicodeDecodeError:
-            # Fall back to latin 1 so apps can transcode if needed.
-            env11['wsgi.url_encoding'] = 'ISO-8859-1'
-            for key in ["PATH_INFO", "SCRIPT_NAME", "QUERY_STRING"]:
-                env11[key] = self.environ[key].decode(env11['wsgi.url_encoding'])
-        
-        for k, v in sorted(env11.items()):
-            if isinstance(v, str) and k not in (
-                'REQUEST_URI', 'PATH_INFO', 'SCRIPT_NAME', 'QUERY_STRING',
-                'wsgi.input'):
-                env11[k] = v.decode('ISO-8859-1')
-        
-        return env11
+            self.conn.wfile.sendall("0\r\n\r\n")
     
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        buf = [self.environ['ACTUAL_SERVER_PROTOCOL'] + " " +
+        buf = [self.server.protocol + " " +
                status + CRLF,
                "Content-Length: %s\r\n" % len(msg),
                "Content-Type: text/plain\r\n"]
@@ -743,54 +748,24 @@ class HTTPRequest(object):
             buf.append(msg)
         
         try:
-            self.wfile.sendall("".join(buf))
+            self.conn.wfile.sendall("".join(buf))
         except socket.error, x:
             if x.args[0] not in socket_errors_to_ignore:
                 raise
     
-    def start_response(self, status, headers, exc_info = None):
-        """WSGI callable to begin the HTTP response."""
-        # "The application may call start_response more than once,
-        # if and only if the exc_info argument is provided."
-        if self.started_response and not exc_info:
-            raise AssertionError("WSGI start_response called a second "
-                                 "time with no exc_info.")
-        
-        # "if exc_info is provided, and the HTTP headers have already been
-        # sent, start_response must raise an error, and should raise the
-        # exc_info tuple."
-        if self.sent_headers:
-            try:
-                raise exc_info[0], exc_info[1], exc_info[2]
-            finally:
-                exc_info = None
-        
-        self.started_response = True
-        self.status = status
-        self.outheaders.extend(headers)
-        return self.write
-    
     def write(self, chunk):
-        """WSGI callable to write unbuffered data to the client.
-        
-        This method is also used internally by start_response (to write
-        data from the iterable returned by the WSGI application).
-        """
-        if not self.started_response:
-            raise AssertionError("WSGI write called before start_response.")
-        
-        if not self.sent_headers:
-            self.sent_headers = True
-            self.send_headers()
-        
+        """Write unbuffered data to the client."""
         if self.chunked_write and chunk:
             buf = [hex(len(chunk))[2:], CRLF, chunk, CRLF]
-            self.wfile.sendall("".join(buf))
+            self.conn.wfile.sendall("".join(buf))
         else:
-            self.wfile.sendall(chunk)
+            self.conn.wfile.sendall(chunk)
     
     def send_headers(self):
-        """Assert, process, and send the HTTP response message-headers."""
+        """Assert, process, and send the HTTP response message-headers.
+        
+        You must set self.status, and self.outheaders before calling this.
+        """
         hkeys = [key.lower() for key, value in self.outheaders]
         status = int(self.status[:3])
         
@@ -805,7 +780,7 @@ class HTTPRequest(object):
                 pass
             else:
                 if (self.response_protocol == 'HTTP/1.1'
-                    and self.environ["REQUEST_METHOD"] != 'HEAD'):
+                    and self.method != 'HEAD'):
                     # Use the chunked transfer-coding
                     self.chunked_write = True
                     self.outheaders.append(("Transfer-Encoding", "chunked"))
@@ -844,22 +819,13 @@ class HTTPRequest(object):
             self.outheaders.append(("Date", rfc822.formatdate()))
         
         if "server" not in hkeys:
-            self.outheaders.append(("Server", self.environ['SERVER_SOFTWARE']))
+            self.outheaders.append(("Server", self.server.server_name))
         
-        buf = [self.environ['ACTUAL_SERVER_PROTOCOL'] +
-               " " + self.status + CRLF]
-        try:
-            for k, v in self.outheaders:
-                buf.append(k + ": " + v + "\r\n")
-        except TypeError:
-            if not isinstance(k, str):
-                raise TypeError("WSGI response header key %r is not a byte string." % k)
-            if not isinstance(v, str):
-                raise TypeError("WSGI response header value %r is not a byte string." % v)
-            else:
-                raise
+        buf = [self.server.protocol + " " + self.status + CRLF]
+        for k, v in self.outheaders:
+            buf.append(k + ": " + v + "\r\n")
         buf.append(CRLF)
-        self.wfile.sendall("".join(buf))
+        self.conn.wfile.sendall("".join(buf))
 
 
 class NoSSLError(Exception):
@@ -1198,31 +1164,20 @@ else:
 class HTTPConnection(object):
     """An HTTP connection (active socket).
     
+    server: the Server object which received this connection.
     socket: the raw socket object (usually TCP) for this connection.
-    wsgi_app: the WSGI application for this server/connection.
-    environ: a WSGI environ template. This will be copied for each request.
-    
-    rfile: a fileobject for reading from the socket.
-    send: a function for writing (+ flush) to the socket.
+    makefile: a fileobject class for reading from the socket.
     """
     
+    remote_addr = None
+    remote_port = None
+    ssl_env = None
     rbufsize = -1
     RequestHandlerClass = HTTPRequest
-    environ = {"wsgi.url_scheme": "http",
-               "wsgi.multithread": True,
-               "wsgi.multiprocess": False,
-               "wsgi.run_once": False,
-               "wsgi.errors": sys.stderr,
-               }
     
-    def __init__(self, sock, wsgi_app, environ, makefile=CP_fileobject):
+    def __init__(self, server, sock, makefile=CP_fileobject):
+        self.server = server
         self.socket = sock
-        self.wsgi_app = wsgi_app
-        
-        # Copy the class environ into self.
-        self.environ = self.environ.copy()
-        self.environ.update(environ)
-        
         self.rfile = makefile(sock, "rb", self.rbufsize)
         self.wfile = makefile(sock, "wb", -1)
     
@@ -1235,8 +1190,7 @@ class HTTPConnection(object):
                 # the RequestHandlerClass constructor, the error doesn't
                 # get written to the previous request.
                 req = None
-                req = self.RequestHandlerClass(
-                    self.rfile, self.wfile, self.environ, self.wsgi_app)
+                req = self.RequestHandlerClass(self.server, self)
                 
                 # This order of operations should guarantee correct pipelining.
                 req.parse_request()
@@ -1283,7 +1237,7 @@ class HTTPConnection(object):
         except NoSSLError:
             if req and not req.sent_headers:
                 # Unwrap our wfile
-                req.wfile = CP_fileobject(self.socket._sock, "wb", -1)
+                req.conn.wfile = CP_fileobject(self.socket._sock, "wb", -1)
                 req.simple_response("400 Bad Request",
                     "The client sent a plain HTTP request, but "
                     "this server only speaks HTTPS on this port.")
@@ -1391,7 +1345,7 @@ class ThreadPool(object):
         for i in range(self.min):
             self._threads.append(WorkerThread(self.server))
         for worker in self._threads:
-            worker.setName("CP WSGIServer " + worker.getName())
+            worker.setName("CP Server " + worker.getName())
             worker.start()
         for worker in self._threads:
             while not worker.ready:
@@ -1413,7 +1367,7 @@ class ThreadPool(object):
             if self.max > 0 and len(self._threads) >= self.max:
                 break
             worker = WorkerThread(self.server)
-            worker.setName("CP WSGIServer " + worker.getName())
+            worker.setName("CP Server " + worker.getName())
             self._threads.append(worker)
             worker.start()
     
@@ -1505,8 +1459,8 @@ class SSLAdapter(object):
         raise NotImplemented
 
 
-class CherryPyWSGIServer(object):
-    """An HTTP server for WSGI.
+class HTTPServer(object):
+    """An HTTP server.
     
     bind_addr: The interface on which to listen for connections.
         For TCP sockets, a (host, port) tuple. Host values may be any IPv4
@@ -1517,19 +1471,16 @@ class CherryPyWSGIServer(object):
         IPv6. The empty string or None are not allowed.
         
         For UNIX sockets, supply the filename as a string.
-    wsgi_app: the WSGI 'application callable'; multiple WSGI applications
-        may be passed as (path_prefix, app) pairs.
-    numthreads: the number of worker threads to create (default 10).
-    server_name: the string to set for WSGI's SERVER_NAME environ entry.
-        Defaults to socket.gethostname().
-    max: the maximum number of queued requests (defaults to -1 = no limit).
+    gateway: a Gateway instance.
+    minthreads: the minimum number of worker threads to create (default 10).
+    maxthreads: the maximum number of worker threads to create (default -1 = no limit).
+    server_name: defaults to socket.gethostname().
+    
     request_queue_size: the 'backlog' argument to socket.listen();
         specifies the maximum number of queued connections (default 5).
     timeout: the timeout in seconds for accepted connections (default 10).
-    
     nodelay: if True (the default since 3.1), sets the TCP_NODELAY socket
         option.
-    
     protocol: the version string to write in the Status-Line of all
         HTTP responses. For example, "HTTP/1.1" (the default). This
         also limits the supported features used in the response.
@@ -1546,37 +1497,27 @@ class CherryPyWSGIServer(object):
     protocol = "HTTP/1.1"
     _bind_addr = "127.0.0.1"
     version = "CherryPy/3.2.0beta"
+    response_header = None
     ready = False
     _interrupt = None
-    
+    max_request_header_size = 0
+    max_request_body_size = 0
     nodelay = True
     
     ConnectionClass = HTTPConnection
-    environ = {"wsgi.version": (1, 0)}
     
     ssl_adapter = None
     
-    def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-                 max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
-        self.requests = ThreadPool(self, min=numthreads or 1, max=max)
-        self.environ = self.environ.copy()
-        
-        self.wsgi_app = wsgi_app
-        
+    def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1,
+                 server_name=None):
         self.bind_addr = bind_addr
+        self.gateway = gateway
+        
+        self.requests = ThreadPool(self, min=minthreads or 1, max=maxthreads)
+        
         if not server_name:
             server_name = socket.gethostname()
         self.server_name = server_name
-        self.request_queue_size = request_queue_size
-        
-        self.timeout = timeout
-        self.shutdown_timeout = shutdown_timeout
-    
-    def _get_numthreads(self):
-        return self.requests.min
-    def _set_numthreads(self, value):
-        self.requests.min = value
-    numthreads = property(_get_numthreads, _set_numthreads)
     
     def __str__(self):
         return "%s.%s(%r)" % (self.__module__, self.__class__.__name__,
@@ -1730,37 +1671,11 @@ class CherryPyWSGIServer(object):
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
             
-            environ = self.environ.copy()
-            # SERVER_SOFTWARE is common for IIS. It's also helpful for
-            # us to pass a default value for the "Server" response header.
-            if environ.get("SERVER_SOFTWARE") is None:
-                environ["SERVER_SOFTWARE"] = "%s WSGI Server" % self.version
-            # set a non-standard environ entry so the WSGI app can know what
-            # the *real* server protocol is (and what features to support).
-            # See http://www.faqs.org/rfcs/rfc2145.html.
-            environ["ACTUAL_SERVER_PROTOCOL"] = self.protocol
-            environ["SERVER_NAME"] = self.server_name
-            
-            if isinstance(self.bind_addr, basestring):
-                # AF_UNIX. This isn't really allowed by WSGI, which doesn't
-                # address unix domain sockets. But it's better than nothing.
-                environ["SERVER_PORT"] = ""
-            else:
-                environ["SERVER_PORT"] = str(self.bind_addr[1])
-                # optional values
-                # Until we do DNS lookups, omit REMOTE_HOST
-                if addr is None: # sometimes this can happen
-                    # figure out if AF_INET or AF_INET6.
-                    if len(s.getsockname()) == 2:
-                        # AF_INET
-                        addr = ('0.0.0.0', 0)
-                    else:
-                        # AF_INET6
-                        addr = ('::', 0)
-                environ["REMOTE_ADDR"] = addr[0]
-                environ["REMOTE_PORT"] = str(addr[1])
+            if self.response_header is None:
+                self.response_header = "%s Server" % self.version
             
             makefile = CP_fileobject
+            ssl_env = {}
             # if ssl cert and key are set, we try to be a secure HTTP server
             if self.ssl_adapter is not None:
                 try:
@@ -1782,10 +1697,26 @@ class CherryPyWSGIServer(object):
                     return
                 if not s:
                     return
-                environ.update(ssl_env)
                 makefile = self.ssl_adapter.makefile
             
-            conn = self.ConnectionClass(s, self.wsgi_app, environ, makefile)
+            conn = self.ConnectionClass(self, s, makefile)
+            
+            if not isinstance(self.bind_addr, basestring):
+                # optional values
+                # Until we do DNS lookups, omit REMOTE_HOST
+                if addr is None: # sometimes this can happen
+                    # figure out if AF_INET or AF_INET6.
+                    if len(s.getsockname()) == 2:
+                        # AF_INET
+                        addr = ('0.0.0.0', 0)
+                    else:
+                        # AF_INET6
+                        addr = ('::', 0)
+                conn.remote_addr = addr[0]
+                conn.remote_port = addr[1]
+            
+            conn.ssl_env = ssl_env
+            
             self.requests.put(conn)
         except socket.timeout:
             # The only reason for the timeout in start() is so we can
@@ -1858,4 +1789,264 @@ class CherryPyWSGIServer(object):
             self.socket = None
         
         self.requests.stop(self.shutdown_timeout)
+
+
+class Gateway(object):
+    
+    def __init__(self, req):
+        self.req = req
+    
+    def respond(self):
+        raise NotImplemented
+
+
+# These may either be wsgiserver.SSLAdapter subclasses or the string names
+# of such classes (in which case they will be lazily loaded).
+ssl_adapters = {
+    'builtin': 'cherrypy.wsgiserver.ssl_builtin.BuiltinSSLAdapter',
+    'pyopenssl': 'cherrypy.wsgiserver.ssl_pyopenssl.pyOpenSSLAdapter',
+    }
+
+def get_ssl_adapter_class(name='pyopenssl'):
+    adapter = ssl_adapters[name.lower()]
+    if isinstance(adapter, basestring):
+        last_dot = adapter.rfind(".")
+        attr_name = adapter[last_dot + 1:]
+        mod_path = adapter[:last_dot]
+        
+        try:
+            mod = sys.modules[mod_path]
+            if mod is None:
+                raise KeyError()
+        except KeyError:
+            # The last [''] is important.
+            mod = __import__(mod_path, globals(), locals(), [''])
+        
+        # Let an AttributeError propagate outward.
+        try:
+            adapter = getattr(mod, attr_name)
+        except AttributeError:
+            raise AttributeError("'%s' object has no attribute '%s'"
+                                 % (mod_path, attr_name))
+    
+    return adapter
+
+# -------------------------------- WSGI Stuff -------------------------------- #
+
+
+class CherryPyWSGIServer(HTTPServer):
+    
+    wsgi_version = (1, 0)
+    
+    def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
+                 max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
+        self.requests = ThreadPool(self, min=numthreads or 1, max=max)
+        self.wsgi_app = wsgi_app
+        self.gateway = wsgi_gateways[self.wsgi_version]
+        
+        self.bind_addr = bind_addr
+        if not server_name:
+            server_name = socket.gethostname()
+        self.server_name = server_name
+        self.request_queue_size = request_queue_size
+        
+        self.timeout = timeout
+        self.shutdown_timeout = shutdown_timeout
+    
+    def _get_numthreads(self):
+        return self.requests.min
+    def _set_numthreads(self, value):
+        self.requests.min = value
+    numthreads = property(_get_numthreads, _set_numthreads)
+
+
+class WSGIGateway(Gateway):
+    
+    def __init__(self, req):
+        self.req = req
+        self.started_response = False
+        self.env = self.get_environ()
+    
+    def get_environ(self):
+        """Return a new environ dict targeting the given wsgi.version"""
+        raise NotImplemented
+    
+    def respond(self):
+        response = self.req.server.wsgi_app(self.env, self.start_response)
+        try:
+            for chunk in response:
+                # "The start_response callable must not actually transmit
+                # the response headers. Instead, it must store them for the
+                # server or gateway to transmit only after the first
+                # iteration of the application return value that yields
+                # a NON-EMPTY string, or upon the application's first
+                # invocation of the write() callable." (PEP 333)
+                if chunk:
+                    if isinstance(chunk, unicode):
+                        chunk = chunk.encode('ISO-8859-1')
+                    self.write(chunk)
+        finally:
+            if hasattr(response, "close"):
+                response.close()
+    
+    def start_response(self, status, headers, exc_info = None):
+        """WSGI callable to begin the HTTP response."""
+        # "The application may call start_response more than once,
+        # if and only if the exc_info argument is provided."
+        if self.started_response and not exc_info:
+            raise AssertionError("WSGI start_response called a second "
+                                 "time with no exc_info.")
+        self.started_response = True
+        
+        # "if exc_info is provided, and the HTTP headers have already been
+        # sent, start_response must raise an error, and should raise the
+        # exc_info tuple."
+        if self.req.sent_headers:
+            try:
+                raise exc_info[0], exc_info[1], exc_info[2]
+            finally:
+                exc_info = None
+        
+        self.req.status = status
+        for k, v in headers:
+            if not isinstance(k, str):
+                raise TypeError("WSGI response header key %r is not a byte string." % k)
+            if not isinstance(v, str):
+                raise TypeError("WSGI response header value %r is not a byte string." % v)
+        self.req.outheaders.extend(headers)
+        
+        return self.write
+    
+    def write(self, chunk):
+        """WSGI callable to write unbuffered data to the client.
+        
+        This method is also used internally by start_response (to write
+        data from the iterable returned by the WSGI application).
+        """
+        if not self.started_response:
+            raise AssertionError("WSGI write called before start_response.")
+        
+        if not self.req.sent_headers:
+            self.req.sent_headers = True
+            self.req.send_headers()
+        
+        self.req.write(chunk)
+
+
+class WSGIGateway_10(WSGIGateway):
+    
+    def get_environ(self):
+        """Return a new environ dict targeting the given wsgi.version"""
+        req = self.req
+        env = {
+            # set a non-standard environ entry so the WSGI app can know what
+            # the *real* server protocol is (and what features to support).
+            # See http://www.faqs.org/rfcs/rfc2145.html.
+            'ACTUAL_SERVER_PROTOCOL': req.server.protocol,
+            'PATH_INFO': req.path,
+            'QUERY_STRING': req.qs,
+            'REMOTE_ADDR': req.conn.remote_addr or '',
+            'REMOTE_PORT': str(req.conn.remote_port or ''),
+            'REQUEST_METHOD': req.method,
+            'REQUEST_URI': req.uri,
+            'SCRIPT_NAME': '',
+            'SERVER_NAME': req.server.server_name,
+            # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
+            'SERVER_PROTOCOL': req.request_protocol,
+            'wsgi.errors': sys.stderr,
+            'wsgi.input': req.rfile,
+            'wsgi.multiprocess': False,
+            'wsgi.multithread': True,
+            'wsgi.run_once': False,
+            'wsgi.url_scheme': req.scheme,
+            'wsgi.version': (1, 0),
+            }
+        
+        if isinstance(req.server.bind_addr, basestring):
+            # AF_UNIX. This isn't really allowed by WSGI, which doesn't
+            # address unix domain sockets. But it's better than nothing.
+            env["SERVER_PORT"] = ""
+        else:
+            env["SERVER_PORT"] = str(req.server.bind_addr[1])
+        
+        # CONTENT_TYPE/CONTENT_LENGTH
+        for k, v in req.inheaders.iteritems():
+            env["HTTP_" + k.upper().replace("-", "_")] = v
+        ct = env.pop("HTTP_CONTENT_TYPE", None)
+        if ct is not None:
+            env["CONTENT_TYPE"] = ct
+        cl = env.pop("HTTP_CONTENT_LENGTH", None)
+        if cl is not None:
+            env["CONTENT_LENGTH"] = cl
+        
+        if req.conn.ssl_env:
+            env.update(req.conn.ssl_env)
+        
+        return env
+
+
+class WSGIGateway_u0(WSGIGateway_10):
+    
+    def get_environ(self):
+        """Return a new environ dict targeting the given wsgi.version"""
+        req = self.req
+        env_10 = WSGIGateway_10.get_environ(self)
+        env = dict([(k.decode('ISO-8859-1'), v) for k, v in env_10.iteritems()])
+        env[u'wsgi.version'] = ('u', 0)
+        
+        # Request-URI
+        env.setdefault(u'wsgi.url_encoding', u'utf-8')
+        try:
+            for key in [u"PATH_INFO", u"SCRIPT_NAME", u"QUERY_STRING"]:
+                env[key] = env_10[str(key)].decode(env[u'wsgi.url_encoding'])
+        except UnicodeDecodeError:
+            # Fall back to latin 1 so apps can transcode if needed.
+            env[u'wsgi.url_encoding'] = u'ISO-8859-1'
+            for key in [u"PATH_INFO", u"SCRIPT_NAME", u"QUERY_STRING"]:
+                env[key] = env_10[str(key)].decode(env[u'wsgi.url_encoding'])
+        
+        for k, v in sorted(env.items()):
+            if isinstance(v, str) and k not in ('REQUEST_URI', 'wsgi.input'):
+                env[k] = v.decode('ISO-8859-1')
+        
+        return env
+
+wsgi_gateways = {
+    (1, 0): WSGIGateway_10,
+    ('u', 0): WSGIGateway_u0,
+}
+
+class WSGIPathInfoDispatcher(object):
+    """A WSGI dispatcher for dispatch based on the PATH_INFO.
+    
+    apps: a dict or list of (path_prefix, app) pairs.
+    """
+    
+    def __init__(self, apps):
+        try:
+            apps = apps.items()
+        except AttributeError:
+            pass
+        
+        # Sort the apps by len(path), descending
+        apps.sort(cmp=lambda x,y: cmp(len(x[0]), len(y[0])))
+        apps.reverse()
+        
+        # The path_prefix strings must start, but not end, with a slash.
+        # Use "" instead of "/".
+        self.apps = [(p.rstrip("/"), a) for p, a in apps]
+    
+    def __call__(self, environ, start_response):
+        path = environ["PATH_INFO"] or "/"
+        for p, app in self.apps:
+            # The apps list should be sorted by length, descending.
+            if path.startswith(p + "/") or path == p:
+                environ = environ.copy()
+                environ["SCRIPT_NAME"] = environ["SCRIPT_NAME"] + p
+                environ["PATH_INFO"] = path[len(p):]
+                return app(environ, start_response)
+        
+        start_response('404 Not Found', [('Content-Type', 'text/plain'),
+                                         ('Content-Length', '0')])
+        return ['']
 

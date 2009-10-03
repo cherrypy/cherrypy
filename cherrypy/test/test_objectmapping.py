@@ -17,7 +17,7 @@ def setup_server():
             return "bar"
         foobar.exposed = True
         
-        def default(self, *params):
+        def default(self, *params, **kwargs):
             return "default:" + repr(params)
         default.exposed = True
         

@@ -76,8 +76,10 @@ RewriteRule ^(.*)$ /fastcgi.pyc [L]
 FastCgiExternalServer "%(server)s" -host 127.0.0.1:4000
 """
 
-class ServerControl(test.LocalServer):
+class ModFCGISupervisor(test.LocalSupervisor):
     
+    using_apache = True
+    using_wsgi = True
     template = conf_fcgid
     
     def __str__(self):

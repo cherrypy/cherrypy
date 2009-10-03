@@ -24,18 +24,13 @@ from cherrypy.lib import profiler
 class TestHarness(object):
     """A test harness for the CherryPy framework and CherryPy applications."""
     
-    def __init__(self, tests=None, server=None, protocol="HTTP/1.1",
-                 port=8000, scheme="http", interactive=True, host='127.0.0.1'):
+    def __init__(self, supervisor, tests, interactive=True):
         """Constructor to populate the TestHarness instance.
         
         tests should be a list of module names (strings).
         """
-        self.tests = tests or []
-        self.server = server
-        self.protocol = protocol
-        self.port = port
-        self.host = host
-        self.scheme = scheme
+        self.supervisor = supervisor
+        self.tests = tests
         self.interactive = interactive
     
     def run(self, conf=None):
@@ -44,13 +39,16 @@ class TestHarness(object):
         v = sys.version.split()[0]
         print("Python version used to run this test script: %s" % v)
         print("CherryPy version: %s" % cherrypy.__version__)
-        if self.scheme == "https":
+        if self.supervisor.scheme == "https":
             ssl = " (ssl)"
         else:
             ssl = ""
-        print("HTTP server version: %s%s" % (self.protocol, ssl))
+        print("HTTP server version: %s%s" % (self.supervisor.protocol, ssl))
         print("PID: %s" % os.getpid())
         print("")
+        
+        cherrypy.server.using_apache = self.supervisor.using_apache
+        cherrypy.server.using_wsgi = self.supervisor.using_wsgi
         
         if isinstance(conf, basestring):
             parser = cherrypy.config._Parser()
@@ -58,12 +56,12 @@ class TestHarness(object):
         else:
             conf = conf or {}
         baseconf = conf.copy()
-        baseconf.update({'server.socket_host': self.host,
-                         'server.socket_port': self.port,
-                         'server.protocol_version': self.protocol,
+        baseconf.update({'server.socket_host': self.supervisor.host,
+                         'server.socket_port': self.supervisor.port,
+                         'server.protocol_version': self.supervisor.protocol,
                          'environment': "test_suite",
                          })
-        if self.scheme == "https":
+        if self.supervisor.scheme == "https":
             baseconf['server.ssl_certificate'] = serverpem
             baseconf['server.ssl_private_key'] = serverpem
         
@@ -75,26 +73,47 @@ class TestHarness(object):
         # and we wouldn't be able to globally override the port anymore.
         from cherrypy.test import helper, webtest
         webtest.WebCase.interactive = self.interactive
-        if self.scheme == "https":
+        if self.supervisor.scheme == "https":
             webtest.WebCase.HTTP_CONN = HTTPSConnection
         print("")
-        print("Running tests: %s" % self.server)
+        print("Running tests: %s" % self.supervisor)
         
-        return helper.run_test_suite(self.tests, baseconf, self.server)
+        return helper.run_test_suite(self.tests, baseconf, self.supervisor)
 
 
-class LocalServer(object):
-    """Server Controller for the builtin WSGI server."""
+class Supervisor(object):
+    """Base class for modeling and controlling servers during testing."""
     
-    def __init__(self, host, port, profile, validate, conquer):
-        self.host = host
-        self.port = port
-        self.profile = profile
-        self.validate = validate
-        self.conquer = conquer
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
+
+
+class LocalSupervisor(Supervisor):
+    """Base class for modeling/controlling servers which run in the same process.
     
-    def __str__(self):
-        return "Builtin WSGI Server on %s:%s" % (self.host, self.port)
+    When the server side runs in a different process, start/stop can dump all
+    state between each test module easily. When the server side runs in the
+    same process as the client, however, we have to do a bit more work to ensure
+    config and mounted apps are reset between tests.
+    """
+    
+    using_apache = False
+    using_wsgi = False
+    
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
+        
+        import cherrypy
+        cherrypy.server.httpserver = self.httpserver_class
+        
+        engine = cherrypy.engine
+        if hasattr(engine, "signal_handler"):
+            engine.signal_handler.subscribe()
+        if hasattr(engine, "console_control_handler"):
+            engine.console_control_handler.subscribe()
+        #engine.subscribe('log', lambda msg, level: sys.stderr.write(msg + os.linesep))
     
     def start(self, modulename=None):
         """Load and start the HTTP server."""
@@ -122,15 +141,39 @@ class LocalServer(object):
         
         cherrypy.engine.start()
         
-        # The setup functions probably mounted new apps.
-        # Tell our server about them.
         self.sync_apps()
+    
+    def sync_apps(self):
+        """Tell the server about any apps which the setup functions mounted."""
+        pass
     
     def stop(self):
         if self.teardown:
             self.teardown()
         import cherrypy
         cherrypy.engine.exit()
+
+
+class NativeServerSupervisor(LocalSupervisor):
+    """Server supervisor for the builtin HTTP server."""
+    
+    httpserver_class = "cherrypy._cpnative_server.CPHTTPServer"
+    using_apache = False
+    using_wsgi = False
+    
+    def __str__(self):
+        return "Builtin HTTP Server on %s:%s" % (self.host, self.port)
+
+
+class LocalWSGISupervisor(LocalSupervisor):
+    """Server supervisor for the builtin WSGI server."""
+    
+    httpserver_class = "cherrypy._cpwsgi_server.CPWSGIServer"
+    using_apache = False
+    using_wsgi = True
+    
+    def __str__(self):
+        return "Builtin WSGI Server on %s:%s" % (self.host, self.port)
     
     def sync_apps(self):
         """Hook a new WSGI app into the origin server."""
@@ -161,23 +204,56 @@ class LocalServer(object):
         return app
 
 
+def get_cpmodpy_supervisor(**options):
+    from cherrypy.test import modpy
+    sup = modpy.ModPythonSupervisor(**options)
+    sup.template = modpy.conf_cpmodpy
+    return sup
+
+def get_modpygw_supervisor(**options):
+    from cherrypy.test import modpy
+    sup = modpy.ModPythonSupervisor(**options)
+    sup.template = modpy.conf_modpython_gateway
+    sup.using_wsgi = True
+    return sup
+
+def get_modwsgi_supervisor(**options):
+    from cherrypy.test import modwsgi
+    return modwsgi.ModWSGISupervisor(**options)
+
+def get_modfcgid_supervisor(**options):
+    from cherrypy.test import modfcgid
+    return modfcgid.ModFCGISupervisor(**options)
+
+def get_wsgi_u_supervisor(**options):
+    import cherrypy
+    cherrypy.server.wsgi_version = ('u', 0)
+    return LocalWSGISupervisor(**options)
+
+
 class CommandLineParser(object):
-    available_servers = {'wsgi': "cherrypy._cpwsgi.CPWSGIServer",
-                         'cpmodpy': "cpmodpy",
-                         'modpygw': "modpygw",
-                         'modwsgi': "modwsgi",
-                         'modfcgid': "modfcgid",
+    available_servers = {'wsgi': LocalWSGISupervisor,
+                         'wsgi_u': get_wsgi_u_supervisor,
+                         'native': NativeServerSupervisor,
+                         'cpmodpy': get_cpmodpy_supervisor,
+                         'modpygw': get_modpygw_supervisor,
+                         'modwsgi': get_modwsgi_supervisor,
+                         'modfcgid': get_modfcgid_supervisor,
                          }
     default_server = "wsgi"
-    scheme = "http"
-    protocol = "HTTP/1.1"
-    port = 8080
-    host = '127.0.0.1'
+    
+    supervisor_factory = None
+    supervisor_options = {
+        'scheme': 'http',
+        'protocol': "HTTP/1.1",
+        'port': 8080,
+        'host': '127.0.0.1',
+        'profile': False,
+        'validate': False,
+        'conquer': False,
+        }
+    
     cover = False
-    profile = False
-    validate = False
-    conquer = False
-    server = None
     basedir = None
     interactive = True
     
@@ -194,6 +270,7 @@ class CommandLineParser(object):
             set of args if you like.
         """
         self.available_tests = available_tests
+        self.supervisor_options = self.supervisor_options.copy()
         
         longopts = self.longopts[:]
         longopts.extend(self.available_tests)
@@ -213,41 +290,43 @@ class CommandLineParser(object):
             elif o == "--cover":
                 self.cover = True
             elif o == "--profile":
-                self.profile = True
+                self.supervisor_options['profile'] = True
             elif o == "--validate":
-                self.validate = True
+                self.supervisor_options['validate'] = True
             elif o == "--conquer":
-                self.conquer = True
+                self.supervisor_options['conquer'] = True
             elif o == "--dumb":
                 self.interactive = False
             elif o == "--1.0":
-                self.protocol = "HTTP/1.0"
+                self.supervisor_options['protocol'] = "HTTP/1.0"
             elif o == "--ssl":
-                self.scheme = "https"
+                self.supervisor_options['scheme'] = "https"
             elif o == "--basedir":
                 self.basedir = a
             elif o == "--port":
-                self.port = int(a)
+                self.supervisor_options['port'] = int(a)
             elif o == "--host":
-                self.host = a
+                self.supervisor_options['host'] = a
             elif o == "--server":
-                if a in self.available_servers:
-                    a = self.available_servers[a]
-                self.server = a
+                if a not in self.available_servers:
+                    print('Error: The --server argument must be one of %s.' %
+                          '|'.join(self.available_servers.keys()))
+                    sys.exit(2)
+                self.supervisor_factory = self.available_servers[a]
             else:
                 o = o[2:]
                 if o in self.available_tests and o not in self.tests:
                     self.tests.append(o)
         
         import cherrypy
-        if self.cover and self.profile:
+        if self.cover and self.supervisor_options['profile']:
             # Print error message and exit
             print('Error: you cannot run the profiler and the '
                    'coverage tool at the same time.')
             sys.exit(2)
         
-        if not self.server:
-            self.server = self.available_servers[self.default_server]
+        if not self.supervisor_factory:
+            self.supervisor_factory = self.available_servers[self.default_server]
         
         if not self.tests:
             self.tests = self.available_tests[:]
@@ -263,11 +342,11 @@ class CommandLineParser(object):
         
     """ % (self.__class__.host, self.__class__.port))
         print('    * servers:')
-        for name, val in self.available_servers.items():
+        for name in self.available_servers.items():
             if name == self.default_server:
-                print('        --server=%s: %s (default)' % (name, val))
+                print('        --server=%s (default)' % name)
             else:
-                print('        --server=%s: %s' % (name, val))
+                print('        --server=%s' % name)
         
         print("""
     
@@ -279,7 +358,7 @@ class CommandLineParser(object):
     --cover: turn on code-coverage tool.
     --basedir=path: display coverage stats for some path other than cherrypy.
     
-    --profile: turn on profiling tool.
+    --profile: turn on WSGI profiling tool.
     --validate: use wsgiref.validate (builtin in Python 2.5).
     --conquer: use wsgiconq (which uses pyconquer) to trace calls.
     --dumb: turn off the interactive output features.
@@ -383,50 +462,15 @@ class CommandLineParser(object):
         if self.cover:
             self.start_coverage()
         
-        import cherrypy
-        if self.server == 'cpmodpy':
-            from cherrypy.test import modpy
-            server = modpy.ServerControl(self.host, self.port,
-                                         modpy.conf_cpmodpy)
-            cherrypy.server.using_apache = True
-            cherrypy.server.using_wsgi = False
-        elif self.server == 'modpygw':
-            from cherrypy.test import modpy
-            server = modpy.ServerControl(self.host, self.port,
-                                         modpy.conf_modpython_gateway)
-            cherrypy.server.using_apache = True
-            cherrypy.server.using_wsgi = True
-        elif self.server == 'modwsgi':
-            from cherrypy.test import modwsgi
-            server = modwsgi.ServerControl(self.host, self.port)
-            cherrypy.server.using_apache = True
-            cherrypy.server.using_wsgi = True
-        elif self.server == 'modfcgid':
-            from cherrypy.test import modfcgid
-            server = modfcgid.ServerControl(self.host, self.port, self.profile,
-                                            self.validate, self.conquer)
-            cherrypy.server.using_apache = True
-            cherrypy.server.using_wsgi = True
-        else:
-            server = LocalServer(self.host, self.port, self.profile,
-                                 self.validate, self.conquer)
-            cherrypy.server.using_apache = False
-            cherrypy.server.using_wsgi = True
-            engine = cherrypy.engine
-            if hasattr(engine, "signal_handler"):
-                engine.signal_handler.subscribe()
-            if hasattr(engine, "console_control_handler"):
-                engine.console_control_handler.subscribe()
-            #engine.subscribe('log', lambda msg, level: sys.stderr.write(msg + os.linesep))
+        supervisor = self.supervisor_factory(**self.supervisor_options)
         
-        if cherrypy.server.using_apache and 'test_conn' in self.tests:
+        if supervisor.using_apache and 'test_conn' in self.tests:
             self.tests.remove('test_conn')
         
-        h = TestHarness(self.tests, server, self.protocol, self.port,
-                        self.scheme, self.interactive, self.host)
+        h = TestHarness(supervisor, self.tests, self.interactive)
         success = h.run(conf)
         
-        if self.profile:
+        if self.supervisor_options['profile']:
             print("")
             print("run /cherrypy/lib/profiler.py as a script to serve "
                    "profiling results on port 8080")

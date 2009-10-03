@@ -113,10 +113,10 @@ CPTestLoader = webtest.ReloadingTestLoader()
 CPTestRunner = webtest.TerseTestRunner(verbosity=2)
 
 
-def run_test_suite(moduleNames, conf, server):
-    """Run the given test modules using the given server and [global] conf.
+def run_test_suite(moduleNames, conf, supervisor):
+    """Run the given test modules using the given supervisor and [global] conf.
     
-    The 'server' arg should be an object with 'start' and 'stop' methods.
+    The 'supervisor' arg should be an object with 'start' and 'stop' methods.
     See test/test.py.
     """
     # The Pybots automatic testing system needs the suite to exit
@@ -126,7 +126,7 @@ def run_test_suite(moduleNames, conf, server):
     for testmod in moduleNames:
         cherrypy.config.reset()
         cherrypy.config.update(conf)
-        setup_client()
+        setup_client(supervisor)
         
         if '.' in testmod:
             package, test_name = testmod.rsplit('.', 1)
@@ -137,19 +137,19 @@ def run_test_suite(moduleNames, conf, server):
         suite = CPTestLoader.loadTestsFromName(testmod)
         
         setup = getattr(m, "setup_server", None)
-        if setup: server.start(testmod)
+        if setup: supervisor.start(testmod)
         try:
             result = CPTestRunner.run(suite)
             test_success &= result.wasSuccessful()
         finally:
-            if setup: server.stop()
+            if setup: supervisor.stop()
     
     if test_success:
         return 0
     else:
         return 1
 
-def setup_client():
+def setup_client(supervisor):
     """Set up the WebCase classes to match the server's socket settings."""
     webtest.WebCase.PORT = cherrypy.server.socket_port
     webtest.WebCase.HOST = cherrypy.server.socket_host
@@ -160,18 +160,17 @@ def testmain(conf=None):
     """Run __main__ as a test module, with webtest debugging."""
     # Comment me out to see ENGINE messages etc. when running a test standalone.
     cherrypy.config.update({'environment': "test_suite"})
-    
     cherrypy.server.socket_host = '127.0.0.1'
-    setup_client()
     
-    from cherrypy.test.test import LocalServer
-    server = LocalServer(cherrypy.server.socket_host, cherrypy.server.socket_port,
-                         False, False, False)
-    server.start('__main__')
+    from cherrypy.test.test import LocalWSGISupervisor
+    supervisor = LocalWSGISupervisor(host=cherrypy.server.socket_host,
+                                     port=cherrypy.server.socket_port)
+    setup_client(supervisor)
+    supervisor.start('__main__')
     try:
         return webtest.main()
     finally:
-        server.stop()
+        supervisor.stop()
 
 
 

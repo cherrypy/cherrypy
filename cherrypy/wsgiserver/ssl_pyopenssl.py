@@ -188,7 +188,6 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
     def get_environ(self):
         """Return WSGI environ entries to be merged into each request."""
         ssl_environ = {
-            "wsgi.url_scheme": "https",
             "HTTPS": "on",
             # pyOpenSSL doesn't provide access to any of these AFAICT
 ##            'SSL_PROTOCOL': 'SSLv2',

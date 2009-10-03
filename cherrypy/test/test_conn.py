@@ -60,9 +60,7 @@ def setup_server():
             if not cherrypy.request.method == 'POST':
                 raise AssertionError("'POST' != request.method %r" %
                                      cherrypy.request.method)
-            return ("thanks for '%s' (%s)" %
-                    (cherrypy.request.body.read(),
-                     cherrypy.request.headers['Content-Type']))
+            return "thanks for '%s'" % cherrypy.request.body.read()
         upload.exposed = True
         
         def custom(self, response_code):
@@ -469,7 +467,7 @@ class PipelineTests(helper.CPWebCase):
         response.begin()
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(200)
-        self.assertBody("thanks for 'I am a small file' (text/plain)")
+        self.assertBody("thanks for 'I am a small file'")
         conn.close()
 
 
@@ -543,7 +541,7 @@ class ConnectionTests(helper.CPWebCase):
             response.begin()
             self.status, self.headers, self.body = webtest.shb(response)
             self.assertStatus(200)
-            self.assertBody("thanks for 'I am a small file' (text/plain)")
+            self.assertBody("thanks for 'I am a small file'")
             conn.close()
     
     def test_No_Message_Body(self):
@@ -592,7 +590,8 @@ class ConnectionTests(helper.CPWebCase):
         
         # Try a normal chunked request (with extensions)
         body = ("8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
-                "Content-Type: application/x-json\r\n\r\n")
+                "Content-Type: application/x-json\r\n"
+                "\r\n")
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.putheader("Transfer-Encoding", "chunked")
@@ -600,13 +599,13 @@ class ConnectionTests(helper.CPWebCase):
         # Note that this is somewhat malformed:
         # we shouldn't be sending Content-Length.
         # RFC 2616 says the server should ignore it.
-        conn.putheader("Content-Length", "%s" % len(body))
+        conn.putheader("Content-Length", "3")
         conn.endheaders()
         conn.send(body)
         response = conn.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus('200 OK')
-        self.assertBody("thanks for 'xx\r\nxxxxyyyyy' (application/x-json)")
+        self.assertBody("thanks for 'xx\r\nxxxxyyyyy'")
         
         # Try a chunked request that exceeds server.max_request_body_size.
         # Note that the delimiters and trailer are included.
@@ -622,7 +621,6 @@ class ConnectionTests(helper.CPWebCase):
         response = conn.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(413)
-        self.assertBody("")
         conn.close()
     
     def test_Content_Length(self):
