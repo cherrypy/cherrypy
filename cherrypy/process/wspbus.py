@@ -228,6 +228,7 @@ class Bus(object):
     
     def exit(self):
         """Stop all services and prepare to exit the process."""
+        exitstate = self.state
         try:
             self.stop()
             
@@ -242,6 +243,13 @@ class Bus(object):
             # signal handler, console handler, or atexit handler), so we
             # can't just let exceptions propagate out unhandled.
             # Assume it's been logged and just die.
+            os._exit(70) # EX_SOFTWARE
+        
+        if exitstate == states.STARTING:
+            # exit() was called before start() finished, possibly due to
+            # Ctrl-C because a start listener got stuck. In this case,
+            # we could get stuck in a loop where Ctrl-C never exits the
+            # process, so we just call os.exit here.
             os._exit(70) # EX_SOFTWARE
     
     def restart(self):
