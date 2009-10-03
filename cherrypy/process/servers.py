@@ -224,8 +224,16 @@ def check_port(host, port, timeout=1.0):
     
     # AF_INET or AF_INET6 socket
     # Get the correct address family for our host (allows IPv6 addresses)
-    for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                  socket.SOCK_STREAM):
+    try:
+        info = socket.getaddrinfo(host, port, socket.AF_UNSPEC,
+                                  socket.SOCK_STREAM)
+    except socket.gaierror:
+        if ':' in host:
+            info = [(socket.AF_INET6, socket.SOCK_STREAM, 0, "", (host, port, 0, 0))]
+        else:
+            info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", (host, port))]
+    
+    for res in info:
         af, socktype, proto, canonname, sa = res
         s = None
         try:

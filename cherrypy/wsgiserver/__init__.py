@@ -1601,8 +1601,12 @@ class HTTPServer(object):
                 info = socket.getaddrinfo(host, port, socket.AF_UNSPEC,
                                           socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
             except socket.gaierror:
-                # Probably a DNS issue. Assume IPv4.
-                info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", self.bind_addr)]
+                if ':' in self.bind_addr[0]:
+                    info = [(socket.AF_INET6, socket.SOCK_STREAM,
+                             0, "", self.bind_addr + (0, 0))]
+                else:
+                    info = [(socket.AF_INET, socket.SOCK_STREAM,
+                             0, "", self.bind_addr)]
         
         self.socket = None
         msg = "No socket could be created"
