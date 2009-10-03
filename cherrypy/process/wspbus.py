@@ -84,7 +84,9 @@ class ChannelFailures(Exception):
     delimiter = '\n'
     
     def __init__(self, *args, **kwargs):
-        super(ChannelFailures, self).__init__(*args, **kwargs)
+        # Don't use 'super' here; Exceptions are old-style in Py2.4
+        # See http://www.cherrypy.org/ticket/959
+        Exception.__init__(self, *args, **kwargs)
         self._exceptions = list()
     
     def handle_exception(self):
