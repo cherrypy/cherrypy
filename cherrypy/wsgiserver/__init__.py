@@ -1995,6 +1995,14 @@ class WSGIGateway_10(WSGIGateway):
         return env
 
 
+class WSGIGateway_11(WSGIGateway_10):
+    
+    def get_environ(self):
+        env = WSGIGateway_10.get_environ(self)
+        env['wsgi.version'] = (1, 1)
+        return env
+
+
 class WSGIGateway_u0(WSGIGateway_10):
     
     def get_environ(self):
@@ -2023,6 +2031,7 @@ class WSGIGateway_u0(WSGIGateway_10):
 
 wsgi_gateways = {
     (1, 0): WSGIGateway_10,
+    (1, 1): WSGIGateway_11,
     ('u', 0): WSGIGateway_u0,
 }
 
