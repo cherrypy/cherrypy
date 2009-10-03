@@ -74,6 +74,9 @@ import re
 quoted_slash = re.compile("(?i)%2F")
 import rfc822
 import socket
+import sys
+if 'win' in sys.platform and not hasattr(socket, 'IPPROTO_IPV6'):
+    socket.IPPROTO_IPV6 = 41
 try:
     import cStringIO as StringIO
 except ImportError:
@@ -81,7 +84,6 @@ except ImportError:
 
 _fileobject_uses_str_type = isinstance(socket._fileobject(None)._rbuf, basestring)
 
-import sys
 import threading
 import time
 import traceback
@@ -1653,8 +1655,8 @@ class HTTPServer(object):
         
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See http://www.cherrypy.org/ticket/871.
-        if (not isinstance(self.bind_addr, basestring)
-            and self.bind_addr[0] == '::' and family == socket.AF_INET6):
+        if (family == socket.AF_INET6
+            and self.bind_addr[0] in ('::', '::0', '::0.0.0.0')):
             try:
                 self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             except (AttributeError, socket.error):
