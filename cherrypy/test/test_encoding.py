@@ -35,7 +35,7 @@ def setup_server():
         
         def reqparams(self, *args, **kwargs):
             return ', '.join([": ".join((k, v)).encode('utf8')
-                             for k, v in cherrypy.request.params.items()])
+                              for k, v in cherrypy.request.params.items()])
         reqparams.exposed = True
     
     class GZIP:
@@ -63,7 +63,7 @@ def setup_server():
     class Decode:
         def extra_charset(self, *args, **kwargs):
             return ', '.join([": ".join((k, v)).encode('utf8')
-                             for k, v in cherrypy.request.params.items()])
+                              for k, v in cherrypy.request.params.items()])
         extra_charset.exposed = True
         extra_charset._cp_config = {
             'tools.decode.on': True,
@@ -72,7 +72,7 @@ def setup_server():
         
         def force_charset(self, *args, **kwargs):
             return ', '.join([": ".join((k, v)).encode('utf8')
-                             for k, v in cherrypy.request.params.items()])
+                              for k, v in cherrypy.request.params.items()])
         force_charset.exposed = True
         force_charset._cp_config = {
             'tools.decode.on': True,
@@ -99,6 +99,7 @@ class EncodingTests(helper.CPWebCase):
         # Encoded utf8 query strings MUST be parsed correctly.
         # Here, q is the POUND SIGN U+00A3 encoded in utf8 and then %HEX
         self.getPage("/reqparams?q=%C2%A3")
+        # The return value will be encoded as utf8.
         self.assertBody("q: \xc2\xa3")
         
         # Query strings that are incorrectly encoded MUST raise 404.

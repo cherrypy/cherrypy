@@ -98,6 +98,25 @@ class Application(object):
         # Handle namespaces specified in config.
         self.namespaces(self.config.get("/", {}))
     
+    def find_config(self, path, key, default=None):
+        """Return the most-specific value for key along path, or default."""
+        trail = path or "/"
+        while trail:
+            nodeconf = self.config.get(trail, {})
+            
+            if key in nodeconf:
+                return nodeconf[key]
+            
+            lastslash = trail.rfind("/")
+            if lastslash == -1:
+                break
+            elif lastslash == 0 and trail != "/":
+                trail = "/"
+            else:
+                trail = trail[:lastslash]
+        
+        return default
+    
     def get_serving(self, local, remote, scheme, sproto):
         """Create and return a Request and Response object."""
         req = self.request_class(local, remote, scheme, sproto)
@@ -232,11 +251,11 @@ class Tree(object):
         # If you're calling this, then you're probably setting SCRIPT_NAME
         # to '' (some WSGI servers always set SCRIPT_NAME to '').
         # Try to look up the app using the full path.
-        env11 = environ
-        if environ.get(u'wsgi.version') == (1, 1):
-            env11 = _cpwsgi.downgrade_wsgi_11_to_10(environ)
-        path = httputil.urljoin(env11.get('SCRIPT_NAME', ''),
-                                env11.get('PATH_INFO', ''))
+        env1x = environ
+        if environ.get(u'wsgi.version') == (u'u', 0):
+            env1x = _cpwsgi.downgrade_wsgi_ux_to_1x(environ)
+        path = httputil.urljoin(env1x.get('SCRIPT_NAME', ''),
+                                env1x.get('PATH_INFO', ''))
         sn = self.script_name(path or "/")
         if sn is None:
             start_response('404 Not Found', [])
@@ -246,13 +265,13 @@ class Tree(object):
         
         # Correct the SCRIPT_NAME and PATH_INFO environ entries.
         environ = environ.copy()
-        if environ.get(u'wsgi.version') == (1, 1):
-            # Python 2/WSGI 1.1: all strings MUST be of type unicode
+        if environ.get(u'wsgi.version') == (u'u', 0):
+            # Python 2/WSGI u.0: all strings MUST be of type unicode
             enc = environ[u'wsgi.url_encoding']
             environ[u'SCRIPT_NAME'] = sn.decode(enc)
             environ[u'PATH_INFO'] = path[len(sn.rstrip("/")):].decode(enc)
         else:
-            # Python 2/WSGI 1.0: all strings MUST be of type str
+            # Python 2/WSGI 1.x: all strings MUST be of type str
             environ['SCRIPT_NAME'] = sn
             environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
         return app(environ, start_response)

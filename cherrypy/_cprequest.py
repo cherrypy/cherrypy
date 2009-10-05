@@ -237,11 +237,11 @@ class Request(object):
     
     query_string_encoding = 'utf8'
     query_string_encoding__doc = """
-    The encoding expected for query string arguments. If a query string
-    is provided that cannot be decoded with this encoding, 404 is raised
-    (since technically it's a different URI). If you want arbitrary
-    encodings to not error, set this to 'Latin-1'; you can then encode
-    back to bytes and re-decode to whatever encoding you like later.
+    The encoding expected for query string arguments after % HEX HEX decoding).
+    If a query string is provided that cannot be decoded with this encoding,
+    404 is raised (since technically it's a different URI). If you want
+    arbitrary encodings to not error, set this to 'Latin-1'; you can then
+    encode back to bytes and re-decode to whatever encoding you like later.
     """
     
     protocol = (1, 1)
@@ -737,26 +737,10 @@ class Request(object):
     
     def get_resource(self, path):
         """Call a dispatcher (which sets self.handler and .config). (Core)"""
-        dispatch = self.dispatch
         # First, see if there is a custom dispatch at this URI. Custom
         # dispatchers can only be specified in app.config, not in _cp_config
         # (since custom dispatchers may not even have an app.root).
-        trail = path or "/"
-        while trail:
-            nodeconf = self.app.config.get(trail, {})
-            
-            d = nodeconf.get("request.dispatch")
-            if d:
-                dispatch = d
-                break
-            
-            lastslash = trail.rfind("/")
-            if lastslash == -1:
-                break
-            elif lastslash == 0 and trail != "/":
-                trail = "/"
-            else:
-                trail = trail[:lastslash]
+        dispatch = self.app.find_config(path, "request.dispatch", self.dispatch)
         
         # dispatch() should set self.handler and self.config
         dispatch(path)

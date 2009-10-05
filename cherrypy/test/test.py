@@ -339,17 +339,16 @@ class CommandLineParser(object):
     Usage:
         test.py --help --server=* --host=%s --port=%s --1.0 --ssl --cover
             --basedir=path --profile --validate --conquer --dumb --tests**
-        
-    """ % (self.__class__.host, self.__class__.port))
+    """ % (self.__class__.supervisor_options['host'],
+           self.__class__.supervisor_options['port']))
         print('    * servers:')
-        for name in self.available_servers.items():
+        for name in self.available_servers:
             if name == self.default_server:
                 print('        --server=%s (default)' % name)
             else:
                 print('        --server=%s' % name)
         
         print("""
-    
     --host=<name or IP addr>: use a host other than the default (%s).
         Not yet available with mod_python servers.
     --port=<int>: use a port other than the default (%s).
@@ -362,7 +361,8 @@ class CommandLineParser(object):
     --validate: use wsgiref.validate (builtin in Python 2.5).
     --conquer: use wsgiconq (which uses pyconquer) to trace calls.
     --dumb: turn off the interactive output features.
-    """ % (self.__class__.host, self.__class__.port))
+    """ % (self.__class__.supervisor_options['host'],
+           self.__class__.supervisor_options['port']))
         
         print('    ** tests:')
         for name in self.available_tests:

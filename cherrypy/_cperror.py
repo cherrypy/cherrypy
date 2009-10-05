@@ -24,7 +24,7 @@ class InternalRedirect(CherryPyException):
     
     def __init__(self, path, query_string=""):
         import cherrypy
-        request = cherrypy.serving.request
+        self.request = cherrypy.serving.request
         
         self.query_string = query_string
         if "?" in path:
@@ -35,7 +35,7 @@ class InternalRedirect(CherryPyException):
         #  1. a URL relative to root (e.g. "/dummy")
         #  2. a URL relative to the current path
         # Note that any query string will be discarded.
-        path = _urljoin(request.path_info, path)
+        path = _urljoin(self.request.path_info, path)
         
         # Set a 'path' member attribute so that code which traps this
         # error can have access to it.

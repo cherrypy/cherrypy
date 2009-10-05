@@ -136,7 +136,7 @@ def setup_server():
         pipe._cp_config = {'hooks.before_request_body': pipe_body}
         
         # Multiple decorators; include kwargs just for fun.
-        # Note that encode must run before gzip.
+        # Note that rotator must run before gzip.
         def decorated_euro(self, *vpath):
             yield u"Hello,"
             yield u"world"

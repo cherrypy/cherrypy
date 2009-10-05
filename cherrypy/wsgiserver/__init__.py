@@ -825,7 +825,7 @@ class HTTPRequest(object):
         
         buf = [self.server.protocol + " " + self.status + CRLF]
         for k, v in self.outheaders:
-            buf.append(k + ": " + v + "\r\n")
+            buf.append(k + ": " + v + CRLF)
         buf.append(CRLF)
         self.conn.wfile.sendall("".join(buf))
 
@@ -1239,7 +1239,7 @@ class HTTPConnection(object):
         except NoSSLError:
             if req and not req.sent_headers:
                 # Unwrap our wfile
-                req.conn.wfile = CP_fileobject(self.socket._sock, "wb", -1)
+                self.wfile = CP_fileobject(self.socket._sock, "wb", -1)
                 req.simple_response("400 Bad Request",
                     "The client sent a plain HTTP request, but "
                     "this server only speaks HTTPS on this port.")
@@ -1846,7 +1846,7 @@ def get_ssl_adapter_class(name='pyopenssl'):
 
 class CherryPyWSGIServer(HTTPServer):
     
-    wsgi_version = (1, 0)
+    wsgi_version = (1, 1)
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
@@ -2068,4 +2068,3 @@ class WSGIPathInfoDispatcher(object):
         start_response('404 Not Found', [('Content-Type', 'text/plain'),
                                          ('Content-Length', '0')])
         return ['']
-

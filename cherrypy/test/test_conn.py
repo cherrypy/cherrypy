@@ -346,6 +346,7 @@ class PipelineTests(helper.CPWebCase):
         self.assertEqual(response.status, 200)
         self.body = response.read()
         self.assertBody(pov)
+
         
         # Make another request on the same socket,
         # but timeout on the headers
@@ -590,7 +591,7 @@ class ConnectionTests(helper.CPWebCase):
         
         # Try a normal chunked request (with extensions)
         body = ("8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
-                "Content-Type: application/x-json\r\n"
+                "Content-Type: application/json\r\n"
                 "\r\n")
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)

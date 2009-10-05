@@ -481,6 +481,7 @@ comma_separated_headers = ['Accept', 'Accept-Charset', 'Accept-Encoding',
     'If-None-Match', 'Pragma', 'Proxy-Authenticate', 'Te', 'Trailer',
     'Transfer-Encoding', 'Upgrade', 'Vary', 'Via', 'Warning', 'Www-Authenticate']
 
+
 class SizedReader:
     
     def __init__(self, fp, length, maxbytes, bufsize=8192, has_trailers=False):

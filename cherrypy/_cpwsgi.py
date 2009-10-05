@@ -11,9 +11,9 @@ from cherrypy import _cperror
 from cherrypy.lib import httputil
 
 
-def downgrade_wsgi_u0_to_10(environ):
-    """Return a new environ dict for WSGI 1.0 from the given WSGI u.0 environ."""
-    env10 = {}
+def downgrade_wsgi_ux_to_1x(environ):
+    """Return a new environ dict for WSGI 1.x from the given WSGI u.x environ."""
+    env1x = {}
     
     url_encoding = environ[u'wsgi.url_encoding']
     for k, v in environ.items():
@@ -21,9 +21,9 @@ def downgrade_wsgi_u0_to_10(environ):
             v = v.encode(url_encoding)
         elif isinstance(v, unicode):
             v = v.encode('ISO-8859-1')
-        env10[k.encode('ISO-8859-1')] = v
+        env1x[k.encode('ISO-8859-1')] = v
     
-    return env10
+    return env1x
 
 
 class VirtualHost(object):
@@ -74,173 +74,151 @@ class VirtualHost(object):
         return nextapp(environ, start_response)
 
 
+class InternalRedirector(object):
+    """WSGI middleware that handles raised cherrypy.InternalRedirect."""
+    
+    def __init__(self, nextapp, recursive=False):
+        self.nextapp = nextapp
+        self.recursive = recursive
+    
+    def __call__(self, environ, start_response):
+        redirections = []
+        while True:
+            environ = environ.copy()
+            try:
+                return self.nextapp(environ, start_response)
+            except _cherrypy.InternalRedirect, ir:
+                sn = environ.get('SCRIPT_NAME', '')
+                path = environ.get('PATH_INFO', '')
+                qs = environ.get('QUERY_STRING', '')
+                
+                # Add the *previous* path_info + qs to redirections.
+                old_uri = sn + path
+                if qs:
+                    old_uri += "?" + qs
+                redirections.append(old_uri)
+                
+                if not self.recursive:
+                    # Check to see if the new URI has been redirected to already
+                    new_uri = sn + ir.path
+                    if ir.query_string:
+                        new_uri += "?" + ir.query_string
+                    if new_uri in redirections:
+                        req.close()
+                        raise RuntimeError("InternalRedirector visited the "
+                                           "same URL twice: %r" % new_uri)
+                
+                # Munge the environment and try again.
+                environ['REQUEST_METHOD'] = "GET"
+                environ['PATH_INFO'] = ir.path
+                environ['QUERY_STRING'] = ir.query_string
+                environ['wsgi.input'] = StringIO()
+                environ['CONTENT_LENGTH'] = "0"
+                environ['cherrypy.previous_request'] = ir.request
+
+
+class ExceptionTrapper(object):
+    
+    def __init__(self, nextapp, throws=(KeyboardInterrupt, SystemExit)):
+        self.nextapp = nextapp
+        self.throws = throws
+    
+    def __call__(self, environ, start_response):
+        return _TrappedResponse(self.nextapp, environ, start_response, self.throws)
+
+
+class _TrappedResponse(object):
+    
+    response = iter([])
+    
+    def __init__(self, nextapp, environ, start_response, throws):
+        self.nextapp = nextapp
+        self.environ = environ
+        self.start_response = start_response
+        self.throws = throws
+        self.started_response = False
+        self.response = self.trap(self.nextapp, self.environ, self.start_response)
+        self.iter_response = iter(self.response)
+    
+    def __iter__(self):
+        self.started_response = True
+        return self
+    
+    def next(self):
+        return self.trap(self.iter_response.next)
+    
+    def close(self):
+        if hasattr(self.response, 'close'):
+            self.response.close()
+    
+    def trap(self, func, *args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except self.throws:
+            raise
+        except StopIteration:
+            raise
+        except:
+            tb = _cperror.format_exc()
+            #print('trapped (started %s):' % self.started_response, tb)
+            _cherrypy.log(tb, severity=40)
+            if not _cherrypy.request.show_tracebacks:
+                tb = ""
+            s, h, b = _cperror.bare_error(tb)
+            if self.started_response:
+                # Empty our iterable (so future calls raise StopIteration)
+                self.iter_response = iter([])
+            else:
+                self.iter_response = iter(b)
+            
+            try:
+                self.start_response(s, h, _sys.exc_info())
+            except:
+                # "The application must not trap any exceptions raised by
+                # start_response, if it called start_response with exc_info.
+                # Instead, it should allow such exceptions to propagate
+                # back to the server or gateway."
+                # But we still log and call close() to clean up ourselves.
+                _cherrypy.log(traceback=True, severity=40)
+                raise
+            
+            if self.started_response:
+                return "".join(b)
+            else:
+                return b
+
 
 #                           WSGI-to-CP Adapter                           #
 
 
 class AppResponse(object):
+    """WSGI response iterable for CherryPy applications."""
     
-    throws = (KeyboardInterrupt, SystemExit)
-    request = None
-    
-    def __init__(self, environ, start_response, cpapp, recursive=False):
-        self.redirections = []
-        self.recursive = recursive
+    def __init__(self, environ, start_response, cpapp):
         if environ.get(u'wsgi.version') == (u'u', 0):
-            environ = downgrade_wsgi_u0_to_10(environ)
+            environ = downgrade_wsgi_ux_to_1x(environ)
         self.environ = environ
-        self.start_response = start_response
         self.cpapp = cpapp
-        self.setapp()
-    
-    def setapp(self):
         try:
-            self.request = self.get_request()
-            s, h, b = self.get_response()
-            self.iter_response = iter(b)
-            self.write = self.start_response(s, h)
-        except self.throws:
+            self.run()
+        except:
             self.close()
             raise
-        except _cherrypy.InternalRedirect, ir:
-            self.environ['cherrypy.previous_request'] = _cherrypy.serving.request
-            self.close()
-            self.iredirect(ir.path, ir.query_string)
-            return
-        except:
-            if getattr(self.request, "throw_errors", False):
-                self.close()
-                raise
-            
-            tb = _cperror.format_exc()
-            _cherrypy.log(tb, severity=40)
-            if not getattr(self.request, "show_tracebacks", True):
-                tb = ""
-            s, h, b = _cperror.bare_error(tb)
-            self.iter_response = iter(b)
-            
-            try:
-                self.start_response(s, h, _sys.exc_info())
-            except:
-                # "The application must not trap any exceptions raised by
-                # start_response, if it called start_response with exc_info.
-                # Instead, it should allow such exceptions to propagate
-                # back to the server or gateway."
-                # But we still log and call close() to clean up ourselves.
-                _cherrypy.log(traceback=True, severity=40)
-                self.close()
-                raise
-    
-    def iredirect(self, path, query_string):
-        """Doctor self.environ and perform an internal redirect.
-        
-        When cherrypy.InternalRedirect is raised, this method is called.
-        It rewrites the WSGI environ using the new path and query_string,
-        and calls a new CherryPy Request object. Because the wsgi.input
-        stream may have already been consumed by the next application,
-        the redirected call will always be of HTTP method "GET"; therefore,
-        any params must be passed in the query_string argument, which is
-        formed from InternalRedirect.query_string when using that exception.
-        If you need something more complicated, make and raise your own
-        exception and write your own AppResponse subclass to trap it. ;)
-        
-        It would be a bad idea to redirect after you've already yielded
-        response content, although an enterprising soul could choose
-        to abuse this.
-        """
-        env = self.environ
-        if not self.recursive:
-            sn = env.get('SCRIPT_NAME', '')
-            qs = query_string
-            if qs:
-                qs = "?" + qs
-            if sn + path + qs in self.redirections:
-                raise RuntimeError("InternalRedirector visited the "
-                                   "same URL twice: %r + %r + %r" %
-                                   (sn, path, qs))
-            else:
-                # Add the *previous* path_info + qs to redirections.
-                p = env.get('PATH_INFO', '')
-                qs = env.get('QUERY_STRING', '')
-                if qs:
-                    qs = "?" + qs
-                self.redirections.append(sn + p + qs)
-        
-        # Munge environment and try again.
-        env['REQUEST_METHOD'] = "GET"
-        env['PATH_INFO'] = path
-        env['QUERY_STRING'] = query_string
-        env['wsgi.input'] = StringIO()
-        env['CONTENT_LENGTH'] = "0"
-        
-        self.setapp()
+        r = _cherrypy.serving.response
+        self.iter_response = iter(r.body)
+        self.write = start_response(r.output_status, r.header_list)
     
     def __iter__(self):
         return self
     
     def next(self):
-        try:
-            chunk = self.iter_response.next()
-            # WSGI 1.x requires all response data to be of type "str".
-            # This coercion should not take any time at all if chunk is
-            # already of type "str".
-            # If it's unicode, it could be a big performance hit (x ~500).
-            if not isinstance(chunk, str):
-                chunk = unicode(chunk).encode("ISO-8859-1")
-            return chunk
-        except self.throws:
-            self.close()
-            raise
-        except _cherrypy.InternalRedirect, ir:
-            self.environ['cherrypy.previous_request'] = _cherrypy.serving.request
-            self.close()
-            self.iredirect(ir.path, ir.query_string)
-        except StopIteration:
-            raise
-        except:
-            if getattr(self.request, "throw_errors", False):
-                self.close()
-                raise
-            
-            tb = _cperror.format_exc()
-            _cherrypy.log(tb, severity=40)
-            if not getattr(self.request, "show_tracebacks", True):
-                tb = ""
-            s, h, b = _cperror.bare_error(tb)
-            # Empty our iterable (so future calls raise StopIteration)
-            self.iter_response = iter([])
-            
-            try:
-                self.start_response(s, h, _sys.exc_info())
-            except:
-                # "The application must not trap any exceptions raised by
-                # start_response, if it called start_response with exc_info.
-                # Instead, it should allow such exceptions to propagate
-                # back to the server or gateway."
-                # But we still log and call close() to clean up ourselves.
-                _cherrypy.log(traceback=True, severity=40)
-                self.close()
-                raise
-            
-            return "".join(b)
+        return self.iter_response.next()
     
     def close(self):
         """Close and de-reference the current request and response. (Core)"""
         self.cpapp.release_serving()
     
-    def get_response(self):
-        """Run self.request and return its response."""
-        meth = self.environ['REQUEST_METHOD']
-        path = httputil.urljoin(self.environ.get('SCRIPT_NAME', ''),
-                                self.environ.get('PATH_INFO', ''))
-        qs = self.environ.get('QUERY_STRING', '')
-        rproto = self.environ.get('SERVER_PROTOCOL')
-        headers = self.translate_headers(self.environ)
-        rfile = self.environ['wsgi.input']
-        response = self.request.run(meth, path, qs, rproto, headers, rfile)
-        return response.output_status, response.header_list, response.body
-    
-    def get_request(self):
+    def run(self):
         """Create a Request object using environ."""
         env = self.environ.get
         
@@ -261,7 +239,16 @@ class AppResponse(object):
         request.multiprocess = self.environ['wsgi.multiprocess']
         request.wsgi_environ = self.environ
         request.prev = env('cherrypy.previous_request', None)
-        return request
+        
+        meth = self.environ['REQUEST_METHOD']
+        
+        path = httputil.urljoin(self.environ.get('SCRIPT_NAME', ''),
+                                self.environ.get('PATH_INFO', ''))
+        qs = self.environ.get('QUERY_STRING', '')
+        rproto = self.environ.get('SERVER_PROTOCOL')
+        headers = self.translate_headers(self.environ)
+        rfile = self.environ['wsgi.input']
+        request.run(meth, path, qs, rproto, headers, rfile)
     
     headerNames = {'HTTP_CGI_AUTHORIZATION': 'Authorization',
                    'CONTENT_LENGTH': 'Content-Length',
@@ -300,7 +287,9 @@ class CPWSGIApp(object):
         named WSGI callable (from the pipeline) as keyword arguments.
     """
     
-    pipeline = []
+    pipeline = [('ExceptionTrapper', ExceptionTrapper),
+                ('InternalRedirector', InternalRedirector),
+                ]
     head = None
     config = {}
     
