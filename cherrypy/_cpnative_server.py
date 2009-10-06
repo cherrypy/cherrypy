@@ -118,11 +118,11 @@ class CPHTTPServer(wsgiserver.HTTPServer):
                        self.server_adapter.socket_file or
                        None)
         
-        wsgiserver.HTTPServer __init__(
+        wsgiserver.HTTPServer.__init__(
             self, server_adapter.bind_addr, NativeGateway,
             minthreads=server_adapter.thread_pool,
             maxthreads=server_adapter.thread_pool_max,
-            server_name=server_name):
+            server_name=server_name)
         
         self.max_request_header_size = self.server_adapter.max_request_header_size or 0
         self.max_request_body_size = self.server_adapter.max_request_body_size or 0
