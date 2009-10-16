@@ -104,7 +104,7 @@ class InternalRedirector(object):
                     if ir.query_string:
                         new_uri += "?" + ir.query_string
                     if new_uri in redirections:
-                        req.close()
+                        ir.request.close()
                         raise RuntimeError("InternalRedirector visited the "
                                            "same URL twice: %r" % new_uri)
                 
