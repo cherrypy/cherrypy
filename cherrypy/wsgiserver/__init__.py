@@ -1506,7 +1506,7 @@ class HTTPServer(object):
     
     protocol = "HTTP/1.1"
     _bind_addr = "127.0.0.1"
-    version = "CherryPy/3.2.0beta"
+    version = "CherryPy/3.2.0rc1"
     response_header = None
     ready = False
     _interrupt = None

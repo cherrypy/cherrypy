@@ -22,7 +22,7 @@ required_python_version = '2.3'
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.2.0beta"
+version = "3.2.0rc1"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers=[
