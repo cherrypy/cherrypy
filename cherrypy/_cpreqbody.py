@@ -558,8 +558,13 @@ class SizedReader:
             chunksize = min(remaining, self.bufsize)
             try:
                 data = self.fp.read(chunksize)
-            except IOError:
-                raise cherrypy.HTTPError(413)
+            except Exception, e:
+                if e.__class__.__name__ == 'MaxSizeExceeded':
+                    # Post data is too big
+                    raise cherrypy.HTTPError(
+                        413, "Maximum request length: %r" % e.args[1])
+                else:
+                    raise
             if not data:
                 self.finish()
                 break
@@ -644,8 +649,13 @@ class SizedReader:
                         if existing:
                             v = ", ".join((existing, v))
                     self.trailers[k] = v
-            except IOError:
-                raise cherrypy.HTTPError(413)
+            except Exception, e:
+                if e.__class__.__name__ == 'MaxSizeExceeded':
+                    # Post data is too big
+                    raise cherrypy.HTTPError(
+                        413, "Maximum request length: %r" % e.args[1])
+                else:
+                    raise
 
 
 class RequestBody(Entity):

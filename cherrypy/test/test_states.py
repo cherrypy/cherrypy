@@ -1,4 +1,3 @@
-import httplib
 from httplib import BadStatusLine
 
 import os

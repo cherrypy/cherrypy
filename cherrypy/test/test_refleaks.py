@@ -4,7 +4,7 @@ from cherrypy.test import test
 test.prefer_parent_path()
 
 import gc
-import httplib
+from httplib import HTTPConnection, HTTPSConnection
 import threading
 
 import cherrypy
@@ -89,9 +89,9 @@ class ReferenceTests(helper.CPWebCase):
         def getpage():
             host = '%s:%s' % (self.interface(), self.PORT)
             if self.scheme == 'https':
-                c = httplib.HTTPSConnection(host)
+                c = HTTPSConnection(host)
             else:
-                c = httplib.HTTPConnection(host)
+                c = HTTPConnection(host)
             try:
                 c.putrequest('GET', '/')
                 c.endheaders()

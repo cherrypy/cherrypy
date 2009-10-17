@@ -16,7 +16,7 @@ the traceback to stdout, and keep any assertions you have from running
 be of further significance to your tests).
 """
 
-import httplib
+from httplib import HTTPConnection, HTTPSConnection
 import os
 import pprint
 import re
@@ -159,7 +159,7 @@ except ImportError:
 class WebCase(TestCase):
     HOST = "127.0.0.1"
     PORT = 8000
-    HTTP_CONN = httplib.HTTPConnection
+    HTTP_CONN = HTTPConnection
     PROTOCOL = "HTTP/1.1"
     
     scheme = "http"
@@ -173,9 +173,9 @@ class WebCase(TestCase):
     def get_conn(self, auto_open=False):
         """Return a connection to our HTTP server."""
         if self.scheme == "https":
-            cls = httplib.HTTPSConnection
+            cls = HTTPSConnection
         else:
-            cls = httplib.HTTPConnection
+            cls = HTTPConnection
         conn = cls(self.interface(), self.PORT)
         # Automatically re-connect?
         conn.auto_open = auto_open
@@ -186,7 +186,7 @@ class WebCase(TestCase):
         """Make our HTTP_CONN persistent (or not).
         
         If the 'on' argument is True (the default), then self.HTTP_CONN
-        will be set to an instance of httplib.HTTPConnection (or HTTPS
+        will be set to an instance of HTTPConnection (or HTTPS
         if self.scheme is "https"). This will then persist across requests.
         
         We only allow for a single open connection, so if you call this
@@ -201,9 +201,9 @@ class WebCase(TestCase):
             self.HTTP_CONN = self.get_conn(auto_open=auto_open)
         else:
             if self.scheme == "https":
-                self.HTTP_CONN = httplib.HTTPSConnection
+                self.HTTP_CONN = HTTPSConnection
             else:
-                self.HTTP_CONN = httplib.HTTPConnection
+                self.HTTP_CONN = HTTPConnection
     
     def _get_persistent(self):
         return hasattr(self.HTTP_CONN, "__class__")
@@ -511,7 +511,7 @@ def shb(response):
 
 
 def openURL(url, headers=None, method="GET", body=None,
-            host="127.0.0.1", port=8000, http_conn=httplib.HTTPConnection,
+            host="127.0.0.1", port=8000, http_conn=HTTPConnection,
             protocol="HTTP/1.1"):
     """Open the given HTTP resource and return status, headers, and body."""
     

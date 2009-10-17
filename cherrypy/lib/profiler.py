@@ -53,6 +53,7 @@ except ImportError:
 
 import os, os.path
 import sys
+import warnings
 
 try:
     from cStringIO import StringIO

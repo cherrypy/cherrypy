@@ -303,6 +303,10 @@ class KnownLengthRFile(object):
         return data
 
 
+class MaxSizeExceeded(Exception):
+    pass
+
+
 class ChunkedRFile(object):
     """Wraps a file-like object, returning an empty string when exhausted.
     
@@ -327,7 +331,7 @@ class ChunkedRFile(object):
         self.bytes_read += len(line)
         
         if self.maxlen and self.bytes_read > self.maxlen:
-            raise IOError("Request Entity Too Large")
+            raise MaxSizeExceeded("Request Entity Too Large", self.maxlen)
         
         line = line.strip().split(";", 1)
         

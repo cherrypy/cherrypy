@@ -3,7 +3,7 @@
 from cherrypy.test import test
 test.prefer_parent_path()
 
-import httplib
+from httplib import HTTPConnection, HTTPSConnection
 import cherrypy
 import mimetypes
 
@@ -78,9 +78,9 @@ class HTTPTests(helper.CPWebCase):
         # the request is of method POST, this should be OK because we set
         # request.process_request_body to False for our handler.
         if self.scheme == "https":
-            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.request("POST", "/no_body")
         response = c.getresponse()
         self.body = response.fp.read()
@@ -92,9 +92,9 @@ class HTTPTests(helper.CPWebCase):
         # Verify that CP times out the socket and responds
         # with 411 Length Required.
         if self.scheme == "https":
-            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.request("POST", "/")
         response = c.getresponse()
         self.body = response.fp.read()
@@ -112,9 +112,9 @@ class HTTPTests(helper.CPWebCase):
         
         # post file
         if self.scheme == 'https':
-            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest('POST', '/post_multipart')
         c.putheader('Content-Type', content_type)
         c.putheader('Content-Length', str(len(body)))
@@ -133,9 +133,9 @@ class HTTPTests(helper.CPWebCase):
         
         # Test missing version in Request-Line
         if self.scheme == 'https':
-            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c._output('GET /')
         c._send_output()
         response = c.response_class(c.sock, strict=c.strict, method='GET')
@@ -146,9 +146,9 @@ class HTTPTests(helper.CPWebCase):
     
     def test_malformed_header(self):
         if self.scheme == 'https':
-            c = httplib.HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            c = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
         # See http://www.cherrypy.org/ticket/941 
@@ -156,9 +156,9 @@ class HTTPTests(helper.CPWebCase):
         c.endheaders()
         
         response = c.getresponse()
-        self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(400)
+        self.body = response.fp.read()
         self.assertBody("Illegal header line.")
     
     def test_http_over_https(self):
@@ -166,7 +166,7 @@ class HTTPTests(helper.CPWebCase):
             return self.skip("skipped (not running HTTPS)... ")
         
         # Try connecting without SSL.
-        conn = httplib.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        conn = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         conn.putrequest("GET", "/", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.endheaders()
