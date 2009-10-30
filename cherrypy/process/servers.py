@@ -208,8 +208,9 @@ def client_host(server_host):
     if server_host == '0.0.0.0':
         # 0.0.0.0 is INADDR_ANY, which should answer on localhost.
         return '127.0.0.1'
-    if server_host == '::':
+    if server_host in ('::', '::0', '::0.0.0.0'):
         # :: is IN6ADDR_ANY, which should answer on localhost.
+        # ::0 and ::0.0.0.0 are non-canonical but common ways to write IN6ADDR_ANY.
         return '::1'
     return server_host
 
