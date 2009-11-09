@@ -1967,6 +1967,7 @@ class WSGIGateway_10(WSGIGateway):
             'SERVER_NAME': req.server.server_name,
             # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
             'SERVER_PROTOCOL': req.request_protocol,
+            'SERVER_SOFTWARE': "%s WSGI Server" % req.server.version,
             'wsgi.errors': sys.stderr,
             'wsgi.input': req.rfile,
             'wsgi.multiprocess': False,
