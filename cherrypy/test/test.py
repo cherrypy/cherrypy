@@ -51,7 +51,7 @@ class TestHarness(object):
         cherrypy.server.using_wsgi = self.supervisor.using_wsgi
         
         if isinstance(conf, basestring):
-            parser = cherrypy.config._Parser()
+            parser = cherrypy.lib.reprconf.Parser()
             conf = parser.dict_from_file(conf).get('global', {})
         else:
             conf = conf or {}
