@@ -30,9 +30,9 @@ class HTTPErrorDemo(object):
             
         return """
         <html><body>
-            <h2><a href="toggleTracebacks">Toggle tracebacks %s</a></h2>
+            <p>Toggle tracebacks <a href="toggleTracebacks">%s</a></p>
             <p><a href="/doesNotExist">Click me; I'm a broken link!</a></p>
-            <p><a href="/error?code=403">Use a custom an error page from a file.</a></p>
+            <p><a href="/error?code=403">Use a custom error page from a file.</a></p>
             <p>These errors are explicitly raised by the application:</p>
             <ul>
                 <li><a href="/error?code=400">400</a></li>
@@ -68,10 +68,14 @@ class HTTPErrorDemo(object):
     messageArg.exposed = True
 
 
-cherrypy.tree.mount(HTTPErrorDemo())
-
+import os.path
+tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':
-    import os.path
-    thisdir = os.path.dirname(__file__)
-    cherrypy.quickstart(config=os.path.join(thisdir, 'tutorial.conf'))
+    # CherryPy always starts with app.root when trying to map request URIs
+    # to objects, so we need to mount a request handler root. A request
+    # to '/' will be mapped to HelloWorld().index().
+    cherrypy.quickstart(HTTPErrorDemo(), config=tutconf)
+else:
+    # This branch is for the test suite; you can ignore it.
+    cherrypy.tree.mount(HTTPErrorDemo(), config=tutconf)

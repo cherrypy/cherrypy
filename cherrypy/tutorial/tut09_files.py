@@ -53,10 +53,13 @@ class FileDemo(object):
     def index(self):
         return """
         <html><body>
+            <h2>Upload a file</h2>
             <form action="upload" method="post" enctype="multipart/form-data">
             filename: <input type="file" name="myFile" /><br />
             <input type="submit" />
             </form>
+            <h2>Download a file</h2>
+            <a href='download'>This one</a>
         </body></html>
         """
     index.exposed = True
@@ -91,9 +94,15 @@ class FileDemo(object):
     download.exposed = True
 
 
-cherrypy.tree.mount(FileDemo())
+import os.path
+tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':
-    import os.path
-    thisdir = os.path.dirname(__file__)
-    cherrypy.quickstart(config=os.path.join(thisdir, 'tutorial.conf'))
+    # CherryPy always starts with app.root when trying to map request URIs
+    # to objects, so we need to mount a request handler root. A request
+    # to '/' will be mapped to HelloWorld().index().
+    cherrypy.quickstart(FileDemo(), config=tutconf)
+else:
+    # This branch is for the test suite; you can ignore it.
+    cherrypy.tree.mount(FileDemo(), config=tutconf)
+

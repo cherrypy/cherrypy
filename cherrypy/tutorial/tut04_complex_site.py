@@ -77,7 +77,6 @@ class ExtraLinksPage:
 root = HomePage()
 root.joke = JokePage()
 root.links = LinksPage()
-cherrypy.tree.mount(root)
 
 # Remember, we don't need to mount ExtraLinksPage here, because
 # LinksPage does that itself on initialization. In fact, there is
@@ -85,8 +84,15 @@ cherrypy.tree.mount(root)
 # creating all contained request handler objects.
 
 
+import os.path
+tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
+
 if __name__ == '__main__':
-    import os.path
-    thisdir = os.path.dirname(__file__)
-    cherrypy.quickstart(config=os.path.join(thisdir, 'tutorial.conf'))
+    # CherryPy always starts with app.root when trying to map request URIs
+    # to objects, so we need to mount a request handler root. A request
+    # to '/' will be mapped to HelloWorld().index().
+    cherrypy.quickstart(root, config=tutconf)
+else:
+    # This branch is for the test suite; you can ignore it.
+    cherrypy.tree.mount(root, config=tutconf)
 
