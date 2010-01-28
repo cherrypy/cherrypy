@@ -29,14 +29,16 @@ from urllib import quote_plus
 import os, os.path
 localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
 
+the_coverage = None
 try:
-    from coverage import the_coverage as coverage
+    from coverage import coverage
+    the_coverage = coverage(data_file=localFile)
     def start():
-        coverage.start()
+        the_coverage.start()
 except ImportError:
-    # Setting coverage to None will raise errors
+    # Setting the_coverage to None will raise errors
     # that need to be trapped downstream.
-    coverage = None
+    the_coverage = None
     
     import warnings
     warnings.warn("No code coverage will be performed; coverage.py could not be imported.")
@@ -182,7 +184,8 @@ def _percent(statements, missing):
         return int(round(100.0 * e / s))
     return 0
 
-def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
+def _show_branch(root, base, path, pct=0, showpct=False, exclude="",
+                 coverage=the_coverage):
     
     # Show the directory name and any of our children
     dirs = [k for k, v in root.items() if v]
@@ -196,7 +199,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
             yield "<a class='directory' href='menu?base=%s&exclude=%s'>%s</a>\n" % \
                    (newpath, quote_plus(exclude), name)
         
-        for chunk in _show_branch(root[name], base, newpath, pct, showpct, exclude):
+        for chunk in _show_branch(root[name], base, newpath, pct, showpct, exclude, coverage=coverage):
             yield chunk
     
     # Now list the files
@@ -248,20 +251,19 @@ def _graft(path, tree):
         if node:
             d = d.setdefault(node, {})
 
-def get_tree(base, exclude):
+def get_tree(base, exclude, coverage=the_coverage):
     """Return covered module names as a nested dict."""
     tree = {}
-    coverage.get_ready()
-    runs = list(coverage.cexecuted.keys())
-    if runs:
-        for path in runs:
-            if not _skip_file(path, exclude) and not os.path.isdir(path):
-                _graft(path, tree)
+    runs = coverage.data.executed_files()
+    for path in runs:
+        if not _skip_file(path, exclude) and not os.path.isdir(path):
+            _graft(path, tree)
     return tree
 
 class CoverStats(object):
     
-    def __init__(self, root=None):
+    def __init__(self, coverage, root=None):
+        self.coverage = coverage
         if root is None:
             # Guess initial depth. Files outside this path will not be
             # reachable from the web interface.
@@ -296,12 +298,12 @@ class CoverStats(object):
         yield "<div id='tree'>"
         
         # Then display the tree
-        tree = get_tree(base, exclude)
+        tree = get_tree(base, exclude, self.coverage)
         if not tree:
             yield "<p>No modules covered.</p>"
         else:
             for chunk in _show_branch(tree, base, "/", pct,
-                                      showpct=='checked', exclude):
+                                      showpct=='checked', exclude, coverage=self.coverage):
                 yield chunk
         
         yield "</div>"
@@ -331,8 +333,7 @@ class CoverStats(object):
                 yield template % (lineno, cgi.escape(line))
     
     def report(self, name):
-        coverage.get_ready()
-        filename, statements, excluded, missing, _ = coverage.analysis2(name)
+        filename, statements, excluded, missing, _ = self.coverage.analysis2(name)
         pc = _percent(statements, missing)
         yield TEMPLATE_COVERAGE % dict(name=os.path.basename(name),
                                        fullpath=name,
@@ -350,14 +351,16 @@ class CoverStats(object):
 def serve(path=localFile, port=8080, root=None):
     if coverage is None:
         raise ImportError("The coverage module could not be imported.")
-    coverage.cache_default = path
+    from coverage import coverage
+    cov = coverage(data_file = path)
+    cov.load()
     
     import cherrypy
     cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
                             'environment': "production",
                             })
-    cherrypy.quickstart(CoverStats(root))
+    cherrypy.quickstart(CoverStats(cov, root))
 
 if __name__ == "__main__":
     serve(*tuple(sys.argv[1:]))

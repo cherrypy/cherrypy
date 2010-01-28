@@ -382,18 +382,22 @@ class CommandLineParser(object):
         coverage is silently(!) disabled.
         """
         try:
-            from coverage import the_coverage as coverage
-            c = os.path.join(os.path.dirname(__file__), "../lib/coverage.cache")
-            coverage.cache_default = c
-            if c and os.path.exists(c):
-                os.remove(c)
-            coverage.start()
+            from coverage import coverage
+            if self.basedir:
+                c = os.path.join(self.basedir, 'coverage.cache')
+            else:
+                c = os.path.join(os.path.dirname(__file__), "../lib/coverage.cache")
+            cov = coverage(data_file=c)
+            #start coverage before importing cherrypy
+            cov.erase()
+            cov.start()
             import cherrypy
             from cherrypy.lib import covercp
+            covercp.the_coverage = cov
             cherrypy.engine.subscribe('start', covercp.start)
         except ImportError:
-            coverage = None
-        self.coverage = coverage
+            cov = None
+        self.coverage = cov
     
     def stop_coverage(self):
         """Stop the coverage tool, save results, and report."""
@@ -419,8 +423,8 @@ class CommandLineParser(object):
                 basedir = os.path.normpath(os.path.join(os.getcwd(), basedir))
         basedir = basedir.lower()
         
-        self.coverage.get_ready()
-        morfs = [x for x in self.coverage.cexecuted
+        self.coverage.load()
+        morfs = [x for x in self.coverage.data.executed_files()
                  if x.lower().startswith(basedir)]
         
         total_statements = 0
