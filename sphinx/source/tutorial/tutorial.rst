@@ -1,26 +1,30 @@
-= CherryPy Tutorial =
-[[PageOutline]]
+CherryPy Tutorial
+*****************
 
 This document is for CherryPy 3.
 
 (Old 2.x) translations: [wiki:CherryPyTutorialIta Italian], [wiki:sp/Tutorial Spanish], [wiki:CherryPyTutorialFrench French]
 
-== What is CherryPy? ==
+What is CherryPy?
+=================
 
 CherryPy is a pythonic, object-oriented HTTP framework. It provides the foundation over which complex web-based applications can be written, with little or no knowledge of the underlying protocols. CherryPy allows developers to build web applications in much the same way they would build any other object-oriented Python program. This usually results in smaller source code developed in less time.
 
 CherryPy does its best to stay out of the way between the programmer and the problem. CherryPy applications are usually very simple. It works out of the box; default behavior is sensible enough to allow use without extensive setup or customization. The embedded web server allows one to deploy web applications anywhere Python is installed. In short, CherryPy is as pythonic as it gets. 
 
-== What CherryPy is NOT? ==
+What CherryPy is NOT?
+=====================
 
 As an HTTP framework, CherryPy does all that is necessary to allow Python code to be executed when some resource (or URL) is requested by the user. However, it is not a templating language, such as PHP. CherryPy can work with several templating packages, including [http://www.cheetahtemplate.org/ Cheetah], [http://cherrytemplate.python-hosting.com/ CherryTemplate], and [wiki:ChoosingATemplatingLanguage several others]. But please note that, while useful to some extent, templating packages are not strictly necessary, and that pure Python code can be used to generate the Web pages.
 
 
-== What is this tutorial about? ==
+What is this tutorial about?
+============================
 
 This tutorial cover the basic steps for a newcomer to get to grips with CherryPy unique approach to web application development. After following this tutorial, the programmer will be able to understand how CherryPy applications work, and also to implement simple but yet powerful applications on her own. Some knowledge of the Python programming language is assumed. One does not need to be an expert to work with CherryPy, but a good understanding of object-oriented basics is strongly recommended. 
 
-=== Knowledge required ===
+Knowledge required
+------------------
 
 It is assumed that the user has:
 
@@ -28,11 +32,13 @@ It is assumed that the user has:
  * Some experience with basic object oriented programming;
  * Some knowledge of HTML, which is necessary to build the Web pages.
 
-=== Learning Python ===
+Learning Python
+---------------
 
 As said above, this is not a guide to the Python language. There are plenty of good resources for those learning Python (just to name a few among the best:  [http://www.pasteur.fr/recherche/unites/sis/formation/python/ Python course in Bioinformatics], [http://www.byteofpython.info/ A Byte Of Python] and [http://www.diveintopython.org/ Dive into Python]). The [http://www.python.org official Python website] lists some good resources, including an [http://docs.python.org/tut/tut.html excellent tutorial].
 
-== Your first CherryPy application ==
+Your first CherryPy application
+===============================
 
 The standard 'Hello world!' application takes less than 10 lines of code, when written using CherryPy. 
 
@@ -56,7 +62,8 @@ python hello.py
 
 Direct your favorite web browser to http://localhost:8080 and you should see {{{Hello world!}}} printed there.
 
-=== How does it work? ===
+How does it work?
+-----------------
 
 Let's take a look at the {{{hello.py}}}:
 
@@ -69,11 +76,13 @@ When the application is executed, the CherryPy server is started with the defaul
 
 Finally, the web server receives the request for the URL {{{http://localhost:8080}}}. It searches for the best method to handle the request, starting from the {{{HelloWorld}}} instance. In this particular case, the root of the site is automatically mapped to the {{{index()}}} method (similar to the {{{index.html}}} that is the standard page for conventional Web servers). The !HelloWorld class defines an {{{index()}}} method and exposes it. CherryPy calls {{{HelloWorld().index()}}}, and the result of the call is sent back to the browser as the contents of the index page for the website. All work is done automatically; the application programmer only needs to provide the desired content as the return value of the {{{index}}} method.
 
-== Concepts ==
+Concepts
+========
 
 Any object that is attached to the root object is traversible via the internal URL-to-object mapping routine. However, it does not mean that the object itself is directly accessible via the Web. For this to happen, the object has to be '''exposed'''.
 
-==== Exposing objects ====
+Exposing objects
+----------------
 
 CherryPy maps URL requests to objects and invokes the suitable callable automatically. The callables that can be invoked as a result of external requests are said to be '''exposed'''.
 
@@ -105,7 +114,8 @@ class Node:
         ...
 }}}
 
-== Finding the correct object ==
+Finding the correct object
+==========================
 
 For the user, a web application is just like a website with static files. The user types (or clicks) a URL, and gets to the desired webpage. A conventional webserver uses the URL to retrieve a static file from the filesystem. On the other hand, a web application server not only serves the content from static files; it can also map the URL it receives into some object and call it. The result is then sent back to the user's browser, where it is rendered into a viewable page. The result is a dynamic web application; for each URL, a unique object can be called into action.
 
@@ -147,7 +157,8 @@ class HelloWorld(object):
 cherrypy.quickstart(HelloWorld())
 }}}
 
-== Normal methods ==
+Normal methods
+==============
 
 CherryPy can directly call methods on the mounted objects, if it receives a URL that is directly mapped to them. For example:
 
@@ -164,11 +175,13 @@ In the example, {{{root.foo}}} contains a function object, named {{{foo}}}. When
 
 In some advanced cases, there can be a conflict as CherryPy tries to decide which method it will call to handle a request. The {{{index()}}} method (see below) takes precedence. But if CherryPy finds a full match, and the last object in the match is a callable (which means a method, function, or any other Python object that supports the {{{__call__}}} method); and finally, if the callable itself does not contain a valid {{{index()}}} method, then the object itself will be called. These rules are necessary because classes in Python actually are callables; calling them produces a new instance. It may look confusing, but the rules are very simple use in practice.
 
-== The `index` method ==
+The `index` method
+==================
 
 The `index` method has a special role in CherryPy: it handles intermediate URI's that end in a slash; for example, the URI `/orders/items/` might map to `root.orders.items.index`. The `index` method can take additional keyword arguments if the request includes querystring or POST params; however, it ''cannot'' take positional arguments.
 
-== Receiving data from HTML forms ==
+Receiving data from HTML forms
+==============================
 
 Any method that is called by CherryPy - {{{index}}}, or any other suitable method - can receive additional data from HTML forms using '''keyword arguments'''. For example, the following login form sends the {{{username}}} and the {{{password}}} as form arguments using the POST method:
 
@@ -201,7 +214,8 @@ Both arguments have to be declared as '''keyword arguments'''. The default value
 
 CherryPy supports both the GET and POST method for HTML forms. Arguments are passed the same way, regardless of the original method used by the browser to send data to the web server.
 
-== Partial matches and the default method ==
+Partial matches and the default method
+======================================
 
 Partial matches can happen when a URL contains components that do not map to the object tree. This can happen for a number of reasons. For example, it may be an error; the user just typed the wrong URL. But it also can mean that the URL contains extra arguments.
 
@@ -231,7 +245,8 @@ root.blog.default('2005', '1', '17')
 
 In this case, there is a partial match up to the {{{blog}}} component. The rest of the URL can't be found in the mounted object tree. In this case, the {{{default()}}} method will be called, and the positional parameters will receive the remaining path components as arguments. The values are passed as strings; in the above mentioned example, the arguments would still need to be converted back into numbers, but the idea is correctly presented.
 
-== The CherryPy configuration file ==
+The CherryPy configuration file
+===============================
 
 CherryPy uses a simple [wiki:ConfigAPI configuration file] format to customize some aspects of its behavior. There are actually two (or more) files, one for the global "site" and one for each "application"; but if you only have one app you can put them both in the same file. The configuration files can be edited with any conventional text editor, and can be used even by non-technical users for some simple customization tasks. For example:
 
@@ -256,7 +271,8 @@ Many of the values are self explanatory (for example, {{{server.socket_port}}}, 
 
 If you're using quickstart, you can pass a single configuration filename (or dict) containing both site and app config to {{{cherrypy.quickstart(Root(), '/', filename_or_dict)}}}. Otherwise, you need to register global site config as {{{cherrypy.config.update(filename_or_dict)}}} and app config in {{{cherrypy.tree.mount(Root(), '/', filename_or_dict)}}}. See the [wiki:ConfigAPI config docs] for more information.
 
-== The cherrypy structure ==
+The CherryPy structure
+======================
 
 Most of the features of CherryPy are available through the {{{cherrypy}}} module. It contains several members:
 
@@ -269,7 +285,8 @@ Most of the features of CherryPy are available through the {{{cherrypy}}} module
  * {{{cherrypy.response.headers}}} contains a mapping with the header options that will be returned by the server, before the contents get sent.
  * {{{cherrypy.response.body}}} contains the actual contents of the webpage that will be sent as a response.
 
-== Tools ==
+Tools
+=====
 
 CherryPy core is extremely light and clean. It contains only the necessary features to support the HTTP protocol and to call the correct object for each request. Additional features can be added to it using '''modular tools'''.
 
@@ -292,7 +309,8 @@ tools.gzip.on = True
 
 In this case, the application can use Unicode strings for the contents it generates; translation to {{{utf8}}} will be done automatically via the encoding tool. Also, all the content will be automatically compressed with gzip, saving bandwidth.
 
-= Conclusion =
+Conclusion
+**********
 
 This tutorial only covers the basic features of CherryPy, but it tries to present them in a way that makes it easier for the user to discover how to use them. The CherryPy distribution comes with several good tutorials; however, the best way to master CherryPy is to use it to write your own Web applications. The embedded web server makes it easy for anyone not only to try, but also to deploy local applications, or even small Internet-enabled web sites. Try it, and let us know what you did with it!
 
