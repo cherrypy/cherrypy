@@ -7,8 +7,7 @@ Contents:
    :maxdepth: 3
    :glob:
 
-   intro/*
-   modules/*
+   */*
 
 Indices and tables
 ==================
