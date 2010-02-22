@@ -30,16 +30,20 @@ replacements = [
 	replace_wiki_link,
 	]
 
-def handle_command_line():
-	options = get_options()
-	text = open(options.filename).read()
+def convert_file(filename):
+	text = open(filename).read()
 	new_text = text
 	for repl in replacements:
 		pattern = re.compile(inspect.getdoc(repl))
 		new_text = pattern.sub(repl, text)
 
-	open(options.filename, 'w').write(new_text)
+	open(filename, 'w').write(new_text)
 	print("done")
+
+
+def handle_command_line():
+	options = get_options()
+	convert_file(options.filename)
 
 if __name__ == '__main__':
 	handle_command_line()
