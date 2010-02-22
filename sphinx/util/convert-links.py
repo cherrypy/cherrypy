@@ -35,7 +35,7 @@ def convert_file(filename):
 	new_text = text
 	for repl in replacements:
 		pattern = re.compile(inspect.getdoc(repl))
-		new_text = pattern.sub(repl, text)
+		new_text = pattern.sub(repl, new_text)
 
 	open(filename, 'w').write(new_text)
 	print("done")
