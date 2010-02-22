@@ -1,7 +1,6 @@
+********
 Overview
 ********
-
-This document is for CherryPy 3.
 
 What is CherryPy?
 =================
@@ -13,17 +12,23 @@ CherryPy does its best to stay out of the way between the programmer and the pro
 What CherryPy is NOT?
 =====================
 
-As an HTTP framework, CherryPy does all that is necessary to allow Python code to be executed when some resource (or URL) is requested by the user. However, it is not a templating language, such as PHP. CherryPy can work with several templating packages, including `Cheetah <http://www.cheetahtemplate.org/>`_, [http://cherrytemplate.python-hosting.com/ CherryTemplate], and [wiki:ChoosingATemplatingLanguage several others]. But please note that, while useful to some extent, templating packages are not strictly necessary, and that pure Python code can be used to generate the Web pages.
+As an HTTP framework, CherryPy does all that is necessary to allow Python code
+to be executed when some resource (or URL) is requested by the user. However,
+it is not a templating language, such as PHP. CherryPy can work with several
+templating packages (see :doc:`templates`). But please note that, while useful
+to some extent, templating packages are not strictly necessary, and that pure
+Python code can be used to generate the Web pages.
 
 Why choose CherryPy?
 ====================
 
-Let's face it: there are **dozens** of different Python web frameworks. Why would you want to choose CherryPy for your next dynamic Web project?
+Let's face it: there are **dozens** of different Python web frameworks. Why would
+you want to choose CherryPy for your next dynamic Web project?
 
 1. Simplicity
 -------------
 
-Developing with CherryPy is a simple task. "Hello, world" is only a few lines long, and does not require the developer to learn the entire (albeit very manageable) framework all at once. The framework is very pythonic, that is, it follows Python's conventions very nicely (code is sparse and clean).
+Developing with CherryPy is a simple task. "Hello, world" is only a few lines long, and does not require the developer to learn the entire (albeit very manageable) framework all at once. The framework is very pythonic; that is, it follows Python's conventions very nicely (code is sparse and clean).
 
 Contrast this with J2EE and Python's most popular and visible web frameworks: Django, Zope, Pylons, and Turbogears. In all of them, the learning curve is massive. In these frameworks, "Hello, world" requires the programmer to set up a large scaffold which spans multiple files and to type a lot of boilerplate code. CherryPy succeeds because it does not include the bloat of other frameworks, allowing the programmer to write their web application quickly while still maintaining a high level of organization and scalability.
 
@@ -36,7 +41,8 @@ In short, CherryPy empowers the developer to work with the framework, not agains
 
 CherryPy leverages all of the power of Python. Python is a dynamic langauge which allows for rapid development of applications. Python also has an extensive built-in API which simplifies web app development. Even more extensive, however, are the third-party libraries available for Python. These range from object-relational mappers to form libraries, to an automatic Python optimizer, a Windows exe generator, imaging libraries, email support, HTML templating engines, etc. CherryPy applications are just like regular Python applications. CherryPy does not stand in your way if you want to use these brilliant tools.
 
-CherryPy also provides an object publisher, sessions, aspects and filters, which are the powerful tools needed to develop world-class web applications.
+CherryPy also provides Tools and Plugins, which are powerful extension points
+needed to develop world-class web applications.
 
 3. Maturity
 -----------
@@ -59,7 +65,7 @@ Out of the box, CherryPy includes its own production-ready application server to
 
 In addition, CherryPy is pure-python and is compatible with Python 2.3. This means that CherryPy will run on all major platforms that Python will run on (Windows, MacOSX, Linux, BSD, etc).
 
-[http://www.webfaction.com Webfaction.com], run by the inventor of CherryPy, is a commercial web host that offers CherryPy hosting packages (in addition to several others).
+`Webfaction.com <http://www.webfaction.com>`_, run by the inventor of CherryPy, is a commercial web host that offers CherryPy hosting packages (in addition to several others).
 
 6. It's free!
 -------------

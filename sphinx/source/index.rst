@@ -1,7 +1,8 @@
-CherryPy Documentation
-======================
+.. _toc:
 
-Contents:
+**********************
+CherryPy Documentation
+**********************
 
 .. toctree::
    :maxdepth: 3
