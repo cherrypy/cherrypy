@@ -131,7 +131,7 @@ Specify the content-type of static resource
 -------------------------------------------
 
 Both the ``staticfile`` and ``staticdir`` tool allow you to specify the mime type of resources by their extension.
-Although internally CherryPy will most of the time guess the correct mime type (using the Python mimetypes module),
+Although internally CherryPy will most of the time guess the correct mime type (using the Python :mod:`mimetypes` module),
 there may be cases when you need to provide the content type values.  You can do this via configuration arguments
 ``tools.staticdir.content_types`` and ``tools.staticfile.content_types``, as in the following example.
 
