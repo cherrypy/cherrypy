@@ -2,12 +2,12 @@
 Logging
 *******
 
-CherryPy 3 uses the ``logging`` module from Python's standard library.
+CherryPy 3 uses the :mod:`logging` module from Python's standard library.
 
 Simple config
 =============
 
-Although CherryPy uses the logging module, it does so "behind the scenes" so that simple logging is simple (but complicated logging is still possible). "Simple" logging means that you can log to the screen (i.e. console/stdout) or to a file, and that you can easily have separate error and access log files.
+Although CherryPy uses the :mod:`Python logging module <logging>`, it does so "behind the scenes" so that simple logging is simple (but complicated logging is still possible). "Simple" logging means that you can log to the screen (i.e. console/stdout) or to a file, and that you can easily have separate error and access log files.
 
 Here are the simplified logging settings. You use these by adding lines to your config file or dict. You should set these at either the global level or per application (see next), but generally not both.
 
@@ -54,7 +54,7 @@ Each log manager possesses the following attributes:
 Custom Handlers
 ===============
 
-The simple settings above work by manipulating Python's standard ``logging`` module. So when you need something more complex, the full power of the standard module is yours to exploit. You can borrow or create custom handlers, formats, filters, and much more. Here's an example that skips the standard FileHandler and uses a RotatingFileHandler instead:
+The simple settings above work by manipulating Python's standard :mod:`logging` module. So when you need something more complex, the full power of the standard module is yours to exploit. You can borrow or create custom handlers, formats, filters, and much more. Here's an example that skips the standard FileHandler and uses a RotatingFileHandler instead:
 
 ::
 
