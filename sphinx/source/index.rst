@@ -7,7 +7,7 @@ Contents:
    :maxdepth: 3
    :glob:
 
-   intro/*
+   intro/index
    progguide/*
    deployguide/*
    refman/*

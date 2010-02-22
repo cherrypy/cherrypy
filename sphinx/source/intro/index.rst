@@ -7,6 +7,8 @@ Contents:
    :maxdepth: 2
    :glob:
 
+   overview
+   install
    tutorial/*
 
 
