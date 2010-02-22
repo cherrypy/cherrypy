@@ -57,6 +57,9 @@ def replace_page_outline(matcher):
 	r"\[\[PageOutline\]\]\n"
 	return ''
 
+def replace_bang_symbols(matcher):
+	r"!(?P<symbol>\w+)"
+	return matcher.groupdict()['symbol']
 
 # a number of the files end in
 """{{{
