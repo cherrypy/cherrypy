@@ -1,10 +1,7 @@
-Serving static content with CherryPy 3
-**************************************
-[[PageOutline]]
+Serving Static Content
+**********************
 
-For CherryPy 2, see the bottom of this page.
-
-Static content is now handled by tools.staticfile and tools.staticdir that can easily be enabled and configured in your config file. For instance, if you wanted to serve /style.css from /home/site/style.css and /static/* from /home/site/static/*, you can use the following configuration:
+Static content is now handled by ``tools.staticfile`` and ``tools.staticdir`` that can easily be enabled and configured in your config file. For instance, if you wanted to serve ``/style.css`` from ``/home/site/style.css`` and ``/static/*`` from ``/home/site/static/*``, you can use the following configuration:
 
 ::
 
@@ -148,24 +145,24 @@ there may be cases when you need to provide the content type values.  You can do
         @cherrypy.expose
         def index(self):
             return """<html>
-    <head>
-    	<title>CherryPy static tutorial</title>
-    </head>
-    <html>
-    <body>
-    <a href="feed/notes.rss">RSS 2.0</a>
-    <br />
-    <a href="feed/notes.atom">Atom 1.0</a>
-    </body>
-    </html>"""
+                    <head>
+                        <title>CherryPy static tutorial</title>
+                    </head>
+                    <html>
+                    <body>
+                    <a href="feed/notes.rss">RSS 2.0</a>
+                    <br />
+                    <a href="feed/notes.atom">Atom 1.0</a>
+                    </body>
+                    </html>"""
     
     if __name__ == '__main__':
         current_dir = os.path.dirname(os.path.abspath(__file__))
         # Set up site-wide config first so we get a log if errors occur.
         cherrypy.config.update({'environment': 'production',
                                 'log.error_file': 'site.log',
-    			    'log.screen': True})
-    	
+                                'log.screen': True})
+    
         conf = {'/feed': {'tools.staticdir.on': True,
                           'tools.staticdir.dir': os.path.join(current_dir, 'feeds'),
                           'tools.staticdir.content_types': {'rss': 'application/xml',
@@ -207,7 +204,7 @@ It may happen that you would need the static tools power but from a page handler
         # Set up site-wide config first so we get a log if errors occur.
         cherrypy.config.update({'environment': 'production',
                                 'log.error_file': 'site.log',
-    			    'log.screen': True})
+                                'log.screen': True})
         cherrypy.quickstart(Root(), '/')
 
 
@@ -299,42 +296,4 @@ Regardless of where you split "root" from "dir", the remainder of the OS path wi
                       section     +                branch
     >>> cherrypy.url('/images' + '/' + 'jpegs/path/to/actual/file.jpg')
     http://www2.mydomain.org/vhost/path/to/my/approot/images/jpegs/path/to/actual/file.jpg
-
-
-::
-
-    #!html
-    <h2 class='compatibility'>Older versions</h2>
-
-
-||   || replace this   || with this        ||
-||2.2||tools.staticdir ||static_filter.dir ||
-||   ||tools.staticfile||static_filter.file||
-||   ||cherrypy.url    ||''no equivalent'' ||
-||   ||serve_file      ||serveFile         ||
-||2.1||static_filter   ||staticFilter      ||
-
-2.0
----
-
-Edit your `config file <TODO-fix wiki target ConfigFile20>`_ and place a section like this:
-::
-
-    [staticContent]
-    static=/home/dir/static
-    icons=/home/dir2/icons
-    favicon.ico=/home/icons/favicon.ico
-    robots.txt=/home/static/robots.txt
-    subobject/static=/home/dir/subdir/static
-
-This will handle all files under static and icons directories as static files.  Also, when the server recieves a request for /favicon.ico, it will serve the /home/icons/favicon.ico file; when it gets a request for /robots.txt, it will serve /home/static/robots.txt.
-
-To use ConfigMap instead of a config file for static files, you can use the keyname 'staticContentList', and you can put the directory names into pairs within an array, like this:
-::
-
-    #!python
-    cpg.server.start(configMap =
-     {'staticContentList': [['example', r'C:\WINDOWS\Desktop\example'],
-                            ['test', r'C:\WINDOWS\Desktop\test']],
-      'socketPort': 9001 })
 
