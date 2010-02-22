@@ -22,7 +22,7 @@ It is assumed that the user has:
 Learning Python
 ---------------
 
-As said above, this is not a guide to the Python language. There are plenty of good resources for those learning Python (just to name a few among the best:  [http://www.pasteur.fr/recherche/unites/sis/formation/python/ Python course in Bioinformatics], [http://www.byteofpython.info/ A Byte Of Python] and [http://www.diveintopython.org/ Dive into Python]). The [http://www.python.org official Python website] lists some good resources, including an [http://docs.python.org/tut/tut.html excellent tutorial].
+As said above, this is not a guide to the Python language. There are plenty of good resources for those learning Python (just to name a few among the best:  `Python course in Bioinformatics <http://www.pasteur.fr/recherche/unites/sis/formation/python/>`_, `A Byte Of Python <http://www.byteofpython.info/>`_ and `Dive into Python <http://www.diveintopython.org/>`_). The `official Python website <http://www.python.org>`_ lists some good resources, including an `excellent tutorial <http://docs.python.org/tut/tut.html>`_.
 
 Your first CherryPy application
 ===============================
@@ -40,7 +40,7 @@ The standard 'Hello world!' application takes less than 10 lines of code, when w
     cherrypy.quickstart(HelloWorld())
 
 
-We assume that you already have [wiki:CherryPyInstall installed CherryPy]. Copy this file and save it locally as ``hello.py``, then start the application at the command prompt: ::
+We assume that you already have `installed CherryPy <TODO-fix wiki target CherryPyInstall>`_. Copy this file and save it locally as ``hello.py``, then start the application at the command prompt: ::
 
 
     python hello.py
@@ -232,7 +232,7 @@ In this case, there is a partial match up to the ``blog`` component. The rest of
 The CherryPy configuration file
 ===============================
 
-CherryPy uses a simple [wiki:ConfigAPI configuration file] format to customize some aspects of its behavior. There are actually two (or more) files, one for the global "site" and one for each "application"; but if you only have one app you can put them both in the same file. The configuration files can be edited with any conventional text editor, and can be used even by non-technical users for some simple customization tasks. For example: ::
+CherryPy uses a simple `configuration file <TODO-fix wiki target ConfigAPI>`_ format to customize some aspects of its behavior. There are actually two (or more) files, one for the global "site" and one for each "application"; but if you only have one app you can put them both in the same file. The configuration files can be edited with any conventional text editor, and can be used even by non-technical users for some simple customization tasks. For example: ::
 
     [global]
     server.socket_port = 8000
@@ -252,7 +252,7 @@ Many of the values are self explanatory (for example, ``server.socket_port``, wh
  * The ``[/static]`` statement specifies that static content from /home/site/static/* is served as /static/*
  * The ``tools.staticdir.root`` statement specifies the directory from which the static files are served. See StaticContent.
 
-If you're using quickstart, you can pass a single configuration filename (or dict) containing both site and app config to ``cherrypy.quickstart(Root(), '/', filename_or_dict)``. Otherwise, you need to register global site config as ``cherrypy.config.update(filename_or_dict)`` and app config in ``cherrypy.tree.mount(Root(), '/', filename_or_dict)``. See the [wiki:ConfigAPI config docs] for more information.
+If you're using quickstart, you can pass a single configuration filename (or dict) containing both site and app config to ``cherrypy.quickstart(Root(), '/', filename_or_dict)``. Otherwise, you need to register global site config as ``cherrypy.config.update(filename_or_dict)`` and app config in ``cherrypy.tree.mount(Root(), '/', filename_or_dict)``. See the `config docs <TODO-fix wiki target ConfigAPI>`_ for more information.
 
 The CherryPy structure
 ======================
@@ -261,10 +261,10 @@ Most of the features of CherryPy are available through the ``cherrypy`` module. 
 
  * ``cherrypy.engine`` contains the API to control the CherryPy engine.
  * ``cherrypy.server`` contains the API to control the HTTP server.
- * [wiki:RequestObject cherrypy.request] contains the all the information that comes with the HTTP request, after it is parsed and analyzed by CherryPy.
+ * `cherrypy.request <TODO-fix wiki target RequestObject>`_ contains the all the information that comes with the HTTP request, after it is parsed and analyzed by CherryPy.
  * ``cherrypy.request.headers`` contains a mapping with the header options that were sent as part of the request.
  * ``cherrypy.session`` is a special mapping that is automatically generated and encoded by CherryPy; it can be used to store session-data in a persistent cookie. For it to work you have to enable the session functionality by setting 'tools.session.on' to True in your config. 
- * [wiki:ResponseObject cherrypy.response] contains the data that is used to build the HTTP response. 
+ * `cherrypy.response <TODO-fix wiki target ResponseObject>`_ contains the data that is used to build the HTTP response. 
  * ``cherrypy.response.headers`` contains a mapping with the header options that will be returned by the server, before the contents get sent.
  * ``cherrypy.response.body`` contains the actual contents of the webpage that will be sent as a response.
 
