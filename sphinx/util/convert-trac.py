@@ -37,7 +37,10 @@ def replace_headings(matcher):
 	level = len(matcher.groupdict()['level'])
 	char = heading_characters[level]
 	name = matcher.groupdict()['name']
-	return '\n'.join([name, char*len(name)])
+	lines = [name, char*len(name)]
+	if level == 1:
+		lines.insert(0, char*len(name))
+	return '\n'.join(lines)
 
 def indent(block):
 	add_indent = lambda s: '    ' + s
