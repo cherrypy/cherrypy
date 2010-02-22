@@ -38,12 +38,12 @@ Log Manager Objects
 Each log manager possesses the following attributes:
 
  * access(): writes to the access log in `Apache/NCSA Combined Log Format <http://httpd.apache.org/docs/2.0/logs.html#combined>`_. CherryPy calls this automatically for you. Note there are no arguments; it collects the data itself from ``cherrypy.request``.
- * access_file: the filename for ``self.access_log``. If you set this to a string, it'll add the appropriate !FileHandler for you. If you set it to None or ``''``, it will remove the handler.
+ * access_file: the filename for ``self.access_log``. If you set this to a string, it'll add the appropriate FileHandler for you. If you set it to None or ``''``, it will remove the handler.
  * access_log: the actual ``logging.Logger`` instance for access messages.
  * appid: the id of the Application object which owns this log manager. If this is a global log manager, appid is None.
  * ``__call__``: an alias for ``error`` (see next).
  * ``error(msg='', context='', severity=logging.DEBUG, traceback=False)``: write ''msg'' to the error log. If ''traceback'' is True, the traceback of the current exception (if any) will be appended to ''msg''.
- * error_file: the filename for ``self.error_log``. If you set this to a string, it'll add the appropriate !FileHandler for you. If you set it to None or ``''``, it will remove the handler.
+ * error_file: the filename for ``self.error_log``. If you set this to a string, it'll add the appropriate FileHandler for you. If you set it to None or ``''``, it will remove the handler.
  * error_log: the actual ``logging.Logger`` instance for error messages.
  * logger_root: the "top-level" logger name ("<logger_root>.error.<appid>"). Defaults to "cherrypy".
  * screen: a boolean. If you set this to True, it'll add the appropriate ``StreamHandler(sys.stdout)`` for you. If you set it to False, it will remove the handler.
@@ -54,11 +54,11 @@ Each log manager possesses the following attributes:
 Custom Handlers
 ===============
 
-The simple settings above work by manipulating Python's standard ``logging`` module. So when you need something more complex, the full power of the standard module is yours to exploit. You can borrow or create custom handlers, formats, filters, and much more. Here's an example that skips the standard !FileHandler and uses a !RotatingFileHandler instead:
+The simple settings above work by manipulating Python's standard ``logging`` module. So when you need something more complex, the full power of the standard module is yours to exploit. You can borrow or create custom handlers, formats, filters, and much more. Here's an example that skips the standard FileHandler and uses a RotatingFileHandler instead:
 
 ::
 
-    #!python
+    #python
     log = app.log
     
     # Remove the default FileHandlers if present.
