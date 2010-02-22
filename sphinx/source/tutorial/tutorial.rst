@@ -3,8 +3,6 @@ CherryPy Tutorial
 
 This document is for CherryPy 3.
 
-(Old 2.x) translations: [wiki:CherryPyTutorialIta Italian], [wiki:sp/Tutorial Spanish], [wiki:CherryPyTutorialFrench French]
-
 What is CherryPy?
 =================
 
@@ -15,7 +13,7 @@ CherryPy does its best to stay out of the way between the programmer and the pro
 What CherryPy is NOT?
 =====================
 
-As an HTTP framework, CherryPy does all that is necessary to allow Python code to be executed when some resource (or URL) is requested by the user. However, it is not a templating language, such as PHP. CherryPy can work with several templating packages, including [http://www.cheetahtemplate.org/ Cheetah], [http://cherrytemplate.python-hosting.com/ CherryTemplate], and [wiki:ChoosingATemplatingLanguage several others]. But please note that, while useful to some extent, templating packages are not strictly necessary, and that pure Python code can be used to generate the Web pages.
+As an HTTP framework, CherryPy does all that is necessary to allow Python code to be executed when some resource (or URL) is requested by the user. However, it is not a templating language, such as PHP. CherryPy can work with several templating packages, including `Cheetah <http://www.cheetahtemplate.org/>`_, [http://cherrytemplate.python-hosting.com/ CherryTemplate], and [wiki:ChoosingATemplatingLanguage several others]. But please note that, while useful to some extent, templating packages are not strictly necessary, and that pure Python code can be used to generate the Web pages.
 
 
 What is this tutorial about?
