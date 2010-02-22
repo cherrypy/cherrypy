@@ -8,7 +8,10 @@ Contents:
    :glob:
 
    intro/*
-   modules/*
+   progguide/*
+   deployguide/*
+   refman/*
+   appendix/*
 
 Indices and tables
 ==================
