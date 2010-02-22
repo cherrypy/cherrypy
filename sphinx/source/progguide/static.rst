@@ -21,7 +21,7 @@ Parameters
 ==========
 
  * on: True or False (default). Enable or disable the filter.
- * match: a `regular expression <http://docs.python.org/lib/module-re.html>`_ of files to match.
+ * match: a :mod:`regular expression <re>` of files to match.
  * filename: path to the target file.
  * dir: path to the target directory.
  * root: absolute path to a "root"; joined with .dir or .filename if they are relative paths.
