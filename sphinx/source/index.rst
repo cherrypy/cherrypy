@@ -1,17 +1,16 @@
 CherryPy Documentation
-====================================
+======================
 
 Contents:
 
 .. toctree::
    :maxdepth: 3
-   :glob:
 
    intro/index
-   progguide/*
-   deployguide/*
-   refman/*
-   appendix/*
+   progguide/index
+   deployguide/index
+   refman/index
+   appendix/index
 
 Indices and tables
 ==================

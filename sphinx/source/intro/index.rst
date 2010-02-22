@@ -10,5 +10,6 @@ Contents:
    overview
    install
    tutorial/*
+   license
 
 
