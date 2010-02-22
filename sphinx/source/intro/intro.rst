@@ -55,5 +55,5 @@ All of CherryPy is licensed under the open-source BSD license, which means '''Ch
 7. Where to go from here?
 -------------------------
 
-Check out the [wiki:CherryPyTutorial CherryPy tutorial], and [wiki:TableOfContents Table of Contents] for more complete documentation.
+Check out the :ref:`tutorial` and :ref:`toc` for more complete documentation.
 
