@@ -1,3 +1,5 @@
+:tocdepth: 1
+
 *******
 Caching
 *******
@@ -15,11 +17,13 @@ to False (so it doesn't get cached again).
 If POST, PUT, or DELETE requests are made for a cached resource, they invalidate
 (delete) any cached response.
 
-Usage::
-=======
+Usage
+=====
 
-[/]
-tools.caching.on = True
+::
+
+    [/]
+    tools.caching.on = True
 
 Other configuration options:
 
