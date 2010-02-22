@@ -36,11 +36,7 @@ def replace_headings(matcher):
 	name = matcher.groupdict()['name']
 	return '\n'.join([name, char*len(name)])
 
-replacements = [
-	replace_external_link,
-	replace_wiki_link,
-	replace_headings,
-	]
+replacements = [func for name, func in globals().items() if name.startswith('replace')]
 
 def convert_file(filename):
 	shutil.copy(filename, filename+'.bak')
