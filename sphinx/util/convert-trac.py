@@ -49,7 +49,7 @@ def replace_inline_code(matcher):
 
 def replace_code_block(matcher):
 	r"\{\{\{\n(?P<code>(.|\n)*?)^\}\}\}"
-	return '::\n' + indent(matcher.groupdict()['code'])
+	return '::\n\n' + indent(matcher.groupdict()['code'])
 
 replacements = [func for name, func in globals().items() if name.startswith('replace_')]
 
