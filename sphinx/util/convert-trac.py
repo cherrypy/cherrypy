@@ -5,6 +5,7 @@ import re
 import inspect
 import optparse
 import shutil
+from StringIO import StringIO
 
 def get_options():
 	parser = optparse.OptionParser()
@@ -36,7 +37,21 @@ def replace_headings(matcher):
 	name = matcher.groupdict()['name']
 	return '\n'.join([name, char*len(name)])
 
-replacements = [func for name, func in globals().items() if name.startswith('replace')]
+def indent(block):
+	add_indent = lambda s: '    ' + s
+	lines = StringIO(block)
+	i_lines = map(add_indent, lines)
+	return ''.join(i_lines)
+
+def replace_inline_code(matcher):
+	r"\{\{\{(?P<code>[^\n]*?)\}\}\}"
+	return '``{code}``'.format(**matcher.groupdict())
+
+def replace_code_block(matcher):
+	r"\{\{\{\n(?P<code>(.|\n)*?)^\}\}\}"
+	return '::\n' + indent(matcher.groupdict()['code'])
+
+replacements = [func for name, func in globals().items() if name.startswith('replace_')]
 
 def convert_file(filename):
 	shutil.copy(filename, filename+'.bak')
