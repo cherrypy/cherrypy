@@ -4,6 +4,7 @@ import sys
 import re
 import inspect
 import optparse
+import shutil
 
 def get_options():
 	parser = optparse.OptionParser()
@@ -25,16 +26,28 @@ def replace_wiki_link(matcher):
 	r"\[wiki\:(?P<ref>.+?) (?P<name>.+?)\]"
 	return '`{name} <TODO-fix wiki target {ref}>`_'.format(**matcher.groupdict())
 
+# character array indexed by level for characters
+heading_characters = [None, '*', '=', '-', '^']
+
+def replace_headings(matcher):
+	r"^(?P<level>=+) (?P<name>.*) (?P=level)$"
+	level = len(matcher.groupdict()['level'])
+	char = heading_characters[level]
+	name = matcher.groupdict()['name']
+	return '\n'.join([name, char*len(name)])
+
 replacements = [
 	replace_external_link,
 	replace_wiki_link,
+	replace_headings,
 	]
 
 def convert_file(filename):
+	shutil.copy(filename, filename+'.bak')
 	text = open(filename).read()
 	new_text = text
 	for repl in replacements:
-		pattern = re.compile(inspect.getdoc(repl))
+		pattern = re.compile(inspect.getdoc(repl), re.MULTILINE)
 		new_text = pattern.sub(repl, new_text)
 
 	open(filename, 'w').write(new_text)
