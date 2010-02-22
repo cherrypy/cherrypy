@@ -10,6 +10,7 @@ Contents:
    overview
    install
    tutorial/*
+   concepts/index
    license
 
 
