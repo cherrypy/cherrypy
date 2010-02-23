@@ -6,7 +6,7 @@ Introduction
 ============
 
 REST (Representational State Transfer) is an architectural style that
-is well suited to implementation in CherryPy. Both REST and CherryPy
+is well-suited to implementation in CherryPy. Both REST and CherryPy
 heavily leverage the HTTP protocol but otherwise carry minimal
 requisite overhead. This chapter briefly discusses the purpose of
 REST and an example implementation in CherryPy.
@@ -30,18 +30,18 @@ Terminology
 REST defines the use of the HTTP protocol and HTTP methods to implement
 the standard REST methods.
 
- - GET retrieves information of a specific identifier,
- - PUT replaces the information of a specific identifier,
- - POST appends information, and
- - DELETE removes information.
+ - GET retrieves the state of a specific resource,
+ - PUT creates or replaces the state of a specific resource,
+ - POST passes information to a resource to use at it sees fit,
+ - DELETE removes resources.
 
-More information on REST can be found in abundance in WikiPedia and
+More information on REST can be found in abundance in Wikipedia and
 other readily-available resources.
 
 Implementing REST in CherryPy
 =============================
 
-As the REST style uses HTTP methods for invokation, the most direct
+Since HTTP defines a number of invocation methods, the most direct
 way to implement REST using CherryPy is to utilize the
 :class:`MethodDispatcher`. To enable the method dispatcher, add the
 following to your config file::
@@ -51,7 +51,7 @@ following to your config file::
 
 Now, the REST methods will map directly to the same method names on
 your resources. That is, a GET method on a CherryPy class implements
-the RESTful GET on the resource represented by that class.
+the HTTP GET on the resource represented by that class.
 
 A Quick Example
 ===============
@@ -67,13 +67,12 @@ For example, consider the following contrived REST+HTML specification.
 3. A PUT request accepts colon-separated key/value pairs in ``<div>``
    elements.
 
-4. An index resource provides an anchor tag (hypertext link) to objects
+4. An index resource provides an HTML anchor tag (hypertext link) to objects
    which it indexes (where the keys represent the names and the values
    represent the link).
 
 TODO REVIEW THIS CODE::
 
-    #!python
     import os
     import cherrypy
 

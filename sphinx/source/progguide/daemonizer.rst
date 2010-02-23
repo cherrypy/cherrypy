@@ -22,7 +22,7 @@ The plugin takes optional arguments to redirect standard streams: stdin,
 stdout, and stderr. By default, these are all redirected to /dev/null, but
 you're free to send them to log files or elsewhere.
 
-'''You should be careful to not start any threads before this plugin runs'''.
+**You should be careful to not start any threads before this plugin runs**.
 The plugin will warn if you do so, because "...the effects of calling functions
 that require certain resources between the call to fork() and the call to an
 exec function are undefined". (`ref <http://www.opengroup.org/onlinepubs/000095399/functions/fork.html>`_).
