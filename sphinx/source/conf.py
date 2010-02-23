@@ -46,6 +46,8 @@ copyright = u'2010, CherryPy Team'
 # built documents.
 #
 # The short X.Y version.
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
 import cherrypy
 version = cherrypy.__version__
 # The full version, including alpha/beta/rc tags.
