@@ -508,17 +508,18 @@ def XMLRPCDispatcher(next_dispatcher=Dispatcher()):
 
 
 def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domains):
-    """Select a different handler based on the Host header.
+    """
+    Select a different handler based on the Host header.
     
     This can be useful when running multiple sites within one CP server.
     It allows several domains to point to different parts of a single
-    website structure. For example:
+    website structure. For example::
     
         http://www.domain.example  ->  root
         http://www.domain2.example  ->  root/domain2/
         http://www.domain2.example:443  ->  root/secure
     
-    can be accomplished via the following config:
+    can be accomplished via the following config::
     
         [/]
         request.dispatch = cherrypy.dispatch.VirtualHost(
@@ -526,15 +527,15 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domai
                'www.domain2.example:443': '/secure',
               })
     
-    next_dispatcher: the next dispatcher object in the dispatch chain.
+    ``next_dispatcher``: the next dispatcher object in the dispatch chain.
         The VirtualHost dispatcher adds a prefix to the URL and calls
         another dispatcher. Defaults to cherrypy.dispatch.Dispatcher().
     
-    use_x_forwarded_host: if True (the default), any "X-Forwarded-Host"
+    ``use_x_forwarded_host``: if True (the default), any "X-Forwarded-Host"
         request header will be used instead of the "Host" header. This
         is commonly added by HTTP servers (such as Apache) when proxying.
     
-    **domains: a dict of {host header value: virtual prefix} pairs.
+    ``**domains``: a dict mapping host header values to virtual prefixes.
         The incoming "Host" request header is looked up in this dict,
         and, if a match is found, the corresponding "virtual prefix"
         value will be prepended to the URL path before calling the
