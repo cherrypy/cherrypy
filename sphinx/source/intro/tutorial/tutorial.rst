@@ -300,14 +300,17 @@ This tutorial only covers the basic features of CherryPy, but it tries to presen
     #!html
     <h2 class='compatibility'>Older versions</h2>
 
-||   || replace this  || with this ||
-||2.2||cherrypy.quickstart(HelloWorld())||cherrypy.root = HelloWorld()[[br]]cherrypy.server.start()||
-||   ||tools.sessions ||session_filter||
-||   ||tools.staticdir||static_filter ||
-||2.1||simple_cookie  ||simpleCookie  ||
-||   ||socket_port    ||socketPort    ||
-||   ||thread_pool    ||threadPool    ||
-||   ||session_filter ||sessionFilter ||
-||   ||static_filter  ||staticFilter  ||
-||   ||headers        ||headerMap     ||
-||2.0||import cherrypy||from cherrypy import cpg as cherrypy||
+=======  =================================  =================
+Version  replace this                       with this
+=======  =================================  =================
+2.2      cherrypy.quickstart(HelloWorld())  cherrypy.root = HelloWorld()[[br]]cherrypy.server.start()
+...      tools.sessions                     session_filter
+...      tools.staticdir                    static_filter
+2.1      simple_cookie                      simpleCookie
+...      socket_port                        socketPort
+...      thread_pool                        threadPool
+...      session_filter                     sessionFilter 
+...      static_filter                      staticFilter  
+...      headers                            headerMap     
+2.0      import cherrypy                    from cherrypy import cpg as cherrypy
+=======  =================================  =================
