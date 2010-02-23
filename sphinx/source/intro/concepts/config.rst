@@ -15,7 +15,7 @@ CherryPy *Requests* are part of an *Application*, which runs in a *global* conte
 
 
 Site config
-===========
+-----------
 
 Site config entries apply everywhere, and are stored in cherrypy.config. This flat dict only holds global config data; that is, "site-wide" config entries which affect all mounted applications.
 
@@ -26,7 +26,7 @@ Site config is stored in the :attr:`cherrypy.config` dict, and you therefore upd
                            })
 
 Application config
-==================
+------------------
 
 Application entries apply to a single mounted application, and are stored on each Application object itself as :attr:`app.config`. This is a two-level dict where each key is a path, or "relative URL" (for example, ``"/"`` or ``"/my/page"``), and each value is a config dict. The URL's are relative to the "script name" of the Application. Usually, all this data is provided in the call to ``tree.mount(root(), script_name='/path/to', config=conf)``, although you may also use ``app.merge(conf)``. The ``conf`` argument can be either a filename, an open file, or a dict of config entries.
 
