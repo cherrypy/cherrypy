@@ -19,7 +19,7 @@ Site config
 
 Site config entries apply everywhere, and are stored in cherrypy.config. This flat dict only holds global config data; that is, "site-wide" config entries which affect all mounted applications.
 
-Site config is stored in the ``cherrypy.config`` dict, and you therefore update it by calling ``cherrypy.config.update(conf)``. The ``conf`` argument can be either a filename, an open file, or a dict of config entries. Here's an example of passing a dict argument::
+Site config is stored in the :attr:`cherrypy.config` dict, and you therefore update it by calling ``cherrypy.config.update(conf)``. The ``conf`` argument can be either a filename, an open file, or a dict of config entries. Here's an example of passing a dict argument::
 
     cherrypy.config.update({'server.socket_host': '64.72.221.48',
                             'server.socket_port': 80,
@@ -28,7 +28,7 @@ Site config is stored in the ``cherrypy.config`` dict, and you therefore update 
 Application config
 ==================
 
-Application entries apply to a single mounted application, and are stored on each Application object itself as ``app.config``. This is a two-level dict where each key is a path, or "relative URL" (for example, ``"/"`` or ``"/my/page"``), and each value is a config dict. The URL's are relative to the "script name" of the Application. Usually, all this data is provided in the call to ``tree.mount(root(), script_name='/path/to', config=conf)``, although you may also use ``app.merge(conf)``. The ``conf`` argument can be either a filename, an open file, or a dict of config entries.
+Application entries apply to a single mounted application, and are stored on each Application object itself as :attr:`app.config`. This is a two-level dict where each key is a path, or "relative URL" (for example, ``"/"`` or ``"/my/page"``), and each value is a config dict. The URL's are relative to the "script name" of the Application. Usually, all this data is provided in the call to ``tree.mount(root(), script_name='/path/to', config=conf)``, although you may also use ``app.merge(conf)``. The ``conf`` argument can be either a filename, an open file, or a dict of config entries.
 
 Examples::
 
@@ -65,7 +65,7 @@ Then, in your application code you can read these values during request time via
 Request config
 --------------
 
-Each Request object possesses a single ``request.config`` dict. Early in the request process, this dict is populated by merging site config, Application config, and any config acquired while looking up the page handler (see next). This dict contains only those config entries which apply to the given request; that is, per-path config. Note that when you do an InternalRedirect, this config is recalculated for the new path.
+Each Request object possesses a single :attr:`request.config` dict. Early in the request process, this dict is populated by merging site config, Application config, and any config acquired while looking up the page handler (see next). This dict contains only those config entries which apply to the given request; that is, per-path config. Note that when you do an InternalRedirect, this config is recalculated for the new path.
 
 Declaration
 ===========
@@ -75,7 +75,7 @@ Configuration data may be supplied as a Python dictionary, as a filename, or as 
 Configuration files
 -------------------
 
-When you supply a filename or file, CherryPy uses Python's builtin !ConfigParser; you declare Application config by writing each path as a section header, and each entry as a ``"key: value"`` (or ``"key = value"``) pair:
+When you supply a filename or file, CherryPy uses Python's builtin ConfigParser; you declare Application config by writing each path as a section header, and each entry as a ``"key: value"`` (or ``"key = value"``) pair:
 
 .. code-block:: cfg
 
@@ -86,12 +86,12 @@ When you supply a filename or file, CherryPy uses Python's builtin !ConfigParser
 Combined Configuration Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you are only deploying a single application, you can make a single config file that contains both site and app entries. Just stick the site entries into a config section named ``[global]``, and pass the same file to both ``update`` and ``mount``. If you're calling ``cherrypy.quickstart(app root, script name, config)``, it will pass the config to both places for you. But as soon as you decide to add another application to the same site, you need to separate the two config files/dicts.
+If you are only deploying a single application, you can make a single config file that contains both site and app entries. Just stick the site entries into a config section named ``[global]``, and pass the same file to both :func:`update` and :func:`mount`. If you're calling ``cherrypy.quickstart(app root, script name, config)``, it will pass the config to both places for you. But as soon as you decide to add another application to the same site, you need to separate the two config files/dicts.
 
 Separate Configuration Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you're deploying more than one application in the same process, you need (1) file for site-wide config, plus (1) file for *each* Application. The site-wide config is applied by calling ``cherrypy.config.update``, and application config is usually passed in a call to ``cherrypy.tree.mount(root, script_name, config)``.
+If you're deploying more than one application in the same process, you need (1) file for site-wide config, plus (1) file for *each* Application. The site-wide config is applied by calling :func:`cherrypy.config.update`, and application config is usually passed in a call to :func:`cherrypy.tree.mount`.
 
 In general, you should set global (site-wide) config first, and then mount each application with its own config. Among other benefits, this allows you to set up site-level logging so that, if something goes wrong while trying to mount an application, you'll see the tracebacks. In other words, use this order::
 
@@ -160,7 +160,7 @@ This can be done at any point in the cherrypy tree; for example, we could have a
             return "Hullo, Werld!"
         page.exposed = True
 
-Note, however, that this behavior is only guaranteed for the default dispatcher. Other dispatchers may have different restrictions on where you can attach _cp_config attributes.
+Note, however, that this behavior is only guaranteed for the default dispatcher. Other dispatchers may have different restrictions on where you can attach :attr:`_cp_config` attributes.
 
 This technique allows you to:
 
@@ -178,14 +178,14 @@ Because config entries usually just set attributes on objects, they're almost al
     >>> cherrypy.response.stream
     False
 
-Each config namespace has its own handler; for example, the "request." namespace has a handler which takes your config entry and sets that value on the appropriate "request" attribute. There are a few namespaces, however, which don't work like normal attributes behind the scenes; however, they still use dotted keys and are considered to "have a namespace". You can write and register your own namespace handlers to do almost anything if you need to; see the "namespaces" attributes of the Request, Application, and ``cherrypy.config`` objects.
+Each config namespace has its own handler; for example, the "request" namespace has a handler which takes your config entry and sets that value on the appropriate "request" attribute. There are a few namespaces, however, which don't work like normal attributes behind the scenes; however, they still use dotted keys and are considered to "have a namespace". You can write and register your own namespace handlers to do almost anything if you need to; see the "namespaces" attributes of the Request, Application, and ``cherrypy.config`` objects.
 
 You can define your own namespaces to be called at the Global, Application, or Request level, by adding a named handler to ``cherrypy.config.namespaces``, ``app.namespaces``, or ``app.request_class.namespaces``. The name can be any string, and the handler must be either a callable or a (Python 2.5 style) context manager.
 
 Environments
 ------------
 
-The only key that does not exist in a namespace is the *"environment"* entry. This special entry *imports* other config entries from a template stored in ``cherrypy._cpconfig.environments[environment]``. It only applies to the global config, and only when you use ``cherrypy.config.update``.
+The only key that does not exist in a namespace is the *"environment"* entry. This special entry *imports* other config entries from a template stored in ``cherrypy._cpconfig.environments[environment]``. It only applies to the global config, and only when you use :func:`cherrypy.config.update`.
 
 If you find the set of existing environments (production, staging, etc) too limiting or just plain wrong, feel free to extend them or add new environments::
 
@@ -229,7 +229,7 @@ tools       X       X                   X
 Custom config namespaces
 ------------------------
 
-You can define your own namespaces if you like, and they can do far more than simply set attributes. The ``test/test_config`` module, for example, shows an example of a custom namespace that coerces incoming params and outgoing body content. The ``_cpwsgi`` module includes an additional, builtin namespace for invoking WSGI middleware.
+You can define your own namespaces if you like, and they can do far more than simply set attributes. The ``test/test_config`` module, for example, shows an example of a custom namespace that coerces incoming params and outgoing body content. The :mod:`_cpwsgi` module includes an additional, builtin namespace for invoking WSGI middleware.
 
 In essence, a config namespace handler is just a function, that gets passed any config entries in its namespace. You add it to a namespaces registry (a dict), where keys are namespace names and values are handler functions. When a config entry for your namespace is encountered, the corresponding handler function will be called, passing the config key and value; that is, ``namespaces[namespace](k, v)``. For example, if you write::
 
@@ -250,5 +250,5 @@ Application.namespaces              Application.merge (which is called by cherry
 engine.request_class.namespaces     Request.configure (called for each request, after the handler is looked up)
 ================================    ===================================
 
-If you need additional code to run when all your namespace keys are collected, you can supply a callable context manager in place of a normal function for the handler. Context managers are defined in `PEP 343 <http://www.python.org/dev/peps/pep-0343/>`_.
+If you need additional code to run when all your namespace keys are collected, you can supply a callable context manager in place of a normal function for the handler. Context managers are defined in :pep:`343`.
 
