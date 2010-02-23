@@ -2,7 +2,9 @@
 Request Bodies
 **************
 
-Beginning in CherryPy 3.2, application authors have complete control over the
+.. versionadded:: 3.2
+
+Application authors have complete control over the
 parsing of HTTP request entities. In short, ``cherrypy.request.body`` is now always
 set to an instance of ``_cpreqbody.RequestBody``, and *that* class is a subclass
 of ``_cprequest.Entity``.
@@ -24,7 +26,7 @@ then one is sought for the major type "image". If a processor is still not
 found, then the ``default_proc`` method of the Entity is called (which does nothing
 by default; you can override this too).
 
-CherryPy 3.2 includes processors for the "application/x-www-form-urlencoded"
+CherryPy includes processors for the "application/x-www-form-urlencoded"
 type, the "multipart/form-data" type, and the "multipart" major type.
 CherryPy 3.2 processes these types almost exactly as older versions. Parts are
 passed as arguments to the page handler using their ``Content-Disposition.name`` if
@@ -108,7 +110,6 @@ You can add your own processors for any specific or major MIME type. Simply add
 it to the ``processors`` dict in a hook/tool that runs at ``on_start_resource`` or ``before_request_body``. 
 Here's the built-in JSON tool for an example::
 
-    #!python
     def json_in(force=True, debug=False):
         request = cherrypy.serving.request
         def json_processor(entity):
