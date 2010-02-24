@@ -36,16 +36,18 @@ def get_tst_config(overconf = {}):
         }
         try:
             import testconfig
-            conf.update(testconfig.config.get('supervisor', None))
+            _conf = testconfig.config.get('supervisor', None)
+            if _conf is not None:
+                for k, v in _conf.iteritems():
+                    if isinstance(v, basestring):
+                        _conf[k] = unrepr(v)
+                conf.update(_conf)
         except ImportError:
             pass
         _testconfig = conf
     conf = _testconfig.copy()
     conf.update(overconf)
 
-    for k, v in conf.iteritems():
-        if isinstance(v, basestring):
-            conf[k] = unrepr(v)
     return conf
 
 class Supervisor(object):
