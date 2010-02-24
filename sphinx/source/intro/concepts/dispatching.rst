@@ -69,7 +69,13 @@ If the default dispatcher is not able to locate a suitable page handler by walki
 URI's with file extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can use dots in a URI like ``/path/to/my.html``, but Python method names don't allow dots. To work around this, the default dispatcher converts all dots in the URI to underscores before trying to find the page handler. In the example, therefore, you would name your page handler "def my_html". However, this means the page is also available at the URI ``/path/to/my_html``. If you need to protect the resource (e.g. with authentication), **you must protect both URLs**.
+You can use dots in a URI like ``/path/to/my.html``, but Python method names
+don't allow dots. To work around this, the default dispatcher converts all dots
+in the URI to underscores before trying to find the page handler. In the
+example, therefore, you would name your page handler "def my_html". However,
+this means the page is also available at the URI ``/path/to/my_html``.
+If you need to protect the resource (e.g. with authentication), **you must
+protect both URLs**.
 
 Other Dispatchers
 -----------------
