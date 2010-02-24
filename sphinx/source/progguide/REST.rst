@@ -47,6 +47,9 @@ From the canonical `Roy Fielding dissertation <http://www.ics.uci.edu/~fielding/
 
     REST is defined by four interface constraints: identification of resources; manipulation of resources through representations; self-descriptive messages; and, hypermedia as the engine of application state
 
+.. TODO: Cover each of the four constraints and demonstrate how they are
+   apply in a CherryPy implementation.
+
 Since HTTP defines a number of invocation methods, the most direct
 way to implement REST using CherryPy is to utilize the
 :class:`MethodDispatcher`. To enable the method dispatcher, add the
@@ -80,15 +83,12 @@ For example, consider the following contrived REST+HTML specification.
 A REST+HTML implementation was chosen for this example as HTML defines
 relative links, which keeps the example simple yet functional.
 
-TODO REVIEW THIS CODE::
+Complete Example
+----------------
 
-    import os
-    import cherrypy
-
-    class Root(object):
-        pass
-
-    root = Root()
+Brining the above code samples together and adding some basic
+configuration results in the following program, which can be run
+directly.
 
     class Resource(object):
         
@@ -122,10 +122,32 @@ TODO REVIEW THIS CODE::
             items = ''.join(items)
             return '<html>{items}</html>'.format(**vars())
 
+    import cherrypy
+
+    class Root(object):
+        pass
+
+    root = Root()
+
     root.sidewinder = Resource({'color': 'red', 'weight': 176, 'type': 'stable'})
     root.teebird = Resource({'color': 'green', 'weight': 173, 'type': 'overstable'})
     root.blowfly = Resource({'color': 'purple', 'weight': 169, 'type': 'putter'})
     root.resource_index = ResourceIndex({'sidewinder': 'sidewinder', 'teebird': 'teebird', 'blowfly': 'blowfly'})
 
-    conf = os.path.join(os.path.abspath(os.path.dirname(__file__)), "app3.conf")
+    conf = {
+        'global': {
+            'server.socket_host': '0.0.0.0',
+            'server.socket_port': 8000,
+        },
+        '/': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        }
+    }
+
     cherrypy.quickstart(root, '/', conf)
+
+Conclusion
+==========
+
+CherryPy provides a straightforward interface for readily creating
+RESTful interfaces.
