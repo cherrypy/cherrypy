@@ -1,36 +1,37 @@
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 import cherrypy
 
 
-def setup_server():
-    class Root:
-        def resource(self):
-            return "Oh wah ta goo Siam."
-        resource.exposed = True
-        
-        def fail(self, code):
-            code = int(code)
-            if 300 <= code <= 399:
-                raise cherrypy.HTTPRedirect([], code)
-            else:
-                raise cherrypy.HTTPError(code)
-        fail.exposed = True
-        
-        def unicoded(self):
-            return u'I am a \u1ee4nicode string.'
-        unicoded.exposed = True
-        unicoded._cp_config = {'tools.encode.on': True}
-    
-    conf = {'/': {'tools.etags.on': True,
-                  'tools.etags.autotags': True,
-                  }}
-    cherrypy.tree.mount(Root(), config=conf)
-
 from cherrypy.test import helper
 
 class ETagTest(helper.CPWebCase):
+    @staticmethod
+    def setup_server():
+        class Root:
+            def resource(self):
+                return "Oh wah ta goo Siam."
+            resource.exposed = True
+            
+            def fail(self, code):
+                code = int(code)
+                if 300 <= code <= 399:
+                    raise cherrypy.HTTPRedirect([], code)
+                else:
+                    raise cherrypy.HTTPError(code)
+            fail.exposed = True
+            
+            def unicoded(self):
+                return u'I am a \u1ee4nicode string.'
+            unicoded.exposed = True
+            unicoded._cp_config = {'tools.encode.on': True}
+
+        conf = {'/': {'tools.etags.on': True,
+                      'tools.etags.autotags': True,
+                      }}
+        cherrypy.tree.mount(Root(), config=conf)
+
     
     def test_etags(self):
         self.getPage("/resource")

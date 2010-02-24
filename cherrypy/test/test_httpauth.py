@@ -1,5 +1,5 @@
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 try:
     # Python 2.5+
@@ -11,56 +11,57 @@ except ImportError:
 import cherrypy
 from cherrypy.lib import httpauth
 
-def setup_server():
-    class Root:
-        def index(self):
-            return "This is public."
-        index.exposed = True
-
-    class DigestProtected:
-        def index(self):
-            return "Hello %s, you've been authorized." % cherrypy.request.login
-        index.exposed = True
-
-    class BasicProtected:
-        def index(self):
-            return "Hello %s, you've been authorized." % cherrypy.request.login
-        index.exposed = True
-
-    class BasicProtected2:
-        def index(self):
-            return "Hello %s, you've been authorized." % cherrypy.request.login
-        index.exposed = True
-
-    def fetch_users():
-        return {'test': 'test'}
-
-    def sha_password_encrypter(password):
-        return sha(password).hexdigest()
-    
-    def fetch_password(username):
-        return sha('test').hexdigest()
-
-    conf = {'/digest': {'tools.digest_auth.on': True,
-                        'tools.digest_auth.realm': 'localhost',
-                        'tools.digest_auth.users': fetch_users},
-            '/basic': {'tools.basic_auth.on': True,
-                       'tools.basic_auth.realm': 'localhost',
-                       'tools.basic_auth.users': {'test': md5('test').hexdigest()}},
-            '/basic2': {'tools.basic_auth.on': True,
-                        'tools.basic_auth.realm': 'localhost',
-                        'tools.basic_auth.users': fetch_password,
-                        'tools.basic_auth.encrypt': sha_password_encrypter}}
-            
-    root = Root()
-    root.digest = DigestProtected()
-    root.basic = BasicProtected()
-    root.basic2 = BasicProtected2()
-    cherrypy.tree.mount(root, config=conf)
-
 from cherrypy.test import helper
 
 class HTTPAuthTest(helper.CPWebCase):
+    @staticmethod
+    def setup_server():
+        class Root:
+            def index(self):
+                return "This is public."
+            index.exposed = True
+
+        class DigestProtected:
+            def index(self):
+                return "Hello %s, you've been authorized." % cherrypy.request.login
+            index.exposed = True
+
+        class BasicProtected:
+            def index(self):
+                return "Hello %s, you've been authorized." % cherrypy.request.login
+            index.exposed = True
+
+        class BasicProtected2:
+            def index(self):
+                return "Hello %s, you've been authorized." % cherrypy.request.login
+            index.exposed = True
+
+        def fetch_users():
+            return {'test': 'test'}
+
+        def sha_password_encrypter(password):
+            return sha(password).hexdigest()
+        
+        def fetch_password(username):
+            return sha('test').hexdigest()
+
+        conf = {'/digest': {'tools.digest_auth.on': True,
+                            'tools.digest_auth.realm': 'localhost',
+                            'tools.digest_auth.users': fetch_users},
+                '/basic': {'tools.basic_auth.on': True,
+                           'tools.basic_auth.realm': 'localhost',
+                           'tools.basic_auth.users': {'test': md5('test').hexdigest()}},
+                '/basic2': {'tools.basic_auth.on': True,
+                            'tools.basic_auth.realm': 'localhost',
+                            'tools.basic_auth.users': fetch_password,
+                            'tools.basic_auth.encrypt': sha_password_encrypter}}
+                
+        root = Root()
+        root.digest = DigestProtected()
+        root.basic = BasicProtected()
+        root.basic2 = BasicProtected2()
+        cherrypy.tree.mount(root, config=conf)
+
 
     def testPublic(self):
         self.getPage("/")

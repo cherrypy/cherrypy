@@ -1,7 +1,7 @@
 """Basic tests for the CherryPy core: request handling."""
 
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 import os
 localDir = os.path.dirname(__file__)
@@ -16,236 +16,236 @@ from cherrypy.lib import httputil, static
 
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
 
-def setup_server():
-    class Root:
-        
-        def index(self):
-            return "hello"
-        index.exposed = True
-        
-        favicon_ico = tools.staticfile.handler(filename=favicon_path)
-        
-        def defct(self, newct):
-            newct = "text/%s" % newct
-            cherrypy.config.update({'tools.response_headers.on': True,
-                                    'tools.response_headers.headers':
-                                    [('Content-Type', newct)]})
-        defct.exposed = True
-        
-        def baseurl(self, path_info, relative=None):
-            return cherrypy.url(path_info, relative=bool(relative))
-        baseurl.exposed = True
-    
-    root = Root()
-    
-    
-    class TestType(type):
-        """Metaclass which automatically exposes all functions in each subclass,
-        and adds an instance of the subclass as an attribute of root.
-        """
-        def __init__(cls, name, bases, dct):
-            type.__init__(cls, name, bases, dct)
-            for value in dct.itervalues():
-                if isinstance(value, types.FunctionType):
-                    value.exposed = True
-            setattr(root, name.lower(), cls())
-    class Test(object):
-        __metaclass__ = TestType
-    
-    
-    class URL(Test):
-        
-        _cp_config = {'tools.trailing_slash.on': False}
-        
-        def index(self, path_info, relative=None):
-            if relative != 'server':
-                relative = bool(relative)
-            return cherrypy.url(path_info, relative=relative)
-        
-        def leaf(self, path_info, relative=None):
-            if relative != 'server':
-                relative = bool(relative)
-            return cherrypy.url(path_info, relative=relative)
-
-
-    class Status(Test):
-        
-        def index(self):
-            return "normal"
-        
-        def blank(self):
-            cherrypy.response.status = ""
-        
-        # According to RFC 2616, new status codes are OK as long as they
-        # are between 100 and 599.
-        
-        # Here is an illegal code...
-        def illegal(self):
-            cherrypy.response.status = 781
-            return "oops"
-        
-        # ...and here is an unknown but legal code.
-        def unknown(self):
-            cherrypy.response.status = "431 My custom error"
-            return "funky"
-        
-        # Non-numeric code
-        def bad(self):
-            cherrypy.response.status = "error"
-            return "bad news"
-
-
-    class Redirect(Test):
-        
-        class Error:
-            _cp_config = {"tools.err_redirect.on": True,
-                          "tools.err_redirect.url": "/errpage",
-                          "tools.err_redirect.internal": False,
-                          }
-            
-            def index(self):
-                raise NameError("redirect_test")
-            index.exposed = True
-        error = Error()
-        
-        def index(self):
-            return "child"
-        
-        def by_code(self, code):
-            raise cherrypy.HTTPRedirect("somewhere else", code)
-        by_code._cp_config = {'tools.trailing_slash.extra': True}
-        
-        def nomodify(self):
-            raise cherrypy.HTTPRedirect("", 304)
-        
-        def proxy(self):
-            raise cherrypy.HTTPRedirect("proxy", 305)
-        
-        def stringify(self):
-            return str(cherrypy.HTTPRedirect("/"))
-        
-        def fragment(self, frag):
-            raise cherrypy.HTTPRedirect("/some/url#%s" % frag)
-    
-    def login_redir():
-        if not getattr(cherrypy.request, "login", None):
-            raise cherrypy.InternalRedirect("/internalredirect/login")
-    tools.login_redir = _cptools.Tool('before_handler', login_redir)
-    
-    def redir_custom():
-        raise cherrypy.InternalRedirect("/internalredirect/custom_err")
-    
-    class InternalRedirect(Test):
-        
-        def index(self):
-            raise cherrypy.InternalRedirect("/")
-        
-        def choke(self):
-            return 3 / 0
-        choke.exposed = True
-        choke._cp_config = {'hooks.before_error_response': redir_custom}
-        
-        def relative(self, a, b):
-            raise cherrypy.InternalRedirect("cousin?t=6")
-        
-        def cousin(self, t):
-            assert cherrypy.request.prev.closed
-            return cherrypy.request.prev.query_string
-        
-        def petshop(self, user_id):
-            if user_id == "parrot":
-                # Trade it for a slug when redirecting
-                raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=slug')
-            elif user_id == "terrier":
-                # Trade it for a fish when redirecting
-                raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=fish')
-            else:
-                # This should pass the user_id through to getImagesByUser
-                raise cherrypy.InternalRedirect(
-                    '/image/getImagesByUser?user_id=%s' % str(user_id))
-        
-        # We support Python 2.3, but the @-deco syntax would look like this:
-        # @tools.login_redir()
-        def secure(self):
-            return "Welcome!"
-        secure = tools.login_redir()(secure)
-        # Since calling the tool returns the same function you pass in,
-        # you could skip binding the return value, and just write:
-        # tools.login_redir()(secure)
-        
-        def login(self):
-            return "Please log in"
-        
-        def custom_err(self):
-            return "Something went horribly wrong."
-        
-        def early_ir(self, arg):
-            return "whatever"
-        early_ir._cp_config = {'hooks.before_request_body': redir_custom}
-    
-    
-    class Image(Test):
-        
-        def getImagesByUser(self, user_id):
-            return "0 images for %s" % user_id
-
-
-    class Flatten(Test):
-        
-        def as_string(self):
-            return "content"
-        
-        def as_list(self):
-            return ["con", "tent"]
-        
-        def as_yield(self):
-            yield "content"
-        
-        def as_dblyield(self):
-            yield self.as_yield()
-        as_dblyield._cp_config = {'tools.flatten.on': True}
-        
-        def as_refyield(self):
-            for chunk in self.as_yield():
-                yield chunk
-    
-    
-    class Ranges(Test):
-        
-        def get_ranges(self, bytes):
-            return repr(httputil.get_ranges('bytes=%s' % bytes, 8))
-        
-        def slice_file(self):
-            path = os.path.join(os.getcwd(), os.path.dirname(__file__))
-            return static.serve_file(os.path.join(path, "static/index.html"))
-
-
-    class Cookies(Test):
-        
-        def single(self, name):
-            cookie = cherrypy.request.cookie[name]
-            # Python2's SimpleCookie.__setitem__ won't take unicode keys.
-            cherrypy.response.cookie[str(name)] = cookie.value
-        
-        def multiple(self, names):
-            for name in names:
-                cookie = cherrypy.request.cookie[name]
-                # Python2's SimpleCookie.__setitem__ won't take unicode keys.
-                cherrypy.response.cookie[str(name)] = cookie.value
-
-
-    if sys.version_info >= (2, 5):
-        from cherrypy.test import py25
-        Root.expose_dec = py25.ExposeExamples()
-    
-    cherrypy.tree.mount(root)
-
-
 #                             Client-side code                             #
 
 from cherrypy.test import helper
 
 class CoreRequestHandlingTest(helper.CPWebCase):
+    @staticmethod
+    def setup_server():
+        class Root:
+            
+            def index(self):
+                return "hello"
+            index.exposed = True
+            
+            favicon_ico = tools.staticfile.handler(filename=favicon_path)
+            
+            def defct(self, newct):
+                newct = "text/%s" % newct
+                cherrypy.config.update({'tools.response_headers.on': True,
+                                        'tools.response_headers.headers':
+                                        [('Content-Type', newct)]})
+            defct.exposed = True
+            
+            def baseurl(self, path_info, relative=None):
+                return cherrypy.url(path_info, relative=bool(relative))
+            baseurl.exposed = True
+        
+        root = Root()
+        
+        
+        class TestType(type):
+            """Metaclass which automatically exposes all functions in each subclass,
+            and adds an instance of the subclass as an attribute of root.
+            """
+            def __init__(cls, name, bases, dct):
+                type.__init__(cls, name, bases, dct)
+                for value in dct.itervalues():
+                    if isinstance(value, types.FunctionType):
+                        value.exposed = True
+                setattr(root, name.lower(), cls())
+        class Test(object):
+            __metaclass__ = TestType
+        
+        
+        class URL(Test):
+            
+            _cp_config = {'tools.trailing_slash.on': False}
+            
+            def index(self, path_info, relative=None):
+                if relative != 'server':
+                    relative = bool(relative)
+                return cherrypy.url(path_info, relative=relative)
+            
+            def leaf(self, path_info, relative=None):
+                if relative != 'server':
+                    relative = bool(relative)
+                return cherrypy.url(path_info, relative=relative)
+
+
+        class Status(Test):
+            
+            def index(self):
+                return "normal"
+            
+            def blank(self):
+                cherrypy.response.status = ""
+            
+            # According to RFC 2616, new status codes are OK as long as they
+            # are between 100 and 599.
+            
+            # Here is an illegal code...
+            def illegal(self):
+                cherrypy.response.status = 781
+                return "oops"
+            
+            # ...and here is an unknown but legal code.
+            def unknown(self):
+                cherrypy.response.status = "431 My custom error"
+                return "funky"
+            
+            # Non-numeric code
+            def bad(self):
+                cherrypy.response.status = "error"
+                return "bad news"
+
+
+        class Redirect(Test):
+            
+            class Error:
+                _cp_config = {"tools.err_redirect.on": True,
+                              "tools.err_redirect.url": "/errpage",
+                              "tools.err_redirect.internal": False,
+                              }
+                
+                def index(self):
+                    raise NameError("redirect_test")
+                index.exposed = True
+            error = Error()
+            
+            def index(self):
+                return "child"
+            
+            def by_code(self, code):
+                raise cherrypy.HTTPRedirect("somewhere else", code)
+            by_code._cp_config = {'tools.trailing_slash.extra': True}
+            
+            def nomodify(self):
+                raise cherrypy.HTTPRedirect("", 304)
+            
+            def proxy(self):
+                raise cherrypy.HTTPRedirect("proxy", 305)
+            
+            def stringify(self):
+                return str(cherrypy.HTTPRedirect("/"))
+            
+            def fragment(self, frag):
+                raise cherrypy.HTTPRedirect("/some/url#%s" % frag)
+        
+        def login_redir():
+            if not getattr(cherrypy.request, "login", None):
+                raise cherrypy.InternalRedirect("/internalredirect/login")
+        tools.login_redir = _cptools.Tool('before_handler', login_redir)
+        
+        def redir_custom():
+            raise cherrypy.InternalRedirect("/internalredirect/custom_err")
+        
+        class InternalRedirect(Test):
+            
+            def index(self):
+                raise cherrypy.InternalRedirect("/")
+            
+            def choke(self):
+                return 3 / 0
+            choke.exposed = True
+            choke._cp_config = {'hooks.before_error_response': redir_custom}
+            
+            def relative(self, a, b):
+                raise cherrypy.InternalRedirect("cousin?t=6")
+            
+            def cousin(self, t):
+                assert cherrypy.request.prev.closed
+                return cherrypy.request.prev.query_string
+            
+            def petshop(self, user_id):
+                if user_id == "parrot":
+                    # Trade it for a slug when redirecting
+                    raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=slug')
+                elif user_id == "terrier":
+                    # Trade it for a fish when redirecting
+                    raise cherrypy.InternalRedirect('/image/getImagesByUser?user_id=fish')
+                else:
+                    # This should pass the user_id through to getImagesByUser
+                    raise cherrypy.InternalRedirect(
+                        '/image/getImagesByUser?user_id=%s' % str(user_id))
+            
+            # We support Python 2.3, but the @-deco syntax would look like this:
+            # @tools.login_redir()
+            def secure(self):
+                return "Welcome!"
+            secure = tools.login_redir()(secure)
+            # Since calling the tool returns the same function you pass in,
+            # you could skip binding the return value, and just write:
+            # tools.login_redir()(secure)
+            
+            def login(self):
+                return "Please log in"
+            
+            def custom_err(self):
+                return "Something went horribly wrong."
+            
+            def early_ir(self, arg):
+                return "whatever"
+            early_ir._cp_config = {'hooks.before_request_body': redir_custom}
+        
+        
+        class Image(Test):
+            
+            def getImagesByUser(self, user_id):
+                return "0 images for %s" % user_id
+
+
+        class Flatten(Test):
+            
+            def as_string(self):
+                return "content"
+            
+            def as_list(self):
+                return ["con", "tent"]
+            
+            def as_yield(self):
+                yield "content"
+            
+            def as_dblyield(self):
+                yield self.as_yield()
+            as_dblyield._cp_config = {'tools.flatten.on': True}
+            
+            def as_refyield(self):
+                for chunk in self.as_yield():
+                    yield chunk
+        
+        
+        class Ranges(Test):
+            
+            def get_ranges(self, bytes):
+                return repr(httputil.get_ranges('bytes=%s' % bytes, 8))
+            
+            def slice_file(self):
+                path = os.path.join(os.getcwd(), os.path.dirname(__file__))
+                return static.serve_file(os.path.join(path, "static/index.html"))
+
+
+        class Cookies(Test):
+            
+            def single(self, name):
+                cookie = cherrypy.request.cookie[name]
+                # Python2's SimpleCookie.__setitem__ won't take unicode keys.
+                cherrypy.response.cookie[str(name)] = cookie.value
+            
+            def multiple(self, names):
+                for name in names:
+                    cookie = cherrypy.request.cookie[name]
+                    # Python2's SimpleCookie.__setitem__ won't take unicode keys.
+                    cherrypy.response.cookie[str(name)] = cookie.value
+
+
+        if sys.version_info >= (2, 5):
+            from cherrypy.test import py25
+            Root.expose_dec = py25.ExposeExamples()
+        
+        cherrypy.tree.mount(root)
+
 
     def testStatus(self):
         self.getPage("/status/")

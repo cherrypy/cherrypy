@@ -1,5 +1,5 @@
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 import gzip
 try:
@@ -17,79 +17,77 @@ sing8 = sing.encode('utf-8')
 sing16 = sing.encode('utf-16')
 
 
-def setup_server():
-    class Root:
-        def index(self, param):
-            assert param == europoundUnicode, "%r != %r" % (param, europoundUnicode)
-            yield europoundUnicode
-        index.exposed = True
-        
-        def mao_zedong(self):
-            return sing
-        mao_zedong.exposed = True
-        
-        def utf8(self):
-            return sing8
-        utf8.exposed = True
-        utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
-        
-        def reqparams(self, *args, **kwargs):
-            return ', '.join([": ".join((k, v)).encode('utf8')
-                              for k, v in cherrypy.request.params.items()])
-        reqparams.exposed = True
-    
-    class GZIP:
-        def index(self):
-            yield "Hello, world"
-        index.exposed = True
-        
-        def noshow(self):
-            # Test for ticket #147, where yield showed no exceptions (content-
-            # encoding was still gzip even though traceback wasn't zipped).
-            raise IndexError()
-            yield "Here be dragons"
-        noshow.exposed = True
-        # Turn encoding off so the gzip tool is the one doing the collapse.
-        noshow._cp_config = {'tools.encode.on': False}
-        
-        def noshow_stream(self):
-            # Test for ticket #147, where yield showed no exceptions (content-
-            # encoding was still gzip even though traceback wasn't zipped).
-            raise IndexError()
-            yield "Here be dragons"
-        noshow_stream.exposed = True
-        noshow_stream._cp_config = {'response.stream': True}
-    
-    class Decode:
-        def extra_charset(self, *args, **kwargs):
-            return ', '.join([": ".join((k, v)).encode('utf8')
-                              for k, v in cherrypy.request.params.items()])
-        extra_charset.exposed = True
-        extra_charset._cp_config = {
-            'tools.decode.on': True,
-            'tools.decode.default_encoding': [u'utf-16'],
-            }
-        
-        def force_charset(self, *args, **kwargs):
-            return ', '.join([": ".join((k, v)).encode('utf8')
-                              for k, v in cherrypy.request.params.items()])
-        force_charset.exposed = True
-        force_charset._cp_config = {
-            'tools.decode.on': True,
-            'tools.decode.encoding': u'utf-16',
-            }
-    
-    root = Root()
-    root.gzip = GZIP()
-    root.decode = Decode()
-    cherrypy.tree.mount(root, config={'/gzip': {'tools.gzip.on': True}})
-
-
-
 from cherrypy.test import helper
 
 
 class EncodingTests(helper.CPWebCase):
+    @staticmethod
+    def setup_server():
+        class Root:
+            def index(self, param):
+                assert param == europoundUnicode, "%r != %r" % (param, europoundUnicode)
+                yield europoundUnicode
+            index.exposed = True
+            
+            def mao_zedong(self):
+                return sing
+            mao_zedong.exposed = True
+            
+            def utf8(self):
+                return sing8
+            utf8.exposed = True
+            utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
+            
+            def reqparams(self, *args, **kwargs):
+                return ', '.join([": ".join((k, v)).encode('utf8')
+                                  for k, v in cherrypy.request.params.items()])
+            reqparams.exposed = True
+        
+        class GZIP:
+            def index(self):
+                yield "Hello, world"
+            index.exposed = True
+            
+            def noshow(self):
+                # Test for ticket #147, where yield showed no exceptions (content-
+                # encoding was still gzip even though traceback wasn't zipped).
+                raise IndexError()
+                yield "Here be dragons"
+            noshow.exposed = True
+            # Turn encoding off so the gzip tool is the one doing the collapse.
+            noshow._cp_config = {'tools.encode.on': False}
+            
+            def noshow_stream(self):
+                # Test for ticket #147, where yield showed no exceptions (content-
+                # encoding was still gzip even though traceback wasn't zipped).
+                raise IndexError()
+                yield "Here be dragons"
+            noshow_stream.exposed = True
+            noshow_stream._cp_config = {'response.stream': True}
+        
+        class Decode:
+            def extra_charset(self, *args, **kwargs):
+                return ', '.join([": ".join((k, v)).encode('utf8')
+                                  for k, v in cherrypy.request.params.items()])
+            extra_charset.exposed = True
+            extra_charset._cp_config = {
+                'tools.decode.on': True,
+                'tools.decode.default_encoding': [u'utf-16'],
+                }
+            
+            def force_charset(self, *args, **kwargs):
+                return ', '.join([": ".join((k, v)).encode('utf8')
+                                  for k, v in cherrypy.request.params.items()])
+            force_charset.exposed = True
+            force_charset._cp_config = {
+                'tools.decode.on': True,
+                'tools.decode.encoding': u'utf-16',
+                }
+        
+        root = Root()
+        root.gzip = GZIP()
+        root.decode = Decode()
+        cherrypy.tree.mount(root, config={'/gzip': {'tools.gzip.on': True}})
     
     def test_query_string_decoding(self):
         europoundUtf8 = europoundUnicode.encode('utf-8')

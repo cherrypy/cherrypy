@@ -1,176 +1,176 @@
 from cherrypy.test import test
 from cherrypy._cptree import Application
-test.prefer_parent_path()
 
 import cherrypy
 
 script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
 
-def setup_server():
-    class SubSubRoot:
-        def index(self):
-            return "SubSubRoot index"
-        index.exposed = True
-
-        def default(self, *args):
-            return "SubSubRoot default"
-        default.exposed = True
-
-        def handler(self):
-            return "SubSubRoot handler"
-        handler.exposed = True
-
-        def dispatch(self):
-            return "SubSubRoot dispatch"
-        dispatch.exposed = True
-
-    subsubnodes = {
-        '1': SubSubRoot(),
-        '2': SubSubRoot(),
-    }
-
-    class SubRoot:
-        def index(self):
-            return "SubRoot index"
-        index.exposed = True
-
-        def default(self, *args):
-            return "SubRoot %s" % (args,)
-        default.exposed = True
-
-        def handler(self):
-            return "SubRoot handler"
-        handler.exposed = True
-
-        def _cp_dispatch(self, vpath):
-            return subsubnodes.get(vpath[0], None)
-
-    subnodes = {
-        '1': SubRoot(),
-        '2': SubRoot(),
-    }
-    class Root:
-        def index(self):
-            return "index"
-        index.exposed = True
-
-        def default(self, *args):
-            return "default %s" % (args,)
-        default.exposed = True
-
-        def handler(self):
-            return "handler"
-        handler.exposed = True
-
-        def _cp_dispatch(self, vpath):
-            return subnodes.get(vpath[0])
-
-    #--------------------------------------------------------------------------
-    # DynamicNodeAndMethodDispatcher example.
-    # This example exposes a fairly naive HTTP api
-    class User(object):
-        def __init__(self, id, name):
-            self.id = id
-            self.name = name
-
-        def __unicode__(self):
-            return unicode(self.name)
-
-    user_lookup = {
-        1: User(1, 'foo'),
-        2: User(2, 'bar'),
-    }
-
-    def make_user(name, id=None):
-        if not id:
-            id = max(*user_lookup.keys()) + 1
-        user_lookup[id] = User(id, name)
-        return id
-
-    class UserContainerNode(object):
-        exposed = True
-
-        def POST(self, name):
-            """
-            Allow the creation of a new Object
-            """
-            return "POST %d" % make_user(name)
-
-        def GET(self):
-            keys = user_lookup.keys()
-            keys.sort()
-            return unicode(keys)
-
-        def dynamic_dispatch(self, vpath):
-            try:
-                id = int(vpath[0])
-            except ValueError:
-                return None
-            return UserInstanceNode(id)
-
-    class UserInstanceNode(object):
-        exposed = True
-        def __init__(self, id):
-            self.id = id
-            self.user = user_lookup.get(id, None)
-
-            # For all but PUT methods there MUST be a valid user identified
-            # by self.id
-            if not self.user and cherrypy.request.method != 'PUT':
-                raise cherrypy.HTTPError(404)
-
-        def GET(self, *args, **kwargs):
-            """
-            Return the appropriate representation of the instance.
-            """
-            return unicode(self.user)
-
-        def POST(self, name):
-            """
-            Update the fields of the user instance.
-            """
-            self.user.name = name
-            return "POST %d" % self.user.id
-
-        def PUT(self, name):
-            """
-            Create a new user with the specified id, or edit it if it already exists
-            """
-            if self.user:
-                # Edit the current user
-                self.user.name = name
-                return "PUT %d" % self.user.id
-            else:
-                # Make a new user with said attributes.
-                return "PUT %d" % make_user(name, self.id)
-
-        def DELETE(self):
-            """
-            Delete the user specified at the id.
-            """
-            id = self.user.id
-            del user_lookup[self.user.id]
-            del self.user
-            return "DELETE %d" % id
-
-
-    Root.users = UserContainerNode()
-
-    md = cherrypy.dispatch.MethodDispatcher('dynamic_dispatch')
-    for url in script_names:
-        conf = {'/': {
-                    'user': (url or "/").split("/")[-2],
-                },
-                '/users': {
-                    'request.dispatch': md
-                },
-            }
-        cherrypy.tree.mount(Root(), url, conf)
-
 
 from cherrypy.test import helper
 
 class DynamicObjectMappingTest(helper.CPWebCase):
+    @staticmethod
+    def setup_server():
+        class SubSubRoot:
+            def index(self):
+                return "SubSubRoot index"
+            index.exposed = True
+
+            def default(self, *args):
+                return "SubSubRoot default"
+            default.exposed = True
+
+            def handler(self):
+                return "SubSubRoot handler"
+            handler.exposed = True
+
+            def dispatch(self):
+                return "SubSubRoot dispatch"
+            dispatch.exposed = True
+
+        subsubnodes = {
+            '1': SubSubRoot(),
+            '2': SubSubRoot(),
+        }
+
+        class SubRoot:
+            def index(self):
+                return "SubRoot index"
+            index.exposed = True
+
+            def default(self, *args):
+                return "SubRoot %s" % (args,)
+            default.exposed = True
+
+            def handler(self):
+                return "SubRoot handler"
+            handler.exposed = True
+
+            def _cp_dispatch(self, vpath):
+                return subsubnodes.get(vpath[0], None)
+
+        subnodes = {
+            '1': SubRoot(),
+            '2': SubRoot(),
+        }
+        class Root:
+            def index(self):
+                return "index"
+            index.exposed = True
+
+            def default(self, *args):
+                return "default %s" % (args,)
+            default.exposed = True
+
+            def handler(self):
+                return "handler"
+            handler.exposed = True
+
+            def _cp_dispatch(self, vpath):
+                return subnodes.get(vpath[0])
+
+        #--------------------------------------------------------------------------
+        # DynamicNodeAndMethodDispatcher example.
+        # This example exposes a fairly naive HTTP api
+        class User(object):
+            def __init__(self, id, name):
+                self.id = id
+                self.name = name
+
+            def __unicode__(self):
+                return unicode(self.name)
+
+        user_lookup = {
+            1: User(1, 'foo'),
+            2: User(2, 'bar'),
+        }
+
+        def make_user(name, id=None):
+            if not id:
+                id = max(*user_lookup.keys()) + 1
+            user_lookup[id] = User(id, name)
+            return id
+
+        class UserContainerNode(object):
+            exposed = True
+
+            def POST(self, name):
+                """
+                Allow the creation of a new Object
+                """
+                return "POST %d" % make_user(name)
+
+            def GET(self):
+                keys = user_lookup.keys()
+                keys.sort()
+                return unicode(keys)
+
+            def dynamic_dispatch(self, vpath):
+                try:
+                    id = int(vpath[0])
+                except ValueError:
+                    return None
+                return UserInstanceNode(id)
+
+        class UserInstanceNode(object):
+            exposed = True
+            def __init__(self, id):
+                self.id = id
+                self.user = user_lookup.get(id, None)
+
+                # For all but PUT methods there MUST be a valid user identified
+                # by self.id
+                if not self.user and cherrypy.request.method != 'PUT':
+                    raise cherrypy.HTTPError(404)
+
+            def GET(self, *args, **kwargs):
+                """
+                Return the appropriate representation of the instance.
+                """
+                return unicode(self.user)
+
+            def POST(self, name):
+                """
+                Update the fields of the user instance.
+                """
+                self.user.name = name
+                return "POST %d" % self.user.id
+
+            def PUT(self, name):
+                """
+                Create a new user with the specified id, or edit it if it already exists
+                """
+                if self.user:
+                    # Edit the current user
+                    self.user.name = name
+                    return "PUT %d" % self.user.id
+                else:
+                    # Make a new user with said attributes.
+                    return "PUT %d" % make_user(name, self.id)
+
+            def DELETE(self):
+                """
+                Delete the user specified at the id.
+                """
+                id = self.user.id
+                del user_lookup[self.user.id]
+                del self.user
+                return "DELETE %d" % id
+
+
+        Root.users = UserContainerNode()
+
+        md = cherrypy.dispatch.MethodDispatcher('dynamic_dispatch')
+        for url in script_names:
+            conf = {'/': {
+                        'user': (url or "/").split("/")[-2],
+                    },
+                    '/users': {
+                        'request.dispatch': md
+                    },
+                }
+            cherrypy.tree.mount(Root(), url, conf)
+
 
     def testObjectMapping(self):
         for url in script_names:

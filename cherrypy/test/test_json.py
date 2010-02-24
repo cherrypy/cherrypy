@@ -1,5 +1,5 @@
 from cherrypy.test import test, helper
-test.prefer_parent_path()
+
 
 import cherrypy
 
@@ -7,39 +7,40 @@ from cherrypy.lib.jsontools import json
 if json is None:
     print "skipped (simplejson not found) "
 else:
-    def setup_server():
-        class Root(object):
-            def plain(self):
-                return 'hello'
-            plain.exposed = True
-
-            def json_string(self):
-                return 'hello'
-            json_string.exposed = True
-            json_string._cp_config = {'tools.json_out.on': True}
-
-            def json_list(self):
-                return ['a', 'b', 42]
-            json_list.exposed = True
-            json_list._cp_config = {'tools.json_out.on': True}
-
-            def json_dict(self):
-                return {'answer': 42}
-            json_dict.exposed = True
-            json_dict._cp_config = {'tools.json_out.on': True}
-
-            def json_post(self):
-                if cherrypy.request.json == [13, 'c']:
-                    return 'ok'
-                else:
-                    return 'nok'
-            json_post.exposed = True
-            json_post._cp_config = {'tools.json_in.on': True}
-
-        root = Root()
-        cherrypy.tree.mount(root)
-
     class JsonTest(helper.CPWebCase):
+        @staticmethod
+        def setup_server():
+            class Root(object):
+                def plain(self):
+                    return 'hello'
+                plain.exposed = True
+
+                def json_string(self):
+                    return 'hello'
+                json_string.exposed = True
+                json_string._cp_config = {'tools.json_out.on': True}
+
+                def json_list(self):
+                    return ['a', 'b', 42]
+                json_list.exposed = True
+                json_list._cp_config = {'tools.json_out.on': True}
+
+                def json_dict(self):
+                    return {'answer': 42}
+                json_dict.exposed = True
+                json_dict._cp_config = {'tools.json_out.on': True}
+
+                def json_post(self):
+                    if cherrypy.request.json == [13, 'c']:
+                        return 'ok'
+                    else:
+                        return 'nok'
+                json_post.exposed = True
+                json_post._cp_config = {'tools.json_in.on': True}
+
+            root = Root()
+            cherrypy.tree.mount(root)
+
         def test_json_output(self):
             self.getPage("/plain")
             self.assertBody("hello")

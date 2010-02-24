@@ -1,5 +1,5 @@
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 import os
 localDir = os.path.dirname(__file__)
@@ -95,6 +95,7 @@ def setup_server():
 from cherrypy.test import helper
 
 class ResponseHeadersTest(helper.CPWebCase):
+    setup_server = staticmethod(setup_server)
 
     def testResponseHeadersDecorator(self):
         self.getPage('/')
@@ -108,6 +109,7 @@ class ResponseHeadersTest(helper.CPWebCase):
 
 
 class RefererTest(helper.CPWebCase):
+    setup_server = staticmethod(setup_server)
     
     def testReferer(self):
         self.getPage('/referer/accept')
@@ -129,6 +131,7 @@ class RefererTest(helper.CPWebCase):
 
 
 class AcceptTest(helper.CPWebCase):
+    setup_server = staticmethod(setup_server)
     
     def test_Accept_Tool(self):
         # Test with no header provided
@@ -193,6 +196,7 @@ class AcceptTest(helper.CPWebCase):
 
 
 class AutoVaryTest(helper.CPWebCase):
+    setup_server = staticmethod(setup_server)
 
     def testAutoVary(self):
         self.getPage('/autovary/')

@@ -1,7 +1,7 @@
 """Tests for the CherryPy configuration system."""
 
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 import os, sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -10,47 +10,47 @@ import time
 
 import cherrypy
 
-def setup_server():
-    
-    class Root:
-        def index(self):
-            return cherrypy.request.wsgi_environ['SERVER_PORT']
-        index.exposed = True
-        
-        def upload(self, file):
-            return "Size: %s" % len(file.file.read())
-        upload.exposed = True
-        
-        def tinyupload(self):
-            return cherrypy.request.body.read()
-        tinyupload.exposed = True
-        tinyupload._cp_config = {'request.body.maxbytes': 100}
-    
-    cherrypy.tree.mount(Root())
-    
-    cherrypy.config.update({
-        'server.socket_host': '0.0.0.0',
-        'server.socket_port': 9876,
-        'server.max_request_body_size': 200,
-        'server.max_request_header_size': 500,
-        'server.socket_timeout': 0.5,
-        
-        # Test explicit server.instance
-        'server.2.instance': 'cherrypy._cpwsgi_server.CPWSGIServer',
-        'server.2.socket_port': 9877,
-        
-        # Test non-numeric <servername>
-        # Also test default server.instance = builtin server
-        'server.yetanother.socket_port': 9878,
-        })
-
 
 #                             Client-side code                             #
 
 from cherrypy.test import helper
 
 class ServerConfigTests(helper.CPWebCase):
-    
+    @staticmethod
+    def setup_server():
+        
+        class Root:
+            def index(self):
+                return cherrypy.request.wsgi_environ['SERVER_PORT']
+            index.exposed = True
+            
+            def upload(self, file):
+                return "Size: %s" % len(file.file.read())
+            upload.exposed = True
+            
+            def tinyupload(self):
+                return cherrypy.request.body.read()
+            tinyupload.exposed = True
+            tinyupload._cp_config = {'request.body.maxbytes': 100}
+        
+        cherrypy.tree.mount(Root())
+        
+        cherrypy.config.update({
+            'server.socket_host': '0.0.0.0',
+            'server.socket_port': 9876,
+            'server.max_request_body_size': 200,
+            'server.max_request_header_size': 500,
+            'server.socket_timeout': 0.5,
+            
+            # Test explicit server.instance
+            'server.2.instance': 'cherrypy._cpwsgi_server.CPWSGIServer',
+            'server.2.socket_port': 9877,
+            
+            # Test non-numeric <servername>
+            # Also test default server.instance = builtin server
+            'server.yetanother.socket_port': 9878,
+            })
+
     PORT = 9876
     
     def testBasicConfig(self):

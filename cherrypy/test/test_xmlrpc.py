@@ -1,5 +1,5 @@
 from cherrypy.test import test
-test.prefer_parent_path()
+
 import xmlrpclib
 
 import cherrypy
@@ -73,6 +73,7 @@ def setup_server():
 
 
 class HTTPSTransport(xmlrpclib.SafeTransport):
+    setup_server = staticmethod(setup_server)
     """Subclass of SafeTransport to fix sock.recv errors (by using file)."""
     
     def request(self, host, handler, request_body, verbose=0):
@@ -106,6 +107,7 @@ class HTTPSTransport(xmlrpclib.SafeTransport):
 from cherrypy.test import helper
 
 class XmlRpcTest(helper.CPWebCase):
+    setup_server = staticmethod(setup_server)
     def testXmlRpc(self):
         
         # load the appropriate xmlrpc proxy

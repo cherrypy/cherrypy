@@ -1,7 +1,7 @@
 """Basic tests for the CherryPy core: request handling."""
 
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 import os
 localDir = os.path.dirname(__file__)
@@ -67,6 +67,7 @@ def setup_server():
 from cherrypy.test import helper, logtest
 
 class AccessLogTests(helper.CPWebCase, logtest.LogCase):
+    setup_server = staticmethod(setup_server)
     
     logfile = access_log
     
@@ -132,6 +133,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
 
 class ErrorLogTests(helper.CPWebCase, logtest.LogCase):
+    setup_server = staticmethod(setup_server)
     
     logfile = error_log
     

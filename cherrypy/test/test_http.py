@@ -1,7 +1,7 @@
 """Tests for managing HTTP issues (malformed requests, etc)."""
 
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 from httplib import HTTPConnection, HTTPSConnection
 import cherrypy
@@ -30,44 +30,44 @@ def encode_multipart_formdata(files):
     return content_type, body
 
 
-def setup_server():
-    
-    class Root:
-        def index(self, *args, **kwargs):
-            return "Hello world!"
-        index.exposed = True
-        
-        def no_body(self, *args, **kwargs):
-            return "Hello world!"
-        no_body.exposed = True
-        no_body._cp_config = {'request.process_request_body': False}
-        
-        def post_multipart(self, file):
-            """Return a summary ("a * 65536\nb * 65536") of the uploaded file."""
-            contents = file.file.read()
-            summary = []
-            curchar = ""
-            count = 0
-            for c in contents:
-                if c == curchar:
-                    count += 1
-                else:
-                    if count:
-                        summary.append("%s * %d" % (curchar, count))
-                    count = 1
-                    curchar = c
-            if count:
-                summary.append("%s * %d" % (curchar, count))
-            return ", ".join(summary)
-        post_multipart.exposed = True
-    
-    cherrypy.tree.mount(Root())
-    cherrypy.config.update({'server.max_request_body_size': 30000000})
 
 
 from cherrypy.test import helper
 
 class HTTPTests(helper.CPWebCase):
+    @staticmethod
+    def setup_server():
+        class Root:
+            def index(self, *args, **kwargs):
+                return "Hello world!"
+            index.exposed = True
+            
+            def no_body(self, *args, **kwargs):
+                return "Hello world!"
+            no_body.exposed = True
+            no_body._cp_config = {'request.process_request_body': False}
+            
+            def post_multipart(self, file):
+                """Return a summary ("a * 65536\nb * 65536") of the uploaded file."""
+                contents = file.file.read()
+                summary = []
+                curchar = ""
+                count = 0
+                for c in contents:
+                    if c == curchar:
+                        count += 1
+                    else:
+                        if count:
+                            summary.append("%s * %d" % (curchar, count))
+                        count = 1
+                        curchar = c
+                if count:
+                    summary.append("%s * %d" % (curchar, count))
+                return ", ".join(summary)
+            post_multipart.exposed = True
+        
+        cherrypy.tree.mount(Root())
+        cherrypy.config.update({'server.max_request_body_size': 30000000})
     
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the

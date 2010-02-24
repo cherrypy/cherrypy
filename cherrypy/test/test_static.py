@@ -1,5 +1,5 @@
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 from httplib import HTTPConnection, HTTPSConnection
 try:
@@ -17,103 +17,105 @@ import threading
 import cherrypy
 from cherrypy.lib import static
 
-def setup_server():
-    if not os.path.exists(has_space_filepath):
-        open(has_space_filepath, 'wb').write('Hello, world\r\n')
-    if not os.path.exists(bigfile_filepath):
-        open(bigfile_filepath, 'wb').write("x" * BIGFILE_SIZE)
-    
-    class Root:
-        
-        def bigfile(self):
-            from cherrypy.lib import static
-            self.f = static.serve_file(bigfile_filepath)
-            return self.f
-        bigfile.exposed = True
-        bigfile._cp_config = {'response.stream': True}
-        
-        def tell(self):
-            if self.f.input.closed:
-                return ''
-            return repr(self.f.input.tell()).rstrip('L')
-        tell.exposed = True
-        
-        def fileobj(self):
-            f = open(os.path.join(curdir, 'style.css'), 'rb')
-            return static.serve_fileobj(f, content_type='text/css')
-        fileobj.exposed = True
-        
-        def stringio(self):
-            f = StringIO.StringIO('Fee\nfie\nfo\nfum')
-            return static.serve_fileobj(f, content_type='text/plain')
-        stringio.exposed = True
-    
-    class Static:
-        
-        def index(self):
-            return 'You want the Baron? You can have the Baron!'
-        index.exposed = True
-        
-        def dynamic(self):
-            return "This is a DYNAMIC page"
-        dynamic.exposed = True
-    
-    
-    root = Root()
-    root.static = Static()
-    
-    rootconf = {
-        '/static': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': 'static',
-            'tools.staticdir.root': curdir,
-        },
-        '/style.css': {
-            'tools.staticfile.on': True,
-            'tools.staticfile.filename': os.path.join(curdir, 'style.css'),
-        },
-        '/docroot': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.root': curdir,
-            'tools.staticdir.dir': 'static',
-            'tools.staticdir.index': 'index.html',
-        },
-        '/error': {
-            'tools.staticdir.on': True,
-            'request.show_tracebacks': True,
-        },
-        }
-    rootApp = cherrypy.Application(root)
-    rootApp.merge(rootconf)
-    
-    test_app_conf = {
-        '/test': {
-            'tools.staticdir.index': 'index.html',
-            'tools.staticdir.on': True,
-            'tools.staticdir.root': curdir,
-            'tools.staticdir.dir': 'static',
-            },
-        }
-    testApp = cherrypy.Application(Static())
-    testApp.merge(test_app_conf)
-    
-    vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
-    cherrypy.tree.graft(vhost)
-
-
-def teardown_server():
-    for f in (has_space_filepath, bigfile_filepath):
-        if os.path.exists(f):
-            try:
-                os.unlink(f)
-            except:
-                pass
-
 
 
 from cherrypy.test import helper
 
 class StaticTest(helper.CPWebCase):
+    @staticmethod
+    def setup_server():
+        if not os.path.exists(has_space_filepath):
+            open(has_space_filepath, 'wb').write('Hello, world\r\n')
+        if not os.path.exists(bigfile_filepath):
+            open(bigfile_filepath, 'wb').write("x" * BIGFILE_SIZE)
+        
+        class Root:
+            
+            def bigfile(self):
+                from cherrypy.lib import static
+                self.f = static.serve_file(bigfile_filepath)
+                return self.f
+            bigfile.exposed = True
+            bigfile._cp_config = {'response.stream': True}
+            
+            def tell(self):
+                if self.f.input.closed:
+                    return ''
+                return repr(self.f.input.tell()).rstrip('L')
+            tell.exposed = True
+            
+            def fileobj(self):
+                f = open(os.path.join(curdir, 'style.css'), 'rb')
+                return static.serve_fileobj(f, content_type='text/css')
+            fileobj.exposed = True
+            
+            def stringio(self):
+                f = StringIO.StringIO('Fee\nfie\nfo\nfum')
+                return static.serve_fileobj(f, content_type='text/plain')
+            stringio.exposed = True
+        
+        class Static:
+            
+            def index(self):
+                return 'You want the Baron? You can have the Baron!'
+            index.exposed = True
+            
+            def dynamic(self):
+                return "This is a DYNAMIC page"
+            dynamic.exposed = True
+        
+        
+        root = Root()
+        root.static = Static()
+        
+        rootconf = {
+            '/static': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': 'static',
+                'tools.staticdir.root': curdir,
+            },
+            '/style.css': {
+                'tools.staticfile.on': True,
+                'tools.staticfile.filename': os.path.join(curdir, 'style.css'),
+            },
+            '/docroot': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.root': curdir,
+                'tools.staticdir.dir': 'static',
+                'tools.staticdir.index': 'index.html',
+            },
+            '/error': {
+                'tools.staticdir.on': True,
+                'request.show_tracebacks': True,
+            },
+            }
+        rootApp = cherrypy.Application(root)
+        rootApp.merge(rootconf)
+        
+        test_app_conf = {
+            '/test': {
+                'tools.staticdir.index': 'index.html',
+                'tools.staticdir.on': True,
+                'tools.staticdir.root': curdir,
+                'tools.staticdir.dir': 'static',
+                },
+            }
+        testApp = cherrypy.Application(Static())
+        testApp.merge(test_app_conf)
+        
+        vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
+        cherrypy.tree.graft(vhost)
+
+
+    @staticmethod
+    def teardown_server():
+        for f in (has_space_filepath, bigfile_filepath):
+            if os.path.exists(f):
+                try:
+                    os.unlink(f)
+                except:
+                    pass
+
     
     def testStatic(self):
         self.getPage("/static/index.html")

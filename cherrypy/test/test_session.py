@@ -1,5 +1,5 @@
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 from httplib import HTTPConnection, HTTPSConnection
 import os
@@ -126,6 +126,7 @@ def setup_server():
 from cherrypy.test import helper
 
 class SessionTest(helper.CPWebCase):
+    setup_server = staticmethod(setup_server)
     
     def tearDown(self):
         # Clean up sessions.
@@ -373,11 +374,13 @@ try:
         break
 except (ImportError, socket.error):
     class MemcachedSessionTest(helper.CPWebCase):
+        setup_server = staticmethod(setup_server)
         
         def test(self):
             return self.skip("memcached not reachable ")
 else:
     class MemcachedSessionTest(helper.CPWebCase):
+        setup_server = staticmethod(setup_server)
         
         def test_0_Session(self):
             self.getPage('/setsessiontype/memcached')

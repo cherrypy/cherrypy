@@ -1,7 +1,7 @@
 """Tests for various MIME issues, including the safe_multipart Tool."""
 
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 import cherrypy
 
@@ -28,6 +28,7 @@ def setup_server():
 from cherrypy.test import helper
 
 class MultipartTest(helper.CPWebCase):
+    setup_server = staticmethod(setup_server)
     
     def test_multipart(self):
         text_part = u"This is the text version"
@@ -62,7 +63,8 @@ This is the <strong>HTML</strong> version
 
 
 class SafeMultipartHandlingTest(helper.CPWebCase):
-    
+    setup_server = staticmethod(setup_server)
+
     def test_Flash_Upload(self):
         headers = [
             ('Accept', 'text/*'),

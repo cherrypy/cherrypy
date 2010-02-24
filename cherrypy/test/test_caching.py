@@ -1,5 +1,5 @@
 from cherrypy.test import test
-test.prefer_parent_path()
+
 
 import datetime
 import gzip
@@ -19,110 +19,112 @@ gif_bytes = ('GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
              '\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x02\x03\x02\x08\t\x00;')
 
 
-def setup_server():
-    
-    class Root:
-        
-        _cp_config = {'tools.caching.on': True}
-        
-        def __init__(self):
-            self.counter = 0
-            self.control_counter = 0
-            self.longlock = threading.Lock()
-        
-        def index(self):
-            self.counter += 1
-            msg = "visit #%s" % self.counter
-            return msg
-        index.exposed = True
-        
-        def control(self):
-            self.control_counter += 1
-            return "visit #%s" % self.control_counter
-        control.exposed = True
-        
-        def a_gif(self):
-            cherrypy.response.headers['Last-Modified'] = httputil.HTTPDate()
-            return gif_bytes
-        a_gif.exposed = True
-        
-        def long_process(self, seconds='1'):
-            try:
-                self.longlock.acquire()
-                time.sleep(float(seconds))
-            finally:
-                self.longlock.release()
-            return 'success!'
-        long_process.exposed = True
-        
-        def clear_cache(self, path):
-            cherrypy._cache.store[cherrypy.request.base + path].clear()
-        clear_cache.exposed = True
-    
-    class VaryHeaderCachingServer(object):
-        
-        _cp_config = {'tools.caching.on': True,
-            'tools.response_headers.on': True,
-            'tools.response_headers.headers': [('Vary', 'Our-Varying-Header')],
-            }
-        
-        def __init__(self):
-            self.counter = count(1)
-        
-        def index(self):
-            return "visit #%s" % self.counter.next()
-        index.exposed = True
-    
-    class UnCached(object):
-        _cp_config = {'tools.expires.on': True,
-                      'tools.expires.secs': 60,
-                      'tools.staticdir.on': True,
-                      'tools.staticdir.dir': 'static',
-                      'tools.staticdir.root': curdir,
-                      }
-
-        def force(self):
-            cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
-            self._cp_config['tools.expires.force'] = True
-            self._cp_config['tools.expires.secs'] = 0
-            return "being forceful"
-        force.exposed = True
-        force._cp_config = {'tools.expires.secs': 0}
-
-        def dynamic(self):
-            cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
-            cherrypy.response.headers['Cache-Control'] = 'private'
-            return "D-d-d-dynamic!"
-        dynamic.exposed = True
-
-        def cacheable(self):
-            cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
-            return "Hi, I'm cacheable."
-        cacheable.exposed = True
-
-        def specific(self):
-            cherrypy.response.headers['Etag'] = 'need_this_to_make_me_cacheable'
-            return "I am being specific"
-        specific.exposed = True
-        specific._cp_config = {'tools.expires.secs': 86400}
-
-        class Foo(object):pass
-        
-        def wrongtype(self):
-            cherrypy.response.headers['Etag'] = 'need_this_to_make_me_cacheable'
-            return "Woops"
-        wrongtype.exposed = True
-        wrongtype._cp_config = {'tools.expires.secs': Foo()}
-    
-    cherrypy.tree.mount(Root())
-    cherrypy.tree.mount(UnCached(), "/expires")
-    cherrypy.tree.mount(VaryHeaderCachingServer(), "/varying_headers")
-    cherrypy.config.update({'tools.gzip.on': True})
-
 
 from cherrypy.test import helper
 
 class CacheTest(helper.CPWebCase):
+
+    @staticmethod
+    def setup_server():
+        
+        class Root:
+            
+            _cp_config = {'tools.caching.on': True}
+            
+            def __init__(self):
+                self.counter = 0
+                self.control_counter = 0
+                self.longlock = threading.Lock()
+            
+            def index(self):
+                self.counter += 1
+                msg = "visit #%s" % self.counter
+                return msg
+            index.exposed = True
+            
+            def control(self):
+                self.control_counter += 1
+                return "visit #%s" % self.control_counter
+            control.exposed = True
+            
+            def a_gif(self):
+                cherrypy.response.headers['Last-Modified'] = httputil.HTTPDate()
+                return gif_bytes
+            a_gif.exposed = True
+            
+            def long_process(self, seconds='1'):
+                try:
+                    self.longlock.acquire()
+                    time.sleep(float(seconds))
+                finally:
+                    self.longlock.release()
+                return 'success!'
+            long_process.exposed = True
+            
+            def clear_cache(self, path):
+                cherrypy._cache.store[cherrypy.request.base + path].clear()
+            clear_cache.exposed = True
+        
+        class VaryHeaderCachingServer(object):
+            
+            _cp_config = {'tools.caching.on': True,
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [('Vary', 'Our-Varying-Header')],
+                }
+            
+            def __init__(self):
+                self.counter = count(1)
+            
+            def index(self):
+                return "visit #%s" % self.counter.next()
+            index.exposed = True
+        
+        class UnCached(object):
+            _cp_config = {'tools.expires.on': True,
+                          'tools.expires.secs': 60,
+                          'tools.staticdir.on': True,
+                          'tools.staticdir.dir': 'static',
+                          'tools.staticdir.root': curdir,
+                          }
+
+            def force(self):
+                cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
+                self._cp_config['tools.expires.force'] = True
+                self._cp_config['tools.expires.secs'] = 0
+                return "being forceful"
+            force.exposed = True
+            force._cp_config = {'tools.expires.secs': 0}
+
+            def dynamic(self):
+                cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
+                cherrypy.response.headers['Cache-Control'] = 'private'
+                return "D-d-d-dynamic!"
+            dynamic.exposed = True
+
+            def cacheable(self):
+                cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
+                return "Hi, I'm cacheable."
+            cacheable.exposed = True
+
+            def specific(self):
+                cherrypy.response.headers['Etag'] = 'need_this_to_make_me_cacheable'
+                return "I am being specific"
+            specific.exposed = True
+            specific._cp_config = {'tools.expires.secs': 86400}
+
+            class Foo(object):pass
+            
+            def wrongtype(self):
+                cherrypy.response.headers['Etag'] = 'need_this_to_make_me_cacheable'
+                return "Woops"
+            wrongtype.exposed = True
+            wrongtype._cp_config = {'tools.expires.secs': Foo()}
+        
+        cherrypy.tree.mount(Root())
+        cherrypy.tree.mount(UnCached(), "/expires")
+        cherrypy.tree.mount(VaryHeaderCachingServer(), "/varying_headers")
+        cherrypy.config.update({'tools.gzip.on': True})
+
 
     def testCaching(self):
         elapsed = 0.0
