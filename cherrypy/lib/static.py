@@ -245,18 +245,21 @@ def staticdir(section, dir, root="", match="", content_types=None, index="",
               debug=False):
     """Serve a static resource from the given (root +) dir.
     
-    If 'match' is given, request.path_info will be searched for the given
-    regular expression before attempting to serve static content.
+    match
+        If given, request.path_info will be searched for the given
+        regular expression before attempting to serve static content.
     
-    If content_types is given, it should be a Python dictionary of
-    {file-extension: content-type} pairs, where 'file-extension' is
-    a string (e.g. "gif") and 'content-type' is the value to write
-    out in the Content-Type response header (e.g. "image/gif").
+    content_types
+        If given, it should be a Python dictionary of
+        {file-extension: content-type} pairs, where 'file-extension' is
+        a string (e.g. "gif") and 'content-type' is the value to write
+        out in the Content-Type response header (e.g. "image/gif").
     
-    If 'index' is provided, it should be the (relative) name of a file to
-    serve for directory requests. For example, if the dir argument is
-    '/home/me', the Request-URI is 'myapp', and the index arg is
-    'index.html', the file '/home/me/myapp/index.html' will be sought.
+    index
+        If provided, it should be the (relative) name of a file to
+        serve for directory requests. For example, if the dir argument is
+        '/home/me', the Request-URI is 'myapp', and the index arg is
+        'index.html', the file '/home/me/myapp/index.html' will be sought.
     """
     request = cherrypy.serving.request
     if request.method not in ('GET', 'HEAD'):
@@ -314,13 +317,16 @@ def staticdir(section, dir, root="", match="", content_types=None, index="",
 def staticfile(filename, root=None, match="", content_types=None, debug=False):
     """Serve a static resource from the given (root +) filename.
     
-    If 'match' is given, request.path_info will be searched for the given
-    regular expression before attempting to serve static content.
+    match
+        If given, request.path_info will be searched for the given
+        regular expression before attempting to serve static content.
     
-    If content_types is given, it should be a Python dictionary of
-    {file-extension: content-type} pairs, where 'file-extension' is
-    a string (e.g. "gif") and 'content-type' is the value to write
-    out in the Content-Type response header (e.g. "image/gif").
+    content_types
+        If given, it should be a Python dictionary of
+        {file-extension: content-type} pairs, where 'file-extension' is
+        a string (e.g. "gif") and 'content-type' is the value to write
+        out in the Content-Type response header (e.g. "image/gif").
+    
     """
     request = cherrypy.serving.request
     if request.method not in ('GET', 'HEAD'):

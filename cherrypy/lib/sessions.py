@@ -308,9 +308,11 @@ class RamSession(Session):
 class FileSession(Session):
     """Implementation of the File backend for sessions
     
-    storage_path: the folder where session data will be saved. Each session
+    storage_path
+        The folder where session data will be saved. Each session
         will be saved as pickle.dump(data, expiration_time) in its own file;
         the filename will be self.SESSION_PREFIX + self.id.
+    
     """
     
     SESSION_PREFIX = 'session-'
@@ -434,7 +436,7 @@ class FileSession(Session):
 
 class PostgresqlSession(Session):
     """ Implementation of the PostgreSQL backend for sessions. It assumes
-        a table like this:
+        a table like this::
 
             create table session (
                 id varchar(40),
@@ -624,21 +626,38 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
          persistent=True, debug=False, **kwargs):
     """Initialize session object (using cookies).
     
-    storage_type: one of 'ram', 'file', 'postgresql'. This will be used
+    storage_type
+        One of 'ram', 'file', 'postgresql'. This will be used
         to look up the corresponding class in cherrypy.lib.sessions
         globals. For example, 'file' will use the FileSession class.
-    path: the 'path' value to stick in the response cookie metadata.
-    path_header: if 'path' is None (the default), then the response
+    
+    path
+        The 'path' value to stick in the response cookie metadata.
+    
+    path_header
+        If 'path' is None (the default), then the response
         cookie 'path' will be pulled from request.headers[path_header].
-    name: the name of the cookie.
-    timeout: the expiration timeout (in minutes) for the stored session data.
+    
+    name
+        The name of the cookie.
+    
+    timeout
+        The expiration timeout (in minutes) for the stored session data.
         If 'persistent' is True (the default), this is also the timeout
         for the cookie.
-    domain: the cookie domain.
-    secure: if False (the default) the cookie 'secure' value will not
+    
+    domain
+        The cookie domain.
+    
+    secure
+        If False (the default) the cookie 'secure' value will not
         be set. If True, the cookie 'secure' value will be set (to 1).
-    clean_freq (minutes): the poll rate for expired session cleanup.
-    persistent: if True (the default), the 'timeout' argument will be used
+    
+    clean_freq (minutes)
+        The poll rate for expired session cleanup.
+    
+    persistent
+        If True (the default), the 'timeout' argument will be used
         to expire the cookie. If False, the cookie will not have an expiry,
         and the cookie will be a "session cookie" which expires when the
         browser is closed.
@@ -700,16 +719,28 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
                         timeout=60, domain=None, secure=False):
     """Set a response cookie for the client.
     
-    path: the 'path' value to stick in the response cookie metadata.
-    path_header: if 'path' is None (the default), then the response
+    path
+        the 'path' value to stick in the response cookie metadata.
+
+    path_header
+        if 'path' is None (the default), then the response
         cookie 'path' will be pulled from request.headers[path_header].
-    name: the name of the cookie.
-    timeout: the expiration timeout for the cookie. If 0 or other boolean
+
+    name
+        the name of the cookie.
+
+    timeout
+        the expiration timeout for the cookie. If 0 or other boolean
         False, no 'expires' param will be set, and the cookie will be a
         "session cookie" which expires when the browser is closed.
-    domain: the cookie domain.
-    secure: if False (the default) the cookie 'secure' value will not
+
+    domain
+        the cookie domain.
+
+    secure
+        if False (the default) the cookie 'secure' value will not
         be set. If True, the cookie 'secure' value will be set (to 1).
+
     """
     # Set response cookie
     cookie = cherrypy.serving.response.cookie

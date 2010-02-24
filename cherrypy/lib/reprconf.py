@@ -51,8 +51,9 @@ class NamespaceSet(dict):
     def __call__(self, config):
         """Iterate through config and pass it to each namespace handler.
         
-        'config' should be a flat dict, where keys use dots to separate
-        namespaces, and values are arbitrary.
+        config
+            A flat dict, where keys use dots to separate
+            namespaces, and values are arbitrary.
         
         The first name in each config key is used to look up the corresponding
         namespace handler. For example, a config entry of {'tools.gzip.on': v}
@@ -160,8 +161,8 @@ class Config(dict):
 
 
 class Parser(ConfigParser):
-    """Sub-class of ConfigParser that keeps the case of options and that raises
-    an exception if the file cannot be read.
+    """Sub-class of ConfigParser that keeps the case of options and that 
+    raises an exception if the file cannot be read.
     """
     
     def optionxform(self, optionstr):
