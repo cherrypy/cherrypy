@@ -1,27 +1,6 @@
-********
-Overview
-********
-
-What is CherryPy?
-=================
-
-CherryPy is a pythonic, object-oriented HTTP framework. It provides the foundation over which complex web-based applications can be written, with little or no knowledge of the underlying protocols. CherryPy allows developers to build web applications in much the same way they would build any other object-oriented Python program. This usually results in smaller source code developed in less time.
-
-CherryPy does its best to stay out of the way between the programmer and the problem. CherryPy applications are usually very simple. It works out of the box; default behavior is sensible enough to allow use without extensive setup or customization. The embedded web server allows one to deploy web applications anywhere Python is installed. In short, CherryPy is as pythonic as it gets. 
-
-What CherryPy is NOT?
-=====================
-
-As an HTTP framework, CherryPy does all that is necessary to allow Python code
-to be executed when some resource (or URL) is requested by the user. However,
-it is not a templating language, such as PHP. CherryPy can work with several
-templating packages (see :doc:`/progguide/choosingtemplate`). But please note
-that, while useful
-to some extent, templating packages are not strictly necessary, and that pure
-Python code can be used to generate the Web pages.
-
+********************
 Why choose CherryPy?
-====================
+********************
 
 Let's face it: there are **dozens** of different Python web frameworks. Why would
 you want to choose CherryPy for your next dynamic Web project?
@@ -71,10 +50,10 @@ In addition, CherryPy is pure-python and is compatible with Python 2.3. This mea
 6. It's free!
 -------------
 
-All of CherryPy is licensed under the open-source BSD license, which means '''CherryPy can be used commercially for ZERO cost'''.
+All of CherryPy is licensed under the open-source BSD license, which means **CherryPy can be used commercially for ZERO cost**.
 
 7. Where to go from here?
 -------------------------
 
-Check out the :ref:`tutorial` and :ref:`toc` for more complete documentation.
+Check out the :doc:`/intro/tutorial/tutorial` and :doc:`/progguide/index` for more complete documentation.
 

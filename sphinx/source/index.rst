@@ -1,53 +1,33 @@
 .. _toc:
 
-**********************
-CherryPy Documentation
-**********************
+********************************
+CherryPy |release| Documentation
+********************************
 
-Introduction
-============
-
-.. toctree::
-   :maxdepth: 3
-
-   intro/index
-
-Programmer's Guide
-==================
-
-.. toctree::
-   :maxdepth: 3
-
-   progguide/index
-
-Deployment Guide
-================
-
-.. toctree::
-   :maxdepth: 3
-
-   deployguide/index
-
-Reference Manual
-================
-
-.. toctree::
-   :maxdepth: 3
-
-   refman/index
-
-Appendix
+Sections
 ========
 
-.. toctree::
-   :maxdepth: 3
+:doc:`Introduction <intro/index>`
+---------------------------------
+*The who, what, and why of CherryPy*
 
-   appendix/index
 
-Indices and tables
-==================
+:doc:`Programmer's Guide <progguide/index>`
+-------------------------------------------
+*How to perform common tasks*
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+:doc:`Deployment Guide <deployguide/index>`
+-------------------------------------------
+*Getting your application on the web*
+
+:doc:`Reference Manual <refman/index>`
+--------------------------------------
+*Module, class, and function reference*
+
+:doc:`Appendix <appendix/index>`
+--------------------------------
+
+:ref:`genindex`
+:ref:`modindex`
+:ref:`search`
 
