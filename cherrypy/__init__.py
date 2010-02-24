@@ -97,7 +97,7 @@ class _AttributeDocstrings(type):
             class Thing(__builtin__.object)
              |  A thing and its properties.
              |
-             |  height [= 50]:
+             |  height [= 50]
              |      The height of the Thing in inches.
              |
 
@@ -136,18 +136,23 @@ class _AttributeDocstrings(type):
                     delattr(cls, name)
 
                 # Make a uniformly-indented docstring from it.
+                val = dct[name]
+                # Allow docstrings to start right after the initial
+                # triple-quote, or on the next line
+                val = val.lstrip('\r\n')
                 val = '\n'.join(['    ' + line.strip()
-                                 for line in dct[name].split('\n')])
+                                 for line in val.split('\n')])
 
                 # Get the default value.
                 attrname = name[:-5]
+                attrval = ""
                 try:
-                    attrval = getattr(cls, attrname)
+                    attrval = " [= %s]" % repr(getattr(cls, attrname))
                 except AttributeError:
-                    attrval = "missing"
+                    attrval = " [missing]"
 
                 # Add the complete attribute docstring to our list.
-                newdoc.append("%s [= %r]:\n%s" % (attrname, attrval, val))
+                newdoc.append("%s%s\n%s" % (attrname, attrval, val))
 
         # Add our list of new docstrings to the class docstring.
         cls.__doc__ = "\n\n".join(newdoc)

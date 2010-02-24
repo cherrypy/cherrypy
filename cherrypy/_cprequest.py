@@ -246,11 +246,11 @@ class Request(object):
     
     protocol = (1, 1)
     protocol__doc = """The HTTP protocol version corresponding to the set
-        of features which should be allowed in the response. If BOTH
-        the client's request message AND the server's level of HTTP
-        compliance is HTTP/1.1, this attribute will be the tuple (1, 1).
-        If either is 1.0, this attribute will be the tuple (1, 0).
-        Lower HTTP protocol versions are not explicitly supported."""
+    of features which should be allowed in the response. If BOTH
+    the client's request message AND the server's level of HTTP
+    compliance is HTTP/1.1, this attribute will be the tuple (1, 1).
+    If either is 1.0, this attribute will be the tuple (1, 0).
+    Lower HTTP protocol versions are not explicitly supported."""
     
     params = {}
     params__doc = """
@@ -317,16 +317,6 @@ class Request(object):
     request entity body as an open file object (which you can .read());
     this value is set between the 'before_request_body' and 'before_handler'
     hooks (assuming that process_request_body is True)."""
-    
-    body_params = None
-    body_params__doc = """
-    If the request Content-Type is 'application/x-www-form-urlencoded' or
-    multipart, this will be a dict of the params pulled from the entity
-    body; that is, it will be the portion of request.params that come
-    from the message body (sometimes called "POST params", although they
-    can be sent with various HTTP method verbs). This value is set between
-    the 'before_request_body' and 'before_handler' hooks (assuming that
-    process_request_body is True)."""
     
     # Dispatch attributes
     dispatch = cherrypy.dispatch.Dispatcher()
@@ -513,16 +503,20 @@ class Request(object):
         """Process the Request. (Core)
         
         method, path, query_string, and req_protocol should be pulled directly
-            from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
+        from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
+        
         path should be %XX-unquoted, but query_string should not be.
-            They both MUST be byte strings, not unicode strings.
+        They both MUST be byte strings, not unicode strings.
+        
         headers should be a list of (name, value) tuples.
+        
         rfile should be a file-like object containing the HTTP request entity.
         
         When run() is done, the returned object should have 3 attributes:
-          status, e.g. "200 OK"
-          header_list, a list of (name, value) tuples
-          body, an iterable yielding strings
+        
+          * status, e.g. "200 OK"
+          * header_list, a list of (name, value) tuples
+          * body, an iterable yielding strings
         
         Consumer code (HTTP servers) should then access these response
         attributes to build the outbound stream.
@@ -833,8 +827,10 @@ class Response(object):
     names (in Title-Case format); however, you may get and set them in
     a case-insensitive manner. That is, headers['Content-Type'] and
     headers['content-type'] refer to the same value. Values are header
-    values (decoded according to RFC 2047 if necessary). See also:
-    httputil.HeaderMap, httputil.HeaderElement."""
+    values (decoded according to RFC 2047 if necessary).
+    
+    .. seealso:: classes :class:`HeaderMap`, :class:`HeaderElement`
+    """
     
     cookie = SimpleCookie()
     cookie__doc = """See help(Cookie)."""

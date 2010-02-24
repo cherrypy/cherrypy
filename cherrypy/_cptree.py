@@ -8,10 +8,10 @@ from cherrypy.lib import httputil
 
 class Application(object):
     """A CherryPy Application.
-    
+
     Servers and gateways should not instantiate Request objects directly.
     Instead, they should ask an Application object for a request object.
-    
+
     An instance of this class may also be used as a WSGI callable
     (WSGI application object) for itself.
     """
@@ -19,16 +19,14 @@ class Application(object):
     __metaclass__ = cherrypy._AttributeDocstrings
     
     root = None
-    root__doc = """
-    The top-most container of page handlers for this app. Handlers should
+    root__doc = """The top-most container of page handlers for this app. Handlers should
     be arranged in a hierarchy of attributes, matching the expected URI
     hierarchy; the default dispatcher then searches this hierarchy for a
     matching handler. When using a dispatcher other than the default,
     this value may be None."""
     
     config = {}
-    config__doc = """
-    A dict of {path: pathconf} pairs, where 'pathconf' is itself a dict
+    config__doc = """A dict of {path: pathconf} pairs, where 'pathconf' is itself a dict
     of {key: value} pairs."""
     
     namespaces = _cpconfig.NamespaceSet()
@@ -63,8 +61,7 @@ class Application(object):
         return "%s.%s(%r, %r)" % (self.__module__, self.__class__.__name__,
                                   self.root, self.script_name)
     
-    script_name__doc = """
-    The URI "mount point" for this app. A mount point is that portion of
+    script_name_doc = """The URI "mount point" for this app. A mount point is that portion of
     the URI which is constant for all URIs that are serviced by this
     application; it does not include scheme, host, or proxy ("virtual host")
     portions of the URI.
@@ -89,7 +86,7 @@ class Application(object):
             value = value.rstrip("/")
         self._script_name = value
     script_name = property(fget=_get_script_name, fset=_set_script_name,
-                           doc=script_name__doc)
+                           doc=script_name_doc)
     
     def merge(self, config):
         """Merge the given config into self.config."""
@@ -170,11 +167,14 @@ class Tree(object):
     def mount(self, root, script_name="", config=None):
         """Mount a new app from a root object, script_name, and config.
         
-        root: an instance of a "controller class" (a collection of page
+        root
+            An instance of a "controller class" (a collection of page
             handler methods) which represents the root of the application.
             This may also be an Application instance, or None if using
             a dispatcher other than the default.
-        script_name: a string containing the "mount point" of the application.
+        
+        script_name
+            A string containing the "mount point" of the application.
             This should start with a slash, and be the path portion of the
             URL at which to mount the given root. For example, if root.index()
             will handle requests to "http://www.example.com:8080/dept/app1/",
@@ -182,7 +182,9 @@ class Tree(object):
             
             It MUST NOT end in a slash. If the script_name refers to the
             root of the URI, it MUST be an empty string (not "/").
-        config: a file or dict containing application config.
+        
+        config
+            A file or dict containing application config.
         """
         if script_name is None:
             raise TypeError(

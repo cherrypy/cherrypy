@@ -7,17 +7,18 @@ import cherrypy
 class Checker(object):
     """A checker for CherryPy sites and their mounted applications.
     
-    on: set this to False to turn off the checker completely.
+    on
+        set this to False to turn off the checker completely.
     
     When this object is called at engine startup, it executes each
-    of its own methods whose names start with "check_". If you wish
+    of its own methods whose names start with ``check_``. If you wish
     to disable selected checks, simply add a line in your global
-    config which sets the appropriate method to False:
+    config which sets the appropriate method to False::
     
-    [global]
-    checker.check_skipped_app_config = False
+        [global]
+        checker.check_skipped_app_config = False
     
-    You may also dynamically add or replace check_* methods in this way.
+    You may also dynamically add or replace ``check_*`` methods in this way.
     """
     
     on = True
@@ -47,6 +48,7 @@ class Checker(object):
     global_config_contained_paths = False
     
     def check_app_config_entries_dont_start_with_script_name(self):
+        """Check for Application config with sections that repeat script_name."""
         for sn, app in cherrypy.tree.apps.items():
             if not isinstance(app, cherrypy.Application):
                 continue
@@ -63,6 +65,7 @@ class Checker(object):
                         "entries that start with its script name: %r" % (sn, key))
     
     def check_site_config_entries_in_app_config(self):
+        """Check for mounted Applications that have site-scoped config."""
         for sn, app in cherrypy.tree.apps.iteritems():
             if not isinstance(app, cherrypy.Application):
                 continue
@@ -83,6 +86,7 @@ class Checker(object):
                 warnings.warn(os.linesep.join(msg))
     
     def check_skipped_app_config(self):
+        """Check for mounted Applications that have no config."""
         for sn, app in cherrypy.tree.apps.items():
             if not isinstance(app, cherrypy.Application):
                 continue
@@ -98,6 +102,7 @@ class Checker(object):
                 return
     
     def check_app_config_brackets(self):
+        """Check for Application config with extraneous brackets in section names."""
         for sn, app in cherrypy.tree.apps.items():
             if not isinstance(app, cherrypy.Application):
                 continue
@@ -112,6 +117,7 @@ class Checker(object):
                         "(e.g. passed to tree.mount) do not." % (sn, key))
     
     def check_static_paths(self):
+        """Check Application config for incorrect static paths."""
         # Use the dummy Request object in the main thread.
         request = cherrypy.request
         for sn, app in cherrypy.tree.apps.items():
