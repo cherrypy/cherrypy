@@ -1,12 +1,11 @@
-
-:mod:`cherrypy.dispatch` -- Mapping URI's to handlers
-======================================================
-
-.. this dummy here just gives cross refs a place to look at
-
-.. module:: cherrypy.dispatch
+********************************************************
+:mod:`cherrypy._cpdispatch` -- Mapping URI's to handlers
+********************************************************
 
 .. automodule:: cherrypy._cpdispatch
+
+Classes
+=======
 
 .. autoclass:: PageHandler
    :members:

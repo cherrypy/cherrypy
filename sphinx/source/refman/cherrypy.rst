@@ -1,12 +1,12 @@
-
+***************
 :mod:`cherrypy`
-=================
+***************
 
 .. automodule:: cherrypy
 
 
 Classes
--------
+=======
 
 .. autoclass:: HTTPError
    :members:
@@ -28,7 +28,7 @@ Classes
 
 
 Functions
-----------
+=========
 
 .. autofunction:: expose
 
