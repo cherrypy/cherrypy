@@ -26,7 +26,7 @@ Priorities of the built-in "start" listeners:
  default                                               50             
  :doc:`Daemonizer </progguide/daemonizer>`             65             
  :doc:`TimeoutMonitor </progguide/responsetimeouts>`   70             
- :ref:`autoreloader`                                   70             
+ :doc:`Autoreloader </progguide/autoreloader>`         70             
  :ref:`pidfile`                                        70             
  :ref:`httpservers`                                    75             
  :ref:`dropprivileges`                                 77             
