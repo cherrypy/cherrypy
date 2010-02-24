@@ -271,7 +271,7 @@ class Request(object):
     names (in Title-Case format); however, you may get and set them in
     a case-insensitive manner. That is, headers['Content-Type'] and
     headers['content-type'] refer to the same value. Values are header
-    values (decoded according to RFC 2047 if necessary). See also:
+    values (decoded according to :rfc:`2047` if necessary). See also:
     httputil.HeaderMap, httputil.HeaderElement."""
     
     cookie = SimpleCookie()
@@ -505,12 +505,15 @@ class Request(object):
         method, path, query_string, and req_protocol should be pulled directly
         from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
         
-        path should be %XX-unquoted, but query_string should not be.
-        They both MUST be byte strings, not unicode strings.
+        path
+            This should be %XX-unquoted, but query_string should not be.
+            They both MUST be byte strings, not unicode strings.
         
-        headers should be a list of (name, value) tuples.
+        headers
+            A list of (name, value) tuples.
         
-        rfile should be a file-like object containing the HTTP request entity.
+        rfile
+            A file-like object containing the HTTP request entity.
         
         When run() is done, the returned object should have 3 attributes:
         
@@ -827,7 +830,7 @@ class Response(object):
     names (in Title-Case format); however, you may get and set them in
     a case-insensitive manner. That is, headers['Content-Type'] and
     headers['content-type'] refer to the same value. Values are header
-    values (decoded according to RFC 2047 if necessary).
+    values (decoded according to :rfc:`2047` if necessary).
     
     .. seealso:: classes :class:`HeaderMap`, :class:`HeaderElement`
     """

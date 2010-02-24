@@ -16,7 +16,6 @@ of plaintext passwords as the credentials store::
                    'tools.auth_digest.key': 'a565c27146791cfb',
     }
     app_config = { '/' : digest_auth }
-
 """
 
 __author__ = 'visteya'

@@ -13,6 +13,10 @@ from cherrypy import _cperror
 
 
 class LogManager(object):
+    """An object to assist both simple and advanced logging.
+    
+    ``cherrypy.log`` is an instance of this class.
+    """
     
     appid = None
     error_log = None
