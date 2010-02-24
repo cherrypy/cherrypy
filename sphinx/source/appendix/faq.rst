@@ -21,11 +21,11 @@ Server Features and Configuration
 =================================
 
   * How do I serve multiple domains on one host?
-      You can use the virtual host filter as described [wiki:VirtualPathFilter here].
+      You can use the :class:`cherrypy._cpdispatch.VirtualHost` dispatcher.
 
   * Does CherryPy support https?
       CherryPy has built-in SSL support as of 3.0.0beta. See the `ssl_*`
-      properties of :mod:`_cpserver`.
+      properties of :mod:`cherrypy._cpserver`.
 
       Earlier versions do not have built-in SSL support, but Tim Evans has
       written a module called `SslCherry <http://tools.cherrypy.org/wiki/SSLWithM2Crypto>`_
@@ -52,7 +52,8 @@ Development Questions
       Please see the FileUpload page for examples.
 
   * Can I perform HTTP based authentication (.htaccess)?
-      There are two filters implementing :rfc:`2617`: :doc:`authdigest` and :doc:`authbasic`.
+      There are two tools implementing :rfc:`2617`: :doc:`/refman/lib/auth_digest`
+      and :doc:`/refman/lib/auth_basic`.
 
   * What templating systems does CherryPy support? 
       All of them! One of the core idea of CherryPy is to be templating

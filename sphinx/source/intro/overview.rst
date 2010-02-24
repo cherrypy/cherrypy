@@ -15,7 +15,8 @@ What CherryPy is NOT?
 As an HTTP framework, CherryPy does all that is necessary to allow Python code
 to be executed when some resource (or URL) is requested by the user. However,
 it is not a templating language, such as PHP. CherryPy can work with several
-templating packages (see :doc:`templates`). But please note that, while useful
+templating packages (see :doc:`/progguide/choosingtemplate`). But please note
+that, while useful
 to some extent, templating packages are not strictly necessary, and that pure
 Python code can be used to generate the Web pages.
 

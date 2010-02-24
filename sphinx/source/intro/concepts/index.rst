@@ -1,7 +1,5 @@
 Concepts
-============
-
-Contents:
+========
 
 .. toctree::
    :maxdepth: 2
