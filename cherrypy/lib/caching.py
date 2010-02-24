@@ -7,17 +7,22 @@ from cherrypy.lib import cptools, httputil
 
 
 class Cache(object):
-    
+    """Blank class
+    """
     def get(self):
+        """Raises NotImplemented"""
         raise NotImplemented
     
     def put(self, obj, size):
+        """Raises NotImplemented"""
         raise NotImplemented
     
     def delete(self):
+        """Raises NotImplemented"""
         raise NotImplemented
     
     def clear(self):
+        """Raises NotImplemented"""
         raise NotImplemented
 
 
@@ -30,7 +35,7 @@ class AntiStampedeCache(dict):
     def wait(self, key, timeout=5, debug=False):
         """Return the cached value for the given key, or None.
         
-        If timeout is not None (the default), and the value is already
+        If timeout is not None, and the value is already
         being calculated by another thread, wait until the given timeout has
         elapsed. If the value is available before the timeout expires, it is
         returned. If not, None is returned, and a sentinel placed in the cache
@@ -133,9 +138,10 @@ class MemoryCache(Cache):
         self.cursize = 0
     
     def expire_cache(self):
-        # expire_cache runs in a separate thread which the servers are
-        # not aware of. It's possible that "time" will be set to None
-        # arbitrarily, so we check "while time" to avoid exceptions.
+        """Runs in a separate thread which the servers are
+        not aware of. It's possible that "time" will be set to None
+        arbitrarily, so we check "while time" to avoid exceptions.
+        """
         # See tickets #99 and #180 for more information.
         while time:
             now = time.time()
@@ -224,8 +230,8 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
         * sets request.cacheable = False
         * sets response.headers to the cached values
         * checks the cached Last-Modified response header against the
-            current If-(Un)Modified-Since request headers; raises 304
-            if necessary.
+          current If-(Un)Modified-Since request headers; raises 304
+          if necessary.
         * sets response.status and response.body to the cached values
         * returns True
     
@@ -324,12 +330,14 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
 
 
 def tee_output():
+    # Used by CachingTool by attaching to request.hooks
+    
     request = cherrypy.serving.request
     if 'no-store' in request.headers.values('Cache-Control'):
         return
     
     def tee(body):
-        """Tee response.body into a list."""
+        # Tee response.body into a list.
         if ('no-cache' in response.headers.values('Pragma') or
             'no-store' in response.headers.values('Cache-Control')):
             for chunk in body:
@@ -352,19 +360,27 @@ def tee_output():
 
 def expires(secs=0, force=False, debug=False):
     """Tool for influencing cache mechanisms using the 'Expires' header.
+
+    secs
+        Must be either an int or a datetime.timedelta, and indicates the
+        number of seconds between response.time and when the response should
+        expire. The 'Expires' header will be set to response.time + secs.
+        If secs is zero, the 'Expires' header is set one year in the past, and
+        the following "cache prevention" headers are also set:
+        
+            * Pragma: no-cache
+            * Cache-Control': no-cache, must-revalidate
+
+    force
+        If False, the following headers are checked:
+        
+            * Etag
+            * Last-Modified
+            * Age
+            * Expires
+        
+        If any are already present, none of the above response headers are set.
     
-    'secs' must be either an int or a datetime.timedelta, and indicates the
-    number of seconds between response.time and when the response should
-    expire. The 'Expires' header will be set to (response.time + secs).
-    
-    If 'secs' is zero, the 'Expires' header is set one year in the past, and
-    the following "cache prevention" headers are also set:
-       'Pragma': 'no-cache'
-       'Cache-Control': 'no-cache, must-revalidate'
-    
-    If 'force' is False (the default), the following headers are checked:
-    'Etag', 'Last-Modified', 'Age', 'Expires'. If any are already present,
-    none of the above response headers are set.
     """
     
     response = cherrypy.serving.response

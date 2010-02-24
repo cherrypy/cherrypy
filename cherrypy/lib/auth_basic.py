@@ -2,19 +2,20 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:expandtab:fileencoding=utf-8
 
-__doc__ = """Module auth_basic.py provides a CherryPy 3.x tool which implements
-the server-side of HTTP Basic Access Authentication, as described in RFC 2617.
+__doc__ = """This module provides a CherryPy 3.x tool which implements
+the server-side of HTTP Basic Access Authentication, as described in :rfc:`2617`.
 
 Example usage, using the built-in checkpassword_dict function which uses a dict
-as the credentials store:
+as the credentials store::
 
-userpassdict = {'bird' : 'bebop', 'ornette' : 'wayout'}
-checkpassword = cherrypy.lib.auth_basic.checkpassword_dict(userpassdict)
-basic_auth = {'tools.auth_basic.on': True,
-              'tools.auth_basic.realm': 'earth',
-              'tools.auth_basic.checkpassword': checkpassword,
-}
-app_config = { '/' : basic_auth }
+    userpassdict = {'bird' : 'bebop', 'ornette' : 'wayout'}
+    checkpassword = cherrypy.lib.auth_basic.checkpassword_dict(userpassdict)
+    basic_auth = {'tools.auth_basic.on': True,
+                  'tools.auth_basic.realm': 'earth',
+                  'tools.auth_basic.checkpassword': checkpassword,
+    }
+    app_config = { '/' : basic_auth }
+
 """
 
 __author__ = 'visteya'
@@ -41,8 +42,8 @@ def checkpassword_dict(user_password_dict):
 
 
 def basic_auth(realm, checkpassword, debug=False):
-    """basic_auth is a CherryPy tool which hooks at before_handler to perform
-    HTTP Basic Access Authentication, as specified in RFC 2617.
+    """A CherryPy tool which hooks at before_handler to perform
+    HTTP Basic Access Authentication, as specified in :rfc:`2617`.
 
     If the request has an 'authorization' header with a 'Basic' scheme, this
     tool attempts to authenticate the credentials supplied in that header.  If
@@ -50,14 +51,16 @@ def basic_auth(realm, checkpassword, debug=False):
     not 'Basic', or if authentication fails, the tool sends a 401 response with
     a 'WWW-Authenticate' Basic header.
 
-    Arguments:
-    realm: a string containing the authentication realm.
+    realm
+        A string containing the authentication realm.
 
-    checkpassword: a callable which checks the authentication credentials.
+    checkpassword
+        A callable which checks the authentication credentials.
         Its signature is checkpassword(realm, username, password). where
         username and password are the values obtained from the request's
         'authorization' header.  If authentication succeeds, checkpassword
         returns True, else it returns False.
+    
     """
     
     if '"' in realm:

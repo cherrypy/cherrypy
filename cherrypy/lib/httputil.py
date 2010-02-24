@@ -1,10 +1,11 @@
-"""HTTP library functions."""
+"""HTTP library functions.
 
-# This module contains functions for building an HTTP application
-# framework: any one, not just one whose name starts with "Ch". ;) If you
-# reference any modules from some popular framework inside *this* module,
-# FuManChu will personally hang you up by your thumbs and submit you
-# to a public caning.
+This module contains functions for building an HTTP application
+framework: any one, not just one whose name starts with "Ch". ;) If you
+reference any modules from some popular framework inside *this* module,
+FuManChu will personally hang you up by your thumbs and submit you
+to a public caning.
+"""
 
 from binascii import b2a_base64
 from BaseHTTPServer import BaseHTTPRequestHandler
@@ -26,7 +27,7 @@ from rfc822 import formatdate as HTTPDate
 
 
 def urljoin(*atoms):
-    """Return the given path *atoms, joined into a single URL.
+    """Return the given path \*atoms, joined into a single URL.
     
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
@@ -183,7 +184,7 @@ class AcceptElement(HeaderElement):
 
 
 def header_elements(fieldname, fieldvalue):
-    """Return a sorted HeaderElement list from a comma-separated header str."""
+    """Return a sorted HeaderElement list from a comma-separated header string."""
     if not fieldvalue:
         return []
     
@@ -199,7 +200,7 @@ def header_elements(fieldname, fieldvalue):
     return result
 
 def decode_TEXT(value):
-    """Decode RFC-2047 TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
+    r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
     from email.Header import decode_header
     atoms = decode_header(value)
     decodedvalue = ""
@@ -255,21 +256,21 @@ def valid_status(status):
 
 def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
     """Parse a query given as a string argument.
-
+    
     Arguments:
-
+    
     qs: URL-encoded query string to be parsed
-
+    
     keep_blank_values: flag indicating whether blank values in
         URL encoded queries should be treated as blank strings.  A
         true value indicates that blanks should be retained as blank
         strings.  The default false value indicates that blank values
         are to be ignored and treated as if they were  not included.
-
+    
     strict_parsing: flag indicating what to do with parsing errors. If
         false (the default), errors are silently ignored. If true,
         errors raise a ValueError exception.
-
+    
     Returns a dict, as G-d intended.
     """
     pairs = [s2 for s1 in qs.split('&') for s2 in s1.split(';')]
@@ -372,7 +373,7 @@ class HeaderMap(CaseInsensitiveDict):
     Each key is changed on entry to str(key).title(). This allows headers
     to be case-insensitive and avoid duplicates.
     
-    Values are header values (decoded according to RFC 2047 if necessary).
+    Values are header values (decoded according to :rfc:`2047` if necessary).
     """
     
     protocol=(1, 1)
@@ -427,8 +428,10 @@ class HeaderMap(CaseInsensitiveDict):
 class Host(object):
     """An internet address.
     
-    name should be the client's host name. If not available (because no DNS
+    name
+        Should be the client's host name. If not available (because no DNS
         lookup is performed), the IP address should be used instead.
+    
     """
     
     ip = "0.0.0.0"

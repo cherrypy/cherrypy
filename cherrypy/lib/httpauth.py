@@ -1,10 +1,9 @@
 """
-httpauth modules defines functions to implement HTTP Digest Authentication (RFC 2617).
+This module defines functions to implement HTTP Digest Authentication (:rfc:`2617`).
 This has full compliance with 'Digest' and 'Basic' authentication methods. In
 'Digest' it supports both MD5 and MD5-sess algorithms.
 
 Usage:
-
     First use 'doAuth' to request the client authentication for a
     certain resource. You should send an httplib.UNAUTHORIZED response to the
     client so he knows he has to authenticate itself.
@@ -340,14 +339,14 @@ def checkResponse (auth_map, password, method = "GET", encrypt=None, **kwargs):
     other arguments that each implementation might need.
     
     If the response is of type 'Basic' then the function has the following
-    signature:
+    signature::
     
-    checkBasicResponse (auth_map, password) -> bool
+        checkBasicResponse (auth_map, password) -> bool
     
     If the response is of type 'Digest' then the function has the following
-    signature:
+    signature::
     
-    checkDigestResponse (auth_map, password, method = 'GET', A1 = None) -> bool
+        checkDigestResponse (auth_map, password, method = 'GET', A1 = None) -> bool
     
     The 'A1' argument is only used in MD5_SESS algorithm based responses.
     Check md5SessionKey() for more info.

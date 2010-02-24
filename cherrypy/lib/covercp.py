@@ -1,14 +1,12 @@
 """Code-coverage tools for CherryPy.
 
 To use this module, or the coverage tools in the test suite,
-you need to download 'coverage.py', either Gareth Rees' original
-implementation:
-http://www.garethrees.org/2001/12/04/python-coverage/
+you need to download 'coverage.py', either Gareth Rees' `original 
+implementation <http://www.garethrees.org/2001/12/04/python-coverage/>`_
+or Ned Batchelder's `enhanced version:
+<http://www.nedbatchelder.com/code/modules/coverage.html>`_
 
-or Ned Batchelder's enhanced version:
-http://www.nedbatchelder.com/code/modules/coverage.html
-
-To turn on coverage tracing, use the following code:
+To turn on coverage tracing, use the following code::
 
     cherrypy.engine.subscribe('start', covercp.start)
 
@@ -17,9 +15,9 @@ recommended. Calling start once in the main thread should be sufficient
 to start coverage on all threads. Calling start again in each thread
 effectively clears any coverage data gathered up to that point.
 
-Run your code, then use the covercp.serve() function to browse the
+Run your code, then use the ``covercp.serve()`` function to browse the
 results in a web browser. If you run this module from the command line,
-it will call serve() for you.
+it will call ``serve()`` for you.
 """
 
 import re

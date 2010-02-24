@@ -33,7 +33,7 @@ def validate_etags(autotags=False, debug=False):
     use for entity tags in a possibly destructive fashion. Likewise, if you
     raise 304 Not Modified, the response body will be empty, the ETag hash
     will be incorrect, and your application will break.
-    See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.24
+    See :rfc:`2616` Section 14.24.
     """
     response = cherrypy.serving.response
     
@@ -217,12 +217,22 @@ def referer(pattern, accept=True, accept_missing=False, error=403,
             message='Forbidden Referer header.', debug=False):
     """Raise HTTPError if Referer header does/does not match the given pattern.
     
-    pattern: a regular expression pattern to test against the Referer.
-    accept: if True, the Referer must match the pattern; if False,
+    pattern
+        A regular expression pattern to test against the Referer.
+        
+    accept
+        If True, the Referer must match the pattern; if False,
         the Referer must NOT match the pattern.
-    accept_missing: if True, permit requests with no Referer header.
-    error: the HTTP error code to return to the client on failure.
-    message: a string to include in the response body on failure.
+
+    accept_missing
+        If True, permit requests with no Referer header.
+
+    error
+        The HTTP error code to return to the client on failure.
+        
+    message
+        A string to include in the response body on failure.
+    
     """
     try:
         ref = cherrypy.serving.request.headers['Referer']

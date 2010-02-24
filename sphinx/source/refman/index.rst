@@ -9,5 +9,6 @@ Contents:
    :glob:
 
    *
+   lib/index
 
 

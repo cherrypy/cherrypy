@@ -20,13 +20,16 @@ def decode(encoding=None, default_encoding='utf-8'):
     
     Either argument may be a single string or a list of strings.
     
-    encoding: If not None, restricts the set of charsets attempted while decoding
-    a request entity to the given set (even if a different charset is given in
-    the Content-Type request header).
+    encoding
+        If not None, restricts the set of charsets attempted while decoding
+        a request entity to the given set (even if a different charset is given in
+        the Content-Type request header).
     
-    default_encoding: Only in effect if the 'encoding' argument is not given.
-    If given, the set of charsets attempted while decoding a request entity is
-    *extended* with the given value(s).
+    default_encoding
+        Only in effect if the 'encoding' argument is not given.
+        If given, the set of charsets attempted while decoding a request entity is
+        *extended* with the given value(s).
+    
     """
     body = cherrypy.request.body
     if encoding is not None:
@@ -293,6 +296,7 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
         * No 'gzip' or 'x-gzip' is present in the Accept-Encoding header
         * No 'gzip' or 'x-gzip' with a qvalue > 0 is present
         * The 'identity' value is given with a qvalue > 0.
+    
     """
     request = cherrypy.serving.request
     response = cherrypy.serving.response
