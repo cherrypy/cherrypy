@@ -11,14 +11,13 @@ Sections
 ---------------------------------
 *The who, what, and why of CherryPy*
 
-
 :doc:`Programmer's Guide <progguide/index>`
 -------------------------------------------
 *How to perform common tasks*
 
 :doc:`Deployment Guide <deployguide/index>`
 -------------------------------------------
-*Getting your application on the web*
+*Getting your application running and on the web*
 
 :doc:`Reference Manual <refman/index>`
 --------------------------------------
@@ -28,6 +27,8 @@ Sections
 --------------------------------
 
 :ref:`genindex`
+
 :ref:`modindex`
+
 :ref:`search`
 

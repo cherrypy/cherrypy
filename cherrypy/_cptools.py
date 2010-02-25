@@ -3,18 +3,18 @@
 Tools are usually designed to be used in a variety of ways (although some
 may only offer one if they choose):
     
-    Library calls:
+    Library calls
         All tools are callables that can be used wherever needed.
         The arguments are straightforward and should be detailed within the
         docstring.
     
-    Function decorators:
+    Function decorators
         All tools, when called, may be used as decorators which configure
         individual CherryPy page handlers (methods on the CherryPy tree).
         That is, "@tools.anytool()" should "turn on" the tool via the
         decorated function's _cp_config attribute.
     
-    CherryPy config:
+    CherryPy config
         If a tool exposes a "_setup" callable, it will be called
         once per Request (if the feature is "turned on" via config).
 
@@ -99,7 +99,7 @@ class Tool(object):
     def __call__(self, *args, **kwargs):
         """Compile-time decorator (turn on the tool in config).
         
-        For example:
+        For example::
         
             @tools.proxy()
             def whats_my_base(self):
@@ -151,7 +151,8 @@ class HandlerTool(Tool):
     def handler(self, *args, **kwargs):
         """Use this tool as a CherryPy page handler.
         
-        For example:
+        For example::
+        
             class Root:
                 nav = tools.staticdir.handler(section="/nav", dir="nav",
                                               root=absDir)
@@ -186,11 +187,12 @@ class HandlerWrapperTool(Tool):
     """Tool which wraps request.handler in a provided wrapper function.
     
     The 'newhandler' arg must be a handler wrapper function that takes a
-    'next_handler' argument, plus *args and **kwargs. Like all page handler
+    'next_handler' argument, plus ``*args`` and ``**kwargs``. Like all
+    page handler
     functions, it must return an iterable for use as cherrypy.response.body.
     
     For example, to allow your 'inner' page handlers to return dicts
-    which then get interpolated into a template:
+    which then get interpolated into a template::
     
         def interpolator(next_handler, *args, **kwargs):
             filename = cherrypy.request.config.get('template')
@@ -242,16 +244,18 @@ from cherrypy.lib import auth_basic, auth_digest
 class SessionTool(Tool):
     """Session Tool for CherryPy.
     
-    sessions.locking:
+    sessions.locking
         When 'implicit' (the default), the session will be locked for you,
-            just before running the page handler.
+        just before running the page handler.
+        
         When 'early', the session will be locked before reading the request
-            body. This is off by default for safety reasons; for example,
-            a large upload would block the session, denying an AJAX
-            progress meter (see http://www.cherrypy.org/ticket/630).
+        body. This is off by default for safety reasons; for example,
+        a large upload would block the session, denying an AJAX
+        progress meter (see http://www.cherrypy.org/ticket/630).
+        
         When 'explicit' (or any other value), you need to call
-            cherrypy.session.acquire_lock() yourself before using
-            session data.
+        cherrypy.session.acquire_lock() yourself before using
+        session data.
     """
     
     def __init__(self):
@@ -311,8 +315,8 @@ class XMLRPCController(object):
     To use it, have your controllers subclass this base class (it will
     turn on the tool for you).
     
-    You can also supply the following optional config entries:
-        
+    You can also supply the following optional config entries::
+    
         tools.xmlrpc.encoding: 'utf-8'
         tools.xmlrpc.allow_none: 0
     
@@ -332,8 +336,8 @@ class XMLRPCController(object):
     
     The XMLRPCDispatcher strips any /RPC2 prefix; if you aren't using /RPC2
     in your URL's, you can safely skip turning on the XMLRPCDispatcher.
-    Otherwise, you need to use declare it in config:
-        
+    Otherwise, you need to use declare it in config::
+    
         request.dispatch: cherrypy.dispatch.XMLRPCDispatcher()
     """
     

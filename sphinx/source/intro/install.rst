@@ -2,10 +2,25 @@
 Installation
 ************
 
+:ref:`prerequisites`
+
+:ref:`stableversions`
+
+:ref:`developmentversions`
+
+.. _prerequisites:
+
 Prerequisites
 =============
 
 All you need is a working version of Python-2.3 or later on your computer.
+
+Get Python on Debian::
+
+    $ apt-get install python python-dev
+
+
+.. _stableversions:
 
 Stable versions
 ===============
@@ -18,14 +33,26 @@ You may download this version from http://download.cherrypy.org/cherrypy/3.2.0rc
 For other releases, browse our
 `download index <http://download.cherrypy.org/ download index>`_.
 
-Install
--------
+Windows Installation
+--------------------
 
 * Download the latest CherryPy release from the
   `repository <http://download.cherrypy.org/cherrypy/>`_.
-* Unzip/untar the files.
+  Select the file ending in ".exe"
+* Run the downloaded file.
+
+Unix/Mac Installation
+---------------------
+
+* Download the latest CherryPy release from the
+  `repository <http://download.cherrypy.org/cherrypy/>`_.
+* Unzip/untar the files
 * Go to the directory created by the file extraction.
 * Type "python setup.py install" to install the CherryPy module
+
+Next Steps
+----------
+
 * To run your first sample website, go to cherrypy/tutorial/ and type
   "python tut01_helloworld.py", and you'll have a running website on port 8080.
 * Open your favorite browser and point it to http://localhost:8080 to see your
@@ -35,10 +62,7 @@ Now, you should try running some of the other tutorials found in the tutorial
 directory and look at their source code to understand how to develop a website
 with CherryPy.
 
-Debian installation::
-
-    $ apt-get install python python-dev
-    $ python setup.py install
+.. _developmentversions:
 
 Development versions
 ====================
