@@ -1,21 +1,19 @@
-************
-FastCGI WSGI
-************
+.. index:: FastCGI
 
-This is a HOWTO. See :doc:`apache` for a higher-level discussion.
+*******
+FastCGI
+*******
 
-A very simple setup lets your cherry run with FastCGI (on apache in my 
-setup). You need just a running apache server with ``mod_fastcgi`` and 
-`flup <http://www.saddi.com/software/flup/>`_.
+A very simple setup lets your cherry run with FastCGI.
+You just need the `flup <http://www.saddi.com/software/flup/>`_ library,
+plus a running Apache server (with ``mod_fastcgi``) or lighttpd server.
 
 CherryPy code
 =============
 
 hello.py::
 
-    #python
     #!/usr/bin/python
-    
     import cherrypy
     
     class HelloWorld:
@@ -28,12 +26,12 @@ hello.py::
     # CherryPy autoreload must be disabled for the flup server to work
     cherrypy.config.update({'engine.autoreload_on':False})
 
-Then run the shiny new cherryd with the '-f' arg::
+Then run :doc:`cherryd` with the '-f' arg::
 
     cherryd -c <myconfig> -d -f -i hello.py
 
-Apache config
-=============
+Apache
+======
 
 At the top level in httpd.conf::
 
@@ -46,12 +44,12 @@ And inside the relevant VirtualHost section::
     AddHandler fastcgi-script .fcgi
     ScriptAliasMatch (.*$) /path/to/cherry.fcgi$1
 
-Lighttpd config
-===============
+Lighttpd
+========
 
-For `Lighttpd <http://www.lighttpd.net/>`_ you can follow these 
-instructions. Within ``lighttpd.conf`` make sure ``mod_fastcgi`` is 
-active within ``server.modules``. Then, within your ``$HTTP["host"]`` 
+For `Lighttpd <http://www.lighttpd.net/>`_ you can follow these
+instructions. Within ``lighttpd.conf`` make sure ``mod_fastcgi`` is
+active within ``server.modules``. Then, within your ``$HTTP["host"]``
 directive, configure your fastcgi script like the following::
 
     $HTTP["url"] =~ "" {
@@ -72,3 +70,4 @@ directive, configure your fastcgi script like the following::
 Please see `Lighttpd FastCGI Docs 
 <http://trac.lighttpd.net/trac/wiki/Docs:ModFastCGI>`_ for an explanation 
 of the possible configuration options.
+

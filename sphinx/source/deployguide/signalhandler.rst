@@ -1,15 +1,13 @@
-.. _signalhandler:
-
-**************
-Handle Signals
-**************
+****************
+Handling Signals
+****************
 
 SignalHandler
 =============
 
 This plugin is instantiated automatically as ``cherrypy.engine.signal_handler``.
 However, it is only *subscribed* automatically by ``cherrypy.quickstart()``. So if
-you want signal handling and you're calling :: 
+you want signal handling and you're calling:: 
 
     tree.mount(); engine.start(); engine.block()
 
@@ -34,3 +32,4 @@ managers tend to send SIGHUP to terminal windows when the user closes them.
 Feel free to add signals which are not available on every platform. The
 ``SignalHandler`` will ignore errors raised from attempting to register handlers
 for unknown signals.
+
