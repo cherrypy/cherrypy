@@ -22,20 +22,13 @@ visibility, scalability, extensibility.
 Terminology
 -----------
 
- - "resources" are concepual objects represented by the system.
+ - "resources" are concepual objects represented by the system - any
+   information that can be named is a resource.
  - "state" is data held by or associated with resources
  - "representations" are information in state with a specific encoding
  - "methods" are invoked to transfer or mutate state.
  - an "identifier" is a URL or URI which uniquely and usually globally
    references a resource.
-
-REST defines the use of the HTTP protocol and HTTP methods to implement
-the standard REST methods.
-
- - GET retrieves the state of a specific resource,
- - PUT creates or replaces the state of a specific resource,
- - POST passes information to a resource to use at it sees fit,
- - DELETE removes resources.
 
 More information on REST can be found in abundance in Wikipedia and
 other readily-available resources.
@@ -47,20 +40,109 @@ From the canonical `Roy Fielding dissertation <http://www.ics.uci.edu/~fielding/
 
     REST is defined by four interface constraints: identification of resources; manipulation of resources through representations; self-descriptive messages; and, hypermedia as the engine of application state
 
-.. TODO: Cover each of the four constraints and demonstrate how they are
-   apply in a CherryPy implementation.
+This section covers each of these four contstraints and demonstrates how each is applied in a CherryPy implementation.
 
-Since HTTP defines a number of invocation methods, the most direct
+Identification of Resources
+---------------------------
+
+As an HTTP service provider, resources represented in CherryPy are
+referenced by HTTP URIs (Uniform Resource Identifiers). A URI consists
+of four parts: scheme, hierarchical identifier, query, and fragment.
+For HTTP, the scheme is always ``http`` or ``https``. The hierarchical
+identifier consists of an authority (typically host/port) and a path
+(similar to a file system path, but not necessarily representing an
+actual path).
+
+A single CherryPy instance is typically bound to a single
+server/port pair, such that the scheme://authority portion of the URI
+references the server. This aspect is configured through the
+``server.socket_host`` and ``server.socket_port`` options or via another
+hosting server.
+
+Within the CherryPy server, the remainder of the hierarchical
+identifier--the path--is mapped to Python objects
+via the Dispatch mechanism. This behavior is highly
+customizable and documented in `Page Handlers PageHandlers`_.
+
+Using the default dispatcher and page handlers, the path of the URI
+maps to a hierarchy of Python identifiers in the CherryPy app. For
+example, the URI path ``/container/objects/pencil`` will result in a
+call to ``app.root.container.objects.pencil()`` where ``app`` is the
+CherryPy app.
+
+Manipulation of Resources Through Representations
+-------------------------------------------------
+
+REST defines the use of the HTTP protocol and HTTP methods to implement
+the standard REST methods.
+
+ - GET retrieves the state of a specific resource,
+ - PUT creates or replaces the state of a specific resource,
+ - POST passes information to a resource to use at it sees fit,
+ - DELETE removes resources.
+
+The default dispatcher in CherryPy stores the HTTP method name in the
+thread-local ``Request Object`` (please link).
+
+Because HTTP defines these invocation methods, the most direct
 way to implement REST using CherryPy is to utilize the
-:class:`MethodDispatcher`. To enable the method dispatcher, add the
-following to your config file::
+:class:`MethodDispatcher` instead of the default dispatcher. To enable
+the method dispatcher, add the
+following to your configuration for /::
 
-    [/]
-    request.dispatch: cherrypy.dispatch.MethodDispatcher()
+        '/': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        }
 
 Now, the REST methods will map directly to the same method names on
 your resources. That is, a GET method on a CherryPy class implements
 the HTTP GET on the resource represented by that class.
+
+For example::
+
+    class Resource(object):
+        
+        exposed = True
+        
+        def GET(self):
+            return """Some representation of self"""
+        
+        def PUT(self):
+            self.content = initialize_from_representation(cherrypy.request.body.read())
+
+The concrete implementation of GET and PUT has been omitted, but the
+basic concepts remain: GET returns some meaningful representation of
+the resource and PUT stores an instance of an object represented by the
+content in the body of the request.
+
+Self-Descriptive Messages
+-------------------------
+
+Hypermedia as the Engine of Application State
+---------------------------------------------
+
+REST is designed as a stateless protocol--all application state is
+maintained with the application at the client. Thus, concepts such as a
+"session" need not be maintained by the server. CherryPy by design does
+not enable sessions, so the default configuration is well-suited to the
+RESTful style.
+
+In order for the client to maintain meaningful state, however, the REST
+server implementer must provide meaningful URIs which supply semantic
+links between resources.
+
+For example, a CherryPy application might have a resource index, which
+a client might retrieve to inspect the application for other resources::
+
+    class ResourceIndex(object):
+        def GET(self):
+            items = [item.get_href() for item in self.get_all_items()]
+            return ', '.join(items)
+
+This very simple example demonstrates how to create an index of
+comma-separated hypertext references. This example assumes the client
+can effectively interpret comma-separated references. In practice,
+another representation such as HTML or JSON might be used.
 
 A Quick Example
 ===============
