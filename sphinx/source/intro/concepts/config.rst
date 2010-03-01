@@ -245,6 +245,7 @@ This technique allows you to:
    point to the same object, yet you only need to define the config once.
  * Provide defaults which are still overridable in a config file.
 
+.. _namespaces:
 
 Namespaces
 ==========
@@ -339,6 +340,8 @@ The name can be any string, and the handler must be either a callable or a
 If you need additional code to run when all your namespace keys are collected,
 you can supply a callable context manager in place of a normal function for
 the handler. Context managers are defined in :pep:`343`.
+
+.. _environments:
 
 Environments
 ============

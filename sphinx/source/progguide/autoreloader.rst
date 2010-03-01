@@ -2,7 +2,7 @@
 Reload processes
 ****************
 
-The autoreload :doc:`plugin </intro/concepts/engineplugins>` restarts the process
+The autoreload :ref:`plugin<plugins>` restarts the process
 (via :func:`os.execv`) if any of the files it monitors change (or is deleted).
 By default, the autoreloader monitors all imported modules; you can add to the
 set by adding to ``autoreloader.files``::

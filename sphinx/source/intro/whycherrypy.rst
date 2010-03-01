@@ -55,5 +55,5 @@ All of CherryPy is licensed under the open-source BSD license, which means **Che
 7. Where to go from here?
 -------------------------
 
-Check out the :doc:`/intro/tutorial/tutorial` and :doc:`/progguide/index` for more complete documentation.
+Check out the :doc:`/intro/concepts/index` and :doc:`/progguide/index` for more complete documentation.
 

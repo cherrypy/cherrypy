@@ -26,6 +26,13 @@ Classes
 .. autoclass:: TimeoutError
    :members:
 
+.. autoclass:: TimeoutError
+   :members:
+
+.. autoclass:: _GlobalLogManager
+   :members:
+   :inherited-members:
+
 
 Functions
 =========

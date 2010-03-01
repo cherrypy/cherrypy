@@ -186,7 +186,7 @@ directly.
             self.content = self.from_html(cherrypy.request.body.read())
 
         def to_html(self):
-            html_item = lambda (name,value): '<div>{name}:{value}</div>'.format(**vars())
+            html_item = lambda (name,value): '<div>{name}:{value}</div>'.format(\*\*vars())
             items = map(html_item, self.content.items())
             items = ''.join(items)
             return '<html>{items}</html>'.format(**vars())
@@ -199,7 +199,7 @@ directly.
 
     class ResourceIndex(Resource):
         def to_html(self):
-            html_item = lambda (name,value): '<div><a href="{value}">{name}</a></div>'.format(**vars())
+            html_item = lambda (name,value): '<div><a href="{value}">{name}</a></div>'.format(\*\*vars())
             items = map(html_item, self.content.items())
             items = ''.join(items)
             return '<html>{items}</html>'.format(**vars())

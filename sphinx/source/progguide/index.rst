@@ -8,5 +8,6 @@ Programmer's Guide
 
    *
    files/index
+   extending/index
 
 

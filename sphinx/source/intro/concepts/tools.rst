@@ -17,9 +17,10 @@ as part of the standard CherryPy library, available in
 Tools provide a lot of flexibility. Different tools can be applied to different
 parts of the site, and the order of tools can be changed. The user can write
 custom tools for special applications, changing the behavior of CherryPy
-without the need to change its internals. See :doc:`/progguide/customtools`.
+without the need to change its internals.
+See :doc:`/progguide/extending/customtools`.
 
-Declaration
+Using Tools
 ===========
 
 Config Files
@@ -84,7 +85,7 @@ They expose this via the 'callable' attribute::
         return "Bonjour, le Monde!"
     page.exposed = True
 
-Inspection
+help(Tool)
 ==========
 
 Because the underlying function is wrapped in a tool, you need to call

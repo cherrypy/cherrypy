@@ -11,7 +11,7 @@ environment, using the traditional double-fork::
 
 .. note::
 
-    This :doc:`plugin </intro/concepts/engineplugins>` is only available on
+    This :ref:`plugin<plugins>` is only available on
     Unix and similar systems which provide fork().
 
 If a startup error occurs in the forked children, the return code from the
