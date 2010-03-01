@@ -62,7 +62,7 @@ hosting server.
 Within the CherryPy server, the remainder of the hierarchical
 identifier--the path--is mapped to Python objects
 via the Dispatch mechanism. This behavior is highly
-customizable and documented in `Page Handlers PageHandlers`_.
+customizable and documented in :doc:`/intro/concepts/dispatching`.
 
 Using the default dispatcher and page handlers, the path of the URI
 maps to a hierarchy of Python identifiers in the CherryPy app. For
@@ -82,13 +82,14 @@ the standard REST methods.
  - DELETE removes resources.
 
 The default dispatcher in CherryPy stores the HTTP method name in the
-thread-local ``Request Object`` (please link).
+thread-local :class:`Request Object<cherrypy._cprequest.Request>`.
 
 Because HTTP defines these invocation methods, the most direct
 way to implement REST using CherryPy is to utilize the
-:class:`MethodDispatcher` instead of the default dispatcher. To enable
+:class:`MethodDispatcher<cherrypy._cpdispatch.MethodDispatcher>`
+instead of the default dispatcher. To enable
 the method dispatcher, add the
-following to your configuration for /::
+following to your configuration for the root URI ("/")::
 
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
@@ -170,7 +171,9 @@ Complete Example
 
 Brining the above code samples together and adding some basic
 configuration results in the following program, which can be run
-directly.
+directly::
+
+    import cherrypy
 
     class Resource(object):
         
@@ -203,8 +206,6 @@ directly.
             items = map(html_item, self.content.items())
             items = ''.join(items)
             return '<html>{items}</html>'.format(**vars())
-
-    import cherrypy
 
     class Root(object):
         pass
