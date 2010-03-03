@@ -1,4 +1,16 @@
 #!python
+
+"""
+%prog <filename>
+
+A utility script for performing some commonly-encountered patterns in
+Trac Wiki format into reStructuredText (rst).
+
+filename is the name of the text file to be saved. If -U is not used,
+the file is converted in-place and filename is also the name of the
+source.
+"""
+
 from __future__ import print_function
 import sys
 import re
@@ -10,7 +22,7 @@ from StringIO import StringIO
 
 def get_options():
 	global options
-	parser = optparse.OptionParser()
+	parser = optparse.OptionParser(usage=inspect.cleandoc(__doc__))
 	parser.add_option('-U', '--url', help="Trac URL from which to retrieve source")
 	options, args = parser.parse_args()
 	try:
