@@ -530,8 +530,10 @@ class ThreadManager(SimplePlugin):
         self.threads = {}
         SimplePlugin.__init__(self, bus)
         self.bus.listeners.setdefault('acquire_thread', set())
+        self.bus.listeners.setdefault('start_thread', set())
         self.bus.listeners.setdefault('release_thread', set())
-    
+        self.bus.listeners.setdefault('stop_thread', set())
+
     def acquire_thread(self):
         """Run 'start_thread' listeners for the current thread.
         
