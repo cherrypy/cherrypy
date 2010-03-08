@@ -98,7 +98,9 @@ class ChannelFailures(Exception):
     def __str__(self):
         exception_strings = map(repr, self.get_instances())
         return self.delimiter.join(exception_strings)
-    
+
+    __repr__ = __str__
+
     def __nonzero__(self):
         return bool(self._exceptions)
 
