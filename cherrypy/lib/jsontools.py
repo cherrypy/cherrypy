@@ -31,9 +31,10 @@ def json_processor(entity):
         raise cherrypy.HTTPError(400, 'Invalid JSON document')
 
 def json_in(content_type=[u'application/json', u'text/javascript'],
-            force=True, debug=False):
-    """Add a processor to parse JSON request entities into request.json.
-    
+            force=True, debug=False, processor = json_processor):
+    """Add a processor to parse JSON request entities:
+    The default processor places the parsed data into request.json.
+
     Incoming request entities which match the given content_type(s) will
     be deserialized from JSON to the Python equivalent, and the result
     stored at cherrypy.request.json. The 'content_type' argument may
@@ -43,6 +44,10 @@ def json_in(content_type=[u'application/json', u'text/javascript'],
     content types will not be allowed; "415 Unsupported Media Type" is
     raised instead.
     
+    Supply your own processor to use a custom decoder, or to handle the parsed
+    data differently.  The processor can be configured via
+    tools.json_in.processor or via the decorator method.
+
     Note that the deserializer requires the client send a Content-Length
     request header, or it will raise "411 Length Required". If for any
     other reason the request entity cannot be deserialized from JSON,
@@ -67,18 +72,22 @@ def json_in(content_type=[u'application/json', u'text/javascript'],
     for ct in content_type:
         if debug:
             cherrypy.log('Adding body processor for %s' % ct, 'TOOLS.JSON_IN')
-        request.body.processors[ct] = json_processor
+        request.body.processors[ct] = processor
 
 def json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     return json_encode(value)
 
-def json_out(content_type='application/json', debug=False):
+def json_out(content_type='application/json', debug=False, handler=json_handler):
     """Wrap request.handler to serialize its output to JSON. Sets Content-Type.
     
     If the given content_type is None, the Content-Type response header
     is not set.
-    
+
+    Provide your own handler to use a custom encoder.  For example
+    cherrypy.config['tools.json_out.handler'] = <function>, or
+    @json_out(handler=function).
+
     You must be using Python 2.6 or greater, or have the 'simplejson'
     package importable; otherwise, ValueError is raised during processing.
     """
@@ -87,7 +96,7 @@ def json_out(content_type='application/json', debug=False):
         cherrypy.log('Replacing %s with JSON handler' % request.handler,
                      'TOOLS.JSON_OUT')
     request._json_inner_handler = request.handler
-    request.handler = json_handler
+    request.handler = handler
     if content_type is not None:
         if debug:
             cherrypy.log('Setting Content-Type to %s' % ct, 'TOOLS.JSON_OUT')
