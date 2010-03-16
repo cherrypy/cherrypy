@@ -822,7 +822,9 @@ class Response(object):
     header_list = []
     header_list__doc = """
     A list of the HTTP response headers as (name, value) tuples.
-    In general, you should use response.headers (a dict) instead."""
+    In general, you should use response.headers (a dict) instead. This
+    attribute is generated from response.headers and is not valid until
+    after the finalize phase."""
     
     headers = httputil.HeaderMap()
     headers__doc = """
