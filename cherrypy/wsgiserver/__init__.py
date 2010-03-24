@@ -66,6 +66,18 @@ except ImportError:
 
 import errno
 
+def plat_specific_errors(*errnames):
+    """Return error numbers for all errors in errnames on this platform.
+    
+    The 'errno' module contains different global constants depending on
+    the specific platform (OS). This function will return the list of
+    numeric values for a given list of potential names.
+    """
+    errno_names = dir(errno)
+    nums = [getattr(errno, k) for k in errnames if k in errno_names]
+    # de-dupe the list
+    return dict.fromkeys(nums).keys()
+
 socket_error_eintr = plat_specific_errors("EINTR", "WSAEINTR")
 
 socket_errors_to_ignore = []
@@ -747,9 +759,12 @@ class CherryPyWSGIServer(object):
     server_name: the string to set for WSGI's SERVER_NAME environ entry.
         Defaults to socket.gethostname().
     max: the maximum number of queued requests (defaults to -1 = no limit).
+        Someday, we should rename this to "accepted_queue_size".
     request_queue_size: the 'backlog' argument to socket.listen();
         specifies the maximum number of queued connections (default 5).
     timeout: the timeout in seconds for accepted connections (default 10).
+    accepted_queue_timeout: the time, in seconds, to wait for an empty
+        slot in the queue.
     
     protocol: the version string to write in the Status-Line of all
         HTTP responses. For example, "HTTP/1.1" (the default). This
@@ -780,7 +795,8 @@ class CherryPyWSGIServer(object):
     ssl_private_key = None
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-                 max=-1, request_queue_size=5, timeout=10):
+                 max=-1, request_queue_size=5, timeout=10,
+                 accepted_queue_timeout=10):
         self.requests = Queue.Queue(max)
         
         if callable(wsgi_app):
@@ -801,6 +817,7 @@ class CherryPyWSGIServer(object):
             server_name = socket.gethostname()
         self.server_name = server_name
         self.request_queue_size = request_queue_size
+        self.accepted_queue_timeout = accepted_queue_timeout
         self._workerThreads = []
         
         self.timeout = timeout
@@ -913,7 +930,11 @@ class CherryPyWSGIServer(object):
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
             conn = self.ConnectionClass(s, addr, self)
-            self.requests.put(conn)
+            try:
+                self.requests.put(conn, True, self.accepted_queue_timeout)
+            except Queue.Full:
+                # Just drop the conn. TODO: write 503 back?
+                conn.close()
         except socket.timeout:
             # The only reason for the timeout in start() is so we can
             # notice keyboard interrupts on Win32, which don't interrupt

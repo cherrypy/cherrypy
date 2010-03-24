@@ -347,8 +347,10 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
         s.__init__(self, bind_addr, _cherrypy.tree.apps.items(),
                    server.thread_pool,
                    server.socket_host,
+                   max=server.accepted_queue_size,
                    request_queue_size = server.socket_queue_size,
                    timeout = server.socket_timeout,
+                   accepted_queue_timeout=server.accepted_queue_timeout,
                    )
         self.protocol = server.protocol_version
         self.ssl_certificate = server.ssl_certificate

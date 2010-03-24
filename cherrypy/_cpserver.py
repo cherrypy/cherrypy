@@ -44,6 +44,8 @@ class Server(object):
     socket_file = ''
     socket_queue_size = 5
     socket_timeout = 10
+    accepted_queue_size = -1
+    accepted_queue_timeout = 10
     protocol_version = 'HTTP/1.1'
     reverse_dns = False
     thread_pool = 10
