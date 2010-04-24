@@ -42,6 +42,14 @@ class EncodingTests(helper.CPWebCase):
                 return ', '.join([": ".join((k, v)).encode('utf8')
                                   for k, v in cherrypy.request.params.items()])
             reqparams.exposed = True
+            
+            def nontext(self, *args, **kwargs):
+                cherrypy.response.headers['Content-Type'] = 'application/binary'
+                return '\x00\x01\x02\x03'
+            nontext.exposed = True
+            nontext._cp_config = {'tools.encode.text_only': False,
+                                  'tools.encode.add_charset': True,
+                                  }
         
         class GZIP:
             def index(self):
@@ -247,6 +255,11 @@ class EncodingTests(helper.CPWebCase):
         self.assertErrorPage(400, 
             "The request entity could not be decoded. The following charsets "
             "were attempted: [u'us-ascii', u'utf-8']")
+    
+    def test_nontext(self):
+        self.getPage('/nontext')
+        self.assertHeader('Content-Type', 'application/binary;charset=utf-8')
+        self.assertBody('\x00\x01\x02\x03')
     
     def testEncoding(self):
         # Default encoding should be utf-8
