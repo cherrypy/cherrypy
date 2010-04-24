@@ -268,10 +268,14 @@ server.ssl_private_key: r'%s'
         if self.daemonize:
             args.append('-d')
 
+        env = os.environ.copy()
+        # Make sure we import the cherrypy package in which this module is defined.
+        grandparentdir = os.path.join(thisdir, '..', '..')
+        env['PATH'] = grandparentdir + os.pathsep + env['PATH']
         if self.wait:
-            self.exit_code = os.spawnl(os.P_WAIT, sys.executable, *args)
+            self.exit_code = os.spawnve(os.P_WAIT, sys.executable, args, env)
         else:
-            os.spawnl(os.P_NOWAIT, sys.executable, *args)
+            os.spawnve(os.P_NOWAIT, sys.executable, args, env)
             cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
 
         # Give the engine a wee bit more time to finish STARTING
