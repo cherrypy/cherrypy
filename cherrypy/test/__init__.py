@@ -1,6 +1,11 @@
 """Regression test suite for CherryPy.
 
-Run test.py to exercise all tests.
+Run 'nosetests -s test/' to exercise all tests.
+
+The '-s' flag instructs nose to output stdout messages, wihch is crucial to
+the 'interactive' mode of webtest.py. If you run these tests without the '-s'
+flag, don't be surprised if the test seems to hang: it's waiting for your
+interactive input.
 """
 
 import sys
