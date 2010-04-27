@@ -1,11 +1,9 @@
 """Tests for managing HTTP issues (malformed requests, etc)."""
 
-from cherrypy.test import test
-
-
 from httplib import HTTPConnection, HTTPSConnection
-import cherrypy
 import mimetypes
+
+import cherrypy
 
 
 def encode_multipart_formdata(files):
@@ -177,6 +175,3 @@ class HTTPTests(helper.CPWebCase):
         self.assertBody("The client sent a plain HTTP request, but this "
                         "server only speaks HTTPS on this port.")
 
-
-if __name__ == '__main__':
-    helper.testmain()

@@ -1,7 +1,5 @@
 """Tests for the CherryPy configuration system."""
 
-from cherrypy.test import test
-
 import os, sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
@@ -252,5 +250,3 @@ class VariableSubstitutionTests(unittest.TestCase):
         self.assertEqual(cherrypy.config["my"]["my.dir"], "/some/dir/my/dir")
         self.assertEqual(cherrypy.config["my"]["my.dir2"], "/some/dir/my/dir/dir2")
 
-if __name__ == '__main__':
-    helper.testmain()

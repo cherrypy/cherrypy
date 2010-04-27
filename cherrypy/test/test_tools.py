@@ -9,10 +9,7 @@ import sys
 from httplib import IncompleteRead
 import time
 timeout = 0.2
-
 import types
-from cherrypy.test import test
-
 
 import cherrypy
 from cherrypy import tools
@@ -398,9 +395,4 @@ class ToolTests(helper.CPWebCase):
             pass
         else:
             raise AssertionError("Tool.on did not error as it should have.")
-
-
-
-if __name__ == '__main__':
-    helper.testmain()
 

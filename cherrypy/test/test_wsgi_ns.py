@@ -1,10 +1,4 @@
-from cherrypy.test import test
-
-
 import cherrypy
-
-
-
 from cherrypy.test import helper
 
 
@@ -82,7 +76,4 @@ class WSGI_Namespace_Test(helper.CPWebCase):
         self.getPage("/")
         # If body is "HEXXO WORXD!", the middleware was applied out of order.
         self.assertBody("HERRO WORRD!")
-
-if __name__ == '__main__':
-    helper.testmain()
 

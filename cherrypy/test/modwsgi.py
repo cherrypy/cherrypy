@@ -39,7 +39,7 @@ import sys
 import time
 
 import cherrypy
-from cherrypy.test import test, webtest
+from cherrypy.test import helper, webtest
 
 
 def read_process(cmd, args=""):
@@ -88,7 +88,7 @@ SetEnv testmod %(testmod)s
 """
 
 
-class ModWSGISupervisor(test.Supervisor):
+class ModWSGISupervisor(helper.Supervisor):
     """Server Controller for ModWSGI and CherryPy."""
     
     using_apache = True

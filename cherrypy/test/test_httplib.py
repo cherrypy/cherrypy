@@ -1,8 +1,5 @@
 """Tests for cherrypy/lib/httputil.py."""
 
-from cherrypy.test import test
-
-
 import unittest
 from cherrypy.lib import httputil
 

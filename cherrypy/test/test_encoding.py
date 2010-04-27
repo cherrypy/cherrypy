@@ -1,6 +1,3 @@
-from cherrypy.test import test
-
-
 import gzip
 try:
     from cStringIO import StringIO
@@ -352,5 +349,3 @@ class EncodingTests(helper.CPWebCase):
                               '/gzip/noshow_stream',
                               headers=[("Accept-Encoding", "gzip")])
 
-if __name__ == "__main__":
-    helper.testmain()

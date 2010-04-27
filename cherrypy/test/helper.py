@@ -1,26 +1,13 @@
-"""A library of helper functions for the CherryPy test suite.
-
-The actual script that runs the entire CP test suite is called
-"test.py" (in this folder); test.py calls this module as a library.
-
-Usage
-=====
-Each individual test_*.py module imports this module (helper),
-usually to make an instance of CPWebCase, and then call testmain().
-
-The CP test suite script (test.py) imports this module and calls
-run_test_suite, possibly more than once. CP applications may also
-import test.py (to use TestHarness), which then calls helper.py.
-"""
-
-# GREAT CARE has been taken to separate this module from test.py,
-# because different consumers of each have mutually-exclusive import
-# requirements. So don't go moving functions from here into test.py,
-# or vice-versa, unless you *really* know what you're doing.
+"""A library of helper functions for the CherryPy test suite."""
 
 import datetime
+from httplib import HTTPSConnection
+import logging
+log = logging.getLogger(__name__)
 import os
 thisdir = os.path.abspath(os.path.dirname(__file__))
+serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
+
 import re
 import sys
 import time
@@ -28,22 +15,179 @@ import warnings
 
 import cherrypy
 from cherrypy.lib import httputil, profiler
-from cherrypy.test import test, webtest
+from cherrypy.lib.reprconf import unrepr
+from cherrypy.test import webtest
 
-import logging
-log = logging.getLogger(__name__)
+_testconfig = None
+
+def get_tst_config(overconf = {}):
+    global _testconfig
+    if _testconfig is None:
+        conf = {
+            'scheme': 'http',
+            'protocol': "HTTP/1.1",
+            'port': 8080,
+            'host': '127.0.0.1',
+            'validate': False,
+            'conquer': False,
+        }
+        try:
+            import testconfig
+            _conf = testconfig.config.get('supervisor', None)
+            if _conf is not None:
+                for k, v in _conf.iteritems():
+                    if isinstance(v, basestring):
+                        _conf[k] = unrepr(v)
+                conf.update(_conf)
+        except ImportError:
+            pass
+        _testconfig = conf
+    conf = _testconfig.copy()
+    conf.update(overconf)
+
+    return conf
+
+class Supervisor(object):
+    """Base class for modeling and controlling servers during testing."""
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            if k == 'port':
+                setattr(self, k, int(v))
+            setattr(self, k, v)
+
+
+class LocalSupervisor(Supervisor):
+    """Base class for modeling/controlling servers which run in the same process.
+
+    When the server side runs in a different process, start/stop can dump all
+    state between each test module easily. When the server side runs in the
+    same process as the client, however, we have to do a bit more work to ensure
+    config and mounted apps are reset between tests.
+    """
+
+    using_apache = False
+    using_wsgi = False
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
+
+        cherrypy.server.httpserver = self.httpserver_class
+
+        engine = cherrypy.engine
+        if hasattr(engine, "signal_handler"):
+            engine.signal_handler.subscribe()
+        if hasattr(engine, "console_control_handler"):
+            engine.console_control_handler.subscribe()
+        #engine.subscribe('log', lambda msg, level: sys.stderr.write(msg + os.linesep))
+
+    def start(self, modulename=None):
+        """Load and start the HTTP server."""
+        if modulename:
+            # Unhook httpserver so cherrypy.server.start() creates a new
+            # one (with config from setup_server, if declared).
+            cherrypy.server.httpserver = None
+
+        cherrypy.engine.start()
+
+        self.sync_apps()
+
+    def sync_apps(self):
+        """Tell the server about any apps which the setup functions mounted."""
+        pass
+
+    def stop(self):
+        td = getattr(self, 'teardown', None)
+        if td:
+            td()
+        cherrypy.engine.exit()
+
+
+class NativeServerSupervisor(LocalSupervisor):
+    """Server supervisor for the builtin HTTP server."""
+
+    httpserver_class = "cherrypy._cpnative_server.CPHTTPServer"
+    using_apache = False
+    using_wsgi = False
+
+    def __str__(self):
+        return "Builtin HTTP Server on %s:%s" % (self.host, self.port)
+
+
+class LocalWSGISupervisor(LocalSupervisor):
+    """Server supervisor for the builtin WSGI server."""
+
+    httpserver_class = "cherrypy._cpwsgi_server.CPWSGIServer"
+    using_apache = False
+    using_wsgi = True
+
+    def __str__(self):
+        return "Builtin WSGI Server on %s:%s" % (self.host, self.port)
+
+    def sync_apps(self):
+        """Hook a new WSGI app into the origin server."""
+        cherrypy.server.httpserver.wsgi_app = self.get_app()
+
+    def get_app(self):
+        """Obtain a new (decorated) WSGI app to hook into the origin server."""
+        app = cherrypy.tree
+        if self.conquer:
+            try:
+                import wsgiconq
+            except ImportError:
+                warnings.warn("Error importing wsgiconq. pyconquer will not run.")
+            else:
+                app = wsgiconq.WSGILogger(app, c_calls=True)
+        if self.validate:
+            try:
+                from wsgiref import validate
+            except ImportError:
+                warnings.warn("Error importing wsgiref. The validator will not run.")
+            else:
+                #wraps the app in the validator
+                app = validate.validator(app)
+
+        return app
+
+
+def get_cpmodpy_supervisor(**options):
+    from cherrypy.test import modpy
+    sup = modpy.ModPythonSupervisor(**options)
+    sup.template = modpy.conf_cpmodpy
+    return sup
+
+def get_modpygw_supervisor(**options):
+    from cherrypy.test import modpy
+    sup = modpy.ModPythonSupervisor(**options)
+    sup.template = modpy.conf_modpython_gateway
+    sup.using_wsgi = True
+    return sup
+
+def get_modwsgi_supervisor(**options):
+    from cherrypy.test import modwsgi
+    return modwsgi.ModWSGISupervisor(**options)
+
+def get_modfcgid_supervisor(**options):
+    from cherrypy.test import modfcgid
+    return modfcgid.ModFCGISupervisor(**options)
+
+def get_wsgi_u_supervisor(**options):
+    cherrypy.server.wsgi_version = ('u', 0)
+    return LocalWSGISupervisor(**options)
+
 
 class CPWebCase(webtest.WebCase):
     script_name = ""
     scheme = "http"
 
-    available_servers = {'wsgi': test.LocalWSGISupervisor,
-                         'wsgi_u': test.get_wsgi_u_supervisor,
-                         'native': test.NativeServerSupervisor,
-                         'cpmodpy': test.get_cpmodpy_supervisor,
-                         'modpygw': test.get_modpygw_supervisor,
-                         'modwsgi': test.get_modwsgi_supervisor,
-                         'modfcgid': test.get_modfcgid_supervisor,
+    available_servers = {'wsgi': LocalWSGISupervisor,
+                         'wsgi_u': get_wsgi_u_supervisor,
+                         'native': NativeServerSupervisor,
+                         'cpmodpy': get_cpmodpy_supervisor,
+                         'modpygw': get_modpygw_supervisor,
+                         'modwsgi': get_modwsgi_supervisor,
+                         'modfcgid': get_modfcgid_supervisor,
                          }
     default_server = "wsgi"
     supervisor_factory = None
@@ -92,7 +236,7 @@ class CPWebCase(webtest.WebCase):
     def setup_class(cls):
         ''
         #Creates a server
-        conf = test.get_tst_config()
+        conf = get_tst_config()
         if not cls.supervisor_factory:
             cls.supervisor_factory = cls.available_servers.get(conf.get('server', 'wsgi'))
             if cls.supervisor_factory is None:

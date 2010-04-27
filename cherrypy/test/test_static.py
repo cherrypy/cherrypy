@@ -1,6 +1,3 @@
-from cherrypy.test import test
-
-
 from httplib import HTTPConnection, HTTPSConnection
 try:
     import cStringIO as StringIO
@@ -16,10 +13,8 @@ import threading
 
 import cherrypy
 from cherrypy.lib import static
-
-
-
 from cherrypy.test import helper
+
 
 class StaticTest(helper.CPWebCase):
     @staticmethod
@@ -305,6 +300,3 @@ class StaticTest(helper.CPWebCase):
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
                       (BIGFILE_SIZE, self.body[:50], len(body)))
 
-
-if __name__ == "__main__":
-    helper.testmain()

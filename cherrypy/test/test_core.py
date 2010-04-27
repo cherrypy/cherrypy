@@ -1,13 +1,10 @@
 """Basic tests for the CherryPy core: request handling."""
 
-from cherrypy.test import test
-
-
+from httplib import IncompleteRead
 import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
-from httplib import IncompleteRead
 
 import cherrypy
 from cherrypy import _cptools, tools
@@ -117,8 +114,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def index(self):
                 return "child"
             
+            def custom(self, url, code):
+                raise cherrypy.HTTPRedirect(url, code)
+            
             def by_code(self, code):
-                raise cherrypy.HTTPRedirect("somewhere else", code)
+                raise cherrypy.HTTPRedirect("somewhere%20else", code)
             by_code._cp_config = {'tools.trailing_slash.extra': True}
             
             def nomodify(self):
@@ -311,23 +311,23 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         
         self.getPage("/redirect/by_code?code=300")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(300)
         
         self.getPage("/redirect/by_code?code=301")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(301)
         
         self.getPage("/redirect/by_code?code=302")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(302)
         
         self.getPage("/redirect/by_code?code=303")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(303)
         
         self.getPage("/redirect/by_code?code=307")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(307)
         
         self.getPage("/redirect/nomodify")
@@ -360,6 +360,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         loc = self.assertHeader('Location')
         assert loc.endswith("#%s" % frag)
         self.assertStatus(('302 Found', '303 See Other'))
+        
+        # check injection protection
+        # See http://www.cherrypy.org/ticket/1003
+        self.getPage("/redirect/custom?code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval")
+        self.assertStatus(500)
+        loc = self.assertNoHeader('Set-Cookie')
     
     def test_InternalRedirect(self):
         # InternalRedirect
@@ -606,6 +612,3 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody("Mr. and Mrs. Watson")
 
-
-if __name__ == '__main__':
-    helper.testmain()

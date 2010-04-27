@@ -1,10 +1,6 @@
-from cherrypy.test import test
-
-
 import cherrypy
-
-
 from cherrypy.test import helper
+
 
 class ETagTest(helper.CPWebCase):
     @staticmethod
@@ -83,6 +79,3 @@ class ETagTest(helper.CPWebCase):
         self.assertStatus(200)
         self.assertHeader('ETag', etag1)
 
-
-if __name__ == "__main__":
-    helper.testmain()

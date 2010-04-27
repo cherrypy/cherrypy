@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:expandtab:fileencoding=utf-8
 
-from cherrypy.test import test
-
-
 
 import cherrypy
 from cherrypy.lib import auth_digest
@@ -115,7 +112,4 @@ class DigestAuthTest(helper.CPWebCase):
         self.getPage('/digest/', [('Authorization', auth_header)])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
-
-if __name__ == "__main__":
-    helper.testmain()
 

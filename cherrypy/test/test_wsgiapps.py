@@ -1,8 +1,3 @@
-from cherrypy.test import test
-
-
-
-
 from cherrypy.test import helper
 
 
@@ -112,7 +107,4 @@ This is a wsgi app running within CherryPy!'''
         self.getPage("/hosted/app3")
         self.assertHeader("Content-Type", "text/plain")
         self.assertInBody('Hello world')
-
-if __name__ == '__main__':
-    helper.testmain()
 

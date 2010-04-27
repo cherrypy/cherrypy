@@ -1,6 +1,3 @@
-from cherrypy.test import test
-
-
 try:
     # Python 2.5+
     from hashlib import md5, sha1 as sha
@@ -156,6 +153,4 @@ class HTTPAuthTest(helper.CPWebCase):
         self.getPage('/digest/', [('Authorization', auth)])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
-            
-if __name__ == "__main__":
-    helper.testmain()
+

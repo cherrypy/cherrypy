@@ -1,8 +1,5 @@
 """Tests for refleaks."""
 
-from cherrypy.test import test
-
-
 import gc
 from httplib import HTTPConnection, HTTPSConnection
 import threading
@@ -119,6 +116,3 @@ class ReferenceTests(helper.CPWebCase):
         self.getPage("/gc_stats")
         self.assertBody("Statistics:")
 
-
-if __name__ == '__main__':
-    helper.testmain({'server.socket_queue_size': 10})

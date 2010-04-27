@@ -1,9 +1,4 @@
-from cherrypy.test import test
-
-
 import cherrypy
-
-
 from cherrypy.test import helper
 
 
@@ -63,8 +58,4 @@ class SessionAuthenticateTest(helper.CPWebCase):
         # verify we are logged out
         self.getPage('/', self.cookies)
         self.assertInBody('<form method="post" action="do_login">')
-
-
-if __name__ == "__main__":
-    helper.testmain()
 

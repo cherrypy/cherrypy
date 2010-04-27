@@ -10,9 +10,8 @@ except ImportError:
 
 import cherrypy
 from cherrypy.lib import auth_basic
-
-
 from cherrypy.test import helper
+
 
 class BasicAuthTest(helper.CPWebCase):
     @staticmethod
@@ -82,6 +81,3 @@ class BasicAuthTest(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertBody("Hello xuser, you've been authorized.")
 
-
-if __name__ == "__main__":
-    helper.testmain()

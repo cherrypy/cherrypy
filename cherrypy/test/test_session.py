@@ -1,6 +1,3 @@
-from cherrypy.test import test
-
-
 from httplib import HTTPConnection, HTTPSConnection
 import os
 localDir = os.path.dirname(__file__)
@@ -464,7 +461,3 @@ else:
             self.getPage('/restricted', self.cookies, method='POST')
             self.assertErrorPage(405, "Specified method is invalid for this server.")
 
-
-
-if __name__ == "__main__":
-    helper.testmain()

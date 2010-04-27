@@ -1,6 +1,3 @@
-from cherrypy.test import test
-
-
 import datetime
 import gzip
 from itertools import count
@@ -329,9 +326,4 @@ class CacheTest(helper.CPWebCase):
         self.assertBody('visit #4')
         self.getPage("/control")
         self.assertBody('visit #4')
-
-
-
-if __name__ == '__main__':
-    helper.testmain()
 

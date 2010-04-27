@@ -1,8 +1,5 @@
 """Tests for the CherryPy configuration system."""
 
-from cherrypy.test import test
-
-
 import os, sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import socket
@@ -121,7 +118,3 @@ class ServerConfigTests(helper.CPWebCase):
         self.getPage('/upload', h, "POST", b)
         self.assertStatus(413)
 
-
-
-if __name__ == '__main__':
-    helper.testmain()

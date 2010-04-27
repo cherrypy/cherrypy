@@ -1,8 +1,5 @@
 """Tests for various MIME issues, including the safe_multipart Tool."""
 
-from cherrypy.test import test
-
-
 import cherrypy
 
 
@@ -102,6 +99,3 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
         self.assertBody("Upload: u'Submit Query', Filename: u'.project', "
                         "Filedata: %r" % filedata)
 
-
-if __name__ == '__main__':
-    helper.testmain()

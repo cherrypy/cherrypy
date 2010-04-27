@@ -1,12 +1,9 @@
-from cherrypy.test import test
-from cherrypy._cptree import Application
-
 import cherrypy
+from cherrypy._cptree import Application
+from cherrypy.test import helper
 
 script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
 
-
-from cherrypy.test import helper
 
 class DynamicObjectMappingTest(helper.CPWebCase):
     @staticmethod
@@ -298,5 +295,3 @@ class DynamicObjectMappingTest(helper.CPWebCase):
         self.assertBody("[]")
         self.assertHeader('Allow', 'GET, HEAD, POST')
 
-if __name__ == "__main__":
-    helper.testmain()

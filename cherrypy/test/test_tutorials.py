@@ -1,11 +1,7 @@
-from cherrypy.test import test
-
-
 import sys
 
 import cherrypy
 from cherrypy.test import helper
-
 
 
 class TutorialTest(helper.CPWebCase):
@@ -202,10 +198,3 @@ class TutorialTest(helper.CPWebCase):
         self.assertStatus(500)
         self.assertInBody("If you construct an HTTPError with a 'message'")
 
-
-if __name__ == "__main__":
-    helper.testmain({
-        'server.socket_host': '127.0.0.1',
-        'server.socket_port': 8080,
-        'server.thread_pool': 10,
-        })

@@ -1,5 +1,3 @@
-from cherrypy.test import test
-
 try:
     set
 except NameError:

@@ -1,14 +1,9 @@
-from cherrypy.test import test
-
-
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
-
-
-
 from cherrypy.test import helper
+
 
 class VirtualHostTest(helper.CPWebCase):
     @staticmethod
@@ -109,6 +104,3 @@ class VirtualHostTest(helper.CPWebCase):
         self.getPage("/static2", [('Host', 'www.mydom2.com')])
         self.assertStatus(301)
 
-
-if __name__ == "__main__":
-    helper.testmain()

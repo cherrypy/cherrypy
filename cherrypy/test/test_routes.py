@@ -1,6 +1,3 @@
-from cherrypy.test import test
-
-
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
@@ -67,7 +64,4 @@ class RoutesDispatchTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertHeader("Content-Language", "en-GB")
         self.assertBody("Welcome to Surbiton, pop. 1327")
-
-if __name__ == '__main__':
-    helper.testmain()
 

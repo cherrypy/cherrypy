@@ -1,8 +1,5 @@
 """Basic tests for the CherryPy core: request handling."""
 
-from cherrypy.test import test
-
-
 import os
 localDir = os.path.dirname(__file__)
 
@@ -150,6 +147,3 @@ class ErrorLogTests(helper.CPWebCase, logtest.LogCase):
         finally:
             ignore.pop()
 
-
-if __name__ == '__main__':
-    helper.testmain()

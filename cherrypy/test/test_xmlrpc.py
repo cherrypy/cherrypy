@@ -1,5 +1,3 @@
-from cherrypy.test import test
-
 import xmlrpclib
 
 import cherrypy
@@ -170,8 +168,4 @@ class XmlRpcTest(helper.CPWebCase):
             self.assertEqual(x.faultString, ("custom Fault response"))
         else:
             self.fail("Expected xmlrpclib.Fault")
-
-
-if __name__ == '__main__':
-    helper.testmain()
 

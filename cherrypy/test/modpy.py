@@ -39,7 +39,7 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
 import time
 
-from cherrypy.test import test
+from cherrypy.test import helper
 
 
 def read_process(cmd, args=""):
@@ -91,7 +91,7 @@ PythonOption socket_host %(host)s
 PythonDebug On
 """
 
-class ModPythonSupervisor(test.Supervisor):
+class ModPythonSupervisor(helper.Supervisor):
     
     using_apache = True
     using_wsgi = False

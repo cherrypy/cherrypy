@@ -1,12 +1,8 @@
 from httplib import BadStatusLine
-
 import os
 import sys
 import threading
 import time
-
-from cherrypy.test import test
-
 
 import cherrypy
 engine = cherrypy.engine
@@ -437,8 +433,4 @@ test_case_name: "test_signal_handler_unsubscribe"
         target_line = open(p.error_log, 'rb').readlines()[-10]
         if not "I am an old SIGTERM handler." in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
-
-
-if __name__ == "__main__":
-    helper.testmain()
 

@@ -1,11 +1,4 @@
-from cherrypy.test import test
-
-
 import cherrypy
-
-
-
-
 from cherrypy.test import helper
 
 
@@ -39,8 +32,4 @@ class WSGI_VirtualHost_Test(helper.CPWebCase):
         for year in range(1997, 2008):
             self.getPage("/", headers=[('Host', 'www.classof%s.example' % year)])
             self.assertBody("Welcome to the Class of %s website!" % year)
-
-
-if __name__ == '__main__':
-    helper.testmain()
 

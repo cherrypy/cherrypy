@@ -1,7 +1,5 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
-from cherrypy.test import test
-
 from httplib import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
 import urllib
 import socket
@@ -684,7 +682,3 @@ class BadRequestTests(helper.CPWebCase):
         self.assertBody("HTTP requires CRLF terminators")
         conn.close()
 
-
-
-if __name__ == "__main__":
-    helper.testmain()

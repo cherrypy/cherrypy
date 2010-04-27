@@ -1,11 +1,8 @@
-from cherrypy.test import test
-
-
 import cherrypy
+from cherrypy.test import helper
 
 script_names = ["", "/path/to/myapp"]
 
-from cherrypy.test import helper
 
 class ProxyTest(helper.CPWebCase):
     @staticmethod
@@ -129,6 +126,3 @@ class ProxyTest(helper.CPWebCase):
         self.assertHeader('Location', "%s://www.example.test/xhost"
                           % self.scheme)
 
-
-if __name__ == '__main__':
-    helper.testmain()

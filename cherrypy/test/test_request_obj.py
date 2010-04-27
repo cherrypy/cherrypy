@@ -1,8 +1,5 @@
 """Basic tests for the cherrypy.Request object."""
 
-from cherrypy.test import test
-
-
 import os
 localDir = os.path.dirname(__file__)
 import sys
@@ -17,7 +14,6 @@ defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
                         "TRACE", "PROPFIND")
 
 
-    
 #                             Client-side code                             #
 
 from cherrypy.test import helper
@@ -724,6 +720,3 @@ class RequestObjectTests(helper.CPWebCase):
             results.append(self.body)
         self.assertEqual(results, ["None"] * 20)
 
-
-if __name__ == '__main__':
-    helper.testmain()

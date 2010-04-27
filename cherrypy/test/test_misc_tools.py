@@ -1,6 +1,3 @@
-from cherrypy.test import test
-
-
 import os
 localDir = os.path.dirname(__file__)
 logfile = os.path.join(localDir, "test_misc_tools.log")
@@ -203,6 +200,3 @@ class AutoVaryTest(helper.CPWebCase):
         self.assertHeader(
             "Vary", 'Accept, Accept-Charset, Accept-Encoding, Host, If-Modified-Since, Range')
 
-
-if __name__ == "__main__":
-    helper.testmain()

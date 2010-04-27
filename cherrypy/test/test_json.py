@@ -1,7 +1,5 @@
-from cherrypy.test import test, helper
-
-
 import cherrypy
+from cherrypy.test import helper
 
 from cherrypy.lib.jsontools import json
 if json is None:
@@ -72,7 +70,4 @@ else:
                        ('Content-Length', str(len(body)))]
             self.getPage("/json_post", method="POST", headers=headers, body=body)
             self.assertStatus(400, 'Invalid JSON document')
-
-if __name__ == '__main__':
-    helper.testmain()
 
