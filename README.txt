@@ -6,8 +6,8 @@
 
 * To run the regression tests, just go to the cherrypy/test/ directory and type:
 
-    python test.py
+    nosetests -s ./
 
   Or to run individual tests type:
 
-    python test.py --test_foo --test_bar
+    nosetests -s test_foo.py
