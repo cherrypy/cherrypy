@@ -505,7 +505,9 @@ class HTTPRequest(object):
         try:
             self._parse_request()
         except MaxSizeExceeded:
-            self.simple_response("413 Request Entity Too Large")
+            self.simple_response("413 Request Entity Too Large",
+                "The headers sent with the request exceed the maximum "
+                "allowed bytes.")
             return
     
     def _parse_request(self):
@@ -612,7 +614,9 @@ class HTTPRequest(object):
         
         mrbs = self.server.max_request_body_size
         if mrbs and int(self.inheaders.get("Content-Length", 0)) > mrbs:
-            self.simple_response("413 Request Entity Too Large")
+            self.simple_response("413 Request Entity Too Large",
+                "The entity sent with the request exceeds the maximum "
+                "allowed bytes.")
             return
         
         # Persistent connection support
@@ -722,7 +726,9 @@ class HTTPRequest(object):
             cl = int(self.inheaders.get("Content-Length", 0))
             if mrbs and mrbs < cl:
                 if not self.sent_headers:
-                    self.simple_response("413 Request Entity Too Large")
+                    self.simple_response("413 Request Entity Too Large",
+                        "The entity sent with the request exceeds the maximum "
+                        "allowed bytes.")
                 return
             self.rfile = KnownLengthRFile(self.conn.rfile, cl)
         
