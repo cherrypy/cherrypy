@@ -490,6 +490,8 @@ class HTTPRequest(object):
         self.scheme = "http"
         if self.server.ssl_adapter is not None:
             self.scheme = "https"
+        # Use the lowest-common protocol in case read_request_line errors.
+        self.response_protocol = 'HTTP/1.0'
         self.inheaders = {}
         
         self.status = ""
@@ -503,14 +505,24 @@ class HTTPRequest(object):
         self.rfile = SizeCheckWrapper(self.conn.rfile,
                                       self.server.max_request_header_size)
         try:
-            self._parse_request()
+            self.read_request_line()
+        except MaxSizeExceeded:
+            self.simple_response("414 Request-URI Too Long",
+                "The Request-URI sent with the request exceeds the maximum "
+                "allowed bytes.")
+            return
+        
+        try:
+            self.read_request_headers()
         except MaxSizeExceeded:
             self.simple_response("413 Request Entity Too Large",
                 "The headers sent with the request exceed the maximum "
                 "allowed bytes.")
             return
+        
+        self.ready = True
     
-    def _parse_request(self):
+    def read_request_line(self):
         # HTTP/1.1 connections are persistent by default. If a client
         # requests a page, then idles (leaves the connection open),
         # then rfile.readline() will raise socket.error("timed out").
@@ -539,13 +551,13 @@ class HTTPRequest(object):
                 return
         
         if not request_line.endswith(CRLF):
-            self.simple_response(400, "HTTP requires CRLF terminators")
+            self.simple_response("400 Bad Request", "HTTP requires CRLF terminators")
             return
         
         try:
             method, uri, req_protocol = request_line.strip().split(" ", 2)
         except ValueError:
-            self.simple_response(400, "Malformed Request-Line")
+            self.simple_response("400 Bad Request", "Malformed Request-Line")
             return
         
         self.uri = uri
@@ -604,6 +616,8 @@ class HTTPRequest(object):
             return
         self.request_protocol = req_protocol
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
+    
+    def read_request_headers(self):
         
         # then all the http headers
         try:
@@ -675,8 +689,6 @@ class HTTPRequest(object):
             except socket.error, x:
                 if x.args[0] not in socket_errors_to_ignore:
                     raise
-        
-        self.ready = True
     
     def parse_request_uri(self, uri):
         """Parse a Request-URI into (scheme, authority, path).
@@ -743,15 +755,21 @@ class HTTPRequest(object):
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        buf = [self.server.protocol + " " +
-               status + CRLF,
-               "Content-Length: %s\r\n" % len(msg),
+        buf = ["Content-Length: %s\r\n" % len(msg),
                "Content-Type: text/plain\r\n"]
         
-        if status[:3] == "413" and self.response_protocol == 'HTTP/1.1':
-            # Request Entity Too Large
+        if status[:3] in ("413", "414"):
+            # Request Entity Too Large / Request-URI Too Long
             self.close_connection = True
-            buf.append("Connection: close\r\n")
+            if self.response_protocol == 'HTTP/1.1':
+                # This will not be true for 414, since read_request_line
+                # usually raises 414 before reading the whole line, and we
+                # therefore cannot know the proper response_protocol.
+                buf.append("Connection: close\r\n")
+            else:
+                # HTTP/1.0 had no 413/414 status nor Connection header.
+                # Emit 400 instead and trust the message body is enough.
+                status = "400 Bad Request"
         
         buf.append(CRLF)
         if msg:
@@ -759,8 +777,9 @@ class HTTPRequest(object):
                 msg = msg.encode("ISO-8859-1")
             buf.append(msg)
         
+        status_line = self.server.protocol + " " + status + CRLF
         try:
-            self.conn.wfile.sendall("".join(buf))
+            self.conn.wfile.sendall(status_line + "".join(buf))
         except socket.error, x:
             if x.args[0] not in socket_errors_to_ignore:
                 raise
