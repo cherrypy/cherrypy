@@ -59,7 +59,7 @@ class SignalHandler(object):
     """Register bus channels (and listeners) for system signals.
     
     By default, instantiating this object subscribes the following signals
-    and listeners:
+    and listeners::
     
         TERM: bus.exit
         HUP : bus.restart
@@ -84,6 +84,7 @@ class SignalHandler(object):
         self._previous_handlers = {}
     
     def subscribe(self):
+        """Subscribe self.handlers to signals."""
         for sig, func in self.handlers.items():
             try:
                 self.set_handler(sig, func)
@@ -91,6 +92,7 @@ class SignalHandler(object):
                 pass
     
     def unsubscribe(self):
+        """Unsubscribe self.handlers from signals."""
         for signum, handler in self._previous_handlers.items():
             signame = self.signals[signum]
             
@@ -400,7 +402,9 @@ class Monitor(SimplePlugin):
     """WSPBus listener to periodically run a callback in its own thread.
     
     bus: a Web Site Process Bus object.
+    
     callback: the function to call at intervals.
+    
     frequency: the time in seconds between callback runs.
     """
     

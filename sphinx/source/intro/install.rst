@@ -93,8 +93,8 @@ Usage notes
 -----------
 
 * The repository is open for anonymous read-only access. CherryPy developers
-  have write permissions. To obtain write permission, please contact fumanchu via
-  email or IRC.
+  have write permissions. To obtain write permission, please contact us via
+  email or IRC (see http://www.cherrypy.org/wiki/CherryPyInvolved).
 * The repository follows the standard trunk/branches/tags structure that is
   recommended in the Subversion documentation:
 

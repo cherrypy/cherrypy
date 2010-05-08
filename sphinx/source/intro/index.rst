@@ -61,7 +61,6 @@ to be executed when some resource (URL) is requested by the user. However:
    or any other solution, or none at all if you're not using HTML ;)
  * CherryPy is not a database or ORM. Rather than dictate or bless a persistence
    layer to you, CherryPy allows you to choose your own.
-   See :doc:`/progguide/databases`.
 
 
 Contents

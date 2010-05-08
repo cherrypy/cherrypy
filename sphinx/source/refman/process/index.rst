@@ -1,12 +1,10 @@
 ****************
-Reference Manual
+cherrypy.process
 ****************
 
 .. toctree::
    :glob:
 
    *
-   lib/index
-   process/index
 
 

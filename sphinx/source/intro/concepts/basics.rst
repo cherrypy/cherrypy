@@ -37,6 +37,8 @@ Let's take a look at ``hello.py``:
    named ``index``, which will get called when the root URL for the site is
    requested (for example, ``http://localhost/``). This method returns the
    **contents** of the Web page; in this case, the ``'Hello World!'`` string.
+   Note that you don't have to subclass any framework-provided classes; in fact,
+   you don't even have to use classes at all! But let's start with them for now.
  * The ``index.exposed = True`` is a necessary step to tell CherryPy that the
    ``index()`` method will be **exposed**. Only exposed methods can be called
    to answer a request. This feature allows the user to select which methods
@@ -49,7 +51,8 @@ Let's take a look at ``hello.py``:
 
 When the application is executed, the CherryPy server is started with the
 default configuration. It will listen on ``localhost`` at port ``8080``. These
-defaults can be overridden by using a configuration file (more on this later).
+defaults can be overridden by using a configuration file or dictionary
+(more on this later).
 
 Finally, the web server receives the request for the URL
 ``http://localhost:8080``. It searches for the best method to handle the
@@ -58,18 +61,20 @@ the root of the site is automatically mapped to the ``index()`` method (similar
 to the ``index.html`` that is the standard page for conventional Web servers).
 The HelloWorld class defines an ``index()`` method and exposes it. CherryPy
 calls ``HelloWorld().index()``, and the result of the call is sent back to
-the browser as the contents of the index page for the website. All work is
+the browser as the contents of the index page for the website. All the
+dispatching and HTTP-processing work is
 done automatically; the application programmer only needs to provide the
 desired content as the return value of the ``index`` method.
 
 CherryPy structure
-==================
+------------------
 
 Most of the features of CherryPy are available through the :mod:`cherrypy`
 module. It contains several members:
 
- * :class:`cherrypy.engine <cherrypy._cpengine.Engine>` contains the API to
-   control the CherryPy engine.
+ * cherrypy.engine (a :class:`Bus <cherrypy.process.wspbus.Bus>` instance)
+   controls process startup, shutdown, and other events, including your own
+   Plugins. See :doc:`/intro/concepts/engine`.
  * :class:`cherrypy.server <cherrypy._cpserver.Server>` contains the API to
    control the HTTP server.
  * :class:`cherrypy.request <cherrypy._cprequest.Request>` contains the all
