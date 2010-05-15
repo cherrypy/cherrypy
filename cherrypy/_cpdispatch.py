@@ -9,6 +9,8 @@ The default dispatcher discovers the page handler by matching path_info
 to a hierarchical arrangement of objects, starting at request.app.root.
 """
 
+import string
+
 import cherrypy
 
 
@@ -192,6 +194,9 @@ class LateParamPageHandler(PageHandler):
                       'cherrypy.request.params copied in)')
 
 
+punctuation_to_underscores = string.maketrans(
+    string.punctuation, '_' * len(string.punctuation))
+
 class Dispatcher(object):
     """CherryPy Dispatcher which walks a tree of objects to find a handler.
     
@@ -213,7 +218,11 @@ class Dispatcher(object):
     to provide their own dynamic dispatch algorithm.
     """
     
-    def __init__(self, dispatch_method_name = None):
+    def __init__(self, dispatch_method_name=None,
+                 translate=punctuation_to_underscores):
+        if not isinstance(translate, str) or len(translate) != 256:
+            raise ValueError("The translate argument must be a str of len 256.")
+        self.translate = translate
         if dispatch_method_name:
             self.dispatch_method_name = dispatch_method_name
 
@@ -267,8 +276,8 @@ class Dispatcher(object):
         iternames = names[:]
         while iternames:
             name = iternames[0]
-            # map to legal Python identifiers (replace '.' with '_')
-            objname = name.replace('.', '_')
+            # map to legal Python identifiers (e.g. replace '.' with '_')
+            objname = name.translate(self.translate)
             
             nodeconf = {}
             subnode = getattr(node, objname, None)

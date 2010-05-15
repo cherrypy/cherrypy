@@ -43,6 +43,10 @@ class ObjectMappingTest(helper.CPWebCase):
             def redirect_via_url(self, path):
                 raise cherrypy.HTTPRedirect(cherrypy.url(path))
             redirect_via_url.exposed = True
+            
+            def translate_html(self):
+                return "OK"
+            translate_html.exposed = True
         
         def mapped_func(self, ID=None):
             return "ID is %s" % ID
@@ -265,6 +269,19 @@ class ObjectMappingTest(helper.CPWebCase):
         # mounted at /foo. See http://www.cherrypy.org/ticket/573
         self.getPage("/foobar")
         self.assertBody("bar")
+    
+    def test_translate(self):
+        self.getPage("/translate_html")
+        self.assertStatus("200 OK")
+        self.assertBody("OK")
+        
+        self.getPage("/translate.html")
+        self.assertStatus("200 OK")
+        self.assertBody("OK")
+        
+        self.getPage("/translate-html")
+        self.assertStatus("200 OK")
+        self.assertBody("OK")
     
     def test_redir_using_url(self):
         for url in script_names:
