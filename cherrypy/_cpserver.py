@@ -15,7 +15,7 @@ class Server(ServerAdapter):
     
     You can set attributes (like socket_host and socket_port)
     on *this* object (which is probably cherrypy.server), and call
-    quickstart. For example:
+    quickstart. For example::
     
         cherrypy.server.socket_port = 80
         cherrypy.quickstart()
@@ -109,7 +109,8 @@ class Server(ServerAdapter):
                 raise ValueError("bind_addr must be a (host, port) tuple "
                                  "(for TCP sockets) or a string (for Unix "
                                  "domain sockets), not %r" % value)
-    bind_addr = property(_get_bind_addr, _set_bind_addr)
+    bind_addr = property(_get_bind_addr, _set_bind_addr,
+        doc='A (host, port) tuple for TCP sockets or a str for Unix domain sockets.')
     
     def base(self):
         """Return the base (scheme://host[:port] or sock file) for this server."""

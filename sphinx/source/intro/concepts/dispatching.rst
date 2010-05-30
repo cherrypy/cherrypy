@@ -19,7 +19,8 @@ When you wish to serve a resource on the Web, you never actually serve the
 resource, because "resources" are concepts. What you serve are representations
 of a resource, and *page handlers* are what you use in CherryPy to do that.
 Page handlers are functions that you write; CherryPy calls one for each
-request and uses its response, often a string of HTML, as the representation.
+request and uses its response (a string of HTML, for example) as the
+representation.
 
 For the user, a web application is just like a website with static files.
 The user types (or clicks) a URL, and gets to the desired webpage. A
@@ -33,7 +34,8 @@ The key to understand how to write a new web application is to understand
 how this mapping occurs.
 
 CherryPy takes the output of the appropriate page handler function, binds it
-to :attr:`cherrypy.response.body`, and sends it as the HTTP response entity
+to :attr:`cherrypy.response.body <cherrypy._cprequest.Response.body>`,
+and sends it as the HTTP response entity
 body. Your page handler function (and almost any other part of CherryPy) can
 directly set :attr:`cherrypy.response.status <cherrypy._cprequest.Response.status>`
 and :attr:`cherrypy.response.headers <cherrypy._cprequest.Response.headers>`
@@ -53,7 +55,7 @@ a Dispatcher object to:
 4. Set :attr:`cherrypy.request.handler <cherrypy._cprequest.Request.handler>`
    (to the :class:`PageHandler <cherrypy._cpdispatch.PageHandler>` wrapper)
 5. Collect configuration entries into
-   :class:`cherrypy.request.config <cherrypy._cpconfig.Config>`
+   :attr:`cherrypy.request.config <cherrypy._cprequest.Request.config>`
 6. Collect "virtual path" components
 
 CherryPy has a default arrangement of handlers (see next), but also allows you
@@ -139,7 +141,8 @@ unlike all other page handlers, it *cannot* take positional arguments (see
 The default dispatcher will always try to find a method named `index` at the
 end of the branch traversal. In the example above, the URI "/onepage/" would
 result in the call: ``app.root.onepage.index()``. Depending on the use of the
-*trailing_slash* Tool, that might be interrupted with an HTTPRedirect, but
+:func:`trailing_slash Tool <cherrypy.lib.cptools.trailing_slash>`,
+that might be interrupted with an HTTPRedirect, but
 otherwise, both ``"/onepage"`` (no trailing slash) and ``"/onepage/"``
 (trailing slash) will result in the same call.
 
@@ -192,9 +195,10 @@ Positional Arguments
 
 When a request is processed, the URI is split into its components, and each
 one is matched in order against the nodes in the tree. Any trailing components
-are "virtual path" components and are passed as positional arguments. Given
-the example application above, the URI ``"/branch/leaf/4"`` would result in
-the call: ``app.root.branch.leaf(4)``.
+are "virtual path" components and are passed as positional arguments. For
+example, the URI ``"/branch/leaf/4"`` might result in
+the call: ``app.root.branch.leaf(4)``, or ``app.root.index(branch, leaf, 4)``
+depending on how you have your handlers arranged.
 
 Partial matches can happen when a URL contains components that do not map to
 the object tree. This can happen for a number of reasons. For example, it may
@@ -255,8 +259,8 @@ So the URL ``http://localhost/blog/2005/01/17`` will be mapped as a call to::
 You could achieve the same effect by defining a ``__call__`` method in this
 case, but "default" just reads better. ;)
 
-URI's with file extensions
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Special characters
+^^^^^^^^^^^^^^^^^^
 
 You can use dots in a URI like ``/path/to/my.html``, but Python method names
 don't allow dots. To work around this, the default dispatcher converts all dots
@@ -265,6 +269,12 @@ example, therefore, you would name your page handler "def my_html". However,
 this means the page is also available at the URI ``/path/to/my_html``.
 If you need to protect the resource (e.g. with authentication), **you must
 protect both URLs**.
+
+.. versionadded:: 3.2
+   The default dispatcher now takes a 'translate' argument, which converts all
+   characters in string.punctuation to underscores using the builtin
+   :meth:`str.translate <str.translate>` method of string objects.
+   You are free to specify any other translation string of length 256.
 
 Other Dispatchers
 -----------------
@@ -318,18 +328,21 @@ A couple of notes about the example above:
 * Since Routes are explicit, there's no need to set the ``exposed`` attribute.
   **All routes are always exposed.**
 
-CherryPy ships with additional Dispatchers in :mod:`cherrypy.dispatch`.
+CherryPy ships with additional Dispatchers in :mod:`cherrypy._cpdispatch`.
 
 .. _pagehandlers:
 
 PageHandler Objects
 ===================
 
-Because the Dispatcher sets ``cherrypy.request.handler``, it can also control
+Because the Dispatcher sets
+:attr:`cherrypy.request.handler <cherrypy._cprequest.Request.handler>`,
+it can also control
 the input and output of that handler function by wrapping the actual handler.
 The default Dispatcher passes "virtual path" components as positional arguments
 and passes query-string and entity (GET and POST) parameters as keyword
-arguments. It uses a PageHandler object for this, which looks a lot like::
+arguments. It uses a :class:`PageHandler <cherrypy._cpdispatch.PageHandler>`
+object for this, which looks a lot like::
 
     class PageHandler(object):
         """Callable which sets response.body."""

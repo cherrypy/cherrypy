@@ -30,7 +30,7 @@ class VirtualHost(object):
     """Select a different WSGI application based on the Host header.
     
     This can be useful when running multiple sites within one CP server.
-    It allows several domains to point to different applications. For example:
+    It allows several domains to point to different applications. For example::
     
         root = Root()
         RootApp = cherrypy.Application(root)
@@ -43,19 +43,22 @@ class VirtualHost(object):
                      })
         
         cherrypy.tree.graft(vhost)
+    """
+    default = None
+    """Required. The default WSGI application."""
     
-    default: required. The default WSGI application.
+    use_x_forwarded_host = True
+    """If True (the default), any "X-Forwarded-Host"
+    request header will be used instead of the "Host" header. This
+    is commonly added by HTTP servers (such as Apache) when proxying."""
     
-    use_x_forwarded_host: if True (the default), any "X-Forwarded-Host"
-        request header will be used instead of the "Host" header. This
-        is commonly added by HTTP servers (such as Apache) when proxying.
-    
-    domains: a dict of {host header value: application} pairs.
-        The incoming "Host" request header is looked up in this dict,
-        and, if a match is found, the corresponding WSGI application
-        will be called instead of the default. Note that you often need
-        separate entries for "example.com" and "www.example.com".
-        In addition, "Host" headers may contain the port number.
+    domains = {}
+    """A dict of {host header value: application} pairs.
+    The incoming "Host" request header is looked up in this dict,
+    and, if a match is found, the corresponding WSGI application
+    will be called instead of the default. Note that you often need
+    separate entries for "example.com" and "www.example.com".
+    In addition, "Host" headers may contain the port number.
     """
     
     def __init__(self, default, domains=None, use_x_forwarded_host=True):
@@ -118,6 +121,7 @@ class InternalRedirector(object):
 
 
 class ExceptionTrapper(object):
+    """WSGI middleware that traps exceptions."""
     
     def __init__(self, nextapp, throws=(KeyboardInterrupt, SystemExit)):
         self.nextapp = nextapp
@@ -270,30 +274,29 @@ class AppResponse(object):
 
 
 class CPWSGIApp(object):
-    """A WSGI application object for a CherryPy Application.
-    
-    pipeline: a list of (name, wsgiapp) pairs. Each 'wsgiapp' MUST be a
-        constructor that takes an initial, positional 'nextapp' argument,
-        plus optional keyword arguments, and returns a WSGI application
-        (that takes environ and start_response arguments). The 'name' can
-        be any you choose, and will correspond to keys in self.config.
-    
-    head: rather than nest all apps in the pipeline on each call, it's only
-        done the first time, and the result is memoized into self.head. Set
-        this to None again if you change self.pipeline after calling self.
-    
-    config: a dict whose keys match names listed in the pipeline. Each
-        value is a further dict which will be passed to the corresponding
-        named WSGI callable (from the pipeline) as keyword arguments.
-    """
+    """A WSGI application object for a CherryPy Application."""
     
     pipeline = [('ExceptionTrapper', ExceptionTrapper),
                 ('InternalRedirector', InternalRedirector),
                 ]
+    """A list of (name, wsgiapp) pairs. Each 'wsgiapp' MUST be a
+    constructor that takes an initial, positional 'nextapp' argument,
+    plus optional keyword arguments, and returns a WSGI application
+    (that takes environ and start_response arguments). The 'name' can
+    be any you choose, and will correspond to keys in self.config."""
+    
     head = None
+    """Rather than nest all apps in the pipeline on each call, it's only
+    done the first time, and the result is memoized into self.head. Set
+    this to None again if you change self.pipeline after calling self."""
+    
     config = {}
+    """A dict whose keys match names listed in the pipeline. Each
+    value is a further dict which will be passed to the corresponding
+    named WSGI callable (from the pipeline) as keyword arguments."""
     
     response_class = AppResponse
+    """The class to instantiate and return as the next app in the WSGI chain."""
     
     def __init__(self, cpapp, pipeline=None):
         self.cpapp = cpapp

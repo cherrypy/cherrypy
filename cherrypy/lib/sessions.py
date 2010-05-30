@@ -32,48 +32,46 @@ missing = object()
 class Session(object):
     """A CherryPy dict-like Session object (one per request)."""
     
-    __metaclass__ = cherrypy._AttributeDocstrings
-    
     _id = None
-    id_observers = None
-    id_observers__doc = "A list of callbacks to which to pass new id's."
     
-    id__doc = "The current session ID."
+    id_observers = None
+    "A list of callbacks to which to pass new id's."
+    
     def _get_id(self):
         return self._id
     def _set_id(self, value):
         self._id = value
         for o in self.id_observers:
             o(value)
-    id = property(_get_id, _set_id, doc=id__doc)
+    id = property(_get_id, _set_id, doc="The current session ID.")
     
     timeout = 60
-    timeout__doc = "Number of minutes after which to delete session data."
+    "Number of minutes after which to delete session data."
     
     locked = False
-    locked__doc = """
+    """
     If True, this session instance has exclusive read/write access
     to session data."""
     
     loaded = False
-    loaded__doc = """
+    """
     If True, data has been retrieved from storage. This should happen
     automatically on the first attempt to access session data."""
     
     clean_thread = None
-    clean_thread__doc = "Class-level Monitor which calls self.clean_up."
+    "Class-level Monitor which calls self.clean_up."
     
     clean_freq = 5
-    clean_freq__doc = "The poll rate for expired session cleanup in minutes."
+    "The poll rate for expired session cleanup in minutes."
     
     originalid = None
-    originalid__doc = "The session id passed by the client. May be missing or unsafe."
+    "The session id passed by the client. May be missing or unsafe."
     
     missing = False
-    missing__doc = "True if the session requested by the client did not exist."
+    "True if the session requested by the client did not exist."
     
     regenerated = False
-    regenerated__doc = """
+    """
     True if the application called session.regenerate(). This is not set by
     internal calls to regenerate the session id."""
     

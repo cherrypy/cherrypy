@@ -72,15 +72,15 @@ CherryPy structure
 Most of the features of CherryPy are available through the :mod:`cherrypy`
 module. It contains several members:
 
- * cherrypy.engine (a :class:`Bus <cherrypy.process.wspbus.Bus>` instance)
+ * :class:`cherrypy.engine <cherrypy.process.wspbus.Bus>`
    controls process startup, shutdown, and other events, including your own
    Plugins. See :doc:`/intro/concepts/engine`.
- * :class:`cherrypy.server <cherrypy._cpserver.Server>` contains the API to
-   control the HTTP server.
- * :class:`cherrypy.request <cherrypy._cprequest.Request>` contains the all
+ * :class:`cherrypy.server <cherrypy._cpserver.Server>` configures and controls
+   the HTTP server.
+ * :class:`cherrypy.request <cherrypy._cprequest.Request>` contains all
    the information that comes with the HTTP request, after it is parsed and
    analyzed by CherryPy.
- * :attr:`cherrypy.request.headers <cherrypy._cprequest.Request.headers>`
+ * :attr:`cherrypy.request.headers <cherrypy.lib.httputil.HeaderMap>`
    contains a mapping with the header options that were sent as part of
    the request.
  * :class:`cherrypy.session <cherrypy.lib.sessions.Session>` is a special
@@ -90,7 +90,7 @@ module. It contains several members:
    True in your config. 
  * :class:`cherrypy.response <cherrypy._cprequest.Response>` contains the
    data that is used to build the HTTP response. 
- * :attr:`cherrypy.response.headers <cherrypy._cprequest.Response.headers>`
+ * :attr:`cherrypy.response.headers <cherrypy.lib.httputil.HeaderMap>`
    contains a mapping with the header options that will be returned by the
    server, before the contents get sent.
  * :attr:`cherrypy.response.body <cherrypy._cprequest.Response.body>` contains

@@ -16,27 +16,25 @@ class Application(object):
     (WSGI application object) for itself.
     """
     
-    __metaclass__ = cherrypy._AttributeDocstrings
-    
     root = None
-    root__doc = """The top-most container of page handlers for this app. Handlers should
+    """The top-most container of page handlers for this app. Handlers should
     be arranged in a hierarchy of attributes, matching the expected URI
     hierarchy; the default dispatcher then searches this hierarchy for a
     matching handler. When using a dispatcher other than the default,
     this value may be None."""
     
     config = {}
-    config__doc = """A dict of {path: pathconf} pairs, where 'pathconf' is itself a dict
+    """A dict of {path: pathconf} pairs, where 'pathconf' is itself a dict
     of {key: value} pairs."""
     
     namespaces = _cpconfig.NamespaceSet()
     toolboxes = {'tools': cherrypy.tools}
     
     log = None
-    log__doc = """A LogManager instance. See _cplogging."""
+    """A LogManager instance. See _cplogging."""
     
     wsgiapp = None
-    wsgiapp__doc = """A CPWSGIApp instance. See _cpwsgi."""
+    """A CPWSGIApp instance. See _cpwsgi."""
     
     request_class = _cprequest.Request
     response_class = _cprequest.Response
@@ -155,7 +153,7 @@ class Tree(object):
     """
     
     apps = {}
-    apps__doc = """
+    """
     A dict of the form {script name: application}, where "script name"
     is a string declaring the URI mount point (no trailing slash), and
     "application" is an instance of cherrypy.Application (or an arbitrary

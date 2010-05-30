@@ -219,9 +219,10 @@ that bit of config directly on the page handler::
 each node in the object tree. The ``_cp_config`` attribute must be a CherryPy
 config dictionary. If the dispatcher finds a ``_cp_config`` attribute,
 it merges that dictionary into the rest of the config. The entire merged
-config dictionary is placed in ``cherrypy.request.config``.
+config dictionary is placed in
+:attr:`cherrypy.request.config <cherrypy._cprequest.Request.config>`.
 
-This can be done at any point in the tree of obejcts; for example, we could have
+This can be done at any point in the tree of objects; for example, we could have
 attached that config to a class which contains the page method::
 
     class SetOPages:

@@ -176,10 +176,8 @@ def _old_process_multipart(entity):
 class Entity(object):
     """An HTTP request body, or MIME multipart body."""
     
-    __metaclass__ = cherrypy._AttributeDocstrings
-    
     params = None
-    params__doc = u"""
+    """
     If the request Content-Type is 'application/x-www-form-urlencoded' or
     multipart, this will be a dict of the params pulled from the entity
     body; that is, it will be the portion of request.params that come

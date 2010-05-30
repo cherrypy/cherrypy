@@ -210,10 +210,9 @@ class Dispatcher(object):
     
     This is the default, built-in dispatcher for CherryPy.
     """
-    __metaclass__ = cherrypy._AttributeDocstrings
-
+    
     dispatch_method_name = '_cp_dispatch'
-    dispatch_method_name__doc = """
+    """
     The name of the dispatch method that nodes may optionally implement
     to provide their own dynamic dispatch algorithm.
     """
