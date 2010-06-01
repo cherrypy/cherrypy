@@ -8,7 +8,7 @@ class ServerAdapter(object):
     
     If you need to start more than one HTTP server (to serve on multiple
     ports, or protocols, etc.), you can manually register each one and then
-    start them all with bus.start:
+    start them all with bus.start::
     
         s1 = ServerAdapter(bus, MyWSGIServer(host='0.0.0.0', port=80))
         s2 = ServerAdapter(bus, another.HTTPServer(host='127.0.0.1', SSL=True))

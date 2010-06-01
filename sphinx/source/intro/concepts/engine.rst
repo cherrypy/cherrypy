@@ -67,11 +67,8 @@ The following builtin plugins are subscribed by default:
 
  * :doc:`Timeout Monitor</progguide/responsetimeouts>`
  * :doc:`Autoreload</progguide/autoreloader>` (off in the "production" :ref:`environment<environments>`)
- * :class:`Server<cherrypy._cpserver>`
+ * :class:`cherrypy.server<cherrypy._cpserver.Server>`
  * :class:`cherrypy.checker<cherrypy._cpchecker.Checker>`
  * Engine log messages go to :class:`cherrypy.log<cherrypy._GlobalLogManager>`.
-
-Depending on your platform, the :doc:`Signal Handler</deployguide/signalhandler>`
-(Unix, Windows) and/or :doc:`Console Control Handler</deployguide/consolecontrol>`
-(Windows) will be subscribed when you call cherrypy.quickstart.
+ * A :doc:`Signal Handler</deployguide/signalhandler>`.
 

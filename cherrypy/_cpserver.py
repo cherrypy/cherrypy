@@ -22,6 +22,7 @@ class Server(ServerAdapter):
     """
     
     socket_port = 8080
+    """The TCP port on which to listen for connections."""
     
     _socket_host = '127.0.0.1'
     def _get_socket_host(self):
@@ -43,23 +44,74 @@ class Server(ServerAdapter):
         not allowed.""")
     
     socket_file = None
+    """If given, the name of the UNIX socket to use instead of TCP/IP.
+    
+    When this option is not None, the `socket_host` and `socket_port` options
+    are ignored."""
+    
     socket_queue_size = 5
+    """The 'backlog' argument to socket.listen(); specifies the maximum number
+    of queued connections (default 5)."""
+    
     socket_timeout = 10
+    """The timeout in seconds for accepted connections (default 10)."""
+    
     shutdown_timeout = 5
+    """The time to wait for HTTP worker threads to clean up."""
+    
     protocol_version = 'HTTP/1.1'
-    reverse_dns = False
+    """The version string to write in the Status-Line of all HTTP responses,
+    for example, "HTTP/1.1" (the default). Depending on the HTTP server used,
+    this should also limit the supported features used in the response."""
+    
     thread_pool = 10
+    """The number of worker threads to start up in the pool."""
+    
     thread_pool_max = -1
+    """The maximum size of the worker-thread pool. Use -1 to indicate no limit."""
+    
     max_request_header_size = 500 * 1024
+    """The maximum number of bytes allowable in the request headers. If exceeded,
+    the HTTP server should return "413 Request Entity Too Large"."""
+    
     max_request_body_size = 100 * 1024 * 1024
+    """The maximum number of bytes allowable in the request body. If exceeded,
+    the HTTP server should return "413 Request Entity Too Large"."""
+    
     instance = None
+    """If not None, this should be an HTTP server instance (such as
+    CPWSGIServer) which cherrypy.server will control. Use this when you need
+    more control over object instantiation than is available in the various
+    configuration options."""
+    
     ssl_context = None
+    """When using PyOpenSSL, an instance of SSL.Context."""
+    
     ssl_certificate = None
+    """The filename of the SSL certificate to use."""
+    
     ssl_certificate_chain = None
+    """When using PyOpenSSL, the certificate chain to pass to
+    Context.load_verify_locations."""
+    
     ssl_private_key = None
+    """The filename of the private key to use with SSL."""
+    
     ssl_module = 'pyopenssl'
+    """The name of a registered SSL adaptation module to use with the builtin
+    WSGI server. Builtin options are 'builtin' (to use the SSL library built
+    into recent versions of Python) and 'pyopenssl' (to use the PyOpenSSL
+    project, which you must install separately). You may also register your
+    own classes in the wsgiserver.ssl_adapters dict."""
+    
     nodelay = True
+    """If True (the default since 3.1), sets the TCP_NODELAY socket option."""
+    
     wsgi_version = (1, 1)
+    """The WSGI version tuple to use with the builtin WSGI server. The provided
+    options are (1, 0), (1, 1), and ('u', 0) [an experimental unicode version].
+    You may create and register your own experimental versions of the WSGI
+    protocol by adding custom classes to the wsgiserver.wsgi_gateways dict."""
     
     def __init__(self):
         self.bus = cherrypy.engine
