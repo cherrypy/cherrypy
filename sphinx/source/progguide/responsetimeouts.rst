@@ -16,6 +16,12 @@ You are free to do the same within your own code.
 Rather than calculate the difference by hand, you can call
 ``response.check_timeout`` to set ``timed_out`` for you.
 
+
+.. _timeoutmonitor:
+
+Timeout Monitor
+===============
+
 In addition, CherryPy includes a ``cherrypy.engine.timeout_monitor`` which
 monitors all active requests in a separate thread; periodically, it calls
 ``check_timeout`` on them all. It is subscribed by default. To turn it off::

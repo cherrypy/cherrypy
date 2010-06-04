@@ -73,8 +73,3 @@ Here is a simple example that shows how file uploads are handled by CherryPy::
 	    # This branch is for the test suite; you can ignore it.
 	    cherrypy.tree.mount(FileDemo(), config=tutconf)
 
-
-
-
-
-

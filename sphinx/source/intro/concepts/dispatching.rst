@@ -61,6 +61,8 @@ a Dispatcher object to:
 CherryPy has a default arrangement of handlers (see next), but also allows you
 to trade it for any arrangement you can think up and implement.
 
+.. _defaultdispatcher:
+
 Default Dispatcher
 ------------------
 
