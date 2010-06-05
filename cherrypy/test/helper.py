@@ -414,8 +414,11 @@ server.ssl_private_key: r'%s'
 
         env = os.environ.copy()
         # Make sure we import the cherrypy package in which this module is defined.
-        grandparentdir = os.path.join(thisdir, '..', '..')
-        env['PATH'] = grandparentdir + os.pathsep + env['PATH']
+        grandparentdir = os.path.abspath(os.path.join(thisdir, '..', '..'))
+        if env.get('PYTHONPATH', ''):
+            env['PYTHONPATH'] = os.pathsep.join((grandparentdir, env['PYTHONPATH']))
+        else:
+            env['PYTHONPATH'] = grandparentdir
         if self.wait:
             self.exit_code = os.spawnve(os.P_WAIT, sys.executable, args, env)
         else:

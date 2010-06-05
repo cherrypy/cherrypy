@@ -498,6 +498,7 @@ class HTTPRequest(object):
         self.outheaders = []
         self.sent_headers = False
         self.close_connection = False
+        self.chunked_read = False
         self.chunked_write = False
     
     def parse_request(self):
@@ -513,12 +514,15 @@ class HTTPRequest(object):
             return
         
         try:
-            self.read_request_headers()
+            success = self.read_request_headers()
         except MaxSizeExceeded:
             self.simple_response("413 Request Entity Too Large",
                 "The headers sent with the request exceed the maximum "
                 "allowed bytes.")
             return
+        else:
+            if not success:
+                return
         
         self.ready = True
     
@@ -618,20 +622,21 @@ class HTTPRequest(object):
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
     
     def read_request_headers(self):
+        """Read self.rfile into self.inheaders. Return success."""
         
         # then all the http headers
         try:
             read_headers(self.rfile, self.inheaders)
         except ValueError, ex:
             self.simple_response("400 Bad Request", ex.args[0])
-            return
+            return False
         
         mrbs = self.server.max_request_body_size
         if mrbs and int(self.inheaders.get("Content-Length", 0)) > mrbs:
             self.simple_response("413 Request Entity Too Large",
                 "The entity sent with the request exceeds the maximum "
                 "allowed bytes.")
-            return
+            return False
         
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
@@ -650,8 +655,6 @@ class HTTPRequest(object):
             if te:
                 te = [x.strip().lower() for x in te.split(",") if x.strip()]
         
-        self.chunked_read = False
-        
         if te:
             for enc in te:
                 if enc == "chunked":
@@ -661,7 +664,7 @@ class HTTPRequest(object):
                     # if there is an extension we don't recognize.
                     self.simple_response("501 Unimplemented")
                     self.close_connection = True
-                    return
+                    return False
         
         # From PEP 333:
         # "Servers and gateways that implement HTTP 1.1 must provide
@@ -689,6 +692,7 @@ class HTTPRequest(object):
             except socket.error, x:
                 if x.args[0] not in socket_errors_to_ignore:
                     raise
+        return True
     
     def parse_request_uri(self, uri):
         """Parse a Request-URI into (scheme, authority, path).

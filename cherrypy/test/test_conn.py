@@ -637,7 +637,8 @@ class ConnectionTests(helper.CPWebCase):
         response = conn.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(413)
-        self.assertBody("")
+        self.assertBody("The entity sent with the request exceeds "
+                        "the maximum allowed bytes.")
         conn.close()
 
     def test_598(self):
