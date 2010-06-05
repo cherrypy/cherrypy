@@ -200,14 +200,24 @@ class BusMethodTests(unittest.TestCase):
             time.sleep(0.4)
         threading.Thread(target=f).start()
         threading.Thread(target=g).start()
-        self.assertEqual(len(threading.enumerate()), 3)
+        if hasattr(threading.Thread, "daemon"):
+            # Python 2.6+
+            threads = [t for t in threading.enumerate() if not t.daemon]
+        else:
+            threads = [t for t in threading.enumerate() if not t.isDaemon()]
+        self.assertEqual(len(threads), 3)
 
         b.block()
 
         # The block method MUST wait for the EXITING state.
         self.assertEqual(b.state, b.states.EXITING)
-        # The block method MUST wait for ALL non-main threads to finish.
-        self.assertEqual(len(threading.enumerate()), 1)
+        # The block method MUST wait for ALL non-main, non-daemon threads to finish.
+        if hasattr(threading.Thread, "daemon"):
+            # Python 2.6+
+            threads = [t for t in threading.enumerate() if not t.daemon]
+        else:
+            threads = [t for t in threading.enumerate() if not t.isDaemon()]
+        self.assertEqual(len(threads), 1)
         self.assertLog(['Bus STOPPING', 'Bus STOPPED',
                         'Bus EXITING', 'Bus EXITED',
                         'Waiting for child threads to terminate...'])

@@ -382,7 +382,12 @@ class PIDFile(SimplePlugin):
 
 
 class PerpetualTimer(threading._Timer):
-    """A subclass of threading._Timer whose run() method repeats."""
+    """A responsive subclass of threading._Timer whose run() method repeats.
+    
+    Use this timer only when you really need a very interruptible timer;
+    this checks its 'finished' condition up to 20 times a second, which can
+    results in pretty high CPU usage 
+    """
     
     def run(self):
         while True:
@@ -396,6 +401,45 @@ class PerpetualTimer(threading._Timer):
                              self.function, level=40, traceback=True)
                 # Quit on first error to avoid massive logs.
                 raise
+
+
+class BackgroundTask(threading.Thread):
+    """A subclass of threading.Thread whose run() method repeats.
+    
+    Use this class for most repeating tasks. It uses time.sleep() to wait
+    for each interval, which isn't very responsive; that is, even if you call
+    self.cancel(), you'll have to wait until the sleep() call finishes before
+    the thread stops. To compensate, it defaults to being daemonic, which means
+    it won't delay stopping the whole process.
+    """
+    
+    def __init__(self, interval, function, args=[], kwargs={}):
+        threading.Thread.__init__(self)
+        self.interval = interval
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+        self.running = False
+    
+    def cancel(self):
+        self.running = False
+    
+    def run(self):
+        self.running = True
+        while self.running:
+            time.sleep(self.interval)
+            if not self.running:
+                return
+            try:
+                self.function(*self.args, **self.kwargs)
+            except Exception, x:
+                self.bus.log("Error in background task thread function %r." %
+                             self.function, level=40, traceback=True)
+                # Quit on first error to avoid massive logs.
+                raise
+    
+    def _set_daemon(self):
+        return True
 
 
 class Monitor(SimplePlugin):
@@ -418,11 +462,11 @@ class Monitor(SimplePlugin):
         self.name = name
     
     def start(self):
-        """Start our callback in its own perpetual timer thread."""
+        """Start our callback in its own background thread."""
         if self.frequency > 0:
             threadname = self.name or self.__class__.__name__
             if self.thread is None:
-                self.thread = PerpetualTimer(self.frequency, self.callback)
+                self.thread = BackgroundTask(self.frequency, self.callback)
                 self.thread.bus = self.bus
                 self.thread.setName(threadname)
                 self.thread.start()
@@ -432,19 +476,26 @@ class Monitor(SimplePlugin):
     start.priority = 70
     
     def stop(self):
-        """Stop our callback's perpetual timer thread."""
+        """Stop our callback's background task thread."""
         if self.thread is None:
             self.bus.log("No thread running for %s." % self.name or self.__class__.__name__)
         else:
             if self.thread is not threading.currentThread():
                 name = self.thread.getName()
                 self.thread.cancel()
-                self.thread.join()
+                if hasattr(threading.Thread, "daemon"):
+                    # Python 2.6+
+                    d = self.thread.daemon
+                else:
+                    d = self.thread.isDaemon()
+                if not d:
+                    self.bus.log("Joining %r" % name)
+                    self.thread.join()
                 self.bus.log("Stopped thread %r." % name)
             self.thread = None
     
     def graceful(self):
-        """Stop the callback's perpetual timer thread and restart it."""
+        """Stop the callback's background task thread and restart it."""
         self.stop()
         self.start()
 
@@ -462,7 +513,7 @@ class Autoreloader(Monitor):
         Monitor.__init__(self, bus, self.run, frequency)
     
     def start(self):
-        """Start our own perpetual timer thread for self.run."""
+        """Start our own background task thread for self.run."""
         if self.thread is None:
             self.mtimes = {}
         Monitor.start(self)
