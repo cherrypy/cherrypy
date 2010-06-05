@@ -7,19 +7,35 @@
 Classes
 =======
 
-.. autoclass:: SimplePlugin
+.. autoclass:: SignalHandler
    :members:
 
-.. autoclass:: SignalHandler
+SimplePlugins
+-------------
+
+.. autoclass:: SimplePlugin
    :members:
 
 .. autoclass:: DropPrivileges
    :members:
+   :show-inheritance:
 
 .. autoclass:: Daemonizer
    :members:
+   :show-inheritance:
 
 .. autoclass:: PIDFile
+   :members:
+   :show-inheritance:
+
+.. autoclass:: ThreadManager
+   :members:
+   :show-inheritance:
+
+Monitors
+--------
+
+.. autoclass:: BackgroundTask
    :members:
 
 .. autoclass:: PerpetualTimer
@@ -27,10 +43,10 @@ Classes
 
 .. autoclass:: Monitor
    :members:
+   :show-inheritance:
 
 .. autoclass:: Autoreloader
    :members:
-
-.. autoclass:: ThreadManager
-   :members:
+   :inherited-members:
+   :show-inheritance:
 

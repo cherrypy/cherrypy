@@ -66,6 +66,14 @@ priority
 The optional priority (0 - 100) allows multiple listeners to run in the correct
 order. Lower numbers run first. The default is 50.
 
+If you omit the priority argument to engine.subscribe (or pass ``None``),
+you can instead set it as an attribute on the callback function::
+
+    def setup_db():
+        ....
+    setup_db.priority = 90
+    engine.subscribe('start', setup_db)
+
 
 Plugins
 =======
@@ -89,6 +97,7 @@ SimplePlugin object, with one method for each *channel* you wish to handle::
         def start(self):
             self.fname = 'myapp_%d.db' % os.getpid()
             self.db = sqlite.connect(database=self.fname)
+        start.priority = 80
         
         def stop(self):
             self.db.close()

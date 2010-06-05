@@ -38,9 +38,12 @@ Implementing REST in CherryPy
 
 From the canonical `Roy Fielding dissertation <http://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm#sec_5_1_5>`_ :
 
-    REST is defined by four interface constraints: identification of resources; manipulation of resources through representations; self-descriptive messages; and, hypermedia as the engine of application state
+    REST is defined by four interface constraints: identification of resources;
+    manipulation of resources through representations; self-descriptive messages;
+    and, hypermedia as the engine of application state
 
-This section covers each of these four contstraints and demonstrates how each is applied in a CherryPy implementation.
+This section covers each of these four contstraints and demonstrates how each
+is applied in a CherryPy implementation.
 
 Identification of Resources
 ---------------------------
@@ -81,8 +84,8 @@ the standard REST methods.
  - POST passes information to a resource to use at it sees fit,
  - DELETE removes resources.
 
-The default dispatcher in CherryPy stores the HTTP method name in the
-thread-local :class:`Request Object<cherrypy._cprequest.Request>`.
+The default dispatcher in CherryPy stores the HTTP method name at
+:attr:`cherrypy.request.method<cherrypy._cprequest.Request.method>`.
 
 Because HTTP defines these invocation methods, the most direct
 way to implement REST using CherryPy is to utilize the
@@ -119,14 +122,30 @@ content in the body of the request.
 Self-Descriptive Messages
 -------------------------
 
+REST enables powerful clients and intermediaries by requiring messages to be
+self-descriptive; that is, everything you need to know about a message is
+carried within the message itself, either in headers or within the definition
+of the message's declared media type.
+
+CherryPy gives you easy access to the headers. It's as simple as
+:attr:`cherrypy.request.headers<cherrypy._cprequest.Request.headers>` and
+:attr:`cherrypy.response.headers<cherrypy._cprequest.Response.headers>`!
+Each is a normal Python dictionary which you can read and write as you like.
+They also have additional functions to help you parse complex values according
+to the HTTP spec.
+
+CherryPy also allows you to set whatever response Content-Type you prefer,
+just like any other response header. You have complete control. When reading
+request entities, you can register :ref:`custombodyprocessors` for different
+media types.
+
 Hypermedia as the Engine of Application State
 ---------------------------------------------
 
 REST is designed as a stateless protocol--all application state is
 maintained with the application at the client. Thus, concepts such as a
-"session" need not be maintained by the server. CherryPy by design does
-not enable sessions, so the default configuration is well-suited to the
-RESTful style.
+"session" need not be maintained by the server. CherryPy does not enable
+sessions by default, so it is well-suited to the RESTful style.
 
 In order for the client to maintain meaningful state, however, the REST
 server implementer must provide meaningful URIs which supply semantic

@@ -1,4 +1,12 @@
-.. _toc:
+.. toctree::
+   :hidden:
+
+   intro/index
+   progguide/index
+   deployguide/index
+   refman/index
+   appendix/index
+
 
 ********************************
 CherryPy |release| Documentation

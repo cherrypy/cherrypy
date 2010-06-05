@@ -99,4 +99,4 @@ All of CherryPy is licensed under the open-source BSD license, which means
 
 Check out the :doc:`/intro/concepts/index` and :doc:`/progguide/index` for
 more complete documentation.
-la
+

@@ -34,6 +34,9 @@ _module__file__base = os.getcwd()
 class SimplePlugin(object):
     """Plugin base class which auto-subscribes methods for known channels."""
     
+    bus = None
+    """A :class:`Bus <cherrypy.process.wspbus.Bus>`, usually cherrypy.engine."""
+    
     def __init__(self, bus):
         self.bus = bus
     
@@ -66,8 +69,12 @@ class SignalHandler(object):
         USR1: bus.graceful
     """
     
-    # Map from signal numbers to names
+    handlers = {}
+    """A map from signal names (e.g. 'SIGTERM') to handlers (e.g. bus.exit)."""
+    
     signals = {}
+    """A map from signal numbers to names."""
+    
     for k, v in vars(_signal).items():
         if k.startswith('SIG') and not k.startswith('SIG_'):
             signals[v] = k
@@ -147,6 +154,7 @@ class SignalHandler(object):
         self.bus.publish(signame)
     
     def handle_SIGHUP(self):
+        """Restart if daemonized, else exit."""
         if os.isatty(sys.stdin.fileno()):
             # not daemonized (may be foreground or background)
             self.bus.log("SIGHUP caught but not daemonized. Exiting.")
@@ -263,8 +271,8 @@ class DropPrivileges(SimplePlugin):
 class Daemonizer(SimplePlugin):
     """Daemonize the running script.
     
-    Use this with a Web Site Process Bus via:
-        
+    Use this with a Web Site Process Bus via::
+    
         Daemonizer(bus).subscribe()
     
     When this component finishes, the process is completely decoupled from
@@ -443,16 +451,16 @@ class BackgroundTask(threading.Thread):
 
 
 class Monitor(SimplePlugin):
-    """WSPBus listener to periodically run a callback in its own thread.
+    """WSPBus listener to periodically run a callback in its own thread."""
     
-    bus: a Web Site Process Bus object.
-    
-    callback: the function to call at intervals.
-    
-    frequency: the time in seconds between callback runs.
-    """
+    callback = None
+    """The function to call at intervals."""
     
     frequency = 60
+    """The time in seconds between callback runs."""
+    
+    thread = None
+    """A :class:`BackgroundTask<cherrypy.process.plugins.BackgroundTask>` thread."""
     
     def __init__(self, bus, callback, frequency=60, name=None):
         SimplePlugin.__init__(self, bus)
@@ -501,10 +509,34 @@ class Monitor(SimplePlugin):
 
 
 class Autoreloader(Monitor):
-    """Monitor which re-executes the process when files change."""
+    """Monitor which re-executes the process when files change.
+    
+    This :ref:`plugin<plugins>` restarts the process (via :func:`os.execv`)
+    if any of the files it monitors change (or is deleted). By default, the
+    autoreloader monitors all imported modules; you can add to the
+    set by adding to ``autoreload.files``::
+    
+        cherrypy.engine.autoreload.files.add(myFile)
+    
+    If there are imported files you do *not* wish to monitor, you can adjust the
+    ``match`` attribute, a regular expression. For example, to stop monitoring
+    cherrypy itself::
+    
+        cherrypy.engine.autoreload.match = r'^(?!cherrypy).+'
+    
+    Like all :class:`Monitor<cherrypy.process.plugins.Monitor>` plugins,
+    the autoreload plugin takes a ``frequency`` argument. The default is
+    1 second; that is, the autoreloader will examine files once each second.
+    """
+    
+    files = None
+    """The set of files to poll for modifications."""
     
     frequency = 1
+    """The interval in seconds at which to poll for modified files."""
+    
     match = '.*'
+    """A regular expression by which to match filenames."""
     
     def __init__(self, bus, frequency=1, match='.*'):
         self.mtimes = {}
@@ -520,7 +552,7 @@ class Autoreloader(Monitor):
     start.priority = 70 
     
     def sysfiles(self):
-        """Return a Set of filenames which the Autoreloader will monitor."""
+        """Return a Set of sys.modules filenames to monitor."""
         files = set()
         for k, m in sys.modules.items():
             if re.match(self.match, k):
@@ -580,6 +612,9 @@ class ThreadManager(SimplePlugin):
     the thread will be re-used or not. The bus will call
     'stop_thread' listeners for you when it stops.
     """
+    
+    threads = None
+    """A map of {thread ident: index number} pairs."""
     
     def __init__(self, bus):
         self.threads = {}

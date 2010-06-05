@@ -11,10 +11,14 @@ Classes
    :members:
 
 .. autoclass:: Part
+   :show-inheritance:
    :members:
+   :inherited-members:
 
 .. autoclass:: RequestBody
+   :show-inheritance:
    :members:
+   :inherited-members:
 
 .. autoclass:: SizedReader
    :members:

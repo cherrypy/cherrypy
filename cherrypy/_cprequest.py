@@ -271,9 +271,6 @@ class Request(object):
     cookie = SimpleCookie()
     """See help(Cookie)."""
     
-    body = None
-    """See help(cherrypy.request.body)"""
-    
     rfile = None
     """
     If the request included an entity (body), it will be available
@@ -307,10 +304,10 @@ class Request(object):
     body = None
     """
     If the request Content-Type is 'application/x-www-form-urlencoded'
-    or multipart, this will be None. Otherwise, this will contain the
-    request entity body as an open file object (which you can .read());
-    this value is set between the 'before_request_body' and 'before_handler'
-    hooks (assuming that process_request_body is True)."""
+    or multipart, this will be None. Otherwise, this will be an instance
+    of :class:`RequestBody<cherrypy._cpreqbody.RequestBody>` (which you
+    can .read()); this value is set between the 'before_request_body' and
+    'before_handler' hooks (assuming that process_request_body is True)."""
     
     # Dispatch attributes
     dispatch = cherrypy.dispatch.Dispatcher()
@@ -764,7 +761,8 @@ class Request(object):
     the 'before_request_body' and 'before_handler' hooks (assuming that
     process_request_body is True).
     
-    Deprecated in 3.2, will be removed for 3.3""")
+    Deprecated in 3.2, will be removed for 3.3 in favor of
+    :attr:`request.body.params<cherrypy._cprequest.RequestBody.params>`.""")
 
 
 class ResponseBody(object):

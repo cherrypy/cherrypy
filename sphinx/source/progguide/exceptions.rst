@@ -93,14 +93,13 @@ This exception will redirect processing to another path within the site
 (without informing the client). Provide the new path as an argument when
 raising the exception. Provide any params in the querystring for the new URL.
 
-*********************
 Custom Error Handling
-*********************
+=====================
 
 .. image:: cperrors.gif
 
 Anticipated HTTP responses
-==========================
+--------------------------
 
 The 'error_page' config namespace can be used to provide custom HTML output for
 expected responses (like 404 Not Found). Supply a filename from which the output
@@ -127,7 +126,7 @@ Also in 3.1, in addition to the numbered error codes, you may also supply
 
 
 Unanticipated errors
-====================
+--------------------
 
 CherryPy also has a generic error handling mechanism: whenever an unanticipated
 error occurs in your code, it will call :func:`Request.error_response` to set
