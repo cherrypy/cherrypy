@@ -3,7 +3,7 @@ cherryd
 *******
 
 The ``cherryd`` script is used to start CherryPy servers, whether the builtin
-WSGI server, :doc:`FastCGI <fastcgi>`, or SCGI. Sites using mod_python don't
+WSGI server, :ref:`FastCGI <fastcgi>`, or SCGI. Sites using mod_python don't
 need to use ``cherryd``; Apache will spawn the CherryPy process in that case.
 
 Command-Line Options
@@ -28,7 +28,7 @@ Command-Line Options
 
 .. cmdoption:: -f
 
-   Start a :doc:`FastCGI <fastcgi>` server instead of the default HTTP server
+   Start a :ref:`FastCGI <fastcgi>` server instead of the default HTTP server
 
 
 .. index:: SCGI

@@ -6,5 +6,5 @@ cherrypy.process
    :glob:
 
    *
-
+   plugins/index
 

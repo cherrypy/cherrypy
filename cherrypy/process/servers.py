@@ -1,21 +1,121 @@
-"""Adapt an HTTP server."""
+"""
+Starting in CherryPy 3.1, cherrypy.server is implemented as an
+:ref:`Engine Plugin<plugins>`. It's an instance of
+:class:`cherrypy._cpserver.Server`, which is a subclass of
+:class:`cherrypy.process.servers.ServerAdapter`. The ``ServerAdapter`` class
+is designed to control other servers, as well.
+
+Multiple servers/ports
+======================
+
+If you need to start more than one HTTP server (to serve on multiple ports, or
+protocols, etc.), you can manually register each one and then start them all
+with engine.start::
+
+    s1 = ServerAdapter(cherrypy.engine, MyWSGIServer(host='0.0.0.0', port=80))
+    s2 = ServerAdapter(cherrypy.engine, another.HTTPServer(host='127.0.0.1', SSL=True))
+    s1.subscribe()
+    s2.subscribe()
+    cherrypy.engine.start()
+
+.. index:: SCGI
+
+FastCGI/SCGI
+============
+
+There are also Flup\ **F**\ CGIServer and Flup\ **S**\ CGIServer classes in
+:mod:`cherrypy.process.servers`. To start an fcgi server, for example,
+wrap an instance of it in a ServerAdapter::
+
+    addr = ('0.0.0.0', 4000)
+    f = servers.FlupFCGIServer(application=cherrypy.tree, bindAddress=addr)
+    s = servers.ServerAdapter(cherrypy.engine, httpserver=f, bind_addr=addr)
+    s.subscribe()
+
+The :doc:`cherryd</deployguide/cherryd>` startup script will do the above for
+you via its `-f` flag.
+Note that you need to download and install `flup <http://trac.saddi.com/flup>`_
+yourself, whether you use ``cherryd`` or not.
+
+.. _fastcgi:
+.. index:: FastCGI
+
+FastCGI
+-------
+
+A very simple setup lets your cherry run with FastCGI.
+You just need the flup library,
+plus a running Apache server (with ``mod_fastcgi``) or lighttpd server.
+
+CherryPy code
+^^^^^^^^^^^^^
+
+hello.py::
+
+    #!/usr/bin/python
+    import cherrypy
+    
+    class HelloWorld:
+        \"""Sample request handler class.\"""
+        def index(self):
+            return "Hello world!"
+        index.exposed = True
+    
+    cherrypy.tree.mount(HelloWorld())
+    # CherryPy autoreload must be disabled for the flup server to work
+    cherrypy.config.update({'engine.autoreload_on':False})
+
+Then run :doc:`/deployguide/cherryd` with the '-f' arg::
+
+    cherryd -c <myconfig> -d -f -i hello.py
+
+Apache
+^^^^^^
+
+At the top level in httpd.conf::
+
+    FastCgiIpcDir /tmp
+    FastCgiServer /path/to/cherry.fcgi -idle-timeout 120 -processes 4
+
+And inside the relevant VirtualHost section::
+
+    # FastCGI config
+    AddHandler fastcgi-script .fcgi
+    ScriptAliasMatch (.*$) /path/to/cherry.fcgi$1
+
+Lighttpd
+^^^^^^^^
+
+For `Lighttpd <http://www.lighttpd.net/>`_ you can follow these
+instructions. Within ``lighttpd.conf`` make sure ``mod_fastcgi`` is
+active within ``server.modules``. Then, within your ``$HTTP["host"]``
+directive, configure your fastcgi script like the following::
+
+    $HTTP["url"] =~ "" {
+      fastcgi.server = (
+        "/" => (
+          "script.fcgi" => (
+            "bin-path" => "/path/to/your/script.fcgi",
+            "socket"          => "/tmp/script.sock",
+            "check-local"     => "disable",
+            "disable-time"    => 1,
+            "min-procs"       => 1,
+            "max-procs"       => 1, # adjust as needed
+          ),
+        ),
+      )
+    } # end of $HTTP["url"] =~ "^/"
+
+Please see `Lighttpd FastCGI Docs 
+<http://trac.lighttpd.net/trac/wiki/Docs:ModFastCGI>`_ for an explanation 
+of the possible configuration options.
+"""
 
 import time
 
 
 class ServerAdapter(object):
-    """Adapter for an HTTP server.
-    
-    If you need to start more than one HTTP server (to serve on multiple
-    ports, or protocols, etc.), you can manually register each one and then
-    start them all with bus.start::
-    
-        s1 = ServerAdapter(bus, MyWSGIServer(host='0.0.0.0', port=80))
-        s2 = ServerAdapter(bus, another.HTTPServer(host='127.0.0.1', SSL=True))
-        s1.subscribe()
-        s2.subscribe()
-        bus.start()
-    """
+    """Adapter for an HTTP server."""
     
     def __init__(self, bus, httpserver=None, bind_addr=None):
         self.bus = bus

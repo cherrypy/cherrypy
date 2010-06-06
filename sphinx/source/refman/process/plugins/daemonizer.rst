@@ -11,7 +11,7 @@ environment, using the traditional double-fork::
 
 .. note::
 
-    This :ref:`plugin<plugins>` is only available on
+    This :ref:`Engine Plugin<plugins>` is only available on
     Unix and similar systems which provide fork().
 
 If a startup error occurs in the forked children, the return code from the
@@ -34,4 +34,14 @@ The plugin takes optional arguments to redirect standard streams: ``stdin``,
     It is for this reason that the Server plugin runs at priority 75 (it starts
     worker threads), which is later than the default priority of 65 for the
     Daemonizer.
+
+
+.. currentmodule:: cherrypy.process.plugins
+
+Classes
+=======
+
+.. autoclass:: Daemonizer
+   :members:
+   :show-inheritance:
 

@@ -8,12 +8,11 @@ Deployment Guide
    apache
    cherryd
    configlist
-   daemonizer
-   dropprivileges
-   fastcgi
-   httpservers
-   pidfile
-   signalhandler
+   /refman/process/plugins/daemonizer
+   /refman/process/plugins/dropprivileges
+   /refman/process/servers
+   /refman/process/plugins/pidfile
+   /refman/process/plugins/signalhandler
    standalone
    wsgiserver
 

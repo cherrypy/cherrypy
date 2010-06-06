@@ -61,12 +61,25 @@ class SimplePlugin(object):
 class SignalHandler(object):
     """Register bus channels (and listeners) for system signals.
     
-    By default, instantiating this object subscribes the following signals
-    and listeners::
+    You can modify what signals your application listens for, and what it does
+    when it receives signals, by modifying :attr:`SignalHandler.handlers`,
+    a dict of {signal name: callback} pairs. The default set is::
     
-        TERM: bus.exit
-        HUP : bus.restart
-        USR1: bus.graceful
+        handlers = {'SIGTERM': self.bus.exit,
+                    'SIGHUP': self.handle_SIGHUP,
+                    'SIGUSR1': self.bus.graceful,
+                   }
+    
+    The :func:`SignalHandler.handle_SIGHUP`` method calls
+    :func:`bus.restart()<cherrypy.process.wspbus.Bus.restart>`
+    if the process is daemonized, but
+    :func:`bus.exit()<cherrypy.process.wspbus.Bus.exit>`
+    if the process is attached to a TTY. This is because Unix window
+    managers tend to send SIGHUP to terminal windows when the user closes them.
+    
+    Feel free to add signals which are not available on every platform. The
+    :class:`SignalHandler` will ignore errors raised from attempting to register
+    handlers for unknown signals.
     """
     
     handlers = {}
@@ -194,7 +207,8 @@ class DropPrivileges(SimplePlugin):
             elif isinstance(val, basestring):
                 val = pwd.getpwnam(val)[2]
         self._uid = val
-    uid = property(_get_uid, _set_uid, doc="The uid under which to run.")
+    uid = property(_get_uid, _set_uid,
+        doc="The uid under which to run. Availability: Unix.")
     
     def _get_gid(self):
         return self._gid
@@ -207,7 +221,8 @@ class DropPrivileges(SimplePlugin):
             elif isinstance(val, basestring):
                 val = grp.getgrnam(val)[2]
         self._gid = val
-    gid = property(_get_gid, _set_gid, doc="The gid under which to run.")
+    gid = property(_get_gid, _set_gid,
+        doc="The gid under which to run. Availability: Unix.")
     
     def _get_umask(self):
         return self._umask
@@ -220,7 +235,12 @@ class DropPrivileges(SimplePlugin):
                              level=30)
                 val = None
         self._umask = val
-    umask = property(_get_umask, _set_umask, doc="The umask under which to run.")
+    umask = property(_get_umask, _set_umask,
+        doc="""The default permission mode for newly created files and directories.
+        
+        Usually expressed in octal format, for example, ``0644``.
+        Availability: Unix, Windows.
+        """)
     
     def start(self):
         # uid/gid

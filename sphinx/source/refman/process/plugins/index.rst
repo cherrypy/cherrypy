@@ -7,26 +7,8 @@
 Classes
 =======
 
-.. autoclass:: SignalHandler
-   :members:
-
-SimplePlugins
--------------
-
 .. autoclass:: SimplePlugin
    :members:
-
-.. autoclass:: DropPrivileges
-   :members:
-   :show-inheritance:
-
-.. autoclass:: Daemonizer
-   :members:
-   :show-inheritance:
-
-.. autoclass:: PIDFile
-   :members:
-   :show-inheritance:
 
 .. autoclass:: ThreadManager
    :members:
@@ -49,4 +31,16 @@ Monitors
    :members:
    :inherited-members:
    :show-inheritance:
+
+
+Other Plugins
+-------------
+
+.. toctree::
+   :maxdepth: 2
+
+   signalhandler
+   dropprivileges
+   daemonizer
+   pidfile
 

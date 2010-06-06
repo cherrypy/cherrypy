@@ -121,11 +121,11 @@ Priorities of the built-in "start" listeners:
  Listener                                                               Priority        
 ======================================================================  ================
  default                                                                50              
- :doc:`Daemonizer </deployguide/daemonizer>`                            65              
+ :doc:`Daemonizer </refman/process/plugins/daemonizer>`                 65              
  :doc:`Timeout Monitor </progguide/responsetimeouts>`                   70              
  :class:`Autoreloader <cherrypy.process.plugins.Autoreloader>`          70              
- :doc:`PID File </deployguide/pidfile>`                                 70              
- :doc:`HTTP Servers </deployguide/httpservers>`                         75              
- :doc:`Drop Privileges </deployguide/dropprivileges>`                   77              
+ :doc:`PID File </refman/process/plugins/pidfile>`                      70              
+ :doc:`HTTP Servers </refman/process/servers>`                          75              
+ :doc:`Drop Privileges </refman/process/plugins/dropprivileges>`        77              
 ======================================================================  ================
 

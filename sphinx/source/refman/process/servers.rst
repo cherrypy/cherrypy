@@ -4,6 +4,7 @@
 
 .. automodule:: cherrypy.process.servers
 
+
 Classes
 =======
 
@@ -19,6 +20,10 @@ Classes
 
 Functions
 =========
+
+.. autofunction:: client_host
+
+.. autofunction:: check_port
 
 .. autofunction:: wait_for_free_port
 
