@@ -219,3 +219,8 @@ tt {
 .note tt {
     background: #d6d6d6;
 }
+
+table.docutils td {
+    padding: 0.25em;
+}
+

@@ -2,6 +2,8 @@
 :mod:`cherrypy._cptools`
 ************************
 
+See :doc:`/intro/concepts/tools` for a conceptual overview of CherryPy Tools.
+
 .. automodule:: cherrypy._cptools
 
 Classes

@@ -117,15 +117,15 @@ SimplePlugin object, with one method for each *channel* you wish to handle::
 
 Priorities of the built-in "start" listeners:
 
-=====================================================  ================
- Listener                                              Priority        
-=====================================================  ================
- default                                               50              
- :doc:`Daemonizer </deployguide/daemonizer>`           65              
- :doc:`Timeout Monitor </progguide/responsetimeouts>`  70              
- :doc:`Autoreloader </progguide/autoreloader>`         70              
- :doc:`PID File </deployguide/pidfile>`                70              
- :doc:`HTTP Servers </deployguide/httpservers>`        75              
- :doc:`Drop Privileges </deployguide/dropprivileges>`  77              
-=====================================================  ================
+======================================================================  ================
+ Listener                                                               Priority        
+======================================================================  ================
+ default                                                                50              
+ :doc:`Daemonizer </deployguide/daemonizer>`                            65              
+ :doc:`Timeout Monitor </progguide/responsetimeouts>`                   70              
+ :class:`Autoreloader <cherrypy.process.plugins.Autoreloader>`          70              
+ :doc:`PID File </deployguide/pidfile>`                                 70              
+ :doc:`HTTP Servers </deployguide/httpservers>`                         75              
+ :doc:`Drop Privileges </deployguide/dropprivileges>`                   77              
+======================================================================  ================
 

@@ -12,15 +12,19 @@ Classes
 
 .. autoclass:: RamSession
    :members:
+   :inherited-members:
 
 .. autoclass:: FileSession
    :members:
+   :inherited-members:
 
 .. autoclass:: PostgresqlSession
    :members:
+   :inherited-members:
 
 .. autoclass:: MemcachedSession
    :members:
+   :inherited-members:
 
 Functions
 =========

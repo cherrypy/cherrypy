@@ -53,7 +53,7 @@ Server Features and Configuration
     
     * Turn off the :ref:`timeoutmonitor`
       via ``cherrypy.engine.timeout_monitor.unsubscribe()``.
-    * Turn off the :doc:`autoreloader </progguide/autoreloader>`
+    * Turn off the :class:`Autoreloader <cherrypy.process.plugins.Autoreloader>`
       via ``cherrypy.engine.autoreload.unsubscribe()``.
     * Examine the number of worker threads that WSGIServer uses.
       See :attr:`cherrypy._cpserver.Server.thread_pool`.
@@ -186,7 +186,7 @@ Development Questions
 :Q: Can I change my root class, refresh my web page and see what is changed
     without restarting the CherryPy server?
 
-:A: See :doc:`/progguide/autoreloader`. Note that this solution works
-    properly only if the changes you make are syntactically correct.
+:A: See :class:`cherrypy.process.plugins.Autoreloader`. Note that this solution
+    works properly only if the changes you make are syntactically correct.
     Re-compilation errors will exit the entire application.
 

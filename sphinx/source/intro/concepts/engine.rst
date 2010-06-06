@@ -66,7 +66,7 @@ If you want to turn off a plugin, call ``p.unsubscribe()``.
 The following builtin plugins are subscribed by default:
 
  * :doc:`Timeout Monitor</progguide/responsetimeouts>`
- * :doc:`Autoreload</progguide/autoreloader>` (off in the "production" :ref:`environment<environments>`)
+ * :class:`Autoreloader<cherrypy.process.plugins.Autoreloader>` (off in the "production" :ref:`environment<environments>`)
  * :class:`cherrypy.server<cherrypy._cpserver.Server>`
  * :class:`cherrypy.checker<cherrypy._cpchecker.Checker>`
  * Engine log messages go to :class:`cherrypy.log<cherrypy._GlobalLogManager>`.
