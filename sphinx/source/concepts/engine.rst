@@ -34,6 +34,8 @@ Note in particular that the Engine allows you to stop and restart it again
 without stopping the process. This can be used to build highly dynamic sites,
 and is invaluable for debugging live servers.
 
+.. _channels:
+
 Channels
 ========
 
@@ -70,5 +72,5 @@ The following builtin plugins are subscribed by default:
  * :class:`cherrypy.server<cherrypy._cpserver.Server>`
  * :class:`cherrypy.checker<cherrypy._cpchecker.Checker>`
  * Engine log messages go to :class:`cherrypy.log<cherrypy._GlobalLogManager>`.
- * A :doc:`Signal Handler</deployguide/signalhandler>`.
+ * A :class:`Signal Handler<cherrypy.process.plugins.SignalHandler>`.
 

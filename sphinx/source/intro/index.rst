@@ -72,7 +72,6 @@ Contents
 
    whycherrypy
    install
-   concepts/index
    license
 
 

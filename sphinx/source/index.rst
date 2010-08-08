@@ -2,6 +2,7 @@
    :hidden:
 
    intro/index
+   concepts/index
    progguide/index
    deployguide/index
    refman/index
@@ -18,6 +19,10 @@ Sections
 :doc:`Introduction <intro/index>`
 ---------------------------------
 *The who, what, and why of CherryPy*
+
+:doc:`Concepts <concepts/index>`
+---------------------------------
+*The basics of CherryPy*
 
 :doc:`Programmer's Guide <progguide/index>`
 -------------------------------------------

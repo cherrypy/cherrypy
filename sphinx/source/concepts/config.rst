@@ -277,15 +277,82 @@ dotted keys and are considered to "have a namespace".
 Builtin namespaces
 ------------------
 
-========    =======================
-engine      Controls the 'application engine', including autoreload. These can only be declared in the global config.
-hooks       Declares additional request-processing functions.
-log         Configures the logging for each application. These can only be declared in the global or / config.
-request     Adds attributes to each Request.
-response    Adds attributes to each Response.
-server      Controls the default HTTP server via cherrypy.server. These can only be declared in the global config.
-tools       Runs and configures additional request-processing packages.
-wsgi        Adds WSGI middleware to an Application's "pipeline". These can only be declared in the app's root config ("/").
+engine
+^^^^^^
+Entries in this namespace controls the 'application engine'. These can only be
+declared in the global config. Any attribute of `cherrypy.engine` may be set
+in config; however, there are a few extra entries available in config:
+
+ * Plugin attributes. Many of the :ref:`Engine Plugin<plugins>` are themselves
+   attributes of `engine`. You can set any attribute of an attached plugin
+   by simply naming it. For example, there is an instance of the
+   :class:`Autoreloader<cherrypy.process.plugins.Autoreloader>` class at
+   `engine.autoreload`; you can set its "frequency" attribute via the config
+   entry `engine.autoreload.frequency = 60`. In addition, you can turn such
+   plugins on and off by setting `engine.autoreload.on = True` or `False`.
+ * `engine.SIGHUP/SIGTERM`: These entries can be used to set the list of
+   listeners for the given :ref:`channel<channels>`. Mostly, this is used
+   to turn off the signal handling one gets automatically via
+   func:`cherrypy.quickstart`.
+
+hooks
+^^^^^
+
+Declares additional request-processing functions. Use this to append your own
+:class:`Hook<cherrypy._cprequest.Hook>` functions to the request. For example,
+to add `my_hook_func` to the `before_handler` hookpoint:
+
+    [/]
+    hooks.before_handler = myapp.my_hook_func
+
+log
+^^^
+
+Configures logging. These can only be declared in the global config (for global
+logging) or `[/]` config (for each application).
+See :class:`LogManager<cherrypy._cplogging.LogManager>` for the list of
+configurable attributes. Typically, the "access_file", "error_file", and
+"screen" attributes are the most commonly configured.
+
+request
+^^^^^^^
+
+Sets attributes on each Request. See the
+:class:`Request<cherrypy._cprequest.Request>` class for a complete list.
+
+response
+^^^^^^^^
+
+Sets attributes on each Response. See the
+:class:`Response<cherrypy._cprequest.Response>` class for a complete list.
+
+server
+^^^^^^
+Controls the default HTTP server via
+:class:`cherrypy.server<cherrypy._cpserver.Server>` (see that class for a
+complete list of configurable attribtues). These can only be
+declared in the global config.
+
+tools
+^^^^^
+
+Enables and configures additional request-processing packages. See the
+:doc:`/concepts/tools` overview for more information.
+
+wsgi
+^^^^
+
+Adds WSGI middleware to an Application's "pipeline". These can only be
+declared in the app's root config ("/").
+
+ * `wsgi.pipeline`: Appends to the WSGi pipeline. The value must be a list of
+   (name, app factory) pairs. Each app factory must be a WSGI callable class
+   (or callable that returns a WSGI callable); it must take an initial
+   'nextapp' argument, plus any optional keyword arguments. The optional
+   arguments may be configured via `wsgi.<name>.<arg>`.
+ * `wsgi.response_class`: Overrides the default
+   :class:`Response<cherrypy._cprequest.Response>` class.
+
 checker     Controls the 'checker', which looks for common errors in app state (including config) when the engine starts. Global config only.
 ========    =======================
 

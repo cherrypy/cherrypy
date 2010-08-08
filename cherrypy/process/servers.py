@@ -106,8 +106,8 @@ directive, configure your fastcgi script like the following::
       )
     } # end of $HTTP["url"] =~ "^/"
 
-Please see `Lighttpd FastCGI Docs 
-<http://trac.lighttpd.net/trac/wiki/Docs:ModFastCGI>`_ for an explanation 
+Please see `Lighttpd FastCGI Docs
+<http://redmine.lighttpd.net/wiki/lighttpd/Docs:ModFastCGI>`_ for an explanation 
 of the possible configuration options.
 """
 
