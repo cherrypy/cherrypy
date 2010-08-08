@@ -228,7 +228,7 @@ class FlupFCGIServer(object):
     def __init__(self, *args, **kwargs):
         if kwargs.get('bindAddress', None) is None:
             import socket
-            if not hasattr(socket.socket, 'fromfd'):
+            if not hasattr(socket, 'fromfd'):
                 raise ValueError(
                     'Dynamic FCGI server not available on this platform. '
                     'You must use a static or external one by providing a '
