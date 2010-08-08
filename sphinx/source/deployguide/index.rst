@@ -10,8 +10,7 @@ Servers
 
    apache
    /refman/process/servers
-   standalone
-   wsgiserver
+   /refman/wsgiserver/init
 
 
 Environment

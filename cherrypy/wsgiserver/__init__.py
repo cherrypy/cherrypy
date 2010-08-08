@@ -1,7 +1,7 @@
 """A high-speed, production ready, thread pooled, generic HTTP server.
 
 Simplest example on how to use this module directly
-(without using CherryPy's application machinery):
+(without using CherryPy's application machinery)::
 
     from cherrypy import wsgiserver
     
@@ -9,18 +9,18 @@ Simplest example on how to use this module directly
         status = '200 OK'
         response_headers = [('Content-type','text/plain')]
         start_response(status, response_headers)
-        return ['Hello world!\n']
+        return ['Hello world!']
     
     server = wsgiserver.CherryPyWSGIServer(
                 ('0.0.0.0', 8070), my_crazy_app,
                 server_name='www.cherrypy.example')
-    
+
 The CherryPy WSGI server can serve as many WSGI applications 
-as you want in one instance by using a WSGIPathInfoDispatcher:
+as you want in one instance by using a WSGIPathInfoDispatcher::
     
     d = WSGIPathInfoDispatcher({'/': my_crazy_app, '/blog': my_blog_app})
     server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 80), d)
-    
+
 Want SSL support? Just set server.ssl_adapter to an SSLAdapter instance.
 
 This won't call the CherryPy engine (application side) at all, only the
@@ -30,7 +30,7 @@ its origin, not its coupling.
 
 For those of you wanting to understand internals of this module, here's the
 basic call flow. The server's listening thread runs a very tight loop,
-sticking incoming connections onto a Queue:
+sticking incoming connections onto a Queue::
 
     server = CherryPyWSGIServer(...)
     server.start()
@@ -43,7 +43,7 @@ sticking incoming connections onto a Queue:
 
 Worker threads are kept in a pool and poll the Queue, popping off and then
 handling each connection in turn. Each connection can consist of an arbitrary
-number of requests and their responses, so we run a nested loop:
+number of requests and their responses, so we run a nested loop::
 
     while True:
         conn = server.requests.get()
@@ -303,10 +303,6 @@ class KnownLengthRFile(object):
         return data
 
 
-class MaxSizeExceeded(Exception):
-    pass
-
-
 class ChunkedRFile(object):
     """Wraps a file-like object, returning an empty string when exhausted.
     
@@ -463,23 +459,34 @@ class HTTPRequest(object):
     """An HTTP Request (and response).
     
     A single HTTP connection may consist of multiple request/response pairs.
-    
-    server: the Server object which is receiving this request.
-    conn: the HTTPConnection object on which this request connected.
-    
-    inheaders: a dict of request headers.
-    outheaders: a list of header tuples to write in the response.
-    ready: when True, the request has been parsed and is ready to begin
-        generating the response. When False, signals the calling Connection
-        that the response should not be generated and the connection should
-        close.
-    close_connection: signals the calling Connection that the request
-        should close. This does not imply an error! The client and/or
-        server may each request that the connection be closed.
-    chunked_write: if True, output will be encoded with the "chunked"
-        transfer-coding. This value is set automatically inside
-        send_headers.
     """
+    
+    server = None
+    """The HTTPServer object which is receiving this request."""
+    
+    conn = None
+    """The HTTPConnection object on which this request connected."""
+    
+    inheaders = {}
+    """A dict of request headers."""
+    
+    outheaders = []
+    """A list of header tuples to write in the response."""
+    
+    ready = False
+    """When True, the request has been parsed and is ready to begin generating
+    the response. When False, signals the calling Connection that the response
+    should not be generated and the connection should close."""
+    
+    close_connection = False
+    """Signals the calling Connection that the request should close. This does
+    not imply an error! The client and/or server may each request that the
+    connection be closed."""
+    
+    chunked_write = False
+    """If True, output will be encoded with the "chunked" transfer-coding.
+    
+    This value is set automatically inside send_headers."""
     
     def __init__(self, server, conn):
         self.server= server
@@ -697,17 +704,17 @@ class HTTPRequest(object):
     def parse_request_uri(self, uri):
         """Parse a Request-URI into (scheme, authority, path).
         
-        Note that Request-URI's must be one of:
+        Note that Request-URI's must be one of::
             
             Request-URI    = "*" | absoluteURI | abs_path | authority
         
         Therefore, a Request-URI which starts with a double forward-slash
-        cannot be a "net_path":
+        cannot be a "net_path"::
         
             net_path      = "//" authority [ abs_path ]
         
         Instead, it must be interpreted as an "abs_path" with an empty first
-        path segment:
+        path segment::
         
             abs_path      = "/"  path_segments
             path_segments = segment *( "/" segment )
@@ -1324,11 +1331,6 @@ _SHUTDOWNREQUEST = None
 class WorkerThread(threading.Thread):
     """Thread which continuously polls a Queue for Connection objects.
     
-    server: the HTTP Server which spawned this thread, and which owns the
-        Queue and is placing active connections into it.
-    ready: a simple flag for the calling server to know when this thread
-        has begun polling the Queue.
-    
     Due to the timing issues of polling a Queue, a WorkerThread does not
     check its own 'ready' flag after it has started. To stop the thread,
     it is necessary to stick a _SHUTDOWNREQUEST object onto the Queue
@@ -1336,6 +1338,16 @@ class WorkerThread(threading.Thread):
     """
     
     conn = None
+    """The current connection pulled off the Queue, or None."""
+    
+    server = None
+    """The HTTP Server which spawned this thread, and which owns the
+    Queue and is placing active connections into it."""
+    
+    ready = False
+    """A simple flag for the calling server to know when this thread
+    has begun polling the Queue."""
+    
     
     def __init__(self, server):
         self.ready = False
@@ -1485,6 +1497,13 @@ else:
 
 
 class SSLAdapter(object):
+    """Base class for SSL driver library adapters.
+    
+    Required methods:
+    
+        * ``wrap(sock) -> (wrapped socket, ssl environ dict)``
+        * ``makefile(sock, mode='r', bufsize=-1) -> socket file object``
+    """
     
     def __init__(self, certificate, private_key, certificate_chain=None):
         self.certificate = certificate
@@ -1499,53 +1518,65 @@ class SSLAdapter(object):
 
 
 class HTTPServer(object):
-    """An HTTP server.
+    """An HTTP server."""
     
-    bind_addr: The interface on which to listen for connections.
-        For TCP sockets, a (host, port) tuple. Host values may be any IPv4
-        or IPv6 address, or any valid hostname. The string 'localhost' is a
-        synonym for '127.0.0.1' (or '::1', if your hosts file prefers IPv6).
-        The string '0.0.0.0' is a special IPv4 entry meaning "any active
-        interface" (INADDR_ANY), and '::' is the similar IN6ADDR_ANY for
-        IPv6. The empty string or None are not allowed.
-        
-        For UNIX sockets, supply the filename as a string.
-    gateway: a Gateway instance.
-    minthreads: the minimum number of worker threads to create (default 10).
-    maxthreads: the maximum number of worker threads to create (default -1 = no limit).
-    server_name: defaults to socket.gethostname().
+    _bind_addr = "127.0.0.1"
+    _interrupt = None
     
-    request_queue_size: the 'backlog' argument to socket.listen();
-        specifies the maximum number of queued connections (default 5).
-    timeout: the timeout in seconds for accepted connections (default 10).
-    nodelay: if True (the default since 3.1), sets the TCP_NODELAY socket
-        option.
-    protocol: the version string to write in the Status-Line of all
-        HTTP responses. For example, "HTTP/1.1" (the default). This
-        also limits the supported features used in the response.
+    gateway = None
+    """A Gateway instance."""
     
+    minthreads = None
+    """The minimum number of worker threads to create (default 10)."""
     
-    SSL/HTTPS
-    ---------
-    You must have an ssl library installed and set self.ssl_adapter to an
-    instance of SSLAdapter (or a subclass) which provides the methods:
-        wrap(sock) -> wrapped socket, ssl environ dict
-        makefile(sock, mode='r', bufsize=-1) -> socket file object
-    """
+    maxthreads = None
+    """The maximum number of worker threads to create (default -1 = no limit)."""
+    
+    server_name = None
+    """The name of the server; defaults to socket.gethostname()."""
     
     protocol = "HTTP/1.1"
-    _bind_addr = "127.0.0.1"
+    """The version string to write in the Status-Line of all HTTP responses.
+    
+    For example, "HTTP/1.1" is the default. This also limits the supported
+    features used in the response."""
+    
+    request_queue_size = 5
+    """The 'backlog' arg to socket.listen(); max queued connections (default 5)."""
+    
+    shutdown_timeout = 5
+    """The total time, in seconds, to wait for worker threads to cleanly exit."""
+    
+    timeout = 10
+    """The timeout in seconds for accepted connections (default 10)."""
+    
     version = "CherryPy/3.2.0rc1"
-    response_header = None
+    """A version string for the HTTPServer."""
+    
+    software = None
+    """The value to set for the SERVER_SOFTWARE entry in the WSGI environ.
+    
+    If None, this defaults to ``'%s Server' % self.version``."""
+    
     ready = False
-    _interrupt = None
+    """An internal flag which marks whether the socket is accepting connections."""
+    
     max_request_header_size = 0
+    """The maximum size, in bytes, for request headers, or 0 for no limit."""
+    
     max_request_body_size = 0
+    """The maximum size, in bytes, for request bodies, or 0 for no limit."""
+    
     nodelay = True
+    """If True (the default since 3.1), sets the TCP_NODELAY socket option."""
     
     ConnectionClass = HTTPConnection
+    """The class to use for handling HTTP connections."""
     
     ssl_adapter = None
+    """An instance of SSLAdapter (or a subclass).
+    
+    You must have the corresponding SSL driver library installed."""
     
     def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1,
                  server_name=None):
@@ -1599,6 +1630,9 @@ class HTTPServer(object):
         # If you're using this server with another framework, you should
         # trap those exceptions in whatever code block calls start().
         self._interrupt = None
+        
+        if self.software is None:
+            self.software = "%s Server" % self.version
         
         # SSL backward compatibility
         if (self.ssl_adapter is None and
@@ -1713,9 +1747,6 @@ class HTTPServer(object):
             prevent_socket_inheritance(s)
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
-            
-            if self.response_header is None:
-                self.response_header = "%s Server" % self.version
             
             makefile = CP_fileobject
             ssl_env = {}
@@ -1996,7 +2027,7 @@ class WSGIGateway_10(WSGIGateway):
             'SERVER_NAME': req.server.server_name,
             # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
             'SERVER_PROTOCOL': req.request_protocol,
-            'SERVER_SOFTWARE': "%s WSGI Server" % req.server.version,
+            'SERVER_SOFTWARE': req.server.software,
             'wsgi.errors': sys.stderr,
             'wsgi.input': req.rfile,
             'wsgi.multiprocess': False,

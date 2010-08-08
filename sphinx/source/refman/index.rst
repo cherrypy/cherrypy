@@ -8,5 +8,5 @@ Reference Manual
    *
    lib/index
    process/index
-
+   wsgiserver/index
 
