@@ -12,7 +12,7 @@ Tools can be enabled for any point of your CherryPy application: a certain
 path, a certain class, or even individual methods using the 
 :ref:`_cp_config <cp_config>` dictionary. Tools can also be used as decorators
 which provide syntactic sugar for configuring a tool for a specific callable.
-See :doc:`/intro/concepts/tools` for more information on how to use Tools.
+See :doc:`/concepts/tools` for more information on how to use Tools.
 This document will show you how to make your own.
 
 Your First Custom Tool

@@ -65,7 +65,7 @@ hosting server.
 Within the CherryPy server, the remainder of the hierarchical
 identifier--the path--is mapped to Python objects
 via the Dispatch mechanism. This behavior is highly
-customizable and documented in :doc:`/intro/concepts/dispatching`.
+customizable and documented in :doc:`/concepts/dispatching`.
 
 Using the default dispatcher and page handlers, the path of the URI
 maps to a hierarchy of Python identifiers in the CherryPy app. For

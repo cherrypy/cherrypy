@@ -7,9 +7,6 @@ import cherrypy
 class Checker(object):
     """A checker for CherryPy sites and their mounted applications.
     
-    on
-        set this to False to turn off the checker completely.
-    
     When this object is called at engine startup, it executes each
     of its own methods whose names start with ``check_``. If you wish
     to disable selected checks, simply add a line in your global
@@ -22,6 +19,8 @@ class Checker(object):
     """
     
     on = True
+    """If True (the default), run all checks; if False, turn off all checks."""
+    
     
     def __init__(self):
         self._populate_known_types()

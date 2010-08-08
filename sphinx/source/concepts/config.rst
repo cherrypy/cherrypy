@@ -277,30 +277,46 @@ dotted keys and are considered to "have a namespace".
 Builtin namespaces
 ------------------
 
+Entries from each namespace may be allowed in the global, application root
+(``"/"``) or per-path config, or a combination:
+
+==========  ======  ==================  =========
+Scope       Global  Application Root    App Path
+----------  ------  ------------------  ---------
+engine      X
+hooks       X       X                   X
+log         X       X
+request     X       X                   X
+response    X       X                   X
+server      X
+tools       X       X                   X
+==========  ======  ==================  =========
+
 engine
 ^^^^^^
 Entries in this namespace controls the 'application engine'. These can only be
-declared in the global config. Any attribute of `cherrypy.engine` may be set
+declared in the global config. Any attribute of
+:class:`cherrypy.engine<cherrypy.process.wspbus.Bus>` may be set
 in config; however, there are a few extra entries available in config:
 
- * Plugin attributes. Many of the :ref:`Engine Plugin<plugins>` are themselves
-   attributes of `engine`. You can set any attribute of an attached plugin
-   by simply naming it. For example, there is an instance of the
+ * Plugin attributes. Many of the :ref:`Engine Plugins<plugins>` are themselves
+   attributes of ``cherrypy.engine``. You can set any attribute of an attached
+   plugin by simply naming it. For example, there is an instance of the
    :class:`Autoreloader<cherrypy.process.plugins.Autoreloader>` class at
-   `engine.autoreload`; you can set its "frequency" attribute via the config
-   entry `engine.autoreload.frequency = 60`. In addition, you can turn such
-   plugins on and off by setting `engine.autoreload.on = True` or `False`.
- * `engine.SIGHUP/SIGTERM`: These entries can be used to set the list of
+   ``engine.autoreload``; you can set its "frequency" attribute via the config
+   entry ``engine.autoreload.frequency = 60``. In addition, you can turn such
+   plugins on and off by setting ``engine.autoreload.on = True`` or ``False``.
+ * ``engine.SIGHUP/SIGTERM``: These entries can be used to set the list of
    listeners for the given :ref:`channel<channels>`. Mostly, this is used
    to turn off the signal handling one gets automatically via
-   func:`cherrypy.quickstart`.
+   :func:`cherrypy.quickstart`.
 
 hooks
 ^^^^^
 
 Declares additional request-processing functions. Use this to append your own
 :class:`Hook<cherrypy._cprequest.Hook>` functions to the request. For example,
-to add `my_hook_func` to the `before_handler` hookpoint:
+to add ``my_hook_func`` to the ``before_handler`` hookpoint::
 
     [/]
     hooks.before_handler = myapp.my_hook_func
@@ -309,7 +325,7 @@ log
 ^^^
 
 Configures logging. These can only be declared in the global config (for global
-logging) or `[/]` config (for each application).
+logging) or ``[/]`` config (for each application).
 See :class:`LogManager<cherrypy._cplogging.LogManager>` for the list of
 configurable attributes. Typically, the "access_file", "error_file", and
 "screen" attributes are the most commonly configured.
@@ -330,7 +346,7 @@ server
 ^^^^^^
 Controls the default HTTP server via
 :class:`cherrypy.server<cherrypy._cpserver.Server>` (see that class for a
-complete list of configurable attribtues). These can only be
+complete list of configurable attributes). These can only be
 declared in the global config.
 
 tools
@@ -345,30 +361,22 @@ wsgi
 Adds WSGI middleware to an Application's "pipeline". These can only be
 declared in the app's root config ("/").
 
- * `wsgi.pipeline`: Appends to the WSGi pipeline. The value must be a list of
+ * ``wsgi.pipeline``: Appends to the WSGi pipeline. The value must be a list of
    (name, app factory) pairs. Each app factory must be a WSGI callable class
    (or callable that returns a WSGI callable); it must take an initial
    'nextapp' argument, plus any optional keyword arguments. The optional
-   arguments may be configured via `wsgi.<name>.<arg>`.
- * `wsgi.response_class`: Overrides the default
+   arguments may be configured via ``wsgi.<name>.<arg>``.
+ * ``wsgi.response_class``: Overrides the default
    :class:`Response<cherrypy._cprequest.Response>` class.
 
-checker     Controls the 'checker', which looks for common errors in app state (including config) when the engine starts. Global config only.
-========    =======================
+checker
+^^^^^^^
 
-Entries from each namespace may be allowed in the global, application root (``"/"``) or per-path config, or a combination:
+Controls the "checker", which looks for common errors in app state (including
+config) when the engine starts. You can turn off individual checks by setting
+them to ``False`` in config. See :class:`cherrypy._cpchecker.Checker` for a
+complete list. Global config only.
 
-==========  ======  ==================  =========
-Scope       Global  Application Root    App Path
-----------  ------  ------------------  ---------
-engine      X
-hooks       X       X                   X
-log         X       X
-request     X       X                   X
-response    X       X                   X
-server      X
-tools       X       X                   X
-==========  ======  ==================  =========
 
 Custom config namespaces
 ------------------------

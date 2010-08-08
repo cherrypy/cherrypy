@@ -97,6 +97,6 @@ All of CherryPy is licensed under the open-source BSD license, which means
 7. Where to go from here?
 -------------------------
 
-Check out the :doc:`/intro/concepts/index` and :doc:`/progguide/index` for
+Check out the :doc:`/concepts/index` and :doc:`/progguide/index` for
 more complete documentation.
 
