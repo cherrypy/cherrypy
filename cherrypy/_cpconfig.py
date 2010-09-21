@@ -287,8 +287,13 @@ Config.namespaces["engine"] = _engine_namespace_handler
 
 def _tree_namespace_handler(k, v):
     """Namespace handler for the 'tree' config namespace."""
-    cherrypy.tree.graft(v, v.script_name)
-    cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name or "/"))
+    if isinstance(v, dict):
+        for script_name, app in v.items():
+            cherrypy.tree.graft(app, script_name)
+            cherrypy.engine.log("Mounted: %s on %s" % (app, script_name or "/"))
+    else:
+        cherrypy.tree.graft(v, v.script_name)
+        cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name or "/"))
 Config.namespaces["tree"] = _tree_namespace_handler
 
 

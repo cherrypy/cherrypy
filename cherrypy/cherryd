@@ -5,7 +5,7 @@ import sys
 
 import cherrypy
 from cherrypy.process import plugins, servers
-
+from cherrypy import Application
 
 def start(configfiles=None, daemonize=False, environment=None,
           fastcgi=False, scgi=False, pidfile=None, imports=None):
@@ -19,7 +19,8 @@ def start(configfiles=None, daemonize=False, environment=None,
         # If there's only one app mounted, merge config into it.
         if len(cherrypy.tree.apps) == 1:
             for app in cherrypy.tree.apps.values():
-                app.merge(c)
+                if isinstance(app, Application):
+                    app.merge(c)
     
     engine = cherrypy.engine
     
