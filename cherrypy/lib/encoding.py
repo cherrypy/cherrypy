@@ -290,6 +290,11 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
     
     cherrypy.response.headers['Content-Type'] must be set to one of the
     values in the mime_types arg before calling this function.
+
+    The provided list of mime-types must be of one of the following form:
+        * type/subtype
+        * type/*
+        * type/*+subtype
     
     No compression is performed if any of the following hold:
         * The client sends no Accept-Encoding request header
@@ -344,10 +349,35 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
                 return
             
             if ct not in mime_types:
-                if debug:
-                    cherrypy.log('Content-Type %s not in mime_types %r' %
-                                 (ct, mime_types), context='TOOLS.GZIP')
-                return
+                # If the list of provided mime-types contains tokens
+                # such as 'text/*' or 'application/*+xml',
+                # we go through them and find the most appropriate one
+                # based on the given content-type.
+                # The pattern matching is only caring about the most
+                # common cases, as stated above, and doesn't support
+                # for extra parameters.
+                found = False
+                if '/' in ct:
+                    ct_media_type, ct_sub_type = ct.split('/')
+                    for mime_type in mime_types:
+                        if '/' in mime_type:
+                            media_type, sub_type = mime_type.split('/')
+                            if ct_media_type == media_type:
+                                if sub_type == '*':
+                                    found = True
+                                    break
+                                elif '+' in sub_type and '+' in ct_sub_type:
+                                    ct_left, ct_right = ct_sub_type.split('+')
+                                    left, right = sub_type.split('+')
+                                    if left == '*' and ct_right == right:
+                                        found = True
+                                        break
+
+                if not found:
+                    if debug:
+                        cherrypy.log('Content-Type %s not in mime_types %r' %
+                                     (ct, mime_types), context='TOOLS.GZIP')
+                    return
             
             if debug:
                 cherrypy.log('Gzipping', context='TOOLS.GZIP')
