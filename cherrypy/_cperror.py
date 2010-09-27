@@ -159,6 +159,9 @@ class HTTPRedirect(CherryPyException):
     e.g., HTTPRedirect(newUrl). Multiple URLs are allowed in a list.
     If a URL is absolute, it will be used as-is. If it is relative, it is
     assumed to be relative to the current cherrypy.request.path_info.
+
+    If one of the provided URL is a unicode object, it will be encoded
+    using the default encoding or the one passed in parameter.
     
     There are multiple types of redirect, from which you can select via the
     ``status`` argument. If you do not provide a ``status`` arg, it defaults to
@@ -178,16 +181,22 @@ class HTTPRedirect(CherryPyException):
     
     urls = None
     """The list of URL's to emit."""
+
+    encoding = 'utf-8'
+    """The encoding when passed urls are unicode objects"""
     
-    def __init__(self, urls, status=None):
+    def __init__(self, urls, status=None, encoding=None):
         import cherrypy
         request = cherrypy.serving.request
-        
+
         if isinstance(urls, basestring):
             urls = [urls]
-        
+
         abs_urls = []
         for url in urls:
+            if isinstance(url, unicode):
+                url = url.encode(encoding or self.encoding)
+                
             # Note that urljoin will "do the right thing" whether url is:
             #  1. a complete URL with host (e.g. "http://www.example.com/test")
             #  2. a URL relative to root (e.g. "/dummy")
