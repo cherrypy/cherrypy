@@ -140,10 +140,9 @@ class ReloadingTestLoader(TestLoader):
 try:
     # Jython support
     if sys.platform[:4] == 'java':
-        from java.lang import System
         def getchar():
             # Hopefully this is enough
-            return System.in.read()
+            return sys.stdin.read(1)
     else:
         # On Windows, msvcrt.getch reads a single char without output.
         import msvcrt
