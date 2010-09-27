@@ -138,10 +138,17 @@ class ReloadingTestLoader(TestLoader):
 
 
 try:
-    # On Windows, msvcrt.getch reads a single char without output.
-    import msvcrt
-    def getchar():
-        return msvcrt.getch()
+    # Jython support
+    if sys.platform[:4] == 'java':
+        from java.lang import System
+        def getchar():
+            # Hopefully this is enough
+            return System.in.read()
+    else:
+        # On Windows, msvcrt.getch reads a single char without output.
+        import msvcrt
+        def getchar():
+            return msvcrt.getch()
 except ImportError:
     # Unix getchr
     import tty, termios
