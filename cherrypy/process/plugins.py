@@ -106,8 +106,14 @@ class SignalHandler(object):
             self.handlers['SIGUSR2'] = self.bus.graceful
             self.bus.log("SIGUSR1 cannot be set on the JVM platform. "
                          "Using SIGUSR2 instead.")
+            self.handlers['SIGINT'] = self._jython_SIGINT_handler
 
         self._previous_handlers = {}
+    
+    def _jython_SIGINT_handler(self, signum=None, frame=None):
+        # See http://bugs.jython.org/issue1313
+        self.bus.log('Keyboard Interrupt: shutting down bus')
+        self.bus.exit()
         
     def subscribe(self):
         """Subscribe self.handlers to signals."""
