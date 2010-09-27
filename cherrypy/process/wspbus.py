@@ -343,12 +343,13 @@ class Bus(object):
         This must be called from the main thread, because certain platforms
         (OS X) don't allow execv to be called in a child thread very well.
         """
+        args = sys.argv[:]
+        self.log('Re-spawning %s' % ' '.join(args))
+        
         if sys.platform[:4] == 'java':
             from _systemrestart import SystemRestart
             raise SystemRestart
         else:
-            args = sys.argv[:]
-            self.log('Re-spawning %s' % ' '.join(args))
             args.insert(0, sys.executable)
             if sys.platform == 'win32':
                 args = ['"%s"' % arg for arg in args]
