@@ -207,6 +207,9 @@ class CPWebCase(webtest.WebCase):
         cherrypy.server.using_apache = supervisor.using_apache
         cherrypy.server.using_wsgi = supervisor.using_wsgi
 
+        if sys.platform[:4] == 'java':
+            cherrypy.config.update({'server.nodelay': False})
+
         if isinstance(conf, basestring):
             parser = cherrypy.lib.reprconf.Parser()
             conf = parser.dict_from_file(conf).get('global', {})
