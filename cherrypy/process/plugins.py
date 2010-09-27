@@ -100,9 +100,15 @@ class SignalHandler(object):
                          'SIGHUP': self.handle_SIGHUP,
                          'SIGUSR1': self.bus.graceful,
                          }
-        
+
+        if sys.platform[:4] == 'java':
+            del self.handlers['SIGUSR1']
+            self.handlers['SIGUSR2'] = self.bus.graceful
+            self.bus.log("SIGUSR1 cannot be set on the JVM platform. "
+                         "Using SIGUSR2 instead.")
+
         self._previous_handlers = {}
-    
+        
     def subscribe(self):
         """Subscribe self.handlers to signals."""
         for sig, func in self.handlers.items():
