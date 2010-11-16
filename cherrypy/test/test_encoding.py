@@ -1,3 +1,5 @@
+#-*- coding: utf-8 -*-
+
 import gzip
 try:
     from cStringIO import StringIO
@@ -35,6 +37,16 @@ class EncodingTests(helper.CPWebCase):
             utf8.exposed = True
             utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
             
+            def cookies_and_headers(self):
+                # if the headers have non-ascii characters and a cookie has
+                #  any part which is unicode (even ascii), the response
+                #  should not fail.
+                cherrypy.response.cookie['candy'] = 'bar'
+                cherrypy.response.cookie['candy']['domain'] = u'cherrypy.org'
+                cherrypy.response.headers['Some-Header'] = u'My dög has fleas'
+                return 'Any content'
+            cookies_and_headers.exposed = True
+
             def reqparams(self, *args, **kwargs):
                 return ', '.join([": ".join((k, v)).encode('utf8')
                                   for k, v in cherrypy.request.params.items()])
@@ -93,7 +105,7 @@ class EncodingTests(helper.CPWebCase):
         root.gzip = GZIP()
         root.decode = Decode()
         cherrypy.tree.mount(root, config={'/gzip': {'tools.gzip.on': True}})
-    
+
     def test_query_string_decoding(self):
         europoundUtf8 = europoundUnicode.encode('utf-8')
         self.getPage('/?param=' + europoundUtf8)
@@ -348,4 +360,8 @@ class EncodingTests(helper.CPWebCase):
             self.assertRaises((ValueError, IncompleteRead), self.getPage,
                               '/gzip/noshow_stream',
                               headers=[("Accept-Encoding", "gzip")])
+
+    def test_UnicodeHeaders(self):
+        self.getPage('/cookies_and_headers')
+        self.assertBody('Any content')
 
