@@ -285,8 +285,11 @@ class Dispatcher(object):
             if subnode is None:
                 dispatch = getattr(node, dispatch_name, None)
                 if dispatch and callable(dispatch) and not \
-                        getattr(dispatch, 'exposed', False):
+                        getattr(dispatch, 'exposed', False) and \
+                        pre_len > 1:
                     #Don't expose the hidden 'index' token to _cp_dispatch
+                    #We skip this if pre_len == 1 since it makes no sense
+                    #to call a dispatcher when we have no tokens left.
                     index_name = iternames.pop()
                     subnode = dispatch(vpath=iternames)
                     iternames.append(index_name)
