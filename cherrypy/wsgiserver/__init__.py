@@ -504,9 +504,9 @@ class HTTPRequest(object):
         self.status = ""
         self.outheaders = []
         self.sent_headers = False
-        self.close_connection = False
+        self.close_connection = HTTPRequest.close_connection
         self.chunked_read = False
-        self.chunked_write = False
+        self.chunked_write = HTTPRequest.chunked_write
     
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
