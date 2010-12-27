@@ -8,10 +8,10 @@ from cherrypy.lib import httputil
 
 class Application(object):
     """A CherryPy Application.
-
+    
     Servers and gateways should not instantiate Request objects directly.
     Instead, they should ask an Application object for a request object.
-
+    
     An instance of this class may also be used as a WSGI callable
     (WSGI application object) for itself.
     """

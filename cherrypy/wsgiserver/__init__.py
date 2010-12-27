@@ -14,13 +14,13 @@ Simplest example on how to use this module directly
     server = wsgiserver.CherryPyWSGIServer(
                 ('0.0.0.0', 8070), my_crazy_app,
                 server_name='www.cherrypy.example')
-
+    
 The CherryPy WSGI server can serve as many WSGI applications 
 as you want in one instance by using a WSGIPathInfoDispatcher::
     
     d = WSGIPathInfoDispatcher({'/': my_crazy_app, '/blog': my_blog_app})
     server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 80), d)
-
+    
 Want SSL support? Just set server.ssl_adapter to an SSLAdapter instance.
 
 This won't call the CherryPy engine (application side) at all, only the
@@ -504,9 +504,9 @@ class HTTPRequest(object):
         self.status = ""
         self.outheaders = []
         self.sent_headers = False
-        self.close_connection = HTTPRequest.close_connection
+        self.close_connection = self.__class__.close_connection
         self.chunked_read = False
-        self.chunked_write = HTTPRequest.chunked_write
+        self.chunked_write = self.__class__.chunked_write
     
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
@@ -662,6 +662,8 @@ class HTTPRequest(object):
             if te:
                 te = [x.strip().lower() for x in te.split(",") if x.strip()]
         
+        self.chunked_read = False
+        
         if te:
             for enc in te:
                 if enc == "chunked":
@@ -766,7 +768,9 @@ class HTTPRequest(object):
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        buf = ["Content-Length: %s\r\n" % len(msg),
+        buf = [self.server.protocol + " " +
+               status + CRLF,
+               "Content-Length: %s\r\n" % len(msg),
                "Content-Type: text/plain\r\n"]
         
         if status[:3] in ("413", "414"):
@@ -788,9 +792,8 @@ class HTTPRequest(object):
                 msg = msg.encode("ISO-8859-1")
             buf.append(msg)
         
-        status_line = self.server.protocol + " " + status + CRLF
         try:
-            self.conn.wfile.sendall(status_line + "".join(buf))
+            self.conn.wfile.sendall("".join(buf))
         except socket.error, x:
             if x.args[0] not in socket_errors_to_ignore:
                 raise
@@ -1248,7 +1251,8 @@ class HTTPConnection(object):
                     return
         except socket.error, e:
             errnum = e.args[0]
-            if errnum == 'timed out':
+            # sadly SSL sockets return a different (longer) time out string
+            if errnum == 'timed out' or errnum == 'The read operation timed out':
                 # Don't error if we're between requests; only error
                 # if 1) no request has been started at all, or 2) we're
                 # in the middle of a request.
@@ -1687,7 +1691,7 @@ class HTTPServer(object):
             af, socktype, proto, canonname, sa = res
             try:
                 self.bind(af, socktype, proto)
-            except socket.error, msg:
+            except socket.error:
                 if self.socket:
                     self.socket.close()
                 self.socket = None
@@ -1772,6 +1776,9 @@ class HTTPServer(object):
                 if not s:
                     return
                 makefile = self.ssl_adapter.makefile
+                # Re-apply our timeout since we may have a new socket object
+                if hasattr(s, 'settimeout'):
+                    s.settimeout(self.timeout)
             
             conn = self.ConnectionClass(self, s, makefile)
             
@@ -2044,9 +2051,11 @@ class WSGIGateway_10(WSGIGateway):
         else:
             env["SERVER_PORT"] = str(req.server.bind_addr[1])
         
-        # CONTENT_TYPE/CONTENT_LENGTH
+        # Request headers
         for k, v in req.inheaders.iteritems():
             env["HTTP_" + k.upper().replace("-", "_")] = v
+        
+        # CONTENT_TYPE/CONTENT_LENGTH
         ct = env.pop("HTTP_CONTENT_TYPE", None)
         if ct is not None:
             env["CONTENT_TYPE"] = ct

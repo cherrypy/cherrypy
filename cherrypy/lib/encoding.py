@@ -171,13 +171,13 @@ class ResponseEncoder:
                             # Matches any charset. Try our default.
                             if self.debug:
                                 cherrypy.log('Attempting default encoding due '
-                                             'to %s' % element, 'TOOLS.ENCODE')
+                                             'to %r' % element, 'TOOLS.ENCODE')
                             if encoder(self.default_encoding):
                                 return self.default_encoding
                         else:
                             encoding = element.value
                             if self.debug:
-                                cherrypy.log('Attempting encoding %s (qvalue >'
+                                cherrypy.log('Attempting encoding %r (qvalue >'
                                              '0)' % element, 'TOOLS.ENCODE')
                             if encoder(encoding):
                                 return encoding

@@ -388,7 +388,7 @@ def tee_output():
         return
     
     def tee(body):
-        # Tee response.body into a list.
+        """Tee response.body into a list."""
         if ('no-cache' in response.headers.values('Pragma') or
             'no-store' in response.headers.values('Cache-Control')):
             for chunk in body:

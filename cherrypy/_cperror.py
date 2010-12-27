@@ -188,10 +188,10 @@ class HTTPRedirect(CherryPyException):
     def __init__(self, urls, status=None, encoding=None):
         import cherrypy
         request = cherrypy.serving.request
-
+        
         if isinstance(urls, basestring):
             urls = [urls]
-
+        
         abs_urls = []
         for url in urls:
             if isinstance(url, unicode):

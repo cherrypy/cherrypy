@@ -248,6 +248,7 @@ class LogManager(object):
             if getattr(h, "_cpbuiltin", None) == key:
                 return h
     
+    
     # ------------------------- Screen handlers ------------------------- #
     
     def _set_screen_handler(self, log, enable, stream=None):
