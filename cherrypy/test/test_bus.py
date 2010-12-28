@@ -218,9 +218,11 @@ class BusMethodTests(unittest.TestCase):
         else:
             threads = [t for t in threading.enumerate() if not t.isDaemon()]
         self.assertEqual(len(threads), 1)
-        self.assertLog(['Bus STOPPING', 'Bus STOPPED',
-                        'Bus EXITING', 'Bus EXITED',
-                        'Waiting for child threads to terminate...'])
+        # The last message will mention an indeterminable thread name; ignore it
+        self.assertEqual(self._log_entries[:-1],
+                         ['Bus STOPPING', 'Bus STOPPED',
+                          'Bus EXITING', 'Bus EXITED',
+                          'Waiting for child threads to terminate...'])
 
     def test_start_with_callback(self):
         b = wspbus.Bus()

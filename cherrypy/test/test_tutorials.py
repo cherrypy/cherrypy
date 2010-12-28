@@ -5,8 +5,8 @@ from cherrypy.test import helper
 
 
 class TutorialTest(helper.CPWebCase):
-    @staticmethod
-    def setup_server():
+    @classmethod
+    def setup_server(cls):
         
         conf = cherrypy.config.copy()
         
@@ -27,7 +27,7 @@ class TutorialTest(helper.CPWebCase):
             app.root.sessions = sessions
             app.root.traceback_setting = traceback_setting
             
-            test.sync_apps()
+            cls.supervisor.sync_apps()
         load_tut_module.exposed = True
         
         def sessions():

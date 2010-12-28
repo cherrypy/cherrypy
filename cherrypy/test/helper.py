@@ -57,6 +57,8 @@ class Supervisor(object):
             setattr(self, k, v)
 
 
+log_to_stderr = lambda msg, level: sys.stderr.write(msg + os.linesep)
+
 class LocalSupervisor(Supervisor):
     """Base class for modeling/controlling servers which run in the same process.
 
@@ -80,7 +82,7 @@ class LocalSupervisor(Supervisor):
             engine.signal_handler.subscribe()
         if hasattr(engine, "console_control_handler"):
             engine.console_control_handler.subscribe()
-        #engine.subscribe('log', lambda msg, level: sys.stderr.write(msg + os.linesep))
+        #engine.subscribe('log', log_to_stderr)
 
     def start(self, modulename=None):
         """Load and start the HTTP server."""
@@ -101,6 +103,11 @@ class LocalSupervisor(Supervisor):
         td = getattr(self, 'teardown', None)
         if td:
             td()
+        
+        for name, server in getattr(cherrypy, 'servers', {}).items():
+            server.unsubscribe()
+            del cherrypy.servers[name]
+        
         cherrypy.engine.exit()
 
 
@@ -223,6 +230,7 @@ class CPWebCase(webtest.WebCase):
                          'environment': "test_suite",
                          })
         if supervisor.scheme == "https":
+            #baseconf['server.ssl_module'] = 'builtin'
             baseconf['server.ssl_certificate'] = serverpem
             baseconf['server.ssl_private_key'] = serverpem
 

@@ -201,7 +201,7 @@ class MemoryCache(Cache):
                 if expiration_time <= now:
                     for obj_size, uri, sel_header_values in objects:
                         try:
-                            del self.store[uri][sel_header_values]
+                            del self.store[uri][tuple(sel_header_values)]
                             self.tot_expires += 1
                             self.cursize -= obj_size
                         except KeyError:

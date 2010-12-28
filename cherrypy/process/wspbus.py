@@ -307,6 +307,7 @@ class Bus(object):
                 else:
                     d = t.isDaemon()
                 if not d:
+                    self.log("Waiting for thread %s." % t.getName())
                     t.join()
         
         if self.execv:

@@ -81,6 +81,7 @@ try:
     import cStringIO as StringIO
 except ImportError:
     import StringIO
+DEFAULT_BUFFER_SIZE = -1
 
 _fileobject_uses_str_type = isinstance(socket._fileobject(None)._rbuf, basestring)
 
@@ -1217,14 +1218,15 @@ class HTTPConnection(object):
     remote_addr = None
     remote_port = None
     ssl_env = None
-    rbufsize = -1
+    rbufsize = DEFAULT_BUFFER_SIZE
+    wbufsize = DEFAULT_BUFFER_SIZE
     RequestHandlerClass = HTTPRequest
     
     def __init__(self, server, sock, makefile=CP_fileobject):
         self.server = server
         self.socket = sock
         self.rfile = makefile(sock, "rb", self.rbufsize)
-        self.wfile = makefile(sock, "wb", -1)
+        self.wfile = makefile(sock, "wb", self.wbufsize)
     
     def communicate(self):
         """Read each request and respond appropriately."""
@@ -1283,7 +1285,7 @@ class HTTPConnection(object):
         except NoSSLError:
             if req and not req.sent_headers:
                 # Unwrap our wfile
-                self.wfile = CP_fileobject(self.socket._sock, "wb", -1)
+                self.wfile = CP_fileobject(self.socket._sock, "wb", self.wbufsize)
                 req.simple_response("400 Bad Request",
                     "The client sent a plain HTTP request, but "
                     "this server only speaks HTTPS on this port.")
@@ -1506,7 +1508,7 @@ class SSLAdapter(object):
     Required methods:
     
         * ``wrap(sock) -> (wrapped socket, ssl environ dict)``
-        * ``makefile(sock, mode='r', bufsize=-1) -> socket file object``
+        * ``makefile(sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE) -> socket file object``
     """
     
     def __init__(self, certificate, private_key, certificate_chain=None):
@@ -1517,7 +1519,7 @@ class SSLAdapter(object):
     def wrap(self, sock):
         raise NotImplemented
     
-    def makefile(self, sock, mode='r', bufsize=-1):
+    def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
         raise NotImplemented
 
 
@@ -1766,7 +1768,7 @@ class HTTPServer(object):
                            "Content-Type: text/plain\r\n\r\n",
                            msg]
                     
-                    wfile = CP_fileobject(s, "wb", -1)
+                    wfile = CP_fileobject(s, "wb", DEFAULT_BUFFER_SIZE)
                     try:
                         wfile.sendall("".join(buf))
                     except socket.error, x:

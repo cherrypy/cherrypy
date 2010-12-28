@@ -47,7 +47,7 @@ class ServerConfigTests(helper.CPWebCase):
             # Also test default server.instance = builtin server
             'server.yetanother.socket_port': 9878,
             })
-
+    
     PORT = 9876
     
     def testBasicConfig(self):
