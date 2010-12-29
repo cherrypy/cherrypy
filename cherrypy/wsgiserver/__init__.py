@@ -14,6 +14,7 @@ Simplest example on how to use this module directly
     server = wsgiserver.CherryPyWSGIServer(
                 ('0.0.0.0', 8070), my_crazy_app,
                 server_name='www.cherrypy.example')
+    server.start()
     
 The CherryPy WSGI server can serve as many WSGI applications 
 as you want in one instance by using a WSGIPathInfoDispatcher::
