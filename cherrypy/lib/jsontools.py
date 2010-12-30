@@ -1,13 +1,14 @@
 import sys
 import cherrypy
 
-if sys.version_info >= (2, 6):
-    # Python 2.6: simplejson is part of the standard library
-    import json
-else:
-    try:
-        import simplejson as json
-    except ImportError:
+try:
+    # Prefer simplejson, which is usually more advanced than the builtin module.
+    import simplejson as json
+except ImportError:
+    if sys.version_info >= (2, 6):
+        # Python 2.6: simplejson is part of the standard library
+        import json
+    else:
         json = None
 
 if json is None:
