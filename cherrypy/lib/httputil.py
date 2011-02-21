@@ -367,6 +367,15 @@ class CaseInsensitiveDict(dict):
         return dict.pop(self, str(key).title(), default)
 
 
+#   TEXT = <any OCTET except CTLs, but including LWS>
+#
+# A CRLF is allowed in the definition of TEXT only as part of a header
+# field continuation. It is expected that the folding LWS will be
+# replaced with a single SP before interpretation of the TEXT value."
+header_translate_table = ''.join([chr(i) for i in xrange(256)])
+header_translate_deletechars = ''.join([chr(i) for i in xrange(32)]) + chr(127)
+
+
 class HeaderMap(CaseInsensitiveDict):
     """A dict subclass for HTTP request and response headers.
     
@@ -377,6 +386,14 @@ class HeaderMap(CaseInsensitiveDict):
     """
     
     protocol=(1, 1)
+    encodings = ["ISO-8859-1"]
+    
+    # Someday, when http-bis is done, this will probably get dropped
+    # since few servers, clients, or intermediaries do it. But until then,
+    # we're going to obey the spec as is.
+    # "Words of *TEXT MAY contain characters from character sets other than
+    # ISO-8859-1 only when encoded according to the rules of RFC 2047."
+    use_rfc_2047 = True
     
     def elements(self, key):
         """Return a sorted list of HeaderElements for the given header."""
@@ -393,37 +410,43 @@ class HeaderMap(CaseInsensitiveDict):
         header_list = []
         for k, v in self.items():
             if isinstance(k, unicode):
-                k = k.encode("ISO-8859-1")
+                k = self.encode(k)
             
             if not isinstance(v, basestring):
                 v = str(v)
             
             if isinstance(v, unicode):
                 v = self.encode(v)
+            
+            # See header_translate_* constants above.
+            # Replace only if you really know what you're doing.
+            k = k.translate(header_translate_table, header_translate_deletechars)
+            v = v.translate(header_translate_table, header_translate_deletechars)
+            
             header_list.append((k, v))
         return header_list
     
     def encode(self, v):
-        """Return the given header value, encoded for HTTP output."""
-        # HTTP/1.0 says, "Words of *TEXT may contain octets 
-        # from character sets other than US-ASCII." and 
-        # "Recipients of header field TEXT containing octets 
-        # outside the US-ASCII character set may assume that 
-        # they represent ISO-8859-1 characters." 
-        try:
-            v = v.encode("ISO-8859-1")
-        except UnicodeEncodeError:
-            if self.protocol == (1, 1):
-                # Encode RFC-2047 TEXT 
-                # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?="). 
-                # We do our own here instead of using the email module
-                # because we never want to fold lines--folding has
-                # been deprecated by the HTTP working group.
-                v = b2a_base64(v.encode('utf-8'))
-                v = ('=?utf-8?b?' + v.strip('\n') + '?=')
-            else:
-                raise
-        return v
+        """Return the given header name or value, encoded for HTTP output."""
+        for enc in self.encodings:
+            try:
+                return v.encode(enc)
+            except UnicodeEncodeError:
+                continue
+        
+        if self.protocol == (1, 1) and self.use_rfc_2047:
+            # Encode RFC-2047 TEXT 
+            # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?="). 
+            # We do our own here instead of using the email module
+            # because we never want to fold lines--folding has
+            # been deprecated by the HTTP working group.
+            v = b2a_base64(v.encode('utf-8'))
+            return ('=?utf-8?b?' + v.strip('\n') + '?=')
+        
+        raise ValueError("Could not encode header part %r using "
+                         "any of the encodings %r." %
+                         (v, self.encodings))
+
 
 class Host(object):
     """An internet address.

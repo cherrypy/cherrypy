@@ -364,8 +364,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # check injection protection
         # See http://www.cherrypy.org/ticket/1003
         self.getPage("/redirect/custom?code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval")
-        self.assertStatus(500)
-        loc = self.assertNoHeader('Set-Cookie')
+        self.assertStatus(303)
+        loc = self.assertHeader('Location')
+        assert 'Set-Cookie' in loc
+        self.assertNoHeader('Set-Cookie')
     
     def test_InternalRedirect(self):
         # InternalRedirect
