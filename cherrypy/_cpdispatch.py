@@ -518,8 +518,8 @@ class RoutesDispatcher(object):
         
         handler = None
         if result:
-            controller = result.get('controller', None)
-            controller = self.controllers.get(controller)
+            controller = result.get('controller')
+            controller = self.controllers.get(controller, controller)
             if controller:
                 # Get config from the controller.
                 if hasattr(controller, "_cp_config"):
