@@ -10,6 +10,7 @@ to a hierarchical arrangement of objects, starting at request.app.root.
 """
 
 import string
+import types
 
 import cherrypy
 
@@ -521,6 +522,8 @@ class RoutesDispatcher(object):
             controller = result.get('controller')
             controller = self.controllers.get(controller, controller)
             if controller:
+                if isinstance(controller, (type, types.ClassType)):
+                    controller = controller()
                 # Get config from the controller.
                 if hasattr(controller, "_cp_config"):
                     merge(controller._cp_config)
