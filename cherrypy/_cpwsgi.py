@@ -229,7 +229,7 @@ class AppResponse(object):
         local = httputil.Host('', int(env('SERVER_PORT', 80)),
                            env('SERVER_NAME', ''))
         remote = httputil.Host(env('REMOTE_ADDR', ''),
-                               int(env('REMOTE_PORT', -1)),
+                               int(env('REMOTE_PORT', -1) or -1),
                                env('REMOTE_HOST', ''))
         scheme = env('wsgi.url_scheme')
         sproto = env('ACTUAL_SERVER_PROTOCOL', "HTTP/1.1")
