@@ -11,6 +11,12 @@ def setup_server():
             return repr(parts)
         multipart.exposed = True
         
+        def multipart_form_data(self, **kwargs):
+            params = kwargs.items()
+            params.sort()
+            return repr(params)
+        multipart_form_data.exposed = True
+        
         def flashupload(self, Filedata, Upload, Filename):
             return ("Upload: %r, Filename: %r, Filedata: %r" %
                     (Upload, Filename, Filedata.file.read()))
@@ -57,6 +63,29 @@ This is the <strong>HTML</strong> version
             ]
         self.getPage('/multipart', headers, "POST", body)
         self.assertBody(repr([text_part, html_part]))
+    
+    def test_multipart_form_data(self):
+        body='\r\n'.join(['--X',
+                          'Content-Disposition: form-data; name="foo"',
+                          '',
+                          'bar',
+                          '--X',
+                          # Test a param with more than one value.
+                          # See http://www.cherrypy.org/ticket/1028
+                          'Content-Disposition: form-data; name="baz"',
+                          '',
+                          '111',
+                          '--X',
+                          'Content-Disposition: form-data; name="baz"',
+                          '',
+                          '333',
+                          '--X--'])
+        self.getPage('/multipart_form_data', method='POST',
+                     headers=[("Content-Type", "multipart/form-data;boundary=X"),
+                              ("Content-Length", str(len(body))),
+                              ],
+                     body=body),
+        self.assertBody(repr([('baz', [u'111', u'333']), ('foo', u'bar')]))
 
 
 class SafeMultipartHandlingTest(helper.CPWebCase):

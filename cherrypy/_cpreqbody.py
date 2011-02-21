@@ -200,11 +200,18 @@ def process_multipart_form_data(entity):
         else:
             if part.filename is None:
                 # It's a regular field
-                entity.params[part.name] = part.fullvalue()
+                value = part.fullvalue()
             else:
                 # It's a file upload. Retain the whole part so consumer code
                 # has access to its .file and .filename attributes.
-                entity.params[part.name] = part
+                value = part
+            
+            if part.name in entity.params:
+                if not isinstance(entity.params[part.name], list):
+                    entity.params[part.name] = [entity.params[part.name]]
+                entity.params[part.name].append(value)
+            else:
+                entity.params[part.name] = value
     
     entity.parts = kept_parts
 
