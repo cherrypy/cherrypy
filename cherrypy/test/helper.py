@@ -104,11 +104,11 @@ class LocalSupervisor(Supervisor):
         if td:
             td()
         
+        cherrypy.engine.exit()
+        
         for name, server in getattr(cherrypy, 'servers', {}).items():
             server.unsubscribe()
             del cherrypy.servers[name]
-        
-        cherrypy.engine.exit()
 
 
 class NativeServerSupervisor(LocalSupervisor):
