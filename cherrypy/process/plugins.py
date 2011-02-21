@@ -277,6 +277,7 @@ class DropPrivileges(SimplePlugin):
                 self.bus.log('Started as uid: %r gid: %r' % current_ids())
                 if self.gid is not None:
                     os.setgid(self.gid)
+                    os.setgroups([])
                 if self.uid is not None:
                     os.setuid(self.uid)
                 self.bus.log('Running as uid: %r gid: %r' % current_ids())
