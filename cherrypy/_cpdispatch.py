@@ -528,13 +528,15 @@ class RoutesDispatcher(object):
                 if hasattr(controller, "_cp_config"):
                     merge(controller._cp_config)
             
-            action = result.get('action', None)
+            action = result.get('action')
             if action is not None:
                 handler = getattr(controller, action, None)
                 # Get config from the handler 
                 if hasattr(handler, "_cp_config"): 
                     merge(handler._cp_config)
-                    
+            else:
+                handler = controller
+        
         # Do the last path atom here so it can
         # override the controller's _cp_config.
         if last:
