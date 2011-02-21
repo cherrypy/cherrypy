@@ -569,7 +569,8 @@ class HTTPRequest(object):
         
         try:
             method, uri, req_protocol = request_line.strip().split(" ", 2)
-        except ValueError:
+            rp = int(req_protocol[5]), int(req_protocol[7])
+        except (ValueError, IndexError):
             self.simple_response("400 Bad Request", "Malformed Request-Line")
             return
         
@@ -621,7 +622,6 @@ class HTTPRequest(object):
         # Notice that, in (b), the response will be "HTTP/1.1" even though
         # the client only understands 1.0. RFC 2616 10.5.6 says we should
         # only return 505 if the _major_ version is different.
-        rp = int(req_protocol[5]), int(req_protocol[7])
         sp = int(self.server.protocol[5]), int(self.server.protocol[7])
         
         if sp[0] != rp[0]:
