@@ -233,6 +233,29 @@ class ServerAdapter(object):
         self.start()
 
 
+class FlupCGIServer(object):
+    """Adapter for a flup.server.cgi.WSGIServer."""
+   
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.ready = False
+    
+    def start(self):
+        """Start the CGI server."""
+        # We have to instantiate the server class here because its __init__
+        # starts a threadpool. If we do it too early, daemonize won't work.
+        from flup.server.cgi import WSGIServer
+       
+        self.cgiserver = WSGIServer(*self.args, **self.kwargs)
+        self.ready = True
+        self.cgiserver.run()
+    
+    def stop(self):
+        """Stop the HTTP server."""
+        self.ready = False
+
+
 class FlupFCGIServer(object):
     """Adapter for a flup.server.fcgi.WSGIServer."""
     
