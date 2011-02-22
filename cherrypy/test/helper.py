@@ -30,6 +30,7 @@ def get_tst_config(overconf = {}):
             'host': '127.0.0.1',
             'validate': False,
             'conquer': False,
+            'server': 'wsgi',
         }
         try:
             import testconfig
@@ -136,9 +137,11 @@ class LocalWSGISupervisor(LocalSupervisor):
         """Hook a new WSGI app into the origin server."""
         cherrypy.server.httpserver.wsgi_app = self.get_app()
 
-    def get_app(self):
+    def get_app(self, app=None):
         """Obtain a new (decorated) WSGI app to hook into the origin server."""
-        app = cherrypy.tree
+        if app is None:
+            app = cherrypy.tree
+        
         if self.conquer:
             try:
                 import wsgiconq
@@ -146,6 +149,7 @@ class LocalWSGISupervisor(LocalSupervisor):
                 warnings.warn("Error importing wsgiconq. pyconquer will not run.")
             else:
                 app = wsgiconq.WSGILogger(app, c_calls=True)
+        
         if self.validate:
             try:
                 from wsgiref import validate
@@ -154,7 +158,7 @@ class LocalWSGISupervisor(LocalSupervisor):
             else:
                 #wraps the app in the validator
                 app = validate.validator(app)
-
+        
         return app
 
 
@@ -179,6 +183,10 @@ def get_modfcgid_supervisor(**options):
     from cherrypy.test import modfcgid
     return modfcgid.ModFCGISupervisor(**options)
 
+def get_modfastcgi_supervisor(**options):
+    from cherrypy.test import modfastcgi
+    return modfastcgi.ModFCGISupervisor(**options)
+
 def get_wsgi_u_supervisor(**options):
     cherrypy.server.wsgi_version = ('u', 0)
     return LocalWSGISupervisor(**options)
@@ -196,10 +204,10 @@ class CPWebCase(webtest.WebCase):
                          'modpygw': get_modpygw_supervisor,
                          'modwsgi': get_modwsgi_supervisor,
                          'modfcgid': get_modfcgid_supervisor,
+                         'modfastcgi': get_modfastcgi_supervisor,
                          }
     default_server = "wsgi"
-    supervisor_factory = None
-
+    
     @classmethod
     def _setup_server(cls, supervisor, conf):
         v = sys.version.split()[0]
@@ -249,11 +257,10 @@ class CPWebCase(webtest.WebCase):
         ''
         #Creates a server
         conf = get_tst_config()
-        if not cls.supervisor_factory:
-            cls.supervisor_factory = cls.available_servers.get(conf.get('server', 'wsgi'))
-            if cls.supervisor_factory is None:
-                raise RuntimeError('Unknown server in config: %s' % conf['server'])
-        supervisor = cls.supervisor_factory(**conf)
+        supervisor_factory = cls.available_servers.get(conf.get('server', 'wsgi'))
+        if supervisor_factory is None:
+            raise RuntimeError('Unknown server in config: %s' % conf['server'])
+        supervisor = supervisor_factory(**conf)
 
         #Copied from "run_test_suite"
         cherrypy.config.reset()
