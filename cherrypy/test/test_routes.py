@@ -35,10 +35,11 @@ class RoutesDispatchTest(helper.CPWebCase):
                 return "OK"
             
         d = cherrypy.dispatch.RoutesDispatcher()
-        d.connect(name='hounslow', route='hounslow', controller=City('Hounslow'))
-        d.connect(name='surbiton', route='surbiton', controller=City('Surbiton'),
+        d.connect(action='index', name='hounslow', route='/hounslow',
+                  controller=City('Hounslow'))
+        d.connect(name='surbiton', route='/surbiton', controller=City('Surbiton'),
                   action='index', conditions=dict(method=['GET']))
-        d.mapper.connect('surbiton', controller='surbiton',
+        d.mapper.connect('/surbiton', controller='surbiton',
                          action='update', conditions=dict(method=['POST']))
         d.connect('main', ':action', controller=Dummy())
         
