@@ -67,6 +67,82 @@ class HTTPTests(helper.CPWebCase):
         cherrypy.tree.mount(Root())
         cherrypy.config.update({'server.max_request_body_size': 30000000})
     
+    def test_no_content_length(self):
+        # "The presence of a message-body in a request is signaled by the
+        # inclusion of a Content-Length or Transfer-Encoding header field in
+        # the request's message-headers."
+        # 
+        # Send a message with neither header and no body. Even though
+        # the request is of method POST, this should be OK because we set
+        # request.process_request_body to False for our handler.
+        if self.scheme == "https":
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.request("POST", "/no_body")
+        response = c.getresponse()
+        self.body = response.fp.read()
+        self.status = str(response.status)
+        self.assertStatus(200)
+        self.assertBody('Hello world!')
+        
+        # Now send a message that has no Content-Length, but does send a body.
+        # Verify that CP times out the socket and responds
+        # with 411 Length Required.
+        if self.scheme == "https":
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.request("POST", "/")
+        response = c.getresponse()
+        self.body = response.fp.read()
+        self.status = str(response.status)
+        self.assertStatus(411)
+    
+    def test_post_multipart(self):
+        alphabet = "abcdefghijklmnopqrstuvwxyz"
+        # generate file contents for a large post
+        contents = "".join([c * 65536 for c in alphabet])
+        
+        # encode as multipart form data
+        files=[('file', 'file.txt', contents)]
+        content_type, body = encode_multipart_formdata(files)
+        body = body.encode('Latin-1')
+        
+        # post file
+        if self.scheme == 'https':
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest('POST', '/post_multipart')
+        c.putheader('Content-Type', content_type)
+        c.putheader('Content-Length', str(len(body)))
+        c.endheaders()
+        c.send(body)
+        
+        response = c.getresponse()
+        self.body = response.fp.read()
+        self.status = str(response.status)
+        self.assertStatus(200)
+        self.assertBody(", ".join(["%s * 65536" % c for c in alphabet]))
+
+    def test_malformed_request_line(self):
+        if getattr(cherrypy.server, "using_apache", False):
+            return self.skip("skipped due to known Apache differences...")
+        
+        # Test missing version in Request-Line
+        if self.scheme == 'https':
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c._output('GET /')
+        c._send_output()
+        response = c.response_class(c.sock, strict=c.strict, method='GET')
+        response.begin()
+        self.assertEqual(response.status, 400)
+        self.assertEqual(response.fp.read(22), "Malformed Request-Line")
+        c.close()
+    
     def test_malformed_header(self):
         if self.scheme == 'https':
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))

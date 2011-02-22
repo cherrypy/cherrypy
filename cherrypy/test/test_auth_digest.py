@@ -37,11 +37,11 @@ class DigestAuthTest(helper.CPWebCase):
         root.digest = DigestProtected()
         cherrypy.tree.mount(root, config=conf)
 
-        def testPublic(self):
-            self.getPage("/")
-            self.assertStatus('200 OK')
-            self.assertHeader('Content-Type', 'text/html;charset=utf-8')
-            self.assertBody('This is public.')
+    def testPublic(self):
+        self.getPage("/")
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/html;charset=utf-8')
+        self.assertBody('This is public.')
 
     def testDigest(self):
         self.getPage("/digest/")

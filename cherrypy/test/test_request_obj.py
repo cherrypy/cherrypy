@@ -8,7 +8,7 @@ from httplib import IncompleteRead
 
 import cherrypy
 from cherrypy import _cptools, tools
-from cherrypy.lib import static, httputil
+from cherrypy.lib import httputil
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
                         "TRACE", "PROPFIND")
