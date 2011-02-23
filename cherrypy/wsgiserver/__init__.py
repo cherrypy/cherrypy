@@ -134,6 +134,10 @@ comma_separated_headers = ['Accept', 'Accept-Charset', 'Accept-Encoding',
     'WWW-Authenticate']
 
 
+import logging
+if not hasattr(logging, 'statistics'): logging.statistics = {}
+
+
 def read_headers(rfile, hdict=None):
     """Read headers from the given stream into the given header dict.
     
@@ -885,38 +889,47 @@ class FatalSSLAlert(Exception):
     pass
 
 
-if not _fileobject_uses_str_type:
-    class CP_fileobject(socket._fileobject):
-        """Faux file object attached to a socket object."""
+class CP_fileobject(socket._fileobject):
+    """Faux file object attached to a socket object."""
 
-        def sendall(self, data):
-            """Sendall for non-blocking sockets."""
-            while data:
-                try:
-                    bytes_sent = self.send(data)
-                    data = data[bytes_sent:]
-                except socket.error, e:
-                    if e.args[0] not in socket_errors_nonblocking:
-                        raise
+    def __init__(self, *args, **kwargs):
+        self.bytes_read = 0
+        self.bytes_written = 0
+        socket._fileobject.__init__(self, *args, **kwargs)
+    
+    def sendall(self, data):
+        """Sendall for non-blocking sockets."""
+        while data:
+            try:
+                bytes_sent = self.send(data)
+                data = data[bytes_sent:]
+            except socket.error, e:
+                if e.args[0] not in socket_errors_nonblocking:
+                    raise
 
-        def send(self, data):
-            return self._sock.send(data)
+    def send(self, data):
+        bytes_sent = self._sock.send(data)
+        self.bytes_written += bytes_sent
+        return bytes_sent
 
-        def flush(self):
-            if self._wbuf:
-                buffer = "".join(self._wbuf)
-                self._wbuf = []
-                self.sendall(buffer)
+    def flush(self):
+        if self._wbuf:
+            buffer = "".join(self._wbuf)
+            self._wbuf = []
+            self.sendall(buffer)
 
-        def recv(self, size):
-            while True:
-                try:
-                    return self._sock.recv(size)
-                except socket.error, e:
-                    if (e.args[0] not in socket_errors_nonblocking
-                        and e.args[0] not in socket_error_eintr):
-                        raise
+    def recv(self, size):
+        while True:
+            try:
+                data = self._sock.recv(size)
+                self.bytes_read += len(data)
+                return data
+            except socket.error, e:
+                if (e.args[0] not in socket_errors_nonblocking
+                    and e.args[0] not in socket_error_eintr):
+                    raise
 
+    if not _fileobject_uses_str_type:
         def read(self, size=-1):
             # Use max, disallow tiny reads in a loop as they are very inefficient.
             # We never leave read() with any leftover data from a new recv() call
@@ -1062,39 +1075,7 @@ if not _fileobject_uses_str_type:
                     buf_len += n
                     #assert buf_len == buf.tell()
                 return buf.getvalue()
-
-else:
-    class CP_fileobject(socket._fileobject):
-        """Faux file object attached to a socket object."""
-
-        def sendall(self, data):
-            """Sendall for non-blocking sockets."""
-            while data:
-                try:
-                    bytes_sent = self.send(data)
-                    data = data[bytes_sent:]
-                except socket.error, e:
-                    if e.args[0] not in socket_errors_nonblocking:
-                        raise
-
-        def send(self, data):
-            return self._sock.send(data)
-
-        def flush(self):
-            if self._wbuf:
-                buffer = "".join(self._wbuf)
-                self._wbuf = []
-                self.sendall(buffer)
-
-        def recv(self, size):
-            while True:
-                try:
-                    return self._sock.recv(size)
-                except socket.error, e:
-                    if (e.args[0] not in socket_errors_nonblocking
-                        and e.args[0] not in socket_error_eintr):
-                        raise
-
+    else:
         def read(self, size=-1):
             if size < 0:
                 # Read until EOF
@@ -1228,6 +1209,7 @@ class HTTPConnection(object):
         self.socket = sock
         self.rfile = makefile(sock, "rb", self.rbufsize)
         self.wfile = makefile(sock, "wb", self.wbufsize)
+        self.requests_seen = 0
     
     def communicate(self):
         """Read each request and respond appropriately."""
@@ -1242,6 +1224,8 @@ class HTTPConnection(object):
                 
                 # This order of operations should guarantee correct pipelining.
                 req.parse_request()
+                if self.server.stats['Enabled']:
+                    self.requests_seen += 1
                 if not req.ready:
                     # Something went wrong in the parsing (and the server has
                     # probably already made a simple_response). Return and
@@ -1359,9 +1343,24 @@ class WorkerThread(threading.Thread):
     def __init__(self, server):
         self.ready = False
         self.server = server
+        
+        self.requests_seen = 0
+        self.bytes_read = 0
+        self.bytes_written = 0
+        self.start_time = None
+        self.work_time = 0
+        self.stats = {
+            'Requests': lambda s: self.requests_seen + (0 if self.start_time is None else self.conn.requests_seen),
+            'Bytes Read': lambda s: self.bytes_read + (0 if self.start_time is None else self.conn.rfile.bytes_read),
+            'Bytes Written': lambda s: self.bytes_written + (0 if self.start_time is None else self.conn.wfile.bytes_written),
+            'Work Time': lambda s: self.work_time + (0 if self.start_time is None else time.time() - self.start_time),
+            'Read Throughput': lambda s: s['Bytes Read'](s) / (s['Work Time'](s) or 1e-6),
+            'Write Throughput': lambda s: s['Bytes Written'](s) / (s['Work Time'](s) or 1e-6),
+        }
         threading.Thread.__init__(self)
     
     def run(self):
+        self.server.stats['Worker Threads'][self.getName()] = self.stats
         try:
             self.ready = True
             while True:
@@ -1370,10 +1369,18 @@ class WorkerThread(threading.Thread):
                     return
                 
                 self.conn = conn
+                if self.server.stats['Enabled']:
+                    self.start_time = time.time()
                 try:
                     conn.communicate()
                 finally:
                     conn.close()
+                    if self.server.stats['Enabled']:
+                        self.requests_seen += self.conn.requests_seen
+                        self.bytes_read += self.conn.rfile.bytes_read
+                        self.bytes_written += self.conn.wfile.bytes_written
+                        self.work_time += time.time() - self.start_time
+                        self.start_time = None
                     self.conn = None
         except (KeyboardInterrupt, SystemExit), exc:
             self.server.interrupt = exc
@@ -1478,6 +1485,10 @@ class ThreadPool(object):
                         # See http://www.cherrypy.org/ticket/691.
                         KeyboardInterrupt), exc1:
                     pass
+    
+    def _get_qsize(self):
+        return self._queue.qsize()
+    qsize = property(_get_qsize)
 
 
 
@@ -1595,6 +1606,44 @@ class HTTPServer(object):
         if not server_name:
             server_name = socket.gethostname()
         self.server_name = server_name
+        self.clear_stats()
+    
+    def clear_stats(self):
+        self._start_time = None
+        self._run_time = 0
+        self.stats = {
+            'Enabled': False,
+            'Bind Address': lambda s: repr(self.bind_addr),
+            'Run time': lambda s: 0 if not s['Enabled'] else self.runtime(),
+            'Accepts': 0,
+            'Accepts/sec': lambda s: s['Accepts'] / self.runtime(),
+            'Queue': lambda s: getattr(self.requests, "qsize", None),
+            'Threads': lambda s: len(getattr(self.requests, "_threads", [])),
+            'Threads Idle': lambda s: getattr(self.requests, "idle", None),
+            'Socket Errors': 0,
+            'Requests': lambda s: 0 if not s['Enabled'] else sum([w['Requests'](w) for w
+                                       in s['Worker Threads'].values()], 0),
+            'Bytes Read': lambda s: 0 if not s['Enabled'] else sum([w['Bytes Read'](w) for w
+                                         in s['Worker Threads'].values()], 0),
+            'Bytes Written': lambda s: 0 if not s['Enabled'] else sum([w['Bytes Written'](w) for w
+                                            in s['Worker Threads'].values()], 0),
+            'Work Time': lambda s: 0 if not s['Enabled'] else sum([w['Work Time'](w) for w
+                                         in s['Worker Threads'].values()], 0),
+            'Read Throughput': lambda s: 0 if not s['Enabled'] else sum(
+                [w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
+                 for w in s['Worker Threads'].values()], 0),
+            'Write Throughput': lambda s: 0 if not s['Enabled'] else sum(
+                [w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
+                 for w in s['Worker Threads'].values()], 0),
+            'Worker Threads': {},
+            }
+        logging.statistics["CherryPy HTTPServer %d" % id(self)] = self.stats
+    
+    def runtime(self):
+        if self._start_time is None:
+            return self._run_time
+        else:
+            return self._run_time + (time.time() - self._start_time)
     
     def __str__(self):
         return "%s.%s(%r)" % (self.__module__, self.__class__.__name__,
@@ -1618,6 +1667,7 @@ class HTTPServer(object):
                              "Use '0.0.0.0' (IPv4) or '::' (IPv6) instead "
                              "to listen on all active interfaces.")
         self._bind_addr = value
+        
     bind_addr = property(_get_bind_addr, _set_bind_addr,
         doc="""The interface on which to listen for connections.
         
@@ -1711,6 +1761,7 @@ class HTTPServer(object):
         self.requests.start()
         
         self.ready = True
+        self._start_time = time.time()
         while self.ready:
             self.tick()
             if self.interrupt:
@@ -1748,6 +1799,8 @@ class HTTPServer(object):
         """Accept a new connection and put it on the Queue."""
         try:
             s, addr = self.socket.accept()
+            if self.stats['Enabled']:
+                self.stats['Accepts'] += 1
             if not self.ready:
                 return
             
@@ -1808,6 +1861,8 @@ class HTTPServer(object):
             # accept() by default
             return
         except socket.error, x:
+            if self.stats['Enabled']:
+                self.stats['Socket Errors'] += 1
             if x.args[0] in socket_error_eintr:
                 # I *think* this is right. EINTR should occur when a signal
                 # is received during the accept() call; all docs say retry
@@ -1837,6 +1892,9 @@ class HTTPServer(object):
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         self.ready = False
+        if self._start_time is not None:
+            self._run_time += (time.time() - self._start_time)
+        self._start_time = None
         
         sock = getattr(self, "socket", None)
         if sock:
@@ -1936,6 +1994,7 @@ class CherryPyWSGIServer(HTTPServer):
         
         self.timeout = timeout
         self.shutdown_timeout = shutdown_timeout
+        self.clear_stats()
     
     def _get_numthreads(self):
         return self.requests.min
@@ -2145,3 +2204,4 @@ class WSGIPathInfoDispatcher(object):
         start_response('404 Not Found', [('Content-Type', 'text/plain'),
                                          ('Content-Length', '0')])
         return ['']
+

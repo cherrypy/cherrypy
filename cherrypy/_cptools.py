@@ -462,6 +462,7 @@ class DeprecatedTool(Tool):
 
 default_toolbox = _d = Toolbox("tools")
 _d.session_auth = SessionAuthTool(cptools.session_auth)
+_d.allow = Tool('on_start_resource', cptools.allow)
 _d.proxy = Tool('before_request_body', cptools.proxy, priority=30)
 _d.response_headers = Tool('on_start_resource', cptools.response_headers)
 _d.log_tracebacks = Tool('before_error_response', cptools.log_traceback)

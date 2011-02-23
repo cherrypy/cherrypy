@@ -5,10 +5,12 @@ This tutorial shows you how to pass GET/POST variables to methods.
 """
 
 import cherrypy
-
+from cherrypy.lib import cpstats
 
 class WelcomePage:
 
+    cpstats = cpstats.StatsPage()
+    
     def index(self):
         # Ask for the user's name.
         return '''
