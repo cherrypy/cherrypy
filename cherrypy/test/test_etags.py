@@ -27,7 +27,6 @@ class ETagTest(helper.CPWebCase):
                       'tools.etags.autotags': True,
                       }}
         cherrypy.tree.mount(Root(), config=conf)
-
     
     def test_etags(self):
         self.getPage("/resource")

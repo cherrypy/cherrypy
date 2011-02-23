@@ -7,14 +7,6 @@ import cherrypy
 from cherrypy import wsgiserver
 
 
-class CPHTTPRequest(wsgiserver.HTTPRequest):
-    pass
-
-
-class CPHTTPConnection(wsgiserver.HTTPConnection):
-    pass
-
-
 class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
     """Wrapper for wsgiserver.CherryPyWSGIServer.
     

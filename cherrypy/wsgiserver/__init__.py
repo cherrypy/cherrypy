@@ -89,6 +89,15 @@ _fileobject_uses_str_type = isinstance(socket._fileobject(None)._rbuf, basestrin
 import threading
 import time
 import traceback
+def format_exc(limit=None):
+    """Like print_exc() but return a string. Backport for Python 2.3."""
+    try:
+        etype, value, tb = sys.exc_info()
+        return ''.join(traceback.format_exception(etype, value, tb, limit))
+    finally:
+        etype = value = tb = None
+
+
 from urllib import unquote
 from urlparse import urlparse
 import warnings
@@ -1308,15 +1317,6 @@ class HTTPConnection(object):
             pass
 
 
-def format_exc(limit=None):
-    """Like print_exc() but return a string. Backport for Python 2.3."""
-    try:
-        etype, value, tb = sys.exc_info()
-        return ''.join(traceback.format_exception(etype, value, tb, limit))
-    finally:
-        etype = value = tb = None
-
-
 _SHUTDOWNREQUEST = None
 
 class WorkerThread(threading.Thread):
@@ -1667,7 +1667,6 @@ class HTTPServer(object):
                              "Use '0.0.0.0' (IPv4) or '::' (IPv6) instead "
                              "to listen on all active interfaces.")
         self._bind_addr = value
-        
     bind_addr = property(_get_bind_addr, _set_bind_addr,
         doc="""The interface on which to listen for connections.
         

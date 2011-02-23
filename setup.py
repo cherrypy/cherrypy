@@ -98,11 +98,11 @@ fix_data_files(data_files)
 def main():
     if sys.version < required_python_version:
         s = "I'm sorry, but %s %s requires Python %s or later."
-        print s % (name, version, required_python_version)
+        print(s % (name, version, required_python_version))
         sys.exit(1)
     # set default location for "data_files" to
     # platform specific "site-packages" location
-    for scheme in INSTALL_SCHEMES.values():
+    for scheme in list(INSTALL_SCHEMES.values()):
         scheme['data'] = scheme['purelib']
     
     dist = setup(

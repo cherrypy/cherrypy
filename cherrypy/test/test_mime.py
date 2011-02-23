@@ -59,7 +59,7 @@ This is the <strong>HTML</strong> version
             "--123456789--"])
         headers = [
             ('Content-Type', 'multipart/mixed; boundary=123456789'),
-            ('Content-Length', len(body)),
+            ('Content-Length', str(len(body))),
             ]
         self.getPage('/multipart', headers, "POST", body)
         self.assertBody(repr([text_part, html_part]))

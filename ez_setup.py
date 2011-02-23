@@ -36,7 +36,7 @@ def use_setuptools(
     try:
         import setuptools
         if setuptools.__version__ == '0.0.1':
-            print >>sys.stderr, (
+            sys.stderr.write(
             "You have an obsolete version of setuptools installed.  Please\n"
             "remove it from your system entirely before rerunning this script."
             )
@@ -53,7 +53,7 @@ def use_setuptools(
 
     except pkg_resources.VersionConflict:
         # XXX could we install in a subprocess here?
-        print >>sys.stderr, (
+        sys.stderr.write(
             "The required version of setuptools (>=%s) is not available, and\n"
             "can't be installed while this script is running. Please install\n"
             " a more recent version first."
@@ -69,7 +69,8 @@ def download_setuptools(
     as an egg for download under the `download_base` URL (which should end
     with a '/'). `to_dir` is the directory where the egg will be downloaded.
     """
-    import urllib2, shutil
+    from urllib2 import urlopen
+    import shutil
     egg_name = "setuptools-%s-py%s.egg" % (version,sys.version[:3])
     url = download_base + egg_name + '.zip'  # XXX
     saveto = os.path.join(to_dir, egg_name)
@@ -79,7 +80,7 @@ def download_setuptools(
         try:
             from distutils import log
             log.warn("Downloading %s", url)
-            src = urllib2.urlopen(url)
+            src = urlopen(url)
             # Read/write all in one block, so we don't create a corrupt file
             # if the download is interrupted.
             data = src.read()
@@ -127,7 +128,7 @@ def main(argv, version=DEFAULT_VERSION):
             from setuptools.command.easy_install import main
             main(argv)
         else:
-            print "Setuptools version",version,"or greater has been installed."
-            print '(Run "ez_setup.py -U setuptools" to reinstall or upgrade.)'
+            print("Setuptools version",version,"or greater has been installed.")
+            print('(Run "ez_setup.py -U setuptools" to reinstall or upgrade.)')
 if __name__=='__main__':
     main(sys.argv[1:])

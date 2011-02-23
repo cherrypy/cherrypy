@@ -40,8 +40,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             baseurl.exposed = True
         
         root = Root()
-        
-        
+                
+        if sys.version_info >= (2, 5):
+            from cherrypy.test.py25 import ExposeExamples
+            root.expose_dec = ExposeExamples()
+
+
         class TestType(type):
             """Metaclass which automatically exposes all functions in each subclass,
             and adds an instance of the subclass as an attribute of root.
@@ -240,10 +244,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     cherrypy.response.cookie[str(name)] = cookie.value
 
 
-        if sys.version_info >= (2, 5):
-            from cherrypy.test import py25
-            Root.expose_dec = py25.ExposeExamples()
-        
         cherrypy.tree.mount(root)
 
 

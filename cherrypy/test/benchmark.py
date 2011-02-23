@@ -217,7 +217,7 @@ Finished 1000 requests
         try:
             self.output = _cpmodpy.read_process(AB_PATH or "ab", self.args())
         except:
-            print _cperror.format_exc()
+            print(_cperror.format_exc())
             raise
         
         for attr, name, pattern in self.parse_patterns:
@@ -380,7 +380,7 @@ if __name__ == '__main__':
                 try:
                     run_standard_benchmarks()
                 except:
-                    print _cperror.format_exc()
+                    print(_cperror.format_exc())
                     raise
             finally:
                 cherrypy.engine.exit()

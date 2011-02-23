@@ -36,7 +36,7 @@ def get_tst_config(overconf = {}):
             import testconfig
             _conf = testconfig.config.get('supervisor', None)
             if _conf is not None:
-                for k, v in _conf.iteritems():
+                for k, v in _conf.items():
                     if isinstance(v, basestring):
                         _conf[k] = unrepr(v)
                 conf.update(_conf)
@@ -52,7 +52,7 @@ class Supervisor(object):
     """Base class for modeling and controlling servers during testing."""
 
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if k == 'port':
                 setattr(self, k, int(v))
             setattr(self, k, v)
@@ -73,7 +73,7 @@ class LocalSupervisor(Supervisor):
     using_wsgi = False
 
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
         cherrypy.server.httpserver = self.httpserver_class

@@ -40,7 +40,7 @@ class RequestObjectTests(helper.CPWebCase):
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
-                for value in dct.itervalues():
+                for value in dct.values():
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
@@ -273,7 +273,6 @@ class RequestObjectTests(helper.CPWebCase):
             }
         cherrypy.tree.mount(root, config=appconf)
 
- 
     def test_scheme(self):
         self.getPage("/scheme")
         self.assertBody(self.scheme)
@@ -715,7 +714,7 @@ class RequestObjectTests(helper.CPWebCase):
     
     def testEmptyThreadlocals(self):
         results = []
-        for x in xrange(20):
+        for x in range(20):
             self.getPage("/threadlocal/")
             results.append(self.body)
         self.assertEqual(results, ["None"] * 20)

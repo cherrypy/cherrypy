@@ -42,7 +42,7 @@ class ReferenceTests(helper.CPWebCase):
                     trash = {}
                     for x in gc.garbage:
                         trash[type(x)] = trash.get(type(x), 0) + 1
-                    trash = [(v, k) for k, v in trash.iteritems()]
+                    trash = [(v, k) for k, v in trash.items()]
                     trash.sort()
                     for pair in trash:
                         output.append("    " + repr(pair))
