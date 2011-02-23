@@ -295,6 +295,9 @@ class StatsTool(cherrypy.Tool):
         if appstats.get('Enabled', False):
             cherrypy.Tool._setup(self)
             self.record_start()
+            cherrypy.request.hooks.attach('before_request_body',
+                                          self.record_resource,
+                                          priority=35)
     
     def record_start(self):
         """Record the beginning of a request."""
@@ -317,6 +320,11 @@ class StatsTool(cherrypy.Tool):
             'Response Status': None,
             'Start Time': time.time(),
             }
+
+    def record_resource(self, debug=False):
+        w = appstats['Requests'][threading._get_ident()]
+        r = cherrypy.serving.request.remote
+        w['Client'] = '%s:%s' % (r.ip, r.port)
     
     def record_stop(self, uriset=None, slow_queries=1.0, slow_queries_count=100,
                     debug=False, **kwargs):
