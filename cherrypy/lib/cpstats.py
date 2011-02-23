@@ -66,8 +66,8 @@ good on a report: spaces and capitalization are just fine.
 
 In addition to scalars, values in a namespace MAY be a (third-layer)
 dict, or a list, called a "collection". For example, the CherryPy StatsTool
-keeps track of what each worker thread is doing (or has most recently done)
-in a 'Worker Threads' collection, where each key is a thread ID; each
+keeps track of what each request is doing (or has most recently done)
+in a 'Requests' collection, where each key is a thread ID; each
 value in the subdict MUST be a fourth dict (whew!) of statistical data about
 each thread. We call each subdict in the collection a "record". Similarly,
 the StatsTool also keeps a list of slow queries, where each record contains
@@ -214,15 +214,14 @@ appstats.update({
     'Bytes Read/Request': lambda s: (
         (s['Total Bytes Read'] / float(s['Total Requests']))
         if s['Total Requests'] else 0.0),
-    'Bytes Read/Second': lambda s: s['Total Bytes Read'] / (time.time() - s['Start Time']),
+    'Bytes Read/Second': lambda s: s['Total Bytes Read'] / s['Uptime'](s),
     'Bytes Written/Request': lambda s: (
         (s['Total Bytes Written'] / float(s['Total Requests']))
         if s['Total Requests'] else 0.0),
-    'Bytes Written/Second': lambda s: s['Total Bytes Written'] / (time.time() - s['Start Time']),
+    'Bytes Written/Second': lambda s: s['Total Bytes Written'] / s['Uptime'](s),
     'Current Time': lambda s: time.time(),
-    'Current Workers': 0,
-    'Idle Workers': lambda s: cherrypy.server.thread_pool - s['Current Workers'],
-    'Requests/Second': lambda s: float(s['Total Requests']) / (time.time() - s['Start Time']),
+    'Current Requests': 0,
+    'Requests/Second': lambda s: float(s['Total Requests']) / s['Uptime'](s),
     'Server Version': cherrypy.__version__,
     'Start Time': time.time(),
     'Total Bytes Read': 0,
@@ -230,11 +229,10 @@ appstats.update({
     'Total Requests': 0,
     'Total Time': 0,
     'Uptime': lambda s: time.time() - s['Start Time'],
-    'Worker Threads': {},
+    'Requests': {},
     })
 
 proc_time = lambda s: time.time() - s['Start Time']
-idle_time = lambda s: time.time() - s['End Time']
 
 
 class ByteCountWrapper(object):
@@ -283,7 +281,7 @@ average_uriset_time = lambda s: (s['Sum'] / s['Count']) if s['Count'] else 0
 
 
 class StatsTool(cherrypy.Tool):
-    """Record various information about the current worker thread."""
+    """Record various information about the current request."""
     
     def __init__(self):
         cherrypy.Tool.__init__(self, 'on_end_request', self.record_stop)
@@ -303,17 +301,17 @@ class StatsTool(cherrypy.Tool):
         request = cherrypy.serving.request
         if not hasattr(request.rfile, 'bytes_read'):
             request.rfile = ByteCountWrapper(request.rfile)
+            request.body.fp = request.rfile
         
         r = request.remote
         
-        appstats['Current Workers'] += 1
+        appstats['Current Requests'] += 1
         appstats['Total Requests'] += 1
-        appstats['Worker Threads'][threading._get_ident()] = {
+        appstats['Requests'][threading._get_ident()] = {
             'Bytes Read': None,
             'Bytes Written': None,
             'Client': '%s:%s' % (r.ip, r.port),
             'End Time': None,
-            'Idle Time': 0,
             'Processing Time': proc_time,
             'Request-Line': request.request_line,
             'Response Status': None,
@@ -323,7 +321,7 @@ class StatsTool(cherrypy.Tool):
     def record_stop(self, uriset=None, slow_queries=1.0, slow_queries_count=100,
                     debug=False, **kwargs):
         """Record the end of a request."""
-        w = appstats['Worker Threads'][threading._get_ident()]
+        w = appstats['Requests'][threading._get_ident()]
         
         r = cherrypy.request.rfile.bytes_read
         w['Bytes Read'] = r
@@ -342,9 +340,8 @@ class StatsTool(cherrypy.Tool):
         p = w['End Time'] - w['Start Time']
         w['Processing Time'] = p
         appstats['Total Time'] += p
-        w['Idle Time'] = idle_time
         
-        appstats['Current Workers'] -= 1
+        appstats['Current Requests'] -= 1
         
         if debug:
             cherrypy.log('Stats recorded: %s' % repr(w), 'TOOLS.CPSTATS')
@@ -428,7 +425,6 @@ class StatsPage(object):
             'Uptime': '%.3f',
             'Slow Queries': {
                 'End Time': None,
-                'Idle Time': None,
                 'Processing Time': '%.3f',
                 'Start Time': iso_format,
                 },
@@ -438,11 +434,10 @@ class StatsPage(object):
                 'Min': '%.3f',
                 'Sum': '%.3f',
                 },
-            'Worker Threads': {
-                'Bytes Read': None,
-                'Bytes Written': None,
+            'Requests': {
+                'Bytes Read': '%s',
+                'Bytes Written': '%s',
                 'End Time': None,
-                'Idle Time': '%.3f',
                 'Processing Time': '%.3f',
                 'Start Time': None,
                 },
@@ -582,7 +577,7 @@ table.stats2 th {
     
     def get_dict_collection(self, v, formatting):
         """Return ([headers], [rows]) for the given collection."""
-        # E.g., the 'Worker Threads' dict.
+        # E.g., the 'Requests' dict.
         headers = []
         for record in v.itervalues():
             for k3 in record:
