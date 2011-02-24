@@ -651,13 +651,13 @@ table.stats2 th {
         logging.statistics.get(namespace, {})['Enabled'] = False
         raise cherrypy.HTTPRedirect('./')
     pause.exposed = True
-    pause.cp_config = ('tools.allow.on': True,
+    pause.cp_config = {'tools.allow.on': True,
                        'tools.allow.methods': ['POST']}
     
     def resume(self, namespace):
         logging.statistics.get(namespace, {})['Enabled'] = True
         raise cherrypy.HTTPRedirect('./')
     resume.exposed = True
-    resume.cp_config = ('tools.allow.on': True,
+    resume.cp_config = {'tools.allow.on': True,
                         'tools.allow.methods': ['POST']}
 
