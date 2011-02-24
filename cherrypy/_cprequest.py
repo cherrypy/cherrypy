@@ -5,7 +5,7 @@ import time
 import warnings
 
 import cherrypy
-from cherrypy._cpcompat import basestring, copykeys, FileType, ntob, unicodestr
+from cherrypy._cpcompat import basestring, copykeys, ntob, unicodestr
 from cherrypy._cpcompat import SimpleCookie, CookieError
 from cherrypy import _cpreqbody, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
@@ -788,7 +788,9 @@ class ResponseBody(object):
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 value = []
-        elif isinstance(value, FileType):
+        # Don't use isinstance here; io.IOBase which has an ABC takes
+        # 1000 times as long as, say, isinstance(value, str)
+        elif hasattr(value, 'read'):
             value = file_generator(value)
         elif value is None:
             value = []

@@ -63,12 +63,6 @@ else:
     BytesIO = StringIO
 
 try:
-    # Python 3.0+
-    from io import IOBase as FileType
-except ImportError:
-    from types import FileType
-
-try:
     set = set
 except NameError:
     from sets import Set as set
@@ -263,9 +257,9 @@ except ImportError:
     # In Python 3, pickle is the sped-up C version.
     import pickle
 
-import binascii
 try:
     os.urandom(20)
+    import binascii
     def random20():
         return binascii.hexlify(os.urandom(20)).decode('ascii')
 except (AttributeError, NotImplementedError):

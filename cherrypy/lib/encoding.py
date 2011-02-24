@@ -2,7 +2,7 @@ import struct
 import time
 
 import cherrypy
-from cherrypy._cpcompat import basestring, BytesIO, FileType, ntob, set, unicodestr
+from cherrypy._cpcompat import basestring, BytesIO, ntob, set, unicodestr
 from cherrypy.lib import file_generator
 from cherrypy.lib import set_vary_header
 
@@ -196,7 +196,7 @@ class ResponseEncoder:
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 self.body = []
-        elif isinstance(self.body, FileType):
+        elif hasattr(self.body, 'read'):
             self.body = file_generator(self.body)
         elif self.body is None:
             self.body = []
