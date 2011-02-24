@@ -19,7 +19,7 @@ defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
 from cherrypy.test import helper
 
 class RequestObjectTests(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         class Root:
             
@@ -272,6 +272,7 @@ class RequestObjectTests(helper.CPWebCase):
             '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
             }
         cherrypy.tree.mount(root, config=appconf)
+    setup_server = staticmethod(setup_server)
 
     def test_scheme(self):
         self.getPage("/scheme")

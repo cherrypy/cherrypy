@@ -20,7 +20,6 @@ from cherrypy.test import helper
 
 
 class ToolTests(helper.CPWebCase):
-    @staticmethod
     def setup_server():
         
         # Put check_access in a custom toolbox with its own namespace
@@ -239,6 +238,7 @@ class ToolTests(helper.CPWebCase):
         if sys.version_info >= (2, 5):
             from cherrypy.test import _test_decorators
             root.tooldecs = _test_decorators.ToolExamples()
+    setup_server = staticmethod(setup_server)
 
     def testHookErrors(self):
         self.getPage("/demo/?id=1")

@@ -2,7 +2,7 @@ from cherrypy.test import helper
 
 
 class WSGIGraftTests(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         import os
         curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -74,6 +74,7 @@ class WSGIGraftTests(helper.CPWebCase):
         # be pulled from the WSGI environ each time.
         app = cherrypy.Application(Root(), script_name=None)
         cherrypy.tree.graft(ReversingMiddleware(app), '/hosted/app2')
+    setup_server = staticmethod(setup_server)
 
     wsgi_output = '''Hello, world!
 This is a wsgi app running within CherryPy!'''

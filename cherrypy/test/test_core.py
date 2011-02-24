@@ -18,7 +18,7 @@ favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
 from cherrypy.test import helper
 
 class CoreRequestHandlingTest(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         class Root:
             
@@ -245,6 +245,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
 
         cherrypy.tree.mount(root)
+    setup_server = staticmethod(setup_server)
 
 
     def testStatus(self):

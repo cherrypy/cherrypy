@@ -3,7 +3,7 @@ from cherrypy.test import helper
 
 
 class SessionAuthenticateTest(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         
         def check(username, password):
@@ -33,6 +33,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
             index.exposed = True
         
         cherrypy.tree.mount(Test())
+    setup_server = staticmethod(setup_server)
 
     
     def testSessionAuthenticate(self):

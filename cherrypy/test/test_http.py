@@ -33,7 +33,7 @@ def encode_multipart_formdata(files):
 from cherrypy.test import helper
 
 class HTTPTests(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         class Root:
             def index(self, *args, **kwargs):
@@ -66,6 +66,7 @@ class HTTPTests(helper.CPWebCase):
         
         cherrypy.tree.mount(Root())
         cherrypy.config.update({'server.max_request_body_size': 30000000})
+    setup_server = staticmethod(setup_server)
     
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the

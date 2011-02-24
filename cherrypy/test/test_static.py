@@ -14,7 +14,7 @@ from cherrypy.test import helper
 
 
 class StaticTest(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         if not os.path.exists(has_space_filepath):
             open(has_space_filepath, 'wb').write('Hello, world\r\n')
@@ -97,9 +97,9 @@ class StaticTest(helper.CPWebCase):
         
         vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
         cherrypy.tree.graft(vhost)
+    setup_server = staticmethod(setup_server)
 
 
-    @staticmethod
     def teardown_server():
         for f in (has_space_filepath, bigfile_filepath):
             if os.path.exists(f):
@@ -107,6 +107,7 @@ class StaticTest(helper.CPWebCase):
                     os.unlink(f)
                 except:
                     pass
+    teardown_server = staticmethod(teardown_server)
 
     
     def testStatic(self):

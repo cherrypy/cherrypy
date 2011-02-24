@@ -5,7 +5,7 @@ script_names = ["", "/path/to/myapp"]
 
 
 class ProxyTest(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         
         # Set up site
@@ -57,6 +57,7 @@ class ProxyTest(helper.CPWebCase):
         
         for sn in script_names:
             cherrypy.tree.mount(Root(sn), sn)
+    setup_server = staticmethod(setup_server)
     
     def testProxy(self):
         self.getPage("/")

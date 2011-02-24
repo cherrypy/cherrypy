@@ -359,7 +359,6 @@ def expose(func=None, alias=None):
         alias = func
         return expose_
 
-        
 def popargs(*args, **kwargs):
     """A decorator for _cp_dispatch 
     (cherrypy.dispatch.Dispatcher.dispatch_method_name).

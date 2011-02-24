@@ -3,7 +3,7 @@ from cherrypy.test import helper
 
 
 class WSGI_Namespace_Test(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         
         class WSGIResponse(object):
@@ -67,6 +67,7 @@ class WSGI_Namespace_Test(helper.CPWebCase):
         app.wsgiapp.pipeline.append(('changecase', ChangeCase))
         app.wsgiapp.config['changecase'] = {'to': 'upper'}
         cherrypy.tree.mount(app, config={'/': root_conf})
+    setup_server = staticmethod(setup_server)
 
     
     def test_pipeline(self):

@@ -5,7 +5,7 @@ from cherrypy.test import helper
 
 
 class TutorialTest(helper.CPWebCase):
-    @classmethod
+
     def setup_server(cls):
         
         conf = cherrypy.config.copy()
@@ -43,6 +43,7 @@ class TutorialTest(helper.CPWebCase):
         root = Dummy()
         root.load_tut_module = load_tut_module
         cherrypy.tree.mount(root)
+    setup_server = staticmethod(setup_server)
 
     
     def test01HelloWorld(self):

@@ -10,7 +10,6 @@ from cherrypy.test import helper
 
 class DigestAuthTest(helper.CPWebCase):
 
-    @staticmethod
     def setup_server():
         class Root:
             def index(self):
@@ -36,7 +35,8 @@ class DigestAuthTest(helper.CPWebCase):
         root = Root()
         root.digest = DigestProtected()
         cherrypy.tree.mount(root, config=conf)
-
+    setup_server = staticmethod(setup_server)
+    
     def testPublic(self):
         self.getPage("/")
         self.assertStatus('200 OK')

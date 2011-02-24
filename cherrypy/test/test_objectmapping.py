@@ -6,7 +6,7 @@ script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
 
 
 class ObjectMappingTest(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
         class Root:
             def index(self, name="world"):
@@ -165,6 +165,7 @@ class ObjectMappingTest(helper.CPWebCase):
                 return "milk"
         
         cherrypy.tree.mount(AnotherApp(), "/app", {'/': {'request.dispatch': d}})
+    setup_server = staticmethod(setup_server)
 
     
     def testObjectMapping(self):

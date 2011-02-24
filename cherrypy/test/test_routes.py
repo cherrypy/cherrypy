@@ -7,7 +7,7 @@ from cherrypy.test import helper
 import nose
 
 class RoutesDispatchTest(helper.CPWebCase):
-    @staticmethod
+
     def setup_server():
 
         try:
@@ -45,6 +45,7 @@ class RoutesDispatchTest(helper.CPWebCase):
         
         conf = {'/': {'request.dispatch': d}}
         cherrypy.tree.mount(root=None, config=conf)
+    setup_server = staticmethod(setup_server)
 
     def test_Routes_Dispatch(self):
         self.getPage("/hounslow")
