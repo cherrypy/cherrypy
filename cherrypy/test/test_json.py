@@ -39,7 +39,8 @@ class JsonTest(helper.CPWebCase):
     
     def test_json_output(self):
         if json is None:
-            self.skip("json not found")
+            self.skip("json not found ")
+            return
         
         self.getPage("/plain")
         self.assertBody("hello")
@@ -55,7 +56,8 @@ class JsonTest(helper.CPWebCase):
 
     def test_json_input(self):
         if json is None:
-            self.skip("json not found")
+            self.skip("json not found ")
+            return
         
         body = '[13, "c"]'
         headers = [('Content-Type', 'application/json'),

@@ -266,13 +266,13 @@ except ImportError:
 import binascii
 try:
     os.urandom(20)
-except (AttributeError, NotImplementedError):
-    # os.urandom not available until Python 2.4. Fall back to random.random.
-    def random20():
-        return binascii.hexlify(sha(random.random())).decode('ascii')
-else:
     def random20():
         return binascii.hexlify(os.urandom(20)).decode('ascii')
+except (AttributeError, NotImplementedError):
+    import random
+    # os.urandom not available until Python 2.4. Fall back to random.random.
+    def random20():
+        return sha('%s' % random.random()).hexdigest()
 
 try:
     from _thread import get_ident as get_thread_ident
