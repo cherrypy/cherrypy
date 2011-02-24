@@ -1977,7 +1977,7 @@ def get_ssl_adapter_class(name='pyopenssl'):
 
 class CherryPyWSGIServer(HTTPServer):
     
-    wsgi_version = (1, 1)
+    wsgi_version = (1, 0)
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
@@ -2130,14 +2130,6 @@ class WSGIGateway_10(WSGIGateway):
         return env
 
 
-class WSGIGateway_11(WSGIGateway_10):
-    
-    def get_environ(self):
-        env = WSGIGateway_10.get_environ(self)
-        env['wsgi.version'] = (1, 1)
-        return env
-
-
 class WSGIGateway_u0(WSGIGateway_10):
     
     def get_environ(self):
@@ -2166,7 +2158,6 @@ class WSGIGateway_u0(WSGIGateway_10):
 
 wsgi_gateways = {
     (1, 0): WSGIGateway_10,
-    (1, 1): WSGIGateway_11,
     ('u', 0): WSGIGateway_u0,
 }
 
