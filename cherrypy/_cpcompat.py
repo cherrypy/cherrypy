@@ -18,8 +18,7 @@ output.
 import os
 import sys
 
-try:
-    # Python 3
+if sys.version_info >= (3, 0):
     bytestr = bytes
     unicodestr = str
     nativestr = unicodestr
@@ -32,7 +31,11 @@ try:
         """Return the given native string as a unicode string with the given encoding."""
         # In Python 3, the native string type is unicode
         return n
-except NameError:
+    # type("")
+    from io import StringIO
+    # bytes:
+    from io import BytesIO as BytesIO
+else:
     # Python 2
     bytestr = str
     unicodestr = unicode
@@ -50,24 +53,14 @@ except NameError:
         # in the given encoding, which for ISO-8859-1 is almost always what
         # was intended.
         return n.decode(encoding)
-
-try:
-    # Python 3.0+
-    # type("")
-    from io import StringIO
-    # bytes:
-    from io import BytesIO as BytesIO
-except ImportError:
     try:
         # type("")
         from cStringIO import StringIO
-        # bytes:
-        BytesIO = StringIO
     except ImportError:
         # type("")
         from StringIO import StringIO
-        # bytes:
-        BytesIO = StringIO
+    # bytes:
+    BytesIO = StringIO
 
 try:
     # Python 3.0+
