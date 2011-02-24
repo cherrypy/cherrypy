@@ -4,6 +4,7 @@ import warnings
 
 import cherrypy
 from cherrypy.lib import attributes
+from cherrypy._cpcompat import basestring
 
 # We import * because we want to export check_port
 # et al as attributes of this module.

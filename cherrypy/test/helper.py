@@ -1,7 +1,7 @@
 """A library of helper functions for the CherryPy test suite."""
 
 import datetime
-from httplib import HTTPSConnection
+from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
 import logging
 log = logging.getLogger(__name__)
 import os
@@ -107,7 +107,7 @@ class LocalSupervisor(Supervisor):
         
         cherrypy.engine.exit()
         
-        for name, server in getattr(cherrypy, 'servers', {}).items():
+        for name, server in copyitems(getattr(cherrypy, 'servers', {})):
             server.unsubscribe()
             del cherrypy.servers[name]
 
@@ -325,7 +325,7 @@ class CPWebCase(webtest.WebCase):
         epage = esc(page)
         epage = epage.replace(esc('<pre id="traceback"></pre>'),
                               esc('<pre id="traceback">') + '(.*)' + esc('</pre>'))
-        m = re.match(epage, self.body, re.DOTALL)
+        m = re.match(ntob(epage, self.encoding), self.body, re.DOTALL)
         if not m:
             self._handlewebError('Error page does not match; expected:\n' + page)
             return
@@ -337,7 +337,7 @@ class CPWebCase(webtest.WebCase):
                 self._handlewebError('Error page contains traceback')
         else:
             if (m is None) or (
-                not re.search(re.escape(pattern),
+                not re.search(ntob(re.escape(pattern), self.encoding),
                               m.group(1))):
                 msg = 'Error page does not contain %s in traceback'
                 self._handlewebError(msg % repr(pattern))
@@ -411,7 +411,7 @@ server.ssl_private_key: r'%s'
             'extra': extra,
             }
         f = open(self.config_file, 'wb')
-        f.write(conf)
+        f.write(ntob(conf, 'utf-8'))
         f.close()
     
     def start(self, imports=None):
@@ -468,7 +468,8 @@ server.ssl_private_key: r'%s'
                     pass
                 else:
                     os.waitpid(pid, 0)
-        except OSError, x:
+        except OSError:
+            x = sys.exc_info()[1]
             if x.args != (10, 'No child processes'):
                 raise
 

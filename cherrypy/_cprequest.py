@@ -1,12 +1,12 @@
 
-from Cookie import SimpleCookie, CookieError
 import os
 import sys
 import time
-import types
 import warnings
 
 import cherrypy
+from cherrypy._cpcompat import basestring, copykeys, FileType, ntob, unicodestr
+from cherrypy._cpcompat import SimpleCookie, CookieError
 from cherrypy import _cpreqbody, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil, file_generator
@@ -117,7 +117,7 @@ class HookMap(dict):
     
     def __repr__(self):
         cls = self.__class__
-        return "%s.%s(points=%r)" % (cls.__module__, cls.__name__, self.keys())
+        return "%s.%s(points=%r)" % (cls.__module__, cls.__name__, copykeys(self))
 
 
 # Config namespace handlers
@@ -648,7 +648,8 @@ class Request(object):
                     self.stage = 'before_finalize'
                     self.hooks.run('before_finalize')
                     response.finalize()
-                except (cherrypy.HTTPRedirect, cherrypy.HTTPError), inst:
+                except (cherrypy.HTTPRedirect, cherrypy.HTTPError):
+                    inst = sys.exc_info()[1]
                     inst.set_response()
                     self.stage = 'before_finalize (HTTPError)'
                     self.hooks.run('before_finalize')
@@ -738,7 +739,8 @@ class Request(object):
                 self.error_response()
             self.hooks.run("after_error_response")
             cherrypy.serving.response.finalize()
-        except cherrypy.HTTPRedirect, inst:
+        except cherrypy.HTTPRedirect:
+            inst = sys.exc_info()[1]
             inst.set_response()
             cherrypy.serving.response.finalize()
     
@@ -786,7 +788,7 @@ class ResponseBody(object):
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 value = []
-        elif isinstance(value, types.FileType):
+        elif isinstance(value, FileType):
             value = file_generator(value)
         elif value is None:
             value = []
@@ -857,8 +859,9 @@ class Response(object):
         """Collapse self.body to a single string; replace it and return it."""
         if isinstance(self.body, basestring):
             return self.body
-
+        
         newbody = ''.join([chunk for chunk in self.body])
+        
         self.body = newbody
         return newbody
     
@@ -866,12 +869,12 @@ class Response(object):
         """Transform headers (and cookies) into self.header_list. (Core)"""
         try:
             code, reason, _ = httputil.valid_status(self.status)
-        except ValueError, x:
-            raise cherrypy.HTTPError(500, x.args[0])
+        except ValueError:
+            raise cherrypy.HTTPError(500, sys.exc_info()[1].args[0])
         
         headers = self.headers
         
-        self.output_status = str(code) + " " + headers.encode(reason)
+        self.output_status = ntob(str(code), 'ascii') + ntob(" ") + headers.encode(reason)
         
         if self.stream:
             # The upshot: wsgiserver will chunk the response if
@@ -884,7 +887,7 @@ class Response(object):
             # and 304 (not modified) responses MUST NOT
             # include a message-body."
             dict.pop(headers, 'Content-Length', None)
-            self.body = ""
+            self.body = ntob("")
         else:
             # Responses which are not streamed should have a Content-Length,
             # but allow user code to set Content-Length if desired.
@@ -902,9 +905,9 @@ class Response(object):
                     # Python 2.4 emits cookies joined by LF but 2.5+ by CRLF.
                     line = line[:-1]
                 name, value = line.split(": ", 1)
-                if isinstance(name, unicode):
+                if isinstance(name, unicodestr):
                     name = name.encode("ISO-8859-1")
-                if isinstance(value, unicode):
+                if isinstance(value, unicodestr):
                     value = headers.encode(value)
                 h.append((name, value))
     

@@ -1,12 +1,9 @@
-try:
-    set
-except NameError:
-    from sets import Set as set
 import threading
 import time
 import unittest
 
 import cherrypy
+from cherrypy._cpcompat import get_daemon, set
 from cherrypy.process import wspbus
 
 
@@ -200,11 +197,7 @@ class BusMethodTests(unittest.TestCase):
             time.sleep(0.4)
         threading.Thread(target=f).start()
         threading.Thread(target=g).start()
-        if hasattr(threading.Thread, "daemon"):
-            # Python 2.6+
-            threads = [t for t in threading.enumerate() if not t.daemon]
-        else:
-            threads = [t for t in threading.enumerate() if not t.isDaemon()]
+        threads = [t for t in threading.enumerate() if not get_daemon(t)]
         self.assertEqual(len(threads), 3)
 
         b.block()
@@ -212,11 +205,7 @@ class BusMethodTests(unittest.TestCase):
         # The block method MUST wait for the EXITING state.
         self.assertEqual(b.state, b.states.EXITING)
         # The block method MUST wait for ALL non-main, non-daemon threads to finish.
-        if hasattr(threading.Thread, "daemon"):
-            # Python 2.6+
-            threads = [t for t in threading.enumerate() if not t.daemon]
-        else:
-            threads = [t for t in threading.enumerate() if not t.isDaemon()]
+        threads = [t for t in threading.enumerate() if not get_daemon(t)]
         self.assertEqual(len(threads), 1)
         # The last message will mention an indeterminable thread name; ignore it
         self.assertEqual(self._log_entries[:-1],

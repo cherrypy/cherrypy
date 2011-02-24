@@ -62,15 +62,13 @@ the new state.::
 
 import atexit
 import os
-try:
-    set
-except NameError:
-    from sets import Set as set
 import sys
 import threading
 import time
 import traceback as _traceback
 import warnings
+
+from cherrypy._cpcompat import set
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed

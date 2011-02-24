@@ -1,12 +1,16 @@
-"""WSGI interface (see PEP 333)."""
+"""WSGI interface (see PEP 333 and 3333).
+
+Note that WSGI environ keys and values are 'native strings'; that is,
+whatever the type of "" is. For Python 2, that's a byte string; for Python 3,
+it's a unicode string. But PEP 3333 says: "even if Python's str type is
+actually Unicode "under the hood", the content of native strings must
+still be translatable to bytes via the Latin-1 encoding!"
+"""
 
 import sys as _sys
 
 import cherrypy as _cherrypy
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+from cherrypy._cpcompat import BytesIO
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 
@@ -115,7 +119,7 @@ class InternalRedirector(object):
                 environ['REQUEST_METHOD'] = "GET"
                 environ['PATH_INFO'] = ir.path
                 environ['QUERY_STRING'] = ir.query_string
-                environ['wsgi.input'] = StringIO()
+                environ['wsgi.input'] = BytesIO()
                 environ['CONTENT_LENGTH'] = "0"
                 environ['cherrypy.previous_request'] = ir.request
 

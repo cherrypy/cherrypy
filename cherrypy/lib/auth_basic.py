@@ -22,7 +22,7 @@ __author__ = 'visteya'
 __date__ = 'April 2009'
 
 import binascii
-import base64
+from cherrypy._cpcompat import base64_decode
 import cherrypy
 
 
@@ -72,10 +72,7 @@ def basic_auth(realm, checkpassword, debug=False):
         try:
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
-                # since CherryPy claims compability with Python 2.3, we must use
-                # the legacy API of base64
-                username_password = base64.decodestring(params)
-                username, password = username_password.split(':', 1)
+                username, password = base64_decode(params).split(':', 1)
                 if checkpassword(realm, username, password):
                     if debug:
                         cherrypy.log('Auth succeeded', 'TOOLS.AUTH_BASIC')

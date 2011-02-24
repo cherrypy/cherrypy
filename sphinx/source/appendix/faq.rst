@@ -58,6 +58,17 @@ Server Features and Configuration
     * Examine the number of worker threads that WSGIServer uses.
       See :attr:`cherrypy._cpserver.Server.thread_pool`.
 
+:Q: CherryPy serves my HTML but not my CSS, Javascript, or images. Why does
+    CherryPy wait to serve one resource before serving the next? Can it not
+    handle more than one connection at a time?
+
+:A: CherryPy certainly can handle multiple connections. It's usually your
+    browser that is the culprit. Firefox, for example, will only open two
+    connections at a time to the same host (and if one of those is for the
+    ``favicon.ico``, then you're down to one). Try increasing the number of
+    concurrent connections your browser makes, or test your site with a tool
+    that isn't a browser, like ``siege``, Apache's ``ab``, or even ``curl``.
+
 Development Questions
 =====================
 

@@ -4,7 +4,7 @@ import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
-from httplib import IncompleteRead
+from cherrypy._cpcompat import IncompleteRead, ntob, unicodestr
 
 import cherrypy
 from cherrypy import _cptools, tools
@@ -197,7 +197,7 @@ class RequestObjectTests(helper.CPWebCase):
             
             def ifmatch(self):
                 val = cherrypy.request.headers['If-Match']
-                assert isinstance(val, unicode)
+                assert isinstance(val, unicodestr)
                 cherrypy.response.headers['ETag'] = val
                 return val
         
@@ -206,7 +206,7 @@ class RequestObjectTests(helper.CPWebCase):
             
             def get_elements(self, headername):
                 e = cherrypy.request.headers.elements(headername)
-                return "\n".join([unicode(x) for x in e])
+                return "\n".join([unicodestr(x) for x in e])
         
         
         class Method(Test):
@@ -633,7 +633,7 @@ class RequestObjectTests(helper.CPWebCase):
                 self.assertBody("")
             elif m == "TRACE":
                 # Some HTTP servers (like modpy) have their own TRACE support
-                self.assertEqual(self.body[:5], "TRACE")
+                self.assertEqual(self.body[:5], ntob("TRACE"))
             else:
                 self.assertBody(m)
         
@@ -652,7 +652,7 @@ class RequestObjectTests(helper.CPWebCase):
         
         # Request a PUT method with a file body but no Content-Type.
         # See http://www.cherrypy.org/ticket/790.
-        b = "one thing on top of another"
+        b = ntob("one thing on top of another")
         self.persistent = True
         try:
             conn = self.HTTP_CONN
@@ -717,5 +717,5 @@ class RequestObjectTests(helper.CPWebCase):
         for x in range(20):
             self.getPage("/threadlocal/")
             results.append(self.body)
-        self.assertEqual(results, ["None"] * 20)
+        self.assertEqual(results, [ntob("None")] * 20)
 

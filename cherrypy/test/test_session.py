@@ -1,4 +1,3 @@
-from httplib import HTTPConnection, HTTPSConnection
 import os
 localDir = os.path.dirname(__file__)
 import sys
@@ -6,7 +5,9 @@ import threading
 import time
 
 import cherrypy
+from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
 from cherrypy.lib import sessions
+from cherrypy.lib.httputil import response_codes
 
 def http_methods_allowed(methods=['GET', 'HEAD']):
     method = cherrypy.request.method.upper()
@@ -240,7 +241,7 @@ class SessionTest(helper.CPWebCase):
                 else:
                     data_dict[index] = max(data_dict[index], int(body))
                 # Uncomment the following line to prove threads overlap.
-##                print index,
+##                sys.stdout.write("%d " % index)
         
         # Start <request_count> requests from each of
         # <client_thread_count> concurrent clients
@@ -286,7 +287,7 @@ class SessionTest(helper.CPWebCase):
         # before_finalize (save) and on_end (close). So the session
         # code has to survive calling save/close without init.
         self.getPage('/restricted', self.cookies, method='POST')
-        self.assertErrorPage(405, "Specified method is invalid for this server.")
+        self.assertErrorPage(405, response_codes[405])
     
     def test_6_regenerate(self):
         self.getPage('/testStr')
@@ -317,7 +318,7 @@ class SessionTest(helper.CPWebCase):
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         id1 = cookie_parts['temp']
-        self.assertEqual(sessions.RamSession.cache.keys(), [id1])
+        self.assertEqual(copykeys(sessions.RamSession.cache), [id1])
         
         # Send another request in the same "browser session".
         self.getPage('/session_cookie', self.cookies)
@@ -325,7 +326,7 @@ class SessionTest(helper.CPWebCase):
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         self.assertBody(id1)
-        self.assertEqual(sessions.RamSession.cache.keys(), [id1])
+        self.assertEqual(copykeys(sessions.RamSession.cache), [id1])
         
         # Simulate a browser close by just not sending the cookies
         self.getPage('/session_cookie')
@@ -340,7 +341,7 @@ class SessionTest(helper.CPWebCase):
         
         # Wait for the session.timeout on both sessions
         time.sleep(2.5)
-        cache = sessions.RamSession.cache.keys()
+        cache = copykeys(sessions.RamSession.cache)
         if cache:
             if cache == [id2]:
                 self.fail("The second session did not time out.")
@@ -422,7 +423,7 @@ else:
                 for i in range(request_count):
                     self.getPage("/", cookies)
                     # Uncomment the following line to prove threads overlap.
-##                    print index,
+##                    sys.stdout.write("%d " % index)
                 if not self.body.isdigit():
                     self.fail(self.body)
                 data_dict[index] = v = int(self.body)
@@ -459,5 +460,5 @@ else:
             # before_finalize (save) and on_end (close). So the session
             # code has to survive calling save/close without init.
             self.getPage('/restricted', self.cookies, method='POST')
-            self.assertErrorPage(405, "Specified method is invalid for this server.")
+            self.assertErrorPage(405, response_codes[405])
 

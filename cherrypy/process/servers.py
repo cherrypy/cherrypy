@@ -111,6 +111,7 @@ Please see `Lighttpd FastCGI Docs
 of the possible configuration options.
 """
 
+import sys
 import time
 
 
@@ -184,17 +185,16 @@ class ServerAdapter(object):
         """
         try:
             self.httpserver.start()
-        except KeyboardInterrupt, exc:
+        except KeyboardInterrupt:
             self.bus.log("<Ctrl-C> hit: shutting down HTTP server")
-            self.interrupt = exc
+            self.interrupt = sys.exc_info()[1]
             self.bus.exit()
-        except SystemExit, exc:
+        except SystemExit:
             self.bus.log("SystemExit raised: shutting down HTTP server")
-            self.interrupt = exc
+            self.interrupt = sys.exc_info()[1]
             self.bus.exit()
             raise
         except:
-            import sys
             self.interrupt = sys.exc_info()[1]
             self.bus.log("Error in HTTP server: shutting down",
                          traceback=True, level=40)

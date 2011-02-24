@@ -18,7 +18,12 @@ by adding a named handler to Config.namespaces. The name can be any string,
 and the handler must be either a callable or a context manager.
 """
 
-from ConfigParser import ConfigParser
+try:
+    # Python 3.0+
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser
+
 try:
     set
 except NameError:

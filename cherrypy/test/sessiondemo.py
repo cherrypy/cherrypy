@@ -6,6 +6,7 @@ from datetime import datetime
 import sys
 import cherrypy
 from cherrypy.lib import sessions
+from cherrypy._cpcompat import copyitems
 
 
 page = """
@@ -116,7 +117,7 @@ class Root(object):
             'changemsg': '<br>'.join(changemsg),
             'respcookie': cherrypy.response.cookie.output(),
             'reqcookie': cherrypy.request.cookie.output(),
-            'sessiondata': cherrypy.session.items(),
+            'sessiondata': copyitems(cherrypy.session),
             'servertime': datetime.utcnow().strftime("%Y/%m/%d %H:%M") + " UTC",
             'serverunixtime': calendar.timegm(datetime.utcnow().timetuple()),
             'cpversion': cherrypy.__version__,

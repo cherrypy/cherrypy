@@ -118,12 +118,8 @@ be any string, and the handler must be either a callable or a (Python 2.5
 style) context manager.
 """
 
-try:
-    set
-except NameError:
-    from sets import Set as set
-
 import cherrypy
+from cherrypy._cpcompat import set, basestring
 from cherrypy.lib import reprconf
 
 # Deprecated in  CherryPy 3.2--remove in 3.3

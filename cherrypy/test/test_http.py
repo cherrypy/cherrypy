@@ -1,9 +1,9 @@
 """Tests for managing HTTP issues (malformed requests, etc)."""
 
-from httplib import HTTPConnection, HTTPSConnection
 import mimetypes
 
 import cherrypy
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
 
 def encode_multipart_formdata(files):
@@ -84,7 +84,7 @@ class HTTPTests(helper.CPWebCase):
         self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(200)
-        self.assertBody('Hello world!')
+        self.assertBody(ntob('Hello world!'))
         
         # Now send a message that has no Content-Length, but does send a body.
         # Verify that CP times out the socket and responds
@@ -135,12 +135,12 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        c._output('GET /')
+        c._output(ntob('GET /'))
         c._send_output()
         response = c.response_class(c.sock, strict=c.strict, method='GET')
         response.begin()
         self.assertEqual(response.status, 400)
-        self.assertEqual(response.fp.read(22), "Malformed Request-Line")
+        self.assertEqual(response.fp.read(22), ntob("Malformed Request-Line"))
         c.close()
     
     def test_malformed_header(self):
@@ -151,12 +151,12 @@ class HTTPTests(helper.CPWebCase):
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
         # See http://www.cherrypy.org/ticket/941 
-        c._output('Re, 1.2.3.4#015#012')
+        c._output(ntob('Re, 1.2.3.4#015#012'))
         c.endheaders()
         
         response = c.getresponse()
         self.status = str(response.status)
         self.assertStatus(400)
-        self.body = response.fp.read()
+        self.body = response.fp.read(20)
         self.assertBody("Illegal header line.")
 

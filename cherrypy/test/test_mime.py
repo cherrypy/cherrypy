@@ -1,7 +1,7 @@
 """Tests for various MIME issues, including the safe_multipart Tool."""
 
 import cherrypy
-
+from cherrypy._cpcompat import ntob, ntou, sorted
 
 def setup_server():
     
@@ -12,9 +12,7 @@ def setup_server():
         multipart.exposed = True
         
         def multipart_form_data(self, **kwargs):
-            params = kwargs.items()
-            params.sort()
-            return repr(params)
+            return repr(list(sorted(kwargs.items())))
         multipart_form_data.exposed = True
         
         def flashupload(self, Filedata, Upload, Filename):
@@ -34,8 +32,8 @@ class MultipartTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
     
     def test_multipart(self):
-        text_part = u"This is the text version"
-        html_part = u"""<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+        text_part = ntou("This is the text version")
+        html_part = ntou("""<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
@@ -45,7 +43,7 @@ class MultipartTest(helper.CPWebCase):
 This is the <strong>HTML</strong> version
 </body>
 </html>
-"""
+""")
         body = '\r\n'.join([
             "--123456789",
             "Content-Type: text/plain; charset='ISO-8859-1'",
@@ -102,10 +100,10 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
             ('Connection', 'Keep-Alive'),
             ('Cache-Control', 'no-cache'),
             ]
-        filedata = ('<?xml version="1.0" encoding="UTF-8"?>\r\n'
-                    '<projectDescription>\r\n'
-                    '</projectDescription>\r\n')
-        body = (
+        filedata = ntob('<?xml version="1.0" encoding="UTF-8"?>\r\n'
+                        '<projectDescription>\r\n'
+                        '</projectDescription>\r\n')
+        body = (ntob(
             '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
             'Content-Disposition: form-data; name="Filename"\r\n'
             '\r\n'
@@ -114,16 +112,16 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
             'Content-Disposition: form-data; '
                 'name="Filedata"; filename=".project"\r\n'
             'Content-Type: application/octet-stream\r\n'
-            '\r\n'
+            '\r\n')
             + filedata + 
-            '\r\n'
+            ntob('\r\n'
             '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
             'Content-Disposition: form-data; name="Upload"\r\n'
             '\r\n'
             'Submit Query\r\n'
             # Flash apps omit the trailing \r\n on the last line:
             '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6--'
-            )
+            ))
         self.getPage('/flashupload', headers, "POST", body)
         self.assertBody("Upload: u'Submit Query', Filename: u'.project', "
                         "Filedata: %r" % filedata)

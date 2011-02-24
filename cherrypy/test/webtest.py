@@ -16,7 +16,6 @@ the traceback to stdout, and keep any assertions you have from running
 be of further significance to your tests).
 """
 
-from httplib import HTTPConnection, HTTPSConnection
 import os
 import pprint
 import re
@@ -28,6 +27,8 @@ import types
 
 from unittest import *
 from unittest import _TextTestResult
+
+from cherrypy._cpcompat import basestring, HTTPConnection, HTTPSConnection, unicodestr
 
 
 
@@ -70,7 +71,7 @@ class TerseTestRunner(TextTestRunner):
         result.printErrors()
         if not result.wasSuccessful():
             self.stream.write("FAILED (")
-            failed, errored = map(len, (result.failures, result.errors))
+            failed, errored = list(map(len, (result.failures, result.errors)))
             if failed:
                 self.stream.write("failures=%d" % failed)
             if errored:
@@ -126,7 +127,7 @@ class ReloadingTestLoader(TestLoader):
             return self.loadTestsFromTestCase(obj)
         elif type(obj) == types.UnboundMethodType:
             return obj.im_class(obj.__name__)
-        elif callable(obj):
+        elif hasattr(obj, '__call__'):
             test = obj()
             if not isinstance(test, TestCase) and \
                not isinstance(test, TestSuite):
@@ -174,6 +175,9 @@ class WebCase(TestCase):
     status = None
     headers = None
     body = None
+    
+    encoding = 'utf-8'
+    
     time = None
 
     def get_conn(self, auto_open=False):
@@ -227,7 +231,12 @@ class WebCase(TestCase):
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
-
+        
+        if isinstance(url, unicodestr):
+            url = url.encode('utf-8')
+        if isinstance(body, unicodestr):
+            body = body.encode('utf-8')
+        
         self.url = url
         self.time = None
         start = time.time()
@@ -255,8 +264,7 @@ class WebCase(TestCase):
             raise self.failureException(msg)
 
         p = "    Show: [B]ody [H]eaders [S]tatus [U]RL; [I]gnore, [R]aise, or sys.e[X]it >> "
-        print p,
-        # ARGH!
+        sys.stdout.write(p)
         sys.stdout.flush()
         while True:
             i = getchar().upper()
@@ -267,10 +275,10 @@ class WebCase(TestCase):
                 for x, line in enumerate(self.body.splitlines()):
                     if (x + 1) % self.console_height == 0:
                         # The \r and comma should make the next line overwrite
-                        print "<-- More -->\r",
+                        sys.stdout.write("<-- More -->\r")
                         m = getchar().lower()
                         # Erase our "More" prompt
-                        print "            \r",
+                        sys.stdout.write("            \r")
                         if m == "q":
                             break
                     print(line)
@@ -287,8 +295,7 @@ class WebCase(TestCase):
                 raise self.failureException(msg)
             elif i == "X":
                 self.exit()
-            print p,
-            # ARGH
+            sys.stdout.write(p)
             sys.stdout.flush()
 
     def exit(self):

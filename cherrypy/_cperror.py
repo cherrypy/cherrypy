@@ -107,7 +107,7 @@ and not simply return an error message as a result.
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
-from urlparse import urljoin as _urljoin
+from cherrypy._cpcompat import basestring, iteritems, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
 
 
@@ -456,7 +456,7 @@ def get_error_page(status, **kwargs):
     if kwargs.get('version') is None:
         kwargs['version'] = cherrypy.__version__
     
-    for k, v in kwargs.iteritems():
+    for k, v in iteritems(kwargs):
         if v is None:
             kwargs[k] = ""
         else:
@@ -467,7 +467,7 @@ def get_error_page(status, **kwargs):
     error_page = pages.get(code) or pages.get('default')
     if error_page:
         try:
-            if callable(error_page):
+            if hasattr(error_page, '__call__'):
                 return error_page(**kwargs)
             else:
                 return open(error_page, 'rb').read() % kwargs
@@ -510,7 +510,7 @@ def _be_ie_unfriendly(status):
             # in one chunk or it will still get replaced! Bah.
             content = content + (" " * (s - l))
         response.body = content
-        response.headers[u'Content-Length'] = str(len(content))
+        response.headers['Content-Length'] = str(len(content))
 
 
 def format_exc(exc=None):

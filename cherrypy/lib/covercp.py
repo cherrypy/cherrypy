@@ -23,7 +23,7 @@ it will call ``serve()`` for you.
 import re
 import sys
 import cgi
-from urllib import quote_plus
+from cherrypy._cpcompat import quote_plus
 import os, os.path
 localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
 

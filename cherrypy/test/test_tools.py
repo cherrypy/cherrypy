@@ -1,12 +1,8 @@
 """Test the various means of instantiating and invoking tools."""
 
 import gzip
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
 import sys
-from httplib import IncompleteRead
+from cherrypy._cpcompat import BytesIO, copyitems, itervalues, IncompleteRead, ntob, ntou, xrange
 import time
 timeout = 0.2
 import types
@@ -15,7 +11,7 @@ import cherrypy
 from cherrypy import tools
 
 
-europoundUnicode = u'\x80\xa3'
+europoundUnicode = ntou('\x80\xa3')
 
 
 #                             Client-side code                             #
@@ -47,7 +43,7 @@ class ToolTests(helper.CPWebCase):
             def _setup(self):
                 def makemap():
                     m = self._merged_args().get("map", {})
-                    cherrypy.request.numerify_map = m.items()
+                    cherrypy.request.numerify_map = copyitems(m)
                 cherrypy.request.hooks.attach('on_start_resource', makemap)
                 
                 def critical():
@@ -69,15 +65,15 @@ class ToolTests(helper.CPWebCase):
             def nadsat(self):
                 def nadsat_it_up(body):
                     for chunk in body:
-                        chunk = chunk.replace("good", "horrorshow")
-                        chunk = chunk.replace("piece", "lomtick")
+                        chunk = chunk.replace(ntob("good"), ntob("horrorshow"))
+                        chunk = chunk.replace(ntob("piece"), ntob("lomtick"))
                         yield chunk
                 cherrypy.response.body = nadsat_it_up(cherrypy.response.body)
             nadsat.priority = 0
             
             def cleanup(self):
                 # This runs after the request has been completely written out.
-                cherrypy.response.body = "razdrez"
+                cherrypy.response.body = [ntob("razdrez")]
                 id = cherrypy.request.params.get("id")
                 if id:
                     self.ended[id] = True
@@ -102,7 +98,7 @@ class ToolTests(helper.CPWebCase):
         cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
         
         def stream_handler(next_handler, *args, **kwargs):
-            cherrypy.response.output = o = StringIO()
+            cherrypy.response.output = o = BytesIO()
             try:
                 response = next_handler(*args, **kwargs)
                 # Ignore the response and return our accumulated output instead.
@@ -117,8 +113,8 @@ class ToolTests(helper.CPWebCase):
             index.exposed = True
             
             def tarfile(self):
-                cherrypy.response.output.write('I am ')
-                cherrypy.response.output.write('a tarfile')
+                cherrypy.response.output.write(ntob('I am '))
+                cherrypy.response.output.write(ntob('a tarfile'))
             tarfile.exposed = True
             tarfile._cp_config = {'tools.streamer.on': True}
             
@@ -129,8 +125,8 @@ class ToolTests(helper.CPWebCase):
                 assert cbnames == ['gzip'], cbnames
                 priorities = [x.priority for x in hooks]
                 assert priorities == [80], priorities
-                yield u"Hello,"
-                yield u"world"
+                yield ntou("Hello,")
+                yield ntou("world")
                 yield europoundUnicode
             euro.exposed = True
             
@@ -143,8 +139,8 @@ class ToolTests(helper.CPWebCase):
             # Multiple decorators; include kwargs just for fun.
             # Note that rotator must run before gzip.
             def decorated_euro(self, *vpath):
-                yield u"Hello,"
-                yield u"world"
+                yield ntou("Hello,")
+                yield ntou("world")
                 yield europoundUnicode
             decorated_euro.exposed = True
             decorated_euro = tools.gzip(compress_level=6)(decorated_euro)
@@ -159,7 +155,7 @@ class ToolTests(helper.CPWebCase):
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
-                for value in dct.itervalues():
+                for value in itervalues(dct):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
@@ -209,7 +205,7 @@ class ToolTests(helper.CPWebCase):
             # Declare Tools in detached config
             '/demo': {
                 'tools.numerify.on': True,
-                'tools.numerify.map': {"pie": "3.14159"},
+                'tools.numerify.map': {ntob("pie"): ntob("3.14159")},
             },
             '/demo/restricted': {
                 'request.show_tracebacks': False,
@@ -241,10 +237,9 @@ class ToolTests(helper.CPWebCase):
         app.request_class.namespaces['myauth'] = myauthtools
         
         if sys.version_info >= (2, 5):
-            from cherrypy.test import py25
-            root.tooldecs = py25.ToolExamples()
+            from cherrypy.test import _test_decorators
+            root.tooldecs = _test_decorators.ToolExamples()
 
-    
     def testHookErrors(self):
         self.getPage("/demo/?id=1")
         # If body is "razdrez", then on_end_request is being called too early.
@@ -334,8 +329,8 @@ class ToolTests(helper.CPWebCase):
         self.assertInBody("AttributeError: 'str' object has no attribute 'items'")
     
     def testCombinedTools(self):
-        expectedResult = (u"Hello,world" + europoundUnicode).encode('utf-8')
-        zbuf = StringIO()
+        expectedResult = (ntou("Hello,world") + europoundUnicode).encode('utf-8')
+        zbuf = BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write(expectedResult)
         zfile.close()
@@ -344,7 +339,7 @@ class ToolTests(helper.CPWebCase):
                                         ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
         self.assertInBody(zbuf.getvalue()[:3])
         
-        zbuf = StringIO()
+        zbuf = BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=6)
         zfile.write(expectedResult)
         zfile.close()
@@ -363,7 +358,7 @@ class ToolTests(helper.CPWebCase):
     def testBareHooks(self):
         content = "bit of a pain in me gulliver"
         self.getPage("/pipe",
-                     headers=[("Content-Length", len(content)),
+                     headers=[("Content-Length", str(len(content))),
                               ("Content-Type", "text/plain")],
                      method="POST", body=content)
         self.assertBody(content)

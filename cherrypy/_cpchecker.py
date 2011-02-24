@@ -2,6 +2,7 @@ import os
 import warnings
 
 import cherrypy
+from cherrypy._cpcompat import iteritems, copykeys, builtins
 
 
 class Checker(object):
@@ -34,7 +35,7 @@ class Checker(object):
                 for name in dir(self):
                     if name.startswith("check_"):
                         method = getattr(self, name)
-                        if method and callable(method):
+                        if method and hasattr(method, '__call__'):
                             method()
             finally:
                 warnings.formatwarning = oldformatwarning
@@ -65,14 +66,14 @@ class Checker(object):
     
     def check_site_config_entries_in_app_config(self):
         """Check for mounted Applications that have site-scoped config."""
-        for sn, app in cherrypy.tree.apps.iteritems():
+        for sn, app in iteritems(cherrypy.tree.apps):
             if not isinstance(app, cherrypy.Application):
                 continue
             
             msg = []
-            for section, entries in app.config.iteritems():
+            for section, entries in iteritems(app.config):
                 if section.startswith('/'):
-                    for key, value in entries.iteritems():
+                    for key, value in iteritems(entries):
                         for n in ("engine.", "server.", "tree.", "checker."):
                             if key.startswith(n):
                                 msg.append("[%s] %s = %s" % (section, key, value))
@@ -219,10 +220,10 @@ class Checker(object):
     
     def _known_ns(self, app):
         ns = ["wsgi"]
-        ns.extend(app.toolboxes.keys())
-        ns.extend(app.namespaces.keys())
-        ns.extend(app.request_class.namespaces.keys())
-        ns.extend(cherrypy.config.namespaces.keys())
+        ns.extend(copykeys(app.toolboxes))
+        ns.extend(copykeys(app.namespaces))
+        ns.extend(copykeys(app.request_class.namespaces))
+        ns.extend(copykeys(cherrypy.config.namespaces))
         ns += self.extra_config_namespaces
         
         for section, conf in app.config.items():
@@ -265,7 +266,6 @@ class Checker(object):
     known_config_types = {}
     
     def _populate_known_types(self):
-        import __builtin__ as builtins
         b = [x for x in vars(builtins).values()
              if type(x) is type(str)]
         

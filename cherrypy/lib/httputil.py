@@ -8,7 +8,8 @@ to a public caning.
 """
 
 from binascii import b2a_base64
-from BaseHTTPServer import BaseHTTPRequestHandler
+from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou, reversed, sorted
+from cherrypy._cpcompat import basestring, iteritems, unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From http://www.cherrypy.org/ticket/361
@@ -23,7 +24,6 @@ response_codes[503] = ('Service Unavailable',
 import re
 import urllib
 
-from rfc822 import formatdate as HTTPDate
 
 
 def urljoin(*atoms):
@@ -105,12 +105,13 @@ class HeaderElement(object):
     def __cmp__(self, other):
         return cmp(self.value, other.value)
     
-    def __unicode__(self):
-        p = [";%s=%s" % (k, v) for k, v in self.params.iteritems()]
-        return u"%s%s" % (self.value, "".join(p))
-    
     def __str__(self):
-        return str(self.__unicode__())
+        p = [";%s=%s" % (k, v) for k, v in iteritems(self.params)]
+        return "%s%s" % (self.value, "".join(p))
+
+    def __unicode__(self):
+        return ntou(self.__str__())
+    
     
     def parse(elementstr):
         """Transform 'token;key=val' to ('token', {'key': 'val'})."""
@@ -195,9 +196,8 @@ def header_elements(fieldname, fieldvalue):
         else:
             hv = HeaderElement.from_str(element)
         result.append(hv)
-    result.sort()
-    result.reverse()
-    return result
+    
+    return list(reversed(sorted(result)))
 
 def decode_TEXT(value):
     r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> u"f\xfcr")."""
@@ -288,10 +288,8 @@ def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
             else:
                 continue
         if len(nv[1]) or keep_blank_values:
-            name = urllib.unquote(nv[0].replace('+', ' '))
-            name = name.decode(encoding, 'strict')
-            value = urllib.unquote(nv[1].replace('+', ' '))
-            value = value.decode(encoding, 'strict')
+            name = unquote_qs(nv[0], encoding)
+            value = unquote_qs(nv[1], encoding)
             if name in d:
                 if not isinstance(d[name], list):
                     d[name] = [d[name]]
@@ -409,13 +407,13 @@ class HeaderMap(CaseInsensitiveDict):
         """Transform self into a list of (name, value) tuples."""
         header_list = []
         for k, v in self.items():
-            if isinstance(k, unicode):
+            if isinstance(k, unicodestr):
                 k = self.encode(k)
             
             if not isinstance(v, basestring):
                 v = str(v)
             
-            if isinstance(v, unicode):
+            if isinstance(v, unicodestr):
                 v = self.encode(v)
             
             # See header_translate_* constants above.
@@ -441,7 +439,7 @@ class HeaderMap(CaseInsensitiveDict):
             # because we never want to fold lines--folding has
             # been deprecated by the HTTP working group.
             v = b2a_base64(v.encode('utf-8'))
-            return ('=?utf-8?b?' + v.strip('\n') + '?=')
+            return (ntob('=?utf-8?b?') + v.strip(ntob('\n')) + ntob('?='))
         
         raise ValueError("Could not encode header part %r using "
                          "any of the encodings %r." %

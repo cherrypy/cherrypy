@@ -53,10 +53,7 @@ import os, os.path
 import sys
 import warnings
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+from cherrypy._cpcompat import BytesIO
 
 _count = 0
 
@@ -88,7 +85,7 @@ class Profiler(object):
     def stats(self, filename, sortby='cumulative'):
         """:rtype stats(index): output of print_stats() for the given profile.
         """
-        sio = StringIO()
+        sio = BytesIO()
         if sys.version_info >= (2, 5):
             s = pstats.Stats(os.path.join(self.path, filename), stream=sio)
             s.strip_dirs()

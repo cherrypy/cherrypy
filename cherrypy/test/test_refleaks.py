@@ -1,7 +1,7 @@
 """Tests for refleaks."""
 
 import gc
-from httplib import HTTPConnection, HTTPSConnection
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 import threading
 
 import cherrypy
@@ -96,7 +96,7 @@ class ReferenceTests(helper.CPWebCase):
                 response = c.getresponse()
                 body = response.read()
                 self.assertEqual(response.status, 200)
-                self.assertEqual(body, "Hello world!")
+                self.assertEqual(body, ntob("Hello world!"))
             finally:
                 c.close()
             success.append(True)

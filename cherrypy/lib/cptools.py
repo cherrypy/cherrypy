@@ -1,19 +1,10 @@
 """Functions for builtin CherryPy tools."""
 
 import logging
-try:
-    # Python 2.5+
-    from hashlib import md5
-except ImportError:
-    from md5 import new as md5
 import re
 
-try:
-    set
-except NameError:
-    from sets import Set as set
-
 import cherrypy
+from cherrypy._cpcompat import basestring, ntob, md5, set
 from cherrypy.lib import httputil as _httputil
 
 
@@ -304,7 +295,7 @@ class SessionAuth(object):
         pass
     
     def login_screen(self, from_page='..', username='', error_msg='', **kwargs):
-        return """<html><body>
+        return ntob("""<html><body>
 Message: %(error_msg)s
 <form method="post" action="do_login">
     Login: <input type="text" name="username" value="%(username)s" size="10" /><br />
@@ -313,7 +304,7 @@ Message: %(error_msg)s
     <input type="submit" />
 </form>
 </body></html>""" % {'from_page': from_page, 'username': username,
-                     'error_msg': error_msg}
+                     'error_msg': error_msg}, "utf-8")
     
     def do_login(self, username, password, from_page='..', **kwargs):
         """Login. May raise redirect, or return True if request handled."""

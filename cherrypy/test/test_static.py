@@ -1,8 +1,5 @@
-from httplib import HTTPConnection, HTTPSConnection
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
+from cherrypy._cpcompat import BytesIO
 
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -44,10 +41,10 @@ class StaticTest(helper.CPWebCase):
                 return static.serve_fileobj(f, content_type='text/css')
             fileobj.exposed = True
             
-            def stringio(self):
-                f = StringIO.StringIO('Fee\nfie\nfo\nfum')
+            def bytesio(self):
+                f = BytesIO('Fee\nfie\nfo\nfum')
                 return static.serve_fileobj(f, content_type='text/plain')
-            stringio.exposed = True
+            bytesio.exposed = True
         
         class Static:
             
@@ -204,8 +201,8 @@ class StaticTest(helper.CPWebCase):
         self.assertHeader('Content-Type', 'text/css;charset=utf-8')
         self.assertMatchesBody('^Dummy stylesheet')
     
-    def test_serve_stringio(self):
-        self.getPage("/stringio")
+    def test_serve_bytesio(self):
+        self.getPage("/bytesio")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
         self.assertHeader('Content-Length', 14)
@@ -287,7 +284,7 @@ class StaticTest(helper.CPWebCase):
         response.begin()
         self.assertEqual(response.status, 200)
         body = response.fp.read(65536)
-        if body != "x" * 65536:
+        if body != "x" * len(body):
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
                       (65536, body[:50], len(body)))
         response.close()

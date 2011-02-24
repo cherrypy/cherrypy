@@ -22,18 +22,12 @@ __author__ = 'visteya'
 __date__ = 'April 2009'
 
 
-try:
-    from hashlib import md5
-except ImportError:
-    # Python 2.4 and earlier
-    from md5 import new as md5
-md5_hex = lambda s: md5(s).hexdigest()
-
 import time
-import base64
-from urllib2 import parse_http_list, parse_keqv_list
+from cherrypy._cpcompat import parse_http_list, parse_keqv_list
 
 import cherrypy
+from cherrypy._cpcompat import md5, ntob
+md5_hex = lambda s: md5(ntob(s)).hexdigest()
 
 qop_auth = 'auth'
 qop_auth_int = 'auth-int'
@@ -338,8 +332,8 @@ def digest_auth(realm, get_ha1, key, debug=False):
     if auth_header is not None:
         try:
             auth = HttpDigestAuthorization(auth_header, request.method, debug=debug)
-        except ValueError, e:
-            raise cherrypy.HTTPError(400, 'Bad Request: %s' % e)
+        except ValueError:
+            raise cherrypy.HTTPError(400, "The Authorization header could not be parsed.")
         
         if debug:
             TRACE(str(auth))

@@ -59,9 +59,8 @@ http://www.cherrypy.org/wiki/CherryPySpec
 
 __version__ = "3.2.0rc1"
 
-from urlparse import urljoin as _urljoin
-from urllib import urlencode as _urlencode
-
+from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
+from cherrypy._cpcompat import basestring, unicodestr
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
@@ -158,10 +157,7 @@ def quickstart(root=None, script_name="", config=None):
     engine.block()
 
 
-try:
-    from threading import local as _local
-except ImportError:
-    from cherrypy._cpthreadinglocal import local as _local
+from cherrypy._cpcompat import threadlocal as _local
 
 class _Serving(_local):
     """An interface for registering request and response objects.
@@ -248,7 +244,8 @@ class _ThreadLocalProxy(object):
     def __nonzero__(self):
         child = getattr(serving, self.__attrname__)
         return bool(child)
-
+    # Python 3
+    __bool__ = __nonzero__
 
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect

@@ -2,15 +2,12 @@
 
 import os
 import re
-try:
-    set
-except NameError:
-    from sets import Set as set
 import signal as _signal
 import sys
 import time
-import thread
 import threading
+
+from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident, ntob, set
 
 # _module__file__base is used by Autoreload to make
 # absolute any filenames retrieved from sys.modules which are not
@@ -358,8 +355,9 @@ class Daemonizer(SimplePlugin):
                 # This is the first parent. Exit, now that we've forked.
                 self.bus.log('Forking once.')
                 os._exit(0)
-        except OSError, exc:
+        except OSError:
             # Python raises OSError rather than returning negative numbers.
+            exc = sys.exc_info()[1]
             sys.exit("%s: fork #1 failed: (%d) %s\n"
                      % (sys.argv[0], exc.errno, exc.strerror))
         
@@ -371,7 +369,8 @@ class Daemonizer(SimplePlugin):
             if pid > 0:
                 self.bus.log('Forking twice.')
                 os._exit(0) # Exit second parent
-        except OSError, exc:
+        except OSError:
+            exc = sys.exc_info()[1]
             sys.exit("%s: fork #2 failed: (%d) %s\n"
                      % (sys.argv[0], exc.errno, exc.strerror))
         
@@ -407,7 +406,7 @@ class PIDFile(SimplePlugin):
         if self.finalized:
             self.bus.log('PID %r already written to %r.' % (pid, self.pidfile))
         else:
-            open(self.pidfile, "wb").write(str(pid))
+            open(self.pidfile, "wb").write(ntob("%s" % pid, 'utf8'))
             self.bus.log('PID %r written to %r.' % (pid, self.pidfile))
             self.finalized = True
     start.priority = 70
@@ -437,7 +436,7 @@ class PerpetualTimer(threading._Timer):
                 return
             try:
                 self.function(*self.args, **self.kwargs)
-            except Exception, x:
+            except Exception:
                 self.bus.log("Error in perpetual timer thread function %r." %
                              self.function, level=40, traceback=True)
                 # Quit on first error to avoid massive logs.
@@ -473,7 +472,7 @@ class BackgroundTask(threading.Thread):
                 return
             try:
                 self.function(*self.args, **self.kwargs)
-            except Exception, x:
+            except Exception:
                 self.bus.log("Error in background task thread function %r." %
                              self.function, level=40, traceback=True)
                 # Quit on first error to avoid massive logs.
@@ -524,12 +523,7 @@ class Monitor(SimplePlugin):
             if self.thread is not threading.currentThread():
                 name = self.thread.getName()
                 self.thread.cancel()
-                if hasattr(threading.Thread, "daemon"):
-                    # Python 2.6+
-                    d = self.thread.daemon
-                else:
-                    d = self.thread.isDaemon()
-                if not d:
+                if not get_daemon(self.thread):
                     self.bus.log("Joining %r" % name)
                     self.thread.join()
                 self.bus.log("Stopped thread %r." % name)
@@ -663,9 +657,9 @@ class ThreadManager(SimplePlugin):
         If the current thread has already been seen, any 'start_thread'
         listeners will not be run again.
         """
-        thread_ident = thread.get_ident()
+        thread_ident = get_thread_ident()
         if thread_ident not in self.threads:
-            # We can't just use _get_ident as the thread ID
+            # We can't just use get_ident as the thread ID
             # because some platforms reuse thread ID's.
             i = len(self.threads) + 1
             self.threads[thread_ident] = i
@@ -673,7 +667,7 @@ class ThreadManager(SimplePlugin):
     
     def release_thread(self):
         """Release the current thread and run 'stop_thread' listeners."""
-        thread_ident = threading._get_ident()
+        thread_ident = get_thread_ident()
         i = self.threads.pop(thread_ident, None)
         if i is not None:
             self.bus.publish('stop_thread', i)

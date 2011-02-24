@@ -1,37 +1,19 @@
 import sys
 import cherrypy
-
-try:
-    # Prefer simplejson, which is usually more advanced than the builtin module.
-    import simplejson as json
-except ImportError:
-    if sys.version_info >= (2, 6):
-        # Python 2.6: simplejson is part of the standard library
-        import json
-    else:
-        json = None
-
-if json is None:
-    def json_decode(s):
-        raise ValueError('No JSON library is available')
-    def json_encode(s):
-        raise ValueError('No JSON library is available')
-else:
-    json_decode = json.JSONDecoder().decode
-    json_encode = json.JSONEncoder().iterencode
+from cherrypy._cpcompat import basestring, ntou, json, json_encode, json_decode
 
 def json_processor(entity):
     """Read application/json data into request.json."""
-    if not entity.headers.get(u"Content-Length", u""):
+    if not entity.headers.get(ntou("Content-Length"), ntou("")):
         raise cherrypy.HTTPError(411)
     
     body = entity.fp.read()
     try:
-        cherrypy.serving.request.json = json_decode(body)
+        cherrypy.serving.request.json = json_decode(body.decode('utf-8'))
     except ValueError:
         raise cherrypy.HTTPError(400, 'Invalid JSON document')
 
-def json_in(content_type=[u'application/json', u'text/javascript'],
+def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
             force=True, debug=False, processor = json_processor):
     """Add a processor to parse JSON request entities:
     The default processor places the parsed data into request.json.

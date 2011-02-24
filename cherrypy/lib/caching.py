@@ -33,11 +33,13 @@ instance by providing them in config. The above sets the
 """
 
 import datetime
+import sys
 import threading
 import time
 
 import cherrypy
 from cherrypy.lib import cptools, httputil
+from cherrypy._cpcompat import copyitems, ntob, set_daemon, sorted
 
 
 class Cache(object):
@@ -166,11 +168,7 @@ class MemoryCache(Cache):
         # Run self.expire_cache in a separate daemon thread.
         t = threading.Thread(target=self.expire_cache, name='expire_cache')
         self.expiration_thread = t
-        if hasattr(threading.Thread, "daemon"):
-            # Python 2.6+
-            t.daemon = True
-        else:
-            t.setDaemon(True)
+        set_daemon(t, True)
         t.start()
     
     def clear(self):
@@ -197,7 +195,7 @@ class MemoryCache(Cache):
             now = time.time()
             # Must make a copy of expirations so it doesn't change size
             # during iteration
-            for expiration_time, objects in self.expirations.items():
+            for expiration_time, objects in copyitems(self.expirations):
                 if expiration_time <= now:
                     for obj_size, uri, sel_header_values in objects:
                         try:
@@ -222,8 +220,7 @@ class MemoryCache(Cache):
         
         header_values = [request.headers.get(h, '')
                          for h in uricache.selecting_headers]
-        header_values.sort()
-        variant = uricache.wait(key=tuple(header_values),
+        variant = uricache.wait(key=tuple(sorted(header_values)),
                                 timeout=self.antistampede_timeout,
                                 debug=self.debug)
         if variant is not None:
@@ -256,8 +253,7 @@ class MemoryCache(Cache):
                 # add to the cache
                 header_values = [request.headers.get(h, '')
                                  for h in uricache.selecting_headers]
-                header_values.sort()
-                uricache[tuple(header_values)] = variant
+                uricache[tuple(sorted(header_values))] = variant
                 self.tot_puts += 1
                 self.cursize = total_size
     
@@ -365,7 +361,8 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
             # this was put into the cached copy, and should have been
             # resurrected just above (response.headers = cache_data[1]).
             cptools.validate_since()
-        except cherrypy.HTTPRedirect, x:
+        except cherrypy.HTTPRedirect:
+            x = sys.exc_info()[1]
             if x.status == 304:
                 cherrypy._cache.tot_non_modified += 1
             raise
@@ -401,7 +398,7 @@ def tee_output():
             yield chunk
         
         # save the cache data
-        body = ''.join(output)
+        body = ntob('').join(output)
         cherrypy._cache.put((response.status, response.headers or {},
                              body, response.time), len(body))
     

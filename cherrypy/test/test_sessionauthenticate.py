@@ -9,7 +9,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
         def check(username, password):
             # Dummy check_username_and_password function
             if username != 'test' or password != 'password':
-                return u'Wrong login/password'
+                return 'Wrong login/password'
         
         def augment_params():
             # A simple tool to add some things to request.params

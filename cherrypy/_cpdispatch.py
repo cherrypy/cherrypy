@@ -10,6 +10,7 @@ to a hierarchical arrangement of objects, starting at request.app.root.
 """
 
 import string
+import sys
 import types
 
 import cherrypy
@@ -26,11 +27,12 @@ class PageHandler(object):
     def __call__(self):
         try:
             return self.callable(*self.args, **self.kwargs)
-        except TypeError, x:
+        except TypeError:
+            x = sys.exc_info()[1]
             try:
                 test_callable_spec(self.callable, self.args, self.kwargs)
-            except cherrypy.HTTPError, error:
-                raise error
+            except cherrypy.HTTPError:
+                raise sys.exc_info()[1]
             except:
                 raise x
             raise
@@ -285,7 +287,7 @@ class Dispatcher(object):
             pre_len = len(iternames)
             if subnode is None:
                 dispatch = getattr(node, dispatch_name, None)
-                if dispatch and callable(dispatch) and not \
+                if dispatch and hasattr(dispatch, '__call__') and not \
                         getattr(dispatch, 'exposed', False) and \
                         pre_len > 1:
                     #Don't expose the hidden 'index' token to _cp_dispatch

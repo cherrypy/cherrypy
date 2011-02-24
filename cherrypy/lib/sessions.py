@@ -86,22 +86,14 @@ Maybe FF doesn't trust system time.
 
 import datetime
 import os
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 import random
-try:
-    # Python 2.5+
-    from hashlib import sha1 as sha
-except ImportError:
-    from sha import new as sha
 import time
 import threading
 import types
 from warnings import warn
 
 import cherrypy
+from cherrypy._cpcompat import copyitems, pickle, random20
 from cherrypy.lib import httputil
 
 
@@ -207,17 +199,9 @@ class Session(object):
         """Clean up expired sessions."""
         pass
     
-    try:
-        os.urandom(20)
-    except (AttributeError, NotImplementedError):
-        # os.urandom not available until Python 2.4. Fall back to random.random.
-        def generate_id(self):
-            """Return a new session id."""
-            return sha('%s' % random.random()).hexdigest()
-    else:
-        def generate_id(self):
-            """Return a new session id."""
-            return os.urandom(20).encode('hex')
+    def generate_id(self):
+        """Return a new session id."""
+        return random20()
     
     def save(self):
         """Save session data."""
@@ -343,7 +327,7 @@ class RamSession(Session):
     def clean_up(self):
         """Clean up expired sessions."""
         now = datetime.datetime.now()
-        for id, (data, expiration_time) in self.cache.items():
+        for id, (data, expiration_time) in copyitems(self.cache):
             if expiration_time <= now:
                 try:
                     del self.cache[id]

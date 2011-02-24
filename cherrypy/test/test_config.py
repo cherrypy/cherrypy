@@ -3,10 +3,7 @@
 import os, sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+from cherrypy._cpcompat import ntob, StringIO
 import unittest
 
 import cherrypy
@@ -222,7 +219,7 @@ class ConfigTests(helper.CPWebCase):
         self.getPage("/plain", method='POST', headers=[
             ('Content-Type', 'application/x-www-form-urlencoded'),
             ('Content-Length', '13')],
-            body='\xff\xfex\x00=\xff\xfea\x00b\x00c\x00')
+            body=ntob('\xff\xfex\x00=\xff\xfea\x00b\x00c\x00'))
         self.assertBody("abc")
 
 

@@ -31,6 +31,7 @@ import time
 import traceback
 
 import cherrypy
+from cherrypy._cpcompat import ntob
 from cherrypy import _cperror, _cpmodpy
 from cherrypy.lib import httputil
 
@@ -103,7 +104,7 @@ app = cherrypy.tree.mount(Root(), SCRIPT_NAME, appconf)
 
 
 class NullRequest:
-    """A null HTTP request class, returning 204 and an empty body."""
+    """A null HTTP request class, returning 200 and an empty body."""
     
     def __init__(self, local, remote, scheme="http"):
         pass
@@ -112,7 +113,7 @@ class NullRequest:
         pass
     
     def run(self, method, path, query_string, protocol, headers, rfile):
-        cherrypy.response.status = "204 No Content"
+        cherrypy.response.status = "200 OK"
         cherrypy.response.header_list = [("Content-Type", 'text/html'),
                                          ("Server", "Null CherryPy"),
                                          ("Date", httputil.HTTPDate()),
@@ -187,15 +188,15 @@ Finished 1000 requests
 """
     
     parse_patterns = [('complete_requests', 'Completed',
-                       r'^Complete requests:\s*(\d+)'),
+                       ntob(r'^Complete requests:\s*(\d+)')),
                       ('failed_requests', 'Failed',
-                       r'^Failed requests:\s*(\d+)'),
+                       ntob(r'^Failed requests:\s*(\d+)')),
                       ('requests_per_second', 'req/sec',
-                       r'^Requests per second:\s*([0-9.]+)'),
+                       ntob(r'^Requests per second:\s*([0-9.]+)')),
                       ('time_per_request_concurrent', 'msec/req',
-                       r'^Time per request:\s*([0-9.]+).*concurrent requests\)$'),
+                       ntob(r'^Time per request:\s*([0-9.]+).*concurrent requests\)$')),
                       ('transfer_rate', 'KB/sec',
-                       r'^Transfer rate:\s*([0-9.]+)'),
+                       ntob(r'^Transfer rate:\s*([0-9.]+)')),
                       ]
     
     def __init__(self, path=SCRIPT_NAME + "/hello", requests=1000, concurrency=10):
@@ -240,41 +241,41 @@ def thread_report(path=SCRIPT_NAME + "/hello", concurrency=safe_threads):
     attrs, names, patterns = list(zip(*sess.parse_patterns))
     avg = dict.fromkeys(attrs, 0.0)
     
-    rows = [('threads',) + names]
+    yield ('threads',) + names
     for c in concurrency:
         sess.concurrency = c
         sess.run()
         row = [c]
         for attr in attrs:
-            val = float(getattr(sess, attr))
+            val = getattr(sess, attr)
+            if val is None:
+                print sess.output
+                row = None
+                break
+            val = float(val)
             avg[attr] += float(val)
             row.append(val)
-        rows.append(row)
+        if row:
+            yield row
     
     # Add a row of averages.
-    rows.append(["Average"] + [str(avg[attr] / len(concurrency)) for attr in attrs])
-    return rows
+    yield ["Average"] + [str(avg[attr] / len(concurrency)) for attr in attrs]
 
 def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
                concurrency=50):
     sess = ABSession(concurrency=concurrency)
     attrs, names, patterns = list(zip(*sess.parse_patterns))
-    rows = [('bytes',) + names]
+    yield ('bytes',) + names
     for sz in sizes:
         sess.path = "%s/sizer?size=%s" % (SCRIPT_NAME, sz)
         sess.run()
-        rows.append([sz] + [getattr(sess, attr) for attr in attrs])
-    return rows
+        yield [sz] + [getattr(sess, attr) for attr in attrs]
 
 def print_report(rows):
-    widths = []
-    for i in range(len(rows[0])):
-        lengths = [len(str(row[i])) for row in rows]
-        widths.append(max(lengths))
     for row in rows:
         print("")
         for i, val in enumerate(row):
-            print str(val).rjust(widths[i]), "|",
+            sys.stdout.write(str(val).rjust(10) + " | ")
     print("")
 
 

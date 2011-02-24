@@ -1,11 +1,5 @@
-try:
-    # Python 2.5+
-    from hashlib import md5, sha1 as sha
-except ImportError:
-    from md5 import new as md5
-    from sha import new as sha
-
 import cherrypy
+from cherrypy._cpcompat import md5, sha, ntob
 from cherrypy.lib import httpauth
 
 from cherrypy.test import helper
@@ -37,17 +31,17 @@ class HTTPAuthTest(helper.CPWebCase):
             return {'test': 'test'}
 
         def sha_password_encrypter(password):
-            return sha(password).hexdigest()
+            return sha(ntob(password)).hexdigest()
         
         def fetch_password(username):
-            return sha('test').hexdigest()
+            return sha(ntob('test')).hexdigest()
 
         conf = {'/digest': {'tools.digest_auth.on': True,
                             'tools.digest_auth.realm': 'localhost',
                             'tools.digest_auth.users': fetch_users},
                 '/basic': {'tools.basic_auth.on': True,
                            'tools.basic_auth.realm': 'localhost',
-                           'tools.basic_auth.users': {'test': md5('test').hexdigest()}},
+                           'tools.basic_auth.users': {'test': md5(ntob('test')).hexdigest()}},
                 '/basic2': {'tools.basic_auth.on': True,
                             'tools.basic_auth.realm': 'localhost',
                             'tools.basic_auth.users': fetch_password,

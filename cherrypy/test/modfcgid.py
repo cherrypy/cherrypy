@@ -40,6 +40,7 @@ import sys
 import time
 
 import cherrypy
+from cherrypy._cpcompat import ntob
 from cherrypy.process import plugins, servers
 from cherrypy.test import helper
 
@@ -105,7 +106,7 @@ class ModFCGISupervisor(helper.LocalSupervisor):
             server = repr(os.path.join(curdir, 'fastcgi.pyc'))[1:-1]
             output = self.template % {'port': self.port, 'root': curdir,
                                       'server': server}
-            output = output.replace('\r\n', '\n')
+            output = ntob(output.replace('\r\n', '\n'))
             f.write(output)
         finally:
             f.close()

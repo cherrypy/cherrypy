@@ -1,6 +1,7 @@
-"""Test module for Python 2.5-specific syntax, like the @-decorator syntax."""
+"""Test module for the @-decorator syntax, which is version-specific"""
 
 from cherrypy import expose, tools
+from cherrypy._cpcompat import ntob
 
 
 class ExposeExamples(object):
@@ -31,7 +32,7 @@ class ToolExamples(object):
     @expose
     @tools.response_headers(headers=[('Content-Type', 'application/data')])
     def blah(self):
-        yield "blah"
+        yield ntob("blah")
     # This is here to demonstrate that _cp_config = {...} overwrites
     # the _cp_config attribute added by the Tool decorator. You have
     # to write _cp_config[k] = v or _cp_config.update(...) instead.

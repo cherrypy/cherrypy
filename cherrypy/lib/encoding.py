@@ -1,16 +1,8 @@
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
-try:
-    set
-except NameError:
-    from sets import Set as set
 import struct
 import time
-import types
 
 import cherrypy
+from cherrypy._cpcompat import basestring, BytesIO, FileType, ntob, set, unicodestr
 from cherrypy.lib import file_generator
 from cherrypy.lib import set_vary_header
 
@@ -77,7 +69,7 @@ class ResponseEncoder:
         
         def encoder(body):
             for chunk in body:
-                if isinstance(chunk, unicode):
+                if isinstance(chunk, unicodestr):
                     chunk = chunk.encode(encoding, self.errors)
                 yield chunk
         self.body = encoder(self.body)
@@ -92,7 +84,7 @@ class ResponseEncoder:
         try:
             body = []
             for chunk in self.body:
-                if isinstance(chunk, unicode):
+                if isinstance(chunk, unicodestr):
                     chunk = chunk.encode(encoding, self.errors)
                 body.append(chunk)
             self.body = body
@@ -152,19 +144,6 @@ class ResponseEncoder:
                 else:
                     raise cherrypy.HTTPError(500, self.failmsg % self.default_encoding)
             else:
-                if "*" not in charsets:
-                    # If no "*" is present in an Accept-Charset field, then all
-                    # character sets not explicitly mentioned get a quality
-                    # value of 0, except for ISO-8859-1, which gets a quality
-                    # value of 1 if not explicitly mentioned.
-                    iso = 'iso-8859-1'
-                    if iso not in charsets:
-                        if self.debug:
-                            cherrypy.log('Attempting ISO-8859-1 encoding',
-                                         'TOOLS.ENCODE')
-                        if encoder(iso):
-                            return iso
-                
                 for element in encs:
                     if element.qvalue > 0:
                         if element.value == "*":
@@ -177,10 +156,23 @@ class ResponseEncoder:
                         else:
                             encoding = element.value
                             if self.debug:
-                                cherrypy.log('Attempting encoding %r (qvalue >'
+                                cherrypy.log('Attempting encoding %s (qvalue >'
                                              '0)' % element, 'TOOLS.ENCODE')
                             if encoder(encoding):
                                 return encoding
+                
+                if "*" not in charsets:
+                    # If no "*" is present in an Accept-Charset field, then all
+                    # character sets not explicitly mentioned get a quality
+                    # value of 0, except for ISO-8859-1, which gets a quality
+                    # value of 1 if not explicitly mentioned.
+                    iso = 'iso-8859-1'
+                    if iso not in charsets:
+                        if self.debug:
+                            cherrypy.log('Attempting ISO-8859-1 encoding',
+                                         'TOOLS.ENCODE')
+                        if encoder(iso):
+                            return iso
         
         # No suitable encoding found.
         ac = request.headers.get('Accept-Charset')
@@ -204,7 +196,7 @@ class ResponseEncoder:
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 self.body = []
-        elif isinstance(self.body, types.FileType):
+        elif isinstance(self.body, FileType):
             self.body = file_generator(self.body)
         elif self.body is None:
             self.body = []
@@ -249,15 +241,15 @@ def compress(body, compress_level):
     import zlib
     
     # See http://www.gzip.org/zlib/rfc-gzip.html
-    yield '\x1f\x8b'       # ID1 and ID2: gzip marker
-    yield '\x08'           # CM: compression method
-    yield '\x00'           # FLG: none set
+    yield ntob('\x1f\x8b')       # ID1 and ID2: gzip marker
+    yield ntob('\x08')           # CM: compression method
+    yield ntob('\x00')           # FLG: none set
     # MTIME: 4 bytes
-    yield struct.pack("<L", int(time.time()) & 0xFFFFFFFFL)
-    yield '\x02'           # XFL: max compression, slowest algo
-    yield '\xff'           # OS: unknown
+    yield struct.pack("<L", int(time.time()) & int('FFFFFFFF', 16))
+    yield ntob('\x02')           # XFL: max compression, slowest algo
+    yield ntob('\xff')           # OS: unknown
     
-    crc = zlib.crc32("")
+    crc = zlib.crc32(ntob(""))
     size = 0
     zobj = zlib.compressobj(compress_level,
                             zlib.DEFLATED, -zlib.MAX_WBITS,
@@ -269,14 +261,14 @@ def compress(body, compress_level):
     yield zobj.flush()
     
     # CRC32: 4 bytes
-    yield struct.pack("<L", crc & 0xFFFFFFFFL)
+    yield struct.pack("<L", crc & int('FFFFFFFF', 16))
     # ISIZE: 4 bytes
-    yield struct.pack("<L", size & 0xFFFFFFFFL)
+    yield struct.pack("<L", size & int('FFFFFFFF', 16))
 
 def decompress(body):
     import gzip
     
-    zbuf = StringIO()
+    zbuf = BytesIO()
     zbuf.write(body)
     zbuf.seek(0)
     zfile = gzip.GzipFile(mode='rb', fileobj=zbuf)

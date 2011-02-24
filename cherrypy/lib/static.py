@@ -10,9 +10,9 @@ import os
 import re
 import stat
 import time
-from urllib import unquote
 
 import cherrypy
+from cherrypy._cpcompat import ntob, unquote
 from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
@@ -174,8 +174,8 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             else:
                 # Return a multipart/byteranges response.
                 response.status = "206 Partial Content"
-                import mimetools
-                boundary = mimetools.choose_boundary()
+                from mimetools import choose_boundary
+                boundary = choose_boundary()
                 ct = "multipart/byteranges; boundary=%s" % boundary
                 response.headers['Content-Type'] = ct
                 if "Content-Length" in response.headers:
@@ -184,25 +184,25 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                 
                 def file_ranges():
                     # Apache compatibility:
-                    yield "\r\n"
+                    yield ntob("\r\n")
                     
                     for start, stop in r:
                         if debug:
                             cherrypy.log('Multipart; start: %r, stop: %r' % (start, stop),
                                          'TOOLS.STATIC')
-                        yield "--" + boundary
-                        yield "\r\nContent-type: %s" % content_type
-                        yield ("\r\nContent-range: bytes %s-%s/%s\r\n\r\n"
-                               % (start, stop - 1, content_length))
+                        yield ntob("--" + boundary, 'ascii')
+                        yield ntob("\r\nContent-type: %s" % content_type, 'ascii')
+                        yield ntob("\r\nContent-range: bytes %s-%s/%s\r\n\r\n"
+                                   % (start, stop - 1, content_length), 'ascii')
                         fileobj.seek(start)
                         for chunk in file_generator_limited(fileobj, stop-start):
                             yield chunk
-                        yield "\r\n"
+                        yield ntob("\r\n")
                     # Final boundary
-                    yield "--" + boundary + "--"
+                    yield ntob("--" + boundary + "--", 'ascii')
                     
                     # Apache compatibility:
-                    yield "\r\n"
+                    yield ntob("\r\n")
                 response.body = file_ranges()
             return response.body
         else:

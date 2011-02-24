@@ -1,4 +1,4 @@
-from httplib import BadStatusLine
+from cherrypy._cpcompat import BadStatusLine, ntob
 import os
 import sys
 import threading
@@ -226,7 +226,7 @@ class ServerStateTests(helper.CPWebCase):
             self.assertBody("Hello World")
             # request.close is called async.
             while engine.timeout_monitor.servings:
-                print ".",
+                sys.stdout.write(".")
                 time.sleep(0.01)
 
             # Request a page that explicitly checks itself for deadlock.
@@ -431,6 +431,6 @@ test_case_name: "test_signal_handler_unsubscribe"
 
         # Assert the old handler ran.
         target_line = open(p.error_log, 'rb').readlines()[-10]
-        if not "I am an old SIGTERM handler." in target_line:
+        if not ntob("I am an old SIGTERM handler.") in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
 

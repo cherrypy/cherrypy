@@ -1,12 +1,12 @@
 """Basic tests for the CherryPy core: request handling."""
 
-from httplib import IncompleteRead
 import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
 
 import cherrypy
+from cherrypy._cpcompat import IncompleteRead, itervalues, ntob
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
 
@@ -42,7 +42,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         root = Root()
                 
         if sys.version_info >= (2, 5):
-            from cherrypy.test.py25 import ExposeExamples
+            from cherrypy.test._test_decorators import ExposeExamples
             root.expose_dec = ExposeExamples()
 
 
@@ -52,7 +52,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
-                for value in dct.itervalues():
+                for value in itervalues(dct):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
@@ -209,7 +209,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 return ["con", "tent"]
             
             def as_yield(self):
-                yield "content"
+                yield ntob("content")
             
             def as_dblyield(self):
                 yield self.as_yield()

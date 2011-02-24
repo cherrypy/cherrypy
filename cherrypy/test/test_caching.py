@@ -9,9 +9,10 @@ import time
 import urllib
 
 import cherrypy
+from cherrypy._cpcompat import next, ntob, quote, xrange
 from cherrypy.lib import httputil
 
-gif_bytes = ('GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
+gif_bytes = ntob('GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
              '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
              '\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x02\x03\x02\x08\t\x00;')
 
@@ -73,7 +74,7 @@ class CacheTest(helper.CPWebCase):
                 self.counter = count(1)
             
             def index(self):
-                return "visit #%s" % self.counter.next()
+                return "visit #%s" % next(self.counter)
             index.exposed = True
         
         class UnCached(object):
@@ -155,14 +156,14 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
         self.assertHeader('Vary')
-        self.assertEqual(cherrypy.lib.encoding.decompress(self.body), "visit #5")
+        self.assertEqual(cherrypy.lib.encoding.decompress(self.body), ntob("visit #5"))
         
         # Now check that a second request gets the gzip header and gzipped body
         # This also tests a bug in 3.0 to 3.0.2 whereby the cached, gzipped
         # response body was being gzipped a second time.
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
-        self.assertEqual(cherrypy.lib.encoding.decompress(self.body), "visit #5")
+        self.assertEqual(cherrypy.lib.encoding.decompress(self.body), ntob("visit #5"))
         
         # Now check that a third request that doesn't accept gzip
         # skips the cache (because the 'Vary' header denies it).
@@ -286,7 +287,7 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/long_process?seconds=%d" % SECONDS)
         self.assertBody('success!')
         self.getPage("/clear_cache?path=" +
-            urllib.quote('/long_process?seconds=%d' % SECONDS, safe=''))
+            quote('/long_process?seconds=%d' % SECONDS, safe=''))
         self.assertStatus(200)
         sys.stdout.write("prepped... ")
         sys.stdout.flush()

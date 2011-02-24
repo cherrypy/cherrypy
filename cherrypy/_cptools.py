@@ -22,17 +22,24 @@ Tools may be implemented as any object with a namespace. The builtins
 are generally either modules or instances of the tools.Tool class.
 """
 
-import cherrypy
+import sys
 import warnings
+
+import cherrypy
 
 
 def _getargs(func):
     """Return the names of all static arguments to the given function."""
     # Use this instead of importing inspect for less mem overhead.
     import types
-    if isinstance(func, types.MethodType):
-        func = func.im_func
-    co = func.func_code
+    if sys.version_info >= (3, 0):
+        if isinstance(func, types.MethodType):
+            func = func.__func__
+        co = func.__code__
+    else:
+        if isinstance(func, types.MethodType):
+            func = func.im_func
+        co = func.func_code
     return co.co_varnames[:co.co_argcount]
 
 
