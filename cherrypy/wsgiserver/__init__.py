@@ -1350,10 +1350,10 @@ class WorkerThread(threading.Thread):
         self.start_time = None
         self.work_time = 0
         self.stats = {
-            'Requests': lambda s: self.requests_seen + (0 if self.start_time is None else self.conn.requests_seen),
-            'Bytes Read': lambda s: self.bytes_read + (0 if self.start_time is None else self.conn.rfile.bytes_read),
-            'Bytes Written': lambda s: self.bytes_written + (0 if self.start_time is None else self.conn.wfile.bytes_written),
-            'Work Time': lambda s: self.work_time + (0 if self.start_time is None else time.time() - self.start_time),
+            'Requests': lambda s: self.requests_seen + ((self.start_time is None) and 0 or self.conn.requests_seen),
+            'Bytes Read': lambda s: self.bytes_read + ((self.start_time is None) and 0 or self.conn.rfile.bytes_read),
+            'Bytes Written': lambda s: self.bytes_written + ((self.start_time is None) and 0 or self.conn.wfile.bytes_written),
+            'Work Time': lambda s: self.work_time + ((self.start_time is None) and 0 or time.time() - self.start_time),
             'Read Throughput': lambda s: s['Bytes Read'](s) / (s['Work Time'](s) or 1e-6),
             'Write Throughput': lambda s: s['Bytes Written'](s) / (s['Work Time'](s) or 1e-6),
         }
@@ -1614,25 +1614,25 @@ class HTTPServer(object):
         self.stats = {
             'Enabled': False,
             'Bind Address': lambda s: repr(self.bind_addr),
-            'Run time': lambda s: 0 if not s['Enabled'] else self.runtime(),
+            'Run time': lambda s: (not s['Enabled']) and 0 or self.runtime(),
             'Accepts': 0,
             'Accepts/sec': lambda s: s['Accepts'] / self.runtime(),
             'Queue': lambda s: getattr(self.requests, "qsize", None),
             'Threads': lambda s: len(getattr(self.requests, "_threads", [])),
             'Threads Idle': lambda s: getattr(self.requests, "idle", None),
             'Socket Errors': 0,
-            'Requests': lambda s: 0 if not s['Enabled'] else sum([w['Requests'](w) for w
+            'Requests': lambda s: (not s['Enabled']) and 0 or sum([w['Requests'](w) for w
                                        in s['Worker Threads'].values()], 0),
-            'Bytes Read': lambda s: 0 if not s['Enabled'] else sum([w['Bytes Read'](w) for w
+            'Bytes Read': lambda s: (not s['Enabled']) and 0 or sum([w['Bytes Read'](w) for w
                                          in s['Worker Threads'].values()], 0),
-            'Bytes Written': lambda s: 0 if not s['Enabled'] else sum([w['Bytes Written'](w) for w
+            'Bytes Written': lambda s: (not s['Enabled']) and 0 or sum([w['Bytes Written'](w) for w
                                             in s['Worker Threads'].values()], 0),
-            'Work Time': lambda s: 0 if not s['Enabled'] else sum([w['Work Time'](w) for w
+            'Work Time': lambda s: (not s['Enabled']) and 0 or sum([w['Work Time'](w) for w
                                          in s['Worker Threads'].values()], 0),
-            'Read Throughput': lambda s: 0 if not s['Enabled'] else sum(
+            'Read Throughput': lambda s: (not s['Enabled']) and 0 or sum(
                 [w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
                  for w in s['Worker Threads'].values()], 0),
-            'Write Throughput': lambda s: 0 if not s['Enabled'] else sum(
+            'Write Throughput': lambda s: (not s['Enabled']) and 0 or sum(
                 [w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
                  for w in s['Worker Threads'].values()], 0),
             'Worker Threads': {},
@@ -1783,7 +1783,7 @@ class HTTPServer(object):
         
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See http://www.cherrypy.org/ticket/871.
-        if (family == socket.AF_INET6
+        if (hasattr(socket, 'AF_INET6') and family == socket.AF_INET6
             and self.bind_addr[0] in ('::', '::0', '::0.0.0.0')):
             try:
                 self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)

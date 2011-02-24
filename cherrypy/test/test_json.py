@@ -4,7 +4,6 @@ from cherrypy.test import helper
 from cherrypy._cpcompat import json
 
 class JsonTest(helper.CPWebCase):
-    @staticmethod
     def setup_server():
         class Root(object):
             def plain(self):
@@ -36,7 +35,8 @@ class JsonTest(helper.CPWebCase):
 
         root = Root()
         cherrypy.tree.mount(root)
-
+    setup_server = staticmethod(setup_server)
+    
     def test_json_output(self):
         if json is None:
             self.skip("json not found")
