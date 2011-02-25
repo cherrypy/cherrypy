@@ -112,7 +112,6 @@ class HeaderElement(object):
     def __unicode__(self):
         return ntou(self.__str__())
     
-    
     def parse(elementstr):
         """Transform 'token;key=val' to ('token', {'key': 'val'})."""
         # Split the element into a value and parameters. The 'value' may

@@ -1,3 +1,4 @@
+import sys
 from xmlrpclib import DateTime, Fault, ServerProxy, SafeTransport
 
 class HTTPSTransport(SafeTransport):
@@ -140,7 +141,8 @@ class XmlRpcTest(helper.CPWebCase):
         # Test an error in the page handler (should raise an xmlrpclib.Fault)
         try:
             proxy.test_argument_passing({})
-        except Exception, x:
+        except Exception:
+            x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
             self.assertEqual(x.faultString, ("unsupported operand type(s) "
                                              "for *: 'dict' and 'int'"))
@@ -151,7 +153,8 @@ class XmlRpcTest(helper.CPWebCase):
         # if a method is not found, an xmlrpclib.Fault should be raised
         try:
             proxy.non_method()
-        except Exception, x:
+        except Exception:
+            x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
             self.assertEqual(x.faultString, 'method "non_method" is not supported')
         else:
@@ -160,7 +163,8 @@ class XmlRpcTest(helper.CPWebCase):
         # Test returning a Fault from the page handler.
         try:
             proxy.test_returning_Fault()
-        except Exception, x:
+        except Exception:
+            x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
             self.assertEqual(x.faultString, ("custom Fault response"))
         else:

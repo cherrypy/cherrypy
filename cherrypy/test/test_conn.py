@@ -8,7 +8,7 @@ timeout = 1
 
 import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
-from cherrypy._cpcompat import ntob, urlopen
+from cherrypy._cpcompat import ntob, urlopen, unicodestr
 from cherrypy.test import webtest
 from cherrypy import _cperror
 
@@ -80,7 +80,7 @@ def setup_server():
                 body = [body]
             newbody = []
             for chunk in body:
-                if isinstance(chunk, unicode):
+                if isinstance(chunk, unicodestr):
                     chunk = chunk.encode('ISO-8859-1')
                 newbody.append(chunk)
             return newbody
