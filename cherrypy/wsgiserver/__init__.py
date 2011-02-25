@@ -2008,6 +2008,7 @@ class WSGIGateway(Gateway):
         self.req = req
         self.started_response = False
         self.env = self.get_environ()
+        self.remaining_bytes_out = None
     
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version"""
@@ -2055,6 +2056,8 @@ class WSGIGateway(Gateway):
                 raise TypeError("WSGI response header key %r is not a byte string." % k)
             if not isinstance(v, str):
                 raise TypeError("WSGI response header value %r is not a byte string." % v)
+            if k.lower() == 'content-length':
+                self.remaining_bytes_out = int(v)
         self.req.outheaders.extend(headers)
         
         return self.write
@@ -2068,11 +2071,30 @@ class WSGIGateway(Gateway):
         if not self.started_response:
             raise AssertionError("WSGI write called before start_response.")
         
+        chunklen = len(chunk)
+        rbo = self.remaining_bytes_out
+        if rbo is not None and chunklen > rbo:
+            if not self.req.sent_headers:
+                # Whew. We can send a 500 to the client.
+                self.req.simple_response("500 Internal Server Error",
+                    "The requested resource returned more bytes than the "
+                    "declared Content-Length.")
+            else:
+                # Dang. We have probably already sent data. Truncate the chunk
+                # to fit (so the client doesn't hang) and raise an error later.
+                chunk = chunk[:rbo]
+        
         if not self.req.sent_headers:
             self.req.sent_headers = True
             self.req.send_headers()
         
         self.req.write(chunk)
+        
+        if rbo is not None:
+            rbo -= chunklen
+            if rbo < 0:
+                raise ValueError(
+                    "Response body exceeds the declared Content-Length.")
 
 
 class WSGIGateway_10(WSGIGateway):

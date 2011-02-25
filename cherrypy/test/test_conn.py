@@ -74,6 +74,21 @@ def setup_server():
             return ["a" * 1024] * 1024
         one_megabyte_of_a.exposed = True
 
+        def custom_cl(self, body, cl):
+            cherrypy.response.headers['Content-Length'] = cl
+            if not isinstance(body, list):
+                body = [body]
+            newbody = []
+            for chunk in body:
+                if isinstance(chunk, unicode):
+                    chunk = chunk.encode('ISO-8859-1')
+                newbody.append(chunk)
+            return newbody
+        custom_cl.exposed = True
+        # Turn off the encoding tool so it doens't collapse
+        # our response body and reclaculate the Content-Length.
+        custom_cl._cp_config = {'tools.encode.on': False}
+
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
         'server.max_request_body_size': 1001,
@@ -626,7 +641,7 @@ class ConnectionTests(helper.CPWebCase):
         self.assertStatus(413)
         conn.close()
 
-    def test_Content_Length(self):
+    def test_Content_Length_in(self):
         # Try a non-chunked request where Content-Length exceeds
         # server.max_request_body_size. Assert error before body send.
         self.persistent = True
@@ -641,6 +656,38 @@ class ConnectionTests(helper.CPWebCase):
         self.assertStatus(413)
         self.assertBody("The entity sent with the request exceeds "
                         "the maximum allowed bytes.")
+        conn.close()
+
+    def test_Content_Length_out_preheaders(self):
+        # Try a non-chunked response where Content-Length is less than
+        # the actual bytes in the response body.
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("GET", "/custom_cl?body=I+have+too+many+bytes&cl=5",
+                        skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.getresponse()
+        self.status, self.headers, self.body = webtest.shb(response)
+        self.assertStatus(500)
+        self.assertBody(
+            "The requested resource returned more bytes than the "
+            "declared Content-Length.")
+        conn.close()
+
+    def test_Content_Length_out_postheaders(self):
+        # Try a non-chunked response where Content-Length is less than
+        # the actual bytes in the response body.
+        self.persistent = True
+        conn = self.HTTP_CONN
+        conn.putrequest("GET", "/custom_cl?body=I+too&body=+have+too+many&cl=5",
+                        skip_host=True)
+        conn.putheader("Host", self.HOST)
+        conn.endheaders()
+        response = conn.getresponse()
+        self.status, self.headers, self.body = webtest.shb(response)
+        self.assertStatus(200)
+        self.assertBody("I too")
         conn.close()
 
     def test_598(self):
