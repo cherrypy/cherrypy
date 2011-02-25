@@ -1,7 +1,6 @@
 """A library of helper functions for the CherryPy test suite."""
 
 import datetime
-from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
 import logging
 log = logging.getLogger(__name__)
 import os
@@ -14,9 +13,12 @@ import time
 import warnings
 
 import cherrypy
+from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib.reprconf import unrepr
 from cherrypy.test import webtest
+
+import nose
 
 _testconfig = None
 
@@ -307,7 +309,7 @@ class CPWebCase(webtest.WebCase):
         return webtest.WebCase.getPage(self, url, headers, method, body, protocol)
     
     def skip(self, msg='skipped '):
-        sys.stderr.write(msg)
+        raise nose.SkipTest(msg)
     
     def assertErrorPage(self, status, message=None, pattern=''):
         """Compare the response body with a built in error page.

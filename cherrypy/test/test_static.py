@@ -1,4 +1,4 @@
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 from cherrypy._cpcompat import BytesIO
 
 import os
@@ -17,9 +17,9 @@ class StaticTest(helper.CPWebCase):
 
     def setup_server():
         if not os.path.exists(has_space_filepath):
-            open(has_space_filepath, 'wb').write('Hello, world\r\n')
+            open(has_space_filepath, 'wb').write(ntob('Hello, world\r\n'))
         if not os.path.exists(bigfile_filepath):
-            open(bigfile_filepath, 'wb').write("x" * BIGFILE_SIZE)
+            open(bigfile_filepath, 'wb').write(ntob("x" * BIGFILE_SIZE))
         
         class Root:
             
@@ -42,7 +42,7 @@ class StaticTest(helper.CPWebCase):
             fileobj.exposed = True
             
             def bytesio(self):
-                f = BytesIO('Fee\nfie\nfo\nfum')
+                f = BytesIO(ntob('Fee\nfie\nfo\nfum'))
                 return static.serve_fileobj(f, content_type='text/plain')
             bytesio.exposed = True
         
@@ -165,8 +165,8 @@ class StaticTest(helper.CPWebCase):
         # Check that we get an error if no .file or .dir
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
-        self.assertInBody("TypeError: staticdir() takes at least 2 "
-                          "arguments (0 given)")
+        self.assertMatchesBody(ntob("TypeError: staticdir\(\) takes at least 2 "
+                                    "(positional )?arguments \(0 given\)"))
     
     def test_security(self):
         # Test up-level security
@@ -225,7 +225,7 @@ class StaticTest(helper.CPWebCase):
         response.begin()
         self.assertEqual(response.status, 200)
         
-        body = ''
+        body = ntob('')
         remaining = BIGFILE_SIZE
         while remaining > 0:
             data = response.fp.read(65536)
@@ -239,7 +239,7 @@ class StaticTest(helper.CPWebCase):
             else:
                 newconn = HTTPConnection
             s, h, b = helper.webtest.openURL(
-                "/tell", headers=[], host=self.HOST, port=self.PORT,
+                ntob("/tell"), headers=[], host=self.HOST, port=self.PORT,
                 http_conn=newconn)
             if not b:
                 # The file was closed on the server.
@@ -264,7 +264,7 @@ class StaticTest(helper.CPWebCase):
                     "as intended, or at the wrong chunk size (65536)" %
                     (expected, tell_position))
         
-        if body != "x" * BIGFILE_SIZE:
+        if body != ntob("x" * BIGFILE_SIZE):
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
                       (BIGFILE_SIZE, body[:50], len(body)))
         conn.close()
@@ -285,7 +285,7 @@ class StaticTest(helper.CPWebCase):
         response.begin()
         self.assertEqual(response.status, 200)
         body = response.fp.read(65536)
-        if body != "x" * len(body):
+        if body != ntob("x" * len(body)):
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
                       (65536, body[:50], len(body)))
         response.close()
@@ -294,7 +294,7 @@ class StaticTest(helper.CPWebCase):
         # Make a second request, which should fetch the whole file.
         self.persistent = False
         self.getPage("/bigfile")
-        if self.body != "x" * BIGFILE_SIZE:
+        if self.body != ntob("x" * BIGFILE_SIZE):
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
                       (BIGFILE_SIZE, self.body[:50], len(body)))
 

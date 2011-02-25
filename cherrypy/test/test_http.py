@@ -138,7 +138,12 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c._output(ntob('GET /'))
         c._send_output()
-        response = c.response_class(c.sock, strict=c.strict, method='GET')
+        if hasattr(c, 'strict'):
+            response = c.response_class(c.sock, strict=c.strict, method='GET')
+        else:
+            # Python 3.2 removed the 'strict' feature, saying:
+            # "http.client now always assumes HTTP/1.x compliant servers."
+            response = c.response_class(c.sock, method='GET')
         response.begin()
         self.assertEqual(response.status, 400)
         self.assertEqual(response.fp.read(22), ntob("Malformed Request-Line"))
