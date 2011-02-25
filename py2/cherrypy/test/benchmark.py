@@ -249,7 +249,7 @@ def thread_report(path=SCRIPT_NAME + "/hello", concurrency=safe_threads):
         for attr in attrs:
             val = getattr(sess, attr)
             if val is None:
-                print sess.output
+                print(sess.output)
                 row = None
                 break
             val = float(val)

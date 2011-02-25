@@ -14,9 +14,6 @@ except ImportError:
 from distutils.command.install import INSTALL_SCHEMES
 import sys
 import os
-import shutil
-
-required_python_version = '2.3'
 
 ###############################################################################
 # arguments for the setup command
@@ -33,6 +30,7 @@ classifiers=[
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 3",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
@@ -77,6 +75,17 @@ data_files=[
         ]
     ),
 ]
+if sys.version_info >= (3, 0):
+    required_python_version = '3.0'
+    setupdir = 'py3'
+else:
+    required_python_version = '2.3'
+    setupdir = 'py2'
+package_dir={'': setupdir}
+data_files = [(install_dir, ['%s/%s' % (setupdir, f) for f in files])
+              for install_dir, files in data_files]
+scripts = ["%s/cherrypy/cherryd" % setupdir]
+
 ###############################################################################
 # end arguments for setup
 ###############################################################################
@@ -120,10 +129,11 @@ def main():
         author_email=author_email,
         url=url,
         license=cp_license,
+        package_dir=package_dir,
         packages=packages,
         download_url=download_url,
         data_files=data_files,
-        scripts=[os.path.join("cherrypy", "cherryd")],
+        scripts=scripts,
     )
 
 
