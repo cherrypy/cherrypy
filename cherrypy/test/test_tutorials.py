@@ -43,7 +43,7 @@ class TutorialTest(helper.CPWebCase):
         root = Dummy()
         root.load_tut_module = load_tut_module
         cherrypy.tree.mount(root)
-    setup_server = staticmethod(setup_server)
+    setup_server = classmethod(setup_server)
 
     
     def test01HelloWorld(self):

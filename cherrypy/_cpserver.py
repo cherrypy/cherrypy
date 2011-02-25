@@ -108,7 +108,7 @@ class Server(ServerAdapter):
     nodelay = True
     """If True (the default since 3.1), sets the TCP_NODELAY socket option."""
     
-    wsgi_version = (1, 1)
+    wsgi_version = (1, 0)
     """The WSGI version tuple to use with the builtin WSGI server.
     The provided options are (1, 0) [which includes support for PEP 3333,
     which declares it covers WSGI version 1.0.1 but still mandates the
