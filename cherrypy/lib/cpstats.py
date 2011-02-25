@@ -211,13 +211,11 @@ import cherrypy
 appstats = logging.statistics.setdefault('CherryPy Applications', {})
 appstats.update({
     'Enabled': True,
-    'Bytes Read/Request': lambda s: (
-        (s['Total Bytes Read'] / float(s['Total Requests']))
-        if s['Total Requests'] else 0.0),
+    'Bytes Read/Request': lambda s: (s['Total Requests'] and
+        (s['Total Bytes Read'] / float(s['Total Requests'])) or 0.0),
     'Bytes Read/Second': lambda s: s['Total Bytes Read'] / s['Uptime'](s),
-    'Bytes Written/Request': lambda s: (
-        (s['Total Bytes Written'] / float(s['Total Requests']))
-        if s['Total Requests'] else 0.0),
+    'Bytes Written/Request': lambda s: (s['Total Requests'] and
+        (s['Total Bytes Written'] / float(s['Total Requests'])) or 0.0),
     'Bytes Written/Second': lambda s: s['Total Bytes Written'] / s['Uptime'](s),
     'Current Time': lambda s: time.time(),
     'Current Requests': 0,
@@ -277,7 +275,7 @@ class ByteCountWrapper(object):
         return data
 
 
-average_uriset_time = lambda s: (s['Sum'] / s['Count']) if s['Count'] else 0
+average_uriset_time = lambda s: s['Count'] and (s['Sum'] / s['Count']) or 0
 
 
 class StatsTool(cherrypy.Tool):
