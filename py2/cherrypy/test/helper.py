@@ -80,6 +80,9 @@ class LocalSupervisor(Supervisor):
 
         cherrypy.server.httpserver = self.httpserver_class
 
+        # This is perhaps the wrong place for this call but this is the only
+        # place that i've found so far that I KNOW is early enough to set this.
+        cherrypy.config.update({'log.screen': False})
         engine = cherrypy.engine
         if hasattr(engine, "signal_handler"):
             engine.signal_handler.subscribe()
