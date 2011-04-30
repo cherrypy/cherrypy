@@ -19,7 +19,7 @@ import os
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.2.0"
+version = "3.2.1"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers=[
