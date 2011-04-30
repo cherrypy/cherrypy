@@ -732,16 +732,15 @@ class HTTPRequest(object):
         """
         if uri == b"*":
             return None, None, uri
-        
-        i = uri.find(b'://')
-        if i > 0 and b'?' not in uri[:i]:
+
+        scheme, sep, remainder = uri.partition(b'://')
+        if sep and b'?' not in scheme:
             # An absoluteURI.
             # If there's a scheme (and it must be http or https), then:
             # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query ]]
-            scheme, remainder = uri[:i].lower(), uri[i + 3:]
-            authority, path = remainder.split(b"/", 1)
-            return scheme, authority, path
-        
+            authority, path_a, path_b = remainder.partition(b'/')
+            return scheme.lower(), authority, path_a+path_b
+
         if uri.startswith(b'/'):
             # An abs_path.
             return None, None, uri

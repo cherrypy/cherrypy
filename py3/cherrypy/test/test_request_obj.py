@@ -46,8 +46,12 @@ class RequestObjectTests(helper.CPWebCase):
                 setattr(root, name.lower(), cls())
         class Test(object, metaclass=TestType):
             pass
-        
-        
+
+        class PathInfo(Test):
+
+            def default(self, *args):
+                return cherrypy.request.path_info
+
         class Params(Test):
             
             def index(self, thing):
@@ -277,7 +281,16 @@ class RequestObjectTests(helper.CPWebCase):
     def test_scheme(self):
         self.getPage("/scheme")
         self.assertBody(self.scheme)
-    
+
+    def testRelativeURIPathInfo(self):
+        self.getPage("/pathinfo/foo/bar")
+        self.assertBody("/pathinfo/foo/bar")
+
+    def testAbsoluteURIPathInfo(self):
+        # http://cherrypy.org/ticket/1061
+        self.getPage("http://localhost/pathinfo/foo/bar")
+        self.assertBody("/pathinfo/foo/bar")
+
     def testParams(self):
         self.getPage("/params/?thing=a")
         self.assertBody("'a'")
