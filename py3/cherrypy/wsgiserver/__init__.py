@@ -1053,6 +1053,15 @@ class HTTPConnection(object):
             pass
 
 
+class TrueyZero(object):
+    """An object which equals and does math like the integer '0' but evals True."""
+    def __add__(self, other):
+        return other
+    def __radd__(self, other):
+        return other
+trueyzero = TrueyZero()
+
+
 _SHUTDOWNREQUEST = None
 
 class WorkerThread(threading.Thread):
@@ -1086,10 +1095,10 @@ class WorkerThread(threading.Thread):
         self.start_time = None
         self.work_time = 0
         self.stats = {
-            'Requests': lambda s: self.requests_seen + ((self.start_time is None) and -1 or self.conn.requests_seen),
-            'Bytes Read': lambda s: self.bytes_read + ((self.start_time is None) and -1 or self.conn.rfile.bytes_read),
-            'Bytes Written': lambda s: self.bytes_written + ((self.start_time is None) and -1 or self.conn.wfile.bytes_written),
-            'Work Time': lambda s: self.work_time + ((self.start_time is None) and -1 or time.time() - self.start_time),
+            'Requests': lambda s: self.requests_seen + ((self.start_time is None) and trueyzero or self.conn.requests_seen),
+            'Bytes Read': lambda s: self.bytes_read + ((self.start_time is None) and trueyzero or self.conn.rfile.bytes_read),
+            'Bytes Written': lambda s: self.bytes_written + ((self.start_time is None) and trueyzero or self.conn.wfile.bytes_written),
+            'Work Time': lambda s: self.work_time + ((self.start_time is None) and trueyzero or time.time() - self.start_time),
             'Read Throughput': lambda s: s['Bytes Read'](s) / (s['Work Time'](s) or 1e-6),
             'Write Throughput': lambda s: s['Bytes Written'](s) / (s['Work Time'](s) or 1e-6),
         }

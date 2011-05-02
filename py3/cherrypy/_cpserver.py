@@ -104,6 +104,9 @@ class Server(ServerAdapter):
     into recent versions of Python). You may also register your
     own classes in the wsgiserver.ssl_adapters dict."""
     
+    statistics = False
+    """Turns statistics-gathering on or off for aware HTTP servers."""
+    
     nodelay = True
     """If True (the default since 3.1), sets the TCP_NODELAY socket option."""
     
