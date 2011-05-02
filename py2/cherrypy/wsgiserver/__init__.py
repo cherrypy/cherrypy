@@ -104,8 +104,6 @@ import warnings
 
 import errno
 
-from cherrypy.py24compat import partition
-
 def plat_specific_errors(*errnames):
     """Return error numbers for all errors in errnames on this platform.
     
@@ -743,13 +741,15 @@ class HTTPRequest(object):
         if uri == "*":
             return None, None, uri
         
-        scheme, sep, remainder = partition(uri, '://')
-        if sep and '?' not in scheme:
+        i = uri.find('://')
+        if i > 0 and '?' not in uri[:i]:
             # An absoluteURI.
             # If there's a scheme (and it must be http or https), then:
             # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query ]]
-            authority, path_a, path_b = partition(remainder, '/')
-            return scheme.lower(), authority, path_a+path_b
+            scheme, remainder = uri[:i].lower(), uri[i + 3:]
+            authority, path = remainder.split("/", 1)
+            path = '/' + path
+            return scheme, authority, path
         
         if uri.startswith('/'):
             # An abs_path.
