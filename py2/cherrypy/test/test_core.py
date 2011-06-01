@@ -244,6 +244,27 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     cherrypy.response.cookie[str(name)] = cookie.value
 
 
+        def append_headers(header_list, debug=False):
+            if debug:
+                cherrypy.log(
+                    "Extending response headers with %s" % repr(header_list),
+                    "TOOLS.APPEND_HEADERS")
+            cherrypy.serving.response.header_list.extend(header_list)
+        cherrypy.tools.append_headers = cherrypy.Tool('on_end_resource', append_headers)
+        
+        class MultiHeader(Test):
+            
+            @cherrypy.tools.append_headers(header_list=[
+                ('WWW-Authenticate', 'Negotiate'),
+                ('WWW-Authenticate', 'Basic realm="foo"'),
+                ])
+            def header_list(self):
+                pass
+            
+            def commas(self):
+                cherrypy.response.headers['WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
+
+
         cherrypy.tree.mount(root)
     setup_server = staticmethod(setup_server)
 
@@ -507,6 +528,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/')
         self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
         self.getPage('/defct/html')
+    
+    def test_multiple_headers(self):
+        self.getPage('/multiheader/header_list')
+        self.assertEqual([(k, v) for k, v in self.headers if k == 'WWW-Authenticate'],
+                         [('WWW-Authenticate', 'Negotiate'),
+                          ('WWW-Authenticate', 'Basic realm="foo"'),
+                          ])
+        self.getPage('/multiheader/commas')
+        self.assertHeader('WWW-Authenticate', 'Negotiate,Basic realm="foo"')
     
     def test_cherrypy_url(self):
         # Input relative to current
