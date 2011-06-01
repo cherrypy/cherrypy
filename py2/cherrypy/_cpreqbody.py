@@ -399,7 +399,6 @@ class Entity(object):
         # Copy the class 'attempt_charsets', prepending any Content-Type charset
         dec = self.content_type.params.get("charset", None)
         if dec:
-            #dec = dec.decode('ISO-8859-1')
             self.attempt_charsets = [dec] + [c for c in self.attempt_charsets
                                              if c != dec]
         else:

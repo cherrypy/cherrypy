@@ -98,11 +98,19 @@ class Server(ServerAdapter):
     ssl_private_key = None
     """The filename of the private key to use with SSL."""
     
-    ssl_module = 'builtin'
-    """The name of a registered SSL adaptation module to use with the builtin
-    WSGI server. Builtin options are: 'builtin' (to use the SSL library built
-    into recent versions of Python). You may also register your
-    own classes in the wsgiserver.ssl_adapters dict."""
+    if sys.version() >= (3, 0):
+        ssl_module = 'builtin'
+        """The name of a registered SSL adaptation module to use with the builtin
+        WSGI server. Builtin options are: 'builtin' (to use the SSL library built
+        into recent versions of Python). You may also register your
+        own classes in the wsgiserver.ssl_adapters dict."""
+    else:
+        ssl_module = 'pyopenssl'
+        """The name of a registered SSL adaptation module to use with the builtin
+        WSGI server. Builtin options are 'builtin' (to use the SSL library built
+        into recent versions of Python) and 'pyopenssl' (to use the PyOpenSSL
+        project, which you must install separately). You may also register your
+        own classes in the wsgiserver.ssl_adapters dict."""
     
     statistics = False
     """Turns statistics-gathering on or off for aware HTTP servers."""

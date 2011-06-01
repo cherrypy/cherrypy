@@ -4,6 +4,7 @@ import sys
 import time
 
 import cherrypy
+from cherrypy._cpcompat import ntob
 
 
 try:
@@ -40,7 +41,7 @@ class LogCase(object):
     
     logfile = None
     lastmarker = None
-    markerPrefix = "test suite marker: "
+    markerPrefix = ntob("test suite marker: ")
     
     def _handleLogError(self, msg, data, marker, pattern):
         print("")
@@ -50,7 +51,7 @@ class LogCase(object):
             raise self.failureException(msg)
         
         p = "    Show: [L]og [M]arker [P]attern; [I]gnore, [R]aise, or sys.e[X]it >> "
-        print p,
+        sys.stdout.write(p + ' ')
         # ARGH
         sys.stdout.flush()
         while True:
@@ -62,10 +63,10 @@ class LogCase(object):
                 for x, line in enumerate(data):
                     if (x + 1) % self.console_height == 0:
                         # The \r and comma should make the next line overwrite
-                        print "<-- More -->\r",
+                        sys.stdout.write("<-- More -->\r ")
                         m = getchar().lower()
                         # Erase our "More" prompt
-                        print "            \r",
+                        sys.stdout.write("            \r ")
                         if m == "q":
                             break
                     print(line.rstrip())
@@ -80,7 +81,7 @@ class LogCase(object):
                 raise self.failureException(msg)
             elif i == "X":
                 self.exit()
-            print p,
+            sys.stdout.write(p + ' ')
     
     def exit(self):
         sys.exit()
@@ -95,7 +96,7 @@ class LogCase(object):
             key = str(time.time())
         self.lastmarker = key
         
-        open(self.logfile, 'ab+').write("%s%s\n" % (self.markerPrefix, key))
+        open(self.logfile, 'ab+').write(ntob("%s%s\n" % (self.markerPrefix, key),"utf-8"))
     
     def _read_marked_region(self, marker=None):
         """Return lines from self.logfile in the marked region.

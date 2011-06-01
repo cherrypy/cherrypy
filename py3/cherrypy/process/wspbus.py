@@ -297,7 +297,12 @@ class Bus(object):
         for t in threading.enumerate():
             if t != threading.currentThread() and t.isAlive():
                 # Note that any dummy (external) threads are always daemonic.
-                if not t.daemon:
+                if hasattr(threading.Thread, "daemon"):
+                    # Python 2.6+
+                    d = t.daemon
+                else:
+                    d = t.isDaemon()
+                if not d:
                     self.log("Waiting for thread %s." % t.getName())
                     t.join()
         

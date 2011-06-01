@@ -174,7 +174,12 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             else:
                 # Return a multipart/byteranges response.
                 response.status = "206 Partial Content"
-                from mimetools import choose_boundary
+                try:
+                    # Python 3
+                    from email.generator import _make_boundary as choose_boundary
+                except ImportError:
+                    # Python 2
+                    from mimetools import choose_boundary
                 boundary = choose_boundary()
                 ct = "multipart/byteranges; boundary=%s" % boundary
                 response.headers['Content-Type'] = ct

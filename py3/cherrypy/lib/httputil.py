@@ -44,11 +44,11 @@ def urljoin_bytes(*atoms):
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
     """
-    url = b"/".join([x for x in atoms if x])
-    while b"//" in url:
-        url = url.replace(b"//", b"/")
-    # Special-case the final url of b"", and return b"/" instead.
-    return url or b"/"
+    url = ntob("/").join([x for x in atoms if x])
+    while ntob("//") in url:
+        url = url.replace(ntob("//"), ntob("/"))
+    # Special-case the final url of "", and return "/" instead.
+    return url or ntob("/")
 
 def protocol_from_http(protocol_str):
     """Return a protocol tuple from the given 'HTTP/x.y' string."""
@@ -114,6 +114,9 @@ class HeaderElement(object):
             params = {}
         self.params = params
     
+    def __cmp__(self, other):
+        return cmp(self.value, other.value)
+    
     def __lt__(self, other):
         return self.value < other.value
     
@@ -123,6 +126,9 @@ class HeaderElement(object):
     
     def __bytes__(self):
         return ntob(self.__str__())
+
+    def __unicode__(self):
+        return ntou(self.__str__())
     
     def parse(elementstr):
         """Transform 'token;key=val' to ('token', {'key': 'val'})."""
@@ -188,6 +194,12 @@ class AcceptElement(HeaderElement):
         return float(val)
     qvalue = property(qvalue, doc="The qvalue, or priority, of this value.")
     
+    def __cmp__(self, other):
+        diff = cmp(self.qvalue, other.qvalue)
+        if diff == 0:
+            diff = cmp(str(self), str(other))
+        return diff
+    
     def __lt__(self, other):
         if self.qvalue == other.qvalue:
             return str(self) < str(other)
@@ -211,8 +223,12 @@ def header_elements(fieldname, fieldvalue):
     return list(reversed(sorted(result)))
 
 def decode_TEXT(value):
-    r"""Decode :rfc:`2047` TEXT (e.g. b"=?utf-8?q?f=C3=BCr?=" -> "f\xfcr")."""
-    from email.header import decode_header
+    r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> "f\xfcr")."""
+    try:
+        # Python 3
+        from email.header import decode_header
+    except ImportError:
+        from email.Header import decode_header
     atoms = decode_header(value)
     decodedvalue = ""
     for atom, charset in atoms:
@@ -354,6 +370,10 @@ class CaseInsensitiveDict(dict):
     def get(self, key, default=None):
         return dict.get(self, str(key).title(), default)
     
+    if hasattr({}, 'has_key'):
+        def has_key(self, key):
+            return dict.has_key(self, str(key).title())
+    
     def update(self, E):
         for k in E.keys():
             self[str(k).title()] = E[k]
@@ -382,8 +402,12 @@ class CaseInsensitiveDict(dict):
 # A CRLF is allowed in the definition of TEXT only as part of a header
 # field continuation. It is expected that the folding LWS will be
 # replaced with a single SP before interpretation of the TEXT value."
-header_translate_table = None
-header_translate_deletechars = bytes(range(32)) + bytes([127])
+if nativestr == bytestr:
+    header_translate_table = ''.join([chr(i) for i in xrange(256)])
+    header_translate_deletechars = ''.join([chr(i) for i in xrange(32)]) + chr(127)
+else:
+    header_translate_table = None
+    header_translate_deletechars = bytes(range(32)) + bytes([127])
 
 
 class HeaderMap(CaseInsensitiveDict):

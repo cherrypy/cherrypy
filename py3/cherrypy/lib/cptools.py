@@ -580,6 +580,12 @@ class MonitoredHeaderMap(_httputil.HeaderMap):
     def get(self, key, default=None):
         self.accessed_headers.add(key)
         return _httputil.HeaderMap.get(self, key, default=default)
+    
+    if hasattr({}, 'has_key'):
+        # Python 2
+        def has_key(self, key):
+            self.accessed_headers.add(key)
+            return _httputil.HeaderMap.has_key(self, key)
 
 
 def autovary(ignore=None, debug=False):
