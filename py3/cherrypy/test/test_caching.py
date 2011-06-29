@@ -302,8 +302,9 @@ class CacheTest(helper.CPWebCase):
         for t in ts:
             t.join()
         self.assertEqualDates(start, datetime.datetime.now(),
-                              # Allow a second for our thread/TCP overhead etc.
-                              seconds=SECONDS + 1.1)
+                              # Allow a second (two, for slow hosts)
+                              # for our thread/TCP overhead etc.
+                              seconds=SECONDS + 2)
     
     def test_cache_control(self):
         self.getPage("/control")

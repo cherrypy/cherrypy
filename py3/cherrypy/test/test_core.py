@@ -56,8 +56,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
-        class Test(object, metaclass=TestType):
-            pass
+        Test = TestType('Test', (object, ), {})
         
         
         class URL(Test):
@@ -122,7 +121,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 raise cherrypy.HTTPRedirect(url, code)
             
             def by_code(self, code):
-                raise cherrypy.HTTPRedirect("somewhere else", code)
+                raise cherrypy.HTTPRedirect("somewhere%20else", code)
             by_code._cp_config = {'tools.trailing_slash.extra': True}
             
             def nomodify(self):
@@ -244,6 +243,27 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     cherrypy.response.cookie[str(name)] = cookie.value
 
 
+        def append_headers(header_list, debug=False):
+            if debug:
+                cherrypy.log(
+                    "Extending response headers with %s" % repr(header_list),
+                    "TOOLS.APPEND_HEADERS")
+            cherrypy.serving.response.header_list.extend(header_list)
+        cherrypy.tools.append_headers = cherrypy.Tool('on_end_resource', append_headers)
+        
+        class MultiHeader(Test):
+            
+            @cherrypy.tools.append_headers(header_list=[
+                ('WWW-Authenticate', 'Negotiate'),
+                ('WWW-Authenticate', 'Basic realm="foo"'),
+                ])
+            def header_list(self):
+                pass
+            
+            def commas(self):
+                cherrypy.response.headers['WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
+
+
         cherrypy.tree.mount(root)
     setup_server = staticmethod(setup_server)
 
@@ -312,23 +332,23 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         
         self.getPage("/redirect/by_code?code=300")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(300)
         
         self.getPage("/redirect/by_code?code=301")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(301)
         
         self.getPage("/redirect/by_code?code=302")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(302)
         
         self.getPage("/redirect/by_code?code=303")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(303)
         
         self.getPage("/redirect/by_code?code=307")
-        self.assertMatchesBody(r"<a href='(.*)somewhere else'>\1somewhere else</a>")
+        self.assertMatchesBody(r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
         self.assertStatus(307)
         
         self.getPage("/redirect/nomodify")
@@ -481,15 +501,20 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody(data)
     
     def testCookies(self):
+        if sys.version_info >= (2, 5):
+            header_value = lambda x: x
+        else:
+            header_value = lambda x: x+';'
+        
         self.getPage("/cookies/single?name=First",
                      [('Cookie', 'First=Dinsdale;')])
-        self.assertHeader('Set-Cookie', 'First=Dinsdale')
+        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
         
         self.getPage("/cookies/multiple?names=First&names=Last",
                      [('Cookie', 'First=Dinsdale; Last=Piranha;'),
                       ])
-        self.assertHeader('Set-Cookie', 'First=Dinsdale')
-        self.assertHeader('Set-Cookie', 'Last=Piranha')
+        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
+        self.assertHeader('Set-Cookie', header_value('Last=Piranha'))
         
         self.getPage("/cookies/single?name=Something-With:Colon",
             [('Cookie', 'Something-With:Colon=some-value')])
@@ -502,6 +527,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/')
         self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
         self.getPage('/defct/html')
+    
+    def test_multiple_headers(self):
+        self.getPage('/multiheader/header_list')
+        self.assertEqual([(k, v) for k, v in self.headers if k == 'WWW-Authenticate'],
+                         [('WWW-Authenticate', 'Negotiate'),
+                          ('WWW-Authenticate', 'Basic realm="foo"'),
+                          ])
+        self.getPage('/multiheader/commas')
+        self.assertHeader('WWW-Authenticate', 'Negotiate,Basic realm="foo"')
     
     def test_cherrypy_url(self):
         # Input relative to current
