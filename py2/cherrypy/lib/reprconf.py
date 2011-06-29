@@ -437,7 +437,7 @@ def unrepr(s):
     """Return a Python object compiled from a string."""
     if not s:
         return s
-    if sys.version_info <= (3, 0):
+    if sys.version_info < (3, 0):
         b = _Builder2()
     else:
         b = _Builder3()

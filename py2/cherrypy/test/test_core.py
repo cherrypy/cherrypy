@@ -56,8 +56,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
-        class Test(object):
-            __metaclass__ = TestType
+        Test = TestType('Test', (object, ), {})
         
         
         class URL(Test):
