@@ -151,6 +151,10 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     
     For running a CP server behind Apache, lighttpd, or other HTTP server.
     
+    For Apache and lighttpd, you should leave the 'local' argument at the
+    default value of 'X-Forwarded-Host'. For Squid, you probably want to set
+    tools.proxy.local = 'Origin'.
+    
     If you want the new request.base to include path info (not just the host),
     you must explicitly set base to the full base path, and ALSO set 'local'
     to '', so that the X-Forwarded-Host request header (which never includes

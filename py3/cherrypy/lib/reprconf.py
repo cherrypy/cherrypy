@@ -24,12 +24,29 @@ try:
 except ImportError:
     from ConfigParser import ConfigParser
 
+try:
+    set
+except NameError:
+    from sets import Set as set
+
+try:
+    basestring
+except NameError:
+    basestring = str
+
+try:
+    # Python 3
+    import builtins
+except ImportError:
+    # Python 2
+    import __builtin__ as builtins
+
 import operator as _operator
 import sys
 
 def as_dict(config):
     """Return a dict from 'config' whether it is a dict, file, or filename."""
-    if isinstance(config, str):
+    if isinstance(config, basestring):
         config = Parser().dict_from_file(config)
     elif hasattr(config, 'read'):
         config = Parser().dict_from_file(config)
@@ -69,12 +86,33 @@ class NamespaceSet(dict):
                 bucket = ns_confs.setdefault(ns, {})
                 bucket[name] = config[k]
         
+        # I chose __enter__ and __exit__ so someday this could be
+        # rewritten using Python 2.5's 'with' statement:
+        # for ns, handler in self.iteritems():
+        #     with handler as callable:
+        #         for k, v in ns_confs.get(ns, {}).iteritems():
+        #             callable(k, v)
         for ns, handler in self.items():
             exit = getattr(handler, "__exit__", None)
             if exit:
-                with handler as callable:
-                    for k, v in ns_confs.get(ns, {}).items():
-                        callable(k, v)
+                callable = handler.__enter__()
+                no_exc = True
+                try:
+                    try:
+                        for k, v in ns_confs.get(ns, {}).items():
+                            callable(k, v)
+                    except:
+                        # The exceptional case is handled here
+                        no_exc = False
+                        if exit is None:
+                            raise
+                        if not exit(*sys.exc_info()):
+                            raise
+                        # The exception is swallowed if exit() returns true
+                finally:
+                    # The normal and non-local-goto cases are handled here
+                    if no_exc and exit:
+                        exit(None, None, None)
             else:
                 for k, v in ns_confs.get(ns, {}).items():
                     handler(k, v)
@@ -114,7 +152,7 @@ class Config(dict):
     
     def update(self, config):
         """Update self from a dict, file or filename."""
-        if isinstance(config, str):
+        if isinstance(config, basestring):
             # Filename
             config = Parser().dict_from_file(config)
         elif hasattr(config, 'read'):
@@ -150,7 +188,7 @@ class Parser(ConfigParser):
         return optionstr
     
     def read(self, filenames):
-        if isinstance(filenames, str):
+        if isinstance(filenames, basestring):
             filenames = [filenames]
         for filename in filenames:
             # try:
@@ -174,7 +212,8 @@ class Parser(ConfigParser):
                 value = self.get(section, option, raw=raw, vars=vars)
                 try:
                     value = unrepr(value)
-                except Exception as x:
+                except Exception:
+                    x = sys.exc_info()[1]
                     msg = ("Config error in section: %r, option: %r, "
                            "value: %r. Config values must be valid Python." %
                            (section, option, value))
@@ -192,7 +231,8 @@ class Parser(ConfigParser):
 
 # public domain "unrepr" implementation, found on the web and then improved.
 
-class _Builder:
+
+class _Builder2:
     
     def build(self, o):
         m = getattr(self, 'build_' + o.__class__.__name__, None)
@@ -201,6 +241,110 @@ class _Builder:
                             repr(o.__class__.__name__))
         return m(o)
     
+    def astnode(self, s):
+        """Return a Python2 ast Node compiled from a string."""
+        try:
+            import compiler
+        except ImportError:
+            # Fallback to eval when compiler package is not available,
+            # e.g. IronPython 1.0.
+            return eval(s)
+        
+        p = compiler.parse("__tempvalue__ = " + s)
+        return p.getChildren()[1].getChildren()[0].getChildren()[1]
+    
+    def build_Subscript(self, o):
+        expr, flags, subs = o.getChildren()
+        expr = self.build(expr)
+        subs = self.build(subs)
+        return expr[subs]
+    
+    def build_CallFunc(self, o):
+        children = map(self.build, o.getChildren())
+        callee = children.pop(0)
+        kwargs = children.pop() or {}
+        starargs = children.pop() or ()
+        args = tuple(children) + tuple(starargs)
+        return callee(*args, **kwargs)
+    
+    def build_List(self, o):
+        return map(self.build, o.getChildren())
+    
+    def build_Const(self, o):
+        return o.value
+    
+    def build_Dict(self, o):
+        d = {}
+        i = iter(map(self.build, o.getChildren()))
+        for el in i:
+            d[el] = i.next()
+        return d
+    
+    def build_Tuple(self, o):
+        return tuple(self.build_List(o))
+    
+    def build_Name(self, o):
+        name = o.name
+        if name == 'None':
+            return None
+        if name == 'True':
+            return True
+        if name == 'False':
+            return False
+        
+        # See if the Name is a package or module. If it is, import it.
+        try:
+            return modules(name)
+        except ImportError:
+            pass
+        
+        # See if the Name is in builtins.
+        try:
+            return getattr(builtins, name)
+        except AttributeError:
+            pass
+        
+        raise TypeError("unrepr could not resolve the name %s" % repr(name))
+    
+    def build_Add(self, o):
+        left, right = map(self.build, o.getChildren())
+        return left + right
+    
+    def build_Getattr(self, o):
+        parent = self.build(o.expr)
+        return getattr(parent, o.attrname)
+    
+    def build_NoneType(self, o):
+        return None
+    
+    def build_UnarySub(self, o):
+        return -self.build(o.getChildren()[0])
+    
+    def build_UnaryAdd(self, o):
+        return self.build(o.getChildren()[0])
+
+
+class _Builder3:
+    
+    def build(self, o):
+        m = getattr(self, 'build_' + o.__class__.__name__, None)
+        if m is None:
+            raise TypeError("unrepr does not recognize %s" %
+                            repr(o.__class__.__name__))
+        return m(o)
+    
+    def astnode(self, s):
+        """Return a Python3 ast Node compiled from a string."""
+        try:
+            import ast
+        except ImportError:
+            # Fallback to eval when ast package is not available,
+            # e.g. IronPython 1.0.
+            return eval(s)
+
+        p = ast.parse("__tempvalue__ = " + s)
+        return p.body[0].value
+
     def build_Subscript(self, o):
         return self.build(o.value)[self.build(o.slice)]
     
@@ -289,24 +433,16 @@ class _Builder:
         return None
 
 
-def _astnode(s):
-    """Return a Python ast Node compiled from a string."""
-    try:
-        import ast
-    except ImportError:
-        # Fallback to eval when ast package is not available,
-        # e.g. IronPython 1.0.
-        return eval(s)
-
-    p = ast.parse("__tempvalue__ = " + s)
-    return p.body[0].value
-
 def unrepr(s):
     """Return a Python object compiled from a string."""
     if not s:
         return s
-    obj = _astnode(s)
-    return _Builder().build(obj)
+    if sys.version_info <= (3, 0):
+        b = _Builder2()
+    else:
+        b = _Builder3()
+    obj = b.astnode(s)
+    return b.build(obj)
 
 
 def modules(modulePath):

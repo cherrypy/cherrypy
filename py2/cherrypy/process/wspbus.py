@@ -102,8 +102,9 @@ class ChannelFailures(Exception):
 
     __repr__ = __str__
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self._exceptions)
+    __nonzero__ = __bool__
 
 # Use a flag to indicate the state of the bus.
 class _StateEnum(object):
@@ -173,13 +174,15 @@ class Bus(object):
         
         items = [(self._priorities[(channel, listener)], listener)
                  for listener in self.listeners[channel]]
-        items.sort()
+        by_priority = lambda item: item[0]
+        items.sort(key=by_priority)
         for priority, listener in items:
             try:
                 output.append(listener(*args, **kwargs))
             except KeyboardInterrupt:
                 raise
-            except SystemExit, e:
+            except SystemExit:
+                e = sys.exc_info()[1]
                 # If we have previous errors ensure the exit code is non-zero
                 if exc and e.code == 0:
                     e.code = 1
@@ -221,13 +224,14 @@ class Bus(object):
         except:
             self.log("Shutting down due to error in start listener:",
                      level=40, traceback=True)
-            e_info = sys.exc_info()
+            e_info = sys.exc_info()[1]
             try:
                 self.exit()
             except:
                 # Any stop/exit errors will be logged inside publish().
                 pass
-            raise e_info[0], e_info[1], e_info[2]
+            # Re-raise the original error
+            raise e
     
     def exit(self):
         """Stop all services and prepare to exit the process."""

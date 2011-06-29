@@ -1,3 +1,7 @@
+try:
+    from io import UnsupportedOperation
+except ImportError:
+    UnsupportedOperation = object()
 import logging
 import mimetypes
 mimetypes.init()
@@ -114,6 +118,8 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
     except AttributeError:
         if debug:
             cherrypy.log('os has no fstat attribute', 'TOOLS.STATIC')
+        content_length = None
+    except UnsupportedOperation:
         content_length = None
     else:
         # Set the Last-Modified response header, so that

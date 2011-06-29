@@ -38,7 +38,7 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
         self.protocol = self.server_adapter.protocol_version
         self.nodelay = self.server_adapter.nodelay
 
-        if sys.version >= (3, 0):
+        if sys.version_info >= (3, 0):
             ssl_module = self.server_adapter.ssl_module or 'builtin'
         else:
             ssl_module = self.server_adapter.ssl_module or 'pyopenssl'

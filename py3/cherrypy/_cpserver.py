@@ -98,7 +98,7 @@ class Server(ServerAdapter):
     ssl_private_key = None
     """The filename of the private key to use with SSL."""
     
-    if sys.version() >= (3, 0):
+    if sys.version_info >= (3, 0):
         ssl_module = 'builtin'
         """The name of a registered SSL adaptation module to use with the builtin
         WSGI server. Builtin options are: 'builtin' (to use the SSL library built
