@@ -197,8 +197,18 @@ class LateParamPageHandler(PageHandler):
                       'cherrypy.request.params copied in)')
 
 
-punctuation_to_underscores = string.maketrans(
-    string.punctuation, '_' * len(string.punctuation))
+if sys.version_info < (3, 0):
+    punctuation_to_underscores = string.maketrans(
+        string.punctuation, '_' * len(string.punctuation))
+    def validate_translator(t):
+        if not isinstance(t, str) or len(t) != 256:
+            raise ValueError("The translate argument must be a str of len 256.")
+else:
+    punctuation_to_underscores = str.maketrans(
+        string.punctuation, '_' * len(string.punctuation))
+    def validate_translator(t):
+        if not isinstance(t, dict):
+            raise ValueError("The translate argument must be a dict.")
 
 class Dispatcher(object):
     """CherryPy Dispatcher which walks a tree of objects to find a handler.
@@ -222,8 +232,7 @@ class Dispatcher(object):
     
     def __init__(self, dispatch_method_name=None,
                  translate=punctuation_to_underscores):
-        if not isinstance(translate, str) or len(translate) != 256:
-            raise ValueError("The translate argument must be a str of len 256.")
+        validate_translator(translate)
         self.translate = translate
         if dispatch_method_name:
             self.dispatch_method_name = dispatch_method_name

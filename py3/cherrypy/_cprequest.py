@@ -50,7 +50,12 @@ class Hook(object):
         self.kwargs = kwargs
     
     def __lt__(self, other):
+        # Python 3
         return self.priority < other.priority
+
+    def __cmp__(self, other):
+        # Python 2
+        return cmp(self.priority, other.priority)
     
     def __call__(self):
         """Run self.callback(**self.kwargs)."""
@@ -488,15 +493,20 @@ class Request(object):
             self.stage = 'close'
     
     def run(self, method, path, query_string, req_protocol, headers, rfile):
-        """Process the Request. (Core)
+        r"""Process the Request. (Core)
         
         method, path, query_string, and req_protocol should be pulled directly
         from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
         
         path
             This should be %XX-unquoted, but query_string should not be.
-            They both MUST be unicode strings, not byte strings,
-            and preferably not bytes \x00-\xFF disguised as unicode.
+            
+            When using Python 2, they both MUST be byte strings,
+            not unicode strings.
+            
+            When using Python 3, they both MUST be unicode strings,
+            not byte strings, and preferably not bytes \x00-\xFF
+            disguised as unicode.
         
         headers
             A list of (name, value) tuples.
@@ -675,6 +685,13 @@ class Request(object):
                 404, "The given query string could not be processed. Query "
                 "strings for this resource must be encoded with %r." %
                 self.query_string_encoding)
+        
+        # Python 2 only: keyword arguments must be byte strings (type 'str').
+        if sys.version_info < (3, 0):
+            for key, value in p.items():
+                if isinstance(key, unicode):
+                    del p[key]
+                    p[key.encode(self.query_string_encoding)] = value
         self.params.update(p)
     
     def process_headers(self):

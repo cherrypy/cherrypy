@@ -31,6 +31,12 @@ if sys.version_info >= (3, 0):
         """Return the given native string as a unicode string with the given encoding."""
         # In Python 3, the native string type is unicode
         return n
+    def tonative(n, encoding='ISO-8859-1'):
+        """Return the given string as a native string in the given encoding."""
+        # In Python 3, the native string type is unicode
+        if isinstance(n, bytes):
+            return n.decode(encoding)
+        return n
     # type("")
     from io import StringIO
     # bytes:
@@ -53,6 +59,12 @@ else:
         # in the given encoding, which for ISO-8859-1 is almost always what
         # was intended.
         return n.decode(encoding)
+    def tonative(n, encoding='ISO-8859-1'):
+        """Return the given string as a native string in the given encoding."""
+        # In Python 2, the native string type is bytes.
+        if isinstance(n, unicode):
+            return n.encode(encoding)
+        return n
     try:
         # type("")
         from cStringIO import StringIO
