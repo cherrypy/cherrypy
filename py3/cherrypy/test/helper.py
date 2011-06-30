@@ -15,6 +15,7 @@ import warnings
 import cherrypy
 from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
 from cherrypy.lib import httputil
+from cherrypy.lib import gctools
 from cherrypy.lib.reprconf import unrepr
 from cherrypy.test import webtest
 
@@ -278,6 +279,10 @@ class CPWebCase(webtest.WebCase):
             cherrypy.tree = cherrypy._cptree.Tree()
             cherrypy.server.httpserver = None
             cls.setup_server()
+            # Add a resource for verifying there are no refleaks
+            # to *every* test class.
+            cherrypy.tree.mount(gctools.GCRoot(), '/gc')
+            cls.do_gc_test = True
             supervisor.start(cls.__module__)
 
         cls.supervisor = supervisor
@@ -288,6 +293,13 @@ class CPWebCase(webtest.WebCase):
         if hasattr(cls, 'setup_server'):
             cls.supervisor.stop()
     teardown_class = classmethod(teardown_class)
+    
+    do_gc_test = False
+    
+    def test_gc(self):
+        if self.do_gc_test:
+            self.getPage("/gc/stats")
+            self.assertBody("Statistics:")
     
     def prefix(self):
         return self.script_name.rstrip("/")

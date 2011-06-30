@@ -242,7 +242,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     # Python2's SimpleCookie.__setitem__ won't take unicode keys.
                     cherrypy.response.cookie[str(name)] = cookie.value
 
-
         def append_headers(header_list, debug=False):
             if debug:
                 cherrypy.log(
@@ -254,8 +253,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         class MultiHeader(Test):
             
             @cherrypy.tools.append_headers(header_list=[
-                ('WWW-Authenticate', 'Negotiate'),
-                ('WWW-Authenticate', 'Basic realm="foo"'),
+                (ntob('WWW-Authenticate'), ntob('Negotiate')),
+                (ntob('WWW-Authenticate'), ntob('Basic realm="foo"')),
                 ])
             def header_list(self):
                 pass
@@ -644,3 +643,29 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody("Mr. and Mrs. Watson")
 
+
+class ErrorTests(helper.CPWebCase):
+
+    def setup_server():
+        def break_header():
+            # Add a header after finalize that is invalid
+            cherrypy.serving.response.header_list.append((2, 3))
+        cherrypy.tools.break_header = cherrypy.Tool('on_end_resource', break_header)
+        
+        class Root:
+            def index(self):
+                return "hello"
+            index.exposed = True
+            
+            def start_response_error(self):
+                return "salud!"
+            start_response_error._cp_config = {'tools.break_header.on': True}
+        root = Root()
+        
+        cherrypy.tree.mount(root)
+    setup_server = staticmethod(setup_server)
+
+    def test_start_response_error(self):
+        self.getPage("/start_response_error")
+        self.assertStatus(500)
+        self.assertInBody("TypeError: WSGI response header key 2 is not a byte string.")

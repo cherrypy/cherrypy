@@ -91,6 +91,7 @@ class ServerStateTests(helper.CPWebCase):
 
     def setUp(self):
         cherrypy.server.socket_timeout = 0.1
+        self.do_gc_test = False
 
     def test_0_NormalStateFlow(self):
         engine.stop()

@@ -197,7 +197,11 @@ class AppResponse(object):
             raise
         r = _cherrypy.serving.response
         self.iter_response = iter(r.body)
-        self.write = start_response(r.output_status, r.header_list)
+        try:
+            self.write = start_response(r.output_status, r.header_list)
+        except:
+            self.close()
+            raise
     
     def __iter__(self):
         return self
