@@ -104,12 +104,12 @@ class HookMap(dict):
                     raise
                 except (cherrypy.HTTPError, cherrypy.HTTPRedirect,
                         cherrypy.InternalRedirect):
-                    exc = sys.exc_info()
+                    exc = sys.exc_info()[1]
                 except:
-                    exc = sys.exc_info()
+                    exc = sys.exc_info()[1]
                     cherrypy.log(traceback=True, severity=40)
         if exc:
-            raise exc[0](*exc[1].args).with_traceback(exc[2])
+            raise exc
     
     def __copy__(self):
         newmap = self.__class__()
@@ -779,11 +779,14 @@ class Request(object):
     :attr:`request.body.params<cherrypy._cprequest.RequestBody.params>`.""")
 
 
+_py3k = (sys.version_info >= (3, 0))
+
 class ResponseBody(object):
     """The body of the HTTP response (the response entity)."""
     
-    unicode_err = ("Page handlers MUST return bytes. Use tools.encode "
-                   "if you wish to return unicode.")
+    if _py3k:
+        unicode_err = ("Page handlers MUST return bytes. Use tools.encode "
+                       "if you wish to return unicode.")
     
     def __get__(self, obj, objclass=None):
         if obj is None:
@@ -794,10 +797,10 @@ class ResponseBody(object):
     
     def __set__(self, obj, value):
         # Convert the given value to an iterable object.
-        if isinstance(value, str):
+        if _py3k and isinstance(value, str):
             raise ValueError(self.unicode_err)
         
-        if isinstance(value, bytes):
+        if isinstance(value, basestring):
             # strings get wrapped in a list because iterating over a single
             # item list is much faster than iterating over every character
             # in a long string.
@@ -806,7 +809,7 @@ class ResponseBody(object):
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 value = []
-        elif isinstance(value, list):
+        elif _py3k and isinstance(value, list):
             # every item in a list must be bytes... 
             for i, item in enumerate(value):
                 if isinstance(item, str):
@@ -887,10 +890,10 @@ class Response(object):
         
         newbody = []
         for chunk in self.body:
-            if not isinstance(chunk, bytes):
+            if _py3k and not isinstance(chunk, bytes):
                 raise TypeError("Chunk %s is not of type 'bytes'." % repr(chunk))
             newbody.append(chunk)
-        newbody = b''.join(newbody)
+        newbody = ntob('').join(newbody)
         
         self.body = newbody
         return newbody

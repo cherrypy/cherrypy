@@ -1,6 +1,8 @@
 """CherryPy Application and Tree objects."""
 
 import os
+import sys
+
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
@@ -266,14 +268,23 @@ class Tree(object):
         
         # Correct the SCRIPT_NAME and PATH_INFO environ entries.
         environ = environ.copy()
-        if environ.get(u'wsgi.version') == (u'u', 0):
-            # Python 2/WSGI u.0: all strings MUST be of type unicode
-            enc = environ[u'wsgi.url_encoding']
-            environ[u'SCRIPT_NAME'] = sn.decode(enc)
-            environ[u'PATH_INFO'] = path[len(sn.rstrip("/")):].decode(enc)
+        if sys.version_info < (3, 0):
+            if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
+                # Python 2/WSGI u.0: all strings MUST be of type unicode
+                enc = environ[ntou('wsgi.url_encoding')]
+                environ[ntou('SCRIPT_NAME')] = sn.decode(enc)
+                environ[ntou('PATH_INFO')] = path[len(sn.rstrip("/")):].decode(enc)
+            else:
+                # Python 2/WSGI 1.x: all strings MUST be of type str
+                environ['SCRIPT_NAME'] = sn
+                environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
         else:
-            # Python 2/WSGI 1.x: all strings MUST be of type str
-            environ['SCRIPT_NAME'] = sn
-            environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
+            if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
+                # Python 3/WSGI u.0: all strings MUST be full unicode
+                environ['SCRIPT_NAME'] = sn
+                environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
+            else:
+                # Python 3/WSGI 1.x: all strings MUST be ISO-8859-1 str
+                environ['SCRIPT_NAME'] = sn.encode('utf-8').decode('ISO-8859-1')
+                environ['PATH_INFO'] = path[len(sn.rstrip("/")):].encode('utf-8').decode('ISO-8859-1')
         return app(environ, start_response)
-

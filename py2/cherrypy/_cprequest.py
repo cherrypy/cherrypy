@@ -109,7 +109,7 @@ class HookMap(dict):
                     exc = sys.exc_info()[1]
                     cherrypy.log(traceback=True, severity=40)
         if exc:
-            raise
+            raise exc
     
     def __copy__(self):
         newmap = self.__class__()
@@ -779,8 +779,14 @@ class Request(object):
     :attr:`request.body.params<cherrypy._cprequest.RequestBody.params>`.""")
 
 
+_py3k = (sys.version_info >= (3, 0))
+
 class ResponseBody(object):
     """The body of the HTTP response (the response entity)."""
+    
+    if _py3k:
+        unicode_err = ("Page handlers MUST return bytes. Use tools.encode "
+                       "if you wish to return unicode.")
     
     def __get__(self, obj, objclass=None):
         if obj is None:
@@ -791,6 +797,9 @@ class ResponseBody(object):
     
     def __set__(self, obj, value):
         # Convert the given value to an iterable object.
+        if _py3k and isinstance(value, str):
+            raise ValueError(self.unicode_err)
+        
         if isinstance(value, basestring):
             # strings get wrapped in a list because iterating over a single
             # item list is much faster than iterating over every character
@@ -800,6 +809,11 @@ class ResponseBody(object):
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 value = []
+        elif _py3k and isinstance(value, list):
+            # every item in a list must be bytes... 
+            for i, item in enumerate(value):
+                if isinstance(item, str):
+                    raise ValueError(self.unicode_err)
         # Don't use isinstance here; io.IOBase which has an ABC takes
         # 1000 times as long as, say, isinstance(value, str)
         elif hasattr(value, 'read'):
@@ -874,7 +888,12 @@ class Response(object):
         if isinstance(self.body, basestring):
             return self.body
         
-        newbody = ''.join([chunk for chunk in self.body])
+        newbody = []
+        for chunk in self.body:
+            if _py3k and not isinstance(chunk, bytes):
+                raise TypeError("Chunk %s is not of type 'bytes'." % repr(chunk))
+            newbody.append(chunk)
+        newbody = ntob('').join(newbody)
         
         self.body = newbody
         return newbody

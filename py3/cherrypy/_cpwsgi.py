@@ -10,9 +10,24 @@ still be translatable to bytes via the Latin-1 encoding!"
 import sys as _sys
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO
+from cherrypy._cpcompat import BytesIO, ntob, ntou, unicodestr
 from cherrypy import _cperror
 from cherrypy.lib import httputil
+
+
+def downgrade_wsgi_ux_to_1x(environ):
+    """Return a new environ dict for WSGI 1.x from the given WSGI u.x environ."""
+    env1x = {}
+    
+    url_encoding = environ[ntou('wsgi.url_encoding')]
+    for k, v in list(environ.items()):
+        if k in [ntou('PATH_INFO'), ntou('SCRIPT_NAME'), ntou('QUERY_STRING')]:
+            v = v.encode(url_encoding)
+        elif isinstance(v, unicodestr):
+            v = v.encode('ISO-8859-1')
+        env1x[k.encode('ISO-8859-1')] = v
+    
+    return env1x
 
 
 class VirtualHost(object):
@@ -79,7 +94,8 @@ class InternalRedirector(object):
             environ = environ.copy()
             try:
                 return self.nextapp(environ, start_response)
-            except _cherrypy.InternalRedirect as ir:
+            except _cherrypy.InternalRedirect:
+                ir = _sys.exc_info()[1]
                 sn = environ.get('SCRIPT_NAME', '')
                 path = environ.get('PATH_INFO', '')
                 qs = environ.get('QUERY_STRING', '')
@@ -137,8 +153,12 @@ class _TrappedResponse(object):
         self.started_response = True
         return self
     
-    def __next__(self):
-        return self.trap(next, self.iter_response)
+    if _sys.version_info >= (3, 0):
+        def __next__(self):
+            return self.trap(next, self.iter_response)
+    else:
+        def next(self):
+            return self.trap(self.iter_response.next)
     
     def close(self):
         if hasattr(self.response, 'close'):
@@ -176,7 +196,7 @@ class _TrappedResponse(object):
                 raise
             
             if self.started_response:
-                return b"".join(b)
+                return ntob("").join(b)
             else:
                 return b
 
@@ -188,6 +208,9 @@ class AppResponse(object):
     """WSGI response iterable for CherryPy applications."""
     
     def __init__(self, environ, start_response, cpapp):
+        if _sys.version_info < (3, 0):
+            if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
+                environ = downgrade_wsgi_ux_to_1x(environ)
         self.environ = environ
         self.cpapp = cpapp
         try:
@@ -206,8 +229,12 @@ class AppResponse(object):
     def __iter__(self):
         return self
     
-    def __next__(self):
-        return next(self.iter_response)
+    if _sys.version_info >= (3, 0):
+        def __next__(self):
+            return next(self.iter_response)
+    else:
+        def next(self):
+            return self.iter_response.next()
     
     def close(self):
         """Close and de-reference the current request and response. (Core)"""
@@ -240,26 +267,28 @@ class AppResponse(object):
         path = httputil.urljoin(self.environ.get('SCRIPT_NAME', ''),
                                 self.environ.get('PATH_INFO', ''))
         qs = self.environ.get('QUERY_STRING', '')
-        # This isn't perfect; if the given PATH_INFO is in the wrong encoding,
-        # it may fail to match the appropriate config section URI. But meh.
-        old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')
-        new_enc = self.cpapp.find_config(self.environ.get('PATH_INFO', ''),
-                                         "request.uri_encoding", 'utf-8')
-        if new_enc.lower() != old_enc.lower():
-            # Even though the path and qs are unicode, the WSGI server is
-            # required by PEP 3333 to coerce them to ISO-8859-1 masquerading
-            # as unicode. So we have to encode back to bytes and then decode
-            # again using the "correct" encoding.
-            try:
-                u_path = path.encode(old_enc).decode(new_enc)
-                u_qs = qs.encode(old_enc).decode(new_enc)
-            except (UnicodeEncodeError, UnicodeDecodeError):
-                # Just pass them through without transcoding and hope.
-                pass
-            else:
-                # Only set transcoded values if they both succeed.
-                path = u_path
-                qs = u_qs
+
+        if _sys.version_info >= (3, 0):
+            # This isn't perfect; if the given PATH_INFO is in the wrong encoding,
+            # it may fail to match the appropriate config section URI. But meh.
+            old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')
+            new_enc = self.cpapp.find_config(self.environ.get('PATH_INFO', ''),
+                                             "request.uri_encoding", 'utf-8')
+            if new_enc.lower() != old_enc.lower():
+                # Even though the path and qs are unicode, the WSGI server is
+                # required by PEP 3333 to coerce them to ISO-8859-1 masquerading
+                # as unicode. So we have to encode back to bytes and then decode
+                # again using the "correct" encoding.
+                try:
+                    u_path = path.encode(old_enc).decode(new_enc)
+                    u_qs = qs.encode(old_enc).decode(new_enc)
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    # Just pass them through without transcoding and hope.
+                    pass
+                else:
+                    # Only set transcoded values if they both succeed.
+                    path = u_path
+                    qs = u_qs
         
         rproto = self.environ.get('SERVER_PROTOCOL')
         headers = self.translate_headers(self.environ)
