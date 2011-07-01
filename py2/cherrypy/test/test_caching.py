@@ -288,8 +288,6 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/clear_cache?path=" +
             quote('/long_process?seconds=%d' % SECONDS, safe=''))
         self.assertStatus(200)
-        sys.stdout.write("prepped... ")
-        sys.stdout.flush()
         
         start = datetime.datetime.now()
         def run():

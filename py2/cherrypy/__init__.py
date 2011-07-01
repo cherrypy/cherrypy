@@ -60,7 +60,7 @@ http://www.cherrypy.org/wiki/CherryPySpec
 __version__ = "3.2.0"
 
 from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
-from cherrypy._cpcompat import basestring, unicodestr
+from cherrypy._cpcompat import basestring, unicodestr, set
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
@@ -89,17 +89,21 @@ except ImportError:
     engine = process.bus
 
 
-# Timeout monitor
+# Timeout monitor. We add two channels to the engine
+# to which cherrypy.Application will publish.
+engine.listeners['before_request'] = set()
+engine.listeners['after_request'] = set()
+
 class _TimeoutMonitor(process.plugins.Monitor):
     
     def __init__(self, bus):
         self.servings = []
         process.plugins.Monitor.__init__(self, bus, self.run)
     
-    def acquire(self):
+    def before_request(self):
         self.servings.append((serving.request, serving.response))
     
-    def release(self):
+    def after_request(self):
         try:
             self.servings.remove((serving.request, serving.response))
         except ValueError:
