@@ -1,4 +1,5 @@
 import cherrypy
+from cherrypy._cpcompat import sorted, unicodestr
 from cherrypy._cptree import Application
 from cherrypy.test import helper
 
@@ -85,7 +86,7 @@ def setup_server():
 
     def make_user(name, id=None):
         if not id:
-            id = max(*user_lookup.keys()) + 1
+            id = max(*list(user_lookup.keys())) + 1
         user_lookup[id] = User(id, name)
         return id
 
@@ -99,9 +100,7 @@ def setup_server():
             return "POST %d" % make_user(name)
 
         def GET(self):
-            keys = user_lookup.keys()
-            keys.sort()
-            return unicode(keys)
+            return unicodestr(sorted(user_lookup.keys()))
 
         def dynamic_dispatch(self, vpath):
             try:
@@ -125,7 +124,7 @@ def setup_server():
             """
             Return the appropriate representation of the instance.
             """
-            return unicode(self.user)
+            return unicodestr(self.user)
 
         def POST(self, name):
             """

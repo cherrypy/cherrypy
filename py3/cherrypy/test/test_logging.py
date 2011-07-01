@@ -4,13 +4,14 @@ import os
 localDir = os.path.dirname(__file__)
 
 import cherrypy
+from cherrypy._cpcompat import ntob, ntou, py3k
 
 access_log = os.path.join(localDir, "access.log")
 error_log = os.path.join(localDir, "error.log")
 
 # Some unicode strings.
-tartaros = '\u03a4\u1f71\u03c1\u03c4\u03b1\u03c1\u03bf\u03c2'
-erebos = '\u0388\u03c1\u03b5\u03b2\u03bf\u03c2.com'
+tartaros = ntou('\u03a4\u1f71\u03c1\u03c4\u03b1\u03c1\u03bf\u03c2', 'escape')
+erebos = ntou('\u0388\u03c1\u03b5\u03b2\u03bf\u03c2.com', 'escape')
 
 
 def setup_server():
@@ -110,7 +111,11 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.markLog()
         self.getPage("/uni_code")
         self.assertStatus(200)
-        self.assertLog(-1, repr(tartaros.encode('utf8'))[2:-1])
+        if py3k:
+            # The repr of a bytestring in py3k includes a b'' prefix
+            self.assertLog(-1, repr(tartaros.encode('utf8'))[2:-1])
+        else:
+            self.assertLog(-1, repr(tartaros.encode('utf8'))[1:-1])
         # Test the erebos value. Included inline for your enlightenment.
         # Note the 'r' prefix--those backslashes are literals.
         self.assertLog(-1, r'\xce\x88\xcf\x81\xce\xb5\xce\xb2\xce\xbf\xcf\x82')
@@ -119,7 +124,10 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.markLog()
         self.getPage("/slashes")
         self.assertStatus(200)
-        self.assertLog(-1, b'"GET /slashed\\path HTTP/1.1"')
+        if py3k:
+            self.assertLog(-1, ntob('"GET /slashed\\path HTTP/1.1"'))
+        else:
+            self.assertLog(-1, r'"GET /slashed\\path HTTP/1.1"')
         
         # Test whitespace in output.
         self.markLog()

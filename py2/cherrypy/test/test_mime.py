@@ -16,7 +16,7 @@ def setup_server():
         multipart_form_data.exposed = True
         
         def flashupload(self, Filedata, Upload, Filename):
-            return ("Upload: %r, Filename: %r, Filedata: %r" %
+            return ("Upload: %s, Filename: %s, Filedata: %r" %
                     (Upload, Filename, Filedata.file.read()))
         flashupload.exposed = True
     
@@ -83,7 +83,7 @@ This is the <strong>HTML</strong> version
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(repr([('baz', [u'111', u'333']), ('foo', u'bar')]))
+        self.assertBody(repr([('baz', [ntou('111'), ntou('333')]), ('foo', ntou('bar'))]))
 
 
 class SafeMultipartHandlingTest(helper.CPWebCase):
@@ -123,6 +123,6 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
             '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6--'
             ))
         self.getPage('/flashupload', headers, "POST", body)
-        self.assertBody("Upload: u'Submit Query', Filename: u'.project', "
+        self.assertBody("Upload: Submit Query, Filename: .project, "
                         "Filedata: %r" % filedata)
 

@@ -1,4 +1,5 @@
 import cherrypy
+from cherrypy._cpcompat import ntou
 from cherrypy.test import helper
 
 
@@ -19,7 +20,7 @@ class ETagTest(helper.CPWebCase):
             fail.exposed = True
             
             def unicoded(self):
-                return 'I am a \u1ee4nicode string.'
+                return ntou('I am a \u1ee4nicode string.', 'escape')
             unicoded.exposed = True
             # In Python 3, tools.encode is on by default
             unicoded._cp_config = {'tools.encode.on': True}

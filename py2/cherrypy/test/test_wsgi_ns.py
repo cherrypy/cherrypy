@@ -1,4 +1,5 @@
 import cherrypy
+from cherrypy._cpcompat import ntob
 from cherrypy.test import helper
 
 
@@ -17,6 +18,8 @@ class WSGI_Namespace_Test(helper.CPWebCase):
             
             def next(self):
                 return self.iter.next()
+            def __next__(self):
+                return next(self.iter)
             
             def close(self):
                 if hasattr(self.appresults, "close"):
@@ -34,6 +37,8 @@ class WSGI_Namespace_Test(helper.CPWebCase):
                 class CaseResults(WSGIResponse):
                     def next(this):
                         return getattr(this.iter.next(), self.to)()
+                    def __next__(this):
+                        return getattr(next(this.iter), self.to)()
                 return CaseResults(res)
         
         class Replacer(object):
@@ -50,6 +55,11 @@ class WSGI_Namespace_Test(helper.CPWebCase):
                         for k, v in self.map.iteritems():
                             line = line.replace(k, v)
                         return line
+                    def __next__(this):
+                        line = next(this.iter)
+                        for k, v in self.map.items():
+                            line = line.replace(k, v)
+                        return line
                 return ReplaceResults(res)
         
         class Root(object):
@@ -60,7 +70,8 @@ class WSGI_Namespace_Test(helper.CPWebCase):
         
         
         root_conf = {'wsgi.pipeline': [('replace', Replacer)],
-                     'wsgi.replace.map': {'L': 'X', 'l': 'r'},
+                     'wsgi.replace.map': {ntob('L'): ntob('X'),
+                                          ntob('l'): ntob('r')},
                      }
         
         app = cherrypy.Application(Root())

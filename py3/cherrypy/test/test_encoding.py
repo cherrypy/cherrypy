@@ -6,7 +6,7 @@ import cherrypy
 from cherrypy._cpcompat import BytesIO, IncompleteRead, ntob, ntou
 
 europoundUnicode = ntou('\x80\xa3')
-sing = "\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?"
+sing = ntou("\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?", 'escape')
 sing8 = sing.encode('utf-8')
 sing16 = sing.encode('utf-16')
 

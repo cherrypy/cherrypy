@@ -3,7 +3,7 @@
 import mimetypes
 
 import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob, py3k
 
 
 def encode_multipart_formdata(files):
@@ -56,11 +56,13 @@ class HTTPTests(helper.CPWebCase):
                         count += 1
                     else:
                         if count:
-                            summary.append("%s * %d" % (chr(curchar), count))
+                            if py3k: curchar = chr(curchar)
+                            summary.append("%s * %d" % (curchar, count))
                         count = 1
                         curchar = c
                 if count:
-                    summary.append("%s * %d" % (chr(curchar), count))
+                    if py3k: curchar = chr(curchar)
+                    summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)
             post_multipart.exposed = True
         
