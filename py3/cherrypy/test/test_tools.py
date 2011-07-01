@@ -2,7 +2,8 @@
 
 import gzip
 import sys
-from cherrypy._cpcompat import BytesIO, copyitems, itervalues, IncompleteRead, ntob, ntou, xrange
+from cherrypy._cpcompat import BytesIO, copyitems, itervalues
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
 import time
 timeout = 0.2
 import types
@@ -93,7 +94,10 @@ class ToolTests(helper.CPWebCase):
             def __call__(self, scale):
                 r = cherrypy.response
                 r.collapse_body()
-                r.body = [bytes([(x + scale) % 256 for x in r.body[0]])]
+                if py3k:
+                    r.body = [bytes([(x + scale) % 256 for x in r.body[0]])]
+                else:
+                    r.body = [chr((ord(x) + scale) % 256) for x in r.body[0]]
         cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
         
         def stream_handler(next_handler, *args, **kwargs):
@@ -158,8 +162,7 @@ class ToolTests(helper.CPWebCase):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
-        class Test(object, metaclass=TestType):
-            pass
+        Test = TestType('Test', (object,), {})
         
         
         # METHOD ONE:
@@ -353,7 +356,10 @@ class ToolTests(helper.CPWebCase):
         # but it proves the priority was changed.
         self.getPage("/decorated_euro/subpath",
                      headers=[("Accept-Encoding", "gzip")])
-        self.assertInBody(bytes([(x + 3) % 256 for x in zbuf.getvalue()]))
+        if py3k:
+            self.assertInBody(bytes([(x + 3) % 256 for x in zbuf.getvalue()]))
+        else:
+            self.assertInBody(''.join([chr((ord(x) + 3) % 256) for x in zbuf.getvalue()]))
     
     def testBareHooks(self):
         content = "bit of a pain in me gulliver"

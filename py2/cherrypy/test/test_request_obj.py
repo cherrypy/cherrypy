@@ -4,7 +4,7 @@ import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
-from cherrypy._cpcompat import IncompleteRead, ntob, unicodestr
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou, unicodestr
 
 import cherrypy
 from cherrypy import _cptools, tools
@@ -44,9 +44,7 @@ class RequestObjectTests(helper.CPWebCase):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
-        class Test(object):
-            __metaclass__ = TestType
-
+        Test = TestType('Test', (object,), {})
 
         class PathInfo(Test):
 
@@ -294,10 +292,10 @@ class RequestObjectTests(helper.CPWebCase):
 
     def testParams(self):
         self.getPage("/params/?thing=a")
-        self.assertBody("u'a'")
+        self.assertBody(repr(ntou("a")))
         
         self.getPage("/params/?thing=a&thing=b&thing=c")
-        self.assertBody("[u'a', u'b', u'c']")
+        self.assertBody(repr([ntou('a'), ntou('b'), ntou('c')]))
 
         # Test friendly error message when given params are not accepted.
         cherrypy.config.update({"request.show_mismatched_params": True})

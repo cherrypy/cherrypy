@@ -21,8 +21,9 @@ class ETagTest(helper.CPWebCase):
             def unicoded(self):
                 return u'I am a \u1ee4nicode string.'
             unicoded.exposed = True
+            # In Python 3, tools.encode is on by default
             unicoded._cp_config = {'tools.encode.on': True}
-
+        
         conf = {'/': {'tools.etags.on': True,
                       'tools.etags.autotags': True,
                       }}

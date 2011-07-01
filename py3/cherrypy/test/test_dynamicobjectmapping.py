@@ -73,6 +73,8 @@ def setup_server():
             self.id = id
             self.name = name
 
+        def __unicode__(self):
+            return unicode(self.name)
         def __str__(self):
             return str(self.name)
 

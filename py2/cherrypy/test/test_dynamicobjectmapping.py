@@ -75,6 +75,8 @@ def setup_server():
 
         def __unicode__(self):
             return unicode(self.name)
+        def __str__(self):
+            return str(self.name)
 
     user_lookup = {
         1: User(1, 'foo'),

@@ -10,7 +10,7 @@ still be translatable to bytes via the Latin-1 encoding!"
 import sys as _sys
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO, ntob, ntou, unicodestr
+from cherrypy._cpcompat import BytesIO, ntob, ntou, py3k, unicodestr
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 
@@ -153,7 +153,7 @@ class _TrappedResponse(object):
         self.started_response = True
         return self
     
-    if _sys.version_info >= (3, 0):
+    if py3k:
         def __next__(self):
             return self.trap(next, self.iter_response)
     else:
@@ -208,7 +208,7 @@ class AppResponse(object):
     """WSGI response iterable for CherryPy applications."""
     
     def __init__(self, environ, start_response, cpapp):
-        if _sys.version_info < (3, 0):
+        if not py3k:
             if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
                 environ = downgrade_wsgi_ux_to_1x(environ)
         self.environ = environ
@@ -229,7 +229,7 @@ class AppResponse(object):
     def __iter__(self):
         return self
     
-    if _sys.version_info >= (3, 0):
+    if py3k:
         def __next__(self):
             return next(self.iter_response)
     else:
@@ -268,7 +268,7 @@ class AppResponse(object):
                                 self.environ.get('PATH_INFO', ''))
         qs = self.environ.get('QUERY_STRING', '')
 
-        if _sys.version_info >= (3, 0):
+        if py3k:
             # This isn't perfect; if the given PATH_INFO is in the wrong encoding,
             # it may fail to match the appropriate config section URI. But meh.
             old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')

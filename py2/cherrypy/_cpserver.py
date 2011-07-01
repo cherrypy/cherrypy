@@ -4,7 +4,7 @@ import warnings
 
 import cherrypy
 from cherrypy.lib import attributes
-from cherrypy._cpcompat import basestring
+from cherrypy._cpcompat import basestring, py3k
 
 # We import * because we want to export check_port
 # et al as attributes of this module.
@@ -98,7 +98,7 @@ class Server(ServerAdapter):
     ssl_private_key = None
     """The filename of the private key to use with SSL."""
     
-    if sys.version_info >= (3, 0):
+    if py3k:
         ssl_module = 'builtin'
         """The name of a registered SSL adaptation module to use with the builtin
         WSGI server. Builtin options are: 'builtin' (to use the SSL library built

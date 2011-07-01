@@ -6,7 +6,7 @@ import warnings
 
 import cherrypy
 from cherrypy._cpcompat import basestring, copykeys, ntob, unicodestr
-from cherrypy._cpcompat import SimpleCookie, CookieError
+from cherrypy._cpcompat import SimpleCookie, CookieError, py3k
 from cherrypy import _cpreqbody, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil, file_generator
@@ -687,7 +687,7 @@ class Request(object):
                 self.query_string_encoding)
         
         # Python 2 only: keyword arguments must be byte strings (type 'str').
-        if sys.version_info < (3, 0):
+        if not py3k:
             for key, value in p.items():
                 if isinstance(key, unicode):
                     del p[key]
@@ -779,12 +779,10 @@ class Request(object):
     :attr:`request.body.params<cherrypy._cprequest.RequestBody.params>`.""")
 
 
-_py3k = (sys.version_info >= (3, 0))
-
 class ResponseBody(object):
     """The body of the HTTP response (the response entity)."""
     
-    if _py3k:
+    if py3k:
         unicode_err = ("Page handlers MUST return bytes. Use tools.encode "
                        "if you wish to return unicode.")
     
@@ -797,7 +795,7 @@ class ResponseBody(object):
     
     def __set__(self, obj, value):
         # Convert the given value to an iterable object.
-        if _py3k and isinstance(value, str):
+        if py3k and isinstance(value, str):
             raise ValueError(self.unicode_err)
         
         if isinstance(value, basestring):
@@ -809,7 +807,7 @@ class ResponseBody(object):
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 value = []
-        elif _py3k and isinstance(value, list):
+        elif py3k and isinstance(value, list):
             # every item in a list must be bytes... 
             for i, item in enumerate(value):
                 if isinstance(item, str):
@@ -890,7 +888,7 @@ class Response(object):
         
         newbody = []
         for chunk in self.body:
-            if _py3k and not isinstance(chunk, bytes):
+            if py3k and not isinstance(chunk, bytes):
                 raise TypeError("Chunk %s is not of type 'bytes'." % repr(chunk))
             newbody.append(chunk)
         newbody = ntob('').join(newbody)

@@ -4,7 +4,7 @@ import os
 import sys
 
 import cherrypy
-from cherrypy._cpcompat import ntou
+from cherrypy._cpcompat import ntou, py3k
 from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
 from cherrypy.lib import httputil
 
@@ -268,7 +268,7 @@ class Tree(object):
         
         # Correct the SCRIPT_NAME and PATH_INFO environ entries.
         environ = environ.copy()
-        if sys.version_info < (3, 0):
+        if not py3k:
             if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
                 # Python 2/WSGI u.0: all strings MUST be of type unicode
                 enc = environ[ntou('wsgi.url_encoding')]

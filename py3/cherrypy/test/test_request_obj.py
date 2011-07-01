@@ -4,7 +4,7 @@ import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
-from cherrypy._cpcompat import IncompleteRead, ntob, unicodestr
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou, unicodestr
 
 import cherrypy
 from cherrypy import _cptools, tools
@@ -44,8 +44,7 @@ class RequestObjectTests(helper.CPWebCase):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
-        class Test(object, metaclass=TestType):
-            pass
+        Test = TestType('Test', (object,), {})
 
         class PathInfo(Test):
 
@@ -293,10 +292,10 @@ class RequestObjectTests(helper.CPWebCase):
 
     def testParams(self):
         self.getPage("/params/?thing=a")
-        self.assertBody("'a'")
+        self.assertBody(repr(ntou("a")))
         
         self.getPage("/params/?thing=a&thing=b&thing=c")
-        self.assertBody("['a', 'b', 'c']")
+        self.assertBody(repr([ntou('a'), ntou('b'), ntou('c')]))
 
         # Test friendly error message when given params are not accepted.
         cherrypy.config.update({"request.show_mismatched_params": True})
@@ -313,7 +312,7 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertInBody("Not Found")
 
         # Test "% HEX HEX"-encoded URL, param keys, and values
-        self.getPage("/params/%d4%20%e3/cheese?Gruy%e8re=Bulgn%e9ville")
+        self.getPage("/params/%d4%20%e3/cheese?Gruy%E8re=Bulgn%e9ville")
         self.assertBody("args: ('\xd4 \xe3', 'cheese') "
                         "kwargs: {'Gruy\xe8re': 'Bulgn\xe9ville'}")
         

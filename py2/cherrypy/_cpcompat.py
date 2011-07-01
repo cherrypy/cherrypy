@@ -19,6 +19,7 @@ import os
 import sys
 
 if sys.version_info >= (3, 0):
+    py3k = True
     bytestr = bytes
     unicodestr = str
     nativestr = unicodestr
@@ -43,6 +44,7 @@ if sys.version_info >= (3, 0):
     from io import BytesIO as BytesIO
 else:
     # Python 2
+    py3k = False
     bytestr = str
     unicodestr = unicode
     nativestr = bytestr
@@ -241,7 +243,7 @@ try:
     json_decode = json.JSONDecoder().decode
     json_encode = json.JSONEncoder().iterencode
 except ImportError:
-    if sys.version_info >= (3, 0):
+    if py3k:
         # Python 3.0: json is part of the standard library,
         # but outputs unicode. We need bytes.
         import json

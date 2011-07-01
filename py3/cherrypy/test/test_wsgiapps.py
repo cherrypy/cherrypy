@@ -1,3 +1,4 @@
+from cherrypy._cpcompat import ntob
 from cherrypy.test import helper
 
 
@@ -10,8 +11,8 @@ class WSGIGraftTests(helper.CPWebCase):
         import cherrypy
         
         def test_app(environ, start_response):
-            status = b'200 OK'
-            response_headers = [(b'Content-type', b'text/plain')]
+            status = ntob('200 OK')
+            response_headers = [(ntob('Content-type'), ntob('text/plain'))]
             start_response(status, response_headers)
             output = ['Hello, world!\n',
                       'This is a wsgi app running within CherryPy!\n\n']
@@ -19,13 +20,13 @@ class WSGIGraftTests(helper.CPWebCase):
             keys.sort()
             for k in keys:
                 output.append('%s: %s\n' % (k,environ[k]))
-            return [x.encode('utf-8') for x in output]
+            return [ntob(x, 'utf-8') for x in output]
         
         def test_empty_string_app(environ, start_response):
-            status = b'200 OK'
-            response_headers = [(b'Content-type', b'text/plain')]
+            status = ntob('200 OK')
+            response_headers = [(ntob('Content-type'), ntob('text/plain'))]
             start_response(status, response_headers)
-            return [b'Hello', b'', b' ', b'', b'world']
+            return [ntob('Hello'), ntob(''), ntob(' '), ntob(''), ntob('world')]
         
         
         class WSGIResponse(object):
@@ -37,6 +38,8 @@ class WSGIGraftTests(helper.CPWebCase):
             def __iter__(self):
                 return self
             
+            def next(self):
+                return self.iter.next()
             def __next__(self):
                 return next(self.iter)
             
@@ -53,6 +56,10 @@ class WSGIGraftTests(helper.CPWebCase):
             def __call__(self, environ, start_response):
                 results = app(environ, start_response)
                 class Reverser(WSGIResponse):
+                    def next(this):
+                        line = list(this.iter.next())
+                        line.reverse()
+                        return "".join(line)
                     def __next__(this):
                         line = list(next(this.iter))
                         line.reverse()
@@ -61,7 +68,7 @@ class WSGIGraftTests(helper.CPWebCase):
         
         class Root:
             def index(self):
-                return b"I'm a regular CherryPy page handler!"
+                return ntob("I'm a regular CherryPy page handler!")
             index.exposed = True
         
         

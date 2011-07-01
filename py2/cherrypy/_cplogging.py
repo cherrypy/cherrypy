@@ -106,11 +106,10 @@ logging.Logger.manager.emittedNoHandlerWarning = 1
 logfmt = logging.Formatter("%(message)s")
 import os
 import sys
-_py3k = (sys.version_info >= (3, 0))
 
 import cherrypy
 from cherrypy import _cperror
-from cherrypy._cpcompat import ntob
+from cherrypy._cpcompat import ntob, py3k
 
 
 class LogManager(object):
@@ -129,7 +128,7 @@ class LogManager(object):
     access_log = None
     """The actual :class:`logging.Logger` instance for access messages."""
     
-    if _py3k:
+    if py3k:
         access_log_format = \
             '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}"'
     else:
@@ -213,7 +212,7 @@ class LogManager(object):
             status = "-"
         else:
             status = response.output_status.split(ntob(" "), 1)[0]
-            if _py3k:
+            if py3k:
                 status = status.decode('ISO-8859-1')
         
         atoms = {'h': remote.name or remote.ip,
@@ -226,7 +225,7 @@ class LogManager(object):
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  }
-        if _py3k:
+        if py3k:
             for k, v in atoms.items():
                 if not isinstance(v, str):
                     v = str(v)

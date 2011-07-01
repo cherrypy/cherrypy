@@ -18,7 +18,7 @@ class VirtualHostTest(helper.CPWebCase):
             dom4.exposed = True
             
             def method(self, value):
-                return "You sent %s" % repr(value)
+                return "You sent %s" % value
             method.exposed = True
         
         class VHost:
@@ -30,7 +30,7 @@ class VirtualHostTest(helper.CPWebCase):
             index.exposed = True
             
             def vmethod(self, value):
-                return "You sent %s" % repr(value)
+                return "You sent %s" % value
             vmethod.exposed = True
             
             def url(self):
@@ -73,14 +73,14 @@ class VirtualHostTest(helper.CPWebCase):
         
         # Test GET, POST, and positional params
         self.getPage("/method?value=root")
-        self.assertBody("You sent u'root'")
+        self.assertBody("You sent root")
         self.getPage("/vmethod?value=dom2+GET", [('Host', 'www.mydom2.com')])
-        self.assertBody("You sent u'dom2 GET'")
+        self.assertBody("You sent dom2 GET")
         self.getPage("/vmethod", [('Host', 'www.mydom3.com')], method="POST",
                      body="value=dom3+POST")
-        self.assertBody("You sent u'dom3 POST'")
+        self.assertBody("You sent dom3 POST")
         self.getPage("/vmethod/pos", [('Host', 'www.mydom3.com')])
-        self.assertBody("You sent 'pos'")
+        self.assertBody("You sent pos")
         
         # Test that cherrypy.url uses the browser url, not the virtual url
         self.getPage("/url", [('Host', 'www.mydom2.com')])
