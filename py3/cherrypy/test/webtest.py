@@ -307,43 +307,6 @@ class WebCase(TestCase):
     def exit(self):
         sys.exit()
 
-    def __call__(self, result=None):
-        if result is None:
-            result = self.defaultTestResult()
-        result.startTest(self)
-        testMethod = getattr(self, self._testMethodName)
-        try:
-            try:
-                self.setUp()
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                result.addError(self, sys.exc_info())
-                return
-            
-            ok = 0
-            try:
-                testMethod()
-                ok = 1
-            except self.failureException:
-                result.addFailure(self, sys.exc_info())
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                result.addError(self, sys.exc_info())
-            
-            try:
-                self.tearDown()
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                result.addError(self, sys.exc_info())
-                ok = 0
-            if ok:
-                result.addSuccess(self)
-        finally:
-            result.stopTest(self)
-    
     def assertStatus(self, status, msg=None):
         """Fail if self.status != status."""
         if isinstance(status, basestring):
