@@ -511,9 +511,9 @@ def openURL(url, headers=None, method="GET", body=None,
                     
                     self._method = method
                     if not url:
-                        url = b'/'
-                    request = b' '.join((method.encode("ASCII"), url,
-                                         self._http_vsn_str.encode("ASCII")))
+                        url = ntob('/')
+                    request = ntob(' ').join((method.encode("ASCII"), url,
+                                              self._http_vsn_str.encode("ASCII")))
                     self._output(request)
                 import types
                 conn.putrequest = types.MethodType(putrequest, conn)

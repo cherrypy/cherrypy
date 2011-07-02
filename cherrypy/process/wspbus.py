@@ -174,8 +174,12 @@ class Bus(object):
         
         items = [(self._priorities[(channel, listener)], listener)
                  for listener in self.listeners[channel]]
-        by_priority = lambda item: item[0]
-        items.sort(key=by_priority)
+        try:
+            items.sort(key=lambda item: item[0])
+        except TypeError:
+            # Python 2.3 had no 'key' arg, but that doesn't matter
+            # since it could sort dissimilar types just fine.
+            items.sort()
         for priority, listener in items:
             try:
                 output.append(listener(*args, **kwargs))
