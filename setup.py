@@ -46,10 +46,10 @@ cp_license="BSD"
 packages=[
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
-    "cherrypy.wsgiserver", "cherrypy.process",
+    "cherrypy.process",
     "cherrypy.scaffold",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.2.0/"
+download_url="http://download.cherrypy.org/cherrypy/3.2.1/"
 data_files=[
     ('cherrypy', ['cherrypy/cherryd',
                   'cherrypy/favicon.ico',
@@ -74,17 +74,19 @@ data_files=[
             'cherrypy/tutorial/custom_error.html',
         ]
     ),
+    ("cherrypy/wsgiserver", ["cherrypy/wsgiserver/__init__.py",
+                             "cherrypy/wsgiserver/wsgiserver2.py",
+                             "cherrypy/wsgiserver/wsgiserver3.py",
+                             "cherrypy/wsgiserver/ssl_builtin.py",
+                             "cherrypy/wsgiserver/ssl_pyopenssl.py",
+                             ]),
 ]
+scripts = ["cherrypy/cherryd"]
+
 if sys.version_info >= (3, 0):
     required_python_version = '3.0'
-    setupdir = 'py3'
 else:
     required_python_version = '2.3'
-    setupdir = 'py2'
-package_dir={'': setupdir}
-data_files = [(install_dir, ['%s/%s' % (setupdir, f) for f in files])
-              for install_dir, files in data_files]
-scripts = ["%s/cherrypy/cherryd" % setupdir]
 
 ###############################################################################
 # end arguments for setup
@@ -129,7 +131,6 @@ def main():
         author_email=author_email,
         url=url,
         license=cp_license,
-        package_dir=package_dir,
         packages=packages,
         download_url=download_url,
         data_files=data_files,
