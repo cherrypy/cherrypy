@@ -304,4 +304,3 @@ except NameError:
     # Python 2
     def next(i):
         return i.next()
-
