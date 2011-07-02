@@ -28,7 +28,7 @@ import types
 from unittest import *
 from unittest import _TextTestResult
 
-from cherrypy._cpcompat import basestring, HTTPConnection, HTTPSConnection, unicodestr
+from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection, HTTPSConnection, unicodestr
 
 
 
@@ -122,11 +122,15 @@ class ReloadingTestLoader(TestLoader):
 
         if type(obj) == types.ModuleType:
             return self.loadTestsFromModule(obj)
-        elif (isinstance(obj, (type, types.ClassType)) and
-              issubclass(obj, TestCase)):
+        elif (((py3k and isinstance(obj, type))
+               or isinstance(obj, (type, types.ClassType)))
+              and issubclass(obj, TestCase)):
             return self.loadTestsFromTestCase(obj)
         elif type(obj) == types.UnboundMethodType:
-            return obj.im_class(obj.__name__)
+            if py3k:
+                return obj.__self__.__class__(obj.__name__)
+            else:
+                return obj.im_class(obj.__name__)
         elif hasattr(obj, '__call__'):
             test = obj()
             if not isinstance(test, TestCase) and \
@@ -268,6 +272,8 @@ class WebCase(TestCase):
         sys.stdout.flush()
         while True:
             i = getchar().upper()
+            if not isinstance(i, type("")):
+                i = i.decode('ascii')
             if i not in "BHSUIRX":
                 continue
             print(i.upper())  # Also prints new line
@@ -367,6 +373,8 @@ class WebCase(TestCase):
 
     def assertBody(self, value, msg=None):
         """Fail if value != self.body."""
+        if isinstance(value, unicodestr):
+            value = value.encode(self.encoding)
         if value != self.body:
             if msg is None:
                 msg = 'expected body:\n%r\n\nactual body:\n%r' % (value, self.body)
@@ -374,6 +382,8 @@ class WebCase(TestCase):
 
     def assertInBody(self, value, msg=None):
         """Fail if value not in self.body."""
+        if isinstance(value, unicodestr):
+            value = value.encode(self.encoding)
         if value not in self.body:
             if msg is None:
                 msg = '%r not in body: %s' % (value, self.body)
@@ -381,6 +391,8 @@ class WebCase(TestCase):
 
     def assertNotInBody(self, value, msg=None):
         """Fail if value in self.body."""
+        if isinstance(value, unicodestr):
+            value = value.encode(self.encoding)
         if value in self.body:
             if msg is None:
                 msg = '%r found in body' % value
@@ -388,6 +400,8 @@ class WebCase(TestCase):
 
     def assertMatchesBody(self, pattern, msg=None, flags=0):
         """Fail if value (a regex pattern) is not in self.body."""
+        if isinstance(pattern, unicodestr):
+            pattern = pattern.encode(self.encoding)
         if re.search(pattern, self.body, flags) is None:
             if msg is None:
                 msg = 'No match for %r in body' % pattern
@@ -430,20 +444,23 @@ def cleanHeaders(headers, method, body, host, port):
 
 def shb(response):
     """Return status, headers, body the way we like from a response."""
-    h = []
-    key, value = None, None
-    for line in response.msg.headers:
-        if line:
-            if line[0] in " \t":
-                value += line.strip()
-            else:
-                if key and value:
-                    h.append((key, value))
-                key, value = line.split(":", 1)
-                key = key.strip()
-                value = value.strip()
-    if key and value:
-        h.append((key, value))
+    if py3k:
+        h = response.getheaders()
+    else:
+        h = []
+        key, value = None, None
+        for line in response.msg.headers:
+            if line:
+                if line[0] in " \t":
+                    value += line.strip()
+                else:
+                    if key and value:
+                        h.append((key, value))
+                    key, value = line.split(":", 1)
+                    key = key.strip()
+                    value = value.strip()
+        if key and value:
+            h.append((key, value))
 
     return "%s %s" % (response.status, response.reason), h, response.read()
 
@@ -477,12 +494,34 @@ def openURL(url, headers=None, method="GET", body=None,
                 import new
                 conn.putheader = new.instancemethod(putheader, conn, conn.__class__)
                 conn.putrequest(method.upper(), url, skip_host=True)
-            else:
+            elif not py3k:
                 conn.putrequest(method.upper(), url, skip_host=True,
                                 skip_accept_encoding=True)
+            else:
+                import http.client
+                # Replace the stdlib method, which only accepts ASCII url's
+                def putrequest(self, method, url):
+                    if self._HTTPConnection__response and self._HTTPConnection__response.isclosed():
+                        self._HTTPConnection__response = None
+                    
+                    if self._HTTPConnection__state == http.client._CS_IDLE:
+                        self._HTTPConnection__state = http.client._CS_REQ_STARTED
+                    else:
+                        raise http.client.CannotSendRequest()
+                    
+                    self._method = method
+                    if not url:
+                        url = b'/'
+                    request = b' '.join((method.encode("ASCII"), url,
+                                         self._http_vsn_str.encode("ASCII")))
+                    self._output(request)
+                import types
+                conn.putrequest = types.MethodType(putrequest, conn)
+                
+                conn.putrequest(method.upper(), url)
 
             for key, value in headers:
-                conn.putheader(key, value)
+                conn.putheader(key, ntob(value, "Latin-1"))
             conn.endheaders()
 
             if body is not None:
@@ -500,7 +539,8 @@ def openURL(url, headers=None, method="GET", body=None,
             return s, h, b
         except socket.error:
             time.sleep(0.5)
-    raise
+            if trial == 9:
+                raise
 
 
 # Add any exceptions which your web framework handles
