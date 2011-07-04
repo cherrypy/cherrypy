@@ -12,6 +12,10 @@ to a hierarchical arrangement of objects, starting at request.app.root.
 import string
 import sys
 import types
+try:
+    classtype = (type, types.ClassType)
+except AttributeError:
+    classtype = type
 
 import cherrypy
 
@@ -533,7 +537,7 @@ class RoutesDispatcher(object):
             controller = result.get('controller')
             controller = self.controllers.get(controller, controller)
             if controller:
-                if isinstance(controller, (type, types.ClassType)):
+                if isinstance(controller, classtype):
                     controller = controller()
                 # Get config from the controller.
                 if hasattr(controller, "_cp_config"):
