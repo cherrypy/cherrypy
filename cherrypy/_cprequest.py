@@ -905,6 +905,7 @@ class Response(object):
         
         headers = self.headers
         
+        self.status = "%s %s" % (code, reason)
         self.output_status = ntob(str(code), 'ascii') + ntob(" ") + headers.encode(reason)
         
         if self.stream:

@@ -74,6 +74,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 return cherrypy.url(path_info, relative=relative)
 
 
+        def log_status():
+            Status.statuses.append(cherrypy.response.status)
+        cherrypy.tools.log_status = cherrypy.Tool('on_end_resource', log_status)
+
+
         class Status(Test):
             
             def index(self):
@@ -99,6 +104,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def bad(self):
                 cherrypy.response.status = "error"
                 return "bad news"
+            
+            statuses = []
+            def on_end_resource_stage(self):
+                return repr(self.statuses)
+            on_end_resource_stage._cp_config = {'tools.log_status.on': True}
 
 
         class Redirect(Test):
@@ -290,7 +300,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(500)
         msg = "Illegal response status from server ('error' is non-numeric)."
         self.assertErrorPage(500, msg)
-    
+
+    def test_on_end_resource_status(self):
+        self.getPage('/status/on_end_resource_stage')
+        self.assertBody('[]')
+        self.getPage('/status/on_end_resource_stage')
+        self.assertBody(repr(["200 OK"]))
+
     def testSlashes(self):
         # Test that requests for index methods without a trailing slash
         # get redirected to the same URI path with a trailing slash.
