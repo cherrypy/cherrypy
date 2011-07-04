@@ -589,7 +589,7 @@ def url(path="", qs="", script_name=None, base=None, relative=None):
     elif relative:
         # "A relative reference that does not begin with a scheme name
         # or a slash character is termed a relative-path reference."
-        old = url().split('/')[:-1]
+        old = url(relative=False).split('/')[:-1]
         new = newurl.split('/')
         while old and new:
             a, b = old[0], new[0]
