@@ -125,6 +125,17 @@ states.STOPPING = states.State()
 states.EXITING = states.State()
 
 
+try:
+    import fcntl
+except ImportError:
+    max_files = 0
+else:
+    try:
+        max_files = os.sysconf('SC_OPEN_MAX')
+    except AttributeError:
+        max_files = 1024
+
+
 class Bus(object):
     """Process state-machine and messenger for HTTP site deployment.
     
@@ -138,6 +149,7 @@ class Bus(object):
     states = states
     state = states.STOPPED
     execv = False
+    max_cloexec_files = max_files
     
     def __init__(self):
         self.execv = False
@@ -362,7 +374,27 @@ class Bus(object):
                 args = ['"%s"' % arg for arg in args]
 
             os.chdir(_startup_cwd)
+            if self.max_cloexec_files:
+                self._set_cloexec()
             os.execv(sys.executable, args)
+    
+    def _set_cloexec(self):
+        """Set the CLOEXEC flag on all open files (except stdin/out/err).
+        
+        If self.max_cloexec_files is an integer (the default), then on
+        platforms which support it, it represents the max open files setting
+        for the operating system. This function will be called just before
+        the process is restarted via os.execv() to prevent open files
+        from persisting into the new process.
+        
+        Set self.max_cloexec_files to 0 to disable this behavior.
+        """
+        for fd in range(3, self.max_cloexec_files): # skip stdin/out/err
+            try:
+                flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+            except IOError:
+                continue
+            fcntl.fcntl(fd, fcntl.F_SETFD, flags | fcntl.FD_CLOEXEC)
     
     def stop(self):
         """Stop all services."""
