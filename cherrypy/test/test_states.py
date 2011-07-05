@@ -267,7 +267,9 @@ class ServerStateTests(helper.CPWebCase):
             cherrypy._cpserver.wait_for_occupied_port(host, port)
 
             self.getPage("/start")
-            self.assert_(float(self.body) > start)
+            if not (float(self.body) > start):
+                raise AssertionError("start time %s not greater than %s" %
+                                     (float(self.body), start))
         finally:
             # Shut down the spawned process
             self.getPage("/exit")
