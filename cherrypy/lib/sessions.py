@@ -684,7 +684,7 @@ close.priority = 90
 
 def init(storage_type='ram', path=None, path_header=None, name='session_id',
          timeout=60, domain=None, secure=False, clean_freq=5,
-         persistent=True, debug=False, **kwargs):
+         persistent=True, httponly=False, debug=False, **kwargs):
     """Initialize session object (using cookies).
     
     storage_type
@@ -722,6 +722,10 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
         to expire the cookie. If False, the cookie will not have an expiry,
         and the cookie will be a "session cookie" which expires when the
         browser is closed.
+    
+    httponly
+        If False (the default) the cookie 'httponly' value will not be set.
+        If True, the cookie 'httponly' value will be set (to 1).
     
     Any additional kwargs will be bound to the new Session instance,
     and may be specific to the storage type. See the subclass of Session
@@ -773,11 +777,12 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
         # and http://support.mozilla.com/en-US/kb/Cookies
         cookie_timeout = None
     set_response_cookie(path=path, path_header=path_header, name=name,
-                        timeout=cookie_timeout, domain=domain, secure=secure)
+                        timeout=cookie_timeout, domain=domain, secure=secure,
+                        httponly=httponly)
 
 
 def set_response_cookie(path=None, path_header=None, name='session_id',
-                        timeout=60, domain=None, secure=False):
+                        timeout=60, domain=None, secure=False, httponly=False):
     """Set a response cookie for the client.
     
     path
@@ -802,6 +807,10 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
         if False (the default) the cookie 'secure' value will not
         be set. If True, the cookie 'secure' value will be set (to 1).
 
+    httponly
+        If False (the default) the cookie 'httponly' value will not be set.
+        If True, the cookie 'httponly' value will be set (to 1).
+
     """
     # Set response cookie
     cookie = cherrypy.serving.response.cookie
@@ -821,7 +830,10 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
         cookie[name]['domain'] = domain
     if secure:
         cookie[name]['secure'] = 1
-
+    if httponly:
+        if not cookie[name].isReservedKey('httponly'):
+            raise ValueError("The httponly cookie token is not supported.")
+        cookie[name]['httponly'] = 1
 
 def expire():
     """Expire the current session cookie."""
