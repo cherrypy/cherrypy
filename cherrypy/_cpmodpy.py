@@ -224,7 +224,7 @@ def handler(req):
                         qs = ir.query_string
                         rfile = BytesIO()
                 
-                send_response(req, response.status, response.header_list,
+                send_response(req, response.output_status, response.header_list,
                               response.body, response.stream)
             finally:
                 app.release_serving()
