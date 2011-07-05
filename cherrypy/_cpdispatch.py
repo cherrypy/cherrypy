@@ -18,6 +18,7 @@ except AttributeError:
     classtype = type
 
 import cherrypy
+from cherrypy._cpcompat import set
 
 
 class PageHandler(object):

@@ -27,8 +27,12 @@ class ReferrerTree(object):
         if len(refs) > self.maxparents:
             return [("[%s referrers]" % len(refs), [])]
 
+        try:
+            ascendcode = self.ascend.__code__
+        except AttributeError:
+            ascendcode = self.ascend.im_func.func_code
         for parent in refs:
-            if inspect.isframe(parent) and parent.f_code is self.ascend.__code__:
+            if inspect.isframe(parent) and parent.f_code is ascendcode:
                 continue
             if parent in self.ignore:
                 continue

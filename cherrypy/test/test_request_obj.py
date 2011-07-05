@@ -415,7 +415,7 @@ class RequestObjectTests(helper.CPWebCase):
                 if show_mismatched_params:
                     self.assertInBody(msg)
                 else:
-                    self.assertInBody("Bad Request")
+                    self.assertInBody("400 Bad")
 
 
         # even if body parameters are wrong, if we get the uri wrong, then 
