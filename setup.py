@@ -12,8 +12,22 @@ except ImportError:
     from distutils.core import setup
 
 from distutils.command.install import INSTALL_SCHEMES
+from distutils.command.build_py import build_py
 import sys
 import os
+import re
+
+class cherrypy_build_py(build_py):
+    "Custom version of build_py that selects Python-specific wsgiserver"
+    def build_module(self, module, module_file, package):
+        python3 = sys.version_info >= (3,)
+        exclude_pattern = re.compile(
+            'wsgiserver2|ssl_pyopenssl' if python3 else 'wsgiserver3'
+        )
+        if exclude_pattern.match(module):
+            return # skip it
+        return build_py.build_module(self, module, module_file, package)
+
 
 ###############################################################################
 # arguments for the setup command
@@ -48,6 +62,7 @@ packages=[
     "cherrypy.tutorial", "cherrypy.test",
     "cherrypy.process",
     "cherrypy.scaffold",
+    "cherrypy.wsgiserver",
 ]
 download_url="http://download.cherrypy.org/cherrypy/3.2.1/"
 data_files=[
@@ -74,14 +89,12 @@ data_files=[
             'cherrypy/tutorial/custom_error.html',
         ]
     ),
-    ("cherrypy/wsgiserver", ["cherrypy/wsgiserver/__init__.py",
-                             "cherrypy/wsgiserver/wsgiserver2.py",
-                             "cherrypy/wsgiserver/wsgiserver3.py",
-                             "cherrypy/wsgiserver/ssl_builtin.py",
-                             "cherrypy/wsgiserver/ssl_pyopenssl.py",
-                             ]),
 ]
 scripts = ["cherrypy/cherryd"]
+
+cmd_class = dict(
+    build_py = cherrypy_build_py,
+)
 
 if sys.version_info >= (3, 0):
     required_python_version = '3.0'
@@ -103,9 +116,9 @@ def fix_data_files(data_files):
     """
     def fix_dest_path(path):
         return '\\PURELIB\\%(path)s' % vars()
-    
+
     if not 'bdist_wininst' in sys.argv: return
-    
+
     data_files[:] = [
         (fix_dest_path(path), files)
         for path, files in data_files]
@@ -120,7 +133,7 @@ def main():
     # platform specific "site-packages" location
     for scheme in list(INSTALL_SCHEMES.values()):
         scheme['data'] = scheme['purelib']
-    
+
     dist = setup(
         name=name,
         version=version,
@@ -135,6 +148,7 @@ def main():
         download_url=download_url,
         data_files=data_files,
         scripts=scripts,
+        cmdclass=cmd_class,
     )
 
 
