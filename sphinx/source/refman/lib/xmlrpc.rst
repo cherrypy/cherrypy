@@ -1,8 +1,8 @@
-**************************
-:mod:`cherrypy.lib.xmlrpc`
-**************************
+******************************
+:mod:`cherrypy.lib.xmlrpcutil`
+******************************
 
-.. automodule:: cherrypy.lib.xmlrpc
+.. automodule:: cherrypy.lib.xmlrpcutil
 
 Functions
 =========

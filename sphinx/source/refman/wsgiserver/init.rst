@@ -76,9 +76,6 @@ WSGI
 .. autoclass:: WSGIGateway_10
    :members:
 
-.. autoclass:: WSGIGateway_11
-   :members:
-
 .. autoclass:: WSGIGateway_u0
    :members:
 

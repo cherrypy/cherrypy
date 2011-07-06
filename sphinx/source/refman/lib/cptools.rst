@@ -44,4 +44,6 @@ Functions
 
 .. autofunction:: accept
 
+.. autofunction:: allow
+
 .. autofunction:: autovary
