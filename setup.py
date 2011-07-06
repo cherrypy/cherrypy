@@ -105,24 +105,11 @@ else:
 # end arguments for setup
 ###############################################################################
 
-def fix_data_files(data_files):
-    """
-    bdist_wininst seems to have a bug about where it installs data files.
-    I found a fix the django team used to work around the problem at
-    http://code.djangoproject.com/changeset/8313 .  This function
-    re-implements that solution.
-    Also see http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
-    for more info.
-    """
-    def fix_dest_path(path):
-        return '\\PURELIB\\%(path)s' % vars()
-
-    if not 'bdist_wininst' in sys.argv: return
-
-    data_files[:] = [
-        (fix_dest_path(path), files)
-        for path, files in data_files]
-fix_data_files(data_files)
+# wininst may install data_files in Python/x.y instead of the cherrypy package.
+# Django's solution is at http://code.djangoproject.com/changeset/8313
+# See also http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
+if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
+    data_files = [(r'\PURELIB\%s' % path, files) for path, files in data_files]
 
 def main():
     if sys.version < required_python_version:
