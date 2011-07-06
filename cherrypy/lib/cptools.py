@@ -116,7 +116,7 @@ def validate_since():
 #                                Tool code                                #
 
 def allow(methods=None, debug=False):
-    """Raise 405 if request.method not in methods (default GET/HEAD).
+    """Raise 405 if request.method not in methods (default ['GET', 'HEAD']).
     
     The given methods are case-insensitive, and may be in any order.
     If only one method is allowed, you may supply a single string;
