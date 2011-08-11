@@ -309,6 +309,10 @@ class _Builder2:
     def build_Add(self, o):
         left, right = map(self.build, o.getChildren())
         return left + right
+
+    def build_Mul(self, o):
+        left, right = map(self.build, o.getChildren())
+        return left * right
     
     def build_Getattr(self, o):
         parent = self.build(o.expr)
@@ -421,6 +425,9 @@ class _Builder3:
 
     def build_Add(self, o):
         return _operator.add
+
+    def build_Mult(self, o):
+        return _operator.mul
         
     def build_USub(self, o):
         return _operator.neg

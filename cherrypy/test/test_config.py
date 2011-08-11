@@ -108,6 +108,7 @@ filename: os.path.join(sys.prefix, "hello.py")
 thing1: cherrypy.lib.httputil.response_codes[404]
 thing2: __import__('cherrypy.tutorial', globals(), locals(), ['']).thing2
 complex: 3+2j
+mul: 6*3
 ones: "11"
 twos: "22"
 stradd: %%(ones)s + %%(twos)s + "33"
@@ -194,6 +195,9 @@ class ConfigTests(helper.CPWebCase):
 
         self.getPage("/repr?key=complex")
         self.assertBody("(3+2j)")
+
+        self.getPage("/repr?key=mul")
+        self.assertBody("18")
 
         self.getPage("/repr?key=stradd")
         self.assertBody(repr("112233"))
