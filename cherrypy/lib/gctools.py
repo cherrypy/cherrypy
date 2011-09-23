@@ -110,7 +110,8 @@ class GCRoot(object):
         
         # gc_collect isn't perfectly synchronous, because it may
         # break reference cycles that then take time to fully
-        # finalize. Call it twice and hope for the best.
+        # finalize. Call it thrice and hope for the best.
+        gc.collect()
         gc.collect()
         unreachable = gc.collect()
         if unreachable:
