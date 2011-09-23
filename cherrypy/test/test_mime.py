@@ -95,7 +95,7 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
             ('Content-Type', 'multipart/form-data; '
                  'boundary=----------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6'),
             ('User-Agent', 'Shockwave Flash'),
-            ('Host', 'www.example.com:8080'),
+            ('Host', 'www.example.com:54583'),
             ('Content-Length', '499'),
             ('Connection', 'Keep-Alive'),
             ('Cache-Control', 'no-cache'),

@@ -29,7 +29,7 @@ def get_tst_config(overconf = {}):
         conf = {
             'scheme': 'http',
             'protocol': "HTTP/1.1",
-            'port': 8080,
+            'port': 54583,
             'host': '127.0.0.1',
             'validate': False,
             'conquer': False,
