@@ -2,6 +2,7 @@ import gc
 import inspect
 import os
 import sys
+import time
  
 try:
     import objgraph
@@ -9,7 +10,8 @@ except ImportError:
     objgraph = None
 
 import cherrypy
-from cherrypy import _cprequest
+from cherrypy import _cprequest, _cpwsgi
+from cherrypy.process.plugins import SimplePlugin
 
 
 class ReferrerTree(object):
@@ -100,6 +102,20 @@ def get_instances(cls):
     return [x for x in gc.get_objects() if isinstance(x, cls)]
 
 
+class RequestCounter(SimplePlugin):
+    
+    def start(self):
+        self.count = 0
+    
+    def before_request(self):
+        self.count += 1
+    
+    def after_request(self):
+        self.count -=1
+request_counter = RequestCounter(cherrypy.engine)
+request_counter.subscribe()
+
+
 class GCRoot(object):
     """A CherryPy page handler for testing reference leaks."""
 
@@ -107,6 +123,8 @@ class GCRoot(object):
                 "Should be 1 in this request thread and 1 in the main thread."),
                (_cprequest.Response, 2, 2,
                 "Should be 1 in this request thread and 1 in the main thread."),
+               (_cpwsgi.AppResponse, 1, 1,
+                "Should be 1 in this request thread only."),
                ]
 
     def index(self):
@@ -115,6 +133,13 @@ class GCRoot(object):
 
     def stats(self):
         output = ["Statistics:"]
+        
+        for trial in range(10):
+            if request_counter.count > 0:
+                break
+            time.sleep(0.5)
+        else:
+            output.append("\nNot all requests closed properly.")
         
         # gc_collect isn't perfectly synchronous, because it may
         # break reference cycles that then take time to fully
@@ -131,7 +156,7 @@ class GCRoot(object):
             trash.sort()
             for pair in trash:
                 output.append("    " + repr(pair))
-        
+
         # Check declared classes to verify uncollected instances.
         # These don't have to be part of a cycle; they can be
         # any objects that have unanticipated referrers that keep
@@ -148,15 +173,20 @@ class GCRoot(object):
                     output.append(
                         "\nExpected %s to %s %r references, got %s." %
                         (minobj, maxobj, cls, lenobj))
+
+                if objgraph is not None:
+                    final = objgraph.by_type('Nondestructible')
+                    if final:
+                        objgraph.show_backrefs(final, filename='finalizers.png')
+
                 for obj in objs:
                     if objgraph is not None:
-                        gfile = os.path.join(
-                            os.getcwd(), "graph_%s.png" % id(obj))
-                        objgraph.show_refs(
-                            obj, extra_ignore=[id(objs), id(sys._getframe())],
-                            max_depth=4, too_many=20,
-                            filename=gfile)
-                    output.append("\nReferrers for %s:" % repr(obj))
+                        ig = [id(objs), id(inspect.currentframe())]
+                        objgraph.show_backrefs(
+                            obj, extra_ignore=ig, max_depth=4,
+                            too_many=20, filename="graph_%s.png" % id(obj))
+                    output.append("\nReferrers for %s (refcount=%s):" %
+                                  (repr(obj), sys.getrefcount(obj)))
                     t = ReferrerTree(ignore=[objs], maxdepth=3)
                     tree = t.ascend(obj)
                     output.extend(t.format(tree))
