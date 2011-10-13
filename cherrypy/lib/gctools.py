@@ -1,6 +1,14 @@
 import gc
 import inspect
+import os
+import sys
+ 
+try:
+    import objgraph
+except ImportError:
+    objgraph = None
 
+import cherrypy
 from cherrypy import _cprequest
 
 
@@ -141,6 +149,13 @@ class GCRoot(object):
                         "\nExpected %s to %s %r references, got %s." %
                         (minobj, maxobj, cls, lenobj))
                 for obj in objs:
+                    if objgraph is not None:
+                        gfile = os.path.join(
+                            os.getcwd(), "graph_%s.png" % id(obj))
+                        objgraph.show_refs(
+                            obj, extra_ignore=[id(objs), id(sys._getframe())],
+                            max_depth=4, too_many=20,
+                            filename=gfile)
                     output.append("\nReferrers for %s:" % repr(obj))
                     t = ReferrerTree(ignore=[objs], maxdepth=3)
                     tree = t.ascend(obj)
