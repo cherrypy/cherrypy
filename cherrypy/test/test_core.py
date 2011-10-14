@@ -684,4 +684,5 @@ class ErrorTests(helper.CPWebCase):
     def test_start_response_error(self):
         self.getPage("/start_response_error")
         self.assertStatus(500)
-        self.assertInBody("TypeError: WSGI response header key 2 is not a byte string.")
+        self.assertInBody("TypeError: response.header_list key 2 is not a byte string.")
+

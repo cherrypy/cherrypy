@@ -11,8 +11,8 @@ class WSGIGraftTests(helper.CPWebCase):
         import cherrypy
         
         def test_app(environ, start_response):
-            status = ntob('200 OK')
-            response_headers = [(ntob('Content-type'), ntob('text/plain'))]
+            status = '200 OK'
+            response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)
             output = ['Hello, world!\n',
                       'This is a wsgi app running within CherryPy!\n\n']
@@ -23,8 +23,8 @@ class WSGIGraftTests(helper.CPWebCase):
             return [ntob(x, 'utf-8') for x in output]
         
         def test_empty_string_app(environ, start_response):
-            status = ntob('200 OK')
-            response_headers = [(ntob('Content-type'), ntob('text/plain'))]
+            status = '200 OK'
+            response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)
             return [ntob('Hello'), ntob(''), ntob(' '), ntob(''), ntob('world')]
         

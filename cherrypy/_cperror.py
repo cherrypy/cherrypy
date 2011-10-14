@@ -515,12 +515,15 @@ def _be_ie_unfriendly(status):
 
 def format_exc(exc=None):
     """Return exc (or sys.exc_info if None), formatted."""
-    if exc is None:
-        exc = _exc_info()
-    if exc == (None, None, None):
-        return ""
-    import traceback
-    return "".join(traceback.format_exception(*exc))
+    try:
+        if exc is None:
+            exc = _exc_info()
+        if exc == (None, None, None):
+            return ""
+        import traceback
+        return "".join(traceback.format_exception(*exc))
+    finally:
+        del exc
 
 def bare_error(extrabody=None):
     """Produce status, headers, body for a critical error.

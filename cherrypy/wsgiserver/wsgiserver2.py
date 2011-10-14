@@ -2127,10 +2127,10 @@ class WSGIGateway(Gateway):
         
         self.req.status = status
         for k, v in headers:
-            if not isinstance(k, bytestr):
-                raise TypeError("WSGI response header key %r is not a byte string." % k)
-            if not isinstance(v, bytestr):
-                raise TypeError("WSGI response header value %r is not a byte string." % v)
+            if not isinstance(k, str):
+                raise TypeError("WSGI response header key %r is not of type str." % k)
+            if not isinstance(v, str):
+                raise TypeError("WSGI response header value %r is not of type str." % v)
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
         self.req.outheaders.extend(headers)

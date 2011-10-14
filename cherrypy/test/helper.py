@@ -300,6 +300,8 @@ class CPWebCase(webtest.WebCase):
         if self.do_gc_test:
             self.getPage("/gc/stats")
             self.assertBody("Statistics:")
+    # Tell nose to run this last in each class
+    test_gc.compat_co_firstlineno = float('inf')
     
     def prefix(self):
         return self.script_name.rstrip("/")

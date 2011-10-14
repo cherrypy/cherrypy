@@ -1839,16 +1839,23 @@ class WSGIGateway(Gateway):
                 raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
             finally:
                 exc_info = None
-        
-        self.req.status = status
+
+        # According to PEP 3333, when using Python 3, the response status
+        # and headers must be bytes masquerading as unicode; that is, they
+        # must be of type "str" but are restricted to code points in the
+        # "latin-1" set.
+        if not isinstance(status, str):
+            raise TypeError("WSGI response status is not of type str.")
+        self.req.status = status.encode('ISO-8859-1')
+
         for k, v in headers:
-            if not isinstance(k, bytestr):
-                raise TypeError("WSGI response header key %r is not a byte string." % k)
-            if not isinstance(v, bytestr):
-                raise TypeError("WSGI response header value %r is not a byte string." % v)
-            if k.lower() == b'content-length':
+            if not isinstance(k, str):
+                raise TypeError("WSGI response header key %r is not of type str." % k)
+            if not isinstance(v, str):
+                raise TypeError("WSGI response header value %r is not of type str." % v)
+            if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
-        self.req.outheaders.extend(headers)
+            self.req.outheaders.append((k.encode('ISO-8859-1'), v.encode('ISO-8859-1')))
         
         return self.write
     

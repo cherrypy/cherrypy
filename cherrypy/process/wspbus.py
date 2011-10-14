@@ -90,11 +90,11 @@ class ChannelFailures(Exception):
     
     def handle_exception(self):
         """Append the current exception to self."""
-        self._exceptions.append(sys.exc_info())
+        self._exceptions.append(sys.exc_info()[1])
     
     def get_instances(self):
         """Return a list of seen exception instances."""
-        return [instance for cls, instance, traceback in self._exceptions]
+        return self._exceptions[:]
     
     def __str__(self):
         exception_strings = map(repr, self.get_instances())
@@ -426,8 +426,7 @@ class Bus(object):
     def log(self, msg="", level=20, traceback=False):
         """Log the given message. Append the last traceback if requested."""
         if traceback:
-            exc = sys.exc_info()
-            msg += "\n" + "".join(_traceback.format_exception(*exc))
+            msg += "\n" + "".join(_traceback.format_exception(*sys.exc_info()))
         self.publish('log', msg, level)
 
 bus = Bus()

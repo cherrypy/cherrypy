@@ -10,7 +10,7 @@ still be translatable to bytes via the Latin-1 encoding!"
 import sys as _sys
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO, ntob, ntou, py3k, unicodestr
+from cherrypy._cpcompat import BytesIO, bytestr, ntob, ntou, py3k, unicodestr
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 
@@ -178,6 +178,11 @@ class _TrappedResponse(object):
             if not _cherrypy.request.show_tracebacks:
                 tb = ""
             s, h, b = _cperror.bare_error(tb)
+            if py3k:
+                # What fun.
+                s = s.decode('ISO-8859-1')
+                h = [(k.decode('ISO-8859-1'), v.decode('ISO-8859-1'))
+                     for k, v in h]
             if self.started_response:
                 # Empty our iterable (so future calls raise StopIteration)
                 self.iter_response = iter([])
@@ -208,20 +213,39 @@ class AppResponse(object):
     """WSGI response iterable for CherryPy applications."""
     
     def __init__(self, environ, start_response, cpapp):
-        if not py3k:
-            if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
-                environ = downgrade_wsgi_ux_to_1x(environ)
-        self.environ = environ
         self.cpapp = cpapp
         try:
+            if not py3k:
+                if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
+                    environ = downgrade_wsgi_ux_to_1x(environ)
+            self.environ = environ
             self.run()
-        except:
-            self.close()
-            raise
-        r = _cherrypy.serving.response
-        self.iter_response = iter(r.body)
-        try:
-            self.write = start_response(r.output_status, r.header_list)
+
+            r = _cherrypy.serving.response
+
+            outstatus = r.output_status
+            if not isinstance(outstatus, bytestr):
+                raise TypeError("response.output_status is not a byte string.")
+            
+            outheaders = []
+            for k, v in r.header_list:
+                if not isinstance(k, bytestr):
+                    raise TypeError("response.header_list key %r is not a byte string." % k)
+                if not isinstance(v, bytestr):
+                    raise TypeError("response.header_list value %r is not a byte string." % v)
+                outheaders.append((k, v))
+            
+            if py3k:
+                # According to PEP 3333, when using Python 3, the response status
+                # and headers must be bytes masquerading as unicode; that is, they
+                # must be of type "str" but are restricted to code points in the
+                # "latin-1" set.
+                outstatus = outstatus.decode('ISO-8859-1')
+                outheaders = [(k.decode('ISO-8859-1'), v.decode('ISO-8859-1'))
+                              for k, v in outheaders]
+
+            self.iter_response = iter(r.body)
+            self.write = start_response(outstatus, outheaders)
         except:
             self.close()
             raise
