@@ -21,9 +21,10 @@ class cherrypy_build_py(build_py):
     "Custom version of build_py that selects Python-specific wsgiserver"
     def build_module(self, module, module_file, package):
         python3 = sys.version_info >= (3,)
-        exclude_pattern = re.compile(
-            'wsgiserver2|ssl_pyopenssl' if python3 else 'wsgiserver3'
-        )
+        if python3:
+            exclude_pattern = re.compile('wsgiserver2|ssl_pyopenssl')
+        else:
+            exclude_pattern = re.compile('wsgiserver3')
         if exclude_pattern.match(module):
             return # skip it
         return build_py.build_module(self, module, module_file, package)
