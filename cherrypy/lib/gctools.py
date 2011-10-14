@@ -116,6 +116,18 @@ request_counter = RequestCounter(cherrypy.engine)
 request_counter.subscribe()
 
 
+def get_context(obj):
+    if isinstance(obj, _cprequest.Request):
+        return "path=%s;stage=%s" % (obj.path_info, obj.stage)
+    elif isinstance(obj, _cprequest.Response):
+        return "status=%s" % obj.status
+    elif isinstance(obj, _cpwsgi.AppResponse):
+        return "PATH_INFO=%s" % obj.environ.get('PATH_INFO', '')
+    elif hasattr(obj, "tb_lineno"):
+        return "tb_lineno=%s" % obj.tb_lineno
+    return ""
+
+
 class GCRoot(object):
     """A CherryPy page handler for testing reference leaks."""
 
@@ -148,21 +160,31 @@ class GCRoot(object):
         gc.collect()
         unreachable = gc.collect()
         if unreachable:
-            output.append("\n%s unreachable objects:" % unreachable)
+            if objgraph is not None:
+                final = objgraph.by_type('Nondestructible')
+                if final:
+                    objgraph.show_backrefs(final, filename='finalizers.png')
+
             trash = {}
             for x in gc.garbage:
                 trash[type(x)] = trash.get(type(x), 0) + 1
-            trash = [(v, k) for k, v in trash.items()]
-            trash.sort()
-            for pair in trash:
-                output.append("    " + repr(pair))
+            if trash:
+                output.insert(0, "\n%s unreachable objects:" % unreachable)
+                trash = [(v, k) for k, v in trash.items()]
+                trash.sort()
+                for pair in trash:
+                    output.append("    " + repr(pair))
 
         # Check declared classes to verify uncollected instances.
         # These don't have to be part of a cycle; they can be
         # any objects that have unanticipated referrers that keep
         # them from being collected.
+        allobjs = {}
         for cls, minobj, maxobj, msg in self.classes:
-            objs = get_instances(cls)
+            allobjs[cls] = get_instances(cls)
+
+        for cls, minobj, maxobj, msg in self.classes:
+            objs = allobjs[cls]
             lenobj = len(objs)
             if lenobj < minobj or lenobj > maxobj:
                 if minobj == maxobj:
@@ -174,17 +196,13 @@ class GCRoot(object):
                         "\nExpected %s to %s %r references, got %s." %
                         (minobj, maxobj, cls, lenobj))
 
-                if objgraph is not None:
-                    final = objgraph.by_type('Nondestructible')
-                    if final:
-                        objgraph.show_backrefs(final, filename='finalizers.png')
-
                 for obj in objs:
                     if objgraph is not None:
                         ig = [id(objs), id(inspect.currentframe())]
+                        fname = "graph_%s_%s.png" % (cls.__name__, id(obj))
                         objgraph.show_backrefs(
-                            obj, extra_ignore=ig, max_depth=4,
-                            too_many=20, filename="graph_%s.png" % id(obj))
+                            obj, extra_ignore=ig, max_depth=4, too_many=20,
+                            filename=fname, extra_info=get_context)
                     output.append("\nReferrers for %s (refcount=%s):" %
                                   (repr(obj), sys.getrefcount(obj)))
                     t = ReferrerTree(ignore=[objs], maxdepth=3)
