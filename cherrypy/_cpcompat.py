@@ -210,6 +210,18 @@ except ImportError:
     from http.server import BaseHTTPRequestHandler
 
 try:
+    # Python 2. We have to do it in this order so Python 2 builds
+    # don't try to import the 'http' module from cherrypy.lib
+    from httplib import HTTPSConnection
+except ImportError:
+    try:
+        # Python 3
+        from http.client import HTTPSConnection
+    except ImportError:
+        # Some platforms which don't have SSL don't expose HTTPSConnection
+        HTTPSConnection = None
+
+try:
     # Python 2
     xrange = xrange
 except NameError:
