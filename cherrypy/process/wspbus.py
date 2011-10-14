@@ -247,7 +247,7 @@ class Bus(object):
                 # Any stop/exit errors will be logged inside publish().
                 pass
             # Re-raise the original error
-            raise e
+            raise e_info
     
     def exit(self):
         """Stop all services and prepare to exit the process."""
