@@ -310,7 +310,7 @@ class KnownLengthRFile(object):
     
     def read(self, size=None):
         if self.remaining == 0:
-            return ''
+            return b''
         if size is None:
             size = self.remaining
         else:
@@ -322,7 +322,7 @@ class KnownLengthRFile(object):
     
     def readline(self, size=None):
         if self.remaining == 0:
-            return ''
+            return b''
         if size is None:
             size = self.remaining
         else:
