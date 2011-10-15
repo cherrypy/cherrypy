@@ -93,7 +93,7 @@ import types
 from warnings import warn
 
 import cherrypy
-from cherrypy._cpcompat import copyitems, pickle, random20
+from cherrypy._cpcompat import copyitems, pickle, random20, unicodestr
 from cherrypy.lib import httputil
 
 
@@ -607,6 +607,19 @@ class MemcachedSession(Session):
         import memcache
         cls.cache = memcache.Client(cls.servers)
     setup = classmethod(setup)
+    
+    def _get_id(self):
+        return self._id
+    def _set_id(self, value):
+        # This encode() call is where we differ from the superclass.
+        # Memcache keys MUST be byte strings, not unicode.
+        if isinstance(value, unicodestr):
+            value = value.encode('utf-8')
+
+        self._id = value
+        for o in self.id_observers:
+            o(value)
+    id = property(_get_id, _set_id, doc="The current session ID.")
     
     def _exists(self):
         self.mc_lock.acquire()
