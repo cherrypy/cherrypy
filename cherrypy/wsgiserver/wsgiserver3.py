@@ -1550,6 +1550,8 @@ class HTTPServer(object):
         while self.ready:
             try:
                 self.tick()
+            except (KeyboardInterrupt, SystemExit):
+                raise
             except:
                 self.error_log("Error in HTTPServer.tick", level=logging.ERROR,
                                traceback=True)
