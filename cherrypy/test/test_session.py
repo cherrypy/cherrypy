@@ -287,7 +287,7 @@ class SessionTest(helper.CPWebCase):
         # before_finalize (save) and on_end (close). So the session
         # code has to survive calling save/close without init.
         self.getPage('/restricted', self.cookies, method='POST')
-        self.assertErrorPage(405, response_codes[405])
+        self.assertErrorPage(405, response_codes[405][1])
     
     def test_6_regenerate(self):
         self.getPage('/testStr')
@@ -460,5 +460,5 @@ else:
             # before_finalize (save) and on_end (close). So the session
             # code has to survive calling save/close without init.
             self.getPage('/restricted', self.cookies, method='POST')
-            self.assertErrorPage(405, response_codes[405])
+            self.assertErrorPage(405, response_codes[405][1])
 

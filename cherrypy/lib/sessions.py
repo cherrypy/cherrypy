@@ -338,6 +338,11 @@ class RamSession(Session):
                     del self.locks[id]
                 except KeyError:
                     pass
+        
+        # added to remove obsolete lock objects
+        for id in list(self.locks):
+            if id not in self.cache:
+                self.locks.pop(id, None)
     
     def _exists(self):
         return self.id in self.cache
@@ -358,9 +363,7 @@ class RamSession(Session):
     
     def release_lock(self):
         """Release the lock on the currently-loaded session data."""
-        lock = self.locks.pop(self.id, None)
-        if lock:
-            lock.release()
+        self.locks[self.id].release()
         self.locked = False
     
     def __len__(self):
