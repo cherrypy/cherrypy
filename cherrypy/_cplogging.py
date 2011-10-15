@@ -112,6 +112,19 @@ from cherrypy import _cperror
 from cherrypy._cpcompat import ntob, py3k
 
 
+class NullHandler(logging.Handler):
+    """A no-op logging handler to silence the logging.lastResort handler."""
+
+    def handle(self, record):
+        pass
+
+    def emit(self, record):
+        pass
+
+    def createLock(self):
+        self.lock = None
+
+
 class LogManager(object):
     """An object to assist both simple and advanced logging.
     
@@ -157,8 +170,13 @@ class LogManager(object):
             self.access_log = logging.getLogger("%s.access.%s" % (logger_root, appid))
         self.error_log.setLevel(logging.INFO)
         self.access_log.setLevel(logging.INFO)
+
+        # Silence the no-handlers "warning" (stderr write!) in stdlib logging
+        self.error_log.addHandler(NullHandler())
+        self.access_log.addHandler(NullHandler())
+
         cherrypy.engine.subscribe('graceful', self.reopen_files)
-    
+
     def reopen_files(self):
         """Close and reopen all file handlers."""
         for log in (self.error_log, self.access_log):
