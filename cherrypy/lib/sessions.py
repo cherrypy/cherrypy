@@ -358,7 +358,9 @@ class RamSession(Session):
     
     def release_lock(self):
         """Release the lock on the currently-loaded session data."""
-        self.locks[self.id].release()
+        lock = self.locks.pop(self.id, None)
+        if lock:
+            lock.release()
         self.locked = False
     
     def __len__(self):
