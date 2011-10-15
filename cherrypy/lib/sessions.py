@@ -171,7 +171,15 @@ class Session(object):
                 self.id = None
                 self.missing = True
                 self._regenerate()
-    
+
+    def now(self):
+        """Generate the session specific concept of 'now'.
+
+        Other session providers can override this to use alternative,
+        possibly timezone aware, versions of 'now'.
+        """
+        return datetime.datetime.now()
+
     def regenerate(self):
         """Replace the current session (with a new id)."""
         self.regenerated = True
@@ -210,7 +218,7 @@ class Session(object):
             #   accessed: no need to save it
             if self.loaded:
                 t = datetime.timedelta(seconds = self.timeout * 60)
-                expiration_time = datetime.datetime.now() + t
+                expiration_time = self.now() + t
                 if self.debug:
                     cherrypy.log('Saving with expiry %s' % expiration_time,
                                  'TOOLS.SESSIONS')
@@ -225,7 +233,7 @@ class Session(object):
         """Copy stored session data into this session instance."""
         data = self._load()
         # data is either None or a tuple (session_data, expiration_time)
-        if data is None or data[1] < datetime.datetime.now():
+        if data is None or data[1] < self.now():
             if self.debug:
                 cherrypy.log('Expired session, flushing data', 'TOOLS.SESSIONS')
             self._data = {}
@@ -327,7 +335,7 @@ class RamSession(Session):
     
     def clean_up(self):
         """Clean up expired sessions."""
-        now = datetime.datetime.now()
+        now = self.now()
         for id, (data, expiration_time) in copyitems(self.cache):
             if expiration_time <= now:
                 try:
@@ -473,7 +481,7 @@ class FileSession(Session):
     
     def clean_up(self):
         """Clean up expired sessions."""
-        now = datetime.datetime.now()
+        now = self.now()
         # Iterate over all session files in self.storage_path
         for fname in os.listdir(self.storage_path):
             if (fname.startswith(self.SESSION_PREFIX)
@@ -581,7 +589,7 @@ class PostgresqlSession(Session):
     def clean_up(self):
         """Clean up expired sessions."""
         self.cursor.execute('delete from session where expiration_time < %s',
-                            (datetime.datetime.now(),))
+                            (self.now(),))
 
 
 class MemcachedSession(Session):
