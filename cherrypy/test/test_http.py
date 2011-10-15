@@ -201,11 +201,12 @@ class HTTPTests(helper.CPWebCase):
         response = c.response_class(c.sock, method="GET")
         try:
             response.begin()
+            self.assertEqual(response.status, 400)
+            self.assertEqual(response.fp.read(22), ntob("Malformed Request-Line"))
+            c.close()
         except socket.error:
             e = sys.exc_info()[1]
             # "Connection reset by peer" is also acceptable.
             if e.errno != errno.ECONNRESET:
                 raise
-        else:
-            raise AssertionError("Server did not reset connection.")
 

@@ -58,6 +58,6 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
         
         self.stats['Enabled'] = getattr(self.server_adapter, 'statistics', False)
 
-    def log(self, msg="", level=20, traceback=False):
+    def error_log(self, msg="", level=20, traceback=False):
         cherrypy.engine.log(msg, level, traceback)
 
