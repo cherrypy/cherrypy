@@ -75,7 +75,7 @@ __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'WorkerThread', 'ThreadPool', 'SSLAdapter',
            'CherryPyWSGIServer',
            'Gateway', 'WSGIGateway', 'WSGIGateway_10', 'WSGIGateway_u0',
-           'WSGIPathInfoDispatcher']
+           'WSGIPathInfoDispatcher', 'get_ssl_adapter_class']
 
 import os
 try:
@@ -577,12 +577,15 @@ class HTTPRequest(object):
         self.rfile = SizeCheckWrapper(self.conn.rfile,
                                       self.server.max_request_header_size)
         try:
-            self.read_request_line()
+            success = self.read_request_line()
         except MaxSizeExceeded:
             self.simple_response("414 Request-URI Too Long",
                 "The Request-URI sent with the request exceeds the maximum "
                 "allowed bytes.")
             return
+        else:
+            if not success:
+                return
         
         try:
             success = self.read_request_headers()
@@ -611,9 +614,7 @@ class HTTPRequest(object):
         # from here on out.
         self.started_request = True
         if not request_line:
-            # Force self.ready = False so the connection will close.
-            self.ready = False
-            return
+            return False
         
         if request_line == CRLF:
             # RFC 2616 sec 4.1: "...if the server is reading the protocol
@@ -622,19 +623,18 @@ class HTTPRequest(object):
             # But only ignore one leading line! else we enable a DoS.
             request_line = self.rfile.readline()
             if not request_line:
-                self.ready = False
-                return
+                return False
         
         if not request_line.endswith(CRLF):
             self.simple_response("400 Bad Request", "HTTP requires CRLF terminators")
-            return
+            return False
         
         try:
             method, uri, req_protocol = request_line.strip().split(SPACE, 2)
             rp = int(req_protocol[5]), int(req_protocol[7])
         except (ValueError, IndexError):
             self.simple_response("400 Bad Request", "Malformed Request-Line")
-            return
+            return False
         
         self.uri = uri
         self.method = method
@@ -644,7 +644,7 @@ class HTTPRequest(object):
         if NUMBER_SIGN in path:
             self.simple_response("400 Bad Request",
                                  "Illegal #fragment in Request-URI.")
-            return
+            return False
         
         if scheme:
             self.scheme = scheme
@@ -665,7 +665,7 @@ class HTTPRequest(object):
         except ValueError:
             ex = sys.exc_info()[1]
             self.simple_response("400 Bad Request", ex.args[0])
-            return
+            return False
         path = "%2F".join(atoms)
         self.path = path
         
@@ -689,10 +689,13 @@ class HTTPRequest(object):
         
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
-            return
+            return False
+
         self.request_protocol = req_protocol
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
-    
+
+        return True
+
     def read_request_headers(self):
         """Read self.rfile into self.inheaders. Return success."""
         
@@ -1318,10 +1321,11 @@ class HTTPConnection(object):
                             # Close the connection.
                             return
             elif errnum not in socket_errors_to_ignore:
+                self.server.error_log("socket.error %s" % repr(errnum),
+                                      level=logging.WARNING, traceback=True)
                 if req and not req.sent_headers:
                     try:
-                        req.simple_response("500 Internal Server Error",
-                                            format_exc())
+                        req.simple_response("500 Internal Server Error")
                     except FatalSSLAlert:
                         # Close the connection.
                         return
@@ -1340,9 +1344,11 @@ class HTTPConnection(object):
                     "this server only speaks HTTPS on this port.")
                 self.linger = True
         except Exception:
+            e = sys.exc_info()[1]
+            self.server.error_log(repr(e), level=logging.ERROR, traceback=True)
             if req and not req.sent_headers:
                 try:
-                    req.simple_response("500 Internal Server Error", format_exc())
+                    req.simple_response("500 Internal Server Error")
                 except FatalSSLAlert:
                     # Close the connection.
                     return
@@ -1827,14 +1833,28 @@ class HTTPServer(object):
         self.ready = True
         self._start_time = time.time()
         while self.ready:
-            self.tick()
+            try:
+                self.tick()
+            except:
+                self.error_log("Error in HTTPServer.tick", level-logging.ERROR,
+                               traceback=True)
+            
             if self.interrupt:
                 while self.interrupt is True:
                     # Wait for self.stop() to complete. See _set_interrupt.
                     time.sleep(0.1)
                 if self.interrupt:
                     raise self.interrupt
-    
+
+    def error_log(self, msg="", level=20, traceback=False):
+        # Override this in subclasses as desired
+        sys.stderr.write(msg + '\n')
+        sys.stderr.flush()
+        if traceback:
+            tblines = format_exc()
+            sys.stderr.write(tblines)
+            sys.stderr.flush()
+
     def bind(self, family, type, proto=0):
         """Create (or recreate) the actual socket object."""
         self.socket = socket.socket(family, type, proto)

@@ -1,6 +1,9 @@
 """Tests for managing HTTP issues (malformed requests, etc)."""
 
+import errno
 import mimetypes
+import socket
+import sys
 
 import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob, py3k
@@ -150,7 +153,7 @@ class HTTPTests(helper.CPWebCase):
         self.assertEqual(response.status, 400)
         self.assertEqual(response.fp.read(22), ntob("Malformed Request-Line"))
         c.close()
-    
+
     def test_malformed_header(self):
         if self.scheme == 'https':
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
@@ -178,9 +181,31 @@ class HTTPTests(helper.CPWebCase):
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         response = conn.response_class(conn.sock, method="GET")
-        response.begin()
-        self.assertEqual(response.status, 400)
-        self.body = response.read()
-        self.assertBody("The client sent a plain HTTP request, but this "
-                        "server only speaks HTTPS on this port.")
+        try:
+            response.begin()
+            self.assertEqual(response.status, 400)
+            self.body = response.read()
+            self.assertBody("The client sent a plain HTTP request, but this "
+                            "server only speaks HTTPS on this port.")
+        except socket.error:
+            e = sys.exc_info()[1]
+            # "Connection reset by peer" is also acceptable.
+            if e.errno != errno.ECONNRESET:
+                raise
+
+    def test_garbage_in(self):
+        # Connect without SSL regardless of server.scheme
+        c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c._output(ntob('gjkgjklsgjklsgjkljklsg'))
+        c._send_output()
+        response = c.response_class(c.sock, method="GET")
+        try:
+            response.begin()
+        except socket.error:
+            e = sys.exc_info()[1]
+            # "Connection reset by peer" is also acceptable.
+            if e.errno != errno.ECONNRESET:
+                raise
+        else:
+            raise AssertionError("Server did not reset connection.")
 

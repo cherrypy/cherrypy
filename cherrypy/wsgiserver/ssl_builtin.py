@@ -61,6 +61,10 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
                 if e.args[1].endswith('http request'):
                     # The client is speaking HTTP to an HTTPS server.
                     raise wsgiserver.NoSSLError
+                elif e.args[1].endswith('unknown protocol'):
+                    # The client is speaking some non-HTTP protocol.
+                    # Drop the conn.
+                    return None, {}
             raise
         return s, self.get_environ(s)
     
