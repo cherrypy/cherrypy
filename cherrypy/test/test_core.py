@@ -262,12 +262,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         
         class MultiHeader(Test):
             
-            @cherrypy.tools.append_headers(header_list=[
-                (ntob('WWW-Authenticate'), ntob('Negotiate')),
-                (ntob('WWW-Authenticate'), ntob('Basic realm="foo"')),
-                ])
             def header_list(self):
                 pass
+            header_list = cherrypy.tools.append_headers(header_list=[
+                (ntob('WWW-Authenticate'), ntob('Negotiate')),
+                (ntob('WWW-Authenticate'), ntob('Basic realm="foo"')),
+                ])(header_list)
             
             def commas(self):
                 cherrypy.response.headers['WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
