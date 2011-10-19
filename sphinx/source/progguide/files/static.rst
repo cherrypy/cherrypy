@@ -63,7 +63,6 @@ Here is our `cpapp/__init__.py`:
             <link rel="stylesheet" type="text/css" href="css/style.css" type="text/css"></link>
             <script type="application/javascript" src="js/some.js"></script>
     </head>
-    <html>
     <body>
     <p>Static example</p>
     </body>
