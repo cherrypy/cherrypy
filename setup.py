@@ -137,6 +137,9 @@ def main():
         data_files=data_files,
         scripts=scripts,
         cmdclass=cmd_class,
+        install_requires=[
+            "processbus>=3.3.0alpha",
+        ],
     )
 
 

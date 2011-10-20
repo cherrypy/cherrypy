@@ -79,26 +79,21 @@ tree = _cptree.Tree()
 from cherrypy._cptree import Application
 from cherrypy import _cpwsgi as wsgi
 
-from cherrypy import process
-try:
-    from cherrypy.process import win32
-    engine = win32.Win32Bus()
-    engine.console_control_handler = win32.ConsoleCtrlHandler(engine)
-    del win32
-except ImportError:
-    engine = process.bus
-
+import processbus
+engine = processbus.bus
+from processbus.plugins.tasks import Autoreloader, Monitor, ThreadManager
+from processbus.plugins.signalhandler import SignalHandler
 
 # Timeout monitor. We add two channels to the engine
 # to which cherrypy.Application will publish.
 engine.listeners['before_request'] = set()
 engine.listeners['after_request'] = set()
 
-class _TimeoutMonitor(process.plugins.Monitor):
+class _TimeoutMonitor(Monitor):
     
     def __init__(self, bus):
         self.servings = []
-        process.plugins.Monitor.__init__(self, bus, self.run)
+        Monitor.__init__(self, bus, self.run)
     
     def before_request(self):
         self.servings.append((serving.request, serving.response))
@@ -116,13 +111,13 @@ class _TimeoutMonitor(process.plugins.Monitor):
 engine.timeout_monitor = _TimeoutMonitor(engine)
 engine.timeout_monitor.subscribe()
 
-engine.autoreload = process.plugins.Autoreloader(engine)
+engine.autoreload = Autoreloader(engine)
 engine.autoreload.subscribe()
 
-engine.thread_manager = process.plugins.ThreadManager(engine)
+engine.thread_manager = ThreadManager(engine)
 engine.thread_manager.subscribe()
 
-engine.signal_handler = process.plugins.SignalHandler(engine)
+engine.signal_handler = SignalHandler(engine)
 
 
 from cherrypy import _cpserver

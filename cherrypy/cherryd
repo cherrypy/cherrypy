@@ -4,7 +4,7 @@
 import sys
 
 import cherrypy
-from cherrypy.process import plugins, servers
+from processbus.plugins import opsys, servers
 from cherrypy import Application
 
 def start(configfiles=None, daemonize=False, environment=None,
@@ -32,10 +32,10 @@ def start(configfiles=None, daemonize=False, environment=None,
     if daemonize:
         # Don't print anything to stdout/sterr.
         cherrypy.config.update({'log.screen': False})
-        plugins.Daemonizer(engine).subscribe()
+        opsys.Daemonizer(engine).subscribe()
     
     if pidfile:
-        plugins.PIDFile(engine, pidfile).subscribe()
+        opsys.PIDFile(engine, pidfile).subscribe()
     
     if hasattr(engine, "signal_handler"):
         engine.signal_handler.subscribe()

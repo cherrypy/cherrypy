@@ -92,6 +92,8 @@ import threading
 import types
 from warnings import warn
 
+from processbus.plugins.tasks import Monitor
+
 import cherrypy
 from cherrypy._cpcompat import copyitems, pickle, random20, unicodestr
 from cherrypy.lib import httputil
@@ -247,9 +249,8 @@ class Session(object):
         if self.clean_freq and not cls.clean_thread:
             # clean_up is in instancemethod and not a classmethod,
             # so that tool config can be accessed inside the method.
-            t = cherrypy.process.plugins.Monitor(
-                cherrypy.engine, self.clean_up, self.clean_freq * 60,
-                name='Session cleanup')
+            t = Monitor(cherrypy.engine, self.clean_up, self.clean_freq * 60,
+                        name='Session cleanup')
             t.subscribe()
             cls.clean_thread = t
             t.start()
