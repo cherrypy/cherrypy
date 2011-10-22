@@ -92,7 +92,7 @@ import threading
 import types
 from warnings import warn
 
-from processbus.plugins.tasks import Monitor
+from magicbus.plugins.tasks import Monitor
 
 import cherrypy
 from cherrypy._cpcompat import copyitems, pickle, random20, unicodestr

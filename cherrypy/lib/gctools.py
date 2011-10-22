@@ -11,7 +11,7 @@ except ImportError:
 
 import cherrypy
 from cherrypy import _cprequest, _cpwsgi
-from processbus.plugins import SimplePlugin
+from magicbus.plugins import SimplePlugin
 
 
 class ReferrerTree(object):

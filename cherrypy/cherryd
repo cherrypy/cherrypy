@@ -4,7 +4,7 @@
 import sys
 
 import cherrypy
-from processbus.plugins import opsys, servers
+from magicbus.plugins import opsys, servers
 from cherrypy import Application
 
 def start(configfiles=None, daemonize=False, environment=None,

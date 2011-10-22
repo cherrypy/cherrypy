@@ -79,10 +79,10 @@ tree = _cptree.Tree()
 from cherrypy._cptree import Application
 from cherrypy import _cpwsgi as wsgi
 
-import processbus
-engine = processbus.bus
-from processbus.plugins.tasks import Autoreloader, Monitor, ThreadManager
-from processbus.plugins.signalhandler import SignalHandler
+import magicbus
+engine = magicbus.bus
+from magicbus.plugins.tasks import Autoreloader, Monitor, ThreadManager
+from magicbus.plugins.signalhandler import SignalHandler
 
 # Timeout monitor. We add two channels to the engine
 # to which cherrypy.Application will publish.

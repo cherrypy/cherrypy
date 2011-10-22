@@ -138,7 +138,7 @@ def main():
         scripts=scripts,
         cmdclass=cmd_class,
         install_requires=[
-            "processbus>=3.3.0alpha",
+            "magicbus>=3.3.0alpha",
         ],
     )
 

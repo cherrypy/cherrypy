@@ -8,7 +8,7 @@ from cherrypy._cpcompat import basestring, py3k
 
 # We import * because we want to export check_port
 # et al as attributes of this module.
-from processbus.plugins.servers import *
+from magicbus.plugins.servers import *
 
 
 class Server(ServerAdapter):
