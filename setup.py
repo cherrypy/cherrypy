@@ -12,23 +12,9 @@ except ImportError:
     from distutils.core import setup
 
 from distutils.command.install import INSTALL_SCHEMES
-from distutils.command.build_py import build_py
 import sys
 import os
 import re
-
-class cherrypy_build_py(build_py):
-    "Custom version of build_py that selects Python-specific wsgiserver"
-    def build_module(self, module, module_file, package):
-        python3 = sys.version_info >= (3,)
-        if python3:
-            exclude_pattern = re.compile('wsgiserver2|ssl_pyopenssl')
-        else:
-            exclude_pattern = re.compile('wsgiserver3')
-        if exclude_pattern.match(module):
-            return # skip it
-        return build_py.build_module(self, module, module_file, package)
-
 
 ###############################################################################
 # arguments for the setup command
@@ -61,9 +47,7 @@ cp_license="BSD"
 packages=[
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
-    "cherrypy.process",
     "cherrypy.scaffold",
-    "cherrypy.wsgiserver",
 ]
 download_url="http://download.cherrypy.org/cherrypy/3.2.2/"
 data_files=[
@@ -71,7 +55,6 @@ data_files=[
                   'cherrypy/favicon.ico',
                   'cherrypy/LICENSE.txt',
                   ]),
-    ('cherrypy/process', []),
     ('cherrypy/scaffold', ['cherrypy/scaffold/example.conf',
                            'cherrypy/scaffold/site.conf',
                            ]),
@@ -92,10 +75,6 @@ data_files=[
     ),
 ]
 scripts = ["cherrypy/cherryd"]
-
-cmd_class = dict(
-    build_py = cherrypy_build_py,
-)
 
 if sys.version_info >= (3, 0):
     required_python_version = '3.0'
@@ -136,9 +115,9 @@ def main():
         download_url=download_url,
         data_files=data_files,
         scripts=scripts,
-        cmdclass=cmd_class,
         install_requires=[
             "magicbus>=3.3.0alpha",
+            "cheroot>=3.3.0alpha",
         ],
     )
 

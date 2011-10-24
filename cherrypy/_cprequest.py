@@ -909,7 +909,7 @@ class Response(object):
         self.output_status = ntob(str(code), 'ascii') + ntob(" ") + headers.encode(reason)
         
         if self.stream:
-            # The upshot: wsgiserver will chunk the response if
+            # The upshot: the cheroot server will chunk the response if
             # you pop Content-Length (or set it explicitly to None).
             # Note that lib.static sets C-L to the file's st_size.
             if dict.get(headers, 'Content-Length') is None:

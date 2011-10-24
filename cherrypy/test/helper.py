@@ -89,7 +89,7 @@ class LocalSupervisor(Supervisor):
             engine.signal_handler.subscribe()
         if hasattr(engine, "console_control_handler"):
             engine.console_control_handler.subscribe()
-        #engine.subscribe('log', log_to_stderr)
+        engine.subscribe('log', log_to_stderr)
 
     def start(self, modulename=None):
         """Load and start the HTTP server."""

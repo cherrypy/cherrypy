@@ -351,8 +351,8 @@ class EncodingTests(helper.CPWebCase):
             self.assertHeader('Content-Encoding', 'gzip')
             self.assertInBody('\x1f\x8b\x08\x00')
         else:
-            # The wsgiserver will simply stop sending data, and the HTTP client
-            # will error due to an incomplete chunk-encoded stream.
+            # The cheroot server will simply stop sending data, and the HTTP
+            # client will error due to an incomplete chunk-encoded stream.
             self.assertRaises((ValueError, IncompleteRead), self.getPage,
                               '/gzip/noshow_stream',
                               headers=[("Accept-Encoding", "gzip")])

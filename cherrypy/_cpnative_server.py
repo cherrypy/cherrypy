@@ -3,14 +3,15 @@
 import logging
 import sys
 
+from cheroot import server, ssllib
+
 import cherrypy
 from cherrypy._cpcompat import BytesIO
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
-from cherrypy import wsgiserver
 
 
-class NativeGateway(wsgiserver.Gateway):
+class NativeGateway(server.Gateway):
     
     recursive = False
     
@@ -101,14 +102,7 @@ class NativeGateway(wsgiserver.Gateway):
             req.write(seg)
 
 
-class CPHTTPServer(wsgiserver.HTTPServer):
-    """Wrapper for wsgiserver.HTTPServer.
-    
-    wsgiserver has been designed to not reference CherryPy in any way,
-    so that it can be used in other frameworks and applications.
-    Therefore, we wrap it here, so we can apply some attributes
-    from config -> cherrypy.server -> HTTPServer.
-    """
+class CPHTTPServer(server.HTTPServer):
     
     def __init__(self, server_adapter=cherrypy.server):
         self.server_adapter = server_adapter
@@ -117,7 +111,7 @@ class CPHTTPServer(wsgiserver.HTTPServer):
                        self.server_adapter.socket_file or
                        None)
         
-        wsgiserver.HTTPServer.__init__(
+        server.HTTPServer.__init__(
             self, server_adapter.bind_addr, NativeGateway,
             minthreads=server_adapter.thread_pool,
             maxthreads=server_adapter.thread_pool_max,
@@ -133,14 +127,14 @@ class CPHTTPServer(wsgiserver.HTTPServer):
         
         ssl_module = self.server_adapter.ssl_module or 'pyopenssl'
         if self.server_adapter.ssl_context:
-            adapter_class = wsgiserver.get_ssl_adapter_class(ssl_module)
+            adapter_class = ssllib.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain)
             self.ssl_adapter.context = self.server_adapter.ssl_context
         elif self.server_adapter.ssl_certificate:
-            adapter_class = wsgiserver.get_ssl_adapter_class(ssl_module)
+            adapter_class = ssllib.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
