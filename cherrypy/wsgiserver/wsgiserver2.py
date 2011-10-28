@@ -1568,6 +1568,14 @@ try:
 except ImportError:
     try:
         from ctypes import windll, WinError
+        import ctypes.wintypes
+        _SetHandleInformation = windll.kernel32.SetHandleInformation
+        _SetHandleInformation.argtypes = [
+            ctypes.wintypes.HANDLE,
+            ctypes.wintypes.DWORD,
+            ctypes.wintypes.DWORD,
+        ]
+        _SetHandleInformation.restype = ctypes.wintypes.BOOL
     except ImportError:
         def prevent_socket_inheritance(sock):
             """Dummy function, since neither fcntl nor ctypes are available."""
@@ -1575,7 +1583,7 @@ except ImportError:
     else:
         def prevent_socket_inheritance(sock):
             """Mark the given socket fd as non-inheritable (Windows)."""
-            if not windll.kernel32.SetHandleInformation(sock.fileno(), 1, 0):
+            if not _SetHandleInformation(sock.fileno(), 1, 0):
                 raise WinError()
 else:
     def prevent_socket_inheritance(sock):
