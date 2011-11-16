@@ -459,8 +459,8 @@ def modules(modulePath):
         if mod is None:
             raise KeyError()
     except KeyError:
-        # The last [''] is important.
-        mod = __import__(modulePath, globals(), locals())
+        __import__(modulePath)
+        mod = sys.modules[modulePath]   
     return mod
 
 def attributes(full_attribute_name):
