@@ -460,7 +460,7 @@ def modules(modulePath):
             raise KeyError()
     except KeyError:
         # The last [''] is important.
-        mod = __import__(modulePath, globals(), locals(), [''])
+        mod = __import__(modulePath, globals(), locals())
     return mod
 
 def attributes(full_attribute_name):
