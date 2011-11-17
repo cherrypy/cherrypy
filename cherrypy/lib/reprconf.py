@@ -454,14 +454,8 @@ def unrepr(s):
 
 def modules(modulePath):
     """Load a module and retrieve a reference to that module."""
-    try:
-        mod = sys.modules[modulePath]
-        if mod is None:
-            raise KeyError()
-    except KeyError:
-        __import__(modulePath)
-        mod = sys.modules[modulePath]
-    return mod
+    __import__(modulePath)
+    return sys.modules[modulePath]
 
 def attributes(full_attribute_name):
     """Load a module and retrieve an attribute of that module."""
