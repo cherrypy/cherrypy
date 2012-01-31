@@ -86,16 +86,14 @@ Maybe FF doesn't trust system time.
 
 import datetime
 import os
-import random
 import time
 import threading
 import types
-from warnings import warn
 
 import cherrypy
 from cherrypy._cpcompat import copyitems, pickle, random20, unicodestr
 from cherrypy.lib import httputil
-
+from cherrypy.lib import lockfile
 
 missing = object()
 
@@ -393,6 +391,9 @@ class FileSession(Session):
     LOCK_SUFFIX = '.lock'
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
+    # class-level objects - don't rebind these
+    locks = {}
+
     def __init__(self, id=None, **kwargs):
         # The 'storage_path' arg is required for file-based sessions.
         kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
@@ -409,17 +410,6 @@ class FileSession(Session):
 
         for k, v in kwargs.items():
             setattr(cls, k, v)
-
-        # Warn if any lock files exist at startup.
-        lockfiles = [fname for fname in os.listdir(cls.storage_path)
-                     if (fname.startswith(cls.SESSION_PREFIX)
-                         and fname.endswith(cls.LOCK_SUFFIX))]
-        if lockfiles:
-            plural = ('', 's')[len(lockfiles) > 1]
-            warn("%s session lockfile%s found at startup. If you are "
-                 "only running one process, then you may need to "
-                 "manually delete the lockfiles found at %r."
-                 % (len(lockfiles), plural, cls.storage_path))
     setup = classmethod(setup)
 
     def _get_file_path(self):
@@ -464,11 +454,10 @@ class FileSession(Session):
         path += self.LOCK_SUFFIX
         while True:
             try:
-                lockfd = os.open(path, os.O_CREAT|os.O_WRONLY|os.O_EXCL)
-            except OSError:
+                self.locks[path] = lockfile.LockFile(path)
+            except lockfile.LockError:
                 time.sleep(0.1)
             else:
-                os.close(lockfd)
                 break
         self.locked = True
 
@@ -476,7 +465,9 @@ class FileSession(Session):
         """Release the lock on the currently-loaded session data."""
         if path is None:
             path = self._get_file_path()
-        os.unlink(path + self.LOCK_SUFFIX)
+        path += self.LOCK_SUFFIX
+
+        self.locks.pop(path).release()
         self.locked = False
 
     def clean_up(self):
