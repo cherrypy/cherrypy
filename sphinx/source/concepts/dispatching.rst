@@ -12,7 +12,7 @@ Dispatching
     request content. All of these implementation-specific issues are hidden
     behind the Web interface; their nature cannot be assumed by a client that
     only has access through the Web interface.
-    
+
     `Roy Fielding <http://www.ics.uci.edu/~fielding/pubs/dissertation/evaluation.htm>`_
 
 When you wish to serve a resource on the Web, you never actually serve the
@@ -89,7 +89,7 @@ In this example, the URL ``http://localhost/some/page`` will be mapped to the
 ``root.some.page`` object. If this object is exposed (or alternatively, its
 ``index`` method is), it will be called for that URL.
 
-In our HelloWorld example, adding the ``http://onepage/`` mapping
+In our HelloWorld example, adding the ``http://localhost/onepage/`` mapping
 to ``OnePage().index`` could be done like this::
 
     class OnePage(object):
@@ -99,7 +99,7 @@ to ``OnePage().index`` could be done like this::
 
     class HelloWorld(object):
         onepage = OnePage()
-     
+
         def index(self):
             return "hello world"
         index.exposed = True
@@ -117,7 +117,7 @@ URL that is directly mapped to them. For example::
     def foo(self):
         return 'Foo!'
     foo.exposed = True
-    
+
     root.foo = foo
 
 In the example, ``root.foo`` contains a function object, named ``foo``. When
@@ -162,10 +162,10 @@ method) can receive additional data from HTML or other forms using
 
     <form action="doLogin" method="post">
         <p>Username</p>
-        <input type="text" name="username" value="" 
+        <input type="text" name="username" value=""
             size="15" maxlength="40"/>
         <p>Password</p>
-        <input type="password" name="password" value="" 
+        <input type="password" name="password" value=""
             size="10" maxlength="40"/>
         <p><input type="submit" value="Login"/></p>
         <p><input type="reset" value="Clear"/></p>
@@ -216,7 +216,7 @@ following code::
         def blog(self, year, month, day):
             ...
         blog.exposed = True
-    
+
     root = Root()
 
 So the URL above will be mapped as a call to::
@@ -248,9 +248,9 @@ written the above "blog" example equivalently with a "default" method instead::
         def default(self, year, month, day):
             ...
         default.exposed = True
-    
+
     class Root: pass
-    
+
     root = Root()
     root.blog = Blog()
 
@@ -348,12 +348,12 @@ object for this, which looks a lot like::
 
     class PageHandler(object):
         """Callable which sets response.body."""
-        
+
         def __init__(self, callable, *args, **kwargs):
             self.callable = callable
             self.args = args
             self.kwargs = kwargs
-        
+
         def __call__(self):
             return self.callable(*self.args, **self.kwargs)
 
