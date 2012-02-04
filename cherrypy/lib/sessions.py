@@ -95,6 +95,7 @@ from warnings import warn
 import cherrypy
 from cherrypy._cpcompat import copyitems, pickle, random20, unicodestr
 from cherrypy.lib import httputil
+from cherrypy.lib import lock_util
 
 
 missing = object()
@@ -387,6 +388,10 @@ class FileSession(Session):
         will be saved as pickle.dump(data, expiration_time) in its own file;
         the filename will be self.SESSION_PREFIX + self.id.
 
+    lock_timeout
+        A timedelta or numeric seconds indicating how long
+        to block acquiring a lock. If None (default), acquiring a lock
+        will block indefinitely.
     """
 
     SESSION_PREFIX = 'session-'
@@ -396,7 +401,16 @@ class FileSession(Session):
     def __init__(self, id=None, **kwargs):
         # The 'storage_path' arg is required for file-based sessions.
         kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
+        kwargs.setdefault('lock_timeout', None)
+
         Session.__init__(self, id=id, **kwargs)
+
+        # validate self.lock_timeout
+        if isinstance(self.lock_timeout, (int, float)):
+            self.lock_timeout = datetime.timedelta(seconds=self.lock_timeout)
+        if not isinstance(self.lock_timeout, (datetime.timedelta, type(None))):
+            raise ValueError("Lock timeout must be numeric seconds or "
+                "a timedelta instance.")
 
     def setup(cls, **kwargs):
         """Set up the storage system for file-based sessions.
@@ -462,7 +476,9 @@ class FileSession(Session):
         if path is None:
             path = self._get_file_path()
         path += self.LOCK_SUFFIX
-        while True:
+        checker = lock_util.LockChecker(self.lock_timeout)
+        while not checker.expired():
+            # always try once
             try:
                 lockfd = os.open(path, os.O_CREAT|os.O_WRONLY|os.O_EXCL)
             except OSError:
