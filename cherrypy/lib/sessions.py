@@ -476,7 +476,7 @@ class FileSession(Session):
         if path is None:
             path = self._get_file_path()
         path += self.LOCK_SUFFIX
-        checker = locking.LockChecker(self.lock_timeout)
+        checker = locking.LockChecker(self.id, self.lock_timeout)
         while not checker.expired():
             # always try once
             try:
