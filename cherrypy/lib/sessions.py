@@ -95,7 +95,7 @@ from warnings import warn
 import cherrypy
 from cherrypy._cpcompat import copyitems, pickle, random20, unicodestr
 from cherrypy.lib import httputil
-from cherrypy.lib import lock_util
+from cherrypy.lib import locking
 
 
 missing = object()
@@ -476,7 +476,7 @@ class FileSession(Session):
         if path is None:
             path = self._get_file_path()
         path += self.LOCK_SUFFIX
-        checker = lock_util.LockChecker(self.lock_timeout)
+        checker = locking.LockChecker(self.lock_timeout)
         while not checker.expired():
             # always try once
             try:
