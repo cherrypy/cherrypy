@@ -478,7 +478,6 @@ class FileSession(Session):
         path += self.LOCK_SUFFIX
         checker = locking.LockChecker(self.id, self.lock_timeout)
         while not checker.expired():
-            # always try once
             try:
                 lockfd = os.open(path, os.O_CREAT|os.O_WRONLY|os.O_EXCL)
             except OSError:
