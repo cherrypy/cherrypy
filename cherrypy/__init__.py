@@ -54,7 +54,7 @@ with customized or extended components. The core API's are:
  * WSGI API
 
 These API's are described in the CherryPy specification:
-http://www.cherrypy.org/wiki/CherryPySpec
+https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec
 """
 
 __version__ = "3.2.2"
