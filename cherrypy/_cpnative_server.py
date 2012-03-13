@@ -1,4 +1,4 @@
-"""Native adapter for serving CherryPy via its builtin server."""
+"""Native adapter for serving CherryPy via the cheroot HTTP server."""
 
 import logging
 import sys
@@ -139,5 +139,4 @@ class CPHTTPServer(server.HTTPServer):
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain)
-
 

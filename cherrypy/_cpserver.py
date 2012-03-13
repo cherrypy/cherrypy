@@ -11,7 +11,7 @@ from cherrypy._cpcompat import basestring, py3k
 from magicbus.plugins.servers import *
 
 
-class Server(ServerAdapter):
+class Server(ServerPlugin):
     """An adapter for an HTTP server.
     
     You can set attributes (like socket_host and socket_port)
@@ -148,7 +148,7 @@ class Server(ServerAdapter):
         """Start the HTTP server."""
         if not self.httpserver:
             self.httpserver, self.bind_addr = self.httpserver_from_self()
-        ServerAdapter.start(self)
+        ServerPlugin.start(self)
     start.priority = 75
     
     def _get_bind_addr(self):
