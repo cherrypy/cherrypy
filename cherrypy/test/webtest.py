@@ -30,7 +30,6 @@ from unittest import _TextTestResult
 from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection, HTTPSConnection, unicodestr
 
 
-
 def interface(host):
     """Return an IP address for a client connection given the server host.
 
@@ -348,6 +347,19 @@ class WebCase(TestCase):
                 msg = '%r not in headers' % key
             else:
                 msg = '%r:%r not in headers' % (key, value)
+        self._handlewebError(msg)
+
+    def assertHeaderIn(self, key, values, msg=None):
+        """Fail if header indicated by key doesn't have one of the values."""
+        lowkey = key.lower()
+        for k, v in self.headers:
+            if k.lower() == lowkey:
+                matches = [value for value in values if str(value) == v]
+                if matches:
+                    return matches
+
+        if msg is None:
+            msg = '%(key)r not in %(values)r' % vars()
         self._handlewebError(msg)
 
     def assertHeaderItemValue(self, key, value, msg=None):
