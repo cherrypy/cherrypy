@@ -16,7 +16,6 @@ the traceback to stdout, and keep any assertions you have from running
 be of further significance to your tests).
 """
 
-import os
 import pprint
 import re
 import socket
@@ -179,9 +178,9 @@ class WebCase(TestCase):
     status = None
     headers = None
     body = None
-    
+
     encoding = 'utf-8'
-    
+
     time = None
 
     def get_conn(self, auto_open=False):
@@ -235,12 +234,12 @@ class WebCase(TestCase):
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
-        
+
         if isinstance(url, unicodestr):
             url = url.encode('utf-8')
         if isinstance(body, unicodestr):
             body = body.encode('utf-8')
-        
+
         self.url = url
         self.time = None
         start = time.time()
@@ -503,12 +502,12 @@ def openURL(url, headers=None, method="GET", body=None,
                 def putrequest(self, method, url):
                     if self._HTTPConnection__response and self._HTTPConnection__response.isclosed():
                         self._HTTPConnection__response = None
-                    
+
                     if self._HTTPConnection__state == http.client._CS_IDLE:
                         self._HTTPConnection__state = http.client._CS_REQ_STARTED
                     else:
                         raise http.client.CannotSendRequest()
-                    
+
                     self._method = method
                     if not url:
                         url = ntob('/')
@@ -517,7 +516,7 @@ def openURL(url, headers=None, method="GET", body=None,
                     self._output(request)
                 import types
                 conn.putrequest = types.MethodType(putrequest, conn)
-                
+
                 conn.putrequest(method.upper(), url)
 
             for key, value in headers:
@@ -572,4 +571,3 @@ def server_error(exc=None):
         print("")
         print("".join(traceback.format_exception(*exc)))
         return True
-

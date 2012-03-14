@@ -6,7 +6,6 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
 bigfile_filepath = os.path.join(curdir, "static", "bigfile.log")
 BIGFILE_SIZE = 1024 * 1024
-import threading
 
 import cherrypy
 from cherrypy.lib import static
@@ -20,46 +19,46 @@ class StaticTest(helper.CPWebCase):
             open(has_space_filepath, 'wb').write(ntob('Hello, world\r\n'))
         if not os.path.exists(bigfile_filepath):
             open(bigfile_filepath, 'wb').write(ntob("x" * BIGFILE_SIZE))
-        
+
         class Root:
-            
+
             def bigfile(self):
                 from cherrypy.lib import static
                 self.f = static.serve_file(bigfile_filepath)
                 return self.f
             bigfile.exposed = True
             bigfile._cp_config = {'response.stream': True}
-            
+
             def tell(self):
                 if self.f.input.closed:
                     return ''
                 return repr(self.f.input.tell()).rstrip('L')
             tell.exposed = True
-            
+
             def fileobj(self):
                 f = open(os.path.join(curdir, 'style.css'), 'rb')
                 return static.serve_fileobj(f, content_type='text/css')
             fileobj.exposed = True
-            
+
             def bytesio(self):
                 f = BytesIO(ntob('Fee\nfie\nfo\nfum'))
                 return static.serve_fileobj(f, content_type='text/plain')
             bytesio.exposed = True
-        
+
         class Static:
-            
+
             def index(self):
                 return 'You want the Baron? You can have the Baron!'
             index.exposed = True
-            
+
             def dynamic(self):
                 return "This is a DYNAMIC page"
             dynamic.exposed = True
-        
-        
+
+
         root = Root()
         root.static = Static()
-        
+
         rootconf = {
             '/static': {
                 'tools.staticdir.on': True,
@@ -83,7 +82,7 @@ class StaticTest(helper.CPWebCase):
             }
         rootApp = cherrypy.Application(root)
         rootApp.merge(rootconf)
-        
+
         test_app_conf = {
             '/test': {
                 'tools.staticdir.index': 'index.html',
@@ -94,7 +93,7 @@ class StaticTest(helper.CPWebCase):
             }
         testApp = cherrypy.Application(Static())
         testApp.merge(test_app_conf)
-        
+
         vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
         cherrypy.tree.graft(vhost)
     setup_server = staticmethod(setup_server)
@@ -109,25 +108,25 @@ class StaticTest(helper.CPWebCase):
                     pass
     teardown_server = staticmethod(teardown_server)
 
-    
+
     def testStatic(self):
         self.getPage("/static/index.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
-        
+
         # Using a staticdir.root value in a subdir...
         self.getPage("/docroot/index.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
-        
+
         # Check a filename with spaces in it
         self.getPage("/static/has%20space.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
         self.assertBody('Hello, world\r\n')
-        
+
         self.getPage("/style.css")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/css')
@@ -136,18 +135,18 @@ class StaticTest(helper.CPWebCase):
         #   into \r\n on Windows when extracting the CherryPy tarball so
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
-    
+
     def test_fallthrough(self):
         # Test that NotFound will then try dynamic handlers (see [878]).
         self.getPage("/static/dynamic")
         self.assertBody("This is a DYNAMIC page")
-        
+
         # Check a directory via fall-through to dynamic handler.
         self.getPage("/static/")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('You want the Baron? You can have the Baron!')
-    
+
     def test_index(self):
         # Check a directory via "staticdir.index".
         self.getPage("/docroot/")
@@ -160,19 +159,19 @@ class StaticTest(helper.CPWebCase):
         self.assertHeader('Location', '%s/docroot/' % self.base())
         self.assertMatchesBody("This resource .* <a href='%s/docroot/'>"
                                "%s/docroot/</a>." % (self.base(), self.base()))
-    
+
     def test_config_errors(self):
         # Check that we get an error if no .file or .dir
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
         self.assertMatchesBody(ntob("TypeError: staticdir\(\) takes at least 2 "
                                     "(positional )?arguments \(0 given\)"))
-    
+
     def test_security(self):
         # Test up-level security
         self.getPage("/static/../../test/style.css")
         self.assertStatus((400, 403))
-    
+
     def test_modif(self):
         # Test modified-since on a reasonably-large file
         self.getPage("/static/dirback.jpg")
@@ -188,33 +187,33 @@ class StaticTest(helper.CPWebCase):
         self.assertNoHeader("Content-Length")
         self.assertNoHeader("Content-Disposition")
         self.assertBody("")
-    
+
     def test_755_vhost(self):
         self.getPage("/test/", [('Host', 'virt.net')])
         self.assertStatus(200)
         self.getPage("/test", [('Host', 'virt.net')])
         self.assertStatus(301)
         self.assertHeader('Location', self.scheme + '://virt.net/test/')
-    
+
     def test_serve_fileobj(self):
         self.getPage("/fileobj")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/css;charset=utf-8')
         self.assertMatchesBody('^Dummy stylesheet')
-    
+
     def test_serve_bytesio(self):
         self.getPage("/bytesio")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
         self.assertHeader('Content-Length', 14)
         self.assertMatchesBody('Fee\nfie\nfo\nfum')
-    
+
     def test_file_stream(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
             return self.skip()
-        
+
         self.PROTOCOL = "HTTP/1.1"
-        
+
         # Make an initial request
         self.persistent = True
         conn = self.HTTP_CONN
@@ -224,7 +223,7 @@ class StaticTest(helper.CPWebCase):
         response = conn.response_class(conn.sock, method="GET")
         response.begin()
         self.assertEqual(response.status, 200)
-        
+
         body = ntob('')
         remaining = BIGFILE_SIZE
         while remaining > 0:
@@ -233,7 +232,7 @@ class StaticTest(helper.CPWebCase):
                 break
             body += data
             remaining -= len(data)
-            
+
             if self.scheme == "https":
                 newconn = HTTPSConnection
             else:
@@ -246,7 +245,7 @@ class StaticTest(helper.CPWebCase):
                 tell_position = BIGFILE_SIZE
             else:
                 tell_position = int(b)
-            
+
             expected = len(body)
             if tell_position >= BIGFILE_SIZE:
                 # We can't exactly control how much content the server asks for.
@@ -263,18 +262,18 @@ class StaticTest(helper.CPWebCase):
                     "only advanced to position %r. It may not be streamed "
                     "as intended, or at the wrong chunk size (65536)" %
                     (expected, tell_position))
-        
+
         if body != ntob("x" * BIGFILE_SIZE):
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
                       (BIGFILE_SIZE, body[:50], len(body)))
         conn.close()
-    
+
     def test_file_stream_deadlock(self):
         if cherrypy.server.protocol_version != "HTTP/1.1":
             return self.skip()
-        
+
         self.PROTOCOL = "HTTP/1.1"
-        
+
         # Make an initial request but abort early.
         self.persistent = True
         conn = self.HTTP_CONN
@@ -290,11 +289,10 @@ class StaticTest(helper.CPWebCase):
                       (65536, body[:50], len(body)))
         response.close()
         conn.close()
-        
+
         # Make a second request, which should fetch the whole file.
         self.persistent = False
         self.getPage("/bigfile")
         if self.body != ntob("x" * BIGFILE_SIZE):
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
                       (BIGFILE_SIZE, self.body[:50], len(body)))
-
