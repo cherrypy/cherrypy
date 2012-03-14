@@ -95,7 +95,7 @@ class VirtualHostTest(helper.CPWebCase):
         # Test static in config
         self.getPage("/static2/dirback.jpg", [('Host', 'www.mydom2.com')])
         self.assertStatus('200 OK')
-        self.assertHeader('Content-Type', 'image/jpeg')
+        self.assertHeaderIn('Content-Type', ['image/jpeg', 'image/pjpeg'])
 
         # Test static config with "index" arg
         self.getPage("/static2/", [('Host', 'www.mydom2.com')])
