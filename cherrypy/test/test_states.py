@@ -1,7 +1,6 @@
 from cherrypy._cpcompat import BadStatusLine, ntob
 import os
 import sys
-import threading
 import time
 
 import cherrypy
@@ -436,4 +435,3 @@ test_case_name: "test_signal_handler_unsubscribe"
         target_line = open(p.error_log, 'rb').readlines()[-10]
         if not ntob("I am an old SIGTERM handler.") in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
-
