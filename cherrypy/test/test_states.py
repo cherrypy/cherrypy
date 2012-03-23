@@ -411,6 +411,13 @@ class SignalHandlingTests(helper.CPWebCase):
     def test_signal_handler_unsubscribe(self):
         self._require_signal_and_kill('SIGTERM')
 
+        # Although Windows has `os.kill` and SIGTERM is defined, the
+        #  platform does not implement signals and sending SIGTERM
+        #  will result in a forced termination of the process.
+        #  Therefore, this test is not suitable for Windows.
+        if os.name == 'nt':
+            self.skip("SIGTERM not available")
+
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
         p.write_conf(
@@ -418,7 +425,7 @@ class SignalHandlingTests(helper.CPWebCase):
 test_case_name: "test_signal_handler_unsubscribe"
 """)
         p.start(imports='cherrypy.test._test_states_demo')
-        # Send a SIGTERM
+        # Ask the process to quit
         os.kill(p.get_pid(), signal.SIGTERM)
         # This might hang if things aren't working right, but meh.
         p.join()
