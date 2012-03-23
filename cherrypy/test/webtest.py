@@ -16,7 +16,6 @@ the traceback to stdout, and keep any assertions you have from running
 be of further significance to your tests).
 """
 
-import os
 import pprint
 import re
 import socket
@@ -29,7 +28,6 @@ from unittest import *
 from unittest import _TextTestResult
 
 from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection, HTTPSConnection, unicodestr
-
 
 
 def interface(host):
@@ -179,9 +177,9 @@ class WebCase(TestCase):
     status = None
     headers = None
     body = None
-    
+
     encoding = 'utf-8'
-    
+
     time = None
 
     def get_conn(self, auto_open=False):
@@ -235,12 +233,12 @@ class WebCase(TestCase):
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
-        
+
         if isinstance(url, unicodestr):
             url = url.encode('utf-8')
         if isinstance(body, unicodestr):
             body = body.encode('utf-8')
-        
+
         self.url = url
         self.time = None
         start = time.time()
@@ -349,6 +347,19 @@ class WebCase(TestCase):
                 msg = '%r not in headers' % key
             else:
                 msg = '%r:%r not in headers' % (key, value)
+        self._handlewebError(msg)
+
+    def assertHeaderIn(self, key, values, msg=None):
+        """Fail if header indicated by key doesn't have one of the values."""
+        lowkey = key.lower()
+        for k, v in self.headers:
+            if k.lower() == lowkey:
+                matches = [value for value in values if str(value) == v]
+                if matches:
+                    return matches
+
+        if msg is None:
+            msg = '%(key)r not in %(values)r' % vars()
         self._handlewebError(msg)
 
     def assertHeaderItemValue(self, key, value, msg=None):
@@ -503,12 +514,12 @@ def openURL(url, headers=None, method="GET", body=None,
                 def putrequest(self, method, url):
                     if self._HTTPConnection__response and self._HTTPConnection__response.isclosed():
                         self._HTTPConnection__response = None
-                    
+
                     if self._HTTPConnection__state == http.client._CS_IDLE:
                         self._HTTPConnection__state = http.client._CS_REQ_STARTED
                     else:
                         raise http.client.CannotSendRequest()
-                    
+
                     self._method = method
                     if not url:
                         url = ntob('/')
@@ -517,7 +528,7 @@ def openURL(url, headers=None, method="GET", body=None,
                     self._output(request)
                 import types
                 conn.putrequest = types.MethodType(putrequest, conn)
-                
+
                 conn.putrequest(method.upper(), url)
 
             for key, value in headers:
@@ -572,4 +583,3 @@ def server_error(exc=None):
         print("")
         print("".join(traceback.format_exception(*exc)))
         return True
-

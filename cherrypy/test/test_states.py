@@ -1,8 +1,8 @@
 from cherrypy._cpcompat import BadStatusLine, ntob
 import os
 import sys
-import threading
 import time
+import signal
 
 import cherrypy
 engine = cherrypy.engine
@@ -375,17 +375,16 @@ class SignalHandlingTests(helper.CPWebCase):
             self.getPage("/exit")
         p.join()
 
-    def test_SIGTERM(self):
-        # SIGTERM should shut down the server whether daemonized or not.
-        try:
-            from signal import SIGTERM
-        except ImportError:
-            return self.skip("skipped (no SIGTERM) ")
+    def _require_signal_and_kill(self, signal_name):
+        if not hasattr(signal, signal_name):
+            self.skip("skipped (no %(signal_name)s)" % vars())
 
-        try:
-            from os import kill
-        except ImportError:
-            return self.skip("skipped (no os.kill) ")
+        if not hasattr(os, 'kill'):
+            self.skip("skipped (no os.kill)")
+
+    def test_SIGTERM(self):
+        "SIGTERM should shut down the server whether daemonized or not."
+        self._require_signal_and_kill('SIGTERM')
 
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
@@ -393,7 +392,7 @@ class SignalHandlingTests(helper.CPWebCase):
                 extra='test_case_name: "test_SIGTERM"')
         p.start(imports='cherrypy.test._test_states_demo')
         # Send a SIGTERM
-        os.kill(p.get_pid(), SIGTERM)
+        os.kill(p.get_pid(), signal.SIGTERM)
         # This might hang if things aren't working right, but meh.
         p.join()
 
@@ -405,20 +404,19 @@ class SignalHandlingTests(helper.CPWebCase):
                  extra='test_case_name: "test_SIGTERM_2"')
             p.start(imports='cherrypy.test._test_states_demo')
             # Send a SIGTERM
-            os.kill(p.get_pid(), SIGTERM)
+            os.kill(p.get_pid(), signal.SIGTERM)
             # This might hang if things aren't working right, but meh.
             p.join()
 
     def test_signal_handler_unsubscribe(self):
-        try:
-            from signal import SIGTERM
-        except ImportError:
-            return self.skip("skipped (no SIGTERM) ")
+        self._require_signal_and_kill('SIGTERM')
 
-        try:
-            from os import kill
-        except ImportError:
-            return self.skip("skipped (no os.kill) ")
+        # Although Windows has `os.kill` and SIGTERM is defined, the
+        #  platform does not implement signals and sending SIGTERM
+        #  will result in a forced termination of the process.
+        #  Therefore, this test is not suitable for Windows.
+        if os.name == 'nt':
+            self.skip("SIGTERM not available")
 
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
@@ -427,8 +425,8 @@ class SignalHandlingTests(helper.CPWebCase):
 test_case_name: "test_signal_handler_unsubscribe"
 """)
         p.start(imports='cherrypy.test._test_states_demo')
-        # Send a SIGTERM
-        os.kill(p.get_pid(), SIGTERM)
+        # Ask the process to quit
+        os.kill(p.get_pid(), signal.SIGTERM)
         # This might hang if things aren't working right, but meh.
         p.join()
 
@@ -436,4 +434,3 @@ test_case_name: "test_signal_handler_unsubscribe"
         target_line = open(p.error_log, 'rb').readlines()[-10]
         if not ntob("I am an old SIGTERM handler.") in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
-
