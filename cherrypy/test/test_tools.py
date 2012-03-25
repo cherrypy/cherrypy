@@ -2,8 +2,10 @@
 
 import gzip
 import sys
+import unittest
 from cherrypy._cpcompat import BytesIO, copyitems, itervalues
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
+from cherrypy._cpcompat import bytestr
 import time
 timeout = 0.2
 import types
@@ -394,3 +396,14 @@ class ToolTests(helper.CPWebCase):
             pass
         else:
             raise AssertionError("Tool.on did not error as it should have.")
+
+class SessionAuthTest(unittest.TestCase):
+    def test_login_screen_returns_bytes(self):
+        """
+        login_screen must return bytes even if unicode parameters are passed.
+        Issue 1132 revealed that login_screen would return unicode if the
+        username and password were unicode.
+        """
+        sa = cherrypy.lib.cptools.SessionAuth()
+        res = sa.login_screen(None, username=u'nobody', password=u'anypass')
+        self.assertIsInstance(res, bytestr)
