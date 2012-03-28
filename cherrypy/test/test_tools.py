@@ -5,7 +5,7 @@ import sys
 import unittest
 from cherrypy._cpcompat import BytesIO, copyitems, itervalues
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
-from cherrypy._cpcompat import bytestr
+from cherrypy._cpcompat import bytestr, unicodestr
 import time
 timeout = 0.2
 import types
@@ -405,5 +405,6 @@ class SessionAuthTest(unittest.TestCase):
         username and password were unicode.
         """
         sa = cherrypy.lib.cptools.SessionAuth()
-        res = sa.login_screen(None, username=u'nobody', password=u'anypass')
+        res = sa.login_screen(None, username=unicodestr('nobody'),
+            password=unicodestr('anypass'))
         self.assertIsInstance(res, bytestr)
