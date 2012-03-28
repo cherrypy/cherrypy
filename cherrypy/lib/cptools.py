@@ -4,7 +4,7 @@ import logging
 import re
 
 import cherrypy
-from cherrypy._cpcompat import basestring, md5, set
+from cherrypy._cpcompat import basestring, md5, set, unicodestr
 from cherrypy.lib import httputil as _httputil
 
 
@@ -299,7 +299,7 @@ class SessionAuth(object):
         pass
 
     def login_screen(self, from_page='..', username='', error_msg='', **kwargs):
-        return (u"""<html><body>
+        return (unicodestr("""<html><body>
 Message: %(error_msg)s
 <form method="post" action="do_login">
     Login: <input type="text" name="username" value="%(username)s" size="10" /><br />
@@ -307,7 +307,7 @@ Message: %(error_msg)s
     <input type="hidden" name="from_page" value="%(from_page)s" /><br />
     <input type="submit" />
 </form>
-</body></html>""" % vars()).encode("utf-8")
+</body></html>""") % vars()).encode("utf-8")
 
     def do_login(self, username, password, from_page='..', **kwargs):
         """Login. May raise redirect, or return True if request handled."""
