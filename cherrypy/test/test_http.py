@@ -11,7 +11,7 @@ from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob, py3k
 
 def encode_multipart_formdata(files):
     """Return (content_type, body) ready for httplib.HTTP instance.
-    
+
     files: a sequence of (name, filename, value) tuples for multipart uploads.
     """
     BOUNDARY = '________ThIs_Is_tHe_bouNdaRY_$'
@@ -42,12 +42,12 @@ class HTTPTests(helper.CPWebCase):
             def index(self, *args, **kwargs):
                 return "Hello world!"
             index.exposed = True
-            
+
             def no_body(self, *args, **kwargs):
                 return "Hello world!"
             no_body.exposed = True
             no_body._cp_config = {'request.process_request_body': False}
-            
+
             def post_multipart(self, file):
                 """Return a summary ("a * 65536\nb * 65536") of the uploaded file."""
                 contents = file.file.read()
@@ -68,16 +68,16 @@ class HTTPTests(helper.CPWebCase):
                     summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)
             post_multipart.exposed = True
-        
+
         cherrypy.tree.mount(Root())
         cherrypy.config.update({'server.max_request_body_size': 30000000})
     setup_server = staticmethod(setup_server)
-    
+
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the
         # inclusion of a Content-Length or Transfer-Encoding header field in
         # the request's message-headers."
-        # 
+        #
         # Send a message with neither header and no body. Even though
         # the request is of method POST, this should be OK because we set
         # request.process_request_body to False for our handler.
@@ -91,7 +91,7 @@ class HTTPTests(helper.CPWebCase):
         self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody(ntob('Hello world!'))
-        
+
         # Now send a message that has no Content-Length, but does send a body.
         # Verify that CP times out the socket and responds
         # with 411 Length Required.
@@ -104,17 +104,17 @@ class HTTPTests(helper.CPWebCase):
         self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(411)
-    
+
     def test_post_multipart(self):
         alphabet = "abcdefghijklmnopqrstuvwxyz"
         # generate file contents for a large post
         contents = "".join([c * 65536 for c in alphabet])
-        
+
         # encode as multipart form data
         files=[('file', 'file.txt', contents)]
         content_type, body = encode_multipart_formdata(files)
         body = body.encode('Latin-1')
-        
+
         # post file
         if self.scheme == 'https':
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
@@ -125,7 +125,7 @@ class HTTPTests(helper.CPWebCase):
         c.putheader('Content-Length', str(len(body)))
         c.endheaders()
         c.send(body)
-        
+
         response = c.getresponse()
         self.body = response.fp.read()
         self.status = str(response.status)
@@ -135,7 +135,7 @@ class HTTPTests(helper.CPWebCase):
     def test_malformed_request_line(self):
         if getattr(cherrypy.server, "using_apache", False):
             return self.skip("skipped due to known Apache differences...")
-        
+
         # Test missing version in Request-Line
         if self.scheme == 'https':
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
@@ -161,20 +161,20 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
-        # See http://www.cherrypy.org/ticket/941 
+        # See http://www.cherrypy.org/ticket/941
         c._output(ntob('Re, 1.2.3.4#015#012'))
         c.endheaders()
-        
+
         response = c.getresponse()
         self.status = str(response.status)
         self.assertStatus(400)
         self.body = response.fp.read(20)
         self.assertBody("Illegal header line.")
-    
+
     def test_http_over_https(self):
         if self.scheme != 'https':
             return self.skip("skipped (not running HTTPS)... ")
-        
+
         # Try connecting without SSL.
         conn = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         conn.putrequest("GET", "/", skip_host=True)

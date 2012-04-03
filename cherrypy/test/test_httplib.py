@@ -5,7 +5,7 @@ from cherrypy.lib import httputil
 
 
 class UtilityTests(unittest.TestCase):
-    
+
     def test_urljoin(self):
         # Test all slash+atom combinations for SCRIPT_NAME and PATH_INFO
         self.assertEqual(httputil.urljoin("/sn/", "/pi/"), "/sn/pi/")

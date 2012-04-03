@@ -10,7 +10,7 @@ class ETagTest(helper.CPWebCase):
             def resource(self):
                 return "Oh wah ta goo Siam."
             resource.exposed = True
-            
+
             def fail(self, code):
                 code = int(code)
                 if 300 <= code <= 399:
@@ -18,26 +18,26 @@ class ETagTest(helper.CPWebCase):
                 else:
                     raise cherrypy.HTTPError(code)
             fail.exposed = True
-            
+
             def unicoded(self):
                 return ntou('I am a \u1ee4nicode string.', 'escape')
             unicoded.exposed = True
             # In Python 3, tools.encode is on by default
             unicoded._cp_config = {'tools.encode.on': True}
-        
+
         conf = {'/': {'tools.etags.on': True,
                       'tools.etags.autotags': True,
                       }}
         cherrypy.tree.mount(Root(), config=conf)
     setup_server = staticmethod(setup_server)
-    
+
     def test_etags(self):
         self.getPage("/resource")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('Oh wah ta goo Siam.')
         etag = self.assertHeader('ETag')
-        
+
         # Test If-Match (both valid and invalid)
         self.getPage("/resource", headers=[('If-Match', etag)])
         self.assertStatus("200 OK")
@@ -47,7 +47,7 @@ class ETagTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.getPage("/resource", headers=[('If-Match', "a bogus tag")])
         self.assertStatus("412 Precondition Failed")
-        
+
         # Test If-None-Match (both valid and invalid)
         self.getPage("/resource", headers=[('If-None-Match', etag)])
         self.assertStatus(304)
@@ -57,12 +57,12 @@ class ETagTest(helper.CPWebCase):
         self.assertStatus(304)
         self.getPage("/resource", headers=[('If-None-Match', "a bogus tag")])
         self.assertStatus("200 OK")
-    
+
     def test_errors(self):
         self.getPage("/resource")
         self.assertStatus(200)
         etag = self.assertHeader('ETag')
-        
+
         # Test raising errors in page handler
         self.getPage("/fail/412", headers=[('If-Match', etag)])
         self.assertStatus(412)
@@ -72,7 +72,7 @@ class ETagTest(helper.CPWebCase):
         self.assertStatus(412)
         self.getPage("/fail/304", headers=[('If-None-Match', "*")])
         self.assertStatus(304)
-    
+
     def test_unicode_body(self):
         self.getPage("/unicoded")
         self.assertStatus(200)

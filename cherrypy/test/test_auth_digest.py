@@ -36,7 +36,7 @@ class DigestAuthTest(helper.CPWebCase):
         root.digest = DigestProtected()
         cherrypy.tree.mount(root, config=conf)
     setup_server = staticmethod(setup_server)
-    
+
     def testPublic(self):
         self.getPage("/")
         self.assertStatus('200 OK')

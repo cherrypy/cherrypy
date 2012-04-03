@@ -78,14 +78,14 @@ FastCgiExternalServer "%(server)s" -host 127.0.0.1:4000
 """
 
 class ModFCGISupervisor(helper.LocalSupervisor):
-    
+
     using_apache = True
     using_wsgi = True
     template = conf_fcgid
-    
+
     def __str__(self):
         return "FCGI Server on %s:%s" % (self.host, self.port)
-    
+
     def start(self, modulename):
         cherrypy.server.httpserver = servers.FlupFCGIServer(
             application=cherrypy.tree, bindAddress=('127.0.0.1', 4000))
@@ -94,12 +94,12 @@ class ModFCGISupervisor(helper.LocalSupervisor):
         self.start_apache()
         # ...and our local server
         helper.LocalServer.start(self, modulename)
-    
+
     def start_apache(self):
         fcgiconf = CONF_PATH
         if not os.path.isabs(fcgiconf):
             fcgiconf = os.path.join(curdir, fcgiconf)
-        
+
         # Write the Apache conf file.
         f = open(fcgiconf, 'wb')
         try:
@@ -110,16 +110,16 @@ class ModFCGISupervisor(helper.LocalSupervisor):
             f.write(output)
         finally:
             f.close()
-        
+
         result = read_process(APACHE_PATH, "-k start -f %s" % fcgiconf)
         if result:
             print(result)
-    
+
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         read_process(APACHE_PATH, "-k stop")
         helper.LocalServer.stop(self)
-    
+
     def sync_apps(self):
         cherrypy.server.httpserver.fcgiserver.application = self.get_app()
 

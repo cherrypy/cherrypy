@@ -18,22 +18,22 @@ class RoutesDispatchTest(helper.CPWebCase):
         class Dummy:
             def index(self):
                 return "I said good day!"
-        
+
         class City:
-            
+
             def __init__(self, name):
                 self.name = name
                 self.population = 10000
-            
+
             def index(self, **kwargs):
                 return "Welcome to %s, pop. %s" % (self.name, self.population)
             index._cp_config = {'tools.response_headers.on': True,
                                 'tools.response_headers.headers': [('Content-Language', 'en-GB')]}
-            
+
             def update(self, **kwargs):
                 self.population = kwargs['pop']
                 return "OK"
-            
+
         d = cherrypy.dispatch.RoutesDispatcher()
         d.connect(action='index', name='hounslow', route='/hounslow',
                   controller=City('Hounslow'))
@@ -42,7 +42,7 @@ class RoutesDispatchTest(helper.CPWebCase):
         d.mapper.connect('/surbiton', controller='surbiton',
                          action='update', conditions=dict(method=['POST']))
         d.connect('main', ':action', controller=Dummy())
-        
+
         conf = {'/': {'request.dispatch': d}}
         cherrypy.tree.mount(root=None, config=conf)
     setup_server = staticmethod(setup_server)
@@ -51,14 +51,14 @@ class RoutesDispatchTest(helper.CPWebCase):
         self.getPage("/hounslow")
         self.assertStatus("200 OK")
         self.assertBody("Welcome to Hounslow, pop. 10000")
-        
+
         self.getPage("/foo")
         self.assertStatus("404 Not Found")
-        
+
         self.getPage("/surbiton")
         self.assertStatus("200 OK")
         self.assertBody("Welcome to Surbiton, pop. 10000")
-        
+
         self.getPage("/surbiton", method="POST", body="pop=1327")
         self.assertStatus("200 OK")
         self.assertBody("OK")

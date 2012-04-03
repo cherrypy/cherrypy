@@ -49,7 +49,7 @@ from cherrypy.lib import static
 
 
 class FileDemo(object):
-    
+
     def index(self):
         return """
         <html><body>
@@ -63,7 +63,7 @@ class FileDemo(object):
         </body></html>
         """
     index.exposed = True
-    
+
     def upload(self, myFile):
         out = """<html>
         <body>
@@ -72,7 +72,7 @@ class FileDemo(object):
             myFile mime-type: %s
         </body>
         </html>"""
-        
+
         # Although this just counts the file length, it demonstrates
         # how to read large files in chunks instead of all at once.
         # CherryPy reads the uploaded file into a temporary file;
@@ -83,10 +83,10 @@ class FileDemo(object):
             if not data:
                 break
             size += len(data)
-        
+
         return out % (size, myFile.filename, myFile.content_type)
     upload.exposed = True
-    
+
     def download(self):
         path = os.path.join(absDir, "pdf_file.pdf")
         return static.serve_file(path, "application/x-download",
