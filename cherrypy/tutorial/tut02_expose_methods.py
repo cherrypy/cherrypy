@@ -8,12 +8,12 @@ handler.
 import cherrypy
 
 class HelloWorld:
-    
+
     def index(self):
         # Let's link to another method here.
         return 'We have an <a href="showMessage">important message</a> for you!'
     index.exposed = True
-    
+
     def showMessage(self):
         # Here's the important message!
         return "Hello world!"

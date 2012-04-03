@@ -15,19 +15,19 @@ from cherrypy.test import helper
 class ReferenceTests(helper.CPWebCase):
 
     def setup_server():
-        
+
         class Root:
             def index(self, *args, **kwargs):
                 cherrypy.request.thing = data
                 return "Hello world!"
             index.exposed = True
-        
+
         cherrypy.tree.mount(Root())
     setup_server = staticmethod(setup_server)
-    
+
     def test_threadlocal_garbage(self):
         success = []
-        
+
         def getpage():
             host = '%s:%s' % (self.interface(), self.PORT)
             if self.scheme == 'https':
@@ -44,16 +44,16 @@ class ReferenceTests(helper.CPWebCase):
             finally:
                 c.close()
             success.append(True)
-        
+
         ITERATIONS = 25
         ts = []
         for _ in range(ITERATIONS):
             t = threading.Thread(target=getpage)
             ts.append(t)
             t.start()
-        
+
         for t in ts:
             t.join()
-        
+
         self.assertEqual(len(success), ITERATIONS)
 

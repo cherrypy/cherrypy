@@ -90,19 +90,19 @@ SetEnv testmod %(testmod)s
 
 class ModWSGISupervisor(helper.Supervisor):
     """Server Controller for ModWSGI and CherryPy."""
-    
+
     using_apache = True
     using_wsgi = True
     template=conf_modwsgi
-    
+
     def __str__(self):
         return "ModWSGI Server on %s:%s" % (self.host, self.port)
-    
+
     def start(self, modulename):
         mpconf = CONF_PATH
         if not os.path.isabs(mpconf):
             mpconf = os.path.join(curdir, mpconf)
-        
+
         f = open(mpconf, 'wb')
         try:
             output = (self.template %
@@ -111,17 +111,17 @@ class ModWSGISupervisor(helper.Supervisor):
             f.write(output)
         finally:
             f.close()
-        
+
         result = read_process(APACHE_PATH, "-k start -f %s" % mpconf)
         if result:
             print(result)
-        
+
         # Make a request so mod_wsgi starts up our app.
         # If we don't, concurrent initial requests will 404.
         cherrypy._cpserver.wait_for_occupied_port("127.0.0.1", self.port)
         webtest.openURL('/ihopetheresnodefault', port=self.port)
         time.sleep(1)
-    
+
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         read_process(APACHE_PATH, "-k stop")
@@ -136,7 +136,7 @@ def application(environ, start_response):
         modname = "cherrypy.test." + environ['testmod']
         mod = __import__(modname, globals(), locals(), [''])
         mod.setup_server()
-        
+
         cherrypy.config.update({
             "log.error_file": os.path.join(curdir, "test.error.log"),
             "log.access_file": os.path.join(curdir, "test.access.log"),

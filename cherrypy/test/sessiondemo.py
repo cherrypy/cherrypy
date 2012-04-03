@@ -15,7 +15,7 @@ page = """
 <style type='text/css'>
 table { border-collapse: collapse; border: 1px solid #663333; }
 th { text-align: right; background-color: #663333; color: white; padding: 0.5em; }
-td { white-space: pre-wrap; font-family: monospace; padding: 0.5em; 
+td { white-space: pre-wrap; font-family: monospace; padding: 0.5em;
      border: 1px solid #663333; }
 .warn { font-family: serif; color: #990000; }
 </style>
@@ -51,15 +51,15 @@ function init() {
     // Set the content of the 'btime' cell.
     var currentTime = new Date();
     var bunixtime = Math.floor(currentTime.getTime() / 1000);
-    
+
     var v = formattime(currentTime);
     v += " (Unix time: " + bunixtime + ")";
-    
+
     var diff = Math.abs(%(serverunixtime)s - bunixtime);
     if (diff > fudge_seconds) v += "<p class='warn'>Browser and Server times disagree.</p>";
-    
+
     document.getElementById('btime').innerHTML = v;
-    
+
     // Warn if response cookie expires is not close to one hour in the future.
     // Yes, we want this to happen when wit hit the 'Expire' link, too.
     var expires = Date.parse("%(expires)s") / 1000;
@@ -96,7 +96,7 @@ function init() {
 """
 
 class Root(object):
-    
+
     def page(self):
         changemsg = []
         if cherrypy.session.id != cherrypy.session.originalid:
@@ -106,12 +106,12 @@ class Root(object):
                 changemsg.append('Created new session due to missing (expired or malicious) session.')
             if cherrypy.session.regenerated:
                 changemsg.append('Application generated a new session.')
-        
+
         try:
             expires = cherrypy.response.cookie['session_id']['expires']
         except KeyError:
             expires = ''
-        
+
         return page % {
             'sessionid': cherrypy.session.id,
             'changemsg': '<br>'.join(changemsg),
@@ -124,18 +124,18 @@ class Root(object):
             'pyversion': sys.version,
             'expires': expires,
             }
-    
+
     def index(self):
         # Must modify data or the session will not be saved.
         cherrypy.session['color'] = 'green'
         return self.page()
     index.exposed = True
-    
+
     def expire(self):
         sessions.expire()
         return self.page()
     expire.exposed = True
-    
+
     def regen(self):
         cherrypy.session.regenerate()
         # Must modify data or the session will not be saved.

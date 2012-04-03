@@ -4,22 +4,22 @@ import cherrypy
 from cherrypy._cpcompat import ntob, ntou, sorted
 
 def setup_server():
-    
+
     class Root:
-        
+
         def multipart(self, parts):
             return repr(parts)
         multipart.exposed = True
-        
+
         def multipart_form_data(self, **kwargs):
             return repr(list(sorted(kwargs.items())))
         multipart_form_data.exposed = True
-        
+
         def flashupload(self, Filedata, Upload, Filename):
             return ("Upload: %s, Filename: %s, Filedata: %r" %
                     (Upload, Filename, Filedata.file.read()))
         flashupload.exposed = True
-    
+
     cherrypy.config.update({'server.max_request_body_size': 0})
     cherrypy.tree.mount(Root())
 
@@ -30,7 +30,7 @@ from cherrypy.test import helper
 
 class MultipartTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
-    
+
     def test_multipart(self):
         text_part = ntou("This is the text version")
         html_part = ntou("""<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -61,7 +61,7 @@ This is the <strong>HTML</strong> version
             ]
         self.getPage('/multipart', headers, "POST", body)
         self.assertBody(repr([text_part, html_part]))
-    
+
     def test_multipart_form_data(self):
         body='\r\n'.join(['--X',
                           'Content-Disposition: form-data; name="foo"',
@@ -113,7 +113,7 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
                 'name="Filedata"; filename=".project"\r\n'
             'Content-Type: application/octet-stream\r\n'
             '\r\n')
-            + filedata + 
+            + filedata +
             ntob('\r\n'
             '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
             'Content-Disposition: form-data; name="Upload"\r\n'
