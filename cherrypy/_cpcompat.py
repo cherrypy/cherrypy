@@ -206,27 +206,28 @@ except ImportError:
     import __builtin__ as builtins
 
 try:
-    # Python 2. We have to do it in this order so Python 2 builds
+    # Python 2. We try Python 2 first clients on Python 2
     # don't try to import the 'http' module from cherrypy.lib
     from Cookie import SimpleCookie, CookieError
-    from httplib import BadStatusLine, HTTPConnection, HTTPSConnection, IncompleteRead, NotConnected
+    from httplib import BadStatusLine, HTTPConnection, IncompleteRead, NotConnected
     from BaseHTTPServer import BaseHTTPRequestHandler
 except ImportError:
     # Python 3
     from http.cookies import SimpleCookie, CookieError
-    from http.client import BadStatusLine, HTTPConnection, HTTPSConnection, IncompleteRead, NotConnected
+    from http.client import BadStatusLine, HTTPConnection, IncompleteRead, NotConnected
     from http.server import BaseHTTPRequestHandler
 
-try:
-    # Python 2. We have to do it in this order so Python 2 builds
-    # don't try to import the 'http' module from cherrypy.lib
-    from httplib import HTTPSConnection
-except ImportError:
+# Some platforms don't expose HTTPSConnection, so handle it separately
+if py3k:
     try:
-        # Python 3
         from http.client import HTTPSConnection
     except ImportError:
         # Some platforms which don't have SSL don't expose HTTPSConnection
+        HTTPSConnection = None
+else:
+    try:
+        from httplib import HTTPSConnection
+    except ImportError:
         HTTPSConnection = None
 
 try:
