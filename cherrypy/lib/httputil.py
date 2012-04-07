@@ -122,7 +122,7 @@ class HeaderElement(object):
 
     def __str__(self):
         p = [";%s=%s" % (k, v) for k, v in iteritems(self.params)]
-        return "%s%s" % (self.value, "".join(p))
+        return str("%s%s" % (self.value, "".join(p)))
 
     def __bytes__(self):
         return ntob(self.__str__())
