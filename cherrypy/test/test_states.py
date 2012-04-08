@@ -3,8 +3,12 @@ import os
 import sys
 import time
 import signal
+import unittest
+import socket
 
 import cherrypy
+import cherrypy.process.servers
+
 engine = cherrypy.engine
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
@@ -434,3 +438,55 @@ test_case_name: "test_signal_handler_unsubscribe"
         target_line = open(p.error_log, 'rb').readlines()[-10]
         if not ntob("I am an old SIGTERM handler.") in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
+
+class WaitTests(unittest.TestCase):
+    def test_wait_for_occupied_port_INADDR_ANY(self):
+        """
+        Wait on INADDR_ANY should not raise IOError
+
+        In cases where the loopback interface does not exist, CherryPy cannot
+        effectively determine if a port binding to INADDR_ANY was effected.
+        In this situation, CherryPy should assume that it failed to detect
+        the binding (not that the binding failed) and only warn that it could
+        not verify it.
+        """
+        # At such a time that CherryPy can reliably determine one or more
+        #  viable IP addresses of the host, this test may be removed.
+
+        # Simulate the behavior we observe when no loopback interface is
+        #  present by: finding a port that's not occupied, then wait on it.
+
+        free_port = self.find_free_port()
+
+        servers = cherrypy.process.servers
+
+        def with_shorter_timeouts(func):
+            """
+            A context where occupied_port_timeout is much smaller to speed
+            test runs.
+            """
+            # When we have Python 2.5, simplify using the with_statement.
+            orig_timeout = servers.occupied_port_timeout
+            servers.occupied_port_timeout = .07
+            try:
+                func()
+            finally:
+                servers.occupied_port_timeout = orig_timeout
+
+        def do_waiting():
+            # Wait on the free port that's unbound
+            servers.wait_for_occupied_port('0.0.0.0', free_port)
+            # The wait should still raise an IO error if INADDR_ANY was
+            #  not supplied.
+            self.assertRaises(IOError, servers.wait_for_occupied_port,
+                '127.0.0.1', free_port)
+
+        with_shorter_timeouts(do_waiting)
+
+    def find_free_port(self):
+        "Find a free port by binding to port 0 then unbinding."
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(('', 0))
+        free_port = sock.getsockname()[1]
+        sock.close()
+        return free_port
