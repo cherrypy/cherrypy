@@ -258,7 +258,7 @@ class SessionTool(Tool):
         When 'early', the session will be locked before reading the request
         body. This is off by default for safety reasons; for example,
         a large upload would block the session, denying an AJAX
-        progress meter (see http://www.cherrypy.org/ticket/630).
+        progress meter (see https://bitbucket.org/cherrypy/cherrypy/issue/630).
 
         When 'explicit' (or any other value), you need to call
         cherrypy.session.acquire_lock() yourself before using
@@ -364,7 +364,7 @@ class XMLRPCController(object):
             body = subhandler(*(vpath + rpcparams), **params)
 
         else:
-            # http://www.cherrypy.org/ticket/533
+            # https://bitbucket.org/cherrypy/cherrypy/issue/533
             # if a method is not found, an xmlrpclib.Fault should be returned
             # raising an exception here will do that; see
             # cherrypy.lib.xmlrpcutil.on_error

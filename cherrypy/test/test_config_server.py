@@ -90,7 +90,7 @@ class ServerConfigTests(helper.CPWebCase):
             self.getPage("/", headers=[('From', "x" * 500)])
             self.assertStatus(413)
 
-        # Test for http://www.cherrypy.org/ticket/421
+        # Test for https://bitbucket.org/cherrypy/cherrypy/issue/421
         # (Incorrect border condition in readline of SizeCheckWrapper).
         # This hangs in rev 891 and earlier.
         lines256 = "x" * 248

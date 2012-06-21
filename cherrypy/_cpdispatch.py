@@ -379,7 +379,7 @@ class Dispatcher(object):
                     conf = getattr(defhandler, "_cp_config", {})
                     object_trail.insert(i+1, ["default", defhandler, conf, segleft])
                     request.config = set_conf()
-                    # See http://www.cherrypy.org/ticket/613
+                    # See https://bitbucket.org/cherrypy/cherrypy/issue/613
                     request.is_index = path.endswith("/")
                     return defhandler, fullpath[fullpath_len - segleft:-1]
 
@@ -625,7 +625,7 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domai
 
         result = next_dispatcher(path_info)
 
-        # Touch up staticdir config. See http://www.cherrypy.org/ticket/614.
+        # Touch up staticdir config. See https://bitbucket.org/cherrypy/cherrypy/issue/614.
         section = request.config.get('tools.staticdir.section')
         if section:
             section = section[len(prefix):]
