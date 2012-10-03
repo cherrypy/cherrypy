@@ -379,12 +379,13 @@ def check_port(host, port, timeout=1.0):
             s.settimeout(timeout)
             s.connect((host, port))
             s.close()
-            raise IOError("Port %s is in use on %s; perhaps the previous "
-                          "httpserver did not shut down properly." %
-                          (repr(port), repr(host)))
         except socket.error:
             if s:
                 s.close()
+        else:
+            raise IOError("Port %s is in use on %s; perhaps the previous "
+                          "httpserver did not shut down properly." %
+                          (repr(port), repr(host)))
 
 
 # Feel free to increase these defaults on slow systems:
