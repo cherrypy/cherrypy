@@ -18,6 +18,7 @@ output.
 import os
 import re
 import sys
+import threading
 
 if sys.version_info >= (3, 0):
     py3k = True
@@ -325,3 +326,9 @@ except NameError:
     # Python 2
     def next(i):
         return i.next()
+
+if sys.version_info >= (3,3):
+    Timer = threading.Timer
+else:
+    # Python 3.2 and earlier
+    Timer = threading._Timer

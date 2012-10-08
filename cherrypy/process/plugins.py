@@ -7,7 +7,7 @@ import sys
 import time
 import threading
 
-from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident, ntob, set
+from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident, ntob, set, Timer
 
 # _module__file__base is used by Autoreload to make
 # absolute any filenames retrieved from sys.modules which are not
@@ -421,7 +421,7 @@ class PIDFile(SimplePlugin):
             pass
 
 
-class PerpetualTimer(threading._Timer):
+class PerpetualTimer(Timer):
     """A responsive subclass of threading._Timer whose run() method repeats.
 
     Use this timer only when you really need a very interruptible timer;
