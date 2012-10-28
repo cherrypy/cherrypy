@@ -73,6 +73,7 @@ def build():
 	subprocess.check_call([sys.executable, 'setup.py', 'sdist'])
 	subprocess.check_call([sys.executable, 'setup.py', 'sdist',
 		'--format=gztar'])
+	subprocess.check_call([sys.executable, 'setup.py', 'bdist_wininst'])
 
 def push():
 	"The build went well, so let's push the SCM changesets"
