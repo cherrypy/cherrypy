@@ -14,4 +14,4 @@ class StringTester(unittest.TestCase):
         """
         if compat.py3k:
             raise nose.SkipTest("Only useful on Python 2")
-        self.assertRaises(Exception, compat.ntob, u'fight')
+        self.assertRaises(Exception, compat.ntob, unicode('fight'))
