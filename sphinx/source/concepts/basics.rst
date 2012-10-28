@@ -6,12 +6,12 @@ The standard 'Hello world!' application takes less than 10 lines of code
 when written using CherryPy::
 
     import cherrypy
-    
+
     class HelloWorld:
         def index(self):
             return "Hello world!"
         index.exposed = True
-    
+
     cherrypy.quickstart(HelloWorld())
 
 We assume that you already have :doc:`installed </intro/install>` CherryPy.
@@ -87,12 +87,42 @@ module. It contains several members:
    mapping that is automatically generated and encoded by CherryPy; it can
    be used to store session-data in a persistent cookie. For it to work you
    have to enable the session functionality by setting 'tools.session.on' to
-   True in your config. 
+   True in your config.
  * :class:`cherrypy.response <cherrypy._cprequest.Response>` contains the
-   data that is used to build the HTTP response. 
+   data that is used to build the HTTP response.
  * :attr:`cherrypy.response.headers <cherrypy.lib.httputil.HeaderMap>`
    contains a mapping with the header options that will be returned by the
    server, before the contents get sent.
  * :attr:`cherrypy.response.body <cherrypy._cprequest.Response.body>` contains
    the actual contents of the webpage that will be sent as a response.
 
+CherryPy Response
+-----------------
+
+The `cherrypy.response` object is available to affect aspects of the response
+to a request. Like the request, the response object is a thread-local,
+meaning although it appears to be a global variable, its value is specific
+to the current thread, and thus the current request.
+
+One may store arbitrary data in the response object.
+
+HTTP Headers
+------------
+
+CherryPy exposes the request headers (as sent from the client), and response
+headers (to be returned in the response) in the `headers` attribute of
+`cherrypy.request` and `cherrypy.response`.
+
+For example, to find out what "host" to which the client intended to connect::
+
+    @cherrypy.expose
+    def index(self):
+        host = cherrypy.request.headers('Host')
+        return "You have successfully reached " + host
+
+Or to set headers on the response::
+
+    @cherrypy.expose
+    def index(self):
+        cherrypy.response.headers['Content-Type'] = 'application/jpeg'
+        return my_jpeg_data()
