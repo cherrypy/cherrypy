@@ -441,34 +441,40 @@ class HeaderMap(CaseInsensitiveDict):
 
     def output(self):
         """Transform self into a list of (name, value) tuples."""
-        header_list = []
-        for k, v in self.items():
+        return list(self.encode_header_items(self.items()))
+
+    def encode_header_items(cls, header_items):
+        """
+        Prepare the sequence of name, value tuples into a form suitable for
+        transmitting on the wire for HTTP.
+        """
+        for k, v in header_items:
             if isinstance(k, unicodestr):
-                k = self.encode(k)
+                k = cls.encode(k)
 
             if not isinstance(v, basestring):
                 v = str(v)
 
             if isinstance(v, unicodestr):
-                v = self.encode(v)
+                v = cls.encode(v)
 
             # See header_translate_* constants above.
             # Replace only if you really know what you're doing.
             k = k.translate(header_translate_table, header_translate_deletechars)
             v = v.translate(header_translate_table, header_translate_deletechars)
 
-            header_list.append((k, v))
-        return header_list
+            yield (k, v)
+    encode_header_items = classmethod(encode_header_items)
 
-    def encode(self, v):
+    def encode(cls, v):
         """Return the given header name or value, encoded for HTTP output."""
-        for enc in self.encodings:
+        for enc in cls.encodings:
             try:
                 return v.encode(enc)
             except UnicodeEncodeError:
                 continue
 
-        if self.protocol == (1, 1) and self.use_rfc_2047:
+        if cls.protocol == (1, 1) and cls.use_rfc_2047:
             # Encode RFC-2047 TEXT
             # (e.g. u"\u8200" -> "=?utf-8?b?6IiA?=").
             # We do our own here instead of using the email module
@@ -479,8 +485,8 @@ class HeaderMap(CaseInsensitiveDict):
 
         raise ValueError("Could not encode header part %r using "
                          "any of the encodings %r." %
-                         (v, self.encodings))
-
+                         (v, cls.encodings))
+    encode = classmethod(encode)
 
 class Host(object):
     """An internet address.
