@@ -334,6 +334,8 @@ except NameError:
 
 if sys.version_info >= (3,3):
     Timer = threading.Timer
+    Event = threading.Event
 else:
     # Python 3.2 and earlier
     Timer = threading._Timer
+    Event = threading._Event
