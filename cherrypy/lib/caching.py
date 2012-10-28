@@ -39,7 +39,7 @@ import time
 
 import cherrypy
 from cherrypy.lib import cptools, httputil
-from cherrypy._cpcompat import copyitems, ntob, set_daemon, sorted
+from cherrypy._cpcompat import copyitems, ntob, set_daemon, sorted, Event
 
 
 class Cache(object):
@@ -81,7 +81,7 @@ class AntiStampedeCache(dict):
         If timeout is None, no waiting is performed nor sentinels used.
         """
         value = self.get(key)
-        if isinstance(value, threading._Event):
+        if isinstance(value, Event):
             if timeout is None:
                 # Ignore the other thread and recalc it ourselves.
                 if debug:
@@ -120,7 +120,7 @@ class AntiStampedeCache(dict):
         """Set the cached value for the given key."""
         existing = self.get(key)
         dict.__setitem__(self, key, value)
-        if isinstance(existing, threading._Event):
+        if isinstance(existing, Event):
             # Set Event.result so other threads waiting on it have
             # immediate access without needing to poll the cache again.
             existing.result = value
