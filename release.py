@@ -1,7 +1,7 @@
 """
 This script will walk a developer through the process of cutting a release.
 
-Based on 1
+Based on https://bitbucket.org/cherrypy/cherrypy/wiki/ReleaseProcess
 
 To cut a release, simply invoke this script at the changeset to be released.
 """
