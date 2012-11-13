@@ -221,7 +221,7 @@ following code::
 
 So the URL above will be mapped as a call to::
 
-    root.blog('2005', '1', '17')
+    root.blog('2005', '01', '17')
 
 In this case, there is a partial match up to the ``blog`` component. The rest
 of the URL can't be found in the mounted object tree. In this case, the
