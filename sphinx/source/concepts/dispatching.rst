@@ -256,7 +256,7 @@ written the above "blog" example equivalently with a "default" method instead::
 
 So the URL ``http://localhost/blog/2005/01/17`` will be mapped as a call to::
 
-    root.blog.default('2005', '1', '17')
+    root.blog.default('2005', '01', '17')
 
 You could achieve the same effect by defining a ``__call__`` method in this
 case, but "default" just reads better. ;)
