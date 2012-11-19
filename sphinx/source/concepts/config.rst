@@ -44,7 +44,7 @@ config entries. Here's an example of passing a dict argument::
                             'server.socket_port': 80,
                            })
 
-The ``server.socket_host`` option n this example determines on which network
+The ``server.socket_host`` option in this example determines on which network
 interface CherryPy will listen. The ``server.socket_port`` option declares
 the TCP port on which to listen.
 
