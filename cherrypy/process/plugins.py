@@ -195,7 +195,7 @@ except ImportError:
 class DropPrivileges(SimplePlugin):
     """Drop privileges. uid/gid arguments not available on Windows.
 
-    Special thanks to Gavin Baker: http://antonym.org/node/100.
+    Special thanks to Gavin Baker: http://antonym.org/2005/12/dropping-privileges-in-python.html
     """
 
     def __init__(self, bus, umask=None, uid=None, gid=None):
