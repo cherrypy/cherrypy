@@ -157,7 +157,7 @@ class Config(reprconf.Config):
 
     def _apply(self, config):
         """Update self from a dict."""
-        if isinstance(config.get("global", None), dict):
+        if isinstance(config.get("global"), dict):
             if len(config) > 1:
                 cherrypy.checker.global_config_contained_paths = True
             config = config["global"]
