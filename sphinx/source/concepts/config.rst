@@ -164,7 +164,7 @@ an application, you'll see the tracebacks. In other words, use this order::
                             })
 
     # Mount each app and pass it its own config
-    cherrypy.tree.mount(root1, "/", appconf1)
+    cherrypy.tree.mount(root1, "", appconf1)
     cherrypy.tree.mount(root2, "/forum", appconf2)
     cherrypy.tree.mount(root3, "/blog", appconf3)
 
