@@ -77,9 +77,9 @@ or, in python code::
             'tools.trailing_slash.on': False,
         }
     }
-    cherrypy.tree.mount(Root(), "/", config=config)
+    cherrypy.tree.mount(Root(), config=config)
 
-CherryPy doesn't use any sections that don't start with ``"/"`` (except
+CherryPy only uses sections that start with ``"/"`` (except
 ``[global]``, see below). That means you can place your own configuration
 entries in a CherryPy config file by giving them a section name which does not
 start with ``"/"``. For example, you might include database entries like this::
