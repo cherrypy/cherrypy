@@ -182,14 +182,14 @@ class Config(reprconf.Config):
 
 Config.environments = environments = {
     "staging": {
-        'engine.autoreload_on': False,
+        'engine.autoreload.on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         'request.show_mismatched_params': False,
         },
     "production": {
-        'engine.autoreload_on': False,
+        'engine.autoreload.on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
@@ -198,7 +198,7 @@ Config.environments = environments = {
         },
     "embedded": {
         # For use with CherryPy embedded in another deployment stack.
-        'engine.autoreload_on': False,
+        'engine.autoreload.on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
@@ -208,7 +208,7 @@ Config.environments = environments = {
         'engine.SIGTERM': None,
         },
     "test_suite": {
-        'engine.autoreload_on': False,
+        'engine.autoreload.on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': True,
@@ -248,20 +248,7 @@ Config.namespaces["server"] = _server_namespace_handler
 def _engine_namespace_handler(k, v):
     """Backward compatibility handler for the "engine" namespace."""
     engine = cherrypy.engine
-    if k == 'autoreload_on':
-        if v:
-            engine.autoreload.subscribe()
-        else:
-            engine.autoreload.unsubscribe()
-    elif k == 'autoreload_frequency':
-        engine.autoreload.frequency = v
-    elif k == 'autoreload_match':
-        engine.autoreload.match = v
-    elif k == 'reload_files':
-        engine.autoreload.files = set(v)
-    elif k == 'deadlock_poll_freq':
-        engine.timeout_monitor.frequency = v
-    elif k == 'SIGHUP':
+    if k == 'SIGHUP':
         engine.listeners['SIGHUP'] = set([v])
     elif k == 'SIGTERM':
         engine.listeners['SIGTERM'] = set([v])
