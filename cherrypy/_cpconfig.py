@@ -248,7 +248,29 @@ Config.namespaces["server"] = _server_namespace_handler
 def _engine_namespace_handler(k, v):
     """Backward compatibility handler for the "engine" namespace."""
     engine = cherrypy.engine
-    if k == 'SIGHUP':
+
+    deprecated = {'autoreload_on': 'autoreload.on', 'autoreload_frequency': 'autoreload.frequency',
+        'autoreload_match': 'autoreload.match', 'reload_files': 'autoreload.files',
+        'deadlock_poll_freq': 'timeout_monitor.frequency'}
+
+    if k in deprecated:
+        engine.log('WARNING: Use of engine.%s is deprecated and will be removed in '
+            'a future version. Use engine.%s instead.' % (k, deprecated[k]))
+
+    if k == 'autoreload_on':
+        if v:
+            engine.autoreload.subscribe()
+        else:
+            engine.autoreload.unsubscribe()
+    elif k == 'autoreload_frequency':
+        engine.autoreload.frequency = v
+    elif k == 'autoreload_match':
+        engine.autoreload.match = v
+    elif k == 'reload_files':
+        engine.autoreload.files = set(v)
+    elif k == 'deadlock_poll_freq':
+        engine.timeout_monitor.frequency = v
+    elif k == 'SIGHUP':
         engine.listeners['SIGHUP'] = set([v])
     elif k == 'SIGTERM':
         engine.listeners['SIGTERM'] = set([v])
