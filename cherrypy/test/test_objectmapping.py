@@ -268,7 +268,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertStatus("404 Not Found")
 
         # Make sure /foobar maps to Root.foobar and not to the app
-        # mounted at /foo. See http://www.cherrypy.org/ticket/573
+        # mounted at /foo. See https://bitbucket.org/cherrypy/cherrypy/issue/573
         self.getPage("/foobar")
         self.assertBody("bar")
 
@@ -319,7 +319,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertBody("default for dir1, param is:('dir2', '5', '3', 'sir')")
 
         # test that extra positional args raises an 404 Not Found
-        # See http://www.cherrypy.org/ticket/733.
+        # See https://bitbucket.org/cherrypy/cherrypy/issue/733.
         self.getPage("/dir1/dir2/script_name/extra/stuff")
         self.assertStatus(404)
 

@@ -167,7 +167,7 @@ class Session(object):
                     cherrypy.log('Expired or malicious session %r; '
                                  'making a new one' % id, 'TOOLS.SESSIONS')
                 # Expired or malicious session. Make a new one.
-                # See http://www.cherrypy.org/ticket/709.
+                # See https://bitbucket.org/cherrypy/cherrypy/issue/709.
                 self.id = None
                 self.missing = True
                 self._regenerate()

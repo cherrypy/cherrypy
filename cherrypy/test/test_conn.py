@@ -182,7 +182,7 @@ class ConnectionCloseTests(helper.CPWebCase):
                     # Make another request on the same connection, which should error.
                     self.assertRaises(NotConnected, self.getPage, "/")
 
-                # Try HEAD. See http://www.cherrypy.org/ticket/864.
+                # Try HEAD. See https://bitbucket.org/cherrypy/cherrypy/issue/864.
                 self.getPage("/stream", method='HEAD')
                 self.assertStatus('200 OK')
                 self.assertBody('')

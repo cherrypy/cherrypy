@@ -895,7 +895,7 @@ class RequestBody(Entity):
     """The buffer size used when reading the socket."""
 
     # Don't parse the request body at all if the client didn't provide
-    # a Content-Type header. See http://www.cherrypy.org/ticket/790
+    # a Content-Type header. See https://bitbucket.org/cherrypy/cherrypy/issue/790
     default_content_type = ''
     """This defines a default ``Content-Type`` to use if no Content-Type header
     is given. The empty string is used for RequestBody, which results in the

@@ -265,7 +265,7 @@ class SizeCheckWrapper(object):
             self.bytes_read += len(data)
             self._check_length()
             res.append(data)
-            # See http://www.cherrypy.org/ticket/421
+            # See https://bitbucket.org/cherrypy/cherrypy/issue/421
             if len(data) < 256 or data[-1:] == "\n":
                 return EMPTY.join(res)
 
@@ -754,7 +754,7 @@ class HTTPRequest(object):
         # but it seems like it would be a big slowdown for such a rare case.
         if self.inheaders.get(b"Expect", b"") == b"100-continue":
             # Don't use simple_response here, because it emits headers
-            # we don't want. See http://www.cherrypy.org/ticket/951
+            # we don't want. See https://bitbucket.org/cherrypy/cherrypy/issue/951
             msg = self.server.protocol.encode('ascii') + b" 100 Continue\r\n\r\n"
             try:
                 self.conn.wfile.write(msg)
@@ -1044,7 +1044,7 @@ class HTTPConnection(object):
                 # Don't error if we're between requests; only error
                 # if 1) no request has been started at all, or 2) we're
                 # in the middle of a request.
-                # See http://www.cherrypy.org/ticket/853
+                # See https://bitbucket.org/cherrypy/cherrypy/issue/853
                 if (not request_seen) or (req and req.started_request):
                     # Don't bother writing the 408 if the response
                     # has already started being written.
@@ -1287,7 +1287,7 @@ class ThreadPool(object):
                             worker.join()
                 except (AssertionError,
                         # Ignore repeated Ctrl-C.
-                        # See http://www.cherrypy.org/ticket/691.
+                        # See https://bitbucket.org/cherrypy/cherrypy/issue/691.
                         KeyboardInterrupt):
                     pass
 
@@ -1591,7 +1591,7 @@ class HTTPServer(object):
             self.socket = self.ssl_adapter.bind(self.socket)
 
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
-        # activate dual-stack. See http://www.cherrypy.org/ticket/871.
+        # activate dual-stack. See https://bitbucket.org/cherrypy/cherrypy/issue/871.
         if (hasattr(socket, 'AF_INET6') and family == socket.AF_INET6
             and self.bind_addr[0] in ('::', '::0', '::0.0.0.0')):
             try:
@@ -1678,14 +1678,14 @@ class HTTPServer(object):
                 # is received during the accept() call; all docs say retry
                 # the call, and I *think* I'm reading it right that Python
                 # will then go ahead and poll for and handle the signal
-                # elsewhere. See http://www.cherrypy.org/ticket/707.
+                # elsewhere. See https://bitbucket.org/cherrypy/cherrypy/issue/707.
                 return
             if x.args[0] in socket_errors_nonblocking:
-                # Just try again. See http://www.cherrypy.org/ticket/479.
+                # Just try again. See https://bitbucket.org/cherrypy/cherrypy/issue/479.
                 return
             if x.args[0] in socket_errors_to_ignore:
                 # Our socket was closed.
-                # See http://www.cherrypy.org/ticket/686.
+                # See https://bitbucket.org/cherrypy/cherrypy/issue/686.
                 return
             raise
 
@@ -1716,7 +1716,7 @@ class HTTPServer(object):
                     x = sys.exc_info()[1]
                     if x.args[0] not in socket_errors_to_ignore:
                         # Changed to use error code and not message
-                        # See http://www.cherrypy.org/ticket/860.
+                        # See https://bitbucket.org/cherrypy/cherrypy/issue/860.
                         raise
                 else:
                     # Note that we're explicitly NOT using AI_PASSIVE,
