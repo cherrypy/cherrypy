@@ -156,7 +156,7 @@ class XmlRpcTest(helper.CPWebCase):
         else:
             self.fail("Expected xmlrpclib.Fault")
 
-        # http://www.cherrypy.org/ticket/533
+        # https://bitbucket.org/cherrypy/cherrypy/issue/533
         # if a method is not found, an xmlrpclib.Fault should be raised
         try:
             proxy.non_method()

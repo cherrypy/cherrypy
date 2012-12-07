@@ -12,7 +12,7 @@ from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou, rev
 from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr, unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
-# From http://www.cherrypy.org/ticket/361
+# From https://bitbucket.org/cherrypy/cherrypy/issue/361
 response_codes[500] = ('Internal Server Error',
                       'The server encountered an unexpected condition '
                       'which prevented it from fulfilling the request.')

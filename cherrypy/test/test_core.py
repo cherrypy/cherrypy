@@ -398,7 +398,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(('302 Found', '303 See Other'))
 
         # check injection protection
-        # See http://www.cherrypy.org/ticket/1003
+        # See https://bitbucket.org/cherrypy/cherrypy/issue/1003
         self.getPage("/redirect/custom?code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval")
         self.assertStatus(303)
         loc = self.assertHeader('Location')
