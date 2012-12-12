@@ -7,7 +7,8 @@ import sys
 import time
 import threading
 
-from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident, ntob, set, Timer
+from cherrypy._cpcompat import (basestring, get_daemon, get_thread_ident,
+    ntob, set, Timer, SetDaemonProperty)
 
 # _module__file__base is used by Autoreload to make
 # absolute any filenames retrieved from sys.modules which are not
@@ -450,7 +451,7 @@ class PerpetualTimer(Timer):
                 raise
 
 
-class BackgroundTask(threading.Thread):
+class BackgroundTask(SetDaemonProperty, threading.Thread):
     """A subclass of threading.Thread whose run() method repeats.
 
     Use this class for most repeating tasks. It uses time.sleep() to wait
@@ -460,7 +461,7 @@ class BackgroundTask(threading.Thread):
     it won't delay stopping the whole process.
     """
 
-    def __init__(self, interval, function, args=[], kwargs={}, bus=None, daemon=True):
+    def __init__(self, interval, function, args=[], kwargs={}, bus=None):
         threading.Thread.__init__(self)
         self.interval = interval
         self.function = function
@@ -468,10 +469,9 @@ class BackgroundTask(threading.Thread):
         self.kwargs = kwargs
         self.running = False
         self.bus = bus
-        if daemon is not None:
-            self.daemon = daemon
-        else:
-            self.daemon = current_thread().daemon
+
+        # default to daemonic
+        self.daemon = True
 
     def cancel(self):
         self.running = False
@@ -490,9 +490,6 @@ class BackgroundTask(threading.Thread):
                                  % self.function, level=40, traceback=True)
                 # Quit on first error to avoid massive logs.
                 raise
-
-    def _set_daemon(self):
-        return True
 
 
 class Monitor(SimplePlugin):
