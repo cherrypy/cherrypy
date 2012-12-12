@@ -7,8 +7,7 @@ import sys
 import time
 import threading
 
-from cherrypy._cpcompat import (basestring, get_daemon, get_thread_ident,
-    ntob, set, Timer, SetDaemonProperty)
+from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident, ntob, set, Timer, SetDaemonProperty
 
 # _module__file__base is used by Autoreload to make
 # absolute any filenames retrieved from sys.modules which are not
