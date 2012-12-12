@@ -460,7 +460,7 @@ class BackgroundTask(SetDaemonProperty, threading.Thread):
     it won't delay stopping the whole process.
     """
 
-    def __init__(self, interval, function, args=[], kwargs={}, bus=None, daemon=True):
+    def __init__(self, interval, function, args=[], kwargs={}, bus=None):
         threading.Thread.__init__(self)
         self.interval = interval
         self.function = function
@@ -468,10 +468,6 @@ class BackgroundTask(SetDaemonProperty, threading.Thread):
         self.kwargs = kwargs
         self.running = False
         self.bus = bus
-        if daemon is not None:
-            self.daemon = daemon
-        else:
-            self.daemon = current_thread().daemon
 
         # default to daemonic
         self.daemon = True
