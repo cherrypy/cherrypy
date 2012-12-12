@@ -460,7 +460,7 @@ class BackgroundTask(threading.Thread):
     it won't delay stopping the whole process.
     """
 
-    def __init__(self, interval, function, args=[], kwargs={}, bus=None, *, daemon=True):
+    def __init__(self, interval, function, args=[], kwargs={}, bus=None, daemon=True):
         threading.Thread.__init__(self)
         self.interval = interval
         self.function = function
@@ -490,6 +490,9 @@ class BackgroundTask(threading.Thread):
                                  % self.function, level=40, traceback=True)
                 # Quit on first error to avoid massive logs.
                 raise
+
+    def _set_daemon(self):
+        return True
 
 
 class Monitor(SimplePlugin):
