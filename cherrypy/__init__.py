@@ -125,6 +125,23 @@ engine.thread_manager.subscribe()
 engine.signal_handler = process.plugins.SignalHandler(engine)
 
 
+class _HandleSignalsPlugin(object):
+    """Handle signals from other processes based on the configured
+    platform handlers above."""
+
+    def __init__(self, bus):
+        self.bus = bus
+
+    def subscribe(self):
+        """Add the handlers based on the platform"""
+        if hasattr(self.bus, "signal_handler"):
+            self.bus.signal_handler.subscribe()
+        if hasattr(self.bus, "console_control_handler"):
+            self.bus.console_control_handler.subscribe()
+
+engine.signals = _HandleSignalsPlugin(engine)
+
+
 from cherrypy import _cpserver
 server = _cpserver.Server()
 server.subscribe()
@@ -152,11 +169,7 @@ def quickstart(root=None, script_name="", config=None):
 
     tree.mount(root, script_name, config)
 
-    if hasattr(engine, "signal_handler"):
-        engine.signal_handler.subscribe()
-    if hasattr(engine, "console_control_handler"):
-        engine.console_control_handler.subscribe()
-
+    engine.signals.subscribe()
     engine.start()
     engine.block()
 
