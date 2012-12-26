@@ -459,7 +459,7 @@ def get_error_page(status, **kwargs):
         if v is None:
             kwargs[k] = ""
         else:
-            kwargs[k] = tonative(_escape(kwargs[k]))
+            kwargs[k] = _escape(kwargs[k])
 
     # Use a custom template or callable for the error page?
     pages = cherrypy.serving.request.error_page
