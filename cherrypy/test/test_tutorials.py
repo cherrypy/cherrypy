@@ -92,8 +92,21 @@ class TutorialTest(helper.CPWebCase):
 
     def test05DerivedObjects(self):
         self.getPage("/load_tut_module/tut05_derived_objects")
-        #Formatted to not get overzealously whitespace fixed
-        msg = '\n            <html>\n            <head>\n                <title>Another Page</title>\n            <head>\n            <body>\n            <h2>Another Page</h2>\n        \n            <p>\n            And this is the amazing second page!\n            </p>\n        \n            </body>\n            </html>\n        '
+        msg = '''
+            <html>
+            <head>
+                <title>Another Page</title>
+            <head>
+            <body>
+            <h2>Another Page</h2>
+
+            <p>
+            And this is the amazing second page!
+            </p>
+
+            </body>
+            </html>
+        '''
         self.getPage("/another/")
         self.assertBody(msg)
 
