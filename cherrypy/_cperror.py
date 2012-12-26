@@ -372,8 +372,8 @@ class HTTPError(CherryPyException):
         response.headers['Content-Type'] = "text/html;charset=utf-8"
         response.headers.pop('Content-Length', None)
 
-        content = ntob(self.get_error_page(self.status, traceback=tb,
-                                           message=self._message), 'utf-8')
+        content = self.get_error_page(self.status, traceback=tb,
+            message=self._message).encode('utf-8')
         response.body = content
 
         _be_ie_unfriendly(self.code)
