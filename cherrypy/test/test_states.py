@@ -251,8 +251,7 @@ class ServerStateTests(helper.CPWebCase):
     def test_4_Autoreload(self):
         # Start the demo script in a new process
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
-        p.write_conf(
-                extra='test_case_name: "test_4_Autoreload"')
+        p.write_conf(extra='test_case_name: "test_4_Autoreload"')
         p.start(imports='cherrypy.test._test_states_demo')
         try:
             self.getPage("/start")
