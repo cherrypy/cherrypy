@@ -14,6 +14,7 @@ import warnings
 
 import cherrypy
 from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
+from cherrypy._cpcompat import spawn
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.lib.reprconf import unrepr
@@ -437,8 +438,11 @@ server.ssl_private_key: r'%s'
         """Start cherryd in a subprocess."""
         cherrypy._cpserver.wait_for_free_port(self.host, self.port)
 
-        args = [sys.executable, os.path.join(thisdir, '..', 'cherryd'),
-                '-c', self.config_file, '-p', self.pid_file]
+        args = [
+            os.path.join(thisdir, '..', 'cherryd'),
+            '-c', self.config_file,
+            '-p', self.pid_file,
+        ]
 
         if not isinstance(imports, (list, tuple)):
             imports = [imports]
@@ -457,10 +461,10 @@ server.ssl_private_key: r'%s'
             env['PYTHONPATH'] = os.pathsep.join((grandparentdir, env['PYTHONPATH']))
         else:
             env['PYTHONPATH'] = grandparentdir
+        res = spawn([sys.executable] + args, env, wait=self.wait)
         if self.wait:
-            self.exit_code = os.spawnve(os.P_WAIT, sys.executable, args, env)
+            self.exit_code = res
         else:
-            os.spawnve(os.P_NOWAIT, sys.executable, args, env)
             cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
 
         # Give the engine a wee bit more time to finish STARTING
