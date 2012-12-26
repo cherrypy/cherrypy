@@ -8,6 +8,7 @@ import socket
 
 import cherrypy
 import cherrypy.process.servers
+from cherrypy.test import helper
 
 engine = cherrypy.engine
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -83,12 +84,7 @@ def setup_server():
 
     db_connection.subscribe()
 
-
-
 # ------------ Enough helpers. Time for real live test cases. ------------ #
-
-
-from cherrypy.test import helper
 
 class ServerStateTests(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
