@@ -345,3 +345,9 @@ class SetDaemonProperty:
 
     if sys.version_info < (2,6):
         daemon = property(__get_daemon, __set_daemon)
+
+# Use subprocess module from Python 2.7 on Python 2.3-2.6
+if sys.version_info < (2,7):
+    import cherrypy._cpcompat_subprocess as subprocess
+else:
+    import subprocess

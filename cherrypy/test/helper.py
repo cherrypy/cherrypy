@@ -14,6 +14,7 @@ import warnings
 
 import cherrypy
 from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
+from cherrypy._cpcompat import subprocess
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.lib.reprconf import unrepr
@@ -437,8 +438,11 @@ server.ssl_private_key: r'%s'
         """Start cherryd in a subprocess."""
         cherrypy._cpserver.wait_for_free_port(self.host, self.port)
 
-        args = [sys.executable, os.path.join(thisdir, '..', 'cherryd'),
-                '-c', self.config_file, '-p', self.pid_file]
+        args = [
+            os.path.join(thisdir, '..', 'cherryd'),
+            '-c', self.config_file,
+            '-p', self.pid_file,
+        ]
 
         if not isinstance(imports, (list, tuple)):
             imports = [imports]
@@ -457,10 +461,10 @@ server.ssl_private_key: r'%s'
             env['PYTHONPATH'] = os.pathsep.join((grandparentdir, env['PYTHONPATH']))
         else:
             env['PYTHONPATH'] = grandparentdir
+        self._proc = subprocess.Popen([sys.executable] + args, env=env)
         if self.wait:
-            self.exit_code = os.spawnve(os.P_WAIT, sys.executable, args, env)
+            self.exit_code = self._proc.wait()
         else:
-            os.spawnve(os.P_NOWAIT, sys.executable, args, env)
             cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
 
         # Give the engine a wee bit more time to finish STARTING
@@ -470,25 +474,8 @@ server.ssl_private_key: r'%s'
             time.sleep(1)
 
     def get_pid(self):
-        return int(open(self.pid_file, 'rb').read())
+        return self._proc.pid
 
     def join(self):
         """Wait for the process to exit."""
-        try:
-            try:
-                # Mac, UNIX
-                os.wait()
-            except AttributeError:
-                # Windows
-                try:
-                    pid = self.get_pid()
-                except IOError:
-                    # Assume the subprocess deleted the pidfile on shutdown.
-                    pass
-                else:
-                    os.waitpid(pid, 0)
-        except OSError:
-            x = sys.exc_info()[1]
-            if x.args != (10, 'No child processes'):
-                raise
-
+        self._proc.wait()

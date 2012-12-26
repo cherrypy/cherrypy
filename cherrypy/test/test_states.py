@@ -8,6 +8,7 @@ import socket
 
 import cherrypy
 import cherrypy.process.servers
+from cherrypy.test import helper
 
 engine = cherrypy.engine
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -83,12 +84,7 @@ def setup_server():
 
     db_connection.subscribe()
 
-
-
 # ------------ Enough helpers. Time for real live test cases. ------------ #
-
-
-from cherrypy.test import helper
 
 class ServerStateTests(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
@@ -251,8 +247,7 @@ class ServerStateTests(helper.CPWebCase):
     def test_4_Autoreload(self):
         # Start the demo script in a new process
         p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
-        p.write_conf(
-                extra='test_case_name: "test_4_Autoreload"')
+        p.write_conf(extra='test_case_name: "test_4_Autoreload"')
         p.start(imports='cherrypy.test._test_states_demo')
         try:
             self.getPage("/start")

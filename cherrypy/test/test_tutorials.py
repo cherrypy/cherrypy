@@ -107,6 +107,9 @@ class TutorialTest(helper.CPWebCase):
             </body>
             </html>
         '''
+        # the tutorial has some annoying spaces in otherwise blank lines
+        msg = msg.replace('</h2>\n\n', '</h2>\n        \n')
+        msg = msg.replace('</p>\n\n', '</p>\n        \n')
         self.getPage("/another/")
         self.assertBody(msg)
 
