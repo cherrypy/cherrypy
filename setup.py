@@ -34,7 +34,7 @@ class cherrypy_build_py(build_py):
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.2.2"
+version = "3.2.3"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers=[
@@ -70,7 +70,7 @@ packages=[
     "cherrypy.scaffold",
     "cherrypy.wsgiserver",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.2.2/"
+download_url="http://download.cherrypy.org/cherrypy/3.2.3/"
 data_files=[
     ('cherrypy', ['cherrypy/cherryd',
                   'cherrypy/favicon.ico',

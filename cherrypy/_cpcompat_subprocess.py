@@ -398,6 +398,11 @@ import gc
 import signal
 import errno
 
+try:
+    set
+except NameError:
+    from sets import Set as set
+
 # Exception classes used by this module.
 class CalledProcessError(Exception):
     """This exception is raised when a process run by check_call() or
@@ -441,10 +446,10 @@ __all__ = ["Popen", "PIPE", "STDOUT", "call", "check_call",
            "check_output", "CalledProcessError"]
 
 if mswindows:
-    from _subprocess import (CREATE_NEW_CONSOLE, CREATE_NEW_PROCESS_GROUP,
-                             STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
-                             STD_ERROR_HANDLE, SW_HIDE,
-                             STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW)
+    from _subprocess import CREATE_NEW_CONSOLE, CREATE_NEW_PROCESS_GROUP, \
+                             STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, \
+                             STD_ERROR_HANDLE, SW_HIDE, \
+                             STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW
 
     __all__.extend(["CREATE_NEW_CONSOLE", "CREATE_NEW_PROCESS_GROUP",
                     "STD_INPUT_HANDLE", "STD_OUTPUT_HANDLE",
@@ -476,7 +481,7 @@ def _eintr_retry_call(func, *args):
     while True:
         try:
             return func(*args)
-        except (OSError, IOError) as e:
+        except (OSError, IOError), e:
             if e.errno == errno.EINTR:
                 continue
             raise
@@ -738,7 +743,7 @@ class Popen(object):
                 if input:
                     try:
                         self.stdin.write(input)
-                    except IOError as e:
+                    except IOError, e:
                         if e.errno != errno.EPIPE and e.errno != errno.EINVAL:
                             raise
                 self.stdin.close()
@@ -886,7 +891,8 @@ class Popen(object):
 
             # Start the process
             try:
-                hp, ht, pid, tid = _subprocess.CreateProcess(executable, args,
+                try:
+                    hp, ht, pid, tid = _subprocess.CreateProcess(executable, args,
                                          # no special security
                                          None, None,
                                          int(not close_fds),
@@ -894,12 +900,12 @@ class Popen(object):
                                          env,
                                          cwd,
                                          startupinfo)
-            except pywintypes.error, e:
-                # Translate pywintypes.error to WindowsError, which is
-                # a subclass of OSError.  FIXME: We should really
-                # translate errno using _sys_errlist (or similar), but
-                # how can this be done from Python?
-                raise WindowsError(*e.args)
+                except pywintypes.error, e:
+                    # Translate pywintypes.error to WindowsError, which is
+                    # a subclass of OSError.  FIXME: We should really
+                    # translate errno using _sys_errlist (or similar), but
+                    # how can this be done from Python?
+                    raise WindowsError(*e.args)
             finally:
                 # Child is launched. Close the parent's copy of those pipe
                 # handles that only the child should have open.  You need
@@ -972,7 +978,7 @@ class Popen(object):
                 if input is not None:
                     try:
                         self.stdin.write(input)
-                    except IOError as e:
+                    except IOError, e:
                         if e.errno != errno.EPIPE:
                             raise
                 self.stdin.close()
@@ -1181,7 +1187,7 @@ class Popen(object):
 
                             # Close pipe fds.  Make sure we don't close the
                             # same fd more than once, or standard fds.
-                            closed = { None }
+                            closed = set([None])
                             for fd in [p2cread, c2pwrite, errwrite]:
                                 if fd not in closed and fd > 2:
                                     os.close(fd)
@@ -1239,7 +1245,7 @@ class Popen(object):
             if data != "":
                 try:
                     _eintr_retry_call(os.waitpid, self.pid, 0)
-                except OSError as e:
+                except OSError, e:
                     if e.errno != errno.ECHILD:
                         raise
                 child_exception = pickle.loads(data)
@@ -1289,7 +1295,7 @@ class Popen(object):
             if self.returncode is None:
                 try:
                     pid, sts = _eintr_retry_call(os.waitpid, self.pid, 0)
-                except OSError as e:
+                except OSError, e:
                     if e.errno != errno.ECHILD:
                         raise
                     # This happens if SIGCLD is set to be ignored or waiting
@@ -1374,7 +1380,7 @@ class Popen(object):
                         chunk = input[input_offset : input_offset + _PIPE_BUF]
                         try:
                             input_offset += os.write(fd, chunk)
-                        except OSError as e:
+                        except OSError, e:
                             if e.errno == errno.EPIPE:
                                 close_unregister_and_remove(fd)
                             else:
@@ -1422,7 +1428,7 @@ class Popen(object):
                     chunk = input[input_offset : input_offset + _PIPE_BUF]
                     try:
                         bytes_written = os.write(self.stdin.fileno(), chunk)
-                    except OSError as e:
+                    except OSError, e:
                         if e.errno == errno.EPIPE:
                             self.stdin.close()
                             write_set.remove(self.stdin)
