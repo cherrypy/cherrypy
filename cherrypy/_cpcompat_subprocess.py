@@ -398,6 +398,11 @@ import gc
 import signal
 import errno
 
+try:
+    set
+except NameError:
+    from sets import Set as set
+
 # Exception classes used by this module.
 class CalledProcessError(Exception):
     """This exception is raised when a process run by check_call() or
