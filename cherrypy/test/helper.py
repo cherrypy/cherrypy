@@ -14,7 +14,7 @@ import warnings
 
 import cherrypy
 from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
-from cherrypy._cpcompat import spawn
+from cherrypy._cpcompat import subprocess
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.lib.reprconf import unrepr
@@ -461,9 +461,9 @@ server.ssl_private_key: r'%s'
             env['PYTHONPATH'] = os.pathsep.join((grandparentdir, env['PYTHONPATH']))
         else:
             env['PYTHONPATH'] = grandparentdir
-        res = spawn([sys.executable] + args, env, wait=self.wait)
+        proc = subprocess.Popen([sys.executable] + args, env=env)
         if self.wait:
-            self.exit_code = res
+            self.exit_code = proc.wait()
         else:
             cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
 

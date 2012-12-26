@@ -346,20 +346,8 @@ class SetDaemonProperty:
     if sys.version_info < (2,6):
         daemon = property(__get_daemon, __set_daemon)
 
-# Prior to Python 2.4, there's no subprocess module.
-import subprocess
-if sys.version_info < (2,4):
-    def spawn(cmd, env, wait=False):
-        if wait:
-            wait_flag = os.P_WAIT
-        else:
-            wait_flag = os.P_NOWAIT
-        exe = cmd[0]
-        code = os.spawnve(wait_flag, exe, cmd, env)
-        if wait:
-            return code
+# Use subprocess module from Python 2.7 on Python 2.3-2.6
+if sys.version_info < (2,7):
+    import cherrypy._cpcompat_subprocess as subprocess
 else:
-    def spawn(cmd, env, wait=False):
-        proc = subprocess.Popen(cmd, env=env)
-        if wait:
-            return proc.wait()
+    import subprocess
