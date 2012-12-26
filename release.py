@@ -14,7 +14,7 @@ import os
 import platform
 import shutil
 
-VERSION='3.2.2'
+VERSION='3.2.3'
 
 def get_next_version():
 	digits = map(int, VERSION.split('.'))
