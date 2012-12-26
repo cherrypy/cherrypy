@@ -474,8 +474,31 @@ server.ssl_private_key: r'%s'
             time.sleep(1)
 
     def get_pid(self):
+        if self.daemonize:
+            return int(open(self.pid_file, 'rb').read())
         return self._proc.pid
 
     def join(self):
         """Wait for the process to exit."""
+        if self.daemonize:
+            return self._join_daemon()
         self._proc.wait()
+
+    def _join_daemon(self):
+        try:
+            try:
+                # Mac, UNIX
+                os.wait()
+            except AttributeError:
+                # Windows
+                try:
+                    pid = self.get_pid()
+                except IOError:
+                    # Assume the subprocess deleted the pidfile on shutdown.
+                    pass
+                else:
+                    os.waitpid(pid, 0)
+        except OSError:
+            x = sys.exc_info()[1]
+            if x.args != (10, 'No child processes'):
+                raise
