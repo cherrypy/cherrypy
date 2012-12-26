@@ -95,11 +95,6 @@ def assert_native(n):
     if not isinstance(n, nativestr):
         raise TypeError("n must be a native str (got %s)" % type(n).__name__)
 
-def always_bytes(str, encoding='utf-8'):
-    if isinstance(str, unicodestr):
-        str = str.encode(encoding)
-    return str
-
 try:
     set = set
 except NameError:

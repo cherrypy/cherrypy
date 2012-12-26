@@ -27,7 +27,7 @@ import types
 from unittest import *
 from unittest import _TextTestResult
 
-from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection, HTTPSConnection, unicodestr, always_bytes
+from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection, HTTPSConnection, unicodestr
 
 
 def interface(host):
@@ -234,8 +234,10 @@ class WebCase(TestCase):
         """Open the url with debugging support. Return status, headers, body."""
         ServerError.on = False
 
-        url = always_bytes(url)
-        body = always_bytes(body)
+        if isinstance(url, unicodestr):
+            url = url.encode('utf-8')
+        if isinstance(body, unicodestr):
+            body = body.encode('utf-8')
 
         self.url = url
         self.time = None
@@ -530,7 +532,7 @@ def openURL(url, headers=None, method="GET", body=None,
                 conn.putrequest(method.upper(), url)
 
             for key, value in headers:
-                conn.putheader(key, always_bytes(value, "Latin-1"))
+                conn.putheader(key, ntob(value, "Latin-1"))
             conn.endheaders()
 
             if body is not None:
