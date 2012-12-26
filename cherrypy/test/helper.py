@@ -461,9 +461,9 @@ server.ssl_private_key: r'%s'
             env['PYTHONPATH'] = os.pathsep.join((grandparentdir, env['PYTHONPATH']))
         else:
             env['PYTHONPATH'] = grandparentdir
-        proc = subprocess.Popen([sys.executable] + args, env=env)
+        self._proc = subprocess.Popen([sys.executable] + args, env=env)
         if self.wait:
-            self.exit_code = proc.wait()
+            self.exit_code = self._proc.wait()
         else:
             cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
 
@@ -474,25 +474,8 @@ server.ssl_private_key: r'%s'
             time.sleep(1)
 
     def get_pid(self):
-        return int(open(self.pid_file, 'rb').read())
+        return self._proc.pid
 
     def join(self):
         """Wait for the process to exit."""
-        try:
-            try:
-                # Mac, UNIX
-                os.wait()
-            except AttributeError:
-                # Windows
-                try:
-                    pid = self.get_pid()
-                except IOError:
-                    # Assume the subprocess deleted the pidfile on shutdown.
-                    pass
-                else:
-                    os.waitpid(pid, 0)
-        except OSError:
-            x = sys.exc_info()[1]
-            if x.args != (10, 'No child processes'):
-                raise
-
+        self._proc.wait()
