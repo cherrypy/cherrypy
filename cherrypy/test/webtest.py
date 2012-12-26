@@ -532,7 +532,7 @@ def openURL(url, headers=None, method="GET", body=None,
                 conn.putrequest(method.upper(), url)
 
             for key, value in headers:
-                conn.putheader(key, ntob(value, "Latin-1"))
+                conn.putheader(key, value.encode("Latin-1"))
             conn.endheaders()
 
             if body is not None:
