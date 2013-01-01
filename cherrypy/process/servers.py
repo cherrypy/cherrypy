@@ -63,7 +63,7 @@ hello.py::
 
     cherrypy.tree.mount(HelloWorld())
     # CherryPy autoreload must be disabled for the flup server to work
-    cherrypy.config.update({'engine.autoreload_on':False})
+    cherrypy.config.update({'engine.autoreload.on':False})
 
 Then run :doc:`/deployguide/cherryd` with the '-f' arg::
 

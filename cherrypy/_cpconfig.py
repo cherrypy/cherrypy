@@ -157,7 +157,7 @@ class Config(reprconf.Config):
 
     def _apply(self, config):
         """Update self from a dict."""
-        if isinstance(config.get("global", None), dict):
+        if isinstance(config.get("global"), dict):
             if len(config) > 1:
                 cherrypy.checker.global_config_contained_paths = True
             config = config["global"]
@@ -182,14 +182,14 @@ class Config(reprconf.Config):
 
 Config.environments = environments = {
     "staging": {
-        'engine.autoreload_on': False,
+        'engine.autoreload.on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         'request.show_mismatched_params': False,
         },
     "production": {
-        'engine.autoreload_on': False,
+        'engine.autoreload.on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
@@ -198,7 +198,7 @@ Config.environments = environments = {
         },
     "embedded": {
         # For use with CherryPy embedded in another deployment stack.
-        'engine.autoreload_on': False,
+        'engine.autoreload.on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
@@ -208,7 +208,7 @@ Config.environments = environments = {
         'engine.SIGTERM': None,
         },
     "test_suite": {
-        'engine.autoreload_on': False,
+        'engine.autoreload.on': False,
         'checker.on': False,
         'tools.log_headers.on': False,
         'request.show_tracebacks': True,
@@ -248,6 +248,15 @@ Config.namespaces["server"] = _server_namespace_handler
 def _engine_namespace_handler(k, v):
     """Backward compatibility handler for the "engine" namespace."""
     engine = cherrypy.engine
+
+    deprecated = {'autoreload_on': 'autoreload.on', 'autoreload_frequency': 'autoreload.frequency',
+        'autoreload_match': 'autoreload.match', 'reload_files': 'autoreload.files',
+        'deadlock_poll_freq': 'timeout_monitor.frequency'}
+
+    if k in deprecated:
+        engine.log('WARNING: Use of engine.%s is deprecated and will be removed in '
+            'a future version. Use engine.%s instead.' % (k, deprecated[k]))
+
     if k == 'autoreload_on':
         if v:
             engine.autoreload.subscribe()

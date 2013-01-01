@@ -33,5 +33,3 @@ Functions
 
 .. autofunction:: process_multipart_form_data
 
-.. autofunction:: process_multipart
-

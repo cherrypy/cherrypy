@@ -77,9 +77,9 @@ or, in python code::
             'tools.trailing_slash.on': False,
         }
     }
-    cherrypy.tree.mount(Root(), "/", config=config)
+    cherrypy.tree.mount(Root(), config=config)
 
-CherryPy doesn't use any sections that don't start with ``"/"`` (except
+CherryPy only uses sections that start with ``"/"`` (except
 ``[global]``, see below). That means you can place your own configuration
 entries in a CherryPy config file by giving them a section name which does not
 start with ``"/"``. For example, you might include database entries like this::
@@ -164,7 +164,7 @@ an application, you'll see the tracebacks. In other words, use this order::
                             })
 
     # Mount each app and pass it its own config
-    cherrypy.tree.mount(root1, "/", appconf1)
+    cherrypy.tree.mount(root1, "", appconf1)
     cherrypy.tree.mount(root2, "/forum", appconf2)
     cherrypy.tree.mount(root3, "/blog", appconf3)
 
