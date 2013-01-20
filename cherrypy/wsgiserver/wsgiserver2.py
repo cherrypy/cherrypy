@@ -1511,13 +1511,17 @@ class ThreadPool(object):
                 self._threads.remove(t)
                 amount -= 1
 
-        if amount > 0:
-            for i in range(min(amount, len(self._threads) - self.min)):
-                # Put a number of shutdown requests on the queue equal
-                # to 'amount'. Once each of those is processed by a worker,
-                # that worker will terminate and be culled from our list
-                # in self.put.
-                self._queue.put(_SHUTDOWNREQUEST)
+        # calculate the number of threads above the minimum
+        n_extra = max(len(self._threads) - self.min, 0)
+
+        # don't remove more than amount
+        n_to_remove = min(amount, n_extra)
+
+        # put shutdown requests on the queue equal to the number of threads
+        # to remove. As each request is processed by a worker, that worker
+        # will terminate and be culled from the list.
+        for n in range(n_to_remove):
+            self._queue.put(_SHUTDOWNREQUEST)
 
     def stop(self, timeout=5):
         # Must shut down threads here so the code that calls
