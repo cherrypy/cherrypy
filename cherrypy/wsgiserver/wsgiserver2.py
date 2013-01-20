@@ -1516,7 +1516,7 @@ class ThreadPool(object):
 
     def _all_ready(workers):
         ready_states = [worker.ready for worker in workers]
-        return reduce(operator.and_, ready_states)
+        return reduce(operator.and_, ready_states, True)
     _all_ready = staticmethod(_all_ready)
 
     def shrink(self, amount):
