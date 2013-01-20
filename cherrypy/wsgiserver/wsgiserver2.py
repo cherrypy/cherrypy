@@ -1494,9 +1494,15 @@ class ThreadPool(object):
 
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
-        for i in range(amount):
-            if self.max > 0 and len(self._threads) >= self.max:
-                break
+        if self.max > 0:
+            budget = max(self.max - len(self._threads), 0)
+        else:
+            # self.max <= 0 indicates no maximum
+            budget = float('inf')
+
+        n_new = min(amount, budget)
+
+        for i in range(n_new):
             worker = WorkerThread(self.server)
             worker.setName("CP Server " + worker.getName())
             self._threads.append(worker)
