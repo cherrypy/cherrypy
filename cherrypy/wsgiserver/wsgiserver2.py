@@ -109,7 +109,6 @@ def format_exc(limit=None):
 
 
 from urllib import unquote
-from urlparse import urlparse
 import warnings
 
 if sys.version_info >= (3, 0):

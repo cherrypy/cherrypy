@@ -97,10 +97,6 @@ DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 import threading
 import time
 from traceback import format_exc
-from urllib.parse import unquote
-from urllib.parse import urlparse
-from urllib.parse import scheme_chars
-import warnings
 
 if sys.version_info >= (3, 0):
     bytestr = bytes
