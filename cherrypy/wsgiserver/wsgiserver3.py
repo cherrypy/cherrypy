@@ -1234,6 +1234,8 @@ class ThreadPool(object):
         n_new = min(amount, budget)
 
         workers = [self._spawn_worker() for i in range(n_new)]
+        while not all(worker.ready for worker in workers):
+            time.sleep(.1)
         self._threads.extend(workers)
 
     def _spawn_worker(self):

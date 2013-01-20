@@ -107,6 +107,7 @@ def format_exc(limit=None):
     finally:
         etype = value = tb = None
 
+import operator
 
 from urllib import unquote
 import warnings
@@ -1503,6 +1504,8 @@ class ThreadPool(object):
         n_new = min(amount, budget)
 
         workers = [self._spawn_worker() for i in range(n_new)]
+        while not self._all_ready(workers):
+            time.sleep(.1)
         self._threads.extend(workers)
 
     def _spawn_worker(self):
@@ -1510,6 +1513,11 @@ class ThreadPool(object):
         worker.setName("CP Server " + worker.getName())
         worker.start()
         return worker
+
+    def _all_ready(workers):
+        ready_states = [worker.ready for worker in workers]
+        return reduce(operator.and_, ready_states)
+    _all_ready = staticmethod(_all_ready)
 
     def shrink(self, amount):
         """Kill off worker threads (not below self.min)."""
