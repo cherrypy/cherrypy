@@ -1504,7 +1504,7 @@ class ThreadPool(object):
         n_new = min(amount, budget)
 
         workers = [self._spawn_worker() for i in range(n_new)]
-        while not self._all_ready(workers):
+        while not self._all(operator.attrgetter('ready'), workers):
             time.sleep(.1)
         self._threads.extend(workers)
 
@@ -1514,10 +1514,10 @@ class ThreadPool(object):
         worker.start()
         return worker
 
-    def _all_ready(workers):
-        ready_states = [worker.ready for worker in workers]
-        return reduce(operator.and_, ready_states, True)
-    _all_ready = staticmethod(_all_ready)
+    def _all(func, items):
+        results = [func(item) for item in items]
+        return reduce(operator.and_, results, True)
+    _all = staticmethod(_all)
 
     def shrink(self, amount):
         """Kill off worker threads (not below self.min)."""
