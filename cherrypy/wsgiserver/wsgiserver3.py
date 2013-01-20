@@ -1233,11 +1233,14 @@ class ThreadPool(object):
 
         n_new = min(amount, budget)
 
-        for i in range(n_new):
-            worker = WorkerThread(self.server)
-            worker.setName("CP Server " + worker.getName())
-            self._threads.append(worker)
-            worker.start()
+        workers = [self._spawn_worker() for i in range(n_new)]
+        self._threads.extend(workers)
+
+    def _spawn_worker(self):
+        worker = WorkerThread(self.server)
+        worker.setName("CP Server " + worker.getName())
+        worker.start()
+        return worker
 
     def shrink(self, amount):
         """Kill off worker threads (not below self.min)."""
