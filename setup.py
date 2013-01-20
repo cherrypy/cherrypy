@@ -14,7 +14,6 @@ except ImportError:
 from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.build_py import build_py
 import sys
-import os
 import re
 
 class cherrypy_build_py(build_py):
