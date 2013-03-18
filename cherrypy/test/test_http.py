@@ -154,6 +154,12 @@ class HTTPTests(helper.CPWebCase):
         self.assertEqual(response.fp.read(22), ntob("Malformed Request-Line"))
         c.close()
 
+    def test_request_line_split_issue_1220(self):
+        Request_URI = "/index?intervenant-entreprise-evenement_classaction=evenement-mailremerciements&_path=intervenant-entreprise-evenement&intervenant-entreprise-evenement_action-id=19404&intervenant-entreprise-evenement_id=19404&intervenant-entreprise_id=28092"
+        self.assertEqual(len("GET %s HTTP/1.1\r\n" % Request_URI), 256)
+        self.getPage(Request_URI)
+        self.assertBody("Hello world!")
+
     def test_malformed_header(self):
         if self.scheme == 'https':
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))

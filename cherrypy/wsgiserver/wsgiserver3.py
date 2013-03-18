@@ -266,7 +266,7 @@ class SizeCheckWrapper(object):
             self._check_length()
             res.append(data)
             # See https://bitbucket.org/cherrypy/cherrypy/issue/421
-            if len(data) < 256 or data[-1:] == "\n":
+            if len(data) < 256 or data[-1:] == LF:
                 return EMPTY.join(res)
 
     def readlines(self, sizehint=0):
