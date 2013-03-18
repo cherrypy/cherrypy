@@ -161,6 +161,7 @@ def plat_specific_errors(*errnames):
 socket_error_eintr = plat_specific_errors("EINTR", "WSAEINTR")
 
 socket_errors_to_ignore = plat_specific_errors(
+    "EPERM",
     "EPIPE",
     "EBADF", "WSAEBADF",
     "ENOTSOCK", "WSAENOTSOCK",
@@ -276,7 +277,7 @@ class SizeCheckWrapper(object):
             self._check_length()
             res.append(data)
             # See https://bitbucket.org/cherrypy/cherrypy/issue/421
-            if len(data) < 256 or data[-1:] == "\n":
+            if len(data) < 256 or data[-1:] == LF:
                 return EMPTY.join(res)
 
     def readlines(self, sizehint=0):
@@ -1049,7 +1050,13 @@ class CP_fileobject(socket._fileobject):
                         buf.write(data)
                         del data  # explicit free
                         break
-                    assert n <= left, "recv(%d) returned %d bytes" % (left, n)
+                    elif n > left:
+                        # Could happen with SSL transport. Differ
+                        # extra data read to the next call
+                        buf.write(data[:left])
+                        self._rbuf.write(data[left:])
+                        del data
+                        break
                     buf.write(data)
                     buf_len += n
                     del data  # explicit free
@@ -1343,6 +1350,9 @@ class HTTPConnection(object):
                     "The client sent a plain HTTP request, but "
                     "this server only speaks HTTPS on this port.")
                 self.linger = True
+        except TypeError:
+            # Python bug #9729: http://bugs.python.org/issue9729
+            return
         except Exception:
             e = sys.exc_info()[1]
             self.server.error_log(repr(e), level=logging.ERROR, traceback=True)
@@ -1602,16 +1612,41 @@ class SSLAdapter(object):
         * ``makefile(sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE) -> socket file object``
     """
 
-    def __init__(self, certificate, private_key, certificate_chain=None):
+    def __init__(self, certificate, private_key, certificate_chain=None,
+                 client_CA=None):
         self.certificate = certificate
         self.private_key = private_key
         self.certificate_chain = certificate_chain
+        self.client_CA = client_CA
 
     def wrap(self, sock):
         raise NotImplemented
 
     def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
         raise NotImplemented
+
+    @staticmethod
+    def possible_addresses(address):
+        name, port = address[:2]
+        canonical, alt_hosts, host_ips = socket.gethostbyaddr(name)
+        all_addrs = set([name] + [canonical] + alt_hosts + host_ips)
+        all_addrs.update(info[4][0] for addr in all_addrs.copy()
+                                    for info in socket.getaddrinfo(addr, port))
+        return all_addrs
+
+    @staticmethod
+    def _matches(addr, cname):
+        if cname.startswith("*."):
+            return addr == cname[2:] or addr.endswith(cname[1:])
+        else:
+            return addr == cname
+
+    @staticmethod
+    def address_matches(address, common_name):
+        for possible in SSLAdapter.possible_addresses(address):
+            if SSLAdapter._matches(possible, common_name):
+                return True
+        return False
 
 
 class HTTPServer(object):
