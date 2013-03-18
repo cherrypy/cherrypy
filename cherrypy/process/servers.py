@@ -150,8 +150,7 @@ class ServerAdapter(object):
         if self.bind_addr is None:
             on_what = "unknown interface (dynamic?)"
         elif isinstance(self.bind_addr, tuple):
-            host, port = self.bind_addr
-            on_what = "http://%s:%s" % (host, port)
+            on_what = self._get_base()
         else:
             on_what = "socket file: %s" % self.bind_addr
 
@@ -176,6 +175,21 @@ class ServerAdapter(object):
         self.running = True
         self.bus.log("Serving on %s" % on_what)
     start.priority = 75
+
+    def _get_base(self):
+        if not self.httpserver:
+            return ''
+        host, port = self.bind_addr
+        if getattr(self.httpserver, 'ssl_certificate', None):
+            scheme = "https"
+            if port != 443:
+                host += ":%s" % port
+        else:
+            scheme = "http"
+            if port != 80:
+                host += ":%s" % port
+
+        return "%s://%s" % (scheme, host)
 
     def _start_http_thread(self):
         """HTTP servers MUST be running in new threads, so that the
