@@ -1,6 +1,6 @@
-*********************
-Tutorial and Concepts
-*********************
+********
+Tutorial
+********
 
 What is this tutorial about?
 ============================

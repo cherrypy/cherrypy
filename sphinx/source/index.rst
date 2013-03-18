@@ -20,7 +20,7 @@ Sections
 ---------------------------------
 *The who, what, and why of CherryPy*
 
-:doc:`Concepts <concepts/index>`
+:doc:`Tutorial <tutorial/index>`
 ---------------------------------
 *The basics of CherryPy*
 
