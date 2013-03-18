@@ -151,7 +151,7 @@ class ServerAdapter(object):
             on_what = "unknown interface (dynamic?)"
         elif isinstance(self.bind_addr, tuple):
             host, port = self.bind_addr
-            on_what = "%s:%s" % (host, port)
+            on_what = "http://%s:%s" % (host, port)
         else:
             on_what = "socket file: %s" % self.bind_addr
 
