@@ -2,7 +2,7 @@
    :hidden:
 
    intro/index
-   concepts/index
+   tutorial/index
    progguide/index
    deployguide/index
    refman/index

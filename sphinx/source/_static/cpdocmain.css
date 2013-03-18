@@ -10,14 +10,14 @@
 body {
     font-family: sans-serif;
     font-size: 100%;
-    background-color: #880000;
+    background:  url("body.png") repeat;
     color: #000;
     margin: 0;
     padding: 0;
 }
 
 div.document {
-    background-color: #880000;
+    background:  url("body.png") repeat;
 }
 
 div.documentwrapper {
@@ -36,7 +36,7 @@ div.body {
 }
 
 div.footer {
-    color: white;
+    color: #BF0000;
     width: 100%;
     padding: 9px 0 9px 0;
     text-align: center;
@@ -44,18 +44,18 @@ div.footer {
 }
 
 div.footer a {
-    color: white;
+    color: #BF0000;
     text-decoration: underline;
 }
 
 div.related {
-    background-color: #880000;
+    background:  url("body.png") repeat;
     line-height: 30px;
-    color: white;
+    color: #BF0000;
 }
 
 div.related a {
-    color: #FFEEEE;
+    color: #BF0000;
 }
 
 div.sphinxsidebar {
@@ -63,7 +63,7 @@ div.sphinxsidebar {
 
 div.sphinxsidebar h3 {
     font-family: 'Trebuchet MS', sans-serif;
-    color: white;
+    color: #BF0000;
     font-size: 1.4em;
     font-weight: normal;
     margin: 0;
@@ -71,12 +71,12 @@ div.sphinxsidebar h3 {
 }
 
 div.sphinxsidebar h3 a {
-    color: white;
+    color: #BF0000;
 }
 
 div.sphinxsidebar h4 {
     font-family: 'Trebuchet MS', sans-serif;
-    color: white;
+    color: #BF0000;
     font-size: 1.3em;
     font-weight: normal;
     margin: 5px 0 0 0;
@@ -84,7 +84,7 @@ div.sphinxsidebar h4 {
 }
 
 div.sphinxsidebar p {
-    color: white;
+    color: #BF0000;
 }
 
 div.sphinxsidebar p.topless {
@@ -94,11 +94,12 @@ div.sphinxsidebar p.topless {
 div.sphinxsidebar ul {
     margin: 10px;
     padding: 0;
-    color: white;
+    color: #BF0000;
 }
 
 div.sphinxsidebar a {
-    color: #FFEEEE;
+    color: #666666
+
 }
 
 div.sphinxsidebar input {
@@ -130,7 +131,7 @@ div.body h4,
 div.body h5,
 div.body h6 {
     font-family: 'Trebuchet MS', sans-serif;
-    background-color: #FFF8FB;
+    background-color: white;
     font-weight: normal;
     color: black;
     border-bottom: 1px solid #ccc;
@@ -154,7 +155,7 @@ a.headerlink {
 
 a.headerlink:hover {
     background-color: #660000;
-    color: white;
+    color: #BF0000;
 }
 
 div.body p, div.body dd, div.body li {
@@ -199,7 +200,7 @@ p.admonition-title:after {
 
 pre {
     padding: 5px;
-    background-color: #FFEEEE;
+    background-color: #F9F9F9;
     color: #333333;
     line-height: 120%;
     border: 1px solid #ac9;
