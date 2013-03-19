@@ -54,4 +54,5 @@ Start the Tutorial
    config
    tools
    engine
+   REST
 

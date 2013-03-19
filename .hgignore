@@ -6,3 +6,8 @@ build/*
 dist/*
 *.swp
 *.log
+lib
+share
+bin
+*.kdev4
+include
