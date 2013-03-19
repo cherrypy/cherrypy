@@ -9,13 +9,13 @@ Introduction
 
 When people ask this question, they usually mean "how fast will my CherryPy-based application be ?".
 
-In 99% of the cases, the answer is "this depends on your actual application code, not on !CherryPy itself".
+In 99% of the cases, the answer is "this depends on your actual application code, not on CherryPy itself".
 
 The reason is that, for 99% of the real-world dynamic applications, most of the time spent to return a page will be spent in your actual application code, and the time actually spent in the CherryPy code will be negligible.
 
 For instance, a typical page that requires a few database calls to be built might take in total 200ms to be served. Out of these 200ms, about 2ms will be spent by CherryPy itself, and 198ms will be spend in your actual database calls and page rendering...
 
-So you can see that, if you want to optimize anything, you should really optimize your actual application code before you try to optimize !CherryPy
+So you can see that, if you want to optimize anything, you should really optimize your actual application code before you try to optimize CherryPy.
 
 Raw speed of the CherryPy HTTP server
 =====================================

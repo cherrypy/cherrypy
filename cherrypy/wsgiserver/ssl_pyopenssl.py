@@ -1,7 +1,7 @@
 """A library for integrating pyOpenSSL with CherryPy.
 
 The OpenSSL module must be importable for SSL functionality.
-You can obtain it from http://pyopenssl.sourceforge.net/
+You can obtain it from `here <https://launchpad.net/pyopenssl>`_.
 
 To use this module, set CherryPyWSGIServer.ssl_adapter to an instance of
 SSLAdapter. There are two ways to use SSL:

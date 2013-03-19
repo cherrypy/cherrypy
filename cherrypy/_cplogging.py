@@ -207,9 +207,9 @@ class LogManager(object):
     def access(self):
         """Write to the access log (in Apache/NCSA Combined Log format).
 
-        See http://httpd.apache.org/docs/2.0/logs.html#combined for format
-        details.
-
+        See `the apache documentation <http://httpd.apache.org/docs/current/logs.html#combined>`_
+        for format details.
+        
         CherryPy calls this automatically for you. Note there are no arguments;
         it collects the data itself from
         :class:`cherrypy.request<cherrypy._cprequest.Request>`.

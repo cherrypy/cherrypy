@@ -369,7 +369,7 @@ Replacing page handlers
 -----------------------
 
 The handler that's going to be called during a request is available at
-:attr:`cherrypy.request.handler <cherrypy._cprequest.Request.handler`,
+:attr:`cherrypy.request.handler <cherrypy._cprequest.Request.handler>`,
 which means your code has a chance to replace it before the handler runs.
 It's a snap to write a Tool to do so with a
 :class:`HandlerWrapperTool <cherrypy._cptools.HandlerWrapperTool>`::

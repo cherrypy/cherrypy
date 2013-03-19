@@ -110,7 +110,7 @@ This dict contains only those config entries which apply to the given request.
 
 .. note::
 
-   when you do an :class:`InternalRedirect<cherrypy._cperror.InternalRedirect`,
+   when you do an :class:`InternalRedirect<cherrypy._cperror.InternalRedirect>`,
    this config attribute is recalculated for the new path.
 
 Declaration
@@ -353,7 +353,7 @@ tools
 ^^^^^
 
 Enables and configures additional request-processing packages. See the
-:doc:`/concepts/tools` overview for more information.
+:doc:`/tutorial/tools` overview for more information.
 
 wsgi
 ^^^^

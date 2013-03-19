@@ -28,10 +28,10 @@ Stable versions
 Download
 --------
 
-You may download this version from http://download.cherrypy.org/cherrypy/3.2.0rc1/
+You may download this version from `here <http://download.cherrypy.org/cherrypy/3.2.3/>`_ 
 
 For other releases, browse our
-`download index <http://download.cherrypy.org/ download index>`_.
+`download index <http://download.cherrypy.org/cherrypy>`_.
 
 Windows Installation
 --------------------
@@ -70,26 +70,18 @@ Development versions
 CherryPy's source code is managed using `Mercurial <http://mercurial.selenic.com/>`_,
 a source code control system written in python.
 
-You can access our Subversion repository using your favorite
-Mercurial client at https://bitbucket.org/cherrypy/cherrypy
+You can access our Mercurial repository using your favorite
+Mercurial client at `bitbucket <https://bitbucket.org/cherrypy/cherrypy>`_.
 
 For Windows users, we recommend the wonderful Mercurial
 client `TortoiseHg <http://tortoisehg.org/>`_. Users of
 other operating systems are advised to use multi-platform
-or the command line tools provided by the
-`core Mercurrial distribution <http://mercurial.selenic.com/>`_.
-RSS feeds. This web interface is located at https://bitbucket.org/cherrypy/cherrypy/src
-
-You may also browse present and past versions of CherryPy source code,
-inspect change sets, and even follow changes to specific trees/files using
- This web interface is located at https://bitbucket.org/cherrypy/cherrypy/src
-
-Usage notes
------------
+command line tools provided by the
+`core Mercurial distribution <http://mercurial.selenic.com/downloads/>`_.
 
 * To submit a patch fork the repository and submit your pull request.
-  For further information please contact us via email or IRC (see
-  http://bitbucket.org/cherrypy/cherrypy/wiki/CherryPyInvolved).
+  For further information please contact us via email or IRC
+  (see `getting involved <http://bitbucket.org/cherrypy/cherrypy/wiki/CherryPyInvolved>`_).
 
 Standalone WSGI server
 ----------------------

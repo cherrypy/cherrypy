@@ -277,7 +277,7 @@ class Entity(object):
 
     Between the ``before_request_body`` and ``before_handler`` tools, CherryPy
     tries to process the request body (if any) by calling
-    :func:`request.body.process<cherrypy._cpreqbody.RequestBody.process`.
+    :func:`request.body.process<cherrypy._cpreqbody.RequestBody.process>`.
     This uses the ``content_type`` of the Entity to look up a suitable processor
     in :attr:`Entity.processors<cherrypy._cpreqbody.Entity.processors>`, a dict.
     If a matching processor cannot be found for the complete Content-Type,

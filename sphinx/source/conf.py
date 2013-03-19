@@ -23,7 +23,7 @@ import sys, os
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.intersphinx']
-intersphinx_mapping = {'http://www.python.org/doc/2.6.4': None}
+intersphinx_mapping = {'http://docs.python.org/2/': None}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -39,7 +39,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'CherryPy'
-copyright = u'2010, CherryPy Team'
+copyright = u'2013, CherryPy Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

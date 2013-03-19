@@ -56,7 +56,7 @@ The 'error_page' config namespace can be used to provide custom HTML output for
 expected responses (like 404 Not Found). Supply a filename from which the output
 will be read. The contents will be interpolated with the values %(status)s,
 %(message)s, %(traceback)s, and %(version)s using plain old Python
-`string formatting <http://www.python.org/doc/2.6.4/library/stdtypes.html#string-formatting-operations>`_.
+`string formatting <http://docs.python.org/2/library/stdtypes.html#string-formatting-operations>`_.
 
 ::
 
