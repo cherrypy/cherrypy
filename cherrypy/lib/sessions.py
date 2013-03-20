@@ -145,7 +145,10 @@ class Session(object):
     True if the application called session.regenerate(). This is not set by
     internal calls to regenerate the session id."""
 
-    debug=False
+    debug = False
+    "If True, log debug information."
+
+    # --------------------- Session management methods --------------------- #
 
     def __init__(self, id=None, **kwargs):
         self.id_observers = []
@@ -162,7 +165,10 @@ class Session(object):
             self._regenerate()
         else:
             self.id = id
-            if not self._exists():
+            if self._exists():
+                if self.debug:
+                    cherrypy.log('Set id to %s.' % id, 'TOOLS.SESSIONS')
+            else:
                 if self.debug:
                     cherrypy.log('Expired or malicious session %r; '
                                  'making a new one' % id, 'TOOLS.SESSIONS')
@@ -187,11 +193,18 @@ class Session(object):
 
     def _regenerate(self):
         if self.id is not None:
+            if self.debug:
+                cherrypy.log(
+                    'Deleting the existing session %r before '
+                    'regeneration.' % self.id,
+                    'TOOLS.SESSIONS')
             self.delete()
 
         old_session_was_locked = self.locked
         if old_session_was_locked:
             self.release_lock()
+            if self.debug:
+                cherrypy.log('Old lock released.', 'TOOLS.SESSIONS')
 
         self.id = None
         while self.id is None:
@@ -199,9 +212,14 @@ class Session(object):
             # Assert that the generated id is not already stored.
             if self._exists():
                 self.id = None
+        if self.debug:
+            cherrypy.log('Set id to generated %s.' % self.id,
+                         'TOOLS.SESSIONS')
 
         if old_session_was_locked:
             self.acquire_lock()
+            if self.debug:
+                cherrypy.log('Regenerated lock acquired.', 'TOOLS.SESSIONS')
 
     def clean_up(self):
         """Clean up expired sessions."""
@@ -220,14 +238,21 @@ class Session(object):
                 t = datetime.timedelta(seconds = self.timeout * 60)
                 expiration_time = self.now() + t
                 if self.debug:
-                    cherrypy.log('Saving with expiry %s' % expiration_time,
+                    cherrypy.log('Saving session %r with expiry %s' %
+                                 (self.id, expiration_time),
                                  'TOOLS.SESSIONS')
                 self._save(expiration_time)
-
+            else:
+                if self.debug:
+                    cherrypy.log(
+                        'Skipping save of session %r (no session loaded).' %
+                        self.id, 'TOOLS.SESSIONS')
         finally:
             if self.locked:
                 # Always release the lock if the user didn't release it
                 self.release_lock()
+                if self.debug:
+                    cherrypy.log('Lock released after save.', 'TOOLS.SESSIONS')
 
     def load(self):
         """Copy stored session data into this session instance."""
@@ -235,9 +260,13 @@ class Session(object):
         # data is either None or a tuple (session_data, expiration_time)
         if data is None or data[1] < self.now():
             if self.debug:
-                cherrypy.log('Expired session, flushing data', 'TOOLS.SESSIONS')
+                cherrypy.log('Expired session %r, flushing data.' % self.id,
+                             'TOOLS.SESSIONS')
             self._data = {}
         else:
+            if self.debug:
+                cherrypy.log('Data loaded for session %r.' % self.id,
+                             'TOOLS.SESSIONS')
             self._data = data[0]
         self.loaded = True
 
@@ -245,7 +274,7 @@ class Session(object):
         # The instances are created and destroyed per-request.
         cls = self.__class__
         if self.clean_freq and not cls.clean_thread:
-            # clean_up is in instancemethod and not a classmethod,
+            # clean_up is an instancemethod and not a classmethod,
             # so that tool config can be accessed inside the method.
             t = cherrypy.process.plugins.Monitor(
                 cherrypy.engine, self.clean_up, self.clean_freq * 60,
@@ -253,10 +282,17 @@ class Session(object):
             t.subscribe()
             cls.clean_thread = t
             t.start()
+            if self.debug:
+                cherrypy.log('Started cleanup thread.', 'TOOLS.SESSIONS')
 
     def delete(self):
         """Delete stored session data."""
         self._delete()
+        if self.debug:
+            cherrypy.log('Deleted session %s.' % self.id,
+                         'TOOLS.SESSIONS')
+
+    # -------------------- Application accessor methods -------------------- #
 
     def __getitem__(self, key):
         if not self.loaded: self.load()
@@ -471,6 +507,8 @@ class FileSession(Session):
                 os.close(lockfd)
                 break
         self.locked = True
+        if self.debug:
+            cherrypy.log('Lock acquired.', 'TOOLS.SESSIONS')
 
     def release_lock(self, path=None):
         """Release the lock on the currently-loaded session data."""
@@ -490,6 +528,13 @@ class FileSession(Session):
                 #   if it's expired. If it fails, nevermind.
                 path = os.path.join(self.storage_path, fname)
                 self.acquire_lock(path)
+                if self.debug:
+                    # This is a bit of a hack, since we're calling clean_up
+                    # on the first instance rather than the entire class,
+                    # so depending on whether you have "debug" set on the
+                    # path of the first session called, this may not run.
+                    cherrypy.log('Cleanup lock acquired.', 'TOOLS.SESSIONS')
+
                 try:
                     contents = self._load(path)
                     # _load returns None on IOError
@@ -578,6 +623,8 @@ class PostgresqlSession(Session):
         self.locked = True
         self.cursor.execute('select id from session where id=%s for update',
                             (self.id,))
+        if self.debug:
+            cherrypy.log('Lock acquired.', 'TOOLS.SESSIONS')
 
     def release_lock(self):
         """Release the lock on the currently-loaded session data."""
@@ -660,6 +707,8 @@ class MemcachedSession(Session):
         """Acquire an exclusive lock on the currently-loaded session data."""
         self.locked = True
         self.locks.setdefault(self.id, threading.RLock()).acquire()
+        if self.debug:
+            cherrypy.log('Lock acquired.', 'TOOLS.SESSIONS')
 
     def release_lock(self):
         """Release the lock on the currently-loaded session data."""
@@ -704,6 +753,8 @@ def close():
     if getattr(sess, "locked", False):
         # If the session is still locked we release the lock
         sess.release_lock()
+        if self.debug:
+            cherrypy.log('Lock released on close.', 'TOOLS.SESSIONS')
 close.failsafe = True
 close.priority = 90
 
