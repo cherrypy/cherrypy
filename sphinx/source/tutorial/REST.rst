@@ -29,7 +29,7 @@ We will also not use a database in this tutorial for the sake of concentrating s
 
     Fortunately, CherryPy has done it for us. For instance, if our backend app receives a request with wrong parameters, CherryPy will raise a ``400 Bad Request`` response automatically.
 
-Download the :download:`complete tutorial file <files/songs.py>`.
+Download the :download:`complete example file <files/songs.py>`.
 
 Getting Started
 ===============
@@ -184,13 +184,19 @@ This method defines the next unique ID and adds an item to the ``songs`` diction
 
 Note that we do not validate the input arguments. CherryPy does it for us. If any parameter is missing or and extra one is provided, the 400 Bad Request error will be raised automatically.
 
-.. hint:: Sending POST, PUT, and DELETE requests
+.. note::
 
-    Unlike GET request, POST, PUT, and DELETE requests cannot be sent via the browser address field.
+    Unlike GET request, POST, PUT, and DELETE requests cannot be sent via the browser URL promt.
 
     You will need to use some special software to do it.
 
     The recommendation here is to use `cURL <http://en.wikipedia.org/wiki/CURL>`_, which is available by default in most GNU/Linux distributions and is available for Windows and Mac.
+
+    Basic cURL usage to send a request, applied in the examples below, is as follows:
+
+    .. code-block:: bash
+
+        curl -d <param1>=<value1> -d <param2>=<value2> -X <HTTPMethod> <URL>
 
     You can send GET requests with cURL too, but using a browser is easier.
 
