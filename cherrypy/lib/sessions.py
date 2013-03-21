@@ -469,6 +469,7 @@ class FileSession(Session):
         return os.path.exists(path)
 
     def _load(self, path=None):
+        assert self.locked, "The session load without being locked.  Check your tools' priority levels."
         if path is None:
             path = self._get_file_path()
         try:
@@ -477,10 +478,13 @@ class FileSession(Session):
                 return pickle.load(f)
             finally:
                 f.close()
-        except (IOError, EOFError):
+        except (IOError, EOFError), e:
+            if self.debug:
+                cherrypy.log("Error loading the session pickle: %s" % e, 'TOOLS.SESSIONS')
             return None
 
     def _save(self, expiration_time):
+        assert self.locked, "The session was saved without being locked.  Check your tools' priority levels."
         f = open(self._get_file_path(), "wb")
         try:
             pickle.dump((self._data, expiration_time), f, self.pickle_protocol)
@@ -488,6 +492,7 @@ class FileSession(Session):
             f.close()
 
     def _delete(self):
+        assert self.locked, "The session deletion without being locked.  Check your tools' priority levels."
         try:
             os.unlink(self._get_file_path())
         except OSError:
