@@ -29,6 +29,24 @@ class PageHandler(object):
         self.args = args
         self.kwargs = kwargs
 
+    def get_args(self):
+        return cherrypy.serving.request.args
+
+    def set_args(self, args):
+        cherrypy.serving.request.args = args
+        return cherrypy.serving.request.args
+    
+    args = property(get_args, set_args, doc="The ordered args should be accessible from post dispatch hooks")
+
+    def get_kwargs(self):
+        return cherrypy.serving.request.kwargs
+
+    def set_kwargs(self, kwargs):
+        cherrypy.serving.request.kwargs = kwargs
+        return cherrypy.serving.request.kwargs
+    
+    kwargs = property(get_kwargs, set_kwargs, doc="The named kwargs should be accessible from post dispatch hooks")
+
     def __call__(self):
         try:
             return self.callable(*self.args, **self.kwargs)
