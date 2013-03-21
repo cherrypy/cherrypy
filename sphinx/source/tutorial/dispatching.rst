@@ -92,10 +92,14 @@ In this example, the URL ``http://localhost/some/page`` will be mapped to the
 In our HelloWorld example, adding the ``http://localhost/onepage/`` mapping
 to ``OnePage().index`` could be done like this::
 
+    import cherrypy
+
+
     class OnePage(object):
         def index(self):
             return "one page!"
         index.exposed = True
+
 
     class HelloWorld(object):
         onepage = OnePage()
@@ -114,11 +118,29 @@ Normal methods
 CherryPy can directly call methods on the mounted objects, if it receives a
 URL that is directly mapped to them. For example::
 
-    def foo(self):
+
+    """This example can handle the URIs
+    /    -> OnePage.index
+    /foo -> OnePage.foo -> foo
+    """
+    import cherrypy
+
+
+    class OnePage(object):
+        def index(self):
+            return "one page!"
+        index.exposed = True
+
+
+    def foo():
         return 'Foo!'
     foo.exposed = True
 
-    root.foo = foo
+    if __name__ == '__main__':
+        root = OnePage()
+	root.foo = foo
+        cherrypy.quickstart(root)
+
 
 In the example, ``root.foo`` contains a function object, named ``foo``. When
 CherryPy receives a request for the ``/foo`` URL, it will automatically call
@@ -175,8 +197,7 @@ The following code can be used to handle this URL::
 
     class Root:
         def doLogin(self, username=None, password=None):
-            # check the username & password
-            ...
+            """Check the username & password"""
         doLogin.exposed = True
 
 Both arguments have to be declared as *keyword arguments*. The default value
@@ -214,7 +235,8 @@ following code::
 
     class Root:
         def blog(self, year, month, day):
-            ...
+	    """Deliver the blog post. According to *year* *month* *day*.
+	    """
         blog.exposed = True
 
     root = Root()
@@ -246,10 +268,14 @@ written the above "blog" example equivalently with a "default" method instead::
 
     class Blog:
         def default(self, year, month, day):
-            ...
+            """This method catch the positional arguments 
+             *year*,*month*,*day* to delivery the blog content.
+            """
         default.exposed = True
 
-    class Root: pass
+
+    class Root:
+        pass
 
     root = Root()
     root.blog = Blog()

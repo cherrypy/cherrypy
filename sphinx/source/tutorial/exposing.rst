@@ -20,15 +20,16 @@ this case, one can directly set the exposed attribute::
 
     class Root:
         def index(self):
-            ...
+	    """Handle the / URI"""
         index.exposed = True
 
 
 or use a decorator::
 
+    class Root:
         @cherrypy.expose
         def index(self):
-            ...
+	    """Handle the / URI"""
 
 
 When it is a special method, such as ``__call__``, that is to be invoked,
@@ -37,6 +38,37 @@ the exposed attribute must be set on the class itself::
     class Node:
         exposed = True
         def __call__(self):
-            ...
+            """ """
+
+The technics can be mixed, for example::
+
+    """This example can handle the URIs:
+    /       ->  Root.index
+    /page   ->  Root.page
+    /node   ->  Node.__call__
+    """
+    import cherrypy
 
 
+    class Node(object):
+        exposed = True
+    
+        def __call__(self):
+	    return "The node content"
+
+
+    class Root:
+        node = Node()
+
+        @cherrypy.expose       
+        def index(self):
+            return "The index of the root object"
+
+        def page(self):
+            return 'This is the "page" content'
+        page.exposed = True
+    
+
+    if __name__ == '__main__':
+        cherrypy.quickstart(Root())
+       
