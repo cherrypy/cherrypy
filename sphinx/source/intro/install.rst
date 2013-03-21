@@ -15,43 +15,57 @@ Prerequisites
 
 All you need is a working version of Python-2.3 or later on your computer.
 
-Get Python on Debian::
+If you need Python on Debian::
 
     $ apt-get install python python-dev
 
 
 .. _stableversions:
 
-Stable versions
-===============
+Download Stable Versions 
+========================
 
-Download
+Using `pip` or `easy_install`
+-----------------------------
+
+Using pip::
+
+    $ pip install CherryPy
+
+or with easy_install::
+
+    $ easy_install CherryPy
+
+It is recommended to use `pip` instead of `easy_install`.
+If you want to download and install CherryPy for yourself proceed to the 
+next instructions depending on your platform. 
+
+Unix/Mac
 --------
 
-You may download this version from `here <http://download.cherrypy.org/cherrypy/3.2.3/>`_ 
+You may download the most current version from `PyPI <https://pypi.python.org/pypi/CherryPy/3.2.3>`_  
 
 For other releases, browse our
 `download index <http://download.cherrypy.org/cherrypy>`_.
 
-Windows Installation
---------------------
-
-* Download the latest CherryPy release from the
-  `repository <http://download.cherrypy.org/cherrypy/>`_.
-  Select the file ending in ".exe"
-* Run the downloaded file.
-
-Unix/Mac Installation
----------------------
-
-* Download the latest CherryPy release from the
-  `repository <http://download.cherrypy.org/cherrypy/>`_.
 * Unzip/untar the files
-* Go to the directory created by the file extraction.
+* Enter the directory created by the file extraction.
 * Type "python setup.py install" to install the CherryPy module
 
+
+Windows
+-------
+
+You may download the most current version from `PyPI <https://pypi.python.org/pypi/CherryPy/3.2.3>`_. 
+
+For other releases, browse our `download index <http://download.cherrypy.org/cherrypy>`_.  
+
+* Select the file ending in ".exe".
+* Run the downloaded file.
+
+
 Next Steps
-----------
+==========
 
 * To run your first sample website, go to cherrypy/tutorial/ and type
   "python tut01_helloworld.py", and you'll have a running website on port 8080.
