@@ -8,7 +8,7 @@ when written using CherryPy::
     import cherrypy
 
 
-    class HelloWorld:
+    class HelloWorld(object):
         def index(self):
             return "Hello world!"
         index.exposed = True
@@ -120,10 +120,10 @@ For example, to find out what "host" to which the client intended to connect::
     import cherrypy
 
 
-    class HelloWorld:    
+    class HelloWorld(object):    
         @cherrypy.expose
         def index(self):
-            host = cherrypy.request.headers('Host')
+            host = cherrypy.request.headers['Host']
             return "You have successfully reached " + host
 
     cherrypy.quickstart(HelloWorld())
@@ -133,7 +133,7 @@ Or to set headers on the response::
     import cherrypy
 
 
-    class HelloWorld:    
+    class HelloWorld(object):    
         def _get_jpeg_data(self):
 	    """This method should return the jpeg data"""
 	    return ""

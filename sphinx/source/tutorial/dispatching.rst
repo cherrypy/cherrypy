@@ -138,7 +138,7 @@ URL that is directly mapped to them. For example::
 
     if __name__ == '__main__':
         root = OnePage()
-	root.foo = foo
+        root.foo = foo
         cherrypy.quickstart(root)
 
 
@@ -195,7 +195,7 @@ method) can receive additional data from HTML or other forms using
 
 The following code can be used to handle this URL::
 
-    class Root:
+    class Root(object):
         def doLogin(self, username=None, password=None):
             """Check the username & password"""
         doLogin.exposed = True
@@ -233,7 +233,7 @@ that takes the year, month and day as part of the URL
 ``http://localhost/blog/2005/01/17``. This URL can be handled by the
 following code::
 
-    class Root:
+    class Root(object):
         def blog(self, year, month, day):
 	    """Deliver the blog post. According to *year* *month* *day*.
 	    """
@@ -266,7 +266,7 @@ any other method with positional arguments, but are defined one level further
 down, in case you have multiple methods to expose. For example, we could have
 written the above "blog" example equivalently with a "default" method instead::
 
-    class Blog:
+    class Blog(object):
         def default(self, year, month, day):
             """This method catch the positional arguments 
              *year*,*month*,*day* to delivery the blog content.
@@ -274,7 +274,7 @@ written the above "blog" example equivalently with a "default" method instead::
         default.exposed = True
 
 
-    class Root:
+    class Root(object):
         pass
 
     root = Root()

@@ -18,7 +18,7 @@ Objects are **exposed** in CherryPy by setting the ``exposed`` attribute.
 Most often, a method on an object is the callable that is to be invoked. In
 this case, one can directly set the exposed attribute::
 
-    class Root:
+    class Root(object):
         def index(self):
 	    """Handle the / URI"""
         index.exposed = True
@@ -26,7 +26,7 @@ this case, one can directly set the exposed attribute::
 
 or use a decorator::
 
-    class Root:
+    class Root(object):
         @cherrypy.expose
         def index(self):
 	    """Handle the / URI"""
@@ -35,7 +35,7 @@ or use a decorator::
 When it is a special method, such as ``__call__``, that is to be invoked,
 the exposed attribute must be set on the class itself::
 
-    class Node:
+    class Node(object):
         exposed = True
         def __call__(self):
             """ """
@@ -57,8 +57,10 @@ The technics can be mixed, for example::
 	    return "The node content"
 
 
-    class Root:
-        node = Node()
+    class Root(object):
+
+        def __init__(self):
+	    self.node = Node()
 
         @cherrypy.expose       
         def index(self):
