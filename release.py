@@ -87,29 +87,22 @@ def push():
 
 def publish():
 	"""
-	Publish the dists on webfaction (download.cherrypy.org)
+	Publish the dists on PyPI
 	"""
-	scp_command = 'pscp' if platform.system() == 'Windows' else 'scp'
 	try:
-		subprocess.check_call([scp_command, 'dist/*',
-			'/home/fumanchu/webapps/downloads/cherrypy/{NEXT_VERSION}/'
-			.format(**globals())])
+		upload_dist_commands = [cmd + ['register', 'upload']
+			for cmd in dist_commands]
+		list(map(subprocess.check_call, upload_dist_commands))
 	except:
 		print("Unable to upload the dist files. Ask in IRC for help access "
 			"or assistance.")
 		raise SystemExit(4)
-	res = input('Have you asked in IRC for others to help you test '
-		'CherryPy {NEXT_VERSION}? '
+	print('Distributions have been uploaded.')
+	print('Please ask in IRC for others to help you test '
+		'CherryPy {NEXT_VERSION}.'
 		.format(**globals()))
-	if not res.lower().startswith('y'):
-		print("Please do that")
-		raise SystemExit(2)
-	subprocess.check_call([sys.executable, 'setup.py', 'register'])
-	res = input("Have you confirmed that the distro installs properly "
-		"with `easy_install CherryPy=={NEXT_VERSION}`? ".format(**globals()))
-	if not res.lower().startswith('y'):
-		print("Please do that")
-		raise SystemExit(3)
+	print("Please confirm that the distro installs properly "
+		"with `easy_install CherryPy=={NEXT_VERSION}`.".format(**globals()))
 
 def announce():
 	print("Please change the Wiki: Home page (news), CherryPyDownload")
