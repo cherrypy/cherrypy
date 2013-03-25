@@ -20,9 +20,9 @@ if sys.version_info < (3,):
 	input = raw_input
 
 def get_next_version():
-	digits = map(int, VERSION.split('.'))
-	digits[-1] += 1
-	return '.'.join(map(str, digits))
+	print("The last release on this branch was {version}".format(
+		version=VERSION))
+	return input("What version are you releasing? ")
 
 NEXT_VERSION = get_next_version()
 
