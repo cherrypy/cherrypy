@@ -12,8 +12,15 @@ If you would like to have your CherryPy powered website or product listed here, 
 Websites running atop CherryPy
 ==============================
 
-`Hulu Deejay and Hulu Sod <http://tech.hulu.com/blog/2013/03/13/python-and-hulu>`_ - Hulu uses CherryPy
-for some projects.
+`Hulu Deejay and Hulu Sod <http://tech.hulu.com/blog/2013/03/13/python-and-hulu>`_ - Hulu uses
+CherryPy for some projects.
+"The service needs to be very high performance.
+Python, together with CherryPy,
+`gunicorn <http://gunicorn.org>`_, and gevent more than provides for this."
+
+`Netflix <http://techblog.netflix.com/2013/03/python-at-netflix.html>`_ - Netflix uses CherryPy as a building block in their infrastructure: "Restful APIs to
+large applications with requests, providing web interfaces with CherryPy and Bottle,
+and crunching data with scipy."
 
 `Urbanility <http://urbanility.com>`_ - French website for local neighbourhood assets in Rennes, France.
 
@@ -41,11 +48,9 @@ Communication training company. Built on CherryPy 3.2.0 and Python 2.7.3, with
 `oursql <http://pythonhosted.org/oursql>`_ and
 `DBUtils <http://www.webwareforpython.org/DBUtils>`_ libraries, amongst others.
 
-`Linstic <http://linstic.com>`_ - Sticky Notes in your browser.
+`Linstic <http://linstic.com>`_ - Sticky Notes in your browser (with linking).
 
 `Almad's Homepage <http://www.almad.net>`_ - Simple homepage with blog.
-
-`hosted-projects.com <http://www.hosted-projects.com>`_ - hosted-projects is a company specialized in web hosting services for software project teams offering the Subversion revision control system coupled with project and issue management software like Trac and Bugzilla. hosted-projects.com uses CherryPy for its web control panel.
 
 
 Products based on CherryPy
@@ -59,7 +64,10 @@ Products based on CherryPy
 
 `TurboGears <http://www.turbogears.org>`_ - The rapid web development megaframework. Turbogears 1.x used Cherrypy. "CherryPy is the underlying application server for TurboGears. It is responsible for taking the requests from the user’s browser, parses them and turns them into calls into the Python code of the web application. Its role is similar to application servers used in other programming languages".
 
-`Indigo <http://www.perceptiveautomation.com/indigo/index.html>`_ - An X10 home control server for Mac
+`Indigo <http://www.perceptiveautomation.com/indigo/index.html>`_ - "An intelligent home control
+server that integrates home control hardware modules to provide control of your home. Indigo's built-in
+Web server and client/server architecture give you control and access to your home remotely from
+other Macs, PCs, internet tablets, PDAs, and mobile phones."
 
 `SlikiWiki <http://www.sf.net/projects/slikiwiki>`_ - Wiki built on CherryPy and featuring WikiWords, automatic backlinking, site map generation, full text search, locking for concurrent edits, RSS feed embedding, per page access control lists, and page formatting using PyTextile markup."
 
