@@ -68,21 +68,27 @@ def tag_release():
 	"""
 	subprocess.check_call(['hg', 'tag', NEXT_VERSION])
 
+dist_commands = [
+	[sys.executable, 'setup.py', 'sdist'],
+	[sys.executable, 'setup.py', 'sdist', '--format=gztar'],
+	[sys.executable, 'setup.py', 'bdist_wininst'],
+]
+
 def build():
 	if os.path.isfile('MANIFEST'):
 		os.remove('MANIFEST')
 	if os.path.isdir('dist'):
 		shutil.rmtree('dist')
-	subprocess.check_call([sys.executable, 'setup.py', 'sdist'])
-	subprocess.check_call([sys.executable, 'setup.py', 'sdist',
-		'--format=gztar'])
-	subprocess.check_call([sys.executable, 'setup.py', 'bdist_wininst'])
+	list(map(subprocess.check_call, dist_commands))
 
 def push():
 	"The build went well, so let's push the SCM changesets"
 	subprocess.check_call(['hg', 'push'])
 
 def publish():
+	"""
+	Publish the dists on webfaction (download.cherrypy.org)
+	"""
 	scp_command = 'pscp' if platform.system() == 'Windows' else 'scp'
 	try:
 		subprocess.check_call([scp_command, 'dist/*',
