@@ -16,6 +16,9 @@ import shutil
 
 VERSION='3.2.3'
 
+if sys.version_info < (3,):
+	input = raw_input
+
 def get_next_version():
 	digits = map(int, VERSION.split('.'))
 	digits[-1] += 1
@@ -35,7 +38,7 @@ def check_status():
 	"""
 	print("You're about to release CherryPy {NEXT_VERSION}".format(
 		**globals()))
-	res = raw_input('Have you run the tests with `nosetests -s ./` on '
+	res = input('Have you run the tests with `nosetests -s ./` on '
 		'Windows, Linux, and Mac on at least Python 2.4, 2.5, 2.7, and 3.2? '
 		.format(**globals()))
 	if not res.lower().startswith('y'):
@@ -89,14 +92,14 @@ def publish():
 		print("Unable to upload the dist files. Ask in IRC for help access "
 			"or assistance.")
 		raise SystemExit(4)
-	res = raw_input('Have you asked in IRC for others to help you test '
+	res = input('Have you asked in IRC for others to help you test '
 		'CherryPy {NEXT_VERSION}? '
 		.format(**globals()))
 	if not res.lower().startswith('y'):
 		print("Please do that")
 		raise SystemExit(2)
 	subprocess.check_call([sys.executable, 'setup.py', 'register'])
-	res = raw_input("Have you confirmed that the distro installs properly "
+	res = input("Have you confirmed that the distro installs properly "
 		"with `easy_install CherryPy=={NEXT_VERSION}`? ".format(**globals()))
 	if not res.lower().startswith('y'):
 		print("Please do that")
