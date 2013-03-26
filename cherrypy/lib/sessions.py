@@ -83,10 +83,9 @@ On the other extreme, some users report Firefox sending cookies after their
 expiration date, although this was on a system with an inaccurate system time.
 Maybe FF doesn't trust system time.
 """
-
+import sys
 import datetime
 import os
-import random
 import time
 import threading
 import types
@@ -478,7 +477,8 @@ class FileSession(Session):
                 return pickle.load(f)
             finally:
                 f.close()
-        except (IOError, EOFError), e:
+        except (IOError, EOFError):
+            e = sys.exc_info()[1]
             if self.debug:
                 cherrypy.log("Error loading the session pickle: %s" % e, 'TOOLS.SESSIONS')
             return None
