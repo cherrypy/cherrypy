@@ -69,7 +69,7 @@ def tag_release():
 	subprocess.check_call(['hg', 'tag', NEXT_VERSION])
 
 dist_commands = [
-	[sys.executable, 'setup.py', 'sdist'],
+	[sys.executable, 'setup.py', 'sdist', '--format=zip'],
 	[sys.executable, 'setup.py', 'sdist', '--format=gztar'],
 	[sys.executable, 'setup.py', 'bdist_wininst'],
 ]
