@@ -14,7 +14,7 @@ import os
 import platform
 import shutil
 
-VERSION='3.2.3'
+VERSION='3.2.4'
 
 if sys.version_info < (3,):
 	input = raw_input
@@ -69,7 +69,7 @@ def tag_release():
 	subprocess.check_call(['hg', 'tag', NEXT_VERSION])
 
 dist_commands = [
-	[sys.executable, 'setup.py', 'sdist'],
+	[sys.executable, 'setup.py', 'sdist', '--format=zip'],
 	[sys.executable, 'setup.py', 'sdist', '--format=gztar'],
 	[sys.executable, 'setup.py', 'bdist_wininst'],
 ]

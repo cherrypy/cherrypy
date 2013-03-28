@@ -34,7 +34,7 @@ class cherrypy_build_py(build_py):
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.2.3"
+version = "3.2.4"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers=[
@@ -70,7 +70,6 @@ packages=[
     "cherrypy.scaffold",
     "cherrypy.wsgiserver",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.2.3/"
 data_files=[
     ('cherrypy', ['cherrypy/cherryd',
                   'cherrypy/favicon.ico',
@@ -127,7 +126,7 @@ def main():
     for scheme in list(INSTALL_SCHEMES.values()):
         scheme['data'] = scheme['purelib']
 
-    dist = setup(
+    setup(
         name=name,
         version=version,
         description=desc,
@@ -138,7 +137,6 @@ def main():
         url=url,
         license=cp_license,
         packages=packages,
-        download_url=download_url,
         data_files=data_files,
         scripts=scripts,
         cmdclass=cmd_class,
