@@ -16,10 +16,13 @@ import shutil
 
 VERSION='3.2.3'
 
+if sys.version_info < (3,):
+	input = raw_input
+
 def get_next_version():
-	digits = map(int, VERSION.split('.'))
-	digits[-1] += 1
-	return '.'.join(map(str, digits))
+	print("The last release on this branch was {version}".format(
+		version=VERSION))
+	return input("What version are you releasing? ")
 
 NEXT_VERSION = get_next_version()
 
@@ -35,7 +38,7 @@ def check_status():
 	"""
 	print("You're about to release CherryPy {NEXT_VERSION}".format(
 		**globals()))
-	res = raw_input('Have you run the tests with `nosetests -s ./` on '
+	res = input('Have you run the tests with `nosetests -s ./` on '
 		'Windows, Linux, and Mac on at least Python 2.4, 2.5, 2.7, and 3.2? '
 		.format(**globals()))
 	if not res.lower().startswith('y'):
@@ -65,42 +68,41 @@ def tag_release():
 	"""
 	subprocess.check_call(['hg', 'tag', NEXT_VERSION])
 
+dist_commands = [
+	[sys.executable, 'setup.py', 'sdist'],
+	[sys.executable, 'setup.py', 'sdist', '--format=gztar'],
+	[sys.executable, 'setup.py', 'bdist_wininst'],
+]
+
 def build():
 	if os.path.isfile('MANIFEST'):
 		os.remove('MANIFEST')
 	if os.path.isdir('dist'):
 		shutil.rmtree('dist')
-	subprocess.check_call([sys.executable, 'setup.py', 'sdist'])
-	subprocess.check_call([sys.executable, 'setup.py', 'sdist',
-		'--format=gztar'])
-	subprocess.check_call([sys.executable, 'setup.py', 'bdist_wininst'])
+	list(map(subprocess.check_call, dist_commands))
 
 def push():
 	"The build went well, so let's push the SCM changesets"
 	subprocess.check_call(['hg', 'push'])
 
 def publish():
-	scp_command = 'pscp' if platform.system() == 'Windows' else 'scp'
+	"""
+	Publish the dists on PyPI
+	"""
 	try:
-		subprocess.check_call([scp_command, 'dist/*',
-			'/home/fumanchu/webapps/downloads/cherrypy/{NEXT_VERSION}/'
-			.format(**globals())])
+		upload_dist_commands = [cmd + ['register', 'upload']
+			for cmd in dist_commands]
+		list(map(subprocess.check_call, upload_dist_commands))
 	except:
 		print("Unable to upload the dist files. Ask in IRC for help access "
 			"or assistance.")
 		raise SystemExit(4)
-	res = raw_input('Have you asked in IRC for others to help you test '
-		'CherryPy {NEXT_VERSION}? '
+	print('Distributions have been uploaded.')
+	print('Please ask in IRC for others to help you test '
+		'CherryPy {NEXT_VERSION}.'
 		.format(**globals()))
-	if not res.lower().startswith('y'):
-		print("Please do that")
-		raise SystemExit(2)
-	subprocess.check_call([sys.executable, 'setup.py', 'register'])
-	res = raw_input("Have you confirmed that the distro installs properly "
-		"with `easy_install CherryPy=={NEXT_VERSION}`? ".format(**globals()))
-	if not res.lower().startswith('y'):
-		print("Please do that")
-		raise SystemExit(3)
+	print("Please confirm that the distro installs properly "
+		"with `easy_install CherryPy=={NEXT_VERSION}`.".format(**globals()))
 
 def announce():
 	print("Please change the Wiki: Home page (news), CherryPyDownload")

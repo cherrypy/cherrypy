@@ -97,10 +97,6 @@ DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 import threading
 import time
 from traceback import format_exc
-from urllib.parse import unquote
-from urllib.parse import urlparse
-from urllib.parse import scheme_chars
-import warnings
 
 if sys.version_info >= (3, 0):
     bytestr = bytes
@@ -266,7 +262,7 @@ class SizeCheckWrapper(object):
             self._check_length()
             res.append(data)
             # See https://bitbucket.org/cherrypy/cherrypy/issue/421
-            if len(data) < 256 or data[-1:] == LF:
+            if len(data) < 256 or data[-1:].decode() == LF:
                 return EMPTY.join(res)
 
     def readlines(self, sizehint=0):
@@ -1229,13 +1225,24 @@ class ThreadPool(object):
 
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
-        for i in range(amount):
-            if self.max > 0 and len(self._threads) >= self.max:
-                break
-            worker = WorkerThread(self.server)
-            worker.setName("CP Server " + worker.getName())
-            self._threads.append(worker)
-            worker.start()
+        if self.max > 0:
+            budget = max(self.max - len(self._threads), 0)
+        else:
+            # self.max <= 0 indicates no maximum
+            budget = float('inf')
+
+        n_new = min(amount, budget)
+
+        workers = [self._spawn_worker() for i in range(n_new)]
+        while not all(worker.ready for worker in workers):
+            time.sleep(.1)
+        self._threads.extend(workers)
+
+    def _spawn_worker(self):
+        worker = WorkerThread(self.server)
+        worker.setName("CP Server " + worker.getName())
+        worker.start()
+        return worker
 
     def shrink(self, amount):
         """Kill off worker threads (not below self.min)."""
@@ -1246,13 +1253,17 @@ class ThreadPool(object):
                 self._threads.remove(t)
                 amount -= 1
 
-        if amount > 0:
-            for i in range(min(amount, len(self._threads) - self.min)):
-                # Put a number of shutdown requests on the queue equal
-                # to 'amount'. Once each of those is processed by a worker,
-                # that worker will terminate and be culled from our list
-                # in self.put.
-                self._queue.put(_SHUTDOWNREQUEST)
+        # calculate the number of threads above the minimum
+        n_extra = max(len(self._threads) - self.min, 0)
+
+        # don't remove more than amount
+        n_to_remove = min(amount, n_extra)
+
+        # put shutdown requests on the queue equal to the number of threads
+        # to remove. As each request is processed by a worker, that worker
+        # will terminate and be culled from the list.
+        for n in range(n_to_remove):
+            self._queue.put(_SHUTDOWNREQUEST)
 
     def stop(self, timeout=5):
         # Must shut down threads here so the code that calls

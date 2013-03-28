@@ -14,15 +14,15 @@ except ImportError:
 from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.build_py import build_py
 import sys
-import os
 import re
 
 class cherrypy_build_py(build_py):
-    "Custom version of build_py that selects Python-specific modules"
+    "Custom version of build_py that excludes Python-specific modules"
     def build_module(self, module, module_file, package):
         python3 = sys.version_info >= (3,)
         if python3:
-            exclude_pattern = re.compile('wsgiserver2|ssl_pyopenssl|_cpcompat_subprocess')
+            exclude_pattern = re.compile('wsgiserver2|ssl_pyopenssl|'
+                '_cpcompat_subprocess')
         else:
             exclude_pattern = re.compile('wsgiserver3')
         if exclude_pattern.match(module):
