@@ -70,7 +70,6 @@ packages=[
     "cherrypy.scaffold",
     "cherrypy.wsgiserver",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.2.3/"
 data_files=[
     ('cherrypy', ['cherrypy/cherryd',
                   'cherrypy/favicon.ico',
@@ -138,7 +137,6 @@ def main():
         url=url,
         license=cp_license,
         packages=packages,
-        download_url=download_url,
         data_files=data_files,
         scripts=scripts,
         cmdclass=cmd_class,
