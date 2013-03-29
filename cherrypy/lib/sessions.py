@@ -758,7 +758,7 @@ def close():
     if getattr(sess, "locked", False):
         # If the session is still locked we release the lock
         sess.release_lock()
-        if self.debug:
+        if sess.debug:
             cherrypy.log('Lock released on close.', 'TOOLS.SESSIONS')
 close.failsafe = True
 close.priority = 90
