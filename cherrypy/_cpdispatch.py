@@ -213,6 +213,7 @@ class LateParamPageHandler(PageHandler):
         return kwargs
 
     def _set_kwargs(self, kwargs):
+        cherrypy.serving.request.kwargs = kwargs
         self._kwargs = kwargs
 
     kwargs = property(_get_kwargs, _set_kwargs,
