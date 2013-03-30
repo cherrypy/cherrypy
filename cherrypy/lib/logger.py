@@ -256,6 +256,7 @@ class LogManager(object):
                  'b': dict.get(outheaders, 'Content-Length', '') or "-",
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
+                 'o': dict.get(inheaders, 'Host', '-'),
                  }
         if py3k:
             for k, v in atoms.items():
