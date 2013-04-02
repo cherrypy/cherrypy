@@ -33,6 +33,14 @@ class JsonTest(helper.CPWebCase):
             json_post.exposed = True
             json_post._cp_config = {'tools.json_in.on': True}
 
+            def json_cached(self):
+                return 'hello there'
+            json_cached.exposed = True
+            json_cached._cp_config = {
+                'tools.json_out.on': True,
+                'tools.caching.on': True,
+            }
+
         root = Root()
         cherrypy.tree.mount(root)
     setup_server = staticmethod(setup_server)
@@ -76,4 +84,17 @@ class JsonTest(helper.CPWebCase):
                    ('Content-Length', str(len(body)))]
         self.getPage("/json_post", method="POST", headers=headers, body=body)
         self.assertStatus(400, 'Invalid JSON document')
+
+    def test_cached(self):
+        if json is None:
+            self.skip("json not found ")
+            return
+
+        self.getPage("/json_cached")
+        self.assertStatus(200, '"hello"')
+
+        self.getPage("/json_cached")  # 2'nd time to hit cache
+        self.assertStatus(200, '"hello"')
+
+
 

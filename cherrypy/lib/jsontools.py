@@ -58,7 +58,11 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
         request.body.processors[ct] = processor
 
 def json_handler(*args, **kwargs):
-    value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
+    request = cherrypy.serving.request
+    if getattr(request, 'cached', False):
+        return cherrypy.serving.response.body
+
+    value = request._json_inner_handler(*args, **kwargs)
     return json_encode(value)
 
 def json_out(content_type='application/json', debug=False, handler=json_handler):
