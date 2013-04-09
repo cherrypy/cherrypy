@@ -14,11 +14,10 @@ Prerequisites
 =============
 
 All you need is a working version of Python-2.3 or later on your computer.
-
-If you need Python on Debian::
-
-    $ apt-get install python python-dev
-
+If you are running Max OS X or some Linux distribution (e.g. Ubuntu, Debian, Fedora)
+you most likely already have python on you system, for a detailed instruction
+on how to install python follow the instruction on the
+`python wiki <http://wiki.python.org/moin/BeginnersGuide/Download>`_.
 
 .. _stableversions:
 
