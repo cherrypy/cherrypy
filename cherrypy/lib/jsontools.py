@@ -58,11 +58,7 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
         request.body.processors[ct] = processor
 
 def json_handler(*args, **kwargs):
-    request = cherrypy.serving.request
-    if getattr(request, 'cached', False):
-        return cherrypy.serving.response.body
-
-    value = request._json_inner_handler(*args, **kwargs)
+    value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     return json_encode(value)
 
 def json_out(content_type='application/json', debug=False, handler=json_handler):
@@ -79,6 +75,11 @@ def json_out(content_type='application/json', debug=False, handler=json_handler)
     package importable; otherwise, ValueError is raised during processing.
     """
     request = cherrypy.serving.request
+    # request.handler may be set to None by e.g. the caching tool
+    # to signal to all components that a response body has already
+    # been attached, in which case we don't need to wrap anything.
+    if request.handler is None:
+        return
     if debug:
         cherrypy.log('Replacing %s with JSON handler' % request.handler,
                      'TOOLS.JSON_OUT')
