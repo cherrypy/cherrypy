@@ -152,7 +152,7 @@ class HttpDigestAuthorization (object):
         self.uri = paramsd.get('uri')
         self.method = paramsd.get('method')
         self.response = paramsd.get('response') # the response digest
-        self.algorithm = paramsd.get('algorithm', 'MD5')
+        self.algorithm = paramsd.get('algorithm', 'MD5').upper()
         self.cnonce = paramsd.get('cnonce')
         self.opaque = paramsd.get('opaque')
         self.qop = paramsd.get('qop') # qop
