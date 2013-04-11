@@ -105,6 +105,8 @@ class SSL_fileobject(wsgiserver.CP_fileobject):
             p = self._sock.pending()
             if not p:
                 return "".join(buf)
+            elif len("".join(buf)) + p >= args[0]:
+                return "".join(buf)
 
     def sendall(self, *args, **kwargs):
         return self._safe_call(False, super(SSL_fileobject, self).sendall,
