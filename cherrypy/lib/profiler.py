@@ -142,9 +142,9 @@ class ProfileAggregator(Profiler):
         self.count = _count = _count + 1
         self.profiler = profile.Profile()
 
-    def run(self, func, *args):
+    def run(self, func, *args, **params):
         path = os.path.join(self.path, "cp_%04d.prof" % self.count)
-        result = self.profiler.runcall(func, *args)
+        result = self.profiler.runcall(func, *args, **params)
         self.profiler.dump_stats(path)
         return result
 
