@@ -273,28 +273,29 @@ try:
     # Prefer simplejson, which is usually more advanced than the builtin module.
     import simplejson as json
     json_decode = json.JSONDecoder().decode
-    json_encode = json.JSONEncoder().iterencode
+    _json_encode = json.JSONEncoder().iterencode
 except ImportError:
-    if py3k:
-        # Python 3.0: json is part of the standard library,
-        # but outputs unicode. We need bytes.
+    if sys.version_info >= (2, 6):
+        # Python >=2.6 : json is part of the standard library
         import json
         json_decode = json.JSONDecoder().decode
         _json_encode = json.JSONEncoder().iterencode
-        def json_encode(value):
-            for chunk in _json_encode(value):
-                yield chunk.encode('utf8')
-    elif sys.version_info >= (2, 6):
-        # Python 2.6: json is part of the standard library
-        import json
-        json_decode = json.JSONDecoder().decode
-        json_encode = json.JSONEncoder().iterencode
     else:
         json = None
         def json_decode(s):
             raise ValueError('No JSON library is available')
-        def json_encode(s):
+        def _json_encode(s):
             raise ValueError('No JSON library is available')
+finally:
+    if json and py3k:
+        # The two Python 3 implementations (simplejson/json) 
+        # outputs str. We need bytes.
+        def json_encode(value):
+            for chunk in _json_encode(value):
+                yield chunk.encode('utf8')
+    else:
+        json_encode = _json_encode
+       
 
 try:
     import cPickle as pickle
