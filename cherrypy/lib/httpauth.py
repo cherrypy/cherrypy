@@ -322,7 +322,7 @@ def _checkBasicResponse (auth_map, password, method='GET', encrypt=None, **kwarg
     try:
         return encrypt(auth_map["password"], auth_map["username"]) == password
     except TypeError:
-        return encrypt(auth_map["password"]) == password
+        return auth_map["password"] == password
 
 AUTH_RESPONSES = {
     "basic": _checkBasicResponse,
