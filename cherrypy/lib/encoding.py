@@ -80,19 +80,17 @@ class ResponseEncoder:
         if encoding in self.attempted_charsets:
             return False
         self.attempted_charsets.add(encoding)
-
-        try:
-            body = []
-            for chunk in self.body:
-                if isinstance(chunk, unicodestr):
+        body = []
+        for chunk in self.body:
+            if isinstance(chunk, unicodestr):
+                try:
                     chunk = chunk.encode(encoding, self.errors)
-                body.append(chunk)
-            self.body = body
-        except (LookupError, UnicodeError):
-            return False
-        else:
-            return True
-
+                except (LookupError, UnicodeError):
+                    return False
+            body.append(chunk)
+        self.body = body
+        return True
+    
     def find_acceptable_charset(self):
         request = cherrypy.serving.request
         response = cherrypy.serving.response
