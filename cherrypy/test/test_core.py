@@ -531,8 +531,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
         self.assertHeader('Set-Cookie', header_value('Last=Piranha'))
 
-        self.getPage("/cookies/single?name=Something-With:Colon",
-            [('Cookie', 'Something-With:Colon=some-value')])
+        self.getPage("/cookies/single?name=Something-With%2CComma",
+            [('Cookie', 'Something-With,Comma=some-value')])
         self.assertStatus(400)
 
     def testDefaultContentType(self):
