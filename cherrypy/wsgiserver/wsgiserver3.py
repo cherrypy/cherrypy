@@ -1952,7 +1952,7 @@ class WSGIGateway_10(WSGIGateway):
             'REMOTE_ADDR': req.conn.remote_addr or '',
             'REMOTE_PORT': str(req.conn.remote_port or ''),
             'REQUEST_METHOD': req.method.decode('ISO-8859-1'),
-            'REQUEST_URI': req.uri,
+            'REQUEST_URI': req.uri.decode('ISO-8859-1'),
             'SCRIPT_NAME': '',
             'SERVER_NAME': req.server.server_name,
             # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
@@ -1966,7 +1966,6 @@ class WSGIGateway_10(WSGIGateway):
             'wsgi.url_scheme': req.scheme.decode('ISO-8859-1'),
             'wsgi.version': (1, 0),
             }
-
         if isinstance(req.server.bind_addr, basestring):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
