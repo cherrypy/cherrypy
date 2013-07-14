@@ -283,8 +283,5 @@ class Tree(object):
                 # Python 3/WSGI u.0: all strings MUST be full unicode
                 environ['SCRIPT_NAME'] = sn
                 environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
-            else:
-                # Python 3/WSGI 1.x: all strings MUST be ISO-8859-1 str
-                environ['SCRIPT_NAME'] = sn.encode('utf-8').decode('ISO-8859-1')
-                environ['PATH_INFO'] = path[len(sn.rstrip("/")):].encode('utf-8').decode('ISO-8859-1')
+            # for the wsgi 1.0 the environment is already encoded by the Gateway.
         return app(environ, start_response)
