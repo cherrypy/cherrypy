@@ -4,9 +4,12 @@
 Success Stories
 ***************
 
-You are interested in CherryPy but you would like to hear more from people using it, or simply check out products or application running it.
+You are interested in CherryPy but you would like to hear more from people
+using it, or simply check out products or application running it.
 
-If you would like to have your CherryPy powered website or product listed here, contact us via our [wiki:CherryPyMailingLists mailing lists] or [wiki:CherryPyIrcChannel IRC].
+If you would like to have your CherryPy powered website or product listed here,
+contact us via our `mailing list <http://groups.google.com/group/cherrypy-users>`_
+or IRC (#cherrypy on `OFTC <http://www.oftc.net/oftc/>`_).
 
 
 Websites running atop CherryPy
