@@ -75,6 +75,7 @@ other Macs, PCs, internet tablets, PDAs, and mobile phones."
 
 `Firebird QA tools <http://www.firebirdsql.org/en/quality-assurance>`_ - Firebird QA tools are based on CherryPy.
 
+`salt-api <https://github.com/saltstack/salt-api>`_ - A REST API for Salt, the infrastructure orchestration tool.
 
 Products inspired by CherryPy
 =============================
