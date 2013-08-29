@@ -180,6 +180,7 @@ class Config(reprconf.Config):
         return tool_decorator
 
 
+# Sphinx begin config.environments
 Config.environments = environments = {
     "staging": {
         'engine.autoreload.on': False,
@@ -216,6 +217,7 @@ Config.environments = environments = {
         'log.screen': False,
         },
     }
+# Sphinx end config.environments
 
 
 def _server_namespace_handler(k, v):
