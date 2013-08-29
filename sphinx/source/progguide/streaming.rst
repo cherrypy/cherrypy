@@ -10,7 +10,9 @@ to *yield* content, rather than *return* content. When you use "yield", you also
 have the option of streaming the output.
 
 **In general, it is safer and easier to not stream output.** Therefore,
-streaming output is off by default.
+streaming output is off by default. Streaming output and also using sessions
+requires a good understanding of :py:mod:`how session locks work
+<cherrypy.lib.sessions>`.
 
 The "normal" CherryPy response process
 ======================================
