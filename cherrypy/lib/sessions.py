@@ -25,7 +25,12 @@ Locking sessions
 ================
 
 By default, the ``'locking'`` mode of sessions is ``'implicit'``, which means
-the session is locked early and unlocked late. If you want to control when the
+the session is locked early and unlocked late. Be mindful of this default mode
+for any requests that take a long time to process (streaming responses,
+expensive calculations, database lookups, API calls, etc), as other concurrent
+requests that also utilize sessions will hang until the session is unlocked.
+
+If you want to control when the
 session data is locked and unlocked, set ``tools.sessions.locking = 'explicit'``.
 Then call ``cherrypy.session.acquire_lock()`` and ``cherrypy.session.release_lock()``.
 Regardless of which mode you use, the session is guaranteed to be unlocked when
