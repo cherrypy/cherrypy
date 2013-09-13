@@ -38,6 +38,10 @@ Sections
 
 :doc:`Appendix <appendix/index>`
 --------------------------------
+:doc:`FAQ </appendix/faq>`, :doc:`Performance benchmarking </appendix/cherrypyspeed>`, and :doc:`Success Stories </appendix/success>`
+
+Other
+-----
 
 :ref:`genindex`
 
