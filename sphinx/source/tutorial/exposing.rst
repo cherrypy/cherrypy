@@ -40,7 +40,7 @@ the exposed attribute must be set on the class itself::
         def __call__(self):
             """ """
 
-The technics can be mixed, for example::
+The techniques can be mixed, for example::
 
     """This example can handle the URIs:
     /       ->  Root.index
