@@ -18,6 +18,7 @@ Features
    Logging </refman/_cplogging>
    responsetimeouts
    Sessions </refman/lib/sessions>
+   security
    extending/index
 
 
