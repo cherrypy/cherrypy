@@ -42,7 +42,7 @@ If you use :doc:`sessions </refman/lib/sessions>` you can also enable these sett
     [/]
     tools.sessions.on = True
     # increase security on sessions
-    tools.session.secure = True
+    tools.sessions.secure = True
     tools.sessions.httponly = True
 
 
