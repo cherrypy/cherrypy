@@ -66,10 +66,16 @@ For other releases, browse our `download index <http://download.cherrypy.org/che
 Next Steps
 ==========
 
-* To run your first sample website, go to cherrypy/tutorial/ and type
-  "python tut01_helloworld.py", and you'll have a running website on port 8080.
-* Open your favorite browser and point it to http://localhost:8080 to see your
-  first CherryPy-served page :-)
+To run your first sample website:
+
+    1. In a command terminal or console go to cherrypy/tutorial/
+    2. Type::
+
+        $ python tut01_helloworld.py
+
+      and you'll have a running website on port 8080.
+
+    3. Open your favorite browser and point it to http://localhost:8080 to see your first CherryPy-served page :-)
 
 Now, you should try running some of the other tutorials found in the tutorial
 directory and look at their source code to understand how to develop a website
@@ -92,7 +98,7 @@ other operating systems are advised to use multi-platform
 command line tools provided by the
 `core Mercurial distribution <http://mercurial.selenic.com/downloads/>`_.
 
-* To submit a patch fork the repository and submit your pull request.
+* To submit a patch: fork the repository and submit your pull request.
   For further information please contact us via email or IRC
   (see `getting involved <http://bitbucket.org/cherrypy/cherrypy/wiki/CherryPyInvolved>`_).
 
