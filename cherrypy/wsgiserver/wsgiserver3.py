@@ -1551,7 +1551,7 @@ class HTTPServer(object):
             af, socktype, proto, canonname, sa = res
             try:
                 self.bind(af, socktype, proto)
-            except socket.error, serr:
+            except socket.error as serr:
                 msg = "%s -- (%s: %s)" % (msg, sa, serr)
                 if self.socket:
                     self.socket.close()
