@@ -146,7 +146,7 @@ GET
 
 Represents the Read method in CRUD.
 
-Add a new method to the file ``songs.py``, called ``GET``::
+Add a new method to the ``Songs`` class in ``songs.py``, called ``GET``::
 
     def GET(self, id=None):
 
