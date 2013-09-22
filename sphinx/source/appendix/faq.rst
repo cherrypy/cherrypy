@@ -31,7 +31,7 @@ Server Features and Configuration
 :Q: Does CherryPy support https?
 
 :A: CherryPy has built-in SSL support as of 3.0.0beta. See the `ssl_*`
-    properties of :mod:`cherrypy._cpserver`.
+    properties of :mod:`cherrypy._cpserver` and the :doc:`programmer's guide </progguide/security>`.
     
     Earlier versions do not have built-in SSL support, but Tim Evans has
     written a module called `SslCherry <http://tools.cherrypy.org/wiki/SSLWithM2Crypto>`_
