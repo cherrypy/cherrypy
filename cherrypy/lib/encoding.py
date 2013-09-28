@@ -90,7 +90,7 @@ class ResponseEncoder:
             body.append(chunk)
         self.body = body
         return True
-    
+
     def find_acceptable_charset(self):
         request = cherrypy.serving.request
         response = cherrypy.serving.response
@@ -202,7 +202,7 @@ class ResponseEncoder:
         ct = response.headers.elements("Content-Type")
         if self.debug:
             cherrypy.log('Content-Type: %r' % [str(h) for h in ct], 'TOOLS.ENCODE')
-        if ct:
+        if ct and self.add_charset:
             ct = ct[0]
             if self.text_only:
                 if ct.value.lower().startswith("text/"):
@@ -224,11 +224,10 @@ class ResponseEncoder:
             if do_find:
                 # Set "charset=..." param on response Content-Type header
                 ct.params['charset'] = self.find_acceptable_charset()
-                if self.add_charset:
-                    if self.debug:
-                        cherrypy.log('Setting Content-Type %s' % ct,
-                                     'TOOLS.ENCODE')
-                    response.headers["Content-Type"] = str(ct)
+                if self.debug:
+                    cherrypy.log('Setting Content-Type %s' % ct,
+                                 'TOOLS.ENCODE')
+                response.headers["Content-Type"] = str(ct)
 
         return self.body
 
