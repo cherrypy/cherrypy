@@ -471,7 +471,7 @@ class MethodDispatcher(Dispatcher):
 class RoutesDispatcher(object):
     """A Routes based dispatcher for CherryPy."""
 
-    def __init__(self, full_result=False):
+    def __init__(self, full_result=False, **mapper_options):
         """
         Routes dispatcher
 
@@ -482,7 +482,7 @@ class RoutesDispatcher(object):
         import routes
         self.full_result = full_result
         self.controllers = {}
-        self.mapper = routes.Mapper()
+        self.mapper = routes.Mapper(**mapper_options)
         self.mapper.controller_scan = self.controllers.keys
 
     def connect(self, name, route, controller, **kwargs):
