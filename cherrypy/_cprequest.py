@@ -304,7 +304,10 @@ class Request(object):
     methods_with_bodies = ("POST", "PUT")
     """
     A sequence of HTTP methods for which CherryPy will automatically
-    attempt to read a body from the rfile."""
+    attempt to read a body from the rfile. If you are going to change
+    this property, modify it on the configuration (recommended)
+    or on the "hook point" `on_start_resource`.
+    """
 
     body = None
     """
