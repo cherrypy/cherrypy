@@ -1,5 +1,5 @@
 """
-Platform-independent file locking.
+Platform-independent file locking. Inspired by and modeled after zc.lockfile.
 """
 
 import os
@@ -50,6 +50,9 @@ class LockFile(object):
 
 
 class SystemLockFile(object):
+    """
+    An abstract base class for platform-specific locking.
+    """
 
     def __init__(self, path):
         self.path = path
@@ -83,8 +86,14 @@ class SystemLockFile(object):
         self.fp.close()
         del self.fp
 
+    #@abc.abstract_method
+    #def _lock_file(self):
+    #    """Attempt to obtain the lock on self.fp. Raise LockError if not
+    #    acquired."""
+
     def _unlock_file(self):
-        pass
+        """Attempt to obtain the lock on self.fp. Raise UnlockError if not
+        released."""
 
 
 class WindowsLockFile(SystemLockFile):
