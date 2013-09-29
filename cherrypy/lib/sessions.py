@@ -432,9 +432,6 @@ class FileSession(Session):
     LOCK_SUFFIX = '.lock'
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
-    # class-level objects - don't rebind these
-    locks = {}
-
     def __init__(self, id=None, **kwargs):
         # The 'storage_path' arg is required for file-based sessions.
         kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
@@ -501,7 +498,7 @@ class FileSession(Session):
         path += self.LOCK_SUFFIX
         while True:
             try:
-                self.locks[path] = lockfile.LockFile(path)
+                self.lock = lockfile.LockFile(path)
             except lockfile.LockError:
                 time.sleep(0.1)
             else:
@@ -512,14 +509,8 @@ class FileSession(Session):
 
     def release_lock(self, path=None):
         """Release the lock on the currently-loaded session data."""
-        if path is None:
-            path = self._get_file_path()
-        path += self.LOCK_SUFFIX
-
-        lock = self.locks.pop(path)
-        lock.release()
-        lock.remove()
-
+        self.lock.release()
+        self.lock.remove()
         self.locked = False
 
     def clean_up(self):
