@@ -39,9 +39,23 @@ class SystemLockFile(object):
 
     def __init__(self, path):
         self.path = path
-        fp = open(path, 'w+')
 
-        self._lock_file(fp)
+        try:
+            # Open lockfile for writing without truncation:
+            fp = open(path, 'r+')
+        except IOError:
+            # If the file doesn't exist, IOError is raised; Use a+ instead.
+            # Note that there may be a race here. Multiple processes
+            # could fail on the r+ open and open the file a+, but only
+            # one will get the the lock and write a pid.
+            fp = open(path, 'a+')
+
+        try:
+            self._lock_file(fp)
+        except:
+            fp.seek(1)
+            fp.close()
+            raise
 
         self.fp = fp
         fp.write(" %s\n" % os.getpid())
