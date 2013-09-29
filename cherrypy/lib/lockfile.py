@@ -48,6 +48,9 @@ class LockFile(object):
     def release(self):
         os.remove(self.path)
 
+    def remove(self):
+        pass
+
 
 class SystemLockFile(object):
     """
@@ -85,6 +88,15 @@ class SystemLockFile(object):
         self._unlock_file()
         self.fp.close()
         del self.fp
+
+    def remove(self):
+        """
+        Attempt to remove the file
+        """
+        try:
+            os.remove(self.path)
+        except:
+            pass
 
     #@abc.abstract_method
     #def _lock_file(self):

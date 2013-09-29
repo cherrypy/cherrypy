@@ -467,7 +467,10 @@ class FileSession(Session):
             path = self._get_file_path()
         path += self.LOCK_SUFFIX
 
-        self.locks.pop(path).release()
+        lock = self.locks.pop(path)
+        lock.release()
+        lock.remove()
+
         self.locked = False
 
     def clean_up(self):
