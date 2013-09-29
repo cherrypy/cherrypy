@@ -21,33 +21,36 @@ to collect stats to import a third-party module. Therefore, we choose to
 re-use the `logging` module by adding a `statistics` object to it.
 
 That `logging.statistics` object is a nested dict. It is not a custom class,
-because that would 1) require libraries and applications to import a third-
-party module in order to participate, 2) inhibit innovation in extrapolation
-approaches and in reporting tools, and 3) be slow. There are, however, some
-specifications regarding the structure of the dict.
+because that would:
 
-    {
-   +----"SQLAlchemy": {
-   |        "Inserts": 4389745,
-   |        "Inserts per Second":
-   |            lambda s: s["Inserts"] / (time() - s["Start"]),
-   |  C +---"Table Statistics": {
-   |  o |        "widgets": {-----------+
- N |  l |            "Rows": 1.3M,      | Record
- a |  l |            "Inserts": 400,    |
- m |  e |        },---------------------+
- e |  c |        "froobles": {
- s |  t |            "Rows": 7845,
- p |  i |            "Inserts": 0,
- a |  o |        },
- c |  n +---},
- e |        "Slow Queries":
-   |            [{"Query": "SELECT * FROM widgets;",
-   |              "Processing Time": 47.840923343,
-   |              },
-   |             ],
-   +----},
-    }
+ 1. require libraries and applications to import a third-party module in order to participate
+ 2. inhibit innovation in extrapolation approaches and in reporting tools, and
+ 3. be slow.
+
+There are, however, some specifications regarding the structure of the dict.::
+
+   {
+     +----"SQLAlchemy": {
+     |        "Inserts": 4389745,
+     |        "Inserts per Second":
+     |            lambda s: s["Inserts"] / (time() - s["Start"]),
+     |  C +---"Table Statistics": {
+     |  o |        "widgets": {-----------+
+   N |  l |            "Rows": 1.3M,      | Record
+   a |  l |            "Inserts": 400,    |
+   m |  e |        },---------------------+
+   e |  c |        "froobles": {
+   s |  t |            "Rows": 7845,
+   p |  i |            "Inserts": 0,
+   a |  o |        },
+   c |  n +---},
+   e |        "Slow Queries":
+     |            [{"Query": "SELECT * FROM widgets;",
+     |              "Processing Time": 47.840923343,
+     |              },
+     |             ],
+     +----},
+   }
 
 The `logging.statistics` dict has four levels. The topmost level is nothing
 more than a set of names to introduce modularity, usually along the lines of
@@ -65,13 +68,13 @@ Each namespace, then, is a dict of named statistical values, such as
 good on a report: spaces and capitalization are just fine.
 
 In addition to scalars, values in a namespace MAY be a (third-layer)
-dict, or a list, called a "collection". For example, the CherryPy StatsTool
-keeps track of what each request is doing (or has most recently done)
-in a 'Requests' collection, where each key is a thread ID; each
+dict, or a list, called a "collection". For example, the CherryPy 
+:class:`StatsTool` keeps track of what each request is doing (or has most
+recently done) in a 'Requests' collection, where each key is a thread ID; each
 value in the subdict MUST be a fourth dict (whew!) of statistical data about
 each thread. We call each subdict in the collection a "record". Similarly,
-the StatsTool also keeps a list of slow queries, where each record contains
-data about each slow query, in order.
+the :class:`StatsTool` also keeps a list of slow queries, where each record
+contains data about each slow query, in order.
 
 Values in a namespace or record may also be functions, which brings us to:
 
@@ -86,7 +89,7 @@ scalar values you already have on hand.
 
 When it comes time to report on the gathered data, however, we usually have
 much more freedom in what we can calculate. Therefore, whenever reporting
-tools (like the provided StatsPage CherryPy class) fetch the contents of
+tools (like the provided :class:`StatsPage` CherryPy class) fetch the contents of
 `logging.statistics` for reporting, they first call `extrapolate_statistics`
 (passing the whole `statistics` dict as the only argument). This makes a
 deep copy of the statistics dict so that the reporting tool can both iterate
@@ -108,7 +111,7 @@ After the whole thing has been extrapolated, it's time for:
 Reporting
 ---------
 
-The StatsPage class grabs the `logging.statistics` dict, extrapolates it all,
+The :class:`StatsPage` class grabs the `logging.statistics` dict, extrapolates it all,
 and then transforms it to HTML for easy viewing. Each namespace gets its own
 header and attribute table, plus an extra table for each collection. This is
 NOT part of the statistics specification; other tools can format how they like.
@@ -145,12 +148,12 @@ entries to False or True, if present.
 Usage
 =====
 
-To collect statistics on CherryPy applications:
+To collect statistics on CherryPy applications::
 
     from cherrypy.lib import cpstats
     appconfig['/']['tools.cpstats.on'] = True
 
-To collect statistics on your own code:
+To collect statistics on your own code::
 
     import logging
     # Initialize the repository
@@ -172,11 +175,11 @@ To collect statistics on your own code:
         if mystats.get('Enabled', False):
             mystats['Important Events'] += 1
 
-To report statistics:
+To report statistics::
 
     root.cpstats = cpstats.StatsPage()
 
-To format statistics reports:
+To format statistics reports::
 
     See 'Reporting', above.
 
