@@ -374,22 +374,26 @@ class RamSession(Session):
 
     def clean_up(self):
         """Clean up expired sessions."""
+
         now = self.now()
-        for id, (data, expiration_time) in copyitems(self.cache):
+        for _id, (data, expiration_time) in copyitems(self.cache):
             if expiration_time <= now:
                 try:
-                    del self.cache[id]
+                    del self.cache[_id]
                 except KeyError:
                     pass
                 try:
-                    del self.locks[id]
+                    if self.locks[_id].acquire(blocking=False):
+                        lock = self.locks.pop(_id)
+                        lock.release()
                 except KeyError:
                     pass
 
         # added to remove obsolete lock objects
-        for id in list(self.locks):
-            if id not in self.cache:
-                self.locks.pop(id, None)
+        for _id in list(self.locks):
+            if _id not in self.cache and self.locks[_id].acquire(blocking=False):
+                lock = self.locks.pop(_id)
+                lock.release()
 
     def _exists(self):
         return self.id in self.cache

@@ -1,6 +1,5 @@
 import os
 localDir = os.path.dirname(__file__)
-import sys
 import threading
 import time
 
@@ -8,6 +7,7 @@ import cherrypy
 from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
 from cherrypy.lib import sessions
 from cherrypy.lib.httputil import response_codes
+
 
 def http_methods_allowed(methods=['GET', 'HEAD']):
     method = cherrypy.request.method.upper()
@@ -23,8 +23,8 @@ def setup_server():
     class Root:
 
         _cp_config = {'tools.sessions.on': True,
-                      'tools.sessions.storage_type' : 'ram',
-                      'tools.sessions.storage_path' : localDir,
+                      'tools.sessions.storage_type': 'ram',
+                      'tools.sessions.storage_path': localDir,
                       'tools.sessions.timeout': (1.0 / 60),
                       'tools.sessions.clean_freq': (1.0 / 60),
                       }
@@ -122,6 +122,7 @@ def setup_server():
 
 
 from cherrypy.test import helper
+
 
 class SessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
@@ -348,10 +349,24 @@ class SessionTest(helper.CPWebCase):
             else:
                 self.fail("Unknown session id in cache: %r", cache)
 
+    def test_8_Ram_Cleanup(self):
+        def lock():
+            s1 = sessions.RamSession()
+            s1.acquire_lock()
+            time.sleep(1)
+            s1.release_lock()
+
+        t = threading.Thread(target=lock)
+        t.start()
+        s2 = sessions.RamSession()
+        s2.clean_up()
+        self.assertEqual(len(sessions.RamSession.locks), 1, 'Clean up should not remove active lock')
+        t.join()
+
 
 import socket
 try:
-    import memcache
+    import memcache  # NOQA
 
     host, port = '127.0.0.1', 11211
     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
@@ -426,7 +441,7 @@ else:
 ##                    sys.stdout.write("%d " % index)
                 if not self.body.isdigit():
                     self.fail(self.body)
-                data_dict[index] = v = int(self.body)
+                data_dict[index] = int(self.body)
 
             # Start <request_count> concurrent requests from
             # each of <client_thread_count> clients
@@ -461,4 +476,3 @@ else:
             # code has to survive calling save/close without init.
             self.getPage('/restricted', self.cookies, method='POST')
             self.assertErrorPage(405, response_codes[405][1])
-
