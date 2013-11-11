@@ -13,28 +13,25 @@
 CherryPy |release| Documentation
 ********************************
 
-Sections
-========
-
 :doc:`Introduction <intro/index>`
 ---------------------------------
-*The who, what, and why of CherryPy*
+The who, what, and why of CherryPy
 
 :doc:`Tutorial <tutorial/index>`
 ---------------------------------
-*The basics of CherryPy*
+The basics of CherryPy
 
 :doc:`Programmer's Guide <progguide/index>`
 -------------------------------------------
-*How to perform common tasks*
+How to perform common tasks
 
 :doc:`Deployment Guide <deployguide/index>`
 -------------------------------------------
-*Getting your application running and on the web*
+Getting your application running and on the web
 
 :doc:`Reference Manual <refman/index>`
 --------------------------------------
-*Module, class, and function reference*
+Module, class, and function reference
 
 :doc:`Appendix <appendix/index>`
 --------------------------------
