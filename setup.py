@@ -43,6 +43,7 @@ classifiers=[
     "Intended Audience :: Developers",
     "License :: Freely Distributable",
     "Operating System :: OS Independent",
+    "Framework :: CherryPy",
     "Programming Language :: Python",
     "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 2.3",
