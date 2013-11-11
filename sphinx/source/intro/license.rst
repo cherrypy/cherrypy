@@ -4,7 +4,7 @@ CherryPy License (BSD)
 
 ::
 
-    Copyright (c) 2002-2010, CherryPy Team (team@cherrypy.org)
+    Copyright (c) 2002-2013, CherryPy Team (team@cherrypy.org)
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without modification, 
