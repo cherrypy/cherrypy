@@ -42,7 +42,6 @@ This benchmarking was performed on a laptop in the following environment:
 
 We used the following basic CherryPy app:
 
-
 .. code-block:: python
 
     import cherrypy
@@ -61,6 +60,25 @@ We used the following basic CherryPy app:
         cherrypy.config.update({'log.screen': False})
 
         cherrypy.quickstart(Root())
+
+For the raw WSGI server tests, we used the following code:
+
+.. code-block:: python
+
+    from cherrypy import wsgiserver
+
+    def my_crazy_app(environ, start_response):
+        start_response('200 OK', [('Content-type','text/plain')])
+        return ['OK']
+
+    if __name__ == '__main__':
+        server = wsgiserver.CherryPyWSGIServer(
+                    ('0.0.0.0', 8080), my_crazy_app)
+        server.stats['Enabled'] = False
+        try:
+            server.start()
+        except KeyboardInterrupt:
+            server.stop()
 
 
 Test 1: Dynamic content / no concurrent connections
