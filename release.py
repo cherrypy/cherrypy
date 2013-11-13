@@ -13,6 +13,7 @@ import sys
 import os
 import platform
 import shutil
+import importlib
 
 VERSION='3.2.4'
 
@@ -30,6 +31,17 @@ files_with_versions = ('release.py', 'setup.py', 'cherrypy/__init__.py',
 	'cherrypy/wsgiserver/wsgiserver2.py',
 	'cherrypy/wsgiserver/wsgiserver3.py',
 )
+
+def check_wheel():
+	"""
+	Ensure 'wheel' is installed (required for bdist_wheel).
+	"""
+	try:
+		importlib.import_module('wheel')
+	except ImportError:
+		print("CherryPy requires 'wheel' be installed to produce wheels.",
+			file=sys.stderr)
+		raise SystemExit(5)
 
 def check_status():
 	"""
@@ -72,6 +84,7 @@ dist_commands = [
 	[sys.executable, 'setup.py', 'sdist', '--format=zip'],
 	[sys.executable, 'setup.py', 'sdist', '--format=gztar'],
 	[sys.executable, 'setup.py', 'bdist_wininst'],
+	[sys.executable, 'setup.py', 'bdist_wheel'],
 ]
 
 def build():
@@ -114,6 +127,7 @@ def main():
 		"or later.")
 	assert platform.system() == 'Windows', ('You must release on Windows '
 		'(to create Windows installers)')
+	check_wheel()
 	check_status()
 	bump_versions()
 	tag_release()
