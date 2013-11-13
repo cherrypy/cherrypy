@@ -72,6 +72,7 @@ dist_commands = [
 	[sys.executable, 'setup.py', 'sdist', '--format=zip'],
 	[sys.executable, 'setup.py', 'sdist', '--format=gztar'],
 	[sys.executable, 'setup.py', 'bdist_wininst'],
+	[sys.executable, 'setup.py', 'bdist_wheel'],
 ]
 
 def build():
