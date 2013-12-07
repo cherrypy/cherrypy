@@ -97,7 +97,13 @@ except ImportError:
     import StringIO
 DEFAULT_BUFFER_SIZE = -1
 
-_fileobject_uses_str_type = isinstance(socket._fileobject(None)._rbuf, basestring)
+class FauxSocket(object):
+    """Faux socket with the minimal interface required by pypy"""
+
+    def _reuse(self):
+        pass
+
+_fileobject_uses_str_type = isinstance(socket._fileobject(FauxSocket())._rbuf, basestring)
 
 import threading
 import time
