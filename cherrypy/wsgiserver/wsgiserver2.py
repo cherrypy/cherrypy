@@ -102,8 +102,9 @@ class FauxSocket(object):
 
     def _reuse(self):
         pass
-
+    
 _fileobject_uses_str_type = isinstance(socket._fileobject(FauxSocket())._rbuf, basestring)
+del FauxSocket # this class is not longer required for anything.
 
 import threading
 import time
@@ -1282,8 +1283,8 @@ class HTTPConnection(object):
     def __init__(self, server, sock, makefile=CP_fileobject):
         self.server = server
         self.socket = sock
-        self.rfile = makefile(sock, "rb", self.rbufsize)
-        self.wfile = makefile(sock, "wb", self.wbufsize)
+        self.rfile = makefile(sock._sock, "rb", self.rbufsize)
+        self.wfile = makefile(sock._sock, "wb", self.wbufsize)
         self.requests_seen = 0
 
     def communicate(self):
@@ -1946,7 +1947,7 @@ class HTTPServer(object):
                            "Content-Type: text/plain\r\n\r\n",
                            msg]
 
-                    wfile = makefile(s, "wb", DEFAULT_BUFFER_SIZE)
+                    wfile = makefile(s._sock, "wb", DEFAULT_BUFFER_SIZE)
                     try:
                         wfile.sendall("".join(buf))
                     except socket.error:
