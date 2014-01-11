@@ -12,3 +12,4 @@ bin
 *.kdev4
 include
 sphinx/source/_build
+.tox
