@@ -4,78 +4,84 @@
 Success Stories
 ***************
 
-You are interested in CherryPy but you would like to hear more from people using it, or simply check out products or application running it.
+You are interested in CherryPy but you would like to hear more from people
+using it, or simply check out products or application running it.
 
-If you would like to have your CherryPy powered website or product listed here, contact us via our [wiki:CherryPyMailingLists mailing lists] or [wiki:CherryPyIrcChannel IRC].
+If you would like to have your CherryPy powered website or product listed here,
+contact us via our `mailing list <http://groups.google.com/group/cherrypy-users>`_
+or IRC (#cherrypy on `OFTC <http://www.oftc.net/oftc/>`_).
 
 
 Websites running atop CherryPy
 ==============================
 
-http://www.yougov.com - International market research firm, conducts millions of surveys on CherryPy yearly
+`Hulu Deejay and Hulu Sod <http://tech.hulu.com/blog/2013/03/13/python-and-hulu>`_ - Hulu uses
+CherryPy for some projects.
+"The service needs to be very high performance.
+Python, together with CherryPy,
+`gunicorn <http://gunicorn.org>`_, and gevent more than provides for this."
 
-http://www.cuil.com - "The world's biggest search engine"
+`Netflix <http://techblog.netflix.com/2013/03/python-at-netflix.html>`_ - Netflix uses CherryPy as a building block in their infrastructure: "Restful APIs to
+large applications with requests, providing web interfaces with CherryPy and Bottle,
+and crunching data with scipy."
 
-`PictureHouse cinemas web sale <http://sales.picturehouses.org.uk/>`_ - E-commerce site for the !PictureHouse cinema chain in the UK
+`Urbanility <http://urbanility.com>`_ - French website for local neighbourhood assets in Rennes, France.
 
-`http://jammersbase.com <http://jammersbase.com>`_
+`MROP Supply <https://www.mropsupply.com>`_ - Webshop for industrial equipment,
+developed using CherryPy 3.2.2 utilizing Python 3.2,
+with libs: `Jinja2-2.6 <http://jinja.pocoo.org/docs>`_, davispuh-MySQL-for-Python-3-3403794,
+pyenchant-1.6.5 (for search spelling).
+"I'm coming over from .net development and found Python and CherryPy to
+be surprisingly minimalistic.  No unnecessary overhead - build everything you
+need without the extra fluff.  I'm a fan!"
 
-`http://www.pennspurchase.com <http://www.pennspurchase.com>`_
+`CherryMusic <http://www.fomori.org/cherrymusic>`_ - A music streaming server written in python:
+Stream your own music collection to all your devices! CherryMusic is open source.
 
-`Almad's Homepage <http://www.almad.net/>`_ - Simple homepage with blog (Czech only, sorry)
+`YouGov Global <http://www.yougov.com>`_ - International market research firm, conducts
+millions of surveys on CherryPy yearly.
 
-`http://bank.muratordom.pl] & [http://bank.muratorplus.pl http://bank.muratorplus.pl <http://bank.muratordom.pl>`_ - Sorry, Polish only
+`Aculab Cloud <http://cloud.aculab.com>`_ - Voice and fax applications on the cloud.
+A simple telephony API for Python, C#, C++, VB, etc...
+The website and all front-end and back-end web services are built with CherryPy,
+fronted by nginx (just handling the ssh and reverse-proxy), and running on AWS in two regions.
 
-[http://www.defuze.org/] - A blog based on CherryPy2
+`Learnit Training <http://www.learnit.nl>`_ - Dutch website for an IT, Management and
+Communication training company. Built on CherryPy 3.2.0 and Python 2.7.3, with
+`oursql <http://pythonhosted.org/oursql>`_ and
+`DBUtils <http://www.webwareforpython.org/DBUtils>`_ libraries, amongst others.
 
-`CTChallenge <http://ctchallenge.org>`_ - A small, but growing site about a bicycle tour that raises money to fight cancer.
+`Linstic <http://linstic.com>`_ - Sticky Notes in your browser (with linking).
 
-`Food on line <http://www.foodfileonline.com>`_ - An online calorie counter and nutrition database
+`Almad's Homepage <http://www.almad.net>`_ - Simple homepage with blog.
 
-`Personal site of Maries Ionel Cristian (ionel_mc) <http://ionel.zapto.org/>`_ - source code for the site and supporting projects available for download.
-
-`diggdot.us] - Built using [http://www.turbogears.org/ TurboGears <http://diggdot.us/>`_, running CherryPy: Cycling Digg, slashdot, and del.icio.us/popular news items.
-
-`stratolab <http://stratolab.com/>`_ - Video Game Courses for Children
-
-`Serpia <http://www.serpia.org/>`_ - A place for Pythoners with some interesting tutorials
-
-`hosted-projects.com <http://www.hosted-projects.com/>`_ - hosted-projects is a company specialized in web hosting services for software project teams offering the Subversion revision control system coupled with project and issue management software like Trac and Bugzilla. hosted-projects.com uses CherryPy for its web control panel. 
-
-`eswap.com <http://www.eswap.com>`_ - website for financial charts, tagging stocks and researching investment ideas.
-
-I have built (and I'm maintaining it now) the `PennsPurchase <http://www.pennspurchase.com>`_ website. It uses Cherry, compiled (or not) !CheetahTemplates and PostgreSQL database (with sqlobject module). -- ''Pawel Maczewski''
-
-`indextar.com/ba <http://www.indextar.com/ba>`_ - a comprehensive directory of Buenos Aires businesses and services for expatriates.
-
-[http://www.worldwildweather.com/] - Personalized marine weather forecasts.
 
 Products based on CherryPy
 ==========================
 
-`TurboGears <http://www.turbogears.org/>`_ - The rapid web development megaframework
+`SABnzbd <http://sabnzbd.org>`_ - Open Source Binary Newsreader written in Python.
 
-`Indigo <http://www.perceptiveautomation.com/indigo/index.html>`_ - An X10 home control server for Mac
+`Headphones <https://github.com/rembo10/headphones>`_  - Third-party add-on for SABnzbd.
 
-`Subway <http://www.gosubway.org/>`_ - Web development stack
+`SickBeard <http://sickbeard.com>`_ - "Sick Beard is a PVR for newsgroup users (with limited torrent support). It watches for new episodes of your favorite shows and when they are posted it downloads them, sorts and renames them, and optionally generates metadata for them."
 
-`SlikiWiki <http://www.sf.net/projects/slikiwiki>`_ - A simple wiki
+`TurboGears <http://www.turbogears.org>`_ - The rapid web development megaframework. Turbogears 1.x used Cherrypy. "CherryPy is the underlying application server for TurboGears. It is responsible for taking the requests from the user’s browser, parses them and turns them into calls into the Python code of the web application. Its role is similar to application servers used in other programming languages".
 
-`opkee <http://svn.defuze.org/oss/opkee/>`_ - A simple blogging example
+`Indigo <http://www.perceptiveautomation.com/indigo/index.html>`_ - "An intelligent home control
+server that integrates home control hardware modules to provide control of your home. Indigo's built-in
+Web server and client/server architecture give you control and access to your home remotely from
+other Macs, PCs, internet tablets, PDAs, and mobile phones."
 
-`BAOW <http://www.baow.org>`_ - A lightweight content manage system based on CherryPy, Python language and SQL database.
+`SlikiWiki <http://www.sf.net/projects/slikiwiki>`_ - Wiki built on CherryPy and featuring WikiWords, automatic backlinking, site map generation, full text search, locking for concurrent edits, RSS feed embedding, per page access control lists, and page formatting using PyTextile markup."
 
-`Planet Plus <http://planetplus.python-hosting.com/>`_ is an add-on for Planet, the feed aggregator.
+`read4me <http://sourceforge.net/projects/read4me>`_ - read4me is a Python feed-reading web service.
 
-`Brockman <http://projects.dowski.com/projects/brockman>`_ - A simple software project catalog example
+`Firebird QA tools <http://www.firebirdsql.org/en/quality-assurance>`_ - Firebird QA tools are based on CherryPy.
 
-`read4me <http://read4me.sourceforge.net/wiki/index.php/Main_Page>`_ - read4me is a Python feed-reading web service.
-
-`Skeletonz <http://www.daimi.au.dk/~amix/skeletonz/>`_ - Skeletonz is an Ajax approach on a content management system (CMS)
-
-Firebird QA tools are based on CherryPy
+`salt-api <https://github.com/saltstack/salt-api>`_ - A REST API for Salt, the infrastructure orchestration tool.
 
 Products inspired by CherryPy
 =============================
 
-`OOWeb <http://ooweb.sourceforge.net/>`_ ''is a lightweight, embedded HTTP server for '''Java''' applications that maps objects to URL directories, methods to pages and form/querystring arguments as method parameters.'' ... ''OOWeb was unashamedly inspired by CherryPy'' =======
+`OOWeb <http://ooweb.sourceforge.net/>`_ - "OOWeb is a lightweight, embedded HTTP server for Java applications that maps objects to URL directories, methods to pages and form/querystring arguments as method parameters. OOWeb was originally inspired by CherryPy."
+

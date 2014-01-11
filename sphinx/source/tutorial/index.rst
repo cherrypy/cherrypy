@@ -1,6 +1,6 @@
-*********************
-Tutorial and Concepts
-*********************
+********
+Tutorial
+********
 
 What is this tutorial about?
 ============================
@@ -35,9 +35,9 @@ Learning Python
 
 As stated above, this is not a guide to the Python language. There are plenty of
 good resources for those learning Python (just to name a few among the best:
-`Python course in Bioinformatics <http://www.pasteur.fr/recherche/unites/sis/formation/python/>`_,
-`A Byte Of Python <http://www.byteofpython.info/>`_ and
-`Dive into Python <http://www.diveintopython.org/>`_).
+`Learn Python The Hard Way <http://learnpythonthehardway.org/>`_, 
+`A Byte Of Python <http://swaroopch.com/notes/python/>`_ and
+`Dive into Python <http://www.diveintopython.net/>`_).
 The `official Python website <http://www.python.org>`_ lists some good
 resources, including an excellent
 `tutorial <http://docs.python.org/tut/tut.html>`_.
@@ -54,4 +54,5 @@ Start the Tutorial
    config
    tools
    engine
+   REST
 

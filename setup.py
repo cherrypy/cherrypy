@@ -12,26 +12,50 @@ except ImportError:
     from distutils.core import setup
 
 from distutils.command.install import INSTALL_SCHEMES
+from distutils.command.build_py import build_py
 import sys
-import os
 import re
+
+
+class cherrypy_build_py(build_py):
+    "Custom version of build_py that excludes Python-specific modules"
+    def build_module(self, module, module_file, package):
+        python3 = sys.version_info >= (3,)
+        if python3:
+            exclude_pattern = re.compile('_cpcompat_subprocess')
+            if exclude_pattern.match(module):
+                return  # skip it
+        return build_py.build_module(self, module, module_file, package)
+
 
 ###############################################################################
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.2.2"
+version = "4.0.0alpha"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
-classifiers=[
-    "Development Status :: 5 - Production/Stable",
+classifiers = [
+    "Development Status :: 3 - Alpha",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
     "License :: Freely Distributable",
     "Operating System :: OS Independent",
+    "Framework :: CherryPy",
+    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.3",
+    "Programming Language :: Python :: 2.4",
+    "Programming Language :: Python :: 2.5",
+    "Programming Language :: Python :: 2.6",
+    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.3",
+    "Programming Language :: Python :: Implementation",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: Jython",
+    "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
@@ -40,17 +64,16 @@ classifiers=[
     "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
-author="CherryPy Team"
-author_email="team@cherrypy.org"
-url="http://www.cherrypy.org"
-cp_license="BSD"
-packages=[
+author = "CherryPy Team"
+author_email = "team@cherrypy.org"
+url = "http://www.cherrypy.org"
+cp_license = "BSD"
+packages = [
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
     "cherrypy.scaffold",
 ]
-download_url="http://download.cherrypy.org/cherrypy/3.2.2/"
-data_files=[
+data_files = [
     ('cherrypy', ['cherrypy/cherryd',
                   'cherrypy/favicon.ico',
                   'cherrypy/LICENSE.txt',
@@ -76,6 +99,10 @@ data_files=[
 ]
 scripts = ["cherrypy/cherryd"]
 
+cmd_class = dict(
+    build_py=cherrypy_build_py,
+)
+
 if sys.version_info >= (3, 0):
     required_python_version = '3.0'
 else:
@@ -91,6 +118,7 @@ else:
 if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
     data_files = [(r'\PURELIB\%s' % path, files) for path, files in data_files]
 
+
 def main():
     if sys.version < required_python_version:
         s = "I'm sorry, but %s %s requires Python %s or later."
@@ -101,7 +129,7 @@ def main():
     for scheme in list(INSTALL_SCHEMES.values()):
         scheme['data'] = scheme['purelib']
 
-    dist = setup(
+    setup(
         name=name,
         version=version,
         description=desc,
@@ -112,12 +140,12 @@ def main():
         url=url,
         license=cp_license,
         packages=packages,
-        download_url=download_url,
         data_files=data_files,
         scripts=scripts,
+        cmdclass=cmd_class,
         install_requires=[
             "magicbus>=3.3.0alpha",
-            "cheroot>=3.3.0alpha",
+            "cheroot>=4.0.0beta",
         ],
     )
 

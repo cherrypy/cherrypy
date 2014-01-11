@@ -10,14 +10,14 @@
 body {
     font-family: sans-serif;
     font-size: 100%;
-    background-color: #880000;
+    background:  url("bgsides.png") repeat;
     color: #000;
     margin: 0;
     padding: 0;
 }
 
 div.document {
-    background-color: #880000;
+    margin: 30px 0;
 }
 
 div.documentwrapper {
@@ -32,11 +32,13 @@ div.bodywrapper {
 div.body {
     background-color: #ffffff;
     color: #000000;
-    padding: 0 20px 30px 20px;
+    padding: 20px 40px;
+    border-radius: 3px 0 0 3px;
+    box-shadow: -1px 1px 5px #ddd;
 }
 
 div.footer {
-    color: white;
+    color: #BF0000;
     width: 100%;
     padding: 9px 0 9px 0;
     text-align: center;
@@ -44,18 +46,20 @@ div.footer {
 }
 
 div.footer a {
-    color: white;
+    color: #BF0000;
     text-decoration: underline;
 }
 
 div.related {
-    background-color: #880000;
+    background: #BF0000;
     line-height: 30px;
-    color: white;
+    color: #ff9393;
+    font-family: verdana;
+    font-size: 11px;
 }
 
 div.related a {
-    color: #FFEEEE;
+    color: #fff;
 }
 
 div.sphinxsidebar {
@@ -63,7 +67,7 @@ div.sphinxsidebar {
 
 div.sphinxsidebar h3 {
     font-family: 'Trebuchet MS', sans-serif;
-    color: white;
+    color: #BF0000;
     font-size: 1.4em;
     font-weight: normal;
     margin: 0;
@@ -71,12 +75,12 @@ div.sphinxsidebar h3 {
 }
 
 div.sphinxsidebar h3 a {
-    color: white;
+    color: #BF0000;
 }
 
 div.sphinxsidebar h4 {
     font-family: 'Trebuchet MS', sans-serif;
-    color: white;
+    color: #BF0000;
     font-size: 1.3em;
     font-weight: normal;
     margin: 5px 0 0 0;
@@ -84,7 +88,7 @@ div.sphinxsidebar h4 {
 }
 
 div.sphinxsidebar p {
-    color: white;
+    color: #BF0000;
 }
 
 div.sphinxsidebar p.topless {
@@ -94,11 +98,12 @@ div.sphinxsidebar p.topless {
 div.sphinxsidebar ul {
     margin: 10px;
     padding: 0;
-    color: white;
+    color: #BF0000;
 }
 
 div.sphinxsidebar a {
-    color: #FFEEEE;
+    color: #666666
+
 }
 
 div.sphinxsidebar input {
@@ -130,7 +135,7 @@ div.body h4,
 div.body h5,
 div.body h6 {
     font-family: 'Trebuchet MS', sans-serif;
-    background-color: #FFF8FB;
+    background-color: white;
     font-weight: normal;
     color: black;
     border-bottom: 1px solid #ccc;
@@ -154,7 +159,7 @@ a.headerlink {
 
 a.headerlink:hover {
     background-color: #660000;
-    color: white;
+    color: #BF0000;
 }
 
 div.body p, div.body dd, div.body li {
@@ -199,7 +204,7 @@ p.admonition-title:after {
 
 pre {
     padding: 5px;
-    background-color: #FFEEEE;
+    background-color: #F9F9F9;
     color: #333333;
     line-height: 120%;
     border: 1px solid #ac9;
@@ -224,3 +229,6 @@ table.docutils td {
     padding: 0.25em;
 }
 
+div.sphinxsidebarwrapper {
+    padding: 10px 5px 0 25px;
+}

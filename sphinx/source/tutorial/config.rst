@@ -44,7 +44,7 @@ config entries. Here's an example of passing a dict argument::
                             'server.socket_port': 80,
                            })
 
-The ``server.socket_host`` option n this example determines on which network
+The ``server.socket_host`` option in this example determines on which network
 interface CherryPy will listen. The ``server.socket_port`` option declares
 the TCP port on which to listen.
 
@@ -77,9 +77,9 @@ or, in python code::
             'tools.trailing_slash.on': False,
         }
     }
-    cherrypy.tree.mount(Root(), "/", config=config)
+    cherrypy.tree.mount(Root(), config=config)
 
-CherryPy doesn't use any sections that don't start with ``"/"`` (except
+CherryPy only uses sections that start with ``"/"`` (except
 ``[global]``, see below). That means you can place your own configuration
 entries in a CherryPy config file by giving them a section name which does not
 start with ``"/"``. For example, you might include database entries like this::
@@ -110,7 +110,7 @@ This dict contains only those config entries which apply to the given request.
 
 .. note::
 
-   when you do an :class:`InternalRedirect<cherrypy._cperror.InternalRedirect`,
+   when you do an :class:`InternalRedirect<cherrypy._cperror.InternalRedirect>`,
    this config attribute is recalculated for the new path.
 
 Declaration
@@ -164,7 +164,7 @@ an application, you'll see the tracebacks. In other words, use this order::
                             })
 
     # Mount each app and pass it its own config
-    cherrypy.tree.mount(root1, "/", appconf1)
+    cherrypy.tree.mount(root1, "", appconf1)
     cherrypy.tree.mount(root2, "/forum", appconf2)
     cherrypy.tree.mount(root3, "/blog", appconf3)
 
@@ -353,7 +353,7 @@ tools
 ^^^^^
 
 Enables and configures additional request-processing packages. See the
-:doc:`/concepts/tools` overview for more information.
+:doc:`/tutorial/tools` overview for more information.
 
 wsgi
 ^^^^
@@ -425,10 +425,14 @@ Environments
 ============
 
 The only key that does not exist in a namespace is the *"environment"* entry.
-This special entry *imports* other config entries from a template stored in
-``cherrypy._cpconfig.environments[environment]``. It only applies to the
-global config, and only when you use
-:func:`cherrypy.config.update <cherrypy._cpconfig.Config.update>`.
+It only applies to the global config, and only when you use
+:func:`cherrypy.config.update <cherrypy._cpconfig.Config.update>`. This special
+entry *imports* other config entries from the following template stored in
+``cherrypy._cpconfig.environments[environment]``.
+
+.. literalinclude:: ../../../cherrypy/_cpconfig.py
+    :start-after: Sphinx begin config.environments
+    :end-before: Sphinx end config.environments
 
 If you find the set of existing environments (production, staging, etc) too
 limiting or just plain wrong, feel free to extend them or add new environments::

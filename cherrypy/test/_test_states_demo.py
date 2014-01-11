@@ -7,23 +7,23 @@ import cherrypy
 
 
 class Root:
-    
+
     def index(self):
         return "Hello World"
     index.exposed = True
-    
+
     def mtimes(self):
         return repr(cherrypy.engine.publish("Autoreloader", "mtimes"))
     mtimes.exposed = True
-    
+
     def pid(self):
         return str(os.getpid())
     pid.exposed = True
-    
+
     def start(self):
         return repr(starttime)
     start.exposed = True
-    
+
     def exit(self):
         # This handler might be called before the engine is STARTED if an
         # HTTP worker thread handles it before the HTTP server returns
@@ -32,7 +32,7 @@ class Root:
         cherrypy.engine.wait(state=cherrypy.engine.states.STARTED)
         cherrypy.engine.exit()
     exit.exposed = True
-    
+
 
 def unsub_sig():
     cherrypy.log("unsubsig: %s" % cherrypy.config.get('unsubsig', False))

@@ -21,33 +21,36 @@ to collect stats to import a third-party module. Therefore, we choose to
 re-use the `logging` module by adding a `statistics` object to it.
 
 That `logging.statistics` object is a nested dict. It is not a custom class,
-because that would 1) require libraries and applications to import a third-
-party module in order to participate, 2) inhibit innovation in extrapolation
-approaches and in reporting tools, and 3) be slow. There are, however, some
-specifications regarding the structure of the dict.
+because that would:
 
-    {
-   +----"SQLAlchemy": {
-   |        "Inserts": 4389745,
-   |        "Inserts per Second":
-   |            lambda s: s["Inserts"] / (time() - s["Start"]),
-   |  C +---"Table Statistics": {
-   |  o |        "widgets": {-----------+
- N |  l |            "Rows": 1.3M,      | Record
- a |  l |            "Inserts": 400,    |
- m |  e |        },---------------------+
- e |  c |        "froobles": {
- s |  t |            "Rows": 7845,
- p |  i |            "Inserts": 0,
- a |  o |        },
- c |  n +---},
- e |        "Slow Queries":
-   |            [{"Query": "SELECT * FROM widgets;",
-   |              "Processing Time": 47.840923343,
-   |              },
-   |             ],
-   +----},
-    }
+ 1. require libraries and applications to import a third-party module in order to participate
+ 2. inhibit innovation in extrapolation approaches and in reporting tools, and
+ 3. be slow.
+
+There are, however, some specifications regarding the structure of the dict.::
+
+   {
+     +----"SQLAlchemy": {
+     |        "Inserts": 4389745,
+     |        "Inserts per Second":
+     |            lambda s: s["Inserts"] / (time() - s["Start"]),
+     |  C +---"Table Statistics": {
+     |  o |        "widgets": {-----------+
+   N |  l |            "Rows": 1.3M,      | Record
+   a |  l |            "Inserts": 400,    |
+   m |  e |        },---------------------+
+   e |  c |        "froobles": {
+   s |  t |            "Rows": 7845,
+   p |  i |            "Inserts": 0,
+   a |  o |        },
+   c |  n +---},
+   e |        "Slow Queries":
+     |            [{"Query": "SELECT * FROM widgets;",
+     |              "Processing Time": 47.840923343,
+     |              },
+     |             ],
+     +----},
+   }
 
 The `logging.statistics` dict has four levels. The topmost level is nothing
 more than a set of names to introduce modularity, usually along the lines of
@@ -65,13 +68,13 @@ Each namespace, then, is a dict of named statistical values, such as
 good on a report: spaces and capitalization are just fine.
 
 In addition to scalars, values in a namespace MAY be a (third-layer)
-dict, or a list, called a "collection". For example, the CherryPy StatsTool
-keeps track of what each request is doing (or has most recently done)
-in a 'Requests' collection, where each key is a thread ID; each
+dict, or a list, called a "collection". For example, the CherryPy 
+:class:`StatsTool` keeps track of what each request is doing (or has most
+recently done) in a 'Requests' collection, where each key is a thread ID; each
 value in the subdict MUST be a fourth dict (whew!) of statistical data about
 each thread. We call each subdict in the collection a "record". Similarly,
-the StatsTool also keeps a list of slow queries, where each record contains
-data about each slow query, in order.
+the :class:`StatsTool` also keeps a list of slow queries, where each record
+contains data about each slow query, in order.
 
 Values in a namespace or record may also be functions, which brings us to:
 
@@ -86,7 +89,7 @@ scalar values you already have on hand.
 
 When it comes time to report on the gathered data, however, we usually have
 much more freedom in what we can calculate. Therefore, whenever reporting
-tools (like the provided StatsPage CherryPy class) fetch the contents of
+tools (like the provided :class:`StatsPage` CherryPy class) fetch the contents of
 `logging.statistics` for reporting, they first call `extrapolate_statistics`
 (passing the whole `statistics` dict as the only argument). This makes a
 deep copy of the statistics dict so that the reporting tool can both iterate
@@ -108,7 +111,7 @@ After the whole thing has been extrapolated, it's time for:
 Reporting
 ---------
 
-The StatsPage class grabs the `logging.statistics` dict, extrapolates it all,
+The :class:`StatsPage` class grabs the `logging.statistics` dict, extrapolates it all,
 and then transforms it to HTML for easy viewing. Each namespace gets its own
 header and attribute table, plus an extra table for each collection. This is
 NOT part of the statistics specification; other tools can format how they like.
@@ -145,12 +148,12 @@ entries to False or True, if present.
 Usage
 =====
 
-To collect statistics on CherryPy applications:
+To collect statistics on CherryPy applications::
 
     from cherrypy.lib import cpstats
     appconfig['/']['tools.cpstats.on'] = True
 
-To collect statistics on your own code:
+To collect statistics on your own code::
 
     import logging
     # Initialize the repository
@@ -172,11 +175,11 @@ To collect statistics on your own code:
         if mystats.get('Enabled', False):
             mystats['Important Events'] += 1
 
-To report statistics:
+To report statistics::
 
     root.cpstats = cpstats.StatsPage()
 
-To format statistics reports:
+To format statistics reports::
 
     See 'Reporting', above.
 
@@ -235,21 +238,21 @@ proc_time = lambda s: time.time() - s['Start Time']
 
 class ByteCountWrapper(object):
     """Wraps a file-like object, counting the number of bytes read."""
-    
+
     def __init__(self, rfile):
         self.rfile = rfile
         self.bytes_read = 0
-    
+
     def read(self, size=-1):
         data = self.rfile.read(size)
         self.bytes_read += len(data)
         return data
-    
+
     def readline(self, size=-1):
         data = self.rfile.readline(size)
         self.bytes_read += len(data)
         return data
-    
+
     def readlines(self, sizehint=0):
         # Shamelessly stolen from StringIO
         total = 0
@@ -262,13 +265,13 @@ class ByteCountWrapper(object):
                 break
             line = self.readline()
         return lines
-    
+
     def close(self):
         self.rfile.close()
-    
+
     def __iter__(self):
         return self
-    
+
     def next(self):
         data = self.rfile.next()
         self.bytes_read += len(data)
@@ -280,29 +283,29 @@ average_uriset_time = lambda s: s['Count'] and (s['Sum'] / s['Count']) or 0
 
 class StatsTool(cherrypy.Tool):
     """Record various information about the current request."""
-    
+
     def __init__(self):
         cherrypy.Tool.__init__(self, 'on_end_request', self.record_stop)
-    
+
     def _setup(self):
         """Hook this tool into cherrypy.request.
-        
+
         The standard CherryPy request object will automatically call this
         method when the tool is "turned on" in config.
         """
         if appstats.get('Enabled', False):
             cherrypy.Tool._setup(self)
             self.record_start()
-    
+
     def record_start(self):
         """Record the beginning of a request."""
         request = cherrypy.serving.request
         if not hasattr(request.rfile, 'bytes_read'):
             request.rfile = ByteCountWrapper(request.rfile)
             request.body.fp = request.rfile
-        
+
         r = request.remote
-        
+
         appstats['Current Requests'] += 1
         appstats['Total Requests'] += 1
         appstats['Requests'][threading._get_ident()] = {
@@ -322,30 +325,30 @@ class StatsTool(cherrypy.Tool):
         """Record the end of a request."""
         resp = cherrypy.serving.response
         w = appstats['Requests'][threading._get_ident()]
-        
+
         r = cherrypy.request.rfile.bytes_read
         w['Bytes Read'] = r
         appstats['Total Bytes Read'] += r
-        
+
         if resp.stream:
             w['Bytes Written'] = 'chunked'
         else:
             cl = int(resp.headers.get('Content-Length', 0))
             w['Bytes Written'] = cl
             appstats['Total Bytes Written'] += cl
-        
+
         w['Response Status'] = getattr(resp, 'output_status', None) or resp.status
-        
+
         w['End Time'] = time.time()
         p = w['End Time'] - w['Start Time']
         w['Processing Time'] = p
         appstats['Total Time'] += p
-        
+
         appstats['Current Requests'] -= 1
-        
+
         if debug:
             cherrypy.log('Stats recorded: %s' % repr(w), 'TOOLS.CPSTATS')
-        
+
         if uriset:
             rs = appstats.setdefault('URI Set Tracking', {})
             r = rs.setdefault(uriset, {
@@ -357,7 +360,7 @@ class StatsTool(cherrypy.Tool):
                 r['Max'] = p
             r['Count'] += 1
             r['Sum'] += p
-        
+
         if slow_queries and p > slow_queries:
             sq = appstats.setdefault('Slow Queries', [])
             sq.append(w.copy())
@@ -410,7 +413,7 @@ def pause_resume(ns):
 
 
 class StatsPage(object):
-    
+
     formatting = {
         'CherryPy Applications': {
             'Enabled': pause_resume('CherryPy Applications'),
@@ -448,8 +451,8 @@ class StatsPage(object):
             'Start time': iso_format,
         },
     }
-    
-    
+
+
     def index(self):
         # Transform the raw data into pretty output for HTML
         yield """
@@ -506,7 +509,7 @@ table.stats2 th {
             <th>%(key)s</th><td id='%(title)s-%(key)s'>%(value)s</td>""" % vars()
                 if colnum == 2: yield """
         </tr>"""
-            
+
             if colnum == 0: yield """
             <th></th><td></td>
             <th></th><td></td>
@@ -547,7 +550,7 @@ table.stats2 th {
 </html>
 """
     index.exposed = True
-    
+
     def get_namespaces(self):
         """Yield (title, scalars, collections) for each namespace."""
         s = extrapolate_statistics(logging.statistics)
@@ -574,7 +577,7 @@ table.stats2 th {
                         v = format % v
                     scalars.append((k, v))
             yield title, scalars, collections
-    
+
     def get_dict_collection(self, v, formatting):
         """Return ([headers], [rows]) for the given collection."""
         # E.g., the 'Requests' dict.
@@ -588,7 +591,7 @@ table.stats2 th {
                 if k3 not in headers:
                     headers.append(k3)
         headers.sort()
-        
+
         subrows = []
         for k2, record in sorted(v.items()):
             subrow = [k2]
@@ -604,9 +607,9 @@ table.stats2 th {
                     v3 = format % v3
                 subrow.append(v3)
             subrows.append(subrow)
-        
+
         return headers, subrows
-    
+
     def get_list_collection(self, v, formatting):
         """Return ([headers], [subrows]) for the given collection."""
         # E.g., the 'Slow Queries' list.
@@ -620,7 +623,7 @@ table.stats2 th {
                 if k3 not in headers:
                     headers.append(k3)
         headers.sort()
-        
+
         subrows = []
         for record in v:
             subrow = []
@@ -636,23 +639,23 @@ table.stats2 th {
                     v3 = format % v3
                 subrow.append(v3)
             subrows.append(subrow)
-        
+
         return headers, subrows
-    
+
     if json is not None:
         def data(self):
             s = extrapolate_statistics(logging.statistics)
             cherrypy.response.headers['Content-Type'] = 'application/json'
             return json.dumps(s, sort_keys=True, indent=4)
         data.exposed = True
-    
+
     def pause(self, namespace):
         logging.statistics.get(namespace, {})['Enabled'] = False
         raise cherrypy.HTTPRedirect('./')
     pause.exposed = True
     pause.cp_config = {'tools.allow.on': True,
                        'tools.allow.methods': ['POST']}
-    
+
     def resume(self, namespace):
         logging.statistics.get(namespace, {})['Enabled'] = True
         raise cherrypy.HTTPRedirect('./')

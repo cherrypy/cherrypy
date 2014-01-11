@@ -35,7 +35,9 @@ deliver multiple headers with the same key in the response.
     import cherrypy
 
     def multi_headers():
-        cherrypy.response.header_list.extend(cherrypy.response.multiheaders)
+        cherrypy.response.header_list.extend(
+            cherrypy.response.headers.encode_header_items(
+                cherrypy.response.multiheaders))
 
     cherrypy.tools.multiheaders = cherrypy.Tool('on_end_resource', multi_headers)
 

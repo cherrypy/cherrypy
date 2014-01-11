@@ -71,6 +71,6 @@ The following builtin plugins are subscribed by default:
  * :class:`Autoreloader<cherrypy.process.plugins.Autoreloader>` (off in the "production" :ref:`environment<environments>`)
  * :class:`cherrypy.server<cherrypy._cpserver.Server>`
  * :class:`cherrypy.checker<cherrypy._cpchecker.Checker>`
- * Engine log messages go to :class:`cherrypy.log<cherrypy._GlobalLogManager>`.
+ * :doc:`Engine log messages </refman/_cplogging>` go to :class:`cherrypy.log<cherrypy._GlobalLogManager>`.
  * A :class:`Signal Handler<cherrypy.process.plugins.SignalHandler>`.
 

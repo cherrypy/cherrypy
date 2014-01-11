@@ -57,7 +57,7 @@ def setup_server():
             return 'Hello world'
         silly.exposed = True
         silly._cp_config = {'response.headers.X-silly': 'sillyval'}
-        
+
         # Test the expose and config decorators
         #@cherrypy.expose
         #@cherrypy.config(foo='this3', **{'bax': 'this4'})
@@ -161,7 +161,7 @@ class ConfigTests(helper.CPWebCase):
             'request.show_tracebacks': True,
             'log.screen': False,
             'environment': 'test_suite',
-            'engine.autoreload_on': False,
+            'engine.autoreload.on': False,
             # From global config
             'luxuryyacht': 'throatwobblermangrove',
             # From Root._cp_config

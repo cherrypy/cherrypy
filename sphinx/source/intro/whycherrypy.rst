@@ -42,8 +42,9 @@ templating engines, etc. CherryPy applications are just like regular Python
 applications. CherryPy does not stand in your way if you want to use these
 brilliant tools.
 
-CherryPy also provides Tools and Plugins, which are powerful extension points
-needed to develop world-class web applications.
+CherryPy also provides :doc:`Tools </tutorial/tools>` and
+:doc:`Plugins </progguide/extending/customplugins>`, which are powerful
+extension points needed to develop world-class web applications.
 
 3. Maturity
 -----------
@@ -64,7 +65,9 @@ a superior tool for the job.
 ------------
 
 CherryPy has an active community that develops deployed CherryPy applications
-and are willing and ready to assist you on the CherryPy mailing list or IRC.
+and are willing and ready to assist you on the 
+`CherryPy mailing list <http://groups.google.com/group/cherrypy-users>`_ or
+IRC (#cherrypy on `OFTC <http://www.oftc.net/oftc/>`_).
 The developers also frequent the list and often answer questions and implement
 features requested by the end-users.
 
@@ -91,12 +94,12 @@ several others).
 6. It's free!
 -------------
 
-All of CherryPy is licensed under the open-source BSD license, which means
+:doc:`All of CherryPy is licensed </intro/license>` under the open-source BSD license, which means
 **CherryPy can be used commercially for ZERO cost**.
 
 7. Where to go from here?
 -------------------------
 
-Check out the :doc:`/concepts/index` and :doc:`/progguide/index` for
+Check out the :doc:`/tutorial/index` and :doc:`/progguide/index` for
 more complete documentation.
 

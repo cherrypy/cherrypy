@@ -85,15 +85,15 @@ def erase_script_name(environ, start_response):
     return cherrypy.tree(environ, start_response)
 
 class ModFCGISupervisor(helper.LocalWSGISupervisor):
-    
+
     httpserver_class = "cherrypy.process.servers.FlupFCGIServer"
     using_apache = True
     using_wsgi = True
     template = conf_fastcgi
-    
+
     def __str__(self):
         return "FCGI Server on %s:%s" % (self.host, self.port)
-    
+
     def start(self, modulename):
         cherrypy.server.httpserver = servers.FlupFCGIServer(
             application=erase_script_name, bindAddress=('127.0.0.1', 4000))
@@ -104,12 +104,12 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
         # ...and our local server
         cherrypy.engine.start()
         self.sync_apps()
-    
+
     def start_apache(self):
         fcgiconf = CONF_PATH
         if not os.path.isabs(fcgiconf):
             fcgiconf = os.path.join(curdir, fcgiconf)
-        
+
         # Write the Apache conf file.
         f = open(fcgiconf, 'wb')
         try:
@@ -120,16 +120,16 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
             f.write(output)
         finally:
             f.close()
-        
+
         result = read_process(APACHE_PATH, "-k start -f %s" % fcgiconf)
         if result:
             print(result)
-    
+
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
         read_process(APACHE_PATH, "-k stop")
         helper.LocalWSGISupervisor.stop(self)
-    
+
     def sync_apps(self):
         cherrypy.server.httpserver.fcgiserver.application = self.get_app(erase_script_name)
 

@@ -13,13 +13,20 @@ source code developed in less time.
 
 CherryPy does its best to stay out of the way between the programmer and the
 problem. It works out of the box; default behavior is sensible enough to allow
-use without extensive setup or customization. However, its configuration
-and plugin systems are more than enough to easily build and deploy complex
+use without extensive setup or customization. However, its :doc:`configuration </tutorial/config>`
+and :doc:`plugin </progguide/extending/customplugins>` systems are more than enough to easily build and deploy complex
 sites.
 
 You are free to use any kind of templating, data access etc. technology
-you want. CherryPy also has built-in tools for sessions, static files, cookies,
-file uploads, caching, encoding, authorization, compression, and many more.
+you want. CherryPy also has built-in tools for
+:doc:`sessions </refman/lib/sessions>`,
+:doc:`static files </progguide/files/static>`,
+:doc:`cookies </progguide/cookies>`,
+:doc:`file uploads </progguide/files/uploading>`,
+:doc:`caching </refman/lib/caching>`, :doc:`encoding </refman/lib/encoding>`,
+:doc:`authorization </refman/lib/auth_basic>`,
+:doc:`compression </refman/lib/encoding>`,
+and :doc:`many more </tutorial/tools>`.
 
 The production-ready, HTTP/1.1-compliant web server allows you to deploy
 web applications anywhere Python is installed. It also supports any other

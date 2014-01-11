@@ -6,12 +6,13 @@ The standard 'Hello world!' application takes less than 10 lines of code
 when written using CherryPy::
 
     import cherrypy
-    
-    class HelloWorld:
+
+
+    class HelloWorld(object):
         def index(self):
             return "Hello world!"
         index.exposed = True
-    
+
     cherrypy.quickstart(HelloWorld())
 
 We assume that you already have :doc:`installed </intro/install>` CherryPy.
@@ -43,7 +44,8 @@ Let's take a look at ``hello.py``:
    ``index()`` method will be **exposed**. Only exposed methods can be called
    to answer a request. This feature allows the user to select which methods
    of an object will be accessible via the Web; non-exposed methods can't be
-   accessed.
+   accessed. Another way to **expose** a method is to use the decorator
+   :func:`cherrypy.expose`.
  * ``cherrypy.quickstart(HelloWorld())`` mounts an instance of the HelloWorld
    class, and starts the embedded webserver. It runs until explicitly
    interrupted, either with ``Ctrl-C`` or via a suitable signal (a simple
@@ -51,7 +53,7 @@ Let's take a look at ``hello.py``:
 
 When the application is executed, the CherryPy server is started with the
 default configuration. It will listen on ``localhost`` at port ``8080``. These
-defaults can be overridden by using a configuration file or dictionary
+defaults can be overridden by using a :doc:`configuration file </tutorial/config>` or dictionary
 (more on this later).
 
 Finally, the web server receives the request for the URL
@@ -74,7 +76,7 @@ module. It contains several members:
 
  * :class:`cherrypy.engine <cherrypy.process.wspbus.Bus>`
    controls process startup, shutdown, and other events, including your own
-   Plugins. See :doc:`/concepts/engine`.
+   Plugins. See :doc:`/tutorial/engine`.
  * :class:`cherrypy.server <cherrypy._cpserver.Server>` configures and controls
    the HTTP server.
  * :class:`cherrypy.request <cherrypy._cprequest.Request>` contains all
@@ -87,12 +89,60 @@ module. It contains several members:
    mapping that is automatically generated and encoded by CherryPy; it can
    be used to store session-data in a persistent cookie. For it to work you
    have to enable the session functionality by setting 'tools.session.on' to
-   True in your config. 
+   True in your :doc:`config </tutorial/config>`.
  * :class:`cherrypy.response <cherrypy._cprequest.Response>` contains the
-   data that is used to build the HTTP response. 
+   data that is used to build the HTTP response.
  * :attr:`cherrypy.response.headers <cherrypy.lib.httputil.HeaderMap>`
    contains a mapping with the header options that will be returned by the
    server, before the contents get sent.
  * :attr:`cherrypy.response.body <cherrypy._cprequest.Response.body>` contains
    the actual contents of the webpage that will be sent as a response.
 
+CherryPy Response
+-----------------
+
+The :class:`cherrypy.response <cherrypy._cprequest.Response>` object is
+available to affect aspects of the response
+to a request. Like the request, the response object is a thread-local,
+meaning although it appears to be a global variable, its value is specific
+to the current thread, and thus the current request.
+
+One may store arbitrary data in the response object.
+
+HTTP Headers
+------------
+
+CherryPy exposes the :attr:`request headers <cherrypy.lib.httputil.HeaderMap>`
+(as sent from the client), and response headers (to be returned in the
+response) in the `headers` attribute of `cherrypy.request` and
+`cherrypy.response`.
+
+For example, to find out what "host" to which the client intended to connect::
+
+    import cherrypy
+
+
+    class HelloWorld(object):    
+        @cherrypy.expose
+        def index(self):
+            host = cherrypy.request.headers['Host']
+            return "You have successfully reached " + host
+
+    cherrypy.quickstart(HelloWorld())
+
+Or to set headers on the response::
+
+    import cherrypy
+
+
+    class HelloWorld(object):    
+        def _get_jpeg_data(self):
+	    """This method should return the jpeg data"""
+	    return ""
+    
+        @cherrypy.expose
+        def index(self):
+            cherrypy.response.headers['Content-Type'] = 'application/jpeg'
+            return self._get_jpeg_data()
+
+    cherrypy.quickstart(HelloWorld())

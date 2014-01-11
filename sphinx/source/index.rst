@@ -2,7 +2,7 @@
    :hidden:
 
    intro/index
-   concepts/index
+   tutorial/index
    progguide/index
    deployguide/index
    refman/index
@@ -13,31 +13,32 @@
 CherryPy |release| Documentation
 ********************************
 
-Sections
-========
-
 :doc:`Introduction <intro/index>`
 ---------------------------------
-*The who, what, and why of CherryPy*
+The who, what, and why of CherryPy
 
-:doc:`Concepts <concepts/index>`
+:doc:`Tutorial <tutorial/index>`
 ---------------------------------
-*The basics of CherryPy*
+The basics of CherryPy
 
 :doc:`Programmer's Guide <progguide/index>`
 -------------------------------------------
-*How to perform common tasks*
+How to perform common tasks
 
 :doc:`Deployment Guide <deployguide/index>`
 -------------------------------------------
-*Getting your application running and on the web*
+Getting your application running and on the web
 
 :doc:`Reference Manual <refman/index>`
 --------------------------------------
-*Module, class, and function reference*
+Module, class, and function reference
 
 :doc:`Appendix <appendix/index>`
 --------------------------------
+:doc:`FAQ </appendix/faq>`, :doc:`Performance benchmarking </appendix/cherrypyspeed>`, and :doc:`Success Stories </appendix/success>`
+
+Other
+-----
 
 :ref:`genindex`
 

@@ -31,7 +31,7 @@ Server Features and Configuration
 :Q: Does CherryPy support https?
 
 :A: CherryPy has built-in SSL support as of 3.0.0beta. See the `ssl_*`
-    properties of :mod:`cherrypy._cpserver`.
+    properties of :mod:`cherrypy._cpserver` and the :doc:`programmer's guide </progguide/security>`.
     
     Earlier versions do not have built-in SSL support, but Tim Evans has
     written a module called `SslCherry <http://tools.cherrypy.org/wiki/SSLWithM2Crypto>`_
@@ -43,8 +43,12 @@ Server Features and Configuration
 :A: See `Malicious HTML Tags Embedded in Client Web Requests <http://www.cert.org/advisories/CA-2000-02.html>`_
     and `Understanding Malicious Content Mitigation for Web Developers <http://www.cert.org/tech_tips/malicious_code_mitigation.html>`_
     at `CERT <http://www.cert.org/>`_ for an overview of Cross-Site Scripting
-    (XSS) issues. It is ultimately up to the developer to remove potential XSS
-    vulnerabilities from their apps and sites.
+    (XSS) issues.
+
+    While it is ultimately up to the developer to remove potential XSS
+    vulnerabilities from their apps and sites, there are several Cherrypy
+    settings that can help. They are discussed in the
+    :doc:`programmer's guide </progguide/security>`.
 
 :Q: Why does CherryPy take CPU/RAM even though it's not yet receiving requests?
 

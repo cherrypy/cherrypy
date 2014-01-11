@@ -32,7 +32,7 @@ class HTTPAuthTest(helper.CPWebCase):
 
         def sha_password_encrypter(password):
             return sha(ntob(password)).hexdigest()
-        
+
         def fetch_password(username):
             return sha(ntob('test')).hexdigest()
 
@@ -46,7 +46,7 @@ class HTTPAuthTest(helper.CPWebCase):
                             'tools.basic_auth.realm': 'localhost',
                             'tools.basic_auth.users': fetch_password,
                             'tools.basic_auth.encrypt': sha_password_encrypter}}
-                
+
         root = Root()
         root.digest = DigestProtected()
         root.basic = BasicProtected()
@@ -68,7 +68,7 @@ class HTTPAuthTest(helper.CPWebCase):
 
         self.getPage('/basic/', [('Authorization', 'Basic dGVzdDp0ZX60')])
         self.assertStatus(401)
-        
+
         self.getPage('/basic/', [('Authorization', 'Basic dGVzdDp0ZXN0')])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
@@ -80,7 +80,7 @@ class HTTPAuthTest(helper.CPWebCase):
 
         self.getPage('/basic2/', [('Authorization', 'Basic dGVzdDp0ZX60')])
         self.assertStatus(401)
-        
+
         self.getPage('/basic2/', [('Authorization', 'Basic dGVzdDp0ZXN0')])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
@@ -88,7 +88,7 @@ class HTTPAuthTest(helper.CPWebCase):
     def testDigest(self):
         self.getPage("/digest/")
         self.assertStatus(401)
-        
+
         value = None
         for k, v in self.headers:
             if k.lower() == "www-authenticate":
@@ -105,7 +105,7 @@ class HTTPAuthTest(helper.CPWebCase):
         for item in items:
             key, value = item.split('=')
             tokens[key.lower()] = value
-            
+
         missing_msg = "%s is missing"
         bad_value_msg = "'%s' was expecting '%s' but found '%s'"
         nonce = None
@@ -132,7 +132,7 @@ class HTTPAuthTest(helper.CPWebCase):
         auth = base_auth % (nonce, '', '00000001')
         params = httpauth.parseAuthorization(auth)
         response = httpauth._computeDigestResponse(params, 'test')
-        
+
         auth = base_auth % (nonce, response, '00000001')
         self.getPage('/digest/', [('Authorization', auth)])
         self.assertStatus(401)
@@ -143,7 +143,7 @@ class HTTPAuthTest(helper.CPWebCase):
         auth = base_auth % (nonce, '', '00000001')
         params = httpauth.parseAuthorization(auth)
         response = httpauth._computeDigestResponse(params, 'test')
-        
+
         auth = base_auth % (nonce, response, '00000001')
         self.getPage('/digest/', [('Authorization', auth)])
         self.assertStatus('200 OK')

@@ -23,7 +23,7 @@ import sys, os
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.intersphinx']
-intersphinx_mapping = {'http://www.python.org/doc/2.6.4': None}
+intersphinx_mapping = {'http://docs.python.org/2/': None}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -39,7 +39,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'CherryPy'
-copyright = u'2010, CherryPy Team'
+copyright = u'2013, CherryPy Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -100,20 +100,20 @@ html_theme = 'default'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "relbarbgcolor": "#880000",
-    "relbartextcolor": "white",
-    "relbarlinkcolor": "#FFEEEE",
-    "sidebarbgcolor": "#880000",
-    "sidebartextcolor": "white",
-    "sidebarlinkcolor": "#FFEEEE",
-    "headbgcolor": "#FFF8FB",
-    "headtextcolor": "black",
-    "headlinkcolor": "#660000",
-    "footerbgcolor": "#880000",
-    "footertextcolor": "white",
-    "codebgcolor": "#FFEEEE",
-}
+# html_theme_options = {
+#     "relbarbgcolor": "#880000",
+#     "relbartextcolor": "white",
+#     "relbarlinkcolor": "#FFEEEE",
+#     "sidebarbgcolor": "#880000",
+#     "sidebartextcolor": "white",
+#     "sidebarlinkcolor": "#FFEEEE",
+#     "headbgcolor": "#FFF8FB",
+#     "headtextcolor": "black",
+#     "headlinkcolor": "#660000",
+#     "footerbgcolor": "#880000",
+#     "footertextcolor": "white",
+#     "codebgcolor": "#FFEEEE",
+# }
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -139,7 +139,7 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-html_style = 'cpdocmain.css'
+# html_style = 'cpdocmain.css'
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -211,3 +211,36 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+import os
+
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if on_rtd:
+    # so that ReadTheDocs can generate the docs properly
+    # even the PDF version. Since ReadTheDocs runs on Linux,
+    # it can't import pywin32. See:
+    # http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
+    import sys
+    
+    class Mock(object):
+        def __init__(self, *args, **kwargs):
+            pass
+        
+        def __call__(self, *args, **kwargs):
+            return Mock()
+        
+        @classmethod
+        def __getattr__(cls, name):
+            if name in ('__file__', '__path__'):
+                return '/dev/null'
+            elif name[0] == name[0].upper():
+                mockType = type(name, (), {})
+                mockType.__module__ = __name__
+                return mockType
+            else:
+                return Mock()
+
+    MOCK_MODULES = ['win32api', 'win32con', 'win32event',
+                    'win32service', 'win32serviceutil']
+    for mod_name in MOCK_MODULES:
+        sys.modules[mod_name] = Mock()

@@ -12,7 +12,7 @@ starting on a low port (which requires root) and then dropping to another user.
 
 Example::
 
-    DropPrivileges(cherrypy.engine, '/var/run/myapp.pid').subscribe()
+    DropPrivileges(cherrypy.engine, uid=1000, gid=1000).subscribe()
 
 .. currentmodule:: cherrypy.process.plugins
 

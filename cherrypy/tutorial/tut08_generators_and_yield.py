@@ -11,24 +11,24 @@ import cherrypy
 
 
 class GeneratorDemo:
-    
+
     def header(self):
         return "<html><body><h2>Generators rule!</h2>"
-    
+
     def footer(self):
         return "</body></html>"
-    
+
     def index(self):
         # Let's make up a list of users for presentation purposes
         users = ['Remi', 'Carlos', 'Hendrik', 'Lorenzo Lamas']
-        
+
         # Every yield line adds one part to the total result body.
         yield self.header()
         yield "<h3>List of users:</h3>"
-        
+
         for user in users:
             yield "%s<br/>" % user
-            
+
         yield self.footer()
     index.exposed = True
 
