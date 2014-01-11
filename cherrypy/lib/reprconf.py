@@ -346,7 +346,8 @@ class _Builder3:
             # e.g. IronPython 1.0.
             return eval(s)
 
-        return ast.literal_eval(s)
+        p = ast.parse("__tempvalue__ = " + s)
+        return p.body[0].value
 
     def build_Subscript(self, o):
         return self.build(o.value)[self.build(o.slice)]
