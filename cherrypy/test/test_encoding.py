@@ -43,8 +43,10 @@ class EncodingTests(helper.CPWebCase):
             cookies_and_headers.exposed = True
 
             def reqparams(self, *args, **kwargs):
-                return ntob(', ').join([": ".join((k, v)).encode('utf8')
-                                  for k, v in cherrypy.request.params.items()])
+                return ntob(', ').join(
+                    [": ".join((k, v)).encode('utf8')
+                     for k, v in sorted(cherrypy.request.params.items())]
+                )
             reqparams.exposed = True
 
             def nontext(self, *args, **kwargs):
@@ -218,7 +220,7 @@ class EncodingTests(helper.CPWebCase):
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(ntob("text: ab\xe2\x80\x9cc, submit: Create"))
+        self.assertBody(ntob("submit: Create, text: ab\xe2\x80\x9cc"))
 
     def test_multipart_decoding_no_charset(self):
         # Test the decoding of a multipart entity when the charset (utf8) is
@@ -237,7 +239,7 @@ class EncodingTests(helper.CPWebCase):
                               ("Content-Length", str(len(body))),
                               ],
                      body=body),
-        self.assertBody(ntob("text: \xe2\x80\x9c, submit: Create"))
+        self.assertBody(ntob("submit: Create, text: \xe2\x80\x9c"))
 
     def test_multipart_decoding_no_successful_charset(self):
         # Test the decoding of a multipart entity when the charset (utf16) is
