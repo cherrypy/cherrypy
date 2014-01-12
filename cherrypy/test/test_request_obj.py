@@ -60,7 +60,7 @@ class RequestObjectTests(helper.CPWebCase):
                 return "Coordinates: %s, %s" % (x, y)
 
             def default(self, *args, **kwargs):
-                return "args: %s kwargs: %s" % (args, kwargs)
+                return "args: %s kwargs: %s" % (args, sorted(kwargs.items()))
             default._cp_config = {'request.query_string_encoding': 'latin1'}
 
 
@@ -315,13 +315,13 @@ class RequestObjectTests(helper.CPWebCase):
         self.getPage("/params/%d4%20%e3/cheese?Gruy%E8re=Bulgn%e9ville")
         self.assertBody("args: %s kwargs: %s" %
                         (('\xd4 \xe3', 'cheese'),
-                         {'Gruy\xe8re': ntou('Bulgn\xe9ville')}))
+                         [('Gruy\xe8re', ntou('Bulgn\xe9ville'))]))
 
         # Make sure that encoded = and & get parsed correctly
         self.getPage("/params/code?url=http%3A//cherrypy.org/index%3Fa%3D1%26b%3D2")
         self.assertBody("args: %s kwargs: %s" %
                         (('code',),
-                         {'url': ntou('http://cherrypy.org/index?a=1&b=2')}))
+                         [('url', ntou('http://cherrypy.org/index?a=1&b=2'))]))
 
         # Test coordinates sent by <img ismap>
         self.getPage("/params/ismap?223,114")
@@ -331,8 +331,8 @@ class RequestObjectTests(helper.CPWebCase):
         self.getPage("/params/dictlike?a[1]=1&a[2]=2&b=foo&b[bar]=baz")
         self.assertBody("args: %s kwargs: %s" %
                         (('dictlike',),
-                         {'a[1]': ntou('1'), 'b[bar]': ntou('baz'),
-                          'b': ntou('foo'), 'a[2]': ntou('2')}))
+                         [('a[1]', ntou('1')), ('a[2]', ntou('2')),
+                          ('b', ntou('foo')), ('b[bar]', ntou('baz'))]))
 
     def testParamErrors(self):
 
