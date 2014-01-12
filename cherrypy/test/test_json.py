@@ -3,9 +3,12 @@ from cherrypy.test import helper
 
 from cherrypy._cpcompat import json
 
+
 class JsonTest(helper.CPWebCase):
+
     def setup_server():
         class Root(object):
+
             def plain(self):
                 return 'hello'
             plain.exposed = True
@@ -95,6 +98,3 @@ class JsonTest(helper.CPWebCase):
 
         self.getPage("/json_cached")  # 2'nd time to hit cache
         self.assertStatus(200, '"hello"')
-
-
-

@@ -21,7 +21,7 @@ class WSGIGraftTests(helper.CPWebCase):
             keys = list(environ.keys())
             keys.sort()
             for k in keys:
-                output.append('%s: %s\n' % (k,environ[k]))
+                output.append('%s: %s\n' % (k, environ[k]))
             return [ntob(x, 'utf-8') for x in output]
 
         def test_empty_string_app(environ, start_response):
@@ -29,7 +29,6 @@ class WSGIGraftTests(helper.CPWebCase):
             response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)
             return [ntob('Hello'), ntob(''), ntob(' '), ntob(''), ntob('world')]
-
 
         class WSGIResponse(object):
 
@@ -75,10 +74,10 @@ class WSGIGraftTests(helper.CPWebCase):
                 return Reverser(results)
 
         class Root:
+
             def index(self):
                 return ntob("I'm a regular CherryPy page handler!")
             index.exposed = True
-
 
         cherrypy.tree.mount(Root())
 
@@ -123,4 +122,3 @@ This is a wsgi app running within CherryPy!'''
         self.getPage("/hosted/app3")
         self.assertHeader("Content-Type", "text/plain")
         self.assertInBody('Hello world')
-

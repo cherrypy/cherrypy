@@ -5,10 +5,10 @@ except ImportError:
 import logging
 import mimetypes
 mimetypes.init()
-mimetypes.types_map['.dwg']='image/x-dwg'
-mimetypes.types_map['.ico']='image/x-icon'
-mimetypes.types_map['.bz2']='application/x-bzip2'
-mimetypes.types_map['.gz']='application/x-gzip'
+mimetypes.types_map['.dwg'] = 'image/x-dwg'
+mimetypes.types_map['.ico'] = 'image/x-icon'
+mimetypes.types_map['.bz2'] = 'application/x-bzip2'
+mimetypes.types_map['.gz'] = 'application/x-gzip'
 
 import os
 import re
@@ -92,6 +92,7 @@ def serve_file(path, content_type=None, disposition=None, name=None, debug=False
     fileobj = open(path, 'rb')
     return _serve_fileobj(fileobj, content_type, content_length, debug=debug)
 
+
 def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
                   debug=False):
     """Set status, headers, and body in order to serve the given file object.
@@ -145,6 +146,7 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
 
     return _serve_fileobj(fileobj, content_type, content_length, debug=debug)
 
+
 def _serve_fileobj(fileobj, content_type, content_length, debug=False):
     """Internal. Set response.body to the given file object, perhaps ranged."""
     response = cherrypy.serving.response
@@ -169,8 +171,9 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                     stop = content_length
                 r_len = stop - start
                 if debug:
-                    cherrypy.log('Single part; start: %r, stop: %r' % (start, stop),
-                                 'TOOLS.STATIC')
+                    cherrypy.log(
+                        'Single part; start: %r, stop: %r' % (start, stop),
+                        'TOOLS.STATIC')
                 response.status = "206 Partial Content"
                 response.headers['Content-Range'] = (
                     "bytes %s-%s/%s" % (start, stop - 1, content_length))
@@ -199,14 +202,16 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
 
                     for start, stop in r:
                         if debug:
-                            cherrypy.log('Multipart; start: %r, stop: %r' % (start, stop),
-                                         'TOOLS.STATIC')
+                            cherrypy.log(
+                                'Multipart; start: %r, stop: %r' % (
+                                    start, stop),
+                                'TOOLS.STATIC')
                         yield ntob("--" + boundary, 'ascii')
                         yield ntob("\r\nContent-type: %s" % content_type, 'ascii')
                         yield ntob("\r\nContent-range: bytes %s-%s/%s\r\n\r\n"
                                    % (start, stop - 1, content_length), 'ascii')
                         fileobj.seek(start)
-                        for chunk in file_generator_limited(fileobj, stop-start):
+                        for chunk in file_generator_limited(fileobj, stop - start):
                             yield chunk
                         yield ntob("\r\n")
                     # Final boundary
@@ -225,6 +230,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
     response.headers['Content-Length'] = content_length
     response.body = fileobj
     return response.body
+
 
 def serve_download(path, name=None):
     """Serve 'path' as an application/x-download attachment."""
@@ -251,6 +257,7 @@ def _attempt(filename, content_types, debug=False):
         if debug:
             cherrypy.log('NotFound', 'TOOLS.STATICFILE')
         return False
+
 
 def staticdir(section, dir, root="", match="", content_types=None, index="",
               debug=False):
@@ -314,7 +321,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index="",
     # have ".." or similar uplevel attacks in it. Check that the final
     # filename is a child of dir.
     if not os.path.normpath(filename).startswith(os.path.normpath(dir)):
-        raise cherrypy.HTTPError(403) # Forbidden
+        raise cherrypy.HTTPError(403)  # Forbidden
 
     handled = _attempt(filename, content_types)
     if not handled:
@@ -324,6 +331,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index="",
             if handled:
                 request.is_index = filename[-1] in (r"\/")
     return handled
+
 
 def staticfile(filename, root=None, match="", content_types=None, debug=False):
     """Serve a static resource from the given (root +) filename.

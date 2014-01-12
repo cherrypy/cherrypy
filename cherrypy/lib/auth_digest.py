@@ -41,6 +41,8 @@ def TRACE(msg):
 
 # Three helper functions for users of the tool, providing three variants
 # of get_ha1() functions for three different kinds of credential stores.
+
+
 def get_ha1_dict_plain(user_password_dict):
     """Returns a get_ha1 function which obtains a plaintext password from a
     dictionary of the form: {username : password}.
@@ -57,6 +59,7 @@ def get_ha1_dict_plain(user_password_dict):
 
     return get_ha1
 
+
 def get_ha1_dict(user_ha1_dict):
     """Returns a get_ha1 function which obtains a HA1 password hash from a
     dictionary of the form: {username : HA1}.
@@ -70,6 +73,7 @@ def get_ha1_dict(user_ha1_dict):
         return user_ha1_dict.get(username)
 
     return get_ha1
+
 
 def get_ha1_file_htdigest(filename):
     """Returns a get_ha1 function which obtains a HA1 password hash from a
@@ -125,6 +129,7 @@ def H(s):
 
 
 class HttpDigestAuthorization (object):
+
     """Class to parse a Digest Authorization header and perform re-calculation
     of the digest.
     """
@@ -135,7 +140,7 @@ class HttpDigestAuthorization (object):
     def __init__(self, auth_header, http_method, debug=False):
         self.http_method = http_method
         self.debug = debug
-        scheme, params  = auth_header.split(" ", 1)
+        scheme, params = auth_header.split(" ", 1)
         self.scheme = scheme.lower()
         if self.scheme != 'digest':
             raise ValueError('Authorization scheme is not "Digest"')
@@ -151,34 +156,38 @@ class HttpDigestAuthorization (object):
         self.nonce = paramsd.get('nonce')
         self.uri = paramsd.get('uri')
         self.method = paramsd.get('method')
-        self.response = paramsd.get('response') # the response digest
+        self.response = paramsd.get('response')  # the response digest
         self.algorithm = paramsd.get('algorithm', 'MD5').upper()
         self.cnonce = paramsd.get('cnonce')
         self.opaque = paramsd.get('opaque')
-        self.qop = paramsd.get('qop') # qop
-        self.nc = paramsd.get('nc') # nonce count
+        self.qop = paramsd.get('qop')  # qop
+        self.nc = paramsd.get('nc')  # nonce count
 
         # perform some correctness checks
         if self.algorithm not in valid_algorithms:
-            raise ValueError(self.errmsg("Unsupported value for algorithm: '%s'" % self.algorithm))
+            raise ValueError(
+                self.errmsg("Unsupported value for algorithm: '%s'" % self.algorithm))
 
         has_reqd = self.username and \
-                   self.realm and \
-                   self.nonce and \
-                   self.uri and \
-                   self.response
+            self.realm and \
+            self.nonce and \
+            self.uri and \
+            self.response
         if not has_reqd:
-            raise ValueError(self.errmsg("Not all required parameters are present."))
+            raise ValueError(
+                self.errmsg("Not all required parameters are present."))
 
         if self.qop:
             if self.qop not in valid_qops:
-                raise ValueError(self.errmsg("Unsupported value for qop: '%s'" % self.qop))
+                raise ValueError(
+                    self.errmsg("Unsupported value for qop: '%s'" % self.qop))
             if not (self.cnonce and self.nc):
-                raise ValueError(self.errmsg("If qop is sent then cnonce and nc MUST be present"))
+                raise ValueError(
+                    self.errmsg("If qop is sent then cnonce and nc MUST be present"))
         else:
             if self.cnonce or self.nc:
-                raise ValueError(self.errmsg("If qop is not sent, neither cnonce nor nc can be present"))
-
+                raise ValueError(
+                    self.errmsg("If qop is not sent, neither cnonce nor nc can be present"))
 
     def __str__(self):
         return 'authorization : %s' % self.auth_header
@@ -199,15 +208,15 @@ class HttpDigestAuthorization (object):
         """
         try:
             timestamp, hashpart = self.nonce.split(':', 1)
-            s_timestamp, s_hashpart = synthesize_nonce(s, key, timestamp).split(':', 1)
+            s_timestamp, s_hashpart = synthesize_nonce(
+                s, key, timestamp).split(':', 1)
             is_valid = s_hashpart == hashpart
             if self.debug:
                 TRACE('validate_nonce: %s' % is_valid)
             return is_valid
-        except ValueError: # split() error
+        except ValueError:  # split() error
             pass
         return False
-
 
     def is_nonce_stale(self, max_age_seconds=600):
         """Returns True if a validated nonce is stale. The nonce contains a
@@ -218,12 +227,11 @@ class HttpDigestAuthorization (object):
             timestamp, hashpart = self.nonce.split(':', 1)
             if int(timestamp) + max_age_seconds > int(time.time()):
                 return False
-        except ValueError: # int() error
+        except ValueError:  # int() error
             pass
         if self.debug:
             TRACE("nonce is stale")
         return True
-
 
     def HA2(self, entity_body=''):
         """Returns the H(A2) string. See :rfc:`2617` section 3.2.2.3."""
@@ -238,10 +246,10 @@ class HttpDigestAuthorization (object):
         elif self.qop == "auth-int":
             a2 = "%s:%s:%s" % (self.http_method, self.uri, H(entity_body))
         else:
-            # in theory, this should never happen, since I validate qop in __init__()
+            # in theory, this should never happen, since I validate qop in
+            # __init__()
             raise ValueError(self.errmsg("Unrecognized value for qop!"))
         return H(a2)
-
 
     def request_digest(self, ha1, entity_body=''):
         """Calculates the Request-Digest. See :rfc:`2617` section 3.2.2.1.
@@ -261,7 +269,8 @@ class HttpDigestAuthorization (object):
         ha2 = self.HA2(entity_body)
         # Request-Digest -- RFC 2617 3.2.2.1
         if self.qop:
-            req = "%s:%s:%s:%s:%s" % (self.nonce, self.nc, self.cnonce, self.qop, ha2)
+            req = "%s:%s:%s:%s:%s" % (
+                self.nonce, self.nc, self.cnonce, self.qop, ha2)
         else:
             req = "%s:%s" % (self.nonce, ha2)
 
@@ -282,7 +291,6 @@ class HttpDigestAuthorization (object):
         return digest
 
 
-
 def www_authenticate(realm, key, algorithm='MD5', nonce=None, qop=qop_auth, stale=False):
     """Constructs a WWW-Authenticate header for Digest authentication."""
     if qop not in valid_qops:
@@ -293,7 +301,7 @@ def www_authenticate(realm, key, algorithm='MD5', nonce=None, qop=qop_auth, stal
     if nonce is None:
         nonce = synthesize_nonce(realm, key)
     s = 'Digest realm="%s", nonce="%s", algorithm="%s", qop="%s"' % (
-                realm, nonce, algorithm, qop)
+        realm, nonce, algorithm, qop)
     if stale:
         s += ', stale="true"'
     return s
@@ -331,9 +339,11 @@ def digest_auth(realm, get_ha1, key, debug=False):
     nonce_is_stale = False
     if auth_header is not None:
         try:
-            auth = HttpDigestAuthorization(auth_header, request.method, debug=debug)
+            auth = HttpDigestAuthorization(
+                auth_header, request.method, debug=debug)
         except ValueError:
-            raise cherrypy.HTTPError(400, "The Authorization header could not be parsed.")
+            raise cherrypy.HTTPError(
+                400, "The Authorization header could not be parsed.")
 
         if debug:
             TRACE(str(auth))
@@ -342,18 +352,21 @@ def digest_auth(realm, get_ha1, key, debug=False):
             ha1 = get_ha1(realm, auth.username)
             if ha1 is not None:
                 # note that for request.body to be available we need to hook in at
-                # before_handler, not on_start_resource like 3.1.x digest_auth does.
+                # before_handler, not on_start_resource like 3.1.x digest_auth
+                # does.
                 digest = auth.request_digest(ha1, entity_body=request.body)
-                if digest == auth.response: # authenticated
+                if digest == auth.response:  # authenticated
                     if debug:
                         TRACE("digest matches auth.response")
                     # Now check if nonce is stale.
-                    # The choice of ten minutes' lifetime for nonce is somewhat arbitrary
+                    # The choice of ten minutes' lifetime for nonce is somewhat
+                    # arbitrary
                     nonce_is_stale = auth.is_nonce_stale(max_age_seconds=600)
                     if not nonce_is_stale:
                         request.login = auth.username
                         if debug:
-                            TRACE("authentication of %s successful" % auth.username)
+                            TRACE("authentication of %s successful" %
+                                  auth.username)
                         return
 
     # Respond with 401 status and a WWW-Authenticate header
@@ -361,5 +374,5 @@ def digest_auth(realm, get_ha1, key, debug=False):
     if debug:
         TRACE(header)
     cherrypy.serving.response.headers['WWW-Authenticate'] = header
-    raise cherrypy.HTTPError(401, "You are not authorized to access that resource")
-
+    raise cherrypy.HTTPError(
+        401, "You are not authorized to access that resource")

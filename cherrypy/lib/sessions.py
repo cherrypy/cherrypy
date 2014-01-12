@@ -102,7 +102,9 @@ from cherrypy.lib import lockfile
 
 missing = object()
 
+
 class Session(object):
+
     """A CherryPy dict-like Session object (one per request)."""
 
     _id = None
@@ -112,6 +114,7 @@ class Session(object):
 
     def _get_id(self):
         return self._id
+
     def _set_id(self, value):
         self._id = value
         for o in self.id_observers:
@@ -238,7 +241,7 @@ class Session(object):
             # If session data has never been loaded then it's never been
             #   accessed: no need to save it
             if self.loaded:
-                t = datetime.timedelta(seconds = self.timeout * 60)
+                t = datetime.timedelta(seconds=self.timeout * 60)
                 expiration_time = self.now() + t
                 if self.debug:
                     cherrypy.log('Saving session %r with expiry %s' %
@@ -298,15 +301,18 @@ class Session(object):
     # -------------------- Application accessor methods -------------------- #
 
     def __getitem__(self, key):
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         return self._data[key]
 
     def __setitem__(self, key, value):
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         self._data[key] = value
 
     def __delitem__(self, key):
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         del self._data[key]
 
     def pop(self, key, default=missing):
@@ -314,55 +320,65 @@ class Session(object):
         If key is not found, default is returned if given,
         otherwise KeyError is raised.
         """
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         if default is missing:
             return self._data.pop(key)
         else:
             return self._data.pop(key, default)
 
     def __contains__(self, key):
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         return key in self._data
 
     if hasattr({}, 'has_key'):
         def has_key(self, key):
             """D.has_key(k) -> True if D has a key k, else False."""
-            if not self.loaded: self.load()
+            if not self.loaded:
+                self.load()
             return key in self._data
 
     def get(self, key, default=None):
         """D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None."""
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         return self._data.get(key, default)
 
     def update(self, d):
         """D.update(E) -> None.  Update D from E: for k in E: D[k] = E[k]."""
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         self._data.update(d)
 
     def setdefault(self, key, default=None):
         """D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D."""
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         return self._data.setdefault(key, default)
 
     def clear(self):
         """D.clear() -> None.  Remove all items from D."""
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         self._data.clear()
 
     def keys(self):
         """D.keys() -> list of D's keys."""
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         return self._data.keys()
 
     def items(self):
         """D.items() -> list of D's (key, value) pairs, as 2-tuples."""
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         return self._data.items()
 
     def values(self):
         """D.values() -> list of D's values."""
-        if not self.loaded: self.load()
+        if not self.loaded:
+            self.load()
         return self._data.values()
 
 
@@ -419,6 +435,7 @@ class RamSession(Session):
 
 
 class FileSession(Session):
+
     """Implementation of the File backend for sessions
 
     storage_path
@@ -473,7 +490,8 @@ class FileSession(Session):
         except (IOError, EOFError):
             e = sys.exc_info()[1]
             if self.debug:
-                cherrypy.log("Error loading the session pickle: %s" % e, 'TOOLS.SESSIONS')
+                cherrypy.log("Error loading the session pickle: %s" %
+                             e, 'TOOLS.SESSIONS')
             return None
 
     def _save(self, expiration_time):
@@ -519,7 +537,7 @@ class FileSession(Session):
         # Iterate over all session files in self.storage_path
         for fname in os.listdir(self.storage_path):
             if (fname.startswith(self.SESSION_PREFIX)
-                and not fname.endswith(self.LOCK_SUFFIX)):
+                    and not fname.endswith(self.LOCK_SUFFIX)):
                 # We have a session file: lock and load it and check
                 #   if it's expired. If it fails, nevermind.
                 path = os.path.join(self.storage_path, fname)
@@ -550,6 +568,7 @@ class FileSession(Session):
 
 
 class PostgresqlSession(Session):
+
     """ Implementation of the PostgreSQL backend for sessions. It assumes
         a table like this::
 
@@ -661,6 +680,7 @@ class MemcachedSession(Session):
 
     def _get_id(self):
         return self._id
+
     def _set_id(self, value):
         # This encode() call is where we differ from the superclass.
         # Memcache keys MUST be byte strings, not unicode.
@@ -692,7 +712,8 @@ class MemcachedSession(Session):
         self.mc_lock.acquire()
         try:
             if not self.cache.set(self.id, (self._data, expiration_time), td):
-                raise AssertionError("Session data for id %r not set." % self.id)
+                raise AssertionError(
+                    "Session data for id %r not set." % self.id)
         finally:
             self.mc_lock.release()
 
@@ -742,6 +763,7 @@ def save():
             response.collapse_body()
         cherrypy.session.save()
 save.failsafe = True
+
 
 def close():
     """Close the session object for this request."""
@@ -834,6 +856,7 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     kwargs['clean_freq'] = clean_freq
     cherrypy.serving.session = sess = storage_class(id, **kwargs)
     sess.debug = debug
+
     def update_cookie(id):
         """Update the cookie every time the session id changes."""
         cherrypy.serving.response.cookie[name] = id
@@ -908,11 +931,11 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
             raise ValueError("The httponly cookie token is not supported.")
         cookie[name]['httponly'] = 1
 
+
 def expire():
     """Expire the current session cookie."""
-    name = cherrypy.serving.request.config.get('tools.sessions.name', 'session_id')
+    name = cherrypy.serving.request.config.get(
+        'tools.sessions.name', 'session_id')
     one_year = 60 * 60 * 24 * 365
     e = time.time() - one_year
     cherrypy.serving.response.cookie[name]['expires'] = httputil.HTTPDate(e)
-
-

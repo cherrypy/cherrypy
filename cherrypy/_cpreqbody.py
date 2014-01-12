@@ -209,6 +209,7 @@ def process_multipart(entity):
         if part.fp.done:
             break
 
+
 def process_multipart_form_data(entity):
     """Read all multipart/form-data parts into entity.parts or entity.params."""
     process_multipart(entity)
@@ -234,6 +235,7 @@ def process_multipart_form_data(entity):
                 entity.params[part.name] = value
 
     entity.parts = kept_parts
+
 
 def _old_process_multipart(entity):
     """The behavior of 3.2 and lower. Deprecated and will be changed in 3.3."""
@@ -263,11 +265,9 @@ def _old_process_multipart(entity):
             params[key] = value
 
 
-
 # --------------------------------- Entities --------------------------------- #
-
-
 class Entity(object):
+
     """An HTTP request body, or MIME multipart body.
 
     This class collects information about the HTTP request entity. When a
@@ -414,7 +414,8 @@ class Entity(object):
             self.content_type = httputil.HeaderElement.from_str(
                 self.default_content_type)
 
-        # Copy the class 'attempt_charsets', prepending any Content-Type charset
+        # Copy the class 'attempt_charsets', prepending any Content-Type
+        # charset
         dec = self.content_type.params.get("charset", None)
         if dec:
             self.attempt_charsets = [dec] + [c for c in self.attempt_charsets
@@ -449,7 +450,7 @@ class Entity(object):
 
     # The 'type' attribute is deprecated in 3.2; remove it in 3.3.
     type = property(lambda self: self.content_type,
-        doc="""A deprecated alias for :attr:`content_type<cherrypy._cpreqbody.Entity.content_type>`.""")
+                    doc="""A deprecated alias for :attr:`content_type<cherrypy._cpreqbody.Entity.content_type>`.""")
 
     def read(self, size=None, fp_out=None):
         return self.fp.read(size, fp_out)
@@ -523,6 +524,7 @@ class Entity(object):
 
 
 class Part(Entity):
+
     """A MIME part entity, part of a multipart entity."""
 
     # "The default character set, which must be assumed in the absence of a
@@ -617,7 +619,7 @@ class Part(Entity):
         lines = []
         seen = 0
         while True:
-            line = self.fp.readline(1<<16)
+            line = self.fp.readline(1 << 16)
             if not line:
                 raise EOFError("Illegal end of multipart body.")
             if line.startswith(ntob("--")) and prev_lf:
@@ -696,18 +698,20 @@ try:
 except ValueError:
     # Python 2.4 and lower
     class Infinity(object):
+
         def __cmp__(self, other):
             return 1
+
         def __sub__(self, other):
             return self
     inf = Infinity()
 
 
 comma_separated_headers = ['Accept', 'Accept-Charset', 'Accept-Encoding',
-    'Accept-Language', 'Accept-Ranges', 'Allow', 'Cache-Control', 'Connection',
-    'Content-Encoding', 'Content-Language', 'Expect', 'If-Match',
-    'If-None-Match', 'Pragma', 'Proxy-Authenticate', 'Te', 'Trailer',
-    'Transfer-Encoding', 'Upgrade', 'Vary', 'Via', 'Warning', 'Www-Authenticate']
+                           'Accept-Language', 'Accept-Ranges', 'Allow', 'Cache-Control', 'Connection',
+                           'Content-Encoding', 'Content-Language', 'Expect', 'If-Match',
+                           'If-None-Match', 'Pragma', 'Proxy-Authenticate', 'Te', 'Trailer',
+                           'Transfer-Encoding', 'Upgrade', 'Vary', 'Via', 'Warning', 'Www-Authenticate']
 
 
 class SizedReader:
@@ -889,13 +893,15 @@ class SizedReader:
 
 
 class RequestBody(Entity):
+
     """The entity of the HTTP request."""
 
     bufsize = 8 * 1024
     """The buffer size used when reading the socket."""
 
     # Don't parse the request body at all if the client didn't provide
-    # a Content-Type header. See https://bitbucket.org/cherrypy/cherrypy/issue/790
+    # a Content-Type header. See
+    # https://bitbucket.org/cherrypy/cherrypy/issue/790
     default_content_type = ''
     """This defines a default ``Content-Type`` to use if no Content-Type header
     is given. The empty string is used for RequestBody, which results in the
@@ -952,7 +958,8 @@ class RequestBody(Entity):
         # add them in here.
         request_params = self.request_params
         for key, value in self.params.items():
-            # Python 2 only: keyword arguments must be byte strings (type 'str').
+            # Python 2 only: keyword arguments must be byte strings (type
+            # 'str').
             if sys.version_info < (3, 0):
                 if isinstance(key, unicode):
                     key = key.encode('ISO-8859-1')

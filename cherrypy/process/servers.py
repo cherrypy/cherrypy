@@ -117,6 +117,7 @@ import warnings
 
 
 class ServerAdapter(object):
+
     """Adapter for an HTTP server.
 
     If you need to start more than one HTTP server (to serve on multiple
@@ -249,6 +250,7 @@ class ServerAdapter(object):
 
 
 class FlupCGIServer(object):
+
     """Adapter for a flup.server.cgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
@@ -272,6 +274,7 @@ class FlupCGIServer(object):
 
 
 class FlupFCGIServer(object):
+
     """Adapter for a flup.server.fcgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
@@ -316,6 +319,7 @@ class FlupFCGIServer(object):
 
 
 class FlupSCGIServer(object):
+
     """Adapter for a flup.server.scgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
@@ -363,6 +367,7 @@ def client_host(server_host):
         return '::1'
     return server_host
 
+
 def check_port(host, port, timeout=1.0):
     """Raise an error if the given port is not free on the given host."""
     if not host:
@@ -379,7 +384,8 @@ def check_port(host, port, timeout=1.0):
                                   socket.SOCK_STREAM)
     except socket.gaierror:
         if ':' in host:
-            info = [(socket.AF_INET6, socket.SOCK_STREAM, 0, "", (host, port, 0, 0))]
+            info = [
+                (socket.AF_INET6, socket.SOCK_STREAM, 0, "", (host, port, 0, 0))]
         else:
             info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", (host, port))]
 
@@ -406,6 +412,7 @@ def check_port(host, port, timeout=1.0):
 free_port_timeout = 0.1
 occupied_port_timeout = 1.0
 
+
 def wait_for_free_port(host, port, timeout=None):
     """Wait for the specified port to become free (drop requests)."""
     if not host:
@@ -424,6 +431,7 @@ def wait_for_free_port(host, port, timeout=None):
             return
 
     raise IOError("Port %r not free on %r" % (port, host))
+
 
 def wait_for_occupied_port(host, port, timeout=None):
     """Wait for the specified port to become active (receive requests)."""
@@ -447,6 +455,6 @@ def wait_for_occupied_port(host, port, timeout=None):
     # On systems where a loopback interface is not available and the
     #  server is bound to all interfaces, it's difficult to determine
     #  whether the server is in fact occupying the port. In this case,
-    #  just issue a warning and move on. See issue #1100.
+    # just issue a warning and move on. See issue #1100.
     msg = "Unable to verify that the server is bound on %r" % port
     warnings.warn(msg)

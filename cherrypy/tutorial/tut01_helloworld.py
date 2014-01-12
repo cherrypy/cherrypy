@@ -7,7 +7,9 @@ The most basic (working) CherryPy application possible.
 # Import CherryPy global namespace
 import cherrypy
 
+
 class HelloWorld:
+
     """ Sample request handler class. """
 
     def index(self):

@@ -31,6 +31,7 @@ def downgrade_wsgi_ux_to_1x(environ):
 
 
 class VirtualHost(object):
+
     """Select a different WSGI application based on the Host header.
 
     This can be useful when running multiple sites within one CP server.
@@ -82,6 +83,7 @@ class VirtualHost(object):
 
 
 class InternalRedirector(object):
+
     """WSGI middleware that handles raised cherrypy.InternalRedirect."""
 
     def __init__(self, nextapp, recursive=False):
@@ -107,7 +109,8 @@ class InternalRedirector(object):
                 redirections.append(old_uri)
 
                 if not self.recursive:
-                    # Check to see if the new URI has been redirected to already
+                    # Check to see if the new URI has been redirected to
+                    # already
                     new_uri = sn + ir.path
                     if ir.query_string:
                         new_uri += "?" + ir.query_string
@@ -126,6 +129,7 @@ class InternalRedirector(object):
 
 
 class ExceptionTrapper(object):
+
     """WSGI middleware that traps exceptions."""
 
     def __init__(self, nextapp, throws=(KeyboardInterrupt, SystemExit)):
@@ -146,7 +150,8 @@ class _TrappedResponse(object):
         self.start_response = start_response
         self.throws = throws
         self.started_response = False
-        self.response = self.trap(self.nextapp, self.environ, self.start_response)
+        self.response = self.trap(
+            self.nextapp, self.environ, self.start_response)
         self.iter_response = iter(self.response)
 
     def __iter__(self):
@@ -210,6 +215,7 @@ class _TrappedResponse(object):
 
 
 class AppResponse(object):
+
     """WSGI response iterable for CherryPy applications."""
 
     def __init__(self, environ, start_response, cpapp):
@@ -230,9 +236,11 @@ class AppResponse(object):
             outheaders = []
             for k, v in r.header_list:
                 if not isinstance(k, bytestr):
-                    raise TypeError("response.header_list key %r is not a byte string." % k)
+                    raise TypeError(
+                        "response.header_list key %r is not a byte string." % k)
                 if not isinstance(v, bytestr):
-                    raise TypeError("response.header_list value %r is not a byte string." % v)
+                    raise TypeError(
+                        "response.header_list value %r is not a byte string." % v)
                 outheaders.append((k, v))
 
             if py3k:
@@ -269,7 +277,7 @@ class AppResponse(object):
         env = self.environ.get
 
         local = httputil.Host('', int(env('SERVER_PORT', 80)),
-                           env('SERVER_NAME', ''))
+                              env('SERVER_NAME', ''))
         remote = httputil.Host(env('REMOTE_ADDR', ''),
                                int(env('REMOTE_PORT', -1) or -1),
                                env('REMOTE_HOST', ''))
@@ -339,6 +347,7 @@ class AppResponse(object):
 
 
 class CPWSGIApp(object):
+
     """A WSGI application object for a CherryPy Application."""
 
     pipeline = [('ExceptionTrapper', ExceptionTrapper),
@@ -405,4 +414,3 @@ class CPWSGIApp(object):
             name, arg = k.split(".", 1)
             bucket = self.config.setdefault(name, {})
             bucket[arg] = v
-

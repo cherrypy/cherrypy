@@ -2,6 +2,7 @@ import sys
 import cherrypy
 from cherrypy._cpcompat import basestring, ntou, json, json_encode, json_decode
 
+
 def json_processor(entity):
     """Read application/json data into request.json."""
     if not entity.headers.get(ntou("Content-Length"), ntou("")):
@@ -13,8 +14,9 @@ def json_processor(entity):
     except ValueError:
         raise cherrypy.HTTPError(400, 'Invalid JSON document')
 
+
 def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
-            force=True, debug=False, processor = json_processor):
+            force=True, debug=False, processor=json_processor):
     """Add a processor to parse JSON request entities:
     The default processor places the parsed data into request.json.
 
@@ -57,9 +59,11 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
             cherrypy.log('Adding body processor for %s' % ct, 'TOOLS.JSON_IN')
         request.body.processors[ct] = processor
 
+
 def json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     return json_encode(value)
+
 
 def json_out(content_type='application/json', debug=False, handler=json_handler):
     """Wrap request.handler to serialize its output to JSON. Sets Content-Type.
@@ -87,6 +91,6 @@ def json_out(content_type='application/json', debug=False, handler=json_handler)
     request.handler = handler
     if content_type is not None:
         if debug:
-            cherrypy.log('Setting Content-Type to %s' % content_type, 'TOOLS.JSON_OUT')
+            cherrypy.log('Setting Content-Type to %s' %
+                         content_type, 'TOOLS.JSON_OUT')
         cherrypy.serving.response.headers['Content-Type'] = content_type
-

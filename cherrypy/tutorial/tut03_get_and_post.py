@@ -19,7 +19,7 @@ class WelcomePage:
             </form>'''
     index.exposed = True
 
-    def greetUser(self, name = None):
+    def greetUser(self, name=None):
         # CherryPy passes all GET and POST variables as method parameters.
         # It doesn't make a difference where the variables come from, how
         # large their contents are, and so on.

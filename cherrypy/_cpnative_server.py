@@ -46,9 +46,11 @@ class NativeGateway(wsgiserver.Gateway):
                         request.app = app
                         request.prev = prev
 
-                        # Run the CherryPy Request object and obtain the response
+                        # Run the CherryPy Request object and obtain the
+                        # response
                         try:
-                            request.run(method, path, qs, req.request_protocol, headers, rfile)
+                            request.run(method, path, qs,
+                                        req.request_protocol, headers, rfile)
                             break
                         except cherrypy.InternalRedirect:
                             ir = sys.exc_info()[1]
@@ -60,7 +62,8 @@ class NativeGateway(wsgiserver.Gateway):
                                     raise RuntimeError("InternalRedirector visited the "
                                                        "same URL twice: %r" % ir.path)
                                 else:
-                                    # Add the *previous* path_info + qs to redirections.
+                                    # Add the *previous* path_info + qs to
+                                    # redirections.
                                     if qs:
                                         qs = "?" + qs
                                     redirections.append(sn + path + qs)
@@ -78,7 +81,7 @@ class NativeGateway(wsgiserver.Gateway):
                     app.release_serving()
         except:
             tb = format_exc()
-            #print tb
+            # print tb
             cherrypy.log(tb, 'NATIVE_ADAPTER', severity=logging.ERROR)
             s, h, b = bare_error()
             self.send_response(s, h, b)
@@ -102,6 +105,7 @@ class NativeGateway(wsgiserver.Gateway):
 
 
 class CPHTTPServer(wsgiserver.HTTPServer):
+
     """Wrapper for wsgiserver.HTTPServer.
 
     wsgiserver has been designed to not reference CherryPy in any way,
@@ -145,5 +149,3 @@ class CPHTTPServer(wsgiserver.HTTPServer):
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain)
-
-

@@ -78,7 +78,9 @@ from cherrypy._cpcompat import set
 # sys.executable is a relative-path, and/or cause other problems).
 _startup_cwd = os.getcwd()
 
+
 class ChannelFailures(Exception):
+
     """Exception raised when errors occur in a listener during Bus.publish()."""
     delimiter = '\n'
 
@@ -107,9 +109,13 @@ class ChannelFailures(Exception):
     __nonzero__ = __bool__
 
 # Use a flag to indicate the state of the bus.
+
+
 class _StateEnum(object):
+
     class State(object):
         name = None
+
         def __repr__(self):
             return "states.%s" % self.name
 
@@ -137,6 +143,7 @@ else:
 
 
 class Bus(object):
+
     """Process state-machine and messenger for HTTP site deployment.
 
     All listeners for a given channel are guaranteed to be called even
@@ -266,14 +273,14 @@ class Bus(object):
             # signal handler, console handler, or atexit handler), so we
             # can't just let exceptions propagate out unhandled.
             # Assume it's been logged and just die.
-            os._exit(70) # EX_SOFTWARE
+            os._exit(70)  # EX_SOFTWARE
 
         if exitstate == states.STARTING:
             # exit() was called before start() finished, possibly due to
             # Ctrl-C because a start listener got stuck. In this case,
             # we could get stuck in a loop where Ctrl-C never exits the
             # process, so we just call os.exit here.
-            os._exit(70) # EX_SOFTWARE
+            os._exit(70)  # EX_SOFTWARE
 
     def restart(self):
         """Restart the process (may close connections).
@@ -318,11 +325,11 @@ class Bus(object):
         self.log("Waiting for child threads to terminate...")
         for t in threading.enumerate():
             # Validate the we're not trying to join the MainThread
-            # that will cause a deadlock and the case exist when imlemented as a 
+            # that will cause a deadlock and the case exist when imlemented as a
             # windows service and in any other case that another thread
             # executes cherrypy.engine.exit()
             if t != threading.currentThread() and t.isAlive() \
-              and not isinstance(t, threading._MainThread):
+                    and not isinstance(t, threading._MainThread):
                 # Note that any dummy (external) threads are always daemonic.
                 if hasattr(threading.Thread, "daemon"):
                     # Python 2.6+
@@ -394,7 +401,7 @@ class Bus(object):
 
         Set self.max_cloexec_files to 0 to disable this behavior.
         """
-        for fd in range(3, self.max_cloexec_files): # skip stdin/out/err
+        for fd in range(3, self.max_cloexec_files):  # skip stdin/out/err
             try:
                 flags = fcntl.fcntl(fd, fcntl.F_GETFD)
             except IOError:

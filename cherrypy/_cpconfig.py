@@ -125,6 +125,7 @@ from cherrypy.lib import reprconf
 # Deprecated in  CherryPy 3.2--remove in 3.3
 NamespaceSet = reprconf.NamespaceSet
 
+
 def merge(base, other):
     """Merge one app config (from a dict, file, or filename) into another.
 
@@ -146,6 +147,7 @@ def merge(base, other):
 
 
 class Config(reprconf.Config):
+
     """The 'global' configuration data for the entire CherryPy process."""
 
     def update(self, config):
@@ -171,6 +173,7 @@ class Config(reprconf.Config):
             raise TypeError(
                 "The cherrypy.config decorator does not accept positional "
                 "arguments; you must use keyword arguments.")
+
         def tool_decorator(f):
             if not hasattr(f, "_cp_config"):
                 f._cp_config = {}
@@ -188,7 +191,7 @@ Config.environments = environments = {
         'tools.log_headers.on': False,
         'request.show_tracebacks': False,
         'request.show_mismatched_params': False,
-        },
+    },
     "production": {
         'engine.autoreload.on': False,
         'checker.on': False,
@@ -196,7 +199,7 @@ Config.environments = environments = {
         'request.show_tracebacks': False,
         'request.show_mismatched_params': False,
         'log.screen': False,
-        },
+    },
     "embedded": {
         # For use with CherryPy embedded in another deployment stack.
         'engine.autoreload.on': False,
@@ -207,7 +210,7 @@ Config.environments = environments = {
         'log.screen': False,
         'engine.SIGHUP': None,
         'engine.SIGTERM': None,
-        },
+    },
     "test_suite": {
         'engine.autoreload.on': False,
         'checker.on': False,
@@ -215,8 +218,8 @@ Config.environments = environments = {
         'request.show_tracebacks': True,
         'request.show_mismatched_params': True,
         'log.screen': False,
-        },
-    }
+    },
+}
 # Sphinx end config.environments
 
 
@@ -247,17 +250,19 @@ def _server_namespace_handler(k, v):
         setattr(cherrypy.server, k, v)
 Config.namespaces["server"] = _server_namespace_handler
 
+
 def _engine_namespace_handler(k, v):
     """Backward compatibility handler for the "engine" namespace."""
     engine = cherrypy.engine
 
-    deprecated = {'autoreload_on': 'autoreload.on', 'autoreload_frequency': 'autoreload.frequency',
+    deprecated = {
+        'autoreload_on': 'autoreload.on', 'autoreload_frequency': 'autoreload.frequency',
         'autoreload_match': 'autoreload.match', 'reload_files': 'autoreload.files',
         'deadlock_poll_freq': 'timeout_monitor.frequency'}
 
     if k in deprecated:
         engine.log('WARNING: Use of engine.%s is deprecated and will be removed in '
-            'a future version. Use engine.%s instead.' % (k, deprecated[k]))
+                   'a future version. Use engine.%s instead.' % (k, deprecated[k]))
 
     if k == 'autoreload_on':
         if v:
@@ -297,10 +302,9 @@ def _tree_namespace_handler(k, v):
     if isinstance(v, dict):
         for script_name, app in v.items():
             cherrypy.tree.graft(app, script_name)
-            cherrypy.engine.log("Mounted: %s on %s" % (app, script_name or "/"))
+            cherrypy.engine.log("Mounted: %s on %s" %
+                                (app, script_name or "/"))
     else:
         cherrypy.tree.graft(v, v.script_name)
         cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name or "/"))
 Config.namespaces["tree"] = _tree_namespace_handler
-
-

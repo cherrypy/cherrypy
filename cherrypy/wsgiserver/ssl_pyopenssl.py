@@ -44,6 +44,7 @@ except ImportError:
 
 
 class SSL_fileobject(wsgiserver.CP_fileobject):
+
     """SSL file object attached to a socket object."""
 
     ssl_timeout = 3
@@ -109,6 +110,7 @@ class SSL_fileobject(wsgiserver.CP_fileobject):
 
 
 class SSLConnection:
+
     """A thread-safe wrapper for an SSL.Connection.
 
     ``*args``: the arguments to create the wrapped ``SSL.Connection(*args)``.
@@ -144,6 +146,7 @@ class SSLConnection:
 
 
 class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
+
     """A wrapper for integrating pyOpenSSL with CherryPy."""
 
     context = None
@@ -198,11 +201,11 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
         ssl_environ = {
             "HTTPS": "on",
             # pyOpenSSL doesn't provide access to any of these AFAICT
-##            'SSL_PROTOCOL': 'SSLv2',
-##            SSL_CIPHER 	string 	The cipher specification name
-##            SSL_VERSION_INTERFACE 	string 	The mod_ssl program version
-##            SSL_VERSION_LIBRARY 	string 	The OpenSSL program version
-            }
+            # 'SSL_PROTOCOL': 'SSLv2',
+            # SSL_CIPHER 	string 	The cipher specification name
+            # SSL_VERSION_INTERFACE 	string 	The mod_ssl program version
+            # SSL_VERSION_LIBRARY 	string 	The OpenSSL program version
+        }
 
         if self.certificate:
             # Server certificate attributes
@@ -211,9 +214,9 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
             ssl_environ.update({
                 'SSL_SERVER_M_VERSION': cert.get_version(),
                 'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
-##                'SSL_SERVER_V_START': Validity of server's certificate (start time),
-##                'SSL_SERVER_V_END': Validity of server's certificate (end time),
-                })
+                # 'SSL_SERVER_V_START': Validity of server's certificate (start time),
+                # 'SSL_SERVER_V_END': Validity of server's certificate (end time),
+            })
 
             for prefix, dn in [("I", cert.get_issuer()),
                                ("S", cert.get_subject())]:
@@ -246,4 +249,3 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
             return f
         else:
             return wsgiserver.CP_fileobject(sock, mode, bufsize)
-

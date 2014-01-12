@@ -48,8 +48,10 @@ class Dependency:
 
 db_connection = Dependency(engine)
 
+
 def setup_server():
     class Root:
+
         def index(self):
             return "Hello World"
         index.exposed = True
@@ -80,11 +82,12 @@ def setup_server():
     cherrypy.config.update({
         'environment': 'test_suite',
         'engine.deadlock_poll_freq': 0.1,
-        })
+    })
 
     db_connection.subscribe()
 
 # ------------ Enough helpers. Time for real live test cases. ------------ #
+
 
 class ServerStateTests(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
@@ -246,7 +249,7 @@ class ServerStateTests(helper.CPWebCase):
 
     def test_4_Autoreload(self):
         # Start the demo script in a new process
-        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
         p.write_conf(extra='test_case_name: "test_4_Autoreload"')
         p.start(imports='cherrypy.test._test_states_demo')
         try:
@@ -277,10 +280,10 @@ class ServerStateTests(helper.CPWebCase):
     def test_5_Start_Error(self):
         # If a process errors during start, it should stop the engine
         # and exit with a non-zero exit code.
-        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
                              wait=True)
         p.write_conf(
-                extra="""starterror: True
+            extra="""starterror: True
 test_case_name: "test_5_Start_Error"
 """
         )
@@ -290,6 +293,7 @@ test_case_name: "test_5_Start_Error"
 
 
 class PluginTests(helper.CPWebCase):
+
     def test_daemonize(self):
         if os.name not in ['posix']:
             return self.skip("skipped (not on posix) ")
@@ -298,12 +302,12 @@ class PluginTests(helper.CPWebCase):
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
-        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
                              wait=True, daemonize=True,
                              socket_host='127.0.0.1',
                              socket_port=8081)
         p.write_conf(
-             extra='test_case_name: "test_daemonize"')
+            extra='test_case_name: "test_daemonize"')
         p.start(imports='cherrypy.test._test_states_demo')
         try:
             # Just get the pid of the daemonization process.
@@ -323,6 +327,7 @@ class PluginTests(helper.CPWebCase):
 
 
 class SignalHandlingTests(helper.CPWebCase):
+
     def test_SIGHUP_tty(self):
         # When not daemonized, SIGHUP should shut down the server.
         try:
@@ -331,9 +336,9 @@ class SignalHandlingTests(helper.CPWebCase):
             return self.skip("skipped (no SIGHUP) ")
 
         # Spawn the process.
-        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
         p.write_conf(
-                extra='test_case_name: "test_SIGHUP_tty"')
+            extra='test_case_name: "test_SIGHUP_tty"')
         p.start(imports='cherrypy.test._test_states_demo')
         # Send a SIGHUP
         os.kill(p.get_pid(), SIGHUP)
@@ -353,10 +358,10 @@ class SignalHandlingTests(helper.CPWebCase):
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
-        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
                              wait=True, daemonize=True)
         p.write_conf(
-             extra='test_case_name: "test_SIGHUP_daemonized"')
+            extra='test_case_name: "test_SIGHUP_daemonized"')
         p.start(imports='cherrypy.test._test_states_demo')
 
         pid = p.get_pid()
@@ -386,9 +391,9 @@ class SignalHandlingTests(helper.CPWebCase):
         self._require_signal_and_kill('SIGTERM')
 
         # Spawn a normal, undaemonized process.
-        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
         p.write_conf(
-                extra='test_case_name: "test_SIGTERM"')
+            extra='test_case_name: "test_SIGTERM"')
         p.start(imports='cherrypy.test._test_states_demo')
         # Send a SIGTERM
         os.kill(p.get_pid(), signal.SIGTERM)
@@ -397,10 +402,10 @@ class SignalHandlingTests(helper.CPWebCase):
 
         if os.name in ['posix']:
             # Spawn a daemonized process and test again.
-            p = helper.CPProcess(ssl=(self.scheme.lower()=='https'),
+            p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
                                  wait=True, daemonize=True)
             p.write_conf(
-                 extra='test_case_name: "test_SIGTERM_2"')
+                extra='test_case_name: "test_SIGTERM_2"')
             p.start(imports='cherrypy.test._test_states_demo')
             # Send a SIGTERM
             os.kill(p.get_pid(), signal.SIGTERM)
@@ -418,7 +423,7 @@ class SignalHandlingTests(helper.CPWebCase):
             self.skip("SIGTERM not available")
 
         # Spawn a normal, undaemonized process.
-        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
         p.write_conf(
             extra="""unsubsig: True
 test_case_name: "test_signal_handler_unsubscribe"
@@ -434,7 +439,9 @@ test_case_name: "test_signal_handler_unsubscribe"
         if not ntob("I am an old SIGTERM handler.") in target_line:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
 
+
 class WaitTests(unittest.TestCase):
+
     def test_wait_for_occupied_port_INADDR_ANY(self):
         """
         Wait on INADDR_ANY should not raise IOError
@@ -474,7 +481,7 @@ class WaitTests(unittest.TestCase):
             # The wait should still raise an IO error if INADDR_ANY was
             #  not supplied.
             self.assertRaises(IOError, servers.wait_for_occupied_port,
-                '127.0.0.1', free_port)
+                              '127.0.0.1', free_port)
 
         with_shorter_timeouts(do_waiting)
 

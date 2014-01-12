@@ -16,6 +16,7 @@ except ImportError:
 
 
 class LockError(Exception):
+
     "Could not obtain a lock"
 
     msg = "Unable to lock %r"
@@ -25,6 +26,7 @@ class LockError(Exception):
 
 
 class UnlockError(LockError):
+
     "Could not release a lock"
 
     msg = "Unable to unlock %r"
@@ -32,6 +34,7 @@ class UnlockError(LockError):
 
 # first, a default, naive locking implementation
 class LockFile(object):
+
     """
     A default, naive locking implementation. Always fails if the file
     already exists.
@@ -53,6 +56,7 @@ class LockFile(object):
 
 
 class SystemLockFile(object):
+
     """
     An abstract base class for platform-specific locking.
     """
@@ -99,7 +103,7 @@ class SystemLockFile(object):
             pass
 
     #@abc.abstract_method
-    #def _lock_file(self):
+    # def _lock_file(self):
     #    """Attempt to obtain the lock on self.fp. Raise LockError if not
     #    acquired."""
 
@@ -109,6 +113,7 @@ class SystemLockFile(object):
 
 
 class WindowsLockFile(SystemLockFile):
+
     def _lock_file(self):
         # Lock just the first byte
         try:
@@ -128,6 +133,7 @@ if 'msvcrt' in globals():
 
 
 class UnixLockFile(SystemLockFile):
+
     def _lock_file(self):
         flags = fcntl.LOCK_EX | fcntl.LOCK_NB
         try:

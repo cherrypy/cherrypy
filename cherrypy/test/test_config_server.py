@@ -1,6 +1,7 @@
 """Tests for the CherryPy configuration system."""
 
-import os, sys
+import os
+import sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import socket
 import time
@@ -12,11 +13,13 @@ import cherrypy
 
 from cherrypy.test import helper
 
+
 class ServerConfigTests(helper.CPWebCase):
 
     def setup_server():
 
         class Root:
+
             def index(self):
                 return cherrypy.request.wsgi_environ['SERVER_PORT']
             index.exposed = True
@@ -46,7 +49,7 @@ class ServerConfigTests(helper.CPWebCase):
             # Test non-numeric <servername>
             # Also test default server.instance = builtin server
             'server.yetanother.socket_port': 9878,
-            })
+        })
     setup_server = staticmethod(setup_server)
 
     PORT = 9876
@@ -118,4 +121,3 @@ class ServerConfigTests(helper.CPWebCase):
              ("Content-Length", "%s" % len(b))]
         self.getPage('/upload', h, "POST", b)
         self.assertStatus(413)
-

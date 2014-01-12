@@ -4,7 +4,9 @@ import nose
 
 from cherrypy import _cpcompat as compat
 
+
 class StringTester(unittest.TestCase):
+
     def test_ntob_non_native(self):
         """
         ntob should raise an Exception on unicode.

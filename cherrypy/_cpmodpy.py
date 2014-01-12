@@ -67,11 +67,11 @@ from cherrypy.lib import httputil
 # ------------------------------ Request-handling
 
 
-
 def setup(req):
     from mod_python import apache
 
-    # Run any setup functions defined by a "PythonOption cherrypy.setup" directive.
+    # Run any setup functions defined by a "PythonOption cherrypy.setup"
+    # directive.
     options = req.get_options()
     if 'cherrypy.setup' in options:
         for function in options['cherrypy.setup'].split():
@@ -124,6 +124,7 @@ def setup(req):
 
 class _ReadOnlyRequest:
     expose = ('read', 'readline', 'readlines')
+
     def __init__(self, req):
         for method in self.expose:
             self.__dict__[method] = getattr(req, method)
@@ -132,6 +133,8 @@ class _ReadOnlyRequest:
 recursive = False
 
 _isSetUp = False
+
+
 def handler(req):
     from mod_python import apache
     try:
@@ -142,9 +145,11 @@ def handler(req):
 
         # Obtain a Request object from CherryPy
         local = req.connection.local_addr
-        local = httputil.Host(local[0], local[1], req.connection.local_host or "")
+        local = httputil.Host(
+            local[0], local[1], req.connection.local_host or "")
         remote = req.connection.remote_addr
-        remote = httputil.Host(remote[0], remote[1], req.connection.remote_host or "")
+        remote = httputil.Host(
+            remote[0], remote[1], req.connection.remote_host or "")
 
         scheme = req.parsed_uri[0] or 'http'
         req.get_basic_auth_pw()
@@ -213,7 +218,8 @@ def handler(req):
                                 raise RuntimeError("InternalRedirector visited the "
                                                    "same URL twice: %r" % ir.path)
                             else:
-                                # Add the *previous* path_info + qs to redirections.
+                                # Add the *previous* path_info + qs to
+                                # redirections.
                                 if qs:
                                     qs = "?" + qs
                                 redirections.append(sn + path + qs)
@@ -224,8 +230,9 @@ def handler(req):
                         qs = ir.query_string
                         rfile = BytesIO()
 
-                send_response(req, response.output_status, response.header_list,
-                              response.body, response.stream)
+                send_response(
+                    req, response.output_status, response.header_list,
+                    response.body, response.stream)
             finally:
                 app.release_serving()
     except:
@@ -260,14 +267,12 @@ def send_response(req, status, headers, body, stream=False):
             req.write(seg)
 
 
-
 # --------------- Startup tools for CherryPy + mod_python --------------- #
-
-
 import os
 import re
 try:
     import subprocess
+
     def popen(fullcmd):
         p = subprocess.Popen(fullcmd, shell=True,
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -341,4 +346,3 @@ LoadModule python_module modules/mod_python.so
     def stop(self):
         os.popen("apache -k stop")
         self.ready = False
-

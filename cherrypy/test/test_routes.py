@@ -6,6 +6,7 @@ import cherrypy
 from cherrypy.test import helper
 import nose
 
+
 class RoutesDispatchTest(helper.CPWebCase):
 
     def setup_server():
@@ -16,6 +17,7 @@ class RoutesDispatchTest(helper.CPWebCase):
             raise nose.SkipTest('Install routes to test RoutesDispatcher code')
 
         class Dummy:
+
             def index(self):
                 return "I said good day!"
 
@@ -37,8 +39,9 @@ class RoutesDispatchTest(helper.CPWebCase):
         d = cherrypy.dispatch.RoutesDispatcher()
         d.connect(action='index', name='hounslow', route='/hounslow',
                   controller=City('Hounslow'))
-        d.connect(name='surbiton', route='/surbiton', controller=City('Surbiton'),
-                  action='index', conditions=dict(method=['GET']))
+        d.connect(
+            name='surbiton', route='/surbiton', controller=City('Surbiton'),
+            action='index', conditions=dict(method=['GET']))
         d.mapper.connect('/surbiton', controller='surbiton',
                          action='update', conditions=dict(method=['POST']))
         d.connect('main', ':action', controller=Dummy())
@@ -66,4 +69,3 @@ class RoutesDispatchTest(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertHeader("Content-Language", "en-GB")
         self.assertBody("Welcome to Surbiton, pop. 1327")
-

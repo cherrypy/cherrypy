@@ -13,6 +13,7 @@ from cherrypy.lib import httputil, file_generator
 
 
 class Hook(object):
+
     """A callback and its metadata: failsafe, priority, and kwargs."""
 
     callback = None
@@ -71,6 +72,7 @@ class Hook(object):
 
 
 class HookMap(dict):
+
     """A map of call points to lists of callbacks (Hook objects)."""
 
     def __new__(cls, points=None):
@@ -139,13 +141,16 @@ def hooks_namespace(k, v):
         v = Hook(v)
     cherrypy.serving.request.hooks[hookpoint].append(v)
 
+
 def request_namespace(k, v):
     """Attach request attributes declared in config."""
-    # Provides config entries to set request.body attrs (like attempt_charsets).
+    # Provides config entries to set request.body attrs (like
+    # attempt_charsets).
     if k[:5] == 'body.':
         setattr(cherrypy.serving.request.body, k[5:], v)
     else:
         setattr(cherrypy.serving.request, k, v)
+
 
 def response_namespace(k, v):
     """Attach response attributes declared in config."""
@@ -155,6 +160,7 @@ def response_namespace(k, v):
         cherrypy.serving.response.headers[k.split('.', 1)[1]] = v
     else:
         setattr(cherrypy.serving.response, k, v)
+
 
 def error_page_namespace(k, v):
     """Attach error pages declared in config."""
@@ -170,6 +176,7 @@ hookpoints = ['on_start_resource', 'before_request_body',
 
 
 class Request(object):
+
     """An HTTP request.
 
     This object represents the metadata of an HTTP request message;
@@ -741,7 +748,8 @@ class Request(object):
         # First, see if there is a custom dispatch at this URI. Custom
         # dispatchers can only be specified in app.config, not in _cp_config
         # (since custom dispatchers may not even have an app.root).
-        dispatch = self.app.find_config(path, "request.dispatch", self.dispatch)
+        dispatch = self.app.find_config(
+            path, "request.dispatch", self.dispatch)
 
         # dispatch() should set self.handler and self.config
         dispatch(path)
@@ -763,13 +771,13 @@ class Request(object):
 
     def _get_body_params(self):
         warnings.warn(
-                "body_params is deprecated in CherryPy 3.2, will be removed in "
-                "CherryPy 3.3.",
-                DeprecationWarning
-            )
+            "body_params is deprecated in CherryPy 3.2, will be removed in "
+            "CherryPy 3.3.",
+            DeprecationWarning
+        )
         return self.body.params
     body_params = property(_get_body_params,
-                      doc= """
+                           doc="""
     If the request Content-Type is 'application/x-www-form-urlencoded' or
     multipart, this will be a dict of the params pulled from the entity
     body; that is, it will be the portion of request.params that come
@@ -783,6 +791,7 @@ class Request(object):
 
 
 class ResponseBody(object):
+
     """The body of the HTTP response (the response entity)."""
 
     if py3k:
@@ -825,6 +834,7 @@ class ResponseBody(object):
 
 
 class Response(object):
+
     """An HTTP Response, including status, headers, and body."""
 
     status = ""
@@ -892,7 +902,8 @@ class Response(object):
         newbody = []
         for chunk in self.body:
             if py3k and not isinstance(chunk, bytes):
-                raise TypeError("Chunk %s is not of type 'bytes'." % repr(chunk))
+                raise TypeError("Chunk %s is not of type 'bytes'." %
+                                repr(chunk))
             newbody.append(chunk)
         newbody = ntob('').join(newbody)
 
@@ -909,7 +920,8 @@ class Response(object):
         headers = self.headers
 
         self.status = "%s %s" % (code, reason)
-        self.output_status = ntob(str(code), 'ascii') + ntob(" ") + headers.encode(reason)
+        self.output_status = ntob(str(code), 'ascii') + \
+            ntob(" ") + headers.encode(reason)
 
         if self.stream:
             # The upshot: wsgiserver will chunk the response if
@@ -954,6 +966,3 @@ class Response(object):
         """
         if time.time() > self.time + self.timeout:
             self.timed_out = True
-
-
-

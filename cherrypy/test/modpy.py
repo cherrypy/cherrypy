@@ -91,6 +91,7 @@ PythonOption socket_host %(host)s
 PythonDebug On
 """
 
+
 class ModPythonSupervisor(helper.Supervisor):
 
     using_apache = True
@@ -123,6 +124,8 @@ class ModPythonSupervisor(helper.Supervisor):
 
 
 loaded = False
+
+
 def wsgisetup(req):
     global loaded
     if not loaded:
@@ -134,7 +137,7 @@ def wsgisetup(req):
             "log.error_file": os.path.join(curdir, "test.log"),
             "environment": "test_suite",
             "server.socket_host": options['socket_host'],
-            })
+        })
 
         modname = options['testmod']
         mod = __import__(modname, globals(), locals(), [''])
@@ -157,7 +160,6 @@ def cpmodpysetup(req):
             "log.error_file": os.path.join(curdir, "test.log"),
             "environment": "test_suite",
             "server.socket_host": options['socket_host'],
-            })
+        })
     from mod_python import apache
     return apache.OK
-
