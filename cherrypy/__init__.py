@@ -88,12 +88,13 @@ from magicbus.plugins.signalhandler import SignalHandler
 engine.listeners['before_request'] = set()
 engine.listeners['after_request'] = set()
 
+
 class _TimeoutMonitor(Monitor):
-    
+
     def __init__(self, bus):
         self.servings = []
         Monitor.__init__(self, bus, self.run)
-    
+
     def before_request(self):
         self.servings.append((serving.request, serving.response))
 
@@ -169,6 +170,7 @@ def quickstart(root=None, script_name="", config=None):
 
 
 from cherrypy._cpcompat import threadlocal as _local
+
 
 class _Serving(_local):
     """An interface for registering request and response objects.
@@ -264,6 +266,7 @@ class _ThreadLocalProxy(object):
 request = _ThreadLocalProxy('request')
 response = _ThreadLocalProxy('response')
 
+
 # Create thread_data object as a thread-specific all-purpose storage
 class _ThreadData(_local):
     """A container for thread-specific data."""
@@ -289,6 +292,7 @@ except ImportError:
 
 
 from cherrypy import _cplogging
+
 
 class _GlobalLogManager(_cplogging.LogManager):
     """A site-wide LogManager; routes to app.log or global log as appropriate.
@@ -324,6 +328,7 @@ log.error_file = ''
 # Using an access file makes CP about 10% slower. Leave off by default.
 log.access_file = ''
 
+
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
 engine.subscribe('log', _buslog)
@@ -343,7 +348,8 @@ def expose(func=None, alias=None):
                     parents[a.replace(".", "_")] = func
         return func
 
-    import sys, types
+    import sys
+    import types
     if isinstance(func, (types.FunctionType, types.MethodType)):
         if alias is None:
             # @expose
@@ -369,6 +375,7 @@ def expose(func=None, alias=None):
         parents = sys._getframe(1).f_locals
         alias = func
         return expose_
+
 
 def popargs(*args, **kwargs):
     """A decorator for _cp_dispatch
@@ -454,20 +461,20 @@ def popargs(*args, **kwargs):
 
     handler = None
     handler_call = False
-    for k,v in kwargs.items():
+    for k, v in kwargs.items():
         if k == 'handler':
             handler = v
         else:
             raise TypeError(
-                "cherrypy.popargs() got an unexpected keyword argument '{0}'" \
-                .format(k)
-                )
+                "cherrypy.popargs() got an unexpected "
+                "keyword argument '{0}'".format(k)
+            )
 
     import inspect
 
-    if handler is not None \
-        and (hasattr(handler, '__call__') or inspect.isclass(handler)):
-        handler_call = True
+    if handler is not None:
+        if hasattr(handler, '__call__') or inspect.isclass(handler):
+            handler_call = True
 
     def decorated(cls_or_self=None, vpath=None):
         if inspect.isclass(cls_or_self):
@@ -502,6 +509,7 @@ def popargs(*args, **kwargs):
             return self
 
     return decorated
+
 
 def url(path="", qs="", script_name=None, base=None, relative=None):
     """Create an absolute URL for the given path.
