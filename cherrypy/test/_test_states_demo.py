@@ -57,9 +57,11 @@ def starterror():
         zerodiv = 1 / 0
 cherrypy.engine.subscribe('start', starterror, priority=6)
 
+
 def log_test_case_name():
     if cherrypy.config.get('test_case_name', False):
-        cherrypy.log("STARTED FROM: %s" % cherrypy.config.get('test_case_name'))
+        cherrypy.log("STARTED FROM: %s" %
+                     cherrypy.config.get('test_case_name'))
 cherrypy.engine.subscribe('start', log_test_case_name, priority=6)
 
 

@@ -45,7 +45,6 @@ class TutorialTest(helper.CPWebCase):
         cherrypy.tree.mount(root)
     setup_server = classmethod(setup_server)
 
-
     def test01HelloWorld(self):
         self.getPage("/load_tut_module/tut01_helloworld")
         self.getPage("/")
@@ -125,21 +124,21 @@ class TutorialTest(helper.CPWebCase):
 
         self.getPage('/')
         self.assertBody("\n            During your current session, you've viewed this"
-                         "\n            page 1 times! Your life is a patio of fun!"
-                         "\n        ")
+                        "\n            page 1 times! Your life is a patio of fun!"
+                        "\n        ")
 
         self.getPage('/', self.cookies)
         self.assertBody("\n            During your current session, you've viewed this"
-                         "\n            page 2 times! Your life is a patio of fun!"
-                         "\n        ")
+                        "\n            page 2 times! Your life is a patio of fun!"
+                        "\n        ")
 
     def test08GeneratorsAndYield(self):
         self.getPage("/load_tut_module/tut08_generators_and_yield")
         self.getPage('/')
         self.assertBody('<html><body><h2>Generators rule!</h2>'
-                         '<h3>List of users:</h3>'
-                         'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
-                         '</body></html>')
+                        '<h3>List of users:</h3>'
+                        'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
+                        '</body></html>')
 
     def test09Files(self):
         self.getPage("/load_tut_module/tut09_files")
@@ -201,4 +200,3 @@ class TutorialTest(helper.CPWebCase):
         self.getPage("/messageArg")
         self.assertStatus(500)
         self.assertInBody("If you construct an HTTPError with a 'message'")
-

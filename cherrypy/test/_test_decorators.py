@@ -37,5 +37,3 @@ class ToolExamples(object):
     # the _cp_config attribute added by the Tool decorator. You have
     # to write _cp_config[k] = v or _cp_config.update(...) instead.
     blah._cp_config['response.stream'] = True
-
-

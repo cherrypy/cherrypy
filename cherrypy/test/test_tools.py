@@ -23,6 +23,7 @@ from cherrypy.test import helper
 
 
 class ToolTests(helper.CPWebCase):
+
     def setup_server():
 
         # Put check_access in a custom toolbox with its own namespace
@@ -31,7 +32,8 @@ class ToolTests(helper.CPWebCase):
         def check_access(default=False):
             if not getattr(cherrypy.request, "userid", default):
                 raise cherrypy.HTTPError(401)
-        myauthtools.check_access = cherrypy.Tool('before_request_body', check_access)
+        myauthtools.check_access = cherrypy.Tool(
+            'before_request_body', check_access)
 
         def numerify():
             def number_it(body):
@@ -42,6 +44,7 @@ class ToolTests(helper.CPWebCase):
             cherrypy.response.body = number_it(cherrypy.response.body)
 
         class NumTool(cherrypy.Tool):
+
             def _setup(self):
                 def makemap():
                     m = self._merged_args().get("map", {})
@@ -49,7 +52,8 @@ class ToolTests(helper.CPWebCase):
                 cherrypy.request.hooks.attach('on_start_resource', makemap)
 
                 def critical():
-                    cherrypy.request.error_response = cherrypy.HTTPError(502).set_response
+                    cherrypy.request.error_response = cherrypy.HTTPError(
+                        502).set_response
                 critical.failsafe = True
 
                 cherrypy.request.hooks.attach('on_start_resource', critical)
@@ -93,6 +97,7 @@ class ToolTests(helper.CPWebCase):
 
         # Assert that we can use a callable object instead of a function.
         class Rotator(object):
+
             def __call__(self, scale):
                 r = cherrypy.response
                 r.collapse_body()
@@ -106,13 +111,16 @@ class ToolTests(helper.CPWebCase):
             cherrypy.response.output = o = BytesIO()
             try:
                 response = next_handler(*args, **kwargs)
-                # Ignore the response and return our accumulated output instead.
+                # Ignore the response and return our accumulated output
+                # instead.
                 return o.getvalue()
             finally:
                 o.close()
-        cherrypy.tools.streamer = cherrypy._cptools.HandlerWrapperTool(stream_handler)
+        cherrypy.tools.streamer = cherrypy._cptools.HandlerWrapperTool(
+            stream_handler)
 
         class Root:
+
             def index(self):
                 return "Howdy earth!"
             index.exposed = True
@@ -154,6 +162,7 @@ class ToolTests(helper.CPWebCase):
         root = Root()
 
         class TestType(type):
+
             """Metaclass which automatically exposes all functions in each subclass,
             and adds an instance of the subclass as an attribute of root.
             """
@@ -200,7 +209,6 @@ class ToolTests(helper.CPWebCase):
                 for x in xrange(100000000):
                     yield str(x)
             stream._cp_config = {'response.stream': True}
-
 
         conf = {
             # METHOD THREE:
@@ -263,7 +271,7 @@ class ToolTests(helper.CPWebCase):
 
         # If body is "razdrez", then on_end_request is being called too early.
         if (cherrypy.server.protocol_version == "HTTP/1.0" or
-            getattr(cherrypy.server, "using_apache", False)):
+                getattr(cherrypy.server, "using_apache", False)):
             self.getPage("/demo/errinstream?id=5")
             # Because this error is raised after the response body has
             # started, the status should not change to an error status.
@@ -329,17 +337,19 @@ class ToolTests(helper.CPWebCase):
         # but our 'critical' hook should run and set the error to 502.
         self.getPage("/demo/err_in_onstart")
         self.assertErrorPage(502)
-        self.assertInBody("AttributeError: 'str' object has no attribute 'items'")
+        self.assertInBody(
+            "AttributeError: 'str' object has no attribute 'items'")
 
     def testCombinedTools(self):
-        expectedResult = (ntou("Hello,world") + europoundUnicode).encode('utf-8')
+        expectedResult = (ntou("Hello,world") +
+                          europoundUnicode).encode('utf-8')
         zbuf = BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write(expectedResult)
         zfile.close()
 
         self.getPage("/euro", headers=[("Accept-Encoding", "gzip"),
-                                        ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
+                                       ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
         self.assertInBody(zbuf.getvalue()[:3])
 
         zbuf = BytesIO()
@@ -359,7 +369,8 @@ class ToolTests(helper.CPWebCase):
         if py3k:
             self.assertInBody(bytes([(x + 3) % 256 for x in zbuf.getvalue()]))
         else:
-            self.assertInBody(''.join([chr((ord(x) + 3) % 256) for x in zbuf.getvalue()]))
+            self.assertInBody(''.join([chr((ord(x) + 3) % 256)
+                              for x in zbuf.getvalue()]))
 
     def testBareHooks(self):
         content = "bit of a pain in me gulliver"
@@ -397,7 +408,9 @@ class ToolTests(helper.CPWebCase):
         else:
             raise AssertionError("Tool.on did not error as it should have.")
 
+
 class SessionAuthTest(unittest.TestCase):
+
     def test_login_screen_returns_bytes(self):
         """
         login_screen must return bytes even if unicode parameters are passed.
@@ -406,5 +419,5 @@ class SessionAuthTest(unittest.TestCase):
         """
         sa = cherrypy.lib.cptools.SessionAuth()
         res = sa.login_screen(None, username=unicodestr('nobody'),
-            password=unicodestr('anypass'))
+                              password=unicodestr('anypass'))
         self.assertIsInstance(res, bytestr)

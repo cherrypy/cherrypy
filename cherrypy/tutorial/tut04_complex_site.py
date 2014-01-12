@@ -9,6 +9,7 @@ import cherrypy
 
 
 class HomePage:
+
     def index(self):
         return '''
             <p>Hi, this is the home page! Check out the other
@@ -22,6 +23,7 @@ class HomePage:
 
 
 class JokePage:
+
     def index(self):
         return '''
             <p>"In Python, how do you create a string of random
@@ -31,6 +33,7 @@ class JokePage:
 
 
 class LinksPage:
+
     def __init__(self):
         # Request handler objects can create their own nested request
         # handler objects. Simply create them inside their __init__
@@ -59,6 +62,7 @@ class LinksPage:
 
 
 class ExtraLinksPage:
+
     def index(self):
         # Note the relative link back to the Links page!
         return '''
@@ -95,4 +99,3 @@ if __name__ == '__main__':
 else:
     # This branch is for the test suite; you can ignore it.
     cherrypy.tree.mount(root, config=tutconf)
-

@@ -49,13 +49,15 @@ except ImportError:
     profile = None
     pstats = None
 
-import os, os.path
+import os
+import os.path
 import sys
 import warnings
 
 from cherrypy._cpcompat import StringIO
 
 _count = 0
+
 
 class Profiler(object):
 
@@ -150,6 +152,7 @@ class ProfileAggregator(Profiler):
 
 
 class make_app:
+
     def __init__(self, nextapp, path=None, aggregate=False):
         """Make a WSGI middleware app which wraps 'nextapp' with profiling.
 
@@ -205,4 +208,3 @@ def serve(path=None, port=8080):
 
 if __name__ == "__main__":
     serve(*tuple(sys.argv[1:]))
-

@@ -44,6 +44,7 @@ except ImportError:
 import operator as _operator
 import sys
 
+
 def as_dict(config):
     """Return a dict from 'config' whether it is a dict, file, or filename."""
     if isinstance(config, basestring):
@@ -54,6 +55,7 @@ def as_dict(config):
 
 
 class NamespaceSet(dict):
+
     """A dict of config namespace names and handlers.
 
     Each config entry should begin with a namespace name; the corresponding
@@ -129,6 +131,7 @@ class NamespaceSet(dict):
 
 
 class Config(dict):
+
     """A dict-like set of configuration data, with defaults and namespaces.
 
     May take a file, filename, or dict.
@@ -180,6 +183,7 @@ class Config(dict):
 
 
 class Parser(ConfigParser):
+
     """Sub-class of ConfigParser that keeps the case of options and that
     raises an exception if the file cannot be read.
     """
@@ -457,6 +461,7 @@ def modules(modulePath):
     __import__(modulePath)
     return sys.modules[modulePath]
 
+
 def attributes(full_attribute_name):
     """Load a module and retrieve an attribute of that module."""
 
@@ -475,5 +480,3 @@ def attributes(full_attribute_name):
 
     # Return a reference to the attribute.
     return attr
-
-

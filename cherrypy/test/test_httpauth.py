@@ -4,25 +4,30 @@ from cherrypy.lib import httpauth
 
 from cherrypy.test import helper
 
+
 class HTTPAuthTest(helper.CPWebCase):
 
     def setup_server():
         class Root:
+
             def index(self):
                 return "This is public."
             index.exposed = True
 
         class DigestProtected:
+
             def index(self):
                 return "Hello %s, you've been authorized." % cherrypy.request.login
             index.exposed = True
 
         class BasicProtected:
+
             def index(self):
                 return "Hello %s, you've been authorized." % cherrypy.request.login
             index.exposed = True
 
         class BasicProtected2:
+
             def index(self):
                 return "Hello %s, you've been authorized." % cherrypy.request.login
             index.exposed = True
@@ -53,7 +58,6 @@ class HTTPAuthTest(helper.CPWebCase):
         root.basic2 = BasicProtected2()
         cherrypy.tree.mount(root, config=conf)
     setup_server = staticmethod(setup_server)
-
 
     def testPublic(self):
         self.getPage("/")
@@ -97,7 +101,8 @@ class HTTPAuthTest(helper.CPWebCase):
                     break
 
         if value is None:
-            self._handlewebError("Digest authentification scheme was not found")
+            self._handlewebError(
+                "Digest authentification scheme was not found")
 
         value = value[7:]
         items = value.split(', ')
@@ -112,7 +117,8 @@ class HTTPAuthTest(helper.CPWebCase):
         if 'realm' not in tokens:
             self._handlewebError(missing_msg % 'realm')
         elif tokens['realm'] != '"localhost"':
-            self._handlewebError(bad_value_msg % ('realm', '"localhost"', tokens['realm']))
+            self._handlewebError(bad_value_msg %
+                                 ('realm', '"localhost"', tokens['realm']))
         if 'nonce' not in tokens:
             self._handlewebError(missing_msg % 'nonce')
         else:
@@ -120,11 +126,13 @@ class HTTPAuthTest(helper.CPWebCase):
         if 'algorithm' not in tokens:
             self._handlewebError(missing_msg % 'algorithm')
         elif tokens['algorithm'] != '"MD5"':
-            self._handlewebError(bad_value_msg % ('algorithm', '"MD5"', tokens['algorithm']))
+            self._handlewebError(bad_value_msg %
+                                 ('algorithm', '"MD5"', tokens['algorithm']))
         if 'qop' not in tokens:
             self._handlewebError(missing_msg % 'qop')
         elif tokens['qop'] != '"auth"':
-            self._handlewebError(bad_value_msg % ('qop', '"auth"', tokens['qop']))
+            self._handlewebError(bad_value_msg %
+                                 ('qop', '"auth"', tokens['qop']))
 
         # Test a wrong 'realm' value
         base_auth = 'Digest username="test", realm="wrong realm", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
@@ -148,4 +156,3 @@ class HTTPAuthTest(helper.CPWebCase):
         self.getPage('/digest/', [('Authorization', auth)])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
-

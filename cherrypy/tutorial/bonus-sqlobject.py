@@ -38,15 +38,18 @@ from sqlobject import *
 __connection__ = 'mysql://root:@localhost/test'
 
 # this is our (only) data class.
+
+
 class Contact(SQLObject):
-    lastName = StringCol(length = 50, notNone = True)
-    firstName = StringCol(length = 50, notNone = True)
-    phone = StringCol(length = 30, notNone = True, default = '')
-    email = StringCol(length = 30, notNone = True, default = '')
-    url = StringCol(length = 100, notNone = True, default = '')
+    lastName = StringCol(length=50, notNone=True)
+    firstName = StringCol(length=50, notNone=True)
+    phone = StringCol(length=30, notNone=True, default='')
+    email = StringCol(length=30, notNone=True, default='')
+    url = StringCol(length=100, notNone=True, default='')
 
 
 class ContactManager:
+
     def index(self):
         # Let's display a list of all stored contacts.
         contacts = Contact.select()
@@ -68,8 +71,7 @@ class ContactManager:
 
     index.exposed = True
 
-
-    def edit(self, id = 0):
+    def edit(self, id=0):
         # we really want id as an integer. Since GET/POST parameters
         # are always passed as strings, let's convert it.
         id = int(id)
@@ -82,7 +84,6 @@ class ContactManager:
             # if no id is specified, we're entering a new contact.
             contact = None
             title = "New Contact"
-
 
         # In the following template code, please note that we use
         # Cheetah's $getVar() construct for the form values. We have
@@ -105,7 +106,6 @@ class ContactManager:
 
     edit.exposed = True
 
-
     def delete(self, id):
         # Delete the specified contact
         contact = Contact.get(int(id))
@@ -114,8 +114,7 @@ class ContactManager:
 
     delete.exposed = True
 
-
-    def store(self, lastName, firstName, phone, email, url, id = None):
+    def store(self, lastName, firstName, phone, email, url, id=None):
         if id and int(id) > 0:
             # If an id was specified, update an existing contact.
             contact = Contact.get(int(id))
@@ -124,24 +123,23 @@ class ContactManager:
             # cause multiple UPDATE clauses. So we'll just do it all
             # in a single pass through the set() method.
             contact.set(
-                lastName = lastName,
-                firstName = firstName,
-                phone = phone,
-                email = email,
-                url = url)
+                lastName=lastName,
+                firstName=firstName,
+                phone=phone,
+                email=email,
+                url=url)
         else:
             # Otherwise, add a new contact.
             contact = Contact(
-                lastName = lastName,
-                firstName = firstName,
-                phone = phone,
-                email = email,
-                url = url)
+                lastName=lastName,
+                firstName=firstName,
+                phone=phone,
+                email=email,
+                url=url)
 
         return 'Stored. <a href="./">Return to Index</a>'
 
     store.exposed = True
-
 
     def reset(self):
         # Drop existing table
@@ -152,17 +150,18 @@ class ContactManager:
 
         # Create some sample data
         Contact(
-            firstName = 'Hendrik',
-            lastName = 'Mans',
-            email = 'hendrik@mans.de',
-            phone = '++49 89 12345678',
-            url = 'http://www.mornography.de')
+            firstName='Hendrik',
+            lastName='Mans',
+            email='hendrik@mans.de',
+            phone='++49 89 12345678',
+            url='http://www.mornography.de')
 
         return "reset completed!"
 
     reset.exposed = True
 
 
-print("If you're running this application for the first time, please go to http://localhost:8080/reset once in order to create the database!")
+print(
+    "If you're running this application for the first time, please go to http://localhost:8080/reset once in order to create the database!")
 
 cherrypy.quickstart(ContactManager())

@@ -10,6 +10,7 @@ from cherrypy.lib import httputil
 
 
 class Application(object):
+
     """A CherryPy Application.
 
     Servers and gateways should not instantiate Request objects directly.
@@ -77,11 +78,14 @@ class Application(object):
     If script_name is explicitly set to None, then the script_name will be
     provided for each call from request.wsgi_environ['SCRIPT_NAME'].
     """
+
     def _get_script_name(self):
         if self._script_name is None:
-            # None signals that the script name should be pulled from WSGI environ.
+            # None signals that the script name should be pulled from WSGI
+            # environ.
             return cherrypy.serving.request.wsgi_environ['SCRIPT_NAME'].rstrip("/")
         return self._script_name
+
     def _set_script_name(self, value):
         if value:
             value = value.rstrip("/")
@@ -148,6 +152,7 @@ class Application(object):
 
 
 class Tree(object):
+
     """A registry of CherryPy applications, mounted at diverse points.
 
     An instance of this class may also be used as a WSGI callable
@@ -273,7 +278,8 @@ class Tree(object):
                 # Python 2/WSGI u.0: all strings MUST be of type unicode
                 enc = environ[ntou('wsgi.url_encoding')]
                 environ[ntou('SCRIPT_NAME')] = sn.decode(enc)
-                environ[ntou('PATH_INFO')] = path[len(sn.rstrip("/")):].decode(enc)
+                environ[ntou('PATH_INFO')] = path[
+                    len(sn.rstrip("/")):].decode(enc)
             else:
                 # Python 2/WSGI 1.x: all strings MUST be of type str
                 environ['SCRIPT_NAME'] = sn
@@ -285,6 +291,8 @@ class Tree(object):
                 environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
             else:
                 # Python 3/WSGI 1.x: all strings MUST be ISO-8859-1 str
-                environ['SCRIPT_NAME'] = sn.encode('utf-8').decode('ISO-8859-1')
-                environ['PATH_INFO'] = path[len(sn.rstrip("/")):].encode('utf-8').decode('ISO-8859-1')
+                environ['SCRIPT_NAME'] = sn.encode(
+                    'utf-8').decode('ISO-8859-1')
+                environ['PATH_INFO'] = path[
+                    len(sn.rstrip("/")):].encode('utf-8').decode('ISO-8859-1')
         return app(environ, start_response)

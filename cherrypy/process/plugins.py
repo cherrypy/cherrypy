@@ -29,6 +29,7 @@ _module__file__base = os.getcwd()
 
 
 class SimplePlugin(object):
+
     """Plugin base class which auto-subscribes methods for known channels."""
 
     bus = None
@@ -54,8 +55,8 @@ class SimplePlugin(object):
                 self.bus.unsubscribe(channel, method)
 
 
-
 class SignalHandler(object):
+
     """Register bus channels (and listeners) for system signals.
 
     You can modify what signals your application listens for, and what it does
@@ -187,12 +188,14 @@ class SignalHandler(object):
 
 
 try:
-    import pwd, grp
+    import pwd
+    import grp
 except ImportError:
     pwd, grp = None, None
 
 
 class DropPrivileges(SimplePlugin):
+
     """Drop privileges. uid/gid arguments not available on Windows.
 
     Special thanks to `Gavin Baker <http://antonym.org/2005/12/dropping-privileges-in-python.html>`_ 
@@ -207,6 +210,7 @@ class DropPrivileges(SimplePlugin):
 
     def _get_uid(self):
         return self._uid
+
     def _set_uid(self, val):
         if val is not None:
             if pwd is None:
@@ -217,10 +221,11 @@ class DropPrivileges(SimplePlugin):
                 val = pwd.getpwnam(val)[2]
         self._uid = val
     uid = property(_get_uid, _set_uid,
-        doc="The uid under which to run. Availability: Unix.")
+                   doc="The uid under which to run. Availability: Unix.")
 
     def _get_gid(self):
         return self._gid
+
     def _set_gid(self, val):
         if val is not None:
             if grp is None:
@@ -231,10 +236,11 @@ class DropPrivileges(SimplePlugin):
                 val = grp.getgrnam(val)[2]
         self._gid = val
     gid = property(_get_gid, _set_gid,
-        doc="The gid under which to run. Availability: Unix.")
+                   doc="The gid under which to run. Availability: Unix.")
 
     def _get_umask(self):
         return self._umask
+
     def _set_umask(self, val):
         if val is not None:
             try:
@@ -245,7 +251,7 @@ class DropPrivileges(SimplePlugin):
                 val = None
         self._umask = val
     umask = property(_get_umask, _set_umask,
-        doc="""The default permission mode for newly created files and directories.
+                     doc="""The default permission mode for newly created files and directories.
 
         Usually expressed in octal format, for example, ``0644``.
         Availability: Unix, Windows.
@@ -299,6 +305,7 @@ class DropPrivileges(SimplePlugin):
 
 
 class Daemonizer(SimplePlugin):
+
     """Daemonize the running script.
 
     Use this with a Web Site Process Bus via::
@@ -368,7 +375,7 @@ class Daemonizer(SimplePlugin):
             pid = os.fork()
             if pid > 0:
                 self.bus.log('Forking twice.')
-                os._exit(0) # Exit second parent
+                os._exit(0)  # Exit second parent
         except OSError:
             exc = sys.exc_info()[1]
             sys.exit("%s: fork #2 failed: (%d) %s\n"
@@ -394,6 +401,7 @@ class Daemonizer(SimplePlugin):
 
 
 class PIDFile(SimplePlugin):
+
     """Maintain a PID file via a WSPBus."""
 
     def __init__(self, bus, pidfile):
@@ -422,6 +430,7 @@ class PIDFile(SimplePlugin):
 
 
 class PerpetualTimer(Timer):
+
     """A responsive subclass of threading.Timer whose run() method repeats.
 
     Use this timer only when you really need a very interruptible timer;
@@ -451,6 +460,7 @@ class PerpetualTimer(Timer):
 
 
 class BackgroundTask(SetDaemonProperty, threading.Thread):
+
     """A subclass of threading.Thread whose run() method repeats.
 
     Use this class for most repeating tasks. It uses time.sleep() to wait
@@ -492,6 +502,7 @@ class BackgroundTask(SetDaemonProperty, threading.Thread):
 
 
 class Monitor(SimplePlugin):
+
     """WSPBus listener to periodically run a callback in its own thread."""
 
     callback = None
@@ -516,7 +527,7 @@ class Monitor(SimplePlugin):
             threadname = self.name or self.__class__.__name__
             if self.thread is None:
                 self.thread = BackgroundTask(self.frequency, self.callback,
-                                             bus = self.bus)
+                                             bus=self.bus)
                 self.thread.setName(threadname)
                 self.thread.start()
                 self.bus.log("Started monitor thread %r." % threadname)
@@ -527,7 +538,8 @@ class Monitor(SimplePlugin):
     def stop(self):
         """Stop our callback's background task thread."""
         if self.thread is None:
-            self.bus.log("No thread running for %s." % self.name or self.__class__.__name__)
+            self.bus.log("No thread running for %s." %
+                         self.name or self.__class__.__name__)
         else:
             if self.thread is not threading.currentThread():
                 name = self.thread.getName()
@@ -545,6 +557,7 @@ class Monitor(SimplePlugin):
 
 
 class Autoreloader(Monitor):
+
     """Monitor which re-executes the process when files change.
 
     This :ref:`plugin<plugins>` restarts the process (via :func:`os.execv`)
@@ -597,8 +610,10 @@ class Autoreloader(Monitor):
                 else:
                     f = getattr(m, '__file__', None)
                     if f is not None and not os.path.isabs(f):
-                        # ensure absolute paths so a os.chdir() in the app doesn't break me
-                        f = os.path.normpath(os.path.join(_module__file__base, f))
+                        # ensure absolute paths so a os.chdir() in the app
+                        # doesn't break me
+                        f = os.path.normpath(
+                            os.path.join(_module__file__base, f))
                 files.add(f)
         return files
 
@@ -626,14 +641,17 @@ class Autoreloader(Monitor):
                 else:
                     if mtime is None or mtime > oldtime:
                         # The file has been deleted or modified.
-                        self.bus.log("Restarting because %s changed." % filename)
+                        self.bus.log("Restarting because %s changed." %
+                                     filename)
                         self.thread.cancel()
-                        self.bus.log("Stopped thread %r." % self.thread.getName())
+                        self.bus.log("Stopped thread %r." %
+                                     self.thread.getName())
                         self.bus.restart()
                         return
 
 
 class ThreadManager(SimplePlugin):
+
     """Manager for HTTP request threads.
 
     If you have control over thread creation and destruction, publish to
@@ -687,4 +705,3 @@ class ThreadManager(SimplePlugin):
             self.bus.publish('stop_thread', i)
         self.threads.clear()
     graceful = stop
-

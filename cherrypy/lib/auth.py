@@ -17,10 +17,11 @@ def check_auth(users, encrypt=None, realm=None):
         if hasattr(users, '__call__'):
             try:
                 # backward compatibility
-                users = users() # expect it to return a dictionary
+                users = users()  # expect it to return a dictionary
 
                 if not isinstance(users, dict):
-                    raise ValueError("Authentication users must be a dictionary")
+                    raise ValueError(
+                        "Authentication users must be a dictionary")
 
                 # fetch the user password
                 password = users.get(ah["username"], None)
@@ -44,6 +45,7 @@ def check_auth(users, encrypt=None, realm=None):
         request.login = False
     return False
 
+
 def basic_auth(realm, users, encrypt=None, debug=False):
     """If auth fails, raise 401 with a basic authentication header.
 
@@ -64,9 +66,12 @@ def basic_auth(realm, users, encrypt=None, debug=False):
         return
 
     # inform the user-agent this path is protected
-    cherrypy.serving.response.headers['www-authenticate'] = httpauth.basicAuth(realm)
+    cherrypy.serving.response.headers[
+        'www-authenticate'] = httpauth.basicAuth(realm)
 
-    raise cherrypy.HTTPError(401, "You are not authorized to access that resource")
+    raise cherrypy.HTTPError(
+        401, "You are not authorized to access that resource")
+
 
 def digest_auth(realm, users, debug=False):
     """If auth fails, raise 401 with a digest authentication header.
@@ -82,6 +87,8 @@ def digest_auth(realm, users, debug=False):
         return
 
     # inform the user-agent this path is protected
-    cherrypy.serving.response.headers['www-authenticate'] = httpauth.digestAuth(realm)
+    cherrypy.serving.response.headers[
+        'www-authenticate'] = httpauth.digestAuth(realm)
 
-    raise cherrypy.HTTPError(401, "You are not authorized to access that resource")
+    raise cherrypy.HTTPError(
+        401, "You are not authorized to access that resource")

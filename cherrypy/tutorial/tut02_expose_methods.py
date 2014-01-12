@@ -7,6 +7,7 @@ handler.
 
 import cherrypy
 
+
 class HelloWorld:
 
     def index(self):

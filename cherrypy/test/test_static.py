@@ -57,7 +57,6 @@ class StaticTest(helper.CPWebCase):
                 return "This is a DYNAMIC page"
             dynamic.exposed = True
 
-
         root = Root()
         root.static = Static()
 
@@ -81,7 +80,7 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.on': True,
                 'request.show_tracebacks': True,
             },
-            }
+        }
         rootApp = cherrypy.Application(root)
         rootApp.merge(rootconf)
 
@@ -91,15 +90,14 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.on': True,
                 'tools.staticdir.root': curdir,
                 'tools.staticdir.dir': 'static',
-                },
-            }
+            },
+        }
         testApp = cherrypy.Application(Static())
         testApp.merge(test_app_conf)
 
         vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
         cherrypy.tree.graft(vhost)
     setup_server = staticmethod(setup_server)
-
 
     def teardown_server():
         for f in (has_space_filepath, bigfile_filepath):
@@ -109,7 +107,6 @@ class StaticTest(helper.CPWebCase):
                 except:
                     pass
     teardown_server = staticmethod(teardown_server)
-
 
     def testStatic(self):
         self.getPage("/static/index.html")

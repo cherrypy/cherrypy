@@ -18,7 +18,8 @@ import cherrypy
 class HTTPErrorDemo(object):
 
     # Set a custom response for 403 errors.
-    _cp_config = {'error_page.403' : os.path.join(curpath, "custom_error.html")}
+    _cp_config = {'error_page.403':
+                  os.path.join(curpath, "custom_error.html")}
 
     def index(self):
         # display some links that will result in errors
@@ -57,7 +58,7 @@ class HTTPErrorDemo(object):
 
     def error(self, code):
         # raise an error based on the get query
-        raise cherrypy.HTTPError(status = code)
+        raise cherrypy.HTTPError(status=code)
     error.exposed = True
 
     def messageArg(self):

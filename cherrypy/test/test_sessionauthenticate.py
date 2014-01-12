@@ -18,7 +18,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
             cherrypy.request.params["test"] = "test"
 
         cherrypy.tools.augment_params = cherrypy.Tool('before_handler',
-                 augment_params, None, priority=30)
+                                                      augment_params, None, priority=30)
 
         class Test:
 
@@ -34,7 +34,6 @@ class SessionAuthenticateTest(helper.CPWebCase):
 
         cherrypy.tree.mount(Test())
     setup_server = staticmethod(setup_server)
-
 
     def testSessionAuthenticate(self):
         # request a page and check for login form
@@ -59,4 +58,3 @@ class SessionAuthenticateTest(helper.CPWebCase):
         # verify we are logged out
         self.getPage('/', self.cookies)
         self.assertInBody('<form method="post" action="do_login">')
-

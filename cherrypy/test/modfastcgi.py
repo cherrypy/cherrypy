@@ -80,9 +80,11 @@ RewriteRule ^(.*)$ /fastcgi.pyc [L]
 FastCgiExternalServer "%(server)s" -host 127.0.0.1:4000
 """
 
+
 def erase_script_name(environ, start_response):
     environ['SCRIPT_NAME'] = ''
     return cherrypy.tree(environ, start_response)
+
 
 class ModFCGISupervisor(helper.LocalWSGISupervisor):
 
@@ -131,5 +133,5 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
         helper.LocalWSGISupervisor.stop(self)
 
     def sync_apps(self):
-        cherrypy.server.httpserver.fcgiserver.application = self.get_app(erase_script_name)
-
+        cherrypy.server.httpserver.fcgiserver.application = self.get_app(
+            erase_script_name)

@@ -112,16 +112,19 @@ from cherrypy.lib import httputil as _httputil
 
 
 class CherryPyException(Exception):
+
     """A base class for CherryPy exceptions."""
     pass
 
 
 class TimeoutError(CherryPyException):
+
     """Exception raised when Response.timed_out is detected."""
     pass
 
 
 class InternalRedirect(CherryPyException):
+
     """Exception raised to switch to the handler for a different URL.
 
     This exception will redirect processing to another path within the site
@@ -152,6 +155,7 @@ class InternalRedirect(CherryPyException):
 
 
 class HTTPRedirect(CherryPyException):
+
     """Exception raised when the request should be redirected.
 
     This exception will force a HTTP redirect to the URL or URL's you give it.
@@ -311,6 +315,7 @@ def clean_headers(status):
 
 
 class HTTPError(CherryPyException):
+
     """Exception used to return an HTTP error code (4xx-5xx) to the client.
 
     This exception can be used to automatically send a response using a http status
@@ -373,7 +378,7 @@ class HTTPError(CherryPyException):
         response.headers.pop('Content-Length', None)
 
         content = self.get_error_page(self.status, traceback=tb,
-            message=self._message).encode('utf-8')
+                                      message=self._message).encode('utf-8')
         response.body = content
 
         _be_ie_unfriendly(self.code)
@@ -387,6 +392,7 @@ class HTTPError(CherryPyException):
 
 
 class NotFound(HTTPError):
+
     """Exception raised when a URL could not be mapped to any handler (404).
 
     This is equivalent to raising
@@ -430,6 +436,7 @@ _HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitiona
     </body>
 </html>
 '''
+
 
 def get_error_page(status, **kwargs):
     """Return an HTML page, containing a pretty error response.
@@ -486,7 +493,7 @@ _ie_friendly_error_sizes = {
     400: 512, 403: 256, 404: 512, 405: 256,
     406: 512, 408: 512, 409: 512, 410: 256,
     500: 512, 501: 512, 505: 512,
-    }
+}
 
 
 def _be_ie_unfriendly(status):
@@ -525,6 +532,7 @@ def format_exc(exc=None):
     finally:
         del exc
 
+
 def bare_error(extrabody=None):
     """Produce status, headers, body for a critical error.
 
@@ -550,7 +558,5 @@ def bare_error(extrabody=None):
 
     return (ntob("500 Internal Server Error"),
             [(ntob('Content-Type'), ntob('text/plain')),
-             (ntob('Content-Length'), ntob(str(len(body)),'ISO-8859-1'))],
+             (ntob('Content-Length'), ntob(str(len(body)), 'ISO-8859-1'))],
             [body])
-
-

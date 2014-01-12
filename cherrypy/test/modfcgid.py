@@ -77,6 +77,7 @@ RewriteRule ^(.*)$ /fastcgi.pyc [L]
 FastCgiExternalServer "%(server)s" -host 127.0.0.1:4000
 """
 
+
 class ModFCGISupervisor(helper.LocalSupervisor):
 
     using_apache = True
@@ -122,4 +123,3 @@ class ModFCGISupervisor(helper.LocalSupervisor):
 
     def sync_apps(self):
         cherrypy.server.httpserver.fcgiserver.application = self.get_app()
-

@@ -54,15 +54,14 @@ def setup_server():
 
     root = Root()
 
-
     cherrypy.config.update({'log.error_file': error_log,
                             'log.access_file': access_log,
                             })
     cherrypy.tree.mount(root)
 
 
-
 from cherrypy.test import helper, logtest
+
 
 class AccessLogTests(helper.CPWebCase, logtest.LogCase):
     setup_server = staticmethod(setup_server)
@@ -154,4 +153,3 @@ class ErrorLogTests(helper.CPWebCase, logtest.LogCase):
             self.assertLog(-3, 'raise ValueError()')
         finally:
             ignore.pop()
-

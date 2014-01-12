@@ -10,6 +10,7 @@ class ObjectMappingTest(helper.CPWebCase):
 
     def setup_server():
         class Root:
+
             def index(self, name="world"):
                 return name
             index.exposed = True
@@ -54,8 +55,8 @@ class ObjectMappingTest(helper.CPWebCase):
         mapped_func.exposed = True
         setattr(Root, "Von B\xfclow", mapped_func)
 
-
         class Exposing:
+
             def base(self):
                 return "expose works!"
             cherrypy.expose(base)
@@ -63,14 +64,15 @@ class ObjectMappingTest(helper.CPWebCase):
             cherrypy.expose(base, "2")
 
         class ExposingNewStyle(object):
+
             def base(self):
                 return "expose works!"
             cherrypy.expose(base)
             cherrypy.expose(base, "1")
             cherrypy.expose(base, "2")
 
-
         class Dir1:
+
             def index(self):
                 return "index for dir1"
             index.exposed = True
@@ -84,8 +86,8 @@ class ObjectMappingTest(helper.CPWebCase):
                 return "default for dir1, param is:" + repr(params)
             default.exposed = True
 
-
         class Dir2:
+
             def index(self):
                 return "index for dir2, path is:" + cherrypy.request.path_info
             index.exposed = True
@@ -102,16 +104,18 @@ class ObjectMappingTest(helper.CPWebCase):
                 return "/".join(vpath)
             posparam.exposed = True
 
-
         class Dir3:
+
             def default(self):
                 return "default for dir3, not exposed"
 
         class Dir4:
+
             def index(self):
                 return "index for dir4, not exposed"
 
         class DefNoIndex:
+
             def default(self, *args):
                 raise cherrypy.HTTPRedirect("contact")
             default.exposed = True
@@ -150,8 +154,8 @@ class ObjectMappingTest(helper.CPWebCase):
                     }
             cherrypy.tree.mount(Root(), url, conf)
 
-
         class Isolated:
+
             def index(self):
                 return "made it!"
             index.exposed = True
@@ -165,9 +169,9 @@ class ObjectMappingTest(helper.CPWebCase):
             def GET(self):
                 return "milk"
 
-        cherrypy.tree.mount(AnotherApp(), "/app", {'/': {'request.dispatch': d}})
+        cherrypy.tree.mount(AnotherApp(), "/app",
+                            {'/': {'request.dispatch': d}})
     setup_server = staticmethod(setup_server)
-
 
     def testObjectMapping(self):
         for url in script_names:
@@ -177,10 +181,12 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertBody('world')
 
             self.getPage("/dir1/myMethod")
-            self.assertBody("myMethod from dir1, path_info is:'/dir1/myMethod'")
+            self.assertBody(
+                "myMethod from dir1, path_info is:'/dir1/myMethod'")
 
             self.getPage("/this/method/does/not/exist")
-            self.assertBody("default:('this', 'method', 'does', 'not', 'exist')")
+            self.assertBody(
+                "default:('this', 'method', 'does', 'not', 'exist')")
 
             self.getPage("/extra/too/much")
             self.assertBody("('too', 'much')")
@@ -206,7 +212,8 @@ class ObjectMappingTest(helper.CPWebCase):
 
             # Test that default method must be exposed in order to match.
             self.getPage("/dir1/dir2/dir3/dir4/index")
-            self.assertBody("default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
+            self.assertBody(
+                "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
 
             # Test *vpath when default() is defined but not index()
             # This also tests HTTPRedirect with default.
@@ -215,10 +222,12 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertHeader('Location', '%s/contact' % self.base())
             self.getPage("/defnoindex/")
             self.assertStatus((302, 303))
-            self.assertHeader('Location', '%s/defnoindex/contact' % self.base())
+            self.assertHeader('Location', '%s/defnoindex/contact' %
+                              self.base())
             self.getPage("/defnoindex/page")
             self.assertStatus((302, 303))
-            self.assertHeader('Location', '%s/defnoindex/contact' % self.base())
+            self.assertHeader('Location', '%s/defnoindex/contact' %
+                              self.base())
 
             self.getPage("/redirect")
             self.assertStatus('302 Found')
@@ -268,7 +277,8 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertStatus("404 Not Found")
 
         # Make sure /foobar maps to Root.foobar and not to the app
-        # mounted at /foo. See https://bitbucket.org/cherrypy/cherrypy/issue/573
+        # mounted at /foo. See
+        # https://bitbucket.org/cherrypy/cherrypy/issue/573
         self.getPage("/foobar")
         self.assertBody("bar")
 
@@ -375,6 +385,7 @@ class ObjectMappingTest(helper.CPWebCase):
 
     def testTreeMounting(self):
         class Root(object):
+
             def hello(self):
                 return "Hello world!"
             hello.exposed = True
@@ -401,4 +412,3 @@ class ObjectMappingTest(helper.CPWebCase):
         a = Application(Root(), script_name=None)
         # However, this does not apply to tree.mount
         self.assertRaises(TypeError, cherrypy.tree.mount, a, None)
-

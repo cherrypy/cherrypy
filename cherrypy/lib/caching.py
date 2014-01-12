@@ -43,6 +43,7 @@ from cherrypy._cpcompat import copyitems, ntob, set_daemon, sorted, Event
 
 
 class Cache(object):
+
     """Base class for Cache implementations."""
 
     def get(self):
@@ -62,11 +63,9 @@ class Cache(object):
         raise NotImplemented
 
 
-
 # ------------------------------- Memory Cache ------------------------------- #
-
-
 class AntiStampedeCache(dict):
+
     """A storage system for cached items which reduces stampede collisions."""
 
     def wait(self, key, timeout=5, debug=False):
@@ -90,7 +89,8 @@ class AntiStampedeCache(dict):
 
             # Wait until it's done or times out.
             if debug:
-                cherrypy.log('Waiting up to %s seconds' % timeout, 'TOOLS.CACHING')
+                cherrypy.log('Waiting up to %s seconds' %
+                             timeout, 'TOOLS.CACHING')
             value.wait(timeout)
             if value.result is not None:
                 # The other thread finished its calculation. Use it.
@@ -128,6 +128,7 @@ class AntiStampedeCache(dict):
 
 
 class MemoryCache(Cache):
+
     """An in-memory cache for varying response content.
 
     Each key in self.store is a URI, and each value is an AntiStampedeCache.
@@ -325,13 +326,15 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
             directive = atoms.pop(0)
             if directive == 'max-age':
                 if len(atoms) != 1 or not atoms[0].isdigit():
-                    raise cherrypy.HTTPError(400, "Invalid Cache-Control header")
+                    raise cherrypy.HTTPError(
+                        400, "Invalid Cache-Control header")
                 max_age = int(atoms[0])
                 break
             elif directive == 'no-cache':
                 if debug:
-                    cherrypy.log('Ignoring cache due to Cache-Control: no-cache',
-                                 'TOOLS.CACHING')
+                    cherrypy.log(
+                        'Ignoring cache due to Cache-Control: no-cache',
+                        'TOOLS.CACHING')
                 request.cached = False
                 request.cacheable = True
                 return False
@@ -348,7 +351,8 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
             request.cacheable = True
             return False
 
-        # Copy the response headers. See https://bitbucket.org/cherrypy/cherrypy/issue/721.
+        # Copy the response headers. See
+        # https://bitbucket.org/cherrypy/cherrypy/issue/721.
         response.headers = rh = httputil.HeaderMap()
         for k in h:
             dict.__setitem__(rh, k, dict.__getitem__(h, k))
@@ -387,7 +391,7 @@ def tee_output():
     def tee(body):
         """Tee response.body into a list."""
         if ('no-cache' in response.headers.values('Pragma') or
-            'no-store' in response.headers.values('Cache-Control')):
+                'no-store' in response.headers.values('Cache-Control')):
             for chunk in body:
                 yield chunk
             return

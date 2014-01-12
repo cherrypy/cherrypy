@@ -12,6 +12,7 @@ from cherrypy.process.servers import *
 
 
 class Server(ServerAdapter):
+
     """An adapter for an HTTP server.
 
     You can set attributes (like socket_host and socket_port)
@@ -26,8 +27,10 @@ class Server(ServerAdapter):
     """The TCP port on which to listen for connections."""
 
     _socket_host = '127.0.0.1'
+
     def _get_socket_host(self):
         return self._socket_host
+
     def _set_socket_host(self, value):
         if value == '':
             raise ValueError("The empty string ('') is not an allowed value. "
@@ -35,7 +38,7 @@ class Server(ServerAdapter):
                              "interfaces (INADDR_ANY).")
         self._socket_host = value
     socket_host = property(_get_socket_host, _set_socket_host,
-        doc="""The hostname or IP address on which to listen for connections.
+                           doc="""The hostname or IP address on which to listen for connections.
 
         Host values may be any IPv4 or IPv6 address, or any valid hostname.
         The string 'localhost' is a synonym for '127.0.0.1' (or '::1', if
@@ -157,6 +160,7 @@ class Server(ServerAdapter):
         if self.socket_host is None and self.socket_port is None:
             return None
         return (self.socket_host, self.socket_port)
+
     def _set_bind_addr(self, value):
         if value is None:
             self.socket_file = None
@@ -175,7 +179,7 @@ class Server(ServerAdapter):
                                  "(for TCP sockets) or a string (for Unix "
                                  "domain sockets), not %r" % value)
     bind_addr = property(_get_bind_addr, _set_bind_addr,
-        doc='A (host, port) tuple for TCP sockets or a str for Unix domain sockets.')
+                         doc='A (host, port) tuple for TCP sockets or a str for Unix domain sockets.')
 
     def base(self):
         """Return the base (scheme://host[:port] or sock file) for this server."""
@@ -202,4 +206,3 @@ class Server(ServerAdapter):
                 host += ":%s" % port
 
         return "%s://%s" % (scheme, host)
-

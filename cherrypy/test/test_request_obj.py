@@ -18,6 +18,7 @@ defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
 
 from cherrypy.test import helper
 
+
 class RequestObjectTests(helper.CPWebCase):
 
     def setup_server():
@@ -33,8 +34,8 @@ class RequestObjectTests(helper.CPWebCase):
 
         root = Root()
 
-
         class TestType(type):
+
             """Metaclass which automatically exposes all functions in each subclass,
             and adds an instance of the subclass as an attribute of root.
             """
@@ -63,9 +64,9 @@ class RequestObjectTests(helper.CPWebCase):
                 return "args: %s kwargs: %s" % (args, sorted(kwargs.items()))
             default._cp_config = {'request.query_string_encoding': 'latin1'}
 
-
         class ParamErrorsCallable(object):
             exposed = True
+
             def __call__(self):
                 return "data"
 
@@ -110,12 +111,11 @@ class RequestObjectTests(helper.CPWebCase):
             raise_type_error.exposed = True
 
             def raise_type_error_with_default_param(self, x, y=None):
-                return '%d' % 'a' # throw an exception
+                return '%d' % 'a'  # throw an exception
             raise_type_error_with_default_param.exposed = True
 
         def callable_error_page(status, **kwargs):
             return "Error %s - Well, I'm very sorry but you haven't paid!" % status
-
 
         class Error(Test):
 
@@ -126,14 +126,17 @@ class RequestObjectTests(helper.CPWebCase):
                 raise cherrypy.HTTPError("410 Gone fishin'")
 
             def custom(self, err='404'):
-                raise cherrypy.HTTPError(int(err), "No, <b>really</b>, not found!")
-            custom._cp_config = {'error_page.404': os.path.join(localDir, "static/index.html"),
-                                 'error_page.401': callable_error_page,
-                                 }
+                raise cherrypy.HTTPError(
+                    int(err), "No, <b>really</b>, not found!")
+            custom._cp_config = {
+                'error_page.404': os.path.join(localDir, "static/index.html"),
+                'error_page.401': callable_error_page,
+            }
 
             def custom_default(self):
-                return 1 + 'a' # raise an unexpected error
-            custom_default._cp_config = {'error_page.default': callable_error_page}
+                return 1 + 'a'  # raise an unexpected error
+            custom_default._cp_config = {
+                'error_page.default': callable_error_page}
 
             def noexist(self):
                 raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
@@ -155,13 +158,13 @@ class RequestObjectTests(helper.CPWebCase):
             def cause_err_in_finalize(self):
                 # Since status must start with an int, this should error.
                 cherrypy.response.status = "ZOO OK"
-            cause_err_in_finalize._cp_config = {'request.show_tracebacks': False}
+            cause_err_in_finalize._cp_config = {
+                'request.show_tracebacks': False}
 
             def rethrow(self):
                 """Test that an error raised here will be thrown out to the server."""
                 raise ValueError()
             rethrow._cp_config = {'request.throw_errors': True}
-
 
         class Expect(Test):
 
@@ -204,13 +207,11 @@ class RequestObjectTests(helper.CPWebCase):
                 cherrypy.response.headers['ETag'] = val
                 return val
 
-
         class HeaderElements(Test):
 
             def get_elements(self, headername):
                 e = cherrypy.request.headers.elements(headername)
                 return "\n".join([unicodestr(x) for x in e])
-
 
         class Method(Test):
 
@@ -236,6 +237,7 @@ class RequestObjectTests(helper.CPWebCase):
                 return "success"
 
         class Divorce:
+
             """HTTP Method handlers shouldn't collide with normal method names.
             For example, a GET-handler shouldn't collide with a method named 'get'.
 
@@ -263,7 +265,6 @@ class RequestObjectTests(helper.CPWebCase):
 
         root.divorce = Divorce()
 
-
         class ThreadLocal(Test):
 
             def index(self):
@@ -273,7 +274,7 @@ class RequestObjectTests(helper.CPWebCase):
 
         appconf = {
             '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
-            }
+        }
         cherrypy.tree.mount(root, config=appconf)
     setup_server = staticmethod(setup_server)
 
@@ -318,7 +319,8 @@ class RequestObjectTests(helper.CPWebCase):
                          [('Gruy\xe8re', ntou('Bulgn\xe9ville'))]))
 
         # Make sure that encoded = and & get parsed correctly
-        self.getPage("/params/code?url=http%3A//cherrypy.org/index%3Fa%3D1%26b%3D2")
+        self.getPage(
+            "/params/code?url=http%3A//cherrypy.org/index%3Fa%3D1%26b%3D2")
         self.assertBody("args: %s kwargs: %s" %
                         (('code',),
                          [('url', ntou('http://cherrypy.org/index?a=1&b=2'))]))
@@ -357,38 +359,45 @@ class RequestObjectTests(helper.CPWebCase):
                 '/paramerrors/no_positional_args_kwargs/foo/bar/baz?param2=bar&param3=baz',
                 '/paramerrors/no_positional_kwargs?param1=foo&param2=bar',
                 '/paramerrors/callable_object',
-            ):
+        ):
             self.getPage(uri)
             self.assertStatus(200)
 
         # query string parameters are part of the URI, so if they are wrong
         # for a particular handler, the status MUST be a 404.
         error_msgs = [
-                'Missing parameters',
-                'Nothing matches the given URI',
-                'Multiple values for parameters',
-                'Unexpected query string parameters',
-                'Unexpected body parameters',
-            ]
+            'Missing parameters',
+            'Nothing matches the given URI',
+            'Multiple values for parameters',
+            'Unexpected query string parameters',
+            'Unexpected body parameters',
+        ]
         for uri, msg in (
             ('/paramerrors/one_positional', error_msgs[0]),
             ('/paramerrors/one_positional?foo=foo', error_msgs[0]),
             ('/paramerrors/one_positional/foo/bar/baz', error_msgs[1]),
             ('/paramerrors/one_positional/foo?param1=foo', error_msgs[2]),
-            ('/paramerrors/one_positional/foo?param1=foo&param2=foo', error_msgs[2]),
-            ('/paramerrors/one_positional_args/foo?param1=foo&param2=foo', error_msgs[2]),
-            ('/paramerrors/one_positional_args/foo/bar/baz?param2=foo', error_msgs[3]),
-            ('/paramerrors/one_positional_args_kwargs/foo/bar/baz?param1=bar&param3=baz', error_msgs[2]),
-            ('/paramerrors/one_positional_kwargs/foo?param1=foo&param2=bar&param3=baz', error_msgs[2]),
+            ('/paramerrors/one_positional/foo?param1=foo&param2=foo',
+             error_msgs[2]),
+            ('/paramerrors/one_positional_args/foo?param1=foo&param2=foo',
+             error_msgs[2]),
+            ('/paramerrors/one_positional_args/foo/bar/baz?param2=foo',
+             error_msgs[3]),
+            ('/paramerrors/one_positional_args_kwargs/foo/bar/baz?param1=bar&param3=baz',
+             error_msgs[2]),
+            ('/paramerrors/one_positional_kwargs/foo?param1=foo&param2=bar&param3=baz',
+             error_msgs[2]),
             ('/paramerrors/no_positional/boo', error_msgs[1]),
             ('/paramerrors/no_positional?param1=foo', error_msgs[3]),
             ('/paramerrors/no_positional_args/boo?param1=foo', error_msgs[3]),
-            ('/paramerrors/no_positional_kwargs/boo?param1=foo', error_msgs[1]),
+            ('/paramerrors/no_positional_kwargs/boo?param1=foo',
+             error_msgs[1]),
             ('/paramerrors/callable_object?param1=foo', error_msgs[3]),
             ('/paramerrors/callable_object/boo', error_msgs[1]),
-            ):
+        ):
             for show_mismatched_params in (True, False):
-                cherrypy.config.update({'request.show_mismatched_params': show_mismatched_params})
+                cherrypy.config.update(
+                    {'request.show_mismatched_params': show_mismatched_params})
                 self.getPage(uri)
                 self.assertStatus(404)
                 if show_mismatched_params:
@@ -398,18 +407,26 @@ class RequestObjectTests(helper.CPWebCase):
 
         # if body parameters are wrong, a 400 must be returned.
         for uri, body, msg in (
-                ('/paramerrors/one_positional/foo', 'param1=foo', error_msgs[2]),
-                ('/paramerrors/one_positional/foo', 'param1=foo&param2=foo', error_msgs[2]),
-                ('/paramerrors/one_positional_args/foo', 'param1=foo&param2=foo', error_msgs[2]),
-                ('/paramerrors/one_positional_args/foo/bar/baz', 'param2=foo', error_msgs[4]),
-                ('/paramerrors/one_positional_args_kwargs/foo/bar/baz', 'param1=bar&param3=baz', error_msgs[2]),
-                ('/paramerrors/one_positional_kwargs/foo', 'param1=foo&param2=bar&param3=baz', error_msgs[2]),
+                ('/paramerrors/one_positional/foo',
+                 'param1=foo', error_msgs[2]),
+                ('/paramerrors/one_positional/foo',
+                 'param1=foo&param2=foo', error_msgs[2]),
+                ('/paramerrors/one_positional_args/foo',
+                 'param1=foo&param2=foo', error_msgs[2]),
+                ('/paramerrors/one_positional_args/foo/bar/baz',
+                 'param2=foo', error_msgs[4]),
+                ('/paramerrors/one_positional_args_kwargs/foo/bar/baz',
+                 'param1=bar&param3=baz', error_msgs[2]),
+                ('/paramerrors/one_positional_kwargs/foo',
+                 'param1=foo&param2=bar&param3=baz', error_msgs[2]),
                 ('/paramerrors/no_positional', 'param1=foo', error_msgs[4]),
-                ('/paramerrors/no_positional_args/boo', 'param1=foo', error_msgs[4]),
+                ('/paramerrors/no_positional_args/boo',
+                 'param1=foo', error_msgs[4]),
                 ('/paramerrors/callable_object', 'param1=foo', error_msgs[4]),
-            ):
+        ):
             for show_mismatched_params in (True, False):
-                cherrypy.config.update({'request.show_mismatched_params': show_mismatched_params})
+                cherrypy.config.update(
+                    {'request.show_mismatched_params': show_mismatched_params})
                 self.getPage(uri, method='POST', body=body)
                 self.assertStatus(400)
                 if show_mismatched_params:
@@ -417,20 +434,27 @@ class RequestObjectTests(helper.CPWebCase):
                 else:
                     self.assertInBody("400 Bad")
 
-
         # even if body parameters are wrong, if we get the uri wrong, then
         # it's a 404
         for uri, body, msg in (
-                ('/paramerrors/one_positional?param2=foo', 'param1=foo', error_msgs[3]),
-                ('/paramerrors/one_positional/foo/bar', 'param2=foo', error_msgs[1]),
-                ('/paramerrors/one_positional_args/foo/bar?param2=foo', 'param3=foo', error_msgs[3]),
-                ('/paramerrors/one_positional_kwargs/foo/bar', 'param2=bar&param3=baz', error_msgs[1]),
-                ('/paramerrors/no_positional?param1=foo', 'param2=foo', error_msgs[3]),
-                ('/paramerrors/no_positional_args/boo?param2=foo', 'param1=foo', error_msgs[3]),
-                ('/paramerrors/callable_object?param2=bar', 'param1=foo', error_msgs[3]),
-            ):
+                ('/paramerrors/one_positional?param2=foo',
+                 'param1=foo', error_msgs[3]),
+                ('/paramerrors/one_positional/foo/bar',
+                 'param2=foo', error_msgs[1]),
+                ('/paramerrors/one_positional_args/foo/bar?param2=foo',
+                 'param3=foo', error_msgs[3]),
+                ('/paramerrors/one_positional_kwargs/foo/bar',
+                 'param2=bar&param3=baz', error_msgs[1]),
+                ('/paramerrors/no_positional?param1=foo',
+                 'param2=foo', error_msgs[3]),
+                ('/paramerrors/no_positional_args/boo?param2=foo',
+                 'param1=foo', error_msgs[3]),
+                ('/paramerrors/callable_object?param2=bar',
+                 'param1=foo', error_msgs[3]),
+        ):
             for show_mismatched_params in (True, False):
-                cherrypy.config.update({'request.show_mismatched_params': show_mismatched_params})
+                cherrypy.config.update(
+                    {'request.show_mismatched_params': show_mismatched_params})
                 self.getPage(uri, method='POST', body=body)
                 self.assertStatus(404)
                 if show_mismatched_params:
@@ -444,7 +468,7 @@ class RequestObjectTests(helper.CPWebCase):
                 '/paramerrors/raise_type_error',
                 '/paramerrors/raise_type_error_with_default_param?x=0',
                 '/paramerrors/raise_type_error_with_default_param?x=0&y=0',
-            ):
+        ):
             self.getPage(uri, method='GET')
             self.assertStatus(500)
             self.assertTrue('Client Error', self.body)
@@ -465,7 +489,7 @@ class RequestObjectTests(helper.CPWebCase):
             self.assertErrorPage(500, pattern=valerr)
 
             if (cherrypy.server.protocol_version == "HTTP/1.0" or
-                getattr(cherrypy.server, "using_apache", False)):
+                    getattr(cherrypy.server, "using_apache", False)):
                 self.getPage("/error/page_streamed")
                 # Because this error is raised after the response body has
                 # started, the status should not change to an error status.
@@ -496,12 +520,14 @@ class RequestObjectTests(helper.CPWebCase):
         # Test custom error page for a specific error.
         self.getPage("/error/custom?err=401")
         self.assertStatus(401)
-        self.assertBody("Error 401 Unauthorized - Well, I'm very sorry but you haven't paid!")
+        self.assertBody(
+            "Error 401 Unauthorized - Well, I'm very sorry but you haven't paid!")
 
         # Test default custom error page.
         self.getPage("/error/custom_default")
         self.assertStatus(500)
-        self.assertBody("Error 500 Internal Server Error - Well, I'm very sorry but you haven't paid!".ljust(513))
+        self.assertBody(
+            "Error 500 Internal Server Error - Well, I'm very sorry but you haven't paid!".ljust(513))
 
         # Test error in custom error page (ticket #305).
         # Note that the message is escaped for HTML (ticket #310).
@@ -540,7 +566,8 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertBody("audio/basic\n"
                         "audio/*;q=0.2")
 
-        h = [('Accept', 'text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c')]
+        h = [
+            ('Accept', 'text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c')]
         self.getPage("/headerelements/get_elements?headername=Accept", h)
         self.assertStatus(200)
         self.assertBody("text/x-c\n"
@@ -559,14 +586,16 @@ class RequestObjectTests(helper.CPWebCase):
 
         # Test Accept-Charset
         h = [('Accept-Charset', 'iso-8859-5, unicode-1-1;q=0.8')]
-        self.getPage("/headerelements/get_elements?headername=Accept-Charset", h)
+        self.getPage(
+            "/headerelements/get_elements?headername=Accept-Charset", h)
         self.assertStatus("200 OK")
         self.assertBody("iso-8859-5\n"
                         "unicode-1-1;q=0.8")
 
         # Test Accept-Encoding
         h = [('Accept-Encoding', 'gzip;q=1.0, identity; q=0.5, *;q=0')]
-        self.getPage("/headerelements/get_elements?headername=Accept-Encoding", h)
+        self.getPage(
+            "/headerelements/get_elements?headername=Accept-Encoding", h)
         self.assertStatus("200 OK")
         self.assertBody("gzip;q=1.0\n"
                         "identity;q=0.5\n"
@@ -574,13 +603,15 @@ class RequestObjectTests(helper.CPWebCase):
 
         # Test Accept-Language
         h = [('Accept-Language', 'da, en-gb;q=0.8, en;q=0.7')]
-        self.getPage("/headerelements/get_elements?headername=Accept-Language", h)
+        self.getPage(
+            "/headerelements/get_elements?headername=Accept-Language", h)
         self.assertStatus("200 OK")
         self.assertBody("da\n"
                         "en-gb;q=0.8\n"
                         "en;q=0.7")
 
-        # Test malformed header parsing. See https://bitbucket.org/cherrypy/cherrypy/issue/763.
+        # Test malformed header parsing. See
+        # https://bitbucket.org/cherrypy/cherrypy/issue/763.
         self.getPage("/headerelements/get_elements?headername=Content-Type",
                      # Note the illegal trailing ";"
                      headers=[('Content-Type', 'text/html; charset=utf-8;')])
@@ -605,13 +636,15 @@ class RequestObjectTests(helper.CPWebCase):
 
     def test_encoded_headers(self):
         # First, make sure the innards work like expected.
-        self.assertEqual(httputil.decode_TEXT(ntou("=?utf-8?q?f=C3=BCr?=")), ntou("f\xfcr"))
+        self.assertEqual(
+            httputil.decode_TEXT(ntou("=?utf-8?q?f=C3=BCr?=")), ntou("f\xfcr"))
 
         if cherrypy.server.protocol_version == "HTTP/1.1":
             # Test RFC-2047-encoded request and response header values
             u = ntou('\u212bngstr\xf6m', 'escape')
             c = ntou("=E2=84=ABngstr=C3=B6m")
-            self.getPage("/headers/ifmatch", [('If-Match', ntou('=?utf-8?q?%s?=') % c)])
+            self.getPage("/headers/ifmatch",
+                         [('If-Match', ntou('=?utf-8?q?%s?=') % c)])
             # The body should be utf-8 encoded.
             self.assertBody(ntob("\xe2\x84\xabngstr\xc3\xb6m"))
             # But the Etag header should be RFC-2047 encoded (binary)
@@ -623,10 +656,10 @@ class RequestObjectTests(helper.CPWebCase):
             self.assertBody(ntob("\xe2\x84\xabngstr\xc3\xb6m") * 10)
             # Note: this is different output for Python3, but it decodes fine.
             etag = self.assertHeader("ETag",
-                '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
-                '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
-                '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
-                '4oSrbmdzdHLDtm0=?=')
+                                     '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                                     '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                                     '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                                     '4oSrbmdzdHLDtm0=?=')
             self.assertEqual(httputil.decode_TEXT(etag), u * 10)
 
     def test_header_presence(self):
@@ -660,7 +693,7 @@ class RequestObjectTests(helper.CPWebCase):
 
         # Request a PUT method with a form-urlencoded body
         self.getPage("/method/parameterized", method="PUT",
-                       body="data=on+top+of+other+things")
+                     body="data=on+top+of+other+things")
         self.assertBody("on top of other things")
 
         # Request a PUT method with a file body
@@ -703,7 +736,8 @@ class RequestObjectTests(helper.CPWebCase):
              '</prop></propfind>')
         h = [('Content-Type', 'text/xml'),
              ('Content-Length', str(len(b)))]
-        self.getPage("/method/request_body", headers=h, method="PROPFIND", body=b)
+        self.getPage("/method/request_body", headers=h,
+                     method="PROPFIND", body=b)
         self.assertStatus(200)
         self.assertBody(b)
 
@@ -739,4 +773,3 @@ class RequestObjectTests(helper.CPWebCase):
             self.getPage("/threadlocal/")
             results.append(self.body)
         self.assertEqual(results, [ntob("None")] * 20)
-

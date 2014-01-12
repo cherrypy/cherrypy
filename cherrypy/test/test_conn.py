@@ -15,6 +15,7 @@ from cherrypy import _cperror
 
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
+
 def setup_server():
 
     def raise500():
@@ -93,10 +94,11 @@ def setup_server():
     cherrypy.config.update({
         'server.max_request_body_size': 1001,
         'server.socket_timeout': timeout,
-        })
+    })
 
 
 from cherrypy.test import helper
+
 
 class ConnectionCloseTests(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
@@ -179,10 +181,12 @@ class ConnectionCloseTests(helper.CPWebCase):
                 else:
                     self.assertHeader("Connection", "close")
 
-                    # Make another request on the same connection, which should error.
+                    # Make another request on the same connection, which should
+                    # error.
                     self.assertRaises(NotConnected, self.getPage, "/")
 
-                # Try HEAD. See https://bitbucket.org/cherrypy/cherrypy/issue/864.
+                # Try HEAD. See
+                # https://bitbucket.org/cherrypy/cherrypy/issue/864.
                 self.getPage("/stream", method='HEAD')
                 self.assertStatus('200 OK')
                 self.assertBody('')
@@ -220,7 +224,8 @@ class ConnectionCloseTests(helper.CPWebCase):
                 self.assertNoHeader("Connection", "Keep-Alive")
                 self.assertNoHeader("Transfer-Encoding")
 
-                # Make another request on the same connection, which should error.
+                # Make another request on the same connection, which should
+                # error.
                 self.assertRaises(NotConnected, self.getPage, "/")
 
     def test_HTTP10_KeepAlive(self):
@@ -235,7 +240,7 @@ class ConnectionCloseTests(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertBody(pov)
         # Apache, for example, may emit a Connection header even for HTTP/1.0
-##        self.assertNoHeader("Connection")
+# self.assertNoHeader("Connection")
 
         # Test a keep-alive HTTP/1.0 request.
         self.persistent = True
@@ -250,7 +255,7 @@ class ConnectionCloseTests(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertBody(pov)
         # Apache, for example, may emit a Connection header even for HTTP/1.0
-##        self.assertNoHeader("Connection")
+# self.assertNoHeader("Connection")
 
 
 class PipelineTests(helper.CPWebCase):
@@ -361,7 +366,6 @@ class PipelineTests(helper.CPWebCase):
         self.body = response.read()
         self.assertBody(pov)
 
-
         # Make another request on the same socket,
         # but timeout on the headers
         conn.send(ntob('GET /hello HTTP/1.1'))
@@ -471,7 +475,9 @@ class PipelineTests(helper.CPWebCase):
         while True:
             line = response.fp.readline().strip()
             if line:
-                self.fail("100 Continue should not output any headers. Got %r" % line)
+                self.fail(
+                    "100 Continue should not output any headers. Got %r" %
+                    line)
             else:
                 break
 
@@ -596,7 +602,7 @@ class ConnectionTests(helper.CPWebCase):
             return self.skip()
 
         if (hasattr(self, 'harness') and
-            "modpython" in self.harness.__class__.__name__.lower()):
+                "modpython" in self.harness.__class__.__name__.lower()):
             # mod_python forbids chunked encoding
             return self.skip()
 
@@ -608,8 +614,8 @@ class ConnectionTests(helper.CPWebCase):
 
         # Try a normal chunked request (with extensions)
         body = ntob("8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
-                "Content-Type: application/json\r\n"
-                "\r\n")
+                    "Content-Type: application/json\r\n"
+                    "\r\n")
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.putheader("Transfer-Encoding", "chunked")
@@ -680,8 +686,9 @@ class ConnectionTests(helper.CPWebCase):
         # the actual bytes in the response body.
         self.persistent = True
         conn = self.HTTP_CONN
-        conn.putrequest("GET", "/custom_cl?body=I+too&body=+have+too+many&cl=5",
-                        skip_host=True)
+        conn.putrequest(
+            "GET", "/custom_cl?body=I+too&body=+have+too+many&cl=5",
+            skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         response = conn.getresponse()
@@ -692,7 +699,7 @@ class ConnectionTests(helper.CPWebCase):
 
     def test_598(self):
         remote_data_conn = urlopen('%s://%s:%s/one_megabyte_of_a/' %
-                                          (self.scheme, self.HOST, self.PORT,))
+                                   (self.scheme, self.HOST, self.PORT,))
         buf = remote_data_conn.read(512)
         time.sleep(timeout * 0.6)
         remaining = (1024 * 1024) - 512
@@ -731,4 +738,3 @@ class BadRequestTests(helper.CPWebCase):
         self.body = response.read()
         self.assertBody("HTTP requires CRLF terminators")
         conn.close()
-

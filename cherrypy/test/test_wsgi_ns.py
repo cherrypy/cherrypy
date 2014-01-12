@@ -18,13 +18,13 @@ class WSGI_Namespace_Test(helper.CPWebCase):
 
             def next(self):
                 return self.iter.next()
+
             def __next__(self):
                 return next(self.iter)
 
             def close(self):
                 if hasattr(self.appresults, "close"):
                     self.appresults.close()
-
 
         class ChangeCase(object):
 
@@ -34,9 +34,12 @@ class WSGI_Namespace_Test(helper.CPWebCase):
 
             def __call__(self, environ, start_response):
                 res = self.app(environ, start_response)
+
                 class CaseResults(WSGIResponse):
+
                     def next(this):
                         return getattr(this.iter.next(), self.to)()
+
                     def __next__(this):
                         return getattr(next(this.iter), self.to)()
                 return CaseResults(res)
@@ -49,12 +52,15 @@ class WSGI_Namespace_Test(helper.CPWebCase):
 
             def __call__(self, environ, start_response):
                 res = self.app(environ, start_response)
+
                 class ReplaceResults(WSGIResponse):
+
                     def next(this):
                         line = this.iter.next()
                         for k, v in self.map.iteritems():
                             line = line.replace(k, v)
                         return line
+
                     def __next__(this):
                         line = next(this.iter)
                         for k, v in self.map.items():
@@ -68,7 +74,6 @@ class WSGI_Namespace_Test(helper.CPWebCase):
                 return "HellO WoRlD!"
             index.exposed = True
 
-
         root_conf = {'wsgi.pipeline': [('replace', Replacer)],
                      'wsgi.replace.map': {ntob('L'): ntob('X'),
                                           ntob('l'): ntob('r')},
@@ -80,7 +85,6 @@ class WSGI_Namespace_Test(helper.CPWebCase):
         cherrypy.tree.mount(app, config={'/': root_conf})
     setup_server = staticmethod(setup_server)
 
-
     def test_pipeline(self):
         if not cherrypy.server.httpserver:
             return self.skip()
@@ -88,4 +92,3 @@ class WSGI_Namespace_Test(helper.CPWebCase):
         self.getPage("/")
         # If body is "HEXXO WORXD!", the middleware was applied out of order.
         self.assertBody("HERRO WORRD!")
-
