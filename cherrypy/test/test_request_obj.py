@@ -507,9 +507,14 @@ class RequestObjectTests(helper.CPWebCase):
         # Note that the message is escaped for HTML (ticket #310).
         self.getPage("/error/noexist")
         self.assertStatus(404)
+        if sys.version_info >= (3, 3):
+            exc_name = "FileNotFoundError"
+        else:
+            exc_name = "IOError"
         msg = ("No, &lt;b&gt;really&lt;/b&gt;, not found!<br />"
                "In addition, the custom error page failed:\n<br />"
-               "IOError: [Errno 2] No such file or directory: 'nonexistent.html'")
+               "%s: [Errno 2] "
+               "No such file or directory: 'nonexistent.html'") % (exc_name,)
         self.assertInBody(msg)
 
         if getattr(cherrypy.server, "using_apache", False):
