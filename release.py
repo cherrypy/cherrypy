@@ -54,7 +54,8 @@ def check_status():
     print("You're about to release CherryPy {NEXT_VERSION}".format(
         **globals()))
     res = input('Have you run the tests with `nosetests -s ./` on '
-                'Windows, Linux, and Mac on at least Python 2.4, 2.5, 2.7, and 3.2? '
+                'Windows, Linux, and Mac on at least Python '
+                '2.4, 2.5, 2.7, and 3.2? '
                 .format(**globals()))
     if not res.lower().startswith('y'):
         print("Please do that")
@@ -115,7 +116,7 @@ def publish():
                                 for cmd in dist_commands]
         list(map(subprocess.check_call, upload_dist_commands))
     except:
-        print("Unable to upload the dist files. Ask in IRC for help access "
+        print("Unable to upload the dist files. Ask in IRC for help access 57"
               "or assistance.")
         raise SystemExit(4)
     print('Distributions have been uploaded.')
