@@ -213,7 +213,7 @@ class LogManager(object):
 
         See `the apache documentation <http://httpd.apache.org/docs/current/logs.html#combined>`_
         for format details.
-        
+
         CherryPy calls this automatically for you. Note there are no arguments;
         it collects the data itself from
         :class:`cherrypy.request<cherrypy._cprequest.Request>`.

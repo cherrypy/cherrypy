@@ -35,11 +35,11 @@ Listen 8080
 LoadModule python_module /usr/lib/apache2/modules/mod_python.so
 
 <Location "/">
-	PythonPath "sys.path+['/path/to/my/application']"
-	SetHandler python-program
-	PythonHandler cherrypy._cpmodpy::handler
-	PythonOption cherrypy.setup myapp::setup_server
-	PythonDebug On
+    PythonPath "sys.path+['/path/to/my/application']"
+    SetHandler python-program
+    PythonHandler cherrypy._cpmodpy::handler
+    PythonOption cherrypy.setup myapp::setup_server
+    PythonDebug On
 </Location>
 # End
 

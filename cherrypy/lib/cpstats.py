@@ -68,7 +68,7 @@ Each namespace, then, is a dict of named statistical values, such as
 good on a report: spaces and capitalization are just fine.
 
 In addition to scalars, values in a namespace MAY be a (third-layer)
-dict, or a list, called a "collection". For example, the CherryPy 
+dict, or a list, called a "collection". For example, the CherryPy
 :class:`StatsTool` keeps track of what each request is doing (or has most
 recently done) in a 'Requests' collection, where each key is a thread ID; each
 value in the subdict MUST be a fourth dict (whew!) of statistical data about

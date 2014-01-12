@@ -120,13 +120,13 @@ class ReloadingTestLoader(TestLoader):
         for part in parts:
             obj = getattr(obj, part)
 
-        if type(obj) == types.ModuleType:
+        if isinstance(obj, types.ModuleType):
             return self.loadTestsFromModule(obj)
         elif (((py3k and isinstance(obj, type))
                or isinstance(obj, (type, types.ClassType)))
               and issubclass(obj, TestCase)):
             return self.loadTestsFromTestCase(obj)
-        elif type(obj) == types.UnboundMethodType:
+        elif isinstance(obj, types.UnboundMethodType):
             if py3k:
                 return obj.__self__.__class__(obj.__name__)
             else:
