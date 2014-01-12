@@ -10,10 +10,10 @@ import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
 from cherrypy._cpcompat import ntob, urlopen, unicodestr
 from cherrypy.test import webtest
-from cherrypy import _cperror
 
 
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
+
 
 def setup_server():
 

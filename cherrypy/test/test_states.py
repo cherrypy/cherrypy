@@ -6,8 +6,9 @@ import signal
 import unittest
 import socket
 
+import magicbus.plugins.servers
+
 import cherrypy
-import cherrypy.process.servers
 from cherrypy.test import helper
 
 engine = cherrypy.engine
@@ -47,6 +48,7 @@ class Dependency:
         del self.threads[thread_id]
 
 db_connection = Dependency(engine)
+
 
 def setup_server():
     class Root:
@@ -106,7 +108,7 @@ class ServerStateTests(helper.CPWebCase):
 
         host = cherrypy.server.socket_host
         port = cherrypy.server.socket_port
-        self.assertRaises(IOError, cherrypy._cpserver.check_port, host, port)
+        self.assertRaises(OSError, cherrypy._cpserver.check_port, host, port)
 
         # The db_connection should be running now
         self.assertEqual(db_connection.running, True)
@@ -418,7 +420,7 @@ class SignalHandlingTests(helper.CPWebCase):
             self.skip("SIGTERM not available")
 
         # Spawn a normal, undaemonized process.
-        p = helper.CPProcess(ssl=(self.scheme.lower()=='https'))
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
         p.write_conf(
             extra="""unsubsig: True
 test_case_name: "test_signal_handler_unsubscribe"
@@ -430,21 +432,24 @@ test_case_name: "test_signal_handler_unsubscribe"
         p.join()
 
         # Assert the old handler ran.
-        target_line = open(p.error_log, 'rb').readlines()[-10]
-        if not ntob("I am an old SIGTERM handler.") in target_line:
+        for target_line in open(p.error_log, 'rb').readlines()[-12:]:
+            if ntob("I am an old SIGTERM handler.") in target_line:
+                break
+        else:
             self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
 
-class WaitTests(unittest.TestCase):
-    def test_wait_for_occupied_port_INADDR_ANY(self):
-        """
-        Wait on INADDR_ANY should not raise IOError
 
-        In cases where the loopback interface does not exist, CherryPy cannot
-        effectively determine if a port binding to INADDR_ANY was effected.
-        In this situation, CherryPy should assume that it failed to detect
-        the binding (not that the binding failed) and only warn that it could
-        not verify it.
-        """
+class WaitTests(unittest.TestCase):
+
+    def test_wait_for_occupied_port_INADDR_ANY(self):
+        # Wait on INADDR_ANY should not raise OSError
+        #
+        # In cases where the loopback interface does not exist, CherryPy cannot
+        # effectively determine if a port binding to INADDR_ANY was effected.
+        # In this situation, CherryPy should assume that it failed to detect
+        # the binding (not that the binding failed) and only warn that it could
+        # not verify it.
+
         # At such a time that CherryPy can reliably determine one or more
         #  viable IP addresses of the host, this test may be removed.
 
@@ -453,7 +458,7 @@ class WaitTests(unittest.TestCase):
 
         free_port = self.find_free_port()
 
-        servers = cherrypy.process.servers
+        servers = magicbus.plugins.servers
 
         def with_shorter_timeouts(func):
             """
@@ -471,10 +476,10 @@ class WaitTests(unittest.TestCase):
         def do_waiting():
             # Wait on the free port that's unbound
             servers.wait_for_occupied_port('0.0.0.0', free_port)
-            # The wait should still raise an IO error if INADDR_ANY was
+            # The wait should still raise an error if INADDR_ANY was
             #  not supplied.
-            self.assertRaises(IOError, servers.wait_for_occupied_port,
-                '127.0.0.1', free_port)
+            self.assertRaises(OSError, servers.wait_for_occupied_port,
+                              '127.0.0.1', free_port)
 
         with_shorter_timeouts(do_waiting)
 

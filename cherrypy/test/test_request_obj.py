@@ -508,8 +508,9 @@ class RequestObjectTests(helper.CPWebCase):
         self.getPage("/error/noexist")
         self.assertStatus(404)
         msg = ("No, &lt;b&gt;really&lt;/b&gt;, not found!<br />"
-               "In addition, the custom error page failed:\n<br />"
-               "IOError: [Errno 2] No such file or directory: 'nonexistent.html'")
+               "In addition, the custom error page failed:\n<br />")
+        self.assertInBody(msg)
+        msg = "[Errno 2] No such file or directory: 'nonexistent.html'"
         self.assertInBody(msg)
 
         if getattr(cherrypy.server, "using_apache", False):
