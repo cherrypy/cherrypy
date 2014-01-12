@@ -1,7 +1,9 @@
+import os
+import sys
+
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 from cherrypy._cpcompat import BytesIO
 
-import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
 bigfile_filepath = os.path.join(curdir, "static", "bigfile.log")
@@ -164,8 +166,13 @@ class StaticTest(helper.CPWebCase):
         # Check that we get an error if no .file or .dir
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
-        self.assertMatchesBody(ntob("TypeError: staticdir\(\) takes at least 2 "
-                                    "(positional )?arguments \(0 given\)"))
+        if sys.version_info >= (3, 3):
+            errmsg = ntob("TypeError: staticdir\(\) missing 2 "
+                          "required positional arguments")
+        else:
+            errmsg = ntob("TypeError: staticdir\(\) takes at least 2 "
+                          "(positional )?arguments \(0 given\)")
+        self.assertMatchesBody(errmsg)
 
     def test_security(self):
         # Test up-level security

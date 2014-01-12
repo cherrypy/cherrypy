@@ -178,7 +178,8 @@ class ResponseEncoder:
             msg = "Your client did not send an Accept-Charset header."
         else:
             msg = "Your client sent this Accept-Charset header: %s." % ac
-        msg += " We tried these charsets: %s." % ", ".join(self.attempted_charsets)
+        _charsets = ", ".join(sorted(self.attempted_charsets))
+        msg += " We tried these charsets: %s." % (_charsets,)
         raise cherrypy.HTTPError(406, msg)
 
     def __call__(self, *args, **kwargs):
