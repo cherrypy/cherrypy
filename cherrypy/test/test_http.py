@@ -31,14 +31,14 @@ def encode_multipart_formdata(files):
     return content_type, body
 
 
-
-
 from cherrypy.test import helper
+
 
 class HTTPTests(helper.CPWebCase):
 
     def setup_server():
         class Root:
+
             def index(self, *args, **kwargs):
                 return "Hello world!"
             index.exposed = True
@@ -49,7 +49,9 @@ class HTTPTests(helper.CPWebCase):
             no_body._cp_config = {'request.process_request_body': False}
             
             def post_multipart(self, file):
-                """Return a summary ("a * 65536\nb * 65536") of the uploaded file."""
+                """Return a summary ("a * 65536\nb * 65536") of the uploaded
+                file.
+                """
                 contents = file.file.read()
                 summary = []
                 curchar = None
@@ -59,12 +61,14 @@ class HTTPTests(helper.CPWebCase):
                         count += 1
                     else:
                         if count:
-                            if py3k: curchar = chr(curchar)
+                            if py3k:
+                                curchar = chr(curchar)
                             summary.append("%s * %d" % (curchar, count))
                         count = 1
                         curchar = c
                 if count:
-                    if py3k: curchar = chr(curchar)
+                    if py3k:
+                        curchar = chr(curchar)
                     summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)
             post_multipart.exposed = True
@@ -111,7 +115,7 @@ class HTTPTests(helper.CPWebCase):
         contents = "".join([c * 65536 for c in alphabet])
         
         # encode as multipart form data
-        files=[('file', 'file.txt', contents)]
+        files = [('file', 'file.txt', contents)]
         content_type, body = encode_multipart_formdata(files)
         body = body.encode('Latin-1')
         
@@ -202,11 +206,11 @@ class HTTPTests(helper.CPWebCase):
         try:
             response.begin()
             self.assertEqual(response.status, 400)
-            self.assertEqual(response.fp.read(22), ntob("Malformed Request-Line"))
+            self.assertEqual(response.fp.read(22),
+                             ntob("Malformed Request-Line"))
             c.close()
         except socket.error:
             e = sys.exc_info()[1]
             # "Connection reset by peer" is also acceptable.
             if e.errno != errno.ECONNRESET:
                 raise
-

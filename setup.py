@@ -18,7 +18,8 @@ import re
 
 
 class cherrypy_build_py(build_py):
-    "Custom version of build_py that excludes Python-specific modules"
+    """Custom version of build_py that excludes Python-specific modules"""
+
     def build_module(self, module, module_file, package):
         python3 = sys.version_info >= (3,)
         if python3:
@@ -81,13 +82,13 @@ data_files = [
     ('cherrypy/scaffold', ['cherrypy/scaffold/example.conf',
                            'cherrypy/scaffold/site.conf',
                            ]),
-    ('cherrypy/scaffold/static', ['cherrypy/scaffold/static/made_with_cherrypy_small.png',
-                                  ]),
+    ('cherrypy/scaffold/static', [
+        'cherrypy/scaffold/static/made_with_cherrypy_small.png']),
     ('cherrypy/test', ['cherrypy/test/style.css',
                        'cherrypy/test/test.pem',
                        ]),
     ('cherrypy/test/static', ['cherrypy/test/static/index.html',
-                              'cherrypy/test/static/dirback.jpg',]),
+                              'cherrypy/test/static/dirback.jpg', ]),
     ('cherrypy/tutorial',
         [
             'cherrypy/tutorial/tutorial.conf',
@@ -95,7 +96,7 @@ data_files = [
             'cherrypy/tutorial/pdf_file.pdf',
             'cherrypy/tutorial/custom_error.html',
         ]
-    ),
+     ),
 ]
 scripts = ["cherrypy/cherryd"]
 
@@ -114,7 +115,8 @@ else:
 
 # wininst may install data_files in Python/x.y instead of the cherrypy package.
 # Django's solution is at http://code.djangoproject.com/changeset/8313
-# See also http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
+# See also
+# http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
 if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
     data_files = [(r'\PURELIB\%s' % path, files) for path, files in data_files]
 

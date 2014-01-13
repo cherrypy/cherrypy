@@ -12,7 +12,7 @@ class ProxyTest(helper.CPWebCase):
         cherrypy.config.update({
             'tools.proxy.on': True,
             'tools.proxy.base': 'www.mydomain.test',
-            })
+        })
 
         # Set up application
 
@@ -20,7 +20,8 @@ class ProxyTest(helper.CPWebCase):
 
             def __init__(self, sn):
                 # Calculate a URL outside of any requests.
-                self.thisnewpage = cherrypy.url("/this/new/page", script_name=sn)
+                self.thisnewpage = cherrypy.url(
+                    "/this/new/page", script_name=sn)
 
             def pageurl(self):
                 return self.thisnewpage
@@ -66,14 +67,16 @@ class ProxyTest(helper.CPWebCase):
                           (self.scheme, self.prefix()))
 
         # Test X-Forwarded-Host (Apache 1.3.33+ and Apache 2)
-        self.getPage("/", headers=[('X-Forwarded-Host', 'http://www.example.test')])
+        self.getPage(
+            "/", headers=[('X-Forwarded-Host', 'http://www.example.test')])
         self.assertHeader('Location', "http://www.example.test/dummy")
         self.getPage("/", headers=[('X-Forwarded-Host', 'www.example.test')])
-        self.assertHeader('Location', "%s://www.example.test/dummy" % self.scheme)
+        self.assertHeader('Location', "%s://www.example.test/dummy" %
+                          self.scheme)
         # Test multiple X-Forwarded-Host headers
         self.getPage("/", headers=[
             ('X-Forwarded-Host', 'http://www.example.test, www.cherrypy.test'),
-            ])
+        ])
         self.assertHeader('Location', "http://www.example.test/dummy")
 
         # Test X-Forwarded-For (Apache2)
@@ -81,12 +84,15 @@ class ProxyTest(helper.CPWebCase):
                      headers=[('X-Forwarded-For', '192.168.0.20')])
         self.assertBody("192.168.0.20")
         self.getPage("/remoteip",
-                     headers=[('X-Forwarded-For', '67.15.36.43, 192.168.0.20')])
+                     headers=[
+                         ('X-Forwarded-For', '67.15.36.43, 192.168.0.20')
+                     ])
         self.assertBody("192.168.0.20")
 
         # Test X-Host (lighttpd; see https://trac.lighttpd.net/trac/ticket/418)
         self.getPage("/xhost", headers=[('X-Host', 'www.example.test')])
-        self.assertHeader('Location', "%s://www.example.test/blah" % self.scheme)
+        self.assertHeader('Location', "%s://www.example.test/blah" %
+                          self.scheme)
 
         # Test X-Forwarded-Proto (lighttpd)
         self.getPage("/base", headers=[('X-Forwarded-Proto', 'https')])
@@ -100,8 +106,9 @@ class ProxyTest(helper.CPWebCase):
         for sn in script_names:
             # Test the value inside requests
             self.getPage(sn + "/newurl")
-            self.assertBody("Browse to <a href='%s://www.mydomain.test" % self.scheme
-                            + sn + "/this/new/page'>this page</a>.")
+            self.assertBody(
+                "Browse to <a href='%s://www.mydomain.test" % self.scheme
+                + sn + "/this/new/page'>this page</a>.")
             self.getPage(sn + "/newurl", headers=[('X-Forwarded-Host',
                                                    'http://www.example.test')])
             self.assertBody("Browse to <a href='http://www.example.test"
@@ -122,8 +129,8 @@ class ProxyTest(helper.CPWebCase):
             self.getPage(sn + "/pageurl")
             self.assertBody(expected)
 
-        # Test trailing slash (see https://bitbucket.org/cherrypy/cherrypy/issue/562).
+        # Test trailing slash (see
+        # https://bitbucket.org/cherrypy/cherrypy/issue/562).
         self.getPage("/xhost/", headers=[('X-Host', 'www.example.test')])
         self.assertHeader('Location', "%s://www.example.test/xhost"
                           % self.scheme)
-

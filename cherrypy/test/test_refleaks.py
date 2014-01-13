@@ -17,6 +17,7 @@ class ReferenceTests(helper.CPWebCase):
     def setup_server():
 
         class Root:
+
             def index(self, *args, **kwargs):
                 cherrypy.request.thing = data
                 return "Hello world!"
@@ -56,4 +57,3 @@ class ReferenceTests(helper.CPWebCase):
             t.join()
 
         self.assertEqual(len(success), ITERATIONS)
-

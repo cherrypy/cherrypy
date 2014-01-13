@@ -6,9 +6,9 @@ from cherrypy.test import helper
 script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
 
 
-
 def setup_server():
     class SubSubRoot:
+
         def index(self):
             return "SubSubRoot index"
         index.exposed = True
@@ -31,6 +31,7 @@ def setup_server():
     }
 
     class SubRoot:
+
         def index(self):
             return "SubRoot index"
         index.exposed = True
@@ -50,7 +51,9 @@ def setup_server():
         '1': SubRoot(),
         '2': SubRoot(),
     }
+
     class Root:
+
         def index(self):
             return "index"
         index.exposed = True
@@ -70,12 +73,14 @@ def setup_server():
     # DynamicNodeAndMethodDispatcher example.
     # This example exposes a fairly naive HTTP api
     class User(object):
+
         def __init__(self, id, name):
             self.id = id
             self.name = name
 
         def __unicode__(self):
             return unicode(self.name)
+
         def __str__(self):
             return str(self.name)
 
@@ -111,6 +116,7 @@ def setup_server():
 
     class UserInstanceNode(object):
         exposed = True
+
         def __init__(self, id):
             self.id = id
             self.user = user_lookup.get(id, None)
@@ -135,7 +141,8 @@ def setup_server():
 
         def PUT(self, name):
             """
-            Create a new user with the specified id, or edit it if it already exists
+            Create a new user with the specified id, or edit it if it already
+            exists
             """
             if self.user:
                 # Edit the current user
@@ -154,9 +161,10 @@ def setup_server():
             del self.user
             return "DELETE %d" % id
 
-
     class ABHandler:
+
         class CustomDispatch:
+
             def index(self, a, b):
                 return "custom"
             index.exposed = True
@@ -168,7 +176,7 @@ def setup_server():
             return self.CustomDispatch()
 
         def index(self, a, b=None):
-            body = [ 'a:' + str(a) ]
+            body = ['a:' + str(a)]
             if b is not None:
                 body.append(',b:' + str(b))
             return ''.join(body)
@@ -179,6 +187,7 @@ def setup_server():
         delete.exposed = True
 
     class IndexOnly:
+
         def _cp_dispatch(self, vpath):
             """Make sure that popping ALL of vpath still shows the index
             handler.
@@ -192,7 +201,9 @@ def setup_server():
         index.exposed = True
 
     class DecoratedPopArgs:
+
         """Test _cp_dispatch with @cherrypy.popargs."""
+
         def index(self):
             return "no params"
         index.exposed = True
@@ -200,9 +211,11 @@ def setup_server():
         def hi(self):
             return "hi was not interpreted as 'a' param"
         hi.exposed = True
-    DecoratedPopArgs = cherrypy.popargs('a', 'b', handler=ABHandler())(DecoratedPopArgs)
+    DecoratedPopArgs = cherrypy.popargs(
+        'a', 'b', handler=ABHandler())(DecoratedPopArgs)
 
     class NonDecoratedPopArgs:
+
         """Test _cp_dispatch = cherrypy.popargs()"""
 
         _cp_dispatch = cherrypy.popargs('a')
@@ -212,6 +225,7 @@ def setup_server():
         index.exposed = True
 
     class ParameterizedHandler:
+
         """Special handler created for each request"""
 
         def __init__(self, a):
@@ -219,13 +233,17 @@ def setup_server():
 
         def index(self):
             if 'a' in cherrypy.request.params:
-                raise Exception("Parameterized handler argument ended up in request.params")
+                raise Exception(
+                    "Parameterized handler argument ended up in "
+                    "request.params")
             return self.a
         index.exposed = True
 
     class ParameterizedPopArgs:
+
         """Test cherrypy.popargs() with a function call handler"""
-    ParameterizedPopArgs = cherrypy.popargs('a', handler=ParameterizedHandler)(ParameterizedPopArgs)
+    ParameterizedPopArgs = cherrypy.popargs(
+        'a', handler=ParameterizedHandler)(ParameterizedPopArgs)
 
     Root.decorated = DecoratedPopArgs()
     Root.undecorated = NonDecoratedPopArgs()
@@ -237,13 +255,14 @@ def setup_server():
     md = cherrypy.dispatch.MethodDispatcher('dynamic_dispatch')
     for url in script_names:
         conf = {'/': {
-                    'user': (url or "/").split("/")[-2],
-                },
-                '/users': {
-                    'request.dispatch': md
-                },
-            }
+            'user': (url or "/").split("/")[-2],
+        },
+            '/users': {
+                'request.dispatch': md
+            },
+        }
         cherrypy.tree.mount(Root(), url, conf)
+
 
 class DynamicObjectMappingTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
@@ -354,12 +373,14 @@ class DynamicObjectMappingTest(helper.CPWebCase):
             self.assertHeader('Allow', headers)
 
             # Make sure POSTs update already existings resources
-            self.getPage("/users/%d" % id, method='POST', body="name=%s" % updatedname)
+            self.getPage("/users/%d" %
+                         id, method='POST', body="name=%s" % updatedname)
             self.assertBody("POST %d" % id)
             self.assertHeader('Allow', headers)
 
             # Make sure PUTs Update already existing resources.
-            self.getPage("/users/%d" % id, method='PUT', body="name=%s" % updatedname)
+            self.getPage("/users/%d" %
+                         id, method='PUT', body="name=%s" % updatedname)
             self.assertBody("PUT %d" % id)
             self.assertHeader('Allow', headers)
 
@@ -367,7 +388,6 @@ class DynamicObjectMappingTest(helper.CPWebCase):
             self.getPage("/users/%d" % id, method='DELETE')
             self.assertBody("DELETE %d" % id)
             self.assertHeader('Allow', headers)
-
 
         # GET acts like a container
         self.getPage("/users")
@@ -401,4 +421,3 @@ class DynamicObjectMappingTest(helper.CPWebCase):
 
         self.getPage("/parameter_test/argument2/")
         self.assertBody("argument2")
-

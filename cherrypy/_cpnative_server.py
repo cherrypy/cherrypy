@@ -47,9 +47,11 @@ class NativeGateway(server.Gateway):
                         request.app = app
                         request.prev = prev
 
-                        # Run the CherryPy Request object and obtain the response
+                        # Run the CherryPy Request object and obtain the
+                        # response
                         try:
-                            request.run(method, path, qs, req.request_protocol, headers, rfile)
+                            request.run(method, path, qs,
+                                        req.request_protocol, headers, rfile)
                             break
                         except cherrypy.InternalRedirect:
                             ir = sys.exc_info()[1]
@@ -58,10 +60,12 @@ class NativeGateway(server.Gateway):
 
                             if not self.recursive:
                                 if ir.path in redirections:
-                                    raise RuntimeError("InternalRedirector visited the "
-                                                       "same URL twice: %r" % ir.path)
+                                    raise RuntimeError(
+                                        "InternalRedirector visited the same "
+                                        "URL twice: %r" % ir.path)
                                 else:
-                                    # Add the *previous* path_info + qs to redirections.
+                                    # Add the *previous* path_info + qs to
+                                    # redirections.
                                     if qs:
                                         qs = "?" + qs
                                     redirections.append(sn + path + qs)
@@ -79,7 +83,7 @@ class NativeGateway(server.Gateway):
                     app.release_serving()
         except:
             tb = format_exc()
-            #print tb
+            # print tb
             cherrypy.log(tb, 'NATIVE_ADAPTER', severity=logging.ERROR)
             s, h, b = bare_error()
             self.send_response(s, h, b)
@@ -117,8 +121,10 @@ class CPHTTPServer(server.HTTPServer):
             maxthreads=server_adapter.thread_pool_max,
             server_name=server_name)
 
-        self.max_request_header_size = self.server_adapter.max_request_header_size or 0
-        self.max_request_body_size = self.server_adapter.max_request_body_size or 0
+        self.max_request_header_size = (
+            self.server_adapter.max_request_header_size or 0)
+        self.max_request_body_size = (
+            self.server_adapter.max_request_body_size or 0)
         self.request_queue_size = self.server_adapter.socket_queue_size
         self.timeout = self.server_adapter.socket_timeout
         self.shutdown_timeout = self.server_adapter.shutdown_timeout

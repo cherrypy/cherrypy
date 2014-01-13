@@ -80,4 +80,3 @@ if __name__ == '__main__':
 else:
     # This branch is for the test suite; you can ignore it.
     cherrypy.tree.mount(HomePage(), config=tutconf)
-

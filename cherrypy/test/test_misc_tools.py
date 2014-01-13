@@ -8,6 +8,7 @@ from cherrypy import tools
 
 def setup_server():
     class Root:
+
         def index(self):
             yield "Hello, world"
         index.exposed = True
@@ -22,8 +23,7 @@ def setup_server():
             'tools.response_headers.headers': [("Content-Language", "fr"),
                                                ('Content-Type', 'text/plain')],
             'tools.log_hooks.on': True,
-            }
-
+        }
 
     class Accept:
         _cp_config = {'tools.accept.on': True}
@@ -52,12 +52,14 @@ def setup_server():
         select.exposed = True
 
     class Referer:
+
         def accept(self):
             return "Accepted!"
         accept.exposed = True
         reject = accept
 
     class AutoVary:
+
         def index(self):
             # Read a header directly with 'get'
             ae = cherrypy.request.headers.get('Accept-Encoding')
@@ -95,6 +97,7 @@ def setup_server():
 
 
 from cherrypy.test import helper
+
 
 class ResponseHeadersTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
@@ -142,7 +145,8 @@ class AcceptTest(helper.CPWebCase):
         self.assertInBody('<title>Unknown Blog</title>')
 
         # Specify exact media type
-        self.getPage('/accept/feed', headers=[('Accept', 'application/atom+xml')])
+        self.getPage('/accept/feed',
+                     headers=[('Accept', 'application/atom+xml')])
         self.assertStatus(200)
         self.assertInBody('<title>Unknown Blog</title>')
 
@@ -176,7 +180,8 @@ class AcceptTest(helper.CPWebCase):
         self.getPage('/accept/select', [('Accept', 'text/plain')])
         self.assertStatus(200)
         self.assertBody('PAGE TITLE')
-        self.getPage('/accept/select', [('Accept', 'text/plain, text/*;q=0.5')])
+        self.getPage('/accept/select',
+                     [('Accept', 'text/plain, text/*;q=0.5')])
         self.assertStatus(200)
         self.assertBody('PAGE TITLE')
 
@@ -191,10 +196,11 @@ class AcceptTest(helper.CPWebCase):
 
         # Try unacceptable media types
         self.getPage('/accept/select', [('Accept', 'application/xml')])
-        self.assertErrorPage(406,
-                             "Your client sent this Accept header: application/xml. "
-                             "But this resource only emits these media types: "
-                             "text/html, text/plain.")
+        self.assertErrorPage(
+            406,
+            "Your client sent this Accept header: application/xml. "
+            "But this resource only emits these media types: "
+            "text/html, text/plain.")
 
 
 class AutoVaryTest(helper.CPWebCase):
@@ -203,5 +209,7 @@ class AutoVaryTest(helper.CPWebCase):
     def testAutoVary(self):
         self.getPage('/autovary/')
         self.assertHeader(
-            "Vary", 'Accept, Accept-Charset, Accept-Encoding, Host, If-Modified-Since, Range')
-
+            "Vary",
+            'Accept, Accept-Charset, Accept-Encoding, '
+            'Host, If-Modified-Since, Range'
+        )

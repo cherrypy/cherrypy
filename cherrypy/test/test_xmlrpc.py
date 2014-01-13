@@ -2,9 +2,11 @@ import sys
 from cherrypy._cpcompat import py3k
 
 try:
-    from xmlrpclib import DateTime, Fault, ProtocolError, ServerProxy, SafeTransport
+    from xmlrpclib import DateTime, Fault, ProtocolError, ServerProxy
+    from xmlrpclib import SafeTransport
 except ImportError:
-    from xmlrpc.client import DateTime, Fault, ProtocolError, ServerProxy, SafeTransport
+    from xmlrpc.client import DateTime, Fault, ProtocolError, ServerProxy
+    from xmlrpc.client import SafeTransport
 
 if py3k:
     HTTPSTransport = SafeTransport
@@ -15,7 +17,9 @@ if py3k:
         socket.ssl = True
 else:
     class HTTPSTransport(SafeTransport):
-        """Subclass of SafeTransport to fix sock.recv errors (by using file)."""
+
+        """Subclass of SafeTransport to fix sock.recv errors (by using file).
+        """
 
         def request(self, host, handler, request_body, verbose=0):
             # issue XML-RPC request
@@ -50,10 +54,10 @@ def setup_server():
     from cherrypy import _cptools
 
     class Root:
+
         def index(self):
             return "I'm a standard index!"
         index.exposed = True
-
 
     class XmlRpc(_cptools.XMLRPCController):
 
@@ -78,7 +82,7 @@ def setup_server():
         return_dict.exposed = True
 
         def return_composite(self):
-            return dict(a=1,z=26), 'hi', ['welcome', 'friend']
+            return dict(a=1, z=26), 'hi', ['welcome', 'friend']
         return_composite.exposed = True
 
         def return_int(self):
@@ -110,13 +114,15 @@ def setup_server():
     cherrypy.tree.mount(root, config={'/': {
         'request.dispatch': cherrypy.dispatch.XMLRPCDispatcher(),
         'tools.xmlrpc.allow_none': 0,
-        }})
+    }})
 
 
 from cherrypy.test import helper
 
+
 class XmlRpcTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
+
     def testXmlRpc(self):
 
         scheme = self.scheme
@@ -134,7 +140,8 @@ class XmlRpcTest(helper.CPWebCase):
         self.assertEqual(proxy.return_single_item_list(), [42])
         self.assertNotEqual(proxy.return_single_item_list(), 'one bazillion')
         self.assertEqual(proxy.return_string(), "here is a string")
-        self.assertEqual(proxy.return_tuple(), list(('here', 'is', 1, 'tuple')))
+        self.assertEqual(proxy.return_tuple(),
+                         list(('here', 'is', 1, 'tuple')))
         self.assertEqual(proxy.return_dict(), {'a': 1, 'c': 3, 'b': 2})
         self.assertEqual(proxy.return_composite(),
                          [{'a': 1, 'z': 26}, 'hi', ['welcome', 'friend']])
@@ -163,7 +170,8 @@ class XmlRpcTest(helper.CPWebCase):
         except Exception:
             x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
-            self.assertEqual(x.faultString, 'method "non_method" is not supported')
+            self.assertEqual(x.faultString,
+                             'method "non_method" is not supported')
         else:
             self.fail("Expected xmlrpclib.Fault")
 
@@ -176,4 +184,3 @@ class XmlRpcTest(helper.CPWebCase):
             self.assertEqual(x.faultString, ("custom Fault response"))
         else:
             self.fail("Expected xmlrpclib.Fault")
-

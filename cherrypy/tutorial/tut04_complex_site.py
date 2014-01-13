@@ -9,6 +9,7 @@ import cherrypy
 
 
 class HomePage:
+
     def index(self):
         return '''
             <p>Hi, this is the home page! Check out the other
@@ -22,6 +23,7 @@ class HomePage:
 
 
 class JokePage:
+
     def index(self):
         return '''
             <p>"In Python, how do you create a string of random
@@ -31,6 +33,7 @@ class JokePage:
 
 
 class LinksPage:
+
     def __init__(self):
         # Request handler objects can create their own nested request
         # handler objects. Simply create them inside their __init__
@@ -46,8 +49,12 @@ class LinksPage:
             <p>Here are some useful links:</p>
 
             <ul>
-                <li><a href="http://www.cherrypy.org">The CherryPy Homepage</a></li>
-                <li><a href="http://www.python.org">The Python Homepage</a></li>
+                <li>
+                    <a href="http://www.cherrypy.org">The CherryPy Homepage</a>
+                </li>
+                <li>
+                    <a href="http://www.python.org">The Python Homepage</a>
+                </li>
             </ul>
 
             <p>You can check out some extra useful
@@ -59,6 +66,7 @@ class LinksPage:
 
 
 class ExtraLinksPage:
+
     def index(self):
         # Note the relative link back to the Links page!
         return '''
@@ -66,7 +74,7 @@ class ExtraLinksPage:
 
             <ul>
                 <li><a href="http://del.icio.us">del.icio.us</a></li>
-                <li><a href="http://www.mornography.de">Hendrik's weblog</a></li>
+                <li><a href="http://www.cherrypy.org">CherryPy</a></li>
             </ul>
 
             <p>[<a href="../">Return to links page</a>]</p>'''
@@ -95,4 +103,3 @@ if __name__ == '__main__':
 else:
     # This branch is for the test suite; you can ignore it.
     cherrypy.tree.mount(root, config=tutconf)
-

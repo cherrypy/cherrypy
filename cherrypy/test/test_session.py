@@ -9,6 +9,7 @@ from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
 from cherrypy.lib import sessions
 from cherrypy.lib.httputil import response_codes
 
+
 def http_methods_allowed(methods=['GET', 'HEAD']):
     method = cherrypy.request.method.upper()
     if method not in methods:
@@ -23,8 +24,8 @@ def setup_server():
     class Root:
 
         _cp_config = {'tools.sessions.on': True,
-                      'tools.sessions.storage_type' : 'ram',
-                      'tools.sessions.storage_path' : localDir,
+                      'tools.sessions.storage_type': 'ram',
+                      'tools.sessions.storage_path': localDir,
                       'tools.sessions.timeout': (1.0 / 60),
                       'tools.sessions.clean_freq': (1.0 / 60),
                       }
@@ -51,7 +52,8 @@ def setup_server():
         testStr.exposed = True
 
         def setsessiontype(self, newtype):
-            self.__class__._cp_config.update({'tools.sessions.storage_type': newtype})
+            self.__class__._cp_config.update(
+                {'tools.sessions.storage_type': newtype})
             if hasattr(cherrypy, "session"):
                 del cherrypy.session
             cls = getattr(sessions, newtype.title() + 'Session')
@@ -122,6 +124,7 @@ def setup_server():
 
 
 from cherrypy.test import helper
+
 
 class SessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
@@ -194,12 +197,14 @@ class SessionTest(helper.CPWebCase):
         self.assertBody("done")
         self.getPage('/delete', cookieset1)
         self.assertBody("done")
-        f = lambda: [x for x in os.listdir(localDir) if x.startswith('session-')]
+        f = lambda: [
+            x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertEqual(f(), [])
 
         # Wait for the cleanup thread to delete remaining session files
         self.getPage('/')
-        f = lambda: [x for x in os.listdir(localDir) if x.startswith('session-')]
+        f = lambda: [
+            x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertNotEqual(f(), [])
         time.sleep(2)
         self.assertEqual(f(), [])
@@ -302,9 +307,10 @@ class SessionTest(helper.CPWebCase):
         # grab the cookie ID
         id1 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
         self.getPage('/testStr',
-                     headers=[('Cookie',
-                               'session_id=maliciousid; '
-                               'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
+                     headers=[
+                         ('Cookie',
+                          'session_id=maliciousid; '
+                          'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
         id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
         self.assertNotEqual(id1, id2)
         self.assertNotEqual(id2, 'maliciousid')
@@ -314,7 +320,8 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/clear')
         self.getPage('/session_cookie')
         # grab the cookie ID
-        cookie_parts = dict([p.strip().split('=') for p in self.cookies[0][1].split(";")])
+        cookie_parts = dict([p.strip().split('=')
+                            for p in self.cookies[0][1].split(";")])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         id1 = cookie_parts['temp']
@@ -322,7 +329,8 @@ class SessionTest(helper.CPWebCase):
 
         # Send another request in the same "browser session".
         self.getPage('/session_cookie', self.cookies)
-        cookie_parts = dict([p.strip().split('=') for p in self.cookies[0][1].split(";")])
+        cookie_parts = dict([p.strip().split('=')
+                            for p in self.cookies[0][1].split(";")])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         self.assertBody(id1)
@@ -331,13 +339,15 @@ class SessionTest(helper.CPWebCase):
         # Simulate a browser close by just not sending the cookies
         self.getPage('/session_cookie')
         # grab the cookie ID
-        cookie_parts = dict([p.strip().split('=') for p in self.cookies[0][1].split(";")])
+        cookie_parts = dict([p.strip().split('=')
+                            for p in self.cookies[0][1].split(";")])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         # Assert a new id has been generated...
         id2 = cookie_parts['temp']
         self.assertNotEqual(id1, id2)
-        self.assertEqual(set(sessions.RamSession.cache.keys()), set([id1, id2]))
+        self.assertEqual(set(sessions.RamSession.cache.keys()),
+                         set([id1, id2]))
 
         # Wait for the session.timeout on both sessions
         time.sleep(2.5)
@@ -452,7 +462,8 @@ else:
 
         def test_5_Error_paths(self):
             self.getPage('/unknown/page')
-            self.assertErrorPage(404, "The path '/unknown/page' was not found.")
+            self.assertErrorPage(
+                404, "The path '/unknown/page' was not found.")
 
             # Note: this path is *not* the same as above. The above
             # takes a normal route through the session code; this one
@@ -461,4 +472,3 @@ else:
             # code has to survive calling save/close without init.
             self.getPage('/restricted', self.cookies, method='POST')
             self.assertErrorPage(405, response_codes[405][1])
-

@@ -11,8 +11,12 @@ class CPWSGIServer(wsgi.WSGIServer):
     
     def __init__(self, server_adapter=cherrypy.server):
         self.server_adapter = server_adapter
-        self.max_request_header_size = self.server_adapter.max_request_header_size or 0
-        self.max_request_body_size = self.server_adapter.max_request_body_size or 0
+        self.max_request_header_size = (
+            self.server_adapter.max_request_header_size or 0
+        )
+        self.max_request_body_size = (
+            self.server_adapter.max_request_body_size or 0
+        )
 
         server_name = (self.server_adapter.socket_host or
                        self.server_adapter.socket_file or
@@ -50,8 +54,8 @@ class CPWSGIServer(wsgi.WSGIServer):
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain)
 
-        self.stats['Enabled'] = getattr(self.server_adapter, 'statistics', False)
+        self.stats['Enabled'] = getattr(
+            self.server_adapter, 'statistics', False)
 
     def error_log(self, msg="", level=20, traceback=False):
         cherrypy.engine.log(msg, level, traceback)
-

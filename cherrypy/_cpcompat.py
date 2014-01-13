@@ -26,16 +26,23 @@ if sys.version_info >= (3, 0):
     unicodestr = str
     nativestr = unicodestr
     basestring = (bytes, str)
+
     def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given encoding."""
+        """Return the given native string as a byte string in the given
+        encoding.
+        """
         assert_native(n)
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
+
     def ntou(n, encoding='ISO-8859-1'):
-        """Return the given native string as a unicode string with the given encoding."""
+        """Return the given native string as a unicode string with the given
+        encoding.
+        """
         assert_native(n)
         # In Python 3, the native string type is unicode
         return n
+
     def tonative(n, encoding='ISO-8859-1'):
         """Return the given string as a native string in the given encoding."""
         # In Python 3, the native string type is unicode
@@ -53,29 +60,36 @@ else:
     unicodestr = unicode
     nativestr = bytestr
     basestring = basestring
+
     def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given encoding."""
+        """Return the given native string as a byte string in the given
+        encoding.
+        """
         assert_native(n)
         # In Python 2, the native string type is bytes. Assume it's already
         # in the given encoding, which for ISO-8859-1 is almost always what
         # was intended.
         return n
+
     def ntou(n, encoding='ISO-8859-1'):
-        """Return the given native string as a unicode string with the given encoding."""
+        """Return the given native string as a unicode string with the given
+        encoding.
+        """
         assert_native(n)
         # In Python 2, the native string type is bytes.
-        # First, check for the special encoding 'escape'. The test suite uses this
-        # to signal that it wants to pass a string with embedded \uXXXX escapes,
-        # but without having to prefix it with u'' for Python 2, but no prefix
-        # for Python 3.
+        # First, check for the special encoding 'escape'. The test suite uses
+        # this to signal that it wants to pass a string with embedded \uXXXX
+        # escapes, but without having to prefix it with u'' for Python 2,
+        # but no prefix for Python 3.
         if encoding == 'escape':
             return unicode(
                 re.sub(r'\\u([0-9a-zA-Z]{4})',
                        lambda m: unichr(int(m.group(1), 16)),
                        n.decode('ISO-8859-1')))
-        # Assume it's already in the given encoding, which for ISO-8859-1 is almost
-        # always what was intended.
+        # Assume it's already in the given encoding, which for ISO-8859-1
+        # is almost always what was intended.
         return n.decode(encoding)
+
     def tonative(n, encoding='ISO-8859-1'):
         """Return the given string as a native string in the given encoding."""
         # In Python 2, the native string type is bytes.
@@ -90,6 +104,7 @@ else:
         from StringIO import StringIO
     # bytes:
     BytesIO = StringIO
+
 
 def assert_native(n):
     if not isinstance(n, nativestr):
@@ -108,6 +123,7 @@ except ImportError:
     # since CherryPy claims compability with Python 2.3, we must use
     # the legacy API of base64
     from base64 import decodestring as _base64_decodebytes
+
 
 def base64_decode(n, encoding='ISO-8859-1'):
     """Return the native string base64-decoded (as a native string)."""
@@ -210,12 +226,14 @@ try:
     # Python 2. We try Python 2 first clients on Python 2
     # don't try to import the 'http' module from cherrypy.lib
     from Cookie import SimpleCookie, CookieError
-    from httplib import BadStatusLine, HTTPConnection, IncompleteRead, NotConnected
+    from httplib import BadStatusLine, HTTPConnection, IncompleteRead
+    from httplib import NotConnected
     from BaseHTTPServer import BaseHTTPRequestHandler
 except ImportError:
     # Python 3
     from http.cookies import SimpleCookie, CookieError
-    from http.client import BadStatusLine, HTTPConnection, IncompleteRead, NotConnected
+    from http.client import BadStatusLine, HTTPConnection, IncompleteRead
+    from http.client import NotConnected
     from http.server import BaseHTTPRequestHandler
 
 # Some platforms don't expose HTTPSConnection, so handle it separately
@@ -243,16 +261,19 @@ if hasattr(threading.Thread, "daemon"):
     # Python 2.6+
     def get_daemon(t):
         return t.daemon
+
     def set_daemon(t, val):
         t.daemon = val
 else:
     def get_daemon(t):
         return t.isDaemon()
+
     def set_daemon(t, val):
         t.setDaemon(val)
 
 try:
     from email.utils import formatdate
+
     def HTTPDate(timeval=None):
         return formatdate(timeval, usegmt=True)
 except ImportError:
@@ -261,16 +282,22 @@ except ImportError:
 try:
     # Python 3
     from urllib.parse import unquote as parse_unquote
+
     def unquote_qs(atom, encoding, errors='strict'):
-        return parse_unquote(atom.replace('+', ' '), encoding=encoding, errors=errors)
+        return parse_unquote(
+            atom.replace('+', ' '),
+            encoding=encoding,
+            errors=errors)
 except ImportError:
     # Python 2
     from urllib import unquote as parse_unquote
+
     def unquote_qs(atom, encoding, errors='strict'):
         return parse_unquote(atom.replace('+', ' ')).decode(encoding, errors)
 
 try:
-    # Prefer simplejson, which is usually more advanced than the builtin module.
+    # Prefer simplejson, which is usually more advanced than the builtin
+    # module.
     import simplejson as json
     json_decode = json.JSONDecoder().decode
     _json_encode = json.JSONEncoder().iterencode
@@ -282,20 +309,22 @@ except ImportError:
         _json_encode = json.JSONEncoder().iterencode
     else:
         json = None
+
         def json_decode(s):
             raise ValueError('No JSON library is available')
+
         def _json_encode(s):
             raise ValueError('No JSON library is available')
 finally:
     if json and py3k:
-        # The two Python 3 implementations (simplejson/json) 
+        # The two Python 3 implementations (simplejson/json)
         # outputs str. We need bytes.
         def json_encode(value):
             for chunk in _json_encode(value):
                 yield chunk.encode('utf8')
     else:
         json_encode = _json_encode
-       
+
 
 try:
     import cPickle as pickle
@@ -307,11 +336,13 @@ except ImportError:
 try:
     os.urandom(20)
     import binascii
+
     def random20():
         return binascii.hexlify(os.urandom(20)).decode('ascii')
 except (AttributeError, NotImplementedError):
     import random
     # os.urandom not available until Python 2.4. Fall back to random.random.
+
     def random20():
         return sha('%s' % random.random()).hexdigest()
 
@@ -328,7 +359,7 @@ except NameError:
     def next(i):
         return i.next()
 
-if sys.version_info >= (3,3):
+if sys.version_info >= (3, 3):
     Timer = threading.Timer
     Event = threading.Event
 else:
@@ -338,17 +369,21 @@ else:
 
 # Prior to Python 2.6, the Thread class did not have a .daemon property.
 # This mix-in adds that property.
+
+
 class SetDaemonProperty:
+
     def __get_daemon(self):
         return self.isDaemon()
+
     def __set_daemon(self, daemon):
         self.setDaemon(daemon)
 
-    if sys.version_info < (2,6):
+    if sys.version_info < (2, 6):
         daemon = property(__get_daemon, __set_daemon)
 
 # Use subprocess module from Python 2.7 on Python 2.3-2.6
-if sys.version_info < (2,7):
+if sys.version_info < (2, 7):
     import cherrypy._cpcompat_subprocess as subprocess
 else:
     import subprocess

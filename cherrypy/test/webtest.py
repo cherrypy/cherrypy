@@ -27,7 +27,8 @@ import types
 from unittest import *
 from unittest import _TextTestResult
 
-from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection, HTTPSConnection, unicodestr
+from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection
+from cherrypy._cpcompat import HTTPSConnection, unicodestr
 
 
 def interface(host):
@@ -56,6 +57,7 @@ class TerseTestResult(_TextTestResult):
 
 
 class TerseTestRunner(TextTestRunner):
+
     """A test runner class that displays results in textual form."""
 
     def _makeResult(self):
@@ -73,7 +75,8 @@ class TerseTestRunner(TextTestRunner):
             if failed:
                 self.stream.write("failures=%d" % failed)
             if errored:
-                if failed: self.stream.write(", ")
+                if failed:
+                    self.stream.write(", ")
                 self.stream.write("errors=%d" % errored)
             self.stream.writeln(")")
         return result
@@ -109,7 +112,7 @@ class ReloadingTestLoader(TestLoader):
                             parts = unused_parts
                             break
                         except ImportError:
-                            unused_parts.insert(0,parts_copy[-1])
+                            unused_parts.insert(0, parts_copy[-1])
                             del parts_copy[-1]
                             if not parts_copy:
                                 raise
@@ -118,13 +121,13 @@ class ReloadingTestLoader(TestLoader):
         for part in parts:
             obj = getattr(obj, part)
 
-        if type(obj) == types.ModuleType:
+        if isinstance(obj, types.ModuleType):
             return self.loadTestsFromModule(obj)
         elif (((py3k and isinstance(obj, type))
                or isinstance(obj, (type, types.ClassType)))
               and issubclass(obj, TestCase)):
             return self.loadTestsFromTestCase(obj)
-        elif type(obj) == types.UnboundMethodType:
+        elif isinstance(obj, types.UnboundMethodType):
             if py3k:
                 return obj.__self__.__class__(obj.__name__)
             else:
@@ -134,7 +137,7 @@ class ReloadingTestLoader(TestLoader):
             if not isinstance(test, TestCase) and \
                not isinstance(test, TestSuite):
                 raise ValueError("calling %s returned %s, "
-                                 "not a test" % (obj,test))
+                                 "not a test" % (obj, test))
             return test
         else:
             raise ValueError("do not know how to make test from: %s" % obj)
@@ -149,11 +152,14 @@ try:
     else:
         # On Windows, msvcrt.getch reads a single char without output.
         import msvcrt
+
         def getchar():
             return msvcrt.getch()
 except ImportError:
     # Unix getchr
-    import tty, termios
+    import tty
+    import termios
+
     def getchar():
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
@@ -219,6 +225,7 @@ class WebCase(TestCase):
 
     def _get_persistent(self):
         return hasattr(self.HTTP_CONN, "__class__")
+
     def _set_persistent(self, on):
         self.set_persistent(on)
     persistent = property(_get_persistent, _set_persistent)
@@ -230,8 +237,10 @@ class WebCase(TestCase):
         or '::' (IN6ADDR_ANY), this will return the proper localhost."""
         return interface(self.HOST)
 
-    def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
-        """Open the url with debugging support. Return status, headers, body."""
+    def getPage(self, url, headers=None, method="GET", body=None,
+                protocol=None):
+        """Open the url with debugging support. Return status, headers, body.
+        """
         ServerError.on = False
 
         if isinstance(url, unicodestr):
@@ -265,7 +274,9 @@ class WebCase(TestCase):
         if not self.interactive:
             raise self.failureException(msg)
 
-        p = "    Show: [B]ody [H]eaders [S]tatus [U]RL; [I]gnore, [R]aise, or sys.e[X]it >> "
+        p = ("    Show: "
+             "[B]ody [H]eaders [S]tatus [U]RL; "
+             "[I]gnore, [R]aise, or sys.e[X]it >> ")
         sys.stdout.write(p)
         sys.stdout.flush()
         while True:
@@ -388,7 +399,8 @@ class WebCase(TestCase):
             value = value.encode(self.encoding)
         if value != self.body:
             if msg is None:
-                msg = 'expected body:\n%r\n\nactual body:\n%r' % (value, self.body)
+                msg = 'expected body:\n%r\n\nactual body:\n%r' % (
+                    value, self.body)
             self._handlewebError(msg)
 
     def assertInBody(self, value, msg=None):
@@ -421,6 +433,7 @@ class WebCase(TestCase):
 
 methods_with_bodies = ("POST", "PUT")
 
+
 def cleanHeaders(headers, method, body, host, port):
     """Return request headers, with required headers added (if missing)."""
     if headers is None:
@@ -447,7 +460,8 @@ def cleanHeaders(headers, method, body, host, port):
                 found = True
                 break
         if not found:
-            headers.append(("Content-Type", "application/x-www-form-urlencoded"))
+            headers.append(
+                ("Content-Type", "application/x-www-form-urlencoded"))
             headers.append(("Content-Length", str(len(body or ""))))
 
     return headers
@@ -503,7 +517,8 @@ def openURL(url, headers=None, method="GET", body=None,
                         return
                     self.__class__.putheader(self, header, value)
                 import new
-                conn.putheader = new.instancemethod(putheader, conn, conn.__class__)
+                conn.putheader = new.instancemethod(
+                    putheader, conn, conn.__class__)
                 conn.putrequest(method.upper(), url, skip_host=True)
             elif not py3k:
                 conn.putrequest(method.upper(), url, skip_host=True,
@@ -511,20 +526,27 @@ def openURL(url, headers=None, method="GET", body=None,
             else:
                 import http.client
                 # Replace the stdlib method, which only accepts ASCII url's
+
                 def putrequest(self, method, url):
-                    if self._HTTPConnection__response and self._HTTPConnection__response.isclosed():
+                    if (
+                        self._HTTPConnection__response and
+                        self._HTTPConnection__response.isclosed()
+                    ):
                         self._HTTPConnection__response = None
 
                     if self._HTTPConnection__state == http.client._CS_IDLE:
-                        self._HTTPConnection__state = http.client._CS_REQ_STARTED
+                        self._HTTPConnection__state = (
+                            http.client._CS_REQ_STARTED)
                     else:
                         raise http.client.CannotSendRequest()
 
                     self._method = method
                     if not url:
                         url = ntob('/')
-                    request = ntob(' ').join((method.encode("ASCII"), url,
-                                              self._http_vsn_str.encode("ASCII")))
+                    request = ntob(' ').join(
+                        (method.encode("ASCII"),
+                         url,
+                         self._http_vsn_str.encode("ASCII")))
                     self._output(request)
                 import types
                 conn.putrequest = types.MethodType(putrequest, conn)
@@ -562,6 +584,7 @@ ignored_exceptions = []
 # that each response will immediately follow each request;
 # for example, when handling requests via multiple threads.
 ignore_all = False
+
 
 class ServerError(Exception):
     on = False

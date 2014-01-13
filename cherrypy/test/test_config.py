@@ -1,12 +1,14 @@
 """Tests for the CherryPy configuration system."""
 
-import os, sys
+import os
+import sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 from cherrypy._cpcompat import ntob, StringIO
 import unittest
 
 import cherrypy
+
 
 def setup_server():
 
@@ -41,7 +43,7 @@ def setup_server():
         plain._cp_config = {'request.body.attempt_charsets': ['utf-16']}
 
         favicon_ico = cherrypy.tools.staticfile.handler(
-                        filename=os.path.join(localDir, '../favicon.ico'))
+            filename=os.path.join(localDir, '../favicon.ico'))
 
     class Foo:
 
@@ -72,10 +74,10 @@ def setup_server():
             return str(cherrypy.request.config.get(key, "None"))
         index.exposed = True
 
-
     def raw_namespace(key, value):
         if key == 'input.map':
             handler = cherrypy.request.handler
+
             def wrapper():
                 params = cherrypy.request.params
                 for name, coercer in list(value.items()):
@@ -87,6 +89,7 @@ def setup_server():
             cherrypy.request.handler = wrapper
         elif key == 'output':
             handler = cherrypy.request.handler
+
             def wrapper():
                 # 'value' is a type (like int or str).
                 return value(handler())
@@ -133,6 +136,7 @@ tools.staticfile.filename = %r
 
 from cherrypy.test import helper
 
+
 class ConfigTests(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
@@ -147,8 +151,9 @@ class ConfigTests(helper.CPWebCase):
             ('/foo/',    'bax', 'None'),
             ('/foo/bar', 'baz', "'that2'"),
             ('/foo/nex', 'baz', 'that2'),
-            # If 'foo' == 'this', then the mount point '/another' leaks into '/'.
-            ('/another/','foo', 'None'),
+            # If 'foo' == 'this', then the mount point '/another' leaks into
+            # '/'.
+            ('/another/', 'foo', 'None'),
         ]
         for path, key, expected in tests:
             self.getPage(path + "?key=" + key)
@@ -171,7 +176,7 @@ class ConfigTests(helper.CPWebCase):
             # From Foo.bar._cp_config
             'foo': 'this3',
             'bax': 'this4',
-            }
+        }
         for key, expected in expectedconf.items():
             self.getPage("/foo/bar?key=" + key)
             self.assertBody(repr(expected))
@@ -252,5 +257,5 @@ class VariableSubstitutionTests(unittest.TestCase):
 
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config["my"]["my.dir"], "/some/dir/my/dir")
-        self.assertEqual(cherrypy.config["my"]["my.dir2"], "/some/dir/my/dir/dir2")
-
+        self.assertEqual(cherrypy.config["my"]
+                         ["my.dir2"], "/some/dir/my/dir/dir2")

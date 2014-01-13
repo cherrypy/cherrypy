@@ -12,13 +12,15 @@ import cherrypy
 from cherrypy._cpcompat import next, ntob, quote, xrange
 from cherrypy.lib import httputil
 
-gif_bytes = ntob('GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
-             '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-             '\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x02\x03\x02\x08\t\x00;')
-
+gif_bytes = ntob(
+    'GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
+    '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    '\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x02\x03\x02\x08\t\x00;'
+)
 
 
 from cherrypy.test import helper
+
 
 class CacheTest(helper.CPWebCase):
 
@@ -45,7 +47,8 @@ class CacheTest(helper.CPWebCase):
             control.exposed = True
 
             def a_gif(self):
-                cherrypy.response.headers['Last-Modified'] = httputil.HTTPDate()
+                cherrypy.response.headers[
+                    'Last-Modified'] = httputil.HTTPDate()
                 return gif_bytes
             a_gif.exposed = True
 
@@ -64,10 +67,13 @@ class CacheTest(helper.CPWebCase):
 
         class VaryHeaderCachingServer(object):
 
-            _cp_config = {'tools.caching.on': True,
+            _cp_config = {
+                'tools.caching.on': True,
                 'tools.response_headers.on': True,
-                'tools.response_headers.headers': [('Vary', 'Our-Varying-Header')],
-                }
+                'tools.response_headers.headers': [
+                    ('Vary', 'Our-Varying-Header')
+                ],
+            }
 
             def __init__(self):
                 self.counter = count(1)
@@ -104,15 +110,18 @@ class CacheTest(helper.CPWebCase):
             cacheable.exposed = True
 
             def specific(self):
-                cherrypy.response.headers['Etag'] = 'need_this_to_make_me_cacheable'
+                cherrypy.response.headers[
+                    'Etag'] = 'need_this_to_make_me_cacheable'
                 return "I am being specific"
             specific.exposed = True
             specific._cp_config = {'tools.expires.secs': 86400}
 
-            class Foo(object):pass
+            class Foo(object):
+                pass
 
             def wrongtype(self):
-                cherrypy.response.headers['Etag'] = 'need_this_to_make_me_cacheable'
+                cherrypy.response.headers[
+                    'Etag'] = 'need_this_to_make_me_cacheable'
                 return "Woops"
             wrongtype.exposed = True
             wrongtype._cp_config = {'tools.expires.secs': Foo()}
@@ -138,7 +147,8 @@ class CacheTest(helper.CPWebCase):
         # POST, PUT, DELETE should not be cached.
         self.getPage("/", method="POST")
         self.assertBody('visit #2')
-        # Because gzip is turned on, the Vary header should always Vary for content-encoding
+        # Because gzip is turned on, the Vary header should always Vary for
+        # content-encoding
         self.assertHeader('Vary', 'Accept-Encoding')
         # The previous request should have invalidated the cache,
         # so this request will recalc the response.
@@ -155,14 +165,16 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
         self.assertHeader('Vary')
-        self.assertEqual(cherrypy.lib.encoding.decompress(self.body), ntob("visit #5"))
+        self.assertEqual(
+            cherrypy.lib.encoding.decompress(self.body), ntob("visit #5"))
 
         # Now check that a second request gets the gzip header and gzipped body
         # This also tests a bug in 3.0 to 3.0.2 whereby the cached, gzipped
         # response body was being gzipped a second time.
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
-        self.assertEqual(cherrypy.lib.encoding.decompress(self.body), ntob("visit #5"))
+        self.assertEqual(
+            cherrypy.lib.encoding.decompress(self.body), ntob("visit #5"))
 
         # Now check that a third request that doesn't accept gzip
         # skips the cache (because the 'Vary' header denies it).
@@ -179,11 +191,13 @@ class CacheTest(helper.CPWebCase):
         # Now check that different 'Vary'-fields don't evict each other.
         # This test creates 2 requests with different 'Our-Varying-Header'
         # and then tests if the first one still exists.
-        self.getPage("/varying_headers/", headers=[('Our-Varying-Header', 'request 2')])
+        self.getPage("/varying_headers/",
+                     headers=[('Our-Varying-Header', 'request 2')])
         self.assertStatus("200 OK")
         self.assertBody('visit #2')
 
-        self.getPage("/varying_headers/", headers=[('Our-Varying-Header', 'request 2')])
+        self.getPage("/varying_headers/",
+                     headers=[('Our-Varying-Header', 'request 2')])
         self.assertStatus("200 OK")
         self.assertBody('visit #2')
 
@@ -286,10 +300,11 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/long_process?seconds=%d" % SECONDS)
         self.assertBody('success!')
         self.getPage("/clear_cache?path=" +
-            quote('/long_process?seconds=%d' % SECONDS, safe=''))
+                     quote('/long_process?seconds=%d' % SECONDS, safe=''))
         self.assertStatus(200)
 
         start = datetime.datetime.now()
+
         def run():
             self.getPage("/long_process?seconds=%d" % SECONDS)
             # The response should be the same every time
@@ -325,4 +340,3 @@ class CacheTest(helper.CPWebCase):
         self.assertBody('visit #4')
         self.getPage("/control")
         self.assertBody('visit #4')
-

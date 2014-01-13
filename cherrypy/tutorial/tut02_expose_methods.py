@@ -7,17 +7,18 @@ handler.
 
 import cherrypy
 
+
 class HelloWorld:
 
     def index(self):
         # Let's link to another method here.
-        return 'We have an <a href="showMessage">important message</a> for you!'
+        return 'We have an <a href="show_msg">important message</a> for you!'
     index.exposed = True
 
-    def showMessage(self):
+    def show_msg(self):
         # Here's the important message!
         return "Hello world!"
-    showMessage.exposed = True
+    show_msg.exposed = True
 
 import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')

@@ -57,7 +57,6 @@ class StaticTest(helper.CPWebCase):
                 return "This is a DYNAMIC page"
             dynamic.exposed = True
 
-
         root = Root()
         root.static = Static()
 
@@ -81,7 +80,7 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.on': True,
                 'request.show_tracebacks': True,
             },
-            }
+        }
         rootApp = cherrypy.Application(root)
         rootApp.merge(rootconf)
 
@@ -91,15 +90,14 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.on': True,
                 'tools.staticdir.root': curdir,
                 'tools.staticdir.dir': 'static',
-                },
-            }
+            },
+        }
         testApp = cherrypy.Application(Static())
         testApp.merge(test_app_conf)
 
         vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
         cherrypy.tree.graft(vhost)
     setup_server = staticmethod(setup_server)
-
 
     def teardown_server():
         for f in (has_space_filepath, bigfile_filepath):
@@ -109,7 +107,6 @@ class StaticTest(helper.CPWebCase):
                 except:
                     pass
     teardown_server = staticmethod(teardown_server)
-
 
     def testStatic(self):
         self.getPage("/static/index.html")
@@ -255,14 +252,15 @@ class StaticTest(helper.CPWebCase):
 
             expected = len(body)
             if tell_position >= BIGFILE_SIZE:
-                # We can't exactly control how much content the server asks for.
+                # We can't exactly control how much content the server asks
+                # for.
                 # Fudge it by only checking the first half of the reads.
                 if expected < (BIGFILE_SIZE / 2):
                     self.fail(
-                        "The file should have advanced to position %r, but has "
-                        "already advanced to the end of the file. It may not be "
-                        "streamed as intended, or at the wrong chunk size (64k)" %
-                        expected)
+                        "The file should have advanced to position %r, but "
+                        "has already advanced to the end of the file. It "
+                        "may not be streamed as intended, or at the wrong "
+                        "chunk size (64k)" % expected)
             elif tell_position < expected:
                 self.fail(
                     "The file should have advanced to position %r, but has "

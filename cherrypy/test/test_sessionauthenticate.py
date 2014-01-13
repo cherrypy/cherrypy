@@ -13,20 +13,21 @@ class SessionAuthenticateTest(helper.CPWebCase):
 
         def augment_params():
             # A simple tool to add some things to request.params
-            # This is to check to make sure that session_auth can handle request
-            # params (ticket #780)
+            # This is to check to make sure that session_auth can handle
+            # request params (ticket #780)
             cherrypy.request.params["test"] = "test"
 
-        cherrypy.tools.augment_params = cherrypy.Tool('before_handler',
-                 augment_params, None, priority=30)
+        cherrypy.tools.augment_params = cherrypy.Tool(
+            'before_handler', augment_params, None, priority=30)
 
         class Test:
 
-            _cp_config = {'tools.sessions.on': True,
-                          'tools.session_auth.on': True,
-                          'tools.session_auth.check_username_and_password': check,
-                          'tools.augment_params.on': True,
-                          }
+            _cp_config = {
+                'tools.sessions.on': True,
+                'tools.session_auth.on': True,
+                'tools.session_auth.check_username_and_password': check,
+                'tools.augment_params.on': True,
+            }
 
             def index(self, **kwargs):
                 return "Hi %s, you are logged in" % cherrypy.request.login
@@ -34,7 +35,6 @@ class SessionAuthenticateTest(helper.CPWebCase):
 
         cherrypy.tree.mount(Test())
     setup_server = staticmethod(setup_server)
-
 
     def testSessionAuthenticate(self):
         # request a page and check for login form
@@ -59,4 +59,3 @@ class SessionAuthenticateTest(helper.CPWebCase):
         # verify we are logged out
         self.getPage('/', self.cookies)
         self.assertInBody('<form method="post" action="do_login">')
-

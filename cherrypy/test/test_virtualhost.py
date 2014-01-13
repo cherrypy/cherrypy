@@ -9,6 +9,7 @@ class VirtualHostTest(helper.CPWebCase):
 
     def setup_server():
         class Root:
+
             def index(self):
                 return "Hello, world"
             index.exposed = True
@@ -22,6 +23,7 @@ class VirtualHostTest(helper.CPWebCase):
             method.exposed = True
 
         class VHost:
+
             def __init__(self, sitename):
                 self.sitename = sitename
 
@@ -38,7 +40,8 @@ class VirtualHostTest(helper.CPWebCase):
             url.exposed = True
 
             # Test static as a handler (section must NOT include vhost prefix)
-            static = cherrypy.tools.staticdir.handler(section='/static', dir=curdir)
+            static = cherrypy.tools.staticdir.handler(
+                section='/static', dir=curdir)
 
         root = Root()
         root.mydom2 = VHost("Domain 2")
@@ -48,14 +51,17 @@ class VirtualHostTest(helper.CPWebCase):
                    'www.mydom4.com': '/dom4',
                    }
         cherrypy.tree.mount(root, config={
-            '/': {'request.dispatch': cherrypy.dispatch.VirtualHost(**hostmap)},
+            '/': {
+                'request.dispatch': cherrypy.dispatch.VirtualHost(**hostmap)
+            },
             # Test static in config (section must include vhost prefix)
-            '/mydom2/static2': {'tools.staticdir.on': True,
-                                'tools.staticdir.root': curdir,
-                                'tools.staticdir.dir': 'static',
-                                'tools.staticdir.index': 'index.html',
-                                },
-            })
+            '/mydom2/static2': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.root': curdir,
+                'tools.staticdir.dir': 'static',
+                'tools.staticdir.index': 'index.html',
+            },
+        })
     setup_server = staticmethod(setup_server)
 
     def testVirtualHost(self):

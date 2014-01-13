@@ -8,22 +8,22 @@ to a public caning.
 """
 
 from binascii import b2a_base64
-from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou, reversed, sorted
-from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr, unicodestr, unquote_qs
+from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
+from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr
+from cherrypy._cpcompat import reversed, sorted, unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://bitbucket.org/cherrypy/cherrypy/issue/361
 response_codes[500] = ('Internal Server Error',
-                      'The server encountered an unexpected condition '
-                      'which prevented it from fulfilling the request.')
+                       'The server encountered an unexpected condition '
+                       'which prevented it from fulfilling the request.')
 response_codes[503] = ('Service Unavailable',
-                      'The server is currently unable to handle the '
-                      'request due to a temporary overloading or '
-                      'maintenance of the server.')
+                       'The server is currently unable to handle the '
+                       'request due to a temporary overloading or '
+                       'maintenance of the server.')
 
 import re
 import urllib
-
 
 
 def urljoin(*atoms):
@@ -38,6 +38,7 @@ def urljoin(*atoms):
     # Special-case the final url of "", and return "/" instead.
     return url or "/"
 
+
 def urljoin_bytes(*atoms):
     """Return the given path *atoms, joined into a single URL.
 
@@ -50,9 +51,11 @@ def urljoin_bytes(*atoms):
     # Special-case the final url of "", and return "/" instead.
     return url or ntob("/")
 
+
 def protocol_from_http(protocol_str):
     """Return a protocol tuple from the given 'HTTP/x.y' string."""
     return int(protocol_str[5]), int(protocol_str[7])
+
 
 def get_ranges(headervalue, content_length):
     """Return a list of (start, stop) indices from a Range header, or None.
@@ -106,6 +109,7 @@ def get_ranges(headervalue, content_length):
 
 
 class HeaderElement(object):
+
     """An element (with parameters) from an HTTP header's element list."""
 
     def __init__(self, value, params=None):
@@ -160,7 +164,9 @@ class HeaderElement(object):
 
 q_separator = re.compile(r'; *q *=')
 
+
 class AcceptElement(HeaderElement):
+
     """An element (with parameters) from an Accept* header's element list.
 
     AcceptElement objects are comparable; the more-preferred object will be
@@ -208,7 +214,8 @@ class AcceptElement(HeaderElement):
 
 
 def header_elements(fieldname, fieldvalue):
-    """Return a sorted HeaderElement list from a comma-separated header string."""
+    """Return a sorted HeaderElement list from a comma-separated header string.
+    """
     if not fieldvalue:
         return []
 
@@ -221,6 +228,7 @@ def header_elements(fieldname, fieldvalue):
         result.append(hv)
 
     return list(reversed(sorted(result)))
+
 
 def decode_TEXT(value):
     r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> "f\xfcr")."""
@@ -236,6 +244,7 @@ def decode_TEXT(value):
             atom = atom.decode(charset)
         decodedvalue += atom
     return decodedvalue
+
 
 def valid_status(status):
     """Return legal HTTP status Code, Reason-phrase and Message.
@@ -332,6 +341,7 @@ def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
 
 image_map_pattern = re.compile(r"[0-9]+,[0-9]+")
 
+
 def parse_query_string(query_string, keep_blank_values=True, encoding='utf-8'):
     """Build a params dictionary from a query_string.
 
@@ -350,6 +360,7 @@ def parse_query_string(query_string, keep_blank_values=True, encoding='utf-8'):
 
 
 class CaseInsensitiveDict(dict):
+
     """A case-insensitive dict subclass.
 
     Each key is changed on entry to str(key).title().
@@ -372,7 +383,7 @@ class CaseInsensitiveDict(dict):
 
     if hasattr({}, 'has_key'):
         def has_key(self, key):
-            return dict.has_key(self, str(key).title())
+            return str(key).title() in self
 
     def update(self, E):
         for k in E.keys():
@@ -404,13 +415,15 @@ class CaseInsensitiveDict(dict):
 # replaced with a single SP before interpretation of the TEXT value."
 if nativestr == bytestr:
     header_translate_table = ''.join([chr(i) for i in xrange(256)])
-    header_translate_deletechars = ''.join([chr(i) for i in xrange(32)]) + chr(127)
+    header_translate_deletechars = ''.join(
+        [chr(i) for i in xrange(32)]) + chr(127)
 else:
     header_translate_table = None
     header_translate_deletechars = bytes(range(32)) + bytes([127])
 
 
 class HeaderMap(CaseInsensitiveDict):
+
     """A dict subclass for HTTP request and response headers.
 
     Each key is changed on entry to str(key).title(). This allows headers
@@ -419,7 +432,7 @@ class HeaderMap(CaseInsensitiveDict):
     Values are header values (decoded according to :rfc:`2047` if necessary).
     """
 
-    protocol=(1, 1)
+    protocol = (1, 1)
     encodings = ["ISO-8859-1"]
 
     # Someday, when http-bis is done, this will probably get dropped
@@ -460,8 +473,10 @@ class HeaderMap(CaseInsensitiveDict):
 
             # See header_translate_* constants above.
             # Replace only if you really know what you're doing.
-            k = k.translate(header_translate_table, header_translate_deletechars)
-            v = v.translate(header_translate_table, header_translate_deletechars)
+            k = k.translate(header_translate_table,
+                            header_translate_deletechars)
+            v = v.translate(header_translate_table,
+                            header_translate_deletechars)
 
             yield (k, v)
     encode_header_items = classmethod(encode_header_items)
@@ -488,7 +503,9 @@ class HeaderMap(CaseInsensitiveDict):
                          (v, cls.encodings))
     encode = classmethod(encode)
 
+
 class Host(object):
+
     """An internet address.
 
     name

@@ -89,11 +89,12 @@ SetEnv testmod %(testmod)s
 
 
 class ModWSGISupervisor(helper.Supervisor):
+
     """Server Controller for ModWSGI and CherryPy."""
 
     using_apache = True
     using_wsgi = True
-    template=conf_modwsgi
+    template = conf_modwsgi
 
     def __str__(self):
         return "ModWSGI Server on %s:%s" % (self.host, self.port)
@@ -128,6 +129,8 @@ class ModWSGISupervisor(helper.Supervisor):
 
 
 loaded = False
+
+
 def application(environ, start_response):
     import cherrypy
     global loaded
@@ -143,6 +146,5 @@ def application(environ, start_response):
             "environment": "test_suite",
             "engine.SIGHUP": None,
             "engine.SIGTERM": None,
-            })
+        })
     return cherrypy.tree(environ, start_response)
-

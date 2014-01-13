@@ -7,6 +7,7 @@ class ETagTest(helper.CPWebCase):
 
     def setup_server():
         class Root:
+
             def resource(self):
                 return "Oh wah ta goo Siam."
             resource.exposed = True
@@ -51,7 +52,8 @@ class ETagTest(helper.CPWebCase):
         # Test If-None-Match (both valid and invalid)
         self.getPage("/resource", headers=[('If-None-Match', etag)])
         self.assertStatus(304)
-        self.getPage("/resource", method='POST', headers=[('If-None-Match', etag)])
+        self.getPage("/resource", method='POST',
+                     headers=[('If-None-Match', etag)])
         self.assertStatus("412 Precondition Failed")
         self.getPage("/resource", headers=[('If-None-Match', "*")])
         self.assertStatus(304)
@@ -80,4 +82,3 @@ class ETagTest(helper.CPWebCase):
         self.getPage("/unicoded", headers=[('If-Match', etag1)])
         self.assertStatus(200)
         self.assertHeader('ETag', etag1)
-

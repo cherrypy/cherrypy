@@ -121,6 +121,7 @@ engine.signal_handler = SignalHandler(engine)
 
 
 class _HandleSignalsPlugin(object):
+
     """Handle signals from other processes based on the configured
     platform handlers above."""
 
@@ -173,6 +174,7 @@ from cherrypy._cpcompat import threadlocal as _local
 
 
 class _Serving(_local):
+
     """An interface for registering request and response objects.
 
     Rather than have a separate "thread local" object for the request and
@@ -268,7 +270,10 @@ response = _ThreadLocalProxy('response')
 
 
 # Create thread_data object as a thread-specific all-purpose storage
+
+
 class _ThreadData(_local):
+
     """A container for thread-specific data."""
 thread_data = _ThreadData()
 
@@ -295,6 +300,7 @@ from cherrypy import _cplogging
 
 
 class _GlobalLogManager(_cplogging.LogManager):
+
     """A site-wide LogManager; routes to app.log or global log as appropriate.
 
     This :class:`LogManager<cherrypy._cplogging.LogManager>` implements
@@ -305,8 +311,10 @@ class _GlobalLogManager(_cplogging.LogManager):
     """
 
     def __call__(self, *args, **kwargs):
-        """Log the given message to the app.log or global log as appropriate."""
-        # Do NOT use try/except here. See https://bitbucket.org/cherrypy/cherrypy/issue/945
+        """Log the given message to the app.log or global log as appropriate.
+        """
+        # Do NOT use try/except here. See
+        # https://bitbucket.org/cherrypy/cherrypy/issue/945
         if hasattr(request, 'app') and hasattr(request.app, 'log'):
             log = request.app.log
         else:
@@ -314,7 +322,8 @@ class _GlobalLogManager(_cplogging.LogManager):
         return log.error(*args, **kwargs)
 
     def access(self):
-        """Log an access message to the app.log or global log as appropriate."""
+        """Log an access message to the app.log or global log as appropriate.
+        """
         try:
             return request.app.log.access()
         except AttributeError:
@@ -456,8 +465,8 @@ def popargs(*args, **kwargs):
 
     """
 
-    #Since keyword arg comes after *args, we have to process it ourselves
-    #for lower versions of python.
+    # Since keyword arg comes after *args, we have to process it ourselves
+    # for lower versions of python.
 
     handler = None
     handler_call = False
@@ -478,12 +487,12 @@ def popargs(*args, **kwargs):
 
     def decorated(cls_or_self=None, vpath=None):
         if inspect.isclass(cls_or_self):
-            #cherrypy.popargs is a class decorator
+            # cherrypy.popargs is a class decorator
             cls = cls_or_self
             setattr(cls, dispatch.Dispatcher.dispatch_method_name, decorated)
             return cls
 
-        #We're in the actual function
+        # We're in the actual function
         self = cls_or_self
         parms = {}
         for arg in args:
@@ -500,9 +509,9 @@ def popargs(*args, **kwargs):
 
         request.params.update(parms)
 
-        #If we are the ultimate handler, then to prevent our _cp_dispatch
-        #from being called again, we will resolve remaining elements through
-        #getattr() directly.
+        # If we are the ultimate handler, then to prevent our _cp_dispatch
+        # from being called again, we will resolve remaining elements through
+        # getattr() directly.
         if vpath:
             return getattr(self, vpath.pop(0), None)
         else:
@@ -628,7 +637,7 @@ config.defaults = {
     'tools.log_headers.on': True,
     'tools.trailing_slash.on': True,
     'tools.encode.on': True
-    }
+}
 config.namespaces["log"] = lambda k, v: setattr(log, k, v)
 config.namespaces["checker"] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
