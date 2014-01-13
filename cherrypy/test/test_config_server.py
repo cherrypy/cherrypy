@@ -102,9 +102,14 @@ class ServerConfigTests(helper.CPWebCase):
                               ('From', lines256)])
 
         # Test upload
+        cd = (
+            'Content-Disposition: form-data; '
+            'name="file"; '
+            'filename="hello.txt"'
+        )
         body = '\r\n'.join([
             '--x',
-            'Content-Disposition: form-data; name="file"; filename="hello.txt"',
+            cd,
             'Content-Type: text/plain',
             '',
             '%s',

@@ -37,8 +37,11 @@ class PageHandler(object):
         cherrypy.serving.request.args = args
         return cherrypy.serving.request.args
 
-    args = property(get_args, set_args,
-                    doc="The ordered args should be accessible from post dispatch hooks")
+    args = property(
+        get_args,
+        set_args,
+        doc="The ordered args should be accessible from post dispatch hooks"
+    )
 
     def get_kwargs(self):
         return cherrypy.serving.request.kwargs
@@ -47,8 +50,11 @@ class PageHandler(object):
         cherrypy.serving.request.kwargs = kwargs
         return cherrypy.serving.request.kwargs
 
-    kwargs = property(get_kwargs, set_kwargs,
-                      doc="The named kwargs should be accessible from post dispatch hooks")
+    kwargs = property(
+        get_kwargs,
+        set_kwargs,
+        doc="The named kwargs should be accessible from post dispatch hooks"
+    )
 
     def __call__(self):
         try:
@@ -75,7 +81,8 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
     2.  Too little parameters are passed to the function.
 
     There are 3 sources of parameters to a cherrypy handler.
-    1.  query string parameters are passed as keyword parameters to the handler.
+    1.  query string parameters are passed as keyword parameters to the
+        handler.
     2.  body parameters are also passed as keyword parameters.
     3.  when partial matching occurs, the final path atoms are passed as
         positional args.
@@ -381,7 +388,8 @@ class Dispatcher(object):
             object_trail.append([name, node, nodeconf, segleft])
 
         def set_conf():
-            """Collapse all object_trail config into cherrypy.request.config."""
+            """Collapse all object_trail config into cherrypy.request.config.
+            """
             base = cherrypy.config.copy()
             # Note that we merge the config from each node
             # even if that node was None.
@@ -413,7 +421,8 @@ class Dispatcher(object):
                     request.is_index = path.endswith("/")
                     return defhandler, fullpath[fullpath_len - segleft:-1]
 
-            # Uncomment the next line to restrict positional params to "default".
+            # Uncomment the next line to restrict positional params to
+            # "default".
             # if i < num_candidates - 2: continue
 
             # Try the current leaf.
@@ -604,7 +613,8 @@ def XMLRPCDispatcher(next_dispatcher=Dispatcher()):
     return xmlrpc_dispatch
 
 
-def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domains):
+def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True,
+                **domains):
     """
     Select a different handler based on the Host header.
 

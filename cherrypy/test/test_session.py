@@ -307,9 +307,10 @@ class SessionTest(helper.CPWebCase):
         # grab the cookie ID
         id1 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
         self.getPage('/testStr',
-                     headers=[('Cookie',
-                               'session_id=maliciousid; '
-                               'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
+                     headers=[
+                         ('Cookie',
+                          'session_id=maliciousid; '
+                          'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
         id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
         self.assertNotEqual(id1, id2)
         self.assertNotEqual(id2, 'maliciousid')

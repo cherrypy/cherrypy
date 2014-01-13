@@ -141,7 +141,8 @@ def setup_server():
 
         def PUT(self, name):
             """
-            Create a new user with the specified id, or edit it if it already exists
+            Create a new user with the specified id, or edit it if it already
+            exists
             """
             if self.user:
                 # Edit the current user
@@ -233,7 +234,8 @@ def setup_server():
         def index(self):
             if 'a' in cherrypy.request.params:
                 raise Exception(
-                    "Parameterized handler argument ended up in request.params")
+                    "Parameterized handler argument ended up in "
+                    "request.params")
             return self.a
         index.exposed = True
 

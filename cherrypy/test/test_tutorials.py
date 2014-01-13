@@ -52,7 +52,7 @@ class TutorialTest(helper.CPWebCase):
 
     def test02ExposeMethods(self):
         self.getPage("/load_tut_module/tut02_expose_methods")
-        self.getPage("/showMessage")
+        self.getPage("/show_msg")
         self.assertBody('Hello world!')
 
     def test03GetAndPost(self):
@@ -82,7 +82,7 @@ class TutorialTest(helper.CPWebCase):
 
             <ul>
                 <li><a href="http://del.icio.us">del.icio.us</a></li>
-                <li><a href="http://www.mornography.de">Hendrik's weblog</a></li>
+                <li><a href="http://www.cherrypy.org">CherryPy</a></li>
             </ul>
 
             <p>[<a href="../">Return to links page</a>]</p>'''
@@ -123,14 +123,16 @@ class TutorialTest(helper.CPWebCase):
         self.getPage("/sessions")
 
         self.getPage('/')
-        self.assertBody("\n            During your current session, you've viewed this"
-                        "\n            page 1 times! Your life is a patio of fun!"
-                        "\n        ")
+        self.assertBody(
+            "\n            During your current session, you've viewed this"
+            "\n            page 1 times! Your life is a patio of fun!"
+            "\n        ")
 
         self.getPage('/', self.cookies)
-        self.assertBody("\n            During your current session, you've viewed this"
-                        "\n            page 2 times! Your life is a patio of fun!"
-                        "\n        ")
+        self.assertBody(
+            "\n            During your current session, you've viewed this"
+            "\n            page 2 times! Your life is a patio of fun!"
+            "\n        ")
 
     def test08GeneratorsAndYield(self):
         self.getPage("/load_tut_module/tut08_generators_and_yield")
@@ -147,12 +149,12 @@ class TutorialTest(helper.CPWebCase):
         filesize = 5
         h = [("Content-type", "multipart/form-data; boundary=x"),
              ("Content-Length", str(105 + filesize))]
-        b = '--x\n' + \
-            'Content-Disposition: form-data; name="myFile"; filename="hello.txt"\r\n' + \
-            'Content-Type: text/plain\r\n' + \
-            '\r\n' + \
-            'a' * filesize + '\n' + \
-            '--x--\n'
+        b = ('--x\n'
+             'Content-Disposition: form-data; name="myFile"; '
+             'filename="hello.txt"\r\n'
+             'Content-Type: text/plain\r\n'
+             '\r\n')
+        b += 'a' * filesize + '\n' + '--x--\n'
         self.getPage('/upload', h, "POST", b)
         self.assertBody('''<html>
         <body>

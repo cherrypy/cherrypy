@@ -420,7 +420,8 @@ class CalledProcessError(Exception):
         self.output = output
 
     def __str__(self):
-        return "Command '%s' returned non-zero exit status %d" % (self.cmd, self.returncode)
+        return "Command '%s' returned non-zero exit status %d" % (
+            self.cmd, self.returncode)
 
 
 if mswindows:
@@ -649,7 +650,8 @@ class Popen(object):
             if close_fds and (stdin is not None or stdout is not None or
                               stderr is not None):
                 raise ValueError("close_fds is not supported on Windows "
-                                 "platforms if you redirect stdin/stdout/stderr")
+                                 "platforms if you redirect "
+                                 "stdin/stdout/stderr")
         else:
             # POSIX
             if startupinfo is not None:
@@ -832,10 +834,14 @@ class Popen(object):
 
         def _make_inheritable(self, handle):
             """Return a duplicate of handle, which is inheritable"""
-            return _subprocess.DuplicateHandle(_subprocess.GetCurrentProcess(),
-                                               handle, _subprocess.GetCurrentProcess(
-                                               ), 0, 1,
-                                               _subprocess.DUPLICATE_SAME_ACCESS)
+            return _subprocess.DuplicateHandle(
+                _subprocess.GetCurrentProcess(),
+                handle,
+                _subprocess.GetCurrentProcess(),
+                0,
+                1,
+                _subprocess.DUPLICATE_SAME_ACCESS
+            )
 
         def _find_w9xpopen(self):
             """Find and return absolut path to w9xpopen.exe"""
@@ -933,10 +939,12 @@ class Popen(object):
             self.pid = pid
             ht.Close()
 
-        def _internal_poll(self, _deadstate=None,
-                           _WaitForSingleObject=_subprocess.WaitForSingleObject,
-                           _WAIT_OBJECT_0=_subprocess.WAIT_OBJECT_0,
-                           _GetExitCodeProcess=_subprocess.GetExitCodeProcess):
+        def _internal_poll(
+                self, _deadstate=None,
+                _WaitForSingleObject=_subprocess.WaitForSingleObject,
+                _WAIT_OBJECT_0=_subprocess.WAIT_OBJECT_0,
+                _GetExitCodeProcess=_subprocess.GetExitCodeProcess
+        ):
             """Check if child process has terminated.  Returns returncode
             attribute.
 
@@ -1093,8 +1101,9 @@ class Popen(object):
         def pipe_cloexec(self):
             """Create a pipe with FDs set CLOEXEC."""
             # Pipes' FDs are set CLOEXEC by default because we don't want them
-            # to be inherited by other subprocesses: the CLOEXEC flag is removed
-            # from the child's FDs by _dup2(), between fork() and exec().
+            # to be inherited by other subprocesses: the CLOEXEC flag is
+            # removed from the child's FDs by _dup2(), between fork() and
+            # exec().
             # This is not atomic: we would need the pipe2() syscall for that.
             r, w = os.pipe()
             self._set_cloexec_flag(r)
@@ -1219,8 +1228,8 @@ class Popen(object):
                             exc_value.child_traceback = ''.join(exc_lines)
                             os.write(errpipe_write, pickle.dumps(exc_value))
 
-                        # This exitcode won't be reported to applications, so it
-                        # really doesn't matter what we return.
+                        # This exitcode won't be reported to applications,
+                        # so it really doesn't matter what we return.
                         os._exit(255)
 
                     # Parent

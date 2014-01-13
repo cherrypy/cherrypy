@@ -196,10 +196,11 @@ class AcceptTest(helper.CPWebCase):
 
         # Try unacceptable media types
         self.getPage('/accept/select', [('Accept', 'application/xml')])
-        self.assertErrorPage(406,
-                             "Your client sent this Accept header: application/xml. "
-                             "But this resource only emits these media types: "
-                             "text/html, text/plain.")
+        self.assertErrorPage(
+            406,
+            "Your client sent this Accept header: application/xml. "
+            "But this resource only emits these media types: "
+            "text/html, text/plain.")
 
 
 class AutoVaryTest(helper.CPWebCase):
@@ -208,4 +209,7 @@ class AutoVaryTest(helper.CPWebCase):
     def testAutoVary(self):
         self.getPage('/autovary/')
         self.assertHeader(
-            "Vary", 'Accept, Accept-Charset, Accept-Encoding, Host, If-Modified-Since, Range')
+            "Vary",
+            'Accept, Accept-Charset, Accept-Encoding, '
+            'Host, If-Modified-Since, Range'
+        )

@@ -48,8 +48,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
         class TestType(type):
 
-            """Metaclass which automatically exposes all functions in each subclass,
-            and adds an instance of the subclass as an attribute of root.
+            """Metaclass which automatically exposes all functions in each
+            subclass, and adds an instance of the subclass as an attribute
+            of root.
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
@@ -184,7 +185,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     raise cherrypy.InternalRedirect(
                         '/image/getImagesByUser?user_id=%s' % str(user_id))
 
-            # We support Python 2.3, but the @-deco syntax would look like this:
+            # We support Python 2.3, but the @-deco syntax would look like
+            # this:
             # @tools.login_redir()
             def secure(self):
                 return "Welcome!"
@@ -234,7 +236,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             def slice_file(self):
                 path = os.path.join(os.getcwd(), os.path.dirname(__file__))
-                return static.serve_file(os.path.join(path, "static/index.html"))
+                return static.serve_file(
+                    os.path.join(path, "static/index.html"))
 
         class Cookies(Test):
 
@@ -396,7 +399,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         frag = "foo"
         self.getPage("/redirect/fragment/%s" % frag)
         self.assertMatchesBody(
-            r"<a href='(.*)\/some\/url\#%s'>\1\/some\/url\#%s</a>" % (frag, frag))
+            r"<a href='(.*)\/some\/url\#%s'>\1\/some\/url\#%s</a>" % (
+                frag, frag))
         loc = self.assertHeader('Location')
         assert loc.endswith("#%s" % frag)
         self.assertStatus(('302 Found', '303 See Other'))
@@ -404,7 +408,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # check injection protection
         # See https://bitbucket.org/cherrypy/cherrypy/issue/1003
         self.getPage(
-            "/redirect/custom?code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval")
+            "/redirect/custom?"
+            "code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval")
         self.assertStatus(303)
         loc = self.assertHeader('Location')
         assert 'Set-Cookie' in loc

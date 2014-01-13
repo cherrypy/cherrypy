@@ -65,7 +65,8 @@ def json_handler(*args, **kwargs):
     return json_encode(value)
 
 
-def json_out(content_type='application/json', debug=False, handler=json_handler):
+def json_out(content_type='application/json', debug=False,
+             handler=json_handler):
     """Wrap request.handler to serialize its output to JSON. Sets Content-Type.
 
     If the given content_type is None, the Content-Type response header

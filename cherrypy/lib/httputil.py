@@ -8,8 +8,9 @@ to a public caning.
 """
 
 from binascii import b2a_base64
-from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou, reversed, sorted
-from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr, unicodestr, unquote_qs
+from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
+from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr
+from cherrypy._cpcompat import reversed, sorted, unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://bitbucket.org/cherrypy/cherrypy/issue/361
@@ -213,7 +214,8 @@ class AcceptElement(HeaderElement):
 
 
 def header_elements(fieldname, fieldvalue):
-    """Return a sorted HeaderElement list from a comma-separated header string."""
+    """Return a sorted HeaderElement list from a comma-separated header string.
+    """
     if not fieldvalue:
         return []
 
@@ -381,7 +383,7 @@ class CaseInsensitiveDict(dict):
 
     if hasattr({}, 'has_key'):
         def has_key(self, key):
-            return dict.has_key(self, str(key).title())
+            return str(key).title() in self
 
     def update(self, E):
         for k in E.keys():

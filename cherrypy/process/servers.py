@@ -13,7 +13,9 @@ protocols, etc.), you can manually register each one and then start them all
 with engine.start::
 
     s1 = ServerAdapter(cherrypy.engine, MyWSGIServer(host='0.0.0.0', port=80))
-    s2 = ServerAdapter(cherrypy.engine, another.HTTPServer(host='127.0.0.1', SSL=True))
+    s2 = ServerAdapter(cherrypy.engine,
+                       another.HTTPServer(host='127.0.0.1',
+                       SSL=True))
     s1.subscribe()
     s2.subscribe()
     cherrypy.engine.start()
@@ -107,8 +109,8 @@ directive, configure your fastcgi script like the following::
     } # end of $HTTP["url"] =~ "^/"
 
 Please see `Lighttpd FastCGI Docs
-<http://redmine.lighttpd.net/wiki/lighttpd/Docs:ModFastCGI>`_ for an explanation
-of the possible configuration options.
+<http://redmine.lighttpd.net/wiki/lighttpd/Docs:ModFastCGI>`_ for
+an explanation of the possible configuration options.
 """
 
 import sys
@@ -314,7 +316,8 @@ class FlupFCGIServer(object):
         # Forcibly stop the fcgi server main event loop.
         self.fcgiserver._keepGoing = False
         # Force all worker threads to die off.
-        self.fcgiserver._threadPool.maxSpare = self.fcgiserver._threadPool._idleCount
+        self.fcgiserver._threadPool.maxSpare = (
+            self.fcgiserver._threadPool._idleCount)
         self.ready = False
 
 
@@ -363,7 +366,8 @@ def client_host(server_host):
         return '127.0.0.1'
     if server_host in ('::', '::0', '::0.0.0.0'):
         # :: is IN6ADDR_ANY, which should answer on localhost.
-        # ::0 and ::0.0.0.0 are non-canonical but common ways to write IN6ADDR_ANY.
+        # ::0 and ::0.0.0.0 are non-canonical but common
+        # ways to write IN6ADDR_ANY.
         return '::1'
     return server_host
 
@@ -384,8 +388,9 @@ def check_port(host, port, timeout=1.0):
                                   socket.SOCK_STREAM)
     except socket.gaierror:
         if ':' in host:
-            info = [
-                (socket.AF_INET6, socket.SOCK_STREAM, 0, "", (host, port, 0, 0))]
+            info = [(
+                socket.AF_INET6, socket.SOCK_STREAM, 0, "", (host, port, 0, 0)
+            )]
         else:
             info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", (host, port))]
 

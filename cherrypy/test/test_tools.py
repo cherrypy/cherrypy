@@ -162,9 +162,9 @@ class ToolTests(helper.CPWebCase):
         root = Root()
 
         class TestType(type):
-
-            """Metaclass which automatically exposes all functions in each subclass,
-            and adds an instance of the subclass as an attribute of root.
+            """Metaclass which automatically exposes all functions in each
+            subclass, and adds an instance of the subclass as an attribute
+            of root.
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
@@ -195,7 +195,8 @@ class ToolTests(helper.CPWebCase):
                 yield "confidential"
 
             # METHOD TWO: decorator using Tool()
-            # We support Python 2.3, but the @-deco syntax would look like this:
+            # We support Python 2.3, but the @-deco syntax would look like
+            # this:
             # @tools.check_access()
             def restricted(self):
                 return "Welcome!"
@@ -348,8 +349,10 @@ class ToolTests(helper.CPWebCase):
         zfile.write(expectedResult)
         zfile.close()
 
-        self.getPage("/euro", headers=[("Accept-Encoding", "gzip"),
-                                       ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
+        self.getPage("/euro",
+                     headers=[
+                         ("Accept-Encoding", "gzip"),
+                         ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
         self.assertInBody(zbuf.getvalue()[:3])
 
         zbuf = BytesIO()

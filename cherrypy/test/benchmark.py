@@ -1,7 +1,7 @@
 """CherryPy Benchmark Tool
 
     Usage:
-        benchmark.py --null --notests --help --cpmodpy --modpython --ab=path --apache=path
+        benchmark.py [options]
 
     --null:        use a null Request object (to bench the HTTP server only)
     --notests:     start the server but do not run the tests; this allows
@@ -190,20 +190,21 @@ Percentage of the requests served within a certain time (ms)
 Finished 1000 requests
 """
 
-    parse_patterns = [('complete_requests', 'Completed',
-                       ntob(r'^Complete requests:\s*(\d+)')),
-                      ('failed_requests', 'Failed',
-                       ntob(r'^Failed requests:\s*(\d+)')),
-                      ('requests_per_second', 'req/sec',
-                       ntob(r'^Requests per second:\s*([0-9.]+)')),
-                      ('time_per_request_concurrent', 'msec/req',
-                       ntob(
-                           r'^Time per request:\s*([0-9.]+).*concurrent requests\)$')),
-                      ('transfer_rate', 'KB/sec',
-                       ntob(r'^Transfer rate:\s*([0-9.]+)')),
-                      ]
+    parse_patterns = [
+        ('complete_requests', 'Completed',
+         ntob(r'^Complete requests:\s*(\d+)')),
+        ('failed_requests', 'Failed',
+         ntob(r'^Failed requests:\s*(\d+)')),
+        ('requests_per_second', 'req/sec',
+         ntob(r'^Requests per second:\s*([0-9.]+)')),
+        ('time_per_request_concurrent', 'msec/req',
+         ntob(r'^Time per request:\s*([0-9.]+).*concurrent requests\)$')),
+        ('transfer_rate', 'KB/sec',
+         ntob(r'^Transfer rate:\s*([0-9.]+)'))
+    ]
 
-    def __init__(self, path=SCRIPT_NAME + "/hello", requests=1000, concurrency=10):
+    def __init__(self, path=SCRIPT_NAME + "/hello", requests=1000,
+                 concurrency=10):
         self.path = path
         self.requests = requests
         self.concurrency = concurrency
@@ -306,7 +307,8 @@ def run_standard_benchmarks():
 #                         modpython and other WSGI                         #
 
 def startup_modpython(req=None):
-    """Start the CherryPy app server in 'serverless' mode (for modpython/WSGI)."""
+    """Start the CherryPy app server in 'serverless' mode (for modpython/WSGI).
+    """
     if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
         if req:
             if "nullreq" in req.get_options():

@@ -20,13 +20,15 @@ class BasicAuthTest(helper.CPWebCase):
         class BasicProtected:
 
             def index(self):
-                return "Hello %s, you've been authorized." % cherrypy.request.login
+                return "Hello %s, you've been authorized." % (
+                    cherrypy.request.login)
             index.exposed = True
 
         class BasicProtected2:
 
             def index(self):
-                return "Hello %s, you've been authorized." % cherrypy.request.login
+                return "Hello %s, you've been authorized." % (
+                    cherrypy.request.login)
             index.exposed = True
 
         userpassdict = {'xuser': 'xpassword'}
@@ -36,13 +38,19 @@ class BasicAuthTest(helper.CPWebCase):
             p = userhashdict.get(user)
             return p and p == md5(ntob(password)).hexdigest() or False
 
-        conf = {'/basic': {'tools.auth_basic.on': True,
-                           'tools.auth_basic.realm': 'wonderland',
-                           'tools.auth_basic.checkpassword': auth_basic.checkpassword_dict(userpassdict)},
-                '/basic2': {'tools.auth_basic.on': True,
-                            'tools.auth_basic.realm': 'wonderland',
-                            'tools.auth_basic.checkpassword': checkpasshash},
-                }
+        basic_checkpassword_dict = auth_basic.checkpassword_dict(userpassdict)
+        conf = {
+            '/basic': {
+                'tools.auth_basic.on': True,
+                'tools.auth_basic.realm': 'wonderland',
+                'tools.auth_basic.checkpassword': basic_checkpassword_dict
+            },
+            '/basic2': {
+                'tools.auth_basic.on': True,
+                'tools.auth_basic.realm': 'wonderland',
+                'tools.auth_basic.checkpassword': checkpasshash
+            },
+        }
 
         root = Root()
         root.basic = BasicProtected()

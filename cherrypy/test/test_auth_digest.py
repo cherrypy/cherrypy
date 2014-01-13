@@ -21,7 +21,8 @@ class DigestAuthTest(helper.CPWebCase):
         class DigestProtected:
 
             def index(self):
-                return "Hello %s, you've been authorized." % cherrypy.request.login
+                return "Hello %s, you've been authorized." % (
+                    cherrypy.request.login)
             index.exposed = True
 
         def fetch_users():
@@ -93,7 +94,15 @@ class DigestAuthTest(helper.CPWebCase):
         get_ha1 = auth_digest.get_ha1_dict_plain({'test': 'test'})
 
         # Test user agent response with a wrong value for 'realm'
-        base_auth = 'Digest username="test", realm="wrong realm", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
+        base_auth = ('Digest username="test", '
+                     'realm="wrong realm", '
+                     'nonce="%s", '
+                     'uri="/digest/", '
+                     'algorithm=MD5, '
+                     'response="%s", '
+                     'qop=auth, '
+                     'nc=%s, '
+                     'cnonce="1522e61005789929"')
 
         auth_header = base_auth % (
             nonce, '11111111111111111111111111111111', '00000001')
@@ -107,7 +116,15 @@ class DigestAuthTest(helper.CPWebCase):
         self.assertStatus(401)
 
         # Test that must pass
-        base_auth = 'Digest username="test", realm="localhost", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
+        base_auth = ('Digest username="test", '
+                     'realm="localhost", '
+                     'nonce="%s", '
+                     'uri="/digest/", '
+                     'algorithm=MD5, '
+                     'response="%s", '
+                     'qop=auth, '
+                     'nc=%s, '
+                     'cnonce="1522e61005789929"')
 
         auth_header = base_auth % (
             nonce, '11111111111111111111111111111111', '00000001')

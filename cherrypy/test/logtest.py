@@ -54,7 +54,9 @@ class LogCase(object):
         if not self.interactive:
             raise self.failureException(msg)
 
-        p = "    Show: [L]og [M]arker [P]attern; [I]gnore, [R]aise, or sys.e[X]it >> "
+        p = ("    Show: "
+             "[L]og [M]arker [P]attern; "
+             "[I]gnore, [R]aise, or sys.e[X]it >> ")
         sys.stdout.write(p + ' ')
         # ARGH
         sys.stdout.flush()
@@ -100,8 +102,8 @@ class LogCase(object):
             key = str(time.time())
         self.lastmarker = key
 
-        open(self.logfile, 'ab+').write(ntob("%s%s\n" %
-                                             (self.markerPrefix, key), "utf-8"))
+        open(self.logfile, 'ab+').write(
+            ntob("%s%s\n" % (self.markerPrefix, key), "utf-8"))
 
     def _read_marked_region(self, marker=None):
         """Return lines from self.logfile in the marked region.
@@ -175,7 +177,11 @@ class LogCase(object):
             if lines not in data[sliceargs]:
                 msg = "%r not found on log line %r" % (lines, sliceargs)
                 self._handleLogError(
-                    msg, [data[sliceargs], "--EXTRA CONTEXT--"] + data[sliceargs + 1:sliceargs + 6], marker, lines)
+                    msg,
+                    [data[sliceargs], "--EXTRA CONTEXT--"] + data[
+                        sliceargs + 1:sliceargs + 6],
+                    marker,
+                    lines)
         else:
             # Multiple args. Use __getslice__ and require lines to be list.
             if isinstance(lines, tuple):

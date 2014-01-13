@@ -302,13 +302,17 @@ class SessionAuth(object):
     def on_check(self, username):
         pass
 
-    def login_screen(self, from_page='..', username='', error_msg='', **kwargs):
+    def login_screen(self, from_page='..', username='', error_msg='',
+                     **kwargs):
         return (unicodestr("""<html><body>
 Message: %(error_msg)s
 <form method="post" action="do_login">
-    Login: <input type="text" name="username" value="%(username)s" size="10" /><br />
-    Password: <input type="password" name="password" size="10" /><br />
-    <input type="hidden" name="from_page" value="%(from_page)s" /><br />
+    Login: <input type="text" name="username" value="%(username)s" size="10" />
+    <br />
+    Password: <input type="password" name="password" size="10" />
+    <br />
+    <input type="hidden" name="from_page" value="%(from_page)s" />
+    <br />
     <input type="submit" />
 </form>
 </body></html>""") % vars()).encode("utf-8")
@@ -341,7 +345,8 @@ Message: %(error_msg)s
         raise cherrypy.HTTPRedirect(from_page)
 
     def do_check(self):
-        """Assert username. May raise redirect, or return True if request handled."""
+        """Assert username. Raise redirect, or return True if request handled.
+        """
         sess = cherrypy.session
         request = cherrypy.serving.request
         response = cherrypy.serving.response
@@ -607,7 +612,8 @@ class MonitoredHeaderMap(_httputil.HeaderMap):
 
 
 def autovary(ignore=None, debug=False):
-    """Auto-populate the Vary response header based on request.header access."""
+    """Auto-populate the Vary response header based on request.header access.
+    """
     request = cherrypy.serving.request
 
     req_h = request.headers

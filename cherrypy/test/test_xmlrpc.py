@@ -2,9 +2,11 @@ import sys
 from cherrypy._cpcompat import py3k
 
 try:
-    from xmlrpclib import DateTime, Fault, ProtocolError, ServerProxy, SafeTransport
+    from xmlrpclib import DateTime, Fault, ProtocolError, ServerProxy
+    from xmlrpclib import SafeTransport
 except ImportError:
-    from xmlrpc.client import DateTime, Fault, ProtocolError, ServerProxy, SafeTransport
+    from xmlrpc.client import DateTime, Fault, ProtocolError, ServerProxy
+    from xmlrpc.client import SafeTransport
 
 if py3k:
     HTTPSTransport = SafeTransport
@@ -16,7 +18,8 @@ if py3k:
 else:
     class HTTPSTransport(SafeTransport):
 
-        """Subclass of SafeTransport to fix sock.recv errors (by using file)."""
+        """Subclass of SafeTransport to fix sock.recv errors (by using file).
+        """
 
         def request(self, host, handler, request_body, verbose=0):
             # issue XML-RPC request

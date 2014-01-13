@@ -106,7 +106,7 @@ def setup(req):
         elif logging.WARNING >= level:
             newlevel = apache.APLOG_WARNING
         # On Windows, req.server is required or the msg will vanish. See
-        # http://www.modpython.org/pipermail/mod_python/2003-October/014291.html.
+        # http://www.modpython.org/pipermail/mod_python/2003-October/014291.html
         # Also, "When server is not specified...LogLevel does not apply..."
         apache.log_error(msg, newlevel, req.server)
     engine.subscribe('log', _log)
@@ -215,8 +215,9 @@ def handler(req):
 
                         if not recursive:
                             if ir.path in redirections:
-                                raise RuntimeError("InternalRedirector visited the "
-                                                   "same URL twice: %r" % ir.path)
+                                raise RuntimeError(
+                                    "InternalRedirector visited the same URL "
+                                    "twice: %r" % ir.path)
                             else:
                                 # Add the *previous* path_info + qs to
                                 # redirections.
@@ -289,8 +290,12 @@ def read_process(cmd, args=""):
     pipeout = popen(fullcmd)
     try:
         firstline = pipeout.readline()
-        if (re.search(ntob("(not recognized|No such file|not found)"), firstline,
-                      re.IGNORECASE)):
+        cmd_not_found = re.search(
+            ntob("(not recognized|No such file|not found)"),
+            firstline,
+            re.IGNORECASE
+        )
+        if cmd_not_found:
             raise IOError('%s must be on your system path.' % cmd)
         output = firstline + pipeout.read()
     finally:

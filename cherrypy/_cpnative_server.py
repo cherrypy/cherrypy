@@ -59,8 +59,9 @@ class NativeGateway(wsgiserver.Gateway):
 
                             if not self.recursive:
                                 if ir.path in redirections:
-                                    raise RuntimeError("InternalRedirector visited the "
-                                                       "same URL twice: %r" % ir.path)
+                                    raise RuntimeError(
+                                        "InternalRedirector visited the same "
+                                        "URL twice: %r" % ir.path)
                                 else:
                                     # Add the *previous* path_info + qs to
                                     # redirections.
@@ -127,8 +128,10 @@ class CPHTTPServer(wsgiserver.HTTPServer):
             maxthreads=server_adapter.thread_pool_max,
             server_name=server_name)
 
-        self.max_request_header_size = self.server_adapter.max_request_header_size or 0
-        self.max_request_body_size = self.server_adapter.max_request_body_size or 0
+        self.max_request_header_size = (
+            self.server_adapter.max_request_header_size or 0)
+        self.max_request_body_size = (
+            self.server_adapter.max_request_body_size or 0)
         self.request_queue_size = self.server_adapter.socket_queue_size
         self.timeout = self.server_adapter.socket_timeout
         self.shutdown_timeout = self.server_adapter.shutdown_timeout

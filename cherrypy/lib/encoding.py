@@ -14,13 +14,13 @@ def decode(encoding=None, default_encoding='utf-8'):
 
     encoding
         If not None, restricts the set of charsets attempted while decoding
-        a request entity to the given set (even if a different charset is given in
-        the Content-Type request header).
+        a request entity to the given set (even if a different charset is
+        given in the Content-Type request header).
 
     default_encoding
         Only in effect if the 'encoding' argument is not given.
-        If given, the set of charsets attempted while decoding a request entity is
-        *extended* with the given value(s).
+        If given, the set of charsets attempted while decoding a request
+        entity is *extended* with the given value(s).
 
     """
     body = cherrypy.request.body
@@ -219,8 +219,8 @@ class ResponseEncoder:
                     do_find = True
                 else:
                     if self.debug:
-                        cherrypy.log('Not finding because Content-Type %s does '
-                                     'not start with "text/"' % ct,
+                        cherrypy.log('Not finding because Content-Type %s '
+                                     'does not start with "text/"' % ct,
                                      'TOOLS.ENCODE')
                     do_find = False
             else:
@@ -284,7 +284,8 @@ def decompress(body):
     return data
 
 
-def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
+def gzip(compress_level=5, mime_types=['text/html', 'text/plain'],
+         debug=False):
     """Try to gzip the response body if Content-Type in mime_types.
 
     cherrypy.response.headers['Content-Type'] must be set to one of the

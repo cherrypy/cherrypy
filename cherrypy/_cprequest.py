@@ -124,7 +124,11 @@ class HookMap(dict):
 
     def __repr__(self):
         cls = self.__class__
-        return "%s.%s(points=%r)" % (cls.__module__, cls.__name__, copykeys(self))
+        return "%s.%s(points=%r)" % (
+            cls.__module__,
+            cls.__name__,
+            copykeys(self)
+        )
 
 
 # Config namespace handlers
@@ -429,9 +433,9 @@ class Request(object):
 
     If a callable is provided, it will be called by default with keyword
     arguments 'status', 'message', 'traceback', and 'version', as for a
-    string-formatting template. The callable must return a string or iterable of
-    strings which will be set to response.body. It may also override headers or
-    perform any other processing.
+    string-formatting template. The callable must return a string or
+    iterable of strings which will be set to response.body. It may also
+    override headers or perform any other processing.
 
     If no entry is given for an error code, and no 'default' entry exists,
     a default template will be used.
@@ -714,9 +718,10 @@ class Request(object):
             name = name.title()
             value = value.strip()
 
-            # Warning: if there is more than one header entry for cookies (AFAIK,
-            # only Konqueror does that), only the last one will remain in headers
-            # (but they will be correctly stored in request.cookie).
+            # Warning: if there is more than one header entry for cookies
+            # (AFAIK, only Konqueror does that), only the last one will
+            # remain in headers (but they will be correctly stored in
+            # request.cookie).
             if "=?" in value:
                 dict.__setitem__(headers, name, httputil.decode_TEXT(value))
             else:

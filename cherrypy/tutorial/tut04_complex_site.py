@@ -49,8 +49,12 @@ class LinksPage:
             <p>Here are some useful links:</p>
 
             <ul>
-                <li><a href="http://www.cherrypy.org">The CherryPy Homepage</a></li>
-                <li><a href="http://www.python.org">The Python Homepage</a></li>
+                <li>
+                    <a href="http://www.cherrypy.org">The CherryPy Homepage</a>
+                </li>
+                <li>
+                    <a href="http://www.python.org">The Python Homepage</a>
+                </li>
             </ul>
 
             <p>You can check out some extra useful
@@ -70,7 +74,7 @@ class ExtraLinksPage:
 
             <ul>
                 <li><a href="http://del.icio.us">del.icio.us</a></li>
-                <li><a href="http://www.mornography.de">Hendrik's weblog</a></li>
+                <li><a href="http://www.cherrypy.org">CherryPy</a></li>
             </ul>
 
             <p>[<a href="../">Return to links page</a>]</p>'''

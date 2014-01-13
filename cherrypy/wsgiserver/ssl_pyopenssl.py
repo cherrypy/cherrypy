@@ -214,8 +214,10 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
             ssl_environ.update({
                 'SSL_SERVER_M_VERSION': cert.get_version(),
                 'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
-                # 'SSL_SERVER_V_START': Validity of server's certificate (start time),
-                # 'SSL_SERVER_V_END': Validity of server's certificate (end time),
+                # 'SSL_SERVER_V_START':
+                #   Validity of server's certificate (start time),
+                # 'SSL_SERVER_V_END':
+                #   Validity of server's certificate (end time),
             })
 
             for prefix, dn in [("I", cert.get_issuer()),

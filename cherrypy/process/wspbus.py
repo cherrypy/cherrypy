@@ -81,7 +81,8 @@ _startup_cwd = os.getcwd()
 
 class ChannelFailures(Exception):
 
-    """Exception raised when errors occur in a listener during Bus.publish()."""
+    """Exception raised when errors occur in a listener during Bus.publish().
+    """
     delimiter = '\n'
 
     def __init__(self, *args, **kwargs):
@@ -325,11 +326,14 @@ class Bus(object):
         self.log("Waiting for child threads to terminate...")
         for t in threading.enumerate():
             # Validate the we're not trying to join the MainThread
-            # that will cause a deadlock and the case exist when imlemented as a
-            # windows service and in any other case that another thread
-            # executes cherrypy.engine.exit()
-            if t != threading.currentThread() and t.isAlive() \
-                    and not isinstance(t, threading._MainThread):
+            # that will cause a deadlock and the case exist when
+            # implemented as a windows service and in any other case
+            # that another thread executes cherrypy.engine.exit()
+            if (
+                    t != threading.currentThread() and
+                    t.isAlive() and
+                    not isinstance(t, threading._MainThread)
+            ):
                 # Note that any dummy (external) threads are always daemonic.
                 if hasattr(threading.Thread, "daemon"):
                     # Python 2.6+

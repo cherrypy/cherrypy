@@ -8,10 +8,11 @@ You need to edit your config file to use sessions. Here's an example::
     tools.sessions.storage_path = "/home/site/sessions"
     tools.sessions.timeout = 60
 
-This sets the session to be stored in files in the directory /home/site/sessions,
-and the session timeout to 60 minutes. If you omit ``storage_type`` the sessions
-will be saved in RAM.  ``tools.sessions.on`` is the only required line for
-working sessions, the rest are optional.
+This sets the session to be stored in files in the directory
+/home/site/sessions, and the session timeout to 60 minutes. If you omit
+``storage_type`` the sessions will be saved in RAM.
+``tools.sessions.on`` is the only required line for working sessions,
+the rest are optional.
 
 By default, the session ID is passed in a cookie, so the client's browser must
 have cookies enabled for your site.
@@ -30,9 +31,9 @@ for any requests that take a long time to process (streaming responses,
 expensive calculations, database lookups, API calls, etc), as other concurrent
 requests that also utilize sessions will hang until the session is unlocked.
 
-If you want to control when the
-session data is locked and unlocked, set ``tools.sessions.locking = 'explicit'``.
-Then call ``cherrypy.session.acquire_lock()`` and ``cherrypy.session.release_lock()``.
+If you want to control when the session data is locked and unlocked,
+set ``tools.sessions.locking = 'explicit'``. Then call
+``cherrypy.session.acquire_lock()`` and ``cherrypy.session.release_lock()``.
 Regardless of which mode you use, the session is guaranteed to be unlocked when
 the request is complete.
 
@@ -478,7 +479,8 @@ class FileSession(Session):
         return os.path.exists(path)
 
     def _load(self, path=None):
-        assert self.locked, "The session load without being locked.  Check your tools' priority levels."
+        assert self.locked, ("The session load without being locked.  "
+                             "Check your tools' priority levels.")
         if path is None:
             path = self._get_file_path()
         try:
@@ -495,7 +497,8 @@ class FileSession(Session):
             return None
 
     def _save(self, expiration_time):
-        assert self.locked, "The session was saved without being locked.  Check your tools' priority levels."
+        assert self.locked, ("The session was saved without being locked.  "
+                             "Check your tools' priority levels.")
         f = open(self._get_file_path(), "wb")
         try:
             pickle.dump((self._data, expiration_time), f, self.pickle_protocol)
@@ -503,7 +506,8 @@ class FileSession(Session):
             f.close()
 
     def _delete(self):
-        assert self.locked, "The session deletion without being locked.  Check your tools' priority levels."
+        assert self.locked, ("The session deletion without being locked.  "
+                             "Check your tools' priority levels.")
         try:
             os.unlink(self._get_file_path())
         except OSError:
@@ -911,8 +915,11 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
     # Set response cookie
     cookie = cherrypy.serving.response.cookie
     cookie[name] = cherrypy.serving.session.id
-    cookie[name]['path'] = (path or cherrypy.serving.request.headers.get(path_header)
-                            or '/')
+    cookie[name]['path'] = (
+        path or
+        cherrypy.serving.request.headers.get(path_header) or
+        '/'
+    )
 
     # We'd like to use the "max-age" param as indicated in
     # http://www.faqs.org/rfcs/rfc2109.html but IE doesn't

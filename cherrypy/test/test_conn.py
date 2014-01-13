@@ -7,8 +7,8 @@ timeout = 1
 
 
 import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
-from cherrypy._cpcompat import ntob, urlopen, unicodestr
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, NotConnected
+from cherrypy._cpcompat import BadStatusLine, ntob, urlopen, unicodestr
 from cherrypy.test import webtest
 from cherrypy import _cperror
 

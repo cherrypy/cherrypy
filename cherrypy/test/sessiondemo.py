@@ -106,7 +106,8 @@ class Root(object):
                     'Created new session because no session id was given.')
             if cherrypy.session.missing:
                 changemsg.append(
-                    'Created new session due to missing (expired or malicious) session.')
+                    'Created new session due to missing '
+                    '(expired or malicious) session.')
             if cherrypy.session.regenerated:
                 changemsg.append('Application generated a new session.')
 
@@ -121,7 +122,9 @@ class Root(object):
             'respcookie': cherrypy.response.cookie.output(),
             'reqcookie': cherrypy.request.cookie.output(),
             'sessiondata': copyitems(cherrypy.session),
-            'servertime': datetime.utcnow().strftime("%Y/%m/%d %H:%M") + " UTC",
+            'servertime': (
+                datetime.utcnow().strftime("%Y/%m/%d %H:%M") + " UTC"
+            ),
             'serverunixtime': calendar.timegm(datetime.utcnow().timetuple()),
             'cpversion': cherrypy.__version__,
             'pyversion': sys.version,

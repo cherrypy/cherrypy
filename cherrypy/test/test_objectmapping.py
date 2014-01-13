@@ -78,7 +78,8 @@ class ObjectMappingTest(helper.CPWebCase):
             index.exposed = True
 
             def myMethod(self):
-                return "myMethod from dir1, path_info is:" + repr(cherrypy.request.path_info)
+                return "myMethod from dir1, path_info is:" + repr(
+                    cherrypy.request.path_info)
             myMethod.exposed = True
             myMethod._cp_config = {'tools.trailing_slash.extra': True}
 
@@ -234,7 +235,8 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertHeader('Location', '%s/dir1/' % self.base())
 
             if not getattr(cherrypy.server, "using_apache", False):
-                # Test that we can use URL's which aren't all valid Python identifiers
+                # Test that we can use URL's which aren't all valid Python
+                # identifiers
                 # This should also test the %XX-unquoting of URL's.
                 self.getPage("/Von%20B%fclow?ID=14")
                 self.assertBody("ID is 14")

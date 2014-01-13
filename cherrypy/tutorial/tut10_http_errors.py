@@ -33,7 +33,11 @@ class HTTPErrorDemo(object):
         <html><body>
             <p>Toggle tracebacks <a href="toggleTracebacks">%s</a></p>
             <p><a href="/doesNotExist">Click me; I'm a broken link!</a></p>
-            <p><a href="/error?code=403">Use a custom error page from a file.</a></p>
+            <p>
+              <a href="/error?code=403">
+                Use a custom error page from a file.
+              </a>
+            </p>
             <p>These errors are explicitly raised by the application:</p>
             <ul>
                 <li><a href="/error?code=400">400</a></li>

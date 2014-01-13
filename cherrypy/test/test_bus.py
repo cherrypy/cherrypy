@@ -102,8 +102,9 @@ class BusMethodTests(unittest.TestCase):
         b.start()
         try:
             # The start method MUST call all 'start' listeners.
-            self.assertEqual(set(self.responses),
-                             set([msg % (i, 'start', None) for i in range(num)]))
+            self.assertEqual(
+                set(self.responses),
+                set([msg % (i, 'start', None) for i in range(num)]))
             # The start method MUST move the state to STARTED
             # (or EXITING, if errors occur)
             self.assertEqual(b.state, b.states.STARTED)
@@ -144,8 +145,9 @@ class BusMethodTests(unittest.TestCase):
         b.graceful()
 
         # The graceful method MUST call all 'graceful' listeners.
-        self.assertEqual(set(self.responses),
-                         set([msg % (i, 'graceful', None) for i in range(num)]))
+        self.assertEqual(
+            set(self.responses),
+            set([msg % (i, 'graceful', None) for i in range(num)]))
         # The graceful method MUST log its states.
         self.assertLog(['Bus graceful'])
 

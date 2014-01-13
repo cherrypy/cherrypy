@@ -48,7 +48,8 @@ class Checker(object):
     global_config_contained_paths = False
 
     def check_app_config_entries_dont_start_with_script_name(self):
-        """Check for Application config with sections that repeat script_name."""
+        """Check for Application config with sections that repeat script_name.
+        """
         for sn, app in cherrypy.tree.apps.items():
             if not isinstance(app, cherrypy.Application):
                 continue
@@ -62,7 +63,8 @@ class Checker(object):
                 if key_atoms[:len(sn_atoms)] == sn_atoms:
                     warnings.warn(
                         "The application mounted at %r has config "
-                        "entries that start with its script name: %r" % (sn, key))
+                        "entries that start with its script name: %r" % (sn,
+                                                                         key))
 
     def check_site_config_entries_in_app_config(self):
         """Check for mounted Applications that have site-scoped config."""
@@ -80,10 +82,11 @@ class Checker(object):
                                            (section, key, value))
             if msg:
                 msg.insert(0,
-                           "The application mounted at %r contains the following "
-                           "config entries, which are only allowed in site-wide "
-                           "config. Move them to a [global] section and pass them "
-                           "to cherrypy.config.update() instead of tree.mount()." % sn)
+                           "The application mounted at %r contains the "
+                           "following config entries, which are only allowed "
+                           "in site-wide config. Move them to a [global] "
+                           "section and pass them to cherrypy.config.update() "
+                           "instead of tree.mount()." % sn)
                 warnings.warn(os.linesep.join(msg))
 
     def check_skipped_app_config(self):
@@ -103,7 +106,9 @@ class Checker(object):
                 return
 
     def check_app_config_brackets(self):
-        """Check for Application config with extraneous brackets in section names."""
+        """Check for Application config with extraneous brackets in section
+        names.
+        """
         for sn, app in cherrypy.tree.apps.items():
             if not isinstance(app, cherrypy.Application):
                 continue
@@ -145,16 +150,20 @@ class Checker(object):
                                        "though a root is provided.")
                                 testdir = os.path.join(root, dir[1:])
                                 if os.path.exists(testdir):
-                                    msg += ("\nIf you meant to serve the "
-                                            "filesystem folder at %r, remove "
-                                            "the leading slash from dir." % testdir)
+                                    msg += (
+                                        "\nIf you meant to serve the "
+                                        "filesystem folder at %r, remove the "
+                                        "leading slash from dir." % (testdir,))
                         else:
                             if not root:
-                                msg = "dir is a relative path and no root provided."
+                                msg = (
+                                    "dir is a relative path and "
+                                    "no root provided.")
                             else:
                                 fulldir = os.path.join(root, dir)
                                 if not os.path.isabs(fulldir):
-                                    msg = "%r is not an absolute path." % fulldir
+                                    msg = ("%r is not an absolute path." % (
+                                        fulldir,))
 
                         if fulldir and not os.path.exists(fulldir):
                             if msg:
@@ -232,20 +241,24 @@ class Checker(object):
                         if atoms[0] not in ns:
                             # Spit out a special warning if a known
                             # namespace is preceded by "cherrypy."
-                            if (atoms[0] == "cherrypy" and atoms[1] in ns):
-                                msg = ("The config entry %r is invalid; "
-                                       "try %r instead.\nsection: [%s]"
-                                       % (k, ".".join(atoms[1:]), section))
+                            if atoms[0] == "cherrypy" and atoms[1] in ns:
+                                msg = (
+                                    "The config entry %r is invalid; "
+                                    "try %r instead.\nsection: [%s]"
+                                    % (k, ".".join(atoms[1:]), section))
                             else:
-                                msg = ("The config entry %r is invalid, because "
-                                       "the %r config namespace is unknown.\n"
-                                       "section: [%s]" % (k, atoms[0], section))
+                                msg = (
+                                    "The config entry %r is invalid, "
+                                    "because the %r config namespace "
+                                    "is unknown.\n"
+                                    "section: [%s]" % (k, atoms[0], section))
                             warnings.warn(msg)
                         elif atoms[0] == "tools":
                             if atoms[1] not in dir(cherrypy.tools):
-                                msg = ("The config entry %r may be invalid, "
-                                       "because the %r tool was not found.\n"
-                                       "section: [%s]" % (k, atoms[1], section))
+                                msg = (
+                                    "The config entry %r may be invalid, "
+                                    "because the %r tool was not found.\n"
+                                    "section: [%s]" % (k, atoms[1], section))
                                 warnings.warn(msg)
 
     def check_config_namespaces(self):
@@ -313,6 +326,7 @@ class Checker(object):
         for k, v in cherrypy.config.items():
             if k == 'server.socket_host' and v == 'localhost':
                 warnings.warn("The use of 'localhost' as a socket host can "
-                              "cause problems on newer systems, since 'localhost' can "
-                              "map to either an IPv4 or an IPv6 address. You should "
-                              "use '127.0.0.1' or '[::1]' instead.")
+                              "cause problems on newer systems, since "
+                              "'localhost' can map to either an IPv4 or an "
+                              "IPv6 address. You should use '127.0.0.1' "
+                              "or '[::1]' instead.")

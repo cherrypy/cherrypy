@@ -70,12 +70,13 @@ log_to_stderr = lambda msg, level: sys.stderr.write(msg + os.linesep)
 
 class LocalSupervisor(Supervisor):
 
-    """Base class for modeling/controlling servers which run in the same process.
+    """Base class for modeling/controlling servers which run in the same
+    process.
 
     When the server side runs in a different process, start/stop can dump all
     state between each test module easily. When the server side runs in the
-    same process as the client, however, we have to do a bit more work to ensure
-    config and mounted apps are reset between tests.
+    same process as the client, however, we have to do a bit more work to
+    ensure config and mounted apps are reset between tests.
     """
 
     using_apache = False
@@ -337,11 +338,13 @@ class CPWebCase(webtest.WebCase):
     def exit(self):
         sys.exit()
 
-    def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
+    def getPage(self, url, headers=None, method="GET", body=None,
+                protocol=None):
         """Open the url. Return status, headers, body."""
         if self.script_name:
             url = httputil.urljoin(self.script_name, url)
-        return webtest.WebCase.getPage(self, url, headers, method, body, protocol)
+        return webtest.WebCase.getPage(self, url, headers, method, body,
+                                       protocol)
 
     def skip(self, msg='skipped '):
         raise nose.SkipTest(msg)
@@ -359,8 +362,9 @@ class CPWebCase(webtest.WebCase):
         # Stick a match-all group (.*) in to grab the traceback.
         esc = re.escape
         epage = esc(page)
-        epage = epage.replace(esc('<pre id="traceback"></pre>'),
-                              esc('<pre id="traceback">') + '(.*)' + esc('</pre>'))
+        epage = epage.replace(
+            esc('<pre id="traceback"></pre>'),
+            esc('<pre id="traceback">') + '(.*)' + esc('</pre>'))
         m = re.match(ntob(epage, self.encoding), self.body, re.DOTALL)
         if not m:
             self._handlewebError(
@@ -422,7 +426,8 @@ log.access_file: r'%(access_log)s'
     error_log = os.path.join(thisdir, 'test.error.log')
     access_log = os.path.join(thisdir, 'test.access.log')
 
-    def __init__(self, wait=False, daemonize=False, ssl=False, socket_host=None, socket_port=None):
+    def __init__(self, wait=False, daemonize=False, ssl=False,
+                 socket_host=None, socket_port=None):
         self.wait = wait
         self.daemonize = daemonize
         self.ssl = ssl

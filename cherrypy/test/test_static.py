@@ -252,14 +252,15 @@ class StaticTest(helper.CPWebCase):
 
             expected = len(body)
             if tell_position >= BIGFILE_SIZE:
-                # We can't exactly control how much content the server asks for.
+                # We can't exactly control how much content the server asks
+                # for.
                 # Fudge it by only checking the first half of the reads.
                 if expected < (BIGFILE_SIZE / 2):
                     self.fail(
-                        "The file should have advanced to position %r, but has "
-                        "already advanced to the end of the file. It may not be "
-                        "streamed as intended, or at the wrong chunk size (64k)" %
-                        expected)
+                        "The file should have advanced to position %r, but "
+                        "has already advanced to the end of the file. It "
+                        "may not be streamed as intended, or at the wrong "
+                        "chunk size (64k)" % expected)
             elif tell_position < expected:
                 self.fail(
                     "The file should have advanced to position %r, but has "

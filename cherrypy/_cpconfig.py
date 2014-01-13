@@ -256,13 +256,17 @@ def _engine_namespace_handler(k, v):
     engine = cherrypy.engine
 
     deprecated = {
-        'autoreload_on': 'autoreload.on', 'autoreload_frequency': 'autoreload.frequency',
-        'autoreload_match': 'autoreload.match', 'reload_files': 'autoreload.files',
-        'deadlock_poll_freq': 'timeout_monitor.frequency'}
+        'autoreload_on': 'autoreload.on',
+        'autoreload_frequency': 'autoreload.frequency',
+        'autoreload_match': 'autoreload.match',
+        'reload_files': 'autoreload.files',
+        'deadlock_poll_freq': 'timeout_monitor.frequency'
+    }
 
     if k in deprecated:
-        engine.log('WARNING: Use of engine.%s is deprecated and will be removed in '
-                   'a future version. Use engine.%s instead.' % (k, deprecated[k]))
+        engine.log(
+            'WARNING: Use of engine.%s is deprecated and will be removed in a '
+            'future version. Use engine.%s instead.' % (k, deprecated[k]))
 
     if k == 'autoreload_on':
         if v:
@@ -288,7 +292,10 @@ def _engine_namespace_handler(k, v):
             if v and hasattr(getattr(plugin, 'subscribe', None), '__call__'):
                 plugin.subscribe()
                 return
-            elif (not v) and hasattr(getattr(plugin, 'unsubscribe', None), '__call__'):
+            elif (
+                (not v) and
+                hasattr(getattr(plugin, 'unsubscribe', None), '__call__')
+            ):
                 plugin.unsubscribe()
                 return
         setattr(plugin, attrname, v)

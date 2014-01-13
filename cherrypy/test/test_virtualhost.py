@@ -51,13 +51,16 @@ class VirtualHostTest(helper.CPWebCase):
                    'www.mydom4.com': '/dom4',
                    }
         cherrypy.tree.mount(root, config={
-            '/': {'request.dispatch': cherrypy.dispatch.VirtualHost(**hostmap)},
+            '/': {
+                'request.dispatch': cherrypy.dispatch.VirtualHost(**hostmap)
+            },
             # Test static in config (section must include vhost prefix)
-            '/mydom2/static2': {'tools.staticdir.on': True,
-                                'tools.staticdir.root': curdir,
-                                'tools.staticdir.dir': 'static',
-                                'tools.staticdir.index': 'index.html',
-                                },
+            '/mydom2/static2': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.root': curdir,
+                'tools.staticdir.dir': 'static',
+                'tools.staticdir.index': 'index.html',
+            },
         })
     setup_server = staticmethod(setup_server)
 

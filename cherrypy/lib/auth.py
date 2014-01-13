@@ -3,7 +3,8 @@ from cherrypy.lib import httpauth
 
 
 def check_auth(users, encrypt=None, realm=None):
-    """If an authorization header contains credentials, return True, else False."""
+    """If an authorization header contains credentials, return True or False.
+    """
     request = cherrypy.serving.request
     if 'authorization' in request.headers:
         # make sure the provided credentials are correctly set
@@ -53,7 +54,8 @@ def basic_auth(realm, users, encrypt=None, debug=False):
         A string containing the authentication realm.
 
     users
-        A dict of the form: {username: password} or a callable returning a dict.
+        A dict of the form: {username: password} or a callable returning
+        a dict.
 
     encrypt
         callable used to encrypt the password returned from the user-agent.
@@ -79,7 +81,8 @@ def digest_auth(realm, users, debug=False):
     realm
         A string containing the authentication realm.
     users
-        A dict of the form: {username: password} or a callable returning a dict.
+        A dict of the form: {username: password} or a callable returning
+        a dict.
     """
     if check_auth(users, realm=realm):
         if debug:

@@ -28,13 +28,17 @@ if sys.version_info >= (3, 0):
     basestring = (bytes, str)
 
     def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given encoding."""
+        """Return the given native string as a byte string in the given
+        encoding.
+        """
         assert_native(n)
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
 
     def ntou(n, encoding='ISO-8859-1'):
-        """Return the given native string as a unicode string with the given encoding."""
+        """Return the given native string as a unicode string with the given
+        encoding.
+        """
         assert_native(n)
         # In Python 3, the native string type is unicode
         return n
@@ -58,7 +62,9 @@ else:
     basestring = basestring
 
     def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given encoding."""
+        """Return the given native string as a byte string in the given
+        encoding.
+        """
         assert_native(n)
         # In Python 2, the native string type is bytes. Assume it's already
         # in the given encoding, which for ISO-8859-1 is almost always what
@@ -66,20 +72,22 @@ else:
         return n
 
     def ntou(n, encoding='ISO-8859-1'):
-        """Return the given native string as a unicode string with the given encoding."""
+        """Return the given native string as a unicode string with the given
+        encoding.
+        """
         assert_native(n)
         # In Python 2, the native string type is bytes.
-        # First, check for the special encoding 'escape'. The test suite uses this
-        # to signal that it wants to pass a string with embedded \uXXXX escapes,
-        # but without having to prefix it with u'' for Python 2, but no prefix
-        # for Python 3.
+        # First, check for the special encoding 'escape'. The test suite uses
+        # this to signal that it wants to pass a string with embedded \uXXXX
+        # escapes, but without having to prefix it with u'' for Python 2,
+        # but no prefix for Python 3.
         if encoding == 'escape':
             return unicode(
                 re.sub(r'\\u([0-9a-zA-Z]{4})',
                        lambda m: unichr(int(m.group(1), 16)),
                        n.decode('ISO-8859-1')))
-        # Assume it's already in the given encoding, which for ISO-8859-1 is almost
-        # always what was intended.
+        # Assume it's already in the given encoding, which for ISO-8859-1
+        # is almost always what was intended.
         return n.decode(encoding)
 
     def tonative(n, encoding='ISO-8859-1'):
@@ -218,12 +226,14 @@ try:
     # Python 2. We try Python 2 first clients on Python 2
     # don't try to import the 'http' module from cherrypy.lib
     from Cookie import SimpleCookie, CookieError
-    from httplib import BadStatusLine, HTTPConnection, IncompleteRead, NotConnected
+    from httplib import BadStatusLine, HTTPConnection, IncompleteRead
+    from httplib import NotConnected
     from BaseHTTPServer import BaseHTTPRequestHandler
 except ImportError:
     # Python 3
     from http.cookies import SimpleCookie, CookieError
-    from http.client import BadStatusLine, HTTPConnection, IncompleteRead, NotConnected
+    from http.client import BadStatusLine, HTTPConnection, IncompleteRead
+    from http.client import NotConnected
     from http.server import BaseHTTPRequestHandler
 
 # Some platforms don't expose HTTPSConnection, so handle it separately
@@ -274,7 +284,10 @@ try:
     from urllib.parse import unquote as parse_unquote
 
     def unquote_qs(atom, encoding, errors='strict'):
-        return parse_unquote(atom.replace('+', ' '), encoding=encoding, errors=errors)
+        return parse_unquote(
+            atom.replace('+', ' '),
+            encoding=encoding,
+            errors=errors)
 except ImportError:
     # Python 2
     from urllib import unquote as parse_unquote

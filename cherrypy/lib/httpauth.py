@@ -1,5 +1,6 @@
 """
-This module defines functions to implement HTTP Digest Authentication (:rfc:`2617`).
+This module defines functions to implement HTTP Digest Authentication
+(:rfc:`2617`).
 This has full compliance with 'Digest' and 'Basic' authentication methods. In
 'Digest' it supports both MD5 and MD5-sess algorithms.
 
@@ -11,9 +12,10 @@ Usage:
     Then use 'parseAuthorization' to retrieve the 'auth_map' used in
     'checkResponse'.
 
-    To use 'checkResponse' you must have already verified the password associated
-    with the 'username' key in 'auth_map' dict. Then you use the 'checkResponse'
-    function to verify if the password matches the one sent by the client.
+    To use 'checkResponse' you must have already verified the password
+    associated with the 'username' key in 'auth_map' dict. Then you use the
+    'checkResponse' function to verify if the password matches the one sent
+    by the client.
 
 SUPPORTED_ALGORITHM - list of supported 'Digest' algorithms
 SUPPORTED_QOP - list of supported 'Digest' 'qop'.
@@ -21,7 +23,8 @@ SUPPORTED_QOP - list of supported 'Digest' 'qop'.
 __version__ = 1, 0, 1
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 __credits__ = """
-    Peter van Kampen for its recipe which implement most of Digest authentication:
+    Peter van Kampen for its recipe which implement most of Digest
+    authentication:
     http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/302378
 """
 
@@ -29,17 +32,17 @@ __license__ = """
 Copyright (c) 2005, Tiago Cogumbreiro <cogumbreiro@users.sf.net>
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
     * Redistributions of source code must retain the above copyright notice,
       this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright notice,
       this list of conditions and the following disclaimer in the documentation
       and/or other materials provided with the distribution.
-    * Neither the name of Sylvain Hellegouarch nor the names of his contributors
-      may be used to endorse or promote products derived from this software
-      without specific prior written permission.
+    * Neither the name of Sylvain Hellegouarch nor the names of his
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -260,7 +263,8 @@ def _A2(params, method, kwargs):
         raise NotImplementedError("The 'qop' method is unknown: %s" % qop)
 
 
-def _computeDigestResponse(auth_map, password, method="GET", A1=None, **kwargs):
+def _computeDigestResponse(auth_map, password, method="GET", A1=None,
+                           **kwargs):
     """
     Generates a response respecting the algorithm defined in RFC 2617
     """
@@ -326,7 +330,8 @@ def _checkDigestResponse(auth_map, password, method="GET", A1=None, **kwargs):
     return response == auth_map["response"]
 
 
-def _checkBasicResponse(auth_map, password, method='GET', encrypt=None, **kwargs):
+def _checkBasicResponse(auth_map, password, method='GET', encrypt=None,
+                        **kwargs):
     # Note that the Basic response doesn't provide the realm value so we cannot
     # test it
     try:
@@ -347,15 +352,16 @@ def checkResponse(auth_map, password, method="GET", encrypt=None, **kwargs):
     If the response is of type 'Basic' then the function has the following
     signature::
 
-        checkBasicResponse (auth_map, password) -> bool
+        checkBasicResponse(auth_map, password) -> bool
 
     If the response is of type 'Digest' then the function has the following
     signature::
 
-        checkDigestResponse (auth_map, password, method = 'GET', A1 = None) -> bool
+        checkDigestResponse(auth_map, password, method='GET', A1=None) -> bool
 
     The 'A1' argument is only used in MD5_SESS algorithm based responses.
     Check md5SessionKey() for more info.
     """
     checker = AUTH_RESPONSES[auth_map["auth_scheme"]]
-    return checker(auth_map, password, method=method, encrypt=encrypt, **kwargs)
+    return checker(auth_map, password, method=method, encrypt=encrypt,
+                   **kwargs)

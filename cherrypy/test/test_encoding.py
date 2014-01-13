@@ -68,8 +68,9 @@ class EncodingTests(helper.CPWebCase):
             index.exposed = True
 
             def noshow(self):
-                # Test for ticket #147, where yield showed no exceptions (content-
-                # encoding was still gzip even though traceback wasn't zipped).
+                # Test for ticket #147, where yield showed no exceptions
+                # (content-encoding was still gzip even though traceback
+                # wasn't zipped).
                 raise IndexError()
                 yield "Here be dragons"
             noshow.exposed = True
@@ -77,8 +78,9 @@ class EncodingTests(helper.CPWebCase):
             noshow._cp_config = {'tools.encode.on': False}
 
             def noshow_stream(self):
-                # Test for ticket #147, where yield showed no exceptions (content-
-                # encoding was still gzip even though traceback wasn't zipped).
+                # Test for ticket #147, where yield showed no exceptions
+                # (content-encoding was still gzip even though traceback
+                # wasn't zipped).
                 raise IndexError()
                 yield "Here be dragons"
             noshow_stream.exposed = True
@@ -125,17 +127,19 @@ class EncodingTests(helper.CPWebCase):
         # Here, q is the POUND SIGN U+00A3 encoded in latin1 and then %HEX
         self.getPage("/reqparams?q=%A3")
         self.assertStatus(404)
-        self.assertErrorPage(404,
-                             "The given query string could not be processed. Query "
-                             "strings for this resource must be encoded with 'utf8'.")
+        self.assertErrorPage(
+            404,
+            "The given query string could not be processed. Query "
+            "strings for this resource must be encoded with 'utf8'.")
 
     def test_urlencoded_decoding(self):
         # Test the decoding of an application/x-www-form-urlencoded entity.
         europoundUtf8 = europoundUnicode.encode('utf-8')
         body = ntob("param=") + europoundUtf8
-        self.getPage('/', method='POST',
-                     headers=[(
-                         "Content-Type", "application/x-www-form-urlencoded"),
+        self.getPage('/',
+                     method='POST',
+                     headers=[
+                         ("Content-Type", "application/x-www-form-urlencoded"),
                          ("Content-Length", str(len(body))),
                      ],
                      body=body),
@@ -154,9 +158,11 @@ class EncodingTests(helper.CPWebCase):
 
         # ...and in utf16, which is not in the default attempt_charsets list:
         body = ntob("\xff\xfeq\x00=\xff\xfe\xa3\x00")
-        self.getPage('/reqparams', method='POST',
-                     headers=[(
-                         "Content-Type", "application/x-www-form-urlencoded;charset=utf-16"),
+        self.getPage('/reqparams',
+                     method='POST',
+                     headers=[
+                         ("Content-Type",
+                          "application/x-www-form-urlencoded;charset=utf-16"),
                          ("Content-Length", str(len(body))),
                      ],
                      body=body),
@@ -166,16 +172,19 @@ class EncodingTests(helper.CPWebCase):
         # Here, q is the POUND SIGN U+00A3 encoded in utf16, but
         # the Content-Type incorrectly labels it utf-8.
         body = ntob("\xff\xfeq\x00=\xff\xfe\xa3\x00")
-        self.getPage('/reqparams', method='POST',
-                     headers=[(
-                         "Content-Type", "application/x-www-form-urlencoded;charset=utf-8"),
+        self.getPage('/reqparams',
+                     method='POST',
+                     headers=[
+                         ("Content-Type",
+                          "application/x-www-form-urlencoded;charset=utf-8"),
                          ("Content-Length", str(len(body))),
                      ],
                      body=body),
         self.assertStatus(400)
-        self.assertErrorPage(400,
-                             "The request entity could not be decoded. The following charsets "
-                             "were attempted: ['utf-8']")
+        self.assertErrorPage(
+            400,
+            "The request entity could not be decoded. The following charsets "
+            "were attempted: ['utf-8']")
 
     def test_decode_tool(self):
         # An extra charset should be tried first, and succeed if it matches.
@@ -210,24 +219,27 @@ class EncodingTests(helper.CPWebCase):
                          ("Content-Length", str(len(body))),
                      ],
                      body=body),
-        self.assertErrorPage(400,
-                             "The request entity could not be decoded. The following charsets "
-                             "were attempted: ['utf-16']")
+        self.assertErrorPage(
+            400,
+            "The request entity could not be decoded. The following charsets "
+            "were attempted: ['utf-16']")
 
     def test_multipart_decoding(self):
         # Test the decoding of a multipart entity when the charset (utf16) is
         # explicitly given.
-        body = ntob('\r\n'.join(['--X',
-                                 'Content-Type: text/plain;charset=utf-16',
-                                'Content-Disposition: form-data; name="text"',
-                                 '',
-                                 '\xff\xfea\x00b\x00\x1c c\x00',
-                                 '--X',
-                                 'Content-Type: text/plain;charset=utf-16',
-                                 'Content-Disposition: form-data; name="submit"',
-                                 '',
-                                 '\xff\xfeC\x00r\x00e\x00a\x00t\x00e\x00',
-                                 '--X--']))
+        body = ntob('\r\n'.join([
+            '--X',
+            'Content-Type: text/plain;charset=utf-16',
+            'Content-Disposition: form-data; name="text"',
+            '',
+            '\xff\xfea\x00b\x00\x1c c\x00',
+            '--X',
+            'Content-Type: text/plain;charset=utf-16',
+            'Content-Disposition: form-data; name="submit"',
+            '',
+            '\xff\xfeC\x00r\x00e\x00a\x00t\x00e\x00',
+            '--X--'
+        ]))
         self.getPage('/reqparams', method='POST',
                      headers=[(
                          "Content-Type", "multipart/form-data;boundary=X"),
@@ -239,15 +251,17 @@ class EncodingTests(helper.CPWebCase):
     def test_multipart_decoding_no_charset(self):
         # Test the decoding of a multipart entity when the charset (utf8) is
         # NOT explicitly given, but is in the list of charsets to attempt.
-        body = ntob('\r\n'.join(['--X',
-                                 'Content-Disposition: form-data; name="text"',
-                                '',
-                                 '\xe2\x80\x9c',
-                                 '--X',
-                                 'Content-Disposition: form-data; name="submit"',
-                                 '',
-                                 'Create',
-                                 '--X--']))
+        body = ntob('\r\n'.join([
+            '--X',
+            'Content-Disposition: form-data; name="text"',
+            '',
+            '\xe2\x80\x9c',
+            '--X',
+            'Content-Disposition: form-data; name="submit"',
+            '',
+            'Create',
+            '--X--'
+        ]))
         self.getPage('/reqparams', method='POST',
                      headers=[(
                          "Content-Type", "multipart/form-data;boundary=X"),
@@ -259,15 +273,17 @@ class EncodingTests(helper.CPWebCase):
     def test_multipart_decoding_no_successful_charset(self):
         # Test the decoding of a multipart entity when the charset (utf16) is
         # NOT explicitly given, and is NOT in the list of charsets to attempt.
-        body = ntob('\r\n'.join(['--X',
-                                 'Content-Disposition: form-data; name="text"',
-                                '',
-                                 '\xff\xfea\x00b\x00\x1c c\x00',
-                                 '--X',
-                                 'Content-Disposition: form-data; name="submit"',
-                                 '',
-                                 '\xff\xfeC\x00r\x00e\x00a\x00t\x00e\x00',
-                                 '--X--']))
+        body = ntob('\r\n'.join([
+            '--X',
+            'Content-Disposition: form-data; name="text"',
+            '',
+            '\xff\xfea\x00b\x00\x1c c\x00',
+            '--X',
+            'Content-Disposition: form-data; name="submit"',
+            '',
+            '\xff\xfeC\x00r\x00e\x00a\x00t\x00e\x00',
+            '--X--'
+        ]))
         self.getPage('/reqparams', method='POST',
                      headers=[(
                          "Content-Type", "multipart/form-data;boundary=X"),
@@ -275,9 +291,10 @@ class EncodingTests(helper.CPWebCase):
                      ],
                      body=body),
         self.assertStatus(400)
-        self.assertErrorPage(400,
-                             "The request entity could not be decoded. The following charsets "
-                             "were attempted: ['us-ascii', 'utf-8']")
+        self.assertErrorPage(
+            400,
+            "The request entity could not be decoded. The following charsets "
+            "were attempted: ['us-ascii', 'utf-8']")
 
     def test_nontext(self):
         self.getPage('/nontext')

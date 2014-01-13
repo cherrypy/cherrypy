@@ -27,7 +27,8 @@ import types
 from unittest import *
 from unittest import _TextTestResult
 
-from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection, HTTPSConnection, unicodestr
+from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection
+from cherrypy._cpcompat import HTTPSConnection, unicodestr
 
 
 def interface(host):
@@ -236,8 +237,10 @@ class WebCase(TestCase):
         or '::' (IN6ADDR_ANY), this will return the proper localhost."""
         return interface(self.HOST)
 
-    def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
-        """Open the url with debugging support. Return status, headers, body."""
+    def getPage(self, url, headers=None, method="GET", body=None,
+                protocol=None):
+        """Open the url with debugging support. Return status, headers, body.
+        """
         ServerError.on = False
 
         if isinstance(url, unicodestr):
@@ -271,7 +274,9 @@ class WebCase(TestCase):
         if not self.interactive:
             raise self.failureException(msg)
 
-        p = "    Show: [B]ody [H]eaders [S]tatus [U]RL; [I]gnore, [R]aise, or sys.e[X]it >> "
+        p = ("    Show: "
+             "[B]ody [H]eaders [S]tatus [U]RL; "
+             "[I]gnore, [R]aise, or sys.e[X]it >> ")
         sys.stdout.write(p)
         sys.stdout.flush()
         while True:
@@ -523,19 +528,25 @@ def openURL(url, headers=None, method="GET", body=None,
                 # Replace the stdlib method, which only accepts ASCII url's
 
                 def putrequest(self, method, url):
-                    if self._HTTPConnection__response and self._HTTPConnection__response.isclosed():
+                    if (
+                        self._HTTPConnection__response and
+                        self._HTTPConnection__response.isclosed()
+                    ):
                         self._HTTPConnection__response = None
 
                     if self._HTTPConnection__state == http.client._CS_IDLE:
-                        self._HTTPConnection__state = http.client._CS_REQ_STARTED
+                        self._HTTPConnection__state = (
+                            http.client._CS_REQ_STARTED)
                     else:
                         raise http.client.CannotSendRequest()
 
                     self._method = method
                     if not url:
                         url = ntob('/')
-                    request = ntob(' ').join((method.encode("ASCII"), url,
-                                              self._http_vsn_str.encode("ASCII")))
+                    request = ntob(' ').join(
+                        (method.encode("ASCII"),
+                         url,
+                         self._http_vsn_str.encode("ASCII")))
                     self._output(request)
                 import types
                 conn.putrequest = types.MethodType(putrequest, conn)

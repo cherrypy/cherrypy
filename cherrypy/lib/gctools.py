@@ -134,13 +134,14 @@ class GCRoot(object):
 
     """A CherryPy page handler for testing reference leaks."""
 
-    classes = [(_cprequest.Request, 2, 2,
-                "Should be 1 in this request thread and 1 in the main thread."),
-               (_cprequest.Response, 2, 2,
-                "Should be 1 in this request thread and 1 in the main thread."),
-               (_cpwsgi.AppResponse, 1, 1,
-                "Should be 1 in this request thread only."),
-               ]
+    classes = [
+        (_cprequest.Request, 2, 2,
+         "Should be 1 in this request thread and 1 in the main thread."),
+        (_cprequest.Response, 2, 2,
+         "Should be 1 in this request thread and 1 in the main thread."),
+        (_cpwsgi.AppResponse, 1, 1,
+         "Should be 1 in this request thread only."),
+    ]
 
     def index(self):
         return "Hello, world!"

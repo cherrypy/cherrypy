@@ -16,7 +16,8 @@ from cherrypy.lib import httputil
 
 
 def downgrade_wsgi_ux_to_1x(environ):
-    """Return a new environ dict for WSGI 1.x from the given WSGI u.x environ."""
+    """Return a new environ dict for WSGI 1.x from the given WSGI u.x environ.
+    """
     env1x = {}
 
     url_encoding = environ[ntou('wsgi.url_encoding')]
@@ -137,7 +138,12 @@ class ExceptionTrapper(object):
         self.throws = throws
 
     def __call__(self, environ, start_response):
-        return _TrappedResponse(self.nextapp, environ, start_response, self.throws)
+        return _TrappedResponse(
+            self.nextapp,
+            environ,
+            start_response,
+            self.throws
+        )
 
 
 class _TrappedResponse(object):
@@ -237,17 +243,19 @@ class AppResponse(object):
             for k, v in r.header_list:
                 if not isinstance(k, bytestr):
                     raise TypeError(
-                        "response.header_list key %r is not a byte string." % k)
+                        "response.header_list key %r is not a byte string." %
+                        k)
                 if not isinstance(v, bytestr):
                     raise TypeError(
-                        "response.header_list value %r is not a byte string." % v)
+                        "response.header_list value %r is not a byte string." %
+                        v)
                 outheaders.append((k, v))
 
             if py3k:
-                # According to PEP 3333, when using Python 3, the response status
-                # and headers must be bytes masquerading as unicode; that is, they
-                # must be of type "str" but are restricted to code points in the
-                # "latin-1" set.
+                # According to PEP 3333, when using Python 3, the response
+                # status and headers must be bytes masquerading as unicode;
+                # that is, they must be of type "str" but are restricted to
+                # code points in the "latin-1" set.
                 outstatus = outstatus.decode('ISO-8859-1')
                 outheaders = [(k.decode('ISO-8859-1'), v.decode('ISO-8859-1'))
                               for k, v in outheaders]
@@ -301,16 +309,17 @@ class AppResponse(object):
         qs = self.environ.get('QUERY_STRING', '')
 
         if py3k:
-            # This isn't perfect; if the given PATH_INFO is in the wrong encoding,
-            # it may fail to match the appropriate config section URI. But meh.
+            # This isn't perfect; if the given PATH_INFO is in the
+            # wrong encoding, it may fail to match the appropriate config
+            # section URI. But meh.
             old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')
             new_enc = self.cpapp.find_config(self.environ.get('PATH_INFO', ''),
                                              "request.uri_encoding", 'utf-8')
             if new_enc.lower() != old_enc.lower():
-                # Even though the path and qs are unicode, the WSGI server is
-                # required by PEP 3333 to coerce them to ISO-8859-1 masquerading
-                # as unicode. So we have to encode back to bytes and then decode
-                # again using the "correct" encoding.
+                # Even though the path and qs are unicode, the WSGI server
+                # is required by PEP 3333 to coerce them to ISO-8859-1
+                # masquerading as unicode. So we have to encode back to
+                # bytes and then decode again using the "correct" encoding.
                 try:
                     u_path = path.encode(old_enc).decode(new_enc)
                     u_qs = qs.encode(old_enc).decode(new_enc)
@@ -370,7 +379,8 @@ class CPWSGIApp(object):
     named WSGI callable (from the pipeline) as keyword arguments."""
 
     response_class = AppResponse
-    """The class to instantiate and return as the next app in the WSGI chain."""
+    """The class to instantiate and return as the next app in the WSGI chain.
+    """
 
     def __init__(self, cpapp, pipeline=None):
         self.cpapp = cpapp

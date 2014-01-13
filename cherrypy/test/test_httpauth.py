@@ -17,19 +17,22 @@ class HTTPAuthTest(helper.CPWebCase):
         class DigestProtected:
 
             def index(self):
-                return "Hello %s, you've been authorized." % cherrypy.request.login
+                return "Hello %s, you've been authorized." % (
+                    cherrypy.request.login)
             index.exposed = True
 
         class BasicProtected:
 
             def index(self):
-                return "Hello %s, you've been authorized." % cherrypy.request.login
+                return "Hello %s, you've been authorized." % (
+                    cherrypy.request.login)
             index.exposed = True
 
         class BasicProtected2:
 
             def index(self):
-                return "Hello %s, you've been authorized." % cherrypy.request.login
+                return "Hello %s, you've been authorized." % (
+                    cherrypy.request.login)
             index.exposed = True
 
         def fetch_users():
@@ -41,16 +44,26 @@ class HTTPAuthTest(helper.CPWebCase):
         def fetch_password(username):
             return sha(ntob('test')).hexdigest()
 
-        conf = {'/digest': {'tools.digest_auth.on': True,
-                            'tools.digest_auth.realm': 'localhost',
-                            'tools.digest_auth.users': fetch_users},
-                '/basic': {'tools.basic_auth.on': True,
-                           'tools.basic_auth.realm': 'localhost',
-                           'tools.basic_auth.users': {'test': md5(ntob('test')).hexdigest()}},
-                '/basic2': {'tools.basic_auth.on': True,
-                            'tools.basic_auth.realm': 'localhost',
-                            'tools.basic_auth.users': fetch_password,
-                            'tools.basic_auth.encrypt': sha_password_encrypter}}
+        conf = {
+            '/digest': {
+                'tools.digest_auth.on': True,
+                'tools.digest_auth.realm': 'localhost',
+                'tools.digest_auth.users': fetch_users
+            },
+            '/basic': {
+                'tools.basic_auth.on': True,
+                'tools.basic_auth.realm': 'localhost',
+                'tools.basic_auth.users': {
+                    'test': md5(ntob('test')).hexdigest()
+                }
+            },
+            '/basic2': {
+                'tools.basic_auth.on': True,
+                'tools.basic_auth.realm': 'localhost',
+                'tools.basic_auth.users': fetch_password,
+                'tools.basic_auth.encrypt': sha_password_encrypter
+            }
+        }
 
         root = Root()
         root.digest = DigestProtected()
@@ -135,7 +148,18 @@ class HTTPAuthTest(helper.CPWebCase):
                                  ('qop', '"auth"', tokens['qop']))
 
         # Test a wrong 'realm' value
-        base_auth = 'Digest username="test", realm="wrong realm", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
+        base_auth = (
+            'Digest '
+            'username="test", '
+            'realm="wrong realm", '
+            'nonce="%s", '
+            'uri="/digest/", '
+            'algorithm=MD5, '
+            'response="%s", '
+            'qop=auth, '
+            'nc=%s, '
+            'cnonce="1522e61005789929"'
+        )
 
         auth = base_auth % (nonce, '', '00000001')
         params = httpauth.parseAuthorization(auth)
@@ -146,7 +170,18 @@ class HTTPAuthTest(helper.CPWebCase):
         self.assertStatus(401)
 
         # Test that must pass
-        base_auth = 'Digest username="test", realm="localhost", nonce="%s", uri="/digest/", algorithm=MD5, response="%s", qop=auth, nc=%s, cnonce="1522e61005789929"'
+        base_auth = (
+            'Digest '
+            'username="test", '
+            'realm="localhost", '
+            'nonce="%s", '
+            'uri="/digest/", '
+            'algorithm=MD5, '
+            'response="%s", '
+            'qop=auth, '
+            'nc=%s, '
+            'cnonce="1522e61005789929"'
+        )
 
         auth = base_auth % (nonce, '', '00000001')
         params = httpauth.parseAuthorization(auth)

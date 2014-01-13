@@ -7,7 +7,8 @@ import sys
 import time
 import threading
 
-from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident, ntob, set, Timer, SetDaemonProperty
+from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident
+from cherrypy._cpcompat import ntob, set, Timer, SetDaemonProperty
 
 # _module__file__base is used by Autoreload to make
 # absolute any filenames retrieved from sys.modules which are not
@@ -19,8 +20,8 @@ from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident, ntob, s
 # changes the current directory by executing os.chdir(), then the next time
 # Autoreload runs, it will not be able to find any filenames which are
 # not absolute paths, because the current directory is not the same as when the
-# module was first imported.  Autoreload will then wrongly conclude the file has
-# "changed", and initiate the shutdown/re-exec sequence.
+# module was first imported.  Autoreload will then wrongly conclude the file
+# has "changed", and initiate the shutdown/re-exec sequence.
 # See ticket #917.
 # For this workaround to have a decent probability of success, this module
 # needs to be imported as early as possible, before the app has much chance
@@ -33,7 +34,8 @@ class SimplePlugin(object):
     """Plugin base class which auto-subscribes methods for known channels."""
 
     bus = None
-    """A :class:`Bus <cherrypy.process.wspbus.Bus>`, usually cherrypy.engine."""
+    """A :class:`Bus <cherrypy.process.wspbus.Bus>`, usually cherrypy.engine.
+    """
 
     def __init__(self, bus):
         self.bus = bus
@@ -75,9 +77,9 @@ class SignalHandler(object):
     if the process is attached to a TTY. This is because Unix window
     managers tend to send SIGHUP to terminal windows when the user closes them.
 
-    Feel free to add signals which are not available on every platform. The
-    :class:`SignalHandler` will ignore errors raised from attempting to register
-    handlers for unknown signals.
+    Feel free to add signals which are not available on every platform.
+    The :class:`SignalHandler` will ignore errors raised from attempting
+    to register handlers for unknown signals.
     """
 
     handlers = {}
@@ -250,8 +252,11 @@ class DropPrivileges(SimplePlugin):
                              level=30)
                 val = None
         self._umask = val
-    umask = property(_get_umask, _set_umask,
-                     doc="""The default permission mode for newly created files and directories.
+    umask = property(
+        _get_umask,
+        _set_umask,
+        doc="""The default permission mode for newly created files and
+        directories.
 
         Usually expressed in octal format, for example, ``0644``.
         Availability: Unix, Windows.
@@ -512,7 +517,9 @@ class Monitor(SimplePlugin):
     """The time in seconds between callback runs."""
 
     thread = None
-    """A :class:`BackgroundTask<cherrypy.process.plugins.BackgroundTask>` thread."""
+    """A :class:`BackgroundTask<cherrypy.process.plugins.BackgroundTask>`
+    thread.
+    """
 
     def __init__(self, bus, callback, frequency=60, name=None):
         SimplePlugin.__init__(self, bus)
@@ -567,9 +574,9 @@ class Autoreloader(Monitor):
 
         cherrypy.engine.autoreload.files.add(myFile)
 
-    If there are imported files you do *not* wish to monitor, you can adjust the
-    ``match`` attribute, a regular expression. For example, to stop monitoring
-    cherrypy itself::
+    If there are imported files you do *not* wish to monitor, you can
+    adjust the ``match`` attribute, a regular expression. For example,
+    to stop monitoring cherrypy itself::
 
         cherrypy.engine.autoreload.match = r'^(?!cherrypy).+'
 
@@ -605,7 +612,10 @@ class Autoreloader(Monitor):
         files = set()
         for k, m in sys.modules.items():
             if re.match(self.match, k):
-                if hasattr(m, '__loader__') and hasattr(m.__loader__, 'archive'):
+                if (
+                    hasattr(m, '__loader__') and
+                    hasattr(m.__loader__, 'archive')
+                ):
                     f = m.__loader__.archive
                 else:
                     f = getattr(m, '__file__', None)

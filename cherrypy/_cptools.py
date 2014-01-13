@@ -43,8 +43,10 @@ def _getargs(func):
     return co.co_varnames[:co.co_argcount]
 
 
-_attr_error = ("CherryPy Tools cannot be turned on directly. Instead, turn them "
-               "on via config, or use them as decorators on your page handlers.")
+_attr_error = (
+    "CherryPy Tools cannot be turned on directly. Instead, turn them "
+    "on via config, or use them as decorators on your page handlers."
+)
 
 
 class Tool(object):
@@ -215,7 +217,8 @@ class HandlerWrapperTool(Tool):
         cherrypy.tools.jinja = HandlerWrapperTool(interpolator)
     """
 
-    def __init__(self, newhandler, point='before_handler', name=None, priority=50):
+    def __init__(self, newhandler, point='before_handler', name=None,
+                 priority=50):
         self.newhandler = newhandler
         self._point = point
         self._name = name
@@ -267,7 +270,8 @@ class SessionTool(Tool):
         When 'early', the session will be locked before reading the request
         body. This is off by default for safety reasons; for example,
         a large upload would block the session, denying an AJAX
-        progress meter (`issue <https://bitbucket.org/cherrypy/cherrypy/issue/630>`_).
+        progress meter
+        (`issue <https://bitbucket.org/cherrypy/cherrypy/issue/630>`_).
 
         When 'explicit' (or any other value), you need to call
         cherrypy.session.acquire_lock() yourself before using
@@ -498,12 +502,16 @@ _d.sessions = SessionTool()
 _d.xmlrpc = ErrorTool(_xmlrpc.on_error)
 _d.caching = CachingTool('before_handler', _caching.get, 'caching')
 _d.expires = Tool('before_finalize', _caching.expires)
-_d.tidy = DeprecatedTool('before_finalize',
-                         "The tidy tool has been removed from the standard distribution of CherryPy. "
-                         "The most recent version can be found at http://tools.cherrypy.org/browser.")
-_d.nsgmls = DeprecatedTool('before_finalize',
-                           "The nsgmls tool has been removed from the standard distribution of CherryPy. "
-                           "The most recent version can be found at http://tools.cherrypy.org/browser.")
+_d.tidy = DeprecatedTool(
+    'before_finalize',
+    "The tidy tool has been removed from the standard distribution of "
+    "CherryPy. The most recent version can be found at "
+    "http://tools.cherrypy.org/browser.")
+_d.nsgmls = DeprecatedTool(
+    'before_finalize',
+    "The nsgmls tool has been removed from the standard distribution of "
+    "CherryPy. The most recent version can be found at "
+    "http://tools.cherrypy.org/browser.")
 _d.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
 _d.referer = Tool('before_request_body', cptools.referer)
 _d.basic_auth = Tool('on_start_resource', auth.basic_auth)

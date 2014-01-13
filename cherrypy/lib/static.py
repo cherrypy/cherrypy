@@ -20,7 +20,8 @@ from cherrypy._cpcompat import ntob, unquote
 from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
-def serve_file(path, content_type=None, disposition=None, name=None, debug=False):
+def serve_file(path, content_type=None, disposition=None, name=None,
+               debug=False):
     """Set status, headers, and body in order to serve the given path.
 
     The Content-Type header will be set to the content_type arg, if provided.
@@ -158,7 +159,8 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
         r = httputil.get_ranges(request.headers.get('Range'), content_length)
         if r == []:
             response.headers['Content-Range'] = "bytes */%s" % content_length
-            message = "Invalid Range (first-byte-pos greater than Content-Length)"
+            message = ("Invalid Range (first-byte-pos greater than "
+                       "Content-Length)")
             if debug:
                 cherrypy.log(message, 'TOOLS.STATIC')
             raise cherrypy.HTTPError(416, message)
@@ -185,11 +187,11 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                 response.status = "206 Partial Content"
                 try:
                     # Python 3
-                    from email.generator import _make_boundary as choose_boundary
+                    from email.generator import _make_boundary as make_boundary
                 except ImportError:
                     # Python 2
-                    from mimetools import choose_boundary
-                boundary = choose_boundary()
+                    from mimetools import choose_boundary as make_boundary
+                boundary = make_boundary()
                 ct = "multipart/byteranges; boundary=%s" % boundary
                 response.headers['Content-Type'] = ct
                 if "Content-Length" in response.headers:
@@ -207,11 +209,15 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                                     start, stop),
                                 'TOOLS.STATIC')
                         yield ntob("--" + boundary, 'ascii')
-                        yield ntob("\r\nContent-type: %s" % content_type, 'ascii')
-                        yield ntob("\r\nContent-range: bytes %s-%s/%s\r\n\r\n"
-                                   % (start, stop - 1, content_length), 'ascii')
+                        yield ntob("\r\nContent-type: %s" % content_type,
+                                   'ascii')
+                        yield ntob(
+                            "\r\nContent-range: bytes %s-%s/%s\r\n\r\n" % (
+                                start, stop - 1, content_length),
+                            'ascii')
                         fileobj.seek(start)
-                        for chunk in file_generator_limited(fileobj, stop - start):
+                        gen = file_generator_limited(fileobj, stop - start)
+                        for chunk in gen:
                             yield chunk
                         yield ntob("\r\n")
                     # Final boundary
@@ -362,7 +368,8 @@ def staticfile(filename, root=None, match="", content_types=None, debug=False):
     # If filename is relative, make absolute using "root".
     if not os.path.isabs(filename):
         if not root:
-            msg = "Static tool requires an absolute filename (got '%s')." % filename
+            msg = "Static tool requires an absolute filename (got '%s')." % (
+                filename,)
             if debug:
                 cherrypy.log(msg, 'TOOLS.STATICFILE')
             raise ValueError(msg)

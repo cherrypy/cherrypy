@@ -1,7 +1,7 @@
 """
-CherryPy implements a simple caching system as a pluggable Tool. This tool tries
-to be an (in-process) HTTP/1.1-compliant cache. It's not quite there yet, but
-it's probably good enough for most sites.
+CherryPy implements a simple caching system as a pluggable Tool. This tool
+tries to be an (in-process) HTTP/1.1-compliant cache. It's not quite there
+yet, but it's probably good enough for most sites.
 
 In general, GET responses are cached (along with selecting headers) and, if
 another request arrives for the same resource, the caching Tool will return 304
@@ -9,8 +9,8 @@ Not Modified if possible, or serve the cached response otherwise. It also sets
 request.cached to True if serving a cached representation, and sets
 request.cacheable to False (so it doesn't get cached again).
 
-If POST, PUT, or DELETE requests are made for a cached resource, they invalidate
-(delete) any cached response.
+If POST, PUT, or DELETE requests are made for a cached resource, they
+invalidate (delete) any cached response.
 
 Usage
 =====
@@ -63,7 +63,7 @@ class Cache(object):
         raise NotImplemented
 
 
-# ------------------------------- Memory Cache ------------------------------- #
+# ------------------------------ Memory Cache ------------------------------- #
 class AntiStampedeCache(dict):
 
     """A storage system for cached items which reduces stampede collisions."""
@@ -153,7 +153,8 @@ class MemoryCache(Cache):
     """The maximum size of the entire cache in bytes; defaults to 10 MB."""
 
     delay = 600
-    """Seconds until the cached content expires; defaults to 600 (10 minutes)."""
+    """Seconds until the cached content expires; defaults to 600 (10 minutes).
+    """
 
     antistampede_timeout = 5
     """Seconds to wait for other threads to release a cache lock."""

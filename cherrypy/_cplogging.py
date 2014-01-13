@@ -34,10 +34,11 @@ and another set of rules specific to each application. The global log
 manager is found at :func:`cherrypy.log`, and the log manager for each
 application is found at :attr:`app.log<cherrypy._cptree.Application.log>`.
 If you're inside a request, the latter is reachable from
-``cherrypy.request.app.log``; if you're outside a request, you'll have to obtain
-a reference to the ``app``: either the return value of
+``cherrypy.request.app.log``; if you're outside a request, you'll have to
+obtain a reference to the ``app``: either the return value of
 :func:`tree.mount()<cherrypy._cptree.Tree.mount>` or, if you used
-:func:`quickstart()<cherrypy.quickstart>` instead, via ``cherrypy.tree.apps['/']``.
+:func:`quickstart()<cherrypy.quickstart>` instead, via
+``cherrypy.tree.apps['/']``.
 
 By default, the global logs are named "cherrypy.error" and "cherrypy.access",
 and the application logs are named "cherrypy.error.2378745" and
@@ -191,7 +192,8 @@ class LogManager(object):
                     h.stream = open(h.baseFilename, h.mode)
                     h.release()
 
-    def error(self, msg='', context='', severity=logging.INFO, traceback=False):
+    def error(self, msg='', context='', severity=logging.INFO,
+              traceback=False):
         """Write the given ``msg`` to the error log.
 
         This is not just for errors! Applications may call this at any time
@@ -211,7 +213,8 @@ class LogManager(object):
     def access(self):
         """Write to the access log (in Apache/NCSA Combined Log format).
 
-        See `the apache documentation <http://httpd.apache.org/docs/current/logs.html#combined>`_
+        See the
+        `apache documentation <http://httpd.apache.org/docs/current/logs.html#combined>`_
         for format details.
 
         CherryPy calls this automatically for you. Note there are no arguments;

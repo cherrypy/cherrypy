@@ -49,7 +49,9 @@ class HTTPTests(helper.CPWebCase):
             no_body._cp_config = {'request.process_request_body': False}
 
             def post_multipart(self, file):
-                """Return a summary ("a * 65536\nb * 65536") of the uploaded file."""
+                """Return a summary ("a * 65536\nb * 65536") of the uploaded
+                file.
+                """
                 contents = file.file.read()
                 summary = []
                 curchar = None

@@ -35,9 +35,9 @@ class RequestObjectTests(helper.CPWebCase):
         root = Root()
 
         class TestType(type):
-
-            """Metaclass which automatically exposes all functions in each subclass,
-            and adds an instance of the subclass as an attribute of root.
+            """Metaclass which automatically exposes all functions in each
+            subclass, and adds an instance of the subclass as an attribute
+            of root.
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
@@ -115,7 +115,8 @@ class RequestObjectTests(helper.CPWebCase):
             raise_type_error_with_default_param.exposed = True
 
         def callable_error_page(status, **kwargs):
-            return "Error %s - Well, I'm very sorry but you haven't paid!" % status
+            return "Error %s - Well, I'm very sorry but you haven't paid!" % (
+                status)
 
         class Error(Test):
 
@@ -162,7 +163,9 @@ class RequestObjectTests(helper.CPWebCase):
                 'request.show_tracebacks': False}
 
             def rethrow(self):
-                """Test that an error raised here will be thrown out to the server."""
+                """Test that an error raised here will be thrown out to
+                the server.
+                """
                 raise ValueError()
             rethrow._cp_config = {'request.throw_errors': True}
 
@@ -182,9 +185,10 @@ class RequestObjectTests(helper.CPWebCase):
 
             def doubledheaders(self):
                 # From https://bitbucket.org/cherrypy/cherrypy/issue/165:
-                # "header field names should not be case sensitive sayes the rfc.
-                # if i set a headerfield in complete lowercase i end up with two
-                # header fields, one in lowercase, the other in mixed-case."
+                # "header field names should not be case sensitive sayes the
+                # rfc. if i set a headerfield in complete lowercase i end up
+                # with two header fields, one in lowercase, the other in
+                # mixed-case."
 
                 # Set the most common headers
                 hMap = cherrypy.response.headers
@@ -239,10 +243,11 @@ class RequestObjectTests(helper.CPWebCase):
         class Divorce:
 
             """HTTP Method handlers shouldn't collide with normal method names.
-            For example, a GET-handler shouldn't collide with a method named 'get'.
+            For example, a GET-handler shouldn't collide with a method named
+            'get'.
 
-            If you build HTTP method dispatching into CherryPy, rewrite this class
-            to use your new dispatch mechanism and make sure that:
+            If you build HTTP method dispatching into CherryPy, rewrite this
+            class to use your new dispatch mechanism and make sure that:
                 "GET /divorce HTTP/1.1" maps to divorce.index() and
                 "GET /divorce/get?ID=13 HTTP/1.1" maps to divorce.get()
             """
@@ -253,8 +258,9 @@ class RequestObjectTests(helper.CPWebCase):
                 yield "<h1>Choose your document</h1>\n"
                 yield "<ul>\n"
                 for id, contents in self.documents.items():
-                    yield ("    <li><a href='/divorce/get?ID=%s'>%s</a>: %s</li>\n"
-                           % (id, id, contents))
+                    yield (
+                        "    <li><a href='/divorce/get?ID=%s'>%s</a>:"
+                        " %s</li>\n" % (id, id, contents))
                 yield "</ul>"
             index.exposed = True
 
@@ -273,7 +279,9 @@ class RequestObjectTests(helper.CPWebCase):
                 return existing
 
         appconf = {
-            '/method': {'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")},
+            '/method': {
+                'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")
+            },
         }
         cherrypy.tree.mount(root, config=appconf)
     setup_server = staticmethod(setup_server)
@@ -346,17 +354,23 @@ class RequestObjectTests(helper.CPWebCase):
                 '/paramerrors/one_positional_args?param1=foo',
                 '/paramerrors/one_positional_args/foo',
                 '/paramerrors/one_positional_args/foo/bar/baz',
-                '/paramerrors/one_positional_args_kwargs?param1=foo&param2=bar',
-                '/paramerrors/one_positional_args_kwargs/foo?param2=bar&param3=baz',
-                '/paramerrors/one_positional_args_kwargs/foo/bar/baz?param2=bar&param3=baz',
-                '/paramerrors/one_positional_kwargs?param1=foo&param2=bar&param3=baz',
-                '/paramerrors/one_positional_kwargs/foo?param4=foo&param2=bar&param3=baz',
+                '/paramerrors/one_positional_args_kwargs?'
+                'param1=foo&param2=bar',
+                '/paramerrors/one_positional_args_kwargs/foo?'
+                'param2=bar&param3=baz',
+                '/paramerrors/one_positional_args_kwargs/foo/bar/baz?'
+                'param2=bar&param3=baz',
+                '/paramerrors/one_positional_kwargs?'
+                'param1=foo&param2=bar&param3=baz',
+                '/paramerrors/one_positional_kwargs/foo?'
+                'param4=foo&param2=bar&param3=baz',
                 '/paramerrors/no_positional',
                 '/paramerrors/no_positional_args/foo',
                 '/paramerrors/no_positional_args/foo/bar/baz',
                 '/paramerrors/no_positional_args_kwargs?param1=foo&param2=bar',
                 '/paramerrors/no_positional_args_kwargs/foo?param2=bar',
-                '/paramerrors/no_positional_args_kwargs/foo/bar/baz?param2=bar&param3=baz',
+                '/paramerrors/no_positional_args_kwargs/foo/bar/baz?'
+                'param2=bar&param3=baz',
                 '/paramerrors/no_positional_kwargs?param1=foo&param2=bar',
                 '/paramerrors/callable_object',
         ):
@@ -383,9 +397,11 @@ class RequestObjectTests(helper.CPWebCase):
              error_msgs[2]),
             ('/paramerrors/one_positional_args/foo/bar/baz?param2=foo',
              error_msgs[3]),
-            ('/paramerrors/one_positional_args_kwargs/foo/bar/baz?param1=bar&param3=baz',
+            ('/paramerrors/one_positional_args_kwargs/foo/bar/baz?'
+             'param1=bar&param3=baz',
              error_msgs[2]),
-            ('/paramerrors/one_positional_kwargs/foo?param1=foo&param2=bar&param3=baz',
+            ('/paramerrors/one_positional_kwargs/foo?'
+             'param1=foo&param2=bar&param3=baz',
              error_msgs[2]),
             ('/paramerrors/no_positional/boo', error_msgs[1]),
             ('/paramerrors/no_positional?param1=foo', error_msgs[3]),
@@ -521,13 +537,15 @@ class RequestObjectTests(helper.CPWebCase):
         self.getPage("/error/custom?err=401")
         self.assertStatus(401)
         self.assertBody(
-            "Error 401 Unauthorized - Well, I'm very sorry but you haven't paid!")
+            "Error 401 Unauthorized - "
+            "Well, I'm very sorry but you haven't paid!")
 
         # Test default custom error page.
         self.getPage("/error/custom_default")
         self.assertStatus(500)
         self.assertBody(
-            "Error 500 Internal Server Error - Well, I'm very sorry but you haven't paid!".ljust(513))
+            "Error 500 Internal Server Error - "
+            "Well, I'm very sorry but you haven't paid!".ljust(513))
 
         # Test error in custom error page (ticket #305).
         # Note that the message is escaped for HTML (ticket #310).
@@ -567,7 +585,9 @@ class RequestObjectTests(helper.CPWebCase):
                         "audio/*;q=0.2")
 
         h = [
-            ('Accept', 'text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c')]
+            ('Accept',
+             'text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c')
+        ]
         self.getPage("/headerelements/get_elements?headername=Accept", h)
         self.assertStatus(200)
         self.assertBody("text/x-c\n"
@@ -655,11 +675,12 @@ class RequestObjectTests(helper.CPWebCase):
                          [('If-Match', ntou('=?utf-8?q?%s?=') % (c * 10))])
             self.assertBody(ntob("\xe2\x84\xabngstr\xc3\xb6m") * 10)
             # Note: this is different output for Python3, but it decodes fine.
-            etag = self.assertHeader("ETag",
-                                     '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
-                                     '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
-                                     '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
-                                     '4oSrbmdzdHLDtm0=?=')
+            etag = self.assertHeader(
+                "ETag",
+                '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
+                '4oSrbmdzdHLDtm0=?=')
             self.assertEqual(httputil.decode_TEXT(etag), u * 10)
 
     def test_header_presence(self):

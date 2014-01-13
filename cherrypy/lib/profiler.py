@@ -35,7 +35,8 @@ module from the command line, it will call ``serve()`` for you.
 
 
 def new_func_strip_path(func_name):
-    """Make profiler output more readable by adding ``__init__`` modules' parents"""
+    """Make profiler output more readable by adding `__init__` modules' parents
+    """
     filename, line, name = func_name
     if filename.endswith("__init__.py"):
         return os.path.basename(filename[:-12]) + filename[-12:], line, name
@@ -126,7 +127,8 @@ class Profiler(object):
         runs = self.statfiles()
         runs.sort()
         for i in runs:
-            yield "<a href='report?filename=%s' target='main'>%s</a><br />" % (i, i)
+            yield "<a href='report?filename=%s' target='main'>%s</a><br />" % (
+                i, i)
     menu.exposed = True
 
     def report(self, filename):
@@ -170,9 +172,11 @@ class make_app:
 
         """
         if profile is None or pstats is None:
-            msg = ("Your installation of Python does not have a profile module. "
-                   "If you're on Debian, try `sudo apt-get install python-profiler`. "
-                   "See http://www.cherrypy.org/wiki/ProfilingOnDebian for details.")
+            msg = ("Your installation of Python does not have a profile "
+                   "module. If you're on Debian, try "
+                   "`sudo apt-get install python-profiler`. "
+                   "See http://www.cherrypy.org/wiki/ProfilingOnDebian "
+                   "for details.")
             warnings.warn(msg)
 
         self.nextapp = nextapp
@@ -194,8 +198,10 @@ class make_app:
 def serve(path=None, port=8080):
     if profile is None or pstats is None:
         msg = ("Your installation of Python does not have a profile module. "
-               "If you're on Debian, try `sudo apt-get install python-profiler`. "
-               "See http://www.cherrypy.org/wiki/ProfilingOnDebian for details.")
+               "If you're on Debian, try "
+               "`sudo apt-get install python-profiler`. "
+               "See http://www.cherrypy.org/wiki/ProfilingOnDebian "
+               "for details.")
         warnings.warn(msg)
 
     import cherrypy

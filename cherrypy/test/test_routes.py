@@ -29,8 +29,12 @@ class RoutesDispatchTest(helper.CPWebCase):
 
             def index(self, **kwargs):
                 return "Welcome to %s, pop. %s" % (self.name, self.population)
-            index._cp_config = {'tools.response_headers.on': True,
-                                'tools.response_headers.headers': [('Content-Language', 'en-GB')]}
+            index._cp_config = {
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [
+                    ('Content-Language', 'en-GB')
+                ]
+            }
 
             def update(self, **kwargs):
                 self.population = kwargs['pop']

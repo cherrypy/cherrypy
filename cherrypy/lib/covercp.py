@@ -42,7 +42,8 @@ except ImportError:
 
     import warnings
     warnings.warn(
-        "No code coverage will be performed; coverage.py could not be imported.")
+        "No code coverage will be performed; "
+        "coverage.py could not be imported.")
 
     def start():
         pass
@@ -121,10 +122,13 @@ TEMPLATE_FORM = """
 <div id="options">
 <form action='menu' method=GET>
     <input type='hidden' name='base' value='%(base)s' />
-    Show percentages <input type='checkbox' %(showpct)s name='showpct' value='checked' /><br />
-    Hide files over <input type='text' id='pct' name='pct' value='%(pct)s' size='3' />%%<br />
+    Show percentages
+    <input type='checkbox' %(showpct)s name='showpct' value='checked' /><br />
+    Hide files over
+    <input type='text' id='pct' name='pct' value='%(pct)s' size='3' />%%<br />
     Exclude files matching<br />
-    <input type='text' id='exclude' name='exclude' value='%(exclude)s' size='20' />
+    <input type='text' id='exclude' name='exclude'
+     value='%(exclude)s' size='20' />
     <br />
 
     <input type='submit' value='Change view' id="submit"/>
@@ -176,7 +180,9 @@ TEMPLATE_LOC_EXCLUDED = """<tr class="excluded">
     <td>%s</td>
 </tr>\n"""
 
-TEMPLATE_ITEM = "%s%s<a class='file' href='report?name=%s' target='main'>%s</a>\n"
+TEMPLATE_ITEM = (
+    "%s%s<a class='file' href='report?name=%s' target='main'>%s</a>\n"
+)
 
 
 def _percent(statements, missing):
@@ -199,10 +205,16 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude="",
         if newpath.lower().startswith(base):
             relpath = newpath[len(base):]
             yield "| " * relpath.count(os.sep)
-            yield "<a class='directory' href='menu?base=%s&exclude=%s'>%s</a>\n" % \
+            yield (
+                "<a class='directory' "
+                "href='menu?base=%s&exclude=%s'>%s</a>\n" %
                 (newpath, quote_plus(exclude), name)
+            )
 
-        for chunk in _show_branch(root[name], base, newpath, pct, showpct, exclude, coverage=coverage):
+        for chunk in _show_branch(
+            root[name], base, newpath, pct, showpct,
+            exclude, coverage=coverage
+        ):
             yield chunk
 
     # Now list the files
@@ -310,7 +322,8 @@ class CoverStats(object):
             yield "<p>No modules covered.</p>"
         else:
             for chunk in _show_branch(tree, base, "/", pct,
-                                      showpct == 'checked', exclude, coverage=self.coverage):
+                                      showpct == 'checked', exclude,
+                                      coverage=self.coverage):
                 yield chunk
 
         yield "</div>"

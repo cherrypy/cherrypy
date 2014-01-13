@@ -23,7 +23,8 @@ re-use the `logging` module by adding a `statistics` object to it.
 That `logging.statistics` object is a nested dict. It is not a custom class,
 because that would:
 
- 1. require libraries and applications to import a third-party module in order to participate
+ 1. require libraries and applications to import a third-party module in
+    order to participate
  2. inhibit innovation in extrapolation approaches and in reporting tools, and
  3. be slow.
 
@@ -89,17 +90,17 @@ scalar values you already have on hand.
 
 When it comes time to report on the gathered data, however, we usually have
 much more freedom in what we can calculate. Therefore, whenever reporting
-tools (like the provided :class:`StatsPage` CherryPy class) fetch the contents of
-`logging.statistics` for reporting, they first call `extrapolate_statistics`
-(passing the whole `statistics` dict as the only argument). This makes a
-deep copy of the statistics dict so that the reporting tool can both iterate
-over it and even change it without harming the original. But it also expands
-any functions in the dict by calling them. For example, you might have a
-'Current Time' entry in the namespace with the value "lambda scope: time.time()".
-The "scope" parameter is the current namespace dict (or record, if we're
-currently expanding one of those instead), allowing you access to existing
-static entries. If you're truly evil, you can even modify more than one entry
-at a time.
+tools (like the provided :class:`StatsPage` CherryPy class) fetch the contents
+of `logging.statistics` for reporting, they first call
+`extrapolate_statistics` (passing the whole `statistics` dict as the only
+argument). This makes a deep copy of the statistics dict so that the
+reporting tool can both iterate over it and even change it without harming
+the original. But it also expands any functions in the dict by calling them.
+For example, you might have a 'Current Time' entry in the namespace with the
+value "lambda scope: time.time()". The "scope" parameter is the current
+namespace dict (or record, if we're currently expanding one of those
+instead), allowing you access to existing static entries. If you're truly
+evil, you can even modify more than one entry at a time.
 
 However, don't try to calculate an entry and then use its value in further
 extrapolations; the order in which the functions are called is not guaranteed.
@@ -111,19 +112,20 @@ After the whole thing has been extrapolated, it's time for:
 Reporting
 ---------
 
-The :class:`StatsPage` class grabs the `logging.statistics` dict, extrapolates it all,
-and then transforms it to HTML for easy viewing. Each namespace gets its own
-header and attribute table, plus an extra table for each collection. This is
-NOT part of the statistics specification; other tools can format how they like.
+The :class:`StatsPage` class grabs the `logging.statistics` dict, extrapolates
+it all, and then transforms it to HTML for easy viewing. Each namespace gets
+its own header and attribute table, plus an extra table for each collection.
+This is NOT part of the statistics specification; other tools can format how
+they like.
 
 You can control which columns are output and how they are formatted by updating
 StatsPage.formatting, which is a dict that mirrors the keys and nesting of
 `logging.statistics`. The difference is that, instead of data values, it has
 formatting values. Use None for a given key to indicate to the StatsPage that a
-given column should not be output. Use a string with formatting (such as '%.3f')
-to interpolate the value(s), or use a callable (such as lambda v: v.isoformat())
-for more advanced formatting. Any entry which is not mentioned in the formatting
-dict is output unchanged.
+given column should not be output. Use a string with formatting
+(such as '%.3f') to interpolate the value(s), or use a callable (such as
+lambda v: v.isoformat()) for more advanced formatting. Any entry which is not
+mentioned in the formatting dict is output unchanged.
 
 Monitoring
 ----------
@@ -185,7 +187,7 @@ To format statistics reports::
 
 """
 
-# -------------------------------- Statistics -------------------------------- #
+# ------------------------------- Statistics -------------------------------- #
 
 import logging
 if not hasattr(logging, 'statistics'):
@@ -206,7 +208,7 @@ def extrapolate_statistics(scope):
     return c
 
 
-# --------------------- CherryPy Applications Statistics --------------------- #
+# -------------------- CherryPy Applications Statistics --------------------- #
 
 import threading
 import time
@@ -216,12 +218,20 @@ import cherrypy
 appstats = logging.statistics.setdefault('CherryPy Applications', {})
 appstats.update({
     'Enabled': True,
-    'Bytes Read/Request': lambda s: (s['Total Requests'] and
-                                     (s['Total Bytes Read'] / float(s['Total Requests'])) or 0.0),
+    'Bytes Read/Request': lambda s: (
+        s['Total Requests'] and
+        (s['Total Bytes Read'] / float(s['Total Requests'])) or
+        0.0
+    ),
     'Bytes Read/Second': lambda s: s['Total Bytes Read'] / s['Uptime'](s),
-    'Bytes Written/Request': lambda s: (s['Total Requests'] and
-                                        (s['Total Bytes Written'] / float(s['Total Requests'])) or 0.0),
-    'Bytes Written/Second': lambda s: s['Total Bytes Written'] / s['Uptime'](s),
+    'Bytes Written/Request': lambda s: (
+        s['Total Requests'] and
+        (s['Total Bytes Written'] / float(s['Total Requests'])) or
+        0.0
+    ),
+    'Bytes Written/Second': lambda s: (
+        s['Total Bytes Written'] / s['Uptime'](s)
+    ),
     'Current Time': lambda s: time.time(),
     'Current Requests': 0,
     'Requests/Second': lambda s: float(s['Total Requests']) / s['Uptime'](s),
@@ -512,8 +522,11 @@ table.stats2 th {
                 if colnum == 0:
                     yield """
         <tr>"""
-                yield """
-            <th>%(key)s</th><td id='%(title)s-%(key)s'>%(value)s</td>""" % vars()
+                yield (
+                    """
+            <th>%(key)s</th><td id='%(title)s-%(key)s'>%(value)s</td>""" %
+                    vars()
+                )
                 if colnum == 2:
                     yield """
         </tr>"""

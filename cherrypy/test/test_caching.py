@@ -12,9 +12,11 @@ import cherrypy
 from cherrypy._cpcompat import next, ntob, quote, xrange
 from cherrypy.lib import httputil
 
-gif_bytes = ntob('GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
-                 '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-                 '\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x02\x03\x02\x08\t\x00;')
+gif_bytes = ntob(
+    'GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
+    '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    '\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x02\x03\x02\x08\t\x00;'
+)
 
 
 from cherrypy.test import helper
@@ -65,10 +67,13 @@ class CacheTest(helper.CPWebCase):
 
         class VaryHeaderCachingServer(object):
 
-            _cp_config = {'tools.caching.on': True,
-                          'tools.response_headers.on': True,
-                          'tools.response_headers.headers': [('Vary', 'Our-Varying-Header')],
-                          }
+            _cp_config = {
+                'tools.caching.on': True,
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [
+                    ('Vary', 'Our-Varying-Header')
+                ],
+            }
 
             def __init__(self):
                 self.counter = count(1)
