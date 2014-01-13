@@ -17,18 +17,21 @@ songs = {
     }
 }
 
+
 class Songs:
 
     exposed = True
 
     def GET(self, id=None):
 
-        if id == None:
+        if id is None:
             return('Here are all the songs we have: %s' % songs)
         elif id in songs:
             song = songs[id]
 
-            return('Song with the ID %s is called %s, and the artist is %s' % (id, song['title'], song['artist']))
+            return(
+                'Song with the ID %s is called %s, and the artist is %s' % (
+                    id, song['title'], song['artist']))
         else:
             return('No song with the ID %s :-(' % id)
 
@@ -50,7 +53,11 @@ class Songs:
             song['title'] = title or song['title']
             song['artist'] = artist or song['artist']
 
-            return('Song with the ID %s is now called %s, and the artist is now %s' % (id, song['title'], song['artist']))
+            return(
+                'Song with the ID %s is now called %s, '
+                'and the artist is now %s' % (
+                    id, song['title'], song['artist'])
+            )
         else:
             return('No song with the ID %s :-(' % id)
 
@@ -68,7 +75,7 @@ if __name__ == '__main__':
         Songs(), '/api/songs',
         {'/':
             {'request.dispatch': cherrypy.dispatch.MethodDispatcher()}
-        }
+         }
     )
 
     cherrypy.engine.start()
