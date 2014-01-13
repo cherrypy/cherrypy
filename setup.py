@@ -16,17 +16,19 @@ from distutils.command.build_py import build_py
 import sys
 import re
 
+
 class cherrypy_build_py(build_py):
-    "Custom version of build_py that excludes Python-specific modules"
+    """Custom version of build_py that excludes Python-specific modules"""
+
     def build_module(self, module, module_file, package):
         python3 = sys.version_info >= (3,)
         if python3:
             exclude_pattern = re.compile('wsgiserver2|ssl_pyopenssl|'
-                '_cpcompat_subprocess')
+                                         '_cpcompat_subprocess')
         else:
             exclude_pattern = re.compile('wsgiserver3')
         if exclude_pattern.match(module):
-            return # skip it
+            return  # skip it
         return build_py.build_module(self, module, module_file, package)
 
 
@@ -37,7 +39,7 @@ name = "CherryPy"
 version = "3.2.4"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
-classifiers=[
+classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
@@ -66,18 +68,18 @@ classifiers=[
     "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
-author="CherryPy Team"
-author_email="team@cherrypy.org"
-url="http://www.cherrypy.org"
-cp_license="BSD"
-packages=[
+author = "CherryPy Team"
+author_email = "team@cherrypy.org"
+url = "http://www.cherrypy.org"
+cp_license = "BSD"
+packages = [
     "cherrypy", "cherrypy.lib",
     "cherrypy.tutorial", "cherrypy.test",
     "cherrypy.process",
     "cherrypy.scaffold",
     "cherrypy.wsgiserver",
 ]
-data_files=[
+data_files = [
     ('cherrypy', ['cherrypy/cherryd',
                   'cherrypy/favicon.ico',
                   'cherrypy/LICENSE.txt',
@@ -86,13 +88,13 @@ data_files=[
     ('cherrypy/scaffold', ['cherrypy/scaffold/example.conf',
                            'cherrypy/scaffold/site.conf',
                            ]),
-    ('cherrypy/scaffold/static', ['cherrypy/scaffold/static/made_with_cherrypy_small.png',
-                                  ]),
+    ('cherrypy/scaffold/static', [
+        'cherrypy/scaffold/static/made_with_cherrypy_small.png']),
     ('cherrypy/test', ['cherrypy/test/style.css',
                        'cherrypy/test/test.pem',
                        ]),
     ('cherrypy/test/static', ['cherrypy/test/static/index.html',
-                              'cherrypy/test/static/dirback.jpg',]),
+                              'cherrypy/test/static/dirback.jpg', ]),
     ('cherrypy/tutorial',
         [
             'cherrypy/tutorial/tutorial.conf',
@@ -100,12 +102,12 @@ data_files=[
             'cherrypy/tutorial/pdf_file.pdf',
             'cherrypy/tutorial/custom_error.html',
         ]
-    ),
+     ),
 ]
 scripts = ["cherrypy/cherryd"]
 
 cmd_class = dict(
-    build_py = cherrypy_build_py,
+    build_py=cherrypy_build_py,
 )
 
 if sys.version_info >= (3, 0):
@@ -119,9 +121,11 @@ else:
 
 # wininst may install data_files in Python/x.y instead of the cherrypy package.
 # Django's solution is at http://code.djangoproject.com/changeset/8313
-# See also http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
+# See also
+# http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
 if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
     data_files = [(r'\PURELIB\%s' % path, files) for path, files in data_files]
+
 
 def main():
     if sys.version < required_python_version:
