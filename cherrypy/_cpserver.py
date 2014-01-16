@@ -119,7 +119,6 @@ class Server(ServerPlugin):
         built into recent versions of Python) and 'pyopenssl' (to use the
         PyOpenSSL project, which you must install separately). You may also
         register your own classes in the cheroot.ssllib.ssl_adapters dict."""
-        dict."""
 
     statistics = False
     """Turns statistics-gathering on or off for aware HTTP servers."""
