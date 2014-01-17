@@ -19,7 +19,6 @@ and the handler must be either a callable or a context manager.
 """
 
 try:
-    # Python 3.0+
     from configparser import ConfigParser
 except ImportError:
     from ConfigParser import ConfigParser
@@ -64,7 +63,7 @@ class NamespaceSet(dict):
     namespace removed) and the config value.
 
     Namespace handlers may be any Python callable; they may also be
-    Python 2.5-style 'context managers', in which case their __enter__
+    context managers, in which case their __enter__
     method should return a callable to be used as the handler.
     See cherrypy.tools (the Toolbox class) for an example.
     """

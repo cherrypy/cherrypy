@@ -55,7 +55,7 @@ def check_status():
         **globals()))
     res = input('Have you run the tests with `nosetests -s ./` on '
                 'Windows, Linux, and Mac on at least Python '
-                '2.4, 2.5, 2.7, and 3.2? '
+                '2.7, and 3.3? '
                 .format(**globals()))
     if not res.lower().startswith('y'):
         print("Please do that")
@@ -134,7 +134,7 @@ def announce():
 
 
 def main():
-    assert sys.version_info >= (2, 6), ("Release script requires Python 2.6 "
+    assert sys.version_info >= (2, 7), ("Release script requires Python 2.7 "
                                         "or later.")
     assert platform.system() == 'Windows', ('You must release on Windows '
                                             '(to create Windows installers)')

@@ -36,7 +36,7 @@ CherryPy itself takes only 1-2ms per request! It is being used in production
 by many sites, from the simplest to the most demanding.
 
 CherryPy applications run on Windows, Linux, Mac OS X and any other platform
-supporting Python 2.3 or higher.
+supporting Python 2.7, Python 3.3 or higher.
 
 CherryPy is now more than eight years old and it is has proven very fast and
 stable. It is well tested, and includes tools for testing, profiling, and

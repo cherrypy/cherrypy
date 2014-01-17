@@ -413,7 +413,7 @@ Request      :attr:`app.request_class.namespaces <cherrypy._cprequest.Request.na
 ===========  =============================================================================  ===================================
 
 The name can be any string, and the handler must be either a callable or a
-(Python 2.5 style) context manager.
+context manager.
 
 If you need additional code to run when all your namespace keys are collected,
 you can supply a callable context manager in place of a normal function for

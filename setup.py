@@ -12,21 +12,7 @@ except ImportError:
     from distutils.core import setup
 
 from distutils.command.install import INSTALL_SCHEMES
-from distutils.command.build_py import build_py
 import sys
-import re
-
-
-class cherrypy_build_py(build_py):
-    """Custom version of build_py that excludes Python-specific modules"""
-
-    def build_module(self, module, module_file, package):
-        python3 = sys.version_info >= (3,)
-        if python3:
-            exclude_pattern = re.compile('_cpcompat_subprocess')
-            if exclude_pattern.match(module):
-                return  # skip it
-        return build_py.build_module(self, module, module_file, package)
 
 
 ###############################################################################
@@ -46,16 +32,11 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.3",
-    "Programming Language :: Python :: 2.4",
-    "Programming Language :: Python :: 2.5",
-    "Programming Language :: Python :: 2.6",
     "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.3",
     "Programming Language :: Python :: Implementation",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: Jython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
@@ -100,14 +81,10 @@ data_files = [
 ]
 scripts = ["cherrypy/cherryd"]
 
-cmd_class = dict(
-    build_py=cherrypy_build_py,
-)
-
 if sys.version_info >= (3, 0):
-    required_python_version = '3.0'
+    required_python_version = '3.3'
 else:
-    required_python_version = '2.3'
+    required_python_version = '2.7'
 
 ###############################################################################
 # end arguments for setup
@@ -144,7 +121,6 @@ def main():
         packages=packages,
         data_files=data_files,
         scripts=scripts,
-        cmdclass=cmd_class,
         install_requires=[
             "magicbus>=3.3.0alpha",
             "cheroot>=4.0.0beta",

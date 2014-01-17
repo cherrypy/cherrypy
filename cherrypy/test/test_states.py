@@ -464,18 +464,22 @@ class WaitTests(unittest.TestCase):
 
         servers = magicbus.plugins.servers
 
+        class TimeOutManager(object):
+
+            def __enter__(self):
+                self.orig_timeout = servers.occupied_port_timeout
+                servers.occupied_port_timeout = .07
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                servers.occupied_port_timeout = self.orig_timeout
+
         def with_shorter_timeouts(func):
             """
             A context where occupied_port_timeout is much smaller to speed
             test runs.
             """
-            # When we have Python 2.5, simplify using the with_statement.
-            orig_timeout = servers.occupied_port_timeout
-            servers.occupied_port_timeout = .07
-            try:
+            with TimeOutManager():
                 func()
-            finally:
-                servers.occupied_port_timeout = orig_timeout
 
         def do_waiting():
             # Wait on the free port that's unbound

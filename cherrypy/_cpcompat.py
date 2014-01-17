@@ -1,6 +1,6 @@
 """Compatibility code for using CherryPy with various versions of Python.
 
-CherryPy 3.2 is compatible with Python versions 2.3+. This module provides a
+CherryPy 3.2 is compatible with Python versions 2.7+. This module provides a
 useful abstraction over the differences between Python versions, sometimes by
 preferring a newer idiom, sometimes an older one, and sometimes a custom one.
 
@@ -116,12 +116,8 @@ except NameError:
     from sets import Set as set
 
 try:
-    # Python 3.1+
     from base64 import decodebytes as _base64_decodebytes
 except ImportError:
-    # Python 3.0-
-    # since CherryPy claims compability with Python 2.3, we must use
-    # the legacy API of base64
     from base64 import decodestring as _base64_decodebytes
 
 
@@ -137,17 +133,7 @@ def base64_decode(n, encoding='ISO-8859-1'):
     else:
         return b
 
-try:
-    # Python 2.5+
-    from hashlib import md5
-except ImportError:
-    from md5 import new as md5
-
-try:
-    # Python 2.5+
-    from hashlib import sha1 as sha
-except ImportError:
-    from sha import new as sha
+from hashlib import md5, sha1 as sha
 
 try:
     sorted = sorted
@@ -180,10 +166,7 @@ except ImportError:
     from urllib import unquote
     from urllib2 import parse_http_list, parse_keqv_list
 
-try:
-    from threading import local as threadlocal
-except ImportError:
-    from cherrypy._cpthreadinglocal import local as threadlocal
+from threading import local as threadlocal
 
 try:
     dict.iteritems
@@ -257,19 +240,15 @@ except NameError:
     xrange = range
 
 import threading
-if hasattr(threading.Thread, "daemon"):
-    # Python 2.6+
-    def get_daemon(t):
-        return t.daemon
 
-    def set_daemon(t, val):
-        t.daemon = val
-else:
-    def get_daemon(t):
-        return t.isDaemon()
 
-    def set_daemon(t, val):
-        t.setDaemon(val)
+def get_daemon(t):
+    return t.daemon
+
+
+def set_daemon(t, val):
+    t.daemon = val
+
 
 try:
     from email.utils import formatdate
@@ -302,19 +281,9 @@ try:
     json_decode = json.JSONDecoder().decode
     _json_encode = json.JSONEncoder().iterencode
 except ImportError:
-    if sys.version_info >= (2, 6):
-        # Python >=2.6 : json is part of the standard library
-        import json
-        json_decode = json.JSONDecoder().decode
-        _json_encode = json.JSONEncoder().iterencode
-    else:
-        json = None
-
-        def json_decode(s):
-            raise ValueError('No JSON library is available')
-
-        def _json_encode(s):
-            raise ValueError('No JSON library is available')
+    import json
+    json_decode = json.JSONDecoder().decode
+    _json_encode = json.JSONEncoder().iterencode
 finally:
     if json and py3k:
         # The two Python 3 implementations (simplejson/json)
@@ -333,18 +302,13 @@ except ImportError:
     # In Python 3, pickle is the sped-up C version.
     import pickle
 
-try:
-    os.urandom(20)
-    import binascii
+os.urandom(20)
+import binascii
 
-    def random20():
-        return binascii.hexlify(os.urandom(20)).decode('ascii')
-except (AttributeError, NotImplementedError):
-    import random
-    # os.urandom not available until Python 2.4. Fall back to random.random.
 
-    def random20():
-        return sha('%s' % random.random()).hexdigest()
+def random20():
+    return binascii.hexlify(os.urandom(20)).decode('ascii')
+
 
 try:
     from _thread import get_ident as get_thread_ident
@@ -367,23 +331,4 @@ else:
     Timer = threading._Timer
     Event = threading._Event
 
-# Prior to Python 2.6, the Thread class did not have a .daemon property.
-# This mix-in adds that property.
-
-
-class SetDaemonProperty:
-
-    def __get_daemon(self):
-        return self.isDaemon()
-
-    def __set_daemon(self, daemon):
-        self.setDaemon(daemon)
-
-    if sys.version_info < (2, 6):
-        daemon = property(__get_daemon, __set_daemon)
-
-# Use subprocess module from Python 2.7 on Python 2.3-2.6
-if sys.version_info < (2, 7):
-    import cherrypy._cpcompat_subprocess as subprocess
-else:
-    import subprocess
+import subprocess

@@ -83,7 +83,7 @@ there is copious documentation discussing how to connect the two. CherryPy can
 also be deployed on any WSGI-compliant gateway (a technology for interfacing
 numerous types of web servers): mod_wsgi, FastCGI, SCGI, IIS, etc.
 
-In addition, CherryPy is pure-python and is compatible with Python 2.3. This
+In addition, CherryPy is pure-python and is compatible with Python 2.7. This
 means that CherryPy will run on all major platforms that Python will run on
 (Windows, MacOSX, Linux, BSD, etc).
 

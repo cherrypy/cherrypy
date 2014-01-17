@@ -194,13 +194,9 @@ class ToolTests(helper.CPWebCase):
                 raise ValueError()
                 yield "confidential"
 
-            # METHOD TWO: decorator using Tool()
-            # We support Python 2.3, but the @-deco syntax would look like
-            # this:
-            # @tools.check_access()
+            @myauthtools.check_access()
             def restricted(self):
                 return "Welcome!"
-            restricted = myauthtools.check_access()(restricted)
             userid = restricted
 
             def err_in_onstart(self):
@@ -247,9 +243,8 @@ class ToolTests(helper.CPWebCase):
         app = cherrypy.tree.mount(root, config=conf)
         app.request_class.namespaces['myauth'] = myauthtools
 
-        if sys.version_info >= (2, 5):
-            from cherrypy.test import _test_decorators
-            root.tooldecs = _test_decorators.ToolExamples()
+        from cherrypy.test import _test_decorators
+        root.tooldecs = _test_decorators.ToolExamples()
     setup_server = staticmethod(setup_server)
 
     def testHookErrors(self):
@@ -388,9 +383,6 @@ class ToolTests(helper.CPWebCase):
         self.assertBody("I am a tarfile")
 
     def testToolWithConfig(self):
-        if not sys.version_info >= (2, 5):
-            return self.skip("skipped (Python 2.5+ only)")
-
         self.getPage('/tooldecs/blah')
         self.assertHeader('Content-Type', 'application/data')
 

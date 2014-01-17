@@ -318,9 +318,7 @@ class CPWebCase(webtest.WebCase):
             self.getPage("/gc/stats")
             self.assertBody("Statistics:")
     # Tell nose to run this last in each class.
-    # Prefer sys.maxint for Python 2.3, which didn't have float('inf')
-    test_gc.compat_co_firstlineno = getattr(
-        sys, 'maxint', None) or float('inf')
+    test_gc.compat_co_firstlineno = float('inf')
 
     def prefix(self):
         return self.script_name.rstrip("/")

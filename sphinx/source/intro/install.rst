@@ -13,7 +13,8 @@ Installation
 Prerequisites
 =============
 
-All you need is a working version of Python-2.3 or later on your computer.
+All you need is a working version of Python-2.7/Python-3.3 or later on your
+computer.
 If you are running Max OS X or some Linux distribution (e.g. Ubuntu, Debian, Fedora)
 you most likely already have python on you system, for a detailed instruction
 on how to install python follow the instruction on the

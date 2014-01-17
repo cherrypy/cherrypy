@@ -42,9 +42,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
         root = Root()
 
-        if sys.version_info >= (2, 5):
-            from cherrypy.test._test_decorators import ExposeExamples
-            root.expose_dec = ExposeExamples()
+        from cherrypy.test._test_decorators import ExposeExamples
+        root.expose_dec = ExposeExamples()
 
         class TestType(type):
 
@@ -185,15 +184,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     raise cherrypy.InternalRedirect(
                         '/image/getImagesByUser?user_id=%s' % str(user_id))
 
-            # We support Python 2.3, but the @-deco syntax would look like
-            # this:
-            # @tools.login_redir()
+            @tools.login_redir()
             def secure(self):
                 return "Welcome!"
-            secure = tools.login_redir()(secure)
-            # Since calling the tool returns the same function you pass in,
-            # you could skip binding the return value, and just write:
-            # tools.login_redir()(secure)
 
             def login(self):
                 return "Please log in"
@@ -527,20 +520,17 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody(data)
 
     def testCookies(self):
-        if sys.version_info >= (2, 5):
-            header_value = lambda x: x
-        else:
-            header_value = lambda x: x + ';'
+        header_value = lambda x: x
 
         self.getPage("/cookies/single?name=First",
                      [('Cookie', 'First=Dinsdale;')])
-        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
+        self.assertHeader('Set-Cookie', 'First=Dinsdale')
 
         self.getPage("/cookies/multiple?names=First&names=Last",
                      [('Cookie', 'First=Dinsdale; Last=Piranha;'),
                       ])
-        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
-        self.assertHeader('Set-Cookie', header_value('Last=Piranha'))
+        self.assertHeader('Set-Cookie', 'First=Dinsdale')
+        self.assertHeader('Set-Cookie', 'Last=Piranha')
 
         self.getPage("/cookies/single?name=Something-With%2CComma",
                      [('Cookie', 'Something-With,Comma=some-value')])
@@ -632,9 +622,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('/page1')
 
     def test_expose_decorator(self):
-        if not sys.version_info >= (2, 5):
-            return self.skip("skipped (Python 2.5+ only) ")
-
         # Test @expose
         self.getPage("/expose_dec/no_call")
         self.assertStatus(200)

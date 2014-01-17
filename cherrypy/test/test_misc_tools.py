@@ -32,15 +32,13 @@ def setup_server():
             return '<a href="feed">Atom feed</a>'
         index.exposed = True
 
-        # In Python 2.4+, we could use a decorator instead:
-        # @tools.accept('application/atom+xml')
+        @cherrypy.expose
+        @tools.accept(media='application/atom+xml')
         def feed(self):
             return """<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title>Unknown Blog</title>
 </feed>"""
-        feed.exposed = True
-        feed._cp_config = {'tools.accept.media': 'application/atom+xml'}
 
         def select(self):
             # We could also write this: mtype = cherrypy.lib.accept.accept(...)
