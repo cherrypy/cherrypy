@@ -330,5 +330,3 @@ else:
     # Python 3.2 and earlier
     Timer = threading._Timer
     Event = threading._Event
-
-import subprocess
