@@ -45,7 +45,7 @@ class PageHandler(object):
         return cherrypy.serving.request.kwargs
 
     @kwargs.setter
-    def set_kwargs(self, kwargs):
+    def kwargs(self, kwargs):
         cherrypy.serving.request.kwargs = kwargs
         return cherrypy.serving.request.kwargs
 
