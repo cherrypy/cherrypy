@@ -59,7 +59,7 @@ import logging
 import sys
 
 import cherrypy
-from cherrypy._cpcompat import BytesIO, copyitems, ntob
+from cherrypy._cpcompat import BytesIO, copyitems
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
 
@@ -291,7 +291,7 @@ def read_process(cmd, args=""):
     try:
         firstline = pipeout.readline()
         cmd_not_found = re.search(
-            ntob("(not recognized|No such file|not found)"),
+            b"(not recognized|No such file|not found)",
             firstline,
             re.IGNORECASE
         )

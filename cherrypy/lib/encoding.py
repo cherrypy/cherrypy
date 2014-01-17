@@ -2,7 +2,7 @@ import struct
 import time
 
 import cherrypy
-from cherrypy._cpcompat import basestring, BytesIO, ntob, unicodestr
+from cherrypy._cpcompat import basestring, BytesIO, unicodestr
 from cherrypy.lib import file_generator
 from cherrypy.lib import set_vary_header
 
@@ -247,15 +247,15 @@ def compress(body, compress_level):
     import zlib
 
     # See http://www.gzip.org/zlib/rfc-gzip.html
-    yield ntob('\x1f\x8b')       # ID1 and ID2: gzip marker
-    yield ntob('\x08')           # CM: compression method
-    yield ntob('\x00')           # FLG: none set
+    yield b'\x1f\x8b'       # ID1 and ID2: gzip marker
+    yield b'\x08'           # CM: compression method
+    yield b'\x00'           # FLG: none set
     # MTIME: 4 bytes
     yield struct.pack("<L", int(time.time()) & int('FFFFFFFF', 16))
-    yield ntob('\x02')           # XFL: max compression, slowest algo
-    yield ntob('\xff')           # OS: unknown
+    yield b'\x02'           # XFL: max compression, slowest algo
+    yield b'\xff'           # OS: unknown
 
-    crc = zlib.crc32(ntob(""))
+    crc = zlib.crc32(b"")
     size = 0
     zobj = zlib.compressobj(compress_level,
                             zlib.DEFLATED, -zlib.MAX_WBITS,

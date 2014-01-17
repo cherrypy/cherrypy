@@ -228,7 +228,7 @@ class StaticTest(helper.CPWebCase):
         response.begin()
         self.assertEqual(response.status, 200)
 
-        body = ntob('')
+        body = b''
         remaining = BIGFILE_SIZE
         while remaining > 0:
             data = response.fp.read(65536)

@@ -29,7 +29,7 @@ class WSGIGraftTests(helper.CPWebCase):
             response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)
             return [
-                ntob('Hello'), ntob(''), ntob(' '), ntob(''), ntob('world')
+                ntob('Hello'), b'', b' ', b'', ntob('world')
             ]
 
         class WSGIResponse(object):

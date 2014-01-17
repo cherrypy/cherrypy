@@ -45,11 +45,11 @@ def urljoin_bytes(*atoms):
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
     """
-    url = ntob("/").join([x for x in atoms if x])
-    while ntob("//") in url:
-        url = url.replace(ntob("//"), ntob("/"))
+    url = b"/".join([x for x in atoms if x])
+    while b"//" in url:
+        url = url.replace(b"//", b"/")
     # Special-case the final url of "", and return "/" instead.
-    return url or ntob("/")
+    return url or b"/"
 
 
 def protocol_from_http(protocol_str):
@@ -496,7 +496,7 @@ class HeaderMap(CaseInsensitiveDict):
             # because we never want to fold lines--folding has
             # been deprecated by the HTTP working group.
             v = b2a_base64(v.encode('utf-8'))
-            return (ntob('=?utf-8?b?') + v.strip(ntob('\n')) + ntob('?='))
+            return (b'=?utf-8?b?' + v.strip(b'\n') + b'?=')
 
         raise ValueError("Could not encode header part %r using "
                          "any of the encodings %r." %

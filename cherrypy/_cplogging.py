@@ -110,7 +110,7 @@ import sys
 
 import cherrypy
 from cherrypy import _cperror
-from cherrypy._cpcompat import ntob, py3k
+from cherrypy._cpcompat import py3k
 
 
 class NullHandler(logging.Handler):
@@ -236,7 +236,7 @@ class LogManager(object):
         if response.output_status is None:
             status = "-"
         else:
-            status = response.output_status.split(ntob(" "), 1)[0]
+            status = response.output_status.split(b" ", 1)[0]
             if py3k:
                 status = status.decode('ISO-8859-1')
 

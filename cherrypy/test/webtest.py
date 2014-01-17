@@ -533,7 +533,7 @@ def openURL(url, headers=None, method="GET", body=None,
                     self._method = method
                     if not url:
                         url = ntob('/')
-                    request = ntob(' ').join(
+                    request = b' '.join(
                         (method.encode("ASCII"),
                          url,
                          self._http_vsn_str.encode("ASCII")))

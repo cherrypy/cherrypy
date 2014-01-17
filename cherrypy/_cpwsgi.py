@@ -10,7 +10,7 @@ still be translatable to bytes via the Latin-1 encoding!"
 import sys as _sys
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO, bytestr, ntob, ntou, py3k, unicodestr
+from cherrypy._cpcompat import BytesIO, bytestr, ntou, py3k, unicodestr
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 
@@ -212,7 +212,7 @@ class _TrappedResponse(object):
                 raise
 
             if self.started_response:
-                return ntob("").join(b)
+                return b"".join(b)
             else:
                 return b
 
