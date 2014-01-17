@@ -59,7 +59,7 @@ These API's are described in the `CherryPy specification <https://bitbucket.org/
 __version__ = "4.0.0alpha"
 
 from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
-from cherrypy._cpcompat import basestring, unicodestr, set
+from cherrypy._cpcompat import basestring, unicodestr
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
@@ -170,7 +170,7 @@ def quickstart(root=None, script_name="", config=None):
     engine.block()
 
 
-from cherrypy._cpcompat import threadlocal as _local
+from threading import local as _local
 
 
 class _Serving(_local):

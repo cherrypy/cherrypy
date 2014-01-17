@@ -10,7 +10,7 @@ to a public caning.
 from binascii import b2a_base64
 from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
 from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr
-from cherrypy._cpcompat import reversed, sorted, unicodestr, unquote_qs
+from cherrypy._cpcompat import unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://bitbucket.org/cherrypy/cherrypy/issue/361

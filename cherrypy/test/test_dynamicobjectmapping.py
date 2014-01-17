@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy._cpcompat import sorted, unicodestr
+from cherrypy._cpcompat import unicodestr
 from cherrypy._cptree import Application
 from cherrypy.test import helper
 

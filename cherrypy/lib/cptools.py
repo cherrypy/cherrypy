@@ -1,10 +1,11 @@
 """Functions for builtin CherryPy tools."""
 
+from hashlib import md5
 import logging
 import re
 
 import cherrypy
-from cherrypy._cpcompat import basestring, md5, set, unicodestr
+from cherrypy._cpcompat import basestring, unicodestr
 from cherrypy.lib import httputil as _httputil
 
 

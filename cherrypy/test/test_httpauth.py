@@ -1,5 +1,7 @@
+from hashlib import md5, sha1 as sha
+
 import cherrypy
-from cherrypy._cpcompat import md5, sha, ntob
+from cherrypy._cpcompat import ntob
 from cherrypy.lib import httpauth
 
 from cherrypy.test import helper

@@ -118,7 +118,7 @@ be any string, and the handler must be either a callable or a context manager.
 """
 
 import cherrypy
-from cherrypy._cpcompat import set, basestring
+from cherrypy._cpcompat import basestring
 from cherrypy.lib import reprconf
 
 # Deprecated in  CherryPy 3.2--remove in 3.3

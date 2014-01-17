@@ -15,10 +15,8 @@ specifically with bytes, and a 'StringIO' name for dealing with native strings.
 It also provides a 'base64_decode' function with native strings as input and
 output.
 """
-import os
 import re
 import sys
-import threading
 
 if sys.version_info >= (3, 0):
     py3k = True
@@ -111,11 +109,6 @@ def assert_native(n):
         raise TypeError("n must be a native str (got %s)" % type(n).__name__)
 
 try:
-    set = set
-except NameError:
-    from sets import Set as set
-
-try:
     from base64 import decodebytes as _base64_decodebytes
 except ImportError:
     from base64 import decodestring as _base64_decodebytes
@@ -133,25 +126,6 @@ def base64_decode(n, encoding='ISO-8859-1'):
     else:
         return b
 
-from hashlib import md5, sha1 as sha
-
-try:
-    sorted = sorted
-except NameError:
-    def sorted(i):
-        i = i[:]
-        i.sort()
-        return i
-
-try:
-    reversed = reversed
-except NameError:
-    def reversed(x):
-        i = len(x)
-        while i > 0:
-            i -= 1
-            yield x[i]
-
 try:
     # Python 3
     from urllib.parse import urljoin, urlencode
@@ -166,7 +140,6 @@ except ImportError:
     from urllib import unquote
     from urllib2 import parse_http_list, parse_keqv_list
 
-from threading import local as threadlocal
 
 try:
     dict.iteritems
@@ -239,16 +212,6 @@ except NameError:
     # Python 3
     xrange = range
 
-import threading
-
-
-def get_daemon(t):
-    return t.daemon
-
-
-def set_daemon(t, val):
-    t.daemon = val
-
 
 try:
     from email.utils import formatdate
@@ -302,13 +265,6 @@ except ImportError:
     # In Python 3, pickle is the sped-up C version.
     import pickle
 
-os.urandom(20)
-import binascii
-
-
-def random20():
-    return binascii.hexlify(os.urandom(20)).decode('ascii')
-
 
 try:
     from _thread import get_ident as get_thread_ident
@@ -322,6 +278,8 @@ except NameError:
     # Python 2
     def next(i):
         return i.next()
+
+import threading
 
 if sys.version_info >= (3, 3):
     Event = threading.Event

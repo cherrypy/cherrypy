@@ -89,6 +89,7 @@ On the other extreme, some users report Firefox sending cookies after their
 expiration date, although this was on a system with an inaccurate system time.
 Maybe FF doesn't trust system time.
 """
+import binascii
 import sys
 import datetime
 import os
@@ -99,7 +100,7 @@ import types
 from magicbus.plugins.tasks import Monitor
 
 import cherrypy
-from cherrypy._cpcompat import copyitems, pickle, random20, unicodestr
+from cherrypy._cpcompat import copyitems, pickle, unicodestr
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
 
@@ -236,7 +237,7 @@ class Session(object):
 
     def generate_id(self):
         """Return a new session id."""
-        return random20()
+        return binascii.hexlify(os.urandom(20)).decode('ascii')
 
     def save(self):
         """Save session data."""
