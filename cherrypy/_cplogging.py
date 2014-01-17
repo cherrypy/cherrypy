@@ -145,11 +145,12 @@ class LogManager(object):
     """The actual :class:`logging.Logger` instance for access messages."""
 
     if py3k:
-        access_log_format = \
-            '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}"'
+        access_log_format = (
+            '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}"')
+
     else:
-        access_log_format = \
-            '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+        access_log_format = (
+            '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"')
 
     logger_root = None
     """The "top-level" logger name.

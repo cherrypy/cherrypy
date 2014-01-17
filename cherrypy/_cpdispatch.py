@@ -169,8 +169,8 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
 
         message = None
         if show_mismatched_params:
-            message = "Multiple values for parameters: "\
-                "%s" % ",".join(multiple_args)
+            message = "Multiple values for parameters: %s" % ",".join(
+                multiple_args)
         raise cherrypy.HTTPError(error, message=message)
 
     if not varkw and varkw_usage > 0:
@@ -180,8 +180,8 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
         if extra_qs_params:
             message = None
             if show_mismatched_params:
-                message = "Unexpected query string "\
-                    "parameters: %s" % ", ".join(extra_qs_params)
+                message = "Unexpected query string parameters: %s" % ", ".join(
+                    extra_qs_params)
             raise cherrypy.HTTPError(404, message=message)
 
         # If there were any extra body parameters, it's a 400 Not Found
@@ -189,8 +189,8 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
         if extra_body_params:
             message = None
             if show_mismatched_params:
-                message = "Unexpected body parameters: "\
-                    "%s" % ", ".join(extra_body_params)
+                message = "Unexpected body parameters: %s" % ", ".join(
+                    extra_body_params)
             raise cherrypy.HTTPError(400, message=message)
 
 
@@ -328,9 +328,12 @@ class Dispatcher(object):
             pre_len = len(iternames)
             if subnode is None:
                 dispatch = getattr(node, dispatch_name, None)
-                if dispatch and hasattr(dispatch, '__call__') and not \
-                        getattr(dispatch, 'exposed', False) and \
-                        pre_len > 1:
+                if (
+                    dispatch and
+                    hasattr(dispatch, '__call__') and not
+                    getattr(dispatch, 'exposed', False) and
+                    pre_len > 1
+                ):
                     # Don't expose the hidden 'index' token to _cp_dispatch
                     # We skip this if pre_len == 1 since it makes no sense
                     # to call a dispatcher when we have no tokens left.
@@ -388,8 +391,8 @@ class Dispatcher(object):
             for name, obj, conf, segleft in object_trail:
                 base.update(conf)
                 if 'tools.staticdir.dir' in conf:
-                    base['tools.staticdir.section'] = '/' + \
-                        '/'.join(fullpath[0:fullpath_len - segleft])
+                    base['tools.staticdir.section'] = (
+                        '/' + '/'.join(fullpath[0:fullpath_len - segleft]))
             return base
 
         # Try successive objects (reverse order)

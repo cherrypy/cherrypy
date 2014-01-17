@@ -153,8 +153,10 @@ def _parseDigestAuthorization(auth_params):
         return None
 
     # If qop is not sent, neither cnonce nor nc can be present
-    if ("cnonce" in params or "nc" in params) and \
-       "qop" not in params:
+    if (
+        ("cnonce" in params or "nc" in params) and
+        "qop" not in params
+    ):
         return None
 
     return params

@@ -134,8 +134,10 @@ class ReloadingTestLoader(TestLoader):
                 return obj.im_class(obj.__name__)
         elif hasattr(obj, '__call__'):
             test = obj()
-            if not isinstance(test, TestCase) and \
-               not isinstance(test, TestSuite):
+            if (
+                not isinstance(test, TestCase) and
+                not isinstance(test, TestSuite)
+            ):
                 raise ValueError("calling %s returned %s, "
                                  "not a test" % (obj, test))
             return test

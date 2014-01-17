@@ -99,9 +99,8 @@ def remove_2x_compat_notes(matcher):
     r"\{\{\{\n#!html\n<h2(.|\n)*"
     return ''
 
-replacements = [remove_2x_compat_notes] + \
-    [func for name,
-     func in globals().items() if name.startswith('replace_')]
+replacements = [remove_2x_compat_notes] + [
+    func for name, func in globals().items() if name.startswith('replace_')]
 
 
 def normalize_linebreaks(text):
