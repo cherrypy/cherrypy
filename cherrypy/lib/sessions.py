@@ -926,7 +926,7 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
     # http://www.faqs.org/rfcs/rfc2109.html but IE doesn't
     # save it to disk and the session is lost if people close
     # the browser. So we have to use the old "expires" ... sigh ...
-##    cookie[name]['max-age'] = timeout * 60
+    ##    cookie[name]['max-age'] = timeout * 60
     if timeout:
         e = time.time() + (timeout * 60)
         cookie[name]['expires'] = httputil.HTTPDate(e)

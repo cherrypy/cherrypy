@@ -111,8 +111,8 @@ class LogCase(object):
         If marker is None, self.lastmarker is used. If the log hasn't
         been marked (using self.markLog), the entire log will be returned.
         """
-# Give the logger time to finish writing?
-# time.sleep(0.5)
+        # Give the logger time to finish writing?
+        # time.sleep(0.5)
 
         logfile = self.logfile
         marker = marker or self.lastmarker
