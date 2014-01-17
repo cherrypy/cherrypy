@@ -193,12 +193,13 @@ class AcceptElement(HeaderElement):
         return cls(media_type, params)
     from_str = classmethod(from_str)
 
+    @property
     def qvalue(self):
+        """The qvalue, or priority, of this value."""
         val = self.params.get("q", "1")
         if isinstance(val, HeaderElement):
             val = val.value
         return float(val)
-    qvalue = property(qvalue, doc="The qvalue, or priority, of this value.")
 
     def __cmp__(self, other):
         diff = cmp(self.qvalue, other.qvalue)

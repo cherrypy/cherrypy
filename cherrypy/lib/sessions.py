@@ -116,14 +116,16 @@ class Session(object):
     id_observers = None
     "A list of callbacks to which to pass new id's."
 
-    def _get_id(self):
+    @property
+    def id(self):
+        """The current session ID."""
         return self._id
 
-    def _set_id(self, value):
+    @id.setter
+    def id(self, value):
         self._id = value
         for o in self.id_observers:
             o(value)
-    id = property(_get_id, _set_id, doc="The current session ID.")
 
     timeout = 60
     "Number of minutes after which to delete session data."
@@ -684,10 +686,13 @@ class MemcachedSession(Session):
         cls.cache = memcache.Client(cls.servers)
     setup = classmethod(setup)
 
-    def _get_id(self):
+    @property
+    def id(self):
+        """The current session ID."""
         return self._id
 
-    def _set_id(self, value):
+    @id.setter
+    def id(self, value):
         # This encode() call is where we differ from the superclass.
         # Memcache keys MUST be byte strings, not unicode.
         if isinstance(value, unicodestr):
@@ -696,7 +701,6 @@ class MemcachedSession(Session):
         self._id = value
         for o in self.id_observers:
             o(value)
-    id = property(_get_id, _set_id, doc="The current session ID.")
 
     def _exists(self):
         self.mc_lock.acquire()

@@ -63,23 +63,23 @@ class Application(object):
         return "%s.%s(%r, %r)" % (self.__module__, self.__class__.__name__,
                                   self.root, self.script_name)
 
-    script_name_doc = """The URI "mount point" for this app. A mount point
-    is that portion of the URI which is constant for all URIs that are
-    serviced by this application; it does not include scheme, host, or proxy
-    ("virtual host") portions of the URI.
+    @property
+    def script_name(self):
+        """The URI "mount point" for this app. A mount point is that portion
+        of the URI which is constant for all URIs that are serviced by this
+        application; it does not include scheme, host, or proxy ("virtual
+        host") portions of the URI.
 
-    For example, if script_name is "/my/cool/app", then the URL
-    "http://www.example.com/my/cool/app/page1" might be handled by a
-    "page1" method on the root object.
+        For example, if script_name is "/my/cool/app", then the URL
+        "http://www.example.com/my/cool/app/page1" might be handled by a
+        "page1" method on the root object.
 
-    The value of script_name MUST NOT end in a slash. If the script_name
-    refers to the root of the URI, it MUST be an empty string (not "/").
+        The value of script_name MUST NOT end in a slash. If the script_name
+        refers to the root of the URI, it MUST be an empty string (not "/").
 
-    If script_name is explicitly set to None, then the script_name will be
-    provided for each call from request.wsgi_environ['SCRIPT_NAME'].
-    """
-
-    def _get_script_name(self):
+        If script_name is explicitly set to None, then the script_name will
+        be provided for each call from request.wsgi_environ['SCRIPT_NAME'].
+        """
         if self._script_name is not None:
             return self._script_name
 
@@ -87,12 +87,11 @@ class Application(object):
         # should be pulled from WSGI environ.
         return cherrypy.serving.request.wsgi_environ['SCRIPT_NAME'].rstrip("/")
 
-    def _set_script_name(self, value):
+    @script_name.setter
+    def script_name(self, value):
         if value:
             value = value.rstrip("/")
         self._script_name = value
-    script_name = property(fget=_get_script_name, fset=_set_script_name,
-                           doc=script_name_doc)
 
     def merge(self, config):
         """Merge the given config into self.config."""

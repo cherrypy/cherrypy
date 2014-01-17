@@ -66,12 +66,13 @@ class Tool(object):
         self.__doc__ = self.callable.__doc__
         self._setargs()
 
-    def _get_on(self):
+    @property
+    def on(self):
         raise AttributeError(_attr_error)
 
-    def _set_on(self, value):
+    @on.setter
+    def on(self, value):
         raise AttributeError(_attr_error)
-    on = property(_get_on, _set_on)
 
     def _setargs(self):
         """Copy func parameter names to obj attributes."""
