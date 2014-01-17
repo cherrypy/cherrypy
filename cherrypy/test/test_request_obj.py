@@ -301,10 +301,10 @@ class RequestObjectTests(helper.CPWebCase):
 
     def testParams(self):
         self.getPage("/params/?thing=a")
-        self.assertBody(repr(ntou("a")))
+        self.assertBody(repr(u"a"))
 
         self.getPage("/params/?thing=a&thing=b&thing=c")
-        self.assertBody(repr([ntou('a'), ntou('b'), ntou('c')]))
+        self.assertBody(repr([u'a', u'b', u'c']))
 
         # Test friendly error message when given params are not accepted.
         cherrypy.config.update({"request.show_mismatched_params": True})
@@ -331,7 +331,7 @@ class RequestObjectTests(helper.CPWebCase):
             "/params/code?url=http%3A//cherrypy.org/index%3Fa%3D1%26b%3D2")
         self.assertBody("args: %s kwargs: %s" %
                         (('code',),
-                         [('url', ntou('http://cherrypy.org/index?a=1&b=2'))]))
+                         [('url', u'http://cherrypy.org/index?a=1&b=2')]))
 
         # Test coordinates sent by <img ismap>
         self.getPage("/params/ismap?223,114")
@@ -341,8 +341,8 @@ class RequestObjectTests(helper.CPWebCase):
         self.getPage("/params/dictlike?a[1]=1&a[2]=2&b=foo&b[bar]=baz")
         self.assertBody("args: %s kwargs: %s" %
                         (('dictlike',),
-                         [('a[1]', ntou('1')), ('a[2]', ntou('2')),
-                          ('b', ntou('foo')), ('b[bar]', ntou('baz'))]))
+                         [('a[1]', u'1'), ('a[2]', u'2'),
+                          ('b', u'foo'), ('b[bar]', u'baz')]))
 
     def testParamErrors(self):
 
@@ -657,22 +657,22 @@ class RequestObjectTests(helper.CPWebCase):
     def test_encoded_headers(self):
         # First, make sure the innards work like expected.
         self.assertEqual(
-            httputil.decode_TEXT(ntou("=?utf-8?q?f=C3=BCr?=")), ntou("f\xfcr"))
+            httputil.decode_TEXT(u"=?utf-8?q?f=C3=BCr?="), ntou("f\xfcr"))
 
         if cherrypy.server.protocol_version == "HTTP/1.1":
             # Test RFC-2047-encoded request and response header values
             u = ntou('\u212bngstr\xf6m', 'escape')
-            c = ntou("=E2=84=ABngstr=C3=B6m")
+            c = u"=E2=84=ABngstr=C3=B6m"
             self.getPage("/headers/ifmatch",
-                         [('If-Match', ntou('=?utf-8?q?%s?=') % c)])
+                         [('If-Match', u'=?utf-8?q?%s?=' % c)])
             # The body should be utf-8 encoded.
             self.assertBody(ntob("\xe2\x84\xabngstr\xc3\xb6m"))
             # But the Etag header should be RFC-2047 encoded (binary)
-            self.assertHeader("ETag", ntou('=?utf-8?b?4oSrbmdzdHLDtm0=?='))
+            self.assertHeader("ETag", u'=?utf-8?b?4oSrbmdzdHLDtm0=?=')
 
             # Test a *LONG* RFC-2047-encoded request and response header value
             self.getPage("/headers/ifmatch",
-                         [('If-Match', ntou('=?utf-8?q?%s?=') % (c * 10))])
+                         [('If-Match', u'=?utf-8?q?%s?=' % (c * 10))])
             self.assertBody(ntob("\xe2\x84\xabngstr\xc3\xb6m") * 10)
             # Note: this is different output for Python3, but it decodes fine.
             etag = self.assertHeader(

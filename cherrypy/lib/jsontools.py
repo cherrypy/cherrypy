@@ -1,11 +1,11 @@
 import sys
 import cherrypy
-from cherrypy._cpcompat import basestring, ntou, json, json_encode, json_decode
+from cherrypy._cpcompat import basestring, json, json_encode, json_decode
 
 
 def json_processor(entity):
     """Read application/json data into request.json."""
-    if not entity.headers.get(ntou("Content-Length"), ntou("")):
+    if not entity.headers.get(u"Content-Length", u""):
         raise cherrypy.HTTPError(411)
 
     body = entity.fp.read()
@@ -15,7 +15,7 @@ def json_processor(entity):
         raise cherrypy.HTTPError(400, 'Invalid JSON document')
 
 
-def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
+def json_in(content_type=[u'application/json', u'text/javascript'],
             force=True, debug=False, processor=json_processor):
     """Add a processor to parse JSON request entities:
     The default processor places the parsed data into request.json.

@@ -10,7 +10,7 @@ still be translatable to bytes via the Latin-1 encoding!"
 import sys as _sys
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO, bytestr, ntou, py3k, unicodestr
+from cherrypy._cpcompat import BytesIO, bytestr, py3k, unicodestr
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 
@@ -20,9 +20,9 @@ def downgrade_wsgi_ux_to_1x(environ):
     """
     env1x = {}
 
-    url_encoding = environ[ntou('wsgi.url_encoding')]
+    url_encoding = environ[u'wsgi.url_encoding']
     for k, v in list(environ.items()):
-        if k in [ntou('PATH_INFO'), ntou('SCRIPT_NAME'), ntou('QUERY_STRING')]:
+        if k in [u'PATH_INFO', u'SCRIPT_NAME', u'QUERY_STRING']:
             v = v.encode(url_encoding)
         elif isinstance(v, unicodestr):
             v = v.encode('ISO-8859-1')
@@ -228,7 +228,7 @@ class AppResponse(object):
         self.cpapp = cpapp
         try:
             if not py3k:
-                if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
+                if environ.get(u'wsgi.version') == (u'u', 0):
                     environ = downgrade_wsgi_ux_to_1x(environ)
             self.environ = environ
             self.run()

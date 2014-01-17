@@ -132,7 +132,7 @@ except ImportError:
         return b''.join(atoms)
 
 import cherrypy
-from cherrypy._cpcompat import basestring, ntou
+from cherrypy._cpcompat import basestring
 from cherrypy.lib import httputil
 
 
@@ -253,7 +253,7 @@ def _old_process_multipart(entity):
 
     for part in entity.parts:
         if part.name is None:
-            key = ntou('parts')
+            key = u'parts'
         else:
             key = part.name
 

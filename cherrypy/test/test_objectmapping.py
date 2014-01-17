@@ -1,5 +1,4 @@
 import cherrypy
-from cherrypy._cpcompat import ntou
 from cherrypy._cptree import Application
 from cherrypy.test import helper
 
@@ -369,7 +368,7 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertHeader('Allow', 'GET, HEAD, POST')
 
         self.getPage("/bymethod")
-        self.assertBody(repr(['another', ntou('one')]))
+        self.assertBody(repr(['another', u'one']))
         self.assertHeader('Allow', 'GET, HEAD, POST')
 
         self.getPage("/bymethod", method="PUT")

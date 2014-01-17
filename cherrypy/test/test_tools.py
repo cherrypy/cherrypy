@@ -138,8 +138,8 @@ class ToolTests(helper.CPWebCase):
                 assert cbnames == ['gzip'], cbnames
                 priorities = [x.priority for x in hooks]
                 assert priorities == [80], priorities
-                yield ntou("Hello,")
-                yield ntou("world")
+                yield u"Hello,"
+                yield u"world"
                 yield europoundUnicode
             euro.exposed = True
 
@@ -152,8 +152,8 @@ class ToolTests(helper.CPWebCase):
             # Multiple decorators; include kwargs just for fun.
             # Note that rotator must run before gzip.
             def decorated_euro(self, *vpath):
-                yield ntou("Hello,")
-                yield ntou("world")
+                yield u"Hello,"
+                yield u"world"
                 yield europoundUnicode
             decorated_euro.exposed = True
             decorated_euro = tools.gzip(compress_level=6)(decorated_euro)
@@ -337,7 +337,7 @@ class ToolTests(helper.CPWebCase):
             "AttributeError: 'str' object has no attribute 'items'")
 
     def testCombinedTools(self):
-        expectedResult = (ntou("Hello,world") +
+        expectedResult = (u"Hello,world" +
                           europoundUnicode).encode('utf-8')
         zbuf = BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)

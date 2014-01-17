@@ -34,7 +34,7 @@ class MultipartTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
     def test_multipart(self):
-        text_part = ntou("This is the text version")
+        text_part = u"This is the text version"
         html_part = ntou(
             """<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -91,7 +91,7 @@ This is the <strong>HTML</strong> version
                      ],
                      body=body),
         self.assertBody(
-            repr([('baz', [ntou('111'), ntou('333')]), ('foo', ntou('bar'))]))
+            repr([('baz', [u'111', u'333']), ('foo', u'bar')]))
 
 
 class SafeMultipartHandlingTest(helper.CPWebCase):
