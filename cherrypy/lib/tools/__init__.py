@@ -323,12 +323,12 @@ def validate_since():
 
         since = request.headers.get('If-Unmodified-Since')
         if since and since != lastmod:
-            if (status >= 200 and status <= 299) or status == 412:
+            if (200 <= status <= 299) or status == 412:
                 raise cherrypy.HTTPError(412)
 
         since = request.headers.get('If-Modified-Since')
         if since and since == lastmod:
-            if (status >= 200 and status <= 299) or status == 304:
+            if (200 <= status <= 299) or status == 304:
                 if request.method in ("GET", "HEAD"):
                     raise cherrypy.HTTPRedirect([], 304)
                 else:

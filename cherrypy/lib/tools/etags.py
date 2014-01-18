@@ -54,7 +54,7 @@ def validate_etags(autotags=False, debug=False):
     # MUST be ignored."
     if debug:
         cherrypy.log('Status: %s' % status, 'TOOLS.ETAGS')
-    if status >= 200 and status <= 299:
+    if 200 <= status <= 299:
         request = cherrypy.serving.request
 
         conditions = request.headers.elements('If-Match') or []
