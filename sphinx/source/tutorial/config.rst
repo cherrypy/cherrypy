@@ -404,13 +404,13 @@ will call ``db_namespace('connstring', 'Oracle:host=1.10.100.200;sid=TEST')``.
 
 The point at which your namespace handler is called depends on where you add it:
 
-===========  =============================================================================  ===================================
-Scope        Namespace dict                                                                 Handler is called in  
------------  -----------------------------------------------------------------------------  -----------------------------------
+===========  ==============================================================================  ===================================
+Scope        Namespace dict                                                                  Handler is called in
+-----------  ------------------------------------------------------------------------------  -----------------------------------
 Global       :attr:`cherrypy.config.namespaces <cherrypy.lib.config.Config.namespaces>`      cherrypy.config.update
 Application  :attr:`app.namespaces <cherrypy.lib.tree.Application.namespaces>`               Application.merge (which is called by cherrypy.tree.mount)
 Request      :attr:`app.request_class.namespaces <cherrypy.lib.request.Request.namespaces>`  Request.configure (called for each request, after the handler is looked up)
-===========  =============================================================================  ===================================
+===========  ==============================================================================  ===================================
 
 The name can be any string, and the handler must be either a callable or a
 context manager.
