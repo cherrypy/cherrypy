@@ -353,6 +353,7 @@ def _prepare_default_toolbox():
     from cherrypy.lib.tools.ignore_headers import ignore_headers
     from cherrypy.lib.tools.proxy import proxy
     from cherrypy.lib.tools.allow import allow
+    from cherrypy.lib.tools.expires import expires
 
     _d = Toolbox("tools")
     _d.session_auth = session_auth.SessionAuthTool(session_auth.session_auth)
@@ -373,7 +374,7 @@ def _prepare_default_toolbox():
     _d.sessions = sessions.SessionTool()
     _d.xmlrpc = ErrorTool(xmlrpcutil.on_error)
     _d.caching = caching.CachingTool('before_handler', caching.get, 'caching')
-    _d.expires = Tool('before_finalize', caching.expires)
+    _d.expires = Tool('before_finalize', expires)
     _d.tidy = DeprecatedTool(
         'before_finalize',
         "The tidy tool has been removed from the standard distribution of "
