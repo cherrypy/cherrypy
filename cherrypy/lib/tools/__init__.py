@@ -337,7 +337,7 @@ def validate_since():
 
 def _prepare_default_toolbox():
     from cherrypy.lib.tools import static, auth_basic, jsontools, auth_digest
-    from cherrypy.lib.tools import auth, encoding, session_auth
+    from cherrypy.lib.tools import encoding, session_auth
     from cherrypy.lib.tools import sessions, xmlrpcutil, caching
     from cherrypy.lib.tools.autovary import autovary
     from cherrypy.lib.tools.etags import validate_etags
@@ -386,8 +386,14 @@ def _prepare_default_toolbox():
         "http://tools.cherrypy.org/browser.")
     _d.ignore_headers = Tool('before_request_body', ignore_headers)
     _d.referer = Tool('before_request_body', referer)
-    _d.basic_auth = Tool('on_start_resource', auth.basic_auth)
-    _d.digest_auth = Tool('on_start_resource', auth.digest_auth)
+    _d.basic_auth = DeprecatedTool(
+        'on_start_resource',
+        "The basic_auth tool has been removed from the standard distribution "
+        "of CherryPy. You probably want to use the auth_basic tool instead.")
+    _d.digest_auth = DeprecatedTool(
+        'on_start_resource',
+        "The digest_auth tool has been removed from the standard distribution "
+        "of CherryPy. You probably want to use the auth_digest tool instead.")
     _d.trailing_slash = Tool('before_handler', trailing_slash, priority=60)
     _d.flatten = Tool('before_finalize', flatten)
     _d.accept = Tool('on_start_resource', accept)
