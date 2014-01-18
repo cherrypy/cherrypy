@@ -10,7 +10,6 @@ from cherrypy.lib import httputil, file_generator, reprconf
 
 
 class Hook(object):
-
     """A callback and its metadata: failsafe, priority, and kwargs."""
 
     callback = None
@@ -69,7 +68,6 @@ class Hook(object):
 
 
 class HookMap(dict):
-
     """A map of call points to lists of callbacks (Hook objects)."""
 
     def __new__(cls, points=None):
@@ -177,7 +175,6 @@ hookpoints = ['on_start_resource', 'before_request_body',
 
 
 class Request(object):
-
     """An HTTP request.
 
     This object represents the metadata of an HTTP request message;
@@ -771,7 +768,6 @@ class Request(object):
 
 
 class ResponseBody(object):
-
     """The body of the HTTP response (the response entity)."""
 
     if py3k:
@@ -814,7 +810,6 @@ class ResponseBody(object):
 
 
 class Response(object):
-
     """An HTTP Response, including status, headers, and body."""
 
     status = ""

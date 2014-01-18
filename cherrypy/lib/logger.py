@@ -114,7 +114,6 @@ from cherrypy.lib.compat import py3k
 
 
 class NullHandler(logging.Handler):
-
     """A no-op logging handler to silence the logging.lastResort handler."""
 
     def handle(self, record):
@@ -128,7 +127,6 @@ class NullHandler(logging.Handler):
 
 
 class LogManager(object):
-
     """An object to assist both simple and advanced logging.
 
     ``cherrypy.log`` is an instance of this class.
@@ -420,8 +418,8 @@ class LogManager(object):
 
 
 class WSGIErrorHandler(logging.Handler):
-
-    "A handler class which writes logging records to environ['wsgi.errors']."
+    """A handler class which writes logging records to environ['wsgi.errors']
+    """
 
     def flush(self):
         """Flushes the stream."""

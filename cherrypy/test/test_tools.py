@@ -168,7 +168,6 @@ class ToolTests(helper.CPWebCase):
         root = Root()
 
         class TestType(type):
-
             """Metaclass which automatically exposes all functions in each
             subclass, and adds an instance of the subclass as an attribute
             of root.

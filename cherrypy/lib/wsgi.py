@@ -32,7 +32,6 @@ def downgrade_wsgi_ux_to_1x(environ):
 
 
 class VirtualHost(object):
-
     """Select a different WSGI application based on the Host header.
 
     This can be useful when running multiple sites within one CP server.
@@ -84,7 +83,6 @@ class VirtualHost(object):
 
 
 class InternalRedirector(object):
-
     """WSGI middleware that handles raised cherrypy.InternalRedirect."""
 
     def __init__(self, nextapp, recursive=False):
@@ -130,7 +128,6 @@ class InternalRedirector(object):
 
 
 class ExceptionTrapper(object):
-
     """WSGI middleware that traps exceptions."""
 
     def __init__(self, nextapp, throws=(KeyboardInterrupt, SystemExit)):
@@ -221,7 +218,6 @@ class _TrappedResponse(object):
 
 
 class AppResponse(object):
-
     """WSGI response iterable for CherryPy applications."""
 
     def __init__(self, environ, start_response, cpapp):
@@ -356,7 +352,6 @@ class AppResponse(object):
 
 
 class CPWSGIApp(object):
-
     """A WSGI application object for a CherryPy Application."""
 
     pipeline = [('ExceptionTrapper', ExceptionTrapper),

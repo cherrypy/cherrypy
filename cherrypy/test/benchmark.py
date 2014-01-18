@@ -104,7 +104,6 @@ app = cherrypy.tree.mount(Root(), SCRIPT_NAME, appconf)
 
 
 class NullRequest:
-
     """A null HTTP request class, returning 200 and an empty body."""
 
     def __init__(self, local, remote, scheme="http"):
@@ -129,7 +128,6 @@ class NullResponse:
 
 
 class ABSession:
-
     """A session of 'ab', the Apache HTTP server benchmarking tool.
 
 Example output from ab:
@@ -399,7 +397,6 @@ if __name__ == '__main__':
     print("Starting CherryPy app server...")
 
     class NullWriter(object):
-
         """Suppresses the printing of socket errors."""
 
         def write(self, data):

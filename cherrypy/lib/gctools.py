@@ -14,7 +14,6 @@ from magicbus.plugins import SimplePlugin
 
 
 class ReferrerTree(object):
-
     """An object which gathers all referrers of an object to a given depth."""
 
     peek_length = 40
@@ -130,7 +129,6 @@ def get_context(obj):
 
 
 class GCRoot(object):
-
     """A CherryPy page handler for testing reference leaks."""
 
     classes = [

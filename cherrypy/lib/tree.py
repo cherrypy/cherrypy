@@ -12,7 +12,6 @@ from cherrypy.lib.config import merge as config_merge
 
 
 class Application(object):
-
     """A CherryPy Application.
 
     Servers and gateways should not instantiate Request objects directly.
@@ -154,7 +153,6 @@ class Application(object):
 
 
 class Tree(object):
-
     """A registry of CherryPy applications, mounted at diverse points.
 
     An instance of this class may also be used as a WSGI callable

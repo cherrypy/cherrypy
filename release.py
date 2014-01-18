@@ -103,14 +103,12 @@ def build():
 
 
 def push():
-    "The build went well, so let's push the SCM changesets"
+    """The build went well, so let's push the SCM changesets."""
     subprocess.check_call(['hg', 'push'])
 
 
 def publish():
-    """
-    Publish the dists on PyPI
-    """
+    """Publish the dists on PyPI."""
     try:
         upload_dist_commands = [cmd + ['register', 'upload']
                                 for cmd in dist_commands]

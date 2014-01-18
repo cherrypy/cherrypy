@@ -249,7 +249,6 @@ proc_time = lambda s: time.time() - s['Start Time']
 
 
 class ByteCountWrapper(object):
-
     """Wraps a file-like object, counting the number of bytes read."""
 
     def __init__(self, rfile):
@@ -295,7 +294,6 @@ average_uriset_time = lambda s: s['Count'] and (s['Sum'] / s['Count']) or 0
 
 
 class StatsTool(cherrypy.Tool):
-
     """Record various information about the current request."""
 
     def __init__(self):

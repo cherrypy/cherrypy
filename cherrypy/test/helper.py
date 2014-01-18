@@ -58,7 +58,6 @@ def get_tst_config(overconf={}):
 
 
 class Supervisor(object):
-
     """Base class for modeling and controlling servers during testing."""
 
     def __init__(self, **kwargs):
@@ -72,7 +71,6 @@ log_to_stderr = lambda msg, level: sys.stderr.write(msg + os.linesep)
 
 
 class LocalSupervisor(Supervisor):
-
     """Base class for modeling/controlling servers which run in the same
     process.
 
@@ -129,7 +127,6 @@ class LocalSupervisor(Supervisor):
 
 
 class NativeServerSupervisor(LocalSupervisor):
-
     """Server supervisor for the builtin HTTP server."""
 
     httpserver_class = "cherrypy.lib.native_server.CPHTTPServer"
@@ -141,7 +138,6 @@ class NativeServerSupervisor(LocalSupervisor):
 
 
 class LocalWSGISupervisor(LocalSupervisor):
-
     """Server supervisor for the builtin WSGI server."""
 
     httpserver_class = "cherrypy.lib.wsgi_server.CPWSGIServer"
@@ -278,7 +274,6 @@ class CPWebCase(webtest.WebCase):
     _setup_server = classmethod(_setup_server)
 
     def setup_class(cls):
-        ''
         # Creates a server
         conf = get_tst_config()
         supervisor_factory = cls.available_servers.get(
@@ -309,7 +304,6 @@ class CPWebCase(webtest.WebCase):
     setup_class = classmethod(setup_class)
 
     def teardown_class(cls):
-        ''
         if hasattr(cls, 'setup_server'):
             cls.supervisor.stop()
     teardown_class = classmethod(teardown_class)

@@ -34,7 +34,6 @@ class RequestObjectTests(helper.CPWebCase):
         root = Root()
 
         class TestType(type):
-
             """Metaclass which automatically exposes all functions in each
             subclass, and adds an instance of the subclass as an attribute
             of root.
@@ -241,7 +240,6 @@ class RequestObjectTests(helper.CPWebCase):
                 return "success"
 
         class Divorce:
-
             """HTTP Method handlers shouldn't collide with normal method names.
             For example, a GET-handler shouldn't collide with a method named
             'get'.

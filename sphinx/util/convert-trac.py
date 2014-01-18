@@ -1,5 +1,4 @@
 #!python
-
 """
 %prog <filename>
 

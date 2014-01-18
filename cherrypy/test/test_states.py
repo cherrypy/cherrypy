@@ -389,7 +389,7 @@ class SignalHandlingTests(helper.CPWebCase):
             self.skip("skipped (no os.kill)")
 
     def test_SIGTERM(self):
-        "SIGTERM should shut down the server whether daemonized or not."
+        """SIGTERM should shut down the server whether daemonized or not."""
         self._require_signal_and_kill('SIGTERM')
 
         # Spawn a normal, undaemonized process.
@@ -493,7 +493,7 @@ class WaitTests(unittest.TestCase):
         with_shorter_timeouts(do_waiting)
 
     def find_free_port(self):
-        "Find a free port by binding to port 0 then unbinding."
+        """Find a free port by binding to port 0 then unbinding."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('', 0))
         free_port = sock.getsockname()[1]

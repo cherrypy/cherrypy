@@ -118,7 +118,6 @@ engine.signal_handler = SignalHandler(engine)
 
 
 class _HandleSignalsPlugin(object):
-
     """Handle signals from other processes based on the configured
     platform handlers above."""
 
@@ -171,7 +170,6 @@ from threading import local as _local
 
 
 class _Serving(_local):
-
     """An interface for registering request and response objects.
 
     Rather than have a separate "thread local" object for the request and
@@ -270,7 +268,6 @@ response = _ThreadLocalProxy('response')
 
 
 class _ThreadData(_local):
-
     """A container for thread-specific data."""
 thread_data = _ThreadData()
 
@@ -297,7 +294,6 @@ from cherrypy.lib import logger as _cplogging
 
 
 class _GlobalLogManager(_cplogging.LogManager):
-
     """A site-wide LogManager; routes to app.log or global log as appropriate.
 
     This :class:`LogManager<cherrypy.lib.logger.LogManager>` implements

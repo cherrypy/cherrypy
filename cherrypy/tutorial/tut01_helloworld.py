@@ -9,7 +9,6 @@ import cherrypy
 
 
 class HelloWorld:
-
     """ Sample request handler class. """
 
     def index(self):

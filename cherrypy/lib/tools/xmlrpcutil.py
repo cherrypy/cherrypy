@@ -58,7 +58,6 @@ def on_error(*args, **kwargs):
 
 
 class XMLRPCController(object):
-
     """A Controller (page handler collection) for XML-RPC.
 
     To use it, have your controllers subclass this base class (it will

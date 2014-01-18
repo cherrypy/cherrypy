@@ -108,7 +108,6 @@ def get_ranges(headervalue, content_length):
 
 
 class HeaderElement(object):
-
     """An element (with parameters) from an HTTP header's element list."""
 
     def __init__(self, value, params=None):
@@ -165,7 +164,6 @@ q_separator = re.compile(r'; *q *=')
 
 
 class AcceptElement(HeaderElement):
-
     """An element (with parameters) from an Accept* header's element list.
 
     AcceptElement objects are comparable; the more-preferred object will be
@@ -360,7 +358,6 @@ def parse_query_string(query_string, keep_blank_values=True, encoding='utf-8'):
 
 
 class CaseInsensitiveDict(dict):
-
     """A case-insensitive dict subclass.
 
     Each key is changed on entry to str(key).title().
@@ -423,7 +420,6 @@ else:
 
 
 class HeaderMap(CaseInsensitiveDict):
-
     """A dict subclass for HTTP request and response headers.
 
     Each key is changed on entry to str(key).title(). This allows headers
@@ -505,7 +501,6 @@ class HeaderMap(CaseInsensitiveDict):
 
 
 class Host(object):
-
     """An internet address.
 
     name

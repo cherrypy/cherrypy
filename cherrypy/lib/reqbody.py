@@ -275,7 +275,6 @@ def _old_process_multipart(entity):
 
 # -------------------------------- Entities --------------------------------- #
 class Entity(object):
-
     """An HTTP request body, or MIME multipart body.
 
     This class collects information about the HTTP request entity. When a
@@ -543,7 +542,6 @@ class Entity(object):
 
 
 class Part(Entity):
-
     """A MIME part entity, part of a multipart entity."""
 
     # "The default character set, which must be assumed in the absence of a
@@ -914,7 +912,6 @@ class SizedReader:
 
 
 class RequestBody(Entity):
-
     """The entity of the HTTP request."""
 
     bufsize = 8 * 1024

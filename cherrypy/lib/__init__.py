@@ -5,7 +5,6 @@ from cherrypy.lib.reprconf import unrepr, modules, attributes
 
 
 class file_generator(object):
-
     """Yield the given input (a file object) in chunks (default 64k). (Core)"""
 
     def __init__(self, input, chunkSize=65536):
@@ -41,7 +40,7 @@ def file_generator_limited(fileobj, count, chunk_size=65536):
 
 
 def set_vary_header(response, header_name):
-    "Add a Vary header to a response"
+    """Add a Vary header to a response"""
     varies = response.headers.get("Vary", "")
     varies = [x.strip() for x in varies.split(",") if x.strip()]
     if header_name not in varies:

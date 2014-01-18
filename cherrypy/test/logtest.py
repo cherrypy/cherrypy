@@ -29,7 +29,6 @@ except ImportError:
 
 
 class LogCase(object):
-
     """unittest.TestCase mixin for testing log messages.
 
     logfile: a filename for the desired log. Yes, I know modes are evil,

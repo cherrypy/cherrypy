@@ -124,19 +124,16 @@ from cherrypy.lib import httputil as _httputil
 
 
 class CherryPyException(Exception):
-
     """A base class for CherryPy exceptions."""
     pass
 
 
 class TimeoutError(CherryPyException):
-
     """Exception raised when Response.timed_out is detected."""
     pass
 
 
 class InternalRedirect(CherryPyException):
-
     """Exception raised to switch to the handler for a different URL.
 
     This exception will redirect processing to another path within the site
@@ -168,7 +165,6 @@ class InternalRedirect(CherryPyException):
 
 
 class HTTPRedirect(CherryPyException):
-
     """Exception raised when the request should be redirected.
 
     This exception will force a HTTP redirect to the URL or URL's you give it.
@@ -331,7 +327,6 @@ def clean_headers(status):
 
 
 class HTTPError(CherryPyException):
-
     """Exception used to return an HTTP error code (4xx-5xx) to the client.
 
     This exception can be used to automatically send a response using a
@@ -411,7 +406,6 @@ class HTTPError(CherryPyException):
 
 
 class NotFound(HTTPError):
-
     """Exception raised when a URL could not be mapped to any handler (404).
 
     This is equivalent to raising

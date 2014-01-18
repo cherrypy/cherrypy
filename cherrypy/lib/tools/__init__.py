@@ -51,7 +51,6 @@ _attr_error = (
 
 
 class Tool(object):
-
     """A registered function for use with CherryPy request-processing hooks.
 
     help(tool.callable) should give you more information about this Tool.
@@ -150,7 +149,6 @@ class Tool(object):
 
 
 class HandlerTool(Tool):
-
     """Tool which is called 'before main', that may skip normal handlers.
 
     If the tool successfully handles the request (by setting response.body),
@@ -200,7 +198,6 @@ class HandlerTool(Tool):
 
 
 class HandlerWrapperTool(Tool):
-
     """Tool which wraps request.handler in a provided wrapper function.
 
     The 'newhandler' arg must be a handler wrapper function that takes a
@@ -235,7 +232,6 @@ class HandlerWrapperTool(Tool):
 
 
 class ErrorTool(Tool):
-
     """Tool which is used to replace the default request.error_response."""
 
     def __init__(self, callable, name=None):
@@ -254,7 +250,6 @@ class ErrorTool(Tool):
 
 
 class Toolbox(object):
-
     """A collection of Tools.
 
     This object also functions as a config namespace handler for itself.

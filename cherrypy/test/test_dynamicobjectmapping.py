@@ -200,7 +200,6 @@ def setup_server():
         index.exposed = True
 
     class DecoratedPopArgs:
-
         """Test _cp_dispatch with @cherrypy.popargs."""
 
         def index(self):
@@ -214,7 +213,6 @@ def setup_server():
         'a', 'b', handler=ABHandler())(DecoratedPopArgs)
 
     class NonDecoratedPopArgs:
-
         """Test _cp_dispatch = cherrypy.popargs()"""
 
         _cp_dispatch = cherrypy.popargs('a')
@@ -224,7 +222,6 @@ def setup_server():
         index.exposed = True
 
     class ParameterizedHandler:
-
         """Special handler created for each request"""
 
         def __init__(self, a):
@@ -239,7 +236,6 @@ def setup_server():
         index.exposed = True
 
     class ParameterizedPopArgs:
-
         """Test cherrypy.popargs() with a function call handler"""
     ParameterizedPopArgs = cherrypy.popargs(
         'a', handler=ParameterizedHandler)(ParameterizedPopArgs)

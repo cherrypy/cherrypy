@@ -18,7 +18,6 @@ if py3k:
         socket.ssl = True
 else:
     class HTTPSTransport(SafeTransport):
-
         """Subclass of SafeTransport to fix sock.recv errors (by using file).
         """
 

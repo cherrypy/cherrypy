@@ -16,8 +16,7 @@ except ImportError:
 
 
 class LockError(Exception):
-
-    "Could not obtain a lock"
+    """Could not obtain a lock."""
 
     msg = "Unable to lock %r"
 
@@ -26,15 +25,13 @@ class LockError(Exception):
 
 
 class UnlockError(LockError):
-
-    "Could not release a lock"
+    """Could not release a lock."""
 
     msg = "Unable to unlock %r"
 
 
 # first, a default, naive locking implementation
 class LockFile(object):
-
     """
     A default, naive locking implementation. Always fails if the file
     already exists.
@@ -56,10 +53,7 @@ class LockFile(object):
 
 
 class SystemLockFile(object):
-
-    """
-    An abstract base class for platform-specific locking.
-    """
+    """An abstract base class for platform-specific locking."""
 
     def __init__(self, path):
         self.path = path

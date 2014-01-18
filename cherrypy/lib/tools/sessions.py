@@ -109,7 +109,6 @@ missing = object()
 
 
 class Session(object):
-
     """A CherryPy dict-like Session object (one per request)."""
 
     _id = None
@@ -441,7 +440,6 @@ class RamSession(Session):
 
 
 class FileSession(Session):
-
     """Implementation of the File backend for sessions
 
     storage_path
@@ -577,7 +575,6 @@ class FileSession(Session):
 
 
 class PostgresqlSession(Session):
-
     """ Implementation of the PostgreSQL backend for sessions. It assumes
         a table like this::
 
@@ -956,7 +953,6 @@ def expire():
 
 
 class SessionTool(Tool):
-
     """Session Tool for CherryPy.
 
     sessions.locking

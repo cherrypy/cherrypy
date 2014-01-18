@@ -6,7 +6,6 @@ from cherrypy.lib.tools import HandlerTool
 
 
 class SessionAuth(object):
-
     """Assert that the user is logged in."""
 
     session_key = "username"

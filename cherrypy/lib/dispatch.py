@@ -23,7 +23,6 @@ import cherrypy
 
 
 class PageHandler(object):
-
     """Callable which sets response.body."""
 
     def __init__(self, callable, *args, **kwargs):
@@ -203,7 +202,6 @@ except ImportError:
 
 
 class LateParamPageHandler(PageHandler):
-
     """When passing cherrypy.request.params to the page handler, we do not
     want to capture that dict too early; we want to give tools like the
     decoding tool a chance to modify the params dict in-between the lookup
@@ -244,7 +242,6 @@ else:
 
 
 class Dispatcher(object):
-
     """CherryPy Dispatcher which walks a tree of objects to find a handler.
 
     The tree is rooted at cherrypy.request.app.root, and each hierarchical
@@ -443,7 +440,6 @@ class Dispatcher(object):
 
 
 class MethodDispatcher(Dispatcher):
-
     """Additional dispatch based on cherrypy.request.method.upper().
 
     Methods named GET, POST, etc will be called on an exposed class.
@@ -487,7 +483,6 @@ class MethodDispatcher(Dispatcher):
 
 
 class RoutesDispatcher(object):
-
     """A Routes based dispatcher for CherryPy."""
 
     def __init__(self, full_result=False, **mapper_options):

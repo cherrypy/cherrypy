@@ -143,7 +143,6 @@ def merge(base, other):
 
 
 class Config(reprconf.Config):
-
     """The 'global' configuration data for the entire CherryPy process."""
 
     def update(self, config):

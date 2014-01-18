@@ -132,7 +132,6 @@ def H(s):
 
 
 class HttpDigestAuthorization (object):
-
     """Class to parse a Digest Authorization header and perform re-calculation
     of the digest.
     """

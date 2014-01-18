@@ -44,7 +44,6 @@ from cherrypy.lib.compat import copyitems, Event
 
 
 class Cache(object):
-
     """Base class for Cache implementations."""
 
     def get(self):
@@ -66,7 +65,6 @@ class Cache(object):
 
 # ------------------------------ Memory Cache ------------------------------- #
 class AntiStampedeCache(dict):
-
     """A storage system for cached items which reduces stampede collisions."""
 
     def wait(self, key, timeout=5, debug=False):
@@ -129,7 +127,6 @@ class AntiStampedeCache(dict):
 
 
 class MemoryCache(Cache):
-
     """An in-memory cache for varying response content.
 
     Each key in self.store is a URI, and each value is an AntiStampedeCache.
@@ -473,7 +470,6 @@ def expires(secs=0, force=False, debug=False):
 
 
 class CachingTool(Tool):
-
     """Caching Tool for CherryPy."""
 
     def _wrapper(self, **kwargs):

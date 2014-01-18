@@ -10,7 +10,6 @@ from magicbus.plugins.servers import *
 
 
 class Server(ServerPlugin):
-
     """An adapter for an HTTP server.
 
     You can set attributes (like socket_host and socket_port)

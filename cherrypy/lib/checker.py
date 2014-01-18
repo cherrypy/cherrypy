@@ -6,7 +6,6 @@ from cherrypy.lib.compat import iteritems, copykeys, builtins
 
 
 class Checker(object):
-
     """A checker for CherryPy sites and their mounted applications.
 
     When this object is called at engine startup, it executes each
