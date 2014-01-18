@@ -55,7 +55,7 @@ import os.path
 import sys
 import warnings
 
-from cherrypy.lib._cpcompat import StringIO
+from cherrypy.lib.compat import StringIO
 
 _count = 0
 

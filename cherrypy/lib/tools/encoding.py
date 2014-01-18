@@ -2,7 +2,7 @@ import struct
 import time
 
 import cherrypy
-from cherrypy.lib._cpcompat import basestring, BytesIO, unicodestr
+from cherrypy.lib.compat import basestring, BytesIO, unicodestr
 from cherrypy.lib import file_generator
 from cherrypy.lib import set_vary_header
 

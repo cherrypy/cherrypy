@@ -9,7 +9,7 @@ except ImportError:
     objgraph = None
 
 import cherrypy
-from cherrypy.lib import _cpwsgi, _cprequest
+from cherrypy.lib import wsgi, request
 from magicbus.plugins import SimplePlugin
 
 
@@ -118,11 +118,11 @@ request_counter.subscribe()
 
 
 def get_context(obj):
-    if isinstance(obj, _cprequest.Request):
+    if isinstance(obj, request.Request):
         return "path=%s;stage=%s" % (obj.path_info, obj.stage)
-    elif isinstance(obj, _cprequest.Response):
+    elif isinstance(obj, request.Response):
         return "status=%s" % obj.status
-    elif isinstance(obj, _cpwsgi.AppResponse):
+    elif isinstance(obj, wsgi.AppResponse):
         return "PATH_INFO=%s" % obj.environ.get('PATH_INFO', '')
     elif hasattr(obj, "tb_lineno"):
         return "tb_lineno=%s" % obj.tb_lineno
@@ -134,11 +134,11 @@ class GCRoot(object):
     """A CherryPy page handler for testing reference leaks."""
 
     classes = [
-        (_cprequest.Request, 2, 2,
+        (request.Request, 2, 2,
          "Should be 1 in this request thread and 1 in the main thread."),
-        (_cprequest.Response, 2, 2,
+        (request.Response, 2, 2,
          "Should be 1 in this request thread and 1 in the main thread."),
-        (_cpwsgi.AppResponse, 1, 1,
+        (wsgi.AppResponse, 1, 1,
          "Should be 1 in this request thread only."),
     ]
 

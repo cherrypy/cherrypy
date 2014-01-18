@@ -1,8 +1,8 @@
 ***********************
-:mod:`cherrypy.lib._cptree`
+:mod:`cherrypy.lib.tree`
 ***********************
 
-.. automodule:: cherrypy.lib._cptree
+.. automodule:: cherrypy.lib.tree
 
 Classes
 =======

@@ -101,7 +101,7 @@ from magicbus.plugins.tasks import Monitor
 
 import cherrypy
 from cherrypy.lib.tools import Tool
-from cherrypy.lib._cpcompat import copyitems, pickle, unicodestr
+from cherrypy.lib.compat import copyitems, pickle, unicodestr
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
 

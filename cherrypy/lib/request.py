@@ -2,10 +2,10 @@ import sys
 import time
 
 import cherrypy
-from cherrypy.lib._cpcompat import basestring, copykeys, ntob, unicodestr
-from cherrypy.lib._cpcompat import SimpleCookie, CookieError, py3k
-from cherrypy.lib import _cpreqbody
-from cherrypy.lib._cperror import format_exc, bare_error
+from cherrypy.lib.compat import basestring, copykeys, ntob, unicodestr
+from cherrypy.lib.compat import SimpleCookie, CookieError, py3k
+from cherrypy.lib import reqbody
+from cherrypy.lib.error import format_exc, bare_error
 from cherrypy.lib import httputil, file_generator, reprconf
 
 
@@ -321,7 +321,7 @@ class Request(object):
     """
     If the request Content-Type is 'application/x-www-form-urlencoded'
     or multipart, this will be None. Otherwise, this will be an instance
-    of :class:`RequestBody<cherrypy.lib._cpreqbody.RequestBody>` (which you
+    of :class:`RequestBody<cherrypy.lib.reqbody.RequestBody>` (which you
     can .read()); this value is set between the 'before_request_body' and
     'before_handler' hooks (assuming that process_request_body is True)."""
 
@@ -638,7 +638,7 @@ class Request(object):
                     self.stage = 'get_resource'
                     self.get_resource(path_info)
 
-                    self.body = _cpreqbody.RequestBody(
+                    self.body = reqbody.RequestBody(
                         self.rfile, self.headers, request_params=self.params)
 
                     self.namespaces(self.config)

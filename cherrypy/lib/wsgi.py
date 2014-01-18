@@ -10,9 +10,9 @@ still be translatable to bytes via the Latin-1 encoding!"
 import sys as _sys
 
 import cherrypy as _cherrypy
-from cherrypy.lib._cpcompat import BytesIO, bytestr, py3k, unicodestr
+from cherrypy.lib.compat import BytesIO, bytestr, py3k, unicodestr
 from cherrypy.lib import httputil
-from cherrypy.lib import _cperror
+from cherrypy.lib import error
 
 
 def downgrade_wsgi_ux_to_1x(environ):
@@ -43,7 +43,7 @@ class VirtualHost(object):
         Domain2App = cherrypy.Application(root)
         SecureApp = cherrypy.Application(Secure())
 
-        vhost = cherrypy.lib._cpwsgi.VirtualHost(RootApp,
+        vhost = cherrypy.lib.wsgi.VirtualHost(RootApp,
             domains={'www.domain2.example': Domain2App,
                      'www.domain2.example:443': SecureApp,
                      })
@@ -183,12 +183,12 @@ class _TrappedResponse(object):
         except StopIteration:
             raise
         except:
-            tb = _cperror.format_exc()
+            tb = error.format_exc()
             #print('trapped (started %s):' % self.started_response, tb)
             _cherrypy.log(tb, severity=40)
             if not _cherrypy.request.show_tracebacks:
                 tb = ""
-            s, h, b = _cperror.bare_error(tb)
+            s, h, b = error.bare_error(tb)
             if py3k:
                 # What fun.
                 s = s.decode('ISO-8859-1')

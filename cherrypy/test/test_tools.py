@@ -4,9 +4,9 @@ import gzip
 import unittest
 import time
 
-from cherrypy.lib._cpcompat import BytesIO, copyitems, itervalues
-from cherrypy.lib._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
-from cherrypy.lib._cpcompat import bytestr, unicodestr
+from cherrypy.lib.compat import BytesIO, copyitems, itervalues
+from cherrypy.lib.compat import IncompleteRead, ntob, ntou, py3k, xrange
+from cherrypy.lib.compat import bytestr, unicodestr
 from cherrypy.lib.tools.session_auth import SessionAuth
 from cherrypy.lib.tools import HandlerWrapperTool
 from cherrypy.lib.tools import Toolbox

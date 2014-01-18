@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy.lib._cpcompat import basestring, json_encode, json_decode
+from cherrypy.lib.compat import basestring, json_encode, json_decode
 
 
 def json_processor(entity):

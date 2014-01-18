@@ -6,8 +6,8 @@ import sys
 from cheroot import server, ssllib
 
 import cherrypy
-from cherrypy.lib._cpcompat import BytesIO
-from cherrypy.lib._cperror import format_exc, bare_error
+from cherrypy.lib.compat import BytesIO
+from cherrypy.lib.error import format_exc, bare_error
 from cherrypy.lib import httputil
 
 

@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy.lib._cpcompat import unicodestr
+from cherrypy.lib.compat import unicodestr
 from cherrypy.test import helper
 
 script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]

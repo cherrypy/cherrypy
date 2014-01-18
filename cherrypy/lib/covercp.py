@@ -26,7 +26,7 @@ import cgi
 import os
 import os.path
 
-from cherrypy.lib._cpcompat import quote_plus
+from cherrypy.lib.compat import quote_plus
 
 localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
 

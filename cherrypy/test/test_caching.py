@@ -6,7 +6,7 @@ import threading
 import time
 
 import cherrypy
-from cherrypy.lib._cpcompat import next, ntob, quote, xrange
+from cherrypy.lib.compat import next, ntob, quote, xrange
 from cherrypy.lib import httputil
 import cherrypy.lib.tools.encoding
 

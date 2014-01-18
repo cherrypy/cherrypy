@@ -7,7 +7,7 @@ import socket
 
 import magicbus.plugins.servers
 
-from cherrypy.lib._cpcompat import BadStatusLine, ntob
+from cherrypy.lib.compat import BadStatusLine, ntob
 import cherrypy
 from cherrypy.test import helper
 

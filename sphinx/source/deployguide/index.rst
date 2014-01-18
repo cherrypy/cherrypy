@@ -16,7 +16,7 @@ configured for development or production use (or even somewhere in-between) by
 setting an :ref:`environment <environments>` in the application config.
 
 A CherryPy application can also be deployed using any WSGI-capable server. The
-return from :py:class:`cherrypy.tree.mount <cherrypy.lib._cptree.Tree>` is a
+return from :py:class:`cherrypy.tree.mount <cherrypy.lib.tree.Tree>` is a
 standard WSGI application.
 
 Servers

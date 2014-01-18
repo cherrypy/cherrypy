@@ -43,7 +43,7 @@ class ServerConfigTests(helper.CPWebCase):
             'server.socket_timeout': 0.5,
 
             # Test explicit server.instance
-            'server.2.instance': 'cherrypy.lib._cpwsgi_server.CPWSGIServer',
+            'server.2.instance': 'cherrypy.lib.wsgi_server.CPWSGIServer',
             'server.2.socket_port': 9877,
 
             # Test non-numeric <servername>

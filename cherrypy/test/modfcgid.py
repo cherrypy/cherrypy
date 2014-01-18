@@ -38,7 +38,7 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
 
 import cherrypy
-from cherrypy.lib._cpcompat import ntob
+from cherrypy.lib.compat import ntob
 from cherrypy.process import plugins, servers
 from cherrypy.test import helper
 

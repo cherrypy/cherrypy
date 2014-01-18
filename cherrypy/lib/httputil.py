@@ -8,9 +8,9 @@ to a public caning.
 """
 
 from binascii import b2a_base64
-from cherrypy.lib._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
-from cherrypy.lib._cpcompat import basestring, bytestr, iteritems, nativestr
-from cherrypy.lib._cpcompat import unicodestr, unquote_qs
+from cherrypy.lib.compat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
+from cherrypy.lib.compat import basestring, bytestr, iteritems, nativestr
+from cherrypy.lib.compat import unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://bitbucket.org/cherrypy/cherrypy/issue/361

@@ -5,7 +5,7 @@
 from hashlib import md5
 
 import cherrypy
-from cherrypy.lib._cpcompat import ntob
+from cherrypy.lib.compat import ntob
 from cherrypy.test import helper
 from cherrypy.lib.tools import auth_basic
 

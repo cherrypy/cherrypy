@@ -1,8 +1,8 @@
 **************************
-:mod:`cherrypy.lib._cplogging`
+:mod:`cherrypy.lib.logger`
 **************************
 
-.. automodule:: cherrypy.lib._cplogging
+.. automodule:: cherrypy.lib.logger
 
 Classes
 =======

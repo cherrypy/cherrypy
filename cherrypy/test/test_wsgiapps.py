@@ -1,6 +1,6 @@
 import sys
 
-from cherrypy.lib._cpcompat import ntob
+from cherrypy.lib.compat import ntob
 from cherrypy.test import helper
 
 

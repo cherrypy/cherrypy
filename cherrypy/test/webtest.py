@@ -27,8 +27,8 @@ import types
 from unittest import *
 from unittest import _TextTestResult
 
-from cherrypy.lib._cpcompat import basestring, ntob, py3k, HTTPConnection
-from cherrypy.lib._cpcompat import HTTPSConnection, unicodestr
+from cherrypy.lib.compat import basestring, ntob, py3k, HTTPConnection
+from cherrypy.lib.compat import HTTPSConnection, unicodestr
 
 
 def interface(host):

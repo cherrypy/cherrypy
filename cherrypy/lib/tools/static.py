@@ -16,7 +16,7 @@ import re
 import stat
 
 import cherrypy
-from cherrypy.lib._cpcompat import ntob, unquote
+from cherrypy.lib.compat import ntob, unquote
 from cherrypy.lib import httputil, file_generator_limited
 
 

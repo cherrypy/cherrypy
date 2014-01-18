@@ -4,7 +4,7 @@ import os
 localDir = os.path.dirname(__file__)
 
 import cherrypy
-from cherrypy.lib._cpcompat import ntob, ntou, py3k
+from cherrypy.lib.compat import ntob, ntou, py3k
 
 access_log = os.path.join(localDir, "access.log")
 error_log = os.path.join(localDir, "error.log")

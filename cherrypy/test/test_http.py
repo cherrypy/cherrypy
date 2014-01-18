@@ -6,7 +6,7 @@ import socket
 import sys
 
 import cherrypy
-from cherrypy.lib._cpcompat import HTTPConnection, HTTPSConnection, ntob, py3k
+from cherrypy.lib.compat import HTTPConnection, HTTPSConnection, ntob, py3k
 
 
 def encode_multipart_formdata(files):

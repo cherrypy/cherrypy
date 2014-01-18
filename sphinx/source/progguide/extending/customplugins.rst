@@ -40,7 +40,7 @@ The channel is an event name:
    :func:`cherrypy.engine.exit<cherrypy.process.wspbus.Bus.exit>` first calls
    :func:`cherrypy.engine.stop<cherrypy.process.wspbus.Bus.stop>`, so Plugins
    may expect to stop first, then exit in a separate step.
- * log(msg, level): in general, :class:`cherrypy.log<cherrypy.lib._cplogging.LogManager>`
+ * log(msg, level): in general, :class:`cherrypy.log<cherrypy.lib.logger.LogManager>`
    listens on this channel. Plugins, however, should make every effort to
    publish to this channel verbosely to aid process event debugging. See the
    builtin Plugins for good examples.

@@ -2,7 +2,7 @@
 
 import threading
 
-from cherrypy.lib._cpcompat import HTTPConnection, HTTPSConnection, ntob
+from cherrypy.lib.compat import HTTPConnection, HTTPSConnection, ntob
 import cherrypy
 
 

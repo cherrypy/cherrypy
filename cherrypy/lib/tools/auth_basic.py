@@ -23,7 +23,7 @@ __author__ = 'visteya'
 __date__ = 'April 2009'
 
 import binascii
-from cherrypy.lib._cpcompat import base64_decode
+from cherrypy.lib.compat import base64_decode
 import cherrypy
 
 

@@ -30,8 +30,8 @@ import sys
 import time
 
 import cherrypy
-from cherrypy.lib._cpcompat import ntob
-from cherrypy.lib import _cperror, _cpmodpy
+from cherrypy.lib.compat import ntob
+from cherrypy.lib import error, modpy
 from cherrypy.lib import httputil
 
 
@@ -221,9 +221,9 @@ Finished 1000 requests
     def run(self):
         # Parse output of ab, setting attributes on self
         try:
-            self.output = _cpmodpy.read_process(AB_PATH or "ab", self.args())
+            self.output = modpy.read_process(AB_PATH or "ab", self.args())
         except:
-            print(_cperror.format_exc())
+            print(error.format_exc())
             raise
 
         for attr, name, pattern in self.parse_patterns:
@@ -308,7 +308,7 @@ def run_standard_benchmarks():
 def startup_modpython(req=None):
     """Start the CherryPy app server in 'serverless' mode (for modpython/WSGI).
     """
-    if cherrypy.engine.state == cherrypy.lib._cpengine.STOPPED:
+    if cherrypy.engine.state == cherrypy.lib.engine.STOPPED:
         if req:
             if "nullreq" in req.get_options():
                 cherrypy.engine.request_class = NullRequest
@@ -318,7 +318,7 @@ def startup_modpython(req=None):
                 global AB_PATH
                 AB_PATH = ab_opt
         cherrypy.engine.start()
-    if cherrypy.engine.state == cherrypy.lib._cpengine.STARTING:
+    if cherrypy.engine.state == cherrypy.lib.engine.STARTING:
         cherrypy.engine.wait()
     return 0  # apache.OK
 
@@ -334,7 +334,7 @@ def run_modpython(use_wsgi=False):
     if "--ab" in opts:
         pyopts.append(("ab", opts["--ab"]))
 
-    s = _cpmodpy.ModPythonServer
+    s = modpy.ModPythonServer
     if use_wsgi:
         pyopts.append(("wsgi.application", "cherrypy::tree"))
         pyopts.append(
@@ -391,7 +391,7 @@ if __name__ == '__main__':
                 try:
                     run_standard_benchmarks()
                 except:
-                    print(_cperror.format_exc())
+                    print(error.format_exc())
                     raise
             finally:
                 cherrypy.engine.exit()

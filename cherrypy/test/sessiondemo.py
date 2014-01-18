@@ -5,7 +5,7 @@ import calendar
 from datetime import datetime
 import sys
 import cherrypy
-from cherrypy.lib._cpcompat import copyitems
+from cherrypy.lib.compat import copyitems
 from cherrypy.lib.tools import sessions
 
 

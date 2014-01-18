@@ -26,12 +26,12 @@ Server Features and Configuration
 
 :Q: How do I serve multiple domains on one host?
 
-:A: You can use the :class:`cherrypy.lib._cpdispatch.VirtualHost` dispatcher.
+:A: You can use the :class:`cherrypy.lib.dispatch.VirtualHost` dispatcher.
 
 :Q: Does CherryPy support https?
 
 :A: CherryPy has built-in SSL support as of 3.0.0beta. See the `ssl_*`
-    properties of :mod:`cherrypy.lib._cpserver` and the :doc:`programmer's guide </progguide/security>`.
+    properties of :mod:`cherrypy.lib.server` and the :doc:`programmer's guide </progguide/security>`.
     
     Earlier versions do not have built-in SSL support, but Tim Evans has
     written a module called `SslCherry <http://tools.cherrypy.org/wiki/SSLWithM2Crypto>`_
@@ -60,7 +60,7 @@ Server Features and Configuration
     * Turn off the :class:`Autoreloader <cherrypy.process.plugins.Autoreloader>`
       via ``cherrypy.engine.autoreload.unsubscribe()``.
     * Examine the number of worker threads that WSGIServer uses.
-      See :attr:`cherrypy.lib._cpserver.Server.thread_pool`.
+      See :attr:`cherrypy.lib.server.Server.thread_pool`.
 
 :Q: CherryPy serves my HTML but not my CSS, Javascript, or images. Why does
     CherryPy wait to serve one resource before serving the next? Can it not
@@ -80,7 +80,7 @@ Development Questions
 
 :A: Set the config entry `server.socket_host` to either your server name/IP,
     or to '0.0.0.0' to listen on all interfaces.
-    See :mod:`cherrypy.lib._cpserver` for more details.
+    See :mod:`cherrypy.lib.server` for more details.
 
 :Q: How do I serve URL's with dots in them, like "/path/to/report.xml"?
 

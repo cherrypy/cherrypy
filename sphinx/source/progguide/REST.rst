@@ -85,11 +85,11 @@ the standard REST methods.
  - DELETE removes resources.
 
 The default dispatcher in CherryPy stores the HTTP method name at
-:attr:`cherrypy.request.method<cherrypy.lib._cprequest.Request.method>`.
+:attr:`cherrypy.request.method<cherrypy.lib.request.Request.method>`.
 
 Because HTTP defines these invocation methods, the most direct
 way to implement REST using CherryPy is to utilize the
-:class:`MethodDispatcher<cherrypy.lib._cpdispatch.MethodDispatcher>`
+:class:`MethodDispatcher<cherrypy.lib.dispatch.MethodDispatcher>`
 instead of the default dispatcher. To enable
 the method dispatcher, add the
 following to your configuration for the root URI ("/")::
@@ -128,8 +128,8 @@ carried within the message itself, either in headers or within the definition
 of the message's declared media type.
 
 CherryPy gives you easy access to the headers. It's as simple as
-:attr:`cherrypy.request.headers<cherrypy.lib._cprequest.Request.headers>` and
-:attr:`cherrypy.response.headers<cherrypy.lib._cprequest.Response.headers>`!
+:attr:`cherrypy.request.headers<cherrypy.lib.request.Request.headers>` and
+:attr:`cherrypy.response.headers<cherrypy.lib.request.Response.headers>`!
 Each is a normal Python dictionary which you can read and write as you like.
 They also have additional functions to help you parse complex values according
 to the HTTP spec.

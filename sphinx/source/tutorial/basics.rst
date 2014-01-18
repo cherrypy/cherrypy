@@ -77,9 +77,9 @@ module. It contains several members:
  * :class:`cherrypy.engine <cherrypy.process.wspbus.Bus>`
    controls process startup, shutdown, and other events, including your own
    Plugins. See :doc:`/tutorial/engine`.
- * :class:`cherrypy.server <cherrypy.lib._cpserver.Server>` configures and controls
+ * :class:`cherrypy.server <cherrypy.lib.server.Server>` configures and controls
    the HTTP server.
- * :class:`cherrypy.request <cherrypy.lib._cprequest.Request>` contains all
+ * :class:`cherrypy.request <cherrypy.lib.request.Request>` contains all
    the information that comes with the HTTP request, after it is parsed and
    analyzed by CherryPy.
  * :attr:`cherrypy.request.headers <cherrypy.lib.httputil.HeaderMap>`
@@ -90,18 +90,18 @@ module. It contains several members:
    be used to store session-data in a persistent cookie. For it to work you
    have to enable the session functionality by setting 'tools.session.on' to
    True in your :doc:`config </tutorial/config>`.
- * :class:`cherrypy.response <cherrypy.lib._cprequest.Response>` contains the
+ * :class:`cherrypy.response <cherrypy.lib.request.Response>` contains the
    data that is used to build the HTTP response.
  * :attr:`cherrypy.response.headers <cherrypy.lib.httputil.HeaderMap>`
    contains a mapping with the header options that will be returned by the
    server, before the contents get sent.
- * :attr:`cherrypy.response.body <cherrypy.lib._cprequest.Response.body>` contains
+ * :attr:`cherrypy.response.body <cherrypy.lib.request.Response.body>` contains
    the actual contents of the webpage that will be sent as a response.
 
 CherryPy Response
 -----------------
 
-The :class:`cherrypy.response <cherrypy.lib._cprequest.Response>` object is
+The :class:`cherrypy.response <cherrypy.lib.request.Response>` object is
 available to affect aspects of the response
 to a request. Like the request, the response object is a thread-local,
 meaning although it appears to be a global variable, its value is specific

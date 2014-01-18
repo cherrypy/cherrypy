@@ -22,7 +22,7 @@ class WSGI_VirtualHost_Test(helper.CPWebCase):
             app = cherrypy.Application(ClassOfRoot('Class of %s' % year))
             domains['www.classof%s.example' % year] = app
 
-        cherrypy.tree.graft(cherrypy.lib._cpwsgi.VirtualHost(default, domains))
+        cherrypy.tree.graft(cherrypy.lib.wsgi.VirtualHost(default, domains))
     setup_server = staticmethod(setup_server)
 
     def test_welcome(self):

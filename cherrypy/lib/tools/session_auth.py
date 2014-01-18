@@ -1,7 +1,7 @@
 """Functions for builtin CherryPy tools."""
 
 import cherrypy
-from cherrypy.lib._cpcompat import unicodestr
+from cherrypy.lib.compat import unicodestr
 from cherrypy.lib.tools import HandlerTool
 
 

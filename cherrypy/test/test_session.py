@@ -6,7 +6,7 @@ import threading
 import time
 
 import cherrypy
-from cherrypy.lib._cpcompat import copykeys, HTTPConnection, HTTPSConnection
+from cherrypy.lib.compat import copykeys, HTTPConnection, HTTPSConnection
 from cherrypy.lib.httputil import response_codes
 
 

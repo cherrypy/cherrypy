@@ -1,8 +1,8 @@
 *************************
-:mod:`cherrypy.lib._cpconfig`
+:mod:`cherrypy.lib.config`
 *************************
 
-.. automodule:: cherrypy.lib._cpconfig
+.. automodule:: cherrypy.lib.config
 
 Classes
 =======

@@ -1,8 +1,8 @@
 **************************
-:mod:`cherrypy.lib._cpreqbody`
+:mod:`cherrypy.lib.reqbody`
 **************************
 
-.. automodule:: cherrypy.lib._cpreqbody
+.. automodule:: cherrypy.lib.reqbody
 
 Classes
 =======

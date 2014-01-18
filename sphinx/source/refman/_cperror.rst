@@ -1,8 +1,8 @@
 *************************
-:mod:`cherrypy.lib._cperror`
+:mod:`cherrypy.lib.error`
 *************************
 
-.. automodule:: cherrypy.lib._cperror
+.. automodule:: cherrypy.lib.error
 
 Classes
 =======

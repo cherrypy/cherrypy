@@ -34,11 +34,11 @@ The key to understand how to write a new web application is to understand
 how this mapping occurs.
 
 CherryPy takes the output of the appropriate page handler function, binds it
-to :attr:`cherrypy.response.body <cherrypy.lib._cprequest.Response.body>`,
+to :attr:`cherrypy.response.body <cherrypy.lib.request.Response.body>`,
 and sends it as the HTTP response entity
 body. Your page handler function (and almost any other part of CherryPy) can
-directly set :attr:`cherrypy.response.status <cherrypy.lib._cprequest.Response.status>`
-and :attr:`cherrypy.response.headers <cherrypy.lib._cprequest.Response.headers>`
+directly set :attr:`cherrypy.response.status <cherrypy.lib.request.Response.status>`
+and :attr:`cherrypy.response.headers <cherrypy.lib.request.Response.headers>`
 as desired.
 
 Dispatchers
@@ -51,11 +51,11 @@ a Dispatcher object to:
 1. Understand the arrangement of handlers
 2. Find the appropriate page handler function
 3. Wrap your actual handler function in a
-   :class:`PageHandler <cherrypy.lib._cpdispatch.PageHandler>` object (see below)
-4. Set :attr:`cherrypy.request.handler <cherrypy.lib._cprequest.Request.handler>`
-   (to the :class:`PageHandler <cherrypy.lib._cpdispatch.PageHandler>` wrapper)
+   :class:`PageHandler <cherrypy.lib.dispatch.PageHandler>` object (see below)
+4. Set :attr:`cherrypy.request.handler <cherrypy.lib.request.Request.handler>`
+   (to the :class:`PageHandler <cherrypy.lib.dispatch.PageHandler>` wrapper)
 5. Collect configuration entries into
-   :attr:`cherrypy.request.config <cherrypy.lib._cprequest.Request.config>`
+   :attr:`cherrypy.request.config <cherrypy.lib.request.Request.config>`
 6. Collect "virtual path" components
 
 CherryPy has a default arrangement of handlers (see next), but also allows you
@@ -67,7 +67,7 @@ Default Dispatcher
 ------------------
 
 By default, CherryPy uses a fairly straightforward mapping procedure. The root
-of the site is the :attr:`Application.root <cherrypy.lib._cptree.Application.root>`
+of the site is the :attr:`Application.root <cherrypy.lib.tree.Application.root>`
 object. When it receives a URL, it breaks it into its path components, and
 proceeds looking down into the site until it finds an object that is the
 'best match' for that particular URL. For each path component it tries to find
@@ -324,9 +324,9 @@ a regular expression, and the value is the handler function. For example::
         (r'^/branch/leaf/(\d+)$', branch_leaf),
         ]
 
-CherryPy allows you to use a :class:`Dispatcher<cherrypy.lib._cpdispatch.Dispatcher>`
+CherryPy allows you to use a :class:`Dispatcher<cherrypy.lib.dispatch.Dispatcher>`
 other than the default if you wish. By using another
-:class:`Dispatcher <cherrypy.lib._cpdispatch.Dispatcher>` (or writing your own),
+:class:`Dispatcher <cherrypy.lib.dispatch.Dispatcher>` (or writing your own),
 you gain complete control over the arrangement and behavior of your page
 handlers (and config). To use another dispatcher, set the
 ``request.dispatch`` config entry to the dispatcher you like::
@@ -344,7 +344,7 @@ handlers (and config). To use another dispatcher, set the
 A couple of notes about the example above:
 
 * Since Routes has no controller hierarchy, there's nothing to pass as a
-  root to :func:`cherrypy.tree.mount <cherrypy.lib._cptree.Tree.mount>`;
+  root to :func:`cherrypy.tree.mount <cherrypy.lib.tree.Tree.mount>`;
   pass ``None`` in this case.
 * Usually you'll use the same dispatcher for an entire app, so specifying it
   at the root ("/") is common. But you can use different dispatchers for
@@ -356,7 +356,7 @@ A couple of notes about the example above:
 * Since Routes are explicit, there's no need to set the ``exposed`` attribute.
   **All routes are always exposed.**
 
-CherryPy ships with additional Dispatchers in :mod:`cherrypy.lib._cpdispatch`.
+CherryPy ships with additional Dispatchers in :mod:`cherrypy.lib.dispatch`.
 
 .. _pagehandlers:
 
@@ -364,12 +364,12 @@ PageHandler Objects
 ===================
 
 Because the Dispatcher sets
-:attr:`cherrypy.request.handler <cherrypy.lib._cprequest.Request.handler>`,
+:attr:`cherrypy.request.handler <cherrypy.lib.request.Request.handler>`,
 it can also control
 the input and output of that handler function by wrapping the actual handler.
 The default Dispatcher passes "virtual path" components as positional arguments
 and passes query-string and entity (GET and POST) parameters as keyword
-arguments. It uses a :class:`PageHandler <cherrypy.lib._cpdispatch.PageHandler>`
+arguments. It uses a :class:`PageHandler <cherrypy.lib.dispatch.PageHandler>`
 object for this, which looks a lot like::
 
     class PageHandler(object):
@@ -388,17 +388,17 @@ args and kwargs are bound later), but you get the idea. And you can see how
 easy it would be to provide your own behavior, whether your own inputs or your
 own way of modifying the output. Remember, whatever is returned from the
 handler will be bound to
-:attr:`cherrypy.response.body <cherrypy.lib._cprequest.Response.body>` and will
+:attr:`cherrypy.response.body <cherrypy.lib.request.Response.body>` and will
 be used as the response entity.
 
 Replacing page handlers
 -----------------------
 
 The handler that's going to be called during a request is available at
-:attr:`cherrypy.request.handler <cherrypy.lib._cprequest.Request.handler>`,
+:attr:`cherrypy.request.handler <cherrypy.lib.request.Request.handler>`,
 which means your code has a chance to replace it before the handler runs.
 It's a snap to write a Tool to do so with a
-:class:`HandlerWrapperTool <cherrypy.lib._cptools.HandlerWrapperTool>`::
+:class:`HandlerWrapperTool <cherrypy.lib.tools.HandlerWrapperTool>`::
 
     to_skip = (KeyboardInterrupt, SystemException, cherrypy.HTTPRedirect)
     def PgSQLWrapper(next_handler, *args, **kwargs):
@@ -413,7 +413,7 @@ It's a snap to write a Tool to do so with a
         trans.end()
         return result
 
-    cherrypy.tools.pgsql = cherrypy.lib._cptools.HandlerWrapperTool(PgSQLWrapper)
+    cherrypy.tools.pgsql = cherrypy.lib.tools.HandlerWrapperTool(PgSQLWrapper)
 
 Configuration
 =============
@@ -427,7 +427,7 @@ definable in other, flatter arrangements.
 However, because the arrangement of config is directly related to the
 arrangement of handlers, it is the responsibility of the Dispatcher to collect
 per-handler config, merge it with per-URI and global config, and bind the
-resulting dict to :attr:`cherrypy.request.config <cherrypy.lib._cprequest.Request.config>`.
+resulting dict to :attr:`cherrypy.request.config <cherrypy.lib.request.Request.config>`.
 This dict is of depth 1 and will contain all config entries which are in
 effect for the current request.
 

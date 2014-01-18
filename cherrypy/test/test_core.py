@@ -7,7 +7,7 @@ localDir = os.path.dirname(__file__)
 import types
 
 import cherrypy
-from cherrypy.lib._cpcompat import itervalues, ntob
+from cherrypy.lib.compat import itervalues, ntob
 from cherrypy import tools
 from cherrypy.lib import httputil
 

@@ -14,7 +14,7 @@ Process
 The CherryPy Response object maintains a dictionary of headers until the
 finalize phase, after which the headers in the dictionary are converted
 into a list of (name, value) tuples. See
-``cherrypy.lib._cprequest.Response`` for details.
+``cherrypy.lib.request.Response`` for details.
 
 Therefore, since a dictionary discards order and duplicate keys,
 customizing the order or duplicity of keys must occur after the finalize

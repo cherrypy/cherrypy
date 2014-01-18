@@ -30,12 +30,12 @@ Global config
 -------------
 
 Global config entries apply everywhere, and are stored in
-:class:`cherrypy.config <cherrypy.lib._cpconfig.Config>`. This flat dict only holds
+:class:`cherrypy.config <cherrypy.lib.config.Config>`. This flat dict only holds
 global config data; that is, "site-wide" config entries which affect all
 mounted applications.
 
 Global config is stored in the
-:class:`cherrypy.config <cherrypy.lib._cpconfig.Config>` dict,
+:class:`cherrypy.config <cherrypy.lib.config.Config>` dict,
 and you therefore update it by calling ``cherrypy.config.update(conf)``.
 The ``conf`` argument can be either a filename, an open file, or a dict of
 config entries. Here's an example of passing a dict argument::
@@ -53,7 +53,7 @@ Application config
 
 Application entries apply to a single mounted application, and are stored on
 each Application object itself as
-:attr:`app.config <cherrypy.lib._cptree.Application.config>`. This is a two-level
+:attr:`app.config <cherrypy.lib.tree.Application.config>`. This is a two-level
 dict where each top-level key is a path, or "relative URL" (for example,
 ``"/"`` or ``"/my/page"``), and each value is a dict of config entries.
 The URL's are relative to the script name (mount point) of the Application.
@@ -103,14 +103,14 @@ Request config
 --------------
 
 Each Request object possesses a single
-:attr:`request.config <cherrypy.lib._cprequest.Request.config>` dict. Early in the
+:attr:`request.config <cherrypy.lib.request.Request.config>` dict. Early in the
 request process, this dict is populated by merging Global config, Application
 config, and any config acquired while looking up the page handler (see next).
 This dict contains only those config entries which apply to the given request.
 
 .. note::
 
-   when you do an :class:`InternalRedirect<cherrypy.lib._cperror.InternalRedirect>`,
+   when you do an :class:`InternalRedirect<cherrypy.lib.error.InternalRedirect>`,
    this config attribute is recalculated for the new path.
 
 Declaration
@@ -136,8 +136,8 @@ Combined Configuration Files
 If you are only deploying a single application, you can make a single config
 file that contains both global and app entries. Just stick the global entries
 into a config section named ``[global]``, and pass the same file to both
-:func:`config.update <cherrypy.lib._cpconfig.Config.update>` and
-:func:`tree.mount <cherrypy.lib._cptree.Tree.mount`. If you're calling
+:func:`config.update <cherrypy.lib.config.Config.update>` and
+:func:`tree.mount <cherrypy.lib.tree.Tree.mount`. If you're calling
 ``cherrypy.quickstart(app root, script name, config)``, it will pass the
 config to both places for you. But as soon as you decide to add another
 application to the same site, you need to separate the two config files/dicts.
@@ -148,9 +148,9 @@ Separate Configuration Files
 If you're deploying more than one application in the same process, you need
 (1) file for global config, plus (1) file for *each* Application.
 The global config is applied by calling
-:func:`cherrypy.config.update <cherrypy.lib._cpconfig.Config.update>`,
+:func:`cherrypy.config.update <cherrypy.lib.config.Config.update>`,
 and application config is usually passed in a call to
-:func:`cherrypy.tree.mount <cherrypy.lib._cptree.Tree.mount>`.
+:func:`cherrypy.tree.mount <cherrypy.lib.tree.Tree.mount>`.
 
 In general, you should set global config first, and then mount each
 application with its own config. Among other benefits, this allows you to set
@@ -222,7 +222,7 @@ each node in the object tree. The ``_cp_config`` attribute must be a CherryPy
 config dictionary. If the dispatcher finds a ``_cp_config`` attribute,
 it merges that dictionary into the rest of the config. The entire merged
 config dictionary is placed in
-:attr:`cherrypy.request.config <cherrypy.lib._cprequest.Request.config>`.
+:attr:`cherrypy.request.config <cherrypy.lib.request.Request.config>`.
 
 This can be done at any point in the tree of objects; for example, we could have
 attached that config to a class which contains the page method::
@@ -260,7 +260,7 @@ because they work like them. We call the first name in the chain the
 *"config namespace"*. When you provide a config entry, it is bound as early
 as possible to the actual object referenced by the namespace; for example,
 the entry ``response.stream`` actually sets the ``stream`` attribute of
-:class:`cherrypy.response <cherrypy.lib._cprequest.Response>`! In this way,
+:class:`cherrypy.response <cherrypy.lib.request.Response>`! In this way,
 you can easily determine the default value by firing up a python interpreter
 and typing::
 
@@ -315,7 +315,7 @@ hooks
 ^^^^^
 
 Declares additional request-processing functions. Use this to append your own
-:class:`Hook<cherrypy.lib._cprequest.Hook>` functions to the request. For example,
+:class:`Hook<cherrypy.lib.request.Hook>` functions to the request. For example,
 to add ``my_hook_func`` to the ``before_handler`` hookpoint::
 
     [/]
@@ -326,7 +326,7 @@ log
 
 Configures logging. These can only be declared in the global config (for global
 logging) or ``[/]`` config (for each application).
-See :class:`LogManager<cherrypy.lib._cplogging.LogManager>` for the list of
+See :class:`LogManager<cherrypy.lib.logger.LogManager>` for the list of
 configurable attributes. Typically, the "access_file", "error_file", and
 "screen" attributes are the most commonly configured.
 
@@ -334,18 +334,18 @@ request
 ^^^^^^^
 
 Sets attributes on each Request. See the
-:class:`Request<cherrypy.lib._cprequest.Request>` class for a complete list.
+:class:`Request<cherrypy.lib.request.Request>` class for a complete list.
 
 response
 ^^^^^^^^
 
 Sets attributes on each Response. See the
-:class:`Response<cherrypy.lib._cprequest.Response>` class for a complete list.
+:class:`Response<cherrypy.lib.request.Response>` class for a complete list.
 
 server
 ^^^^^^
 Controls the default HTTP server via
-:class:`cherrypy.server<cherrypy.lib._cpserver.Server>` (see that class for a
+:class:`cherrypy.server<cherrypy.lib.server.Server>` (see that class for a
 complete list of configurable attributes). These can only be
 declared in the global config.
 
@@ -367,14 +367,14 @@ declared in the app's root config ("/").
    'nextapp' argument, plus any optional keyword arguments. The optional
    arguments may be configured via ``wsgi.<name>.<arg>``.
  * ``wsgi.response_class``: Overrides the default
-   :class:`Response<cherrypy.lib._cprequest.Response>` class.
+   :class:`Response<cherrypy.lib.request.Response>` class.
 
 checker
 ^^^^^^^
 
 Controls the "checker", which looks for common errors in app state (including
 config) when the engine starts. You can turn off individual checks by setting
-them to ``False`` in config. See :class:`cherrypy.lib._cpchecker.Checker` for a
+them to ``False`` in config. See :class:`cherrypy.lib.checker.Checker` for a
 complete list. Global config only.
 
 
@@ -384,7 +384,7 @@ Custom config namespaces
 You can define your own namespaces if you like, and they can do far more than
 simply set attributes. The ``test/test_config`` module, for example, shows an
 example of a custom namespace that coerces incoming params and outgoing body
-content. The :mod:`cherrypy.lib._cpwsgi` module includes an additional, builtin
+content. The :mod:`cherrypy.lib.wsgi` module includes an additional, builtin
 namespace for invoking WSGI middleware.
 
 In essence, a config namespace handler is just a function, that gets passed
@@ -407,9 +407,9 @@ The point at which your namespace handler is called depends on where you add it:
 ===========  =============================================================================  ===================================
 Scope        Namespace dict                                                                 Handler is called in  
 -----------  -----------------------------------------------------------------------------  -----------------------------------
-Global       :attr:`cherrypy.config.namespaces <cherrypy.lib._cpconfig.Config.namespaces>`      cherrypy.config.update
-Application  :attr:`app.namespaces <cherrypy.lib._cptree.Application.namespaces>`               Application.merge (which is called by cherrypy.tree.mount)
-Request      :attr:`app.request_class.namespaces <cherrypy.lib._cprequest.Request.namespaces>`  Request.configure (called for each request, after the handler is looked up)
+Global       :attr:`cherrypy.config.namespaces <cherrypy.lib.config.Config.namespaces>`      cherrypy.config.update
+Application  :attr:`app.namespaces <cherrypy.lib.tree.Application.namespaces>`               Application.merge (which is called by cherrypy.tree.mount)
+Request      :attr:`app.request_class.namespaces <cherrypy.lib.request.Request.namespaces>`  Request.configure (called for each request, after the handler is looked up)
 ===========  =============================================================================  ===================================
 
 The name can be any string, and the handler must be either a callable or a
@@ -426,9 +426,9 @@ Environments
 
 The only key that does not exist in a namespace is the *"environment"* entry.
 It only applies to the global config, and only when you use
-:func:`cherrypy.config.update <cherrypy.lib._cpconfig.Config.update>`. This special
+:func:`cherrypy.config.update <cherrypy.lib.config.Config.update>`. This special
 entry *imports* other config entries from the following template stored in
-``cherrypy.lib._cpconfig.environments[environment]``.
+``cherrypy.lib.config.environments[environment]``.
 
 .. literalinclude:: ../../../cherrypy/_cpconfig.py
     :start-after: Sphinx begin config.environments
@@ -437,9 +437,9 @@ entry *imports* other config entries from the following template stored in
 If you find the set of existing environments (production, staging, etc) too
 limiting or just plain wrong, feel free to extend them or add new environments::
 
-    cherrypy.lib._cpconfig.environments['staging']['log.screen'] = False
+    cherrypy.lib.config.environments['staging']['log.screen'] = False
 
-    cherrypy.lib._cpconfig.environments['Greek'] = {
+    cherrypy.lib.config.environments['Greek'] = {
         'tools.encode.encoding': 'ISO-8859-7',
         'tools.decode.encoding': 'ISO-8859-7',
         }

@@ -12,7 +12,7 @@ handlers. A tool is an object that has a chance to work on a request as it
 goes through the usual CherryPy processing stages, both before and after it
 gets to your handler. Several tools are provided
 as part of the standard CherryPy library, available in
-:mod:`cherrypy.tools <cherrypy.lib._cptools>`. See :doc:`/progguide/builtintools`.
+:mod:`cherrypy.tools <cherrypy.lib.tools>`. See :doc:`/progguide/builtintools`.
 
 Tools provide a lot of flexibility. Different tools can be applied to different
 parts of the site, and the order of tools can be changed. The user can write
@@ -66,7 +66,7 @@ Page Handlers
 -------------
 
 ...and in this case, we can do even **better** because tools.staticdir is a
-:class:`HandlerTool <cherrypy.lib._cptools.HandlerTool>`, and therefore can be
+:class:`HandlerTool <cherrypy.lib.tools.HandlerTool>`, and therefore can be
 used directly as a page handler::
 
     class docroot(object):

@@ -1,8 +1,8 @@
 ***********************
-:mod:`cherrypy.lib._cpwsgi`
+:mod:`cherrypy.lib.wsgi`
 ***********************
 
-.. automodule:: cherrypy.lib._cpwsgi
+.. automodule:: cherrypy.lib.wsgi
 
 Classes
 =======

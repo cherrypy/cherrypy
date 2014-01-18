@@ -40,7 +40,7 @@ import time
 import cherrypy
 from cherrypy.lib.tools import Tool
 from cherrypy.lib import httputil
-from cherrypy.lib._cpcompat import copyitems, Event
+from cherrypy.lib.compat import copyitems, Event
 
 
 class Cache(object):

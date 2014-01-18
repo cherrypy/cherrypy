@@ -1,5 +1,5 @@
 import sys
-from cherrypy.lib._cpcompat import py3k
+from cherrypy.lib.compat import py3k
 from cherrypy.lib.tools.xmlrpcutil import XMLRPCController
 
 try:

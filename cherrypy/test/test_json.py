@@ -1,7 +1,7 @@
 import cherrypy
 from cherrypy.test import helper
 
-from cherrypy.lib._cpcompat import json
+from cherrypy.lib.compat import json
 
 
 class JsonTest(helper.CPWebCase):

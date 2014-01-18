@@ -16,12 +16,12 @@ import time
 import warnings
 
 import cherrypy
-from cherrypy.lib._cpcompat import basestring, copyitems, HTTPSConnection, ntob
+from cherrypy.lib.compat import basestring, copyitems, HTTPSConnection, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.lib.reprconf import unrepr
 from cherrypy.test import webtest
-from cherrypy.lib._cptree import Tree
+from cherrypy.lib.tree import Tree
 
 import nose
 
@@ -132,7 +132,7 @@ class NativeServerSupervisor(LocalSupervisor):
 
     """Server supervisor for the builtin HTTP server."""
 
-    httpserver_class = "cherrypy.lib._cpnative_server.CPHTTPServer"
+    httpserver_class = "cherrypy.lib.native_server.CPHTTPServer"
     using_apache = False
     using_wsgi = False
 
@@ -144,7 +144,7 @@ class LocalWSGISupervisor(LocalSupervisor):
 
     """Server supervisor for the builtin WSGI server."""
 
-    httpserver_class = "cherrypy.lib._cpwsgi_server.CPWSGIServer"
+    httpserver_class = "cherrypy.lib.wsgi_server.CPWSGIServer"
     using_apache = False
     using_wsgi = True
 
@@ -357,7 +357,7 @@ class CPWebCase(webtest.WebCase):
         within the exception embedded in the error page."""
 
         # This will never contain a traceback
-        page = cherrypy.lib._cperror.get_error_page(status, message=message)
+        page = cherrypy.lib.error.get_error_page(status, message=message)
 
         # First, test the response body without checking the traceback.
         # Stick a match-all group (.*) in to grab the traceback.

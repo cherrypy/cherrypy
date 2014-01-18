@@ -3,7 +3,7 @@
 import sys
 import time
 
-from cherrypy.lib._cpcompat import basestring, ntob, unicodestr
+from cherrypy.lib.compat import basestring, ntob, unicodestr
 
 
 try:

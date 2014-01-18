@@ -2,7 +2,7 @@ import unittest
 
 import nose
 
-from cherrypy.lib import _cpcompat as compat
+from cherrypy.lib import compat as compat
 
 
 class StringTester(unittest.TestCase):

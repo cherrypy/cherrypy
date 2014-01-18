@@ -3,10 +3,12 @@
 import os
 
 import cherrypy
-from cherrypy.lib._cpcompat import py3k
+from cherrypy.lib.compat import py3k
 from cherrypy import tools
 from cherrypy.lib import httputil, reprconf
-from cherrypy.lib import _cplogging, _cpwsgi, _cpconfig, _cprequest
+from cherrypy.lib import logger, wsgi, request
+from cherrypy.lib import config as _cpconfig
+from cherrypy.lib.config import merge as config_merge
 
 
 class Application(object):
@@ -40,16 +42,16 @@ class Application(object):
     wsgiapp = None
     """A CPWSGIApp instance. See _cpwsgi."""
 
-    request_class = _cprequest.Request
-    response_class = _cprequest.Response
+    request_class = request.Request
+    response_class = request.Response
 
     relative_urls = False
 
     def __init__(self, root, script_name="", config=None):
-        self.log = _cplogging.LogManager(id(self), cherrypy.log.logger_root)
+        self.log = logger.LogManager(id(self), cherrypy.log.logger_root)
         self.root = root
         self.script_name = script_name
-        self.wsgiapp = _cpwsgi.CPWSGIApp(self)
+        self.wsgiapp = wsgi.CPWSGIApp(self)
 
         self.namespaces = self.namespaces.copy()
         self.namespaces["log"] = lambda k, v: setattr(self.log, k, v)
@@ -95,7 +97,7 @@ class Application(object):
 
     def merge(self, config):
         """Merge the given config into self.config."""
-        _cpconfig.merge(self.config, config)
+        config_merge(self.config, config)
 
         # Handle namespaces specified in config.
         self.namespaces(self.config.get("/", {}))
@@ -262,7 +264,7 @@ class Tree(object):
         # Try to look up the app using the full path.
         env1x = environ
         if environ.get(u'wsgi.version') == (u'u', 0):
-            env1x = _cpwsgi.downgrade_wsgi_ux_to_1x(environ)
+            env1x = wsgi.downgrade_wsgi_ux_to_1x(environ)
         path = httputil.urljoin(env1x.get('SCRIPT_NAME', ''),
                                 env1x.get('PATH_INFO', ''))
         sn = self.script_name(path or "/")

@@ -2,7 +2,7 @@
 import gzip
 
 import cherrypy
-from cherrypy.lib._cpcompat import BytesIO, IncompleteRead, ntob, ntou
+from cherrypy.lib.compat import BytesIO, IncompleteRead, ntob, ntou
 
 europoundUnicode = ntou('\x80\xa3')
 sing = ntou("\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?", 'escape')
