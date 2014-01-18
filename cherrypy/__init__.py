@@ -13,7 +13,7 @@ handle multiple paths via a single handler. This layer also includes:
 
  * the 'exposed' attribute (and cherrypy.expose)
  * cherrypy.quickstart()
- * _cp_config attributes
+ * cherrypy.lib.config attributes
  * cherrypy.tools (including cherrypy.session)
  * cherrypy.url()
 
@@ -620,7 +620,7 @@ def url(path="", qs="", script_name=None, base=None, relative=None):
     return newurl
 
 
-# import _cpconfig last so it can reference other top-level objects
+# import cherrypy.lib.config last so it can reference other top-level objects
 from cherrypy.lib import config as _cpconfig
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.

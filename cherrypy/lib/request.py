@@ -399,7 +399,8 @@ class Request(object):
     of hooks which will be called at that hook point during this request.
     The list of hooks is generally populated as early as possible (mostly
     from Tools specified in config), but may be extended at any time.
-    See also: _cprequest.Hook, _cprequest.HookMap, and cherrypy.tools."""
+    See also: cherrypy.lib.request.Hook, cherrypy.lib.request.HookMap,
+    and cherrypy.tools."""
 
     error_response = cherrypy.HTTPError(500).set_response
     """

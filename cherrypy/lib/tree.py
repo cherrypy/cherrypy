@@ -36,10 +36,10 @@ class Application(object):
     toolboxes = {'tools': cherrypy.tools}
 
     log = None
-    """A LogManager instance. See _cplogging."""
+    """A LogManager instance. See cherrypy.lib.logger."""
 
     wsgiapp = None
-    """A CPWSGIApp instance. See _cpwsgi."""
+    """A CPWSGIApp instance. See cherrypy.lib.wsgi."""
 
     request_class = request.Request
     response_class = request.Response

@@ -5,7 +5,7 @@ on your system path, or you must override the global APACHE_PATH.
 On some platforms, "apache" may be called "apachectl" or "apache2ctl"--
 create a symlink to them if needed.
 
-If you wish to test the WSGI interface instead of our _cpmodpy interface,
+If you wish to test the WSGI interface instead of our modpy interface,
 you also need the 'modpython_gateway' module at:
 http://projects.amor.org/misc/wiki/ModPythonGateway
 
@@ -76,7 +76,7 @@ PythonDebug On
 """
 
 conf_cpmodpy = """
-# Apache2 server conf file for testing CherryPy with _cpmodpy.
+# Apache2 server conf file for testing CherryPy with modpy.
 
 ServerName 127.0.0.1
 DocumentRoot "/"

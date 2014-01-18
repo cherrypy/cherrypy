@@ -95,7 +95,7 @@ some other behavior, you generally replace "request.error_response".
 Here is some sample code that shows how to display a custom error message and
 send an e-mail containing the error::
 
-    from cherrypy import _cperror
+    import cherrypy.lib.error
 
     def handle_error():
         cherrypy.response.status = 500
@@ -104,7 +104,7 @@ send an e-mail containing the error::
         ]
         sendMail('error@domain.com',
                  'Error in your web app',
-                 _cperror.format_exc())
+                 cherrypy.lib.error.format_exc())
 
     class Root:
         _cp_config = {'request.error_response': handle_error}

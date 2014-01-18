@@ -314,7 +314,8 @@ class Entity(object):
     :attr:`request.body.parts<cherrypy.lib.reqbody.Entity.parts>`. You can
     enable it with::
 
-        cherrypy.request.body.processors['multipart'] = _cpreqbody.process_multipart
+        cherrypy.request.body.processors['multipart'] = (
+            cherrypy.lib.reqbody.process_multipart)
 
     in an ``on_start_resource`` tool.
     """

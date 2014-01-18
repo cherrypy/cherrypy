@@ -7,7 +7,7 @@
     --notests:     start the server but do not run the tests; this allows
                    you to check the tested pages with a browser
     --help:        show this help message
-    --cpmodpy:     run tests via apache on 54583 (with the builtin _cpmodpy)
+    --cpmodpy:     run tests via apache on 54583 (with the builtin modpy)
     --modpython:   run tests via apache on 54583 (with modpython_gateway)
     --ab=path:     Use the ab script/executable at 'path' (see below)
     --apache=path: Use the apache script/exe at 'path' (see below)
