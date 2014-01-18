@@ -336,7 +336,7 @@ def validate_since():
 
 
 def _prepare_default_toolbox():
-    from cherrypy.lib.tools import auth_basic, jsontools, auth_digest
+    from cherrypy.lib.tools import auth_basic, auth_digest
     from cherrypy.lib.tools import encoding, session_auth
     from cherrypy.lib.tools import sessions, xmlrpcutil, caching
     from cherrypy.lib.tools.autovary import autovary
@@ -356,6 +356,8 @@ def _prepare_default_toolbox():
     from cherrypy.lib.tools.expires import expires
     from cherrypy.lib.tools.staticfile import staticfile
     from cherrypy.lib.tools.staticdir import staticdir
+    from cherrypy.lib.tools.json_in import json_in
+    from cherrypy.lib.tools.json_out import json_out
 
     _d = Toolbox("tools")
     _d.session_auth = session_auth.SessionAuthTool(session_auth.session_auth)
@@ -402,8 +404,8 @@ def _prepare_default_toolbox():
     _d.accept = Tool('on_start_resource', accept)
     _d.redirect = Tool('on_start_resource', redirect)
     _d.autovary = Tool('on_start_resource', autovary, priority=0)
-    _d.json_in = Tool('before_request_body', jsontools.json_in, priority=30)
-    _d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
+    _d.json_in = Tool('before_request_body', json_in, priority=30)
+    _d.json_out = Tool('before_handler', json_out, priority=30)
     _d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
     _d.auth_digest = Tool(
         'before_handler', auth_digest.digest_auth, priority=1)
