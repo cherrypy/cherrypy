@@ -11,7 +11,7 @@ from cherrypy.lib.compat import HTTPConnection, HTTPSConnection, ntob, py3k
 
 def encode_multipart_formdata(files):
     """Return (content_type, body) ready for httplib.HTTP instance.
-    
+
     files: a sequence of (name, filename, value) tuples for multipart uploads.
     """
     BOUNDARY = '________ThIs_Is_tHe_bouNdaRY_$'

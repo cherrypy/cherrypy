@@ -80,14 +80,30 @@ function init() {
 
 <body onload='init()'>
 <h2>Session Demo</h2>
-<p>Reload this page. The session ID should not change from one reload to the next</p>
-<p><a href='../'>Index</a> | <a href='expire'>Expire</a> | <a href='regen'>Regenerate</a></p>
+<p>
+  Reload this page. The session ID should not change from one reload to the
+  next
+</p>
+<p>
+  <a href='../'>Index</a> |
+  <a href='expire'>Expire</a> |
+  <a href='regen'>Regenerate</a>
+</p>
 <table>
-    <tr><th>Session ID:</th><td>%(sessionid)s<p class='warn'>%(changemsg)s</p></td></tr>
+    <tr>
+      <th>Session ID:</th>
+      <td>%(sessionid)s<p class='warn'>%(changemsg)s</p></td>
+    </tr>
     <tr><th>Request Cookie</th><td>%(reqcookie)s</td></tr>
-    <tr><th>Response Cookie</th><td>%(respcookie)s<p id='respcookiewarn' class='warn'></p></td></tr>
+    <tr>
+      <th>Response Cookie</th>
+      <td>%(respcookie)s<p id='respcookiewarn' class='warn'></p></td>
+    </tr>
     <tr><th>Session Data</th><td>%(sessiondata)s</td></tr>
-    <tr><th>Server Time</th><td id='stime'>%(servertime)s (Unix time: %(serverunixtime)s)</td></tr>
+    <tr>
+      <th>Server Time</th>
+      <td id='stime'>%(servertime)s (Unix time: %(serverunixtime)s)</td>
+    </tr>
     <tr><th>Browser Time</th><td id='btime'>&nbsp;</td></tr>
     <tr><th>Cherrypy Version:</th><td>%(cpversion)s</td></tr>
     <tr><th>Python Version:</th><td>%(pyversion)s</td></tr>

@@ -53,7 +53,9 @@ with customized or extended components. The core API's are:
  * Server API
  * WSGI API
 
-These API's are described in the `CherryPy specification <https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
+These API's are described in the
+`CherryPy specification
+<https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
 from cherrypy.lib.tools import Tool, default_toolbox as tools
 
