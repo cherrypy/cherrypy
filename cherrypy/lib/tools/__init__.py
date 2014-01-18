@@ -336,7 +336,7 @@ def validate_since():
 
 
 def _prepare_default_toolbox():
-    from cherrypy.lib.tools import static, auth_basic, jsontools, auth_digest
+    from cherrypy.lib.tools import auth_basic, jsontools, auth_digest
     from cherrypy.lib.tools import encoding, session_auth
     from cherrypy.lib.tools import sessions, xmlrpcutil, caching
     from cherrypy.lib.tools.autovary import autovary
@@ -354,6 +354,8 @@ def _prepare_default_toolbox():
     from cherrypy.lib.tools.proxy import proxy
     from cherrypy.lib.tools.allow import allow
     from cherrypy.lib.tools.expires import expires
+    from cherrypy.lib.tools.staticfile import staticfile
+    from cherrypy.lib.tools.staticdir import staticdir
 
     _d = Toolbox("tools")
     _d.session_auth = session_auth.SessionAuthTool(session_auth.session_auth)
@@ -369,8 +371,8 @@ def _prepare_default_toolbox():
     # the order of encoding, gzip, caching is important
     _d.encode = Tool('before_handler', encoding.ResponseEncoder, priority=70)
     _d.gzip = Tool('before_finalize', encoding.gzip, priority=80)
-    _d.staticdir = HandlerTool(static.staticdir)
-    _d.staticfile = HandlerTool(static.staticfile)
+    _d.staticdir = HandlerTool(staticdir)
+    _d.staticfile = HandlerTool(staticfile)
     _d.sessions = sessions.SessionTool()
     _d.xmlrpc = ErrorTool(xmlrpcutil.on_error)
     _d.caching = caching.CachingTool('before_handler', caching.get, 'caching')

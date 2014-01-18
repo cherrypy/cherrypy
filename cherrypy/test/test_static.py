@@ -3,7 +3,7 @@ import sys
 
 from cherrypy.lib.compat import HTTPConnection, HTTPSConnection, ntob
 from cherrypy.lib.compat import BytesIO
-from cherrypy.lib.tools import static
+from cherrypy.lib.static import serve_file, serve_fileobj
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
@@ -25,8 +25,7 @@ class StaticTest(helper.CPWebCase):
         class Root:
 
             def bigfile(self):
-                from cherrypy.lib.tools import static
-                self.f = static.serve_file(bigfile_filepath)
+                self.f = serve_file(bigfile_filepath)
                 return self.f
             bigfile.exposed = True
             bigfile._cp_config = {'response.stream': True}
@@ -39,12 +38,12 @@ class StaticTest(helper.CPWebCase):
 
             def fileobj(self):
                 f = open(os.path.join(curdir, 'style.css'), 'rb')
-                return static.serve_fileobj(f, content_type='text/css')
+                return serve_fileobj(f, content_type='text/css')
             fileobj.exposed = True
 
             def bytesio(self):
                 f = BytesIO(ntob('Fee\nfie\nfo\nfum'))
-                return static.serve_fileobj(f, content_type='text/plain')
+                return serve_fileobj(f, content_type='text/plain')
             bytesio.exposed = True
 
         class Static:

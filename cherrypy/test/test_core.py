@@ -1,7 +1,8 @@
 """Basic tests for the CherryPy core: request handling."""
 
 import os
-from cherrypy.lib.tools import Tool, static
+from cherrypy.lib.tools import Tool
+from cherrypy.lib.static import serve_file
 
 localDir = os.path.dirname(__file__)
 import types
@@ -229,8 +230,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             def slice_file(self):
                 path = os.path.join(os.getcwd(), os.path.dirname(__file__))
-                return static.serve_file(
-                    os.path.join(path, "static/index.html"))
+                return serve_file(os.path.join(path, "static/index.html"))
 
         class Cookies(Test):
 

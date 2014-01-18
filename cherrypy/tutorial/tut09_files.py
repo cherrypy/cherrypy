@@ -41,7 +41,7 @@ popular browsers.
 """
 
 import os
-from cherrypy.lib.tools import static
+from cherrypy.lib.static import serve_file
 
 localDir = os.path.dirname(__file__)
 absDir = os.path.join(os.getcwd(), localDir)
@@ -90,8 +90,8 @@ class FileDemo(object):
 
     def download(self):
         path = os.path.join(absDir, "pdf_file.pdf")
-        return static.serve_file(path, "application/x-download",
-                                 "attachment", os.path.basename(path))
+        return serve_file(path, "application/x-download", "attachment",
+                          os.path.basename(path))
     download.exposed = True
 
 
