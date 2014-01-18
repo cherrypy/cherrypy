@@ -62,7 +62,7 @@ from cherrypy.lib.tools import Tool, default_toolbox as tools
 __version__ = "4.0.0alpha"
 
 from cherrypy.lib.compat import urljoin as _urljoin, urlencode as _urlencode
-from cherrypy.lib.compat import basestring, unicodestr
+from cherrypy.lib.compat import basestring as _basestring
 
 from cherrypy.lib.error import HTTPError, HTTPRedirect, InternalRedirect
 from cherrypy.lib.error import NotFound, CherryPyException, TimeoutError
@@ -345,7 +345,7 @@ def expose(func=None, alias=None):
     def expose_(func):
         func.exposed = True
         if alias is not None:
-            if isinstance(alias, basestring):
+            if isinstance(alias, _basestring):
                 parents[alias.replace(".", "_")] = func
             else:
                 for a in alias:
