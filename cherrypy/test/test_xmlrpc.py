@@ -180,6 +180,6 @@ class XmlRpcTest(helper.CPWebCase):
         except Exception:
             x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
-            self.assertEqual(x.faultString, ("custom Fault response"))
+            self.assertEqual(x.faultString, "custom Fault response")
         else:
             self.fail("Expected xmlrpclib.Fault")

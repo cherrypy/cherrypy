@@ -244,7 +244,7 @@ class MemoryCache(Cache):
             total_size = self.cursize + size
 
             # checks if there's space for the object
-            if (size < self.maxobj_size and total_size < self.maxsize):
+            if size < self.maxobj_size and total_size < self.maxsize:
                 # add to the expirations list
                 expiration_time = response.time + self.delay
                 bucket = self.expirations.setdefault(expiration_time, [])
@@ -343,7 +343,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
             cherrypy.log('Reading response from cache', 'TOOLS.CACHING')
         s, h, b, create_time = cache_data
         age = int(response.time - create_time)
-        if (age > max_age):
+        if age > max_age:
             if debug:
                 cherrypy.log('Ignoring cache due to age > %d' % max_age,
                              'TOOLS.CACHING')

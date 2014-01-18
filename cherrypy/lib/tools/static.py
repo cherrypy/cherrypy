@@ -335,7 +335,7 @@ def staticdir(section, dir, root="", match="", content_types=None, index="",
         if index:
             handled = _attempt(os.path.join(filename, index), content_types)
             if handled:
-                request.is_index = filename[-1] in (r"\/")
+                request.is_index = filename[-1] in r"\/"
     return handled
 
 

@@ -164,7 +164,7 @@ class Server(ServerPlugin):
             return self.socket_file
         if self.socket_host is None and self.socket_port is None:
             return None
-        return (self.socket_host, self.socket_port)
+        return self.socket_host, self.socket_port
 
     @bind_addr.setter
     def bind_addr(self, value):

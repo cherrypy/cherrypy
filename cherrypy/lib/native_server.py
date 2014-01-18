@@ -97,7 +97,7 @@ class NativeGateway(server.Gateway):
         # Set response headers
         for header, value in headers:
             req.outheaders.append((header, value))
-        if (req.ready and not req.sent_headers):
+        if req.ready and not req.sent_headers:
             req.sent_headers = True
             req.send_headers()
 

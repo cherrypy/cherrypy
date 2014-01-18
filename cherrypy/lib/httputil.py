@@ -492,7 +492,7 @@ class HeaderMap(CaseInsensitiveDict):
             # because we never want to fold lines--folding has
             # been deprecated by the HTTP working group.
             v = b2a_base64(v.encode('utf-8'))
-            return (b'=?utf-8?b?' + v.strip(b'\n') + b'?=')
+            return b'=?utf-8?b?' + v.strip(b'\n') + b'?='
 
         raise ValueError("Could not encode header part %r using "
                          "any of the encodings %r." %
