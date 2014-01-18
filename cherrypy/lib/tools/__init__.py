@@ -336,9 +336,8 @@ def validate_since():
 
 
 def _prepare_default_toolbox():
-    from cherrypy.lib.tools import auth_basic, auth_digest
-    from cherrypy.lib.tools import encoding, session_auth
-    from cherrypy.lib.tools import sessions, xmlrpcutil, caching
+    from cherrypy.lib.tools import auth_basic, auth_digest, caching
+    from cherrypy.lib.tools import session_auth, sessions, xmlrpcutil
     from cherrypy.lib.tools.autovary import autovary
     from cherrypy.lib.tools.etags import validate_etags
     from cherrypy.lib.tools.accept import accept
@@ -358,6 +357,9 @@ def _prepare_default_toolbox():
     from cherrypy.lib.tools.staticdir import staticdir
     from cherrypy.lib.tools.json_in import json_in
     from cherrypy.lib.tools.json_out import json_out
+    from cherrypy.lib.tools.decode import decode
+    from cherrypy.lib.tools.encode import ResponseEncoder
+    from cherrypy.lib.tools.gzip import gzip
 
     _d = Toolbox("tools")
     _d.session_auth = session_auth.SessionAuthTool(session_auth.session_auth)
@@ -369,10 +371,10 @@ def _prepare_default_toolbox():
     _d.log_hooks = Tool('on_end_request', log_hooks, priority=100)
     _d.err_redirect = ErrorTool(redirect)
     _d.etags = Tool('before_finalize', validate_etags, priority=75)
-    _d.decode = Tool('before_request_body', encoding.decode)
+    _d.decode = Tool('before_request_body', decode)
     # the order of encoding, gzip, caching is important
-    _d.encode = Tool('before_handler', encoding.ResponseEncoder, priority=70)
-    _d.gzip = Tool('before_finalize', encoding.gzip, priority=80)
+    _d.encode = Tool('before_handler', ResponseEncoder, priority=70)
+    _d.gzip = Tool('before_finalize', gzip, priority=80)
     _d.staticdir = HandlerTool(staticdir)
     _d.staticfile = HandlerTool(staticfile)
     _d.sessions = sessions.SessionTool()

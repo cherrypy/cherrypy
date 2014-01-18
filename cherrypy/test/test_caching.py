@@ -8,7 +8,7 @@ import time
 import cherrypy
 from cherrypy.lib.compat import next, ntob, quote, xrange
 from cherrypy.lib import httputil
-import cherrypy.lib.tools.encoding
+from cherrypy.lib.compression import decompress
 
 gif_bytes = ntob(
     'GIF89a\x01\x00\x01\x00\x82\x00\x01\x99"\x1e\x00\x00\x00\x00\x00'
@@ -163,20 +163,14 @@ class CacheTest(helper.CPWebCase):
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
         self.assertHeader('Vary')
-        self.assertEqual(
-            cherrypy.lib.tools.encoding.decompress(self.body),
-            ntob("visit #5")
-        )
+        self.assertEqual(decompress(self.body), ntob("visit #5"))
 
         # Now check that a second request gets the gzip header and gzipped body
         # This also tests a bug in 3.0 to 3.0.2 whereby the cached, gzipped
         # response body was being gzipped a second time.
         self.getPage("/", method="GET", headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
-        self.assertEqual(
-            cherrypy.lib.tools.encoding.decompress(
-                self.body), ntob("visit #5")
-        )
+        self.assertEqual(decompress(self.body), ntob("visit #5"))
 
         # Now check that a third request that doesn't accept gzip
         # skips the cache (because the 'Vary' header denies it).
