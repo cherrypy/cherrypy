@@ -27,6 +27,8 @@ import warnings
 
 import cherrypy
 
+from cherrypy.lib import httputil as _httputil
+
 
 def _getargs(func):
     """Return the names of all static arguments to the given function."""
@@ -41,7 +43,6 @@ def _getargs(func):
             func = func.im_func
         co = func.func_code
     return co.co_varnames[:co.co_argcount]
-
 
 _attr_error = (
     "CherryPy Tools cannot be turned on directly. Instead, turn them "
@@ -252,177 +253,6 @@ class ErrorTool(Tool):
         cherrypy.serving.request.error_response = self._wrapper
 
 
-#                              Builtin tools                              #
-
-from cherrypy.lib import cptools, encoding, auth, static, jsontools
-from cherrypy.lib import sessions as _sessions, xmlrpcutil as _xmlrpc
-from cherrypy.lib import caching as _caching
-from cherrypy.lib import auth_basic, auth_digest
-
-
-class SessionTool(Tool):
-
-    """Session Tool for CherryPy.
-
-    sessions.locking
-        When 'implicit' (the default), the session will be locked for you,
-        just before running the page handler.
-
-        When 'early', the session will be locked before reading the request
-        body. This is off by default for safety reasons; for example,
-        a large upload would block the session, denying an AJAX
-        progress meter
-        (`issue <https://bitbucket.org/cherrypy/cherrypy/issue/630>`_).
-
-        When 'explicit' (or any other value), you need to call
-        cherrypy.session.acquire_lock() yourself before using
-        session data.
-    """
-
-    def __init__(self):
-        # _sessions.init must be bound after headers are read
-        Tool.__init__(self, 'before_request_body', _sessions.init)
-
-    def _lock_session(self):
-        cherrypy.serving.session.acquire_lock()
-
-    def _setup(self):
-        """Hook this tool into cherrypy.request.
-
-        The standard CherryPy request object will automatically call this
-        method when the tool is "turned on" in config.
-        """
-        hooks = cherrypy.serving.request.hooks
-
-        conf = self._merged_args()
-
-        p = conf.pop("priority", None)
-        if p is None:
-            p = getattr(self.callable, "priority", self._priority)
-
-        hooks.attach(self._point, self.callable, priority=p, **conf)
-
-        locking = conf.pop('locking', 'implicit')
-        if locking == 'implicit':
-            hooks.attach('before_handler', self._lock_session)
-        elif locking == 'early':
-            # Lock before the request body (but after _sessions.init runs!)
-            hooks.attach('before_request_body', self._lock_session,
-                         priority=60)
-        else:
-            # Don't lock
-            pass
-
-        hooks.attach('before_finalize', _sessions.save)
-        hooks.attach('on_end_request', _sessions.close)
-
-    def regenerate(self):
-        """Drop the current session and make a new one (with a new id)."""
-        sess = cherrypy.serving.session
-        sess.regenerate()
-
-        # Grab cookie-relevant tool args
-        conf = dict([(k, v) for k, v in self._merged_args().items()
-                     if k in ('path', 'path_header', 'name', 'timeout',
-                              'domain', 'secure')])
-        _sessions.set_response_cookie(**conf)
-
-
-class XMLRPCController(object):
-
-    """A Controller (page handler collection) for XML-RPC.
-
-    To use it, have your controllers subclass this base class (it will
-    turn on the tool for you).
-
-    You can also supply the following optional config entries::
-
-        tools.xmlrpc.encoding: 'utf-8'
-        tools.xmlrpc.allow_none: 0
-
-    XML-RPC is a rather discontinuous layer over HTTP; dispatching to the
-    appropriate handler must first be performed according to the URL, and
-    then a second dispatch step must take place according to the RPC method
-    specified in the request body. It also allows a superfluous "/RPC2"
-    prefix in the URL, supplies its own handler args in the body, and
-    requires a 200 OK "Fault" response instead of 404 when the desired
-    method is not found.
-
-    Therefore, XML-RPC cannot be implemented for CherryPy via a Tool alone.
-    This Controller acts as the dispatch target for the first half (based
-    on the URL); it then reads the RPC method from the request body and
-    does its own second dispatch step based on that method. It also reads
-    body params, and returns a Fault on error.
-
-    The XMLRPCDispatcher strips any /RPC2 prefix; if you aren't using /RPC2
-    in your URL's, you can safely skip turning on the XMLRPCDispatcher.
-    Otherwise, you need to use declare it in config::
-
-        request.dispatch: cherrypy.dispatch.XMLRPCDispatcher()
-    """
-
-    # Note we're hard-coding this into the 'tools' namespace. We could do
-    # a huge amount of work to make it relocatable, but the only reason why
-    # would be if someone actually disabled the default_toolbox. Meh.
-    _cp_config = {'tools.xmlrpc.on': True}
-
-    def default(self, *vpath, **params):
-        rpcparams, rpcmethod = _xmlrpc.process_body()
-
-        subhandler = self
-        for attr in str(rpcmethod).split('.'):
-            subhandler = getattr(subhandler, attr, None)
-
-        if subhandler and getattr(subhandler, "exposed", False):
-            body = subhandler(*(vpath + rpcparams), **params)
-
-        else:
-            # https://bitbucket.org/cherrypy/cherrypy/issue/533
-            # if a method is not found, an xmlrpclib.Fault should be returned
-            # raising an exception here will do that; see
-            # cherrypy.lib.xmlrpcutil.on_error
-            raise Exception('method "%s" is not supported' % attr)
-
-        conf = cherrypy.serving.request.toolmaps['tools'].get("xmlrpc", {})
-        _xmlrpc.respond(body,
-                        conf.get('encoding', 'utf-8'),
-                        conf.get('allow_none', 0))
-        return cherrypy.serving.response.body
-    default.exposed = True
-
-
-class SessionAuthTool(HandlerTool):
-
-    def _setargs(self):
-        for name in dir(cptools.SessionAuth):
-            if not name.startswith("__"):
-                setattr(self, name, None)
-
-
-class CachingTool(Tool):
-
-    """Caching Tool for CherryPy."""
-
-    def _wrapper(self, **kwargs):
-        request = cherrypy.serving.request
-        if _caching.get(**kwargs):
-            request.handler = None
-        else:
-            if request.cacheable:
-                # Note the devious technique here of adding hooks on the fly
-                request.hooks.attach('before_finalize', _caching.tee_output,
-                                     priority=90)
-    _wrapper.priority = 20
-
-    def _setup(self):
-        """Hook caching into cherrypy.request."""
-        conf = self._merged_args()
-
-        p = conf.pop("priority", None)
-        cherrypy.serving.request.hooks.attach('before_handler', self._wrapper,
-                                              priority=p, **conf)
-
-
 class Toolbox(object):
 
     """A collection of Tools.
@@ -483,48 +313,95 @@ class DeprecatedTool(Tool):
         warnings.warn(self.warnmsg)
 
 
-default_toolbox = _d = Toolbox("tools")
-_d.session_auth = SessionAuthTool(cptools.session_auth)
-_d.allow = Tool('on_start_resource', cptools.allow)
-_d.proxy = Tool('before_request_body', cptools.proxy, priority=30)
-_d.response_headers = Tool('on_start_resource', cptools.response_headers)
-_d.log_tracebacks = Tool('before_error_response', cptools.log_traceback)
-_d.log_headers = Tool('before_error_response', cptools.log_request_headers)
-_d.log_hooks = Tool('on_end_request', cptools.log_hooks, priority=100)
-_d.err_redirect = ErrorTool(cptools.redirect)
-_d.etags = Tool('before_finalize', cptools.validate_etags, priority=75)
-_d.decode = Tool('before_request_body', encoding.decode)
-# the order of encoding, gzip, caching is important
-_d.encode = Tool('before_handler', encoding.ResponseEncoder, priority=70)
-_d.gzip = Tool('before_finalize', encoding.gzip, priority=80)
-_d.staticdir = HandlerTool(static.staticdir)
-_d.staticfile = HandlerTool(static.staticfile)
-_d.sessions = SessionTool()
-_d.xmlrpc = ErrorTool(_xmlrpc.on_error)
-_d.caching = CachingTool('before_handler', _caching.get, 'caching')
-_d.expires = Tool('before_finalize', _caching.expires)
-_d.tidy = DeprecatedTool(
-    'before_finalize',
-    "The tidy tool has been removed from the standard distribution of "
-    "CherryPy. The most recent version can be found at "
-    "http://tools.cherrypy.org/browser.")
-_d.nsgmls = DeprecatedTool(
-    'before_finalize',
-    "The nsgmls tool has been removed from the standard distribution of "
-    "CherryPy. The most recent version can be found at "
-    "http://tools.cherrypy.org/browser.")
-_d.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
-_d.referer = Tool('before_request_body', cptools.referer)
-_d.basic_auth = Tool('on_start_resource', auth.basic_auth)
-_d.digest_auth = Tool('on_start_resource', auth.digest_auth)
-_d.trailing_slash = Tool('before_handler', cptools.trailing_slash, priority=60)
-_d.flatten = Tool('before_finalize', cptools.flatten)
-_d.accept = Tool('on_start_resource', cptools.accept)
-_d.redirect = Tool('on_start_resource', cptools.redirect)
-_d.autovary = Tool('on_start_resource', cptools.autovary, priority=0)
-_d.json_in = Tool('before_request_body', jsontools.json_in, priority=30)
-_d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
-_d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
-_d.auth_digest = Tool('before_handler', auth_digest.digest_auth, priority=1)
+def validate_since():
+    """Validate the current Last-Modified against If-Modified-Since headers.
 
-del _d, cptools, encoding, auth, static
+    If no code has set the Last-Modified response header, then no validation
+    will be performed.
+    """
+    response = cherrypy.serving.response
+    lastmod = response.headers.get('Last-Modified')
+    if lastmod:
+        status, reason, msg = _httputil.valid_status(response.status)
+
+        request = cherrypy.serving.request
+
+        since = request.headers.get('If-Unmodified-Since')
+        if since and since != lastmod:
+            if (status >= 200 and status <= 299) or status == 412:
+                raise cherrypy.HTTPError(412)
+
+        since = request.headers.get('If-Modified-Since')
+        if since and since == lastmod:
+            if (status >= 200 and status <= 299) or status == 304:
+                if request.method in ("GET", "HEAD"):
+                    raise cherrypy.HTTPRedirect([], 304)
+                else:
+                    raise cherrypy.HTTPError(412)
+
+
+def _prepare_default_toolbox():
+    from cherrypy.lib.tools import static, auth_basic, jsontools, auth_digest
+    from cherrypy.lib.tools import auth, encoding, session_auth
+    from cherrypy.lib.tools import sessions, xmlrpcutil, caching
+    from cherrypy.lib.tools.autovary import autovary
+    from cherrypy.lib.tools.etags import validate_etags
+    from cherrypy.lib.tools.accept import accept
+    from cherrypy.lib.tools.flatten import flatten
+    from cherrypy.lib.tools.trailing_slash import trailing_slash
+    from cherrypy.lib.tools.redirect import redirect
+    from cherrypy.lib.tools.log_hooks import log_hooks
+    from cherrypy.lib.tools.log_request_headers import log_request_headers
+    from cherrypy.lib.tools.log_traceback import log_traceback
+    from cherrypy.lib.tools.referer import referer
+    from cherrypy.lib.tools.response_headers import response_headers
+    from cherrypy.lib.tools.ignore_headers import ignore_headers
+    from cherrypy.lib.tools.proxy import proxy
+    from cherrypy.lib.tools.allow import allow
+
+    _d = Toolbox("tools")
+    _d.session_auth = session_auth.SessionAuthTool(session_auth.session_auth)
+    _d.allow = Tool('on_start_resource', allow)
+    _d.proxy = Tool('before_request_body', proxy, priority=30)
+    _d.response_headers = Tool('on_start_resource', response_headers)
+    _d.log_tracebacks = Tool('before_error_response', log_traceback)
+    _d.log_headers = Tool('before_error_response', log_request_headers)
+    _d.log_hooks = Tool('on_end_request', log_hooks, priority=100)
+    _d.err_redirect = ErrorTool(redirect)
+    _d.etags = Tool('before_finalize', validate_etags, priority=75)
+    _d.decode = Tool('before_request_body', encoding.decode)
+    # the order of encoding, gzip, caching is important
+    _d.encode = Tool('before_handler', encoding.ResponseEncoder, priority=70)
+    _d.gzip = Tool('before_finalize', encoding.gzip, priority=80)
+    _d.staticdir = HandlerTool(static.staticdir)
+    _d.staticfile = HandlerTool(static.staticfile)
+    _d.sessions = sessions.SessionTool()
+    _d.xmlrpc = ErrorTool(xmlrpcutil.on_error)
+    _d.caching = caching.CachingTool('before_handler', caching.get, 'caching')
+    _d.expires = Tool('before_finalize', caching.expires)
+    _d.tidy = DeprecatedTool(
+        'before_finalize',
+        "The tidy tool has been removed from the standard distribution of "
+        "CherryPy. The most recent version can be found at "
+        "http://tools.cherrypy.org/browser.")
+    _d.nsgmls = DeprecatedTool(
+        'before_finalize',
+        "The nsgmls tool has been removed from the standard distribution of "
+        "CherryPy. The most recent version can be found at "
+        "http://tools.cherrypy.org/browser.")
+    _d.ignore_headers = Tool('before_request_body', ignore_headers)
+    _d.referer = Tool('before_request_body', referer)
+    _d.basic_auth = Tool('on_start_resource', auth.basic_auth)
+    _d.digest_auth = Tool('on_start_resource', auth.digest_auth)
+    _d.trailing_slash = Tool('before_handler', trailing_slash, priority=60)
+    _d.flatten = Tool('before_finalize', flatten)
+    _d.accept = Tool('on_start_resource', accept)
+    _d.redirect = Tool('on_start_resource', redirect)
+    _d.autovary = Tool('on_start_resource', autovary, priority=0)
+    _d.json_in = Tool('before_request_body', jsontools.json_in, priority=30)
+    _d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
+    _d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
+    _d.auth_digest = Tool('before_handler', auth_digest.digest_auth, priority=1)
+    return _d
+
+default_toolbox = _prepare_default_toolbox()

@@ -38,7 +38,8 @@ import threading
 import time
 
 import cherrypy
-from cherrypy.lib import cptools, httputil
+from cherrypy.lib.tools import Tool
+from cherrypy.lib import httputil
 from cherrypy._cpcompat import copyitems, Event
 
 
@@ -288,6 +289,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
         * sets request.cacheable = True
         * returns False
     """
+    from cherrypy.lib.tools import validate_since
     request = cherrypy.serving.request
     response = cherrypy.serving.response
 
@@ -365,7 +367,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
             # Note that validate_since depends on a Last-Modified header;
             # this was put into the cached copy, and should have been
             # resurrected just above (response.headers = cache_data[1]).
-            cptools.validate_since()
+            validate_since()
         except cherrypy.HTTPRedirect:
             x = sys.exc_info()[1]
             if x.status == 304:
@@ -468,3 +470,27 @@ def expires(secs=0, force=False, debug=False):
             expiry = httputil.HTTPDate(response.time + secs)
         if force or "Expires" not in headers:
             headers["Expires"] = expiry
+
+
+class CachingTool(Tool):
+
+    """Caching Tool for CherryPy."""
+
+    def _wrapper(self, **kwargs):
+        request = cherrypy.serving.request
+        if get(**kwargs):
+            request.handler = None
+        else:
+            if request.cacheable:
+                # Note the devious technique here of adding hooks on the fly
+                request.hooks.attach('before_finalize', tee_output,
+                                     priority=90)
+    _wrapper.priority = 20
+
+    def _setup(self):
+        """Hook caching into cherrypy.request."""
+        conf = self._merged_args()
+
+        p = conf.pop("priority", None)
+        cherrypy.serving.request.hooks.attach('before_handler', self._wrapper,
+                                              priority=p, **conf)

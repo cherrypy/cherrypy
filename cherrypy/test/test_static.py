@@ -3,6 +3,7 @@ import sys
 
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 from cherrypy._cpcompat import BytesIO
+from cherrypy.lib.tools import static
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
@@ -10,7 +11,6 @@ bigfile_filepath = os.path.join(curdir, "static", "bigfile.log")
 BIGFILE_SIZE = 1024 * 1024
 
 import cherrypy
-from cherrypy.lib import static
 from cherrypy.test import helper
 
 
@@ -25,7 +25,7 @@ class StaticTest(helper.CPWebCase):
         class Root:
 
             def bigfile(self):
-                from cherrypy.lib import static
+                from cherrypy.lib.tools import static
                 self.f = static.serve_file(bigfile_filepath)
                 return self.f
             bigfile.exposed = True

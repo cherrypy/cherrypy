@@ -12,6 +12,8 @@ to a hierarchical arrangement of objects, starting at request.app.root.
 import string
 import sys
 import types
+from cherrypy.lib.tools import xmlrpcutil
+
 try:
     classtype = (type, types.ClassType)
 except AttributeError:
@@ -600,8 +602,6 @@ class RoutesDispatcher(object):
 
 
 def XMLRPCDispatcher(next_dispatcher=Dispatcher()):
-    from cherrypy.lib import xmlrpcutil
-
     def xmlrpc_dispatch(path_info):
         path_info = xmlrpcutil.patched_path(path_info)
         return next_dispatcher(path_info)

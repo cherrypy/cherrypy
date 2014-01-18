@@ -4,9 +4,9 @@
 
 
 import cherrypy
-from cherrypy.lib import auth_digest
 
 from cherrypy.test import helper
+from cherrypy.lib.tools import auth_digest
 
 
 class DigestAuthTest(helper.CPWebCase):
@@ -28,7 +28,7 @@ class DigestAuthTest(helper.CPWebCase):
         def fetch_users():
             return {'test': 'test'}
 
-        get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(fetch_users())
+        get_ha1 = auth_digest.get_ha1_dict_plain(fetch_users())
         conf = {'/digest': {'tools.auth_digest.on': True,
                             'tools.auth_digest.realm': 'localhost',
                             'tools.auth_digest.get_ha1': get_ha1,

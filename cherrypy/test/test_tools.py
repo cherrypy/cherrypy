@@ -7,11 +7,16 @@ from cherrypy._cpcompat import BytesIO, copyitems, itervalues
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
 from cherrypy._cpcompat import bytestr, unicodestr
 import time
+from cherrypy.lib.tools.session_auth import SessionAuth
+from cherrypy.lib.tools import HandlerWrapperTool
+from cherrypy.lib.tools import Toolbox
+
 timeout = 0.2
 import types
 
 import cherrypy
 from cherrypy import tools
+import cherrypy.lib.tools
 
 
 europoundUnicode = ntou('\x80\xa3')
@@ -27,7 +32,7 @@ class ToolTests(helper.CPWebCase):
     def setup_server():
 
         # Put check_access in a custom toolbox with its own namespace
-        myauthtools = cherrypy._cptools.Toolbox("myauth")
+        myauthtools = Toolbox("myauth")
 
         def check_access(default=False):
             if not getattr(cherrypy.request, "userid", default):
@@ -116,7 +121,7 @@ class ToolTests(helper.CPWebCase):
                 return o.getvalue()
             finally:
                 o.close()
-        cherrypy.tools.streamer = cherrypy._cptools.HandlerWrapperTool(
+        cherrypy.tools.streamer = HandlerWrapperTool(
             stream_handler)
 
         class Root:
@@ -412,7 +417,7 @@ class SessionAuthTest(unittest.TestCase):
         Issue 1132 revealed that login_screen would return unicode if the
         username and password were unicode.
         """
-        sa = cherrypy.lib.cptools.SessionAuth()
+        sa = SessionAuth()
         res = sa.login_screen(None, username=unicodestr('nobody'),
                               password=unicodestr('anypass'))
         self.assertIsInstance(res, bytestr)

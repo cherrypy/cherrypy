@@ -38,7 +38,8 @@ a config file::
     tools.protect.users = ['me', 'myself', 'I']
 
 Now let's look at the example tool a bit more closely.
-Working from the bottom up, the :class:`cherrypy.Tool<cherrypy._cptools.Tool>`
+Working from the bottom up, the
+:class:`cherrypy.Tool<cherrypy.lib.tools.Tool>`
 constructor takes 2 required and 2 optional arguments.
 
 point
@@ -151,7 +152,7 @@ could benefit (hint, hint). Creating a new Toolbox is as simple as::
     import cherrypy
 
     # Create a new Toolbox.
-    newauthtools = cherrypy._cptools.Toolbox("newauth")
+    newauthtools = cherrypy.lib.tools.Toolbox("newauth")
 
     # Add a Tool to our new Toolbox.
     def check_access(default=False):

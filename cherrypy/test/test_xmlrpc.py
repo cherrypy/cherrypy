@@ -1,5 +1,6 @@
 import sys
 from cherrypy._cpcompat import py3k
+from cherrypy.lib.tools.xmlrpcutil import XMLRPCController
 
 try:
     from xmlrpclib import DateTime, Fault, ProtocolError, ServerProxy
@@ -51,7 +52,6 @@ import cherrypy
 
 
 def setup_server():
-    from cherrypy import _cptools
 
     class Root:
 
@@ -59,7 +59,7 @@ def setup_server():
             return "I'm a standard index!"
         index.exposed = True
 
-    class XmlRpc(_cptools.XMLRPCController):
+    class XmlRpc(XMLRPCController):
 
         def foo(self):
             return "Hello world!"

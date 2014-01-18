@@ -100,6 +100,7 @@ import types
 from magicbus.plugins.tasks import Monitor
 
 import cherrypy
+from cherrypy.lib.tools import Tool
 from cherrypy._cpcompat import copyitems, pickle, unicodestr
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
@@ -952,3 +953,71 @@ def expire():
     one_year = 60 * 60 * 24 * 365
     e = time.time() - one_year
     cherrypy.serving.response.cookie[name]['expires'] = httputil.HTTPDate(e)
+
+
+class SessionTool(Tool):
+
+    """Session Tool for CherryPy.
+
+    sessions.locking
+        When 'implicit' (the default), the session will be locked for you,
+        just before running the page handler.
+
+        When 'early', the session will be locked before reading the request
+        body. This is off by default for safety reasons; for example,
+        a large upload would block the session, denying an AJAX
+        progress meter
+        (`issue <https://bitbucket.org/cherrypy/cherrypy/issue/630>`_).
+
+        When 'explicit' (or any other value), you need to call
+        cherrypy.session.acquire_lock() yourself before using
+        session data.
+    """
+
+    def __init__(self):
+        # _sessions.init must be bound after headers are read
+        Tool.__init__(self, 'before_request_body', init)
+
+    def _lock_session(self):
+        cherrypy.serving.session.acquire_lock()
+
+    def _setup(self):
+        """Hook this tool into cherrypy.request.
+
+        The standard CherryPy request object will automatically call this
+        method when the tool is "turned on" in config.
+        """
+        hooks = cherrypy.serving.request.hooks
+
+        conf = self._merged_args()
+
+        p = conf.pop("priority", None)
+        if p is None:
+            p = getattr(self.callable, "priority", self._priority)
+
+        hooks.attach(self._point, self.callable, priority=p, **conf)
+
+        locking = conf.pop('locking', 'implicit')
+        if locking == 'implicit':
+            hooks.attach('before_handler', self._lock_session)
+        elif locking == 'early':
+            # Lock before the request body (but after _sessions.init runs!)
+            hooks.attach('before_request_body', self._lock_session,
+                         priority=60)
+        else:
+            # Don't lock
+            pass
+
+        hooks.attach('before_finalize', save)
+        hooks.attach('on_end_request', close)
+
+    def regenerate(self):
+        """Drop the current session and make a new one (with a new id)."""
+        sess = cherrypy.serving.session
+        sess.regenerate()
+
+        # Grab cookie-relevant tool args
+        conf = dict([(k, v) for k, v in self._merged_args().items()
+                     if k in ('path', 'path_header', 'name', 'timeout',
+                              'domain', 'secure')])
+        set_response_cookie(**conf)

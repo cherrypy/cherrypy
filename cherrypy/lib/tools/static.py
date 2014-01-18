@@ -1,8 +1,9 @@
+from cherrypy.lib.tools import validate_since
+
 try:
     from io import UnsupportedOperation
 except ImportError:
     UnsupportedOperation = object()
-import logging
 import mimetypes
 mimetypes.init()
 mimetypes.types_map['.dwg'] = 'image/x-dwg'
@@ -13,11 +14,10 @@ mimetypes.types_map['.gz'] = 'application/x-gzip'
 import os
 import re
 import stat
-import time
 
 import cherrypy
 from cherrypy._cpcompat import ntob, unquote
-from cherrypy.lib import cptools, httputil, file_generator_limited
+from cherrypy.lib import httputil, file_generator_limited
 
 
 def serve_file(path, content_type=None, disposition=None, name=None,
@@ -64,7 +64,7 @@ def serve_file(path, content_type=None, disposition=None, name=None,
     # Set the Last-Modified response header, so that
     # modified-since validation code can work.
     response.headers['Last-Modified'] = httputil.HTTPDate(st.st_mtime)
-    cptools.validate_since()
+    validate_since()
 
     if content_type is None:
         # Set content-type based on filename extension
@@ -127,7 +127,7 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
         # Set the Last-Modified response header, so that
         # modified-since validation code can work.
         response.headers['Last-Modified'] = httputil.HTTPDate(st.st_mtime)
-        cptools.validate_since()
+        validate_since()
         content_length = st.st_size
 
     if content_type is not None:

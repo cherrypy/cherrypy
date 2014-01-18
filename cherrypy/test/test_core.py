@@ -1,14 +1,15 @@
 """Basic tests for the CherryPy core: request handling."""
 
 import os
+from cherrypy.lib.tools import Tool, static
+
 localDir = os.path.dirname(__file__)
-import sys
 import types
 
 import cherrypy
-from cherrypy._cpcompat import IncompleteRead, itervalues, ntob
-from cherrypy import _cptools, tools
-from cherrypy.lib import httputil, static
+from cherrypy._cpcompat import itervalues, ntob
+from cherrypy import tools
+from cherrypy.lib import httputil
 
 
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
@@ -148,7 +149,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         def login_redir():
             if not getattr(cherrypy.request, "login", None):
                 raise cherrypy.InternalRedirect("/internalredirect/login")
-        tools.login_redir = _cptools.Tool('before_handler', login_redir)
+        tools.login_redir = Tool('before_handler', login_redir)
 
         def redir_custom():
             raise cherrypy.InternalRedirect("/internalredirect/custom_err")

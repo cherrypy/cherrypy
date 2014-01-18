@@ -55,6 +55,7 @@ with customized or extended components. The core API's are:
 
 These API's are described in the `CherryPy specification <https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
+from cherrypy.lib.tools import Tool, default_toolbox as tools
 
 __version__ = "4.0.0alpha"
 
@@ -65,10 +66,6 @@ from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
 
 from cherrypy import _cpdispatch as dispatch
-
-from cherrypy import _cptools
-tools = _cptools.default_toolbox
-Tool = _cptools.Tool
 
 from cherrypy import _cprequest
 from cherrypy.lib import httputil as _httputil

@@ -41,11 +41,12 @@ popular browsers.
 """
 
 import os
+from cherrypy.lib.tools import static
+
 localDir = os.path.dirname(__file__)
 absDir = os.path.join(os.getcwd(), localDir)
 
 import cherrypy
-from cherrypy.lib import static
 
 
 class FileDemo(object):

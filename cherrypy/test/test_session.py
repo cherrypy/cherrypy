@@ -1,12 +1,12 @@
 import os
+from cherrypy.lib.tools import sessions
+
 localDir = os.path.dirname(__file__)
-import sys
 import threading
 import time
 
 import cherrypy
 from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
-from cherrypy.lib import sessions
 from cherrypy.lib.httputil import response_codes
 
 

@@ -7,7 +7,6 @@ import types
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou, unicodestr
 
 import cherrypy
-from cherrypy import _cptools, tools
 from cherrypy.lib import httputil
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
