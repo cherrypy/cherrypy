@@ -12,7 +12,7 @@ from cherrypy.lib import httputil
 
 
 class NativeGateway(server.Gateway):
-    
+
     recursive = False
 
     def respond(self):
@@ -107,14 +107,14 @@ class NativeGateway(server.Gateway):
 
 
 class CPHTTPServer(server.HTTPServer):
-    
+
     def __init__(self, server_adapter=cherrypy.server):
         self.server_adapter = server_adapter
 
         server_name = (self.server_adapter.socket_host or
                        self.server_adapter.socket_file or
                        None)
-        
+
         server.HTTPServer.__init__(
             self, server_adapter.bind_addr, NativeGateway,
             minthreads=server_adapter.thread_pool,

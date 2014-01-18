@@ -8,7 +8,7 @@ from cheroot import wsgi, ssllib
 
 
 class CPWSGIServer(wsgi.WSGIServer):
-    
+
     def __init__(self, server_adapter=cherrypy.server):
         self.server_adapter = server_adapter
         self.max_request_header_size = (
@@ -28,7 +28,7 @@ class CPWSGIServer(wsgi.WSGIServer):
                    minthreads=self.server_adapter.thread_pool,
                    maxthreads=self.server_adapter.thread_pool_max,
                    server_name=server_name,
-                   protocol = self.server_adapter.protocol_version,
+                   protocol=self.server_adapter.protocol_version,
                    )
         self.wsgi_app = cherrypy.tree
         self.request_queue_size = self.server_adapter.socket_queue_size
