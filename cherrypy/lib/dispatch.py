@@ -38,7 +38,6 @@ class PageHandler(object):
     @args.setter
     def args(self, args):
         cherrypy.serving.request.args = args
-        return cherrypy.serving.request.args
 
     @property
     def kwargs(self):
@@ -48,7 +47,6 @@ class PageHandler(object):
     @kwargs.setter
     def kwargs(self, kwargs):
         cherrypy.serving.request.kwargs = kwargs
-        return cherrypy.serving.request.kwargs
 
     def __call__(self):
         try:
