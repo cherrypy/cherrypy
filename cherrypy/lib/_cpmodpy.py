@@ -37,7 +37,7 @@ LoadModule python_module /usr/lib/apache2/modules/mod_python.so
 <Location "/">
     PythonPath "sys.path+['/path/to/my/application']"
     SetHandler python-program
-    PythonHandler cherrypy._cpmodpy::handler
+    PythonHandler cherrypy.lib._cpmodpy::handler
     PythonOption cherrypy.setup myapp::setup_server
     PythonDebug On
 </Location>
@@ -59,8 +59,8 @@ import logging
 import sys
 
 import cherrypy
-from cherrypy._cpcompat import BytesIO, copyitems
-from cherrypy._cperror import format_exc, bare_error
+from cherrypy.lib._cpcompat import BytesIO, copyitems
+from cherrypy.lib._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
 
 
@@ -321,7 +321,7 @@ LoadModule python_module modules/mod_python.so
 """
 
     def __init__(self, loc="/", port=80, opts=None, apache_path="apache",
-                 handler="cherrypy._cpmodpy::handler"):
+                 handler="cherrypy.lib._cpmodpy::handler"):
         self.loc = loc
         self.port = port
         self.opts = opts

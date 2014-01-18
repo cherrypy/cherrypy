@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy._cpcompat import ntob
+from cherrypy.lib._cpcompat import ntob
 from cherrypy.test import helper
 
 

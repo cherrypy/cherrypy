@@ -4,9 +4,9 @@ CherryPy provides (and uses) exceptions for declaring that the HTTP response
 should be a status other than the default "200 OK". You can ``raise`` them like
 normal Python exceptions. You can also call them and they will raise
 themselves; this means you can set an
-:class:`HTTPError<cherrypy._cperror.HTTPError>`
-or :class:`HTTPRedirect<cherrypy._cperror.HTTPRedirect>` as the
-:attr:`request.handler<cherrypy._cprequest.Request.handler>`.
+:class:`HTTPError<cherrypy.lib._cperror.HTTPError>`
+or :class:`HTTPRedirect<cherrypy.lib._cperror.HTTPRedirect>` as the
+:attr:`request.handler<cherrypy.lib._cprequest.Request.handler>`.
 
 .. _redirectingpost:
 
@@ -86,10 +86,10 @@ Unanticipated errors
 
 CherryPy also has a generic error handling mechanism: whenever an unanticipated
 error occurs in your code, it will call
-:func:`Request.error_response<cherrypy._cprequest.Request.error_response>` to
+:func:`Request.error_response<cherrypy.lib._cprequest.Request.error_response>` to
 set the response status, headers, and body. By default, this is the same
 output as
-:class:`HTTPError(500) <cherrypy._cperror.HTTPError>`. If you want to provide
+:class:`HTTPError(500) <cherrypy.lib._cperror.HTTPError>`. If you want to provide
 some other behavior, you generally replace "request.error_response".
 
 Here is some sample code that shows how to display a custom error message and
@@ -111,15 +111,15 @@ send an e-mail containing the error::
 
 
 Note that you have to explicitly set
-:attr:`response.body <cherrypy._cprequest.Response.body>`
+:attr:`response.body <cherrypy.lib._cprequest.Response.body>`
 and not simply return an error message as a result.
 """
 
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
-from cherrypy._cpcompat import basestring, bytestr, iteritems, ntob
-from cherrypy._cpcompat import tonative, urljoin as _urljoin
+from cherrypy.lib._cpcompat import basestring, bytestr, iteritems, ntob
+from cherrypy.lib._cpcompat import tonative, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
 
 
@@ -415,7 +415,7 @@ class NotFound(HTTPError):
     """Exception raised when a URL could not be mapped to any handler (404).
 
     This is equivalent to raising
-    :class:`HTTPError("404 Not Found") <cherrypy._cperror.HTTPError>`.
+    :class:`HTTPError("404 Not Found") <cherrypy.lib._cperror.HTTPError>`.
     """
 
     def __init__(self, path=None):

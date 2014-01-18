@@ -4,10 +4,10 @@
 
 Application authors have complete control over the parsing of HTTP request
 entities. In short,
-:attr:`cherrypy.request.body<cherrypy._cprequest.Request.body>`
+:attr:`cherrypy.request.body<cherrypy.lib._cprequest.Request.body>`
 is now always set to an instance of
-:class:`RequestBody<cherrypy._cpreqbody.RequestBody>`,
-and *that* class is a subclass of :class:`Entity<cherrypy._cpreqbody.Entity>`.
+:class:`RequestBody<cherrypy.lib._cpreqbody.RequestBody>`,
+and *that* class is a subclass of :class:`Entity<cherrypy.lib._cpreqbody.Entity>`.
 
 When an HTTP request includes an entity body, it is often desirable to
 provide that information to applications in a form other than the raw bytes.
@@ -20,13 +20,13 @@ Different content types demand different approaches. Examples:
 
 When the request contains a Content-Type header, the media type is used as a
 key to look up a value in the
-:attr:`request.body.processors<cherrypy._cpreqbody.Entity.processors>` dict.
+:attr:`request.body.processors<cherrypy.lib._cpreqbody.Entity.processors>` dict.
 If the full media
 type is not found, then the major type is tried; for example, if no processor
 is found for the 'image/jpeg' type, then we look for a processor for the
 'image' types altogether. If neither the full type nor the major type has a
 matching processor, then a default processor is used
-(:func:`default_proc<cherrypy._cpreqbody.Entity.default_proc>`). For most
+(:func:`default_proc<cherrypy.lib._cpreqbody.Entity.default_proc>`). For most
 types, this means no processing is done, and the body is left unread as a
 raw byte stream. Processors are configurable in an 'on_start_resource' hook.
 
@@ -35,7 +35,7 @@ to unicode. If the Content-Type request header includes a 'charset' parameter,
 this is used to decode the entity. Otherwise, one or more default charsets may
 be attempted, although this decision is up to each processor. If a processor
 successfully decodes an Entity or Part, it should set the
-:attr:`charset<cherrypy._cpreqbody.Entity.charset>` attribute
+:attr:`charset<cherrypy.lib._cpreqbody.Entity.charset>` attribute
 on the Entity or Part to the name of the successful charset, so that
 applications can easily re-encode or transcode the value if they wish.
 
@@ -44,8 +44,8 @@ the above parsing process, and possibly a decoding process, is performed for
 each part.
 
 For both the full entity and multipart parts, a Content-Disposition header may
-be used to fill :attr:`name<cherrypy._cpreqbody.Entity.name>` and
-:attr:`filename<cherrypy._cpreqbody.Entity.filename>` attributes on the
+be used to fill :attr:`name<cherrypy.lib._cpreqbody.Entity.name>` and
+:attr:`filename<cherrypy.lib._cpreqbody.Entity.filename>` attributes on the
 request.body or the Part.
 
 .. _custombodyprocessors:
@@ -54,7 +54,7 @@ Custom Processors
 =================
 
 You can add your own processors for any specific or major MIME type. Simply add
-it to the :attr:`processors<cherrypy._cprequest.Entity.processors>` dict in a
+it to the :attr:`processors<cherrypy.lib._cprequest.Entity.processors>` dict in a
 hook/tool that runs at ``on_start_resource`` or ``before_request_body``.
 Here's the built-in JSON tool for an example::
 
@@ -132,7 +132,7 @@ except ImportError:
         return b''.join(atoms)
 
 import cherrypy
-from cherrypy._cpcompat import basestring
+from cherrypy.lib._cpcompat import basestring
 from cherrypy.lib import httputil
 
 
@@ -281,21 +281,21 @@ class Entity(object):
     This class collects information about the HTTP request entity. When a
     given entity is of MIME type "multipart", each part is parsed into its own
     Entity instance, and the set of parts stored in
-    :attr:`entity.parts<cherrypy._cpreqbody.Entity.parts>`.
+    :attr:`entity.parts<cherrypy.lib._cpreqbody.Entity.parts>`.
 
     Between the ``before_request_body`` and ``before_handler`` tools, CherryPy
     tries to process the request body (if any) by calling
-    :func:`request.body.process<cherrypy._cpreqbody.RequestBody.process>`.
+    :func:`request.body.process<cherrypy.lib._cpreqbody.RequestBody.process>`.
     This uses the ``content_type`` of the Entity to look up a suitable
     processor in
-    :attr:`Entity.processors<cherrypy._cpreqbody.Entity.processors>`,
+    :attr:`Entity.processors<cherrypy.lib._cpreqbody.Entity.processors>`,
     a dict.
     If a matching processor cannot be found for the complete Content-Type,
     it tries again using the major type. For example, if a request with an
     entity of type "image/jpeg" arrives, but no processor can be found for
     that complete type, then one is sought for the major type "image". If a
     processor is still not found, then the
-    :func:`default_proc<cherrypy._cpreqbody.Entity.default_proc>` method
+    :func:`default_proc<cherrypy.lib._cpreqbody.Entity.default_proc>` method
     of the Entity is called (which does nothing by default; you can
     override this too).
 
@@ -305,14 +305,14 @@ class Entity(object):
     Parts are passed as arguments to the page handler using their
     ``Content-Disposition.name`` if given, otherwise in a generic "parts"
     argument. Each such part is either a string, or the
-    :class:`Part<cherrypy._cpreqbody.Part>` itself if it's a file. (In this
+    :class:`Part<cherrypy.lib._cpreqbody.Part>` itself if it's a file. (In this
     case it will have ``file`` and ``filename`` attributes, or possibly a
     ``value`` attribute). Each Part is itself a subclass of
     Entity, and has its own ``process`` method and ``processors`` dict.
 
     There is a separate processor for the "multipart" major type which is more
     flexible, and simply stores all multipart parts in
-    :attr:`request.body.parts<cherrypy._cpreqbody.Entity.parts>`. You can
+    :attr:`request.body.parts<cherrypy.lib._cpreqbody.Entity.parts>`. You can
     enable it with::
 
         cherrypy.request.body.processors['multipart'] = _cpreqbody.process_multipart
@@ -330,7 +330,7 @@ class Entity(object):
     When the Content-Type of the request body warrants it, each of the given
     encodings will be tried in order. The first one to successfully decode the
     entity without raising an error is stored as
-    :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
+    :attr:`entity.charset<cherrypy.lib._cpreqbody.Entity.charset>`. This defaults
     to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
     `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
     but ``['us-ascii', 'utf-8']`` for multipart parts.
@@ -353,7 +353,7 @@ class Entity(object):
     ``Content-Type`` header in the HTTP request entity is an error at best,
     and a security hole at worst. For multipart parts, however, the MIME spec
     declares that a part with no Content-Type defaults to "text/plain"
-    (see :class:`Part<cherrypy._cpreqbody.Part>`).
+    (see :class:`Part<cherrypy.lib._cpreqbody.Part>`).
     """
 
     filename = None
@@ -501,7 +501,7 @@ class Entity(object):
         """Return a file-like object into which the request body will be read.
 
         By default, this will return a TemporaryFile. Override as needed.
-        See also :attr:`cherrypy._cpreqbody.Part.maxrambytes`."""
+        See also :attr:`cherrypy.lib._cpreqbody.Part.maxrambytes`."""
         return tempfile.TemporaryFile()
 
     def fullvalue(self):
@@ -554,7 +554,7 @@ class Part(Entity):
     When the Content-Type of the request body warrants it, each of the given
     encodings will be tried in order. The first one to successfully decode the
     entity without raising an error is stored as
-    :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
+    :attr:`entity.charset<cherrypy.lib._cpreqbody.Entity.charset>`. This defaults
     to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
     `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
     but ``['us-ascii', 'utf-8']`` for multipart parts.
@@ -577,7 +577,7 @@ class Part(Entity):
     maxrambytes = 1000
     """The threshold of bytes after which point the ``Part`` will store
     its data in a file (generated by
-    :func:`make_file<cherrypy._cprequest.Entity.make_file>`)
+    :func:`make_file<cherrypy.lib._cprequest.Entity.make_file>`)
     instead of a string. Defaults to 1000, just like the :mod:`cgi`
     module in Python's standard library.
     """
@@ -930,7 +930,7 @@ class RequestBody(Entity):
     ``Content-Type`` header in the HTTP request entity is an error at best,
     and a security hole at worst. For multipart parts, however, the MIME spec
     declares that a part with no Content-Type defaults to "text/plain"
-    (see :class:`Part<cherrypy._cpreqbody.Part>`).
+    (see :class:`Part<cherrypy.lib._cpreqbody.Part>`).
     """
 
     maxbytes = None

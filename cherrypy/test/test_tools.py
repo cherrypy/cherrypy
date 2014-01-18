@@ -1,15 +1,16 @@
 """Test the various means of instantiating and invoking tools."""
 
 import gzip
-import sys
 import unittest
-from cherrypy._cpcompat import BytesIO, copyitems, itervalues
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
-from cherrypy._cpcompat import bytestr, unicodestr
 import time
+
+from cherrypy.lib._cpcompat import BytesIO, copyitems, itervalues
+from cherrypy.lib._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
+from cherrypy.lib._cpcompat import bytestr, unicodestr
 from cherrypy.lib.tools.session_auth import SessionAuth
 from cherrypy.lib.tools import HandlerWrapperTool
 from cherrypy.lib.tools import Toolbox
+
 
 timeout = 0.2
 import types

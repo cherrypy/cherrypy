@@ -69,8 +69,8 @@ The following builtin plugins are subscribed by default:
 
  * :doc:`Timeout Monitor</progguide/responsetimeouts>`
  * :class:`Autoreloader<cherrypy.process.plugins.Autoreloader>` (off in the "production" :ref:`environment<environments>`)
- * :class:`cherrypy.server<cherrypy._cpserver.Server>`
- * :class:`cherrypy.checker<cherrypy._cpchecker.Checker>`
+ * :class:`cherrypy.server<cherrypy.lib._cpserver.Server>`
+ * :class:`cherrypy.checker<cherrypy.lib._cpchecker.Checker>`
  * :doc:`Engine log messages </refman/_cplogging>` go to :class:`cherrypy.log<cherrypy._GlobalLogManager>`.
  * A :class:`Signal Handler<cherrypy.process.plugins.SignalHandler>`.
 

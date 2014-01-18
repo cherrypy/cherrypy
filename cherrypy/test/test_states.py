@@ -1,4 +1,3 @@
-from cherrypy._cpcompat import BadStatusLine, ntob
 import os
 import sys
 import time
@@ -8,6 +7,7 @@ import socket
 
 import magicbus.plugins.servers
 
+from cherrypy.lib._cpcompat import BadStatusLine, ntob
 import cherrypy
 from cherrypy.test import helper
 
@@ -110,7 +110,8 @@ class ServerStateTests(helper.CPWebCase):
 
         host = cherrypy.server.socket_host
         port = cherrypy.server.socket_port
-        self.assertRaises(OSError, cherrypy._cpserver.check_port, host, port)
+        self.assertRaises(
+            OSError, magicbus.plugins.servers.check_port, host, port)
 
         # The db_connection should be running now
         self.assertEqual(db_connection.running, True)
@@ -267,7 +268,7 @@ class ServerStateTests(helper.CPWebCase):
             time.sleep(2)
             host = cherrypy.server.socket_host
             port = cherrypy.server.socket_port
-            cherrypy._cpserver.wait_for_occupied_port(host, port)
+            magicbus.plugins.servers.wait_for_occupied_port(host, port)
 
             self.getPage("/start")
             if not (float(self.body) > start):

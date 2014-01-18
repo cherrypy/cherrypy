@@ -1,7 +1,7 @@
 import sys
 
 import cherrypy
-from cherrypy._cpcompat import ntob
+from cherrypy.lib._cpcompat import ntob
 
 
 def get_xmlrpclib():

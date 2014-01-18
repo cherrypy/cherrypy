@@ -32,11 +32,11 @@ CherryPy provides log managers at both the global and application layers.
 This means you can have one set of logging rules for your entire site,
 and another set of rules specific to each application. The global log
 manager is found at :func:`cherrypy.log`, and the log manager for each
-application is found at :attr:`app.log<cherrypy._cptree.Application.log>`.
+application is found at :attr:`app.log<cherrypy.lib._cptree.Application.log>`.
 If you're inside a request, the latter is reachable from
 ``cherrypy.request.app.log``; if you're outside a request, you'll have to
 obtain a reference to the ``app``: either the return value of
-:func:`tree.mount()<cherrypy._cptree.Tree.mount>` or, if you used
+:func:`tree.mount()<cherrypy.lib._cptree.Tree.mount>` or, if you used
 :func:`quickstart()<cherrypy.quickstart>` instead, via
 ``cherrypy.tree.apps['/']``.
 
@@ -109,8 +109,8 @@ import os
 import sys
 
 import cherrypy
-from cherrypy import _cperror
-from cherrypy._cpcompat import py3k
+from cherrypy.lib import _cperror
+from cherrypy.lib._cpcompat import py3k
 
 
 class NullHandler(logging.Handler):
@@ -220,7 +220,7 @@ class LogManager(object):
 
         CherryPy calls this automatically for you. Note there are no arguments;
         it collects the data itself from
-        :class:`cherrypy.request<cherrypy._cprequest.Request>`.
+        :class:`cherrypy.request<cherrypy.lib._cprequest.Request>`.
 
         Like Apache started doing in 2.0.46, non-printable and other special
         characters in %r (and we expand that to all parts) are escaped using
@@ -408,7 +408,7 @@ class LogManager(object):
         """Write errors to wsgi.errors.
 
         If you set this to True, it'll add the appropriate
-        :class:`WSGIErrorHandler<cherrypy._cplogging.WSGIErrorHandler>` for you
+        :class:`WSGIErrorHandler<cherrypy.lib._cplogging.WSGIErrorHandler>` for you
         (which writes errors to ``wsgi.errors``).
         If you set it to False, it will remove the handler.
         """

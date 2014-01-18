@@ -4,7 +4,7 @@ import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, unicodestr
+from cherrypy.lib._cpcompat import IncompleteRead, ntob, ntou, unicodestr
 
 import cherrypy
 from cherrypy.lib import httputil

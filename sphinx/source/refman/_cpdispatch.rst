@@ -1,8 +1,8 @@
 ********************************************************
-:mod:`cherrypy._cpdispatch` -- Mapping URI's to handlers
+:mod:`cherrypy.lib._cpdispatch` -- Mapping URI's to handlers
 ********************************************************
 
-.. automodule:: cherrypy._cpdispatch
+.. automodule:: cherrypy.lib._cpdispatch
 
 Classes
 =======

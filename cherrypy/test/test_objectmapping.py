@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy._cptree import Application
+from cherrypy.lib._cptree import Application
 from cherrypy.test import helper
 
 script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]

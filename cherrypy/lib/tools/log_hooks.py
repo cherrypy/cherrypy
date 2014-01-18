@@ -7,7 +7,7 @@ def log_hooks(debug=False):
 
     msg = []
     # Sort by the standard points if possible.
-    from cherrypy import _cprequest
+    from cherrypy.lib import _cprequest
     points = _cprequest.hookpoints
     for k in request.hooks.keys():
         if k not in points:

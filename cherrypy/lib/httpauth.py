@@ -63,8 +63,8 @@ __all__ = ("digestAuth", "basicAuth", "doAuth", "checkResponse",
 ##########################################################################
 from hashlib import md5
 import time
-from cherrypy._cpcompat import base64_decode, ntob
-from cherrypy._cpcompat import parse_http_list, parse_keqv_list
+from cherrypy.lib._cpcompat import base64_decode, ntob
+from cherrypy.lib._cpcompat import parse_http_list, parse_keqv_list
 
 MD5 = "MD5"
 MD5_SESS = "MD5-sess"

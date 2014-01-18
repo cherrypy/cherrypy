@@ -1,8 +1,8 @@
 **************************
-:mod:`cherrypy._cprequest`
+:mod:`cherrypy.lib._cprequest`
 **************************
 
-.. automodule:: cherrypy._cprequest
+.. automodule:: cherrypy.lib._cprequest
 
 Classes
 =======

@@ -28,11 +28,10 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
 import sys
 import time
-import traceback
 
 import cherrypy
-from cherrypy._cpcompat import ntob
-from cherrypy import _cperror, _cpmodpy
+from cherrypy.lib._cpcompat import ntob
+from cherrypy.lib import _cperror, _cpmodpy
 from cherrypy.lib import httputil
 
 
@@ -309,7 +308,7 @@ def run_standard_benchmarks():
 def startup_modpython(req=None):
     """Start the CherryPy app server in 'serverless' mode (for modpython/WSGI).
     """
-    if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
+    if cherrypy.engine.state == cherrypy.lib._cpengine.STOPPED:
         if req:
             if "nullreq" in req.get_options():
                 cherrypy.engine.request_class = NullRequest
@@ -319,7 +318,7 @@ def startup_modpython(req=None):
                 global AB_PATH
                 AB_PATH = ab_opt
         cherrypy.engine.start()
-    if cherrypy.engine.state == cherrypy._cpengine.STARTING:
+    if cherrypy.engine.state == cherrypy.lib._cpengine.STARTING:
         cherrypy.engine.wait()
     return 0  # apache.OK
 

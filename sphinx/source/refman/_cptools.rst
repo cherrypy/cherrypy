@@ -1,10 +1,10 @@
 ************************
-:mod:`cherrypy._cptools`
+:mod:`cherrypy.lib._cptools`
 ************************
 
 See :doc:`/tutorial/tools` for a conceptual overview of CherryPy Tools.
 
-.. automodule:: cherrypy._cptools
+.. automodule:: cherrypy.lib._cptools
 
 Classes
 =======

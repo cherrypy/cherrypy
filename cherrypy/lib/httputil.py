@@ -8,9 +8,9 @@ to a public caning.
 """
 
 from binascii import b2a_base64
-from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
-from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr
-from cherrypy._cpcompat import unicodestr, unquote_qs
+from cherrypy.lib._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
+from cherrypy.lib._cpcompat import basestring, bytestr, iteritems, nativestr
+from cherrypy.lib._cpcompat import unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://bitbucket.org/cherrypy/cherrypy/issue/361
@@ -23,7 +23,6 @@ response_codes[503] = ('Service Unavailable',
                        'maintenance of the server.')
 
 import re
-import urllib
 
 
 def urljoin(*atoms):

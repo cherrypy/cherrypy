@@ -38,7 +38,8 @@ import re
 import sys
 import time
 
-import cherrypy
+from magicbus.plugins.servers import wait_for_occupied_port
+
 from cherrypy.test import helper, webtest
 
 
@@ -119,7 +120,7 @@ class ModWSGISupervisor(helper.Supervisor):
 
         # Make a request so mod_wsgi starts up our app.
         # If we don't, concurrent initial requests will 404.
-        cherrypy._cpserver.wait_for_occupied_port("127.0.0.1", self.port)
+        wait_for_occupied_port("127.0.0.1", self.port)
         webtest.openURL('/ihopetheresnodefault', port=self.port)
         time.sleep(1)
 

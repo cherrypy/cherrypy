@@ -1,6 +1,5 @@
 import gc
 import inspect
-import os
 import sys
 import time
 
@@ -10,7 +9,7 @@ except ImportError:
     objgraph = None
 
 import cherrypy
-from cherrypy import _cprequest, _cpwsgi
+from cherrypy.lib import _cpwsgi, _cprequest
 from magicbus.plugins import SimplePlugin
 
 

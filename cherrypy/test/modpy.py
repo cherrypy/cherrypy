@@ -85,7 +85,7 @@ LoadModule python_module modules/mod_python.so
 
 SetHandler python-program
 PythonFixupHandler cherrypy.test.modpy::cpmodpysetup
-PythonHandler cherrypy._cpmodpy::handler
+PythonHandler cherrypy.lib._cpmodpy::handler
 PythonOption cherrypy.setup cherrypy.test.%(modulename)s::setup_server
 PythonOption socket_host %(host)s
 PythonDebug On

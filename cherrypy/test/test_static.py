@@ -1,8 +1,8 @@
 import os
 import sys
 
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
-from cherrypy._cpcompat import BytesIO
+from cherrypy.lib._cpcompat import HTTPConnection, HTTPSConnection, ntob
+from cherrypy.lib._cpcompat import BytesIO
 from cherrypy.lib.tools import static
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -95,7 +95,7 @@ class StaticTest(helper.CPWebCase):
         testApp = cherrypy.Application(Static())
         testApp.merge(test_app_conf)
 
-        vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
+        vhost = cherrypy.lib._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
         cherrypy.tree.graft(vhost)
     setup_server = staticmethod(setup_server)
 

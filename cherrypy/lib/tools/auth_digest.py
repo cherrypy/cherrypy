@@ -25,10 +25,10 @@ __date__ = 'April 2009'
 from hashlib import md5
 import time
 
-from cherrypy._cpcompat import parse_http_list, parse_keqv_list
+from cherrypy.lib._cpcompat import parse_http_list, parse_keqv_list
 
 import cherrypy
-from cherrypy._cpcompat import ntob
+from cherrypy.lib._cpcompat import ntob
 md5_hex = lambda s: md5(ntob(s)).hexdigest()
 
 qop_auth = 'auth'

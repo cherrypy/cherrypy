@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy._cpcompat import basestring
+from cherrypy.lib._cpcompat import basestring
 
 
 def accept(media=None, debug=False):

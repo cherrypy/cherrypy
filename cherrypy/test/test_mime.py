@@ -1,7 +1,7 @@
 """Tests for various MIME issues, including the safe_multipart Tool."""
 
 import cherrypy
-from cherrypy._cpcompat import ntob, ntou
+from cherrypy.lib._cpcompat import ntob, ntou
 
 
 def setup_server():

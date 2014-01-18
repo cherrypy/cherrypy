@@ -1,15 +1,12 @@
 import datetime
-import gzip
 from itertools import count
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-import sys
 import threading
 import time
-import urllib
 
 import cherrypy
-from cherrypy._cpcompat import next, ntob, quote, xrange
+from cherrypy.lib._cpcompat import next, ntob, quote, xrange
 from cherrypy.lib import httputil
 import cherrypy.lib.tools.encoding
 

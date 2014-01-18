@@ -1,8 +1,8 @@
 **************************
-:mod:`cherrypy._cpchecker`
+:mod:`cherrypy.lib._cpchecker`
 **************************
 
-.. automodule:: cherrypy._cpchecker
+.. automodule:: cherrypy.lib._cpchecker
 
 Classes
 =======

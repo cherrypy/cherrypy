@@ -2,7 +2,7 @@
 
 import cherrypy
 from cherrypy.lib import attributes
-from cherrypy._cpcompat import basestring, py3k
+from cherrypy.lib._cpcompat import basestring, py3k
 
 # We import * because we want to export check_port
 # et al as attributes of this module.
@@ -142,7 +142,7 @@ class Server(ServerPlugin):
         if httpserver is None:
             httpserver = self.instance
         if httpserver is None:
-            from cherrypy import _cpwsgi_server
+            from cherrypy.lib import _cpwsgi_server
             httpserver = _cpwsgi_server.CPWSGIServer(self)
         if isinstance(httpserver, basestring):
             # Is anyone using this? Can I add an arg?

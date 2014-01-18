@@ -59,21 +59,21 @@ from cherrypy.lib.tools import Tool, default_toolbox as tools
 
 __version__ = "4.0.0alpha"
 
-from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
-from cherrypy._cpcompat import basestring, unicodestr
+from cherrypy.lib._cpcompat import urljoin as _urljoin, urlencode as _urlencode
+from cherrypy.lib._cpcompat import basestring, unicodestr
 
-from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
-from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
+from cherrypy.lib._cperror import HTTPError, HTTPRedirect, InternalRedirect
+from cherrypy.lib._cperror import NotFound, CherryPyException, TimeoutError
 
-from cherrypy import _cpdispatch as dispatch
+from cherrypy.lib import _cpdispatch as dispatch
 
-from cherrypy import _cprequest
+from cherrypy.lib import _cprequest
 from cherrypy.lib import httputil as _httputil
 
-from cherrypy import _cptree
+from cherrypy.lib import _cptree
 tree = _cptree.Tree()
-from cherrypy._cptree import Application
-from cherrypy import _cpwsgi as wsgi
+from cherrypy.lib._cptree import Application
+from cherrypy.lib import _cpwsgi as wsgi
 
 import magicbus
 engine = magicbus.bus
@@ -135,7 +135,7 @@ class _HandleSignalsPlugin(object):
 engine.signals = _HandleSignalsPlugin(engine)
 
 
-from cherrypy import _cpserver
+from cherrypy.lib import _cpserver
 server = _cpserver.Server()
 server.subscribe()
 
@@ -293,14 +293,14 @@ except ImportError:
     pass
 
 
-from cherrypy import _cplogging
+from cherrypy.lib import _cplogging
 
 
 class _GlobalLogManager(_cplogging.LogManager):
 
     """A site-wide LogManager; routes to app.log or global log as appropriate.
 
-    This :class:`LogManager<cherrypy._cplogging.LogManager>` implements
+    This :class:`LogManager<cherrypy.lib._cplogging.LogManager>` implements
     cherrypy.log() and cherrypy.log.access(). If either
     function is called during a request, the message will be sent to the
     logger for the current Application. If they are called outside of a
@@ -625,7 +625,7 @@ def url(path="", qs="", script_name=None, base=None, relative=None):
 
 
 # import _cpconfig last so it can reference other top-level objects
-from cherrypy import _cpconfig
+from cherrypy.lib import _cpconfig
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
@@ -640,6 +640,6 @@ config.namespaces["checker"] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
-from cherrypy import _cpchecker
+from cherrypy.lib import _cpchecker
 checker = _cpchecker.Checker()
 engine.subscribe('start', checker)

@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy._cpcompat import ntou
+from cherrypy.lib._cpcompat import ntou
 from cherrypy.test import helper
 
 

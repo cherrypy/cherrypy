@@ -2,6 +2,8 @@
 
 import datetime
 import logging
+from magicbus.plugins.servers import wait_for_free_port, wait_for_occupied_port
+
 log = logging.getLogger(__name__)
 import os
 thisdir = os.path.abspath(os.path.dirname(__file__))
@@ -14,11 +16,12 @@ import time
 import warnings
 
 import cherrypy
-from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
+from cherrypy.lib._cpcompat import basestring, copyitems, HTTPSConnection, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.lib.reprconf import unrepr
 from cherrypy.test import webtest
+from cherrypy.lib._cptree import Tree
 
 import nose
 
@@ -129,7 +132,7 @@ class NativeServerSupervisor(LocalSupervisor):
 
     """Server supervisor for the builtin HTTP server."""
 
-    httpserver_class = "cherrypy._cpnative_server.CPHTTPServer"
+    httpserver_class = "cherrypy.lib._cpnative_server.CPHTTPServer"
     using_apache = False
     using_wsgi = False
 
@@ -141,7 +144,7 @@ class LocalWSGISupervisor(LocalSupervisor):
 
     """Server supervisor for the builtin WSGI server."""
 
-    httpserver_class = "cherrypy._cpwsgi_server.CPWSGIServer"
+    httpserver_class = "cherrypy.lib._cpwsgi_server.CPWSGIServer"
     using_apache = False
     using_wsgi = True
 
@@ -293,7 +296,7 @@ class CPWebCase(webtest.WebCase):
         if hasattr(cls, 'setup_server'):
             # Clear the cherrypy tree and clear the wsgi server so that
             # it can be updated with the new root
-            cherrypy.tree = cherrypy._cptree.Tree()
+            cherrypy.tree = Tree()
             cherrypy.server.httpserver = None
             cls.setup_server()
             # Add a resource for verifying there are no refleaks
@@ -354,7 +357,7 @@ class CPWebCase(webtest.WebCase):
         within the exception embedded in the error page."""
 
         # This will never contain a traceback
-        page = cherrypy._cperror.get_error_page(status, message=message)
+        page = cherrypy.lib._cperror.get_error_page(status, message=message)
 
         # First, test the response body without checking the traceback.
         # Stick a match-all group (.*) in to grab the traceback.
@@ -456,7 +459,7 @@ server.ssl_private_key: r'%s'
 
     def start(self, imports=None):
         """Start cherryd in a subprocess."""
-        cherrypy._cpserver.wait_for_free_port(self.host, self.port)
+        wait_for_free_port(self.host, self.port)
 
         args = [
             os.path.join(thisdir, '..', 'cherryd'),
@@ -487,7 +490,7 @@ server.ssl_private_key: r'%s'
         if self.wait:
             self.exit_code = self._proc.wait()
         else:
-            cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
+            wait_for_occupied_port(self.host, self.port)
 
         # Give the engine a wee bit more time to finish STARTING
         if self.daemonize:

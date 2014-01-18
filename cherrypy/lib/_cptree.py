@@ -1,12 +1,12 @@
 """CherryPy Application and Tree objects."""
 
 import os
-import sys
 
 import cherrypy
-from cherrypy._cpcompat import py3k
-from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
+from cherrypy.lib._cpcompat import py3k
+from cherrypy import tools
 from cherrypy.lib import httputil, reprconf
+from cherrypy.lib import _cplogging, _cpwsgi, _cpconfig, _cprequest
 
 
 class Application(object):

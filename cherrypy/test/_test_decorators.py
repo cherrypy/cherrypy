@@ -1,7 +1,7 @@
 """Test module for the @-decorator syntax, which is version-specific"""
 
 from cherrypy import expose, tools
-from cherrypy._cpcompat import ntob
+from cherrypy.lib._cpcompat import ntob
 
 
 class ExposeExamples(object):

@@ -108,7 +108,7 @@ checker
 
 The only key that does not exist in a namespace is the "environment" entry.
 This special entry 'imports' other config entries from a template stored in
-cherrypy._cpconfig.environments[environment]. It only applies to the global
+cherrypy.lib._cpconfig.environments[environment]. It only applies to the global
 config, and only when you use cherrypy.config.update.
 
 You can define your own namespaces to be called at the Global, Application,
@@ -118,7 +118,7 @@ be any string, and the handler must be either a callable or a context manager.
 """
 
 import cherrypy
-from cherrypy._cpcompat import basestring
+from cherrypy.lib._cpcompat import basestring
 from cherrypy.lib import reprconf
 
 
@@ -230,7 +230,7 @@ def _server_namespace_handler(k, v):
 
         servername, k = atoms
         if servername not in cherrypy.servers:
-            from cherrypy import _cpserver
+            from cherrypy.lib import _cpserver
             cherrypy.servers[servername] = _cpserver.Server()
             # On by default, but 'on = False' can unsubscribe it (see below).
             cherrypy.servers[servername].subscribe()

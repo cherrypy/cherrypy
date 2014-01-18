@@ -1,8 +1,8 @@
 """Tests for refleaks."""
 
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 import threading
 
+from cherrypy.lib._cpcompat import HTTPConnection, HTTPSConnection, ntob
 import cherrypy
 
 

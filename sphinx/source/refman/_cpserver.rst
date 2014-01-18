@@ -1,8 +1,8 @@
 *************************
-:mod:`cherrypy._cpserver`
+:mod:`cherrypy.lib._cpserver`
 *************************
 
-.. automodule:: cherrypy._cpserver
+.. automodule:: cherrypy.lib._cpserver
 
 Classes
 =======

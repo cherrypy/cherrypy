@@ -2,7 +2,7 @@ import os
 import warnings
 
 import cherrypy
-from cherrypy._cpcompat import iteritems, copykeys, builtins
+from cherrypy.lib._cpcompat import iteritems, copykeys, builtins
 
 
 class Checker(object):

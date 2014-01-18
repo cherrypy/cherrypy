@@ -4,7 +4,7 @@ import os
 import sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
-from cherrypy._cpcompat import ntob, StringIO
+from cherrypy.lib._cpcompat import ntob, StringIO
 import unittest
 
 import cherrypy

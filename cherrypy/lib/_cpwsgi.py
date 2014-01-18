@@ -10,9 +10,9 @@ still be translatable to bytes via the Latin-1 encoding!"
 import sys as _sys
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO, bytestr, py3k, unicodestr
-from cherrypy import _cperror
+from cherrypy.lib._cpcompat import BytesIO, bytestr, py3k, unicodestr
 from cherrypy.lib import httputil
+from cherrypy.lib import _cperror
 
 
 def downgrade_wsgi_ux_to_1x(environ):
@@ -43,7 +43,7 @@ class VirtualHost(object):
         Domain2App = cherrypy.Application(root)
         SecureApp = cherrypy.Application(Secure())
 
-        vhost = cherrypy._cpwsgi.VirtualHost(RootApp,
+        vhost = cherrypy.lib._cpwsgi.VirtualHost(RootApp,
             domains={'www.domain2.example': Domain2App,
                      'www.domain2.example:443': SecureApp,
                      })
