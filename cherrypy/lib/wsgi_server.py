@@ -23,13 +23,13 @@ class CPWSGIServer(wsgi.WSGIServer):
                        None)
 
         self.wsgi_version = self.server_adapter.wsgi_version
-        s = wsgi.WSGIServer
-        s.__init__(self, server_adapter.bind_addr,
-                   minthreads=self.server_adapter.thread_pool,
-                   maxthreads=self.server_adapter.thread_pool_max,
-                   server_name=server_name,
-                   protocol=self.server_adapter.protocol_version,
-                   )
+        super(CPWSGIServer, self).__init__(
+            server_adapter.bind_addr,
+            minthreads=self.server_adapter.thread_pool,
+            maxthreads=self.server_adapter.thread_pool_max,
+            server_name=server_name,
+            protocol=self.server_adapter.protocol_version
+        )
         self.wsgi_app = cherrypy.tree
         self.request_queue_size = self.server_adapter.socket_queue_size
         self.timeout = self.server_adapter.socket_timeout
@@ -40,19 +40,17 @@ class CPWSGIServer(wsgi.WSGIServer):
             ssl_module = self.server_adapter.ssl_module or 'builtin'
         else:
             ssl_module = self.server_adapter.ssl_module or 'pyopenssl'
-        if self.server_adapter.ssl_context:
+        if (
+                self.server_adapter.ssl_context or
+                self.server_adapter.ssl_certificate
+        ):
             adapter_class = ssllib.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain)
-            self.ssl_adapter.context = self.server_adapter.ssl_context
-        elif self.server_adapter.ssl_certificate:
-            adapter_class = ssllib.get_ssl_adapter_class(ssl_module)
-            self.ssl_adapter = adapter_class(
-                self.server_adapter.ssl_certificate,
-                self.server_adapter.ssl_private_key,
-                self.server_adapter.ssl_certificate_chain)
+            if self.server_adapter.ssl_context:
+                self.ssl_adapter.context = self.server_adapter.ssl_context
 
         self.stats['Enabled'] = getattr(
             self.server_adapter, 'statistics', False)
