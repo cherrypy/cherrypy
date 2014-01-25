@@ -66,11 +66,36 @@ class Server(ServerPlugin):
     for example, "HTTP/1.1" (the default). Depending on the HTTP server used,
     this should also limit the supported features used in the response."""
 
-    thread_pool = 10
+    thread_pool = 5
     """The number of worker threads to start up in the pool."""
 
-    thread_pool_max = -1
+    thread_pool_max = 30
     """The maximum size of the worker-thread pool. Use -1 to indicate no limit.
+    """
+
+    thread_pool_minspare = 5
+    """The minimum number of idle workers threads that should always be ready
+    to accept new request (unless the total exceeds `thread_pool_max`).
+    """
+
+    thread_pool_maxspare = 15
+    """The number of maximum idle worker threads that will be available to
+    serve connections. Basically:
+
+    - If there is a sudden spike of traffic (or a lot of slow requests
+      being served), there are no idle workers available, and there are
+      requests waiting for a worker, ``maxspare`` threads will quickly be
+      spawned to serve the requests as soon as possible.
+    - After a sudden spike of traffic (or after a backend shortage that
+      got a lot of threads working for a long time), the thread pool will be
+      shrinked leaving at most ``maxspare`` idle threads, and then it will
+      slowly shrink the pool until it reaches the `thread_pool_minspare`
+      value if there isn't much traffic to avoid wasting resources.
+    """
+
+    thread_pool_shrink_frequency = 5
+    """The frequency in seconds in which the thread pool monitor will
+    perform shrink operations (default 5).
     """
 
     max_request_header_size = 500 * 1024

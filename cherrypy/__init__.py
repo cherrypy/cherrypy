@@ -107,8 +107,37 @@ class _TimeoutMonitor(Monitor):
         """Check timeout on all responses. (Internal)"""
         for req, resp in self.servings:
             resp.check_timeout()
+
+
+class _ThreadPoolMonitor(Monitor):
+
+    def __init__(self, bus):
+        self._run = lambda: None
+        super(_ThreadPoolMonitor, self).__init__(bus, self.run, frequency=1)
+
+    def run(self):
+        self._run()
+
+    def configure(self, thread_pool, server_adapter, logger):
+        resizer = thread_pool.get_pool_resizer(
+            minspare=server_adapter.thread_pool_minspare,
+            maxspare=server_adapter.thread_pool_maxspare,
+            shrinkfreq=server_adapter.thread_pool_shrink_frequency,
+            logger=logger or (lambda: None)
+        )
+        self._run = resizer.run
+
+    def stop(self):
+        self._run = lambda: None
+        super(_ThreadPoolMonitor, self).stop()
+    stop.priority = 10
+
+
 engine.timeout_monitor = _TimeoutMonitor(engine)
 engine.timeout_monitor.subscribe()
+
+engine.threadpool_monitor = _ThreadPoolMonitor(engine)
+engine.threadpool_monitor.subscribe()
 
 engine.autoreload = Autoreloader(engine)
 engine.autoreload.subscribe()
