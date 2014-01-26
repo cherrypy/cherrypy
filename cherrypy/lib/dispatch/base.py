@@ -9,14 +9,8 @@ The default dispatcher discovers the page handler by matching path_info
 to a hierarchical arrangement of objects, starting at request.app.root.
 """
 
-import string
+import inspect
 import sys
-import types
-
-try:
-    classtype = (type, types.ClassType)
-except AttributeError:
-    classtype = type
 
 import cherrypy
 
@@ -192,12 +186,6 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
             raise cherrypy.HTTPError(400, message=message)
 
 
-try:
-    import inspect
-except ImportError:
-    test_callable_spec = lambda callable, args, kwargs: None
-
-
 class LateParamPageHandler(PageHandler):
     """When passing cherrypy.request.params to the page handler, we do not
     want to capture that dict too early; we want to give tools like the
@@ -219,20 +207,3 @@ class LateParamPageHandler(PageHandler):
     def kwargs(self, kwargs):
         cherrypy.serving.request.kwargs = kwargs
         self._kwargs = kwargs
-
-
-if sys.version_info < (3, 0):
-    punctuation_to_underscores = string.maketrans(
-        string.punctuation, '_' * len(string.punctuation))
-
-    def validate_translator(t):
-        if not isinstance(t, str) or len(t) != 256:
-            raise ValueError(
-                "The translate argument must be a str of len 256.")
-else:
-    punctuation_to_underscores = str.maketrans(
-        string.punctuation, '_' * len(string.punctuation))
-
-    def validate_translator(t):
-        if not isinstance(t, dict):
-            raise ValueError("The translate argument must be a dict.")

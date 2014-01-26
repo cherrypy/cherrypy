@@ -1,5 +1,11 @@
+import types
+
+import routes
+
 import cherrypy
-from cherrypy.lib.dispatch.base import LateParamPageHandler, classtype
+from cherrypy.lib.dispatch.base import LateParamPageHandler
+
+classtype = (type, types.ClassType)
 
 
 class RoutesDispatcher(object):
@@ -13,7 +19,6 @@ class RoutesDispatcher(object):
         and the action to be passed on to the page handler
         parameters. By default they won't be.
         """
-        import routes
         self.full_result = full_result
         self.controllers = {}
         self.mapper = routes.Mapper(**mapper_options)
@@ -36,8 +41,6 @@ class RoutesDispatcher(object):
 
     def find_handler(self, path_info):
         """Find the right page handler, and set request.config."""
-        import routes
-
         request = cherrypy.serving.request
 
         config = routes.request_config()
