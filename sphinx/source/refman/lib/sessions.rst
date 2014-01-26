@@ -18,10 +18,6 @@ Classes
    :members:
    :inherited-members:
 
-.. autoclass:: PostgresqlSession
-   :members:
-   :inherited-members:
-
 .. autoclass:: MemcachedSession
    :members:
    :inherited-members:
