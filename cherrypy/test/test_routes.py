@@ -1,5 +1,5 @@
 import os
-from cherrypy.lib.dispatch.routes import RoutesDispatcher
+from cherrypy.lib.dispatch.route import RoutesDispatcher
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
