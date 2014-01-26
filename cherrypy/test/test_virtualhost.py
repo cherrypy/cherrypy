@@ -1,4 +1,6 @@
 import os
+from cherrypy.lib.dispatch.virtualhost import VirtualHost
+
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
@@ -52,7 +54,7 @@ class VirtualHostTest(helper.CPWebCase):
                    }
         cherrypy.tree.mount(root, config={
             '/': {
-                'request.dispatch': cherrypy.dispatch.VirtualHost(**hostmap)
+                'request.dispatch': VirtualHost(**hostmap)
             },
             # Test static in config (section must include vhost prefix)
             '/mydom2/static2': {

@@ -1,4 +1,6 @@
 import os
+from cherrypy.lib.dispatch.routes import RoutesDispatcher
+
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
@@ -40,7 +42,7 @@ class RoutesDispatchTest(helper.CPWebCase):
                 self.population = kwargs['pop']
                 return "OK"
 
-        d = cherrypy.dispatch.RoutesDispatcher()
+        d = RoutesDispatcher()
         d.connect(action='index', name='hounslow', route='/hounslow',
                   controller=City('Hounslow'))
         d.connect(

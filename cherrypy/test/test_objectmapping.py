@@ -1,6 +1,7 @@
 import cherrypy
 from cherrypy.lib.tree import Application
 from cherrypy.test import helper
+from cherrypy.lib.dispatch.method import MethodDispatcher
 
 script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
 
@@ -146,7 +147,7 @@ class ObjectMappingTest(helper.CPWebCase):
         Root.bymethod = ByMethod('another')
         Root.collection = Collection()
 
-        d = cherrypy.dispatch.MethodDispatcher()
+        d = MethodDispatcher()
         for url in script_names:
             conf = {'/': {'user': (url or "/").split("/")[-2]},
                     '/bymethod': {'request.dispatch': d},

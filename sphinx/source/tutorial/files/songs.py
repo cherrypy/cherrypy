@@ -1,4 +1,5 @@
 import cherrypy
+from cherrypy.lib.dispatch.method import MethodDispatcher
 
 songs = {
     '1': {
@@ -74,7 +75,7 @@ if __name__ == '__main__':
     cherrypy.tree.mount(
         Songs(), '/api/songs',
         {'/':
-            {'request.dispatch': cherrypy.dispatch.MethodDispatcher()}
+            {'request.dispatch': MethodDispatcher()}
          }
     )
 

@@ -1,6 +1,7 @@
 import cherrypy
 from cherrypy.lib.compat import unicodestr
 from cherrypy.test import helper
+from cherrypy.lib.dispatch.method import MethodDispatcher
 
 script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
 
@@ -247,7 +248,7 @@ def setup_server():
 
     Root.users = UserContainerNode()
 
-    md = cherrypy.dispatch.MethodDispatcher('dynamic_dispatch')
+    md = MethodDispatcher('dynamic_dispatch')
     for url in script_names:
         conf = {'/': {
             'user': (url or "/").split("/")[-2],

@@ -1,6 +1,6 @@
 # For compatibility. Consider removing in CP4 final.
-from cherrypy.lib.dispatch.base import (Dispatcher,
-                                        MethodDispatcher,
-                                        RoutesDispatcher,
-                                        VirtualHost,
-                                        XMLRPCDispatcher)
+from cherrypy.lib.dispatch.method import MethodDispatcher
+from cherrypy.lib.dispatch.object import Dispatcher
+from cherrypy.lib.dispatch.routes import RoutesDispatcher
+from cherrypy.lib.dispatch.virtualhost import VirtualHost
+from cherrypy.lib.dispatch.xmlrpc import XMLRPCDispatcher

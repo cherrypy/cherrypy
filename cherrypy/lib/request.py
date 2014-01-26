@@ -2,6 +2,7 @@ import sys
 import time
 
 import cherrypy
+from cherrypy.lib.dispatch.object import Dispatcher
 from cherrypy.lib.compat import basestring, copykeys, ntob, unicodestr
 from cherrypy.lib.compat import SimpleCookie, CookieError, py3k
 from cherrypy.lib import reqbody
@@ -323,7 +324,7 @@ class Request(object):
     'before_handler' hooks (assuming that process_request_body is True)."""
 
     # Dispatch attributes
-    dispatch = cherrypy.dispatch.Dispatcher()
+    dispatch = Dispatcher()
     """
     The object which looks up the 'page handler' callable and collects
     config for the current request based on the path_info, other

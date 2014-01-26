@@ -58,6 +58,7 @@ These API's are described in the
 <https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
 from cherrypy.lib.tools import Tool, default_toolbox as tools
+from cherrypy.lib.dispatch.object import Dispatcher
 
 __version__ = "4.0.0alpha"
 
@@ -412,7 +413,7 @@ def expose(func=None, alias=None):
 
 def popargs(*args, **kwargs):
     """A decorator for _cp_dispatch
-    (cherrypy.dispatch.Dispatcher.dispatch_method_name).
+    (cherrypy.lib.dispatch.object.Dispatcher.dispatch_method_name).
 
     Optional keyword argument: handler=(Object or Function)
 
@@ -513,7 +514,7 @@ def popargs(*args, **kwargs):
         if inspect.isclass(cls_or_self):
             # cherrypy.popargs is a class decorator
             cls = cls_or_self
-            setattr(cls, dispatch.Dispatcher.dispatch_method_name, decorated)
+            setattr(cls, Dispatcher.dispatch_method_name, decorated)
             return cls
 
         # We're in the actual function
