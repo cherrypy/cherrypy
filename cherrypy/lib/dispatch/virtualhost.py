@@ -1,5 +1,6 @@
 import cherrypy
-from cherrypy.lib.dispatch import Dispatcher
+from cherrypy.lib.httputil import urljoin
+from cherrypy.lib.dispatch.object import Dispatcher
 
 
 def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True,
@@ -42,8 +43,6 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True,
         for "example.com" and "www.example.com". In addition, "Host"
         headers may contain the port number.
     """
-    from cherrypy.lib import httputil
-
     def vhost_dispatch(path_info):
         request = cherrypy.serving.request
         header = request.headers.get
@@ -54,7 +53,7 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True,
 
         prefix = domains.get(domain, "")
         if prefix:
-            path_info = httputil.urljoin(prefix, path_info)
+            path_info = urljoin(prefix, path_info)
 
         result = next_dispatcher(path_info)
 
