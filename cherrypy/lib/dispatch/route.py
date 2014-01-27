@@ -5,7 +5,10 @@ import routes
 import cherrypy
 from cherrypy.lib.dispatch.base import LateParamPageHandler
 
-classtype = (type, types.ClassType)
+try:
+    classtype = (type, types.ClassType)
+except AttributeError:
+    classtype = type
 
 
 class RoutesDispatcher(object):
