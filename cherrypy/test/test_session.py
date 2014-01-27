@@ -1,5 +1,6 @@
 import os
 from cherrypy.lib.tools import sessions
+from cherrypy.lib.tools.sessions.ram import RamSession
 
 localDir = os.path.dirname(__file__)
 import threading
