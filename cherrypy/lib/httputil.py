@@ -153,11 +153,11 @@ class HeaderElement(object):
         return initial_value, params
     parse = staticmethod(parse)
 
+    @classmethod
     def from_str(cls, elementstr):
         """Construct an instance from a string of the form 'token;key=val'."""
         ival, params = cls.parse(elementstr)
         return cls(ival, params)
-    from_str = classmethod(from_str)
 
 
 q_separator = re.compile(r'; *q *=')
@@ -173,6 +173,7 @@ class AcceptElement(HeaderElement):
     have been the other way around, but it's too late to fix now.
     """
 
+    @classmethod
     def from_str(cls, elementstr):
         qvalue = None
         # The first "q" parameter (if any) separates the initial
@@ -188,7 +189,6 @@ class AcceptElement(HeaderElement):
         if qvalue is not None:
             params["q"] = qvalue
         return cls(media_type, params)
-    from_str = classmethod(from_str)
 
     @property
     def qvalue(self):
@@ -386,12 +386,12 @@ class CaseInsensitiveDict(dict):
         for k in E.keys():
             self[str(k).title()] = E[k]
 
+    @classmethod
     def fromkeys(cls, seq, value=None):
         newdict = cls()
         for k in seq:
             newdict[str(k).title()] = value
         return newdict
-    fromkeys = classmethod(fromkeys)
 
     def setdefault(self, key, x=None):
         key = str(key).title()
@@ -452,6 +452,7 @@ class HeaderMap(CaseInsensitiveDict):
         """Transform self into a list of (name, value) tuples."""
         return list(self.encode_header_items(self.items()))
 
+    @classmethod
     def encode_header_items(cls, header_items):
         """
         Prepare the sequence of name, value tuples into a form suitable for
@@ -475,8 +476,8 @@ class HeaderMap(CaseInsensitiveDict):
                             header_translate_deletechars)
 
             yield (k, v)
-    encode_header_items = classmethod(encode_header_items)
 
+    @classmethod
     def encode(cls, v):
         """Return the given header name or value, encoded for HTTP output."""
         for enc in cls.encodings:
@@ -497,8 +498,6 @@ class HeaderMap(CaseInsensitiveDict):
         raise ValueError("Could not encode header part %r using "
                          "any of the encodings %r." %
                          (v, cls.encodings))
-    encode = classmethod(encode)
-
 
 class Host(object):
     """An internet address.

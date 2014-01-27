@@ -16,6 +16,7 @@ class MemcachedSession(Session):
 
     servers = ['127.0.0.1:11211']
 
+    @classmethod
     def setup(cls, **kwargs):
         """Set up the storage system for memcached-based sessions.
 
@@ -27,7 +28,6 @@ class MemcachedSession(Session):
 
         import memcache
         cls.cache = memcache.Client(cls.servers)
-    setup = classmethod(setup)
 
     @property
     def id(self):

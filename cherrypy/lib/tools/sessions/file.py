@@ -26,6 +26,7 @@ class FileSession(Session):
         kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
         Session.__init__(self, id=id, **kwargs)
 
+    @classmethod
     def setup(cls, **kwargs):
         """Set up the storage system for file-based sessions.
 
@@ -37,7 +38,6 @@ class FileSession(Session):
 
         for k, v in kwargs.items():
             setattr(cls, k, v)
-    setup = classmethod(setup)
 
     def _get_file_path(self):
         f = os.path.join(self.storage_path, self.SESSION_PREFIX + self.id)
