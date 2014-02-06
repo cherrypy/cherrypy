@@ -25,8 +25,13 @@ class cherrypy_build_py(build_py):
         if python3:
             exclude_pattern = re.compile('wsgiserver2|ssl_pyopenssl|'
                                          '_cpcompat_subprocess')
-        else:
+        elif sys.version_info < (2, 7):
             exclude_pattern = re.compile('wsgiserver3')
+        else:
+            # no need to include _cpcompat_subprocess when
+            # python already provides its own subprocess module
+            exclude_pattern = re.compile('wsgiserver3|'
+                                         '_cpcompat_subprocess')
         if exclude_pattern.match(module):
             return  # skip it
         return build_py.build_module(self, module, module_file, package)
