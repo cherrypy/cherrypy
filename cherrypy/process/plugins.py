@@ -590,7 +590,7 @@ class Autoreloader(Monitor):
     def sysfiles(self):
         """Return a Set of sys.modules filenames to monitor."""
         files = set()
-        for k, m in sys.modules.items():
+        for k, m in list(sys.modules.items()):
             if re.match(self.match, k):
                 if hasattr(m, '__loader__') and hasattr(m.__loader__, 'archive'):
                     f = m.__loader__.archive
