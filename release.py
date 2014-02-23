@@ -81,7 +81,7 @@ def tag_release():
 	subprocess.check_call(['hg', 'tag', NEXT_VERSION])
 
 dist_commands = [
-	['sdist', '--formats=zip,gztar', 'bdist_wininst', 'bdist_wheel'],
+	['sdist', 'bdist_wininst', 'bdist_wheel'],
 ]
 
 def build():
