@@ -93,7 +93,7 @@ def build():
 
 def push():
 	"The build went well, so let's push the SCM changesets"
-	subprocess.check_call(['hg', 'push'])
+	subprocess.check_call(['hg', 'push', '-r', '.'])
 
 def publish():
 	"""
