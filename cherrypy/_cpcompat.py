@@ -348,6 +348,10 @@ class SetDaemonProperty:
 
 # Use subprocess module from Python 2.7 on Python 2.3-2.6
 if sys.version_info < (2,7):
-    import cherrypy._cpcompat_subprocess as subprocess
+    try:
+        import cherrypy._cpcompat_subprocess as subprocess
+    except ImportError:
+        # Some implementations (Jython) don't have fcntl, so fallback
+        import subprocess
 else:
     import subprocess
