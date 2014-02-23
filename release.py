@@ -70,7 +70,9 @@ def bump_versions():
 
 def bump_version(filename):
 	with open(filename, 'rb') as f:
-		lines = [line.replace(VERSION, NEXT_VERSION) for line in f]
+		b_version = VERSION.encode('ascii')
+		b_next_version = NEXT_VERSION.encode('ascii')
+		lines = [line.replace(b_version, b_next_version) for line in f]
 	with open(filename, 'wb') as f:
 		f.writelines(lines)
 
