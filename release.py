@@ -15,7 +15,7 @@ import platform
 import shutil
 import importlib
 
-VERSION='3.2.4'
+VERSION='3.2.5'
 
 if sys.version_info < (3,):
 	input = raw_input
