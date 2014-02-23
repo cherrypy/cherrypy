@@ -81,10 +81,7 @@ def tag_release():
 	subprocess.check_call(['hg', 'tag', NEXT_VERSION])
 
 dist_commands = [
-	[sys.executable, 'setup.py', 'sdist', '--format=zip'],
-	[sys.executable, 'setup.py', 'sdist', '--format=gztar'],
-	[sys.executable, 'setup.py', 'bdist_wininst'],
-	[sys.executable, 'setup.py', 'bdist_wheel'],
+	['sdist', '--formats=zip,gztar', 'bdist_wininst', 'bdist_wheel'],
 ]
 
 def build():
@@ -92,7 +89,7 @@ def build():
 		os.remove('MANIFEST')
 	if os.path.isdir('dist'):
 		shutil.rmtree('dist')
-	list(map(subprocess.check_call, dist_commands))
+	subprocess.check_call([sys.executable] + dist_commands)
 
 def push():
 	"The build went well, so let's push the SCM changesets"
@@ -103,9 +100,8 @@ def publish():
 	Publish the dists on PyPI
 	"""
 	try:
-		upload_dist_commands = [cmd + ['register', 'upload']
-			for cmd in dist_commands]
-		list(map(subprocess.check_call, upload_dist_commands))
+		upload_dist_command = [sys.executable] + dist_commands + ['register', 'upload']
+		subprocess.check_call(upload_dist_command)
 	except:
 		print("Unable to upload the dist files. Ask in IRC for help access "
 			"or assistance.")
