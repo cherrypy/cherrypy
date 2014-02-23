@@ -419,6 +419,9 @@ class _Builder3:
 
         raise TypeError("unrepr could not resolve the name %s" % repr(name))
 
+    def build_NameConstant(self, o):
+        return o.value
+
     def build_UnaryOp(self, o):
         op, operand = map(self.build, [o.op, o.operand])
         return op(operand)

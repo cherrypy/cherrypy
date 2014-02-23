@@ -15,7 +15,7 @@ import platform
 import shutil
 import importlib
 
-VERSION = '3.2.4'
+VERSION = '3.2.5'
 
 if sys.version_info < (3,):
     input = raw_input
@@ -75,7 +75,9 @@ def bump_versions():
 
 def bump_version(filename):
     with open(filename, 'rb') as f:
-        lines = [line.replace(VERSION, NEXT_VERSION) for line in f]
+        b_version = VERSION.encode('ascii')
+        b_next_version = NEXT_VERSION.encode('ascii')
+        lines = [line.replace(b_version, b_next_version) for line in f]
     with open(filename, 'wb') as f:
         f.writelines(lines)
 
@@ -86,12 +88,7 @@ def tag_release():
     """
     subprocess.check_call(['hg', 'tag', NEXT_VERSION])
 
-dist_commands = [
-    [sys.executable, 'setup.py', 'sdist', '--format=zip'],
-    [sys.executable, 'setup.py', 'sdist', '--format=gztar'],
-    [sys.executable, 'setup.py', 'bdist_wininst'],
-    [sys.executable, 'setup.py', 'bdist_wheel'],
-]
+dist_commands = ['sdist', 'bdist_wininst', 'bdist_wheel']
 
 
 def build():
@@ -99,12 +96,12 @@ def build():
         os.remove('MANIFEST')
     if os.path.isdir('dist'):
         shutil.rmtree('dist')
-    list(map(subprocess.check_call, dist_commands))
+    subprocess.check_call([sys.executable, 'setup.py'] + dist_commands)
 
 
 def push():
     "The build went well, so let's push the SCM changesets"
-    subprocess.check_call(['hg', 'push'])
+    subprocess.check_call(['hg', 'push', '-r', '.'])
 
 
 def publish():
@@ -112,9 +109,8 @@ def publish():
     Publish the dists on PyPI
     """
     try:
-        upload_dist_commands = [cmd + ['register', 'upload']
-                                for cmd in dist_commands]
-        list(map(subprocess.check_call, upload_dist_commands))
+        upload_dist_command = [sys.executable, 'setup.py'] + dist_commands + ['register', 'upload']
+        subprocess.check_call(upload_dist_command)
     except:
         print("Unable to upload the dist files. Ask in IRC for help access 57"
               "or assistance.")
