@@ -89,7 +89,7 @@ def build():
 		os.remove('MANIFEST')
 	if os.path.isdir('dist'):
 		shutil.rmtree('dist')
-	subprocess.check_call([sys.executable] + dist_commands)
+	subprocess.check_call([sys.executable, 'setup.py'] + dist_commands)
 
 def push():
 	"The build went well, so let's push the SCM changesets"
@@ -100,7 +100,7 @@ def publish():
 	Publish the dists on PyPI
 	"""
 	try:
-		upload_dist_command = [sys.executable] + dist_commands + ['register', 'upload']
+		upload_dist_command = [sys.executable, 'setup.py'] + dist_commands + ['register', 'upload']
 		subprocess.check_call(upload_dist_command)
 	except:
 		print("Unable to upload the dist files. Ask in IRC for help access "
