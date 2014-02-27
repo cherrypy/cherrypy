@@ -1048,6 +1048,25 @@ Save this into a file named `tut07.py` and run it as follow:
 
    $ python tut07.py
 
+Before we see it in action, let's explain a few things. Until now,
+CherryPy was creating a tree of exposed methods that were used to
+math URLs. In the case of our web API, we want to stress the role
+played by the actual requests' HTTP methods. So we created 
+methods that are named after them and they are all exposed at once
+through the `exposed = True` attribute of the class itself.
+
+However, we must then switch from the default mechanism of matching
+URLs to method for one that is aware of the whole HTTP method
+shenanigan. This is what goes on line 27 where we create 
+a :class:`~cherrypy.dispatch.MethodDispatcher` instance.
+
+Then we force the responses `content-type` to be `text/plain` and
+we finally ensure that `GET` requests will only be responded to clients
+that accept that `content-type` by having a `Accept: text/plain` 
+header set in their request. However, we do this only for that
+HTTP method as it wouldn't have much meaning on the oher methods.
+
+
 For the purpose of this tutorial, we will be using a Python client
 rather than your browser as we wouldn't be able to actually try
 our web API otherwiser.
