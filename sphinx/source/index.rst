@@ -464,6 +464,7 @@ CherryPy will automatically respond to URLs such as
 
    
    .. code-block:: ini
+
       [/]
       tools.staticdir.root = "/home/site"
 
@@ -582,17 +583,14 @@ basic one explained above.
 
    cherrypy.quickstart(myapp, '/', conf)
 
-Tutorial
-========
-
-Overview
---------
+Tutorials
+=========
 
 This tutorial will walk you through basic but complete CherryPy applications
 that will show you common concepts as well as slightly more adavanced ones.
 
 Tutorial 1: A basic web application
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 
 The following example demonstrates the most basic application
 you could write with CherryPy. It starts a server and hosts
@@ -657,7 +655,7 @@ can refer to :ref:`the documentation above <perappconf>` to
 understand how to set the configuration.
 
 Tutorial 2: Different URLs lead to different functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------------
 
 Your applications will obviously handle more than a single URL. 
 Let's imagine you have an application that generates a random 
@@ -708,7 +706,7 @@ Here CherryPy uses the `index()` method to handle `/` and the
 .. _tut03:
 
 Tutorial 3: My URLs have parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 
 In the previous tutorial, we have seen how to create an application
 that could generate a random string. Let's not assume you wish
@@ -761,7 +759,7 @@ query-string keys are mapped to those exposed function parameters.
 .. _tut04:
 
 Tutorial 4: Submit this form
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
 
 CherryPy is a web framework upon which you build web applications.
 The most traditionnal shape taken by applications is through
@@ -820,7 +818,7 @@ parameters to deal with the query-string (key, value) pairs.
 .. _tut05:
 
 Tutorial 5: Track my end-user's activity
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 It's not uncommon that an application needs to follow the
 user's activity for a while. The usual mechanism is to use
@@ -851,9 +849,9 @@ your application.
 
        @cherrypy.expose
        def generate(self, length=8):
-           pwd = ''.join(random.sample(string.hexdigits, int(length)))
-           cherrypy.session['mystring'] = pwd
-           return pwd
+           some_string = ''.join(random.sample(string.hexdigits, int(length)))
+           cherrypy.session['mystring'] = some_string
+           return some_string
 
        @cherrypy.expose
        def display(self):
@@ -885,7 +883,7 @@ sessions in the process's memory. It supports more persistent
 :ref:`backends <basicsession>` as well.
 
 Tutorial 6: What about my javascripts, CSS and images?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------------
 
 Web application are usually also made of static content such
 as javascript, CSS files or images. CherryPy provides support
@@ -933,9 +931,9 @@ using the http://localhost:8080/static/css/style.css URL.
 
        @cherrypy.expose
        def generate(self, length=8):
-           pwd = ''.join(random.sample(string.hexdigits, int(length)))
-           cherrypy.session['mystring'] = pwd
-           return pwd
+           some_string = ''.join(random.sample(string.hexdigits, int(length)))
+           cherrypy.session['mystring'] = some_string
+           return some_string
 
        @cherrypy.expose
        def display(self):
@@ -976,3 +974,140 @@ directory, a direct child of the `root` directory. The entire
 sub-tree of the `public` directory will be served as static content.
 CherryPy will map URLs to path within that directory. This is why
 `/static/css/style.css` is found in `public/css/style.css`.
+
+Tutorial 7: Give us a REST
+--------------------------
+
+It's not unusual nowadays that web applications expose some sort
+of datamodel or computation functions. Without going into
+its details, one strategy is to follow the `REST principles
+edicted by Roy T. Fielding in his thesis 
+<https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm>`_.
+
+Roughly speaking, it assumes that you can identify a resource
+and that you can address that resource through that identifier.
+
+"What for?" you may ask. Well, mostly, these principles are there
+to ensure that you decouple, as best as you can, the entities 
+your application expose from the way they are manipulated or
+consumed. To embrace this point of view, developers will
+usually design a web API that expose pairs of `(URL, HTTP method)`.
+
+.. note::
+
+   You will often hear REST and web API together. The former is
+   one strategy to provide the latter. This tutorial will not go
+   deeper in that whole web API concept as it's a much more
+   engaging subject, but you ought to read more about it online.
+
+
+Lets go through a small example of a very basic web API
+midly following REST principles.
+
+.. code-block:: python
+   :linenos:
+
+    import random
+    import string
+
+    import cherrypy
+
+    class StringGeneratorWebService(object):
+        exposed = True
+
+        @cherrypy.tools.accept(media='text/plain')
+        def GET(self):
+            return cherrypy.session['mystring']
+
+        def POST(self, length=8):
+            some_string = ''.join(random.sample(string.hexdigits, int(length)))
+            cherrypy.session['mystring'] = some_string
+            return some_string
+
+        def PUT(self, another_string):
+            cherrypy.session['mystring'] = another_string
+
+        def DELETE(self):
+            cherrypy.session.pop('mystring', None)
+
+    if __name__ == '__main__':
+        conf = {
+            '/': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+                'tools.sessions.on': True,
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+            }
+        }
+        cherrypy.quickstart(StringGeneratorWebService(), '/', conf)
+
+
+Save this into a file named `tut07.py` and run it as follow:
+
+.. code-block:: bash
+
+   $ python tut07.py
+
+For the purpose of this tutorial, we will be using a Python client
+rather than your browser as we wouldn't be able to actually try
+our web API otherwiser.
+
+Please install `requests <http://www.python-requests.org/en/latest/>`_
+through the following command:
+
+.. code-block:: bash
+
+   $ pip install requests
+
+Then fire up a Python terminal and try the following commands:
+
+.. code-block:: pycon
+   :linenos:
+
+   >>> import requests
+   >>> s = requests.Session()
+   >>> r = s.get('http://127.0.0.1:8080/')
+   >>> r.status_code
+   500
+   >>> r = s.post('http://127.0.0.1:8080/')
+   >>> r.status_code, r.text
+   (200, u'04A92138')
+   >>> r = s.get('http://127.0.0.1:8080/')
+   >>> r.status_code, r.text
+   (200, u'04A92138')
+   >>> r = s.get('http://127.0.0.1:8080/', headers={'Accept': 'application/json'})
+   >>> r.status_code
+   406
+   >>> r = s.put('http://127.0.0.1:8080/', params={'another_string': 'hello'})
+   >>> r = s.get('http://127.0.0.1:8080/')
+   >>> r.status_code, r.text
+   (200, u'hello')
+   >>> r = s.delete('http://127.0.0.1:8080/')
+   >>> r = s.get('http://127.0.0.1:8080/')
+   >>> r.status_code
+   500
+
+The first and last `500` responses steam from the fact that, in
+the first case, we haven't yet generated a string through `POST` and,
+on the latter case, that it doesn't exist after we've deleted it.
+
+Lines 12-14 show you how the application reacted when our client requested
+the generated string as a JSON format. Since we configured the
+web API to only support plain text, it returns the appropriate 
+`HTTP error code http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.7`
+
+
+
+Tutorial 8: Make it smoother with Ajax
+--------------------------------------
+
+In the recent years, web applications have moved away from the
+simple pattern of "HTML forms + refresh the whole page". This 
+traditional scheme still works very well but users have become used
+to web applications that don't refresh the entire page. 
+Broadly speaking, web applications carry code performed 
+client-side that can speak with the backend without having to 
+refresh the whole page.
+
+
+
