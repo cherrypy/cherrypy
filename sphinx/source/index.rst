@@ -1097,6 +1097,13 @@ web API to only support plain text, it returns the appropriate
 `HTTP error code http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.7`
 
 
+.. note::
+
+   We use the `Session <http://www.python-requests.org/en/latest/user/advanced/#session-objects`_
+   interface of `requests` so that it takes care of carrying the
+   session id stored in the request cookie in each subsequent
+   request. That is handy.
+
 
 Tutorial 8: Make it smoother with Ajax
 --------------------------------------
