@@ -1123,6 +1123,8 @@ web API to only support plain text, it returns the appropriate
    session id stored in the request cookie in each subsequent
    request. That is handy.
 
+.. _tut08:
+
 
 Tutorial 8: Make it smoother with Ajax
 --------------------------------------
@@ -1287,3 +1289,151 @@ isn't refreshed, simply part of its content.
 Notice as well how your frontend converses with the backend using
 a straightfoward, yet clean, web service API. That same API
 could easily be used by non-HTML clients.
+
+
+Tutorial 9: Data is all my life
+-------------------------------
+
+Until now, all the generated strings were saved in the 
+session, which by default is stored in the process memory. Though,
+you can persist sessions on disk or in a distributed memory store,
+this is not the right way of keeping your data on the long run. 
+Sessions are there to identify your user and carry as little
+amount of data as necessary for the operation carried by the user.
+
+To store, persist and query data your need a proper database server.
+There exist many to choose from with various paradigm support:
+
+- relational: PostgreSQL, SQLite, MariaDB, Firebird
+- column-oriented: HBase, Cassandra
+- key-store: redis, memcached
+- document oriented: Couchdb, MongoDB
+- graph-oriented: neo4j
+
+Let's focus on the relational ones since they are the most common
+and probably what you will want to learn first. 
+
+For the sake of reducing the number of dependencies for these
+tutorials, we will go for the :mod:`sqlite` database which
+is directly supported by Python. 
+
+Our application will replace the storage of the generated
+string from the session to a SQLite database. The application
+will have the same HTML code as :ref:`tutorial 08 <tut08>`.
+So let's simply focus on the application code itself:
+
+.. code-block:: python
+   :linenos:
+
+    import os, os.path
+    import random
+    import sqlite3
+    import string
+
+    import cherrypy
+
+    DB_STRING = "my.db"
+
+    class StringGenerator(object):
+       @cherrypy.expose
+       def index(self):
+           return file('index.html')
+
+    class StringGeneratorWebService(object):
+        exposed = True
+
+        @cherrypy.tools.accept(media='text/plain')
+        def GET(self):
+            with sqlite3.connect(DB_STRING) as c:
+                c.execute("SELECT value FROM user_string WHERE session_id=?",
+                          [cherrypy.session.id])
+                return c.fetchone()
+
+        def POST(self, length=8):
+            some_string = ''.join(random.sample(string.hexdigits, int(length)))
+            with sqlite3.connect(DB_STRING) as c:
+                c.execute("INSERT INTO user_string VALUES (?, ?)",
+                          [cherrypy.session.id, some_string])
+            return some_string
+
+        def PUT(self, another_string):
+            with sqlite3.connect(DB_STRING) as c:
+                c.execute("UPDATE user_string SET value=? WHERE session_id=?",
+                          [another_string, cherrypy.session.id])
+
+        def DELETE(self):
+            with sqlite3.connect(DB_STRING) as c:
+                c.execute("DELETE FROM user_string WHERE session_id=?",
+                          [cherrypy.session.id])
+
+    def setup_database():
+        """
+        Create the `user_string` table in the database
+        on server startup
+        """
+        with sqlite3.connect(DB_STRING) as con:
+            con.execute("CREATE TABLE user_string (session_id, value)")
+
+    def cleanup_database():
+        """
+        Destroy the `user_string` table from the database
+        on server shutdown.
+        """
+        with sqlite3.connect(DB_STRING) as con:
+            con.execute("DROP TABLE user_string")
+
+    if __name__ == '__main__':
+        conf = {
+            '/': {
+                'tools.sessions.on': True,
+                'tools.staticdir.root': os.path.abspath(os.getcwd())
+            },            
+            '/generator': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+            },
+            '/static': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': './public'
+            }
+        }
+
+        cherrypy.engine.subscribe('start', setup_database)
+        cherrypy.engine.subscribe('stop', cleanup_database)
+
+        webapp = StringGenerator()
+        webapp.generator = StringGeneratorWebService()
+        cherrypy.quickstart(webapp, '/', conf)
+
+
+Save this into a file named `tut09.py` and run it as follow:
+
+.. code-block:: bash
+
+   $ python tut09.py
+
+Let's first see how we create two functions that create
+and destroy the table within our database. These functions
+are registered to the CherryPy's server on lines 76-77,
+so that they are called when the server starts and stops.
+
+Next, notice how we replaced all the session code with calls
+to the database. We use the session id to identify the
+user's string within our database. Since the session will go
+away after a while, it's probably not the right approach.
+A better idea would be to associate the user's login or 
+more resilient unique identifier. For the sake of our
+demo, this should do.
+
+.. note::
+
+   Unfortunately, sqlite in Python forbids us
+   to share a connection between threads. Since CherryPy is a 
+   multi-threaded server, this would be an issue. This is the
+   reason why we open and close a connection to the database
+   on each call. This is clearly not really production friendly,
+   and it is probably advise to either use a more capable
+   database engine or a higher level library, such as 
+   `SQLAlchemy <http://sqlalchemy.readthedocs.org>`, to better
+   support your application's needs.
