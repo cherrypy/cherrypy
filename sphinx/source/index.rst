@@ -1433,7 +1433,7 @@ demo, this should do.
    multi-threaded server, this would be an issue. This is the
    reason why we open and close a connection to the database
    on each call. This is clearly not really production friendly,
-   and it is probably advise to either use a more capable
+   and it is probably advisable to either use a more capable
    database engine or a higher level library, such as 
    `SQLAlchemy <http://sqlalchemy.readthedocs.org>`, to better
    support your application's needs.
