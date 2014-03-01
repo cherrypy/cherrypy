@@ -52,7 +52,7 @@ of tools one might expect from such a framework. Indeed, CherryPy doesn't
 come with built-in database, HTML templating, authentication, or any other
 high level features.
 
-Instead, what CherryPy provides you with is freedom. It offers you the
+Instead, what CherryPy provides you with is **freedom**. It offers you the
 luxury of making your own decisions as to what are the best tool for the job.
 CherryPy will support your usage through simple yet reliable mechanisms
 that this documentation will expose. Finally, being freed from these choices,
