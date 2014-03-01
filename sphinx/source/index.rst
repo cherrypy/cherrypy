@@ -244,6 +244,11 @@ Logging
 Logging is an important task in any application. CherryPy will
 log all incoming requests as well as protocol errors.
 
+To do so, CherryPy manages two loggers:
+
+- an access one that logs every incoming requests 
+- an application/error log that traces errors or other application-level messages
+
 Your application may leverage that second logger by calling
 :func:`cherrypy.log()`. 
 
@@ -260,9 +265,38 @@ You can also log an exception:
    except:
       cherrypy.log("kaboom!", traceback=True)
 
+Both logs are writing to files identified by the following keys
+in your configuration:
 
-Obviously, you can also create your own
-logger by using the :mod:`logging` module.
+- `log.access_file` for incoming requests using the 
+  `common log format <http://en.wikipedia.org/wiki/Common_Log_Format>`_
+- `log.error_file` for the other log
+
+Disable logging
+###############
+
+You may be interested in disable either log. To do so, simply
+set a en empty string to the `log.access_file` or `log.error_file`
+parameters.
+
+Play along with your other logs
+###############################
+
+Your application may aobviously already use the :mod:`logging`
+module to trace application level messages. CherryPy will not
+interfere with them as long as your loggers are explicitely
+named. Indeed, CherryPy attaches itself to the default
+logger and if your other loggers do the same, you will get
+strange logs. This would work nicely:
+
+.. code-block:: python
+		
+    import logging
+    logger = logging.getLogger('myapp.mypackage')
+    logger.setLevel(logging.INFO)
+    stream = logging.StreamHandler()
+    stream.setLevel(logging.INFO)
+    logger.addHandler(stream)
 
 
 Configuring
