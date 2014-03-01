@@ -238,6 +238,72 @@ CherryPy is a minimal framework but not a bare one, it comes
 with a few basic tools to cover common usages that you would
 expect.
 
+Hosting one or more applications
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A web application needs an HTTP server to be accessed to. CherryPy
+provides its own, production ready, HTTP server. There are two
+ways to host an application with it. The simple one and the almost-as-simple one.
+
+Single application
+##################
+
+The most straightforward way is to use :func:`cherrypy.quickstart`
+function. It takes at least one argument, the instance of the 
+application to host. Two other settings are optionals. First, the
+base path at which the application will be accessible from. Second,
+a config dictionary or file to configure your application.
+
+.. code-block:: python
+
+   cherrypy.quickstart(Blog())
+   cherrypy.quickstart(Blog(), '/blog')
+   cherrypy.quickstart(Blog(), '/blog', {'/': {'tools.gzip.on': True}})
+
+The first one means that your application will be available at
+http://hostname:port/ whereas the other two will make your blog
+application available at http://hostname:port/blog. In addition,
+the last one provides specific settings for the application.
+
+.. note::
+
+   Notice in the third case how the settings are still 
+   relative to the application, not where it is made available at, 
+   hence the `{'/': ... }` rather than a `{'/blog': ... }`
+
+
+Multiple applications
+#####################
+
+The :func:`cherrypy.quickstart` approach is fine for a single application,
+but lacks the capacity to host several applications with the server.
+To achieve this, one must use the :func:`cherrypy.tree.mount` function as 
+follow:
+
+.. code-block:: python
+
+   cherrypy.tree.mount(Blog(), '/blog', blog_conf)
+   cherrypy.tree.mount(Forum(), '/forum', forum_conf)
+   
+   cherrypy.engine.start()
+   cherrypy.engine.block()
+
+Essentially, :func:`cherrypy.tree.mount` takes the same parameters
+as :func:`cherrypy.quickstart`: an application, a hosting path segment
+and a configuration. The last two lines are simply starting
+application server.
+
+.. note::
+
+   :func:`cherrypy.quickstart` and :func:`cherrypy.tree.mount` are not
+   exclusive. For instance, the previous lines can be written as:
+
+   .. code-block:: python
+
+      cherrypy.tree.mount(Blog(), '/blog', blog_conf)
+      cherrypy.quickstart(Forum(), '/forum', forum_conf)
+
+
 Logging
 ^^^^^^^
 
@@ -308,7 +374,8 @@ settings can be set at various levels.
 Global server settings
 ######################
 
-To configure the HTTP server, use the :func:`cherrypy.config.update()` method.
+To configure the HTTP and application servers, 
+use the :func:`cherrypy.config.update()` method.
 
 .. code-block:: python
 
@@ -334,8 +401,8 @@ file):
 Global application settings
 ###########################
 
-To configure the application settings, pass a dictionary
-or a file when you associate your application
+To configure your application settings, pass a dictionary
+or a file when you associate ther application
 to the server.
 
 .. code-block:: python
