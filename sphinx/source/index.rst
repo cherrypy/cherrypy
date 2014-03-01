@@ -24,7 +24,7 @@ A CherryPy application typically looks like this:
 
 
 .. contents::
-   :depth: 3
+   :depth: 4
 
 Foreword
 ========
