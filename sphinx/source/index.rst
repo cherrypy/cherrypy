@@ -279,15 +279,15 @@ You may be interested in disable either log. To do so, simply
 set a en empty string to the `log.access_file` or `log.error_file`
 parameters.
 
-Play along with your other logs
-###############################
+Play along with your other loggers
+##################################
 
 Your application may aobviously already use the :mod:`logging`
 module to trace application level messages. CherryPy will not
 interfere with them as long as your loggers are explicitely
 named. Indeed, CherryPy attaches itself to the default
 logger and if your other loggers do the same, you will get
-strange logs. This would work nicely:
+strange results. This would work nicely:
 
 .. code-block:: python
 		
