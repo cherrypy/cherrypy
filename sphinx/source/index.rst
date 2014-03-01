@@ -1091,7 +1091,7 @@ and that you can address that resource through that identifier.
 to ensure that you decouple, as best as you can, the entities 
 your application expose from the way they are manipulated or
 consumed. To embrace this point of view, developers will
-usually design a web API that expose pairs of `(URL, HTTP method)`.
+usually design a web API that expose pairs of `(URL, HTTP method, data, constraints)`.
 
 .. note::
 
