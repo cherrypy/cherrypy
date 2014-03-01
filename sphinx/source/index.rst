@@ -698,7 +698,7 @@ This URL contains various parts:
 - `http://` which roughly indicates it's a URL using the HTTP protocol (see :rfc:`2616`).
 - `localhost:8080` is the server's address. It's made of a hostname and a port.
 - `/generate` which is the path segment of the URL. This is what ultimately uses to
- try and locate an appropriate exposed function or method to respond.
+  try and locate an appropriate exposed function or method to respond.
 
 Here CherryPy uses the `index()` method to handle `/` and the
 `generate()` method to handle `/generate`
@@ -1118,7 +1118,7 @@ web API to only support plain text, it returns the appropriate
 
 .. note::
 
-   We use the `Session <http://www.python-requests.org/en/latest/user/advanced/#session-objects`_
+   We use the `Session <http://www.python-requests.org/en/latest/user/advanced/#session-objects>`_
    interface of `requests` so that it takes care of carrying the
    session id stored in the request cookie in each subsequent
    request. That is handy.
@@ -1135,5 +1135,155 @@ Broadly speaking, web applications carry code performed
 client-side that can speak with the backend without having to 
 refresh the whole page.
 
+This tutorial will involve a little more code this time around. First,
+let's see our CSS stylesheet located in `public/css/style.css`.
+
+.. code-block:: css
+   :linenos:
+
+   body { 
+     background-color: blue;
+   }
+
+   #the-string { 
+     display: none;
+   }
+
+We're adding a simple rule about the element that will display
+the generated string. By default, let's not show it up.
+Save the following HTML code into a file named `index.html`.
+
+.. code-block:: html
+   :linenos:
+
+   <!DOCTYPE html>
+   <html>
+      <head>
+	<link href="/static/css/style.css" rel="stylesheet">
+	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script type="text/javascript">
+	  $(document).ready(function() {
+
+	    $("#generate-string").click(function(e) {
+	      $.post("/generator", {"length": $("input[name='length']").val()})
+	       .done(function(string) {
+		  $("#the-string").show();
+		  $("#the-string input").val(string);
+	       });
+	      e.preventDefault();
+	    });
+
+	    $("#replace-string").click(function(e) {
+	      $.ajax({
+		 type: "PUT",
+		 url: "/generator",
+		 data: {"another_string": $("#the-string").val()}
+	      })
+	      .done(function() {
+		 alert("Replaced!");
+	      });
+	      e.preventDefault();
+	    });
+
+	    $("#delete-string").click(function(e) {
+	      $.ajax({
+		 type: "DELETE",
+		 url: "/generator"
+	      })
+	      .done(function() {
+		 $("#the-string").hide();
+	      });
+	      e.preventDefault();
+	    });
+
+	  });
+	</script>
+      </head>
+      <body>
+	<input type="text" value="8" name="length" />
+	<button id="generate-string">Give it now!</button>
+	<div id="the-string">
+	    <input type="text" />
+	    <button id="replace-string">Replace</button>
+	    <button id="delete-string">Delete it</button>
+	</div>
+      </body>
+   </html>
+
+We'll be using the `jQuery framework <http://jquery.com/>`_
+out of simplicity but feel free to replace it with your
+favourite tool. The page is composed of simple HTML elements
+to get user input and display the generated string. It also
+contains client-side code to talk to the backend API that
+actually performs the hard work.
+
+Finally, here's the application's code that serves the
+HTML page above and responds to requests to generate strings.
+Both are hosted by the same application server.
+
+.. code-block:: python
+   :linenos:
+
+    import os, os.path
+    import random
+    import string
+
+    import cherrypy
+
+    class StringGenerator(object):
+       @cherrypy.expose
+       def index(self):
+           return file('index.html')
+
+    class StringGeneratorWebService(object):
+        exposed = True
+
+        @cherrypy.tools.accept(media='text/plain')
+        def GET(self):
+            return cherrypy.session['mystring']
+
+        def POST(self, length=8):
+            some_string = ''.join(random.sample(string.hexdigits, int(length)))
+            cherrypy.session['mystring'] = some_string
+            return some_string
+
+        def PUT(self, another_string):
+            cherrypy.session['mystring'] = another_string
+
+        def DELETE(self):
+            cherrypy.session.pop('mystring', None)
+
+    if __name__ == '__main__':
+        conf = {
+            '/': {
+                'tools.sessions.on': True,
+                'tools.staticdir.root': os.path.abspath(os.getcwd())
+            },            
+            '/generator': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+            },
+            '/static': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': './public'
+            }
+        }
+        webapp = StringGenerator()
+        webapp.generator = StringGeneratorWebService()
+        cherrypy.quickstart(webapp, '/', conf)
 
 
+Save this into a file named `tut08.py` and run it as follow:
+
+.. code-block:: bash
+
+   $ python tut08.py
+
+Go to http://127.0.0.1:8080/ and play with the input and buttons 
+to generate, replace or delete the strings. Notice how the page
+isn't refreshed, simply part of its content.
+
+Notice as well how your frontend converses with the backend using
+a straightfoward, yet clean, web service API. That same API
+could easily be used by non-HTML clients.
