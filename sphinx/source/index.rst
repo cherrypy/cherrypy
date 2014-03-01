@@ -24,7 +24,7 @@ A CherryPy application typically looks like this:
 
 
 .. contents::
-   :depth: 4
+   :depth: 3
 
 Foreword
 ========
@@ -340,7 +340,7 @@ in your configuration:
 Disable logging
 ###############
 
-You may be interested in disable either log. To do so, simply
+You may be interested in disabling either logs. To do so, simply
 set a en empty string to the `log.access_file` or `log.error_file`
 parameters.
 
