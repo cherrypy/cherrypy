@@ -43,29 +43,6 @@ a reliable scaffolding for you to build from.
 Typical use-cases for CherryPy go from regular web application with user frontends 
 (think blogging, CMS, portals, ecommerce) to web-services only.
 
-What's in CherryPy and what isn't?
-----------------------------------
-
-CherryPy is a minimal (some prefer lean) web framework. In fact, one might
-say it's not even a web framework as it doesn't provide the complete set
-of tools one might expect from such a framework. Indeed, CherryPy doesn't
-come with built-in database, HTML templating, authentication, or any other
-high level features.
-
-Instead, what CherryPy provides you with is **freedom**. It offers you the
-luxury of making your own decisions as to what are the best tool for the job.
-CherryPy will support your usage through simple yet reliable mechanisms
-that this documentation will expose. Finally, being freed from these choices,
-the CherryPy team has been able to focus on the HTTP server itself, making
-it as reliable and `compliant <http://www.w3.org/Protocols/rfc2616/rfc2616-sec1.html#sec1.2>`_
-as possible.
-
-In other words, CherryPy may not be the best tool if you want to
-quickly throw a content-oriented application starting from a generated
-skeleton. On other hand, CherryPy will shine whenever your application
-doesn't precisely fall into such well-known perimeters (for instance
-web services). Ultimately, use the tool that fits the bill the best.
-
 
 Installation
 ============
