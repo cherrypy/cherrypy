@@ -9,7 +9,7 @@ using it, or simply check out products or application running it.
 
 If you would like to have your CherryPy powered website or product listed here,
 contact us via our `mailing list <http://groups.google.com/group/cherrypy-users>`_
-or IRC (#cherrypy on `Freenode <http://frenode.net/>`_).
+or IRC (#cherrypy on `OFTC <http://www.oftc.net/oftc/>`_).
 
 
 Websites running atop CherryPy
