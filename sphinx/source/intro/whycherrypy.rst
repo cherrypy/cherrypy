@@ -65,9 +65,9 @@ a superior tool for the job.
 ------------
 
 CherryPy has an active community that develops deployed CherryPy applications
-and are willing and ready to assist you on the 
+and are willing and ready to assist you on the
 `CherryPy mailing list <http://groups.google.com/group/cherrypy-users>`_ or
-IRC (#cherrypy on `OFTC <http://www.oftc.net/oftc/>`_).
+IRC (#cherrypy on `Freenode <http://freenode.net/>`_).
 The developers also frequent the list and often answer questions and implement
 features requested by the end-users.
 
