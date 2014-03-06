@@ -80,9 +80,10 @@ class ProxyTest(helper.CPWebCase):
         self.getPage("/remoteip",
                      headers=[('X-Forwarded-For', '192.168.0.20')])
         self.assertBody("192.168.0.20")
+        #Fix bug #1268
         self.getPage("/remoteip",
                      headers=[('X-Forwarded-For', '67.15.36.43, 192.168.0.20')])
-        self.assertBody("192.168.0.20")
+        self.assertBody("67.15.36.43")
 
         # Test X-Host (lighttpd; see https://trac.lighttpd.net/trac/ticket/418)
         self.getPage("/xhost", headers=[('X-Host', 'www.example.test')])
