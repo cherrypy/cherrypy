@@ -110,6 +110,7 @@ neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
 thing1: cherrypy.lib.httputil.response_codes[404]
 thing2: __import__('cherrypy.tutorial', globals(), locals(), ['']).thing2
+thing3: unicode('test', errors='ignore')
 complex: 3+2j
 mul: 6*3
 ones: "11"
