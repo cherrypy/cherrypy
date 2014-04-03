@@ -1,0 +1,527 @@
+
+Basics
+------
+
+The following sections will drive you through the basics of
+a CherryPy application, introducing some essential concepts.
+
+The one-minute application example
+##################################
+
+The most basic application you can write with CherryPy 
+involves almost all its core concepts.
+
+.. code-block:: python
+   :linenos:
+
+   import cherrypy
+   
+   class Root(object):
+       @cherrypy.expose
+       def index(self):
+           return "Hello World!"
+
+   if __name__ == '__main__':
+      cherrypy.quickstart(Root(), '/')
+
+
+First and foremost, for most tasks, you will never need more than
+a single import statement as demonstrated in line 1.
+
+Before discussing the meat, let's jump to line 9 which shows,
+how to host your application with the CherryPy application server
+and serve it with its builtin HTTP server at the `'/'` path. 
+All in one single line. Not bad.
+
+Let's now step back to the actual application. Even though CherryPy
+does not mandate it, most of the time your applications 
+will be written as Python classes. Methods of those classes will
+be called by CherryPy to respond to client requests. However,
+CherryPy needs to be aware that a method can be used that way, we
+say the method needs to be :term:`exposed`. This is precisely
+what the :func:`cherrypy.expose()` decorator does in line 4. 
+
+Save the snippet in a file named `myapp.py` and run your first
+CherryPy application:
+
+.. code-block:: bash
+
+   $ python myapp.py
+
+Then point your browser at http://127.0.0.1:8080. Tada!
+
+
+.. note::
+
+   CherryPy is a small framework that focuses on one single task: 
+   take a HTTP request and locate the most appropriate
+   Python function or method that match the request's URL. 
+   Unlike other well-known frameworks, CherryPy does not 
+   provide a built-in support for database access, HTML
+   templating or any other middleware nifty features. 
+
+   In a nutshell, once CherryPy has found and called an 
+   :term:`exposed` method, it is up to you, as a developer, to
+   provide the tools to implement your application's logic.
+
+   CherryPy takes the opinion that you, the developer, know best.
+
+.. warning::
+
+   The previous example demonstrated the simplicty of the
+   CherryPy interface but, your application will likely
+   contain a few other bits and pieces: static service,
+   more complex structure, database access, etc. 
+   This will be developed in the tutorial section.
+
+
+CherryPy is a minimal framework but not a bare one, it comes
+with a few basic tools to cover common usages that you would
+expect.
+
+Hosting one or more applications
+################################
+
+A web application needs an HTTP server to be accessed to. CherryPy
+provides its own, production ready, HTTP server. There are two
+ways to host an application with it. The simple one and the almost-as-simple one.
+
+Single application
+^^^^^^^^^^^^^^^^^^
+
+The most straightforward way is to use :func:`cherrypy.quickstart`
+function. It takes at least one argument, the instance of the 
+application to host. Two other settings are optionals. First, the
+base path at which the application will be accessible from. Second,
+a config dictionary or file to configure your application.
+
+.. code-block:: python
+
+   cherrypy.quickstart(Blog())
+   cherrypy.quickstart(Blog(), '/blog')
+   cherrypy.quickstart(Blog(), '/blog', {'/': {'tools.gzip.on': True}})
+
+The first one means that your application will be available at
+http://hostname:port/ whereas the other two will make your blog
+application available at http://hostname:port/blog. In addition,
+the last one provides specific settings for the application.
+
+.. note::
+
+   Notice in the third case how the settings are still 
+   relative to the application, not where it is made available at, 
+   hence the `{'/': ... }` rather than a `{'/blog': ... }`
+
+
+Multiple applications
+^^^^^^^^^^^^^^^^^^^^^
+
+The :func:`cherrypy.quickstart` approach is fine for a single application,
+but lacks the capacity to host several applications with the server.
+To achieve this, one must use the :func:`cherrypy.tree.mount` function as 
+follow:
+
+.. code-block:: python
+
+   cherrypy.tree.mount(Blog(), '/blog', blog_conf)
+   cherrypy.tree.mount(Forum(), '/forum', forum_conf)
+   
+   cherrypy.engine.start()
+   cherrypy.engine.block()
+
+Essentially, :func:`cherrypy.tree.mount` takes the same parameters
+as :func:`cherrypy.quickstart`: an application, a hosting path segment
+and a configuration. The last two lines are simply starting
+application server.
+
+.. note::
+
+   :func:`cherrypy.quickstart` and :func:`cherrypy.tree.mount` are not
+   exclusive. For instance, the previous lines can be written as:
+
+   .. code-block:: python
+
+      cherrypy.tree.mount(Blog(), '/blog', blog_conf)
+      cherrypy.quickstart(Forum(), '/forum', forum_conf)
+
+
+Logging
+#######
+
+Logging is an important task in any application. CherryPy will
+log all incoming requests as well as protocol errors.
+
+To do so, CherryPy manages two loggers:
+
+- an access one that logs every incoming requests 
+- an application/error log that traces errors or other application-level messages
+
+Your application may leverage that second logger by calling
+:func:`cherrypy.log()`. 
+
+.. code-block:: python
+
+   cherrypy.log("hello there")
+
+You can also log an exception:
+
+.. code-block:: python
+
+   try:
+      ...
+   except:
+      cherrypy.log("kaboom!", traceback=True)
+
+Both logs are writing to files identified by the following keys
+in your configuration:
+
+- `log.access_file` for incoming requests using the 
+  `common log format <http://en.wikipedia.org/wiki/Common_Log_Format>`_
+- `log.error_file` for the other log
+
+Disable logging
+^^^^^^^^^^^^^^^
+
+You may be interested in disabling either logs. To do so, simply
+set a en empty string to the `log.access_file` or `log.error_file`
+parameters.
+
+Play along with your other loggers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Your application may aobviously already use the :mod:`logging`
+module to trace application level messages. CherryPy will not
+interfere with them as long as your loggers are explicitely
+named. Indeed, CherryPy attaches itself to the default
+logger and if your other loggers do the same, you will get
+strange results. This would work nicely:
+
+.. code-block:: python
+		
+    import logging
+    logger = logging.getLogger('myapp.mypackage')
+    logger.setLevel(logging.INFO)
+    stream = logging.StreamHandler()
+    stream.setLevel(logging.INFO)
+    logger.addHandler(stream)
+
+.. _config:
+
+Configuring
+###########
+
+CherryPy comes with a fine-grained configuration mechanism and 
+settings can be set at various levels.
+
+Global server settings
+^^^^^^^^^^^^^^^^^^^^^^
+
+To configure the HTTP and application servers, 
+use the :func:`cherrypy.config.update()` method.
+
+.. code-block:: python
+
+   cherrypy.config.update({'server.socket_port': 9090})
+
+The `cherrypy.config` object is a dictionary and the 
+update method merge the passed dictionary into it.
+
+You can also pass a file instead (assuming a `server.conf`
+file):
+
+.. code-block:: ini
+
+   [global]
+   server.socket_port: 9090
+
+.. code-block:: python
+
+   cherrypy.config.update("server.conf")
+
+.. _perappconf:
+
+Global application settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To configure your application settings, pass a dictionary
+or a file when you associate ther application
+to the server.
+
+.. code-block:: python
+
+   cherrypy.quickstart(myapp, '/', {'/': {'tools.gzip.on': True}})
+
+or via a file (called `app.conf` for instance):
+
+.. code-block:: ini
+
+   [/]
+   tools.gzip.on: True
+
+.. code-block:: python
+
+   cherrypy.quickstart(myapp, '/', "app.conf")
+ 
+
+Local application settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Although, you can define most of your settings in a global
+fashion, it is sometimes convenient to define them
+where they are applied in the code.
+
+.. code-block:: python
+
+   class Root(object):
+       @cherrypy.expose
+       @cherrypy.tools.gzip()
+       def index(self):
+           return "hello world!"
+
+A variant notation to the above:
+
+.. code-block:: python
+
+   class Root(object):
+       @cherrypy.expose
+       def index(self):
+           return "hello world!"
+       index._cp_config = {'tools.gzip.on': True}
+
+Both methods have the same effect so pick the one
+that suits your style best.
+
+.. _basicsession:
+
+Using sessions
+##############
+
+Sessions is one of the most common mechanism used by developers to 
+identify users and synchronize their activity. By default, CherryPy
+does not activate sessions because it is not a mandatory feature
+to have, to enable it simply add the following settings in your
+configuration:
+
+.. code-block:: ini
+
+   [/]
+   tools.sessions.on: True
+
+.. code-block:: python
+
+   cherrypy.quickstart(myapp, '/', "app.conf")
+ 
+Sessions are, by default, stored in RAM so, if you restart your server
+all of your current sessions will be lost. You can store them in memcached
+or on the filesystem instead.
+
+Using sessions in your applications is done as follow:
+
+.. code-block:: python
+
+   import cherrypy
+  
+   @cherrypy.expose
+   def index(self):
+       if 'count' not in cherrypy.session:
+          cherrypy.session['count'] = 0
+       cherrypy.session['count'] += 1
+
+In this snippet, everytime the the index page handler is called,
+the current user's session has its `'count'` key incremented by `1`.
+
+CherryPy knows which session to use by inspecting the cookie
+sent alongside the request. This cookie contains the session
+identifier used by CherryPy to load the user's session from
+the storage.
+
+Filesystem backend
+^^^^^^^^^^^^^^^^^^
+
+Using a filesystem is a simple not to lose your sessions
+between reboots. Each session is saved in its own file within
+the given directory. 
+
+.. code-block:: ini
+
+   [/]
+   tools.sessions.on: True
+   tools.sessions.storage_type = "file"
+   tools.sessions.storage_path = "/some/directorys"
+
+Memcached backend
+^^^^^^^^^^^^^^^^^
+
+`Memcached <http://memcached.org/>`_ is a popular key-store on top of your RAM, 
+it is distributed and a good choice if you want to
+share sessions outside of the process running CherryPy.
+
+.. code-block:: ini
+
+   [/]
+   tools.sessions.on: True
+   tools.sessions.storage_type = "memcached"
+
+Static content serving
+######################
+
+CherryPy can serve your static content such as images, javascript and 
+CSS resources, etc. 
+
+Serving a single file
+^^^^^^^^^^^^^^^^^^^^^
+
+You can serve a single file as follow:
+
+.. code-block:: ini
+
+   [/style.css]
+   tools.staticfile.on = True
+   tools.staticfile.filename = "/home/site/style.css"
+
+CherryPy will automatically respond to URLs such as 
+`http://hostname/style.css`.
+
+Serving a whole directory
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Serving a whole directory is similar to a single file:
+
+.. code-block:: ini
+
+   [/static]
+   tools.staticdir.on = True
+   tools.staticdir.dir = "/home/site/static"
+
+Assuming you have a file at `static/js/my.js`, 
+CherryPy will automatically respond to URLs such as 
+`http://hostname/static/js/my.js`.
+
+
+.. note::
+
+   CherryPy always requires the absolute path to the files or directories
+   it will serve. If you have several static section to configure
+   but located in the same root directory, you can use the following 
+   shortcut:
+
+   
+   .. code-block:: ini
+
+      [/]
+      tools.staticdir.root = "/home/site"
+
+      [/static]
+      tools.staticdir.on = True
+      tools.staticdir.dir = "static"
+
+Dealing with JSON
+#################
+
+CherryPy has a built-in support for JSON encoding and decoding
+of the request and/or response.
+
+Decoding request
+^^^^^^^^^^^^^^^^
+
+To automatically decode the content of a request using JSON:
+
+.. code-block:: python
+
+   class Root(object):
+       @cherrypy.expose
+       @cherrypy.tools.json_in()
+       def index(self):
+           data = cherrypy.request.json
+
+The `json` attribute attached to the request contains
+the decoded content.
+
+Encoding response
+^^^^^^^^^^^^^^^^^
+
+To automatically encode the content of a response using JSON:
+
+.. code-block:: python
+
+   class Root(object):
+       @cherrypy.expose
+       @cherrypy.tools.json_out()
+       def index(self):
+           return {'key': 'value'}
+
+CherryPy will encode any content returned by your page handler
+using JSON. Not all type of objects may natively be
+encoded.
+
+Authentication
+##############
+
+CherryPy provides support for two very simple authentications mechanism,
+both described in :rfc:`2617`: Basic and Digest. They are most commonly
+known to trigger a browser's popup asking users their name
+and password.
+
+Basic
+^^^^^
+
+Basic authentication is the simplest form of authentication however
+it is not a secure one as the user's credentials are embedded into
+the request. We advise against using it unless you are running on
+SSL or within a closed network.
+
+.. code-block:: python
+
+   from cherrypy.lib import auth_basic
+
+   USERS = {'jon': 'secret'}
+
+   def validate_password(username, password):
+       if username in USERS and USERS[username] == password:
+          return True
+       return False
+
+   conf = {
+      '/protected/area': {
+          'tools.auth_basic.on': True,
+          'tools.auth_basic.realm': 'localhost',
+          'tools.auth_basic.checkpassword': validate_password
+       } 
+   }
+
+   cherrypy.quickstart(myapp, '/', conf)
+
+Simply put, you have to provide a function that will
+be called by CherryPy passing the username and password 
+decoded from the request.
+
+The function can read its data from any source it has to: a file,
+a database, memory, etc.
+
+
+Digest
+^^^^^^
+
+Digest authentication differs by the fact the credentials
+are not carried on by the request so it's a little more secure
+than basic.
+
+CherryPy's digest support has a similar interface to the 
+basic one explained above.
+
+.. code-block:: python
+
+   from cherrypy.lib import auth_digest
+
+   USERS = {'jon': 'secret'}
+
+   conf = {
+      '/protected/area': {
+           'tools.auth_digest.on': True,
+           'tools.auth_digest.realm': 'localhost',
+           'tools.auth_digest.get_ha1': auth_digest.get_ha1_dict_plain(USERS),
+           'tools.auth_digest.key': 'a565c27146791cfb'
+      }
+   }
+
+   cherrypy.quickstart(myapp, '/', conf)
