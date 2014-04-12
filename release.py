@@ -15,11 +15,9 @@ import platform
 import shutil
 import importlib
 
-VERSION = '3.2.5'
+from six.moves import input
 
-if sys.version_info < (3,):
-    input = raw_input
-
+VERSION='4.0.0a1'
 
 def get_next_version():
     print("The last release on this branch was {version}".format(
@@ -28,11 +26,7 @@ def get_next_version():
 
 NEXT_VERSION = get_next_version()
 
-files_with_versions = ('release.py', 'setup.py', 'cherrypy/__init__.py',
-                       'cherrypy/wsgiserver/wsgiserver2.py',
-                       'cherrypy/wsgiserver/wsgiserver3.py',
-                       )
-
+files_with_versions = ('release.py', 'setup.py', 'cherrypy/__init__.py')
 
 def check_wheel():
     """
