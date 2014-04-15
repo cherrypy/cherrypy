@@ -78,6 +78,11 @@ class HTTPTests(helper.CPWebCase):
                     summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)
             post_multipart.exposed = True
+            
+            @cherrypy.expose
+            def post_filename(self, myfile):
+                '''Return the name of the file which was uploaded.'''
+                return myfile.filename
 
         cherrypy.tree.mount(Root())
         cherrypy.config.update({'server.max_request_body_size': 30000000})
@@ -135,6 +140,30 @@ class HTTPTests(helper.CPWebCase):
         self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody(", ".join(["%s * 65536" % c for c in alphabet]))
+        
+    def test_post_filename_with_commas(self):
+        '''Testing that we can handle filenames with commas. This was
+        reported as a bug in:
+           https://bitbucket.org/cherrypy/cherrypy/issue/1146/'''
+        # We'll upload a bunch of files with differing names.
+        for fname in ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv']:
+            files = [('myfile', fname, 'yunyeenyunyue')]
+            content_type, body = encode_multipart_formdata(files)
+            body = body.encode('Latin-1')
+
+            # post file
+            c = self.make_connection()
+            c.putrequest('POST', '/post_filename')
+            c.putheader('Content-Type', content_type)
+            c.putheader('Content-Length', str(len(body)))
+            c.endheaders()
+            c.send(body)
+
+            response = c.getresponse()
+            self.body = response.fp.read()
+            self.status = str(response.status)
+            self.assertStatus(200)
+            self.assertBody(fname)
 
     def test_malformed_request_line(self):
         if getattr(cherrypy.server, "using_apache", False):
