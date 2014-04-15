@@ -3,6 +3,19 @@
 # Deprecated in CherryPy 3.2 -- remove in CherryPy 3.3
 from cherrypy.lib.reprconf import unrepr, modules, attributes
 
+def is_iterator(obj):
+    '''Returns a boolean indicating if the object provided implements
+     the iterator protocol (i.e. like a generator). This will return
+     false for objects which iterable, but not iterators themselves.'''
+    from types import GeneratorType
+    if isinstance(obj, GeneratorType):
+        return True
+    elif not hasattr(obj, '__iter__'):
+        return False
+    else:
+        # Types which implement the protocol must return themselves when
+        # invoking 'iter' upon them.
+        return iter(obj) is obj
 
 class file_generator(object):
 

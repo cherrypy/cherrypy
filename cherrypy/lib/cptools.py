@@ -6,6 +6,7 @@ import re
 import cherrypy
 from cherrypy._cpcompat import basestring, md5, set, unicodestr
 from cherrypy.lib import httputil as _httputil
+from cherrypy.lib import is_iterator
 
 
 #                     Conditional HTTP request support                     #
@@ -493,12 +494,10 @@ def flatten(debug=False):
     This allows cherrypy.response.body to consist of 'nested generators';
     that is, a set of generators that yield generators.
     """
-    import types
-
     def flattener(input):
         numchunks = 0
         for x in input:
-            if not isinstance(x, types.GeneratorType):
+            if not is_iterator(x):
                 numchunks += 1
                 yield x
             else:

@@ -101,6 +101,7 @@ from cherrypy._cpcompat import copyitems, pickle, random20, unicodestr
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
 from cherrypy.lib import locking
+from cherrypy.lib import is_iterator
 
 missing = object()
 
@@ -778,7 +779,7 @@ def save():
     else:
         # If the body is not being streamed, we save the data now
         # (so we can release the lock).
-        if isinstance(response.body, types.GeneratorType):
+        if is_iterator(response.body):
             response.collapse_body()
         cherrypy.session.save()
 save.failsafe = True
