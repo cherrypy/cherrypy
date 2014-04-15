@@ -394,11 +394,11 @@ class HTTPError(CherryPyException):
         tb = None
         if cherrypy.serving.request.show_tracebacks:
             tb = format_exc()
-        response.headers['Content-Type'] = "text/html;charset=utf-8"
+
         response.headers.pop('Content-Length', None)
 
         content = self.get_error_page(self.status, traceback=tb,
-                                      message=self._message).encode('utf-8')
+                                      message=self._message)
         response.body = content
 
         _be_ie_unfriendly(self.code)
@@ -494,13 +494,19 @@ def get_error_page(status, **kwargs):
     # Use a custom template or callable for the error page?
     pages = cherrypy.serving.request.error_page
     error_page = pages.get(code) or pages.get('default')
+
+    # Default template, can be overridden below.
+    template = _HTTPErrorTemplate
     if error_page:
         try:
             if hasattr(error_page, '__call__'):
+                # The caller function may be setting headers manually,
+                # so we delegate to it completely. We may be returning
+                # an iterator as well as a string here.
                 return error_page(**kwargs)
             else:
-                data = open(error_page, 'rb').read()
-                return tonative(data) % kwargs
+                # Load the template from this path.
+                template = tonative(open(error_page, 'rb').read())
         except:
             e = _format_exception(*_exc_info())[-1]
             m = kwargs['message']
@@ -509,7 +515,10 @@ def get_error_page(status, **kwargs):
             m += "In addition, the custom error page failed:\n<br />%s" % e
             kwargs['message'] = m
 
-    return _HTTPErrorTemplate % kwargs
+    response = cherrypy.serving.response
+    response.headers['Content-Type'] = "text/html;charset=utf-8"
+    result = template % kwargs
+    return result.encode('utf-8')
 
 
 _ie_friendly_error_sizes = {
