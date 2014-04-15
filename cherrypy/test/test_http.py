@@ -146,7 +146,7 @@ class HTTPTests(helper.CPWebCase):
         reported as a bug in:
            https://bitbucket.org/cherrypy/cherrypy/issue/1146/'''
         # We'll upload a bunch of files with differing names.
-        for fname in ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv']:
+        for fname in ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv']:
             files = [('myfile', fname, 'yunyeenyunyue')]
             content_type, body = encode_multipart_formdata(files)
             body = body.encode('Latin-1')
