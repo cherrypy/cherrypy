@@ -156,7 +156,7 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/docroot")
         self.assertStatus(301)
         self.assertHeader('Location', '%s/docroot/' % self.base())
-        self.assertMatchesBody("This resource .* <a href='%s/docroot/'>"
+        self.assertMatchesBody("This resource .* <a href=(['\"])%s/docroot/\\1>"
                                "%s/docroot/</a>." % (self.base(), self.base()))
 
     def test_config_errors(self):

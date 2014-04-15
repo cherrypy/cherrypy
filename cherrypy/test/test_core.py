@@ -145,7 +145,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             def fragment(self, frag):
                 raise cherrypy.HTTPRedirect("/some/url#%s" % frag)
-                
+
             def url_with_quote(self):
                 raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
 
@@ -352,27 +352,27 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
         self.getPage("/redirect/by_code?code=300")
         self.assertMatchesBody(
-            r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
         self.assertStatus(300)
 
         self.getPage("/redirect/by_code?code=301")
         self.assertMatchesBody(
-            r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
         self.assertStatus(301)
 
         self.getPage("/redirect/by_code?code=302")
         self.assertMatchesBody(
-            r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
         self.assertStatus(302)
 
         self.getPage("/redirect/by_code?code=303")
         self.assertMatchesBody(
-            r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
         self.assertStatus(303)
 
         self.getPage("/redirect/by_code?code=307")
         self.assertMatchesBody(
-            r"<a href='(.*)somewhere%20else'>\1somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
         self.assertStatus(307)
 
         self.getPage("/redirect/nomodify")
@@ -402,7 +402,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         frag = "foo"
         self.getPage("/redirect/fragment/%s" % frag)
         self.assertMatchesBody(
-            r"<a href='(.*)\/some\/url\#%s'>\1\/some\/url\#%s</a>" % (
+            r"<a href=(['\"])(.*)\/some\/url\#%s\1>\2\/some\/url\#%s</a>" % (
                 frag, frag))
         loc = self.assertHeader('Location')
         assert loc.endswith("#%s" % frag)
@@ -417,7 +417,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         loc = self.assertHeader('Location')
         assert 'Set-Cookie' in loc
         self.assertNoHeader('Set-Cookie')
-        
+
         def assertValidXHTML():
             from xml.etree import ElementTree
             try:
@@ -435,7 +435,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # do the same with a url containing quote characters.
         self.getPage("/redirect/url_with_quote")
         self.assertStatus(303)
-        assertValidXHTML()        
+        assertValidXHTML()
 
     def test_InternalRedirect(self):
         # InternalRedirect
