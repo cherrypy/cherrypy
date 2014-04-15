@@ -80,6 +80,12 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.on': True,
                 'request.show_tracebacks': True,
             },
+            '/404test': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.root': curdir,
+                'tools.staticdir.dir': 'static',
+                'error_page.404': error_page_404,
+            }
         }
         rootApp = cherrypy.Application(root)
         rootApp.merge(rootconf)
@@ -301,3 +307,13 @@ class StaticTest(helper.CPWebCase):
         if self.body != ntob("x" * BIGFILE_SIZE):
             self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
                       (BIGFILE_SIZE, self.body[:50], len(body)))
+                      
+    def test_error_page_with_serve_file(self):
+        self.getPage("/404test/yunyeen")
+        self.assertStatus(404)
+        self.assertInBody("I couldn't find that thing")
+
+def error_page_404(status, message, traceback, version):
+    import os.path
+    return static.serve_file(os.path.join(curdir, 'static', '404.html'),
+        content_type='text/html')
