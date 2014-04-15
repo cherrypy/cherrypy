@@ -145,6 +145,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             def fragment(self, frag):
                 raise cherrypy.HTTPRedirect("/some/url#%s" % frag)
+                
+            def url_with_quote(self):
+                raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
 
         def login_redir():
             if not getattr(cherrypy.request, "login", None):
@@ -414,6 +417,25 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         loc = self.assertHeader('Location')
         assert 'Set-Cookie' in loc
         self.assertNoHeader('Set-Cookie')
+        
+        def assertValidXHTML():
+            from xml.etree import ElementTree
+            try:
+                ElementTree.fromstring('<html><body>%s</body></html>' % self.body)
+            except ElementTree.ParseError as e:
+                self._handlewebError('automatically generated redirect '
+                    'did not generate well-formed html')
+
+        # check redirects to URLs generated valid HTML - we check this
+        # by seeing if it appears as valid XHTML.
+        self.getPage("/redirect/by_code?code=303")
+        self.assertStatus(303)
+        assertValidXHTML()
+
+        # do the same with a url containing quote characters.
+        self.getPage("/redirect/url_with_quote")
+        self.assertStatus(303)
+        assertValidXHTML()        
 
     def test_InternalRedirect(self):
         # InternalRedirect
