@@ -1,13 +1,14 @@
-from cherrypy._cpcompat import BadStatusLine, ntob
 import os
+import signal
+import socket
 import sys
 import time
-import signal
 import unittest
-import socket
+import warnings
 
 import cherrypy
 import cherrypy.process.servers
+from cherrypy._cpcompat import BadStatusLine, ntob
 from cherrypy.test import helper
 
 engine = cherrypy.engine
@@ -477,7 +478,13 @@ class WaitTests(unittest.TestCase):
 
         def do_waiting():
             # Wait on the free port that's unbound
-            servers.wait_for_occupied_port('0.0.0.0', free_port)
+            with warnings.catch_warnings(record=True) as w:
+                servers.wait_for_occupied_port('0.0.0.0', free_port)
+                self.assertEqual(len(w), 1)
+                self.assertIsInstance(w[0], warnings.WarningMessage)
+                self.assertIn('Unable to verify that the server is bound on ',
+                              str(w[0]))
+
             # The wait should still raise an IO error if INADDR_ANY was
             #  not supplied.
             self.assertRaises(IOError, servers.wait_for_occupied_port,
