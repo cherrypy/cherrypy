@@ -1,4 +1,5 @@
 import cherrypy
+from cherrypy.lib import is_iterator
 
 
 def flatten(debug=False):
@@ -7,12 +8,10 @@ def flatten(debug=False):
     This allows cherrypy.response.body to consist of 'nested generators';
     that is, a set of generators that yield generators.
     """
-    import types
-
     def flattener(input):
         numchunks = 0
         for x in input:
-            if not isinstance(x, types.GeneratorType):
+            if not is_iterator(x):
                 numchunks += 1
                 yield x
             else:
