@@ -1,7 +1,6 @@
 """CherryPy Application and Tree objects."""
 
 import os
-import sys
 
 import cherrypy
 from cherrypy._cpcompat import ntou, py3k
