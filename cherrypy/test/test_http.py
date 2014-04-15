@@ -35,6 +35,12 @@ from cherrypy.test import helper
 
 
 class HTTPTests(helper.CPWebCase):
+    
+    def make_connection(self):
+        if self.scheme == "https":
+            return HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            return HTTPConnection('%s:%s' % (self.interface(), self.PORT))      
 
     def setup_server():
         class Root:
@@ -85,10 +91,7 @@ class HTTPTests(helper.CPWebCase):
         # Send a message with neither header and no body. Even though
         # the request is of method POST, this should be OK because we set
         # request.process_request_body to False for our handler.
-        if self.scheme == "https":
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self.make_connection()
         c.request("POST", "/no_body")
         response = c.getresponse()
         self.body = response.fp.read()
@@ -120,10 +123,7 @@ class HTTPTests(helper.CPWebCase):
         body = body.encode('Latin-1')
 
         # post file
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self.make_connection()
         c.putrequest('POST', '/post_multipart')
         c.putheader('Content-Type', content_type)
         c.putheader('Content-Length', str(len(body)))
@@ -141,10 +141,7 @@ class HTTPTests(helper.CPWebCase):
             return self.skip("skipped due to known Apache differences...")
 
         # Test missing version in Request-Line
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self.make_connection()
         c._output(ntob('GET /'))
         c._send_output()
         if hasattr(c, 'strict'):
@@ -165,10 +162,7 @@ class HTTPTests(helper.CPWebCase):
         self.assertBody("Hello world!")
 
     def test_malformed_header(self):
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self.make_connection()
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
         # See https://bitbucket.org/cherrypy/cherrypy/issue/941
