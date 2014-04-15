@@ -265,8 +265,9 @@ class HTTPRedirect(CherryPyException):
                 303: "This resource can be found at ",
                 307: "This resource has moved temporarily to ",
             }[status]
-            msg += "<a href='%s'>%s</a>."
-            msgs = [msg % (u, u) for u in self.urls]
+            msg += '<a href=%s>%s</a>.'
+            from xml.sax import saxutils
+            msgs = [msg % (saxutils.quoteattr(u), u) for u in self.urls]
             response.body = ntob("<br />\n".join(msgs), 'utf-8')
             # Previous code may have set C-L, so we have to reset it
             # (allow finalize to set it).

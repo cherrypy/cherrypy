@@ -35,6 +35,12 @@ from cherrypy.test import helper
 
 
 class HTTPTests(helper.CPWebCase):
+    
+    def make_connection(self):
+        if self.scheme == "https":
+            return HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            return HTTPConnection('%s:%s' % (self.interface(), self.PORT))      
 
     def setup_server():
         class Root:
@@ -72,6 +78,11 @@ class HTTPTests(helper.CPWebCase):
                     summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)
             post_multipart.exposed = True
+            
+            @cherrypy.expose
+            def post_filename(self, myfile):
+                '''Return the name of the file which was uploaded.'''
+                return myfile.filename
 
         cherrypy.tree.mount(Root())
         cherrypy.config.update({'server.max_request_body_size': 30000000})
@@ -85,10 +96,7 @@ class HTTPTests(helper.CPWebCase):
         # Send a message with neither header and no body. Even though
         # the request is of method POST, this should be OK because we set
         # request.process_request_body to False for our handler.
-        if self.scheme == "https":
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self.make_connection()
         c.request("POST", "/no_body")
         response = c.getresponse()
         self.body = response.fp.read()
@@ -120,10 +128,7 @@ class HTTPTests(helper.CPWebCase):
         body = body.encode('Latin-1')
 
         # post file
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self.make_connection()
         c.putrequest('POST', '/post_multipart')
         c.putheader('Content-Type', content_type)
         c.putheader('Content-Length', str(len(body)))
@@ -135,16 +140,37 @@ class HTTPTests(helper.CPWebCase):
         self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody(", ".join(["%s * 65536" % c for c in alphabet]))
+        
+    def test_post_filename_with_commas(self):
+        '''Testing that we can handle filenames with commas. This was
+        reported as a bug in:
+           https://bitbucket.org/cherrypy/cherrypy/issue/1146/'''
+        # We'll upload a bunch of files with differing names.
+        for fname in ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv']:
+            files = [('myfile', fname, 'yunyeenyunyue')]
+            content_type, body = encode_multipart_formdata(files)
+            body = body.encode('Latin-1')
+
+            # post file
+            c = self.make_connection()
+            c.putrequest('POST', '/post_filename')
+            c.putheader('Content-Type', content_type)
+            c.putheader('Content-Length', str(len(body)))
+            c.endheaders()
+            c.send(body)
+
+            response = c.getresponse()
+            self.body = response.fp.read()
+            self.status = str(response.status)
+            self.assertStatus(200)
+            self.assertBody(fname)
 
     def test_malformed_request_line(self):
         if getattr(cherrypy.server, "using_apache", False):
             return self.skip("skipped due to known Apache differences...")
 
         # Test missing version in Request-Line
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self.make_connection()
         c._output(ntob('GET /'))
         c._send_output()
         if hasattr(c, 'strict'):
@@ -165,10 +191,7 @@ class HTTPTests(helper.CPWebCase):
         self.assertBody("Hello world!")
 
     def test_malformed_header(self):
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self.make_connection()
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
         # See https://bitbucket.org/cherrypy/cherrypy/issue/941
