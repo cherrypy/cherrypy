@@ -2,12 +2,12 @@
 
 import os
 import sys
-localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-
-from cherrypy._cpcompat import ntob, StringIO
 import unittest
 
 import cherrypy
+import cherrypy._cpcompat as compat
+
+localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 def setup_server():
@@ -104,13 +104,18 @@ def setup_server():
         incr.exposed = True
         incr._cp_config = {'raw.input.map': {'num': int}}
 
-    ioconf = StringIO("""
+    if not compat.py3k:
+        thing3 = "thing3: unicode('test', errors='ignore')"
+    else:
+        thing3 = ''
+
+    ioconf = compat.StringIO("""
 [/]
 neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
 thing1: cherrypy.lib.httputil.response_codes[404]
 thing2: __import__('cherrypy.tutorial', globals(), locals(), ['']).thing2
-thing3: unicode('test', errors='ignore')
+%s
 complex: 3+2j
 mul: 6*3
 ones: "11"
@@ -119,7 +124,7 @@ stradd: %%(ones)s + %%(twos)s + "33"
 
 [/favicon.ico]
 tools.staticfile.filename = %r
-""" % os.path.join(localDir, 'static/dirback.jpg'))
+""" % (thing3, os.path.join(localDir, 'static/dirback.jpg')))
 
     root = Root()
     root.foo = Foo()
@@ -199,6 +204,10 @@ class ConfigTests(helper.CPWebCase):
             from cherrypy.tutorial import thing2
             self.assertBody(repr(thing2))
 
+        if not compat.py3k:
+            self.getPage("/repr?key=thing3")
+            self.assertBody(repr(u'test'))
+
         self.getPage("/repr?key=complex")
         self.assertBody("(3+2j)")
 
@@ -232,7 +241,7 @@ class ConfigTests(helper.CPWebCase):
         self.getPage("/plain", method='POST', headers=[
             ('Content-Type', 'application/x-www-form-urlencoded'),
             ('Content-Length', '13')],
-            body=ntob('\xff\xfex\x00=\xff\xfea\x00b\x00c\x00'))
+            body=compat.ntob('\xff\xfex\x00=\xff\xfea\x00b\x00c\x00'))
         self.assertBody("abc")
 
 
@@ -254,7 +263,7 @@ class VariableSubstitutionTests(unittest.TestCase):
 
         """)
 
-        fp = StringIO(conf)
+        fp = compat.StringIO(conf)
 
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config["my"]["my.dir"], "/some/dir/my/dir")
