@@ -1,6 +1,28 @@
 import cherrypy
-from cherrypy.lib.compat import basestring, BytesIO, unicodestr
+from cherrypy.lib.compat import basestring, unicodestr
 from cherrypy.lib import file_generator
+
+
+class UTF8StreamEncoder:
+    def __init__(self, iterator):
+        self._iterator = iterator
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        res = next(self._iterator)
+        if isinstance(res, unicodestr):
+            res = res.encode('utf-8')
+        return res
+
+    def __getattr__(self, attr):
+        if attr.startswith('__'):
+            raise AttributeError(self, attr)
+        return getattr(self._iterator, attr)
 
 
 class ResponseEncoder:
