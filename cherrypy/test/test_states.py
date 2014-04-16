@@ -482,8 +482,8 @@ class WaitTests(unittest.TestCase):
                 servers.wait_for_occupied_port('0.0.0.0', free_port)
                 self.assertEqual(len(w), 1)
                 self.assertTrue(isinstance(w[0], warnings.WarningMessage))
-                self.assertIn('Unable to verify that the server is bound on ',
-                              str(w[0]))
+                self.assertTrue(
+                    'Unable to verify that the server is bound on ' in str(w[0]))
 
             # The wait should still raise an IO error if INADDR_ANY was
             #  not supplied.
