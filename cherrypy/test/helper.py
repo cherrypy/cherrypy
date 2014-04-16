@@ -365,12 +365,13 @@ class CPWebCase(webtest.WebCase):
 
         # First, test the response body without checking the traceback.
         # Stick a match-all group (.*) in to grab the traceback.
-        esc = re.escape
-        epage = esc(page)
+        def esc(text):
+            return re.escape(ntob(text))
+        epage = re.escape(page)
         epage = epage.replace(
             esc('<pre id="traceback"></pre>'),
-            esc('<pre id="traceback">') + '(.*)' + esc('</pre>'))
-        m = re.match(ntob(epage, self.encoding), self.body, re.DOTALL)
+            esc('<pre id="traceback">') + ntob('(.*)') + esc('</pre>'))
+        m = re.match(epage, self.body, re.DOTALL)
         if not m:
             self._handlewebError(
                 'Error page does not match; expected:\n' + page)

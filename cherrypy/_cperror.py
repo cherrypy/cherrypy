@@ -503,7 +503,21 @@ def get_error_page(status, **kwargs):
                 # The caller function may be setting headers manually,
                 # so we delegate to it completely. We may be returning
                 # an iterator as well as a string here.
-                return error_page(**kwargs)
+                #
+                # We *must* make sure any content is not unicode.
+                result = error_page(**kwargs)
+                if cherrypy.lib.is_iterator(result):
+                    from cherrypy.lib.encoding import UTF8StreamEncoder
+                    return UTF8StreamEncoder(result)
+                elif isinstance(result, cherrypy._cpcompat.unicodestr):
+                    return result.encode('utf-8')
+                else:
+                    if not isinstance(result, cherrypy._cpcompat.bytestr):
+                        raise ValueError('error page function did not '
+                            'return a bytestring, unicodestring or an '
+                            'iterator - returned object of type %s.'
+                            % (type(result).__name__))
+                    return result
             else:
                 # Load the template from this path.
                 template = tonative(open(error_page, 'rb').read())
@@ -519,6 +533,7 @@ def get_error_page(status, **kwargs):
     response.headers['Content-Type'] = "text/html;charset=utf-8"
     result = template % kwargs
     return result.encode('utf-8')
+
 
 
 _ie_friendly_error_sizes = {

@@ -32,6 +32,27 @@ def decode(encoding=None, default_encoding='utf-8'):
         if not isinstance(default_encoding, list):
             default_encoding = [default_encoding]
         body.attempt_charsets = body.attempt_charsets + default_encoding
+        
+class UTF8StreamEncoder:
+    def __init__(self, iterator):
+        self._iterator = iterator
+        
+    def __iter__(self):
+        return self
+        
+    def next(self):
+        return self.__next__()
+        
+    def __next__(self):
+        res = next(self._iterator)
+        if isinstance(res, unicodestr):
+            res = res.encode('utf-8')
+        return res
+        
+    def __getattr__(self, attr):
+        if attr.startswith('__'):
+            raise AttributeError(self, attr)
+        return getattr(self._iterator, attr)
 
 
 class ResponseEncoder:
