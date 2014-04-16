@@ -212,7 +212,7 @@ class AcceptElement(HeaderElement):
         else:
             return self.qvalue < other.qvalue
 
-
+RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')
 def header_elements(fieldname, fieldvalue):
     """Return a sorted HeaderElement list from a comma-separated header string.
     """
@@ -220,39 +220,7 @@ def header_elements(fieldname, fieldvalue):
         return []
 
     result = []
-
-    # There's probably a regex that I could write to parse this
-    # behaviour, but for the sake of getting this done sooner rather
-    # than later.
-    if '"' in fieldvalue:
-        elements = []
-        remaining = fieldvalue
-        in_quote = False
-        while remaining:
-            for i, ch in enumerate(remaining):
-                if ch == '"':
-                    # Check if this quote is escaped.
-                    if i > 0:
-                        if remaining[i-1] == '\\':
-                            continue
-                    in_quote = not in_quote
-
-                # We find a comma and we aren't in quotes, so split the
-                # string.
-                elif ch == ',' and not in_quote:
-                    elements.append(remaining[:i])
-                    remaining = remaining[i+1:]
-                    break
-
-            # End of string, place the remainder in elements and stop
-            # processing.
-            else:
-                elements.append(remaining)
-                remaining = None
-    else:
-        elements = fieldvalue.split(",")
-
-    for element in elements:
+    for element in RE_HEADER_SPLIT.split(fieldvalue):
         if fieldname.startswith("Accept") or fieldname == 'TE':
             hv = AcceptElement.from_str(element)
         else:
