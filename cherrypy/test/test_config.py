@@ -4,11 +4,10 @@ import os
 import sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
-from cherrypy.lib.compat import ntob, StringIO
+from cherrypy.lib.compat import ntob, StringIO, py3k
 import unittest
 
 import cherrypy
-import cherrypy._cpcompat as compat
 
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
@@ -107,12 +106,12 @@ def setup_server():
         incr.exposed = True
         incr._cp_config = {'raw.input.map': {'num': int}}
 
-    if not compat.py3k:
+    if not py3k:
         thing3 = "thing3: unicode('test', errors='ignore')"
     else:
         thing3 = ''
 
-    ioconf = compat.StringIO("""
+    ioconf = StringIO("""
 [/]
 neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
@@ -207,7 +206,7 @@ class ConfigTests(helper.CPWebCase):
             from cherrypy.tutorial import thing2
             self.assertBody(repr(thing2))
 
-        if not compat.py3k:
+        if not py3k:
             self.getPage("/repr?key=thing3")
             self.assertBody(repr(u'test'))
 
@@ -244,7 +243,7 @@ class ConfigTests(helper.CPWebCase):
         self.getPage("/plain", method='POST', headers=[
             ('Content-Type', 'application/x-www-form-urlencoded'),
             ('Content-Length', '13')],
-            body=compat.ntob('\xff\xfex\x00=\xff\xfea\x00b\x00c\x00'))
+            body=ntob('\xff\xfex\x00=\xff\xfea\x00b\x00c\x00'))
         self.assertBody("abc")
 
 
@@ -266,7 +265,7 @@ class VariableSubstitutionTests(unittest.TestCase):
 
         """)
 
-        fp = compat.StringIO(conf)
+        fp = StringIO(conf)
 
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config["my"]["my.dir"], "/some/dir/my/dir")
