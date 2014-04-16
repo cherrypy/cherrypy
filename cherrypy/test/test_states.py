@@ -481,7 +481,7 @@ class WaitTests(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 servers.wait_for_occupied_port('0.0.0.0', free_port)
                 self.assertEqual(len(w), 1)
-                self.assertIsInstance(w[0], warnings.WarningMessage)
+                self.assertTrue(isinstance(w[0], warnings.WarningMessage))
                 self.assertIn('Unable to verify that the server is bound on ',
                               str(w[0]))
 
