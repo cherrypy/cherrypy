@@ -17,7 +17,7 @@ import importlib
 
 from six.moves import input
 
-VERSION='3.2.6'
+VERSION='3.3.0'
 
 
 def get_next_version():
