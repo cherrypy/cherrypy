@@ -423,4 +423,4 @@ class SessionAuthTest(unittest.TestCase):
         sa = cherrypy.lib.cptools.SessionAuth()
         res = sa.login_screen(None, username=unicodestr('nobody'),
                               password=unicodestr('anypass'))
-        self.assertIsInstance(res, bytestr)
+        self.assertTrue(isinstance(res, bytestr))
