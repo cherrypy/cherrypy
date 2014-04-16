@@ -249,6 +249,11 @@ class ServerStateTests(helper.CPWebCase):
             engine.exit()
 
     def test_4_Autoreload(self):
+        # If test_3 has not been executed, the server won't be stopped,
+        # so we'll have to do it.
+        if engine.state != engine.states.EXITING:
+            engine.exit()
+
         # Start the demo script in a new process
         p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
         p.write_conf(extra='test_case_name: "test_4_Autoreload"')
@@ -279,6 +284,11 @@ class ServerStateTests(helper.CPWebCase):
         p.join()
 
     def test_5_Start_Error(self):
+        # If test_3 has not been executed, the server won't be stopped,
+        # so we'll have to do it.
+        if engine.state != engine.states.EXITING:
+            engine.exit()
+
         # If a process errors during start, it should stop the engine
         # and exit with a non-zero exit code.
         p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
