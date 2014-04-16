@@ -11,6 +11,7 @@ bigfile_filepath = os.path.join(curdir, "static", "bigfile.log")
 BIGFILE_SIZE = 1024 * 1024
 
 import cherrypy
+from cherrypy.lib import static
 from cherrypy.test import helper
 
 
