@@ -214,6 +214,15 @@ In any case by using the serve_file function we benefit from the CherryPy intern
 Troubleshooting staticdir
 =========================
 
+Adding the ``debug`` flag to the ``staticdir`` tool will output a log entry of
+the filesystem path it tried in order to resolve the given path.
+
+::
+
+    [/]
+    tools.staticdir.on = True
+    tools.staticdir.debug = True
+
 When using staticdir, "root" and "dir" are concatenated using ``os.path.join``. So if you're having problems, try ``os.path.join(root, dir)`` in an interactive interpreter and make sure you at least get a valid, absolute path. Remember, you don't have to use "root" at all if you don't want to; just make "dir" an absolute path. If root + dir is not absolute, an error will be raised asking you to make it absolute. CherryPy doesn't make any assumptions about where your project files are, nor can it trust the current working directory, since that may change or not be under your control depending on your deployment environment.
 
 Once root and dir are joined, the final file is found by ``os.path.join``'ing a ''branch''. The branch is pulled from the current request's URL like this:
