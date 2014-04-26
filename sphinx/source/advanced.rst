@@ -45,6 +45,10 @@ and wrap your entire CherryPy application with it:
    # else on the 'before_finalize' hook point.
    cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize', secureheaders, priority=60)
 
+.. note::
+
+   Read more about `those headers <https://www.owasp.org/index.php/List_of_useful_HTTP_headers>`_.
+
 Then, in the :ref:`configuration file <config>` (or any other place that you want to enable the tool):
 
 .. code-block:: ini
@@ -121,11 +125,11 @@ openssl will then ask you a series of questions. You can enter whatever values a
 
        cherrypy.server.ssl_module = 'builtin'
 
-    b) *pyOpenSSL*. Because python did not have a built-in SSL library when CherryPy was first created, the default setting is to use pyOpenSSL. To use it you'll need to install it:
+    b) *pyOpenSSL*. Because python did not have a built-in SSL library when CherryPy was first created, the default setting is to use pyOpenSSL. To use it you'll need to install it (we could recommend you install `cython <http://cython.org/>`_ first):
 
     .. code-block:: bash
 
-       $ pip install pyOpenSSL
+       $ pip install cython, pyOpenSSL
 
 
 4. Add the following lines in your CherryPy config to point to your certificate files:
@@ -135,8 +139,13 @@ openssl will then ask you a series of questions. You can enter whatever values a
    cherrypy.server.ssl_certificate = "cert.pem"
    cherrypy.server.ssl_private_key = "privkey.pem"
 
+5. If you have a certificate chain at hand, you can also specify it:
 
-5. Start your CherryPy server normally. Note that if you are debugging locally and/or using a self-signed certificate, your browser may show you security warnings.
+.. code-block:: python
+
+   cherrypy.server.ssl_certificate_chain = "certchain.perm"
+
+6. Start your CherryPy server normally. Note that if you are debugging locally and/or using a self-signed certificate, your browser may show you security warnings.
 
 Run as a daemon
 ###############
