@@ -4,6 +4,12 @@ Extend
 .. contents::
    :depth:  4
 
+CherryPy is truly an open framework, you can extend and plug
+new functions at will either server-side or on a per-requests basis.
+Either way, CherryPy is made to help you build your
+application and support your architecture with simple
+patterns.
+
 Server-wide functions
 #####################
 
