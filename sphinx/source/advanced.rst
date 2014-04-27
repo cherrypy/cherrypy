@@ -244,3 +244,23 @@ once you have them installed, CherryPy will handle Ctrl-C and other
 console events (CTRL_C_EVENT, CTRL_LOGOFF_EVENT, CTRL_BREAK_EVENT,
 CTRL_SHUTDOWN_EVENT, and CTRL_CLOSE_EVENT) automatically, shutting down the
 bus in preparation for process exit.
+
+WebSocket support
+#################
+
+`WebSocket <http://tools.ietf.org/html/rfc6455>`_ 
+is a recent application protocol that came to life
+from the HTML5 working-group in response to the needs for
+bi-directional communication. Various hacks had been proposed
+such as Comet, polling, etc.
+
+WebSocket is a socket that starts its life from a HTTP upgrade request.
+Once the upgrade is performed, the underlying socket is
+kept opened but not used in a HTTP context any longer.
+Instead, both connected endpoints may use the socket
+to push data to the other end.
+
+CherryPy itself does not support WebSocket, but the feature
+is provided by an external library called 
+`ws4py <https://github.com/Lawouach/WebSocket-for-Python>`_.
+
