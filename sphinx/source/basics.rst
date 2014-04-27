@@ -190,7 +190,9 @@ Play along with your other loggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Your application may aobviously already use the :mod:`logging`
-module to trace application level messages. 
+module to trace application level messages. CherryPy will not
+interfere with them as long as your loggers are explicitely
+named. This would work nicely:
 
 .. code-block:: python
 		
@@ -200,14 +202,6 @@ module to trace application level messages.
     stream = logging.StreamHandler()
     stream.setLevel(logging.INFO)
     logger.addHandler(stream)
-
-In order to avoid the CherryPy loggers to pick up messaging,
-it is a good idea to execute the two following line:
-
-.. code-block:: python
-
-    cherrypy.log.error_log.propagate = False
-
 
 .. _config:
 
