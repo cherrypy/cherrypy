@@ -167,7 +167,7 @@ to the transition changes of the `engine`.
 In addition, a few other channels are also published to during
 the request processing.
 
-- `before_request`: right before the request is process by CherryPy
+- `before_request`: right before the request is processed by CherryPy
 - `after_request`: right after it has been processed
 
 Also, from the :class:`cherrypy.process.plugins.ThreadManager` plugin:
