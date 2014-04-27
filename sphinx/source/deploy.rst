@@ -67,8 +67,10 @@ follow:
 .. code-block:: python
 
     import cherrypy
+
     from twisted.web.wsgi import WSGIResource
     from twisted.internet import reactor
+    from twisted.internet import task
 
     # Our CherryPy application
     class Root(object):
@@ -76,28 +78,30 @@ follow:
         def index(self):
             return "hello world"
 
-    if __name__ == '__main__':
-        # Create our WSGI app from the CherryPy application
-        wsgiapp = cherrypy.tree.mount(Root())
+    # Create our WSGI app from the CherryPy application
+    wsgiapp = cherrypy.tree.mount(Root())
 
-        # Configure the CherryPy's app server
-        # Disable the autoreload which won't play well 
-        cherrypy.config.update({'engine.autoreload.on': False})
+    # Configure the CherryPy's app server
+    # Disable the autoreload which won't play well 
+    cherrypy.config.update({'engine.autoreload.on': False})
 
-        # We will be using Twisted HTTP server so let's
-        # disable the CherryPy's HTTP server entirely
-        cherrypy.server.unsubscribe()
+    # We will be using Twisted HTTP server so let's
+    # disable the CherryPy's HTTP server entirely
+    cherrypy.server.unsubscribe()
 
-        # If you'd rather use CherryPy's signal handler
-        # Uncomment the next line. I don't know how well this
-        # will play with Twisted however
-        #cherrypy.engine.signals.subscribe()
+    # If you'd rather use CherryPy's signal handler
+    # Uncomment the next line. I don't know how well this
+    # will play with Twisted however
+    #cherrypy.engine.signals.subscribe()
 
-        # Tie our app to Twisted
-        reactor.addSystemEventTrigger('after', 'startup', cherrypy.engine.start)
-        reactor.addSystemEventTrigger('before', 'shutdown', cherrypy.engine.exit)
-        resource = WSGIResource(reactor, reactor.getThreadPool(), wsgiapp)
+    # Publish periodically onto the 'main' channel as the bus mainloop would do
+    task.LoopingCall(lambda: cherrypy.engine.publish('main')).start(0.1)
 
+    # Tie our app to Twisted
+    reactor.addSystemEventTrigger('after', 'startup', cherrypy.engine.start)
+    reactor.addSystemEventTrigger('before', 'shutdown', cherrypy.engine.exit)
+    resource = WSGIResource(reactor, reactor.getThreadPool(), wsgiapp)
+		
 Notice how we attach the bus methods to the Twisted's own lifecycle.
 
 Save that code into a module named `cptw.py` and run it as follow:
