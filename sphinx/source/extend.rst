@@ -1,8 +1,476 @@
 Extend
 ------
 
-Tools
-#####
+.. contents::
+   :depth:  4
+
+Server-wide functions
+#####################
+
+CherryPy can be considered both as a HTTP library
+as much as a web application framework. In that latter case,
+its architecture provides mechanisms to support operations
+accross the whole server instance. This offers a powerful
+canvas to perform persistent operations.
+
+
+Publish/Subscribe pattern
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+CherryPy's backbone consists of a bus system implementing
+a simple `publish/subscribe messaging pattern <http://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern>`_. 
+Simply put, in CherryPy everything is controlled via that bus. 
+One can easily picture the bus as a sushi restaurant's belt as in
+the picture below.
+
+.. image:: _static/images/sushibelt.JPG
+   :target:  http://en.wikipedia.org/wiki/YO!_Sushi
+
+
+You can subscribe and publish to channels on a bus. A channel is 
+bit like a unique identifier within the bus. When a message is
+published to a channel, the bus will dispatch the message to
+all subscribers for that channel. 
+
+One interesting aspect of a pubsub pattern is that it promotes
+decoupling between a caller and the callee. A published message
+will eventually generate a response but the publisher does not
+know where that response came from.
+
+Thanks to that decoupling, a CherryPy application can easily
+access functionalities without having to hold a reference to
+the entity providing that functionality. Instead, the
+application simply publishes onto the bus and will receive
+the appropriate response, which is all that matter.
+
+Typical pattern
+~~~~~~~~~~~~~~~
+
+Let's take the following dummy application:
+
+.. code-block:: python
+
+   import cherrypy
+   
+   class ECommerce(object):
+       def __init__(self, db):
+           self.mydb = db
+
+       @cherrypy.expose
+       def save_kart(self, cart_data):
+           cart = Cart(cart_data)
+	   self.mydb.save(cart)
+
+   if __name__ == '__main__':
+      cherrypy.quickstart(ECommerce(), '/')
+
+The application has a reference to the database but
+this creates a fairly strong coupling between the
+database provider and the application. 
+
+Another approach to work around the coupling is by
+using a pubsub workflow:
+
+.. code-block:: python
+
+   import cherrypy
+   
+   class ECommerce(object):
+       @cherrypy.expose
+       def save_kart(self, cart_data):
+           cart = Cart(cart_data)
+	   cherrypy.engine.publish('db-save', cart)
+
+   if __name__ == '__main__':
+      cherrypy.quickstart(ECommerce(), '/')
+
+In this example, we publish a `cart` instance to
+`db-save` channel. One or many subscirbers can then
+react to that message and the application doesn't
+have to know about them.
+
+.. note::
+
+   This approach is not mandatory and it's up to you to 
+   decide how to design your entities interaction. 
+
+
+Implementation details
+~~~~~~~~~~~~~~~~~~~~~~
+
+CherryPy's bus implementation is simplistic as it registers
+functions to channels. Whenever a message is published to
+a channel, each registered function is applied with that 
+message passas as a parameter.
+
+The whole behaviour happens synchronously and, in that sense,
+if a subscriber takes too long to process a message, the
+remaining subscribers will be delayed.
+
+CherryPy's bus is not an advanced pubsub messaging broker
+system such as provided by `zeromq <http://zeromq.org/>`_ or 
+`RabbitMQ <https://www.rabbitmq.com/>`_. 
+Use it with the understanding that it may have a cost.
+
+
+Engine as a pubsub bus
+~~~~~~~~~~~~~~~~~~~~~~
+
+As said earlier, CherryPy is built around a pubsub bus. All
+entities that the framework manages at runtime are working on
+top of a single bus instance, which is named the `engine`.
+
+The bus implementation therefore provides a set of common
+channels which describe the application's lifecycle:
+
+.. code-block:: text
+
+                        O
+                        |
+                        V
+       STOPPING --> STOPPED --> EXITING -> X
+          A   A         |
+          |    \___     |
+          |        \    |
+          |         V   V
+        STARTED <-- STARTING
+
+The states' transitions trigger channels to be published
+to so that subscribers can react to them.
+
+One good example is the HTTP server which will tranisition
+from a `"STOPPED"` stated to a `"STARTED"` state whenever
+a message is published to the `start` channel.
+
+Built-in channels
+~~~~~~~~~~~~~~~~~
+
+In order to support its life-cycle, CherryPy defines a set
+of common channels that will be published to at various states:
+
+- `start`: When the bus is in the `"STARTING"` state
+- `main`: Periodically from the CherryPy's mainloop
+- `stop`: When the bus is in the `"STOPPING"` state
+- `graceful`: When the bus requests a reload of subscribers
+- `exit`: When the bus is in the `"EXITING"` state
+
+This channel will be published to by the `engine` automatically.
+Register therefore any subscribers that would need to react
+to the transition changes of the `engine`.
+
+In addition, a few other channels are also published to during
+the request processing.
+
+- `before_request`: right before the request is process by CherryPy
+- `after_request`: right after it has been processed
+
+Also, from the :class:`cherrypy.process.plugins.ThreadManager` plugin:
+
+- `acquire_thread`
+- `start_thread`
+- `stop_thread`
+- `release_thread`
+
+Bus API
+~~~~~~~
+
+In order to work with the bus, the implementation
+provides the following simple API:
+
+- :meth:`cherrypy.engine.publish(channel, *args) <cherrypy.process.wspbus.Bus.publish>`: 
+ - The `channel` parameter is a string identifying the channel to 
+   which the message should be sent to
+ - `*args` is the message and may contain any valid Python values or
+   objects.
+- :meth:`cherrypy.engine.subscribe(channel, callable) <cherrypy.process.wspbus.Bus.subscribe>`:
+ - The `channel` parameter is a string identifying the channel the
+   `callable` will be registered to.
+ - `callable` is a Python function or method which signature must
+   match what will be published.
+- :meth:`cherrypy.engine.unsubscribe(channel, callable) <cherrypy.process.wspbus.Bus.unsubscribe>`:
+ - The `channel` parameter is a string identifying the channel the
+   `callable` was registered to.
+ - `callable` is the Python function or method which was registered.
+
 
 Plugins
-#######
+^^^^^^^
+
+Plugins, simply put, are entities that play with the bus, either by
+publishing or subscirbing to channels, usually both at the same time.
+
+.. important::
+
+   Plugins are extremely useful whenever you have functionalities:
+
+   - Available accross the whole application server
+   - Associated to the application's life-cycle
+   - You want to avoid being strongly coupled to the application
+
+Create a plugin
+~~~~~~~~~~~~~~~
+
+A typical plugin looks like this:
+
+.. code-block:: python
+
+   import cherrypy
+   from cherrypy.process import wspbus, plugins
+
+   class DatabasePlugin(plugins.SimplePlugin):
+       def __init__(self, bus, db_klass):
+           plugins.SimplePlugin.__init__(self, bus)
+	   self.db = db_klass()
+ 
+       def start(self):
+           self.bus.log('Starting up DB access')
+           self.bus.subscribe("db-save", self.save_it)
+ 
+       def stop(self):
+           self.bus.log('Stopping down DB access')
+           self.bus.unsubscribe("db-save", self.save_it)
+ 
+       def save_it(self, entity):
+           self.db.save(entity)
+
+The :class:`cherrypy.process.plugins.SimplePlugin` is a helper
+class provided by CherryPy that will automatically subscribe
+your `start` and `stop` methods to the related channels.
+
+When the `start` and `stop` channels are published on, those
+methods are called accordingly.
+
+Notice then how our plugin subscribes to the `db-save` 
+channel so that the bus can dispatch messages to the plugin.
+
+Enable a plugin
+~~~~~~~~~~~~~~~
+
+To enable the plugin, it has to be registered to the the 
+bus as follow:
+
+.. code-block:: python
+
+   DatabasePlugin(cherrypy.engine, SQLiteDB).subscribe()
+
+The `SQLiteDB` here is a fake class that is used as our
+database provider.
+
+Disable a plugin
+~~~~~~~~~~~~~~~~
+
+You can also unregister a plugin as follow:
+
+.. code-block:: python
+
+   someplugin.unsubscribe()
+
+This is often used when you want to prevent the default
+HTTP server from being started by CherryPy, for instance
+if you run on top of a different HTTP server (WSGI capable):
+
+.. code-block:: python
+
+   cherrypy.server.unsubscribe()
+
+Let's see an example using this default application:
+
+.. code-block:: python
+
+   import cherrypy
+   
+   class Root(object):
+       @cherrypy.expose
+       def index(self):
+           return "hello world"
+
+   if __name__ == '__main__':
+       cherrypy.quickstart(Root())
+
+For instance, this is what you would see when running
+this application:
+
+.. code-block:: python
+
+   [27/Apr/2014:13:04:07] ENGINE Listening for SIGHUP.
+   [27/Apr/2014:13:04:07] ENGINE Listening for SIGTERM.
+   [27/Apr/2014:13:04:07] ENGINE Listening for SIGUSR1.
+   [27/Apr/2014:13:04:07] ENGINE Bus STARTING
+   [27/Apr/2014:13:04:07] ENGINE Started monitor thread 'Autoreloader'.
+   [27/Apr/2014:13:04:07] ENGINE Started monitor thread '_TimeoutMonitor'.
+   [27/Apr/2014:13:04:08] ENGINE Serving on http://127.0.0.1:8080
+   [27/Apr/2014:13:04:08] ENGINE Bus STARTED
+
+Now let's unsubscribe the HTTP server:
+
+.. code-block:: python
+
+   import cherrypy
+   
+   class Root(object):
+       @cherrypy.expose
+       def index(self):
+           return "hello world"
+
+   if __name__ == '__main__':
+       cherrypy.server.unsubscribe()
+       cherrypy.quickstart(Root())
+
+This is what we get:
+
+.. code-block:: python
+
+   [27/Apr/2014:13:08:06] ENGINE Listening for SIGHUP.
+   [27/Apr/2014:13:08:06] ENGINE Listening for SIGTERM.
+   [27/Apr/2014:13:08:06] ENGINE Listening for SIGUSR1.
+   [27/Apr/2014:13:08:06] ENGINE Bus STARTING
+   [27/Apr/2014:13:08:06] ENGINE Started monitor thread 'Autoreloader'.
+   [27/Apr/2014:13:08:06] ENGINE Started monitor thread '_TimeoutMonitor'.
+   [27/Apr/2014:13:08:06] ENGINE Bus STARTED
+
+As you can see, the server is not started. The missing:
+
+.. code-block:: python
+
+   [27/Apr/2014:13:04:08] ENGINE Serving on http://127.0.0.1:8080
+
+Request-wide functions
+######################
+
+One of the most common task in a web application development
+is to tailor the request's processing to the runtime context.
+
+Within CherryPy, this is performed via what are called `tools`.
+If you are familiar with Django or WSGI middlewares, 
+CherryPy tools are similar in spirit. 
+They add functions that are applied during the 
+request/response processing.
+
+.. _hookpoint:
+
+Hook point
+^^^^^^^^^^
+
+A hook point is a point during the request/response processing.
+
+As it stands the following hook points exist:
+
+- `on_start_resource`: once the :term:`page handler` has been found
+- `before_request_body`: in case of a `POST`/`PUT` request, before the request's body is read
+- `before_handler`: before the page handler is called (your tool can still change the request's parameters)
+- `before_finalize`: after the page handler was called (your tool can change the page handler's response)
+- `on_end_resource`: on completion, error or normal path alike
+- `on_end_request`: when this requests' processing is completed
+
+In addition, when an error occurs during processing:
+
+- `before_error_response`
+- `after_error_response`
+
+Though it is important that you know at which point during
+a request your tool should apply, you shouldn't have to know much
+more about the hook point internals.
+
+
+Tools
+^^^^^
+
+A tool is a simple callable object (function, method, object
+implementing a `__call__` method) that is attached to a 
+:ref:`hook point <hookpoint>`. 
+
+Below is a simple tool that is attached to the `before_finalize`
+hook point, hence after the page handler was called:
+
+.. code-block:: python
+
+   def log_it():
+      print(cherrypy.request.remote.ip)
+    
+   cherrypy.tools.logit = cherrypy.Tool('before_finalize', log_it)
+
+Using that tool is as simple as follow:
+
+.. code-block:: python
+
+   class Root(object):
+       @cherrypy.expose
+       @cherrypy.tools.logit()
+       def index(self):
+           return "hello world"
+
+Obviously the tool may be declared the 
+:ref:`other usual ways <perappconf>`.
+
+Stateful tools
+~~~~~~~~~~~~~~
+
+The tools mechanism is really flexible and enables
+rich per-request functionalities.
+
+Straight tools as shown in the previous section are
+usually good enough. However, if your workflow
+requires some sort of state during the request processing,
+you will probably want a class-based approach:
+
+.. code-block:: python
+
+    import time
+
+    import cherrypy
+
+    class TimingTool(cherrypy.Tool):
+        def __init__(self):
+            cherrypy.Tool.__init__(self, 'before_handler',
+                                   self.start_timer,
+                                   priority=95)
+
+        def _setup(self):
+            cherrypy.Tool._setup(self)
+            cherrypy.request.hooks.attach('before_finalize',
+                                          self.end_timer,
+                                          priority=5)
+
+        def start_timer(self):
+            cherrypy.request._time = time.time()
+
+        def end_timer(self):
+            duration = time.time() - cherrypy.request._time
+            cherrypy.log("Page handler took %.4f" % duration)
+
+    cherrypy.tools.timeit = TimingTool()
+
+This tool computes the time taken by the page handler
+for a given request. It stores the time at which the handler
+is about to get called and logs the time difference
+right after the handler returned its result.
+
+The import bits is that the :class:`cherrypy.Tool` constructor
+allows you to register to a hook point but, to attach the
+same tool to a different hook point, you must use the 
+:meth:`cherrypy.request.hooks.attach` method. The :meth:`cherrypy.Tool._setup`
+method is automatically called by CherryPy when the tool is 
+applied to the request.
+
+Next, let's see how to use our tool:
+
+.. code-block:: python
+
+    class Root(object):
+        @cherrypy.expose
+        @cherrypy.tools.timeit()
+        def index(self):
+            return "hello world"
+
+Tools ordering
+~~~~~~~~~~~~~~
+
+Since you can register many tools at the same hookpoint,
+you may wonder in which order they will be applied.
+
+CherryPy offers a deterministic, yet so simple, mechanism
+to do so. Simply set the `priority` attribute to a value
+from 1 to 100, lower values providing greater priority.
+
+If you set the same priority for several tools, they will
+be called in the order you declare them in your configuration.
