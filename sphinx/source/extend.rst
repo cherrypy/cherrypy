@@ -340,8 +340,8 @@ As you can see, the server is not started. The missing:
 
    [27/Apr/2014:13:04:08] ENGINE Serving on http://127.0.0.1:8080
 
-Request-wide functions
-######################
+Per-request functions
+#####################
 
 One of the most common task in a web application development
 is to tailor the request's processing to the runtime context.
