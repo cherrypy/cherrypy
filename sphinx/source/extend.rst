@@ -482,3 +482,62 @@ from 1 to 100, lower values providing greater priority.
 
 If you set the same priority for several tools, they will
 be called in the order you declare them in your configuration.
+
+Request parameters massaging
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+HTTP uses strings to carry data between two endpoints.
+However your application may make better use of richer
+object types. As it wouldn't be really readable, nor
+a good idea regarding maintenance, to let each page handler
+deserialize data, it's a common pattern to delegate
+this functions to tools.
+
+For instance, let's assume you have a user id in the query-string
+and some user data stored into a database. You could
+retrieve the data, create an object and pass it on to the
+page handler instead of the user id.
+
+
+.. code-block:: python
+
+    import cherrypy
+
+    class UserManager(cherrypy.Tool):
+        def __init__(self):
+            cherrypy.Tool.__init__(self, 'before_handler',
+                                   self.load, priority=10)
+
+        def load(self):
+            req = cherrypy.request
+
+	    # let's assume we have a db session
+            # attached to the request somehow
+	    db = req.db
+
+            # retrieve the user id and remove it
+            # from the request parameters
+	    user_id = req.params.pop('user_id')
+            req.params['user'] = db.get(int(user_id))
+
+    cherrypy.tools.user = UserManager()
+
+    
+    class Root(object):
+        @cherrypy.expose
+        @cherrypy.tools.user()
+        def index(self, user):
+            return "hello %s" % user.name
+
+Tailored dispatchers
+####################
+
+Dispatching is the art of locating the appropriate page handler
+for a given request. Usually, dispatching is based on the 
+request's URL, the query-string and, sometimes, the request's method 
+(GET, POST, etc.).
+
+Based on this, CherryPy comes with various dispatchers already.
+
+
+In some cases however, you will need a little more.
