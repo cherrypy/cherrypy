@@ -17,7 +17,9 @@ CherryPy can be considered both as a HTTP library
 as much as a web application framework. In that latter case,
 its architecture provides mechanisms to support operations
 accross the whole server instance. This offers a powerful
-canvas to perform persistent operations.
+canvas to perform persistent operations as server-wide
+functions live outside the request processing itself. They
+are available to the whole process as long as the bus lives.
 
 
 Publish/Subscribe pattern
