@@ -10,6 +10,7 @@ CherryPy - A Minimalist Python Web Framework
    tutorials.rst
    basics.rst
    advanced.rst
+   config.rst
    extend.rst
    deploy.rst
    glossary.rst
