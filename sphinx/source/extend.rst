@@ -371,24 +371,30 @@ Hook point
 
 A hook point is a point during the request/response processing.
 
-As it stands the following hook points exist:
+Here is a quick rundown of the "hook points" that you can hang your tools on:
 
-- **"on_start_resource"**: once the :term:`page handler` has been found
-- **"before_request_body"**: in case of a `POST`/`PUT` request, before the request's body is read
-- **"before_handler"**: before the page handler is called (your tool can still change the request's parameters)
-- **"before_finalize"**: after the page handler was called (your tool can change the page handler's response)
-- **"on_end_resource"**: on completion, error or normal path alike
-- **"on_end_request"**: when this requests' processing is completed
-
-In addition, when an error occurs during processing:
-
-- **"before_error_response"**
-- **"after_error_response"**
-
-Though it is important that you know at which point during
-a request your tool should apply, you shouldn't have to know much
-more about the hook point internals.
-
+ * **"on_start_resource"** - The earliest hook; the Request-Line and request headers
+   have been processed and a dispatcher has set request.handler and request.config.
+ * **"before_request_body"** - Tools that are hooked up here run right before the
+   request body would be processed.
+ * **"before_handler"** - Right before the request.handler (the :term:`exposed` callable
+   that was found by the dispatcher) is called.
+ * **"before_finalize"** - This hook is called right after the page handler has been
+   processed and before CherryPy formats the final response object. It helps
+   you for example to check for what could have been returned by your page
+   handler and change some headers if needed.
+ * **"on_end_resource"** - Processing is complete - the response is ready to be
+   returned. This doesn't always mean that the request.handler (the exposed
+   page handler) has executed! It may be a generator. If your tool absolutely
+   needs to run after the page handler has produced the response body, you
+   need to either use on_end_request instead, or wrap the response.body in a
+   generator which applies your tool as the response body is being generated.
+ * **"before_error_response"** - Called right before an error response
+   (status code, body) is set.
+ * **"after_error_response"** - Called right after the error response
+   (status code, body) is set and just before the error response is finalized.
+ * **"on_end_request"** - The request/response conversation is over, all data has
+   been written to the client, nothing more to see here, move along.
 
 Tools
 ^^^^^
@@ -419,6 +425,13 @@ Using that tool is as simple as follow:
 
 Obviously the tool may be declared the 
 :ref:`other usual ways <perappconf>`.
+
+.. note::
+
+   The name of the tool, technically the attribute set to `cherrypy.tools`, 
+   does not have to match the name of the callable. However, it is
+   that name that will be used in the configuration to refer to that
+   tool.
 
 Stateful tools
 ~~~~~~~~~~~~~~
@@ -493,6 +506,55 @@ from 1 to 100, lower values providing greater priority.
 
 If you set the same priority for several tools, they will
 be called in the order you declare them in your configuration.
+
+Toolboxes
+~~~~~~~~~
+
+All of the builtin CherryPy tools are collected into a Toolbox called
+:attr:`cherrypy.tools`. It responds to config entries in the ``"tools"``
+:ref:`namespace<namespaces>`. You can add your own Tools to this Toolbox
+as described above.
+
+You can also make your own Toolboxes if you need more modularity. For example,
+you might create multiple Tools for working with JSON, or you might publish
+a set of Tools covering authentication and authorization from which everyone
+could benefit (hint, hint). Creating a new Toolbox is as simple as:
+
+.. code-block:: python
+
+    import cherrypy
+
+    # Create a new Toolbox.
+    newauthtools = cherrypy._cptools.Toolbox("newauth")
+
+    # Add a Tool to our new Toolbox.
+    def check_access(default=False):
+        if not getattr(cherrypy.request, "userid", default):
+            raise cherrypy.HTTPError(401)
+    newauthtools.check_access = cherrypy.Tool('before_request_body', check_access)
+
+Then, in your application, use it just like you would use ``cherrypy.tools``,
+with the additional step of registering your toolbox with your app.
+Note that doing so automatically registers the ``"newauth"`` config namespace;
+you can see the config entries in action below:
+
+.. code-block:: python
+
+    import cherrypy
+
+    class Root(object):
+        @cherrypy.expose
+        def default(self):
+            return "Hello"
+
+    conf = {
+       '/demo': {
+           'newauth.check_access.on': True,  
+           'newauth.check_access.default': True,
+        }
+    }
+
+    app = cherrypy.tree.mount(Root(), config=conf)
 
 Request parameters massaging
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

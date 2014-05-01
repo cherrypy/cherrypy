@@ -228,6 +228,12 @@ Configuring
 CherryPy comes with a fine-grained configuration mechanism and 
 settings can be set at various levels.
 
+.. seealso::
+
+   Once you have the reviewed the basics, please refer
+   to the :ref:`in-depth discussion <configindepth>` 
+   around configuration.
+
 .. _globalsettings:
 
 Global server settings
