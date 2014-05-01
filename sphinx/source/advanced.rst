@@ -8,6 +8,47 @@ will describe.
 .. contents::
    :depth:  4
 
+Set aliases to page handlers
+############################
+
+A fairly unknown, yet useful, feature provided by the :func:`cherrypy.expose` 
+decorator is to support aliases.
+
+Let's use the template provided by :ref:`tutorial 03 <tut03>`:
+
+.. code-block:: python
+
+   import random
+   import string
+   
+   import cherrypy
+
+   class StringGenerator(object):
+       @cherrypy.expose
+       def index(self):
+	   return "Hello world!"
+
+       @cherrypy.expose(['generer', 'generar'])
+       def generate(self, length=8):
+           return ''.join(random.sample(string.hexdigits, int(length)))
+    
+   if __name__ == '__main__':
+       cherrypy.quickstart(StringGenerator())
+
+In this example, we create localized aliases for
+the page handler. This means the page handler will be
+accessible via:
+
+- /generate
+- /generer (French)
+- /generar (Spanish)
+
+Obviously, your aliases may be whatever suits your needs. 
+
+.. note::
+
+   The alias may be a single string or a list of them.
+
 Securing your server
 ####################
 
