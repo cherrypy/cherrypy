@@ -1,14 +1,13 @@
 Extend
 ------
 
-.. contents::
-   :depth:  4
-
 CherryPy is truly an open framework, you can extend and plug
 new functions at will either server-side or on a per-requests basis.
 Either way, CherryPy is made to help you build your
-application and support your architecture with simple
-patterns.
+application and support your architecture via simple patterns.
+
+.. contents::
+   :depth:  4
 
 Server-wide functions
 #####################
@@ -20,6 +19,14 @@ accross the whole server instance. This offers a powerful
 canvas to perform persistent operations as server-wide
 functions live outside the request processing itself. They
 are available to the whole process as long as the bus lives.
+
+Typical use cases:
+
+- Keeping a pool of connection to an external server so that
+  your need not to re-open them on each request (database connections
+  for instance).
+- Background processing (say you need work to be done without
+  blocking the whole request itself).
 
 
 Publish/Subscribe pattern
