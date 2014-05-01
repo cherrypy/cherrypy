@@ -24,10 +24,6 @@ Let's use the template provided by :ref:`tutorial 03 <tut03>`:
    import cherrypy
 
    class StringGenerator(object):
-       @cherrypy.expose
-       def index(self):
-	   return "Hello world!"
-
        @cherrypy.expose(['generer', 'generar'])
        def generate(self, length=8):
            return ''.join(random.sample(string.hexdigits, int(length)))
