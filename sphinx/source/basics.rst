@@ -360,6 +360,8 @@ share sessions outside of the process running CherryPy.
    tools.sessions.on: True
    tools.sessions.storage_type = "memcached"
 
+.. _staticontent:
+
 Static content serving
 ######################
 
@@ -523,3 +525,54 @@ basic one explained above.
    }
 
    cherrypy.quickstart(myapp, '/', conf)
+
+Favicon
+#######
+
+CherryPy serves its own sweet red cherrypy as the default 
+`favicon <http://en.wikipedia.org/wiki/Favicon>`_ using the static file
+tool. You can serve your own favicon as follow:
+
+.. code-block:: python
+
+    import cherrypy
+
+    class HelloWorld(object):
+       @cherrypy.expose
+       def index(self):
+           return "Hello World!"
+
+    if __name__ == '__main__':
+        cherrypy.quickstart(HelloWorld(), '/',
+            {
+                '/favicon.ico':
+                {
+                    'tools.staticfile.on': True,
+                    'tools.staticfile.filename:' '/path/to/myfavicon.ico'
+                }
+            }
+        )
+
+Please refer to the :ref:`static serving <staticontent>` section
+for more details.
+
+You can also use a file to configure it:
+
+.. code-block:: ini
+
+    [/favicon.ico]
+    tools.staticfile.on: True
+    tools.staticfile.filename: "/path/to/myfavicon.ico"
+
+
+.. code-block:: python
+
+    import cherrypy
+
+    class HelloWorld(object):
+       @cherrypy.expose
+       def index(self):
+           return "Hello World!"
+
+    if __name__ == '__main__':
+        cherrypy.quickstart(HelloWorld(), '/', app.conf)
