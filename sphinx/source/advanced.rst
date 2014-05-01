@@ -47,6 +47,88 @@ Obviously, your aliases may be whatever suits your needs.
 
    The alias may be a single string or a list of them.
 
+Response timeouts
+#################
+
+CherryPy responses include 3 attributes related to time:
+
+ * ``response.time``: the :func:`time.time` at which the response began
+ * ``response.timeout``: the number of seconds to allow responses to run
+ * ``response.timed_out``: a boolean indicating whether the response has
+   timed out (default False).
+
+The request processing logic inspects the value of ``response.timed_out`` at
+various stages; if it is ever True, then :class:`TimeoutError` is raised.
+You are free to do the same within your own code.
+
+Rather than calculate the difference by hand, you can call
+``response.check_timeout`` to set ``timed_out`` for you.
+
+
+.. _timeoutmonitor:
+
+Timeout Monitor
+^^^^^^^^^^^^^^^
+
+In addition, CherryPy includes a ``cherrypy.engine.timeout_monitor`` which
+monitors all active requests in a separate thread; periodically, it calls
+``check_timeout`` on them all. It is subscribed by default. To turn it off:
+
+.. code-block:: ini
+
+    [global]
+    engine.timeout_monitor.on: False
+
+or:
+
+.. code-block:: python
+
+    cherrypy.engine.timeout_monitor.unsubscribe()
+
+You can also change the interval (in seconds) at which the timeout monitor runs:
+
+.. code-block:: ini
+
+    [global]
+    engine.timeout_monitor.frequency: 60 * 60
+
+The default is once per minute. The above example changes that to once per hour.
+
+Deal with signals
+#################
+
+This :ref:`engine plugin <busplugins>` is instantiated automatically as
+`cherrypy.engine.signal_handler`.
+However, it is only *subscribed* automatically by :func:`cherrypy.quickstart`.
+So if you want signal handling and you're calling:
+
+.. code-block:: python
+
+   tree.mount()
+   engine.start()
+   engine.block()
+
+on your own, be sure to add before you start the engine:
+
+.. code-block:: python
+
+   engine.signals.subscribe()
+
+.. index:: Windows, Ctrl-C, shutdown
+.. _windows-console:
+
+Windows Console Events
+^^^^^^^^^^^^^^^^^^^^^^
+
+Microsoft Windows uses console events to communicate some signals, like Ctrl-C.
+When deploying CherryPy on Windows platforms, you should obtain the
+`Python for Windows Extensions <http://sourceforge.net/projects/pywin32/>`_;
+once you have them installed, CherryPy will handle Ctrl-C and other
+console events (CTRL_C_EVENT, CTRL_LOGOFF_EVENT, CTRL_BREAK_EVENT,
+CTRL_SHUTDOWN_EVENT, and CTRL_CLOSE_EVENT) automatically, shutting down the
+bus in preparation for process exit.
+
+
 Securing your server
 ####################
 
@@ -123,41 +205,6 @@ If you use SSL you can also enable Strict Transport Security:
 	headers['Strict-Transport-Security'] = 'max-age=31536000'  # one year
 
 Next, you should probably use :ref:`SSL <ssl>`.
-
-Deal with signals
-#################
-
-This :ref:`engine plugin <busplugins>` is instantiated automatically as
-`cherrypy.engine.signal_handler`.
-However, it is only *subscribed* automatically by :func:`cherrypy.quickstart`.
-So if you want signal handling and you're calling:
-
-.. code-block:: python
-
-   tree.mount()
-   engine.start()
-   engine.block()
-
-on your own, be sure to add before you start the engine:
-
-.. code-block:: python
-
-   engine.signals.subscribe()
-
-.. index:: Windows, Ctrl-C, shutdown
-.. _windows-console:
-
-Windows Console Events
-^^^^^^^^^^^^^^^^^^^^^^
-
-Microsoft Windows uses console events to communicate some signals, like Ctrl-C.
-When deploying CherryPy on Windows platforms, you should obtain the
-`Python for Windows Extensions <http://sourceforge.net/projects/pywin32/>`_;
-once you have them installed, CherryPy will handle Ctrl-C and other
-console events (CTRL_C_EVENT, CTRL_LOGOFF_EVENT, CTRL_BREAK_EVENT,
-CTRL_SHUTDOWN_EVENT, and CTRL_CLOSE_EVENT) automatically, shutting down the
-bus in preparation for process exit.
-
 
 Multiple HTTP servers support
 #############################

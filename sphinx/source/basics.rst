@@ -132,10 +132,10 @@ function as follow:
    cherrypy.engine.start()
    cherrypy.engine.block()
 
-Essentially, :func:`cherrypy.tree.mount` takes the same parameters
-as :func:`cherrypy.quickstart`: an application, a hosting path segment
-and a configuration. The last two lines are simply starting
-application server.
+Essentially, :meth:`cherrypy.tree.mount <cherrypy._cptree.Tree.mount>`  
+takes the same parameters as :func:`cherrypy.quickstart`: an :term:`application`, 
+a hosting path segment and a configuration. The last two lines 
+are simply starting application server.
 
 .. important::
 
