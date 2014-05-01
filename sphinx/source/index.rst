@@ -13,6 +13,7 @@ CherryPy - A Minimalist Python Web Framework
    config.rst
    extend.rst
    deploy.rst
+   contribute.rst
    glossary.rst
 
 CherryPy is a pythonic, object-oriented web framework.
