@@ -605,3 +605,11 @@ to the runtime context of the application and the request's content.
 Usually, you will have to write a dispatcher only if you
 have a very specific use case to locate the most adequate
 page handler. Otherwise, the default ones will likely suffice.
+
+Request body processors
+#######################
+
+Since its 3.2 release, CherryPy provides a really elegant
+and powerful mechanism to deal with a request's body based
+on its mimetype. Refer to the :mod:`cherrypy._cpreqbody` module
+to understand how to implement your own processors.
