@@ -1,7 +1,7 @@
 .. _configindepth:
 
-Configuration
--------------
+Configure
+---------
 
 Configuration in CherryPy is implemented via dictionaries. Keys are strings
 which name the mapped value; values may be of any type.
@@ -14,7 +14,7 @@ simply import those objects and see what ``help(obj)`` tells you.
 .. note::
 
    If you are new to CherryPy, please refer first to the simpler
-   :ref:`basic config <config>` section.
+   :ref:`basic config <config>` section first.
 
 .. contents::
    :depth:  3
