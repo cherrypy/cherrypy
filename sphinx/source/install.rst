@@ -9,6 +9,9 @@ CherryPy is a pure Python library. This has various consequences:
  - It can run on various implementations of the Python language: `CPython <http://python.org/>`_, 
    `IronPython <http://ironpython.net/>`_, `Jython <http://www.jython.org/>`_ and `PyPy <http://pypy.org/>`_
 
+.. contents::
+   :depth:  4
+
 Requirements
 ############
 
@@ -50,8 +53,8 @@ You may also get the latest CherryPy version by grabbing the source code from Bi
    $ cd cherrypy
    $ python setup.py install
 
-Run it
-######
+Test your installation
+^^^^^^^^^^^^^^^^^^^^^^
 
 CherryPy comes with a set of simple tutorials that can be executed
 once you have deployed the package.
@@ -78,4 +81,76 @@ Once started the above command shows the following logs:
 We will explain what all those lines mean later on, but suffice
 to know that once you see the last two lines, your server
 is listening and ready to receive requests.
+
+Run it
+######
+
+During development, the easiest path is to run your application as
+follow:
+
+.. code-block:: bash
+
+   $ python myapp.py
+
+As long as `myapp.py` defines a `"__main__"` section, it will
+run just fine.
+
+cherryd
+^^^^^^^
+
+Another way to run the application is through the ``cherryd`` script
+which is installed along side CherryPy.
+
+.. note::
+
+   This utility command will not concern you if you embed your
+   application with another framework.
+
+Command-Line Options
+~~~~~~~~~~~~~~~~~~~~
+
+.. program:: cherryd
+
+.. cmdoption:: -c, --config
+
+   Specify config file(s)
+
+.. cmdoption:: -d
+
+   Run the server as a daemon
+
+.. cmdoption:: -e, --environment
+
+   Apply the given config environment (defaults to None)
+
+
+.. index:: FastCGI
+
+.. cmdoption:: -f
+
+   Start a :ref:`FastCGI <fastcgi>` server instead of the default HTTP server
+
+
+.. index:: SCGI
+
+.. cmdoption:: -s
+
+   Start a SCGI server instead of the default HTTP server
+
+
+.. cmdoption:: -i, --import
+
+   Specify modules to import
+
+
+.. index:: PID file
+
+.. cmdoption:: -p, --pidfile
+
+   Store the process id in the given file (defaults to None)
+
+
+.. cmdoption:: -P, --Path
+
+   Add the given paths to sys.path
 
