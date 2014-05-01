@@ -436,6 +436,18 @@ Static content serving
 CherryPy can serve your static content such as images, javascript and 
 CSS resources, etc. 
 
+.. note::
+
+   CherryPy uses the :mod:`mimetypes` module to determine the
+   best content-type to serve a particular resource. If the choice
+   is not valid, you can simply set more media-types as follow:
+
+   .. code-block:: python
+ 
+      import mimetypes
+      mimetypes.types_map['.csv'] = 'text/csv'
+
+
 Serving a single file
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -482,6 +494,34 @@ CherryPy will automatically respond to URLs such as
       [/static]
       tools.staticdir.on = True
       tools.staticdir.dir = "static"
+
+Allow files downloading
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Using ``"application/x-download"`` response content-type,
+you can tell a browser that a resource should be downloaded
+onto the user's machine rather than displayed.
+
+You could for instance write a page handler as follow:
+
+.. code-block:: python
+
+    from cherrypy.lib.static import serve_file
+
+    @cherrypy.expose
+    def download(self, filepath):
+        return serve_file(filepath, "application/x-download", "attachment")
+
+Assuming the filepath is a valid path on your machine, the 
+response would be considered as a downloadable content by
+the browser.
+
+.. warning::
+
+   The above page handler is a security risk on its own since any file
+   of the server could be accessed (if the user running the
+   server had permissions on them).
+
 
 Dealing with JSON
 #################
