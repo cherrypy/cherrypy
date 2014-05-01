@@ -5,6 +5,9 @@ Basics
 The following sections will drive you through the basics of
 a CherryPy application, introducing some essential concepts.
 
+.. contents::
+   :depth:  4
+
 The one-minute application example
 ##################################
 

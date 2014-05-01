@@ -2,6 +2,154 @@
 Deploy
 ------
 
+CherryPy stands on its own, but as an application server, it is often
+located in shared or complex environments. For this reason,
+it is not uncommon to run CherryPy behind a reverse proxy
+or use other servers to host the application.
+
+.. note::
+   
+   CherryPy's server has proven reliable and fast enough
+   for years now. If the volume of traffic you receive is
+   average, it will do well enough on its own. Nonetheless,
+   it is common to delegate the serving of static content
+   to more capable servers such as `nginx <http://nginx.org>`_ or
+   CDN.
+
+.. contents::
+   :depth:  3
+
+
+Run as a daemon
+###############
+
+CherryPy allows you to easily decouple the current process from the parent
+environment, using the traditional double-fork:
+
+.. code-block:: python
+
+   from cherrypy.process.plugins import Daemonizer
+   d = Daemonizer(cherrypy.engine)
+   d.subscribe()
+
+.. note::
+
+    This :ref:`engine plugin <busplugins>` is only available on
+    Unix and similar systems which provide `fork()`.
+
+If a startup error occurs in the forked children, the return code from the
+parent process will still be 0. Errors in the initial daemonizing process still
+return proper exit codes, but errors after the fork won't. Therefore, if you use
+this plugin to daemonize, don't use the return code as an accurate indicator of
+whether the process fully started. In fact, that return code only indicates if
+the process successfully finished the first fork.
+
+The plugin takes optional arguments to redirect standard streams: ``stdin``,
+``stdout``, and ``stderr``. By default, these are all redirected to
+:file:`/dev/null`, but you're free to send them to log files or elsewhere.
+
+.. warning::
+
+    You should be careful to not start any threads before this plugin runs.
+    The plugin will warn if you do so, because "...the effects of calling functions
+    that require certain resources between the call to fork() and the call to an
+    exec function are undefined". (`ref <http://www.opengroup.org/onlinepubs/000095399/functions/fork.html>`_).
+    It is for this reason that the Server plugin runs at priority 75 (it starts
+    worker threads), which is later than the default priority of 65 for the
+    Daemonizer.
+
+Run as a different user
+#######################
+
+Use this :ref:`engine plugin <busplugins>` to start your
+CherryPy site as root (for example, to listen on a privileged port like 80)
+and then reduce privileges to something more restricted.
+
+This priority of this plugin's "start" listener is slightly higher than the
+priority for `server.start` in order to facilitate the most common use:
+starting on a low port (which requires root) and then dropping to another user.
+
+.. code-block:: python
+
+   DropPrivileges(cherrypy.engine, uid=1000, gid=1000).subscribe()
+
+PID files
+#########
+
+The PIDFile :ref:`engine plugin <busplugins>` is pretty straightforward: it writes
+the process id to a file on start, and deletes the file on exit. You must
+provide a 'pidfile' argument, preferably an absolute path:
+
+.. code-block:: python
+
+   PIDFile(cherrypy.engine, '/var/run/myapp.pid').subscribe()
+
+
+.. _ssl:
+
+SSL support
+###########
+
+.. note::
+
+   You may want to test your server for SSL using the services
+   from `Qualys, Inc. <https://www.ssllabs.com/ssltest/index.html>`_
+
+
+CherryPy can encrypt connections using SSL to create an https connection. This keeps your web traffic secure. Here's how.
+
+1. Generate a private key. We'll use openssl and follow the `OpenSSL Keys HOWTO <https://www.openssl.org/docs/HOWTO/keys.txt>`_.:
+
+.. code-block:: bash
+
+   $ openssl genrsa -out privkey.pem 2048
+
+You can create either a key that requires a password to use, or one without a password. Protecting your private key with a password is much more secure, but requires that you enter the password every time you use the key. For example, you may have to enter the password when you start or restart your CherryPy server. This may or may not be feasible, depending on your setup.
+
+If you want to require a password, add one of the ``-aes128``, ``-aes192`` or ``-aes256`` switches to the command above. You should not use any of the DES, 3DES, or SEED algoritms to protect your password, as they are insecure.
+
+SSL Labs recommends using 2048-bit RSA keys for security (see references section at the end).
+
+
+2. Generate a certificate. We'll use openssl and follow the `OpenSSL Certificates HOWTO <https://www.openssl.org/docs/HOWTO/certificates.txt>`_. Let's start off with a self-signed certificate for testing:
+
+.. code-block:: bash
+
+   $ openssl req -new -x509 -days 365 -key privkey.pem -out cert.pem
+
+openssl will then ask you a series of questions. You can enter whatever values are applicable, or leave most fields blank. The one field you *must* fill in is the 'Common Name': enter the hostname you will use to access your site. If you are just creating a certificate to test on your own machine and you access the server by typing 'localhost' into your browser, enter the Common Name 'localhost'.
+
+
+3. Decide whether you want to use python's built-in SSL library, or the pyOpenSSL library. CherryPy supports either.
+
+    a) *Built-in.* To use python's built-in SSL, add the following line to your CherryPy config:
+
+    .. code-block:: python
+
+       cherrypy.server.ssl_module = 'builtin'
+
+    b) *pyOpenSSL*. Because python did not have a built-in SSL library when CherryPy was first created, the default setting is to use pyOpenSSL. To use it you'll need to install it (we could recommend you install `cython <http://cython.org/>`_ first):
+
+    .. code-block:: bash
+
+       $ pip install cython, pyOpenSSL
+
+
+4. Add the following lines in your CherryPy config to point to your certificate files:
+    
+.. code-block:: python
+
+   cherrypy.server.ssl_certificate = "cert.pem"
+   cherrypy.server.ssl_private_key = "privkey.pem"
+
+5. If you have a certificate chain at hand, you can also specify it:
+
+.. code-block:: python
+
+   cherrypy.server.ssl_certificate_chain = "certchain.perm"
+
+6. Start your CherryPy server normally. Note that if you are debugging locally and/or using a self-signed certificate, your browser may show you security warnings.
+
 WSGI servers
 ############
 
