@@ -8,6 +8,8 @@ will describe.
 .. contents::
    :depth:  4
 
+.. _aliases:
+
 Set aliases to page handlers
 ############################
 
@@ -155,6 +157,102 @@ once you have them installed, CherryPy will handle Ctrl-C and other
 console events (CTRL_C_EVENT, CTRL_LOGOFF_EVENT, CTRL_BREAK_EVENT,
 CTRL_SHUTDOWN_EVENT, and CTRL_CLOSE_EVENT) automatically, shutting down the
 bus in preparation for process exit.
+
+
+Multiple HTTP servers support
+#############################
+
+CherryPy starts its own HTTP server whenever you start the
+engine. In some cases, you may wish to host your application
+on more than a single port. This is easily achieved:
+
+.. code-block:: python
+
+    from cherrypy._cpserver import Server
+    server = Server()
+    server.socket_port = 8090
+    server.subscribe()
+
+You can create as many :class:`server <cherrypy._cpserver.Server>`
+server instances as you need, once :ref:`subscribed <busplugins>`, 
+they will follow the CherryPy engine's life-cycle.
+
+WSGI support
+############
+
+CherryPy supports the WSGI interface defined in :pep:`333`
+as well as its updates in :pep:`3333`. It means the following:
+
+- You can host a foreign WSGI application with the CherryPy server
+- A CherryPy application can be hosted by another WSGI server
+
+Make your CherryPy application a WSGI application
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A WSGI application can be obtained from your application as follow:
+
+.. code-block:: python
+
+    import cherrypy
+    wsgiapp = cherrypy.Application(StringGenerator(), '/', config=myconf)
+
+Simply use the `wsgiapp` instance in any WSGI-aware server.
+
+.. _hostwsgiapp:
+
+Host a foreign WSGI application in CherryPy
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Assuming you have a WSGI-aware application, you can host it
+in your CherryPy server using the :meth:`cherrypy.tree.graft <cherrypy._cptree.Tree.graft>`
+facility.
+
+.. code-block:: python
+
+    def raw_wsgi_app(environ, start_response):
+        status = '200 OK'
+        response_headers = [('Content-type','text/plain')]
+        start_response(status, response_headers)
+        return ['Hello world!']
+
+    cherrypy.tree.graft(raw_wsgi_app, '/')
+
+.. important::
+
+   You cannot use tools with a foreign WSGI application.
+   However, you can still benefit from the 
+   :ref:`CherryPy bus <buspattern>`.
+
+
+No need for the WSGI interface?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The default CherryPy HTTP server supports the WSGI interfaces
+defined in :pep:`333` and :pep:`3333`. However, if your application
+is a pure CherryPy application, you can switch to a HTTP
+server that by-passes the WSGI layer altogether. It will provide
+a slight performance increase.
+
+.. code-block:: python
+
+   import cherrypy
+   
+   class Root(object):
+       @cherrypy.expose
+       def index(self):
+           return "Hello World!"
+
+   if __name__ == '__main__':
+       from cherrypy._cpnative_server import CPHTTPServer
+       cherrypy.server.httpserver = CPHTTPServer(cherrypy.server)
+
+       cherrypy.quickstart(Root(), '/')
+
+.. important::
+
+   Using the native server, you will not be able to 
+   graft a WSGI application as shown in the previous section.
+   Doing so will result in a server error at runtime.
 
 WebSocket support
 #################

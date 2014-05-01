@@ -121,8 +121,8 @@ Multiple applications
 
 The :func:`cherrypy.quickstart` approach is fine for a single application,
 but lacks the capacity to host several applications with the server.
-To achieve this, one must use the :func:`cherrypy.tree.mount` function as 
-follow:
+To achieve this, one must use the :meth:`cherrypy.tree.mount <cherrypy._cptree.Tree.mount>` 
+function as follow:
 
 .. code-block:: python
 
@@ -137,15 +137,19 @@ as :func:`cherrypy.quickstart`: an application, a hosting path segment
 and a configuration. The last two lines are simply starting
 application server.
 
-.. note::
+.. important::
 
-   :func:`cherrypy.quickstart` and :func:`cherrypy.tree.mount` are not
-   exclusive. For instance, the previous lines can be written as:
+   :func:`cherrypy.quickstart` and :meth:`cherrypy.tree.mount <cherrypy._cptree.Tree.mount>` 
+   are not exclusive. For instance, the previous lines can be written as:
 
    .. code-block:: python
 
       cherrypy.tree.mount(Blog(), '/blog', blog_conf)
       cherrypy.quickstart(Forum(), '/forum', forum_conf)
+
+.. note::
+   
+   You can also :ref:`host foreign WSGI application <hostwsgiapp>`.
 
 
 Logging
