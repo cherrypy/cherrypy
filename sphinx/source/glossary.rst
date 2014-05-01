@@ -4,6 +4,13 @@ Glossary
 
 .. glossary:: 
 
+   application
+      A CherryPy application is simply a class instance containing
+      at least one page handler.
+
+   controller
+      Name commonly given to a class owning at least one exposed method
+
    exposed
       A Python function or method which has an attribute called `exposed`
       set to `True`. This attribute can be set directly or via the 
@@ -25,6 +32,3 @@ Glossary
          
    page handler
       Name commonly given to an exposed method
-
-   controller
-      Name commonly given to a class owning at least one exposed method
