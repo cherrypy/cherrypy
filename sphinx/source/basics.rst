@@ -215,13 +215,14 @@ Global server settings
 ^^^^^^^^^^^^^^^^^^^^^^
 
 To configure the HTTP and application servers, 
-use the :func:`cherrypy.config.update()` method.
+use the :meth:`cherrypy.config.update() <cherrypy._cpconfig.Config.update>` 
+method.
 
 .. code-block:: python
 
    cherrypy.config.update({'server.socket_port': 9090})
 
-The `cherrypy.config` object is a dictionary and the 
+The :mod:`cherrypy.config <cherrypy._cpconfig>` object is a dictionary and the 
 update method merge the passed dictionary into it.
 
 You can also pass a file instead (assuming a `server.conf`
@@ -235,6 +236,12 @@ file):
 .. code-block:: python
 
    cherrypy.config.update("server.conf")
+
+.. warning::
+
+   :meth:`cherrypy.config.update() <cherrypy._cpconfig.Config.update>`  
+   is not mean to be used to configure the application. 
+   It is a common mistake. It is used to configure the server and engine.
 
 .. _perappconf:
 

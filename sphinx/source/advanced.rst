@@ -161,8 +161,8 @@ environment, using the traditional double-fork:
 
 .. note::
 
-    This :ref:`Engine Plugin<plugins>` is only available on
-    Unix and similar systems which provide fork().
+    This :ref:`engine plugin <busplugins>` is only available on
+    Unix and similar systems which provide `fork()`.
 
 If a startup error occurs in the forked children, the return code from the
 parent process will still be 0. Errors in the initial daemonizing process still
@@ -188,12 +188,12 @@ The plugin takes optional arguments to redirect standard streams: ``stdin``,
 Run as a different user
 #######################
 
-Use this :ref:`Engine Plugin<plugins>` to start your
+Use this :ref:`engine plugin <busplugins>` to start your
 CherryPy site as root (for example, to listen on a privileged port like 80)
 and then reduce privileges to something more restricted.
 
 This priority of this plugin's "start" listener is slightly higher than the
-priority for ``server.start`` in order to facilitate the most common use:
+priority for `server.start` in order to facilitate the most common use:
 starting on a low port (which requires root) and then dropping to another user.
 
 .. code-block:: python
@@ -203,7 +203,7 @@ starting on a low port (which requires root) and then dropping to another user.
 PID files
 #########
 
-The PIDFile :ref:`Engine Plugin<plugins>` is pretty straightforward: it writes
+The PIDFile :ref:`engine plugin <busplugins>` is pretty straightforward: it writes
 the process id to a file on start, and deletes the file on exit. You must
 provide a 'pidfile' argument, preferably an absolute path:
 
@@ -214,9 +214,9 @@ provide a 'pidfile' argument, preferably an absolute path:
 Deal with signals
 #################
 
-This :ref:`Engine Plugin<plugins>` is instantiated automatically as
-``cherrypy.engine.signal_handler``.
-However, it is only *subscribed* automatically by ``cherrypy.quickstart()``.
+This :ref:`engine plugin <busplugins>` is instantiated automatically as
+`cherrypy.engine.signal_handler`.
+However, it is only *subscribed* automatically by :func:`cherrypy.quickstart`.
 So if you want signal handling and you're calling:
 
 .. code-block:: python
