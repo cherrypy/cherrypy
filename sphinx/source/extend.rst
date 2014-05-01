@@ -163,11 +163,11 @@ Built-in channels
 In order to support its life-cycle, CherryPy defines a set
 of common channels that will be published to at various states:
 
-- `start`: When the bus is in the `"STARTING"` state
-- `main`: Periodically from the CherryPy's mainloop
-- `stop`: When the bus is in the `"STOPPING"` state
-- `graceful`: When the bus requests a reload of subscribers
-- `exit`: When the bus is in the `"EXITING"` state
+- **"start"**: When the bus is in the `"STARTING"` state
+- **"main"**: Periodically from the CherryPy's mainloop
+- **"stop"**: When the bus is in the `"STOPPING"` state
+- **"graceful"**: When the bus requests a reload of subscribers
+- **"exit"**: When the bus is in the `"EXITING"` state
 
 This channel will be published to by the `engine` automatically.
 Register therefore any subscribers that would need to react
@@ -176,15 +176,15 @@ to the transition changes of the `engine`.
 In addition, a few other channels are also published to during
 the request processing.
 
-- `before_request`: right before the request is processed by CherryPy
-- `after_request`: right after it has been processed
+- `**"before_request"**: right before the request is processed by CherryPy
+- **"after_request"**: right after it has been processed
 
 Also, from the :class:`cherrypy.process.plugins.ThreadManager` plugin:
 
-- `acquire_thread`
-- `start_thread`
-- `stop_thread`
-- `release_thread`
+- **"acquire_thread"**
+- **"start_thread"**
+- **"stop_thread"**
+- **"release_thread"**
 
 Bus API
 ~~~~~~~
@@ -207,6 +207,7 @@ provides the following simple API:
    `callable` was registered to.
  - `callable` is the Python function or method which was registered.
 
+.. _busplugins:
 
 Plugins
 ^^^^^^^
@@ -370,17 +371,17 @@ A hook point is a point during the request/response processing.
 
 As it stands the following hook points exist:
 
-- `on_start_resource`: once the :term:`page handler` has been found
-- `before_request_body`: in case of a `POST`/`PUT` request, before the request's body is read
-- `before_handler`: before the page handler is called (your tool can still change the request's parameters)
-- `before_finalize`: after the page handler was called (your tool can change the page handler's response)
-- `on_end_resource`: on completion, error or normal path alike
-- `on_end_request`: when this requests' processing is completed
+- **"on_start_resource"**: once the :term:`page handler` has been found
+- **"before_request_body"**: in case of a `POST`/`PUT` request, before the request's body is read
+- **"before_handler"**: before the page handler is called (your tool can still change the request's parameters)
+- **"before_finalize"**: after the page handler was called (your tool can change the page handler's response)
+- **"on_end_resource"**: on completion, error or normal path alike
+- **"on_end_request"**: when this requests' processing is completed
 
 In addition, when an error occurs during processing:
 
-- `before_error_response`
-- `after_error_response`
+- **"before_error_response"**
+- **"after_error_response"**
 
 Though it is important that you know at which point during
 a request your tool should apply, you shouldn't have to know much
@@ -460,12 +461,13 @@ for a given request. It stores the time at which the handler
 is about to get called and logs the time difference
 right after the handler returned its result.
 
-The import bits is that the :class:`cherrypy.Tool` constructor
+The import bits is that the :class:`cherrypy.Tool <cherrypy._cptools.Tool>` constructor
 allows you to register to a hook point but, to attach the
 same tool to a different hook point, you must use the 
-:meth:`cherrypy.request.hooks.attach` method. The :meth:`cherrypy.Tool._setup`
-method is automatically called by CherryPy when the tool is 
-applied to the request.
+:meth:`cherrypy.request.hooks.attach <cherrypy._cprequest.HookMap.attach>` method. 
+The :meth:`cherrypy.Tool._setup <cherrypy._cptools.Tool._setup>` 
+method is automatically called by CherryPy when the tool 
+is applied to the request.
 
 Next, let's see how to use our tool:
 
@@ -484,7 +486,7 @@ Since you can register many tools at the same hookpoint,
 you may wonder in which order they will be applied.
 
 CherryPy offers a deterministic, yet so simple, mechanism
-to do so. Simply set the `priority` attribute to a value
+to do so. Simply set the **priority** attribute to a value
 from 1 to 100, lower values providing greater priority.
 
 If you set the same priority for several tools, they will
