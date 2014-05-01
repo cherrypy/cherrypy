@@ -164,7 +164,7 @@ To do so, CherryPy manages two loggers:
 - an application/error log that traces errors or other application-level messages
 
 Your application may leverage that second logger by calling
-:func:`cherrypy.log()`. 
+:func:`cherrypy.log() <cherrypy._cplogging.LogManager.error>`. 
 
 .. code-block:: python
 
@@ -182,16 +182,26 @@ You can also log an exception:
 Both logs are writing to files identified by the following keys
 in your configuration:
 
-- `log.access_file` for incoming requests using the 
+- ``log.access_file`` for incoming requests using the 
   `common log format <http://en.wikipedia.org/wiki/Common_Log_Format>`_
-- `log.error_file` for the other log
+- ``log.error_file`` for the other log
+
+.. seealso::
+
+   Refer to the :mod:`cherrypy._cplogging` module for more
+   details about CherryPy's logging architecture.
 
 Disable logging
 ^^^^^^^^^^^^^^^
 
-You may be interested in disabling either logs. To do so, simply
-set a en empty string to the `log.access_file` or `log.error_file`
-parameters.
+You may be interested in disabling either logs.
+
+To disable file logging, simply set a en empty string to the 
+``log.access_file`` or ``log.error_file`` keys in your 
+:ref:`global configuration <globalsettings>`.
+
+To disable, console logging, set ``log.screen`` to `False`.
+
 
 Play along with your other loggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -217,6 +227,8 @@ Configuring
 
 CherryPy comes with a fine-grained configuration mechanism and 
 settings can be set at various levels.
+
+.. _globalsettings:
 
 Global server settings
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -400,6 +412,12 @@ CherryPy knows which session to use by inspecting the cookie
 sent alongside the request. This cookie contains the session
 identifier used by CherryPy to load the user's session from
 the storage.
+
+.. seealso::
+
+   Refer to the :mod:`cherrypy.lib.sessions` module for more
+   details about the session interface and implementation.
+   Notabley you will learn about sessions expiricy.
 
 Filesystem backend
 ^^^^^^^^^^^^^^^^^^
