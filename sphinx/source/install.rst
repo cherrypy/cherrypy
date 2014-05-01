@@ -20,6 +20,7 @@ will require you install certain packages.
 - `pywin32 <http://sourceforge.net/projects/pywin32/>`_ for Windows services
 - `python-memcached <https://github.com/linsomniac/python-memcached>`_ for memcached backend session
 - `simplejson <https://github.com/simplejson/simplejson>`_ for a better JSON support
+- `pyOpenSSL <https://github.com/pyca/pyopenssl>`_ if your Python environment does not have the builtin :mod:`ssl` module
 
 Supported python version
 ########################
