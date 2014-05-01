@@ -58,6 +58,8 @@ the entity providing that functionality. Instead, the
 application simply publishes onto the bus and will receive
 the appropriate response, which is all that matter.
 
+.. _buspattern:
+
 Typical pattern
 ~~~~~~~~~~~~~~~
 
@@ -548,5 +550,58 @@ request's URL, the query-string and, sometimes, the request's method
 
 Based on this, CherryPy comes with various dispatchers already.
 
+In some cases however, you will need a little more. Here is an example
+of dispatcher that will always ensure the incoming URL leads
+to a lower-case page handler.
 
-In some cases however, you will need a little more.
+.. code-block:: python
+
+    import random
+    import string
+
+    import cherrypy
+    from cherrypy._cpdispatch import Dispatcher
+
+    class StringGenerator(object):
+       @cherrypy.expose
+       def generate(self, length=8):
+           return ''.join(random.sample(string.hexdigits, int(length)))
+
+    class ForceLowerDispatcher(Dispatcher):
+        def __call__(self, path_info):
+            return Dispatcher.__call__(self, path_info.lower())
+
+    if __name__ == '__main__':
+        conf = {
+            '/': {
+                'request.dispatch': ForceLowerDispatcher(),
+            }
+        }
+        cherrypy.quickstart(StringGenerator(), '/', conf)
+
+Once you run this snipper, go to:
+
+- http://localhost:8080/generate?length=8
+- http://localhost:8080/GENerAte?length=8
+
+In both cases, you will be led to the `generate` page
+handler. Without our home-made dispatcher, the second
+one would fail and return a 404 error (:rfc:`2616#sec10.4.5`).
+
+Tool or dispatcher?
+^^^^^^^^^^^^^^^^^^^
+
+In the previous example, why not simply use a tool? Well, the sooner
+a tool can be called is always after the page handler has been found.
+In our example, it would be already too late as the default dispatcher
+would have not even found a match for `/GENerAte`.
+
+A dispatcher exists mostly to determine the best page 
+handler to serve the requested resource.
+
+On ther other hand, tools are there to adapt the request's processing
+to the runtime context of the application and the request's content.
+
+Usually, you will have to write a dispatcher only if you
+have a very specific use case to locate the most adequate
+page handler. Otherwise, the default ones will likely suffice.
