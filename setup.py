@@ -51,7 +51,8 @@ author_email = "team@cherrypy.org"
 url = "http://www.cherrypy.org"
 cp_license = "BSD"
 packages = [
-    "cherrypy", "cherrypy.lib",
+    "cherrypy", "cherrypy.lib", "cherrypy.lib.tools",
+    "cherrypy.lib.tools.sessions", "cherrypy.lib.dispatch",
     "cherrypy.tutorial", "cherrypy.test",
     "cherrypy.scaffold",
 ]
