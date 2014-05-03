@@ -208,7 +208,7 @@ class ConfigTests(helper.CPWebCase):
 
         if not py3k:
             self.getPage("/repr?key=thing3")
-            self.assertBody(repr(u'test'))
+            self.assertBody(repr(unicode('test')))
 
         self.getPage("/repr?key=complex")
         self.assertBody("(3+2j)")
