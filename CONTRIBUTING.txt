@@ -1,0 +1,6 @@
+CherryPy is a community-maintained, open-source project hosted at Bitbucket.
+
+To contribute, first read `How to write the perfect pull request
+<http://blog.jaraco.com/2014/04/how-to-write-perfect-pull-request.html>`_
+and file your contribution with the `CherryPy Project page
+<https://bitbucket.org/cherrypy/cherrypy>`_.
