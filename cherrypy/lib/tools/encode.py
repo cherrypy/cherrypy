@@ -1,6 +1,7 @@
 import cherrypy
 from cherrypy.lib.compat import basestring, unicodestr
 from cherrypy.lib import file_generator
+from cherrypy.lib import is_closable_iterator
 
 
 class UTF8StreamEncoder:
@@ -18,6 +19,10 @@ class UTF8StreamEncoder:
         if isinstance(res, unicodestr):
             res = res.encode('utf-8')
         return res
+
+    def close(self):
+        if is_closable_iterator(self._iterator)
+            self._iterator.close()
 
     def __getattr__(self, attr):
         if attr.startswith('__'):
