@@ -4,6 +4,7 @@ import time
 import cherrypy
 from cherrypy._cpcompat import basestring, BytesIO, ntob, set, unicodestr
 from cherrypy.lib import file_generator
+from cherrypy.lib import is_closable_iterator
 from cherrypy.lib import set_vary_header
 
 
@@ -32,23 +33,27 @@ def decode(encoding=None, default_encoding='utf-8'):
         if not isinstance(default_encoding, list):
             default_encoding = [default_encoding]
         body.attempt_charsets = body.attempt_charsets + default_encoding
-        
+
 class UTF8StreamEncoder:
     def __init__(self, iterator):
         self._iterator = iterator
-        
+
     def __iter__(self):
         return self
-        
+
     def next(self):
         return self.__next__()
-        
+
     def __next__(self):
         res = next(self._iterator)
         if isinstance(res, unicodestr):
             res = res.encode('utf-8')
         return res
-        
+
+    def close(self):
+        if is_closable_iterator(self._iterator)
+            self._iterator.close()
+
     def __getattr__(self, attr):
         if attr.startswith('__'):
             raise AttributeError(self, attr)

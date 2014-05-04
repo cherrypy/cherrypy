@@ -13,7 +13,7 @@ import cherrypy as _cherrypy
 from cherrypy._cpcompat import BytesIO, bytestr, ntob, ntou, py3k, unicodestr
 from cherrypy import _cperror
 from cherrypy.lib import httputil
-
+from cherrypy.lib import is_closable_iterator
 
 def downgrade_wsgi_ux_to_1x(environ):
     """Return a new environ dict for WSGI 1.x from the given WSGI u.x environ.
@@ -279,6 +279,8 @@ class AppResponse(object):
     def close(self):
         """Close and de-reference the current request and response. (Core)"""
         self.cpapp.release_serving()
+        if is_closable_iterator(self.iter_response):
+            self.iter_response.close()
 
     def run(self):
         """Create a Request object using environ."""

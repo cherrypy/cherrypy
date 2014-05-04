@@ -16,6 +16,29 @@ def is_iterator(obj):
         # Types which implement the protocol must return themselves when
         # invoking 'iter' upon them.
         return iter(obj) is obj
+        
+def is_closable_iterator(obj):
+    
+    # Not an iterator.
+    if not is_iterator(obj):
+        return False
+    
+    # A generator - the easiest thing to deal with.
+    import inspect
+    if inspect.isgenerator(obj):
+        return True
+    
+    # A custom iterator. Look for a close method...
+    if not (hasattr(obj, 'close') and callable(obj.close)):
+        return False
+    
+    #  ... which doesn't require any arguments.
+    try:
+        inspect.getcallargs(obj.close)
+    except TypeError:
+        return False
+    else:
+        return True
 
 class file_generator(object):
 
