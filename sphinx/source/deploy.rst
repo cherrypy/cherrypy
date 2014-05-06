@@ -361,3 +361,107 @@ Apache
 Nginx
 ^^^^^
 
+nginx is a fast and modern HTTP server with a small footprint. It is
+a popular choice as a reverse proxy to application servers such as
+CherryPy.
+
+This section will not cover the whole range of features nginx provides.
+Instead, it will simply provide you with a basic configuration that can
+be a good starting point.
+
+
+.. code-block:: nginx
+   :linenos:
+
+   upstream apps {
+      server 127.0.0.1:8080;
+      server 127.0.0.1:8081;
+   }
+
+   gzip_http_version 1.0;
+   gzip_proxied      any;
+   gzip_min_length   500;
+   gzip_disable      "MSIE [1-6]\.";
+   gzip_types        text/plain text/xml text/css
+                     text/javascript
+                     application/javascript;
+
+   server {
+      listen 80;
+      server_name  www.example.com;
+
+      access_log  /app/logs/www.example.com.log combined;
+      error_log  /app/logs/www.example.com.log;
+
+      location ^~ /static/  {
+         root /app/static/;
+      }
+
+      location / {
+         proxy_pass         http://apps;
+         proxy_redirect     off;
+         proxy_set_header   Host $host;
+         proxy_set_header   X-Real-IP $remote_addr;
+         proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header   X-Forwarded-Host $server_name;
+      }
+   }
+
+Edit this configuration to match your own paths. Then, save this configuration 
+into a file under ``/etc/nginx/conf.d/`` (assuming Ubuntu).
+The filename is irrelevant. Then run the following commands:
+
+.. code-block:: bash
+
+   $ sudo service nginx stop
+   $ sudo service nginx start
+
+Hopefully, this will be enough to forward requests hitting
+the nginx frontend to your CherryPy application. The ``upstream``
+block defines the addresses of your CherryPy instances.
+
+It shows that you can load-balance between two application
+servers. Refer to the nginx documentation to understand
+how this achieved.
+
+.. code-block:: nginx
+
+   upstream apps {
+      server 127.0.0.1:8080;
+      server 127.0.0.1:8081;
+   }
+
+Later on, this block is used to define the reverse
+proxy section.
+
+Now, let's see our application:
+
+.. code-block:: python
+
+    import cherrypy
+
+    class Root(object):
+        @cherrypy.expose
+        def index(self):
+            return "hello world"
+
+    if __name__ == '__main__':
+        cherrypy.config.update({
+	    'server.socket_port': 8080,
+            'tools.proxy.on': True,
+            'tools.proxy.base': 'http://www.example.com'
+        })
+        cherrypy.quickstart(Root())
+
+If you run two instances of this code, one on each
+port defined in the nginx section, you will be able
+to reach both of them via the load-balancing done
+by nginx.
+
+Notice how we define the proxy tool. It is not mandatory and
+used only so that the CherryPy request knows about the true
+client's address. Otherwise, it would know only about the
+nginx's own address. This is most visible in the logs.
+
+The ``base`` attribute should match the ``server_name``
+section of the nginx configuration.
