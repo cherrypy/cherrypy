@@ -1,4 +1,5 @@
 import cherrypy
+from cherrypy._cpcompat import unicodestr
 
 class IteratorBase(object):
 
@@ -79,7 +80,7 @@ class IteratorTest(helper.CPWebCase):
             @cherrypy.expose
             def count(self, clsname):
                 cherrypy.response.headers['Content-Type'] = 'text/plain'
-                return unicode(globals()[clsname].created)
+                return unicodestr(globals()[clsname].created)
 
             @cherrypy.expose
             def getall(self, clsname):
@@ -122,7 +123,12 @@ class IteratorTest(helper.CPWebCase):
             response = itr_conn.getresponse()
             self.assertEqual(response.status, 200)
             headers = response.getheaders()
-            assert ('content-length', str(1024 * 16 * 256)) in headers, headers
+            for header_name, header_value in headers:
+                if header_name.lower() == 'content-length':
+                    assert header_value == unicodestr(1024 * 16 * 256), header_value
+                    break
+            else:
+                raise AssertionError('No Content-Length header found')
 
             # As the response should be fully consumed by CherryPy
             # before sending back, the count should still be at zero
@@ -154,7 +160,7 @@ class IteratorTest(helper.CPWebCase):
             # If this is a response which should be easily closed, then
             # we will test to see if the value has gone back down to
             # zero.
-            if clsname in closeables:
+            if clsname in closables:
 
                 # Sometimes we try to get the answer too quickly - we
                 # will wait for 100 ms before asking again if we didn't
