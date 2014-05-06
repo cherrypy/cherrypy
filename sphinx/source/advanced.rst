@@ -64,6 +64,9 @@ You are free to do the same within your own code.
 Rather than calculate the difference by hand, you can call
 ``response.check_timeout`` to set ``timed_out`` for you.
 
+.. note::
+   
+   The default response timeout is 300 seconds.
 
 .. _timeoutmonitor:
 
