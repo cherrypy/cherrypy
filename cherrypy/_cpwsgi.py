@@ -278,9 +278,19 @@ class AppResponse(object):
 
     def close(self):
         """Close and de-reference the current request and response. (Core)"""
+        streaming = _cherrypy.serving.response.stream
         self.cpapp.release_serving()
-        if is_closable_iterator(self.iter_response):
-            self.iter_response.close()
+
+        # We avoid the expense of examining the iterator to see if it's
+        # closable unless we are streaming the response, as that's the
+        # only situation where we are going to have an iterator which
+        # may not have been exhausted yet.
+        if streaming and is_closable_iterator(self.iter_response):
+            iter_close = self.iter_response.close
+            try:
+                iter_close()
+            except Exception:
+                _cherrypy.log(traceback=True, severity=40)
 
     def run(self):
         """Create a Request object using environ."""
