@@ -153,10 +153,62 @@ openssl will then ask you a series of questions. You can enter whatever values a
 WSGI servers
 ############
 
+Embedding into another WSGI framework
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Though CherryPy comes with a very reliable and fast enough HTTP server,
 you may wish to integrate your CherryPy application within a 
 different framework. To do so, we will benefit from the WSGI
-interface.
+interface defined in :pep:`333` and :pep:`3333`.
+
+Note that you should follow the basic rules when embedding CherryPy
+in a third-party WSGI server:
+
+- If you rely on the `"main"` channel to be published on, as
+  it would happen within the CherryPy's mainloop, you should
+  find a way to publish to it within the other framework's mainloop.
+
+- Start the CherryPy's engine.
+
+  .. code-block:: python
+
+     cherrypy.engine.start()
+
+- Disable the built-in HTTP server since it will not be used.
+
+  .. code-block:: python
+
+     cherrypy.server.unsubscribe()
+
+- Disable autoreload. Usually other frameworks won't react well to it,
+  or sometimes, provide the same feature.
+
+  .. code-block:: python
+
+     cherrypy.config.update({'engine.autoreload.on': False})
+
+- Disable CherryPy signals handling. This may not be needed, it depends
+  on how the other framework handles them.
+
+  .. code-block:: python
+        
+     cherrypy.engine.signals.subscribe()
+
+- Use the ``"embedded"`` environment configuration scheme.
+
+  .. code-block:: python
+        
+     cherrypy.config.update({'environment': 'embedded'})
+
+  Essentially this will disable the following:
+
+  - Stdout logging
+  - Autoreloader
+  - Configuration checker
+  - Headers logging on error
+  - Tracebacks in error
+  - Mismatched params error during dispatching
+  - Signals (SIGHUP, SIGTERM)
 
 Tornado
 ^^^^^^^
