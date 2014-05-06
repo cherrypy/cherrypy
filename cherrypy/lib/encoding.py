@@ -51,7 +51,7 @@ class UTF8StreamEncoder:
         return res
 
     def close(self):
-        if is_closable_iterator(self._iterator)
+        if is_closable_iterator(self._iterator):
             self._iterator.close()
 
     def __getattr__(self, attr):
