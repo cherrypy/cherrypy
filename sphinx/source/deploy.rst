@@ -161,18 +161,28 @@ you may wish to integrate your CherryPy application within a
 different framework. To do so, we will benefit from the WSGI
 interface defined in :pep:`333` and :pep:`3333`.
 
-Note that you should follow the basic rules when embedding CherryPy
+Note that you should follow some basic rules when embedding CherryPy
 in a third-party WSGI server:
 
 - If you rely on the `"main"` channel to be published on, as
   it would happen within the CherryPy's mainloop, you should
   find a way to publish to it within the other framework's mainloop.
 
-- Start the CherryPy's engine.
+- Start the CherryPy's engine. This will publish to the `"start"` channel
+  of the bus.
 
   .. code-block:: python
 
      cherrypy.engine.start()
+
+- Stop the CherryPy's engine when you terminate. This will publish 
+  to the `"stop"` channel of the bus.
+
+  .. code-block:: python
+
+     cherrypy.engine.stop()
+
+- Do not call ``cherrypy.engine.block()``.
 
 - Disable the built-in HTTP server since it will not be used.
 
