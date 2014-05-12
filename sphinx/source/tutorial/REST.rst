@@ -208,7 +208,7 @@ Send a POST HTTP request to ``127.0.0.1:8080/api/songs/`` with cURL:
 
 You will see the response:
 
-    Create a new song with the ID: 4%
+    Create a new song with the ID: 4
 
 Now, if you go to ``127.0.0.1:8080/api/songs/4`` in your browser you will se the following message:
 
@@ -244,7 +244,7 @@ Try sending some PUT HTTP requests to ``127.0.0.1:8080/api/songs/3`` via cURL, a
 
     The response:
 
-        Song with the ID 3 is now called Yesterday, and the artist is now Monty Python%
+        Song with the ID 3 is now called Yesterday, and the artist is now Monty Python
 
     What you'll see in the browser:
 
@@ -256,7 +256,7 @@ Try sending some PUT HTTP requests to ``127.0.0.1:8080/api/songs/3`` via cURL, a
 
     The response:
 
-        Song with the ID 3 is now called Yesterday, and the artist is now Beatles%
+        Song with the ID 3 is now called Yesterday, and the artist is now Beatles
 
     What you'll see in the browser:
 
@@ -287,7 +287,7 @@ Send a DELETE HTTP request to ``127.0.0.1:8080/api/songs/2`` via cURL:
 
 The response:
 
-    Song with the ID 2 has been deleted.%
+    Song with the ID 2 has been deleted.
 
 And the browser output:
 
