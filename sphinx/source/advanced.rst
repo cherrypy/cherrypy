@@ -336,3 +336,14 @@ or `SQLObject <https://pypi.python.org/pypi/SQLObject/>`_.
 You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/database/sql_alchemy/>`_
 a recipe on how integrating SQLAlchemy using a mix of 
 :ref:`plugins <busplugins>` and :ref:`tools <tools>`.
+
+HTML Templating support
+#######################
+
+CherryPy does not provide any HTML template but its architecture
+makes it easy to integrate one. Popular ones are `Mako <www.makotemplates.org>`_
+or `Jinja2 <jinja.pocoo.org/docs/>`_.
+
+You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/templating/>`_
+a recipe on how integrating them using a mix
+:ref:`plugins <busplugins>` and :ref:`tools <tools>`.
