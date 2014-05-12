@@ -323,3 +323,16 @@ CherryPy itself does not support WebSocket, but the feature
 is provided by an external library called 
 `ws4py <https://github.com/Lawouach/WebSocket-for-Python>`_.
 
+Database support
+################
+
+CherryPy does not bundle any database access but its architecture
+makes it easy to integrate common database interfaces such as
+the DB-API specified in :pep:`249`. Alternatively, you can also
+use an `ORM <en.wikipedia.org/wiki/Object-relational_mapping>`_
+such as `SQLAlchemy <http://sqlalchemy.readthedocs.org>`_ 
+or `SQLObject <https://pypi.python.org/pypi/SQLObject/>`_.
+
+You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/database/sql_alchemy/>`_
+a recipe on how integrating SQLAlchemy using a mix of 
+:ref:`plugins <busplugins>` and :ref:`tools <tools>`.
