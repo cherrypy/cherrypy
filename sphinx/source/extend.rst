@@ -129,6 +129,7 @@ system such as provided by `zeromq <http://zeromq.org/>`_ or
 `RabbitMQ <https://www.rabbitmq.com/>`_. 
 Use it with the understanding that it may have a cost.
 
+.. _cpengine:
 
 Engine as a pubsub bus
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -603,6 +604,8 @@ page handler instead of the user id.
         @cherrypy.tools.user()
         def index(self, user):
             return "hello %s" % user.name
+
+.. _dispatchers:
 
 Tailored dispatchers
 ####################
