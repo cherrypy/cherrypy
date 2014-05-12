@@ -396,6 +396,8 @@ Here is a quick rundown of the "hook points" that you can hang your tools on:
  * **"on_end_request"** - The request/response conversation is over, all data has
    been written to the client, nothing more to see here, move along.
 
+.. _tools:
+
 Tools
 ^^^^^
 
