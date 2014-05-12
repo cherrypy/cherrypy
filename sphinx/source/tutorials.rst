@@ -854,5 +854,78 @@ demo, this should do.
    on each call. This is clearly not really production friendly,
    and it is probably advisable to either use a more capable
    database engine or a higher level library, such as 
-   `SQLAlchemy <http://sqlalchemy.readthedocs.org>`, to better
+   `SQLAlchemy <http://sqlalchemy.readthedocs.org>`_, to better
    support your application's needs.
+
+
+Tutorial 10: Organize my code
+#############################
+
+CherryPy comes with a powerful architecture
+that helps you organizing your code in a way that should make
+it easier to maintain and more flexible. 
+
+Several mechanisms are at your disposal, this tutorial will focus
+on the three main ones:
+
+- :ref:`dispatchers <dispatchers>`
+- :ref:`tools <tools>`
+- :ref:`plugins <busplugins>`
+
+In order to understand them, let's imagine you are at a superstore:
+
+- You have several tills and people queuing for each of them (those are your requests)
+- You have various sections with food and other stuff (these are your data)
+- Finally you have the superstore people and their daily tasks
+  to make sure sections are always in order (this is your backend)
+
+In spite of being really simplistic, this is not far from how your
+application behaves. CherryPy helps your structure your application 
+in a way that mirrors these high-level ideas.
+
+Dispatchers
+^^^^^^^^^^^
+
+Coming back to the superstore example, it is likely that you will
+want to perform operations based on the till:
+
+- Have a till for baskets with less than ten items
+- Have a till for disabled people
+- Have a till for pregnant women
+- Have a till where you can only using the store card
+
+To support these use-cases, CherryPy provides a mechanism called
+a :ref:`dispatcher <dispatchers>`. A dispatcher is executed early
+during the request processing in order to determine which piece of
+code of your application will handle the incoming request. Or, to
+continue on the store analogy, a dispatcher will decide which
+till to lead a customer to.
+
+Tools
+^^^^^
+
+Let's assume your store has decided to operate a discount spree but,
+only for a specific category of customers. CherryPy will deal
+with such use case via a mechanism called a :ref:`tool <tools>`.
+
+A tool is a piece of code that runs on a per-request
+basis in order to perform additional work. Usually a tool is a 
+simple Python function that is executed at a given point during
+the process of the request by CherryPy.
+
+Plugins
+^^^^^^^
+
+As we have seen, the store has a crew of people dedicated to manage
+the stock and deal with any customers' expectation.
+
+In the CherryPy world, this translates into having functions
+that run outside of any request life-cycle. These functions should
+take care of background tasks, long lived connections (such as
+those to a database for instance), etc. 
+
+:ref:`Plugins <busplugins>` are called that way because 
+they work along with the CherryPy :ref:`engine <cpengine>` 
+and extend it with your operations.
+
+
