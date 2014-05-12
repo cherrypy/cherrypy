@@ -85,6 +85,79 @@ provide a 'pidfile' argument, preferably an absolute path:
    PIDFile(cherrypy.engine, '/var/run/myapp.pid').subscribe()
 
 
+Control via Supervisord
+#######################
+
+`Supervisord <http://supervisord.org>`_ is a powerful process control 
+and management tool that can perform a lot of tasks around process monitoring. 
+
+Below is a simple supervisor configuration for your CherryPy
+application.
+
+.. code-block:: ini
+
+   [unix_http_server]
+   file=/tmp/supervisor.sock 
+
+   [supervisord]
+   logfile=/tmp/supervisord.log ; (main log file;default $CWD/supervisord.log)
+   logfile_maxbytes=50MB        ; (max main logfile bytes b4 rotation;default 50MB)
+   logfile_backups=10           ; (num of main logfile rotation backups;default 10)
+   loglevel=info                ; (log level;default info; others: debug,warn,trace)
+   pidfile=/tmp/supervisord.pid ; (supervisord pidfile;default supervisord.pid)
+   nodaemon=false               ; (start in foreground if true;default false)
+   minfds=1024                  ; (min. avail startup file descriptors;default 1024)
+   minprocs=200                 ; (min. avail process descriptors;default 200)
+   
+   [rpcinterface:supervisor]
+   supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+   
+   [supervisorctl]
+   serverurl=unix:///tmp/supervisor.sock
+
+   [program:myapp]
+   command=python server.py
+   environment=PYTHONPATH=.   
+   directory=.
+
+This could control your server via the ``server.py`` module as
+the application entry point.
+
+.. code-block:: python
+
+   import cherrypy
+   
+   class Root(object):
+       @cherrypy.expose
+       def index(self):
+           return "Hello World!"
+
+	
+   cherrypy.config.update({'server.socket_port': 8090,
+                           'engine.autoreload_on': False,
+                           'log.access_file': './access.log',
+                           'log.error_file': './error.log'})
+   cherrypy.quickstart(Root())
+
+To take the configuration (assuming it was saved in a file
+called ``supervisor.conf``) into account:
+
+.. code-block:: bash
+
+   $ supervisord -c supervisord.conf
+   $ supervisorctl update
+
+Now, you can point your browser at http://localhost:8090/
+and it will display `Hello World!`.
+
+To stop supervisor, type:
+
+.. code-block:: bash
+
+   $ supervisorctl shutdown
+
+This will obviously shutdown your application.
+
 .. _ssl:
 
 SSL support
