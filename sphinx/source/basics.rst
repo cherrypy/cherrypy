@@ -321,6 +321,29 @@ A variant notation to the above:
 Both methods have the same effect so pick the one
 that suits your style best.
 
+You can add settings that are not specific to a request URL
+and retrieve it from your page handler as follow:
+
+.. code-block:: ini
+		
+   [/]
+   tools.gzip.on: True
+
+   [googleapi]
+   key = "..."
+   appid = "..."
+   
+.. code-block:: python
+
+   class Root(object):
+       @cherrypy.expose
+       def index(self):
+           google_appid = cherrypy.request.app.config['googleapi']['appid']
+           return "hello world!"
+
+   cherrypy.quickstart(Root(), '/', "app.conf")
+
+
 Cookies
 #######
 
