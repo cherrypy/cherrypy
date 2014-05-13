@@ -236,8 +236,8 @@ settings can be set at various levels.
 
 .. _globalsettings:
 
-Global server settings
-^^^^^^^^^^^^^^^^^^^^^^
+Global server configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To configure the HTTP and application servers, 
 use the :meth:`cherrypy.config.update() <cherrypy._cpconfig.Config.update>` 
@@ -270,12 +270,11 @@ file):
 
 .. _perappconf:
 
-Global application settings
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Per-application configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To configure your application settings, pass a dictionary
-or a file when you associate ther application
-to the server.
+To configure your application, pass a dictionary or a file 
+when you associate ther application to the server.
 
 .. code-block:: python
 
@@ -292,11 +291,7 @@ or via a file (called `app.conf` for instance):
 
    cherrypy.quickstart(myapp, '/', "app.conf")
  
-
-Local application settings
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Although, you can define most of your settings in a global
+Although, you can define most of your configuration in a global
 fashion, it is sometimes convenient to define them
 where they are applied in the code.
 
@@ -321,8 +316,11 @@ A variant notation to the above:
 Both methods have the same effect so pick the one
 that suits your style best.
 
+Additional application settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 You can add settings that are not specific to a request URL
-and retrieve it from your page handler as follow:
+and retrieve them from your page handler as follow:
 
 .. code-block:: ini
 		
