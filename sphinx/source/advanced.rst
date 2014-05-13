@@ -47,6 +47,168 @@ Obviously, your aliases may be whatever suits your needs.
 
    The alias may be a single string or a list of them.
 
+RESTful-style dispatching
+#########################
+
+The term `RESTful URL` is sometimes used to talk about friendly URLs
+that nicely map to the entities an application exposes.
+
+.. important::
+
+   We will not enter the debate around what is restful or not but we will
+   showcase two mechanisms to implement the usual idea in your 
+   CherryPy application.
+
+Let's assume you wish to create an application that exposes
+music bands and their records. Your application will probably have
+the following URLs:
+
+- http://hostname/<bandname>/
+- http://hostname/<bandname>/albums/<recordname>/
+
+It's quite clear you would not create a page handler named after
+every possible band in the world. This means you will need a page handler
+that acts as a proxy for all of them.
+
+The default dispatcher cannot deal with that scenario on its own
+because it expects page handlers to be explicitely declared in your
+source code. Luckily, CherryPy provides ways to support those use cases.
+
+.. seealso:: 
+
+   This section extends from this `stackoverflow response <http://stackoverflow.com/a/15789415/1363905>`_.
+
+The special _cp_dispatch method
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``_cp_dispatch`` is a special method you declare in any of your :term:`controller`
+to massage the remaining segments before CherryPy gets to process them. 
+This offers you the capacity to remove, add or otherwise handle any segment 
+you wish and, even, entirely change the remaining parts.
+
+.. code-block:: python
+
+    import cherrypy
+
+    class Band(object):
+        def __init__(self):
+            self.albums = Album()
+
+        def _cp_dispatch(self, vpath):
+            if len(vpath) == 1:
+                cherrypy.request.params['name'] = vpath.pop()
+                return self
+
+            if len(vpath) == 3:
+                cherrypy.request.params['artist'] = vpath.pop(0)  # /band name/
+                vpath.pop(0) # /albums/
+                cherrypy.request.params['title'] = vpath.pop(0) # /album title/
+                return self.albums
+
+            return vpath
+
+        @cherrypy.expose
+        def index(self, name):
+            return 'About %s...' % name
+
+    class Album(object):
+        @cherrypy.expose
+        def index(self, artist, title):
+            return 'About %s by %s...' % (title, artist)
+
+    if __name__ == '__main__':
+        cherrypy.quickstart(Band())
+
+Notice how the controller defines `_cp_dispatch`, it takes
+a single argument, the URL path info broken into its segments.
+
+The method can inspect and manipulate the list of segments,
+removing any or adding new segments at any position. The new list of 
+segments is then sent to the dispatcher which will use it
+to locate the appropriate resource.
+
+In the above example, you should be able to go to the following URLs:
+
+- http://localhost:8080/nirvana/
+- http://localhost:8080/nirvana/albums/nevermind/
+
+The ``/nirvana/`` segment is associated to the band and
+the ``/nevermind/`` segment relates to the album.
+
+To achieve this, our `_cp_dispatch` method works on the idea
+that the default dispatcher matches URLs against page handler
+signatures and their position in the tree of handlers.
+
+In this case, we take the dynamic segments in the URL (band and record names),
+we inject them into the request parameters and we remove them
+from the segment lists as if they had never been there in the first place.
+
+In other words, `_cp_dispatch` makes it as if we were 
+working on the following URLs:
+
+- http://localhost:8080/?artist=nirvana
+- http://localhost:8080/albums/?artist=nirvana&title=nevermind
+
+
+The popargs decorator
+^^^^^^^^^^^^^^^^^^^^^
+:func:`cherrypy.popargs` is more straightforward as it gives a name to any segment 
+that CherryPy wouldn't be able to interpret otherwise. This makes the 
+matching of segments with page handler signatures easier and help CherryPy 
+understand the structure of your URL.
+
+.. code-block:: python
+
+    import cherrypy
+
+    @cherrypy.popargs('name')
+    class Band(object):
+        def __init__(self):
+            self.albums = Album()
+
+        @cherrypy.expose
+        def index(self, name):
+            return 'About %s...' % name
+
+    @cherrypy.popargs('title')
+    class Album(object):
+        @cherrypy.expose
+        def index(self, name, title):
+            return 'About %s by %s...' % (title, name)
+
+    if __name__ == '__main__':
+        cherrypy.quickstart(Band())
+
+This works similarly to `_cp_dispatch` but, as said above, is more
+explicit and localized. It says:
+
+- take the first segment and store it into a parameter name `band`
+- take again the first segment (since we removed the previous first) 
+  and store it into a parameter named `title`
+
+Note that the decorator accepts more than a single binding. For instance:
+
+.. code-block:: python
+
+    @cherrypy.popargs('title')
+    class Album(object):
+	def __init__(self):
+	    self.tracks = Track()
+
+    @cherrypy.popargs('num', 'track')
+    class Track(object):
+        @cherrypy.expose
+        def index(self, name, title, num, track):
+	    ...
+
+This would handle the following URL:
+
+- http://localhost:8080/nirvana/albums/nevermind/track/06/polly
+
+Notice finally how the whole stack of segments is passed to each
+page handler so that you have the full context.
+
+
 Response timeouts
 #################
 
