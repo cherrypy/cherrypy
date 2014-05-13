@@ -9,7 +9,7 @@ Glossary
       at least one page handler.
 
    controller
-      Name commonly given to a class owning at least one exposed method
+      Loose name commonly given to a class owning at least one exposed method
 
    exposed
       A Python function or method which has an attribute called `exposed`
