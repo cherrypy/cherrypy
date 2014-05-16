@@ -6,6 +6,7 @@ CherryPy responses include 3 attributes related to time:
 
  * ``response.time``: the :func:`time.time` at which the response began
  * ``response.timeout``: the number of seconds to allow responses to run
+   (default 300 seconds)
  * ``response.timed_out``: a boolean indicating whether the response has
    timed out (default False).
 
