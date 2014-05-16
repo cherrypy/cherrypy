@@ -55,6 +55,8 @@ Communication training company. Built on CherryPy 3.2.0 and Python 2.7.3, with
 
 `Almad's Homepage <http://www.almad.net>`_ - Simple homepage with blog.
 
+`Fight.Watch <http://fight.watch>`_ - Twitch.tv web portal for fighting games. 
+Built on CherryPy 3.3.0 and Python 2.7.3 with Jinja 2.7.2 and SQLAlchemy 0.9.4.
 
 Products based on CherryPy
 ==========================
