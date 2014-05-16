@@ -210,7 +210,7 @@ You will see the response:
 
     Create a new song with the ID: 4
 
-Now, if you go to ``127.0.0.1:8080/api/songs/4`` in your browser you will se the following message:
+Now, if you go to ``127.0.0.1:8080/api/songs/4`` in your browser you will see the following message:
 
     Song with the ID 4 is called Frozen, and the artist is Madonna
 
@@ -225,7 +225,7 @@ Add a new method to the ``Songs`` class, called ``PUT``::
 
     def PUT(self, id, title=None, artist=None):
         if id in songs:
-            song = songs['id']
+            song = songs[id]
 
             song['title'] = title or song['title']
             song['artist'] = artist or song['artist']
