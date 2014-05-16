@@ -58,11 +58,11 @@ tracebacks, if enabled).
 
 If you are logging the access log and error log to the same source, then there
 is a possibility that a specially crafted error message may replicate an access
-log message as described in CWE-117.  In this case it is the application 
-developer's responsibility to manually escape data before using CherryPy's log() 
-functionality, or they may create an application that is vulnerable to CWE-117.  
+log message as described in CWE-117.  In this case it is the application
+developer's responsibility to manually escape data before using CherryPy's log()
+functionality, or they may create an application that is vulnerable to CWE-117.
 This would be achieved by using a custom handler escape any special characters,
-and attached as described below.   
+and attached as described below.
 
 Custom Handlers
 ===============
