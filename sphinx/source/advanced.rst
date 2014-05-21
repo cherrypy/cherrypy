@@ -594,3 +594,71 @@ or `Jinja2 <jinja.pocoo.org/docs/>`_.
 You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/templating/>`_
 a recipe on how integrating them using a mix
 :ref:`plugins <busplugins>` and :ref:`tools <tools>`.
+
+Testing your application
+########################
+
+Web application, like any other kind of code, must be tested. CherryPy provides
+a :class:`helper class <cherrypy.test.helper.CPWebCase>` to ease writing 
+functional tests. 
+
+Here is a simple example for a basic echo application:
+
+.. code-block:: python
+
+    import cherrypy
+    from cherrypy.test import helper
+
+    class SimpleCPTest(helper.CPWebCase):
+        def setup_server():
+            class Root(object):
+                @cherrypy.expose
+                def echo(self, message):
+                    return message
+
+            cherrypy.tree.mount(Root())
+        setup_server = staticmethod(setup_server)
+
+        def test_message_should_be_returned_as_is(self):
+            self.getPage("/echo?message=Hello%20world")
+            self.assertStatus('200 OK')
+            self.assertHeader('Content-Type', 'text/html;charset=utf-8')
+            self.assertBody('Hello world')
+
+        def test_non_utf8_message_will_fail(self):
+            """
+            CherryPy defaults to decode the query-string
+            using UTF-8, trying to send a query-string with
+            a different encoding will raise a 404 since
+            it considers it's a different URL.
+            """
+            self.getPage("/echo?message=A+bient%F4t",
+                         headers=[
+                             ('Accept-Charset', 'ISO-8859-1,utf-8'),
+                             ('Content-Type', 'text/html;charset=ISO-8859-1')
+                         ]
+            )
+            self.assertStatus('404 Not Found')
+
+As you can see the, test inherits from that helper class. You should 
+setup your application and mount it as per-usual. Then, define your various
+tests and call the helper :meth:`~cherrypy.test.helper.CPWebCase.getPage`
+method to perform a request. Simply use the various specialized 
+assert* methods to validate your workflow and data.
+
+You can then run the test using `py.test <http://pytest.org/latest/>`_ as follow:
+
+.. code-block:: bash
+
+   $ py.test -s test_echo_app.py
+
+The ``-s`` is necessary because the CherryPy class also wraps stdin and stdout.
+
+.. note::
+
+   Although they are written using the typical pattern the 
+   :mod:`unittest` module supports, they are not bare unit tests. 
+   Indeed, a whole CherryPy stack is started for you and runs your application. 
+   If you want to really unit test your CherryPy application, meaning without
+   having to start a server, you may want to have a look at 
+   this `recipe <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/testing/unit/serverless/>`_.
