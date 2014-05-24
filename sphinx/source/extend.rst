@@ -104,7 +104,7 @@ using a pubsub workflow:
       cherrypy.quickstart(ECommerce(), '/')
 
 In this example, we publish a `cart` instance to
-`db-save` channel. One or many subscirbers can then
+`db-save` channel. One or many subscribers can then
 react to that message and the application doesn't
 have to know about them.
 
@@ -218,7 +218,7 @@ Plugins
 ^^^^^^^
 
 Plugins, simply put, are entities that play with the bus, either by
-publishing or subscirbing to channels, usually both at the same time.
+publishing or subscribing to channels, usually both at the same time.
 
 .. important::
 
@@ -268,7 +268,7 @@ Enable a plugin
 ~~~~~~~~~~~~~~~
 
 To enable the plugin, it has to be registered to the the 
-bus as follow:
+bus as follows:
 
 .. code-block:: python
 
@@ -280,7 +280,7 @@ database provider.
 Disable a plugin
 ~~~~~~~~~~~~~~~~
 
-You can also unregister a plugin as follow:
+You can also unregister a plugin as follows:
 
 .. code-block:: python
 
@@ -418,7 +418,7 @@ hook point, hence after the page handler was called:
     
    cherrypy.tools.logit = cherrypy.Tool('before_finalize', log_it)
 
-Using that tool is as simple as follow:
+Using that tool is as simple as follows:
 
 .. code-block:: python
 
