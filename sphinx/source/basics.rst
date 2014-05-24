@@ -123,7 +123,7 @@ Multiple applications
 The :func:`cherrypy.quickstart` approach is fine for a single application,
 but lacks the capacity to host several applications with the server.
 To achieve this, one must use the :meth:`cherrypy.tree.mount <cherrypy._cptree.Tree.mount>` 
-function as follow:
+function as follows:
 
 .. code-block:: python
 
@@ -207,7 +207,7 @@ To disable, console logging, set ``log.screen`` to `False`.
 Play along with your other loggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Your application may aobviously already use the :mod:`logging`
+Your application may obviously already use the :mod:`logging`
 module to trace application level messages. CherryPy will not
 interfere with them as long as your loggers are explicitely
 named. This would work nicely:
@@ -249,7 +249,7 @@ method.
    cherrypy.config.update({'server.socket_port': 9090})
 
 The :mod:`cherrypy.config <cherrypy._cpconfig>` object is a dictionary and the 
-update method merge the passed dictionary into it.
+update method merges the passed dictionary into it.
 
 You can also pass a file instead (assuming a `server.conf`
 file):
@@ -266,7 +266,7 @@ file):
 .. warning::
 
    :meth:`cherrypy.config.update() <cherrypy._cpconfig.Config.update>`  
-   is not mean to be used to configure the application. 
+   is not meant to be used to configure the application. 
    It is a common mistake. It is used to configure the server and engine.
 
 .. _perappconf:
@@ -274,8 +274,8 @@ file):
 Per-application configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To configure your application, pass a dictionary or a file 
-when you associate ther application to the server.
+To configure your application, pass in a dictionary or a file 
+when you associate their application to the server.
 
 .. code-block:: python
 
@@ -321,7 +321,7 @@ Additional application settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can add settings that are not specific to a request URL
-and retrieve them from your page handler as follow:
+and retrieve them from your page handler as follows:
 
 .. code-block:: ini
 		
@@ -402,7 +402,7 @@ Extended example:
 Using sessions
 ##############
 
-Sessions is one of the most common mechanism used by developers to 
+Sessions are one of the most common mechanism used by developers to 
 identify users and synchronize their activity. By default, CherryPy
 does not activate sessions because it is not a mandatory feature
 to have, to enable it simply add the following settings in your
@@ -421,7 +421,7 @@ Sessions are, by default, stored in RAM so, if you restart your server
 all of your current sessions will be lost. You can store them in memcached
 or on the filesystem instead.
 
-Using sessions in your applications is done as follow:
+Using sessions in your applications is done as follows:
 
 .. code-block:: python
 
@@ -445,12 +445,12 @@ the storage.
 
    Refer to the :mod:`cherrypy.lib.sessions` module for more
    details about the session interface and implementation.
-   Notabley you will learn about sessions expiricy.
+   Notably you will learn about sessions expiration.
 
 Filesystem backend
 ^^^^^^^^^^^^^^^^^^
 
-Using a filesystem is a simple not to lose your sessions
+Using a filesystem is a simple to not lose your sessions
 between reboots. Each session is saved in its own file within
 the given directory. 
 
@@ -486,7 +486,7 @@ CSS resources, etc.
 
    CherryPy uses the :mod:`mimetypes` module to determine the
    best content-type to serve a particular resource. If the choice
-   is not valid, you can simply set more media-types as follow:
+   is not valid, you can simply set more media-types as follows:
 
    .. code-block:: python
  
@@ -497,7 +497,7 @@ CSS resources, etc.
 Serving a single file
 ^^^^^^^^^^^^^^^^^^^^^
 
-You can serve a single file as follow:
+You can serve a single file as follows:
 
 .. code-block:: ini
 
@@ -527,7 +527,7 @@ CherryPy will automatically respond to URLs such as
 .. note::
 
    CherryPy always requires the absolute path to the files or directories
-   it will serve. If you have several static section to configure
+   it will serve. If you have several static sections to configure
    but located in the same root directory, you can use the following 
    shortcut:
 
@@ -548,7 +548,7 @@ Using ``"application/x-download"`` response content-type,
 you can tell a browser that a resource should be downloaded
 onto the user's machine rather than displayed.
 
-You could for instance write a page handler as follow:
+You could for instance write a page handler as follows:
 
 .. code-block:: python
 
@@ -572,7 +572,7 @@ the browser.
 Dealing with JSON
 #################
 
-CherryPy has a built-in support for JSON encoding and decoding
+CherryPy has built-in support for JSON encoding and decoding
 of the request and/or response.
 
 Decoding request
@@ -611,7 +611,7 @@ encoded.
 Authentication
 ##############
 
-CherryPy provides support for two very simple authentications mechanism,
+CherryPy provides support for two very simple authentication mechanisms,
 both described in :rfc:`2617`: Basic and Digest. They are most commonly
 known to trigger a browser's popup asking users their name
 and password.
@@ -685,7 +685,7 @@ Favicon
 
 CherryPy serves its own sweet red cherrypy as the default 
 `favicon <http://en.wikipedia.org/wiki/Favicon>`_ using the static file
-tool. You can serve your own favicon as follow:
+tool. You can serve your own favicon as follows:
 
 .. code-block:: python
 

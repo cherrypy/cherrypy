@@ -155,7 +155,7 @@ The popargs decorator
 ^^^^^^^^^^^^^^^^^^^^^
 :func:`cherrypy.popargs` is more straightforward as it gives a name to any segment 
 that CherryPy wouldn't be able to interpret otherwise. This makes the 
-matching of segments with page handler signatures easier and help CherryPy 
+matching of segments with page handler signatures easier and helps CherryPy 
 understand the structure of your URL.
 
 .. code-block:: python
@@ -254,7 +254,7 @@ available.
 
 Once CherryPy has set the status and headers, it sends them to the HTTP server,
 which then writes them out to the client. From that point on, the CherryPy
-ramework mostly steps out of the way, and the HTTP server essentially requests
+framework mostly steps out of the way, and the HTTP server essentially requests
 content directly from your application code (your page handler method).
 
 Therefore, when streaming, if an error occurs within your page handler,
@@ -486,7 +486,7 @@ as well as its updates in :pep:`3333`. It means the following:
 Make your CherryPy application a WSGI application
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A WSGI application can be obtained from your application as follow:
+A WSGI application can be obtained from your application as follows:
 
 .. code-block:: python
 
@@ -592,13 +592,13 @@ makes it easy to integrate one. Popular ones are `Mako <www.makotemplates.org>`_
 or `Jinja2 <jinja.pocoo.org/docs/>`_.
 
 You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/templating/>`_
-a recipe on how integrating them using a mix
+a recipe on how to integrate them using a mix
 :ref:`plugins <busplugins>` and :ref:`tools <tools>`.
 
 Testing your application
 ########################
 
-Web application, like any other kind of code, must be tested. CherryPy provides
+Web applications, like any other kind of code, must be tested. CherryPy provides
 a :class:`helper class <cherrypy.test.helper.CPWebCase>` to ease writing 
 functional tests. 
 
@@ -646,7 +646,7 @@ tests and call the helper :meth:`~cherrypy.test.helper.CPWebCase.getPage`
 method to perform a request. Simply use the various specialized 
 assert* methods to validate your workflow and data.
 
-You can then run the test using `py.test <http://pytest.org/latest/>`_ as follow:
+You can then run the test using `py.test <http://pytest.org/latest/>`_ as follows:
 
 .. code-block:: bash
 
