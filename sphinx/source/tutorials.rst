@@ -32,7 +32,7 @@ http://127.0.0.1:8080/
       cherrypy.quickstart(HelloWorld())
 
 Store this code snippet into a file named `tut01.py` and
-execute it as follow:
+execute it as follows:
 
 .. code-block:: bash
 
@@ -102,7 +102,7 @@ string each time it is called:
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
-Save this into a file named `tut02.py` and run it as follow:
+Save this into a file named `tut02.py` and run it as follows:
 
 .. code-block:: bash
 
@@ -118,8 +118,8 @@ This URL contains various parts:
 
 - `http://` which roughly indicates it's a URL using the HTTP protocol (see :rfc:`2616`).
 - `localhost:8080` is the server's address. It's made of a hostname and a port.
-- `/generate` which is the path segment of the URL. This is what ultimately uses to
-  try and locate an appropriate exposed function or method to respond.
+- `/generate` which is the path segment of the URL. This is what CherryPy uses to
+  locate an :term:`exposed` function or method to respond.
 
 Here CherryPy uses the `index()` method to handle `/` and the
 `generate()` method to handle `/generate`
@@ -153,7 +153,7 @@ to indicate the length of that string dynamically.
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
-Save this into a file named `tut03.py` and run it as follow:
+Save this into a file named `tut03.py` and run it as follows:
 
 .. code-block:: bash
 
@@ -217,7 +217,7 @@ example.
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
-Save this into a file named `tut04.py` and run it as follow:
+Save this into a file named `tut04.py` and run it as follows:
 
 .. code-block:: bash
 
@@ -286,7 +286,7 @@ your application.
         }
         cherrypy.quickstart(StringGenerator(), '/', conf)
 
-Save this into a file named `tut05.py` and run it as follow:
+Save this into a file named `tut05.py` and run it as follows:
 
 .. code-block:: bash
 
@@ -373,7 +373,7 @@ using the http://localhost:8080/static/css/style.css URL.
         }
         cherrypy.quickstart(StringGenerator(), '/', conf)
 
-Save this into a file named `tut06.py` and run it as follow:
+Save this into a file named `tut06.py` and run it as follows:
 
 .. code-block:: bash
 
@@ -402,8 +402,8 @@ Tutorial 7: Give us a REST
 It's not unusual nowadays that web applications expose some sort
 of datamodel or computation functions. Without going into
 its details, one strategy is to follow the `REST principles
-edicted by Roy T. Fielding in his thesis 
-<https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm>`_.
+edicted by Roy T. Fielding
+<http://www.ibm.com/developerworks/library/ws-restful/index.html>`_.
 
 Roughly speaking, it assumes that you can identify a resource
 and that you can address that resource through that identifier.
@@ -463,7 +463,7 @@ midly following REST principles.
         cherrypy.quickstart(StringGeneratorWebService(), '/', conf)
 
 
-Save this into a file named `tut07.py` and run it as follow:
+Save this into a file named `tut07.py` and run it as follows:
 
 .. code-block:: bash
 
@@ -697,7 +697,7 @@ Both are hosted by the same application server.
         cherrypy.quickstart(webapp, '/', conf)
 
 
-Save this into a file named `tut08.py` and run it as follow:
+Save this into a file named `tut08.py` and run it as follows:
 
 .. code-block:: bash
 
@@ -828,7 +828,7 @@ So let's simply focus on the application code itself:
         cherrypy.quickstart(webapp, '/', conf)
 
 
-Save this into a file named `tut09.py` and run it as follow:
+Save this into a file named `tut09.py` and run it as follows:
 
 .. code-block:: bash
 

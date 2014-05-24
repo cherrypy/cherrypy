@@ -387,7 +387,7 @@ follow:
 		
 Notice how we attach the bus methods to the Twisted's own lifecycle.
 
-Save that code into a module named `cptw.py` and run it as follow:
+Save that code into a module named `cptw.py` and run it as follows:
 
 .. code-block:: bash
 
@@ -417,7 +417,7 @@ follow:
     wsgiapp = cherrypy.tree.mount(Root())
 
 Save this into a Python module called `mymod.py` and run
-it as follow:
+it as follows:
 
 
 .. code-block:: bash
