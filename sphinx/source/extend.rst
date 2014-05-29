@@ -561,8 +561,8 @@ you can see the config entries in action below:
 
     app = cherrypy.tree.mount(Root(), config=conf)
 
-Request parameters massaging
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Request parameters manipulation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 HTTP uses strings to carry data between two endpoints.
 However your application may make better use of richer
@@ -606,6 +606,13 @@ page handler instead of the user id.
         @cherrypy.tools.user()
         def index(self, user):
             return "hello %s" % user.name
+
+In other words, CherryPy give you the power to:
+
+- inject data, that wasn't part of the initial request, into the page handler
+- remove data as well
+- convert data into a different, more useful, object to remove that burden
+  from the page handler itself
 
 .. _dispatchers:
 
