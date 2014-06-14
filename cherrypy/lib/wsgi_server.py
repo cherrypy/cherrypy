@@ -27,7 +27,9 @@ class CPWSGIServer(wsgi.WSGIServer):
             minthreads=server_adapter.thread_pool,
             maxthreads=server_adapter.thread_pool_max,
             server_name=server_name,
-            protocol=server_adapter.protocol_version
+            protocol=server_adapter.protocol_version,
+            accepted_queue_size=server_adapter.accepted_queue_size,
+            accepted_queue_timeout=server_adapter.accepted_queue_timeout
         )
         cherrypy.engine.threadpool_monitor.configure(self.requests,
                                                      server_adapter,
