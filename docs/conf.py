@@ -20,7 +20,7 @@ try:
     WITH_RTD_THEME = True
 except ImportError:
     WITH_RTD_THEME = False
-    
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -55,8 +55,7 @@ copyright = u'2014, CherryPy Team'
 # built documents.
 #
 # The short X.Y version.
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../'))
 import cherrypy
 version = cherrypy.__version__
 # The full version, including alpha/beta/rc tags.
@@ -109,7 +108,7 @@ if WITH_RTD_THEME:
     html_theme = "sphinx_rtd_theme"
 else:
     html_theme = 'default'
-    
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
