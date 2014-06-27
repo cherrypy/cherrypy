@@ -126,6 +126,21 @@ else:
 if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
     data_files = [(r'\PURELIB\%s' % path, files) for path, files in data_files]
 
+setup_params = dict(
+    name=name,
+    version=version,
+    description=desc,
+    long_description=long_desc,
+    classifiers=classifiers,
+    author=author,
+    author_email=author_email,
+    url=url,
+    license=cp_license,
+    packages=packages,
+    data_files=data_files,
+    scripts=scripts,
+    cmdclass=cmd_class,
+)
 
 def main():
     if sys.version < required_python_version:
@@ -137,21 +152,7 @@ def main():
     for scheme in list(INSTALL_SCHEMES.values()):
         scheme['data'] = scheme['purelib']
 
-    setup(
-        name=name,
-        version=version,
-        description=desc,
-        long_description=long_desc,
-        classifiers=classifiers,
-        author=author,
-        author_email=author_email,
-        url=url,
-        license=cp_license,
-        packages=packages,
-        data_files=data_files,
-        scripts=scripts,
-        cmdclass=cmd_class,
-    )
+    setup(**setup_params)
 
 
 if __name__ == "__main__":
