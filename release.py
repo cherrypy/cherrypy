@@ -28,10 +28,12 @@ def get_next_version():
 NEXT_VERSION = get_next_version()
 
 files_with_versions = (
-    'release.py', 'setup.py', 'cherrypy/__init__.py',
-                       'cherrypy/wsgiserver/wsgiserver2.py',
-                       'cherrypy/wsgiserver/wsgiserver3.py',
-                       )
+    'release.py',
+    'setup.py',
+    'cherrypy/__init__.py',
+    'cherrypy/wsgiserver/wsgiserver2.py',
+    'cherrypy/wsgiserver/wsgiserver3.py',
+)
 
 
 def check_wheel():
