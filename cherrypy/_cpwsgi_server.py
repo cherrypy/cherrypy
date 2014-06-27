@@ -39,6 +39,8 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
                    request_queue_size=self.server_adapter.socket_queue_size,
                    timeout=self.server_adapter.socket_timeout,
                    shutdown_timeout=self.server_adapter.shutdown_timeout,
+                   accepted_queue_size=self.server_adapter.accepted_queue_size,
+                   accepted_queue_timeout=self.server_adapter.accepted_queue_timeout,
                    )
         self.protocol = self.server_adapter.protocol_version
         self.nodelay = self.server_adapter.nodelay

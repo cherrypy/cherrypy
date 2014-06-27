@@ -1261,12 +1261,14 @@ class ThreadPool(object):
     and stop(timeout) attributes.
     """
 
-    def __init__(self, server, min=10, max=-1):
+    def __init__(self, server, min=10, max=-1,
+        accepted_queue_size=-1, accepted_queue_timeout=10):
         self.server = server
         self.min = min
         self.max = max
         self._threads = []
-        self._queue = queue.Queue()
+        self._queue = queue.Queue(maxsize=accepted_queue_size)
+        self._queue_put_timeout = accepted_queue_timeout
         self.get = self._queue.get
 
     def start(self):
@@ -1286,7 +1288,7 @@ class ThreadPool(object):
     idle = property(_get_idle, doc=_get_idle.__doc__)
 
     def put(self, obj):
-        self._queue.put(obj)
+        self._queue.put(obj, block=True, timeout=self._queue_put_timeout)
         if obj is _SHUTDOWNREQUEST:
             return
 
@@ -1764,7 +1766,12 @@ class HTTPServer(object):
 
             conn.ssl_env = ssl_env
 
-            self.requests.put(conn)
+            try:
+                self.requests.put(conn)
+            except queue.Full:
+                # Just drop the conn. TODO: write 503 back?
+                conn.close()
+                return
         except socket.timeout:
             # The only reason for the timeout in start() is so we can
             # notice keyboard interrupts on Win32, which don't interrupt
@@ -1906,8 +1913,11 @@ class CherryPyWSGIServer(HTTPServer):
     """The version of WSGI to produce."""
 
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-                 max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5):
-        self.requests = ThreadPool(self, min=numthreads or 1, max=max)
+                 max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
+                 accepted_queue_size=-1, accepted_queue_timeout=10):
+        self.requests = ThreadPool(self, min=numthreads or 1, max=max,
+            accepted_queue_size=accepted_queue_size,
+            accepted_queue_timeout=accepted_queue_timeout)
         self.wsgi_app = wsgi_app
         self.gateway = wsgi_gateways[self.wsgi_version]
 

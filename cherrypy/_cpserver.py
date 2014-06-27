@@ -61,6 +61,14 @@ class Server(ServerAdapter):
 
     socket_timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
+    
+    accepted_queue_size = -1
+    """The maximum number of requests which will be queued up before
+    the server refuses to accept it (default -1, meaning no limit)."""
+    
+    accepted_queue_timeout = 10
+    """The timeout in seconds for attempting to add a request to the
+    queue when the queue is full (default 10)."""
 
     shutdown_timeout = 5
     """The time to wait for HTTP worker threads to clean up."""
