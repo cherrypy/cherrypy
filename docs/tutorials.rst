@@ -423,7 +423,7 @@ usually design a web API that expose pairs of `(URL, HTTP method, data, constrai
 
 
 Lets go through a small example of a very basic web API
-midly following REST principles.
+mildly following REST principles.
 
 .. code-block:: python
    :linenos:
