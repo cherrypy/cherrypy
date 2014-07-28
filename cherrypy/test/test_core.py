@@ -496,6 +496,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/ranges/get_ranges?bytes=2-4,-1")
         self.assertBody("[(2, 5), (7, 8)]")
 
+        # Test a suffix-byte-range longer than the content
+        # length. Note that in this test, the content length
+        # is 8 bytes.
+        self.getPage("/ranges/get_ranges?bytes=-100")
+        self.assertBody("[(0, 8)]")
+
         # Get a partial file.
         if cherrypy.server.protocol_version == "HTTP/1.1":
             self.getPage("/ranges/slice_file", [('Range', 'bytes=2-5')])

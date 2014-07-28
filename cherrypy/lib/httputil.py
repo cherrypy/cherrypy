@@ -103,7 +103,14 @@ def get_ranges(headervalue, content_length):
                 # See rfc quote above.
                 return None
             # Negative subscript (last N bytes)
-            result.append((content_length - int(stop), content_length))
+            #
+            # RFC 2616 Section 14.35.1:
+            #   If the entity is shorter than the specified suffix-length,
+            #   the entire entity-body is used.
+            if int(stop) > content_length:
+              result.append((0, content_length))
+            else:
+              result.append((content_length - int(stop), content_length))
 
     return result
 
