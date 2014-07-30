@@ -65,11 +65,14 @@ else:
         """Return the given native string as a byte string in the given
         encoding.
         """
-        assert_native(n)
-        # In Python 2, the native string type is bytes. Assume it's already
-        # in the given encoding, which for ISO-8859-1 is almost always what
-        # was intended.
-        return n
+        if isinstance(n, unicodestr):
+            return n.encode(encoding)
+        else:
+            assert_native(n)
+            # In Python 2, the native string type is bytes. Assume it's already
+            # in the given encoding, which for ISO-8859-1 is almost always what
+            # was intended.
+            return n
 
     def ntou(n, encoding='ISO-8859-1'):
         """Return the given native string as a unicode string with the given
