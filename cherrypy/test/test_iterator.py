@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy._cpcompat import unicodestr
+from cherrypy.lib.compat import unicodestr
 
 class IteratorBase(object):
 
