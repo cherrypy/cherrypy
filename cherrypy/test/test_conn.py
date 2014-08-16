@@ -1,5 +1,6 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
+import httplib
 import socket
 import sys
 import time
@@ -801,6 +802,10 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 else:
                     raise AssertionError("Overflow conn did not get RST. "
                                          "Got %s instead" % repr(exc.args))
+            except httplib.BadStatusLine:
+                # This is a special case in OS X. Linux and Windows will
+                # RST correctly.
+                assert sys.platform == 'darwin'
             else:
                 raise AssertionError("Overflow conn did not get RST ")
         finally:
