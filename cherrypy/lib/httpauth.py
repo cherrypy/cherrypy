@@ -337,9 +337,10 @@ def _checkBasicResponse(auth_map, password, method='GET', encrypt=None,
     if not encrypt:
         return auth_map["password"] == password
     try:
-        return encrypt(auth_map["password"], auth_map["username"]) == password
+        candidate = encrypt(auth_map["password"], auth_map["username"])
     except TypeError:
-        return encrypt(auth_map["password"]) == password
+        candidate = encrypt(auth_map["password"])
+    return candidate == password
 
 AUTH_RESPONSES = {
     "basic": _checkBasicResponse,
