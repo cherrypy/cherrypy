@@ -108,6 +108,7 @@ class ToolTests(helper.CPWebCase):
         cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
 
         def stream_handler(next_handler, *args, **kwargs):
+            assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
             cherrypy.response.output = o = BytesIO()
             try:
                 response = next_handler(*args, **kwargs)
@@ -126,10 +127,11 @@ class ToolTests(helper.CPWebCase):
             index.exposed = True
 
             def tarfile(self):
+                assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
                 cherrypy.response.output.write(ntob('I am '))
                 cherrypy.response.output.write(ntob('a tarfile'))
             tarfile.exposed = True
-            tarfile._cp_config = {'tools.streamer.on': True}
+            tarfile._cp_config = {'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'}
 
             def euro(self):
                 hooks = list(cherrypy.request.hooks['before_finalize'])
