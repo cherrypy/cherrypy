@@ -334,8 +334,8 @@ def _checkBasicResponse(auth_map, password, method='GET', encrypt=None,
                         **kwargs):
     # Note that the Basic response doesn't provide the realm value so we cannot
     # test it
-    if not encrypt:
-        return auth_map["password"] == password
+    pass_through = lambda password, username=None: password
+    encrypt = encrypt or pass_through
     try:
         candidate = encrypt(auth_map["password"], auth_map["username"])
     except TypeError:
