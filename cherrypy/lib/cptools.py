@@ -382,7 +382,8 @@ Message: %(error_msg)s
             if self.debug:
                 cherrypy.log('routing %r to login_screen' %
                              path, 'TOOLS.SESSAUTH')
-            return self.login_screen(**request.params)
+            response.body = self.login_screen()
+            return True
         elif path.endswith('do_login'):
             if request.method != 'POST':
                 response.headers['Allow'] = "POST"
