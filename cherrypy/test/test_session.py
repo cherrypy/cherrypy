@@ -1,6 +1,5 @@
 import os
 localDir = os.path.dirname(__file__)
-import sys
 import threading
 import time
 
@@ -358,10 +357,24 @@ class SessionTest(helper.CPWebCase):
             else:
                 self.fail("Unknown session id in cache: %r", cache)
 
+    def test_8_Ram_Cleanup(self):
+        def lock():
+            s1 = sessions.RamSession()
+            s1.acquire_lock()
+            time.sleep(1)
+            s1.release_lock()
+
+        t = threading.Thread(target=lock)
+        t.start()
+        s2 = sessions.RamSession()
+        s2.clean_up()
+        self.assertEqual(len(sessions.RamSession.locks), 1, 'Clean up should not remove active lock')
+        t.join()
+
 
 import socket
 try:
-    import memcache
+    import memcache  # NOQA
 
     host, port = '127.0.0.1', 11211
     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
@@ -436,7 +449,7 @@ else:
 ##                    sys.stdout.write("%d " % index)
                 if not self.body.isdigit():
                     self.fail(self.body)
-                data_dict[index] = v = int(self.body)
+                data_dict[index] = int(self.body)
 
             # Start <request_count> concurrent requests from
             # each of <client_thread_count> clients
