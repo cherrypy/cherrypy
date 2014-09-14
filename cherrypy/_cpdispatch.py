@@ -93,11 +93,11 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
     show_mismatched_params = getattr(
         cherrypy.serving.request, 'show_mismatched_params', False)
     try:
-        (args, varargs, varkw, defaults) = inspect.getargspec(callable)
+        (args, varargs, varkw, defaults) = getargspec(callable)
     except TypeError:
         if isinstance(callable, object) and hasattr(callable, '__call__'):
             (args, varargs, varkw,
-             defaults) = inspect.getargspec(callable.__call__)
+             defaults) = getargspec(callable.__call__)
         else:
             # If it wasn't one of our own types, re-raise
             # the original error
@@ -205,6 +205,12 @@ try:
     import inspect
 except ImportError:
     test_callable_spec = lambda callable, args, kwargs: None
+else:
+    getargspec = inspect.getargspec
+    # Python 3 requires using getfullargspec if keyword-only arguments are present
+    if hasattr(inspect, 'getfullargspec'):
+        def getargspec(callable):
+            return inspect.getfullargspec(callable)[:4]
 
 
 class LateParamPageHandler(PageHandler):

@@ -1,3 +1,4 @@
+import sys
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy._cptree import Application
@@ -414,3 +415,17 @@ class ObjectMappingTest(helper.CPWebCase):
         a = Application(Root(), script_name=None)
         # However, this does not apply to tree.mount
         self.assertRaises(TypeError, cherrypy.tree.mount, a, None)
+
+    def testKeywords(self):
+        if sys.version_info < (3,):
+            return self.skip("skipped (Python 3 only)")
+        exec("""class Root(object):
+    @cherrypy.expose
+    def hello(self, *, name='world'):
+        return 'Hello %s!' % name
+cherrypy.tree.mount(Application(Root(), '/keywords'))""")
+
+        self.getPage('/keywords/hello')
+        self.assertStatus(200)
+        self.getPage('/keywords/hello/extra')
+        self.assertStatus(404)
