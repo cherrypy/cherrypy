@@ -2,7 +2,6 @@ try:
     from io import UnsupportedOperation
 except ImportError:
     UnsupportedOperation = object()
-import logging
 import mimetypes
 mimetypes.init()
 mimetypes.types_map['.dwg'] = 'image/x-dwg'
@@ -13,7 +12,6 @@ mimetypes.types_map['.gz'] = 'application/x-gzip'
 import os
 import re
 import stat
-import time
 
 import cherrypy
 from cherrypy._cpcompat import ntob, unquote
