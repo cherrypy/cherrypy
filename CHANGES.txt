@@ -1,4 +1,17 @@
 -----
+3.6.0
+-----
+
+* Fixed HTTP range headers for negative length larger than content size.
+* Disabled universal wheel generation as wsgiserver has Python duality.
+* Pull Request #42: Correct TypeError in ``check_auth`` when encrypt is used.
+* Pull Request #59: Correct signature of HandlerWrapperTool.
+* Pull Request #60: Fix error in SessionAuth where login_screen was
+  incorrectly used.
+* Issue #1077: Support keyword-only arguments in dispatchers (Python 3).
+* Issue #1019: Allow logging host name in the access log.
+
+-----
 3.5.0
 -----
 
