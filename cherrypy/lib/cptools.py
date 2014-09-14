@@ -380,8 +380,8 @@ Message: %(error_msg)s
         path = request.path_info
         if path.endswith('login_screen'):
             if self.debug:
-                cherrypy.log('routing %r to login_screen' %
-                             path, 'TOOLS.SESSAUTH')
+                msg = 'routing %(path)r to login_screen' % locals()
+                cherrypy.log(msg, 'TOOLS.SESSAUTH')
             response.body = self.login_screen()
             return True
         elif path.endswith('do_login'):
@@ -391,20 +391,21 @@ Message: %(error_msg)s
                     cherrypy.log('do_login requires POST', 'TOOLS.SESSAUTH')
                 raise cherrypy.HTTPError(405)
             if self.debug:
-                cherrypy.log('routing %r to do_login' % path, 'TOOLS.SESSAUTH')
+                msg = 'routing %(path)r to do_login' % locals()
+                cherrypy.log(msg, 'TOOLS.SESSAUTH')
             return self.do_login(**request.params)
         elif path.endswith('do_logout'):
             if request.method != 'POST':
                 response.headers['Allow'] = "POST"
                 raise cherrypy.HTTPError(405)
             if self.debug:
-                cherrypy.log('routing %r to do_logout' %
-                             path, 'TOOLS.SESSAUTH')
+                msg = 'routing %(path)r to do_logout' % locals()
+                cherrypy.log(msg, 'TOOLS.SESSAUTH')
             return self.do_logout(**request.params)
         else:
             if self.debug:
-                cherrypy.log('No special path, running do_check',
-                             'TOOLS.SESSAUTH')
+                msg = 'No special path, running do_check'
+                cherrypy.log(msg, 'TOOLS.SESSAUTH')
             return self.do_check()
 
 
