@@ -10,6 +10,7 @@
   incorrectly used.
 * Issue #1077: Support keyword-only arguments in dispatchers (Python 3).
 * Issue #1019: Allow logging host name in the access log.
+* Pull Request #50: Fixed race condition in session cleanup.
 
 -----
 3.5.0
