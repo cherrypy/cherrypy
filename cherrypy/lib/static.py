@@ -1,21 +1,24 @@
 import os
+import re
 import stat
+import mimetypes
 
 try:
     from io import UnsupportedOperation
 except ImportError:
     UnsupportedOperation = object()
-import mimetypes
-mimetypes.init()
-mimetypes.types_map['.dwg'] = 'image/x-dwg'
-mimetypes.types_map['.ico'] = 'image/x-icon'
-mimetypes.types_map['.bz2'] = 'application/x-bzip2'
-mimetypes.types_map['.gz'] = 'application/x-gzip'
 
 import cherrypy
 from cherrypy.lib.compat import ntob
 from cherrypy.lib import httputil, file_generator_limited
 from cherrypy.lib.tools import validate_since
+
+
+mimetypes.init()
+mimetypes.types_map['.dwg'] = 'image/x-dwg'
+mimetypes.types_map['.ico'] = 'image/x-icon'
+mimetypes.types_map['.bz2'] = 'application/x-bzip2'
+mimetypes.types_map['.gz'] = 'application/x-gzip'
 
 
 def serve_file(path, content_type=None, disposition=None, name=None,
