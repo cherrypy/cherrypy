@@ -118,7 +118,7 @@ and not simply return an error message as a result.
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
-from cherrypy._cpcompat import basestring, bytestr, iteritems, ntob
+from cherrypy._cpcompat import basestring, bytestr, iteritems, ntob, always_bytes
 from cherrypy._cpcompat import tonative, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
 
@@ -268,7 +268,7 @@ class HTTPRedirect(CherryPyException):
             msg += '<a href=%s>%s</a>.'
             from xml.sax import saxutils
             msgs = [msg % (saxutils.quoteattr(u), u) for u in self.urls]
-            response.body = ntob("<br />\n".join(msgs), 'utf-8')
+            response.body = always_bytes("<br />\n".join(msgs), 'utf-8')
             # Previous code may have set C-L, so we have to reset it
             # (allow finalize to set it).
             response.headers.pop('Content-Length', None)
