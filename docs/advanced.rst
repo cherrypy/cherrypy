@@ -588,8 +588,8 @@ HTML Templating support
 #######################
 
 CherryPy does not provide any HTML template but its architecture
-makes it easy to integrate one. Popular ones are `Mako <www.makotemplates.org>`_
-or `Jinja2 <jinja.pocoo.org/docs/>`_.
+makes it easy to integrate one. Popular ones are `Mako <http://www.makotemplates.org>`_
+or `Jinja2 <http://jinja.pocoo.org/docs/>`_.
 
 You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/templating/>`_
 a recipe on how to integrate them using a mix
