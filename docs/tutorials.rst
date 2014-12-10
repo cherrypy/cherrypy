@@ -600,7 +600,7 @@ Save the following HTML code into a file named `index.html`.
 	      $.ajax({
 		 type: "PUT",
 		 url: "/generator",
-		 data: {"another_string": $("#the-string").val()}
+		 data: {"another_string": $("#the-string input").val()}
 	      })
 	      .done(function() {
 		 alert("Replaced!");
