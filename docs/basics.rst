@@ -275,7 +275,7 @@ Per-application configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To configure your application, pass in a dictionary or a file 
-when you associate their application to the server.
+when you associate your application to the server.
 
 .. code-block:: python
 
