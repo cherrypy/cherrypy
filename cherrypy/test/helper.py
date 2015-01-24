@@ -6,6 +6,7 @@ log = logging.getLogger(__name__)
 import os
 thisdir = os.path.abspath(os.path.dirname(__file__))
 serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
+import unittest
 
 import re
 import sys
@@ -322,10 +323,6 @@ class CPWebCase(webtest.WebCase):
         if self.do_gc_test:
             self.getPage("/gc/stats")
             self.assertBody("Statistics:")
-    # Tell nose to run this last in each class.
-    # Prefer sys.maxint for Python 2.3, which didn't have float('inf')
-    test_gc.compat_co_firstlineno = getattr(
-        sys, 'maxint', None) or float('inf')
 
     def prefix(self):
         return self.script_name.rstrip("/")
@@ -403,6 +400,20 @@ class CPWebCase(webtest.WebCase):
         if not diff < datetime.timedelta(seconds=seconds):
             raise AssertionError('%r and %r are not within %r seconds.' %
                                  (dt1, dt2, seconds))
+
+
+def _test_method_sorter(_, x, y):
+    """Monkeypatch the test sorter to always run test_gc last in each suite."""
+    if x == 'test_gc':
+        return 1
+    if y == y == 'test_gc':
+        return -1
+    if x > y:
+        return 1
+    if x < y:
+        return -1
+    return 0
+unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter
 
 
 def setup_client():
