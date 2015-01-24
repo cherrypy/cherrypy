@@ -406,7 +406,7 @@ def _test_method_sorter(_, x, y):
     """Monkeypatch the test sorter to always run test_gc last in each suite."""
     if x == 'test_gc':
         return 1
-    if y == y == 'test_gc':
+    if y == 'test_gc':
         return -1
     if x > y:
         return 1
