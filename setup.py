@@ -123,8 +123,8 @@ def main():
         data_files=data_files,
         scripts=scripts,
         install_requires=[
-            "magicbus>=3.3.0alpha",
-            "cheroot>=4.0.0beta",
+            "magicbus>=4.0.0b1",
+            "Cheroot>=4.0.0b2,!=4.0.0beta-20140210",
         ],
     )
 
