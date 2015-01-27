@@ -702,7 +702,7 @@ tool. You can serve your own favicon as follows:
                 '/favicon.ico':
                 {
                     'tools.staticfile.on': True,
-                    'tools.staticfile.filename:' '/path/to/myfavicon.ico'
+                    'tools.staticfile.filename': '/path/to/myfavicon.ico'
                 }
             }
         )
