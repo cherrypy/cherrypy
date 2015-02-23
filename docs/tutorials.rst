@@ -294,8 +294,8 @@ Save this into a file named `tut05.py` and run it as follows:
 
 In this example, we generate the string as in the 
 :ref:`previous <tut04>` tutorial but also store it in the current
-session. If you go to http://localhostt:8080/, generate a
-random string, then go to http://localhostt:8080/display, you
+session. If you go to http://localhost:8080/, generate a
+random string, then go to http://localhost:8080/display, you
 will see the string you just generated. 
 
 The lines 30-34 show you how to enable the session support
@@ -471,7 +471,7 @@ Save this into a file named `tut07.py` and run it as follows:
 
 Before we see it in action, let's explain a few things. Until now,
 CherryPy was creating a tree of exposed methods that were used to
-math URLs. In the case of our web API, we want to stress the role
+match URLs. In the case of our web API, we want to stress the role
 played by the actual requests' HTTP methods. So we created 
 methods that are named after them and they are all exposed at once
 through the `exposed = True` attribute of the class itself.
@@ -490,7 +490,7 @@ HTTP method as it wouldn't have much meaning on the oher methods.
 
 For the purpose of this tutorial, we will be using a Python client
 rather than your browser as we wouldn't be able to actually try
-our web API otherwiser.
+our web API otherwise.
 
 Please install `requests <http://www.python-requests.org/en/latest/>`_
 through the following command:
@@ -527,7 +527,7 @@ Then fire up a Python terminal and try the following commands:
    >>> r.status_code
    500
 
-The first and last `500` responses steam from the fact that, in
+The first and last `500` responses stem from the fact that, in
 the first case, we haven't yet generated a string through `POST` and,
 on the latter case, that it doesn't exist after we've deleted it.
 
