@@ -1,6 +1,4 @@
-
 import gzip
-import sys
 
 import cherrypy
 from cherrypy._cpcompat import BytesIO, IncompleteRead, ntob, ntou
