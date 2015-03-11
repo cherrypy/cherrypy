@@ -1,5 +1,3 @@
-#-*- coding: utf-8 -*-
-
 import gzip
 
 import cherrypy
@@ -395,8 +393,3 @@ class EncodingTests(helper.CPWebCase):
     def test_UnicodeHeaders(self):
         self.getPage('/cookies_and_headers')
         self.assertBody('Any content')
-
-    def test_404(self):
-        self.getPage('/%C2%A3')
-        self.assertStatus(404)
-        self.assertInBody('/£')
