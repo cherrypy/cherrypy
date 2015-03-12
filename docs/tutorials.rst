@@ -656,7 +656,7 @@ Both are hosted by the same application server.
     class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-           return file('index.html')
+           return open('index.html')
 
     class StringGeneratorWebService(object):
         exposed = True
