@@ -541,6 +541,25 @@ CherryPy will automatically respond to URLs such as
       tools.staticdir.on = True
       tools.staticdir.dir = "static"
 
+Specifying an index file
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, CherryPy will repsond to the root of a static
+directory with an error. To specify an index file, you can use the
+following:
+
+.. code-block:: ini
+
+   [/static]
+   tools.staticdir.on = True
+   tools.staticdir.dir = "/home/site/static"
+   tools.staticdir.index = "index.html"
+
+Assuming you have a file at `static/index.html`, 
+CherryPy will automatically respond to URLs such as 
+`http://hostname/static/` by returning its contents.
+
+
 Allow files downloading
 ^^^^^^^^^^^^^^^^^^^^^^^
 
