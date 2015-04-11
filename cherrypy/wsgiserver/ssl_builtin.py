@@ -33,6 +33,9 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
 
     private_key = None
     """The filename of the server's private key file."""
+    
+    certificate_chain = None
+    """The filename of the certificate chain file."""
 
     def __init__(self, certificate, private_key, certificate_chain=None):
         if ssl is None:
@@ -51,7 +54,8 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
             s = ssl.wrap_socket(sock, do_handshake_on_connect=True,
                                 server_side=True, certfile=self.certificate,
                                 keyfile=self.private_key,
-                                ssl_version=ssl.PROTOCOL_SSLv23)
+                                ssl_version=ssl.PROTOCOL_SSLv23,
+                                ca_certs=self.certificate_chain)
         except ssl.SSLError:
             e = sys.exc_info()[1]
             if e.errno == ssl.SSL_ERROR_EOF:
