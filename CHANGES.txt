@@ -1,4 +1,14 @@
 -----
+3.7.0
+-----
+
+* CherryPy daemon may now be invoked with ``python -m cherrypy`` in
+  addition to the ``cherryd`` script.
+* Issue #1298: Fix SSL handling on CPython 2.7 with builtin SSL module
+  and pyOpenSSL 0.14. This change will break PyPy for now.
+* Several documentation fixes.
+
+-----
 3.6.0
 -----
 
