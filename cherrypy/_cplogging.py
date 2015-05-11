@@ -211,7 +211,6 @@ class LogManager(object):
         """
         exc_info = None
         if traceback:
-            msg += _cperror.format_exc()
             exc_info = _cperror._exc_info()
 
         self.error_log.log(severity, ' '.join((self.time(), context, msg)), exc_info=exc_info)
