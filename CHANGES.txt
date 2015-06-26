@@ -1,4 +1,11 @@
 -----
+3.8.0
+-----
+
+* Pull Request #96: Pass ``exc_info`` to logger as keyword rather than
+  formatting the error and injecting into the message.
+
+-----
 3.7.0
 -----
 
