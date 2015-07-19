@@ -534,7 +534,7 @@ on the latter case, that it doesn't exist after we've deleted it.
 Lines 12-14 show you how the application reacted when our client requested
 the generated string as a JSON format. Since we configured the
 web API to only support plain text, it returns the appropriate 
-`HTTP error code http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.7`
+`HTTP error code <http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.7>`_.
 
 
 .. note::
