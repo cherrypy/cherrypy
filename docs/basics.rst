@@ -203,23 +203,133 @@ To disable file logging, simply set a en empty string to the
 
 To disable, console logging, set ``log.screen`` to `False`.
 
+.. code-block:: python
+
+    cherrypy.config.update({'log.screen': False,
+                            'log.access_file': '',
+                            'log.error_file': ''})
+
 
 Play along with your other loggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Your application may obviously already use the :mod:`logging`
-module to trace application level messages. CherryPy will not
-interfere with them as long as your loggers are explicitely
-named. This would work nicely:
+module to trace application level messages. Below is a simple
+example on setting it up.
 
 .. code-block:: python
 		
     import logging
-    logger = logging.getLogger('myapp.mypackage')
-    logger.setLevel(logging.INFO)
-    stream = logging.StreamHandler()
-    stream.setLevel(logging.INFO)
-    logger.addHandler(stream)
+    import logging.config
+
+    import cherrypy
+
+    logger = logging.getLogger()
+    db_logger = logging.getLogger('db')
+
+    LOG_CONF = {
+        'version': 1,              
+
+        'formatters': {
+            'void': {
+                'format': ''
+            },
+            'standard': {
+                'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+            },
+        },
+        'handlers': {
+            'default': {
+                'level':'INFO',    
+                'class':'logging.StreamHandler',
+                'formatter': 'standard',
+                'stream': 'ext://sys.stdout'
+            },  
+            'cherrypy_console': {
+                'level':'INFO',    
+                'class':'logging.StreamHandler',
+                'formatter': 'void',
+                'stream': 'ext://sys.stdout'
+            }, 
+            'cherrypy_access': {
+                'level':'INFO',    
+                'class': 'logging.handlers.RotatingFileHandler',
+                'formatter': 'void',
+                'filename': 'access.log',
+                'maxBytes': 10485760,
+                'backupCount': 20,
+                'encoding': 'utf8'
+            },   
+            'cherrypy_error': {
+                'level':'INFO',    
+                'class': 'logging.handlers.RotatingFileHandler',
+                'formatter': 'void',
+                'filename': 'errors.log',
+                'maxBytes': 10485760,
+                'backupCount': 20,
+                'encoding': 'utf8'
+            },   
+        },
+        'loggers': {
+            '': {                  
+                'handlers': ['default'],        
+                'level': 'INFO'
+            },
+            'db': {                  
+                'handlers': ['default'],        
+                'level': 'INFO' ,  
+                'propagate': False 
+            },
+            'cherrypy.access': {                  
+                'handlers': ['cherrypy_access'],        
+                'level': 'INFO',  
+                'propagate': False  
+            },
+            'cherrypy.error': {                  
+                'handlers': ['cherrypy_console', 'cherrypy_error'],        
+                'level': 'INFO',  
+                'propagate': False  
+            },
+        }
+    }
+
+    class Root(object):
+        @cherrypy.expose
+        def index(self):
+
+            logger.info("boom")
+            db_logger.info("bam")
+            cherrypy.log("bang")
+
+            return "hello world"
+
+    if __name__ == '__main__':
+        cherrypy.config.update({'log.screen': False,
+                                'log.access_file': '',
+                                'log.error_file': ''})
+	cherrypy.engine.unsubscribe('graceful', cherrypy.log.reopen_files)
+        logging.config.dictConfig(LOG_CONF)
+        cherrypy.quickstart(Root())
+
+	
+In this snippet, we create a `configuration dictionary <https://docs.python.org/2/library/logging.config.html#logging.config.dictConfig>`_
+that we pass on to the ``logging`` module to configure
+our loggers:
+
+ * the default root logger is associated to a single stream handler
+ * a logger for the db backend with also a single stream handler
+
+In addition, we re-configure the CherryPy loggers:
+
+ * the top-level ``cherrypy.access`` logger to log requests into a file
+ * the ``cherrypy.error`` logger to log everything else into a file
+   and to the console
+
+We also prevent CherryPy from trying to open its log files when
+the autoreloader kicks in. This is not strictly required since we do not
+even let CherryPy open them in the first place. But, this avoids
+wasting time on something useless.
+    
 
 .. _config:
 
