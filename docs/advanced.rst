@@ -48,6 +48,8 @@ Obviously, your aliases may be whatever suits your needs.
 
    The alias may be a single string or a list of them.
 
+.. _restful:
+   
 RESTful-style dispatching
 #########################
 
