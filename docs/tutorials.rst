@@ -766,6 +766,7 @@ So let's simply focus on the application code itself:
     import random
     import sqlite3
     import string
+    import time
 
     import cherrypy
 
@@ -782,6 +783,7 @@ So let's simply focus on the application code itself:
         @cherrypy.tools.accept(media='text/plain')
         def GET(self):
             with sqlite3.connect(DB_STRING) as c:
+                cherrypy.session['ts'] = time.time()
                 c.execute("SELECT value FROM user_string WHERE session_id=?",
                           [cherrypy.session.id])
                 return c.fetchone()
@@ -789,16 +791,19 @@ So let's simply focus on the application code itself:
         def POST(self, length=8):
             some_string = ''.join(random.sample(string.hexdigits, int(length)))
             with sqlite3.connect(DB_STRING) as c:
+                cherrypy.session['ts'] = time.time()
                 c.execute("INSERT INTO user_string VALUES (?, ?)",
                           [cherrypy.session.id, some_string])
             return some_string
 
         def PUT(self, another_string):
             with sqlite3.connect(DB_STRING) as c:
+                cherrypy.session['ts'] = time.time()
                 c.execute("UPDATE user_string SET value=? WHERE session_id=?",
                           [another_string, cherrypy.session.id])
 
         def DELETE(self):
+            cherrypy.session.pop('ts', None)
             with sqlite3.connect(DB_STRING) as c:
                 c.execute("DELETE FROM user_string WHERE session_id=?",
                           [cherrypy.session.id])
@@ -862,6 +867,14 @@ away after a while, it's probably not the right approach.
 A better idea would be to associate the user's login or 
 more resilient unique identifier. For the sake of our
 demo, this should do.
+
+.. important::
+
+   In this example, we must still set the session to a dummy value
+   so that the session is not `discarded <https://cherrypy.readthedocs.org/en/latest/pkg/cherrypy.lib.html?highlight=fixation#session-fixation-protection>`_
+   on each request by CherryPy. Since we now use the database
+   to store the generated string, we simply store a dummy
+   timestamp inside the session.
 
 .. note::
 
