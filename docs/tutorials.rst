@@ -784,9 +784,9 @@ So let's simply focus on the application code itself:
         def GET(self):
             with sqlite3.connect(DB_STRING) as c:
                 cherrypy.session['ts'] = time.time()
-                c.execute("SELECT value FROM user_string WHERE session_id=?",
+                r = c.execute("SELECT value FROM user_string WHERE session_id=?",
                           [cherrypy.session.id])
-                return c.fetchone()
+                return r.fetchone()
 
         def POST(self, length=8):
             some_string = ''.join(random.sample(string.hexdigits, int(length)))
