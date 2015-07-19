@@ -726,6 +726,7 @@ Notice as well how your frontend converses with the backend using
 a straightfoward, yet clean, web service API. That same API
 could easily be used by non-HTML clients.
 
+.. _tut09:
 
 Tutorial 9: Data is all my life
 ###############################
@@ -874,8 +875,228 @@ demo, this should do.
    `SQLAlchemy <http://sqlalchemy.readthedocs.org>`_, to better
    support your application's needs.
 
+.. _tut10:
+   
+Tutorial 10: Make it a modern single-page application with React.js
+###################################################################
 
-Tutorial 10: Organize my code
+In the recent years, client-side single-page applications (SPA) have
+gradually eaten server-side generated content web applications's lunch.
+
+This tutorial demonstrates how to integrate with
+`React.js <https://facebook.github.io/react/>`_, a Javascript library
+for SPA released by Facebook in 2013. Please refer to React.js
+documentation to learn more about it.
+
+To demonstrate it, let's use the code from :ref:`tutorial 09 <tut09>`.
+However, we will be replacing the HTML and Javascript code.
+
+First, let's see how our HTML code has changed:
+
+.. code-block:: html
+   :linenos:
+
+    <!DOCTYPE html>
+    <html>
+       <head>
+         <link href="/static/css/style.css" rel="stylesheet">
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js"></script>
+         <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+       </head>
+       <body>
+         <div id="generator"></div>
+         <script type="text/javascript" src="static/js/gen.js"></script>
+       </body>
+    </html>
+
+Basically, we have remove the entire Javascript code that was using jQuery.
+Instead, we load the React.js library as well as a new, local,
+Javascript module, named ``gen.js`` and located in the ``public/js``
+directory:
+
+.. code-block:: javascript
+   :linenos:
+
+    var StringGeneratorBox = React.createClass({
+      handleGenerate: function() {
+        var length = this.state.length;
+        this.setState(function() {
+          $.ajax({
+            url: this.props.url,
+            dataType: 'text',
+            type: 'POST',
+            data: {
+              "length": length
+            },
+            success: function(data) {
+              this.setState({
+                length: length,
+                string: data,
+                mode: "edit"
+              });
+            }.bind(this),
+            error: function(xhr, status, err) {
+              console.error(this.props.url,
+                status, err.toString()
+              );
+            }.bind(this)
+          });
+        });
+      },
+      handleEdit: function() {
+        var new_string = this.state.string;
+        this.setState(function() {
+          $.ajax({
+            url: this.props.url,
+            type: 'PUT',
+            data: {
+              "another_string": new_string
+            },
+            success: function() {
+              this.setState({
+                length: new_string.length,
+                string: new_string,
+                mode: "edit"
+              });
+            }.bind(this),
+            error: function(xhr, status, err) {
+              console.error(this.props.url,
+                status, err.toString()
+              );
+            }.bind(this)
+          });
+        });
+      },
+      handleDelete: function() {
+        this.setState(function() {
+          $.ajax({
+            url: this.props.url,
+            type: 'DELETE',
+            success: function() {
+              this.setState({
+                length: "8",
+                string: "",
+                mode: "create"
+              });
+            }.bind(this),
+            error: function(xhr, status, err) {
+              console.error(this.props.url,
+                status, err.toString()
+              );
+            }.bind(this)
+          });
+        });
+      },
+      handleLengthChange: function(length) {
+        this.setState({
+          length: length,
+          string: "",
+          mode: "create"
+        });
+      },
+      handleStringChange: function(new_string) {
+        this.setState({
+          length: new_string.length,
+          string: new_string,
+          mode: "edit"
+        });
+      },
+      getInitialState: function() {
+        return {
+          length: "8",
+          string: "",
+          mode: "create"
+        };
+      },
+      render: function() {
+        return (
+          <div className="stringGenBox">
+                <StringGeneratorForm onCreateString={this.handleGenerate}
+                                     onReplaceString={this.handleEdit}
+                                     onDeleteString={this.handleDelete}
+                                     onLengthChange={this.handleLengthChange}
+                                     onStringChange={this.handleStringChange}
+                                     mode={this.state.mode}
+                                     length={this.state.length}
+                                     string={this.state.string}/>
+          </div>
+        );
+      }
+    });
+
+    var StringGeneratorForm = React.createClass({
+      handleCreate: function(e) {
+        e.preventDefault();
+        this.props.onCreateString();
+      },
+      handleReplace: function(e) {
+        e.preventDefault();
+        this.props.onReplaceString();
+      },
+      handleDelete: function(e) {
+        e.preventDefault();
+        this.props.onDeleteString();
+      },
+      handleLengthChange: function(e) {
+        e.preventDefault();
+        var length = React.findDOMNode(this.refs.length).value.trim();
+        this.props.onLengthChange(length);
+      },
+      handleStringChange: function(e) {
+        e.preventDefault();
+        var string = React.findDOMNode(this.refs.string).value.trim();
+        this.props.onStringChange(string);
+      },
+      render: function() {
+        if (this.props.mode == "create") {
+          return (
+            <div>
+               <input  type="text" ref="length" defaultValue="8" value={this.props.length} onChange={this.handleLengthChange} />
+               <button onClick={this.handleCreate}>Give it now!</button>
+            </div>
+          );
+        } else if (this.props.mode == "edit") {
+          return (
+            <div>
+               <input type="text" ref="string" value={this.props.string} onChange={this.handleStringChange} />
+               <button onClick={this.handleReplace}>Replace</button>
+               <button onClick={this.handleDelete}>Delete it</button>
+            </div>
+          );
+        }
+
+        return null;
+      }
+    });
+
+    React.render(
+      <StringGeneratorBox url="/generator" />,
+      document.getElementById('generator')
+    );
+
+    
+Wow! What a lot of code for something so simple, isn't it?
+The entry point is the last few lines where we indicate that we
+want to render the HTML code of the ``StringGeneratorBox`` React.js
+class inside the ``generator`` div.
+
+When the page is rendered, so is that component. Notice how it
+is also made of another component that renders the form itself.
+
+This might be a little over the top for such a simple example
+but hopefully will get you started with React.js in the process.
+
+There is not much to say and, hopefully, the meaning of that code
+is rather clear. The component has an internal `state <https://facebook.github.io/react/docs/interactivity-and-dynamic-uis.html>`_
+in which we store the current string as generated/modified by the user.
+
+When the user `changes the content of the input boxes <https://facebook.github.io/react/docs/forms.html>`_,
+the state is updated on the client side. Then, when a button is clicked,
+that state is sent out to the backend server using the API endpoint
+and the appropriate action takes places. Then, the state is updated and so is the view.
+
+
+Tutorial 11: Organize my code
 #############################
 
 CherryPy comes with a powerful architecture
