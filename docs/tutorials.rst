@@ -544,6 +544,21 @@ web API to only support plain text, it returns the appropriate
    session id stored in the request cookie in each subsequent
    request. That is handy.
 
+.. important::
+
+   It's all about RESTful URLs these days, isn't it?
+   
+   It is likely your URL will be made of dynamic parts that you
+   will not be able to match to page handlers. For example,
+   ``/library/12/book/15`` cannot be directly handled by the
+   default CherryPy dispatcher since the segments ``12`` and
+   ``15`` will not be matched to any Python callable.
+
+   This can be easily workaround with two handy CherryPy features
+   explained in the :ref:`advanced section <restful>`.
+
+
+   
 .. _tut08:
 
 
