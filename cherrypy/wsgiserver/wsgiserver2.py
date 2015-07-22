@@ -674,6 +674,10 @@ class HTTPRequest(object):
 
         # uri may be an abs_path (including "http://host.domain.tld");
         scheme, authority, path = self.parse_request_uri(uri)
+        if path is None:
+            self.simple_response("400 Bad Request",
+                                 "No valid path in Request-URI.")
+            return False
         if NUMBER_SIGN in path:
             self.simple_response("400 Bad Request",
                                  "Illegal #fragment in Request-URI.")

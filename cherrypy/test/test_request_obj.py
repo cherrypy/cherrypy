@@ -377,15 +377,27 @@ class RequestObjectTests(helper.CPWebCase):
             self.getPage(uri)
             self.assertStatus(200)
 
-        # query string parameters are part of the URI, so if they are wrong
-        # for a particular handler, the status MUST be a 404.
         error_msgs = [
             'Missing parameters',
             'Nothing matches the given URI',
             'Multiple values for parameters',
             'Unexpected query string parameters',
             'Unexpected body parameters',
+            'No valid path in Request-URI',
+            'Illegal #fragment in Request-URI',
         ]
+
+        # uri should be tested for valid absolute path, the status must be 400.
+        for uri, error_idx in (
+            ('invalid/path/without/leading/slash', 5),
+            ('/valid/path#invalid=fragment', 6),
+        ):
+            self.getPage(uri)
+            self.assertStatus(400)
+            self.assertInBody(error_msgs[error_idx])
+
+        # query string parameters are part of the URI, so if they are wrong
+        # for a particular handler, the status MUST be a 404.
         for uri, msg in (
             ('/paramerrors/one_positional', error_msgs[0]),
             ('/paramerrors/one_positional?foo=foo', error_msgs[0]),
