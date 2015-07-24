@@ -383,7 +383,7 @@ class RequestObjectTests(helper.CPWebCase):
             'Multiple values for parameters',
             'Unexpected query string parameters',
             'Unexpected body parameters',
-            'No valid path in Request-URI',
+            'Invalid path in Request-URI',
             'Illegal #fragment in Request-URI',
         ]
 
