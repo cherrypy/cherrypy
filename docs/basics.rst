@@ -759,7 +759,7 @@ SSL or within a closed network.
 
    USERS = {'jon': 'secret'}
 
-   def validate_password(username, password):
+   def validate_password(realm, username, password):
        if username in USERS and USERS[username] == password:
           return True
        return False
