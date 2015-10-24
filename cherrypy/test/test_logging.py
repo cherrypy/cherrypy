@@ -169,7 +169,8 @@ class ErrorLogTests(helper.CPWebCase, logtest.LogCase):
         try:
             self.getPage("/error")
             self.assertInBody("raise ValueError()")
-            self.assertLog(0, 'HTTP Traceback (most recent call last):')
-            self.assertLog(-3, 'raise ValueError()')
+            self.assertLog(0, 'HTTP')
+            self.assertLog(1, 'Traceback (most recent call last):')
+            self.assertLog(-2, 'raise ValueError()')
         finally:
             ignore.pop()
