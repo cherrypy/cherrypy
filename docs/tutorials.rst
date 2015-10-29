@@ -162,7 +162,7 @@ Save this into a file named `tut03.py` and run it as follows:
 Go now to http://localhost:8080/generate?length=16 and your browser
 will display a generated string of length 16. Notice how
 we benefit from Python's default arguments' values to support 
-URLs such as http://localhost:8080/password still.
+URLs such as http://localhost:8080/generate still.
 
 In a URL such as this one, the section after `?` is called a 
 query-string. Traditionally, the query-string is used to 
