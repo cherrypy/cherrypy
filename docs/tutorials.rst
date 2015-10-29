@@ -386,7 +386,7 @@ directory structure. Most of the time, this is what you'll end
 up doing so this is what the code above demonstrates. First, we
 indicate the `root` directory of all of our static content. This
 must be an absolute path for security reason. CherryPy will
-complain if you provide only non-absolute paths when looking for a
+complain if you provide only relative paths when looking for a
 match to your URLs.
 
 Then we indicate that all URLs which path segment starts with `/static`
