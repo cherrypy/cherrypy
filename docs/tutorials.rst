@@ -130,7 +130,7 @@ Tutorial 3: My URLs have parameters
 ###################################
 
 In the previous tutorial, we have seen how to create an application
-that could generate a random string. Let's not assume you wish
+that could generate a random string. Let's now assume you wish
 to indicate the length of that string dynamically.
 
 .. code-block:: python
