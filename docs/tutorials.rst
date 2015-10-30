@@ -306,7 +306,7 @@ sessions in the process's memory. It supports more persistent
 Tutorial 6: What about my javascripts, CSS and images?
 ######################################################
 
-Web application are usually also made of static content such
+Web applications are usually also made of static content such
 as javascript, CSS files or images. CherryPy provides support
 to serve static content to end-users.
 
