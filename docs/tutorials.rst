@@ -485,7 +485,7 @@ Then we force the responses `content-type` to be `text/plain` and
 we finally ensure that `GET` requests will only be responded to clients
 that accept that `content-type` by having a `Accept: text/plain` 
 header set in their request. However, we do this only for that
-HTTP method as it wouldn't have much meaning on the oher methods.
+HTTP method as it wouldn't have much meaning on the other methods.
 
 
 For the purpose of this tutorial, we will be using a Python client
