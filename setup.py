@@ -36,7 +36,7 @@ class cherrypy_build_py(build_py):
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "3.8.2"
+version = "3.8.3"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers = [
