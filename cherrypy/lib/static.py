@@ -49,7 +49,7 @@ def serve_file(path, content_type=None, disposition=None, name=None,
 
     try:
         st = os.stat(path)
-    except OSError:
+    except (OSError, TypeError):
         if debug:
             cherrypy.log('os.stat(%r) failed' % path, 'TOOLS.STATIC')
         raise cherrypy.NotFound()

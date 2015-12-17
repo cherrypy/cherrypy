@@ -119,7 +119,7 @@ class StaticTest(helper.CPWebCase):
                     pass
     teardown_server = staticmethod(teardown_server)
 
-    def testStatic(self):
+    def test_static(self):
         self.getPage("/static/index.html")
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
@@ -332,6 +332,10 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/404test/yunyeen")
         self.assertStatus(404)
         self.assertInBody("I couldn't find that thing")
+
+    def test_null_bytes(self):
+        self.getPage("/static/\x00")
+        self.assertStatus('404 Not Found')
 
 def error_page_404(status, message, traceback, version):
     import os.path
