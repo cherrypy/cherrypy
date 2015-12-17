@@ -1,4 +1,11 @@
 -----
+3.8.2
+-----
+
+* Pull Request #116: Correct InternalServerError when null bytes in
+  static file path. Now responds with 404 instead.
+
+-----
 3.8.0
 -----
 
