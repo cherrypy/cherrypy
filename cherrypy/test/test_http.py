@@ -5,6 +5,8 @@ import mimetypes
 import socket
 import sys
 
+from mock import patch
+
 import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob, py3k
 
@@ -35,12 +37,12 @@ from cherrypy.test import helper
 
 
 class HTTPTests(helper.CPWebCase):
-    
+
     def make_connection(self):
         if self.scheme == "https":
             return HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
-            return HTTPConnection('%s:%s' % (self.interface(), self.PORT))      
+            return HTTPConnection('%s:%s' % (self.interface(), self.PORT))
 
     def setup_server():
         class Root:
@@ -78,7 +80,7 @@ class HTTPTests(helper.CPWebCase):
                     summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)
             post_multipart.exposed = True
-            
+
             @cherrypy.expose
             def post_filename(self, myfile):
                 '''Return the name of the file which was uploaded.'''
@@ -111,7 +113,8 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        c.request("POST", "/")
+        with patch.object(c, '_set_content_length'):
+            c.request("POST", "/")
         response = c.getresponse()
         self.body = response.fp.read()
         self.status = str(response.status)
@@ -140,7 +143,7 @@ class HTTPTests(helper.CPWebCase):
         self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody(", ".join(["%s * 65536" % c for c in alphabet]))
-        
+
     def test_post_filename_with_commas(self):
         '''Testing that we can handle filenames with commas. This was
         reported as a bug in:
