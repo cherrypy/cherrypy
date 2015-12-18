@@ -170,6 +170,8 @@ socket_errors_to_ignore = plat_specific_errors(
 )
 socket_errors_to_ignore.append("timed out")
 socket_errors_to_ignore.append("The read operation timed out")
+if sys.platform == 'darwin':
+    socket_errors_to_ignore.append(plat_specific_errors("EPROTOTYPE"))
 
 socket_errors_nonblocking = plat_specific_errors(
     'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
