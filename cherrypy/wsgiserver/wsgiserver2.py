@@ -93,10 +93,12 @@ if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
     if not hasattr(socket, 'IPV6_V6ONLY'):
         socket.IPV6_V6ONLY = 27
 try:
-    import cStringIO as StringIO
+    # prefer slower Python-based io module
+    import _pyio as io
 except ImportError:
-    import StringIO
-DEFAULT_BUFFER_SIZE = -1
+    # Python 2.6
+    import io
+DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 
 
 class FauxSocket(object):
@@ -1047,7 +1049,7 @@ class CP_fileobject(socket._fileobject):
             if size < 0:
                 # Read until EOF
                 # reset _rbuf.  we consume it via buf.
-                self._rbuf = StringIO.StringIO()
+                self._rbuf = io.BytesIO()
                 while True:
                     data = self.recv(rbufsize)
                     if not data:
@@ -1062,12 +1064,12 @@ class CP_fileobject(socket._fileobject):
                     # return.
                     buf.seek(0)
                     rv = buf.read(size)
-                    self._rbuf = StringIO.StringIO()
+                    self._rbuf = io.BytesIO()
                     self._rbuf.write(buf.read())
                     return rv
 
                 # reset _rbuf.  we consume it via buf.
-                self._rbuf = StringIO.StringIO()
+                self._rbuf = io.BytesIO()
                 while True:
                     left = size - buf_len
                     # recv() will malloc the amount of memory given as its
@@ -1105,7 +1107,7 @@ class CP_fileobject(socket._fileobject):
                 buf.seek(0)
                 bline = buf.readline(size)
                 if bline.endswith('\n') or len(bline) == size:
-                    self._rbuf = StringIO.StringIO()
+                    self._rbuf = io.BytesIO()
                     self._rbuf.write(buf.read())
                     return bline
                 del bline
@@ -1116,7 +1118,7 @@ class CP_fileobject(socket._fileobject):
                     buf.seek(0)
                     buffers = [buf.read()]
                     # reset _rbuf.  we consume it via buf.
-                    self._rbuf = StringIO.StringIO()
+                    self._rbuf = io.BytesIO()
                     data = None
                     recv = self.recv
                     while data != "\n":
@@ -1128,7 +1130,7 @@ class CP_fileobject(socket._fileobject):
 
                 buf.seek(0, 2)  # seek end
                 # reset _rbuf.  we consume it via buf.
-                self._rbuf = StringIO.StringIO()
+                self._rbuf = io.BytesIO()
                 while True:
                     data = self.recv(self._rbufsize)
                     if not data:
@@ -1150,11 +1152,11 @@ class CP_fileobject(socket._fileobject):
                 if buf_len >= size:
                     buf.seek(0)
                     rv = buf.read(size)
-                    self._rbuf = StringIO.StringIO()
+                    self._rbuf = io.BytesIO()
                     self._rbuf.write(buf.read())
                     return rv
                 # reset _rbuf.  we consume it via buf.
-                self._rbuf = StringIO.StringIO()
+                self._rbuf = io.BytesIO()
                 while True:
                     data = self.recv(self._rbufsize)
                     if not data:
