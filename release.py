@@ -42,7 +42,7 @@ test_info = textwrap.dedent("""
     Python 2.4, 2.5, 2.7, and 3.2.
     """).lstrip()
 
-dist_commands = 'sdist', 'bdist_wininst', 'bdist_wheel'
+dist_commands = 'sdist', 'bdist_wheel'
 
 
 def remove_files():

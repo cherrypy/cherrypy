@@ -3,6 +3,7 @@
 -----
 
 * Drop support for Python 2.5 and earlier.
+* No longer build Windows installers by default.
 
 -----
 3.8.2
