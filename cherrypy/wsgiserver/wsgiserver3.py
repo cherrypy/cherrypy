@@ -92,10 +92,12 @@ if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
         socket.IPPROTO_IPV6 = 41
     if not hasattr(socket, 'IPV6_V6ONLY'):
         socket.IPV6_V6ONLY = 27
-if sys.version_info < (3, 1):
-    import io
-else:
+try:
+    # prefer slower Python-based io module
     import _pyio as io
+except ImportError:
+    # Python 2.6
+    import io
 DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 
 import threading
