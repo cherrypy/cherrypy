@@ -1914,7 +1914,7 @@ class HTTPServer(object):
 
             # So everyone can access the socket...
             try:
-                os.chmod(self.bind_addr, 511)  # 0777
+                os.chmod(self.bind_addr, 0o777)
             except:
                 pass
 
