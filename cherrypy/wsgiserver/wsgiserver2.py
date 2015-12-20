@@ -1883,25 +1883,6 @@ class HTTPServer(object):
         if self.software is None:
             self.software = "%s Server" % self.version
 
-        # SSL backward compatibility
-        if (self.ssl_adapter is None and
-                getattr(self, 'ssl_certificate', None) and
-                getattr(self, 'ssl_private_key', None)):
-            warnings.warn(
-                "SSL attributes are deprecated in CherryPy 3.2, and will "
-                "be removed in CherryPy 3.3. Use an ssl_adapter attribute "
-                "instead.",
-                DeprecationWarning
-            )
-            try:
-                from cherrypy.wsgiserver.ssl_pyopenssl import pyOpenSSLAdapter
-            except ImportError:
-                pass
-            else:
-                self.ssl_adapter = pyOpenSSLAdapter(
-                    self.ssl_certificate, self.ssl_private_key,
-                    getattr(self, 'ssl_certificate_chain', None))
-
         # Select the appropriate socket
         if isinstance(self.bind_addr, basestring):
             # AF_UNIX socket
