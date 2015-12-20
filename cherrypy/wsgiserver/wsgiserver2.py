@@ -87,17 +87,29 @@ import re
 import email.utils
 import socket
 import sys
-if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
-    if not hasattr(socket, 'IPPROTO_IPV6'):
-        socket.IPPROTO_IPV6 = 41
-    if not hasattr(socket, 'IPV6_V6ONLY'):
-        socket.IPV6_V6ONLY = 27
+import threading
+import time
+import traceback as traceback_
+import operator
+from urllib import unquote
+import warnings
+import errno
+import logging
 try:
     # prefer slower Python-based io module
     import _pyio as io
 except ImportError:
     # Python 2.6
     import io
+
+
+if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
+    if not hasattr(socket, 'IPPROTO_IPV6'):
+        socket.IPPROTO_IPV6 = 41
+    if not hasattr(socket, 'IPV6_V6ONLY'):
+        socket.IPV6_V6ONLY = 27
+
+
 DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 
 
@@ -112,14 +124,6 @@ _fileobject_uses_str_type = isinstance(
     socket._fileobject(FauxSocket())._rbuf, basestring)
 del FauxSocket  # this class is not longer required for anything.
 
-import threading
-import time
-import traceback as traceback_
-
-import operator
-
-from urllib import unquote
-import warnings
 
 if sys.version_info >= (3, 0):
     bytestr = bytes
@@ -158,8 +162,6 @@ QUESTION_MARK = ntob('?')
 ASTERISK = ntob('*')
 FORWARD_SLASH = ntob('/')
 quoted_slash = re.compile(ntob("(?i)%2F"))
-
-import errno
 
 
 def plat_specific_errors(*errnames):
@@ -204,7 +206,6 @@ comma_separated_headers = [
 ]
 
 
-import logging
 if not hasattr(logging, 'statistics'):
     logging.statistics = {}
 
