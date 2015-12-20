@@ -3,7 +3,7 @@ import time
 import unittest
 
 import cherrypy
-from cherrypy._cpcompat import get_daemon, set
+from cherrypy._cpcompat import get_daemon
 from cherrypy.process import wspbus
 
 

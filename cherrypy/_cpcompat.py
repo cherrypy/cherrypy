@@ -111,11 +111,6 @@ def assert_native(n):
         raise TypeError("n must be a native str (got %s)" % type(n).__name__)
 
 try:
-    set = set
-except NameError:
-    from sets import Set as set
-
-try:
     # Python 3.1+
     from base64 import decodebytes as _base64_decodebytes
 except ImportError:

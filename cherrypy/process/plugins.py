@@ -8,7 +8,7 @@ import time
 import threading
 
 from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident
-from cherrypy._cpcompat import ntob, set, Timer, SetDaemonProperty
+from cherrypy._cpcompat import ntob, Timer, SetDaemonProperty
 
 # _module__file__base is used by Autoreload to make
 # absolute any filenames retrieved from sys.modules which are not
@@ -200,7 +200,7 @@ class DropPrivileges(SimplePlugin):
 
     """Drop privileges. uid/gid arguments not available on Windows.
 
-    Special thanks to `Gavin Baker <http://antonym.org/2005/12/dropping-privileges-in-python.html>`_ 
+    Special thanks to `Gavin Baker <http://antonym.org/2005/12/dropping-privileges-in-python.html>`_
     """
 
     def __init__(self, bus, umask=None, uid=None, gid=None):
