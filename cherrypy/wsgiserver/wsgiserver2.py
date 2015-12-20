@@ -84,7 +84,7 @@ try:
 except:
     import Queue as queue
 import re
-import rfc822
+import email.utils
 import socket
 import sys
 if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
@@ -975,7 +975,7 @@ class HTTPRequest(object):
                 self.rfile.read(remaining)
 
         if "date" not in hkeys:
-            self.outheaders.append(("Date", rfc822.formatdate()))
+            self.outheaders.append(("Date", email.utils.formatdate()))
 
         if "server" not in hkeys:
             self.outheaders.append(("Server", self.server.server_name))
