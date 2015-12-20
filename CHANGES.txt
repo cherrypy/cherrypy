@@ -5,6 +5,8 @@
 * Removed deprecated support for ``ssl_certificate`` and
   ``ssl_private_key`` attributes and implicit construction
   of SSL adapter on Python 2 WSGI servers.
+* Default SSL Adapter on Python 2 is the builtin SSL adapter,
+  matching Python 3 behavior.
 
 -----
 4.0.0

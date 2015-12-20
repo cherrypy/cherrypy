@@ -2166,7 +2166,7 @@ ssl_adapters = {
 }
 
 
-def get_ssl_adapter_class(name='pyopenssl'):
+def get_ssl_adapter_class(name='builtin'):
     """Return an SSL adapter class for the given name."""
     adapter = ssl_adapters[name.lower()]
     if isinstance(adapter, basestring):
