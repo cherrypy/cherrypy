@@ -1,5 +1,7 @@
+from hashlib import md5, sha1
+
 import cherrypy
-from cherrypy._cpcompat import md5, sha, ntob
+from cherrypy._cpcompat import ntob
 from cherrypy.lib import httpauth
 
 from cherrypy.test import helper
@@ -39,10 +41,10 @@ class HTTPAuthTest(helper.CPWebCase):
             return {'test': 'test'}
 
         def sha_password_encrypter(password):
-            return sha(ntob(password)).hexdigest()
+            return sha1(ntob(password)).hexdigest()
 
         def fetch_password(username):
-            return sha(ntob('test')).hexdigest()
+            return sha1(ntob('test')).hexdigest()
 
         conf = {
             '/digest': {

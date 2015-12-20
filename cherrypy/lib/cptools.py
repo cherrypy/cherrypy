@@ -2,9 +2,10 @@
 
 import logging
 import re
+from hashlib import md5
 
 import cherrypy
-from cherrypy._cpcompat import basestring, md5, set, unicodestr
+from cherrypy._cpcompat import basestring, set, unicodestr
 from cherrypy.lib import httputil as _httputil
 from cherrypy.lib import is_iterator
 

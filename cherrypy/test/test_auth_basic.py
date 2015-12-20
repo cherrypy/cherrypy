@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:expandtab:fileencoding=utf-8
 
+from hashlib import md5
+
 import cherrypy
-from cherrypy._cpcompat import md5, ntob
+from cherrypy._cpcompat import ntob
 from cherrypy.lib import auth_basic
 from cherrypy.test import helper
 
