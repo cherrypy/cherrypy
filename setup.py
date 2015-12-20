@@ -112,7 +112,7 @@ cmd_class = dict(
 )
 
 if sys.version_info >= (3, 0):
-    required_python_version = '3.0'
+    required_python_version = '3.1'
 else:
     required_python_version = '2.6'
 
