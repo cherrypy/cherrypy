@@ -112,16 +112,7 @@ del FauxSocket  # this class is not longer required for anything.
 
 import threading
 import time
-import traceback
-
-
-def format_exc(limit=None):
-    """Like print_exc() but return a string. Backport for Python 2.3."""
-    try:
-        etype, value, tb = sys.exc_info()
-        return ''.join(traceback.format_exception(etype, value, tb, limit))
-    finally:
-        etype = value = tb = None
+import traceback as traceback_
 
 import operator
 
@@ -1989,7 +1980,7 @@ class HTTPServer(object):
         sys.stderr.write(msg + '\n')
         sys.stderr.flush()
         if traceback:
-            tblines = format_exc()
+            tblines = traceback_.format_exc()
             sys.stderr.write(tblines)
             sys.stderr.flush()
 

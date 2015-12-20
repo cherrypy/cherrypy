@@ -100,7 +100,7 @@ DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 
 import threading
 import time
-from traceback import format_exc
+import traceback as traceback_
 
 if sys.version_info >= (3, 0):
     bytestr = bytes
@@ -1681,7 +1681,7 @@ class HTTPServer(object):
         sys.stderr.write(msg + '\n')
         sys.stderr.flush()
         if traceback:
-            tblines = format_exc()
+            tblines = traceback_.format_exc()
             sys.stderr.write(tblines)
             sys.stderr.flush()
 
