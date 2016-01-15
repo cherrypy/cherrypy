@@ -206,7 +206,7 @@ Note that the decorator accepts more than a single binding. For instance:
 
 This would handle the following URL:
 
-- http://localhost:8080/nirvana/albums/nevermind/track/06/polly
+- http://localhost:8080/nirvana/albums/nevermind/tracks/06/polly
 
 Notice finally how the whole stack of segments is passed to each
 page handler so that you have the full context.
