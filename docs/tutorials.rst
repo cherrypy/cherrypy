@@ -738,7 +738,7 @@ this is not the right way of keeping your data on the long run.
 Sessions are there to identify your user and carry as little
 amount of data as necessary for the operation carried by the user.
 
-To store, persist and query data your need a proper database server.
+To store, persist and query data you need a proper database server.
 There exist many to choose from with various paradigm support:
 
 - relational: PostgreSQL, SQLite, MariaDB, Firebird
@@ -1131,7 +1131,7 @@ In order to understand them, let's imagine you are at a superstore:
   to make sure sections are always in order (this is your backend)
 
 In spite of being really simplistic, this is not far from how your
-application behaves. CherryPy helps your structure your application 
+application behaves. CherryPy helps you structure your application 
 in a way that mirrors these high-level ideas.
 
 Dispatchers
