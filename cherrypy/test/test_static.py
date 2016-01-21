@@ -344,7 +344,7 @@ class StaticTest(helper.CPWebCase):
         self.assertStatus('404 Not Found')
 
     def test_unicode(self):
-        self.getPage(u"/static/%s.html" % url_quote(u"Слава Україні"))
+        self.getPage("/static/%s.html" % url_quote("Слава Україні"))
         self.assertInBody(u"Героям Слава!")
 
 def error_page_404(status, message, traceback, version):
