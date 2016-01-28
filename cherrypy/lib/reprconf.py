@@ -398,7 +398,11 @@ class _Builder3:
             if a.arg:
                 kwargs[a.arg] = self.build(a.value)
             else:
-                kwargs[a.value.id] = self.build(a.value)
+                if _ast.Dict is type(a.value):
+                    for k, v in zip(a.value.keys, a.value.values):
+                        kwargs[self.build(k)] = self.build(v)
+                else:
+                    kwargs[a.value.id] = self.build(a.value)
 
         return callee(*(args), **kwargs)
 
