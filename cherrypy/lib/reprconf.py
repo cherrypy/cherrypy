@@ -287,7 +287,7 @@ class _Builder2:
         key, value_obj = o.getChildren()
         value = self.build(value_obj)
         kw_dict = {key: value}
-        return kw_dict 
+        return kw_dict
 
     def build_List(self, o):
         return map(self.build, o.getChildren())
@@ -377,7 +377,35 @@ class _Builder3:
     def build_Index(self, o):
         return self.build(o.value)
 
+    def build_Call35(self, o):
+        """workaround for python 3.5 _ast.Call signature, docs found here
+        https://greentreesnakes.readthedocs.org/en/latest/nodes.html"""
+        callee = self.build(o.func)
+
+        args = ()
+        kwargs = dict()
+        if o.args is not None:
+            import _ast
+            args = []
+            for a in o.args:
+                if _ast.Starred is not type(a):
+                    args.append(self.build(a))
+                else:
+                    args.append(self.build(a.value))
+            args = tuple(args)
+
+        for a in o.keywords:
+            if a.arg:
+                kwargs[a.arg] = self.build(a.value)
+            else:
+                kwargs[a.value.id] = self.build(a.value)
+
+        return callee(*(args), **kwargs)
+
     def build_Call(self, o):
+        if sys.version_info >= (3, 5):
+            return self.build_Call35(o)
+
         callee = self.build(o.func)
 
         if o.args is None:
