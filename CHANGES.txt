@@ -7,6 +7,8 @@
   of SSL adapter on Python 2 WSGI servers.
 * Default SSL Adapter on Python 2 is the builtin SSL adapter,
   matching Python 3 behavior.
+* Pull request #94: In proxy tool, defer to Host header for
+  resolving the base if no base is supplied.
 
 -----
 4.0.0
