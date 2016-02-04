@@ -555,20 +555,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody(data)
 
     def testCookies(self):
-        if sys.version_info >= (2, 5):
-            header_value = lambda x: x
-        else:
-            header_value = lambda x: x + ';'
-
         self.getPage("/cookies/single?name=First",
                      [('Cookie', 'First=Dinsdale;')])
-        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
+        self.assertHeader('Set-Cookie', 'First=Dinsdale')
 
         self.getPage("/cookies/multiple?names=First&names=Last",
                      [('Cookie', 'First=Dinsdale; Last=Piranha;'),
                       ])
-        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
-        self.assertHeader('Set-Cookie', header_value('Last=Piranha'))
+        self.assertHeader('Set-Cookie', 'First=Dinsdale')
+        self.assertHeader('Set-Cookie', 'Last=Piranha')
 
         self.getPage("/cookies/single?name=Something-With%2CComma",
                      [('Cookie', 'Something-With,Comma=some-value')])
