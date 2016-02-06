@@ -759,12 +759,12 @@ for _ in ("ECONNRESET", "WSAECONNRESET"):
         socket_reset_errors.append(getattr(errno, _))
 
 class LimitedRequestQueueTests(helper.CPWebCase):
-    setup_server = staticmethod(setup_upload_server)    
+    setup_server = staticmethod(setup_upload_server)
 
     def test_queue_full(self):
         conns = []
         overflow_conn = None
-        
+
         try:
             # Make 15 initial requests and leave them open, which should use
             # all of wsgiserver's WorkerThreads and fill its Queue.
@@ -777,7 +777,7 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 conn.putheader("Content-Length", "4")
                 conn.endheaders()
                 conns.append(conn)
-            
+
             # Now try a 16th conn, which should be closed by the server immediately.
             overflow_conn = self.HTTP_CONN(self.HOST, self.PORT)
             # Manually connect since httplib won't let us set a timeout
@@ -788,7 +788,7 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 overflow_conn.sock.settimeout(5)
                 overflow_conn.sock.connect(sa)
                 break
-            
+
             overflow_conn.putrequest("GET", "/", skip_host=True)
             overflow_conn.putheader("Host", self.HOST)
             overflow_conn.endheaders()
