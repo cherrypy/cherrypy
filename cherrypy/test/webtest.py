@@ -510,38 +510,11 @@ def openURL(url, headers=None, method="GET", body=None,
             conn._http_vsn_str = protocol
             conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
 
-            if not py3k:
-                conn.putrequest(method.upper(), url, skip_host=True,
-                                skip_accept_encoding=True)
-            else:
-                import http.client
-                # Replace the stdlib method, which only accepts ASCII url's
+            if py3k and isinstance(url, bytes):
+                url = url.decode()
 
-                def putrequest(self, method, url):
-                    if (
-                        self._HTTPConnection__response and
-                        self._HTTPConnection__response.isclosed()
-                    ):
-                        self._HTTPConnection__response = None
-
-                    if self._HTTPConnection__state == http.client._CS_IDLE:
-                        self._HTTPConnection__state = (
-                            http.client._CS_REQ_STARTED)
-                    else:
-                        raise http.client.CannotSendRequest()
-
-                    self._method = method
-                    if not url:
-                        url = ntob('/')
-                    request = ntob(' ').join(
-                        (method.encode("ASCII"),
-                         url,
-                         self._http_vsn_str.encode("ASCII")))
-                    self._output(request)
-                import types
-                conn.putrequest = types.MethodType(putrequest, conn)
-
-                conn.putrequest(method.upper(), url)
+            conn.putrequest(method.upper(), url, skip_host=True,
+                            skip_accept_encoding=True)
 
             for key, value in headers:
                 conn.putheader(key, value.encode("Latin-1"))
