@@ -9,6 +9,7 @@ import cherrypy
 from cherrypy._cpcompat import IncompleteRead, itervalues, ntob
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
+from cherrypy.test._test_decorators import ExposeExamples
 
 
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
@@ -41,10 +42,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             baseurl.exposed = True
 
         root = Root()
-
-        if sys.version_info >= (2, 5):
-            from cherrypy.test._test_decorators import ExposeExamples
-            root.expose_dec = ExposeExamples()
+        root.expose_dec = ExposeExamples()
 
         class TestType(type):
 
