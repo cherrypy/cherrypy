@@ -768,7 +768,6 @@ class LimitedRequestQueueTests(helper.CPWebCase):
         try:
             # Make 15 initial requests and leave them open, which should use
             # all of wsgiserver's WorkerThreads and fill its Queue.
-            import time
             for i in range(15):
                 conn = self.HTTP_CONN(self.HOST, self.PORT)
                 conn.putrequest("POST", "/upload", skip_host=True)
