@@ -799,8 +799,11 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 if exc.args[0] in socket_reset_errors:
                     pass # Expected.
                 else:
-                    raise AssertionError("Overflow conn did not get RST. "
-                                         "Got %s instead" % repr(exc.args))
+                    tmpl = (
+                        "Overflow conn did not get RST. "
+                        "Got {exc.args!r} instead"
+                    )
+                    raise AssertionError(tmpl.format(**locals()))
             except BadStatusLine:
                 # This is a special case in OS X. Linux and Windows will
                 # RST correctly.
