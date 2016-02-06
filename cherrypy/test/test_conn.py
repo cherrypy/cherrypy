@@ -3,6 +3,7 @@
 import socket
 import sys
 import time
+import errno
 
 
 import cherrypy
@@ -750,7 +751,6 @@ def setup_upload_server():
         'server.accepted_queue_timeout': 0.1,
     })
 
-import errno
 socket_reset_errors = []
 # Not all of these names will be defined for every platform.
 for _ in ("ECONNRESET", "WSAECONNRESET"):
