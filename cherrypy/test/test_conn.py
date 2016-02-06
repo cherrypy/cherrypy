@@ -757,6 +757,13 @@ for _ in ("ECONNRESET", "WSAECONNRESET"):
     if _ in dir(errno):
         socket_reset_errors.append(getattr(errno, _))
 
+socket_reset_errors += [
+    # Python 3.5 raises an http.client.RemoteDisconnected
+    # with this message
+    "Remote end closed connection without response",
+]
+
+
 class LimitedRequestQueueTests(helper.CPWebCase):
     setup_server = staticmethod(setup_upload_server)
 
