@@ -3,7 +3,6 @@
 import socket
 import sys
 import time
-timeout = 1
 
 
 import cherrypy
@@ -12,6 +11,7 @@ from cherrypy._cpcompat import BadStatusLine, ntob, tonative, urlopen, unicodest
 from cherrypy.test import webtest
 
 
+timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 
