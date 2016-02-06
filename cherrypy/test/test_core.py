@@ -548,7 +548,22 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/favicon.ico")
         self.assertBody(data)
 
+    def skip_if_bad_cookies(self):
+        """
+        cookies module fails to reject invalid cookies
+        https://bitbucket.org/cherrypy/cherrypy/issues/1405
+        """
+        cookies = sys.modules.get('http.cookies')
+        _is_legal_key = getattr(cookies, '_is_legal_key', lambda x: False)
+        if not _is_legal_key(','):
+            return
+        issue = 'http://bugs.python.org/issue26302'
+        tmpl = "Broken cookies module ({issue})"
+        self.skip(tmpl.format(**locals()))
+
     def testCookies(self):
+        self.skip_if_bad_cookies()
+
         self.getPage("/cookies/single?name=First",
                      [('Cookie', 'First=Dinsdale;')])
         self.assertHeader('Set-Cookie', 'First=Dinsdale')
