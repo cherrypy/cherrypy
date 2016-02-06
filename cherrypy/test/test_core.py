@@ -649,9 +649,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('/page1')
 
     def test_expose_decorator(self):
-        if not sys.version_info >= (2, 5):
-            return self.skip("skipped (Python 2.5+ only) ")
-
         # Test @expose
         self.getPage("/expose_dec/no_call")
         self.assertStatus(200)
