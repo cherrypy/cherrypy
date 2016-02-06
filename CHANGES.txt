@@ -1,4 +1,10 @@
 -----
+5.0.1
+-----
+
+* Bugfix for NameError following #94.
+
+-----
 5.0.0
 -----
 
