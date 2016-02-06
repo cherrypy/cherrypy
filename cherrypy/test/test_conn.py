@@ -751,11 +751,13 @@ def setup_upload_server():
         'server.accepted_queue_timeout': 0.1,
     })
 
-socket_reset_errors = []
-# Not all of these names will be defined for every platform.
-for _ in ("ECONNRESET", "WSAECONNRESET"):
-    if _ in dir(errno):
-        socket_reset_errors.append(getattr(errno, _))
+reset_names = 'ECONNRESET', 'WSAECONNRESET'
+socket_reset_errors = [
+    getattr(errno, name)
+    for name in reset_names
+    if hasattr(errno, name)
+]
+"reset error numbers available on this platform"
 
 socket_reset_errors += [
     # Python 3.5 raises an http.client.RemoteDisconnected
