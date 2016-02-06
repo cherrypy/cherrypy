@@ -248,11 +248,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 cherrypy.response.cookie[str(name)] = cookie.value
 
             def multiple(self, names):
-                for name in names:
-                    cookie = cherrypy.request.cookie[name]
-                    # Python2's SimpleCookie.__setitem__ won't take unicode
-                    # keys.
-                    cherrypy.response.cookie[str(name)] = cookie.value
+                list(map(self.single, names))
 
         def append_headers(header_list, debug=False):
             if debug:
