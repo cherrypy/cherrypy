@@ -5,7 +5,7 @@ Tutorials
 
 
 This tutorial will walk you through basic but complete CherryPy applications
-that will show you common concepts as well as slightly more adavanced ones.
+that will show you common concepts as well as slightly more advanced ones.
 
 .. contents::
    :depth:  4
