@@ -2,6 +2,7 @@ import os
 import sys
 import socket
 import atexit
+import tempfile
 
 import cherrypy
 from cherrypy.test import helper
@@ -9,7 +10,7 @@ from cherrypy._cpcompat import HTTPConnection
 
 
 USOCKET_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
+    tempfile.gettempdir(),
     'cp_test.sock'
 )
 
