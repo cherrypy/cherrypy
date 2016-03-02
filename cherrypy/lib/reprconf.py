@@ -281,6 +281,7 @@ class _Builder2:
             # Everything else becomes args
             else :
                 args.append(self.build(child))
+
         return callee(*args, **kwargs)
 
     def build_Keyword(self, o):
@@ -377,40 +378,38 @@ class _Builder3:
     def build_Index(self, o):
         return self.build(o.value)
 
-    def build_Call35(self, o):
+    def _build_call35(self, o):
         """
         Workaround for python 3.5 _ast.Call signature, docs found here
         https://greentreesnakes.readthedocs.org/en/latest/nodes.html
         """
+        import ast
         callee = self.build(o.func)
-
-        args = ()
-        kwargs = dict()
+        args = []
         if o.args is not None:
-            import _ast
-            args = []
             for a in o.args:
-                if _ast.Starred is not type(a):
-                    args.append(self.build(a))
-                else:
+                if isinstance(a, ast.Starred):
                     args.append(self.build(a.value))
-            args = tuple(args)
-
-        for a in o.keywords:
-            if a.arg:
-                kwargs[a.arg] = self.build(a.value)
-            else:
-                if _ast.Dict is type(a.value):
-                    for k, v in zip(a.value.keys, a.value.values):
-                        kwargs[self.build(k)] = self.build(v)
                 else:
-                    kwargs[a.value.id] = self.build(a.value)
-
-        return callee(*(args), **kwargs)
+                    args.append(self.build(a))
+        kwargs = {}
+        for kw in o.keywords:
+            if kw.arg is None: # double asterix `**`
+                rst = self.build(kw.value)
+                if not isinstance(rst, dict):
+                    raise TypeError("Invalid argument for call."
+                                    "Must be a mapping object.")
+                # give preference to the keys set directly from arg=value
+                for k, v in rst.items():
+                    if k not in kwargs:
+                        kwargs[k] = v
+            else: # defined on the call as: arg=value
+                kwargs[kw.arg] = self.build(kw.value)
+        return callee(*args, **kwargs)
 
     def build_Call(self, o):
         if sys.version_info >= (3, 5):
-            return self.build_Call35(o)
+            return self._build_call35(o)
 
         callee = self.build(o.func)
 
@@ -422,13 +421,12 @@ class _Builder3:
         if o.starargs is None:
             starargs = ()
         else:
-            starargs = self.build(o.starargs)
+            starargs = tuple(self.build(o.starargs))
 
         if o.kwargs is None:
             kwargs = {}
         else:
             kwargs = self.build(o.kwargs)
-
         return callee(*(args + starargs), **kwargs)
 
     def build_List(self, o):
