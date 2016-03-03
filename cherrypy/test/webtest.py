@@ -238,8 +238,13 @@ class WebCase(TestCase):
         return interface(self.HOST)
 
     def getPage(self, url, headers=None, method="GET", body=None,
-                protocol=None):
+                protocol=None, raise_subcls=None):
         """Open the url with debugging support. Return status, headers, body.
+
+        `raise_subcls` must be a tuple with the exceptions classes
+        or a single exception class that are not going to be considered
+        a socket.error regardless that they were are subclass of a
+        socket.error and therefore not considered for a connection retry.
         """
         ServerError.on = False
 
@@ -252,7 +257,8 @@ class WebCase(TestCase):
         self.time = None
         start = time.time()
         result = openURL(url, headers, method, body, self.HOST, self.PORT,
-                         self.HTTP_CONN, protocol or self.PROTOCOL)
+                         self.HTTP_CONN, protocol or self.PROTOCOL,
+                         raise_subcls)
         self.time = time.time() - start
         self.status, self.headers, self.body = result
 
@@ -492,9 +498,15 @@ def shb(response):
 
 def openURL(url, headers=None, method="GET", body=None,
             host="127.0.0.1", port=8000, http_conn=HTTPConnection,
-            protocol="HTTP/1.1"):
-    """Open the given HTTP resource and return status, headers, and body."""
+            protocol="HTTP/1.1", raise_subcls=None):
+    """
+    Open the given HTTP resource and return status, headers, and body.
 
+    `raise_subcls` must be a tuple with the exceptions classes
+    or a single exception class that are not going to be considered
+    a socket.error regardless that they were are subclass of a
+    socket.error and therefore not considered for a connection retry.
+    """
     headers = cleanHeaders(headers, method, body, host, port)
 
     # Trying 10 times is simply in case of socket errors.
@@ -512,7 +524,6 @@ def openURL(url, headers=None, method="GET", body=None,
 
             if py3k and isinstance(url, bytes):
                 url = url.decode()
-
             conn.putrequest(method.upper(), url, skip_host=True,
                             skip_accept_encoding=True)
 
@@ -533,10 +544,16 @@ def openURL(url, headers=None, method="GET", body=None,
                 conn.close()
 
             return s, h, b
-        except socket.error:
-            time.sleep(0.5)
-            if trial == 9:
+        except socket.error as e:
+            if (raise_subcls is not None and
+                issubclass(e.__class__, raise_subcls)):
                 raise
+            else:
+                time.sleep(0.5)
+                if trial == 9:
+                    raise
+
+
 
 
 # Add any exceptions which your web framework handles

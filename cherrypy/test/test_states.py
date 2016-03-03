@@ -204,9 +204,25 @@ class ServerStateTests(helper.CPWebCase):
         # thread will just die without writing a response.
         engine.start()
         cherrypy.server.start()
-
+        # From python3.5 a new exception is retuned when the connection
+        # ends abruptly:
+        #   http.client.RemoteDisconnected
+        # RemoteDisconnected is a subclass of:
+        #   (ConnectionResetError, http.client.BadStatusLine)
+        # and ConnectionResetError is an indirect subclass of:
+        #    OSError
+        # From python 3.3 an up socket.error is an alias to OSError
+        # following PEP-3151, therefore http.client.RemoteDisconnected
+        # is considered a socket.error.
+        #
+        # raise_subcls specifies the classes that are not going
+        # to be considered as a socket.error for the retries.
+        # Given that RemoteDisconnected is part BadStatusLine
+        # we can use the same call for all py3 versions without
+        # sideffects. python < 3.5 will raise directly BadStatusLine
+        # which is not a subclass for socket.error/OSError.
         try:
-            self.getPage("/ctrlc")
+            self.getPage("/ctrlc", raise_subcls=BadStatusLine)
         except BadStatusLine:
             pass
         else:
