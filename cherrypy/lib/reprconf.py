@@ -427,6 +427,10 @@ class _Builder3:
             kwargs = {}
         else:
             kwargs = self.build(o.kwargs)
+        if o.keywords is not None: # direct a=b keywords
+            for kw in o.keywords:
+                # preference because is a direct keyword against **kwargs
+                kwargs[kw.arg] = self.build(kw.value)
         return callee(*(args + starargs), **kwargs)
 
     def build_List(self, o):
