@@ -289,11 +289,17 @@ class CallablesInConfigTest(unittest.TestCase):
         from textwrap import dedent
         conf = dedent("""
         [my]
-        value = dict(test_suite="OVERRIDE", **cherrypy.config.environments)
+        value = dict(foo="buzz", **cherrypy._test_dict)
         """)
+        test_dict = {
+            "foo": "bar",
+            "bar": "foo",
+            "fizz": "buzz"
+        }
+        cherrypy._test_dict = test_dict
         fp = compat.StringIO(conf)
         cherrypy.config.update(fp)
-        env = cherrypy.config.environments.copy()
-        env['test_suite'] = 'OVERRIDE'
-        self.assertEqual(cherrypy.config['my']['value']['test_suite'], 'OVERRIDE')
-        self.assertEqual(cherrypy.config['my']['value'], env)
+        test_dict['foo'] = 'buzz'
+        self.assertEqual(cherrypy.config['my']['value']['foo'], 'buzz')
+        self.assertEqual(cherrypy.config['my']['value'], test_dict)
+        del cherrypy._test_dict
