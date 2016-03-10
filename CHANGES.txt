@@ -1,6 +1,5 @@
-----------
-Unreleased
-----------
+5.1.0
+-----
 
 * Bugfix issue #1315 for ``test_HTTP11_pipelining`` test in Python 3.5
 * Bugfix issue #1382 regarding the keyword arguments support for Python 3
@@ -12,18 +11,16 @@ Unreleased
   `openURL` and ``CPWebCase.getPage`` to have finer control on
   which exceptions can be raised.
 * Add support for direct keywords on the calls (e.g. ``foo=bar``) on
-  the config file under python 3.
+  the config file under Python 3.
 * Add additional validation to determine if the process is running
   as a daemon on ``cherrypy.process.plugins.SignalHandler`` to allow
   the execution of the testsuite under CI tools.
 
------
 5.0.1
 -----
 
 * Bugfix for NameError following #94.
 
------
 5.0.0
 -----
 
@@ -35,28 +32,24 @@ Unreleased
 * Pull request #94: In proxy tool, defer to Host header for
   resolving the base if no base is supplied.
 
------
 4.0.0
 -----
 
 * Drop support for Python 2.5 and earlier.
 * No longer build Windows installers by default.
 
------
 3.8.2
 -----
 
 * Pull Request #116: Correct InternalServerError when null bytes in
   static file path. Now responds with 404 instead.
 
------
 3.8.0
 -----
 
 * Pull Request #96: Pass ``exc_info`` to logger as keyword rather than
   formatting the error and injecting into the message.
 
------
 3.7.0
 -----
 
@@ -66,7 +59,6 @@ Unreleased
   and pyOpenSSL 0.14. This change will break PyPy for now.
 * Several documentation fixes.
 
------
 3.6.0
 -----
 
@@ -80,7 +72,6 @@ Unreleased
 * Issue #1019: Allow logging host name in the access log.
 * Pull Request #50: Fixed race condition in session cleanup.
 
------
 3.5.0
 -----
 
@@ -88,13 +79,11 @@ Unreleased
   connections. This functionality was added to CherryPy 3.0, but
   unintentionally lost in 3.1.
 
------
 3.4.0
 -----
 
 * Miscellaneous quality improvements.
 
------
 3.3.0
 -----
 
