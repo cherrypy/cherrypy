@@ -545,8 +545,7 @@ def openURL(url, headers=None, method="GET", body=None,
 
             return s, h, b
         except socket.error as e:
-            if (raise_subcls is not None and
-                issubclass(e.__class__, raise_subcls)):
+            if raise_subcls is not None and isinstance(e, raise_subcls):
                 raise
             else:
                 time.sleep(0.5)
