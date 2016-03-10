@@ -1,3 +1,22 @@
+----------
+Unreleased
+----------
+
+* Bugfix issue #1315 for ``test_HTTP11_pipelining`` test in Python 3.5
+* Bugfix issue #1382 regarding the keyword arguments support for Python 3
+  on the config file.
+* Bugfix issue #1406 for ``test_2_KeyboardInterrupt`` test in Python 3.5.
+  by monkey patching the HTTPRequest given a bug on CPython
+  that is affecting the testsuite (https://bugs.python.org/issue23377).
+* Add additional parameter ``raise_subcls`` to the tests helpers
+  `openURL` and ``CPWebCase.getPage`` to have finer control on
+  which exceptions can be raised.
+* Add support for direct keywords on the calls (e.g. ``foo=bar``) on
+  the config file under python 3.
+* Add additional validation to determine if the process is running
+  as a daemon on ``cherrypy.process.plugins.SignalHandler`` to allow
+  the execution of the testsuite under CI tools.
+
 -----
 5.0.1
 -----
