@@ -8,12 +8,13 @@ import cherrypy
 from cherrypy.test import helper
 from cherrypy._cpcompat import HTTPConnection
 
+def usocket_path():
+    fd, path = tempfile.mkstemp('cp_test.sock')
+    os.close(fd)
+    os.remove(path)
+    return path
 
-USOCKET_PATH = os.path.join(
-    tempfile.gettempdir(),
-    'cp_test.sock'
-)
-
+USOCKET_PATH = usocket_path()
 
 class USocketHTTPConnection(HTTPConnection):
     """
