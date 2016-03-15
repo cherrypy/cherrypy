@@ -11,7 +11,7 @@ bigfile_filepath = os.path.join(curdir, "static", "bigfile.log")
 # The file size needs to be big enough such that half the size of it
 # won't be socket-buffered (or server-buffered) all in one go. See
 # test_file_stream.
-BIGFILE_SIZE = 1024 * 1024 * 4
+BIGFILE_SIZE = 1024 * 1024 * 20
 
 import cherrypy
 from cherrypy.lib import static
@@ -279,7 +279,9 @@ class StaticTest(helper.CPWebCase):
             #
             # At the time of writing, we seem to have encountered
             # buffer sizes bigger than 512K, so we've increased
-            # BIGFILE_SIZE to 4MB.
+            # BIGFILE_SIZE to 4MB and in 2016 to 20MB.
+            # This test is going to keep failing according to the
+            # improvements in hardware and OS buffers.
             if tell_position >= BIGFILE_SIZE:
                 if read_so_far < (BIGFILE_SIZE / 2):
                     self.fail(
