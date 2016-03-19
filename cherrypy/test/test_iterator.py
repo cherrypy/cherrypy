@@ -4,7 +4,7 @@ from cherrypy._cpcompat import unicodestr
 class IteratorBase(object):
 
     created = 0
-    datachunk = u'butternut squash' * 256
+    datachunk = 'butternut squash' * 256
 
     @classmethod
     def incr(cls):
