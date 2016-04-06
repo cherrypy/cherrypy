@@ -269,3 +269,37 @@ class VariableSubstitutionTests(unittest.TestCase):
         self.assertEqual(cherrypy.config["my"]["my.dir"], "/some/dir/my/dir")
         self.assertEqual(cherrypy.config["my"]
                          ["my.dir2"], "/some/dir/my/dir/dir2")
+
+
+class CallablesInConfigTest(unittest.TestCase):
+    setup_server = staticmethod(setup_server)
+
+
+    def test_call_with_literal_dict(self):
+        from textwrap import dedent
+        conf = dedent("""
+        [my]
+        value = dict(**{'foo': 'bar'})
+        """)
+        fp = compat.StringIO(conf)
+        cherrypy.config.update(fp)
+        self.assertEqual(cherrypy.config['my']['value'], {'foo': 'bar'})
+
+    def test_call_with_kwargs(self):
+        from textwrap import dedent
+        conf = dedent("""
+        [my]
+        value = dict(foo="buzz", **cherrypy._test_dict)
+        """)
+        test_dict = {
+            "foo": "bar",
+            "bar": "foo",
+            "fizz": "buzz"
+        }
+        cherrypy._test_dict = test_dict
+        fp = compat.StringIO(conf)
+        cherrypy.config.update(fp)
+        test_dict['foo'] = 'buzz'
+        self.assertEqual(cherrypy.config['my']['value']['foo'], 'buzz')
+        self.assertEqual(cherrypy.config['my']['value'], test_dict)
+        del cherrypy._test_dict

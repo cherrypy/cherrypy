@@ -9,6 +9,7 @@ import cherrypy
 from cherrypy._cpcompat import IncompleteRead, itervalues, ntob
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
+from cherrypy.test._test_decorators import ExposeExamples
 
 
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
@@ -41,10 +42,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             baseurl.exposed = True
 
         root = Root()
-
-        if sys.version_info >= (2, 5):
-            from cherrypy.test._test_decorators import ExposeExamples
-            root.expose_dec = ExposeExamples()
+        root.expose_dec = ExposeExamples()
 
         class TestType(type):
 
@@ -250,11 +248,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 cherrypy.response.cookie[str(name)] = cookie.value
 
             def multiple(self, names):
-                for name in names:
-                    cookie = cherrypy.request.cookie[name]
-                    # Python2's SimpleCookie.__setitem__ won't take unicode
-                    # keys.
-                    cherrypy.response.cookie[str(name)] = cookie.value
+                list(map(self.single, names))
 
         def append_headers(header_list, debug=False):
             if debug:
@@ -554,21 +548,31 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/favicon.ico")
         self.assertBody(data)
 
+    def skip_if_bad_cookies(self):
+        """
+        cookies module fails to reject invalid cookies
+        https://bitbucket.org/cherrypy/cherrypy/issues/1405
+        """
+        cookies = sys.modules.get('http.cookies')
+        _is_legal_key = getattr(cookies, '_is_legal_key', lambda x: False)
+        if not _is_legal_key(','):
+            return
+        issue = 'http://bugs.python.org/issue26302'
+        tmpl = "Broken cookies module ({issue})"
+        self.skip(tmpl.format(**locals()))
+
     def testCookies(self):
-        if sys.version_info >= (2, 5):
-            header_value = lambda x: x
-        else:
-            header_value = lambda x: x + ';'
+        self.skip_if_bad_cookies()
 
         self.getPage("/cookies/single?name=First",
                      [('Cookie', 'First=Dinsdale;')])
-        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
+        self.assertHeader('Set-Cookie', 'First=Dinsdale')
 
         self.getPage("/cookies/multiple?names=First&names=Last",
                      [('Cookie', 'First=Dinsdale; Last=Piranha;'),
                       ])
-        self.assertHeader('Set-Cookie', header_value('First=Dinsdale'))
-        self.assertHeader('Set-Cookie', header_value('Last=Piranha'))
+        self.assertHeader('Set-Cookie', 'First=Dinsdale')
+        self.assertHeader('Set-Cookie', 'Last=Piranha')
 
         self.getPage("/cookies/single?name=Something-With%2CComma",
                      [('Cookie', 'Something-With,Comma=some-value')])
@@ -660,9 +664,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('/page1')
 
     def test_expose_decorator(self):
-        if not sys.version_info >= (2, 5):
-            return self.skip("skipped (Python 2.5+ only) ")
-
         # Test @expose
         self.getPage("/expose_dec/no_call")
         self.assertStatus(200)

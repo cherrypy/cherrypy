@@ -5,7 +5,7 @@ Tutorials
 
 
 This tutorial will walk you through basic but complete CherryPy applications
-that will show you common concepts as well as slightly more adavanced ones.
+that will show you common concepts as well as slightly more advanced ones.
 
 .. contents::
    :depth:  4
@@ -183,7 +183,7 @@ Tutorial 4: Submit this form
 ############################
 
 CherryPy is a web framework upon which you build web applications.
-The most traditionnal shape taken by applications is through
+The most traditional shape taken by applications is through
 an HTML user-interface speaking to your CherryPy server.
 
 Let's see how to handle HTML forms via the following

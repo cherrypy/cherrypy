@@ -2,17 +2,19 @@ import os
 import sys
 import socket
 import atexit
+import tempfile
 
 import cherrypy
 from cherrypy.test import helper
 from cherrypy._cpcompat import HTTPConnection
 
+def usocket_path():
+    fd, path = tempfile.mkstemp('cp_test.sock')
+    os.close(fd)
+    os.remove(path)
+    return path
 
-USOCKET_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    'cp_test.sock'
-)
-
+USOCKET_PATH = usocket_path()
 
 class USocketHTTPConnection(HTTPConnection):
     """

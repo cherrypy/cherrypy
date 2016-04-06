@@ -341,12 +341,18 @@ class CPWebCase(webtest.WebCase):
         sys.exit()
 
     def getPage(self, url, headers=None, method="GET", body=None,
-                protocol=None):
-        """Open the url. Return status, headers, body."""
+                protocol=None, raise_subcls=None):
+        """Open the url. Return status, headers, body.
+
+        `raise_subcls` must be a tuple with the exceptions classes
+        or a single exception class that are not going to be considered
+        a socket.error regardless that they were are subclass of a
+        socket.error and therefore not considered for a connection retry.
+        """
         if self.script_name:
             url = httputil.urljoin(self.script_name, url)
         return webtest.WebCase.getPage(self, url, headers, method, body,
-                                       protocol)
+                                       protocol, raise_subcls)
 
     def skip(self, msg='skipped '):
         raise nose.SkipTest(msg)

@@ -113,7 +113,10 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        with patch.object(c, '_set_content_length'):
+        if hasattr(c, '_set_content_length'): # python 2.6 doesn't have it
+            with patch.object(c, '_set_content_length'):
+                c.request("POST", "/")
+        else:
             c.request("POST", "/")
         response = c.getresponse()
         self.body = response.fp.read()

@@ -3,16 +3,23 @@
 import socket
 import sys
 import time
-timeout = 1
+import errno
 
 
 import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, NotConnected
-from cherrypy._cpcompat import BadStatusLine, ntob, tonative, urlopen, unicodestr
+from cherrypy._cpcompat import (
+    BadStatusLine,
+    ntob,
+    tonative,
+    urlopen,
+    unicodestr,
+    py3k
+)
 from cherrypy.test import webtest
-from cherrypy import _cperror
 
 
+timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 
@@ -434,6 +441,12 @@ class PipelineTests(helper.CPWebCase):
 
             # Retrieve previous response
             response = conn.response_class(conn.sock, method="GET")
+            # there is a bug in python3 regarding the buffering of
+            # ``conn.sock``. Until that bug get's fixed we will
+            # monkey patch the ``reponse`` instance.
+            # https://bugs.python.org/issue23377
+            if py3k:
+                response.fp = conn.sock.makefile("rb", 0)
             response.begin()
             body = response.read(13)
             self.assertEqual(response.status, 200)
@@ -751,24 +764,31 @@ def setup_upload_server():
         'server.accepted_queue_timeout': 0.1,
     })
 
-import errno
-socket_reset_errors = []
-# Not all of these names will be defined for every platform.
-for _ in ("ECONNRESET", "WSAECONNRESET"):
-    if _ in dir(errno):
-        socket_reset_errors.append(getattr(errno, _))
+reset_names = 'ECONNRESET', 'WSAECONNRESET'
+socket_reset_errors = [
+    getattr(errno, name)
+    for name in reset_names
+    if hasattr(errno, name)
+]
+"reset error numbers available on this platform"
+
+socket_reset_errors += [
+    # Python 3.5 raises an http.client.RemoteDisconnected
+    # with this message
+    "Remote end closed connection without response",
+]
+
 
 class LimitedRequestQueueTests(helper.CPWebCase):
-    setup_server = staticmethod(setup_upload_server)    
+    setup_server = staticmethod(setup_upload_server)
 
     def test_queue_full(self):
         conns = []
         overflow_conn = None
-        
+
         try:
             # Make 15 initial requests and leave them open, which should use
             # all of wsgiserver's WorkerThreads and fill its Queue.
-            import time
             for i in range(15):
                 conn = self.HTTP_CONN(self.HOST, self.PORT)
                 conn.putrequest("POST", "/upload", skip_host=True)
@@ -777,7 +797,7 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 conn.putheader("Content-Length", "4")
                 conn.endheaders()
                 conns.append(conn)
-            
+
             # Now try a 16th conn, which should be closed by the server immediately.
             overflow_conn = self.HTTP_CONN(self.HOST, self.PORT)
             # Manually connect since httplib won't let us set a timeout
@@ -788,7 +808,7 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 overflow_conn.sock.settimeout(5)
                 overflow_conn.sock.connect(sa)
                 break
-            
+
             overflow_conn.putrequest("GET", "/", skip_host=True)
             overflow_conn.putheader("Host", self.HOST)
             overflow_conn.endheaders()
@@ -799,8 +819,11 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 if exc.args[0] in socket_reset_errors:
                     pass # Expected.
                 else:
-                    raise AssertionError("Overflow conn did not get RST. "
-                                         "Got %s instead" % repr(exc.args))
+                    tmpl = (
+                        "Overflow conn did not get RST. "
+                        "Got {exc.args!r} instead"
+                    )
+                    raise AssertionError(tmpl.format(**locals()))
             except BadStatusLine:
                 # This is a special case in OS X. Linux and Windows will
                 # RST correctly.
