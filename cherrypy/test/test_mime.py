@@ -74,7 +74,7 @@ This is the <strong>HTML</strong> version
             '--X',
             # Test a param with more than one value.
             # See
-            # https://bitbucket.org/cherrypy/cherrypy/issue/1028
+            # https://github.com/cherrypy/cherrypy/issues/1028
             'Content-Disposition: form-data; name="baz"',
             '',
             '111',

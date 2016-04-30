@@ -6,7 +6,7 @@ CherryPy is a pure Python library. This has various consequences:
 
  - It can run anywhere Python runs
  - It does not require a C compiler
- - It can run on various implementations of the Python language: `CPython <http://python.org/>`_, 
+ - It can run on various implementations of the Python language: `CPython <http://python.org/>`_,
    `IronPython <http://ironpython.net/>`_, `Jython <http://www.jython.org/>`_ and `PyPy <http://pypy.org/>`_
 
 .. contents::
@@ -45,11 +45,11 @@ CherryPy can be easily installed via common Python package managers such as setu
 
    $ pip install cherrypy
 
-You may also get the latest CherryPy version by grabbing the source code from BitBucket:
+You may also get the latest CherryPy version by grabbing the source code from Github:
 
 .. code-block:: bash
 
-   $ hg clone https://bitbucket.org/cherrypy/cherrypy
+   $ git clone https://github.com/cherrypy/cherrypy
    $ cd cherrypy
    $ python setup.py install
 

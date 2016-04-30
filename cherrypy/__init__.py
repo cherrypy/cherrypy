@@ -56,7 +56,10 @@ with customized or extended components. The core API's are:
 These API's are described in the `CherryPy specification <https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
 
-__version__ = "5.1.0"
+try:
+    import pkg_resources
+except ImportError:
+    pass
 
 from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
 from cherrypy._cpcompat import basestring, unicodestr
@@ -86,6 +89,12 @@ try:
     del win32
 except ImportError:
     engine = process.bus
+
+
+try:
+    __version__ = pkg_resources.require('cherrypy')[0].version
+except Exception:
+    __version__ = 'unknown'
 
 
 # Timeout monitor. We add two channels to the engine
@@ -318,7 +327,7 @@ class _GlobalLogManager(_cplogging.LogManager):
         """Log the given message to the app.log or global log as appropriate.
         """
         # Do NOT use try/except here. See
-        # https://bitbucket.org/cherrypy/cherrypy/issue/945
+        # https://github.com/cherrypy/cherrypy/issues/945
         if hasattr(request, 'app') and hasattr(request.app, 'log'):
             log = request.app.log
         else:

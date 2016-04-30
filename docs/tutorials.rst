@@ -915,10 +915,11 @@ First, let's see how our HTML code has changed:
          <link href="/static/css/style.css" rel="stylesheet">
          <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js"></script>
          <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
        </head>
        <body>
          <div id="generator"></div>
-         <script type="text/javascript" src="static/js/gen.js"></script>
+         <script type="text/babel" src="static/js/gen.js"></script>
        </body>
     </html>
 

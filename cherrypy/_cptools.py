@@ -271,7 +271,7 @@ class SessionTool(Tool):
         body. This is off by default for safety reasons; for example,
         a large upload would block the session, denying an AJAX
         progress meter
-        (`issue <https://bitbucket.org/cherrypy/cherrypy/issue/630>`_).
+        (`issue <https://github.com/cherrypy/cherrypy/issues/630>`_).
 
         When 'explicit' (or any other value), you need to call
         cherrypy.session.acquire_lock() yourself before using
@@ -376,7 +376,7 @@ class XMLRPCController(object):
             body = subhandler(*(vpath + rpcparams), **params)
 
         else:
-            # https://bitbucket.org/cherrypy/cherrypy/issue/533
+            # https://github.com/cherrypy/cherrypy/issues/533
             # if a method is not found, an xmlrpclib.Fault should be returned
             # raising an exception here will do that; see
             # cherrypy.lib.xmlrpcutil.on_error

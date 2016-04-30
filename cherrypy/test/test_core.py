@@ -403,7 +403,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(('302 Found', '303 See Other'))
 
         # check injection protection
-        # See https://bitbucket.org/cherrypy/cherrypy/issue/1003
+        # See https://github.com/cherrypy/cherrypy/issues/1003
         self.getPage(
             "/redirect/custom?"
             "code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval")
@@ -551,7 +551,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     def skip_if_bad_cookies(self):
         """
         cookies module fails to reject invalid cookies
-        https://bitbucket.org/cherrypy/cherrypy/issues/1405
+        https://github.com/cherrypy/cherrypy/issues/1405
         """
         cookies = sys.modules.get('http.cookies')
         _is_legal_key = getattr(cookies, '_is_legal_key', lambda x: False)

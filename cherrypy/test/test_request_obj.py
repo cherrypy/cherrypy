@@ -184,7 +184,7 @@ class RequestObjectTests(helper.CPWebCase):
                 return cherrypy.request.headers[headername]
 
             def doubledheaders(self):
-                # From https://bitbucket.org/cherrypy/cherrypy/issue/165:
+                # From https://github.com/cherrypy/cherrypy/issues/165:
                 # "header field names should not be case sensitive sayes the
                 # rfc. if i set a headerfield in complete lowercase i end up
                 # with two header fields, one in lowercase, the other in
@@ -643,7 +643,7 @@ class RequestObjectTests(helper.CPWebCase):
                         "en;q=0.7")
 
         # Test malformed header parsing. See
-        # https://bitbucket.org/cherrypy/cherrypy/issue/763.
+        # https://github.com/cherrypy/cherrypy/issues/763.
         self.getPage("/headerelements/get_elements?headername=Content-Type",
                      # Note the illegal trailing ";"
                      headers=[('Content-Type', 'text/html; charset=utf-8;')])
@@ -652,7 +652,7 @@ class RequestObjectTests(helper.CPWebCase):
 
     def test_repeated_headers(self):
         # Test that two request headers are collapsed into one.
-        # See https://bitbucket.org/cherrypy/cherrypy/issue/542.
+        # See https://github.com/cherrypy/cherrypy/issues/542.
         self.getPage("/headers/Accept-Charset",
                      headers=[("Accept-Charset", "iso-8859-5"),
                               ("Accept-Charset", "unicode-1-1;q=0.8")])
@@ -738,7 +738,7 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertBody(b)
 
         # Request a PUT method with a file body but no Content-Type.
-        # See https://bitbucket.org/cherrypy/cherrypy/issue/790.
+        # See https://github.com/cherrypy/cherrypy/issues/790.
         b = ntob("one thing on top of another")
         self.persistent = True
         try:
@@ -757,7 +757,7 @@ class RequestObjectTests(helper.CPWebCase):
             self.persistent = False
 
         # Request a PUT method with no body whatsoever (not an empty one).
-        # See https://bitbucket.org/cherrypy/cherrypy/issue/650.
+        # See https://github.com/cherrypy/cherrypy/issues/650.
         # Provide a C-T or webtest will provide one (and a C-L) for us.
         h = [("Content-Type", "text/plain")]
         self.getPage("/method/reachable", headers=h, method="PUT")
