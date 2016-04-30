@@ -318,7 +318,7 @@ class _GlobalLogManager(_cplogging.LogManager):
         """Log the given message to the app.log or global log as appropriate.
         """
         # Do NOT use try/except here. See
-        # https://bitbucket.org/cherrypy/cherrypy/issue/945
+        # https://github.com/cherrypy/cherrypy/issues/945
         if hasattr(request, 'app') and hasattr(request.app, 'log'):
             log = request.app.log
         else:

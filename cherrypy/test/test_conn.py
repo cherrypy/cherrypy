@@ -205,7 +205,7 @@ class ConnectionCloseTests(helper.CPWebCase):
                     self.assertRaises(NotConnected, self.getPage, "/")
 
                 # Try HEAD. See
-                # https://bitbucket.org/cherrypy/cherrypy/issue/864.
+                # https://github.com/cherrypy/cherrypy/issues/864.
                 self.getPage("/stream", method='HEAD')
                 self.assertStatus('200 OK')
                 self.assertBody('')

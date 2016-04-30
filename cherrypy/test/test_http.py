@@ -150,7 +150,7 @@ class HTTPTests(helper.CPWebCase):
     def test_post_filename_with_commas(self):
         '''Testing that we can handle filenames with commas. This was
         reported as a bug in:
-           https://bitbucket.org/cherrypy/cherrypy/issue/1146/'''
+           https://github.com/cherrypy/cherrypy/issues/1146/'''
         # We'll upload a bunch of files with differing names.
         for fname in ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv']:
             files = [('myfile', fname, 'yunyeenyunyue')]
@@ -200,7 +200,7 @@ class HTTPTests(helper.CPWebCase):
         c = self.make_connection()
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
-        # See https://bitbucket.org/cherrypy/cherrypy/issue/941
+        # See https://github.com/cherrypy/cherrypy/issues/941
         c._output(ntob('Re, 1.2.3.4#015#012'))
         c.endheaders()
 

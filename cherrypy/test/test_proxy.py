@@ -131,7 +131,7 @@ class ProxyTest(helper.CPWebCase):
             self.assertBody(expected)
 
         # Test trailing slash (see
-        # https://bitbucket.org/cherrypy/cherrypy/issue/562).
+        # https://github.com/cherrypy/cherrypy/issues/562).
         self.getPage("/xhost/", headers=[('X-Host', 'www.example.test')])
         self.assertHeader('Location', "%s://www.example.test/xhost"
                           % self.scheme)

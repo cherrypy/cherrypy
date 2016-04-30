@@ -85,7 +85,7 @@ class ChannelFailures(Exception):
 
     def __init__(self, *args, **kwargs):
         # Don't use 'super' here; Exceptions are old-style in Py2.4
-        # See https://bitbucket.org/cherrypy/cherrypy/issue/959
+        # See https://github.com/cherrypy/cherrypy/issues/959
         Exception.__init__(self, *args, **kwargs)
         self._exceptions = list()
 
@@ -317,10 +317,10 @@ class Bus(object):
             raise
 
         # Waiting for ALL child threads to finish is necessary on OS X.
-        # See https://bitbucket.org/cherrypy/cherrypy/issue/581.
+        # See https://github.com/cherrypy/cherrypy/issues/581.
         # It's also good to let them all shut down before allowing
         # the main thread to call atexit handlers.
-        # See https://bitbucket.org/cherrypy/cherrypy/issue/751.
+        # See https://github.com/cherrypy/cherrypy/issues/751.
         self.log("Waiting for child threads to terminate...")
         for t in threading.enumerate():
             # Validate the we're not trying to join the MainThread
