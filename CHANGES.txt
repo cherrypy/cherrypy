@@ -5,6 +5,7 @@
   serving SSL using the built-in SSL support.
 * Use ssl.create_default_context when available.
 * #1392: Catch platform-specific socket errors on OS X.
+* #1386: Fix parsing of URIs containing ``://`` in the path part.
 
 5.2.0
 -----

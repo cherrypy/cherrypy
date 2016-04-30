@@ -92,6 +92,7 @@ import time
 import traceback as traceback_
 import operator
 from urllib import unquote
+from urlparse import urlparse
 import warnings
 import errno
 import logging
@@ -842,15 +843,12 @@ class HTTPRequest(object):
         if uri == ASTERISK:
             return None, None, uri
 
-        i = uri.find('://')
-        if i > 0 and QUESTION_MARK not in uri[:i]:
+        scheme, authority, path, params, query, fragment = urlparse(uri)
+        if scheme and QUESTION_MARK not in scheme:
             # An absoluteURI.
             # If there's a scheme (and it must be http or https), then:
             # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query
             # ]]
-            scheme, remainder = uri[:i].lower(), uri[i + 3:]
-            authority, path = remainder.split(FORWARD_SLASH, 1)
-            path = FORWARD_SLASH + path
             return scheme, authority, path
 
         if uri.startswith(FORWARD_SLASH):
