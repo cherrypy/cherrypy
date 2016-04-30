@@ -1,3 +1,11 @@
+5.4.0
+-----
+
+* ``cherrypy.test.webtest.WebCase`` now honors a
+  'WEBTEST_INTERACTIVE' environment variable to disable
+  interactive tests (still enabled by default). Set to '0'
+  or 'false' or 'False' to disable interactive tests.
+
 5.3.0
 -----
 

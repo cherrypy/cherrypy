@@ -23,6 +23,8 @@ import sys
 import time
 import traceback
 import types
+import os
+import json
 
 from unittest import *
 from unittest import _TextTestResult
@@ -171,6 +173,19 @@ except ImportError:
         return ch
 
 
+# from jaraco.properties
+class NonDataProperty(object):
+    def __init__(self, fget):
+        assert fget is not None, "fget cannot be none"
+        assert callable(fget), "fget must be callable"
+        self.fget = fget
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+        return self.fget(obj)
+
+
 class WebCase(TestCase):
     HOST = "127.0.0.1"
     PORT = 8000
@@ -270,7 +285,16 @@ class WebCase(TestCase):
             raise ServerError()
         return result
 
-    interactive = True
+    @NonDataProperty
+    def interactive(self):
+        """
+        Load interactivity setting from environment, where
+        the value can be numeric or a string like true or
+        False or 1 or 0.
+        """
+        env_str = os.environ.get('WEBTEST_INTERACTIVE', 'True')
+        return bool(json.loads(env_str.lower()))
+
     console_height = 30
 
     def _handlewebError(self, msg):
