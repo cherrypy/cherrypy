@@ -106,6 +106,13 @@ else:
     BytesIO = StringIO
 
 
+def always_bytes(s, encoding='ISO-8859-1'):
+    if isinstance(s, unicodestr):
+        return s.encode(encoding)
+    else:
+        assert_native(s)
+        return s  # Assume this bytestring is already in the correct encoding.
+
 def assert_native(n):
     if not isinstance(n, nativestr):
         raise TypeError("n must be a native str (got %s)" % type(n).__name__)
