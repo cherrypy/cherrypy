@@ -102,6 +102,10 @@ except ImportError:
     # Python 2.6
     import io
 
+try:
+    import pkg_resources
+except ImportError:
+    pass
 
 if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
     if not hasattr(socket, 'IPPROTO_IPV6'):
@@ -111,6 +115,12 @@ if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
 
 
 DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
+
+
+try:
+    cp_version = pkg_resources.require('cherrypy')[0].version
+except Exception:
+    cp_version = 'unknown'
 
 
 class FauxSocket(object):
@@ -1756,7 +1766,7 @@ class HTTPServer(object):
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
 
-    version = "CherryPy/5.1.0"
+    version = "CherryPy/" + cp_version
     """A version string for the HTTPServer."""
 
     software = None
