@@ -4,6 +4,7 @@
 * #1202: Add support for specifying a certificate authority when
   serving SSL using the built-in SSL support.
 * Use ssl.create_default_context when available.
+* #1392: Catch platform-specific socket errors on OS X.
 
 5.2.0
 -----
