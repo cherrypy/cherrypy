@@ -1,0 +1,22 @@
+language: python
+python:
+- 2.6
+- 2.7
+- 3.2
+- 3.3
+- 3.4
+- 3.5
+- pypy
+- pypy3
+script:
+- nosetests -s .
+deploy:
+  provider: pypi
+  on:
+    tags: true
+    all_branches: true
+    python: 3.5
+  user: jaraco
+  password:
+    secure: jWITC3NYIFEts9ssH6ILy4BmloZ9pA0R7xIgR0L++2GUXkViIDb0DGgyTr0Godiu1fiip661Ur6L+Bu9hDYcEFG5otvOf3Mg2on+2bURXyfH/MaLU6+BZmYy3lG4EISgRHevhynWYiKOftXdSZcEEjUNTa+YTBw2nnYCFt9l2Ow=
+  distributions: sdist bdist_wheel
