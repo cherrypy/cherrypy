@@ -164,12 +164,12 @@ class _TrappedResponse(object):
         self.started_response = True
         return self
 
-    if py3k:
-        def __next__(self):
-            return self.trap(next, self.iter_response)
-    else:
-        def next(self):
-            return self.trap(self.iter_response.next)
+    def __next__(self):
+        return self.trap(next, self.iter_response)
+
+    # todo: https://pythonhosted.org/six/#six.Iterator
+    if not py3k:
+        next = __next__
 
     def close(self):
         if hasattr(self.response, 'close'):
@@ -269,12 +269,12 @@ class AppResponse(object):
     def __iter__(self):
         return self
 
-    if py3k:
-        def __next__(self):
-            return next(self.iter_response)
-    else:
-        def next(self):
-            return self.iter_response.next()
+    def __next__(self):
+        return next(self.iter_response)
+
+    # todo: https://pythonhosted.org/six/#six.Iterator
+    if not py3k:
+        next = __next__
 
     def close(self):
         """Close and de-reference the current request and response. (Core)"""
