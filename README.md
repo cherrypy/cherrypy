@@ -2,6 +2,8 @@
 
 # CherryPy
 
+[![Join the chat at https://gitter.im/cherrypy/cherrypy](https://badges.gitter.im/cherrypy/cherrypy.svg)](https://gitter.im/cherrypy/cherrypy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Welcome to the GitHub-repository of CherryPy! 
 [CherryPy](http://cherrypy.org/) is a pythonic, object-oriented HTTP framework.
 
