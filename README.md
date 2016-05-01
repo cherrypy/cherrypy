@@ -29,7 +29,7 @@ Welcome to the GitHub-repository of CherryPy!
 
 # Help
 
-What are my options if I feel I need help?
+What are my options if I feel I need help? 
 
 ### I don't understand the documentation
 While CherryPy is one of the easiest and most intuitive frameworks out there, the prerequisite for understanding the [CherryPy documentation](http://docs.cherrypy.org/en/latest/) is that you have a general understanding of Python and web development.<br />
@@ -37,25 +37,26 @@ While CherryPy is one of the easiest and most intuitive frameworks out there, th
 So if you have that, and still cannot understand the documentation, it is probably not your fault. [Please create an issue](https://github.com/cherrypy/cherrypy/issues/new) in those cases.<br />
 
 ### I have a question
-If you have a question and cannot find an answer for it in the documentation below, [please create an issue](https://github.com/cherrypy/cherrypy/issues/new).<br />
-Questions and their answers have great value for the community.
+If you have a question and cannot find an answer for it in issues or the the [documentation](http://docs.cherrypy.org/en/latest/), [please create an issue](https://github.com/cherrypy/cherrypy/issues/new).<br />
+Questions and their answers have great value for the community, and a tip is to really put the effort in and write a good explanation, you will get better and quicker answers. 
+Examples are strongly encouraged.
 
 ### I have found a bug 
-[Please create an issue](https://github.com/cherrypy/cherrypy/issues/new).
+If no one have already, [create an issue](https://github.com/cherrypy/cherrypy/issues/new).
 Be sure to provide ample information, remember that any help won't be better than your explanation. 
 
-Unless something is obviously wrong, you are likely to be asked to provide a working example, displaying the erroneous behaviour.
+Unless something is very obviously wrong, you are likely to be asked to provide a working example, displaying the erroneous behaviour.
 
 <i>While this might feel troublesome, a tip is to always make a separate example that have the same external requirements as your project.<br />
 <b>It is great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components'.<br />
 And you can then easily fork and provide as an example.<br />
-You will answers and resolutions way quicker, also, many other open source projects require it.</i>
+You will get answers and resolutions way quicker, also, many other open source projects require it.</i>
 
 ### I have a feature request
-[Good stuff! Please create an issue!](https://github.com/cherrypy/cherrypy/issues/new)<br />
+[Good stuff! Please create an issue!](https://github.com/cherrypy/cherrypy/issues/new)
 (features are more likely to be added the more users they seem to benefit)
 
-### I want to discuss ASFDS or reach out to the developers, or other ASFDS users
+### I want to discuss CherryPy, reach out to the developers, or other CherryPy users
 [The gitter page](https://gitter.im/cherrypy/cherrypy) is good for when you want to talk, but perhaps doesn't feel that the discussion has to be indexed for posterity.
 
 # Documentation
@@ -64,8 +65,6 @@ You will answers and resolutions way quicker, also, many other open source proje
 * Tutorials are included in the repository: https://github.com/cherrypy/cherrypy/tree/master/cherrypy/tutorial
 * A general wiki at(will be moved to github): https://bitbucket.org/cherrypy/cherrypy/wiki/Home 
 * Plugins are described at: http://tools.cherrypy.org/
-
-
 
 # Installation
 
