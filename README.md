@@ -16,7 +16,7 @@ Welcome to the GitHub-repository of CherryPy!
     - [I have a question](#i-have-a-question)
     - [I have found a bug](#i-have-found-a-bug)
     - [I have a feature request](#i-have-a-feature-request)
-    - [I want to discuss ASFDS or reach out to the developers, or other ASFDS users](#i-want-to-discuss-asfds-or-reach-out-to-the-developers-or-other-asfds-users)
+    - [I want to discuss CherryPy, reach out to the developers, or other CherryPy users](#i-want-to-discuss-cherrypy-reach-out-to-the-developers-or-other-cherrypy-users)
 - [Documentation](#documentation)
 - [Installation](#installation)
   - [Pip](#pip)
