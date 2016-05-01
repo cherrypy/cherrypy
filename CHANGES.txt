@@ -3,6 +3,7 @@
 
 * #1408: Fix AttributeError when listiterator was accessed
   using the ``next`` attribute.
+* #748: Removed ``cherrypy.lib.sessions.PostgresqlSession``.
 
 5.4.0
 -----
