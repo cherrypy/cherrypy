@@ -4,7 +4,8 @@
 
 Welcome to the GitHub-repository of [CherryPy](http://cherrypy.org/)! 
 
-It is a pythonic, object-oriented HTTP framework, it:
+Being a pythonic, object-oriented HTTP framework, it:
+
 1. allows developers to build web applications in much the same way they would build any other object-oriented Python program. 
 2. results in less source code developed in less time. It is basically properties and methods translated to a site structure.
 3. is now more than ten years old and it is has proven fast and very stable. It is being used in production by many sites, from the simplest to the most demanding.
@@ -22,7 +23,7 @@ class HelloWorld(object):
 cherrypy.quickstart(HelloWorld())
 ``` 
 
-And it actually continues to work that intuitively when systems grow, allowing for the Python object model to be dynamically presented as a web site and/or API.
+And it continues to work that intuitively when systems grow, allowing for the Python object model to be dynamically presented as a web site and/or API.
 
 ### Table of contents
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
