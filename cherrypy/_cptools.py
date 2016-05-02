@@ -460,6 +460,13 @@ class Toolbox(object):
                     tool = getattr(self, name)
                     tool._setup()
 
+    def register(self, point, **kwargs):
+        """Return a decorator which registers the function at the given hook point."""
+        def decorator(func):
+            setattr(self, kwargs.get('name', func.__name__), Tool(point, func, **kwargs))
+            return func
+        return decorator
+
 
 class DeprecatedTool(Tool):
 
