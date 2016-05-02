@@ -62,22 +62,21 @@ Questions and their answers have great value for the community, and a tip is to 
 Examples are strongly encouraged.
 
 ### I have found a bug 
-If no one have already, [create an issue](https://github.com/cherrypy/cherrypy/issues/new).
+If no one have already, [create an issue](https://github.com/cherrypy/cherrypy/issues/new).  
 Be sure to provide ample information, remember that any help won't be better than your explanation. 
 
 Unless something is very obviously wrong, you are likely to be asked to provide a working example, displaying the erroneous behaviour.
 
-<i>While this might feel troublesome, a tip is to always make a separate example that have the same external requirements as your project.<br />
-<b>It is great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components'.<br />
-And you can then easily fork and provide as an example.<br />
-You will get answers and resolutions way quicker, also, many other open source projects require it.</i>
+<i>Note: While this might feel troublesome, a tip is to always make a separate example that have the same dependencies as your project.<br />
+It is <b>great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components. Also, you can then easily fork and provide as an example.<br />
+You will get answers and resolutions way quicker. Also, many other open source projects require it.</i>
 
 ### I have a feature request
-[Good stuff! Please create an issue!](https://github.com/cherrypy/cherrypy/issues/new)
-(features are more likely to be added the more users they seem to benefit)
+[Good stuff! Please create an issue!](https://github.com/cherrypy/cherrypy/issues/new)<br />
+<i>Note: Features are more likely to be added the more users they seem to benefit.</i>
 
 ### I want to discuss CherryPy, reach out to the developers, or other CherryPy users
-[The gitter page](https://gitter.im/cherrypy/cherrypy) is good for when you want to talk, but perhaps doesn't feel that the discussion has to be indexed for posterity.
+[The gitter page](https://gitter.im/cherrypy/cherrypy) is good for when you want to talk, but doesn't feel that the discussion has to be indexed for posterity.
 
 # Documentation
 
@@ -90,7 +89,7 @@ You will get answers and resolutions way quicker, also, many other open source p
 
 To install CherryPy for use in your project, follow these instructions:
 
-## Pip
+## From the PyPI package
 
 ```sh
 pip install cherrypy
@@ -100,7 +99,7 @@ or (for python 3)
 pip3 install cherrypy
 ```
 
-## Source
+## From source
 
 Change to the directory where setup.py is located and type (Python 2.6 or later needed):
 ```sh
