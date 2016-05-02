@@ -36,7 +36,7 @@ And it continues to work that intuitively when systems grow, allowing for the Py
     - [I have a question](#i-have-a-question)
     - [I have found a bug](#i-have-found-a-bug)
     - [I have a feature request](#i-have-a-feature-request)
-    - [I want to discuss CherryPy, reach out to the developers, or other CherryPy users](#i-want-to-discuss-cherrypy-reach-out-to-the-developers-or-other-cherrypy-users)
+    - [I want to discuss CherryPy, reach out to developers, or other CherryPy users](#i-want-to-discuss-cherrypy-reach-out-to-developers-or-other-cherrypy-users)
 - [Documentation](#documentation)
 - [Installation](#installation)
   - [Pip](#pip)
@@ -52,12 +52,14 @@ And it continues to work that intuitively when systems grow, allowing for the Py
 What are my options if I feel I need help? 
 
 ### I don't understand the documentation
-While CherryPy is one of the easiest and most intuitive frameworks out there, the prerequisite for understanding the [CherryPy documentation](http://docs.cherrypy.org/en/latest/) is that you have a general understanding of Python and web development.<br />
+While CherryPy is one of the easiest and most intuitive frameworks out there, the prerequisite for understanding the [CherryPy documentation](http://docs.cherrypy.org/en/latest/) is that you have a general understanding of Python and web development.
 
-So if you have that, and still cannot understand the documentation, it is probably not your fault. [Please create an issue](https://github.com/cherrypy/cherrypy/issues/new) in those cases.<br />
+So if you have that, and still cannot understand the documentation, it is probably not your fault.  
+[Please create an issue](https://github.com/cherrypy/cherrypy/issues/new) in those cases.
 
 ### I have a question
-If you have a question and cannot find an answer for it in issues or the the [documentation](http://docs.cherrypy.org/en/latest/), [please create an issue](https://github.com/cherrypy/cherrypy/issues/new).<br />
+If you have a question and cannot find an answer for it in issues or the the [documentation](http://docs.cherrypy.org/en/latest/), [please create an issue](https://github.com/cherrypy/cherrypy/issues/new).
+
 Questions and their answers have great value for the community, and a tip is to really put the effort in and write a good explanation, you will get better and quicker answers. 
 Examples are strongly encouraged.
 
@@ -67,15 +69,14 @@ Be sure to provide ample information, remember that any help won't be better tha
 
 Unless something is very obviously wrong, you are likely to be asked to provide a working example, displaying the erroneous behaviour.
 
-<i>Note: While this might feel troublesome, a tip is to always make a separate example that have the same dependencies as your project.<br />
-It is <b>great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components. Also, you can then easily fork and provide as an example.<br />
+<i>Note: While this might feel troublesome, a tip is to always make a separate example that have the same dependencies as your project.It is <b>great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components. Also, you can then easily fork and provide as an example.<br />
 You will get answers and resolutions way quicker. Also, many other open source projects require it.</i>
 
 ### I have a feature request
 [Good stuff! Please create an issue!](https://github.com/cherrypy/cherrypy/issues/new)<br />
 <i>Note: Features are more likely to be added the more users they seem to benefit.</i>
 
-### I want to discuss CherryPy, reach out to the developers, or other CherryPy users
+### I want to discuss CherryPy, reach out to developers, or other CherryPy users
 [The gitter page](https://gitter.im/cherrypy/cherrypy) is good for when you want to talk, but doesn't feel that the discussion has to be indexed for posterity.
 
 # Documentation
