@@ -2,9 +2,31 @@
 
 # CherryPy
 
-Welcome to the GitHub-repository of CherryPy! 
-[CherryPy](http://cherrypy.org/) is a pythonic, object-oriented HTTP framework.
+[![Join the chat at https://gitter.im/cherrypy/cherrypy](https://badges.gitter.im/cherrypy/cherrypy.svg)](https://gitter.im/cherrypy/cherrypy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+Welcome to the GitHub-repository of [CherryPy](http://cherrypy.org/)! 
+
+CherryPy is a pythonic, object-oriented HTTP framework.
+
+1. It allows building web applications in much the same way one would build any other object-oriented program.
+2. This results in less and more readable code being developed faster. It's all just properties and methods.
+3. It is now more than ten years old and has proven fast and very stable. 
+4. It is being used in production by many sites, from the simplest to the most demanding.
+5. And perhaps most importantly, it is fun to work with :-) 
+
+Here's how easy it is to write "Hello World" in CherryPy:
+```python
+import cherrypy
+
+class HelloWorld(object):
+    @cherrypy.expose
+    def index(self):
+        return "Hello World!"
+    
+cherrypy.quickstart(HelloWorld())
+``` 
+
+And it continues to work that intuitively when systems grow, allowing for the Python object model to be dynamically presented as a web site and/or API.
 
 ### Table of contents
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -16,7 +38,7 @@ Welcome to the GitHub-repository of CherryPy!
     - [I have a question](#i-have-a-question)
     - [I have found a bug](#i-have-found-a-bug)
     - [I have a feature request](#i-have-a-feature-request)
-    - [I want to discuss CherryPy, reach out to the developers, or other CherryPy users](#i-want-to-discuss-cherrypy-reach-out-to-the-developers-or-other-cherrypy-users)
+    - [I want to discuss CherryPy, reach out to developers or CherryPy users users](#i-want-to-discuss-cherrypy-reach-out-to-developers-or-cherrypy-users)
 - [Documentation](#documentation)
 - [Installation](#installation)
   - [Pip](#pip)
@@ -32,32 +54,32 @@ Welcome to the GitHub-repository of CherryPy!
 What are my options if I feel I need help? 
 
 ### I don't understand the documentation
-While CherryPy is one of the easiest and most intuitive frameworks out there, the prerequisite for understanding the [CherryPy documentation](http://docs.cherrypy.org/en/latest/) is that you have a general understanding of Python and web development.<br />
+While CherryPy is one of the easiest and most intuitive frameworks out there, the prerequisite for understanding the [CherryPy documentation](http://docs.cherrypy.org/en/latest/) is that you have a general understanding of Python and web development.
 
-So if you have that, and still cannot understand the documentation, it is probably not your fault. [Please create an issue](https://github.com/cherrypy/cherrypy/issues/new) in those cases.<br />
+So if you have that, and still cannot understand the documentation, it is probably not your fault.  
+[Please create an issue](https://github.com/cherrypy/cherrypy/issues/new) in those cases.
 
 ### I have a question
-If you have a question and cannot find an answer for it in issues or the the [documentation](http://docs.cherrypy.org/en/latest/), [please create an issue](https://github.com/cherrypy/cherrypy/issues/new).<br />
+If you have a question and cannot find an answer for it in issues or the the [documentation](http://docs.cherrypy.org/en/latest/), [please create an issue](https://github.com/cherrypy/cherrypy/issues/new).
+
 Questions and their answers have great value for the community, and a tip is to really put the effort in and write a good explanation, you will get better and quicker answers. 
 Examples are strongly encouraged.
 
 ### I have found a bug 
-If no one have already, [create an issue](https://github.com/cherrypy/cherrypy/issues/new).
+If no one have already, [create an issue](https://github.com/cherrypy/cherrypy/issues/new).  
 Be sure to provide ample information, remember that any help won't be better than your explanation. 
 
 Unless something is very obviously wrong, you are likely to be asked to provide a working example, displaying the erroneous behaviour.
 
-<i>While this might feel troublesome, a tip is to always make a separate example that have the same external requirements as your project.<br />
-<b>It is great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components'.<br />
-And you can then easily fork and provide as an example.<br />
-You will get answers and resolutions way quicker, also, many other open source projects require it.</i>
+<i>Note: While this might feel troublesome, a tip is to always make a separate example that have the same dependencies as your project. It is <b>great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components. Also, you can then easily fork and provide as an example.<br />
+You will get answers and resolutions way quicker. Also, many other open source projects require it.</i>
 
 ### I have a feature request
-[Good stuff! Please create an issue!](https://github.com/cherrypy/cherrypy/issues/new)
-(features are more likely to be added the more users they seem to benefit)
+[Good stuff! Please create an issue!](https://github.com/cherrypy/cherrypy/issues/new)<br />
+<i>Note: Features are more likely to be added the more users they seem to benefit.</i>
 
-### I want to discuss CherryPy, reach out to the developers, or other CherryPy users
-[The gitter page](https://gitter.im/cherrypy/cherrypy) is good for when you want to talk, but perhaps doesn't feel that the discussion has to be indexed for posterity.
+### I want to discuss CherryPy, reach out to developers or CherryPy users
+[The gitter page](https://gitter.im/cherrypy/cherrypy) is good for when you want to talk, but doesn't feel that the discussion has to be indexed for posterity.
 
 # Documentation
 
@@ -70,7 +92,7 @@ You will get answers and resolutions way quicker, also, many other open source p
 
 To install CherryPy for use in your project, follow these instructions:
 
-## Pip
+## From the PyPI package
 
 ```sh
 pip install cherrypy
@@ -80,7 +102,7 @@ or (for python 3)
 pip3 install cherrypy
 ```
 
-## Source
+## From source
 
 Change to the directory where setup.py is located and type (Python 2.6 or later needed):
 ```sh
