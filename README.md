@@ -8,7 +8,7 @@ Being a pythonic, object-oriented HTTP framework:
 
 1. It allows building web applications in much the same way one would build any other object-oriented program.
 2. This results in less and more readable code being developed faster. It's all just properties and methods.
-3. It is now more than ten years old and it is has proven fast and very stable. 
+3. It is now more than ten years old and has proven fast and very stable. 
 4. It is being used in production by many sites, from the simplest to the most demanding.
 5. And perhaps most importantly, it is fun to work with :-) 
 
@@ -36,7 +36,7 @@ And it continues to work that intuitively when systems grow, allowing for the Py
     - [I have a question](#i-have-a-question)
     - [I have found a bug](#i-have-found-a-bug)
     - [I have a feature request](#i-have-a-feature-request)
-    - [I want to discuss CherryPy, reach out to developers, or other CherryPy users](#i-want-to-discuss-cherrypy-reach-out-to-developers-or-other-cherrypy-users)
+    - [I want to discuss CherryPy, reach out to developers or CherryPy users users](#i-want-to-discuss-cherrypy-reach-out-to-developers-or-cherrypy-users)
 - [Documentation](#documentation)
 - [Installation](#installation)
   - [Pip](#pip)
@@ -69,14 +69,14 @@ Be sure to provide ample information, remember that any help won't be better tha
 
 Unless something is very obviously wrong, you are likely to be asked to provide a working example, displaying the erroneous behaviour.
 
-<i>Note: While this might feel troublesome, a tip is to always make a separate example that have the same dependencies as your project.It is <b>great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components. Also, you can then easily fork and provide as an example.<br />
+<i>Note: While this might feel troublesome, a tip is to always make a separate example that have the same dependencies as your project. It is <b>great for troubleshooting</b> those annoying problems where you don't know if the problem is at your end or the components. Also, you can then easily fork and provide as an example.<br />
 You will get answers and resolutions way quicker. Also, many other open source projects require it.</i>
 
 ### I have a feature request
 [Good stuff! Please create an issue!](https://github.com/cherrypy/cherrypy/issues/new)<br />
 <i>Note: Features are more likely to be added the more users they seem to benefit.</i>
 
-### I want to discuss CherryPy, reach out to developers, or other CherryPy users
+### I want to discuss CherryPy, reach out to developers or CherryPy users
 [The gitter page](https://gitter.im/cherrypy/cherrypy) is good for when you want to talk, but doesn't feel that the discussion has to be indexed for posterity.
 
 # Documentation
