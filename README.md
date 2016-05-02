@@ -4,12 +4,13 @@
 
 Welcome to the GitHub-repository of [CherryPy](http://cherrypy.org/)! 
 
-Being a pythonic, object-oriented HTTP framework, it:
+Being a pythonic, object-oriented HTTP framework:
 
-1. allows developers to build web applications in much the same way they would build any other object-oriented Python program. 
-2. results in less source code developed in less time. It is basically properties and methods translated to a site structure.
-3. is now more than ten years old and it is has proven fast and very stable. It is being used in production by many sites, from the simplest to the most demanding.
-4. perhaps most importantly, is fun to work with :-) 
+1. It allows building web applications in much the same way one would build any other object-oriented program.
+2. This results in less and more readable code being developed faster. It's all just properties and methods.
+3. It is now more than ten years old and it is has proven fast and very stable. 
+4. It is being used in production by many sites, from the simplest to the most demanding.
+5. And perhaps most importantly, it is fun to work with :-) 
 
 Here's how easy it is to write "Hello World" in CherryPy:
 ```python
