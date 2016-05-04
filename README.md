@@ -1,10 +1,10 @@
-
-
 # CherryPy
 
 Welcome to the GitHub-repository of [CherryPy](http://cherrypy.org/)! 
 
 CherryPy is a pythonic, object-oriented HTTP framework.
+
+CI: [![Build Status](https://travis-ci.org/cherrypy/cherrypy.svg?branch=master)](https://travis-ci.org/cherrypy/cherrypy)
 
 1. It allows building web applications in much the same way one would build any other object-oriented program.
 2. This results in less and more readable code being developed faster. It's all just properties and methods.
