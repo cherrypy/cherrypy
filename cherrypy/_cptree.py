@@ -274,17 +274,11 @@ class Tree(object):
 
         # Correct the SCRIPT_NAME and PATH_INFO environ entries.
         environ = environ.copy()
-        if not py3k:
-            if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
-                # Python 2/WSGI u.0: all strings MUST be of type unicode
-                enc = environ[ntou('wsgi.url_encoding')]
-                environ[ntou('SCRIPT_NAME')] = sn.decode(enc)
-                environ[ntou('PATH_INFO')] = path[
-                    len(sn.rstrip("/")):].decode(enc)
-            else:
-                # Python 2/WSGI 1.x: all strings MUST be of type str
-                environ['SCRIPT_NAME'] = sn
-                environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
+        if not py3k and environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
+            # Python 2/WSGI u.0: all strings MUST be of type unicode
+            enc = environ[ntou('wsgi.url_encoding')]
+            environ[ntou('SCRIPT_NAME')] = sn.decode(enc)
+            environ[ntou('PATH_INFO')] = path[len(sn.rstrip("/")):].decode(enc)
         else:
             environ['SCRIPT_NAME'] = sn
             environ['PATH_INFO'] = path[len(sn.rstrip("/")):]
