@@ -1,10 +1,3 @@
-5.4.1
------
-
-* #1408: Fix AttributeError when listiterator was accessed
-  using the ``next`` attribute.
-* #748: Removed ``cherrypy.lib.sessions.PostgresqlSession``.
-
 5.4.0
 -----
 
@@ -12,6 +5,10 @@
   'WEBTEST_INTERACTIVE' environment variable to disable
   interactive tests (still enabled by default). Set to '0'
   or 'false' or 'False' to disable interactive tests.
+* #1408: Fix AttributeError when listiterator was accessed
+  using the ``next`` attribute.
+* #748: Removed ``cherrypy.lib.sessions.PostgresqlSession``.
+* #1432: Fix errors with redirects to Unicode URLs.
 
 5.3.0
 -----
