@@ -148,7 +148,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
 
             def url_with_unicode(self):
-                raise cherrypy.HTTPRedirect(ntou("\u0442\u0435\u0441\u0442"))
+                raise cherrypy.HTTPRedirect(ntou("\u0442\u0435\u0441\u0442",
+                                                 'escape'))
 
         def login_redir():
             if not getattr(cherrypy.request, "login", None):
