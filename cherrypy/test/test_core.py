@@ -6,7 +6,7 @@ import sys
 import types
 
 import cherrypy
-from cherrypy._cpcompat import IncompleteRead, itervalues, ntob
+from cherrypy._cpcompat import IncompleteRead, itervalues, ntob, ntou
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
 from cherrypy.test._test_decorators import ExposeExamples
@@ -146,6 +146,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             def url_with_quote(self):
                 raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
+
+            def url_with_unicode(self):
+                raise cherrypy.HTTPRedirect(ntou("\u0442\u0435\u0441\u0442",
+                                                 'escape'))
 
         def login_redir():
             if not getattr(cherrypy.request, "login", None):
@@ -430,6 +434,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/url_with_quote")
         self.assertStatus(303)
         assertValidXHTML()
+
+        # check redirect to url containing unicode characters.
+        self.getPage("/redirect/url_with_unicode")
+        self.assertStatus(303)
+        loc = self.assertHeader('Location')
+        assert loc.endswith("\xd1\x82\xd0\xb5\xd1\x81\xd1\x82")
 
     def test_InternalRedirect(self):
         # InternalRedirect
