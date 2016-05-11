@@ -320,9 +320,11 @@ class CPWebCase(webtest.WebCase):
     do_gc_test = False
 
     def test_gc(self):
-        if self.do_gc_test:
-            self.getPage("/gc/stats")
-            self.assertBody("Statistics:")
+        if not self.do_gc_test:
+            return
+
+        self.getPage("/gc/stats")
+        self.assertBody("Statistics:")
 
     def prefix(self):
         return self.script_name.rstrip("/")
