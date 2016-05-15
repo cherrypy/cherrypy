@@ -210,7 +210,7 @@ def process_multipart(entity):
 
     # Read all parts
     while True:
-        part = entity.part_class.from_fp(entity.fp, ib)
+        part = entity.part_class.from_fp(entity.fp, ib, entity.default_charset)
         entity.parts.append(part)
         part.process()
         if part.fp.done:
@@ -320,6 +320,17 @@ class Entity(object):
     in an ``on_start_resource`` tool.
     """
 
+    default_charset = 'utf-8'
+    """A string representing the character set encoding used for multipart/form-data payloads.
+    Defaults to utf-8.
+
+    References:
+    https://tools.ietf.org/html/rfc7578#section-5.1.3
+    https://www.w3.org/TR/html5/forms.html#multipart-form-data
+    """
+    # TODO: `default_charset` could probably be used to decode application/x-www-form-urlencoded
+    # as well, and maybe even replace `attempt_charsets`.
+
     # http://tools.ietf.org/html/rfc2046#section-4.1.2:
     # "The default character set, which must be assumed in the
     # absence of a charset parameter, is US-ASCII."
@@ -332,8 +343,7 @@ class Entity(object):
     entity without raising an error is stored as
     :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
     to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
-    `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
-    but ``['us-ascii', 'utf-8']`` for multipart parts.
+    `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_).
     """
 
     charset = None
@@ -553,20 +563,6 @@ class Part(Entity):
 
     """A MIME part entity, part of a multipart entity."""
 
-    # "The default character set, which must be assumed in the absence of a
-    # charset parameter, is US-ASCII."
-    attempt_charsets = ['us-ascii', 'utf-8']
-    """A list of strings, each of which should be a known encoding.
-
-    When the Content-Type of the request body warrants it, each of the given
-    encodings will be tried in order. The first one to successfully decode the
-    entity without raising an error is stored as
-    :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
-    to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
-    `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
-    but ``['us-ascii', 'utf-8']`` for multipart parts.
-    """
-
     boundary = None
     """The MIME multipart boundary."""
 
@@ -589,18 +585,19 @@ class Part(Entity):
     module in Python's standard library.
     """
 
-    def __init__(self, fp, headers, boundary):
+    def __init__(self, fp, headers, boundary, charset):
+        self.attempt_charsets = [charset]
         Entity.__init__(self, fp, headers)
         self.boundary = boundary
         self.file = None
         self.value = None
 
-    def from_fp(cls, fp, boundary):
-        headers = cls.read_headers(fp)
-        return cls(fp, headers, boundary)
+    def from_fp(cls, fp, boundary, charset):
+        headers = cls.read_headers(fp, charset)
+        return cls(fp, headers, boundary, charset)
     from_fp = classmethod(from_fp)
 
-    def read_headers(cls, fp):
+    def read_headers(cls, fp, charset):
         headers = httputil.HeaderMap()
         while True:
             line = fp.readline()
@@ -616,11 +613,11 @@ class Part(Entity):
 
             if line[0] in ntob(' \t'):
                 # It's a continuation line.
-                v = line.strip().decode('ISO-8859-1')
+                v = line.strip().decode(charset, 'replace')
             else:
                 k, v = line.split(ntob(":"), 1)
                 k = k.strip().decode('ISO-8859-1')
-                v = v.strip().decode('ISO-8859-1')
+                v = v.strip().decode(charset, 'replace')
 
             existing = headers.get(k)
             if existing:
