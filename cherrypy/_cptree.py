@@ -261,7 +261,7 @@ class Tree(object):
         # to '' (some WSGI servers always set SCRIPT_NAME to '').
         # Try to look up the app using the full path.
         env1x = environ
-        if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
+        if not py3k and environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
             env1x = _cpwsgi.downgrade_wsgi_ux_to_1x(environ)
         path = httputil.urljoin(env1x.get('SCRIPT_NAME', ''),
                                 env1x.get('PATH_INFO', ''))
