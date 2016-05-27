@@ -160,9 +160,11 @@ class Bus(object):
     def __init__(self):
         self.execv = False
         self.state = states.STOPPED
+        channels = 'start', 'stop', 'exit', 'graceful', 'log', 'main'
         self.listeners = dict(
-            [(channel, set()) for channel
-             in ('start', 'stop', 'exit', 'graceful', 'log', 'main')])
+            (channel, set())
+            for channel in channels
+        )
         self._priorities = {}
 
     def subscribe(self, channel, callback, priority=None):
