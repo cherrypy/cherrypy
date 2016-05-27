@@ -67,6 +67,7 @@ import threading
 import time
 import traceback as _traceback
 import warnings
+import operator
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed
@@ -192,14 +193,11 @@ class Bus(object):
         exc = ChannelFailures()
         output = []
 
-        items = [(self._priorities[(channel, listener)], listener)
-                 for listener in self.listeners[channel]]
-        try:
-            items.sort(key=lambda item: item[0])
-        except TypeError:
-            # Python 2.3 had no 'key' arg, but that doesn't matter
-            # since it could sort dissimilar types just fine.
-            items.sort()
+        raw_items = (
+            (self._priorities[(channel, listener)], listener)
+            for listener in self.listeners[channel]
+        )
+        items = sorted(raw_items, key=operator.itemgetter(0))
         for priority, listener in items:
             try:
                 output.append(listener(*args, **kwargs))
