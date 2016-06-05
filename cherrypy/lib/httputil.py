@@ -24,6 +24,7 @@ response_codes[503] = ('Service Unavailable',
 
 import re
 import urllib
+from cgi import parse_header
 
 
 def urljoin(*atoms):
@@ -143,22 +144,7 @@ class HeaderElement(object):
 
     def parse(elementstr):
         """Transform 'token;key=val' to ('token', {'key': 'val'})."""
-        # Split the element into a value and parameters. The 'value' may
-        # be of the form, "token=token", but we don't split that here.
-        atoms = [x.strip() for x in elementstr.split(";") if x.strip()]
-        if not atoms:
-            initial_value = ''
-        else:
-            initial_value = atoms.pop(0).strip()
-        params = {}
-        for atom in atoms:
-            atom = [x.strip() for x in atom.split("=", 1) if x.strip()]
-            key = atom.pop(0)
-            if atom:
-                val = atom[0]
-            else:
-                val = ""
-            params[key] = val
+        initial_value, params = parse_header(elementstr)
         return initial_value, params
     parse = staticmethod(parse)
 
