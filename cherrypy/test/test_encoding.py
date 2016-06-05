@@ -19,21 +19,22 @@ class EncodingTests(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self, param):
                 assert param == europoundUnicode, "%r != %r" % (
                     param, europoundUnicode)
                 yield europoundUnicode
-            index.exposed = True
 
+            @cherrypy.expose
             def mao_zedong(self):
                 return sing
-            mao_zedong.exposed = True
 
+            @cherrypy.expose
             def utf8(self):
                 return sing8
-            utf8.exposed = True
             utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
 
+            @cherrypy.expose
             def cookies_and_headers(self):
                 # if the headers have non-ascii characters and a cookie has
                 #  any part which is unicode (even ascii), the response
@@ -43,64 +44,63 @@ class EncodingTests(helper.CPWebCase):
                 cherrypy.response.headers[
                     'Some-Header'] = 'My d\xc3\xb6g has fleas'
                 return 'Any content'
-            cookies_and_headers.exposed = True
 
+            @cherrypy.expose
             def reqparams(self, *args, **kwargs):
                 return ntob(', ').join(
                     [": ".join((k, v)).encode('utf8')
                      for k, v in sorted(cherrypy.request.params.items())]
                 )
-            reqparams.exposed = True
 
+            @cherrypy.expose
             def nontext(self, *args, **kwargs):
                 cherrypy.response.headers[
                     'Content-Type'] = 'application/binary'
                 return '\x00\x01\x02\x03'
-            nontext.exposed = True
             nontext._cp_config = {'tools.encode.text_only': False,
                                   'tools.encode.add_charset': True,
                                   }
 
         class GZIP:
 
+            @cherrypy.expose
             def index(self):
                 yield "Hello, world"
-            index.exposed = True
 
+            @cherrypy.expose
             def noshow(self):
                 # Test for ticket #147, where yield showed no exceptions
                 # (content-encoding was still gzip even though traceback
                 # wasn't zipped).
                 raise IndexError()
                 yield "Here be dragons"
-            noshow.exposed = True
             # Turn encoding off so the gzip tool is the one doing the collapse.
             noshow._cp_config = {'tools.encode.on': False}
 
+            @cherrypy.expose
             def noshow_stream(self):
                 # Test for ticket #147, where yield showed no exceptions
                 # (content-encoding was still gzip even though traceback
                 # wasn't zipped).
                 raise IndexError()
                 yield "Here be dragons"
-            noshow_stream.exposed = True
             noshow_stream._cp_config = {'response.stream': True}
 
         class Decode:
 
+            @cherrypy.expose
             def extra_charset(self, *args, **kwargs):
                 return ', '.join([": ".join((k, v))
                                   for k, v in cherrypy.request.params.items()])
-            extra_charset.exposed = True
             extra_charset._cp_config = {
                 'tools.decode.on': True,
                 'tools.decode.default_encoding': ['utf-16'],
             }
 
+            @cherrypy.expose
             def force_charset(self, *args, **kwargs):
                 return ', '.join([": ".join((k, v))
                                   for k, v in cherrypy.request.params.items()])
-            force_charset.exposed = True
             force_charset._cp_config = {
                 'tools.decode.on': True,
                 'tools.decode.encoding': 'utf-16',

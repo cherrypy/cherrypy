@@ -24,13 +24,13 @@ class RequestObjectTests(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "hello"
-            index.exposed = True
 
+            @cherrypy.expose
             def scheme(self):
                 return cherrypy.request.scheme
-            scheme.exposed = True
 
         root = Root()
 
@@ -64,55 +64,55 @@ class RequestObjectTests(helper.CPWebCase):
                 return "args: %s kwargs: %s" % (args, sorted(kwargs.items()))
             default._cp_config = {'request.query_string_encoding': 'latin1'}
 
+        @cherrypy.expose
         class ParamErrorsCallable(object):
-            exposed = True
 
             def __call__(self):
                 return "data"
 
         class ParamErrors(Test):
 
+            @cherrypy.expose
             def one_positional(self, param1):
                 return "data"
-            one_positional.exposed = True
 
+            @cherrypy.expose
             def one_positional_args(self, param1, *args):
                 return "data"
-            one_positional_args.exposed = True
 
+            @cherrypy.expose
             def one_positional_args_kwargs(self, param1, *args, **kwargs):
                 return "data"
-            one_positional_args_kwargs.exposed = True
 
+            @cherrypy.expose
             def one_positional_kwargs(self, param1, **kwargs):
                 return "data"
-            one_positional_kwargs.exposed = True
 
+            @cherrypy.expose
             def no_positional(self):
                 return "data"
-            no_positional.exposed = True
 
+            @cherrypy.expose
             def no_positional_args(self, *args):
                 return "data"
-            no_positional_args.exposed = True
 
+            @cherrypy.expose
             def no_positional_args_kwargs(self, *args, **kwargs):
                 return "data"
-            no_positional_args_kwargs.exposed = True
 
+            @cherrypy.expose
             def no_positional_kwargs(self, **kwargs):
                 return "data"
-            no_positional_kwargs.exposed = True
 
             callable_object = ParamErrorsCallable()
 
+            @cherrypy.expose
             def raise_type_error(self, **kwargs):
                 raise TypeError("Client Error")
-            raise_type_error.exposed = True
 
+            @cherrypy.expose
             def raise_type_error_with_default_param(self, x, y=None):
                 return '%d' % 'a'  # throw an exception
-            raise_type_error_with_default_param.exposed = True
 
         def callable_error_page(status, **kwargs):
             return "Error %s - Well, I'm very sorry but you haven't paid!" % (
@@ -254,6 +254,7 @@ class RequestObjectTests(helper.CPWebCase):
 
             documents = {}
 
+            @cherrypy.expose
             def index(self):
                 yield "<h1>Choose your document</h1>\n"
                 yield "<ul>\n"
@@ -262,12 +263,11 @@ class RequestObjectTests(helper.CPWebCase):
                         "    <li><a href='/divorce/get?ID=%s'>%s</a>:"
                         " %s</li>\n" % (id, id, contents))
                 yield "</ul>"
-            index.exposed = True
 
+            @cherrypy.expose
             def get(self, ID):
                 return ("Divorce document %s: %s" %
                         (ID, self.documents.get(ID, "empty")))
-            get.exposed = True
 
         root.divorce = Divorce()
 

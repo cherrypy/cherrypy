@@ -29,38 +29,38 @@ class StaticTest(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
             def bigfile(self):
                 from cherrypy.lib import static
                 self.f = static.serve_file(bigfile_filepath)
                 return self.f
-            bigfile.exposed = True
             bigfile._cp_config = {'response.stream': True}
 
+            @cherrypy.expose
             def tell(self):
                 if self.f.input.closed:
                     return ''
                 return repr(self.f.input.tell()).rstrip('L')
-            tell.exposed = True
 
+            @cherrypy.expose
             def fileobj(self):
                 f = open(os.path.join(curdir, 'style.css'), 'rb')
                 return static.serve_fileobj(f, content_type='text/css')
-            fileobj.exposed = True
 
+            @cherrypy.expose
             def bytesio(self):
                 f = BytesIO(ntob('Fee\nfie\nfo\nfum'))
                 return static.serve_fileobj(f, content_type='text/plain')
-            bytesio.exposed = True
 
         class Static:
 
+            @cherrypy.expose
             def index(self):
                 return 'You want the Baron? You can have the Baron!'
-            index.exposed = True
 
+            @cherrypy.expose
             def dynamic(self):
                 return "This is a DYNAMIC page"
-            dynamic.exposed = True
 
         root = Root()
         root.static = Static()

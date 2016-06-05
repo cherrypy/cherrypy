@@ -77,9 +77,9 @@ class WSGIGraftTests(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return ntob("I'm a regular CherryPy page handler!")
-            index.exposed = True
 
         cherrypy.tree.mount(Root())
 

@@ -122,17 +122,18 @@ class ToolTests(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "Howdy earth!"
-            index.exposed = True
 
+            @cherrypy.expose
             def tarfile(self):
                 assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
                 cherrypy.response.output.write(ntob('I am '))
                 cherrypy.response.output.write(ntob('a tarfile'))
-            tarfile.exposed = True
             tarfile._cp_config = {'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'}
 
+            @cherrypy.expose
             def euro(self):
                 hooks = list(cherrypy.request.hooks['before_finalize'])
                 hooks.sort()
@@ -143,21 +144,20 @@ class ToolTests(helper.CPWebCase):
                 yield ntou("Hello,")
                 yield ntou("world")
                 yield europoundUnicode
-            euro.exposed = True
 
             # Bare hooks
+            @cherrypy.expose
             def pipe(self):
                 return cherrypy.request.body
-            pipe.exposed = True
             pipe._cp_config = {'hooks.before_request_body': pipe_body}
 
             # Multiple decorators; include kwargs just for fun.
             # Note that rotator must run before gzip.
+            @cherrypy.expose
             def decorated_euro(self, *vpath):
                 yield ntou("Hello,")
                 yield ntou("world")
                 yield europoundUnicode
-            decorated_euro.exposed = True
             decorated_euro = tools.gzip(compress_level=6)(decorated_euro)
             decorated_euro = tools.rotator(scale=3)(decorated_euro)
 
@@ -172,7 +172,7 @@ class ToolTests(helper.CPWebCase):
                 type.__init__(cls, name, bases, dct)
                 for value in itervalues(dct):
                     if isinstance(value, types.FunctionType):
-                        value.exposed = True
+                        cherrypy.expose(value)
                 setattr(root, name.lower(), cls())
         Test = TestType('Test', (object,), {})
 

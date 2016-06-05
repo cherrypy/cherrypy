@@ -21,6 +21,7 @@ import cherrypy
 
 class UsersPage:
 
+    @cherrypy.expose
     def index(self):
         # Since this is just a stupid little example, we'll simply
         # display a list of links to random, made-up users. In a real
@@ -30,8 +31,8 @@ class UsersPage:
             <a href="./hendrik">Hendrik Mans</a><br/>
             <a href="./lorenzo">Lorenzo Lamas</a><br/>
         '''
-    index.exposed = True
 
+    @cherrypy.expose
     def default(self, user):
         # Here we react depending on the virtualPath -- the part of the
         # path that could not be mapped to an object method. In a real
@@ -47,7 +48,6 @@ class UsersPage:
             out = "Unknown user. :-("
 
         return '%s (<a href="./">back</a>)' % out
-    default.exposed = True
 
 
 import os.path

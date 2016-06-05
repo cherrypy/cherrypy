@@ -10,9 +10,9 @@ You can profile any of your pages as follows::
     class Root:
         p = profiler.Profiler("/path/to/profile/dir")
 
+        @cherrypy.expose
         def index(self):
             self.p.run(self._index)
-        index.exposed = True
 
         def _index(self):
             return "Hello, world!"
@@ -32,6 +32,9 @@ function to browse the results in a web browser. If you run this
 module from the command line, it will call ``serve()`` for you.
 
 """
+
+
+import cherrypy
 
 
 def new_func_strip_path(func_name):
@@ -110,6 +113,7 @@ class Profiler(object):
         sio.close()
         return response
 
+    @cherrypy.expose
     def index(self):
         return """<html>
         <head><title>CherryPy profile data</title></head>
@@ -119,8 +123,8 @@ class Profiler(object):
         </frameset>
         </html>
         """
-    index.exposed = True
 
+    @cherrypy.expose
     def menu(self):
         yield "<h2>Profiling runs</h2>"
         yield "<p>Click on one of the runs below to see profiling data.</p>"
@@ -129,13 +133,12 @@ class Profiler(object):
         for i in runs:
             yield "<a href='report?filename=%s' target='main'>%s</a><br />" % (
                 i, i)
-    menu.exposed = True
 
+    @cherrypy.expose
     def report(self, filename):
         import cherrypy
         cherrypy.response.headers['Content-Type'] = 'text/plain'
         return self.stats(filename)
-    report.exposed = True
 
 
 class ProfileAggregator(Profiler):

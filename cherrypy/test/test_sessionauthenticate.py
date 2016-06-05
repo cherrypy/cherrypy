@@ -29,9 +29,9 @@ class SessionAuthenticateTest(helper.CPWebCase):
                 'tools.augment_params.on': True,
             }
 
+            @cherrypy.expose
             def index(self, **kwargs):
                 return "Hi %s, you are logged in" % cherrypy.request.login
-            index.exposed = True
 
         cherrypy.tree.mount(Test())
     setup_server = staticmethod(setup_server)

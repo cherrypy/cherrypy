@@ -49,14 +49,14 @@ This will display something along the following:
    [24/Feb/2014:21:01:46] ENGINE Bus STARTING
    CherryPy Checker:
    The Application mounted at '' has an empty config.
-   
+
    [24/Feb/2014:21:01:46] ENGINE Started monitor thread 'Autoreloader'.
    [24/Feb/2014:21:01:46] ENGINE Started monitor thread '_TimeoutMonitor'.
    [24/Feb/2014:21:01:46] ENGINE Serving on http://127.0.0.1:8080
    [24/Feb/2014:21:01:46] ENGINE Bus STARTED
 
 This tells you several things. The first three lines indicate
-the server will handle :mod:`signal` for you. The next line tells you 
+the server will handle :mod:`signal` for you. The next line tells you
 the current state of the server, as that
 point it is in `STARTING` stage. Then, you are notified your
 application has no specific configuration set to it.
@@ -78,8 +78,8 @@ understand how to set the configuration.
 Tutorial 2: Different URLs lead to different functions
 ######################################################
 
-Your applications will obviously handle more than a single URL. 
-Let's imagine you have an application that generates a random 
+Your applications will obviously handle more than a single URL.
+Let's imagine you have an application that generates a random
 string each time it is called:
 
 .. code-block:: python
@@ -87,7 +87,7 @@ string each time it is called:
 
    import random
    import string
-   
+
    import cherrypy
 
    class StringGenerator(object):
@@ -98,7 +98,7 @@ string each time it is called:
        @cherrypy.expose
        def generate(self):
            return ''.join(random.sample(string.hexdigits, 8))
-    
+
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
@@ -109,7 +109,7 @@ Save this into a file named `tut02.py` and run it as follows:
    $ python tut02.py
 
 Go now to http://localhost:8080/generate and your browser
-will display a random string. 
+will display a random string.
 
 Let's take a minute to decompose what's happening here. This is the
 URL that you have typed into your browser: http://localhost:8080/generate
@@ -138,7 +138,7 @@ to indicate the length of that string dynamically.
 
    import random
    import string
-   
+
    import cherrypy
 
    class StringGenerator(object):
@@ -149,7 +149,7 @@ to indicate the length of that string dynamically.
        @cherrypy.expose
        def generate(self, length=8):
            return ''.join(random.sample(string.hexdigits, int(length)))
-    
+
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
@@ -161,18 +161,18 @@ Save this into a file named `tut03.py` and run it as follows:
 
 Go now to http://localhost:8080/generate?length=16 and your browser
 will display a generated string of length 16. Notice how
-we benefit from Python's default arguments' values to support 
+we benefit from Python's default arguments' values to support
 URLs such as http://localhost:8080/generate still.
 
-In a URL such as this one, the section after `?` is called a 
-query-string. Traditionally, the query-string is used to 
+In a URL such as this one, the section after `?` is called a
+query-string. Traditionally, the query-string is used to
 contextualize the URL by passing a set of (key, value) pairs. The
 format for those pairs is `key=value`. Each pair being
 separated by a `&` character.
 
 Notice how we have to convert the given `length` value to
 and integer. Indeed, values are sent out from the client
-to our server as strings. 
+to our server as strings.
 
 Much like CherryPy maps URL path segments to exposed functions,
 query-string keys are mapped to those exposed function parameters.
@@ -194,7 +194,7 @@ example.
 
    import random
    import string
-   
+
    import cherrypy
 
    class StringGenerator(object):
@@ -213,7 +213,7 @@ example.
        @cherrypy.expose
        def generate(self, length=8):
            return ''.join(random.sample(string.hexdigits, int(length)))
-    
+
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
@@ -227,9 +227,9 @@ Go now to http://localhost:8080/ and your browser and this will
 display a simple input field to indicate the length of the string
 you want to generate.
 
-Notice that in this example, the form uses the `GET` method and 
+Notice that in this example, the form uses the `GET` method and
 when you pressed the `Give it now!` button, the form is sent using the
-same URL as in the :ref:`previous <tut03>` tutorial. HTML forms also support the 
+same URL as in the :ref:`previous <tut03>` tutorial. HTML forms also support the
 `POST` method, in that case the query-string is not appended to the
 URL but it sent as the body of the client's request to the server.
 However, this would not change your application's exposed method because
@@ -244,8 +244,8 @@ Tutorial 5: Track my end-user's activity
 It's not uncommon that an application needs to follow the
 user's activity for a while. The usual mechanism is to use
 a `session identifier <http://en.wikipedia.org/wiki/Session_(computer_science)#HTTP_session_token>`_
-that is carried during the conversation between the user and 
-your application. 
+that is carried during the conversation between the user and
+your application.
 
 .. code-block:: python
    :linenos:
@@ -292,11 +292,11 @@ Save this into a file named `tut05.py` and run it as follows:
 
    $ python tut05.py
 
-In this example, we generate the string as in the 
+In this example, we generate the string as in the
 :ref:`previous <tut04>` tutorial but also store it in the current
 session. If you go to http://localhost:8080/, generate a
 random string, then go to http://localhost:8080/display, you
-will see the string you just generated. 
+will see the string you just generated.
 
 The lines 30-34 show you how to enable the session support
 in your CherryPy application. By default, CherryPy will save
@@ -319,7 +319,7 @@ and stored into a local directory `public/css`.
 .. code-block:: css
    :linenos:
 
-      body { 
+      body {
         background-color: blue;
       }
 
@@ -409,7 +409,7 @@ Roughly speaking, it assumes that you can identify a resource
 and that you can address that resource through that identifier.
 
 "What for?" you may ask. Well, mostly, these principles are there
-to ensure that you decouple, as best as you can, the entities 
+to ensure that you decouple, as best as you can, the entities
 your application expose from the way they are manipulated or
 consumed. To embrace this point of view, developers will
 usually design a web API that expose pairs of `(URL, HTTP method, data, constraints)`.
@@ -433,8 +433,8 @@ mildly following REST principles.
 
     import cherrypy
 
+    @cherrypy.exposed
     class StringGeneratorWebService(object):
-        exposed = True
 
         @cherrypy.tools.accept(media='text/plain')
         def GET(self):
@@ -472,18 +472,18 @@ Save this into a file named `tut07.py` and run it as follows:
 Before we see it in action, let's explain a few things. Until now,
 CherryPy was creating a tree of exposed methods that were used to
 match URLs. In the case of our web API, we want to stress the role
-played by the actual requests' HTTP methods. So we created 
+played by the actual requests' HTTP methods. So we created
 methods that are named after them and they are all exposed at once
-through the `exposed = True` attribute of the class itself.
+by decorating the class itself with `cherrypy.exposed`.
 
 However, we must then switch from the default mechanism of matching
 URLs to method for one that is aware of the whole HTTP method
-shenanigan. This is what goes on line 27 where we create 
+shenanigan. This is what goes on line 27 where we create
 a :class:`~cherrypy.dispatch.MethodDispatcher` instance.
 
 Then we force the responses `content-type` to be `text/plain` and
 we finally ensure that `GET` requests will only be responded to clients
-that accept that `content-type` by having a `Accept: text/plain` 
+that accept that `content-type` by having a `Accept: text/plain`
 header set in their request. However, we do this only for that
 HTTP method as it wouldn't have much meaning on the other methods.
 
@@ -533,7 +533,7 @@ on the latter case, that it doesn't exist after we've deleted it.
 
 Lines 12-14 show you how the application reacted when our client requested
 the generated string as a JSON format. Since we configured the
-web API to only support plain text, it returns the appropriate 
+web API to only support plain text, it returns the appropriate
 `HTTP error code <http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.7>`_.
 
 
@@ -547,7 +547,7 @@ web API to only support plain text, it returns the appropriate
 .. important::
 
    It's all about RESTful URLs these days, isn't it?
-   
+
    It is likely your URL will be made of dynamic parts that you
    will not be able to match to page handlers. For example,
    ``/library/12/book/15`` cannot be directly handled by the
@@ -558,7 +558,7 @@ web API to only support plain text, it returns the appropriate
    explained in the :ref:`advanced section <restful>`.
 
 
-   
+
 .. _tut08:
 
 
@@ -566,11 +566,11 @@ Tutorial 8: Make it smoother with Ajax
 ######################################
 
 In the recent years, web applications have moved away from the
-simple pattern of "HTML forms + refresh the whole page". This 
+simple pattern of "HTML forms + refresh the whole page". This
 traditional scheme still works very well but users have become used
-to web applications that don't refresh the entire page. 
-Broadly speaking, web applications carry code performed 
-client-side that can speak with the backend without having to 
+to web applications that don't refresh the entire page.
+Broadly speaking, web applications carry code performed
+client-side that can speak with the backend without having to
 refresh the whole page.
 
 This tutorial will involve a little more code this time around. First,
@@ -579,11 +579,11 @@ let's see our CSS stylesheet located in `public/css/style.css`.
 .. code-block:: css
    :linenos:
 
-   body { 
+   body {
      background-color: blue;
    }
 
-   #the-string { 
+   #the-string {
      display: none;
    }
 
@@ -673,8 +673,8 @@ Both are hosted by the same application server.
        def index(self):
            return open('index.html')
 
+    @cherrypy.expose
     class StringGeneratorWebService(object):
-        exposed = True
 
         @cherrypy.tools.accept(media='text/plain')
         def GET(self):
@@ -696,7 +696,7 @@ Both are hosted by the same application server.
             '/': {
                 'tools.sessions.on': True,
                 'tools.staticdir.root': os.path.abspath(os.getcwd())
-            },            
+            },
             '/generator': {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
                 'tools.response_headers.on': True,
@@ -718,7 +718,7 @@ Save this into a file named `tut08.py` and run it as follows:
 
    $ python tut08.py
 
-Go to http://127.0.0.1:8080/ and play with the input and buttons 
+Go to http://127.0.0.1:8080/ and play with the input and buttons
 to generate, replace or delete the strings. Notice how the page
 isn't refreshed, simply part of its content.
 
@@ -731,10 +731,10 @@ could easily be used by non-HTML clients.
 Tutorial 9: Data is all my life
 ###############################
 
-Until now, all the generated strings were saved in the 
+Until now, all the generated strings were saved in the
 session, which by default is stored in the process memory. Though,
 you can persist sessions on disk or in a distributed memory store,
-this is not the right way of keeping your data on the long run. 
+this is not the right way of keeping your data on the long run.
 Sessions are there to identify your user and carry as little
 amount of data as necessary for the operation carried by the user.
 
@@ -748,11 +748,11 @@ There exist many to choose from with various paradigm support:
 - graph-oriented: neo4j
 
 Let's focus on the relational ones since they are the most common
-and probably what you will want to learn first. 
+and probably what you will want to learn first.
 
 For the sake of reducing the number of dependencies for these
 tutorials, we will go for the :mod:`sqlite` database which
-is directly supported by Python. 
+is directly supported by Python.
 
 Our application will replace the storage of the generated
 string from the session to a SQLite database. The application
@@ -777,8 +777,8 @@ So let's simply focus on the application code itself:
        def index(self):
            return file('index.html')
 
+    @cherrypy.expose
     class StringGeneratorWebService(object):
-        exposed = True
 
         @cherrypy.tools.accept(media='text/plain')
         def GET(self):
@@ -829,7 +829,7 @@ So let's simply focus on the application code itself:
             '/': {
                 'tools.sessions.on': True,
                 'tools.staticdir.root': os.path.abspath(os.getcwd())
-            },            
+            },
             '/generator': {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
                 'tools.response_headers.on': True,
@@ -864,7 +864,7 @@ Next, notice how we replaced all the session code with calls
 to the database. We use the session id to identify the
 user's string within our database. Since the session will go
 away after a while, it's probably not the right approach.
-A better idea would be to associate the user's login or 
+A better idea would be to associate the user's login or
 more resilient unique identifier. For the sake of our
 demo, this should do.
 
@@ -879,17 +879,17 @@ demo, this should do.
 .. note::
 
    Unfortunately, sqlite in Python forbids us
-   to share a connection between threads. Since CherryPy is a 
+   to share a connection between threads. Since CherryPy is a
    multi-threaded server, this would be an issue. This is the
    reason why we open and close a connection to the database
    on each call. This is clearly not really production friendly,
    and it is probably advisable to either use a more capable
-   database engine or a higher level library, such as 
+   database engine or a higher level library, such as
    `SQLAlchemy <http://sqlalchemy.readthedocs.org>`_, to better
    support your application's needs.
 
 .. _tut10:
-   
+
 Tutorial 10: Make it a modern single-page application with React.js
 ###################################################################
 
@@ -1088,7 +1088,7 @@ directory:
       document.getElementById('generator')
     );
 
-    
+
 Wow! What a lot of code for something so simple, isn't it?
 The entry point is the last few lines where we indicate that we
 want to render the HTML code of the ``StringGeneratorBox`` React.js
@@ -1115,7 +1115,7 @@ Tutorial 11: Organize my code
 
 CherryPy comes with a powerful architecture
 that helps you organizing your code in a way that should make
-it easier to maintain and more flexible. 
+it easier to maintain and more flexible.
 
 Several mechanisms are at your disposal, this tutorial will focus
 on the three main ones:
@@ -1132,7 +1132,7 @@ In order to understand them, let's imagine you are at a superstore:
   to make sure sections are always in order (this is your backend)
 
 In spite of being really simplistic, this is not far from how your
-application behaves. CherryPy helps you structure your application 
+application behaves. CherryPy helps you structure your application
 in a way that mirrors these high-level ideas.
 
 Dispatchers
@@ -1161,7 +1161,7 @@ only for a specific category of customers. CherryPy will deal
 with such use case via a mechanism called a :ref:`tool <tools>`.
 
 A tool is a piece of code that runs on a per-request
-basis in order to perform additional work. Usually a tool is a 
+basis in order to perform additional work. Usually a tool is a
 simple Python function that is executed at a given point during
 the process of the request by CherryPy.
 
@@ -1174,10 +1174,10 @@ the stock and deal with any customers' expectation.
 In the CherryPy world, this translates into having functions
 that run outside of any request life-cycle. These functions should
 take care of background tasks, long lived connections (such as
-those to a database for instance), etc. 
+those to a database for instance), etc.
 
-:ref:`Plugins <busplugins>` are called that way because 
-they work along with the CherryPy :ref:`engine <cpengine>` 
+:ref:`Plugins <busplugins>` are called that way because
+they work along with the CherryPy :ref:`engine <cpengine>`
 and extend it with your operations.
 
 

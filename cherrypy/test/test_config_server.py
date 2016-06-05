@@ -20,17 +20,17 @@ class ServerConfigTests(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return cherrypy.request.wsgi_environ['SERVER_PORT']
-            index.exposed = True
 
+            @cherrypy.expose
             def upload(self, file):
                 return "Size: %s" % len(file.file.read())
-            upload.exposed = True
 
+            @cherrypy.expose
             def tinyupload(self):
                 return cherrypy.request.body.read()
-            tinyupload.exposed = True
             tinyupload._cp_config = {'request.body.maxbytes': 100}
 
         cherrypy.tree.mount(Root())

@@ -55,59 +55,59 @@ def setup_server():
 
     class Root:
 
+        @cherrypy.expose
         def index(self):
             return "I'm a standard index!"
-        index.exposed = True
 
     class XmlRpc(_cptools.XMLRPCController):
 
+        @cherrypy.expose
         def foo(self):
             return "Hello world!"
-        foo.exposed = True
 
+        @cherrypy.expose
         def return_single_item_list(self):
             return [42]
-        return_single_item_list.exposed = True
 
+        @cherrypy.expose
         def return_string(self):
             return "here is a string"
-        return_string.exposed = True
 
+        @cherrypy.expose
         def return_tuple(self):
             return ('here', 'is', 1, 'tuple')
-        return_tuple.exposed = True
 
+        @cherrypy.expose
         def return_dict(self):
             return dict(a=1, b=2, c=3)
-        return_dict.exposed = True
 
+        @cherrypy.expose
         def return_composite(self):
             return dict(a=1, z=26), 'hi', ['welcome', 'friend']
-        return_composite.exposed = True
 
+        @cherrypy.expose
         def return_int(self):
             return 42
-        return_int.exposed = True
 
+        @cherrypy.expose
         def return_float(self):
             return 3.14
-        return_float.exposed = True
 
+        @cherrypy.expose
         def return_datetime(self):
             return DateTime((2003, 10, 7, 8, 1, 0, 1, 280, -1))
-        return_datetime.exposed = True
 
+        @cherrypy.expose
         def return_boolean(self):
             return True
-        return_boolean.exposed = True
 
+        @cherrypy.expose
         def test_argument_passing(self, num):
             return num * 2
-        test_argument_passing.exposed = True
 
+        @cherrypy.expose
         def test_returning_Fault(self):
             return Fault(1, "custom Fault response")
-        test_returning_Fault.exposed = True
 
     root = Root()
     root.xmlrpc = XmlRpc()

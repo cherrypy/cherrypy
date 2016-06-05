@@ -24,22 +24,22 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "hello"
-            index.exposed = True
 
             favicon_ico = tools.staticfile.handler(filename=favicon_path)
 
+            @cherrypy.expose
             def defct(self, newct):
                 newct = "text/%s" % newct
                 cherrypy.config.update({'tools.response_headers.on': True,
                                         'tools.response_headers.headers':
                                         [('Content-Type', newct)]})
-            defct.exposed = True
 
+            @cherrypy.expose
             def baseurl(self, path_info, relative=None):
                 return cherrypy.url(path_info, relative=bool(relative))
-            baseurl.exposed = True
 
         root = Root()
         root.expose_dec = ExposeExamples()
@@ -117,9 +117,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                               "tools.err_redirect.internal": False,
                               }
 
+                @cherrypy.expose
                 def index(self):
                     raise NameError("redirect_test")
-                index.exposed = True
             error = Error()
 
             def index(self):
@@ -164,9 +164,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def index(self):
                 raise cherrypy.InternalRedirect("/")
 
+            @cherrypy.expose
             def choke(self):
                 return 3 / 0
-            choke.exposed = True
             choke._cp_config = {'hooks.before_error_response': redir_custom}
 
             def relative(self, a, b):
@@ -722,9 +722,9 @@ class ErrorTests(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "hello"
-            index.exposed = True
 
             def start_response_error(self):
                 return "salud!"

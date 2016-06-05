@@ -51,9 +51,9 @@ attribute. For example::
     class Demo:
         _cp_config = {'tools.gzip.on': True}
 
+        @cherrypy.expose
         def index(self):
             return "Hello world"
-        index.exposed = True
         index._cp_config = {'request.show_tracebacks': False}
 
 .. note::

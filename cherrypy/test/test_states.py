@@ -53,31 +53,31 @@ db_connection = Dependency(engine)
 def setup_server():
     class Root:
 
+        @cherrypy.expose
         def index(self):
             return "Hello World"
-        index.exposed = True
 
+        @cherrypy.expose
         def ctrlc(self):
             raise KeyboardInterrupt()
-        ctrlc.exposed = True
 
+        @cherrypy.expose
         def graceful(self):
             engine.graceful()
             return "app was (gracefully) restarted succesfully"
-        graceful.exposed = True
 
+        @cherrypy.expose
         def block_explicit(self):
             while True:
                 if cherrypy.response.timed_out:
                     cherrypy.response.timed_out = False
                     return "broken!"
                 time.sleep(0.01)
-        block_explicit.exposed = True
 
+        @cherrypy.expose
         def block_implicit(self):
             time.sleep(0.5)
             return "response.timeout = %s" % cherrypy.response.timeout
-        block_implicit.exposed = True
 
     cherrypy.tree.mount(Root())
     cherrypy.config.update({

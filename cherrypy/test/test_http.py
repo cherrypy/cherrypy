@@ -47,15 +47,16 @@ class HTTPTests(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self, *args, **kwargs):
                 return "Hello world!"
-            index.exposed = True
 
+            @cherrypy.expose
             def no_body(self, *args, **kwargs):
                 return "Hello world!"
-            no_body.exposed = True
             no_body._cp_config = {'request.process_request_body': False}
 
+            @cherrypy.expose
             def post_multipart(self, file):
                 """Return a summary ("a * 65536\nb * 65536") of the uploaded
                 file.
@@ -79,7 +80,6 @@ class HTTPTests(helper.CPWebCase):
                         curchar = chr(curchar)
                     summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)
-            post_multipart.exposed = True
 
             @cherrypy.expose
             def post_filename(self, myfile):

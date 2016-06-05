@@ -24,22 +24,21 @@ def setup_server():
             if k == "scheme":
                 self.db = v
 
-        # @cherrypy.expose(alias=('global_', 'xyz'))
+        @cherrypy.expose(alias=('global_', 'xyz'))
         def index(self, key):
             return cherrypy.request.config.get(key, "None")
-        index = cherrypy.expose(index, alias=('global_', 'xyz'))
 
+        @cherrypy.expose
         def repr(self, key):
             return repr(cherrypy.request.config.get(key, None))
-        repr.exposed = True
 
+        @cherrypy.expose
         def dbscheme(self):
             return self.db
-        dbscheme.exposed = True
 
+        @cherrypy.expose
         def plain(self, x):
             return x
-        plain.exposed = True
         plain._cp_config = {'request.body.attempt_charsets': ['utf-16']}
 
         favicon_ico = cherrypy.tools.staticfile.handler(
@@ -50,29 +49,28 @@ def setup_server():
         _cp_config = {'foo': 'this2',
                       'baz': 'that2'}
 
+        @cherrypy.expose
         def index(self, key):
             return cherrypy.request.config.get(key, "None")
-        index.exposed = True
         nex = index
 
+        @cherrypy.expose
         def silly(self):
             return 'Hello world'
-        silly.exposed = True
         silly._cp_config = {'response.headers.X-silly': 'sillyval'}
 
         # Test the expose and config decorators
-        #@cherrypy.expose
         #@cherrypy.config(foo='this3', **{'bax': 'this4'})
+        @cherrypy.expose
         def bar(self, key):
             return repr(cherrypy.request.config.get(key, None))
-        bar.exposed = True
         bar._cp_config = {'foo': 'this3', 'bax': 'this4'}
 
     class Another:
 
+        @cherrypy.expose
         def index(self, key):
             return str(cherrypy.request.config.get(key, "None"))
-        index.exposed = True
 
     def raw_namespace(key, value):
         if key == 'input.map':
@@ -99,9 +97,9 @@ def setup_server():
 
         _cp_config = {'raw.output': repr}
 
+        @cherrypy.expose
         def incr(self, num):
             return num + 1
-        incr.exposed = True
         incr._cp_config = {'raw.input.map': {'num': int}}
 
     if not compat.py3k:

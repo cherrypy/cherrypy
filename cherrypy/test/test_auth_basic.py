@@ -15,23 +15,23 @@ class BasicAuthTest(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "This is public."
-            index.exposed = True
 
         class BasicProtected:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         class BasicProtected2:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         userpassdict = {'xuser': 'xpassword'}
         userhashdict = {'xuser': md5(ntob('xpassword')).hexdigest()}

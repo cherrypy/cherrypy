@@ -14,16 +14,16 @@ class DigestAuthTest(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "This is public."
-            index.exposed = True
 
         class DigestProtected:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         def fetch_users():
             return {'test': 'test'}

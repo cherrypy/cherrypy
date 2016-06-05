@@ -18,6 +18,7 @@ class GeneratorDemo:
     def footer(self):
         return "</body></html>"
 
+    @cherrypy.expose
     def index(self):
         # Let's make up a list of users for presentation purposes
         users = ['Remi', 'Carlos', 'Hendrik', 'Lorenzo Lamas']
@@ -30,7 +31,6 @@ class GeneratorDemo:
             yield "%s<br/>" % user
 
         yield self.footer()
-    index.exposed = True
 
 
 import os.path

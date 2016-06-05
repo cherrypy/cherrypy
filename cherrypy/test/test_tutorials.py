@@ -10,6 +10,7 @@ class TutorialTest(helper.CPWebCase):
 
         conf = cherrypy.config.copy()
 
+        @cherrypy.expose
         def load_tut_module(name):
             """Import or reload tutorial module as needed."""
             cherrypy.config.reset()
@@ -28,15 +29,14 @@ class TutorialTest(helper.CPWebCase):
             app.root.traceback_setting = traceback_setting
 
             cls.supervisor.sync_apps()
-        load_tut_module.exposed = True
 
+        @cherrypy.expose
         def sessions():
             cherrypy.config.update({"tools.sessions.on": True})
-        sessions.exposed = True
 
+        @cherrypy.expose
         def traceback_setting():
             return repr(cherrypy.request.show_tracebacks)
-        traceback_setting.exposed = True
 
         class Dummy:
             pass

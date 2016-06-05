@@ -50,6 +50,7 @@ from cherrypy.lib import static
 
 class FileDemo(object):
 
+    @cherrypy.expose
     def index(self):
         return """
         <html><body>
@@ -62,8 +63,8 @@ class FileDemo(object):
             <a href='download'>This one</a>
         </body></html>
         """
-    index.exposed = True
 
+    @cherrypy.expose
     def upload(self, myFile):
         out = """<html>
         <body>
@@ -85,13 +86,12 @@ class FileDemo(object):
             size += len(data)
 
         return out % (size, myFile.filename, myFile.content_type)
-    upload.exposed = True
 
+    @cherrypy.expose
     def download(self):
         path = os.path.join(absDir, "pdf_file.pdf")
         return static.serve_file(path, "application/x-download",
                                  "attachment", os.path.basename(path))
-    download.exposed = True
 
 
 import os.path

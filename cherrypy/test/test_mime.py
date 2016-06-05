@@ -8,18 +8,18 @@ def setup_server():
 
     class Root:
 
+        @cherrypy.expose
         def multipart(self, parts):
             return repr(parts)
-        multipart.exposed = True
 
+        @cherrypy.expose
         def multipart_form_data(self, **kwargs):
             return repr(list(sorted(kwargs.items())))
-        multipart_form_data.exposed = True
 
+        @cherrypy.expose
         def flashupload(self, Filedata, Upload, Filename):
             return ("Upload: %s, Filename: %s, Filedata: %r" %
                     (Upload, Filename, Filedata.file.read()))
-        flashupload.exposed = True
 
     cherrypy.config.update({'server.max_request_body_size': 0})
     cherrypy.tree.mount(Root())

@@ -17,19 +17,20 @@ erebos = ntou('\u0388\u03c1\u03b5\u03b2\u03bf\u03c2.com', 'escape')
 def setup_server():
     class Root:
 
+        @cherrypy.expose
         def index(self):
             return "hello"
-        index.exposed = True
 
+        @cherrypy.expose
         def uni_code(self):
             cherrypy.request.login = tartaros
             cherrypy.request.remote.name = erebos
-        uni_code.exposed = True
 
+        @cherrypy.expose
         def slashes(self):
             cherrypy.request.request_line = r'GET /slashed\path HTTP/1.1'
-        slashes.exposed = True
 
+        @cherrypy.expose
         def whitespace(self):
             # User-Agent = "User-Agent" ":" 1*( product | comment )
             # comment    = "(" *( ctext | quoted-pair | comment ) ")"
@@ -37,19 +38,18 @@ def setup_server():
             # TEXT       = <any OCTET except CTLs, but including LWS>
             # LWS        = [CRLF] 1*( SP | HT )
             cherrypy.request.headers['User-Agent'] = 'Browzuh (1.0\r\n\t\t.3)'
-        whitespace.exposed = True
 
+        @cherrypy.expose
         def as_string(self):
             return "content"
-        as_string.exposed = True
 
+        @cherrypy.expose
         def as_yield(self):
             yield "content"
-        as_yield.exposed = True
 
+        @cherrypy.expose
         def error(self):
             raise ValueError()
-        error.exposed = True
         error._cp_config = {'tools.log_tracebacks.on': True}
 
     root = Root()
