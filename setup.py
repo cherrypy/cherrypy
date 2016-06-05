@@ -1,20 +1,9 @@
-"""Installs CherryPy using distutils
-
-Run:
-    python setup.py install
-
-to install this package.
-"""
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-
-from distutils.command.install import INSTALL_SCHEMES
-from distutils.command.build_py import build_py
 import sys
 import re
+from distutils.command.install import INSTALL_SCHEMES
+from distutils.command.build_py import build_py
+
+import setuptools
 
 
 class cherrypy_build_py(build_py):
@@ -153,7 +142,7 @@ def main():
     for scheme in list(INSTALL_SCHEMES.values()):
         scheme['data'] = scheme['purelib']
 
-    setup(**setup_params)
+    setuptools.setup(**setup_params)
 
 
 if __name__ == "__main__":

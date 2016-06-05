@@ -1,3 +1,13 @@
+6.0.0
+-----
+
+* Setuptools is now required to build CherryPy. Pure
+  distutils installs are no longer supported. This change
+  allows CherryPy to depend on other packages and re-use
+  code from them. It's still possible to install
+  pre-built CherryPy packages (wheels) using pip without
+  Setuptools.
+
 5.6.0
 -----
 
