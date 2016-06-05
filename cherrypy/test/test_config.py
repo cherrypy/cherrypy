@@ -66,11 +66,10 @@ def setup_server():
         silly._cp_config = {'response.headers.X-silly': 'sillyval'}
 
         # Test the expose and config decorators
-        #@cherrypy.config(foo='this3', **{'bax': 'this4'})
+        @cherrypy.config(foo='this3', **{'bax': 'this4'})
         @cherrypy.expose
         def bar(self, key):
             return repr(cherrypy.request.config.get(key, None))
-        bar._cp_config = {'foo': 'this3', 'bax': 'this4'}
 
     class Another:
 
