@@ -4,6 +4,10 @@
 * #1397: Fix for filenames with semicolons and quote
   characters in filenames found in headers.
 * #1311: Added decorator for registering tools.
+* #1194: Use simpler encoding rules for SCRIPT_NAME
+  and PATH_INFO environment variables in CherryPy Tree
+  allowing non-latin characters to pass even when
+  ``wsgi.version`` is not ``u.0``.
 
 5.4.0
 -----
