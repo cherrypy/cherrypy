@@ -1,3 +1,9 @@
+5.6.0
+-----
+
+* ``@cherrypy.expose`` now will also set the exposed
+  attribute on a class.
+
 5.5.0
 -----
 

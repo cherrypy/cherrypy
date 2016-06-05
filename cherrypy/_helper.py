@@ -3,14 +3,14 @@ Helper functions for CP apps
 """
 
 from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
-from cherrypy._cpcompat import basestring
+from cherrypy._cpcompat import basestring, py3k
 
 import cherrypy
 
 
 def expose(func=None, alias=None):
     """
-    Expose the function, optionally providing an alias or set of aliases.
+    Expose the function or class, optionally providing an alias or set of aliases.
     """
     def expose_(func):
         func.exposed = True
@@ -24,7 +24,10 @@ def expose(func=None, alias=None):
 
     import sys
     import types
-    decoratable_types = types.FunctionType, types.MethodType
+    decoratable_types = types.FunctionType, types.MethodType, type,
+    if not py3k:
+        # Old-style classes are type types.ClassType.
+        decoratable_types += types.ClassType,
     if isinstance(func, decoratable_types):
         if alias is None:
             # @expose
