@@ -176,9 +176,23 @@ class Config(reprconf.Config):
                 "arguments; you must use keyword arguments.")
 
         def tool_decorator(f):
-            vars(f).setdefault('_cp_config', {}).update(kwargs)
+            _Vars(f).setdefault('_cp_config', {}).update(kwargs)
             return f
         return tool_decorator
+
+
+class _Vars(object):
+    """
+    Adapter that allows setting a default attribute on a function
+    or class.
+    """
+    def __init__(self, target):
+        self.target = target
+
+    def setdefault(self, key, default):
+        if not hasattr(self.target, key):
+            setattr(self.target, key, default)
+        return getattr(self.target, key)
 
 
 # Sphinx begin config.environments

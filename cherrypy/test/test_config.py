@@ -18,10 +18,8 @@ StringIOFromNative = lambda x: io.StringIO(six.text_type(x))
 
 def setup_server():
 
+    @cherrypy.config(foo='this', bar='that')
     class Root:
-
-        _cp_config = {'foo': 'this',
-                      'bar': 'that'}
 
         def __init__(self):
             cherrypy.config.namespaces['db'] = self.db_namespace
@@ -43,17 +41,15 @@ def setup_server():
             return self.db
 
         @cherrypy.expose
+        @cherrypy.config(**{'request.body.attempt_charsets': ['utf-16']})
         def plain(self, x):
             return x
-        plain._cp_config = {'request.body.attempt_charsets': ['utf-16']}
 
         favicon_ico = cherrypy.tools.staticfile.handler(
             filename=os.path.join(localDir, '../favicon.ico'))
 
+    @cherrypy.config(foo='this2', baz='that2')
     class Foo:
-
-        _cp_config = {'foo': 'this2',
-                      'baz': 'that2'}
 
         @cherrypy.expose
         def index(self, key):
@@ -61,9 +57,9 @@ def setup_server():
         nex = index
 
         @cherrypy.expose
+        @cherrypy.config(**{'response.headers.X-silly': 'sillyval'})
         def silly(self):
             return 'Hello world'
-        silly._cp_config = {'response.headers.X-silly': 'sillyval'}
 
         # Test the expose and config decorators
         @cherrypy.config(foo='this3', **{'bax': 'this4'})
@@ -98,14 +94,13 @@ def setup_server():
                 return value(handler())
             cherrypy.request.handler = wrapper
 
+    @cherrypy.config(**{'raw.output': repr})
     class Raw:
 
-        _cp_config = {'raw.output': repr}
-
         @cherrypy.expose
+        @cherrypy.config(**{'raw.input.map': {'num': int}})
         def incr(self, num):
             return num + 1
-        incr._cp_config = {'raw.input.map': {'num': int}}
 
     if not six.PY3:
         thing3 = "thing3: unicode('test', errors='ignore')"
