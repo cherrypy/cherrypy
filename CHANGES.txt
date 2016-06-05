@@ -6,6 +6,7 @@
 * Rewrote all tutorials and internal usage to prefer
   the decorator usage of ``expose`` rather than setting
   the attribute explicitly.
+* Removed test-specific code from tutorials.
 
 5.5.0
 -----
