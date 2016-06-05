@@ -9,7 +9,9 @@ import cherrypy
 
 
 def expose(func=None, alias=None):
-    """Expose the function, optionally providing an alias or set of aliases."""
+    """
+    Expose the function, optionally providing an alias or set of aliases.
+    """
     def expose_(func):
         func.exposed = True
         if alias is not None:
@@ -22,7 +24,8 @@ def expose(func=None, alias=None):
 
     import sys
     import types
-    if isinstance(func, (types.FunctionType, types.MethodType)):
+    decoratable_types = types.FunctionType, types.MethodType
+    if isinstance(func, decoratable_types):
         if alias is None:
             # @expose
             func.exposed = True
