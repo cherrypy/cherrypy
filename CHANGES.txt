@@ -1,3 +1,9 @@
+5.4.1
+-----
+
+* #1397: Fix for filenames with semicolons and quote
+  characters in filenames found in headers.
+
 5.4.0
 -----
 
