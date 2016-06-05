@@ -28,6 +28,3 @@ if __name__ == '__main__':
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().
     cherrypy.quickstart(HelloWorld(), config=tutconf)
-else:
-    # This branch is for the test suite; you can ignore it.
-    cherrypy.tree.mount(HelloWorld(), config=tutconf)
