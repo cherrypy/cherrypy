@@ -47,10 +47,6 @@ if six.PY3:
         if isinstance(n, bytes):
             return n.decode(encoding)
         return n
-    # type("")
-    from io import StringIO
-    # bytes:
-    from io import BytesIO as BytesIO
 else:
     # Python 2
     basestring = basestring
@@ -90,14 +86,6 @@ else:
         if isinstance(n, unicode):
             return n.encode(encoding)
         return n
-    try:
-        # type("")
-        from cStringIO import StringIO
-    except ImportError:
-        # type("")
-        from StringIO import StringIO
-    # bytes:
-    BytesIO = StringIO
 
 
 def assert_native(n):

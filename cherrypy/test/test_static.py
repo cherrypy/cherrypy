@@ -1,8 +1,8 @@
 import os
 import sys
+import io
 
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
-from cherrypy._cpcompat import BytesIO
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
@@ -49,7 +49,7 @@ class StaticTest(helper.CPWebCase):
 
             @cherrypy.expose
             def bytesio(self):
-                f = BytesIO(ntob('Fee\nfie\nfo\nfum'))
+                f = io.BytesIO(ntob('Fee\nfie\nfo\nfum'))
                 return static.serve_fileobj(f, content_type='text/plain')
 
         class Static:

@@ -33,6 +33,7 @@ module from the command line, it will call ``serve()`` for you.
 
 """
 
+import io
 
 import cherrypy
 
@@ -57,8 +58,6 @@ import os
 import os.path
 import sys
 import warnings
-
-from cherrypy._cpcompat import StringIO
 
 _count = 0
 
@@ -91,7 +90,7 @@ class Profiler(object):
     def stats(self, filename, sortby='cumulative'):
         """:rtype stats(index): output of print_stats() for the given profile.
         """
-        sio = StringIO()
+        sio = io.StringIO()
         if sys.version_info >= (2, 5):
             s = pstats.Stats(os.path.join(self.path, filename), stream=sio)
             s.strip_dirs()

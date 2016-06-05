@@ -1,5 +1,6 @@
 """Tests for the CherryPy configuration system."""
 
+import io
 import os
 import sys
 import unittest
@@ -10,6 +11,9 @@ import cherrypy
 import cherrypy._cpcompat as compat
 
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+
+
+StringIOFromNative = lambda x: io.StringIO(six.text_type(x))
 
 
 def setup_server():
@@ -109,7 +113,7 @@ def setup_server():
     else:
         thing3 = ''
 
-    ioconf = compat.StringIO("""
+    ioconf = StringIOFromNative("""
 [/]
 neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
@@ -263,7 +267,7 @@ class VariableSubstitutionTests(unittest.TestCase):
 
         """)
 
-        fp = compat.StringIO(conf)
+        fp = StringIOFromNative(conf)
 
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config["my"]["my.dir"], "/some/dir/my/dir")
@@ -281,7 +285,7 @@ class CallablesInConfigTest(unittest.TestCase):
         [my]
         value = dict(**{'foo': 'bar'})
         """)
-        fp = compat.StringIO(conf)
+        fp = StringIOFromNative(conf)
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config['my']['value'], {'foo': 'bar'})
 
@@ -297,7 +301,7 @@ class CallablesInConfigTest(unittest.TestCase):
             "fizz": "buzz"
         }
         cherrypy._test_dict = test_dict
-        fp = compat.StringIO(conf)
+        fp = StringIOFromNative(conf)
         cherrypy.config.update(fp)
         test_dict['foo'] = 'buzz'
         self.assertEqual(cherrypy.config['my']['value']['foo'], 'buzz')

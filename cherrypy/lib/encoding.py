@@ -1,10 +1,11 @@
 import struct
 import time
+import io
 
 import six
 
 import cherrypy
-from cherrypy._cpcompat import basestring, BytesIO, ntob
+from cherrypy._cpcompat import basestring, ntob
 from cherrypy.lib import file_generator
 from cherrypy.lib import is_closable_iterator
 from cherrypy.lib import set_vary_header
@@ -303,7 +304,7 @@ def compress(body, compress_level):
 def decompress(body):
     import gzip
 
-    zbuf = BytesIO()
+    zbuf = io.BytesIO()
     zbuf.write(body)
     zbuf.seek(0)
     zfile = gzip.GzipFile(mode='rb', fileobj=zbuf)

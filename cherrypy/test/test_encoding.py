@@ -1,9 +1,10 @@
 import gzip
+import io
 
 import mock
 
 import cherrypy
-from cherrypy._cpcompat import BytesIO, IncompleteRead, ntob, ntou
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 
 europoundUnicode = ntou(r'\x00\xa3')
 sing = ntou("\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?", 'escape')
@@ -351,7 +352,7 @@ class EncodingTests(helper.CPWebCase):
         self.assertStatus("406 Not Acceptable")
 
     def testGzip(self):
-        zbuf = BytesIO()
+        zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write(ntob("Hello, world"))
         zfile.close()

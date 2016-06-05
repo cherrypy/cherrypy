@@ -8,11 +8,12 @@ still be translatable to bytes via the Latin-1 encoding!"
 """
 
 import sys as _sys
+import io
 
 import six
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO, ntob, ntou
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 from cherrypy.lib import is_closable_iterator
@@ -126,7 +127,7 @@ class InternalRedirector(object):
                 environ['REQUEST_METHOD'] = "GET"
                 environ['PATH_INFO'] = ir.path
                 environ['QUERY_STRING'] = ir.query_string
-                environ['wsgi.input'] = BytesIO()
+                environ['wsgi.input'] = io.BytesIO()
                 environ['CONTENT_LENGTH'] = "0"
                 environ['cherrypy.previous_request'] = ir.request
 

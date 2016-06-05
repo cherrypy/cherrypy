@@ -3,7 +3,9 @@
 import gzip
 import sys
 import unittest
-from cherrypy._cpcompat import BytesIO, copyitems, itervalues
+import io
+
+from cherrypy._cpcompat import copyitems, itervalues
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
 import time
 timeout = 0.2
@@ -110,7 +112,7 @@ class ToolTests(helper.CPWebCase):
 
         def stream_handler(next_handler, *args, **kwargs):
             assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
-            cherrypy.response.output = o = BytesIO()
+            cherrypy.response.output = o = io.BytesIO()
             try:
                 response = next_handler(*args, **kwargs)
                 # Ignore the response and return our accumulated output
@@ -347,7 +349,7 @@ class ToolTests(helper.CPWebCase):
     def testCombinedTools(self):
         expectedResult = (ntou("Hello,world") +
                           europoundUnicode).encode('utf-8')
-        zbuf = BytesIO()
+        zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write(expectedResult)
         zfile.close()
@@ -358,7 +360,7 @@ class ToolTests(helper.CPWebCase):
                          ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
         self.assertInBody(zbuf.getvalue()[:3])
 
-        zbuf = BytesIO()
+        zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=6)
         zfile.write(expectedResult)
         zfile.close()
