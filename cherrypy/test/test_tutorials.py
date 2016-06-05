@@ -47,7 +47,7 @@ class TutorialTest(helper.CPWebCase):
         conf = getattr(module, 'tutconf')
         class_types = type,
         if not py3k:
-            class_types += types.ClassType
+            class_types += types.ClassType,
         if isinstance(root, class_types):
             root = root()
         cherrypy.tree.mount(root, config=conf)
