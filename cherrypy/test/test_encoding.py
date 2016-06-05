@@ -1,5 +1,7 @@
 import gzip
 
+import mock
+
 import cherrypy
 from cherrypy._cpcompat import BytesIO, IncompleteRead, ntob, ntou
 
@@ -246,13 +248,13 @@ class EncodingTests(helper.CPWebCase):
                      body=body),
         self.assertBody(ntob("submit: Create, text: ab\xe2\x80\x9cc"))
 
+    @mock.patch('cherrypy._cpreqbody.Part.maxrambytes', 1)
     def test_multipart_decoding_bigger_maxrambytes(self):
-        # Test the decoding of a multipart entity when the entity is bigger
-        # than maxrambytes. See ticket #1352.
-        maxrambytes_original = cherrypy._cpreqbody.Part.maxrambytes
-        cherrypy._cpreqbody.Part.maxrambytes = 1
+        """
+        Decoding of a multipart entity should also pass when
+        the entity is bigger than maxrambytes. See ticket #1352.
+        """
         self.test_multipart_decoding()
-        cherrypy._cpreqbody.Part.maxrambytes = maxrambytes_original
 
     def test_multipart_decoding_no_charset(self):
         # Test the decoding of a multipart entity when the charset (utf8) is
