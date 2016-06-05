@@ -1,6 +1,6 @@
-
-
 # CherryPy
+
+[![CherryPy Build Status](https://travis-ci.org/cherrypy/cherrypy.svg?branch=master)](https://travis-ci.org/cherrypy/cherrypy)
 
 Welcome to the GitHub-repository of [CherryPy](http://cherrypy.org/)! 
 
