@@ -1,8 +1,9 @@
-5.4.1
+5.5.0
 -----
 
 * #1397: Fix for filenames with semicolons and quote
   characters in filenames found in headers.
+* #1311: Added decorator for registering tools.
 
 5.4.0
 -----
@@ -15,7 +16,6 @@
   using the ``next`` attribute.
 * #748: Removed ``cherrypy.lib.sessions.PostgresqlSession``.
 * #1432: Fix errors with redirects to Unicode URLs.
-* #1311: Added decorator for registering tools.
 
 5.3.0
 -----
