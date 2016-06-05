@@ -1,4 +1,5 @@
 import sys
+import imp
 
 import cherrypy
 from cherrypy.test import helper
@@ -18,7 +19,7 @@ class TutorialTest(helper.CPWebCase):
 
             target = "cherrypy.tutorial." + name
             if target in sys.modules:
-                module = reload(sys.modules[target])
+                module = imp.reload(sys.modules[target])
             else:
                 module = __import__(target, globals(), locals(), [''])
             # The above import will probably mount a new app at "".
