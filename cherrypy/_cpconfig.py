@@ -167,7 +167,8 @@ class Config(reprconf.Config):
             config['tools.staticdir.section'] = "global"
         reprconf.Config._apply(self, config)
 
-    def __call__(self, *args, **kwargs):
+    @staticmethod
+    def __call__(*args, **kwargs):
         """Decorator for page handlers to set _cp_config."""
         if args:
             raise TypeError(
@@ -175,10 +176,7 @@ class Config(reprconf.Config):
                 "arguments; you must use keyword arguments.")
 
         def tool_decorator(f):
-            if not hasattr(f, "_cp_config"):
-                f._cp_config = {}
-            for k, v in kwargs.items():
-                f._cp_config[k] = v
+            vars(f).setdefault('_cp_config', {}).update(kwargs)
             return f
         return tool_decorator
 
