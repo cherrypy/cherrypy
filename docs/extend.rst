@@ -413,10 +413,16 @@ hook point, hence after the page handler was called:
 
 .. code-block:: python
 
-   def log_it():
+   @cherrypy.tools.register('before_finalize')
+   def logit():
       print(cherrypy.request.remote.ip)
-    
-   cherrypy.tools.logit = cherrypy.Tool('before_finalize', log_it)
+
+Tools can also be created and assigned manually.
+The decorator registration is equivalent to:
+
+.. code-block:: python
+
+   cherrypy.tools.logit = cherrypy.Tool('before_finalize', logit)
 
 Using that tool is as simple as follows:
 
@@ -533,10 +539,10 @@ could benefit (hint, hint). Creating a new Toolbox is as simple as:
     newauthtools = cherrypy._cptools.Toolbox("newauth")
 
     # Add a Tool to our new Toolbox.
+    @newauthtools.register('before_request_body')
     def check_access(default=False):
         if not getattr(cherrypy.request, "userid", default):
             raise cherrypy.HTTPError(401)
-    newauthtools.check_access = cherrypy.Tool('before_request_body', check_access)
 
 Then, in your application, use it just like you would use ``cherrypy.tools``,
 with the additional step of registering your toolbox with your app.
