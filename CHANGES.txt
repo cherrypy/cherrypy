@@ -8,6 +8,8 @@
   and PATH_INFO environment variables in CherryPy Tree
   allowing non-latin characters to pass even when
   ``wsgi.version`` is not ``u.0``.
+* #1352: Ensure that multipart fields are decoded even
+  when cached in a file.
 
 5.4.0
 -----
