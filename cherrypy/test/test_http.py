@@ -147,12 +147,15 @@ class HTTPTests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody(", ".join(["%s * 65536" % c for c in alphabet]))
 
-    def test_post_filename_with_commas(self):
-        '''Testing that we can handle filenames with commas. This was
-        reported as a bug in:
-           https://github.com/cherrypy/cherrypy/issues/1146/'''
+    def test_post_filename_with_special_characters(self):
+        '''Testing that we can handle filenames with special characters. This
+        was reported as a bug in:
+           https://github.com/cherrypy/cherrypy/issues/1146/
+           https://github.com/cherrypy/cherrypy/issues/1397'''
         # We'll upload a bunch of files with differing names.
-        for fname in ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv']:
+        fnames = ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
+                'file;name.csv', 'file; name.csv']
+        for fname in fnames:
             files = [('myfile', fname, 'yunyeenyunyue')]
             content_type, body = encode_multipart_formdata(files)
             body = body.encode('Latin-1')
