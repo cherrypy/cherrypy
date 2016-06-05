@@ -5,6 +5,7 @@ import sys
 import time
 import errno
 
+import six
 
 import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, NotConnected
@@ -14,7 +15,6 @@ from cherrypy._cpcompat import (
     tonative,
     urlopen,
     unicodestr,
-    py3k
 )
 from cherrypy.test import webtest
 
@@ -445,7 +445,7 @@ class PipelineTests(helper.CPWebCase):
             # ``conn.sock``. Until that bug get's fixed we will
             # monkey patch the ``reponse`` instance.
             # https://bugs.python.org/issue23377
-            if py3k:
+            if six.PY3:
                 response.fp = conn.sock.makefile("rb", 0)
             response.begin()
             body = response.read(13)

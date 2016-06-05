@@ -1,5 +1,6 @@
 import sys
-from cherrypy._cpcompat import py3k
+
+import six
 
 try:
     from xmlrpclib import DateTime, Fault, ProtocolError, ServerProxy
@@ -8,7 +9,7 @@ except ImportError:
     from xmlrpc.client import DateTime, Fault, ProtocolError, ServerProxy
     from xmlrpc.client import SafeTransport
 
-if py3k:
+if six.PY3:
     HTTPSTransport = SafeTransport
 
     # Python 3.0's SafeTransport still mistakenly checks for socket.ssl

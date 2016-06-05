@@ -9,8 +9,10 @@ still be translatable to bytes via the Latin-1 encoding!"
 
 import sys as _sys
 
+import six
+
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO, bytestr, ntob, ntou, py3k, unicodestr
+from cherrypy._cpcompat import BytesIO, bytestr, ntob, ntou, unicodestr
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 from cherrypy.lib import is_closable_iterator
@@ -168,7 +170,7 @@ class _TrappedResponse(object):
         return self.trap(next, self.iter_response)
 
     # todo: https://pythonhosted.org/six/#six.Iterator
-    if not py3k:
+    if six.PY2:
         next = __next__
 
     def close(self):
@@ -189,7 +191,7 @@ class _TrappedResponse(object):
             if not _cherrypy.request.show_tracebacks:
                 tb = ""
             s, h, b = _cperror.bare_error(tb)
-            if py3k:
+            if six.PY3:
                 # What fun.
                 s = s.decode('ISO-8859-1')
                 h = [(k.decode('ISO-8859-1'), v.decode('ISO-8859-1'))
@@ -227,7 +229,7 @@ class AppResponse(object):
     def __init__(self, environ, start_response, cpapp):
         self.cpapp = cpapp
         try:
-            if not py3k:
+            if six.PY2:
                 if environ.get(ntou('wsgi.version')) == (ntou('u'), 0):
                     environ = downgrade_wsgi_ux_to_1x(environ)
             self.environ = environ
@@ -251,7 +253,7 @@ class AppResponse(object):
                         v)
                 outheaders.append((k, v))
 
-            if py3k:
+            if six.PY3:
                 # According to PEP 3333, when using Python 3, the response
                 # status and headers must be bytes masquerading as unicode;
                 # that is, they must be of type "str" but are restricted to
@@ -273,7 +275,7 @@ class AppResponse(object):
         return next(self.iter_response)
 
     # todo: https://pythonhosted.org/six/#six.Iterator
-    if not py3k:
+    if six.PY2:
         next = __next__
 
     def close(self):
@@ -321,7 +323,7 @@ class AppResponse(object):
                                 self.environ.get('PATH_INFO', ''))
         qs = self.environ.get('QUERY_STRING', '')
 
-        if py3k:
+        if six.PY3:
             # This isn't perfect; if the given PATH_INFO is in the
             # wrong encoding, it may fail to match the appropriate config
             # section URI. But meh.

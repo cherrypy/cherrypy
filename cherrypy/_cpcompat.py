@@ -20,8 +20,9 @@ import re
 import sys
 import threading
 
-if sys.version_info >= (3, 0):
-    py3k = True
+import six
+
+if six.PY3:
     bytestr = bytes
     unicodestr = str
     nativestr = unicodestr
@@ -55,7 +56,6 @@ if sys.version_info >= (3, 0):
     from io import BytesIO as BytesIO
 else:
     # Python 2
-    py3k = False
     bytestr = str
     unicodestr = unicode
     nativestr = bytestr
@@ -221,7 +221,7 @@ except ImportError:
     from http.server import BaseHTTPRequestHandler
 
 # Some platforms don't expose HTTPSConnection, so handle it separately
-if py3k:
+if six.PY3:
     try:
         from http.client import HTTPSConnection
     except ImportError:
@@ -300,7 +300,7 @@ except ImportError:
         def _json_encode(s):
             raise ValueError('No JSON library is available')
 finally:
-    if json and py3k:
+    if json and six.PY3:
         # The two Python 3 implementations (simplejson/json)
         # outputs str. We need bytes.
         def json_encode(value):

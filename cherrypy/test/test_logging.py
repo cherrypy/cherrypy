@@ -3,8 +3,10 @@
 import os
 localDir = os.path.dirname(__file__)
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import ntob, ntou, py3k
+from cherrypy._cpcompat import ntob, ntou
 
 access_log = os.path.join(localDir, "access.log")
 error_log = os.path.join(localDir, "error.log")
@@ -112,7 +114,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         original_logformat = cherrypy._cplogging.LogManager.access_log_format
         cherrypy._cplogging.LogManager.access_log_format = \
           '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}' \
-          if py3k else \
+          if six.PY3 else \
           '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
 
         self.markLog()
@@ -130,8 +132,8 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.markLog()
         self.getPage("/uni_code")
         self.assertStatus(200)
-        if py3k:
-            # The repr of a bytestring in py3k includes a b'' prefix
+        if six.PY3:
+            # The repr of a bytestring in six.PY3 includes a b'' prefix
             self.assertLog(-1, repr(tartaros.encode('utf8'))[2:-1])
         else:
             self.assertLog(-1, repr(tartaros.encode('utf8'))[1:-1])
@@ -143,7 +145,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.markLog()
         self.getPage("/slashes")
         self.assertStatus(200)
-        if py3k:
+        if six.PY3:
             self.assertLog(-1, ntob('"GET /slashed\\path HTTP/1.1"'))
         else:
             self.assertLog(-1, r'"GET /slashed\\path HTTP/1.1"')

@@ -4,6 +4,8 @@ import os
 import sys
 import unittest
 
+import six
+
 import cherrypy
 import cherrypy._cpcompat as compat
 
@@ -102,7 +104,7 @@ def setup_server():
             return num + 1
         incr._cp_config = {'raw.input.map': {'num': int}}
 
-    if not compat.py3k:
+    if not six.PY3:
         thing3 = "thing3: unicode('test', errors='ignore')"
     else:
         thing3 = ''
@@ -202,7 +204,7 @@ class ConfigTests(helper.CPWebCase):
             from cherrypy.tutorial import thing2
             self.assertBody(repr(thing2))
 
-        if not compat.py3k:
+        if not six.PY3:
             self.getPage("/repr?key=thing3")
             self.assertBody(repr(unicode('test')))
 

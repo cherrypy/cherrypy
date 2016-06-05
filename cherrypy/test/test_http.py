@@ -5,10 +5,12 @@ import mimetypes
 import socket
 import sys
 
+import six
+
 from mock import patch
 
 import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob, py3k
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
 
 def encode_multipart_formdata(files):
@@ -70,13 +72,13 @@ class HTTPTests(helper.CPWebCase):
                         count += 1
                     else:
                         if count:
-                            if py3k:
+                            if six.PY3:
                                 curchar = chr(curchar)
                             summary.append("%s * %d" % (curchar, count))
                         count = 1
                         curchar = c
                 if count:
-                    if py3k:
+                    if six.PY3:
                         curchar = chr(curchar)
                     summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)

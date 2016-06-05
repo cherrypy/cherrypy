@@ -2,8 +2,10 @@
 Helper functions for CP apps
 """
 
+import six
+
 from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
-from cherrypy._cpcompat import basestring, py3k
+from cherrypy._cpcompat import basestring
 
 import cherrypy
 
@@ -25,7 +27,7 @@ def expose(func=None, alias=None):
     import sys
     import types
     decoratable_types = types.FunctionType, types.MethodType, type,
-    if not py3k:
+    if six.PY2:
         # Old-style classes are type types.ClassType.
         decoratable_types += types.ClassType,
     if isinstance(func, decoratable_types):

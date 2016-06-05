@@ -8,7 +8,7 @@ except Exception:
     # Python 2.6 may not have it.
     pass
 
-from cherrypy._cpcompat import py3k
+import six
 
 import cherrypy
 from cherrypy.test import helper
@@ -46,7 +46,7 @@ class TutorialTest(helper.CPWebCase):
         root = getattr(module, root_name)
         conf = getattr(module, 'tutconf')
         class_types = type,
-        if not py3k:
+        if six.PY2:
             class_types += types.ClassType,
         if isinstance(root, class_types):
             root = root()

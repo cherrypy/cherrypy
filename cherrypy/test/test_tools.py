@@ -4,11 +4,13 @@ import gzip
 import sys
 import unittest
 from cherrypy._cpcompat import BytesIO, copyitems, itervalues
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
 from cherrypy._cpcompat import bytestr, unicodestr
 import time
 timeout = 0.2
 import types
+
+import six
 
 import cherrypy
 from cherrypy import tools
@@ -101,7 +103,7 @@ class ToolTests(helper.CPWebCase):
             def __call__(self, scale):
                 r = cherrypy.response
                 r.collapse_body()
-                if py3k:
+                if six.PY3:
                     r.body = [bytes([(x + scale) % 256 for x in r.body[0]])]
                 else:
                     r.body = [chr((ord(x) + scale) % 256) for x in r.body[0]]
@@ -371,7 +373,7 @@ class ToolTests(helper.CPWebCase):
         # but it proves the priority was changed.
         self.getPage("/decorated_euro/subpath",
                      headers=[("Accept-Encoding", "gzip")])
-        if py3k:
+        if six.PY3:
             self.assertInBody(bytes([(x + 3) % 256 for x in zbuf.getvalue()]))
         else:
             self.assertInBody(''.join([chr((ord(x) + 3) % 256)

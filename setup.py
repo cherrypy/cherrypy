@@ -96,6 +96,10 @@ data_files = [
 ]
 scripts = ["cherrypy/cherryd"]
 
+install_requires = [
+    'six',
+]
+
 cmd_class = dict(
     build_py=cherrypy_build_py,
 )
@@ -130,6 +134,7 @@ setup_params = dict(
     data_files=data_files,
     scripts=scripts,
     cmdclass=cmd_class,
+    install_requires=install_requires,
 )
 
 def main():

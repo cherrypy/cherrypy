@@ -29,7 +29,9 @@ import json
 from unittest import *
 from unittest import _TextTestResult
 
-from cherrypy._cpcompat import basestring, ntob, py3k, HTTPConnection
+import six
+
+from cherrypy._cpcompat import basestring, ntob, HTTPConnection
 from cherrypy._cpcompat import HTTPSConnection, unicodestr
 
 
@@ -125,12 +127,12 @@ class ReloadingTestLoader(TestLoader):
 
         if isinstance(obj, types.ModuleType):
             return self.loadTestsFromModule(obj)
-        elif (((py3k and isinstance(obj, type))
+        elif (((six.PY3 and isinstance(obj, type))
                or isinstance(obj, (type, types.ClassType)))
               and issubclass(obj, TestCase)):
             return self.loadTestsFromTestCase(obj)
         elif isinstance(obj, types.UnboundMethodType):
-            if py3k:
+            if six.PY3:
                 return obj.__self__.__class__(obj.__name__)
             else:
                 return obj.im_class(obj.__name__)
@@ -499,7 +501,7 @@ def cleanHeaders(headers, method, body, host, port):
 
 def shb(response):
     """Return status, headers, body the way we like from a response."""
-    if py3k:
+    if six.PY3:
         h = response.getheaders()
     else:
         h = []
@@ -546,7 +548,7 @@ def openURL(url, headers=None, method="GET", body=None,
             conn._http_vsn_str = protocol
             conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
 
-            if py3k and isinstance(url, bytes):
+            if six.PY3 and isinstance(url, bytes):
                 url = url.decode()
             conn.putrequest(method.upper(), url, skip_host=True,
                             skip_accept_encoding=True)
