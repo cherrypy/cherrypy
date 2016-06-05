@@ -50,6 +50,10 @@ class EncodingTests(helper.CPWebCase):
                 )
             reqparams.exposed = True
 
+            def filename(self, test_file):
+                return test_file.filename.encode('utf-8')
+            filename.exposed = True
+
             def nontext(self, *args, **kwargs):
                 cherrypy.response.headers[
                     'Content-Type'] = 'application/binary'
@@ -292,7 +296,27 @@ class EncodingTests(helper.CPWebCase):
         self.assertErrorPage(
             400,
             "The request entity could not be decoded. The following charsets "
-            "were attempted: ['us-ascii', 'utf-8']")
+            "were attempted: ['utf-8']")
+
+    def test_multipart_decoding_filename(self):
+        # Test the decoding of a filename encoded in UTF-8.
+        body = ntob('\r\n'.join([
+            '--X',
+            'Content-Disposition: form-data; name="test_file"; filename="D\xc3\xa9mo.pdf"',
+            'Content-Type: application/pdf',
+            '',
+            '--X--'
+        ]))
+        self.getPage(
+            '/filename',
+            method='POST',
+            headers=[
+                ("Content-Type", "multipart/form-data;boundary=X"),
+                ("Content-Length", str(len(body))),
+            ],
+            body=body
+        ),
+        self.assertBody(ntob("D\xc3\xa9mo.pdf"))
 
     def test_nontext(self):
         self.getPage('/nontext')
