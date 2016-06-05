@@ -14,7 +14,6 @@ from cherrypy._cpcompat import (
     ntob,
     tonative,
     urlopen,
-    unicodestr,
 )
 from cherrypy.test import webtest
 
@@ -89,7 +88,7 @@ def setup_server():
                 body = [body]
             newbody = []
             for chunk in body:
-                if isinstance(chunk, unicodestr):
+                if isinstance(chunk, six.text_type):
                     chunk = chunk.encode('ISO-8859-1')
                 newbody.append(chunk)
             return newbody

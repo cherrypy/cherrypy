@@ -3,8 +3,9 @@
 import sys
 import time
 
-import cherrypy
-from cherrypy._cpcompat import basestring, ntob, unicodestr
+import six
+
+from cherrypy._cpcompat import basestring, ntob
 
 
 try:
@@ -119,7 +120,7 @@ class LogCase(object):
         if marker is None:
             return open(logfile, 'rb').readlines()
 
-        if isinstance(marker, unicodestr):
+        if isinstance(marker, six.text_type):
             marker = marker.encode('utf-8')
         data = []
         in_region = False
@@ -172,7 +173,7 @@ class LogCase(object):
             # Single arg. Use __getitem__ and allow lines to be str or list.
             if isinstance(lines, (tuple, list)):
                 lines = lines[0]
-            if isinstance(lines, unicodestr):
+            if isinstance(lines, six.text_type):
                 lines = lines.encode('utf-8')
             if lines not in data[sliceargs]:
                 msg = "%r not found on log line %r" % (lines, sliceargs)
@@ -192,7 +193,7 @@ class LogCase(object):
 
             start, stop = sliceargs
             for line, logline in zip(lines, data[start:stop]):
-                if isinstance(line, unicodestr):
+                if isinstance(line, six.text_type):
                     line = line.encode('utf-8')
                 if line not in logline:
                     msg = "%r not found in log" % line

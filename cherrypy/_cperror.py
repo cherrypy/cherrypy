@@ -118,6 +118,9 @@ and not simply return an error message as a result.
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
+
+import six
+
 from cherrypy._cpcompat import basestring, iteritems, ntob
 from cherrypy._cpcompat import tonative, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
@@ -509,12 +512,12 @@ def get_error_page(status, **kwargs):
                 if cherrypy.lib.is_iterator(result):
                     from cherrypy.lib.encoding import UTF8StreamEncoder
                     return UTF8StreamEncoder(result)
-                elif isinstance(result, cherrypy._cpcompat.unicodestr):
+                elif isinstance(result, six.text_type):
                     return result.encode('utf-8')
                 else:
                     if not isinstance(result, bytes):
                         raise ValueError('error page function did not '
-                            'return a bytestring, unicodestring or an '
+                            'return a bytestring, six.text_typeing or an '
                             'iterator - returned object of type %s.'
                             % (type(result).__name__))
                     return result

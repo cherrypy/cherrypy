@@ -61,8 +61,6 @@ try:
 except ImportError:
     pass
 
-from cherrypy._cpcompat import basestring, unicodestr
-
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
 

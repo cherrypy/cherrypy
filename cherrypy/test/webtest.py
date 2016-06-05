@@ -32,7 +32,7 @@ from unittest import _TextTestResult
 import six
 
 from cherrypy._cpcompat import basestring, ntob, HTTPConnection
-from cherrypy._cpcompat import HTTPSConnection, unicodestr
+from cherrypy._cpcompat import HTTPSConnection
 
 
 def interface(host):
@@ -265,9 +265,9 @@ class WebCase(TestCase):
         """
         ServerError.on = False
 
-        if isinstance(url, unicodestr):
+        if isinstance(url, six.text_type):
             url = url.encode('utf-8')
-        if isinstance(body, unicodestr):
+        if isinstance(body, six.text_type):
             body = body.encode('utf-8')
 
         self.url = url
@@ -427,7 +427,7 @@ class WebCase(TestCase):
 
     def assertBody(self, value, msg=None):
         """Fail if value != self.body."""
-        if isinstance(value, unicodestr):
+        if isinstance(value, six.text_type):
             value = value.encode(self.encoding)
         if value != self.body:
             if msg is None:
@@ -437,7 +437,7 @@ class WebCase(TestCase):
 
     def assertInBody(self, value, msg=None):
         """Fail if value not in self.body."""
-        if isinstance(value, unicodestr):
+        if isinstance(value, six.text_type):
             value = value.encode(self.encoding)
         if value not in self.body:
             if msg is None:
@@ -446,7 +446,7 @@ class WebCase(TestCase):
 
     def assertNotInBody(self, value, msg=None):
         """Fail if value in self.body."""
-        if isinstance(value, unicodestr):
+        if isinstance(value, six.text_type):
             value = value.encode(self.encoding)
         if value in self.body:
             if msg is None:
@@ -455,7 +455,7 @@ class WebCase(TestCase):
 
     def assertMatchesBody(self, pattern, msg=None, flags=0):
         """Fail if value (a regex pattern) is not in self.body."""
-        if isinstance(pattern, unicodestr):
+        if isinstance(pattern, six.text_type):
             pattern = pattern.encode(self.encoding)
         if re.search(pattern, self.body, flags) is None:
             if msg is None:

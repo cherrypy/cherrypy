@@ -4,7 +4,10 @@ import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, unicodestr
+
+import six
+
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 
 import cherrypy
 from cherrypy import _cptools, tools
@@ -207,7 +210,7 @@ class RequestObjectTests(helper.CPWebCase):
 
             def ifmatch(self):
                 val = cherrypy.request.headers['If-Match']
-                assert isinstance(val, unicodestr)
+                assert isinstance(val, six.text_type)
                 cherrypy.response.headers['ETag'] = val
                 return val
 
@@ -215,7 +218,7 @@ class RequestObjectTests(helper.CPWebCase):
 
             def get_elements(self, headername):
                 e = cherrypy.request.headers.elements(headername)
-                return "\n".join([unicodestr(x) for x in e])
+                return "\n".join([six.text_type(x) for x in e])
 
         class Method(Test):
 

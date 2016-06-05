@@ -8,9 +8,12 @@ to a public caning.
 """
 
 from binascii import b2a_base64
+
+import six
+
 from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
 from cherrypy._cpcompat import basestring, iteritems
-from cherrypy._cpcompat import reversed, sorted, unicodestr, unquote_qs
+from cherrypy._cpcompat import reversed, sorted, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://github.com/cherrypy/cherrypy/issues/361
@@ -23,7 +26,6 @@ response_codes[503] = ('Service Unavailable',
                        'maintenance of the server.')
 
 import re
-import urllib
 from cgi import parse_header
 
 
@@ -455,13 +457,13 @@ class HeaderMap(CaseInsensitiveDict):
         transmitting on the wire for HTTP.
         """
         for k, v in header_items:
-            if isinstance(k, unicodestr):
+            if isinstance(k, six.text_type):
                 k = cls.encode(k)
 
             if not isinstance(v, basestring):
                 v = str(v)
 
-            if isinstance(v, unicodestr):
+            if isinstance(v, six.text_type):
                 v = cls.encode(v)
 
             # See header_translate_* constants above.

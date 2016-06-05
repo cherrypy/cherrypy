@@ -5,7 +5,7 @@ import warnings
 import six
 
 import cherrypy
-from cherrypy._cpcompat import basestring, copykeys, ntob, unicodestr
+from cherrypy._cpcompat import basestring, copykeys, ntob
 from cherrypy._cpcompat import SimpleCookie, CookieError
 from cherrypy import _cpreqbody, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
@@ -957,9 +957,9 @@ class Response(object):
                     # Python 2.4 emits cookies joined by LF but 2.5+ by CRLF.
                     line = line[:-1]
                 name, value = line.split(": ", 1)
-                if isinstance(name, unicodestr):
+                if isinstance(name, six.text_type):
                     name = name.encode("ISO-8859-1")
-                if isinstance(value, unicodestr):
+                if isinstance(value, six.text_type):
                     value = headers.encode(value)
                 h.append((name, value))
 

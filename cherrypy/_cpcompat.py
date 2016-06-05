@@ -7,7 +7,7 @@ preferring a newer idiom, sometimes an older one, and sometimes a custom one.
 In particular, Python 2 uses str and '' for byte strings, while Python 3
 uses str and '' for unicode strings. We will call each of these the 'native
 string' type for each version. Because of this major difference, this module
-provides new 'unicodestr' attribute, as well as
+provides
 two functions: 'ntob', which translates native strings (of type 'str') into
 byte strings regardless of Python version, and 'ntou', which translates native
 strings to unicode strings. This also provides a 'BytesIO' name for dealing
@@ -23,7 +23,6 @@ import threading
 import six
 
 if six.PY3:
-    unicodestr = str
     basestring = (bytes, str)
 
     def ntob(n, encoding='ISO-8859-1'):
@@ -54,7 +53,6 @@ if six.PY3:
     from io import BytesIO as BytesIO
 else:
     # Python 2
-    unicodestr = unicode
     basestring = basestring
 
     def ntob(n, encoding='ISO-8859-1'):
@@ -118,12 +116,12 @@ except ImportError:
 
 def base64_decode(n, encoding='ISO-8859-1'):
     """Return the native string base64-decoded (as a native string)."""
-    if isinstance(n, unicodestr):
+    if isinstance(n, six.text_type):
         b = n.encode(encoding)
     else:
         b = n
     b = _base64_decodebytes(b)
-    if str is unicodestr:
+    if str is six.text_type:
         return b.decode(encoding)
     else:
         return b

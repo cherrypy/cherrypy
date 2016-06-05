@@ -1,8 +1,10 @@
 import struct
 import time
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import basestring, BytesIO, ntob, unicodestr
+from cherrypy._cpcompat import basestring, BytesIO, ntob
 from cherrypy.lib import file_generator
 from cherrypy.lib import is_closable_iterator
 from cherrypy.lib import set_vary_header
@@ -46,7 +48,7 @@ class UTF8StreamEncoder:
 
     def __next__(self):
         res = next(self._iterator)
-        if isinstance(res, unicodestr):
+        if isinstance(res, six.text_type):
             res = res.encode('utf-8')
         return res
 
@@ -95,7 +97,7 @@ class ResponseEncoder:
 
         def encoder(body):
             for chunk in body:
-                if isinstance(chunk, unicodestr):
+                if isinstance(chunk, six.text_type):
                     chunk = chunk.encode(encoding, self.errors)
                 yield chunk
         self.body = encoder(self.body)
@@ -108,7 +110,7 @@ class ResponseEncoder:
         self.attempted_charsets.add(encoding)
         body = []
         for chunk in self.body:
-            if isinstance(chunk, unicodestr):
+            if isinstance(chunk, six.text_type):
                 try:
                     chunk = chunk.encode(encoding, self.errors)
                 except (LookupError, UnicodeError):
