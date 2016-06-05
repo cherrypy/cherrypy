@@ -12,7 +12,7 @@ import sys as _sys
 import six
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import BytesIO, bytestr, ntob, ntou, unicodestr
+from cherrypy._cpcompat import BytesIO, ntob, ntou, unicodestr
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 from cherrypy.lib import is_closable_iterator
@@ -238,16 +238,16 @@ class AppResponse(object):
             r = _cherrypy.serving.response
 
             outstatus = r.output_status
-            if not isinstance(outstatus, bytestr):
+            if not isinstance(outstatus, bytes):
                 raise TypeError("response.output_status is not a byte string.")
 
             outheaders = []
             for k, v in r.header_list:
-                if not isinstance(k, bytestr):
+                if not isinstance(k, bytes):
                     raise TypeError(
                         "response.header_list key %r is not a byte string." %
                         k)
-                if not isinstance(v, bytestr):
+                if not isinstance(v, bytes):
                     raise TypeError(
                         "response.header_list value %r is not a byte string." %
                         v)

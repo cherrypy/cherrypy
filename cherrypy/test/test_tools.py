@@ -5,7 +5,7 @@ import sys
 import unittest
 from cherrypy._cpcompat import BytesIO, copyitems, itervalues
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
-from cherrypy._cpcompat import bytestr, unicodestr
+from cherrypy._cpcompat import unicodestr
 import time
 timeout = 0.2
 import types
@@ -442,4 +442,4 @@ class SessionAuthTest(unittest.TestCase):
         sa = cherrypy.lib.cptools.SessionAuth()
         res = sa.login_screen(None, username=unicodestr('nobody'),
                               password=unicodestr('anypass'))
-        self.assertTrue(isinstance(res, bytestr))
+        self.assertTrue(isinstance(res, bytes))

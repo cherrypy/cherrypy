@@ -137,7 +137,6 @@ del FauxSocket  # this class is not longer required for anything.
 
 
 if sys.version_info >= (3, 0):
-    bytestr = bytes
     unicodestr = str
     basestring = (bytes, str)
 
@@ -148,7 +147,6 @@ if sys.version_info >= (3, 0):
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
 else:
-    bytestr = str
     unicodestr = unicode
     basestring = basestring
 

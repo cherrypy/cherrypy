@@ -9,7 +9,7 @@ to a public caning.
 
 from binascii import b2a_base64
 from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
-from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr
+from cherrypy._cpcompat import basestring, iteritems
 from cherrypy._cpcompat import reversed, sorted, unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
@@ -406,7 +406,7 @@ class CaseInsensitiveDict(dict):
 # A CRLF is allowed in the definition of TEXT only as part of a header
 # field continuation. It is expected that the folding LWS will be
 # replaced with a single SP before interpretation of the TEXT value."
-if nativestr == bytestr:
+if str == bytes:
     header_translate_table = ''.join([chr(i) for i in xrange(256)])
     header_translate_deletechars = ''.join(
         [chr(i) for i in xrange(32)]) + chr(127)

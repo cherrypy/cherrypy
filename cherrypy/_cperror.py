@@ -512,7 +512,7 @@ def get_error_page(status, **kwargs):
                 elif isinstance(result, cherrypy._cpcompat.unicodestr):
                     return result.encode('utf-8')
                 else:
-                    if not isinstance(result, cherrypy._cpcompat.bytestr):
+                    if not isinstance(result, bytes):
                         raise ValueError('error page function did not '
                             'return a bytestring, unicodestring or an '
                             'iterator - returned object of type %s.'
@@ -599,7 +599,7 @@ def bare_error(extrabody=None):
 
     body = ntob("Unrecoverable error in the server.")
     if extrabody is not None:
-        if not isinstance(extrabody, bytestr):
+        if not isinstance(extrabody, bytes):
             extrabody = extrabody.encode('utf-8')
         body += ntob("\n") + extrabody
 
