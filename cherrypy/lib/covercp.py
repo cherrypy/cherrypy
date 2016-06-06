@@ -293,11 +293,11 @@ class CoverStats(object):
             root = os.path.dirname(cherrypy.__file__)
         self.root = root
 
-    @cherrypy.exposed
+    @cherrypy.expose
     def index(self):
         return TEMPLATE_FRAMESET % self.root.lower()
 
-    @cherrypy.exposed
+    @cherrypy.expose
     def menu(self, base="/", pct="50", showpct="",
              exclude=r'python\d\.\d|test|tut\d|tutorial'):
 
@@ -355,7 +355,7 @@ class CoverStats(object):
                 buffer = []
                 yield template % (lineno, cgi.escape(line))
 
-    @cherrypy.exposed
+    @cherrypy.expose
     def report(self, name):
         filename, statements, excluded, missing, _ = self.coverage.analysis2(
             name)

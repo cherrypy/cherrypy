@@ -475,7 +475,7 @@ class StatsPage(object):
         },
     }
 
-    @cherrypy.exposed
+    @cherrypy.expose
     def index(self):
         # Transform the raw data into pretty output for HTML
         yield """
