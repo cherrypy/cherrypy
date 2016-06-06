@@ -44,6 +44,8 @@ except ImportError:
 import operator as _operator
 import sys
 
+from jaraco.itertools import always_iterable
+
 
 def as_dict(config):
     """Return a dict from 'config' whether it is a dict, file, or filename."""
@@ -192,9 +194,7 @@ class Parser(ConfigParser):
         return optionstr
 
     def read(self, filenames):
-        if isinstance(filenames, basestring):
-            filenames = [filenames]
-        for filename in filenames:
+        for filename in always_iterable(filenames):
             # try:
             #     fp = open(filename)
             # except IOError:
