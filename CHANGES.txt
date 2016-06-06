@@ -11,6 +11,9 @@
   fix redirects with Unicode URLs, as it also had the
   unintended consequence of causing the 'Location'
   to be ``bytes`` on Python 3.
+* ``cherrypy.expose`` now works on classes.
+* ``cherrypy.config`` decorator is now used throughout
+  the code internally.
 
 5.6.0
 -----
