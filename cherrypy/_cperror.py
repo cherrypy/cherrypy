@@ -256,7 +256,7 @@ class HTTPRedirect(CherryPyException):
             response.headers['Content-Type'] = "text/html;charset=utf-8"
             # "The ... URI SHOULD be given by the Location field
             # in the response."
-            response.headers['Location'] = ntob(self.urls[0], 'utf-8')
+            response.headers['Location'] = self.urls[0]
 
             # "Unless the request method was HEAD, the entity of the response
             # SHOULD contain a short hypertext note with a hyperlink to the
