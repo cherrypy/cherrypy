@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import gzip
 import io
 
@@ -6,8 +8,9 @@ import mock
 import cherrypy
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 
-europoundUnicode = ntou(r'\x00\xa3')
-sing = ntou("\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?", 'escape')
+europoundUnicode = ntou('£', encoding='utf-8')
+sing = ntou("毛泽东: Sing, Little Birdie?", encoding='utf-8')
+
 sing8 = sing.encode('utf-8')
 sing16 = sing.encode('utf-16')
 
