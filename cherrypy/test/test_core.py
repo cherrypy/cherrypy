@@ -1,3 +1,5 @@
+# coding: utf-8
+
 """Basic tests for the CherryPy core: request handling."""
 
 import os
@@ -148,8 +150,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
 
             def url_with_unicode(self):
-                raise cherrypy.HTTPRedirect(ntou("\u0442\u0435\u0441\u0442",
-                                                 'escape'))
+                raise cherrypy.HTTPRedirect(ntou("тест", "utf-8"))
 
         def login_redir():
             if not getattr(cherrypy.request, "login", None):
