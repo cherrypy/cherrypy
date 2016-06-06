@@ -436,7 +436,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(303)
         assertValidXHTML()
 
-        # check redirect to url containing unicode characters.
+    def test_redirect_with_unicode(self):
+        """
+        A redirect to a URL with Unicode should return a Location
+        header containing that Unicode URL.
+        """
         self.getPage("/redirect/url_with_unicode")
         self.assertStatus(303)
         loc = self.assertHeader('Location')
