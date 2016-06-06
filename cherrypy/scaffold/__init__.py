@@ -19,10 +19,8 @@ import os
 local_dir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
+@cherrypy.config(**{'tools.log_tracebacks.on': True})
 class Root:
-
-    _cp_config = {'tools.log_tracebacks.on': True,
-                  }
 
     @cherrypy.expose
     def index(self):

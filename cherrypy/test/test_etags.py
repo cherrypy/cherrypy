@@ -21,10 +21,10 @@ class ETagTest(helper.CPWebCase):
                     raise cherrypy.HTTPError(code)
 
             @cherrypy.expose
+            # In Python 3, tools.encode is on by default
+            @cherrypy.config(**{'tools.encode.on': True})
             def unicoded(self):
                 return ntou('I am a \u1ee4nicode string.', 'escape')
-            # In Python 3, tools.encode is on by default
-            unicoded._cp_config = {'tools.encode.on': True}
 
         conf = {'/': {'tools.etags.on': True,
                       'tools.etags.autotags': True,

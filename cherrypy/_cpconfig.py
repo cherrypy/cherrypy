@@ -46,21 +46,21 @@ To declare global configuration entries, place them in a [global] section.
 
 You may also declare config entries directly on the classes and methods
 (page handlers) that make up your CherryPy application via the ``_cp_config``
-attribute. For example::
+attribute, set with the ``cherrypy.config`` decorator. For example::
 
+    @cherrypy.config(**{'tools.gzip.on': True})
     class Demo:
-        _cp_config = {'tools.gzip.on': True}
 
         @cherrypy.expose
+        @cherrypy.config(**{'request.show_tracebacks': False})
         def index(self):
             return "Hello world"
-        index._cp_config = {'request.show_tracebacks': False}
 
 .. note::
 
     This behavior is only guaranteed for the default dispatcher.
     Other dispatchers may have different restrictions on where
-    you can attach _cp_config attributes.
+    you can attach config attributes.
 
 
 Namespaces

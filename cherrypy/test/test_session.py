@@ -20,14 +20,14 @@ cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
 
 def setup_server():
 
+    @cherrypy.config(**{
+        'tools.sessions.on': True,
+        'tools.sessions.storage_type': 'ram',
+        'tools.sessions.storage_path': localDir,
+        'tools.sessions.timeout': (1.0 / 60),
+        'tools.sessions.clean_freq': (1.0 / 60),
+    })
     class Root:
-
-        _cp_config = {'tools.sessions.on': True,
-                      'tools.sessions.storage_type': 'ram',
-                      'tools.sessions.storage_path': localDir,
-                      'tools.sessions.timeout': (1.0 / 60),
-                      'tools.sessions.clean_freq': (1.0 / 60),
-                      }
 
         @cherrypy.expose
         def clear(self):
@@ -51,6 +51,7 @@ def setup_server():
             return str(counter)
 
         @cherrypy.expose
+        @cherrypy.config(**{'tools.sessions.on': False})
         def setsessiontype(self, newtype):
             self.__class__._cp_config.update(
                 {'tools.sessions.storage_type': newtype})
@@ -61,7 +62,6 @@ def setup_server():
                 cls.clean_thread.stop()
                 cls.clean_thread.unsubscribe()
                 del cls.clean_thread
-        setsessiontype._cp_config = {'tools.sessions.on': False}
 
         @cherrypy.expose
         def index(self):
@@ -95,10 +95,12 @@ def setup_server():
             raise cherrypy.InternalRedirect('/blah')
 
         @cherrypy.expose
+        @cherrypy.config(**{
+            'tools.allow.on': True,
+            'tools.allow.methods': ['GET'],
+        })
         def restricted(self):
             return cherrypy.request.method
-        restricted._cp_config = {'tools.allow.on': True,
-                                 'tools.allow.methods': ['GET']}
 
         @cherrypy.expose
         def regen(self):
@@ -110,14 +112,15 @@ def setup_server():
             return str(len(cherrypy.session))
 
         @cherrypy.expose
+        @cherrypy.config(**{
+            'tools.sessions.path': '/session_cookie',
+            'tools.sessions.name': 'temp',
+            'tools.sessions.persistent': False,
+        })
         def session_cookie(self):
             # Must load() to start the clean thread.
             cherrypy.session.load()
             return cherrypy.session.id
-        session_cookie._cp_config = {
-            'tools.sessions.path': '/session_cookie',
-            'tools.sessions.name': 'temp',
-            'tools.sessions.persistent': False}
 
     cherrypy.tree.mount(Root())
 

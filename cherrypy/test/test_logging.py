@@ -50,15 +50,16 @@ def setup_server():
             yield "content"
 
         @cherrypy.expose
+        @cherrypy.config(**{'tools.log_tracebacks.on': True})
         def error(self):
             raise ValueError()
-        error._cp_config = {'tools.log_tracebacks.on': True}
 
     root = Root()
 
-    cherrypy.config.update({'log.error_file': error_log,
-                            'log.access_file': access_log,
-                            })
+    cherrypy.config.update({
+        'log.error_file': error_log,
+        'log.access_file': access_log,
+    })
     cherrypy.tree.mount(root)
 
 

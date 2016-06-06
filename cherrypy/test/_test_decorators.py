@@ -1,5 +1,6 @@
 """Test module for the @-decorator syntax, which is version-specific"""
 
+import cherrypy
 from cherrypy import expose, tools
 from cherrypy._cpcompat import ntob
 
@@ -30,10 +31,10 @@ class ExposeExamples(object):
 class ToolExamples(object):
 
     @expose
+    # This is here to demonstrate that using the config decorator
+    # does not overwrite other config attributes added by the Tool
+    # decorator (in this case response_headers).
+    @cherrypy.config(**{'response.stream': True})
     @tools.response_headers(headers=[('Content-Type', 'application/data')])
     def blah(self):
         yield ntob("blah")
-    # This is here to demonstrate that _cp_config = {...} overwrites
-    # the _cp_config attribute added by the Tool decorator. You have
-    # to write _cp_config[k] = v or _cp_config.update(...) instead.
-    blah._cp_config['response.stream'] = True

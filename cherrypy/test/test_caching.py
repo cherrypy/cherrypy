@@ -26,9 +26,8 @@ class CacheTest(helper.CPWebCase):
 
     def setup_server():
 
+        @cherrypy.config(**{'tools.caching.on': True})
         class Root:
-
-            _cp_config = {'tools.caching.on': True}
 
             def __init__(self):
                 self.counter = 0
@@ -65,15 +64,14 @@ class CacheTest(helper.CPWebCase):
             def clear_cache(self, path):
                 cherrypy._cache.store[cherrypy.request.base + path].clear()
 
+        @cherrypy.config(**{
+            'tools.caching.on': True,
+            'tools.response_headers.on': True,
+            'tools.response_headers.headers': [
+                ('Vary', 'Our-Varying-Header')
+            ],
+        })
         class VaryHeaderCachingServer(object):
-
-            _cp_config = {
-                'tools.caching.on': True,
-                'tools.response_headers.on': True,
-                'tools.response_headers.headers': [
-                    ('Vary', 'Our-Varying-Header')
-                ],
-            }
 
             def __init__(self):
                 self.counter = count(1)
@@ -82,21 +80,22 @@ class CacheTest(helper.CPWebCase):
             def index(self):
                 return "visit #%s" % next(self.counter)
 
+        @cherrypy.config(**{
+            'tools.expires.on': True,
+            'tools.expires.secs': 60,
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': 'static',
+            'tools.staticdir.root': curdir,
+        })
         class UnCached(object):
-            _cp_config = {'tools.expires.on': True,
-                          'tools.expires.secs': 60,
-                          'tools.staticdir.on': True,
-                          'tools.staticdir.dir': 'static',
-                          'tools.staticdir.root': curdir,
-                          }
 
             @cherrypy.expose
+            @cherrypy.config(**{'tools.expires.secs': 0})
             def force(self):
                 cherrypy.response.headers['Etag'] = 'bibbitybobbityboo'
                 self._cp_config['tools.expires.force'] = True
                 self._cp_config['tools.expires.secs'] = 0
                 return "being forceful"
-            force._cp_config = {'tools.expires.secs': 0}
 
             @cherrypy.expose
             def dynamic(self):
@@ -110,21 +109,21 @@ class CacheTest(helper.CPWebCase):
                 return "Hi, I'm cacheable."
 
             @cherrypy.expose
+            @cherrypy.config(**{'tools.expires.secs': 86400})
             def specific(self):
                 cherrypy.response.headers[
                     'Etag'] = 'need_this_to_make_me_cacheable'
                 return "I am being specific"
-            specific._cp_config = {'tools.expires.secs': 86400}
 
             class Foo(object):
                 pass
 
             @cherrypy.expose
+            @cherrypy.config(**{'tools.expires.secs': Foo()})
             def wrongtype(self):
                 cherrypy.response.headers[
                     'Etag'] = 'need_this_to_make_me_cacheable'
                 return "Woops"
-            wrongtype._cp_config = {'tools.expires.secs': Foo()}
 
         cherrypy.tree.mount(Root())
         cherrypy.tree.mount(UnCached(), "/expires")

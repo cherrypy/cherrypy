@@ -27,14 +27,14 @@ class RoutesDispatchTest(helper.CPWebCase):
                 self.name = name
                 self.population = 10000
 
-            def index(self, **kwargs):
-                return "Welcome to %s, pop. %s" % (self.name, self.population)
-            index._cp_config = {
+            @cherrypy.config(**{
                 'tools.response_headers.on': True,
                 'tools.response_headers.headers': [
-                    ('Content-Language', 'en-GB')
-                ]
-            }
+                    ('Content-Language', 'en-GB'),
+                ],
+            })
+            def index(self, **kwargs):
+                return "Welcome to %s, pop. %s" % (self.name, self.population)
 
             def update(self, **kwargs):
                 self.population = kwargs['pop']

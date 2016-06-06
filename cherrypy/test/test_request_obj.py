@@ -62,9 +62,9 @@ class RequestObjectTests(helper.CPWebCase):
             def ismap(self, x, y):
                 return "Coordinates: %s, %s" % (x, y)
 
+            @cherrypy.config(**{'request.query_string_encoding': 'latin1'})
             def default(self, *args, **kwargs):
                 return "args: %s kwargs: %s" % (args, sorted(kwargs.items()))
-            default._cp_config = {'request.query_string_encoding': 'latin1'}
 
         @cherrypy.expose
         class ParamErrorsCallable(object):
@@ -120,30 +120,29 @@ class RequestObjectTests(helper.CPWebCase):
             return "Error %s - Well, I'm very sorry but you haven't paid!" % (
                 status)
 
+        @cherrypy.config(**{'tools.log_tracebacks.on': True})
         class Error(Test):
-
-            _cp_config = {'tools.log_tracebacks.on': True,
-                          }
 
             def reason_phrase(self):
                 raise cherrypy.HTTPError("410 Gone fishin'")
 
+            @cherrypy.config(**{
+                'error_page.404': os.path.join(localDir, "static/index.html"),
+                'error_page.401': callable_error_page,
+            })
             def custom(self, err='404'):
                 raise cherrypy.HTTPError(
                     int(err), "No, <b>really</b>, not found!")
-            custom._cp_config = {
-                'error_page.404': os.path.join(localDir, "static/index.html"),
-                'error_page.401': callable_error_page,
-            }
 
+            @cherrypy.config(**{
+                'error_page.default': callable_error_page,
+            })
             def custom_default(self):
                 return 1 + 'a'  # raise an unexpected error
-            custom_default._cp_config = {
-                'error_page.default': callable_error_page}
 
+            @cherrypy.config(**{'error_page.404': "nonexistent.html"})
             def noexist(self):
                 raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
-            noexist._cp_config = {'error_page.404': "nonexistent.html"}
 
             def page_method(self):
                 raise ValueError()
@@ -152,24 +151,23 @@ class RequestObjectTests(helper.CPWebCase):
                 yield "howdy"
                 raise ValueError()
 
+            @cherrypy.config(**{"response.stream": True})
             def page_streamed(self):
                 yield "word up"
                 raise ValueError()
                 yield "very oops"
-            page_streamed._cp_config = {"response.stream": True}
 
+            @cherrypy.config(**{'request.show_tracebacks': False})
             def cause_err_in_finalize(self):
                 # Since status must start with an int, this should error.
                 cherrypy.response.status = "ZOO OK"
-            cause_err_in_finalize._cp_config = {
-                'request.show_tracebacks': False}
 
+            @cherrypy.config(**{'request.throw_errors': True})
             def rethrow(self):
                 """Test that an error raised here will be thrown out to
                 the server.
                 """
                 raise ValueError()
-            rethrow._cp_config = {'request.throw_errors': True}
 
         class Expect(Test):
 

@@ -16,17 +16,19 @@ def setup_server():
         tools.response_headers(headers=h)(index)
 
         @cherrypy.expose
+        @cherrypy.config(**{
+            'tools.response_headers.on': True,
+            'tools.response_headers.headers': [
+                ("Content-Language", "fr"),
+                ('Content-Type', 'text/plain'),
+            ],
+            'tools.log_hooks.on': True,
+        })
         def other(self):
             return "salut"
-        other._cp_config = {
-            'tools.response_headers.on': True,
-            'tools.response_headers.headers': [("Content-Language", "fr"),
-                                               ('Content-Type', 'text/plain')],
-            'tools.log_hooks.on': True,
-        }
 
+    @cherrypy.config(**{'tools.accept.on': True})
     class Accept:
-        _cp_config = {'tools.accept.on': True}
 
         @cherrypy.expose
         def index(self):
@@ -35,12 +37,12 @@ def setup_server():
         # In Python 2.4+, we could use a decorator instead:
         # @tools.accept('application/atom+xml')
         @cherrypy.expose
+        @cherrypy.config(**{'tools.accept.media': 'application/atom+xml'})
         def feed(self):
             return """<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title>Unknown Blog</title>
 </feed>"""
-        feed._cp_config = {'tools.accept.media': 'application/atom+xml'}
 
         @cherrypy.expose
         def select(self):

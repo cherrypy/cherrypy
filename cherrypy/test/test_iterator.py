@@ -90,9 +90,9 @@ class IteratorTest(helper.CPWebCase):
                 return globals()[clsname]()
 
             @cherrypy.expose
+            @cherrypy.config(**{'response.stream': True})
             def stream(self, clsname):
                 return self.getall(clsname)
-            stream._cp_config = {'response.stream': True}
 
         cherrypy.tree.mount(Root())
 

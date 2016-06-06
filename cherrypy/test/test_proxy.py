@@ -36,20 +36,21 @@ class ProxyTest(helper.CPWebCase):
                 return cherrypy.request.remote.ip
 
             @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.proxy.local': 'X-Host',
+                'tools.trailing_slash.extra': True,
+            })
             def xhost(self):
                 raise cherrypy.HTTPRedirect('blah')
-            xhost._cp_config = {'tools.proxy.local': 'X-Host',
-                                'tools.trailing_slash.extra': True,
-                                }
 
             @cherrypy.expose
             def base(self):
                 return cherrypy.request.base
 
             @cherrypy.expose
+            @cherrypy.config(**{'tools.proxy.scheme': 'X-Forwarded-Ssl'})
             def ssl(self):
                 return cherrypy.request.base
-            ssl._cp_config = {'tools.proxy.scheme': 'X-Forwarded-Ssl'}
 
             @cherrypy.expose
             def newurl(self):

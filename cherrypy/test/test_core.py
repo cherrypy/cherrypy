@@ -58,9 +58,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 setattr(root, name.lower(), cls())
         Test = TestType('Test', (object, ), {})
 
+        @cherrypy.config(**{'tools.trailing_slash.on': False})
         class URL(Test):
-
-            _cp_config = {'tools.trailing_slash.on': False}
 
             def index(self, path_info, relative=None):
                 if relative != 'server':
@@ -105,21 +104,22 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             statuses = []
 
+            @cherrypy.config(**{'tools.log_status.on': True})
             def on_end_resource_stage(self):
                 return repr(self.statuses)
-            on_end_resource_stage._cp_config = {'tools.log_status.on': True}
 
         class Redirect(Test):
 
+            @cherrypy.config(**{
+                "tools.err_redirect.on": True,
+                "tools.err_redirect.url": "/errpage",
+                "tools.err_redirect.internal": False,
+            })
             class Error:
-                _cp_config = {"tools.err_redirect.on": True,
-                              "tools.err_redirect.url": "/errpage",
-                              "tools.err_redirect.internal": False,
-                              }
-
                 @cherrypy.expose
                 def index(self):
                     raise NameError("redirect_test")
+
             error = Error()
 
             def index(self):
@@ -128,9 +128,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def custom(self, url, code):
                 raise cherrypy.HTTPRedirect(url, code)
 
+            @cherrypy.config(**{'tools.trailing_slash.extra': True})
             def by_code(self, code):
                 raise cherrypy.HTTPRedirect("somewhere%20else", code)
-            by_code._cp_config = {'tools.trailing_slash.extra': True}
 
             def nomodify(self):
                 raise cherrypy.HTTPRedirect("", 304)
@@ -165,9 +165,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 raise cherrypy.InternalRedirect("/")
 
             @cherrypy.expose
+            @cherrypy.config(**{'hooks.before_error_response': redir_custom})
             def choke(self):
                 return 3 / 0
-            choke._cp_config = {'hooks.before_error_response': redir_custom}
 
             def relative(self, a, b):
                 raise cherrypy.InternalRedirect("cousin?t=6")
@@ -206,9 +206,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def custom_err(self):
                 return "Something went horribly wrong."
 
+            @cherrypy.config(**{'hooks.before_request_body': redir_custom})
             def early_ir(self, arg):
                 return "whatever"
-            early_ir._cp_config = {'hooks.before_request_body': redir_custom}
 
         class Image(Test):
 
@@ -226,9 +226,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def as_yield(self):
                 yield ntob("content")
 
+            @cherrypy.config(**{'tools.flatten.on': True})
             def as_dblyield(self):
                 yield self.as_yield()
-            as_dblyield._cp_config = {'tools.flatten.on': True}
 
             def as_refyield(self):
                 for chunk in self.as_yield():
@@ -726,9 +726,9 @@ class ErrorTests(helper.CPWebCase):
             def index(self):
                 return "hello"
 
+            @cherrypy.config(**{'tools.break_header.on': True})
             def start_response_error(self):
                 return "salud!"
-            start_response_error._cp_config = {'tools.break_header.on': True}
         root = Root()
 
         cherrypy.tree.mount(root)

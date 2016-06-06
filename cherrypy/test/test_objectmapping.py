@@ -79,10 +79,10 @@ class ObjectMappingTest(helper.CPWebCase):
                 return "index for dir1"
 
             @cherrypy.expose
+            @cherrypy.config(**{'tools.trailing_slash.extra': True})
             def myMethod(self):
                 return "myMethod from dir1, path_info is:" + repr(
                     cherrypy.request.path_info)
-            myMethod._cp_config = {'tools.trailing_slash.extra': True}
 
             @cherrypy.expose
             def default(self, *params):

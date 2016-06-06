@@ -54,9 +54,9 @@ class HTTPTests(helper.CPWebCase):
                 return "Hello world!"
 
             @cherrypy.expose
+            @cherrypy.config(**{'request.process_request_body': False})
             def no_body(self, *args, **kwargs):
                 return "Hello world!"
-            no_body._cp_config = {'request.process_request_body': False}
 
             @cherrypy.expose
             def post_multipart(self, file):

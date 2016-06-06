@@ -29,9 +29,9 @@ class ServerConfigTests(helper.CPWebCase):
                 return "Size: %s" % len(file.file.read())
 
             @cherrypy.expose
+            @cherrypy.config(**{'request.body.maxbytes': 100})
             def tinyupload(self):
                 return cherrypy.request.body.read()
-            tinyupload._cp_config = {'request.body.maxbytes': 100}
 
         cherrypy.tree.mount(Root())
 

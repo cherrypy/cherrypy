@@ -130,11 +130,11 @@ class ToolTests(helper.CPWebCase):
                 return "Howdy earth!"
 
             @cherrypy.expose
+            @cherrypy.config(**{'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'})
             def tarfile(self):
                 assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
                 cherrypy.response.output.write(ntob('I am '))
                 cherrypy.response.output.write(ntob('a tarfile'))
-            tarfile._cp_config = {'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'}
 
             @cherrypy.expose
             def euro(self):
@@ -150,9 +150,9 @@ class ToolTests(helper.CPWebCase):
 
             # Bare hooks
             @cherrypy.expose
+            @cherrypy.config(**{'hooks.before_request_body': pipe_body})
             def pipe(self):
                 return cherrypy.request.body
-            pipe._cp_config = {'hooks.before_request_body': pipe_body}
 
             # Multiple decorators; include kwargs just for fun.
             # Note that rotator must run before gzip.
@@ -181,9 +181,8 @@ class ToolTests(helper.CPWebCase):
 
         # METHOD ONE:
         # Declare Tools in _cp_config
+        @cherrypy.config(**{"tools.nadsat.on": True})
         class Demo(Test):
-
-            _cp_config = {"tools.nadsat.on": True}
 
             def index(self, id=None):
                 return "A good piece of cherry pie"
@@ -211,10 +210,10 @@ class ToolTests(helper.CPWebCase):
             def err_in_onstart(self):
                 return "success!"
 
+            @cherrypy.config(**{'response.stream': True})
             def stream(self, id=None):
                 for x in xrange(100000000):
                     yield str(x)
-            stream._cp_config = {'response.stream': True}
 
         conf = {
             # METHOD THREE:

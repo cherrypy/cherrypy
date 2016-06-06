@@ -30,11 +30,11 @@ class StaticTest(helper.CPWebCase):
         class Root:
 
             @cherrypy.expose
+            @cherrypy.config(**{'response.stream': True})
             def bigfile(self):
                 from cherrypy.lib import static
                 self.f = static.serve_file(bigfile_filepath)
                 return self.f
-            bigfile._cp_config = {'response.stream': True}
 
             @cherrypy.expose
             def tell(self):

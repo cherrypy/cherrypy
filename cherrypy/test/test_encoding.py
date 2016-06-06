@@ -31,9 +31,9 @@ class EncodingTests(helper.CPWebCase):
                 return sing
 
             @cherrypy.expose
+            @cherrypy.config(**{'tools.encode.encoding': 'utf-8'})
             def utf8(self):
                 return sing8
-            utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
 
             @cherrypy.expose
             def cookies_and_headers(self):
@@ -54,13 +54,14 @@ class EncodingTests(helper.CPWebCase):
                 )
 
             @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.encode.text_only': False,
+                'tools.encode.add_charset': True,
+            })
             def nontext(self, *args, **kwargs):
                 cherrypy.response.headers[
                     'Content-Type'] = 'application/binary'
                 return '\x00\x01\x02\x03'
-            nontext._cp_config = {'tools.encode.text_only': False,
-                                  'tools.encode.add_charset': True,
-                                  }
 
         class GZIP:
 
@@ -69,43 +70,43 @@ class EncodingTests(helper.CPWebCase):
                 yield "Hello, world"
 
             @cherrypy.expose
+            # Turn encoding off so the gzip tool is the one doing the collapse.
+            @cherrypy.config(**{'tools.encode.on': False})
             def noshow(self):
                 # Test for ticket #147, where yield showed no exceptions
                 # (content-encoding was still gzip even though traceback
                 # wasn't zipped).
                 raise IndexError()
                 yield "Here be dragons"
-            # Turn encoding off so the gzip tool is the one doing the collapse.
-            noshow._cp_config = {'tools.encode.on': False}
 
             @cherrypy.expose
+            @cherrypy.config(**{'response.stream': True})
             def noshow_stream(self):
                 # Test for ticket #147, where yield showed no exceptions
                 # (content-encoding was still gzip even though traceback
                 # wasn't zipped).
                 raise IndexError()
                 yield "Here be dragons"
-            noshow_stream._cp_config = {'response.stream': True}
 
         class Decode:
 
             @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.decode.on': True,
+                'tools.decode.default_encoding': ['utf-16'],
+            })
             def extra_charset(self, *args, **kwargs):
                 return ', '.join([": ".join((k, v))
                                   for k, v in cherrypy.request.params.items()])
-            extra_charset._cp_config = {
-                'tools.decode.on': True,
-                'tools.decode.default_encoding': ['utf-16'],
-            }
 
             @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.decode.on': True,
+                'tools.decode.encoding': 'utf-16',
+            })
             def force_charset(self, *args, **kwargs):
                 return ', '.join([": ".join((k, v))
                                   for k, v in cherrypy.request.params.items()])
-            force_charset._cp_config = {
-                'tools.decode.on': True,
-                'tools.decode.encoding': 'utf-16',
-            }
 
         root = Root()
         root.gzip = GZIP()

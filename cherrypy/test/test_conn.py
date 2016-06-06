@@ -45,6 +45,7 @@ def setup_server():
             return str(cherrypy.server.httpserver.timeout)
 
         @cherrypy.expose
+        @cherrypy.config(**{'response.stream': True})
         def stream(self, set_cl=False):
             if set_cl:
                 cherrypy.response.headers['Content-Length'] = 10
@@ -54,7 +55,6 @@ def setup_server():
                     yield str(x)
 
             return content()
-        stream._cp_config = {'response.stream': True}
 
         @cherrypy.expose
         def error(self, code=500):
@@ -73,15 +73,18 @@ def setup_server():
             return "Code = %s" % response_code
 
         @cherrypy.expose
+        @cherrypy.config(**{'hooks.on_start_resource': raise500})
         def err_before_read(self):
             return "ok"
-        err_before_read._cp_config = {'hooks.on_start_resource': raise500}
 
         @cherrypy.expose
         def one_megabyte_of_a(self):
             return ["a" * 1024] * 1024
 
         @cherrypy.expose
+        # Turn off the encoding tool so it doens't collapse
+        # our response body and reclaculate the Content-Length.
+        @cherrypy.config(**{'tools.encode.on': False})
         def custom_cl(self, body, cl):
             cherrypy.response.headers['Content-Length'] = cl
             if not isinstance(body, list):
@@ -92,9 +95,6 @@ def setup_server():
                     chunk = chunk.encode('ISO-8859-1')
                 newbody.append(chunk)
             return newbody
-        # Turn off the encoding tool so it doens't collapse
-        # our response body and reclaculate the Content-Length.
-        custom_cl._cp_config = {'tools.encode.on': False}
 
     cherrypy.tree.mount(Root())
     cherrypy.config.update({

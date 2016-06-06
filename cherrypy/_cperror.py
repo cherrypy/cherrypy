@@ -106,9 +106,9 @@ send an e-mail containing the error::
                  'Error in your web app',
                  _cperror.format_exc())
 
+    @cherrypy.config(**{'request.error_response': handle_error})
     class Root:
-        _cp_config = {'request.error_response': handle_error}
-
+        pass
 
 Note that you have to explicitly set
 :attr:`response.body <cherrypy._cprequest.Response.body>`

@@ -4,6 +4,9 @@ from cherrypy.test import helper
 from cherrypy._cpcompat import json
 
 
+json_out = cherrypy.config(**{'tools.json_out.on': True})
+json_in = cherrypy.config(**{'tools.json_in.on': True})
+
 class JsonTest(helper.CPWebCase):
 
     def setup_server():
@@ -14,35 +17,33 @@ class JsonTest(helper.CPWebCase):
                 return 'hello'
 
             @cherrypy.expose
+            @json_out
             def json_string(self):
                 return 'hello'
-            json_string._cp_config = {'tools.json_out.on': True}
 
             @cherrypy.expose
+            @json_out
             def json_list(self):
                 return ['a', 'b', 42]
-            json_list._cp_config = {'tools.json_out.on': True}
 
             @cherrypy.expose
+            @json_out
             def json_dict(self):
                 return {'answer': 42}
-            json_dict._cp_config = {'tools.json_out.on': True}
 
             @cherrypy.expose
+            @json_in
             def json_post(self):
                 if cherrypy.request.json == [13, 'c']:
                     return 'ok'
                 else:
                     return 'nok'
-            json_post._cp_config = {'tools.json_in.on': True}
 
             @cherrypy.expose
+            @json_out
+            @cherrypy.config(**{'tools.caching.on': True})
             def json_cached(self):
                 return 'hello there'
-            json_cached._cp_config = {
-                'tools.json_out.on': True,
-                'tools.caching.on': True,
-            }
 
         root = Root()
         cherrypy.tree.mount(root)
