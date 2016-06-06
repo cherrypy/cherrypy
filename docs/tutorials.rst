@@ -433,7 +433,7 @@ mildly following REST principles.
 
     import cherrypy
 
-    @cherrypy.exposed
+    @cherrypy.expose
     class StringGeneratorWebService(object):
 
         @cherrypy.tools.accept(media='text/plain')
@@ -474,7 +474,7 @@ CherryPy was creating a tree of exposed methods that were used to
 match URLs. In the case of our web API, we want to stress the role
 played by the actual requests' HTTP methods. So we created
 methods that are named after them and they are all exposed at once
-by decorating the class itself with `cherrypy.exposed`.
+by decorating the class itself with `cherrypy.expose`.
 
 However, we must then switch from the default mechanism of matching
 URLs to method for one that is aware of the whole HTTP method

@@ -237,7 +237,7 @@ that bit of config directly on the page handler:
 
 .. code-block:: python
 
-    @cherrypy.exposed
+    @cherrypy.expose
     def page(self):
         return "Hello, world!"
     page._cp_config = {"request.methods_with_bodies": ("POST", "PUT", "PROPPATCH")}
@@ -258,7 +258,7 @@ attached that config to a class which contains the page method:
 
         _cp_config = {"request.methods_with_bodies": ("POST", "PUT", "PROPPATCH")}
 
-        @cherrypy.exposed
+        @cherrypy.expose
         def page(self):
             return "Hullo, Werld!"
 
