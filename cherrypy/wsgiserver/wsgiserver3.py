@@ -92,7 +92,8 @@ import time
 import traceback as traceback_
 import errno
 import logging
-from urllib.parse import urlparse
+
+from six.moves.urllib.parse import urlparse
 
 try:
     # prefer slower Python-based io module
