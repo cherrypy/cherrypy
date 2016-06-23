@@ -1,5 +1,3 @@
-from jaraco.itertools import always_iterable
-
 import cherrypy
 from cherrypy._cpcompat import basestring, ntou, json_encode, json_decode
 
@@ -43,8 +41,8 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
     package importable; otherwise, ValueError is raised during processing.
     """
     request = cherrypy.serving.request
-
-    content_type = list(always_iterable(content_type))
+    if isinstance(content_type, basestring):
+        content_type = [content_type]
 
     if force:
         if debug:

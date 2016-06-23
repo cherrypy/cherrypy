@@ -98,7 +98,6 @@ scripts = ["cherrypy/cherryd"]
 
 install_requires = [
     'six',
-    'jaraco.itertools',
 ]
 
 cmd_class = dict(

@@ -4,9 +4,8 @@ Helper functions for CP apps
 
 import six
 
-from jaraco.itertools import always_iterable
-
 from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
+from cherrypy._cpcompat import basestring
 
 import cherrypy
 
@@ -17,8 +16,12 @@ def expose(func=None, alias=None):
     """
     def expose_(func):
         func.exposed = True
-        for alias_item in always_iterable(alias):
-            parents[alias_item.replace('.', '_')] = func
+        if alias is not None:
+            if isinstance(alias, basestring):
+                parents[alias.replace(".", "_")] = func
+            else:
+                for a in alias:
+                    parents[a.replace(".", "_")] = func
         return func
 
     import sys
