@@ -70,7 +70,7 @@ number of requests and their responses, so we run a nested loop::
 
 __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
-           'CP_fileobject',
+           'CP_makefile',
            'MaxSizeExceeded', 'NoSSLError', 'FatalSSLAlert',
            'WorkerThread', 'ThreadPool', 'SSLAdapter',
            'CherryPyWSGIServer',
@@ -1001,7 +1001,7 @@ class FatalSSLAlert(Exception):
     pass
 
 
-class CP_fileobject(socket._fileobject):
+class CP_makefile(socket._fileobject):
 
     """Faux file object attached to a socket object."""
 
@@ -1328,7 +1328,7 @@ class HTTPConnection(object):
     wbufsize = DEFAULT_BUFFER_SIZE
     RequestHandlerClass = HTTPRequest
 
-    def __init__(self, server, sock, makefile=CP_fileobject):
+    def __init__(self, server, sock, makefile=CP_makefile):
         self.server = server
         self.socket = sock
         self.rfile = makefile(sock, "rb", self.rbufsize)
@@ -1399,7 +1399,7 @@ class HTTPConnection(object):
         except NoSSLError:
             if req and not req.sent_headers:
                 # Unwrap our wfile
-                self.wfile = CP_fileobject(
+                self.wfile = CP_makefile(
                     self.socket._sock, "wb", self.wbufsize)
                 req.simple_response(
                     "400 Bad Request",
@@ -2015,7 +2015,7 @@ class HTTPServer(object):
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
 
-            makefile = CP_fileobject
+            makefile = CP_makefile
             ssl_env = {}
             # if ssl cert and key are set, we try to be a secure HTTP server
             if self.ssl_adapter is not None:

@@ -33,10 +33,10 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
 
     private_key = None
     """The filename of the server's private key file."""
-    
+
     certificate_chain = None
     """The filename of the certificate chain file."""
-    
+
     """The ssl.SSLContext that will be used to wrap sockets where available
     (on Python > 2.7.9 / 3.3)
     """
@@ -103,9 +103,5 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
         }
         return ssl_environ
 
-    if sys.version_info >= (3, 0):
-        def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
-            return wsgiserver.CP_makefile(sock, mode, bufsize)
-    else:
-        def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
-            return wsgiserver.CP_fileobject(sock, mode, bufsize)
+    def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
+        return wsgiserver.CP_makefile(sock, mode, bufsize)
