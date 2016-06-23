@@ -1,3 +1,8 @@
+6.0.2
+-----
+
+* Issue #1445: Correct additional typos.
+
 6.0.1
 -----
 
