@@ -90,6 +90,10 @@ import sys
 import threading
 import time
 import traceback as traceback_
+try:
+    from urllib.parse import unquote_to_bytes
+except ImportError:
+    from urlparse import unquote as unquote_to_bytes
 import errno
 import logging
 from urllib.parse import urlparse
@@ -692,7 +696,7 @@ class HTTPRequest(object):
         # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
         # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
         try:
-            atoms = [self.unquote_bytes(x) for x in quoted_slash.split(path)]
+            atoms = [unquote_to_bytes(x) for x in quoted_slash.split(path)]
         except ValueError:
             ex = sys.exc_info()[1]
             self.simple_response("400 Bad Request", ex.args[0])
@@ -845,18 +849,6 @@ class HTTPRequest(object):
         else:
             # An authority.
             return None, uri, None
-
-    def unquote_bytes(self, path):
-        """takes quoted string and unquotes % encoded values"""
-        res = path.split(b'%')
-
-        for i in range(1, len(res)):
-            item = res[i]
-            try:
-                res[i] = bytes([int(item[:2], 16)]) + item[2:]
-            except ValueError:
-                raise
-        return b''.join(res)
 
     def respond(self):
         """Call the gateway and write its iterable output."""

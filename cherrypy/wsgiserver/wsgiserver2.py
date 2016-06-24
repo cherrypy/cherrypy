@@ -91,7 +91,10 @@ import threading
 import time
 import traceback as traceback_
 import operator
-from urllib import unquote
+try:
+    from urllib.parse import unquote_to_bytes
+except ImportError:
+    from urlparse import unquote as unquote_to_bytes
 from urlparse import urlparse
 import errno
 import logging
@@ -704,7 +707,7 @@ class HTTPRequest(object):
         # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
         # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
         try:
-            atoms = [unquote(x) for x in quoted_slash.split(path)]
+            atoms = [unquote_to_bytes(x) for x in quoted_slash.split(path)]
         except ValueError:
             ex = sys.exc_info()[1]
             self.simple_response("400 Bad Request", ex.args[0])
