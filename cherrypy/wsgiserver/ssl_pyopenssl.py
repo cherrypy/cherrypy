@@ -43,7 +43,7 @@ except ImportError:
     SSL = None
 
 
-class SSL_fileobject(wsgiserver.CP_fileobject):
+class SSL_fileobject(wsgiserver.CP_makefile):
 
     """SSL file object attached to a socket object."""
 

@@ -6,5 +6,4 @@ __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'Gateway', 'WSGIGateway', 'WSGIGateway_10', 'WSGIGateway_u0',
            'WSGIPathInfoDispatcher', 'get_ssl_adapter_class']
 
-if True:
-    exec('from .wsgiserver3 import *')
+from .wsgiserver3 import *

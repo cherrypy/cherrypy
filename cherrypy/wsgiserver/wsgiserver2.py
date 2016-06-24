@@ -70,7 +70,7 @@ number of requests and their responses, so we run a nested loop::
 
 __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
-           'CP_fileobject',
+           'CP_makefile',
            'MaxSizeExceeded', 'NoSSLError', 'FatalSSLAlert',
            'WorkerThread', 'ThreadPool', 'SSLAdapter',
            'CherryPyWSGIServer',
@@ -91,9 +91,11 @@ import threading
 import time
 import traceback as traceback_
 import operator
-from urllib import unquote
+try:
+    from urllib.parse import unquote_to_bytes
+except ImportError:
+    from urlparse import unquote as unquote_to_bytes
 from urlparse import urlparse
-import warnings
 import errno
 import logging
 try:
@@ -124,18 +126,6 @@ except Exception:
     cp_version = 'unknown'
 
 
-class FauxSocket(object):
-
-    """Faux socket with the minimal interface required by pypy"""
-
-    def _reuse(self):
-        pass
-
-_fileobject_uses_str_type = isinstance(
-    socket._fileobject(FauxSocket())._rbuf, basestring)
-del FauxSocket  # this class is not longer required for anything.
-
-
 if sys.version_info >= (3, 0):
     unicodestr = str
     basestring = (bytes, str)
@@ -158,6 +148,19 @@ else:
         # in the given encoding, which for ISO-8859-1 is almost always what
         # was intended.
         return n
+
+
+class FauxSocket(object):
+
+    """Faux socket with the minimal interface required by pypy"""
+
+    def _reuse(self):
+        pass
+
+_fileobject_uses_str_type = isinstance(
+    socket._fileobject(FauxSocket())._rbuf, basestring)
+del FauxSocket  # this class is not longer required for anything.
+
 
 LF = ntob('\n')
 CRLF = ntob('\r\n')
@@ -704,7 +707,7 @@ class HTTPRequest(object):
         # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
         # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
         try:
-            atoms = [unquote(x) for x in quoted_slash.split(path)]
+            atoms = [unquote_to_bytes(x) for x in quoted_slash.split(path)]
         except ValueError:
             ex = sys.exc_info()[1]
             self.simple_response("400 Bad Request", ex.args[0])
@@ -1001,7 +1004,7 @@ class FatalSSLAlert(Exception):
     pass
 
 
-class CP_fileobject(socket._fileobject):
+class CP_makefile(socket._fileobject):
 
     """Faux file object attached to a socket object."""
 
@@ -1328,7 +1331,7 @@ class HTTPConnection(object):
     wbufsize = DEFAULT_BUFFER_SIZE
     RequestHandlerClass = HTTPRequest
 
-    def __init__(self, server, sock, makefile=CP_fileobject):
+    def __init__(self, server, sock, makefile=CP_makefile):
         self.server = server
         self.socket = sock
         self.rfile = makefile(sock, "rb", self.rbufsize)
@@ -1399,7 +1402,7 @@ class HTTPConnection(object):
         except NoSSLError:
             if req and not req.sent_headers:
                 # Unwrap our wfile
-                self.wfile = CP_fileobject(
+                self.wfile = CP_makefile(
                     self.socket._sock, "wb", self.wbufsize)
                 req.simple_response(
                     "400 Bad Request",
@@ -2015,7 +2018,7 @@ class HTTPServer(object):
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.timeout)
 
-            makefile = CP_fileobject
+            makefile = CP_makefile
             ssl_env = {}
             # if ssl cert and key are set, we try to be a secure HTTP server
             if self.ssl_adapter is not None:
