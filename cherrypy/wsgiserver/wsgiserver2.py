@@ -93,7 +93,6 @@ import traceback as traceback_
 import operator
 from urllib import unquote
 from urlparse import urlparse
-import warnings
 import errno
 import logging
 try:
