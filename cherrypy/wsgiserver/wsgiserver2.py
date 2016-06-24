@@ -124,18 +124,6 @@ except Exception:
     cp_version = 'unknown'
 
 
-class FauxSocket(object):
-
-    """Faux socket with the minimal interface required by pypy"""
-
-    def _reuse(self):
-        pass
-
-_fileobject_uses_str_type = isinstance(
-    socket._fileobject(FauxSocket())._rbuf, basestring)
-del FauxSocket  # this class is not longer required for anything.
-
-
 if sys.version_info >= (3, 0):
     unicodestr = str
     basestring = (bytes, str)
@@ -158,6 +146,19 @@ else:
         # in the given encoding, which for ISO-8859-1 is almost always what
         # was intended.
         return n
+
+
+class FauxSocket(object):
+
+    """Faux socket with the minimal interface required by pypy"""
+
+    def _reuse(self):
+        pass
+
+_fileobject_uses_str_type = isinstance(
+    socket._fileobject(FauxSocket())._rbuf, basestring)
+del FauxSocket  # this class is not longer required for anything.
+
 
 LF = ntob('\n')
 CRLF = ntob('\r\n')
