@@ -120,7 +120,7 @@ Implementation details
 CherryPy's bus implementation is simplistic as it registers
 functions to channels. Whenever a message is published to
 a channel, each registered function is applied with that 
-message passas as a parameter.
+message passed as a parameter.
 
 The whole behaviour happens synchronously and, in that sense,
 if a subscriber takes too long to process a message, the
