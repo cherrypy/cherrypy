@@ -95,9 +95,12 @@ try:
     from urllib.parse import unquote_to_bytes
 except ImportError:
     from urlparse import unquote as unquote_to_bytes
-from urlparse import urlparse
 import errno
 import logging
+
+import six
+from six.moves.urllib.parse import urlparse
+
 try:
     # prefer slower Python-based io module
     import _pyio as io
@@ -267,7 +270,7 @@ def read_headers(rfile, hdict=None):
         if k in comma_separated_headers:
             existing = hdict.get(hname)
             if existing:
-                v = ", ".join((existing, v))
+                v = b", ".join((existing, v))
         hdict[hname] = v
 
     return hdict
@@ -357,7 +360,7 @@ class KnownLengthRFile(object):
 
     def read(self, size=None):
         if self.remaining == 0:
-            return ''
+            return b''
         if size is None:
             size = self.remaining
         else:
@@ -369,7 +372,7 @@ class KnownLengthRFile(object):
 
     def readline(self, size=None):
         if self.remaining == 0:
-            return ''
+            return b''
         if size is None:
             size = self.remaining
         else:
@@ -673,7 +676,8 @@ class HTTPRequest(object):
 
         try:
             method, uri, req_protocol = request_line.strip().split(SPACE, 2)
-            rp = int(req_protocol[5]), int(req_protocol[7])
+            req_protocol_str = req_protocol.decode('ascii')
+            rp = int(req_protocol_str[5]), int(req_protocol_str[7])
         except (ValueError, IndexError):
             self.simple_response("400 Bad Request", "Malformed Request-Line")
             return False
@@ -712,7 +716,7 @@ class HTTPRequest(object):
             ex = sys.exc_info()[1]
             self.simple_response("400 Bad Request", ex.args[0])
             return False
-        path = "%2F".join(atoms)
+        path = b"%2F".join(atoms)
         self.path = path
 
         # Note that, like wsgiref and most other HTTP servers,
@@ -731,7 +735,8 @@ class HTTPRequest(object):
         # Notice that, in (b), the response will be "HTTP/1.1" even though
         # the client only understands 1.0. RFC 2616 10.5.6 says we should
         # only return 505 if the _major_ version is different.
-        sp = int(self.server.protocol[5]), int(self.server.protocol[7])
+        server_proto_str = self.server.protocol.decode('ascii')
+        sp = int(server_proto_str[5]), int(server_proto_str[7])
 
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
@@ -754,7 +759,7 @@ class HTTPRequest(object):
             return False
 
         mrbs = self.server.max_request_body_size
-        if mrbs and int(self.inheaders.get("Content-Length", 0)) > mrbs:
+        if mrbs and int(self.inheaders.get(b"Content-Length", 0)) > mrbs:
             self.simple_response(
                 "413 Request Entity Too Large",
                 "The entity sent with the request exceeds the maximum "
@@ -764,25 +769,25 @@ class HTTPRequest(object):
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
             # Both server and client are HTTP/1.1
-            if self.inheaders.get("Connection", "") == "close":
+            if self.inheaders.get(b"Connection", b"") == b"close":
                 self.close_connection = True
         else:
             # Either the server or client (or both) are HTTP/1.0
-            if self.inheaders.get("Connection", "") != "Keep-Alive":
+            if self.inheaders.get(b"Connection", b"") != b"Keep-Alive":
                 self.close_connection = True
 
         # Transfer-Encoding support
         te = None
         if self.response_protocol == "HTTP/1.1":
-            te = self.inheaders.get("Transfer-Encoding")
+            te = self.inheaders.get(b"Transfer-Encoding")
             if te:
-                te = [x.strip().lower() for x in te.split(",") if x.strip()]
+                te = [x.strip().lower() for x in te.split(b",") if x.strip()]
 
         self.chunked_read = False
 
         if te:
             for enc in te:
-                if enc == "chunked":
+                if enc == b"chunked":
                     self.chunked_read = True
                 else:
                     # Note that, even if we see "chunked", we must reject
@@ -808,11 +813,12 @@ class HTTPRequest(object):
         #
         # We used to do 3, but are now doing 1. Maybe we'll do 2 someday,
         # but it seems like it would be a big slowdown for such a rare case.
-        if self.inheaders.get("Expect", "") == "100-continue":
+        if self.inheaders.get(b"Expect", b"") == b"100-continue":
             # Don't use simple_response here, because it emits headers
             # we don't want. See
             # https://github.com/cherrypy/cherrypy/issues/951
-            msg = self.server.protocol + " 100 Continue\r\n\r\n"
+            msg = self.server.protocol.encode('ascii')
+            msg += b" 100 Continue\r\n\r\n"
             try:
                 self.conn.wfile.sendall(msg)
             except socket.error:
@@ -865,13 +871,13 @@ class HTTPRequest(object):
         if self.chunked_read:
             self.rfile = ChunkedRFile(self.conn.rfile, mrbs)
         else:
-            cl = int(self.inheaders.get("Content-Length", 0))
+            cl = int(self.inheaders.get(b"Content-Length", 0))
             if mrbs and mrbs < cl:
                 if not self.sent_headers:
                     self.simple_response(
                         "413 Request Entity Too Large",
-                        "The entity sent with the request exceeds the maximum "
-                        "allowed bytes.")
+                        "The entity sent with the request exceeds the "
+                        "maximum allowed bytes.")
                 return
             self.rfile = KnownLengthRFile(self.conn.rfile, cl)
 
@@ -881,15 +887,19 @@ class HTTPRequest(object):
             self.sent_headers = True
             self.send_headers()
         if self.chunked_write:
-            self.conn.wfile.sendall("0\r\n\r\n")
+            self.conn.wfile.sendall(b"0\r\n\r\n")
 
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        buf = [self.server.protocol + SPACE +
-               status + CRLF,
-               "Content-Length: %s\r\n" % len(msg),
-               "Content-Type: text/plain\r\n"]
+        proto_status = "%s %s\r\n" % (self.server.protocol, status)
+        content_length = "Content-Length: %s\r\n" % len(msg)
+        content_type = "Content-Type: text/plain\r\n"
+        buf = [
+            proto_status.encode("ISO-8859-1"),
+            content_length.encode("ISO-8859-1"),
+            content_type.encode("ISO-8859-1"),
+        ]
 
         if status[:3] in ("413", "414"):
             # Request Entity Too Large / Request-URI Too Long
@@ -898,7 +908,7 @@ class HTTPRequest(object):
                 # This will not be true for 414, since read_request_line
                 # usually raises 414 before reading the whole line, and we
                 # therefore cannot know the proper response_protocol.
-                buf.append("Connection: close\r\n")
+                buf.append(b"Connection: close\r\n")
             else:
                 # HTTP/1.0 had no 413/414 status nor Connection header.
                 # Emit 400 instead and trust the message body is enough.
@@ -911,7 +921,7 @@ class HTTPRequest(object):
             buf.append(msg)
 
         try:
-            self.conn.wfile.sendall("".join(buf))
+            self.conn.wfile.sendall(EMPTY.join(buf))
         except socket.error:
             x = sys.exc_info()[1]
             if x.args[0] not in socket_errors_to_ignore:
@@ -920,7 +930,8 @@ class HTTPRequest(object):
     def write(self, chunk):
         """Write unbuffered data to the client."""
         if self.chunked_write and chunk:
-            buf = [hex(len(chunk))[2:], CRLF, chunk, CRLF]
+            chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
+            buf = [chunk_size_hex, CRLF, chunk, CRLF]
             self.conn.wfile.sendall(EMPTY.join(buf))
         else:
             self.conn.wfile.sendall(chunk)
@@ -936,7 +947,7 @@ class HTTPRequest(object):
         if status == 413:
             # Request Entity Too Large. Close conn to avoid garbage.
             self.close_connection = True
-        elif "content-length" not in hkeys:
+        elif b"content-length" not in hkeys:
             # "All 1xx (informational), 204 (no content),
             # and 304 (not modified) responses MUST NOT
             # include a message-body." So no point chunking.
@@ -944,23 +955,23 @@ class HTTPRequest(object):
                 pass
             else:
                 if (self.response_protocol == 'HTTP/1.1'
-                        and self.method != 'HEAD'):
+                        and self.method != b'HEAD'):
                     # Use the chunked transfer-coding
                     self.chunked_write = True
-                    self.outheaders.append(("Transfer-Encoding", "chunked"))
+                    self.outheaders.append((b"Transfer-Encoding", b"chunked"))
                 else:
                     # Closing the conn is the only way to determine len.
                     self.close_connection = True
 
-        if "connection" not in hkeys:
+        if b"connection" not in hkeys:
             if self.response_protocol == 'HTTP/1.1':
                 # Both server and client are HTTP/1.1 or better
                 if self.close_connection:
-                    self.outheaders.append(("Connection", "close"))
+                    self.outheaders.append((b"Connection", b"close"))
             else:
                 # Server and/or client are HTTP/1.0
                 if not self.close_connection:
-                    self.outheaders.append(("Connection", "Keep-Alive"))
+                    self.outheaders.append((b"Connection", b"Keep-Alive"))
 
         if (not self.close_connection) and (not self.chunked_read):
             # Read any remaining request body data on the socket.
@@ -979,13 +990,20 @@ class HTTPRequest(object):
             if remaining > 0:
                 self.rfile.read(remaining)
 
-        if "date" not in hkeys:
-            self.outheaders.append(("Date", email.utils.formatdate()))
+        if b"date" not in hkeys:
+            self.outheaders.append((
+                b"Date",
+                email.utils.formatdate(usegmt=True).encode('ISO-8859-1'),
+            ))
 
-        if "server" not in hkeys:
-            self.outheaders.append(("Server", self.server.server_name))
+        if b"server" not in hkeys:
+            self.outheaders.append((
+                b"Server",
+                self.server.server_name.encode('ISO-8859-1'),
+            ))
 
-        buf = [self.server.protocol + SPACE + self.status + CRLF]
+        proto = self.server.protocol.encode('ascii')
+        buf = [proto + SPACE + self.status + CRLF]
         for k, v in self.outheaders:
             buf.append(k + COLON + SPACE + v + CRLF)
         buf.append(CRLF)
@@ -1019,7 +1037,7 @@ class CP_makefile(socket._fileobject):
             try:
                 bytes_sent = self.send(data)
                 data = data[bytes_sent:]
-            except socket.error, e:
+            except socket.error as e:
                 if e.args[0] not in socket_errors_nonblocking:
                     raise
 
@@ -1040,7 +1058,7 @@ class CP_makefile(socket._fileobject):
                 data = self._sock.recv(size)
                 self.bytes_read += len(data)
                 return data
-            except socket.error, e:
+            except socket.error as e:
                 if (e.args[0] not in socket_errors_nonblocking
                         and e.args[0] not in socket_error_eintr):
                     raise
@@ -1597,7 +1615,7 @@ class ThreadPool(object):
         n_new = min(amount, budget)
 
         workers = [self._spawn_worker() for i in range(n_new)]
-        while not self._all(operator.attrgetter('ready'), workers):
+        while not all(worker.ready for worker in workers):
             time.sleep(.1)
         self._threads.extend(workers)
 
@@ -1606,11 +1624,6 @@ class ThreadPool(object):
         worker.setName("CP Server " + worker.getName())
         worker.start()
         return worker
-
-    def _all(func, items):
-        results = [func(item) for item in items]
-        return reduce(operator.and_, results, True)
-    _all = staticmethod(_all)
 
     def shrink(self, amount):
         """Kill off worker threads (not below self.min)."""
@@ -1776,7 +1789,8 @@ class HTTPServer(object):
     If None, this defaults to ``'%s Server' % self.version``."""
 
     ready = False
-    """An internal flag which marks whether the socket is accepting connections
+    """An internal flag which marks whether the socket is accepting
+    connections.
     """
 
     max_request_header_size = 0
@@ -1935,7 +1949,7 @@ class HTTPServer(object):
             af, socktype, proto, canonname, sa = res
             try:
                 self.bind(af, socktype, proto)
-            except socket.error, serr:
+            except socket.error as serr:
                 msg = "%s -- (%s: %s)" % (msg, sa, serr)
                 if self.socket:
                     self.socket.close()
@@ -2142,7 +2156,7 @@ class HTTPServer(object):
                             s = socket.socket(af, socktype, proto)
                             # See
                             # http://groups.google.com/group/cherrypy-users/
-                            #    browse_frm/thread/bbfe5eb39c904fe0
+                            #     browse_frm/thread/bbfe5eb39c904fe0
                             s.settimeout(1.0)
                             s.connect((host, port))
                             s.close()
@@ -2300,7 +2314,8 @@ class WSGIGateway(Gateway):
                     "WSGI response header value %r is not of type str." % v)
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
-        self.req.outheaders.extend(headers)
+            out_header = k, v
+            self.req.outheaders.append(out_header)
 
         return self.write
 
@@ -2401,8 +2416,8 @@ class WSGIGateway_u0(WSGIGateway_10):
 
     """A Gateway class to interface HTTPServer with WSGI u.0.
 
-    WSGI u.0 is an experimental protocol, which uses unicode for keys and
-    values in both Python 2 and Python 3.
+    WSGI u.0 is an experimental protocol, which uses unicode for keys
+    and values in both Python 2 and Python 3.
     """
 
     def get_environ(self):

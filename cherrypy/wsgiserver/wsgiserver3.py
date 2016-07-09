@@ -662,10 +662,9 @@ class HTTPRequest(object):
 
         try:
             method, uri, req_protocol = request_line.strip().split(SPACE, 2)
-            # The [x:y] slicing is necessary for byte strings to avoid getting
-            # ord's
-            rp = int(req_protocol[5:6]), int(req_protocol[7:8])
-        except ValueError:
+            req_protocol_str = req_protocol.decode('ascii')
+            rp = int(req_protocol_str[5]), int(req_protocol_str[7])
+        except (ValueError, IndexError):
             self.simple_response("400 Bad Request", "Malformed Request-Line")
             return False
 
@@ -722,9 +721,8 @@ class HTTPRequest(object):
         # Notice that, in (b), the response will be "HTTP/1.1" even though
         # the client only understands 1.0. RFC 2616 10.5.6 says we should
         # only return 505 if the _major_ version is different.
-        # The [x:y] slicing is necessary for byte strings to avoid getting
-        # ord's
-        sp = int(self.server.protocol[5:6]), int(self.server.protocol[7:8])
+        server_proto_str = self.server.protocol.decode('ascii')
+        sp = int(server_proto_str[5]), int(server_proto_str[7])
 
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
@@ -732,6 +730,7 @@ class HTTPRequest(object):
 
         self.request_protocol = req_protocol
         self.response_protocol = "HTTP/%s.%s" % min(rp, sp)
+
         return True
 
     def read_request_headers(self):
@@ -804,8 +803,8 @@ class HTTPRequest(object):
             # Don't use simple_response here, because it emits headers
             # we don't want. See
             # https://github.com/cherrypy/cherrypy/issues/951
-            msg = self.server.protocol.encode(
-                'ascii') + b" 100 Continue\r\n\r\n"
+            msg = self.server.protocol.encode('ascii')
+            msg += b" 100 Continue\r\n\r\n"
             try:
                 self.conn.wfile.write(msg)
             except socket.error:
@@ -879,10 +878,14 @@ class HTTPRequest(object):
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
         status = str(status)
-        buf = [bytes(self.server.protocol, "ascii") + SPACE +
-               bytes(status, "ISO-8859-1") + CRLF,
-               bytes("Content-Length: %s\r\n" % len(msg), "ISO-8859-1"),
-               b"Content-Type: text/plain\r\n"]
+        proto_status = "%s %s\r\n" % (self.server.protocol, status)
+        content_length = "Content-Length: %s\r\n" % len(msg)
+        content_type = "Content-Type: text/plain\r\n"
+        buf = [
+            proto_status.encode("ISO-8859-1"),
+            content_length.encode("ISO-8859-1"),
+            content_type.encode("ISO-8859-1"),
+        ]
 
         if status[:3] in ("413", "414"):
             # Request Entity Too Large / Request-URI Too Long
@@ -904,7 +907,7 @@ class HTTPRequest(object):
             buf.append(msg)
 
         try:
-            self.conn.wfile.write(b"".join(buf))
+            self.conn.wfile.write(EMPTY.join(buf))
         except socket.error:
             x = sys.exc_info()[1]
             if x.args[0] not in socket_errors_to_ignore:
@@ -913,7 +916,8 @@ class HTTPRequest(object):
     def write(self, chunk):
         """Write unbuffered data to the client."""
         if self.chunked_write and chunk:
-            buf = [bytes(hex(len(chunk)), 'ASCII')[2:], CRLF, chunk, CRLF]
+            chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
+            buf = [chunk_size_hex, CRLF, chunk, CRLF]
             self.conn.wfile.write(EMPTY.join(buf))
         else:
             self.conn.wfile.write(chunk)
@@ -975,15 +979,17 @@ class HTTPRequest(object):
         if b"date" not in hkeys:
             self.outheaders.append((
                 b"Date",
-                email.utils.formatdate(usegmt=True).encode('ISO-8859-1')
+                email.utils.formatdate(usegmt=True).encode('ISO-8859-1'),
             ))
 
         if b"server" not in hkeys:
-            self.outheaders.append(
-                (b"Server", self.server.server_name.encode('ISO-8859-1')))
+            self.outheaders.append((
+                b"Server",
+                self.server.server_name.encode('ISO-8859-1'),
+            ))
 
-        buf = [self.server.protocol.encode(
-            'ascii') + SPACE + self.status + CRLF]
+        proto = self.server.protocol.encode('ascii')
+        buf = [proto + SPACE + self.status + CRLF]
         for k, v in self.outheaders:
             buf.append(k + COLON + SPACE + v + CRLF)
         buf.append(CRLF)
@@ -1451,8 +1457,8 @@ class HTTPConnection(object):
                     self.socket._sock, "wb", self.wbufsize)
                 req.simple_response(
                     "400 Bad Request",
-                    "The client sent a plain HTTP request, but this server "
-                    "only speaks HTTPS on this port.")
+                    "The client sent a plain HTTP request, but "
+                    "this server only speaks HTTPS on this port.")
                 self.linger = True
         except Exception:
             e = sys.exc_info()[1]
@@ -1960,9 +1966,9 @@ class HTTPServer(object):
             # addresses)
             host, port = self.bind_addr
             try:
-                info = socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                          socket.SOCK_STREAM, 0,
-                                          socket.AI_PASSIVE)
+                info = socket.getaddrinfo(
+                    host, port, socket.AF_UNSPEC,
+                    socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
             except socket.gaierror:
                 if ':' in self.bind_addr[0]:
                     info = [(socket.AF_INET6, socket.SOCK_STREAM,
@@ -2004,6 +2010,7 @@ class HTTPServer(object):
             except:
                 self.error_log("Error in HTTPServer.tick", level=logging.ERROR,
                                traceback=True)
+
             if self.interrupt:
                 while self.interrupt is True:
                     # Wait for self.stop() to complete. See _set_interrupt.
@@ -2348,8 +2355,8 @@ class WSGIGateway(Gateway):
                     "WSGI response header value %r is not of type str." % v)
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
-            self.req.outheaders.append(
-                (k.encode('ISO-8859-1'), v.encode('ISO-8859-1')))
+            out_header = k.encode('ISO-8859-1'), v.encode('ISO-8859-1')
+            self.req.outheaders.append(out_header)
 
         return self.write
 
@@ -2367,10 +2374,10 @@ class WSGIGateway(Gateway):
         if rbo is not None and chunklen > rbo:
             if not self.req.sent_headers:
                 # Whew. We can send a 500 to the client.
-                self.req.simple_response("500 Internal Server Error",
-                                         "The requested resource returned "
-                                         "more bytes than the declared "
-                                         "Content-Length.")
+                self.req.simple_response(
+                    "500 Internal Server Error",
+                    "The requested resource returned more bytes than the "
+                    "declared Content-Length.")
             else:
                 # Dang. We have probably already sent data. Truncate the chunk
                 # to fit (so the client doesn't hang) and raise an error later.
@@ -2420,6 +2427,7 @@ class WSGIGateway_10(WSGIGateway):
             'wsgi.url_scheme': req.scheme.decode('ISO-8859-1'),
             'wsgi.version': (1, 0),
         }
+
         if isinstance(req.server.bind_addr, basestring):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
