@@ -2463,8 +2463,8 @@ class WSGIPathInfoDispatcher(object):
             pass
 
         # Sort the apps by len(path), descending
-        apps.sort(cmp=lambda x, y: cmp(len(x[0]), len(y[0])))
-        apps.reverse()
+        by_path_len = lambda app: len(app[0])
+        apps.sort(key=by_path_len, reverse=True)
 
         # The path_prefix strings must start, but not end, with a slash.
         # Use "" instead of "/".
