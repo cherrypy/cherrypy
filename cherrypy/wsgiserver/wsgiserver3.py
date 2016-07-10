@@ -534,17 +534,6 @@ class ChunkedRFile(object):
     def close(self):
         self.rfile.close()
 
-    def __iter__(self):
-        # Shamelessly stolen from StringIO
-        total = 0
-        line = self.readline(sizehint)
-        while line:
-            yield line
-            total += len(line)
-            if 0 < sizehint <= total:
-                break
-            line = self.readline(sizehint)
-
 
 class HTTPRequest(object):
 
