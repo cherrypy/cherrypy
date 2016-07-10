@@ -1,5 +1,5 @@
 """A high-speed, production ready, thread pooled, generic HTTP server.
-
+a
 Simplest example on how to use this module directly
 (without using CherryPy's application machinery)::
 
@@ -97,6 +97,8 @@ except ImportError:
     from urlparse import urlparse
 import errno
 import logging
+
+import six
 
 try:
     # prefer slower Python-based io module
@@ -2007,7 +2009,7 @@ class WSGIGateway(Gateway):
         # exc_info tuple."
         if self.req.sent_headers:
             try:
-                raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
+                six.reraise(*exc_info)
             finally:
                 exc_info = None
 

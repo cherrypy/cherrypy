@@ -99,6 +99,8 @@ except ImportError:
 import errno
 import logging
 
+import six
+
 try:
     # prefer slower Python-based io module
     import _pyio as io
@@ -2298,7 +2300,7 @@ class WSGIGateway(Gateway):
         # exc_info tuple."
         if self.req.sent_headers:
             try:
-                raise exc_info[0], exc_info[1], exc_info[2]
+                six.reraise(*exc_info)
             finally:
                 exc_info = None
 
