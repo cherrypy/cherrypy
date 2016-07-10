@@ -90,7 +90,6 @@ import sys
 import threading
 import time
 import traceback as traceback_
-import operator
 try:
     from urllib.parse import unquote_to_bytes, urlparse
 except ImportError:
