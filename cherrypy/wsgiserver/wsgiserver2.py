@@ -90,7 +90,6 @@ import sys
 import threading
 import time
 import traceback as traceback_
-import operator
 try:
     from urllib.parse import unquote_to_bytes
 except ImportError:
@@ -547,17 +546,6 @@ class ChunkedRFile(object):
 
     def close(self):
         self.rfile.close()
-
-    def __iter__(self):
-        # Shamelessly stolen from StringIO
-        total = 0
-        line = self.readline(sizehint)
-        while line:
-            yield line
-            total += len(line)
-            if 0 < sizehint <= total:
-                break
-            line = self.readline(sizehint)
 
 
 class HTTPRequest(object):
@@ -2300,7 +2288,7 @@ class WSGIGateway(Gateway):
         # exc_info tuple."
         if self.req.sent_headers:
             try:
-                raise exc_info[0], exc_info[1], exc_info[2]
+                six.reraise(*exc_info)
             finally:
                 exc_info = None
 
@@ -2465,8 +2453,8 @@ class WSGIPathInfoDispatcher(object):
             pass
 
         # Sort the apps by len(path), descending
-        apps.sort(cmp=lambda x, y: cmp(len(x[0]), len(y[0])))
-        apps.reverse()
+        by_path_len = lambda app: len(app[0])
+        apps.sort(key=by_path_len, reverse=True)
 
         # The path_prefix strings must start, but not end, with a slash.
         # Use "" instead of "/".
