@@ -723,8 +723,7 @@ class HTTPRequest(object):
         # Notice that, in (b), the response will be "HTTP/1.1" even though
         # the client only understands 1.0. RFC 2616 10.5.6 says we should
         # only return 505 if the _major_ version is different.
-        server_proto_str = self.server.protocol.decode('ascii')
-        sp = int(server_proto_str[5]), int(server_proto_str[7])
+        sp = int(self.server.protocol[5]), int(self.server.protocol[7])
 
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
