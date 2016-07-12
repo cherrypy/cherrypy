@@ -807,7 +807,7 @@ class HTTPRequest(object):
             msg = self.server.protocol.encode('ascii')
             msg += b" 100 Continue\r\n\r\n"
             try:
-                self.conn.wfile.sendall(msg)
+                self.conn.wfile.write(msg)
             except socket.error:
                 x = sys.exc_info()[1]
                 if x.args[0] not in socket_errors_to_ignore:
@@ -874,7 +874,7 @@ class HTTPRequest(object):
             self.sent_headers = True
             self.send_headers()
         if self.chunked_write:
-            self.conn.wfile.sendall(b"0\r\n\r\n")
+            self.conn.wfile.write(b"0\r\n\r\n")
 
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
@@ -908,7 +908,7 @@ class HTTPRequest(object):
             buf.append(msg)
 
         try:
-            self.conn.wfile.sendall(EMPTY.join(buf))
+            self.conn.wfile.write(EMPTY.join(buf))
         except socket.error:
             x = sys.exc_info()[1]
             if x.args[0] not in socket_errors_to_ignore:
@@ -919,9 +919,9 @@ class HTTPRequest(object):
         if self.chunked_write and chunk:
             chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
             buf = [chunk_size_hex, CRLF, chunk, CRLF]
-            self.conn.wfile.sendall(EMPTY.join(buf))
+            self.conn.wfile.write(EMPTY.join(buf))
         else:
-            self.conn.wfile.sendall(chunk)
+            self.conn.wfile.write(chunk)
 
     def send_headers(self):
         """Assert, process, and send the HTTP response message-headers.
@@ -994,7 +994,7 @@ class HTTPRequest(object):
         for k, v in self.outheaders:
             buf.append(k + COLON + SPACE + v + CRLF)
         buf.append(CRLF)
-        self.conn.wfile.sendall(EMPTY.join(buf))
+        self.conn.wfile.write(EMPTY.join(buf))
 
 
 class NoSSLError(Exception):
@@ -1018,7 +1018,7 @@ class CP_makefile(socket._fileobject):
         self.bytes_written = 0
         socket._fileobject.__init__(self, *args, **kwargs)
 
-    def sendall(self, data):
+    def write(self, data):
         """Sendall for non-blocking sockets."""
         while data:
             try:
@@ -1037,7 +1037,7 @@ class CP_makefile(socket._fileobject):
         if self._wbuf:
             buffer = "".join(self._wbuf)
             self._wbuf = []
-            self.sendall(buffer)
+            self.write(buffer)
 
     def recv(self, size):
         while True:
@@ -2035,7 +2035,7 @@ class HTTPServer(object):
 
                     wfile = makefile(s._sock, "wb", DEFAULT_BUFFER_SIZE)
                     try:
-                        wfile.sendall("".join(buf))
+                        wfile.write("".join(buf))
                     except socket.error:
                         x = sys.exc_info()[1]
                         if x.args[0] not in socket_errors_to_ignore:
