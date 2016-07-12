@@ -126,7 +126,7 @@ if sys.version_info >= (3, 0):
     unicodestr = str
     basestring = (bytes, str)
 
-    def ntob(n, encoding='ISO-8859-1'):
+    def ntob(n, encoding='UTF-8'):
         """Return the given native string as a byte string in the given
         encoding.
         """
@@ -136,12 +136,12 @@ else:
     unicodestr = unicode
     basestring = basestring
 
-    def ntob(n, encoding='ISO-8859-1'):
+    def ntob(n, encoding='UTF-8'):
         """Return the given native string as a byte string in the given
         encoding.
         """
         # In Python 2, the native string type is bytes. Assume it's already
-        # in the given encoding, which for ISO-8859-1 is almost always what
+        # in the given encoding, which for UTF-8 is almost always what
         # was intended.
         return n
 
@@ -886,8 +886,8 @@ class HTTPRequest(object):
         """Write a simple response back to the client."""
         status = str(status)
         buf = [bytes(self.server.protocol, "ascii") + SPACE +
-               bytes(status, "ISO-8859-1") + CRLF,
-               bytes("Content-Length: %s\r\n" % len(msg), "ISO-8859-1"),
+               bytes(status, "UTF-8") + CRLF,
+               bytes("Content-Length: %s\r\n" % len(msg), "UTF-8"),
                b"Content-Type: text/plain\r\n"]
 
         if status[:3] in ("413", "414"):
@@ -906,7 +906,7 @@ class HTTPRequest(object):
         buf.append(CRLF)
         if msg:
             if isinstance(msg, unicodestr):
-                msg = msg.encode("ISO-8859-1")
+                msg = msg.encode("UTF-8")
             buf.append(msg)
 
         try:
@@ -981,12 +981,12 @@ class HTTPRequest(object):
         if b"date" not in hkeys:
             self.outheaders.append((
                 b"Date",
-                email.utils.formatdate(usegmt=True).encode('ISO-8859-1')
+                email.utils.formatdate(usegmt=True).encode('UTF-8')
             ))
 
         if b"server" not in hkeys:
             self.outheaders.append(
-                (b"Server", self.server.server_name.encode('ISO-8859-1')))
+                (b"Server", self.server.server_name.encode('UTF-8')))
 
         buf = [self.server.protocol.encode(
             'ascii') + SPACE + self.status + CRLF]
@@ -1756,7 +1756,7 @@ class HTTPServer(object):
 
                     wfile = makefile(s, "wb", DEFAULT_BUFFER_SIZE)
                     try:
-                        wfile.write("".join(buf).encode('ISO-8859-1'))
+                        wfile.write("".join(buf).encode('UTF-8'))
                     except socket.error:
                         x = sys.exc_info()[1]
                         if x.args[0] not in socket_errors_to_ignore:
@@ -1988,7 +1988,7 @@ class WSGIGateway(Gateway):
                 # invocation of the write() callable." (PEP 333)
                 if chunk:
                     if isinstance(chunk, unicodestr):
-                        chunk = chunk.encode('ISO-8859-1')
+                        chunk = chunk.encode('UTF-8')
                     self.write(chunk)
         finally:
             if hasattr(response, "close"):
@@ -2018,7 +2018,7 @@ class WSGIGateway(Gateway):
         # "latin-1" set.
         if not isinstance(status, str):
             raise TypeError("WSGI response status is not of type str.")
-        self.req.status = status.encode('ISO-8859-1')
+        self.req.status = status.encode('UTF-8')
 
         for k, v in headers:
             if not isinstance(k, str):
@@ -2030,7 +2030,7 @@ class WSGIGateway(Gateway):
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
             self.req.outheaders.append(
-                (k.encode('ISO-8859-1'), v.encode('ISO-8859-1')))
+                (k.encode('UTF-8'), v.encode('UTF-8')))
 
         return self.write
 
@@ -2082,23 +2082,23 @@ class WSGIGateway_10(WSGIGateway):
             # the *real* server protocol is (and what features to support).
             # See http://www.faqs.org/rfcs/rfc2145.html.
             'ACTUAL_SERVER_PROTOCOL': req.server.protocol,
-            'PATH_INFO': req.path.decode('ISO-8859-1'),
-            'QUERY_STRING': req.qs.decode('ISO-8859-1'),
+            'PATH_INFO': req.path.decode('UTF-8'),
+            'QUERY_STRING': req.qs.decode('UTF-8'),
             'REMOTE_ADDR': req.conn.remote_addr or '',
             'REMOTE_PORT': str(req.conn.remote_port or ''),
-            'REQUEST_METHOD': req.method.decode('ISO-8859-1'),
-            'REQUEST_URI': req.uri.decode('ISO-8859-1'),
+            'REQUEST_METHOD': req.method.decode('UTF-8'),
+            'REQUEST_URI': req.uri.decode('UTF-8'),
             'SCRIPT_NAME': '',
             'SERVER_NAME': req.server.server_name,
             # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
-            'SERVER_PROTOCOL': req.request_protocol.decode('ISO-8859-1'),
+            'SERVER_PROTOCOL': req.request_protocol.decode('UTF-8'),
             'SERVER_SOFTWARE': req.server.software,
             'wsgi.errors': sys.stderr,
             'wsgi.input': req.rfile,
             'wsgi.multiprocess': False,
             'wsgi.multithread': True,
             'wsgi.run_once': False,
-            'wsgi.url_scheme': req.scheme.decode('ISO-8859-1'),
+            'wsgi.url_scheme': req.scheme.decode('UTF-8'),
             'wsgi.version': (1, 0),
         }
         if isinstance(req.server.bind_addr, basestring):
@@ -2110,8 +2110,8 @@ class WSGIGateway_10(WSGIGateway):
 
         # Request headers
         for k, v in req.inheaders.items():
-            k = k.decode('ISO-8859-1').upper().replace("-", "_")
-            env["HTTP_" + k] = v.decode('ISO-8859-1')
+            k = k.decode('UTF-8').upper().replace("-", "_")
+            env["HTTP_" + k] = v.decode('UTF-8')
 
         # CONTENT_TYPE/CONTENT_LENGTH
         ct = env.pop("HTTP_CONTENT_TYPE", None)
@@ -2150,7 +2150,7 @@ class WSGIGateway_u0(WSGIGateway_10):
             env["QUERY_STRING"] = req.qs.decode(env['wsgi.url_encoding'])
         except UnicodeDecodeError:
             # Fall back to latin 1 so apps can transcode if needed.
-            env['wsgi.url_encoding'] = 'ISO-8859-1'
+            env['wsgi.url_encoding'] = 'UTF-8'
             env["PATH_INFO"] = env_10["PATH_INFO"]
             env["QUERY_STRING"] = env_10["QUERY_STRING"]
 
