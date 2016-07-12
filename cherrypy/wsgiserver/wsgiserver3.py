@@ -1,5 +1,5 @@
 """A high-speed, production ready, thread pooled, generic HTTP server.
-a
+
 Simplest example on how to use this module directly
 (without using CherryPy's application machinery)::
 
