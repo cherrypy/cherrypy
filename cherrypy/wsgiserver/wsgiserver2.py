@@ -1431,14 +1431,7 @@ class HTTPConnection(object):
         self.rfile.close()
 
         if not self.linger:
-            # Python's socket module does NOT call close on the kernel
-            # socket when you call socket.close(). We do so manually here
-            # because we want this server to send a FIN TCP segment
-            # immediately. Note this must be called *before* calling
-            # socket.close(), because the latter drops its reference to
-            # the kernel socket.
-            if hasattr(self.socket, '_sock'):
-                self.socket._sock.close()
+            self._close_kernel_socket()
             self.socket.close()
         else:
             # On the other hand, sometimes we want to hang around for a bit
@@ -1448,6 +1441,19 @@ class HTTPConnection(object):
             # Someday, perhaps, we'll do the full lingering_close that
             # Apache does, but not today.
             pass
+
+    def _close_kernel_socket(self):
+        """
+        On old Python versions,
+        Python's socket module does NOT call close on the kernel
+        socket when you call socket.close(). We do so manually here
+        because we want this server to send a FIN TCP segment
+        immediately. Note this must be called *before* calling
+        socket.close(), because the latter drops its reference to
+        the kernel socket.
+        """
+        if six.PY2 and hasattr(self.socket, '_sock'):
+            self.socket._sock.close()
 
 
 class TrueyZero(object):
