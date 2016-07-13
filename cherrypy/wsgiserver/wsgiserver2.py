@@ -2039,7 +2039,8 @@ class HTTPServer(object):
                            "Content-Type: text/plain\r\n\r\n",
                            msg]
 
-                    wfile = makefile(s._sock, "wb", DEFAULT_BUFFER_SIZE)
+                    sock_to_make = s if six.PY3 else s._sock
+                    wfile = makefile(sock_to_make, "wb", DEFAULT_BUFFER_SIZE)
                     try:
                         wfile.write(ntob("".join(buf)))
                     except socket.error:
