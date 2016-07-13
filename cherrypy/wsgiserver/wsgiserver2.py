@@ -2041,7 +2041,7 @@ class HTTPServer(object):
 
                     wfile = makefile(s._sock, "wb", DEFAULT_BUFFER_SIZE)
                     try:
-                        wfile.write("".join(buf))
+                        wfile.write(ntob("".join(buf)))
                     except socket.error:
                         x = sys.exc_info()[1]
                         if x.args[0] not in socket_errors_to_ignore:
@@ -2308,7 +2308,7 @@ class WSGIGateway(Gateway):
                     "WSGI response header value %r is not of type str." % v)
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
-            out_header = k, v
+            out_header = ntob(k), ntob(v)
             self.req.outheaders.append(out_header)
 
         return self.write
