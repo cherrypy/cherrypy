@@ -128,10 +128,7 @@ except Exception:
     cp_version = 'unknown'
 
 
-if sys.version_info >= (3, 0):
-    unicodestr = str
-    basestring = (bytes, str)
-
+if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given
         encoding.
@@ -139,9 +136,6 @@ if sys.version_info >= (3, 0):
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
 else:
-    unicodestr = unicode
-    basestring = basestring
-
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given
         encoding.
@@ -160,7 +154,7 @@ class FauxSocket(object):
         pass
 
 _fileobject_uses_str_type = isinstance(
-    socket._fileobject(FauxSocket())._rbuf, basestring)
+    socket._fileobject(FauxSocket())._rbuf, six.string_types)
 del FauxSocket  # this class is not longer required for anything.
 
 
@@ -903,7 +897,7 @@ class HTTPRequest(object):
 
         buf.append(CRLF)
         if msg:
-            if isinstance(msg, unicodestr):
+            if isinstance(msg, six.text_type):
                 msg = msg.encode("ISO-8859-1")
             buf.append(msg)
 
@@ -1902,7 +1896,7 @@ class HTTPServer(object):
             self.software = "%s Server" % self.version
 
         # Select the appropriate socket
-        if isinstance(self.bind_addr, basestring):
+        if isinstance(self.bind_addr, six.string_types):
             # AF_UNIX socket
 
             # So we can reuse the socket...
@@ -2057,7 +2051,7 @@ class HTTPServer(object):
 
             conn = self.ConnectionClass(self, s, makefile)
 
-            if not isinstance(self.bind_addr, basestring):
+            if not isinstance(self.bind_addr, six.string_types):
                 # optional values
                 # Until we do DNS lookups, omit REMOTE_HOST
                 if addr is None:  # sometimes this can happen
@@ -2126,7 +2120,7 @@ class HTTPServer(object):
 
         sock = getattr(self, "socket", None)
         if sock:
-            if not isinstance(self.bind_addr, basestring):
+            if not isinstance(self.bind_addr, six.string_types):
                 # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]
@@ -2188,7 +2182,7 @@ ssl_adapters = {
 def get_ssl_adapter_class(name='builtin'):
     """Return an SSL adapter class for the given name."""
     adapter = ssl_adapters[name.lower()]
-    if isinstance(adapter, basestring):
+    if isinstance(adapter, six.string_types):
         last_dot = adapter.rfind(".")
         attr_name = adapter[last_dot + 1:]
         mod_path = adapter[:last_dot]
@@ -2273,7 +2267,7 @@ class WSGIGateway(Gateway):
                 # a NON-EMPTY string, or upon the application's first
                 # invocation of the write() callable." (PEP 333)
                 if chunk:
-                    if isinstance(chunk, unicodestr):
+                    if isinstance(chunk, six.text_type):
                         chunk = chunk.encode('ISO-8859-1')
                     self.write(chunk)
         finally:
@@ -2396,7 +2390,7 @@ class WSGIGateway_10(WSGIGateway):
             'wsgi.version': (1, 0),
         }
 
-        if isinstance(req.server.bind_addr, basestring):
+        if isinstance(req.server.bind_addr, six.string_types):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
             env["SERVER_PORT"] = ""
