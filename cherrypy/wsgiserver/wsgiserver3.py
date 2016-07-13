@@ -712,7 +712,6 @@ class HTTPRequest(object):
         # only return 505 if the _major_ version is different.
         sp = int(self.server.protocol[5]), int(self.server.protocol[7])
 
-
         if sp[0] != rp[0]:
             self.simple_response("505 HTTP Version Not Supported")
             return False
