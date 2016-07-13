@@ -2007,13 +2007,7 @@ class WSGIGateway(Gateway):
             finally:
                 exc_info = None
 
-        # According to PEP 3333, when using Python 3, the response status
-        # and headers must be bytes masquerading as unicode; that is, they
-        # must be of type "str" but are restricted to code points in the
-        # "latin-1" set.
-        if not isinstance(status, str):
-            raise TypeError("WSGI response status is not of type str.")
-        self.req.status = status.encode('ISO-8859-1')
+        self.req.status = self._encode_status(status)
 
         for k, v in headers:
             if not isinstance(k, str):
@@ -2028,6 +2022,20 @@ class WSGIGateway(Gateway):
             self.req.outheaders.append(out_header)
 
         return self.write
+
+    @staticmethod
+    def _encode_status(status):
+        """
+        According to PEP 3333, when using Python 3, the response status
+        and headers must be bytes masquerading as unicode; that is, they
+        must be of type "str" but are restricted to code points in the
+        "latin-1" set.
+        """
+        if six.PY2:
+            return status
+        if not isinstance(status, str):
+            raise TypeError("WSGI response status is not of type str.")
+        return status.encode('ISO-8859-1')
 
     def write(self, chunk):
         """WSGI callable to write unbuffered data to the client.
