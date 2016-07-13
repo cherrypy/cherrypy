@@ -146,18 +146,6 @@ else:
         return n
 
 
-class FauxSocket(object):
-
-    """Faux socket with the minimal interface required by pypy"""
-
-    def _reuse(self):
-        pass
-
-_fileobject_uses_str_type = isinstance(
-    socket._fileobject(FauxSocket())._rbuf, six.string_types)
-del FauxSocket  # this class is not longer required for anything.
-
-
 LF = ntob('\n')
 CRLF = ntob('\r\n')
 TAB = ntob('\t')
@@ -1043,6 +1031,19 @@ class CP_makefile(socket._fileobject):
                 if (e.args[0] not in socket_errors_nonblocking
                         and e.args[0] not in socket_error_eintr):
                     raise
+
+    class FauxSocket(object):
+
+        """Faux socket with the minimal interface required by pypy"""
+
+        def _reuse(self):
+            pass
+
+    _fileobject_uses_str_type = isinstance(
+        socket._fileobject(FauxSocket())._rbuf, six.string_types)
+
+    # FauxSocket is no longer needed
+    del FauxSocket
 
     if not _fileobject_uses_str_type:
         def read(self, size=-1):
