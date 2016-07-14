@@ -2441,8 +2441,10 @@ class WSGIGateway_10(WSGIGateway):
             env["SERVER_PORT"] = str(req.server.bind_addr[1])
 
         # Request headers
-        for k, v in req.inheaders.iteritems():
-            env["HTTP_" + k.upper().replace("-", "_")] = v
+        env.update(
+            ("HTTP_" + bton(k).upper().replace("-", "_"), bton(v))
+            for k, v in req.inheaders.items()
+        )
 
         # CONTENT_TYPE/CONTENT_LENGTH
         ct = env.pop("HTTP_CONTENT_TYPE", None)
