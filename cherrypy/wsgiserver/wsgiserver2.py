@@ -2487,8 +2487,8 @@ class WSGIGateway_u0(WSGIGateway_10):
             for key in [u"PATH_INFO", u"SCRIPT_NAME", u"QUERY_STRING"]:
                 env[key] = env_10[str(key)].decode(env[u'wsgi.url_encoding'])
 
-        for k, v in sorted(env.items()):
-            if isinstance(v, str) and k not in ('REQUEST_URI', 'wsgi.input'):
+        for k, v in env.items():
+            if isinstance(v, bytes) and k not in ('REQUEST_URI', 'wsgi.input'):
                 env[k] = v.decode('ISO-8859-1')
 
         return env
