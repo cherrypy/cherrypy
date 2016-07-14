@@ -2478,7 +2478,6 @@ class WSGIGateway_u0(WSGIGateway_10):
         # Request-URI
         env.setdefault(six.u('wsgi.url_encoding'), six.u('utf-8'))
         try:
-            # SCRIPT_NAME is the empty string, who cares what encoding it is?
             env["PATH_INFO"] = req.path.decode(env['wsgi.url_encoding'])
             env["QUERY_STRING"] = req.qs.decode(env['wsgi.url_encoding'])
         except UnicodeDecodeError:
