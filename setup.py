@@ -12,10 +12,10 @@ class cherrypy_build_py(build_py):
     def build_module(self, module, module_file, package):
         python3 = sys.version_info >= (3,)
         if python3:
-            exclude_pattern = re.compile('wsgiserver2|ssl_pyopenssl|'
+            exclude_pattern = re.compile('ssl_pyopenssl|'
                                          '_cpcompat_subprocess')
         else:
-            exclude_pattern = re.compile('wsgiserver3')
+            exclude_pattern = re.compile('xxx')
         if exclude_pattern.match(module):
             return  # skip it
         return build_py.build_module(self, module, module_file, package)
