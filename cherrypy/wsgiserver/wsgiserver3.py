@@ -135,6 +135,9 @@ if six.PY3:
         """
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
+
+    def bton(b, encoding='ISO-8859-1'):
+        return b.decode(encoding)
 else:
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given
@@ -144,6 +147,9 @@ else:
         # in the given encoding, which for ISO-8859-1 is almost always what
         # was intended.
         return n
+
+    def bton(b, encoding='ISO-8859-1'):
+        return b
 
 
 LF = ntob('\n')
@@ -2407,23 +2413,23 @@ class WSGIGateway_10(WSGIGateway):
             # the *real* server protocol is (and what features to support).
             # See http://www.faqs.org/rfcs/rfc2145.html.
             'ACTUAL_SERVER_PROTOCOL': req.server.protocol,
-            'PATH_INFO': req.path.decode('ISO-8859-1'),
-            'QUERY_STRING': req.qs.decode('ISO-8859-1'),
+            'PATH_INFO': bton(req.path),
+            'QUERY_STRING': bton(req.qs),
             'REMOTE_ADDR': req.conn.remote_addr or '',
             'REMOTE_PORT': str(req.conn.remote_port or ''),
-            'REQUEST_METHOD': req.method.decode('ISO-8859-1'),
-            'REQUEST_URI': req.uri.decode('ISO-8859-1'),
+            'REQUEST_METHOD': bton(req.method),
+            'REQUEST_URI': bton(req.uri),
             'SCRIPT_NAME': '',
             'SERVER_NAME': req.server.server_name,
             # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
-            'SERVER_PROTOCOL': req.request_protocol.decode('ISO-8859-1'),
+            'SERVER_PROTOCOL': bton(req.request_protocol),
             'SERVER_SOFTWARE': req.server.software,
             'wsgi.errors': sys.stderr,
             'wsgi.input': req.rfile,
             'wsgi.multiprocess': False,
             'wsgi.multithread': True,
             'wsgi.run_once': False,
-            'wsgi.url_scheme': req.scheme.decode('ISO-8859-1'),
+            'wsgi.url_scheme': bton(req.scheme),
             'wsgi.version': (1, 0),
         }
 
