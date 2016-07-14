@@ -2473,10 +2473,10 @@ class WSGIGateway_u0(WSGIGateway_10):
         req = self.req
         env_10 = WSGIGateway_10.get_environ(self)
         env = dict(map(self._decode_key, self.items()))
-        env['wsgi.version'] = ('u', 0)
+        env[six.u('wsgi.version')] = ('u', 0)
 
         # Request-URI
-        env.setdefault('wsgi.url_encoding', 'utf-8')
+        env.setdefault(six.u('wsgi.url_encoding'), six.u('utf-8'))
         try:
             # SCRIPT_NAME is the empty string, who cares what encoding it is?
             env["PATH_INFO"] = req.path.decode(env['wsgi.url_encoding'])
