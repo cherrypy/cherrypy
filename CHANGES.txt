@@ -1,3 +1,9 @@
+6.1.0
+-----
+
+* Combined wsgiserver2 and wsgiserver3 modules into a
+  single module, ``cherrypy.wsgiserver``.
+
 6.0.2
 -----
 
