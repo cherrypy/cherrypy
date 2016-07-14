@@ -2478,13 +2478,13 @@ class WSGIGateway_u0(WSGIGateway_10):
         # Request-URI
         enc = env.setdefault(six.u('wsgi.url_encoding'), six.u('utf-8'))
         try:
-            for key in [u"PATH_INFO", u"QUERY_STRING"]:
-                env[key] = env_10[str(key)].decode(enc)
+            env["PATH_INFO"] = req.path.decode(enc)
+            env["QUERY_STRING"] = req.qs.decode(enc)
         except UnicodeDecodeError:
             # Fall back to latin 1 so apps can transcode if needed.
-            enc = env[six.u('wsgi.url_encoding')] = six.u('ISO-8859-1')
-            for key in [u"PATH_INFO", u"QUERY_STRING"]:
-                env[key] = env_10[str(key)].decode(enc)
+            env['wsgi.url_encoding'] = 'ISO-8859-1'
+            env["PATH_INFO"] = env_10["PATH_INFO"]
+            env["QUERY_STRING"] = env_10["QUERY_STRING"]
 
         env.update(map(self._decode_value, self.items()))
 
