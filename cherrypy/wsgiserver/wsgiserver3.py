@@ -2487,7 +2487,17 @@ class WSGIGateway_u0(WSGIGateway_10):
             env["PATH_INFO"] = env_10["PATH_INFO"]
             env["QUERY_STRING"] = env_10["QUERY_STRING"]
 
+        env.update(map(self._decode_value, self.items()))
+
         return env
+
+    @staticmethod
+    def _decode_value(k, v):
+        skip_keys = 'REQUEST_URI', 'wsgi.input'
+        if six.PY3 or not isinstance(v, bytes) or k in skip_keys:
+            return k, v
+        return k, v.decode('ISO-8859-1')
+
 
 wsgi_gateways = {
     (1, 0): WSGIGateway_10,
