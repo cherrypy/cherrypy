@@ -379,7 +379,7 @@ class Bus(object):
         args = sys.argv[:]
         self.log('Re-spawning %s' % ' '.join(args))
 
-        self._extend_pythonpath()
+        self._extend_pythonpath(os.environ)
 
         if sys.platform[:4] == 'java':
             from _systemrestart import SystemRestart
@@ -395,7 +395,7 @@ class Bus(object):
             os.execv(sys.executable, args)
 
     @staticmethod
-    def _extend_pythonpath():
+    def _extend_pythonpath(env):
         """
         If sys.path[0] is an empty string, the interpreter was likely
         invoked with -m and the effective path is about to change on
@@ -409,14 +409,14 @@ class Bus(object):
         (This idea filched from tornado.autoreload)
         """
         path_prefix = '.' + os.pathsep
-        existing_path = os.environ.get('PYTHONPATH', '')
+        existing_path = env.get('PYTHONPATH', '')
         needs_patch = (
             sys.path[0] == '' and
             not existing_path.startswith(path_prefix)
         )
 
         if needs_patch:
-            os.environ["PYTHONPATH"] = path_prefix + existing_path
+            env["PYTHONPATH"] = path_prefix + existing_path
 
     def _set_cloexec(self):
         """Set the CLOEXEC flag on all open files (except stdin/out/err).
