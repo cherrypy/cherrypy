@@ -409,11 +409,14 @@ class Bus(object):
         (This idea filched from tornado.autoreload)
         """
         path_prefix = '.' + os.pathsep
-        if (sys.path[0] == '' and
-                not os.environ.get("PYTHONPATH", "").startswith(path_prefix)):
-            os.environ["PYTHONPATH"] = (path_prefix +
-                                        os.environ.get("PYTHONPATH", ""))
+        existing_path = os.environ.get('PYTHONPATH', '')
+        needs_patch = (
+            sys.path[0] == '' and
+            not existing_path.startswith(path_prefix)
+        )
 
+        if needs_patch:
+            os.environ["PYTHONPATH"] = path_prefix + existing_path
 
     def _set_cloexec(self):
         """Set the CLOEXEC flag on all open files (except stdin/out/err).
