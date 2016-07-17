@@ -379,6 +379,20 @@ class Bus(object):
         args = sys.argv[:]
         self.log('Re-spawning %s' % ' '.join(args))
 
+        # If sys.path[0] is an empty string, we were (probably) invoked with -m and
+        # the effective path is about to change on re-exec.  Add the current directory
+        # to $PYTHONPATH to ensure that the new process sees the same path we did.
+        #
+        # We can't fix the general case because we cannot reliably reconstruct the
+        # original command line (http://bugs.python.org/issue14208).
+        #
+        # (This idea filched from tornado.autoreload)
+        path_prefix = '.' + os.pathsep
+        if (sys.path[0] == '' and
+                not os.environ.get("PYTHONPATH", "").startswith(path_prefix)):
+            os.environ["PYTHONPATH"] = (path_prefix +
+                                        os.environ.get("PYTHONPATH", ""))
+
         if sys.platform[:4] == 'java':
             from _systemrestart import SystemRestart
             raise SystemRestart
