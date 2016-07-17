@@ -24,6 +24,9 @@
   code from them. It's still possible to install
   pre-built CherryPy packages (wheels) using pip without
   Setuptools.
+* `six <https://pypi.io/project/six>`_ is now a
+  requirement and subsequent requirements will be
+  declared in the project metadata.
 * #1440: Back out changes from #1432 attempting to
   fix redirects with Unicode URLs, as it also had the
   unintended consequence of causing the 'Location'
