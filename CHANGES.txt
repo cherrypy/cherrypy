@@ -1,3 +1,10 @@
+6.1.1
+-----
+
+* Issue #1411: Fix issue where autoreload fails when
+  the host interpreter for CherryPy was launched using
+  ``python -m``.
+
 6.1.0
 -----
 
