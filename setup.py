@@ -25,7 +25,7 @@ class cherrypy_build_py(build_py):
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "6.1.1"
+version = "6.2.0"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers = [
