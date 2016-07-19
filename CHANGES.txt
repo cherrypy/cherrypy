@@ -1,10 +1,20 @@
+6.2.0
+-----
+
+* #1441: Added tool to automatically convert request
+  params based on type annotations (primarily in
+  Python 3). For example:
+
+    @cherrypy.tools.params()
+    def resource(self, limit: int):
+        assert isinstance(limit, int)
+
 6.1.1
 -----
 
 * Issue #1411: Fix issue where autoreload fails when
   the host interpreter for CherryPy was launched using
   ``python -m``.
-* #1441: Added tool to automatically convert request params.
 
 6.1.0
 -----
