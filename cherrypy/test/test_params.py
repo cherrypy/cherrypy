@@ -1,4 +1,6 @@
 import sys
+import textwrap
+
 import cherrypy
 from cherrypy.test import helper
 
@@ -42,13 +44,16 @@ class ParamsTest(helper.CPWebCase):
     def test_syntax(self):
         if sys.version_info < (3,):
             return self.skip("skipped (Python 3 only)")
-        exec("""class Root:
-    @cherrypy.expose
-    @cherrypy.tools.params()
-    def resource(self, limit: int):
-        return type(limit).__name__
-conf = {'/': {'tools.params.on': True}}
-cherrypy.tree.mount(Root(), config=conf)""")
+        code = textwrap.dedent("""
+            class Root:
+                @cherrypy.expose
+                @cherrypy.tools.params()
+                def resource(self, limit: int):
+                    return type(limit).__name__
+            conf = {'/': {'tools.params.on': True}}
+            cherrypy.tree.mount(Root(), config=conf)
+            """)
+        exec(code)
 
         self.getPage('/resource?limit=0')
         self.assertStatus(200)
