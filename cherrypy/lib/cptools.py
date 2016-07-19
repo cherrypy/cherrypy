@@ -630,3 +630,21 @@ def autovary(ignore=None, debug=False):
         v.sort()
         resp_h['Vary'] = ', '.join(v)
     request.hooks.attach('before_finalize', set_response_header, 95)
+
+
+def convert_params(exception=ValueError, error=400):
+    """Convert request params based on function annotations, with error handling.
+
+    exception
+        Exception class to catch.
+
+    status
+        The HTTP error code to return to the client on failure.
+    """
+    request = cherrypy.serving.request
+    types = request.handler.callable.__annotations__
+    try:
+        for key in set(types).intersection(request.params):
+            request.params[key] = types[key](request.params[key])
+    except exception as exc:
+        raise cherrypy.HTTPError(error, str(exc))
