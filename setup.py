@@ -2,6 +2,7 @@ import sys
 import re
 from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.build_py import build_py
+from setuptools.command.test import test as TestCommand
 
 import setuptools
 
@@ -19,6 +20,34 @@ class cherrypy_build_py(build_py):
         if exclude_pattern.match(module):
             return  # skip it
         return build_py.build_module(self, module, module_file, package)
+
+
+class Tox(TestCommand):
+    """
+    Command for running tox on `python setup.py test` invocation
+
+    Shamelessly stolen from http://stackoverflow.com/a/11547391/595220
+    """
+    user_options = [('tox-args=', 'a', 'Arguments to pass to tox')]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.tox_args = None
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import tox
+        import shlex
+        args = self.tox_args
+        if args:
+            args = shlex.split(self.tox_args)
+        errno = tox.cmdline(args=args)
+        sys.exit(errno)
 
 
 ###############################################################################
@@ -100,9 +129,21 @@ install_requires = [
     'six',
 ]
 
-cmd_class = dict(
-    build_py=cherrypy_build_py,
-)
+tests_require = [
+    'nose',
+    'tox',
+    'virtualenv',
+]
+
+extras_require = {
+    # run `pip install cherrypy[test]` to install test packages as well
+    'test': tests_require,
+}
+
+cmd_class = {
+    'build_py': cherrypy_build_py,
+    'test': Tox,  # Enables `python setup.py test` invocation run tox tests
+}
 
 if sys.version_info >= (3, 0):
     required_python_version = '3.1'
@@ -135,7 +176,14 @@ setup_params = dict(
     scripts=scripts,
     cmdclass=cmd_class,
     install_requires=install_requires,
+    # Enables `python setup.py test` invocation install test dependencies first
+    tests_require=tests_require,
+    # Enables installation of additional dependencies
+    # run `pip install cherrypy[dependency_name]` to install extra packages
+    # N.B. dependency_name may be comma-separated list of several of them
+    extras_require=extras_require
 )
+
 
 def main():
     if sys.version < required_python_version:
