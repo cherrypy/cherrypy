@@ -67,6 +67,7 @@ import threading
 import time
 import traceback as _traceback
 import warnings
+import operator
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed
@@ -160,9 +161,11 @@ class Bus(object):
     def __init__(self):
         self.execv = False
         self.state = states.STOPPED
+        channels = 'start', 'stop', 'exit', 'graceful', 'log', 'main'
         self.listeners = dict(
-            [(channel, set()) for channel
-             in ('start', 'stop', 'exit', 'graceful', 'log', 'main')])
+            (channel, set())
+            for channel in channels
+        )
         self._priorities = {}
 
     def subscribe(self, channel, callback, priority=None):
@@ -190,14 +193,11 @@ class Bus(object):
         exc = ChannelFailures()
         output = []
 
-        items = [(self._priorities[(channel, listener)], listener)
-                 for listener in self.listeners[channel]]
-        try:
-            items.sort(key=lambda item: item[0])
-        except TypeError:
-            # Python 2.3 had no 'key' arg, but that doesn't matter
-            # since it could sort dissimilar types just fine.
-            items.sort()
+        raw_items = (
+            (self._priorities[(channel, listener)], listener)
+            for listener in self.listeners[channel]
+        )
+        items = sorted(raw_items, key=operator.itemgetter(0))
         for priority, listener in items:
             try:
                 output.append(listener(*args, **kwargs))
@@ -379,6 +379,8 @@ class Bus(object):
         args = sys.argv[:]
         self.log('Re-spawning %s' % ' '.join(args))
 
+        self._extend_pythonpath(os.environ)
+
         if sys.platform[:4] == 'java':
             from _systemrestart import SystemRestart
             raise SystemRestart
@@ -391,6 +393,30 @@ class Bus(object):
             if self.max_cloexec_files:
                 self._set_cloexec()
             os.execv(sys.executable, args)
+
+    @staticmethod
+    def _extend_pythonpath(env):
+        """
+        If sys.path[0] is an empty string, the interpreter was likely
+        invoked with -m and the effective path is about to change on
+        re-exec.  Add the current directory to $PYTHONPATH to ensure
+        that the new process sees the same path.
+
+        This issue cannot be addressed in the general case because
+        Python cannot reliably reconstruct the
+        original command line (http://bugs.python.org/issue14208).
+
+        (This idea filched from tornado.autoreload)
+        """
+        path_prefix = '.' + os.pathsep
+        existing_path = env.get('PYTHONPATH', '')
+        needs_patch = (
+            sys.path[0] == '' and
+            not existing_path.startswith(path_prefix)
+        )
+
+        if needs_patch:
+            env["PYTHONPATH"] = path_prefix + existing_path
 
     def _set_cloexec(self):
         """Set the CLOEXEC flag on all open files (except stdin/out/err).

@@ -70,9 +70,9 @@ class WSGI_Namespace_Test(helper.CPWebCase):
 
         class Root(object):
 
+            @cherrypy.expose
             def index(self):
                 return "HellO WoRlD!"
-            index.exposed = True
 
         root_conf = {'wsgi.pipeline': [('replace', Replacer)],
                      'wsgi.replace.map': {ntob('L'): ntob('X'),

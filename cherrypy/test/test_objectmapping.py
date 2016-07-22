@@ -12,99 +12,99 @@ class ObjectMappingTest(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self, name="world"):
                 return name
-            index.exposed = True
 
+            @cherrypy.expose
             def foobar(self):
                 return "bar"
-            foobar.exposed = True
 
+            @cherrypy.expose
             def default(self, *params, **kwargs):
                 return "default:" + repr(params)
-            default.exposed = True
 
+            @cherrypy.expose
             def other(self):
                 return "other"
-            other.exposed = True
 
+            @cherrypy.expose
             def extra(self, *p):
                 return repr(p)
-            extra.exposed = True
 
+            @cherrypy.expose
             def redirect(self):
                 raise cherrypy.HTTPRedirect('dir1/', 302)
-            redirect.exposed = True
 
             def notExposed(self):
                 return "not exposed"
 
+            @cherrypy.expose
             def confvalue(self):
                 return cherrypy.request.config.get("user")
-            confvalue.exposed = True
 
+            @cherrypy.expose
             def redirect_via_url(self, path):
                 raise cherrypy.HTTPRedirect(cherrypy.url(path))
-            redirect_via_url.exposed = True
 
+            @cherrypy.expose
             def translate_html(self):
                 return "OK"
-            translate_html.exposed = True
 
+        @cherrypy.expose
         def mapped_func(self, ID=None):
             return "ID is %s" % ID
-        mapped_func.exposed = True
         setattr(Root, "Von B\xfclow", mapped_func)
 
         class Exposing:
 
+            @cherrypy.expose
             def base(self):
                 return "expose works!"
-            cherrypy.expose(base)
             cherrypy.expose(base, "1")
             cherrypy.expose(base, "2")
 
         class ExposingNewStyle(object):
 
+            @cherrypy.expose
             def base(self):
                 return "expose works!"
-            cherrypy.expose(base)
             cherrypy.expose(base, "1")
             cherrypy.expose(base, "2")
 
         class Dir1:
 
+            @cherrypy.expose
             def index(self):
                 return "index for dir1"
-            index.exposed = True
 
+            @cherrypy.expose
+            @cherrypy.config(**{'tools.trailing_slash.extra': True})
             def myMethod(self):
                 return "myMethod from dir1, path_info is:" + repr(
                     cherrypy.request.path_info)
-            myMethod.exposed = True
-            myMethod._cp_config = {'tools.trailing_slash.extra': True}
 
+            @cherrypy.expose
             def default(self, *params):
                 return "default for dir1, param is:" + repr(params)
-            default.exposed = True
 
         class Dir2:
 
+            @cherrypy.expose
             def index(self):
                 return "index for dir2, path is:" + cherrypy.request.path_info
-            index.exposed = True
 
+            @cherrypy.expose
             def script_name(self):
                 return cherrypy.tree.script_name()
-            script_name.exposed = True
 
+            @cherrypy.expose
             def cherrypy_url(self):
                 return cherrypy.url("/extra")
-            cherrypy_url.exposed = True
 
+            @cherrypy.expose
             def posparam(self, *vpath):
                 return "/".join(vpath)
-            posparam.exposed = True
 
         class Dir3:
 
@@ -118,13 +118,13 @@ class ObjectMappingTest(helper.CPWebCase):
 
         class DefNoIndex:
 
+            @cherrypy.expose
             def default(self, *args):
                 raise cherrypy.HTTPRedirect("contact")
-            default.exposed = True
 
         # MethodDispatcher code
+        @cherrypy.expose
         class ByMethod:
-            exposed = True
 
             def __init__(self, *things):
                 self.things = list(things)
@@ -158,15 +158,14 @@ class ObjectMappingTest(helper.CPWebCase):
 
         class Isolated:
 
+            @cherrypy.expose
             def index(self):
                 return "made it!"
-            index.exposed = True
 
         cherrypy.tree.mount(Isolated(), "/isolated")
 
+        @cherrypy.expose
         class AnotherApp:
-
-            exposed = True
 
             def GET(self):
                 return "milk"
@@ -389,9 +388,9 @@ class ObjectMappingTest(helper.CPWebCase):
     def testTreeMounting(self):
         class Root(object):
 
+            @cherrypy.expose
             def hello(self):
                 return "Hello world!"
-            hello.exposed = True
 
         # When mounting an application instance,
         # we can't specify a different script name in the call to mount.

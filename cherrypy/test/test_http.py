@@ -5,10 +5,12 @@ import mimetypes
 import socket
 import sys
 
+import six
+
 from mock import patch
 
 import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob, py3k
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
 
 def encode_multipart_formdata(files):
@@ -47,15 +49,16 @@ class HTTPTests(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self, *args, **kwargs):
                 return "Hello world!"
-            index.exposed = True
 
+            @cherrypy.expose
+            @cherrypy.config(**{'request.process_request_body': False})
             def no_body(self, *args, **kwargs):
                 return "Hello world!"
-            no_body.exposed = True
-            no_body._cp_config = {'request.process_request_body': False}
 
+            @cherrypy.expose
             def post_multipart(self, file):
                 """Return a summary ("a * 65536\nb * 65536") of the uploaded
                 file.
@@ -69,17 +72,16 @@ class HTTPTests(helper.CPWebCase):
                         count += 1
                     else:
                         if count:
-                            if py3k:
+                            if six.PY3:
                                 curchar = chr(curchar)
                             summary.append("%s * %d" % (curchar, count))
                         count = 1
                         curchar = c
                 if count:
-                    if py3k:
+                    if six.PY3:
                         curchar = chr(curchar)
                     summary.append("%s * %d" % (curchar, count))
                 return ", ".join(summary)
-            post_multipart.exposed = True
 
             @cherrypy.expose
             def post_filename(self, myfile):
@@ -147,12 +149,15 @@ class HTTPTests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody(", ".join(["%s * 65536" % c for c in alphabet]))
 
-    def test_post_filename_with_commas(self):
-        '''Testing that we can handle filenames with commas. This was
-        reported as a bug in:
-           https://github.com/cherrypy/cherrypy/issues/1146/'''
+    def test_post_filename_with_special_characters(self):
+        '''Testing that we can handle filenames with special characters. This
+        was reported as a bug in:
+           https://github.com/cherrypy/cherrypy/issues/1146/
+           https://github.com/cherrypy/cherrypy/issues/1397'''
         # We'll upload a bunch of files with differing names.
-        for fname in ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv']:
+        fnames = ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
+                'file;name.csv', 'file; name.csv']
+        for fname in fnames:
             files = [('myfile', fname, 'yunyeenyunyue')]
             content_type, body = encode_multipart_formdata(files)
             body = body.encode('Latin-1')

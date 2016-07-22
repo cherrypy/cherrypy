@@ -8,23 +8,23 @@ class ETagTest(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def resource(self):
                 return "Oh wah ta goo Siam."
-            resource.exposed = True
 
+            @cherrypy.expose
             def fail(self, code):
                 code = int(code)
                 if 300 <= code <= 399:
                     raise cherrypy.HTTPRedirect([], code)
                 else:
                     raise cherrypy.HTTPError(code)
-            fail.exposed = True
 
+            @cherrypy.expose
+            # In Python 3, tools.encode is on by default
+            @cherrypy.config(**{'tools.encode.on': True})
             def unicoded(self):
                 return ntou('I am a \u1ee4nicode string.', 'escape')
-            unicoded.exposed = True
-            # In Python 3, tools.encode is on by default
-            unicoded._cp_config = {'tools.encode.on': True}
 
         conf = {'/': {'tools.etags.on': True,
                       'tools.etags.autotags': True,

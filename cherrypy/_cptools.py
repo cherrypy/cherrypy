@@ -26,6 +26,7 @@ import sys
 import warnings
 
 import cherrypy
+from cherrypy._helper import expose
 
 
 def _getargs(func):
@@ -113,10 +114,10 @@ class Tool(object):
 
         For example::
 
+            @expose
             @tools.proxy()
             def whats_my_base(self):
                 return cherrypy.request.base
-            whats_my_base.exposed = True
         """
         if args:
             raise TypeError("The %r Tool does not accept positional "
@@ -171,12 +172,12 @@ class HandlerTool(Tool):
                 nav = tools.staticdir.handler(section="/nav", dir="nav",
                                               root=absDir)
         """
+        @expose
         def handle_func(*a, **kw):
             handled = self.callable(*args, **self._merged_args(kwargs))
             if not handled:
                 raise cherrypy.NotFound()
             return cherrypy.serving.response.body
-        handle_func.exposed = True
         return handle_func
 
     def _wrapper(self, **kwargs):
@@ -365,6 +366,7 @@ class XMLRPCController(object):
     # would be if someone actually disabled the default_toolbox. Meh.
     _cp_config = {'tools.xmlrpc.on': True}
 
+    @expose
     def default(self, *vpath, **params):
         rpcparams, rpcmethod = _xmlrpc.process_body()
 
@@ -387,7 +389,6 @@ class XMLRPCController(object):
                         conf.get('encoding', 'utf-8'),
                         conf.get('allow_none', 0))
         return cherrypy.serving.response.body
-    default.exposed = True
 
 
 class SessionAuthTool(HandlerTool):
@@ -460,6 +461,13 @@ class Toolbox(object):
                     tool = getattr(self, name)
                     tool._setup()
 
+    def register(self, point, **kwargs):
+        """Return a decorator which registers the function at the given hook point."""
+        def decorator(func):
+            setattr(self, kwargs.get('name', func.__name__), Tool(point, func, **kwargs))
+            return func
+        return decorator
+
 
 class DeprecatedTool(Tool):
 
@@ -525,5 +533,6 @@ _d.json_in = Tool('before_request_body', jsontools.json_in, priority=30)
 _d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
 _d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
 _d.auth_digest = Tool('before_handler', auth_digest.digest_auth, priority=1)
+_d.params = Tool('before_handler', cptools.convert_params)
 
 del _d, cptools, encoding, auth, static

@@ -10,34 +10,34 @@ class VirtualHostTest(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello, world"
-            index.exposed = True
 
+            @cherrypy.expose
             def dom4(self):
                 return "Under construction"
-            dom4.exposed = True
 
+            @cherrypy.expose
             def method(self, value):
                 return "You sent %s" % value
-            method.exposed = True
 
         class VHost:
 
             def __init__(self, sitename):
                 self.sitename = sitename
 
+            @cherrypy.expose
             def index(self):
                 return "Welcome to %s" % self.sitename
-            index.exposed = True
 
+            @cherrypy.expose
             def vmethod(self, value):
                 return "You sent %s" % value
-            vmethod.exposed = True
 
+            @cherrypy.expose
             def url(self):
                 return cherrypy.url("nextpage")
-            url.exposed = True
 
             # Test static as a handler (section must NOT include vhost prefix)
             static = cherrypy.tools.staticdir.handler(

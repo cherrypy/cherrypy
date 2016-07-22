@@ -1,9 +1,80 @@
-5.4.1
+6.2.0
 -----
 
-* #1408: Fix AttributeError when listiterator was accessed
-  using the ``next`` attribute.
-* #748: Removed ``cherrypy.lib.sessions.PostgresqlSession``.
+* #1441: Added tool to automatically convert request
+  params based on type annotations (primarily in
+  Python 3). For example:
+
+    @cherrypy.tools.params()
+    def resource(self, limit: int):
+        assert isinstance(limit, int)
+
+6.1.1
+-----
+
+* Issue #1411: Fix issue where autoreload fails when
+  the host interpreter for CherryPy was launched using
+  ``python -m``.
+
+6.1.0
+-----
+
+* Combined wsgiserver2 and wsgiserver3 modules into a
+  single module, ``cherrypy.wsgiserver``.
+
+6.0.2
+-----
+
+* Issue #1445: Correct additional typos.
+
+6.0.1
+-----
+
+* Issue #1444: Correct typos in ``@cherrypy.expose``
+  decorators.
+
+6.0.0
+-----
+
+* Setuptools is now required to build CherryPy. Pure
+  distutils installs are no longer supported. This change
+  allows CherryPy to depend on other packages and re-use
+  code from them. It's still possible to install
+  pre-built CherryPy packages (wheels) using pip without
+  Setuptools.
+* `six <https://pypi.io/project/six>`_ is now a
+  requirement and subsequent requirements will be
+  declared in the project metadata.
+* #1440: Back out changes from #1432 attempting to
+  fix redirects with Unicode URLs, as it also had the
+  unintended consequence of causing the 'Location'
+  to be ``bytes`` on Python 3.
+* ``cherrypy.expose`` now works on classes.
+* ``cherrypy.config`` decorator is now used throughout
+  the code internally.
+
+5.6.0
+-----
+
+* ``@cherrypy.expose`` now will also set the exposed
+  attribute on a class.
+* Rewrote all tutorials and internal usage to prefer
+  the decorator usage of ``expose`` rather than setting
+  the attribute explicitly.
+* Removed test-specific code from tutorials.
+
+5.5.0
+-----
+
+* #1397: Fix for filenames with semicolons and quote
+  characters in filenames found in headers.
+* #1311: Added decorator for registering tools.
+* #1194: Use simpler encoding rules for SCRIPT_NAME
+  and PATH_INFO environment variables in CherryPy Tree
+  allowing non-latin characters to pass even when
+  ``wsgi.version`` is not ``u.0``.
+* #1352: Ensure that multipart fields are decoded even
+  when cached in a file.
 
 5.4.0
 -----
@@ -12,6 +83,10 @@
   'WEBTEST_INTERACTIVE' environment variable to disable
   interactive tests (still enabled by default). Set to '0'
   or 'false' or 'False' to disable interactive tests.
+* #1408: Fix AttributeError when listiterator was accessed
+  using the ``next`` attribute.
+* #748: Removed ``cherrypy.lib.sessions.PostgresqlSession``.
+* #1432: Fix errors with redirects to Unicode URLs.
 
 5.3.0
 -----

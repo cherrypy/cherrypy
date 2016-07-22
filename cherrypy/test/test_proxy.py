@@ -23,38 +23,39 @@ class ProxyTest(helper.CPWebCase):
                 self.thisnewpage = cherrypy.url(
                     "/this/new/page", script_name=sn)
 
+            @cherrypy.expose
             def pageurl(self):
                 return self.thisnewpage
-            pageurl.exposed = True
 
+            @cherrypy.expose
             def index(self):
                 raise cherrypy.HTTPRedirect('dummy')
-            index.exposed = True
 
+            @cherrypy.expose
             def remoteip(self):
                 return cherrypy.request.remote.ip
-            remoteip.exposed = True
 
+            @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.proxy.local': 'X-Host',
+                'tools.trailing_slash.extra': True,
+            })
             def xhost(self):
                 raise cherrypy.HTTPRedirect('blah')
-            xhost.exposed = True
-            xhost._cp_config = {'tools.proxy.local': 'X-Host',
-                                'tools.trailing_slash.extra': True,
-                                }
 
+            @cherrypy.expose
             def base(self):
                 return cherrypy.request.base
-            base.exposed = True
 
+            @cherrypy.expose
+            @cherrypy.config(**{'tools.proxy.scheme': 'X-Forwarded-Ssl'})
             def ssl(self):
                 return cherrypy.request.base
-            ssl.exposed = True
-            ssl._cp_config = {'tools.proxy.scheme': 'X-Forwarded-Ssl'}
 
+            @cherrypy.expose
             def newurl(self):
                 return ("Browse to <a href='%s'>this page</a>."
                         % cherrypy.url("/this/new/page"))
-            newurl.exposed = True
 
         for sn in script_names:
             cherrypy.tree.mount(Root(sn), sn)

@@ -1,8 +1,8 @@
 import os
 import sys
+import io
 
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
-from cherrypy._cpcompat import BytesIO
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
@@ -29,38 +29,38 @@ class StaticTest(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
+            @cherrypy.config(**{'response.stream': True})
             def bigfile(self):
                 from cherrypy.lib import static
                 self.f = static.serve_file(bigfile_filepath)
                 return self.f
-            bigfile.exposed = True
-            bigfile._cp_config = {'response.stream': True}
 
+            @cherrypy.expose
             def tell(self):
                 if self.f.input.closed:
                     return ''
                 return repr(self.f.input.tell()).rstrip('L')
-            tell.exposed = True
 
+            @cherrypy.expose
             def fileobj(self):
                 f = open(os.path.join(curdir, 'style.css'), 'rb')
                 return static.serve_fileobj(f, content_type='text/css')
-            fileobj.exposed = True
 
+            @cherrypy.expose
             def bytesio(self):
-                f = BytesIO(ntob('Fee\nfie\nfo\nfum'))
+                f = io.BytesIO(ntob('Fee\nfie\nfo\nfum'))
                 return static.serve_fileobj(f, content_type='text/plain')
-            bytesio.exposed = True
 
         class Static:
 
+            @cherrypy.expose
             def index(self):
                 return 'You want the Baron? You can have the Baron!'
-            index.exposed = True
 
+            @cherrypy.expose
             def dynamic(self):
                 return "This is a DYNAMIC page"
-            dynamic.exposed = True
 
         root = Root()
         root.static = Static()

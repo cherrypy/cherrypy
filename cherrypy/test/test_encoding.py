@@ -1,10 +1,18 @@
+# coding: utf-8
+
 import gzip
+import io
+
+import six
+
+import mock
 
 import cherrypy
-from cherrypy._cpcompat import BytesIO, IncompleteRead, ntob, ntou
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 
-europoundUnicode = ntou(r'\x00\xa3')
-sing = ntou("\u6bdb\u6cfd\u4e1c: Sing, Little Birdie?", 'escape')
+europoundUnicode = ntou('£', encoding='utf-8')
+sing = ntou("毛泽东: Sing, Little Birdie?", encoding='utf-8')
+
 sing8 = sing.encode('utf-8')
 sing16 = sing.encode('utf-16')
 
@@ -17,21 +25,22 @@ class EncodingTests(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self, param):
                 assert param == europoundUnicode, "%r != %r" % (
                     param, europoundUnicode)
                 yield europoundUnicode
-            index.exposed = True
 
+            @cherrypy.expose
             def mao_zedong(self):
                 return sing
-            mao_zedong.exposed = True
 
+            @cherrypy.expose
+            @cherrypy.config(**{'tools.encode.encoding': 'utf-8'})
             def utf8(self):
                 return sing8
-            utf8.exposed = True
-            utf8._cp_config = {'tools.encode.encoding': 'utf-8'}
 
+            @cherrypy.expose
             def cookies_and_headers(self):
                 # if the headers have non-ascii characters and a cookie has
                 #  any part which is unicode (even ascii), the response
@@ -41,68 +50,68 @@ class EncodingTests(helper.CPWebCase):
                 cherrypy.response.headers[
                     'Some-Header'] = 'My d\xc3\xb6g has fleas'
                 return 'Any content'
-            cookies_and_headers.exposed = True
 
+            @cherrypy.expose
             def reqparams(self, *args, **kwargs):
                 return ntob(', ').join(
                     [": ".join((k, v)).encode('utf8')
                      for k, v in sorted(cherrypy.request.params.items())]
                 )
-            reqparams.exposed = True
 
+            @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.encode.text_only': False,
+                'tools.encode.add_charset': True,
+            })
             def nontext(self, *args, **kwargs):
                 cherrypy.response.headers[
                     'Content-Type'] = 'application/binary'
                 return '\x00\x01\x02\x03'
-            nontext.exposed = True
-            nontext._cp_config = {'tools.encode.text_only': False,
-                                  'tools.encode.add_charset': True,
-                                  }
 
         class GZIP:
 
+            @cherrypy.expose
             def index(self):
                 yield "Hello, world"
-            index.exposed = True
 
+            @cherrypy.expose
+            # Turn encoding off so the gzip tool is the one doing the collapse.
+            @cherrypy.config(**{'tools.encode.on': False})
             def noshow(self):
                 # Test for ticket #147, where yield showed no exceptions
                 # (content-encoding was still gzip even though traceback
                 # wasn't zipped).
                 raise IndexError()
                 yield "Here be dragons"
-            noshow.exposed = True
-            # Turn encoding off so the gzip tool is the one doing the collapse.
-            noshow._cp_config = {'tools.encode.on': False}
 
+            @cherrypy.expose
+            @cherrypy.config(**{'response.stream': True})
             def noshow_stream(self):
                 # Test for ticket #147, where yield showed no exceptions
                 # (content-encoding was still gzip even though traceback
                 # wasn't zipped).
                 raise IndexError()
                 yield "Here be dragons"
-            noshow_stream.exposed = True
-            noshow_stream._cp_config = {'response.stream': True}
 
         class Decode:
 
+            @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.decode.on': True,
+                'tools.decode.default_encoding': ['utf-16'],
+            })
             def extra_charset(self, *args, **kwargs):
                 return ', '.join([": ".join((k, v))
                                   for k, v in cherrypy.request.params.items()])
-            extra_charset.exposed = True
-            extra_charset._cp_config = {
-                'tools.decode.on': True,
-                'tools.decode.default_encoding': ['utf-16'],
-            }
 
+            @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.decode.on': True,
+                'tools.decode.encoding': 'utf-16',
+            })
             def force_charset(self, *args, **kwargs):
                 return ', '.join([": ".join((k, v))
                                   for k, v in cherrypy.request.params.items()])
-            force_charset.exposed = True
-            force_charset._cp_config = {
-                'tools.decode.on': True,
-                'tools.decode.encoding': 'utf-16',
-            }
 
         root = Root()
         root.gzip = GZIP()
@@ -111,6 +120,9 @@ class EncodingTests(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
     def test_query_string_decoding(self):
+        if six.PY3:
+            # This test fails on Python 3. See #1443
+            return
         europoundUtf8 = europoundUnicode.encode('utf-8')
         self.getPage(ntob('/?param=') + europoundUtf8)
         self.assertBody(europoundUtf8)
@@ -246,6 +258,14 @@ class EncodingTests(helper.CPWebCase):
                      body=body),
         self.assertBody(ntob("submit: Create, text: ab\xe2\x80\x9cc"))
 
+    @mock.patch('cherrypy._cpreqbody.Part.maxrambytes', 1)
+    def test_multipart_decoding_bigger_maxrambytes(self):
+        """
+        Decoding of a multipart entity should also pass when
+        the entity is bigger than maxrambytes. See ticket #1352.
+        """
+        self.test_multipart_decoding()
+
     def test_multipart_decoding_no_charset(self):
         # Test the decoding of a multipart entity when the charset (utf8) is
         # NOT explicitly given, but is in the list of charsets to attempt.
@@ -341,7 +361,7 @@ class EncodingTests(helper.CPWebCase):
         self.assertStatus("406 Not Acceptable")
 
     def testGzip(self):
-        zbuf = BytesIO()
+        zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write(ntob("Hello, world"))
         zfile.close()

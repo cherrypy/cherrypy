@@ -5,6 +5,7 @@ import sys
 import time
 import errno
 
+import six
 
 import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, NotConnected
@@ -13,8 +14,6 @@ from cherrypy._cpcompat import (
     ntob,
     tonative,
     urlopen,
-    unicodestr,
-    py3k
 )
 from cherrypy.test import webtest
 
@@ -30,21 +29,23 @@ def setup_server():
 
     class Root:
 
+        @cherrypy.expose
         def index(self):
             return pov
-        index.exposed = True
         page1 = index
         page2 = index
         page3 = index
 
+        @cherrypy.expose
         def hello(self):
             return "Hello, world!"
-        hello.exposed = True
 
+        @cherrypy.expose
         def timeout(self, t):
             return str(cherrypy.server.httpserver.timeout)
-        timeout.exposed = True
 
+        @cherrypy.expose
+        @cherrypy.config(**{'response.stream': True})
         def stream(self, set_cl=False):
             if set_cl:
                 cherrypy.response.headers['Content-Length'] = 10
@@ -54,48 +55,46 @@ def setup_server():
                     yield str(x)
 
             return content()
-        stream.exposed = True
-        stream._cp_config = {'response.stream': True}
 
+        @cherrypy.expose
         def error(self, code=500):
             raise cherrypy.HTTPError(code)
-        error.exposed = True
 
+        @cherrypy.expose
         def upload(self):
             if not cherrypy.request.method == 'POST':
                 raise AssertionError("'POST' != request.method %r" %
                                      cherrypy.request.method)
             return "thanks for '%s'" % cherrypy.request.body.read()
-        upload.exposed = True
 
+        @cherrypy.expose
         def custom(self, response_code):
             cherrypy.response.status = response_code
             return "Code = %s" % response_code
-        custom.exposed = True
 
+        @cherrypy.expose
+        @cherrypy.config(**{'hooks.on_start_resource': raise500})
         def err_before_read(self):
             return "ok"
-        err_before_read.exposed = True
-        err_before_read._cp_config = {'hooks.on_start_resource': raise500}
 
+        @cherrypy.expose
         def one_megabyte_of_a(self):
             return ["a" * 1024] * 1024
-        one_megabyte_of_a.exposed = True
 
+        @cherrypy.expose
+        # Turn off the encoding tool so it doens't collapse
+        # our response body and reclaculate the Content-Length.
+        @cherrypy.config(**{'tools.encode.on': False})
         def custom_cl(self, body, cl):
             cherrypy.response.headers['Content-Length'] = cl
             if not isinstance(body, list):
                 body = [body]
             newbody = []
             for chunk in body:
-                if isinstance(chunk, unicodestr):
+                if isinstance(chunk, six.text_type):
                     chunk = chunk.encode('ISO-8859-1')
                 newbody.append(chunk)
             return newbody
-        custom_cl.exposed = True
-        # Turn off the encoding tool so it doens't collapse
-        # our response body and reclaculate the Content-Length.
-        custom_cl._cp_config = {'tools.encode.on': False}
 
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
@@ -445,7 +444,7 @@ class PipelineTests(helper.CPWebCase):
             # ``conn.sock``. Until that bug get's fixed we will
             # monkey patch the ``reponse`` instance.
             # https://bugs.python.org/issue23377
-            if py3k:
+            if six.PY3:
                 response.fp = conn.sock.makefile("rb", 0)
             response.begin()
             body = response.read(13)
@@ -749,12 +748,12 @@ class ConnectionTests(helper.CPWebCase):
 def setup_upload_server():
 
     class Root:
+        @cherrypy.expose
         def upload(self):
             if not cherrypy.request.method == 'POST':
                 raise AssertionError("'POST' != request.method %r" %
                                      cherrypy.request.method)
             return "thanks for '%s'" % tonative(cherrypy.request.body.read())
-        upload.exposed = True
 
     cherrypy.tree.mount(Root())
     cherrypy.config.update({

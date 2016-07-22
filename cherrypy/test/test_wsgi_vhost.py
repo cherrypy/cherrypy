@@ -11,9 +11,9 @@ class WSGI_VirtualHost_Test(helper.CPWebCase):
             def __init__(self, name):
                 self.name = name
 
+            @cherrypy.expose
             def index(self):
                 return "Welcome to the %s website!" % self.name
-            index.exposed = True
 
         default = cherrypy.Application(None)
 

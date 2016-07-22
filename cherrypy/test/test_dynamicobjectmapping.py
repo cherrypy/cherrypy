@@ -1,6 +1,7 @@
+import six
+
 import cherrypy
-from cherrypy._cpcompat import sorted, unicodestr
-from cherrypy._cptree import Application
+from cherrypy._cpcompat import sorted
 from cherrypy.test import helper
 
 script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
@@ -9,21 +10,21 @@ script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
 def setup_server():
     class SubSubRoot:
 
+        @cherrypy.expose
         def index(self):
             return "SubSubRoot index"
-        index.exposed = True
 
+        @cherrypy.expose
         def default(self, *args):
             return "SubSubRoot default"
-        default.exposed = True
 
+        @cherrypy.expose
         def handler(self):
             return "SubSubRoot handler"
-        handler.exposed = True
 
+        @cherrypy.expose
         def dispatch(self):
             return "SubSubRoot dispatch"
-        dispatch.exposed = True
 
     subsubnodes = {
         '1': SubSubRoot(),
@@ -32,17 +33,17 @@ def setup_server():
 
     class SubRoot:
 
+        @cherrypy.expose
         def index(self):
             return "SubRoot index"
-        index.exposed = True
 
+        @cherrypy.expose
         def default(self, *args):
             return "SubRoot %s" % (args,)
-        default.exposed = True
 
+        @cherrypy.expose
         def handler(self):
             return "SubRoot handler"
-        handler.exposed = True
 
         def _cp_dispatch(self, vpath):
             return subsubnodes.get(vpath[0], None)
@@ -54,17 +55,17 @@ def setup_server():
 
     class Root:
 
+        @cherrypy.expose
         def index(self):
             return "index"
-        index.exposed = True
 
+        @cherrypy.expose
         def default(self, *args):
             return "default %s" % (args,)
-        default.exposed = True
 
+        @cherrypy.expose
         def handler(self):
             return "handler"
-        handler.exposed = True
 
         def _cp_dispatch(self, vpath):
             return subnodes.get(vpath[0])
@@ -95,8 +96,8 @@ def setup_server():
         user_lookup[id] = User(id, name)
         return id
 
+    @cherrypy.expose
     class UserContainerNode(object):
-        exposed = True
 
         def POST(self, name):
             """
@@ -105,7 +106,7 @@ def setup_server():
             return "POST %d" % make_user(name)
 
         def GET(self):
-            return unicodestr(sorted(user_lookup.keys()))
+            return six.text_type(sorted(user_lookup.keys()))
 
         def dynamic_dispatch(self, vpath):
             try:
@@ -114,8 +115,8 @@ def setup_server():
                 return None
             return UserInstanceNode(id)
 
+    @cherrypy.expose
     class UserInstanceNode(object):
-        exposed = True
 
         def __init__(self, id):
             self.id = id
@@ -130,7 +131,7 @@ def setup_server():
             """
             Return the appropriate representation of the instance.
             """
-            return unicodestr(self.user)
+            return six.text_type(self.user)
 
         def POST(self, name):
             """
@@ -165,9 +166,9 @@ def setup_server():
 
         class CustomDispatch:
 
+            @cherrypy.expose
             def index(self, a, b):
                 return "custom"
-            index.exposed = True
 
         def _cp_dispatch(self, vpath):
             """Make sure that if we don't pop anything from vpath,
@@ -175,16 +176,16 @@ def setup_server():
             """
             return self.CustomDispatch()
 
+        @cherrypy.expose
         def index(self, a, b=None):
             body = ['a:' + str(a)]
             if b is not None:
                 body.append(',b:' + str(b))
             return ''.join(body)
-        index.exposed = True
 
+        @cherrypy.expose
         def delete(self, a, b):
             return 'deleting ' + str(a) + ' and ' + str(b)
-        delete.exposed = True
 
     class IndexOnly:
 
@@ -196,21 +197,21 @@ def setup_server():
                 vpath.pop()
             return self
 
+        @cherrypy.expose
         def index(self):
             return "IndexOnly index"
-        index.exposed = True
 
     class DecoratedPopArgs:
 
         """Test _cp_dispatch with @cherrypy.popargs."""
 
+        @cherrypy.expose
         def index(self):
             return "no params"
-        index.exposed = True
 
+        @cherrypy.expose
         def hi(self):
             return "hi was not interpreted as 'a' param"
-        hi.exposed = True
     DecoratedPopArgs = cherrypy.popargs(
         'a', 'b', handler=ABHandler())(DecoratedPopArgs)
 
@@ -220,9 +221,9 @@ def setup_server():
 
         _cp_dispatch = cherrypy.popargs('a')
 
+        @cherrypy.expose
         def index(self, a):
             return "index: " + str(a)
-        index.exposed = True
 
     class ParameterizedHandler:
 
@@ -231,13 +232,13 @@ def setup_server():
         def __init__(self, a):
             self.a = a
 
+        @cherrypy.expose
         def index(self):
             if 'a' in cherrypy.request.params:
                 raise Exception(
                     "Parameterized handler argument ended up in "
                     "request.params")
             return self.a
-        index.exposed = True
 
     class ParameterizedPopArgs:
 

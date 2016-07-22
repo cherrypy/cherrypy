@@ -10,6 +10,7 @@ import cherrypy
 
 class HomePage:
 
+    @cherrypy.expose
     def index(self):
         return '''
             <p>Hi, this is the home page! Check out the other
@@ -19,17 +20,16 @@ class HomePage:
                 <li><a href="/joke/">A silly joke</a></li>
                 <li><a href="/links/">Useful links</a></li>
             </ul>'''
-    index.exposed = True
 
 
 class JokePage:
 
+    @cherrypy.expose
     def index(self):
         return '''
             <p>"In Python, how do you create a string of random
             characters?" -- "Read a Perl file!"</p>
             <p>[<a href="../">Return</a>]</p>'''
-    index.exposed = True
 
 
 class LinksPage:
@@ -40,6 +40,7 @@ class LinksPage:
         # methods!
         self.extra = ExtraLinksPage()
 
+    @cherrypy.expose
     def index(self):
         # Note the way we link to the extra links page (and back).
         # As you can see, this object doesn't really care about its
@@ -62,11 +63,11 @@ class LinksPage:
 
             <p>[<a href="../">Return</a>]</p>
         '''
-    index.exposed = True
 
 
 class ExtraLinksPage:
 
+    @cherrypy.expose
     def index(self):
         # Note the relative link back to the Links page!
         return '''
@@ -78,7 +79,6 @@ class ExtraLinksPage:
             </ul>
 
             <p>[<a href="../">Return to links page</a>]</p>'''
-    index.exposed = True
 
 
 # Of course we can also mount request handler objects right here!
@@ -100,6 +100,3 @@ if __name__ == '__main__':
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().
     cherrypy.quickstart(root, config=tutconf)
-else:
-    # This branch is for the test suite; you can ignore it.
-    cherrypy.tree.mount(root, config=tutconf)

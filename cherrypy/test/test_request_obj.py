@@ -4,10 +4,12 @@ import os
 localDir = os.path.dirname(__file__)
 import sys
 import types
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, unicodestr
+
+import six
+
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 
 import cherrypy
-from cherrypy import _cptools, tools
 from cherrypy.lib import httputil
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
@@ -24,13 +26,13 @@ class RequestObjectTests(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "hello"
-            index.exposed = True
 
+            @cherrypy.expose
             def scheme(self):
                 return cherrypy.request.scheme
-            scheme.exposed = True
 
         root = Root()
 
@@ -60,88 +62,87 @@ class RequestObjectTests(helper.CPWebCase):
             def ismap(self, x, y):
                 return "Coordinates: %s, %s" % (x, y)
 
+            @cherrypy.config(**{'request.query_string_encoding': 'latin1'})
             def default(self, *args, **kwargs):
                 return "args: %s kwargs: %s" % (args, sorted(kwargs.items()))
-            default._cp_config = {'request.query_string_encoding': 'latin1'}
 
+        @cherrypy.expose
         class ParamErrorsCallable(object):
-            exposed = True
 
             def __call__(self):
                 return "data"
 
         class ParamErrors(Test):
 
+            @cherrypy.expose
             def one_positional(self, param1):
                 return "data"
-            one_positional.exposed = True
 
+            @cherrypy.expose
             def one_positional_args(self, param1, *args):
                 return "data"
-            one_positional_args.exposed = True
 
+            @cherrypy.expose
             def one_positional_args_kwargs(self, param1, *args, **kwargs):
                 return "data"
-            one_positional_args_kwargs.exposed = True
 
+            @cherrypy.expose
             def one_positional_kwargs(self, param1, **kwargs):
                 return "data"
-            one_positional_kwargs.exposed = True
 
+            @cherrypy.expose
             def no_positional(self):
                 return "data"
-            no_positional.exposed = True
 
+            @cherrypy.expose
             def no_positional_args(self, *args):
                 return "data"
-            no_positional_args.exposed = True
 
+            @cherrypy.expose
             def no_positional_args_kwargs(self, *args, **kwargs):
                 return "data"
-            no_positional_args_kwargs.exposed = True
 
+            @cherrypy.expose
             def no_positional_kwargs(self, **kwargs):
                 return "data"
-            no_positional_kwargs.exposed = True
 
             callable_object = ParamErrorsCallable()
 
+            @cherrypy.expose
             def raise_type_error(self, **kwargs):
                 raise TypeError("Client Error")
-            raise_type_error.exposed = True
 
+            @cherrypy.expose
             def raise_type_error_with_default_param(self, x, y=None):
                 return '%d' % 'a'  # throw an exception
-            raise_type_error_with_default_param.exposed = True
 
         def callable_error_page(status, **kwargs):
             return "Error %s - Well, I'm very sorry but you haven't paid!" % (
                 status)
 
+        @cherrypy.config(**{'tools.log_tracebacks.on': True})
         class Error(Test):
-
-            _cp_config = {'tools.log_tracebacks.on': True,
-                          }
 
             def reason_phrase(self):
                 raise cherrypy.HTTPError("410 Gone fishin'")
 
+            @cherrypy.config(**{
+                'error_page.404': os.path.join(localDir, "static/index.html"),
+                'error_page.401': callable_error_page,
+            })
             def custom(self, err='404'):
                 raise cherrypy.HTTPError(
                     int(err), "No, <b>really</b>, not found!")
-            custom._cp_config = {
-                'error_page.404': os.path.join(localDir, "static/index.html"),
-                'error_page.401': callable_error_page,
-            }
 
+            @cherrypy.config(**{
+                'error_page.default': callable_error_page,
+            })
             def custom_default(self):
                 return 1 + 'a'  # raise an unexpected error
-            custom_default._cp_config = {
-                'error_page.default': callable_error_page}
 
+            @cherrypy.config(**{'error_page.404': "nonexistent.html"})
             def noexist(self):
                 raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
-            noexist._cp_config = {'error_page.404': "nonexistent.html"}
 
             def page_method(self):
                 raise ValueError()
@@ -150,24 +151,23 @@ class RequestObjectTests(helper.CPWebCase):
                 yield "howdy"
                 raise ValueError()
 
+            @cherrypy.config(**{"response.stream": True})
             def page_streamed(self):
                 yield "word up"
                 raise ValueError()
                 yield "very oops"
-            page_streamed._cp_config = {"response.stream": True}
 
+            @cherrypy.config(**{'request.show_tracebacks': False})
             def cause_err_in_finalize(self):
                 # Since status must start with an int, this should error.
                 cherrypy.response.status = "ZOO OK"
-            cause_err_in_finalize._cp_config = {
-                'request.show_tracebacks': False}
 
+            @cherrypy.config(**{'request.throw_errors': True})
             def rethrow(self):
                 """Test that an error raised here will be thrown out to
                 the server.
                 """
                 raise ValueError()
-            rethrow._cp_config = {'request.throw_errors': True}
 
         class Expect(Test):
 
@@ -207,7 +207,7 @@ class RequestObjectTests(helper.CPWebCase):
 
             def ifmatch(self):
                 val = cherrypy.request.headers['If-Match']
-                assert isinstance(val, unicodestr)
+                assert isinstance(val, six.text_type)
                 cherrypy.response.headers['ETag'] = val
                 return val
 
@@ -215,7 +215,7 @@ class RequestObjectTests(helper.CPWebCase):
 
             def get_elements(self, headername):
                 e = cherrypy.request.headers.elements(headername)
-                return "\n".join([unicodestr(x) for x in e])
+                return "\n".join([six.text_type(x) for x in e])
 
         class Method(Test):
 
@@ -254,6 +254,7 @@ class RequestObjectTests(helper.CPWebCase):
 
             documents = {}
 
+            @cherrypy.expose
             def index(self):
                 yield "<h1>Choose your document</h1>\n"
                 yield "<ul>\n"
@@ -262,12 +263,11 @@ class RequestObjectTests(helper.CPWebCase):
                         "    <li><a href='/divorce/get?ID=%s'>%s</a>:"
                         " %s</li>\n" % (id, id, contents))
                 yield "</ul>"
-            index.exposed = True
 
+            @cherrypy.expose
             def get(self, ID):
                 return ("Divorce document %s: %s" %
                         (ID, self.documents.get(ID, "empty")))
-            get.exposed = True
 
         root.divorce = Divorce()
 

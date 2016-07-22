@@ -1,20 +1,9 @@
-"""Installs CherryPy using distutils
-
-Run:
-    python setup.py install
-
-to install this package.
-"""
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-
-from distutils.command.install import INSTALL_SCHEMES
-from distutils.command.build_py import build_py
 import sys
 import re
+from distutils.command.install import INSTALL_SCHEMES
+from distutils.command.build_py import build_py
+
+import setuptools
 
 
 class cherrypy_build_py(build_py):
@@ -23,10 +12,10 @@ class cherrypy_build_py(build_py):
     def build_module(self, module, module_file, package):
         python3 = sys.version_info >= (3,)
         if python3:
-            exclude_pattern = re.compile('wsgiserver2|ssl_pyopenssl|'
+            exclude_pattern = re.compile('ssl_pyopenssl|'
                                          '_cpcompat_subprocess')
         else:
-            exclude_pattern = re.compile('wsgiserver3')
+            exclude_pattern = re.compile('xxx')
         if exclude_pattern.match(module):
             return  # skip it
         return build_py.build_module(self, module, module_file, package)
@@ -36,7 +25,7 @@ class cherrypy_build_py(build_py):
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "5.3.0"
+version = "6.2.0"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers = [
@@ -107,6 +96,10 @@ data_files = [
 ]
 scripts = ["cherrypy/cherryd"]
 
+install_requires = [
+    'six',
+]
+
 cmd_class = dict(
     build_py=cherrypy_build_py,
 )
@@ -141,6 +134,7 @@ setup_params = dict(
     data_files=data_files,
     scripts=scripts,
     cmdclass=cmd_class,
+    install_requires=install_requires,
 )
 
 def main():
@@ -153,7 +147,7 @@ def main():
     for scheme in list(INSTALL_SCHEMES.values()):
         scheme['data'] = scheme['purelib']
 
-    setup(**setup_params)
+    setuptools.setup(**setup_params)
 
 
 if __name__ == "__main__":

@@ -50,6 +50,7 @@ size_cache = {}
 
 class Root:
 
+    @cherrypy.expose
     def index(self):
         return """<html>
 <head>
@@ -65,18 +66,17 @@ class Root:
     </ul>
 </body>
 </html>"""
-    index.exposed = True
 
+    @cherrypy.expose
     def hello(self):
         return "Hello, world\r\n"
-    hello.exposed = True
 
+    @cherrypy.expose
     def sizer(self, size):
         resp = size_cache.get(size, None)
         if resp is None:
             size_cache[size] = resp = "X" * int(size)
         return resp
-    sizer.exposed = True
 
 
 cherrypy.config.update({

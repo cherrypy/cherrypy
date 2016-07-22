@@ -18,10 +18,10 @@ class ReferenceTests(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
             def index(self, *args, **kwargs):
                 cherrypy.request.thing = data
                 return "Hello world!"
-            index.exposed = True
 
         cherrypy.tree.mount(Root())
     setup_server = staticmethod(setup_server)

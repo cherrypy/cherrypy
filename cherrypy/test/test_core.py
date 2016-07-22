@@ -1,3 +1,5 @@
+# coding: utf-8
+
 """Basic tests for the CherryPy core: request handling."""
 
 import os
@@ -6,7 +8,7 @@ import sys
 import types
 
 import cherrypy
-from cherrypy._cpcompat import IncompleteRead, itervalues, ntob
+from cherrypy._cpcompat import IncompleteRead, itervalues, ntob, ntou
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
 from cherrypy.test._test_decorators import ExposeExamples
@@ -24,22 +26,22 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "hello"
-            index.exposed = True
 
             favicon_ico = tools.staticfile.handler(filename=favicon_path)
 
+            @cherrypy.expose
             def defct(self, newct):
                 newct = "text/%s" % newct
                 cherrypy.config.update({'tools.response_headers.on': True,
                                         'tools.response_headers.headers':
                                         [('Content-Type', newct)]})
-            defct.exposed = True
 
+            @cherrypy.expose
             def baseurl(self, path_info, relative=None):
                 return cherrypy.url(path_info, relative=bool(relative))
-            baseurl.exposed = True
 
         root = Root()
         root.expose_dec = ExposeExamples()
@@ -58,9 +60,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 setattr(root, name.lower(), cls())
         Test = TestType('Test', (object, ), {})
 
+        @cherrypy.config(**{'tools.trailing_slash.on': False})
         class URL(Test):
-
-            _cp_config = {'tools.trailing_slash.on': False}
 
             def index(self, path_info, relative=None):
                 if relative != 'server':
@@ -105,21 +106,22 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             statuses = []
 
+            @cherrypy.config(**{'tools.log_status.on': True})
             def on_end_resource_stage(self):
                 return repr(self.statuses)
-            on_end_resource_stage._cp_config = {'tools.log_status.on': True}
 
         class Redirect(Test):
 
+            @cherrypy.config(**{
+                "tools.err_redirect.on": True,
+                "tools.err_redirect.url": "/errpage",
+                "tools.err_redirect.internal": False,
+            })
             class Error:
-                _cp_config = {"tools.err_redirect.on": True,
-                              "tools.err_redirect.url": "/errpage",
-                              "tools.err_redirect.internal": False,
-                              }
-
+                @cherrypy.expose
                 def index(self):
                     raise NameError("redirect_test")
-                index.exposed = True
+
             error = Error()
 
             def index(self):
@@ -128,9 +130,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def custom(self, url, code):
                 raise cherrypy.HTTPRedirect(url, code)
 
+            @cherrypy.config(**{'tools.trailing_slash.extra': True})
             def by_code(self, code):
                 raise cherrypy.HTTPRedirect("somewhere%20else", code)
-            by_code._cp_config = {'tools.trailing_slash.extra': True}
 
             def nomodify(self):
                 raise cherrypy.HTTPRedirect("", 304)
@@ -147,6 +149,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def url_with_quote(self):
                 raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
 
+            def url_with_unicode(self):
+                raise cherrypy.HTTPRedirect(ntou("тест", "utf-8"))
+
         def login_redir():
             if not getattr(cherrypy.request, "login", None):
                 raise cherrypy.InternalRedirect("/internalredirect/login")
@@ -160,10 +165,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def index(self):
                 raise cherrypy.InternalRedirect("/")
 
+            @cherrypy.expose
+            @cherrypy.config(**{'hooks.before_error_response': redir_custom})
             def choke(self):
                 return 3 / 0
-            choke.exposed = True
-            choke._cp_config = {'hooks.before_error_response': redir_custom}
 
             def relative(self, a, b):
                 raise cherrypy.InternalRedirect("cousin?t=6")
@@ -202,9 +207,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def custom_err(self):
                 return "Something went horribly wrong."
 
+            @cherrypy.config(**{'hooks.before_request_body': redir_custom})
             def early_ir(self, arg):
                 return "whatever"
-            early_ir._cp_config = {'hooks.before_request_body': redir_custom}
 
         class Image(Test):
 
@@ -222,9 +227,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def as_yield(self):
                 yield ntob("content")
 
+            @cherrypy.config(**{'tools.flatten.on': True})
             def as_dblyield(self):
                 yield self.as_yield()
-            as_dblyield._cp_config = {'tools.flatten.on': True}
 
             def as_refyield(self):
                 for chunk in self.as_yield():
@@ -430,6 +435,18 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage("/redirect/url_with_quote")
         self.assertStatus(303)
         assertValidXHTML()
+
+    def test_redirect_with_unicode(self):
+        """
+        A redirect to a URL with Unicode should return a Location
+        header containing that Unicode URL.
+        """
+        # test disabled due to #1440
+        return
+        self.getPage("/redirect/url_with_unicode")
+        self.assertStatus(303)
+        loc = self.assertHeader('Location')
+        assert ntou('тест', encoding='utf-8') in loc
 
     def test_InternalRedirect(self):
         # InternalRedirect
@@ -712,13 +729,13 @@ class ErrorTests(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "hello"
-            index.exposed = True
 
+            @cherrypy.config(**{'tools.break_header.on': True})
             def start_response_error(self):
                 return "salud!"
-            start_response_error._cp_config = {'tools.break_header.on': True}
         root = Root()
 
         cherrypy.tree.mount(root)

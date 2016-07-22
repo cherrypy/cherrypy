@@ -3,12 +3,15 @@
 import gzip
 import sys
 import unittest
-from cherrypy._cpcompat import BytesIO, copyitems, itervalues
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, py3k, xrange
-from cherrypy._cpcompat import bytestr, unicodestr
+import io
+
+from cherrypy._cpcompat import copyitems, itervalues
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
 import time
 timeout = 0.2
 import types
+
+import six
 
 import cherrypy
 from cherrypy import tools
@@ -101,7 +104,7 @@ class ToolTests(helper.CPWebCase):
             def __call__(self, scale):
                 r = cherrypy.response
                 r.collapse_body()
-                if py3k:
+                if six.PY3:
                     r.body = [bytes([(x + scale) % 256 for x in r.body[0]])]
                 else:
                     r.body = [chr((ord(x) + scale) % 256) for x in r.body[0]]
@@ -109,7 +112,7 @@ class ToolTests(helper.CPWebCase):
 
         def stream_handler(next_handler, *args, **kwargs):
             assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
-            cherrypy.response.output = o = BytesIO()
+            cherrypy.response.output = o = io.BytesIO()
             try:
                 response = next_handler(*args, **kwargs)
                 # Ignore the response and return our accumulated output
@@ -122,17 +125,18 @@ class ToolTests(helper.CPWebCase):
 
         class Root:
 
+            @cherrypy.expose
             def index(self):
                 return "Howdy earth!"
-            index.exposed = True
 
+            @cherrypy.expose
+            @cherrypy.config(**{'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'})
             def tarfile(self):
                 assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
                 cherrypy.response.output.write(ntob('I am '))
                 cherrypy.response.output.write(ntob('a tarfile'))
-            tarfile.exposed = True
-            tarfile._cp_config = {'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'}
 
+            @cherrypy.expose
             def euro(self):
                 hooks = list(cherrypy.request.hooks['before_finalize'])
                 hooks.sort()
@@ -143,21 +147,20 @@ class ToolTests(helper.CPWebCase):
                 yield ntou("Hello,")
                 yield ntou("world")
                 yield europoundUnicode
-            euro.exposed = True
 
             # Bare hooks
+            @cherrypy.expose
+            @cherrypy.config(**{'hooks.before_request_body': pipe_body})
             def pipe(self):
                 return cherrypy.request.body
-            pipe.exposed = True
-            pipe._cp_config = {'hooks.before_request_body': pipe_body}
 
             # Multiple decorators; include kwargs just for fun.
             # Note that rotator must run before gzip.
+            @cherrypy.expose
             def decorated_euro(self, *vpath):
                 yield ntou("Hello,")
                 yield ntou("world")
                 yield europoundUnicode
-            decorated_euro.exposed = True
             decorated_euro = tools.gzip(compress_level=6)(decorated_euro)
             decorated_euro = tools.rotator(scale=3)(decorated_euro)
 
@@ -172,15 +175,14 @@ class ToolTests(helper.CPWebCase):
                 type.__init__(cls, name, bases, dct)
                 for value in itervalues(dct):
                     if isinstance(value, types.FunctionType):
-                        value.exposed = True
+                        cherrypy.expose(value)
                 setattr(root, name.lower(), cls())
         Test = TestType('Test', (object,), {})
 
         # METHOD ONE:
         # Declare Tools in _cp_config
+        @cherrypy.config(**{"tools.nadsat.on": True})
         class Demo(Test):
-
-            _cp_config = {"tools.nadsat.on": True}
 
             def index(self, id=None):
                 return "A good piece of cherry pie"
@@ -208,10 +210,10 @@ class ToolTests(helper.CPWebCase):
             def err_in_onstart(self):
                 return "success!"
 
+            @cherrypy.config(**{'response.stream': True})
             def stream(self, id=None):
                 for x in xrange(100000000):
                     yield str(x)
-            stream._cp_config = {'response.stream': True}
 
         conf = {
             # METHOD THREE:
@@ -346,7 +348,7 @@ class ToolTests(helper.CPWebCase):
     def testCombinedTools(self):
         expectedResult = (ntou("Hello,world") +
                           europoundUnicode).encode('utf-8')
-        zbuf = BytesIO()
+        zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write(expectedResult)
         zfile.close()
@@ -357,7 +359,7 @@ class ToolTests(helper.CPWebCase):
                          ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")])
         self.assertInBody(zbuf.getvalue()[:3])
 
-        zbuf = BytesIO()
+        zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=6)
         zfile.write(expectedResult)
         zfile.close()
@@ -371,7 +373,7 @@ class ToolTests(helper.CPWebCase):
         # but it proves the priority was changed.
         self.getPage("/decorated_euro/subpath",
                      headers=[("Accept-Encoding", "gzip")])
-        if py3k:
+        if six.PY3:
             self.assertInBody(bytes([(x + 3) % 256 for x in zbuf.getvalue()]))
         else:
             self.assertInBody(''.join([chr((ord(x) + 3) % 256)
@@ -413,6 +415,21 @@ class ToolTests(helper.CPWebCase):
         else:
             raise AssertionError("Tool.on did not error as it should have.")
 
+    def testDecorator(self):
+        @cherrypy.tools.register('on_start_resource')
+        def example():
+            pass
+        self.assertTrue(isinstance(cherrypy.tools.example, cherrypy.Tool))
+        self.assertEqual(cherrypy.tools.example._point, 'on_start_resource')
+
+        @cherrypy.tools.register('before_finalize', name='renamed', priority=60)
+        def example():
+            pass
+        self.assertTrue(isinstance(cherrypy.tools.renamed, cherrypy.Tool))
+        self.assertEqual(cherrypy.tools.renamed._point, 'before_finalize')
+        self.assertEqual(cherrypy.tools.renamed._name, 'renamed')
+        self.assertEqual(cherrypy.tools.renamed._priority, 60)
+
 
 class SessionAuthTest(unittest.TestCase):
 
@@ -423,6 +440,6 @@ class SessionAuthTest(unittest.TestCase):
         username and password were unicode.
         """
         sa = cherrypy.lib.cptools.SessionAuth()
-        res = sa.login_screen(None, username=unicodestr('nobody'),
-                              password=unicodestr('anypass'))
-        self.assertTrue(isinstance(res, bytestr))
+        res = sa.login_screen(None, username=six.text_type('nobody'),
+                              password=six.text_type('anypass'))
+        self.assertTrue(isinstance(res, bytes))

@@ -4,8 +4,10 @@ import logging
 import re
 from hashlib import md5
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import basestring, unicodestr
+from cherrypy._cpcompat import basestring
 from cherrypy.lib import httputil as _httputil
 from cherrypy.lib import is_iterator
 
@@ -304,7 +306,7 @@ class SessionAuth(object):
 
     def login_screen(self, from_page='..', username='', error_msg='',
                      **kwargs):
-        return (unicodestr("""<html><body>
+        return (six.text_type("""<html><body>
 Message: %(error_msg)s
 <form method="post" action="do_login">
     Login: <input type="text" name="username" value="%(username)s" size="10" />
@@ -628,3 +630,21 @@ def autovary(ignore=None, debug=False):
         v.sort()
         resp_h['Vary'] = ', '.join(v)
     request.hooks.attach('before_finalize', set_response_header, 95)
+
+
+def convert_params(exception=ValueError, error=400):
+    """Convert request params based on function annotations, with error handling.
+
+    exception
+        Exception class to catch.
+
+    status
+        The HTTP error code to return to the client on failure.
+    """
+    request = cherrypy.serving.request
+    types = request.handler.callable.__annotations__
+    try:
+        for key in set(types).intersection(request.params):
+            request.params[key] = types[key](request.params[key])
+    except exception as exc:
+        raise cherrypy.HTTPError(error, str(exc))

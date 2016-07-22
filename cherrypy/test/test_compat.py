@@ -1,5 +1,7 @@
 import unittest
 
+import six
+
 import nose
 
 from cherrypy import _cpcompat as compat
@@ -14,6 +16,6 @@ class StringTester(unittest.TestCase):
 
         See #1132 for discussion.
         """
-        if compat.py3k:
+        if six.PY3:
             raise nose.SkipTest("Only useful on Python 2")
         self.assertRaises(Exception, compat.ntob, unicode('fight'))

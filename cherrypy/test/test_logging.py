@@ -3,8 +3,10 @@
 import os
 localDir = os.path.dirname(__file__)
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import ntob, ntou, py3k
+from cherrypy._cpcompat import ntob, ntou
 
 access_log = os.path.join(localDir, "access.log")
 error_log = os.path.join(localDir, "error.log")
@@ -17,19 +19,20 @@ erebos = ntou('\u0388\u03c1\u03b5\u03b2\u03bf\u03c2.com', 'escape')
 def setup_server():
     class Root:
 
+        @cherrypy.expose
         def index(self):
             return "hello"
-        index.exposed = True
 
+        @cherrypy.expose
         def uni_code(self):
             cherrypy.request.login = tartaros
             cherrypy.request.remote.name = erebos
-        uni_code.exposed = True
 
+        @cherrypy.expose
         def slashes(self):
             cherrypy.request.request_line = r'GET /slashed\path HTTP/1.1'
-        slashes.exposed = True
 
+        @cherrypy.expose
         def whitespace(self):
             # User-Agent = "User-Agent" ":" 1*( product | comment )
             # comment    = "(" *( ctext | quoted-pair | comment ) ")"
@@ -37,26 +40,26 @@ def setup_server():
             # TEXT       = <any OCTET except CTLs, but including LWS>
             # LWS        = [CRLF] 1*( SP | HT )
             cherrypy.request.headers['User-Agent'] = 'Browzuh (1.0\r\n\t\t.3)'
-        whitespace.exposed = True
 
+        @cherrypy.expose
         def as_string(self):
             return "content"
-        as_string.exposed = True
 
+        @cherrypy.expose
         def as_yield(self):
             yield "content"
-        as_yield.exposed = True
 
+        @cherrypy.expose
+        @cherrypy.config(**{'tools.log_tracebacks.on': True})
         def error(self):
             raise ValueError()
-        error.exposed = True
-        error._cp_config = {'tools.log_tracebacks.on': True}
 
     root = Root()
 
-    cherrypy.config.update({'log.error_file': error_log,
-                            'log.access_file': access_log,
-                            })
+    cherrypy.config.update({
+        'log.error_file': error_log,
+        'log.access_file': access_log,
+    })
     cherrypy.tree.mount(root)
 
 
@@ -112,7 +115,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         original_logformat = cherrypy._cplogging.LogManager.access_log_format
         cherrypy._cplogging.LogManager.access_log_format = \
           '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}' \
-          if py3k else \
+          if six.PY3 else \
           '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
 
         self.markLog()
@@ -130,8 +133,8 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.markLog()
         self.getPage("/uni_code")
         self.assertStatus(200)
-        if py3k:
-            # The repr of a bytestring in py3k includes a b'' prefix
+        if six.PY3:
+            # The repr of a bytestring in six.PY3 includes a b'' prefix
             self.assertLog(-1, repr(tartaros.encode('utf8'))[2:-1])
         else:
             self.assertLog(-1, repr(tartaros.encode('utf8'))[1:-1])
@@ -143,7 +146,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.markLog()
         self.getPage("/slashes")
         self.assertStatus(200)
-        if py3k:
+        if six.PY3:
             self.assertLog(-1, ntob('"GET /slashed\\path HTTP/1.1"'))
         else:
             self.assertLog(-1, r'"GET /slashed\\path HTTP/1.1"')

@@ -9,39 +9,42 @@ from cherrypy import tools
 def setup_server():
     class Root:
 
+        @cherrypy.expose
         def index(self):
             yield "Hello, world"
-        index.exposed = True
         h = [("Content-Language", "en-GB"), ('Content-Type', 'text/plain')]
         tools.response_headers(headers=h)(index)
 
+        @cherrypy.expose
+        @cherrypy.config(**{
+            'tools.response_headers.on': True,
+            'tools.response_headers.headers': [
+                ("Content-Language", "fr"),
+                ('Content-Type', 'text/plain'),
+            ],
+            'tools.log_hooks.on': True,
+        })
         def other(self):
             return "salut"
-        other.exposed = True
-        other._cp_config = {
-            'tools.response_headers.on': True,
-            'tools.response_headers.headers': [("Content-Language", "fr"),
-                                               ('Content-Type', 'text/plain')],
-            'tools.log_hooks.on': True,
-        }
 
+    @cherrypy.config(**{'tools.accept.on': True})
     class Accept:
-        _cp_config = {'tools.accept.on': True}
 
+        @cherrypy.expose
         def index(self):
             return '<a href="feed">Atom feed</a>'
-        index.exposed = True
 
         # In Python 2.4+, we could use a decorator instead:
         # @tools.accept('application/atom+xml')
+        @cherrypy.expose
+        @cherrypy.config(**{'tools.accept.media': 'application/atom+xml'})
         def feed(self):
             return """<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title>Unknown Blog</title>
 </feed>"""
-        feed.exposed = True
-        feed._cp_config = {'tools.accept.media': 'application/atom+xml'}
 
+        @cherrypy.expose
         def select(self):
             # We could also write this: mtype = cherrypy.lib.accept.accept(...)
             mtype = tools.accept.callable(['text/html', 'text/plain'])
@@ -49,17 +52,17 @@ def setup_server():
                 return "<h2>Page Title</h2>"
             else:
                 return "PAGE TITLE"
-        select.exposed = True
 
     class Referer:
 
+        @cherrypy.expose
         def accept(self):
             return "Accepted!"
-        accept.exposed = True
         reject = accept
 
     class AutoVary:
 
+        @cherrypy.expose
         def index(self):
             # Read a header directly with 'get'
             ae = cherrypy.request.headers.get('Accept-Encoding')
@@ -77,7 +80,6 @@ def setup_server():
             # Call a lib function
             mtype = tools.accept.callable(['text/html', 'text/plain'])
             return "Hello, world!"
-        index.exposed = True
 
     conf = {'/referer': {'tools.referer.on': True,
                          'tools.referer.pattern': r'http://[^/]*example\.com',

@@ -131,23 +131,23 @@ class Root(object):
             'expires': expires,
         }
 
+    @cherrypy.expose
     def index(self):
         # Must modify data or the session will not be saved.
         cherrypy.session['color'] = 'green'
         return self.page()
-    index.exposed = True
 
+    @cherrypy.expose
     def expire(self):
         sessions.expire()
         return self.page()
-    expire.exposed = True
 
+    @cherrypy.expose
     def regen(self):
         cherrypy.session.regenerate()
         # Must modify data or the session will not be saved.
         cherrypy.session['color'] = 'yellow'
         return self.page()
-    regen.exposed = True
 
 if __name__ == '__main__':
     cherrypy.config.update({
