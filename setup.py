@@ -133,11 +133,6 @@ tests_require = [
     'tox',
 ]
 
-extras_require = {
-    # run `pip install cherrypy[test]` to install test packages as well
-    'test': tests_require,
-}
-
 cmd_class = {
     'build_py': cherrypy_build_py,
     'test': Tox,  # Enables `python setup.py test` invocation run tox tests
@@ -176,10 +171,6 @@ setup_params = dict(
     install_requires=install_requires,
     # Enables `python setup.py test` invocation install test dependencies first
     tests_require=tests_require,
-    # Enables installation of additional dependencies
-    # run `pip install cherrypy[dependency_name]` to install extra packages
-    # N.B. dependency_name may be comma-separated list of several of them
-    extras_require=extras_require
 )
 
 
