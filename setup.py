@@ -130,9 +130,7 @@ install_requires = [
 ]
 
 tests_require = [
-    'nose',
     'tox',
-    'virtualenv',
 ]
 
 extras_require = {
