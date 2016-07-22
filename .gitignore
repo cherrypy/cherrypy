@@ -13,5 +13,10 @@ include
 sphinx/source/_build
 .tox
 
+/.eggs/
+/.ropeproject/
+/cherrypy/test/static/has space.html
+/cherrypy/test/test.conf
+
 # pyenv local config:
 .python-version
