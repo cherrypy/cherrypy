@@ -1,3 +1,9 @@
+6.2.1
+-----
+
+# 1460: Fix KeyError in Bus.publish when signal handlers
+  set in config.
+
 6.2.0
 -----
 
