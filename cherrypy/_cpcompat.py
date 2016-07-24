@@ -19,8 +19,6 @@ import os
 import re
 import sys
 import threading
-import functools
-import email.utils
 
 import six
 
@@ -234,8 +232,6 @@ else:
 
     def set_daemon(t, val):
         t.setDaemon(val)
-
-HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
 
 try:
     # Python 3

@@ -7,11 +7,13 @@ FuManChu will personally hang you up by your thumbs and submit you
 to a public caning.
 """
 
+import functools
+import email.utils
 from binascii import b2a_base64
 
 import six
 
-from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou
+from cherrypy._cpcompat import BaseHTTPRequestHandler, ntob, ntou
 from cherrypy._cpcompat import basestring, iteritems
 from cherrypy._cpcompat import reversed, sorted, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
@@ -27,6 +29,9 @@ response_codes[503] = ('Service Unavailable',
 
 import re
 from cgi import parse_header
+
+
+HTTPDate = functools.partial(email.utils.formatdate, use_gmt=True)
 
 
 def urljoin(*atoms):
