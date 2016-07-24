@@ -31,7 +31,7 @@ import re
 from cgi import parse_header
 
 
-HTTPDate = functools.partial(email.utils.formatdate, use_gmt=True)
+HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
 
 
 def urljoin(*atoms):
