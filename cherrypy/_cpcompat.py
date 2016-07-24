@@ -23,8 +23,6 @@ import threading
 import six
 
 if six.PY3:
-    basestring = (bytes, str)
-
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given
         encoding.
@@ -49,8 +47,6 @@ if six.PY3:
         return n
 else:
     # Python 2
-    basestring = basestring
-
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given
         encoding.
@@ -291,6 +287,8 @@ finally:
     else:
         json_encode = _json_encode
 
+text_or_bytes = six.text_type, six.binary_type
+basestring = text_or_bytes
 
 try:
     import cPickle as pickle
