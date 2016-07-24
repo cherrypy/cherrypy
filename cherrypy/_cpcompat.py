@@ -1,6 +1,6 @@
 """Compatibility code for using CherryPy with various versions of Python.
 
-CherryPy 3.2 is compatible with Python versions 2.3+. This module provides a
+CherryPy 3.2 is compatible with Python versions 2.6+. This module provides a
 useful abstraction over the differences between Python versions, sometimes by
 preferring a newer idiom, sometimes an older one, and sometimes a custom one.
 
