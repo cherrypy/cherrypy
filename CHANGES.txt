@@ -1,3 +1,16 @@
+7.0.0
+-----
+
+Removed the long-deprecated backward compatibility for
+legacy config keys in the engine. Use the config for the
+namespaced-plugins instead:
+
+ - autoreload_on -> autoreload.on
+ - autoreload_frequency -> autoreload.frequency
+ - autoreload_match -> autoreload.match
+ - reload_files -> autoreload.files
+ - deadlock_poll_frequency -> timeout_monitor.frequency
+
 6.2.1
 -----
 

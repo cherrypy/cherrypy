@@ -48,7 +48,7 @@ def start(configfiles=None, daemonize=False, environment=None,
         sys.exit(1)
     elif fastcgi or scgi or cgi:
         # Turn off autoreload when using *cgi.
-        cherrypy.config.update({'engine.autoreload_on': False})
+        cherrypy.config.update({'engine.autoreload.on': False})
         # Turn off the default HTTP server (which is subscribed by default).
         cherrypy.server.unsubscribe()
 

@@ -82,7 +82,7 @@ def setup_server():
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
         'environment': 'test_suite',
-        'engine.deadlock_poll_freq': 0.1,
+        'engine.timeout_monitor.frequency': 0.1,
     })
 
     db_connection.subscribe()
