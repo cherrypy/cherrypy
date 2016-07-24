@@ -294,9 +294,9 @@ def _engine_namespace_handler(k, v):
     elif k == 'deadlock_poll_freq':
         engine.timeout_monitor.frequency = v
     elif k == 'SIGHUP':
-        engine.listeners['SIGHUP'] = set([v])
+        engine.subscribe('SIGHUP', v)
     elif k == 'SIGTERM':
-        engine.listeners['SIGTERM'] = set([v])
+        engine.subscribe('SIGTERM', v)
     elif "." in k:
         plugin, attrname = k.split(".", 1)
         plugin = getattr(engine, plugin)
