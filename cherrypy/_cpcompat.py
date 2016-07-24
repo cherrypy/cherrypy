@@ -19,6 +19,8 @@ import os
 import re
 import sys
 import threading
+import functools
+import email.utils
 
 import six
 
@@ -233,13 +235,7 @@ else:
     def set_daemon(t, val):
         t.setDaemon(val)
 
-try:
-    from email.utils import formatdate
-
-    def HTTPDate(timeval=None):
-        return formatdate(timeval, usegmt=True)
-except ImportError:
-    from rfc822 import formatdate as HTTPDate
+HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
 
 try:
     # Python 3
