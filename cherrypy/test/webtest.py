@@ -26,8 +26,7 @@ import types
 import os
 import json
 
-from unittest import *
-from unittest import _TextTestResult
+import unittest
 
 import six
 
@@ -49,7 +48,7 @@ def interface(host):
     return host
 
 
-class TerseTestResult(_TextTestResult):
+class TerseTestResult(unittest._TextTestResult):
 
     def printErrors(self):
         # Overridden to avoid unnecessary empty line
@@ -60,7 +59,7 @@ class TerseTestResult(_TextTestResult):
             self.printErrorList('FAIL', self.failures)
 
 
-class TerseTestRunner(TextTestRunner):
+class TerseTestRunner(unittest.TextTestRunner):
 
     """A test runner class that displays results in textual form."""
 
@@ -86,7 +85,7 @@ class TerseTestRunner(TextTestRunner):
         return result
 
 
-class ReloadingTestLoader(TestLoader):
+class ReloadingTestLoader(unittest.TestLoader):
 
     def loadTestsFromName(self, name, module=None):
         """Return a suite of all tests cases given a string specifier.
@@ -129,7 +128,7 @@ class ReloadingTestLoader(TestLoader):
             return self.loadTestsFromModule(obj)
         elif (((six.PY3 and isinstance(obj, type))
                or isinstance(obj, (type, types.ClassType)))
-              and issubclass(obj, TestCase)):
+              and issubclass(obj, unittest.TestCase)):
             return self.loadTestsFromTestCase(obj)
         elif isinstance(obj, types.UnboundMethodType):
             if six.PY3:
@@ -138,8 +137,8 @@ class ReloadingTestLoader(TestLoader):
                 return obj.im_class(obj.__name__)
         elif hasattr(obj, '__call__'):
             test = obj()
-            if not isinstance(test, TestCase) and \
-               not isinstance(test, TestSuite):
+            if not isinstance(test, unittest.TestCase) and \
+               not isinstance(test, unittest.TestSuite):
                 raise ValueError("calling %s returned %s, "
                                  "not a test" % (obj, test))
             return test
@@ -188,7 +187,7 @@ class NonDataProperty(object):
         return self.fget(obj)
 
 
-class WebCase(TestCase):
+class WebCase(unittest.TestCase):
     HOST = "127.0.0.1"
     PORT = 8000
     HTTP_CONN = HTTPConnection
