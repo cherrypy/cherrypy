@@ -5,7 +5,7 @@ Helper functions for CP apps
 import six
 
 from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
-from cherrypy._cpcompat import basestring
+from cherrypy._cpcompat import text_or_bytes
 
 import cherrypy
 
@@ -17,7 +17,7 @@ def expose(func=None, alias=None):
     def expose_(func):
         func.exposed = True
         if alias is not None:
-            if isinstance(alias, basestring):
+            if isinstance(alias, text_or_bytes):
                 parents[alias.replace(".", "_")] = func
             else:
                 for a in alias:

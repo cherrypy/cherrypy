@@ -280,7 +280,6 @@ finally:
         json_encode = _json_encode
 
 text_or_bytes = six.text_type, six.binary_type
-basestring = text_or_bytes
 
 try:
     import cPickle as pickle

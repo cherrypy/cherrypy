@@ -262,7 +262,7 @@ def send_response(req, status, headers, body, stream=False):
         req.flush()
 
     # Set response body
-    if isinstance(body, basestring):
+    if isinstance(body, text_or_bytes):
         req.write(body)
     else:
         for seg in body:

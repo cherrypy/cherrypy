@@ -1,5 +1,5 @@
 import cherrypy
-from cherrypy._cpcompat import basestring, ntou, json_encode, json_decode
+from cherrypy._cpcompat import text_or_bytes, ntou, json_encode, json_decode
 
 
 def json_processor(entity):
@@ -41,7 +41,7 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
     package importable; otherwise, ValueError is raised during processing.
     """
     request = cherrypy.serving.request
-    if isinstance(content_type, basestring):
+    if isinstance(content_type, text_or_bytes):
         content_type = [content_type]
 
     if force:

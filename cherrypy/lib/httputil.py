@@ -14,7 +14,7 @@ from binascii import b2a_base64
 import six
 
 from cherrypy._cpcompat import BaseHTTPRequestHandler, ntob, ntou
-from cherrypy._cpcompat import basestring, iteritems
+from cherrypy._cpcompat import text_or_bytes, iteritems
 from cherrypy._cpcompat import reversed, sorted, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
@@ -465,7 +465,7 @@ class HeaderMap(CaseInsensitiveDict):
             if isinstance(k, six.text_type):
                 k = cls.encode(k)
 
-            if not isinstance(v, basestring):
+            if not isinstance(v, text_or_bytes):
                 v = str(v)
 
             if isinstance(v, six.text_type):

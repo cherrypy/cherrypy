@@ -119,7 +119,7 @@ style) context manager.
 """
 
 import cherrypy
-from cherrypy._cpcompat import basestring
+from cherrypy._cpcompat import text_or_bytes
 from cherrypy.lib import reprconf
 
 # Deprecated in  CherryPy 3.2--remove in 3.3
@@ -132,7 +132,7 @@ def merge(base, other):
     If the given config is a filename, it will be appended to
     the list of files to monitor for "autoreload" changes.
     """
-    if isinstance(other, basestring):
+    if isinstance(other, text_or_bytes):
         cherrypy.engine.autoreload.files.add(other)
 
     # Load other into base
@@ -152,7 +152,7 @@ class Config(reprconf.Config):
 
     def update(self, config):
         """Update self from a dict, file or filename."""
-        if isinstance(config, basestring):
+        if isinstance(config, text_or_bytes):
             # Filename
             cherrypy.engine.autoreload.files.add(config)
         reprconf.Config.update(self, config)

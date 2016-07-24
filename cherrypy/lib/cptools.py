@@ -7,7 +7,7 @@ from hashlib import md5
 import six
 
 import cherrypy
-from cherrypy._cpcompat import basestring
+from cherrypy._cpcompat import text_or_bytes
 from cherrypy.lib import httputil as _httputil
 from cherrypy.lib import is_iterator
 
@@ -533,7 +533,7 @@ def accept(media=None, debug=False):
     """
     if not media:
         return
-    if isinstance(media, basestring):
+    if isinstance(media, text_or_bytes):
         media = [media]
     request = cherrypy.serving.request
 

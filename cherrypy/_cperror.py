@@ -121,7 +121,7 @@ from traceback import format_exception as _format_exception
 
 import six
 
-from cherrypy._cpcompat import basestring, iteritems, ntob
+from cherrypy._cpcompat import text_or_bytes, iteritems, ntob
 from cherrypy._cpcompat import tonative, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
 
@@ -209,7 +209,7 @@ class HTTPRedirect(CherryPyException):
         import cherrypy
         request = cherrypy.serving.request
 
-        if isinstance(urls, basestring):
+        if isinstance(urls, text_or_bytes):
             urls = [urls]
 
         abs_urls = []

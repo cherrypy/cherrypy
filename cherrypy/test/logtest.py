@@ -5,7 +5,7 @@ import time
 
 import six
 
-from cherrypy._cpcompat import basestring, ntob
+from cherrypy._cpcompat import text_or_bytes, ntob
 
 
 try:
@@ -187,7 +187,7 @@ class LogCase(object):
             # Multiple args. Use __getslice__ and require lines to be list.
             if isinstance(lines, tuple):
                 lines = list(lines)
-            elif isinstance(lines, basestring):
+            elif isinstance(lines, text_or_bytes):
                 raise TypeError("The 'lines' arg must be a list when "
                                 "'sliceargs' is a tuple.")
 

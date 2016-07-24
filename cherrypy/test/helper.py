@@ -14,7 +14,7 @@ import time
 import warnings
 
 import cherrypy
-from cherrypy._cpcompat import basestring, copyitems, HTTPSConnection, ntob
+from cherrypy._cpcompat import text_or_bytes, copyitems, HTTPSConnection, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.lib.reprconf import unrepr
@@ -48,7 +48,7 @@ def get_tst_config(overconf={}):
             _conf = testconfig.config.get('supervisor', None)
             if _conf is not None:
                 for k, v in _conf.items():
-                    if isinstance(v, basestring):
+                    if isinstance(v, text_or_bytes):
                         _conf[k] = unrepr(v)
                 conf.update(_conf)
         except ImportError:
@@ -253,7 +253,7 @@ class CPWebCase(webtest.WebCase):
         if sys.platform[:4] == 'java':
             cherrypy.config.update({'server.nodelay': False})
 
-        if isinstance(conf, basestring):
+        if isinstance(conf, text_or_bytes):
             parser = cherrypy.lib.reprconf.Parser()
             conf = parser.dict_from_file(conf).get('global', {})
         else:

@@ -7,7 +7,7 @@ import sys
 import time
 import threading
 
-from cherrypy._cpcompat import basestring, get_daemon, get_thread_ident
+from cherrypy._cpcompat import text_or_bytes, get_daemon, get_thread_ident
 from cherrypy._cpcompat import ntob, Timer, SetDaemonProperty
 
 # _module__file__base is used by Autoreload to make
@@ -176,7 +176,7 @@ class SignalHandler(object):
         If the given signal name or number is not available on the current
         platform, ValueError is raised.
         """
-        if isinstance(signal, basestring):
+        if isinstance(signal, text_or_bytes):
             signum = getattr(_signal, signal, None)
             if signum is None:
                 raise ValueError("No such signal: %r" % signal)
@@ -242,7 +242,7 @@ class DropPrivileges(SimplePlugin):
                 self.bus.log("pwd module not available; ignoring uid.",
                              level=30)
                 val = None
-            elif isinstance(val, basestring):
+            elif isinstance(val, text_or_bytes):
                 val = pwd.getpwnam(val)[2]
         self._uid = val
     uid = property(_get_uid, _set_uid,
@@ -257,7 +257,7 @@ class DropPrivileges(SimplePlugin):
                 self.bus.log("grp module not available; ignoring gid.",
                              level=30)
                 val = None
-            elif isinstance(val, basestring):
+            elif isinstance(val, text_or_bytes):
                 val = grp.getgrnam(val)[2]
         self._gid = val
     gid = property(_get_gid, _set_gid,

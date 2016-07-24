@@ -5,7 +5,7 @@ import warnings
 import six
 
 import cherrypy
-from cherrypy._cpcompat import basestring, copykeys, ntob
+from cherrypy._cpcompat import text_or_bytes, copykeys, ntob
 from cherrypy._cpcompat import SimpleCookie, CookieError
 from cherrypy import _cpreqbody, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
@@ -139,7 +139,7 @@ def hooks_namespace(k, v):
     # hookpoint per path (e.g. "hooks.before_handler.1").
     # Little-known fact you only get from reading source ;)
     hookpoint = k.split(".", 1)[0]
-    if isinstance(v, basestring):
+    if isinstance(v, text_or_bytes):
         v = cherrypy.lib.attributes(v)
     if not isinstance(v, Hook):
         v = Hook(v)
@@ -815,7 +815,7 @@ class ResponseBody(object):
         if six.PY3 and isinstance(value, str):
             raise ValueError(self.unicode_err)
 
-        if isinstance(value, basestring):
+        if isinstance(value, text_or_bytes):
             # strings get wrapped in a list because iterating over a single
             # item list is much faster than iterating over every character
             # in a long string.
@@ -901,7 +901,7 @@ class Response(object):
 
     def collapse_body(self):
         """Collapse self.body to a single string; replace it and return it."""
-        if isinstance(self.body, basestring):
+        if isinstance(self.body, text_or_bytes):
             return self.body
 
         newbody = []

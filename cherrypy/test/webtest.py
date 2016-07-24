@@ -30,7 +30,7 @@ import unittest
 
 import six
 
-from cherrypy._cpcompat import basestring, HTTPConnection
+from cherrypy._cpcompat import text_or_bytes, HTTPConnection
 from cherrypy._cpcompat import HTTPSConnection
 
 
@@ -349,7 +349,7 @@ class WebCase(unittest.TestCase):
 
     def assertStatus(self, status, msg=None):
         """Fail if self.status != status."""
-        if isinstance(status, basestring):
+        if isinstance(status, text_or_bytes):
             if not self.status == status:
                 if msg is None:
                     msg = 'Status (%r) != %r' % (self.status, status)
@@ -364,7 +364,7 @@ class WebCase(unittest.TestCase):
             # status is a tuple or list.
             match = False
             for s in status:
-                if isinstance(s, basestring):
+                if isinstance(s, text_or_bytes):
                     if self.status == s:
                         match = True
                         break

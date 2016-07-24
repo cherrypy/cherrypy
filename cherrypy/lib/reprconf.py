@@ -30,9 +30,9 @@ except NameError:
     from sets import Set as set
 
 try:
-    basestring
+    text_or_bytes
 except NameError:
-    basestring = str
+    text_or_bytes = str
 
 try:
     # Python 3
@@ -47,7 +47,7 @@ import sys
 
 def as_dict(config):
     """Return a dict from 'config' whether it is a dict, file, or filename."""
-    if isinstance(config, basestring):
+    if isinstance(config, text_or_bytes):
         config = Parser().dict_from_file(config)
     elif hasattr(config, 'read'):
         config = Parser().dict_from_file(config)
@@ -155,7 +155,7 @@ class Config(dict):
 
     def update(self, config):
         """Update self from a dict, file or filename."""
-        if isinstance(config, basestring):
+        if isinstance(config, text_or_bytes):
             # Filename
             config = Parser().dict_from_file(config)
         elif hasattr(config, 'read'):
@@ -192,7 +192,7 @@ class Parser(ConfigParser):
         return optionstr
 
     def read(self, filenames):
-        if isinstance(filenames, basestring):
+        if isinstance(filenames, text_or_bytes):
             filenames = [filenames]
         for filename in filenames:
             # try:

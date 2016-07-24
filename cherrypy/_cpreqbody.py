@@ -132,7 +132,7 @@ except ImportError:
         return ntob('').join(atoms)
 
 import cherrypy
-from cherrypy._cpcompat import basestring, ntob, ntou
+from cherrypy._cpcompat import text_or_bytes, ntob, ntou
 from cherrypy.lib import httputil
 
 
@@ -715,7 +715,7 @@ class Part(Entity):
             self.file = self.read_into_file()
         else:
             result = self.read_lines_to_boundary()
-            if isinstance(result, basestring):
+            if isinstance(result, text_or_bytes):
                 self.value = result
             else:
                 self.file = result

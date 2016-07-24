@@ -5,7 +5,7 @@ import io
 import six
 
 import cherrypy
-from cherrypy._cpcompat import basestring, ntob
+from cherrypy._cpcompat import text_or_bytes, ntob
 from cherrypy.lib import file_generator
 from cherrypy.lib import is_closable_iterator
 from cherrypy.lib import set_vary_header
@@ -219,7 +219,7 @@ class ResponseEncoder:
         response = cherrypy.serving.response
         self.body = self.oldhandler(*args, **kwargs)
 
-        if isinstance(self.body, basestring):
+        if isinstance(self.body, text_or_bytes):
             # strings get wrapped in a list because iterating over a single
             # item list is much faster than iterating over every character
             # in a long string.
