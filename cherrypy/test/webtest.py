@@ -31,7 +31,7 @@ from unittest import _TextTestResult
 
 import six
 
-from cherrypy._cpcompat import basestring, ntob, HTTPConnection
+from cherrypy._cpcompat import basestring, HTTPConnection
 from cherrypy._cpcompat import HTTPSConnection
 
 
