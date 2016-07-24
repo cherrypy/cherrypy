@@ -170,9 +170,8 @@ class Bus(object):
 
     def subscribe(self, channel, callback, priority=None):
         """Add the given callback at the given channel (if not present)."""
-        if channel not in self.listeners:
-            self.listeners[channel] = set()
-        self.listeners[channel].add(callback)
+        ch_listeners = self.listeners.setdefault(channel, set())
+        ch_listeners.add(callback)
 
         if priority is None:
             priority = getattr(callback, 'priority', 50)
