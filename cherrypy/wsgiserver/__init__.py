@@ -1925,7 +1925,10 @@ class HTTPServer(object):
         interface" (INADDR_ANY), and '::' is the similar IN6ADDR_ANY for
         IPv6. The empty string or None are not allowed.
 
-        For UNIX sockets, supply the filename as a string.""")
+        For UNIX sockets, supply the filename as a string.
+
+        Systemd socket activation is automatic and doesn't require tempering
+        with this variable""")
 
     def start(self):
         """Run the server forever."""
