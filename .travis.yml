@@ -12,10 +12,11 @@ python:
 - nightly
 matrix:
   allow_failures:
-    - 3.1
-    - pypy
-    - pypy3
-    - nightly
+    python:
+      - 3.1
+      - pypy
+      - pypy3
+      - nightly
 env:
 - WEBTEST_INTERACTIVE=false
 script:
