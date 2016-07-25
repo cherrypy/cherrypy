@@ -1,6 +1,12 @@
+# -*- coding: utf-8 -*- 
 import os
 import sys
 import io
+
+try:
+    from urllib.parse import quote as url_quote
+except ImportError:
+    from urllib import quote as url_quote
 
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
@@ -338,6 +344,10 @@ class StaticTest(helper.CPWebCase):
     def test_null_bytes(self):
         self.getPage("/static/\x00")
         self.assertStatus('404 Not Found')
+
+    def test_unicode(self):
+        self.getPage("/static/%s.html" % url_quote("Слава Україні"))
+        self.assertInBody(u"Героям Слава!")
 
 def error_page_404(status, message, traceback, version):
     import os.path
