@@ -345,7 +345,7 @@ class StaticTest(helper.CPWebCase):
 
     def test_unicode(self):
         self.getPage("/static/%s.html" % urllib.parse.quote("Слава Україні"))
-        self.assertInBody(six.u("Героям Слава!"))
+        self.assertInBody(b'\xd0\x93\xd0\xb5\xd1\x80\xd0\xbe\xd1\x8f\xd0\xbc \xd0\xa1\xd0\xbb\xd0\xb0\xd0\xb2\xd0\xb0!'.decode('utf-8'))
 
 def error_page_404(status, message, traceback, version):
     import os.path
