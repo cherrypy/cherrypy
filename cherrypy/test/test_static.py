@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import os
 import sys
 import io
@@ -7,6 +7,8 @@ try:
     from urllib.parse import quote as url_quote
 except ImportError:
     from urllib import quote as url_quote
+
+import six
 
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
@@ -347,7 +349,7 @@ class StaticTest(helper.CPWebCase):
 
     def test_unicode(self):
         self.getPage("/static/%s.html" % url_quote("Слава Україні"))
-        self.assertInBody(u"Героям Слава!")
+        self.assertInBody(six.u("Героям Слава!"))
 
 def error_page_404(status, message, traceback, version):
     import os.path
