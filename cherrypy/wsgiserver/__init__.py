@@ -1925,7 +1925,10 @@ class HTTPServer(object):
         interface" (INADDR_ANY), and '::' is the similar IN6ADDR_ANY for
         IPv6. The empty string or None are not allowed.
 
-        For UNIX sockets, supply the filename as a string.""")
+        For UNIX sockets, supply the filename as a string.
+
+        Systemd socket activation is automatic and doesn't require tempering
+        with this variable""")
 
     def start(self):
         """Run the server forever."""
@@ -1939,7 +1942,11 @@ class HTTPServer(object):
             self.software = "%s Server" % self.version
 
         # Select the appropriate socket
-        if isinstance(self.bind_addr, six.string_types):
+        self.socket = None
+        if os.getenv('LISTEN_PID', None):
+            # systemd socket activation
+            self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
+        elif isinstance(self.bind_addr, six.string_types):
             # AF_UNIX socket
 
             # So we can reuse the socket...
@@ -1973,21 +1980,21 @@ class HTTPServer(object):
                     info = [(socket.AF_INET, socket.SOCK_STREAM,
                              0, "", self.bind_addr)]
 
-        self.socket = None
-        msg = "No socket could be created"
-        for res in info:
-            af, socktype, proto, canonname, sa = res
-            try:
-                self.bind(af, socktype, proto)
-            except socket.error as serr:
-                msg = "%s -- (%s: %s)" % (msg, sa, serr)
-                if self.socket:
-                    self.socket.close()
-                self.socket = None
-                continue
-            break
         if not self.socket:
-            raise socket.error(msg)
+            msg = "No socket could be created"
+            for res in info:
+                af, socktype, proto, canonname, sa = res
+                try:
+                    self.bind(af, socktype, proto)
+                    break
+                except socket.error as serr:
+                    msg = "%s -- (%s: %s)" % (msg, sa, serr)
+                    if self.socket:
+                        self.socket.close()
+                    self.socket = None
+
+            if not self.socket:
+                raise socket.error(msg)
 
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
