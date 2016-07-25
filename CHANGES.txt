@@ -1,3 +1,14 @@
+7.1.0
+-----
+
+# 1458: Implement systemd's socket activation mechanism for
+  CherryPy servers, based on work sponsored by Endless Computers.
+
+  Socket Activation allows one to setup a system so that
+  systemd will sit on a port and start services
+  'on demand' (a little bit like inetd and xinetd
+  used to do).
+
 7.0.0
 -----
 
