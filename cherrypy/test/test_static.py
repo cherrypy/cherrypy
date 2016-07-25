@@ -3,10 +3,11 @@ import os
 import sys
 import io
 
-import six
 from six.moves import urllib
 
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
+from cherrypy._cpcompat import (
+    HTTPConnection, HTTPSConnection, ntob, ntou, tonative,
+)
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
@@ -344,8 +345,15 @@ class StaticTest(helper.CPWebCase):
         self.assertStatus('404 Not Found')
 
     def test_unicode(self):
-        self.getPage("/static/%s.html" % urllib.parse.quote("Слава Україні"))
-        self.assertInBody(six.u("Героям Слава!"))
+        url = ntou("/static/Слава Україні.html", 'utf-8')
+        # quote function requires str
+        url = tonative(url, 'utf-8')
+        url = urllib.parse.quote(url)
+        self.getPage(url)
+
+        expected = ntou("Героям Слава!", 'utf-8')
+        self.assertInBody(expected)
+
 
 def error_page_404(status, message, traceback, version):
     import os.path
