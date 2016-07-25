@@ -3,12 +3,8 @@ import os
 import sys
 import io
 
-try:
-    from urllib.parse import quote as url_quote
-except ImportError:
-    from urllib import quote as url_quote
-
 import six
+from six.moves import urllib
 
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
@@ -348,7 +344,7 @@ class StaticTest(helper.CPWebCase):
         self.assertStatus('404 Not Found')
 
     def test_unicode(self):
-        self.getPage("/static/%s.html" % url_quote("Слава Україні"))
+        self.getPage("/static/%s.html" % urllib.parse.quote("Слава Україні"))
         self.assertInBody(six.u("Героям Слава!"))
 
 def error_page_404(status, message, traceback, version):
