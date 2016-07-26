@@ -16,11 +16,13 @@ matrix:
     - python: pypy
     - python: pypy3
     - python: nightly
+
 env:
 - WEBTEST_INTERACTIVE=false
-script:
-- pip install -e .
-- nosetests
+
+install: pip install -e .
+script: nosetests
+
 deploy:
   provider: pypi
   on:
