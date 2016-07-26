@@ -775,7 +775,7 @@ So let's simply focus on the application code itself:
     class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-           return file('index.html')
+           return open('index.html')
 
     @cherrypy.expose
     class StringGeneratorWebService(object):
