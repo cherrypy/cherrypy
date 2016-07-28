@@ -6,7 +6,7 @@ from distutils.command.build_py import build_py
 import setuptools
 
 
-needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
+needs_pytest = set(['pytest', 'test']).intersection(sys.argv)
 pytest_runner = ['pytest_runner'] if needs_pytest else []
 
 
