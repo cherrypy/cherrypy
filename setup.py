@@ -112,6 +112,7 @@ tests_require = [
     'pytest',
     'routes',
     'nose',
+    'mock',
 ]
 
 cmd_class = {
