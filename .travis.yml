@@ -20,8 +20,7 @@ matrix:
 env:
 - WEBTEST_INTERACTIVE=false
 
-install: pip install -e .
-script: nosetests
+script: python setup.py test
 
 deploy:
   provider: pypi
