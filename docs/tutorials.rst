@@ -447,8 +447,8 @@ mildly following REST principles.
    import cherrypy
 
 
+   @cherrypy.expose
    class StringGeneratorWebService(object):
-       exposed = True
 
        @cherrypy.tools.accept(media='text/plain')
        def GET(self):
@@ -690,8 +690,8 @@ Both are hosted by the same application server.
            return open('index.html')
 
 
+   @cherrypy.expose
    class StringGeneratorWebService(object):
-       exposed = True
 
        @cherrypy.tools.accept(media='text/plain')
        def GET(self):
@@ -796,8 +796,8 @@ So let's simply focus on the application code itself:
            return open('index.html')
 
 
+   @cherrypy.expose
    class StringGeneratorWebService(object):
-       exposed = True
 
        @cherrypy.tools.accept(media='text/plain')
        def GET(self):
