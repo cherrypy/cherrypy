@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import unittest
 
 import six
@@ -18,4 +20,4 @@ class StringTester(unittest.TestCase):
         """
         if six.PY3:
             raise nose.SkipTest("Only useful on Python 2")
-        self.assertRaises(Exception, compat.ntob, unicode('fight'))
+        self.assertRaises(Exception, compat.ntob, 'fight')
