@@ -23,6 +23,7 @@ from cherrypy.test import helper
 
 class CoreRequestHandlingTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
@@ -278,7 +279,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     'WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
 
         cherrypy.tree.mount(root)
-    setup_server = staticmethod(setup_server)
 
     def testStatus(self):
         self.getPage("/status/")
@@ -720,6 +720,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
 class ErrorTests(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         def break_header():
             # Add a header after finalize that is invalid
@@ -739,7 +740,6 @@ class ErrorTests(helper.CPWebCase):
         root = Root()
 
         cherrypy.tree.mount(root)
-    setup_server = staticmethod(setup_server)
 
     def test_start_response_error(self):
         self.getPage("/start_response_error")

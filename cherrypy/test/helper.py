@@ -236,6 +236,7 @@ class CPWebCase(webtest.WebCase):
                          }
     default_server = "wsgi"
 
+    @classmethod
     def _setup_server(cls, supervisor, conf):
         v = sys.version.split()[0]
         log.info("Python version used to run this test script: %s" % v)
@@ -278,8 +279,8 @@ class CPWebCase(webtest.WebCase):
         if supervisor.scheme == "https":
             webtest.WebCase.HTTP_CONN = HTTPSConnection
         return baseconf
-    _setup_server = classmethod(_setup_server)
 
+    @classmethod
     def setup_class(cls):
         ''
         # Creates a server
@@ -309,13 +310,12 @@ class CPWebCase(webtest.WebCase):
             supervisor.start(cls.__module__)
 
         cls.supervisor = supervisor
-    setup_class = classmethod(setup_class)
 
+    @classmethod
     def teardown_class(cls):
         ''
         if hasattr(cls, 'setup_server'):
             cls.supervisor.stop()
-    teardown_class = classmethod(teardown_class)
 
     do_gc_test = False
 

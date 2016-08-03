@@ -46,6 +46,7 @@ class HTTPTests(helper.CPWebCase):
         else:
             return HTTPConnection('%s:%s' % (self.interface(), self.PORT))
 
+    @staticmethod
     def setup_server():
         class Root:
 
@@ -90,7 +91,6 @@ class HTTPTests(helper.CPWebCase):
 
         cherrypy.tree.mount(Root())
         cherrypy.config.update({'server.max_request_body_size': 30000000})
-    setup_server = staticmethod(setup_server)
 
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the

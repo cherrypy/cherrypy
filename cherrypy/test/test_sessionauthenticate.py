@@ -4,6 +4,7 @@ from cherrypy.test import helper
 
 class SessionAuthenticateTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
 
         def check(username, password):
@@ -34,7 +35,6 @@ class SessionAuthenticateTest(helper.CPWebCase):
                 return "Hi %s, you are logged in" % cherrypy.request.login
 
         cherrypy.tree.mount(Test())
-    setup_server = staticmethod(setup_server)
 
     def testSessionAuthenticate(self):
         # request a page and check for login form

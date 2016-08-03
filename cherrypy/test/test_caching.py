@@ -24,6 +24,7 @@ from cherrypy.test import helper
 
 class CacheTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
 
         @cherrypy.config(**{'tools.caching.on': True})
@@ -129,7 +130,6 @@ class CacheTest(helper.CPWebCase):
         cherrypy.tree.mount(UnCached(), "/expires")
         cherrypy.tree.mount(VaryHeaderCachingServer(), "/varying_headers")
         cherrypy.config.update({'tools.gzip.on': True})
-    setup_server = staticmethod(setup_server)
 
     def testCaching(self):
         elapsed = 0.0

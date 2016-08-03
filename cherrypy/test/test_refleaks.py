@@ -14,6 +14,7 @@ from cherrypy.test import helper
 
 class ReferenceTests(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
 
         class Root:
@@ -24,7 +25,6 @@ class ReferenceTests(helper.CPWebCase):
                 return "Hello world!"
 
         cherrypy.tree.mount(Root())
-    setup_server = staticmethod(setup_server)
 
     def test_threadlocal_garbage(self):
         success = []

@@ -5,6 +5,7 @@ from cherrypy.test import helper
 
 class ETagTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
@@ -30,7 +31,6 @@ class ETagTest(helper.CPWebCase):
                       'tools.etags.autotags': True,
                       }}
         cherrypy.tree.mount(Root(), config=conf)
-    setup_server = staticmethod(setup_server)
 
     def test_etags(self):
         self.getPage("/resource")

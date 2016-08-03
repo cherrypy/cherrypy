@@ -613,11 +613,12 @@ class Part(Entity):
         self.file = None
         self.value = None
 
+    @classmethod
     def from_fp(cls, fp, boundary):
         headers = cls.read_headers(fp)
         return cls(fp, headers, boundary)
-    from_fp = classmethod(from_fp)
 
+    @classmethod
     def read_headers(cls, fp):
         headers = httputil.HeaderMap()
         while True:
@@ -646,7 +647,6 @@ class Part(Entity):
             headers[k] = v
 
         return headers
-    read_headers = classmethod(read_headers)
 
     def read_lines_to_boundary(self, fp_out=None):
         """Read bytes from self.fp and return or write them to a file.

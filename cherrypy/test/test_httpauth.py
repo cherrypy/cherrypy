@@ -9,6 +9,7 @@ from cherrypy.test import helper
 
 class HTTPAuthTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
@@ -72,7 +73,6 @@ class HTTPAuthTest(helper.CPWebCase):
         root.basic = BasicProtected()
         root.basic2 = BasicProtected2()
         cherrypy.tree.mount(root, config=conf)
-    setup_server = staticmethod(setup_server)
 
     def testPublic(self):
         self.getPage("/")
