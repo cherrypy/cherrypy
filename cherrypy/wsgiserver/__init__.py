@@ -1423,18 +1423,22 @@ class HTTPConnection(object):
                     if req and not req.sent_headers:
                         try:
                             req.simple_response("408 Request Timeout")
-                        except (FatalSSLAlert, NoSSLError):
+                        except FatalSSLAlert:
                             # Close the connection.
                             return
+                        except NoSSLError:
+                            self._handle_no_ssl()
             elif errnum not in socket_errors_to_ignore:
                 self.server.error_log("socket.error %s" % repr(errnum),
                                       level=logging.WARNING, traceback=True)
                 if req and not req.sent_headers:
                     try:
                         req.simple_response("500 Internal Server Error")
-                    except (FatalSSLAlert, NoSSLError):
+                    except FatalSSLAlert:
                         # Close the connection.
                         return
+                    except NoSSLError:
+                        self._handle_no_ssl()
             return
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -1442,15 +1446,7 @@ class HTTPConnection(object):
             # Close the connection.
             return
         except NoSSLError:
-            if req and not req.sent_headers:
-                # Unwrap our wfile
-                self.wfile = CP_makefile(
-                    self.socket._sock, "wb", self.wbufsize)
-                req.simple_response(
-                    "400 Bad Request",
-                    "The client sent a plain HTTP request, but "
-                    "this server only speaks HTTPS on this port.")
-                self.linger = True
+            self._handle_no_ssl(req)
         except Exception:
             e = sys.exc_info()[1]
             self.server.error_log(repr(e), level=logging.ERROR, traceback=True)
@@ -1462,6 +1458,18 @@ class HTTPConnection(object):
                     return
 
     linger = False
+
+    def _handle_no_ssl(self, req):
+        if not req or req.sent_headers:
+            return
+        # Unwrap wfile
+        self.wfile = CP_makefile(self.socket._sock, "wb", self.wbufsize)
+        msg = (
+            "The client sent a plain HTTP request, but "
+            "this server only speaks HTTPS on this port."
+        )
+        req.simple_response("400 Bad Request", msg)
+        self.linger = True
 
     def close(self):
         """Close the socket underlying this connection."""
