@@ -1423,7 +1423,7 @@ class HTTPConnection(object):
                     if req and not req.sent_headers:
                         try:
                             req.simple_response("408 Request Timeout")
-                        except FatalSSLAlert:
+                        except (FatalSSLAlert, NoSSLError):
                             # Close the connection.
                             return
             elif errnum not in socket_errors_to_ignore:
@@ -1432,7 +1432,7 @@ class HTTPConnection(object):
                 if req and not req.sent_headers:
                     try:
                         req.simple_response("500 Internal Server Error")
-                    except FatalSSLAlert:
+                    except (FatalSSLAlert, NoSSLError):
                         # Close the connection.
                         return
             return
