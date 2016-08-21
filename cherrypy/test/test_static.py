@@ -29,13 +29,15 @@ class StaticTest(helper.CPWebCase):
     @staticmethod
     def setup_server():
         if not os.path.exists(has_space_filepath):
-            open(has_space_filepath, 'wb').write(b'Hello, world\r\n')
+            with open(has_space_filepath, 'wb') as f:
+                f.write(b'Hello, world\r\n')
         needs_bigfile = (
             not os.path.exists(bigfile_filepath)
             or os.path.getsize(bigfile_filepath) != BIGFILE_SIZE
         )
         if needs_bigfile:
-            open(bigfile_filepath, 'wb').write(b"x" * BIGFILE_SIZE)
+            with open(bigfile_filepath, 'wb') as f:
+                f.write(b"x" * BIGFILE_SIZE)
 
         class Root:
 
