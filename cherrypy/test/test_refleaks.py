@@ -1,6 +1,7 @@
 """Tests for refleaks."""
 
 import itertools
+import platform
 
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
 import threading
@@ -29,6 +30,8 @@ class ReferenceTests(helper.CPWebCase):
         cherrypy.tree.mount(Root())
 
     def test_threadlocal_garbage(self):
+        if platform.system() == 'Darwin':
+            self.skip("queue issues; see #1474")
         success = itertools.count()
 
         def getpage():
