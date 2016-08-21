@@ -23,13 +23,15 @@ http://127.0.0.1:8080/
 
    import cherrypy
 
+
    class HelloWorld(object):
        @cherrypy.expose
        def index(self):
-	   return "Hello world!"
+           return "Hello world!"
+
 
    if __name__ == '__main__':
-      cherrypy.quickstart(HelloWorld())
+       cherrypy.quickstart(HelloWorld())
 
 Store this code snippet into a file named `tut01.py` and
 execute it as follows:
@@ -90,14 +92,16 @@ string each time it is called:
 
    import cherrypy
 
+
    class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-	   return "Hello world!"
+           return "Hello world!"
 
        @cherrypy.expose
        def generate(self):
            return ''.join(random.sample(string.hexdigits, 8))
+
 
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
@@ -141,14 +145,16 @@ to indicate the length of that string dynamically.
 
    import cherrypy
 
+
    class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-	   return "Hello world!"
+           return "Hello world!"
 
        @cherrypy.expose
        def generate(self, length=8):
            return ''.join(random.sample(string.hexdigits, int(length)))
+
 
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
@@ -197,22 +203,24 @@ example.
 
    import cherrypy
 
+
    class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-	   return """<html>
+           return """<html>
              <head></head>
-	     <body>
-	       <form method="get" action="generate">
-	         <input type="text" value="8" name="length" />
+             <body>
+               <form method="get" action="generate">
+                 <input type="text" value="8" name="length" />
                  <button type="submit">Give it now!</button>
-	       </form>
-	     </body>
-	   </html>"""
+               </form>
+             </body>
+           </html>"""
 
        @cherrypy.expose
        def generate(self, length=8):
            return ''.join(random.sample(string.hexdigits, int(length)))
+
 
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
@@ -250,23 +258,24 @@ your application.
 .. code-block:: python
    :linenos:
 
-    import random
-    import string
+   import random
+   import string
 
-    import cherrypy
+   import cherrypy
 
-    class StringGenerator(object):
+
+   class StringGenerator(object):
        @cherrypy.expose
        def index(self):
            return """<html>
              <head></head>
-         <body>
-           <form method="get" action="generate">
-             <input type="text" value="8" name="length" />
+             <body>
+               <form method="get" action="generate">
+                 <input type="text" value="8" name="length" />
                  <button type="submit">Give it now!</button>
-           </form>
-         </body>
-       </html>"""
+               </form>
+             </body>
+           </html>"""
 
        @cherrypy.expose
        def generate(self, length=8):
@@ -278,13 +287,14 @@ your application.
        def display(self):
            return cherrypy.session['mystring']
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'tools.sessions.on': True
-            }
-        }
-        cherrypy.quickstart(StringGenerator(), '/', conf)
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'tools.sessions.on': True
+           }
+       }
+       cherrypy.quickstart(StringGenerator(), '/', conf)
 
 Save this into a file named `tut05.py` and run it as follows:
 
@@ -319,9 +329,9 @@ and stored into a local directory `public/css`.
 .. code-block:: css
    :linenos:
 
-      body {
-        background-color: blue;
-      }
+   body {
+     background-color: blue;
+   }
 
 Now let's update the HTML code so that we link to the stylesheet
 using the http://localhost:8080/static/css/style.css URL.
@@ -329,26 +339,27 @@ using the http://localhost:8080/static/css/style.css URL.
 .. code-block:: python
    :linenos:
 
-    import os, os.path
-    import random
-    import string
+   import os, os.path
+   import random
+   import string
 
-    import cherrypy
+   import cherrypy
 
-    class StringGenerator(object):
+
+   class StringGenerator(object):
        @cherrypy.expose
        def index(self):
            return """<html>
              <head>
                <link href="/static/css/style.css" rel="stylesheet">
              </head>
-         <body>
-           <form method="get" action="generate">
-             <input type="text" value="8" name="length" />
+             <body>
+               <form method="get" action="generate">
+                 <input type="text" value="8" name="length" />
                  <button type="submit">Give it now!</button>
-           </form>
-         </body>
-       </html>"""
+               </form>
+             </body>
+           </html>"""
 
        @cherrypy.expose
        def generate(self, length=8):
@@ -360,18 +371,20 @@ using the http://localhost:8080/static/css/style.css URL.
        def display(self):
            return cherrypy.session['mystring']
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'tools.sessions.on': True,
-		'tools.staticdir.root': os.path.abspath(os.getcwd())
-            },
-            '/static': {
-                'tools.staticdir.on': True,
-		'tools.staticdir.dir': './public'
-            }
-        }
-        cherrypy.quickstart(StringGenerator(), '/', conf)
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'tools.sessions.on': True,
+               'tools.staticdir.root': os.path.abspath(os.getcwd())
+           },
+           '/static': {
+               'tools.staticdir.on': True,
+               'tools.staticdir.dir': './public'
+           }
+       }
+       cherrypy.quickstart(StringGenerator(), '/', conf)
+
 
 Save this into a file named `tut06.py` and run it as follows:
 
@@ -428,39 +441,41 @@ mildly following REST principles.
 .. code-block:: python
    :linenos:
 
-    import random
-    import string
+   import random
+   import string
 
-    import cherrypy
+   import cherrypy
 
-    @cherrypy.expose
-    class StringGeneratorWebService(object):
 
-        @cherrypy.tools.accept(media='text/plain')
-        def GET(self):
-            return cherrypy.session['mystring']
+   @cherrypy.expose
+   class StringGeneratorWebService(object):
 
-        def POST(self, length=8):
-            some_string = ''.join(random.sample(string.hexdigits, int(length)))
-            cherrypy.session['mystring'] = some_string
-            return some_string
+       @cherrypy.tools.accept(media='text/plain')
+       def GET(self):
+           return cherrypy.session['mystring']
 
-        def PUT(self, another_string):
-            cherrypy.session['mystring'] = another_string
+       def POST(self, length=8):
+           some_string = ''.join(random.sample(string.hexdigits, int(length)))
+           cherrypy.session['mystring'] = some_string
+           return some_string
 
-        def DELETE(self):
-            cherrypy.session.pop('mystring', None)
+       def PUT(self, another_string):
+           cherrypy.session['mystring'] = another_string
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.sessions.on': True,
-                'tools.response_headers.on': True,
-                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-            }
-        }
-        cherrypy.quickstart(StringGeneratorWebService(), '/', conf)
+       def DELETE(self):
+           cherrypy.session.pop('mystring', None)
+
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+               'tools.sessions.on': True,
+               'tools.response_headers.on': True,
+               'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+           }
+       }
+       cherrypy.quickstart(StringGeneratorWebService(), '/', conf)
 
 
 Save this into a file named `tut07.py` and run it as follows:
@@ -596,56 +611,56 @@ Save the following HTML code into a file named `index.html`.
 
    <!DOCTYPE html>
    <html>
-      <head>
-	<link href="/static/css/style.css" rel="stylesheet">
-	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
-	<script type="text/javascript">
-	  $(document).ready(function() {
+     <head>
+       <link href="/static/css/style.css" rel="stylesheet">
+       <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+       <script type="text/javascript">
+         $(document).ready(function() {
 
-	    $("#generate-string").click(function(e) {
-	      $.post("/generator", {"length": $("input[name='length']").val()})
-	       .done(function(string) {
-		  $("#the-string").show();
-		  $("#the-string input").val(string);
-	       });
-	      e.preventDefault();
-	    });
+           $("#generate-string").click(function(e) {
+             $.post("/generator", {"length": $("input[name='length']").val()})
+              .done(function(string) {
+               $("#the-string").show();
+               $("#the-string input").val(string);
+             });
+             e.preventDefault();
+           });
 
-	    $("#replace-string").click(function(e) {
-	      $.ajax({
-		 type: "PUT",
-		 url: "/generator",
-		 data: {"another_string": $("#the-string input").val()}
-	      })
-	      .done(function() {
-		 alert("Replaced!");
-	      });
-	      e.preventDefault();
-	    });
+           $("#replace-string").click(function(e) {
+             $.ajax({
+               type: "PUT",
+               url: "/generator",
+               data: {"another_string": $("#the-string input").val()}
+             })
+             .done(function() {
+               alert("Replaced!");
+             });
+             e.preventDefault();
+           });
 
-	    $("#delete-string").click(function(e) {
-	      $.ajax({
-		 type: "DELETE",
-		 url: "/generator"
-	      })
-	      .done(function() {
-		 $("#the-string").hide();
-	      });
-	      e.preventDefault();
-	    });
+           $("#delete-string").click(function(e) {
+             $.ajax({
+               type: "DELETE",
+               url: "/generator"
+             })
+             .done(function() {
+               $("#the-string").hide();
+             });
+             e.preventDefault();
+           });
 
-	  });
-	</script>
-      </head>
-      <body>
-	<input type="text" value="8" name="length" />
-	<button id="generate-string">Give it now!</button>
-	<div id="the-string">
-	    <input type="text" />
-	    <button id="replace-string">Replace</button>
-	    <button id="delete-string">Delete it</button>
-	</div>
-      </body>
+         });
+       </script>
+     </head>
+     <body>
+       <input type="text" value="8" name="length"/>
+       <button id="generate-string">Give it now!</button>
+       <div id="the-string">
+         <input type="text" />
+         <button id="replace-string">Replace</button>
+         <button id="delete-string">Delete it</button>
+       </div>
+     </body>
    </html>
 
 We'll be using the `jQuery framework <http://jquery.com/>`_
@@ -662,55 +677,57 @@ Both are hosted by the same application server.
 .. code-block:: python
    :linenos:
 
-    import os, os.path
-    import random
-    import string
+   import os, os.path
+   import random
+   import string
 
-    import cherrypy
+   import cherrypy
 
-    class StringGenerator(object):
+
+   class StringGenerator(object):
        @cherrypy.expose
        def index(self):
            return open('index.html')
 
-    @cherrypy.expose
-    class StringGeneratorWebService(object):
 
-        @cherrypy.tools.accept(media='text/plain')
-        def GET(self):
-            return cherrypy.session['mystring']
+   @cherrypy.expose
+   class StringGeneratorWebService(object):
 
-        def POST(self, length=8):
-            some_string = ''.join(random.sample(string.hexdigits, int(length)))
-            cherrypy.session['mystring'] = some_string
-            return some_string
+       @cherrypy.tools.accept(media='text/plain')
+       def GET(self):
+           return cherrypy.session['mystring']
 
-        def PUT(self, another_string):
-            cherrypy.session['mystring'] = another_string
+       def POST(self, length=8):
+           some_string = ''.join(random.sample(string.hexdigits, int(length)))
+           cherrypy.session['mystring'] = some_string
+           return some_string
 
-        def DELETE(self):
-            cherrypy.session.pop('mystring', None)
+       def PUT(self, another_string):
+           cherrypy.session['mystring'] = another_string
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'tools.sessions.on': True,
-                'tools.staticdir.root': os.path.abspath(os.getcwd())
-            },
-            '/generator': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.response_headers.on': True,
-                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-            },
-            '/static': {
-                'tools.staticdir.on': True,
-                'tools.staticdir.dir': './public'
-            }
-        }
-        webapp = StringGenerator()
-        webapp.generator = StringGeneratorWebService()
-        cherrypy.quickstart(webapp, '/', conf)
+       def DELETE(self):
+           cherrypy.session.pop('mystring', None)
 
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'tools.sessions.on': True,
+               'tools.staticdir.root': os.path.abspath(os.getcwd())
+           },
+           '/generator': {
+               'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+               'tools.response_headers.on': True,
+               'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+           },
+           '/static': {
+               'tools.staticdir.on': True,
+               'tools.staticdir.dir': './public'
+           }
+       }
+       webapp = StringGenerator()
+       webapp.generator = StringGeneratorWebService()
+       cherrypy.quickstart(webapp, '/', conf)
 
 Save this into a file named `tut08.py` and run it as follows:
 
@@ -762,92 +779,96 @@ So let's simply focus on the application code itself:
 .. code-block:: python
    :linenos:
 
-    import os, os.path
-    import random
-    import sqlite3
-    import string
-    import time
+   import os, os.path
+   import random
+   import sqlite3
+   import string
+   import time
 
-    import cherrypy
+   import cherrypy
 
-    DB_STRING = "my.db"
+   DB_STRING = "my.db"
 
-    class StringGenerator(object):
+
+   class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-           return file('index.html')
+           return open('index.html')
 
-    @cherrypy.expose
-    class StringGeneratorWebService(object):
 
-        @cherrypy.tools.accept(media='text/plain')
-        def GET(self):
-            with sqlite3.connect(DB_STRING) as c:
-                cherrypy.session['ts'] = time.time()
-                r = c.execute("SELECT value FROM user_string WHERE session_id=?",
-                          [cherrypy.session.id])
-                return r.fetchone()
+   @cherrypy.expose
+   class StringGeneratorWebService(object):
 
-        def POST(self, length=8):
-            some_string = ''.join(random.sample(string.hexdigits, int(length)))
-            with sqlite3.connect(DB_STRING) as c:
-                cherrypy.session['ts'] = time.time()
-                c.execute("INSERT INTO user_string VALUES (?, ?)",
-                          [cherrypy.session.id, some_string])
-            return some_string
+       @cherrypy.tools.accept(media='text/plain')
+       def GET(self):
+           with sqlite3.connect(DB_STRING) as c:
+               cherrypy.session['ts'] = time.time()
+               r = c.execute("SELECT value FROM user_string WHERE session_id=?",
+                             [cherrypy.session.id])
+               return r.fetchone()
 
-        def PUT(self, another_string):
-            with sqlite3.connect(DB_STRING) as c:
-                cherrypy.session['ts'] = time.time()
-                c.execute("UPDATE user_string SET value=? WHERE session_id=?",
-                          [another_string, cherrypy.session.id])
+       def POST(self, length=8):
+           some_string = ''.join(random.sample(string.hexdigits, int(length)))
+           with sqlite3.connect(DB_STRING) as c:
+               cherrypy.session['ts'] = time.time()
+               c.execute("INSERT INTO user_string VALUES (?, ?)",
+                         [cherrypy.session.id, some_string])
+           return some_string
 
-        def DELETE(self):
-            cherrypy.session.pop('ts', None)
-            with sqlite3.connect(DB_STRING) as c:
-                c.execute("DELETE FROM user_string WHERE session_id=?",
-                          [cherrypy.session.id])
+       def PUT(self, another_string):
+           with sqlite3.connect(DB_STRING) as c:
+               cherrypy.session['ts'] = time.time()
+               c.execute("UPDATE user_string SET value=? WHERE session_id=?",
+                         [another_string, cherrypy.session.id])
 
-    def setup_database():
-        """
-        Create the `user_string` table in the database
-        on server startup
-        """
-        with sqlite3.connect(DB_STRING) as con:
-            con.execute("CREATE TABLE user_string (session_id, value)")
+       def DELETE(self):
+           cherrypy.session.pop('ts', None)
+           with sqlite3.connect(DB_STRING) as c:
+               c.execute("DELETE FROM user_string WHERE session_id=?",
+                         [cherrypy.session.id])
 
-    def cleanup_database():
-        """
-        Destroy the `user_string` table from the database
-        on server shutdown.
-        """
-        with sqlite3.connect(DB_STRING) as con:
-            con.execute("DROP TABLE user_string")
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'tools.sessions.on': True,
-                'tools.staticdir.root': os.path.abspath(os.getcwd())
-            },
-            '/generator': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.response_headers.on': True,
-                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-            },
-            '/static': {
-                'tools.staticdir.on': True,
-                'tools.staticdir.dir': './public'
-            }
-        }
+   def setup_database():
+       """
+       Create the `user_string` table in the database
+       on server startup
+       """
+       with sqlite3.connect(DB_STRING) as con:
+           con.execute("CREATE TABLE user_string (session_id, value)")
 
-        cherrypy.engine.subscribe('start', setup_database)
-        cherrypy.engine.subscribe('stop', cleanup_database)
 
-        webapp = StringGenerator()
-        webapp.generator = StringGeneratorWebService()
-        cherrypy.quickstart(webapp, '/', conf)
+   def cleanup_database():
+       """
+       Destroy the `user_string` table from the database
+       on server shutdown.
+       """
+       with sqlite3.connect(DB_STRING) as con:
+           con.execute("DROP TABLE user_string")
 
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'tools.sessions.on': True,
+               'tools.staticdir.root': os.path.abspath(os.getcwd())
+           },
+           '/generator': {
+               'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+               'tools.response_headers.on': True,
+               'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+           },
+           '/static': {
+               'tools.staticdir.on': True,
+               'tools.staticdir.dir': './public'
+           }
+       }
+
+       cherrypy.engine.subscribe('start', setup_database)
+       cherrypy.engine.subscribe('stop', cleanup_database)
+
+       webapp = StringGenerator()
+       webapp.generator = StringGeneratorWebService()
+       cherrypy.quickstart(webapp, '/', conf)
 
 Save this into a file named `tut09.py` and run it as follows:
 
@@ -931,163 +952,162 @@ directory:
 .. code-block:: javascript
    :linenos:
 
-    var StringGeneratorBox = React.createClass({
-      handleGenerate: function() {
-        var length = this.state.length;
-        this.setState(function() {
-          $.ajax({
-            url: this.props.url,
-            dataType: 'text',
-            type: 'POST',
-            data: {
-              "length": length
-            },
-            success: function(data) {
-              this.setState({
-                length: length,
-                string: data,
-                mode: "edit"
-              });
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(this.props.url,
-                status, err.toString()
-              );
-            }.bind(this)
-          });
-        });
-      },
-      handleEdit: function() {
-        var new_string = this.state.string;
-        this.setState(function() {
-          $.ajax({
-            url: this.props.url,
-            type: 'PUT',
-            data: {
-              "another_string": new_string
-            },
-            success: function() {
-              this.setState({
-                length: new_string.length,
-                string: new_string,
-                mode: "edit"
-              });
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(this.props.url,
-                status, err.toString()
-              );
-            }.bind(this)
-          });
-        });
-      },
-      handleDelete: function() {
-        this.setState(function() {
-          $.ajax({
-            url: this.props.url,
-            type: 'DELETE',
-            success: function() {
-              this.setState({
-                length: "8",
-                string: "",
-                mode: "create"
-              });
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(this.props.url,
-                status, err.toString()
-              );
-            }.bind(this)
-          });
-        });
-      },
-      handleLengthChange: function(length) {
-        this.setState({
-          length: length,
-          string: "",
-          mode: "create"
-        });
-      },
-      handleStringChange: function(new_string) {
-        this.setState({
-          length: new_string.length,
-          string: new_string,
-          mode: "edit"
-        });
-      },
-      getInitialState: function() {
-        return {
-          length: "8",
-          string: "",
-          mode: "create"
-        };
-      },
-      render: function() {
-        return (
-          <div className="stringGenBox">
-                <StringGeneratorForm onCreateString={this.handleGenerate}
-                                     onReplaceString={this.handleEdit}
-                                     onDeleteString={this.handleDelete}
-                                     onLengthChange={this.handleLengthChange}
-                                     onStringChange={this.handleStringChange}
-                                     mode={this.state.mode}
-                                     length={this.state.length}
-                                     string={this.state.string}/>
-          </div>
-        );
-      }
-    });
+   var StringGeneratorBox = React.createClass({
+     handleGenerate: function() {
+       var length = this.state.length;
+       this.setState(function() {
+         $.ajax({
+           url: this.props.url,
+           dataType: 'text',
+           type: 'POST',
+           data: {
+             "length": length
+           },
+           success: function(data) {
+             this.setState({
+               length: length,
+               string: data,
+               mode: "edit"
+             });
+           }.bind(this),
+           error: function(xhr, status, err) {
+             console.error(this.props.url,
+               status, err.toString()
+             );
+           }.bind(this)
+         });
+       });
+     },
+     handleEdit: function() {
+       var new_string = this.state.string;
+       this.setState(function() {
+         $.ajax({
+           url: this.props.url,
+           type: 'PUT',
+           data: {
+             "another_string": new_string
+           },
+           success: function() {
+             this.setState({
+               length: new_string.length,
+               string: new_string,
+               mode: "edit"
+             });
+           }.bind(this),
+           error: function(xhr, status, err) {
+             console.error(this.props.url,
+               status, err.toString()
+             );
+           }.bind(this)
+         });
+       });
+     },
+     handleDelete: function() {
+       this.setState(function() {
+         $.ajax({
+           url: this.props.url,
+           type: 'DELETE',
+           success: function() {
+             this.setState({
+               length: "8",
+               string: "",
+               mode: "create"
+             });
+           }.bind(this),
+           error: function(xhr, status, err) {
+             console.error(this.props.url,
+               status, err.toString()
+             );
+           }.bind(this)
+         });
+       });
+     },
+     handleLengthChange: function(length) {
+       this.setState({
+         length: length,
+         string: "",
+         mode: "create"
+       });
+     },
+     handleStringChange: function(new_string) {
+       this.setState({
+         length: new_string.length,
+         string: new_string,
+         mode: "edit"
+       });
+     },
+     getInitialState: function() {
+       return {
+         length: "8",
+         string: "",
+         mode: "create"
+       };
+     },
+     render: function() {
+       return (
+         <div className="stringGenBox">
+               <StringGeneratorForm onCreateString={this.handleGenerate}
+                                    onReplaceString={this.handleEdit}
+                                    onDeleteString={this.handleDelete}
+                                    onLengthChange={this.handleLengthChange}
+                                    onStringChange={this.handleStringChange}
+                                    mode={this.state.mode}
+                                    length={this.state.length}
+                                    string={this.state.string}/>
+         </div>
+       );
+     }
+   });
 
-    var StringGeneratorForm = React.createClass({
-      handleCreate: function(e) {
-        e.preventDefault();
-        this.props.onCreateString();
-      },
-      handleReplace: function(e) {
-        e.preventDefault();
-        this.props.onReplaceString();
-      },
-      handleDelete: function(e) {
-        e.preventDefault();
-        this.props.onDeleteString();
-      },
-      handleLengthChange: function(e) {
-        e.preventDefault();
-        var length = React.findDOMNode(this.refs.length).value.trim();
-        this.props.onLengthChange(length);
-      },
-      handleStringChange: function(e) {
-        e.preventDefault();
-        var string = React.findDOMNode(this.refs.string).value.trim();
-        this.props.onStringChange(string);
-      },
-      render: function() {
-        if (this.props.mode == "create") {
-          return (
-            <div>
-               <input  type="text" ref="length" defaultValue="8" value={this.props.length} onChange={this.handleLengthChange} />
-               <button onClick={this.handleCreate}>Give it now!</button>
-            </div>
-          );
-        } else if (this.props.mode == "edit") {
-          return (
-            <div>
-               <input type="text" ref="string" value={this.props.string} onChange={this.handleStringChange} />
-               <button onClick={this.handleReplace}>Replace</button>
-               <button onClick={this.handleDelete}>Delete it</button>
-            </div>
-          );
-        }
+   var StringGeneratorForm = React.createClass({
+     handleCreate: function(e) {
+       e.preventDefault();
+       this.props.onCreateString();
+     },
+     handleReplace: function(e) {
+       e.preventDefault();
+       this.props.onReplaceString();
+     },
+     handleDelete: function(e) {
+       e.preventDefault();
+       this.props.onDeleteString();
+     },
+     handleLengthChange: function(e) {
+       e.preventDefault();
+       var length = React.findDOMNode(this.refs.length).value.trim();
+       this.props.onLengthChange(length);
+     },
+     handleStringChange: function(e) {
+       e.preventDefault();
+       var string = React.findDOMNode(this.refs.string).value.trim();
+       this.props.onStringChange(string);
+     },
+     render: function() {
+       if (this.props.mode == "create") {
+         return (
+           <div>
+              <input  type="text" ref="length" defaultValue="8" value={this.props.length} onChange={this.handleLengthChange} />
+              <button onClick={this.handleCreate}>Give it now!</button>
+           </div>
+         );
+       } else if (this.props.mode == "edit") {
+         return (
+           <div>
+              <input type="text" ref="string" value={this.props.string} onChange={this.handleStringChange} />
+              <button onClick={this.handleReplace}>Replace</button>
+              <button onClick={this.handleDelete}>Delete it</button>
+           </div>
+         );
+       }
 
-        return null;
-      }
-    });
+       return null;
+     }
+   });
 
-    React.render(
-      <StringGeneratorBox url="/generator" />,
-      document.getElementById('generator')
-    );
-
+   React.render(
+     <StringGeneratorBox url="/generator" />,
+     document.getElementById('generator')
+   );
 
 Wow! What a lot of code for something so simple, isn't it?
 The entry point is the last few lines where we indicate that we
@@ -1179,5 +1199,3 @@ those to a database for instance), etc.
 :ref:`Plugins <busplugins>` are called that way because
 they work along with the CherryPy :ref:`engine <cpengine>`
 and extend it with your operations.
-
-

@@ -475,6 +475,7 @@ class FileSession(Session):
             raise ValueError("Lock timeout must be numeric seconds or "
                 "a timedelta instance.")
 
+    @classmethod
     def setup(cls, **kwargs):
         """Set up the storage system for file-based sessions.
 
@@ -486,7 +487,6 @@ class FileSession(Session):
 
         for k, v in kwargs.items():
             setattr(cls, k, v)
-    setup = classmethod(setup)
 
     def _get_file_path(self):
         f = os.path.join(self.storage_path, self.SESSION_PREFIX + self.id)
@@ -603,6 +603,7 @@ class MemcachedSession(Session):
 
     servers = ['127.0.0.1:11211']
 
+    @classmethod
     def setup(cls, **kwargs):
         """Set up the storage system for memcached-based sessions.
 
@@ -614,7 +615,6 @@ class MemcachedSession(Session):
 
         import memcache
         cls.cache = memcache.Client(cls.servers)
-    setup = classmethod(setup)
 
     def _get_id(self):
         return self._id

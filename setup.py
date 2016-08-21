@@ -54,7 +54,7 @@ class Tox(TestCommand):
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "7.0.0"
+version = "7.1.0"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers = [
@@ -99,29 +99,33 @@ packages = [
     "cherrypy.wsgiserver",
 ]
 data_files = [
-    ('cherrypy', ['cherrypy/cherryd',
-                  'cherrypy/favicon.ico',
-                  'cherrypy/LICENSE.txt',
-                  ]),
+    ('cherrypy', [
+        'cherrypy/cherryd',
+        'cherrypy/favicon.ico',
+        'cherrypy/LICENSE.txt',
+    ]),
     ('cherrypy/process', []),
-    ('cherrypy/scaffold', ['cherrypy/scaffold/example.conf',
-                           'cherrypy/scaffold/site.conf',
-                           ]),
+    ('cherrypy/scaffold', [
+        'cherrypy/scaffold/example.conf',
+        'cherrypy/scaffold/site.conf',
+    ]),
     ('cherrypy/scaffold/static', [
-        'cherrypy/scaffold/static/made_with_cherrypy_small.png']),
-    ('cherrypy/test', ['cherrypy/test/style.css',
-                       'cherrypy/test/test.pem',
-                       ]),
-    ('cherrypy/test/static', ['cherrypy/test/static/index.html',
-                              'cherrypy/test/static/dirback.jpg', ]),
-    ('cherrypy/tutorial',
-        [
-            'cherrypy/tutorial/tutorial.conf',
-            'cherrypy/tutorial/README.txt',
-            'cherrypy/tutorial/pdf_file.pdf',
-            'cherrypy/tutorial/custom_error.html',
-        ]
-     ),
+        'cherrypy/scaffold/static/made_with_cherrypy_small.png',
+    ]),
+    ('cherrypy/test', [
+        'cherrypy/test/style.css',
+        'cherrypy/test/test.pem',
+    ]),
+    ('cherrypy/test/static', [
+        'cherrypy/test/static/index.html',
+        'cherrypy/test/static/dirback.jpg',
+    ]),
+    ('cherrypy/tutorial', [
+        'cherrypy/tutorial/tutorial.conf',
+        'cherrypy/tutorial/README.txt',
+        'cherrypy/tutorial/pdf_file.pdf',
+        'cherrypy/tutorial/custom_error.html',
+    ]),
 ]
 scripts = ["cherrypy/cherryd"]
 

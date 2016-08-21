@@ -1426,6 +1426,8 @@ class HTTPConnection(object):
                         except FatalSSLAlert:
                             # Close the connection.
                             return
+                        except NoSSLError:
+                            self._handle_no_ssl()
             elif errnum not in socket_errors_to_ignore:
                 self.server.error_log("socket.error %s" % repr(errnum),
                                       level=logging.WARNING, traceback=True)
@@ -1435,6 +1437,8 @@ class HTTPConnection(object):
                     except FatalSSLAlert:
                         # Close the connection.
                         return
+                    except NoSSLError:
+                        self._handle_no_ssl()
             return
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -1442,15 +1446,7 @@ class HTTPConnection(object):
             # Close the connection.
             return
         except NoSSLError:
-            if req and not req.sent_headers:
-                # Unwrap our wfile
-                self.wfile = CP_makefile(
-                    self.socket._sock, "wb", self.wbufsize)
-                req.simple_response(
-                    "400 Bad Request",
-                    "The client sent a plain HTTP request, but "
-                    "this server only speaks HTTPS on this port.")
-                self.linger = True
+            self._handle_no_ssl(req)
         except Exception:
             e = sys.exc_info()[1]
             self.server.error_log(repr(e), level=logging.ERROR, traceback=True)
@@ -1462,6 +1458,18 @@ class HTTPConnection(object):
                     return
 
     linger = False
+
+    def _handle_no_ssl(self, req):
+        if not req or req.sent_headers:
+            return
+        # Unwrap wfile
+        self.wfile = CP_makefile(self.socket._sock, "wb", self.wbufsize)
+        msg = (
+            "The client sent a plain HTTP request, but "
+            "this server only speaks HTTPS on this port."
+        )
+        req.simple_response("400 Bad Request", msg)
+        self.linger = True
 
     def close(self):
         """Close the socket underlying this connection."""
@@ -1925,7 +1933,10 @@ class HTTPServer(object):
         interface" (INADDR_ANY), and '::' is the similar IN6ADDR_ANY for
         IPv6. The empty string or None are not allowed.
 
-        For UNIX sockets, supply the filename as a string.""")
+        For UNIX sockets, supply the filename as a string.
+
+        Systemd socket activation is automatic and doesn't require tempering
+        with this variable""")
 
     def start(self):
         """Run the server forever."""
@@ -1939,7 +1950,11 @@ class HTTPServer(object):
             self.software = "%s Server" % self.version
 
         # Select the appropriate socket
-        if isinstance(self.bind_addr, six.string_types):
+        self.socket = None
+        if os.getenv('LISTEN_PID', None):
+            # systemd socket activation
+            self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
+        elif isinstance(self.bind_addr, six.string_types):
             # AF_UNIX socket
 
             # So we can reuse the socket...
@@ -1973,21 +1988,21 @@ class HTTPServer(object):
                     info = [(socket.AF_INET, socket.SOCK_STREAM,
                              0, "", self.bind_addr)]
 
-        self.socket = None
-        msg = "No socket could be created"
-        for res in info:
-            af, socktype, proto, canonname, sa = res
-            try:
-                self.bind(af, socktype, proto)
-            except socket.error as serr:
-                msg = "%s -- (%s: %s)" % (msg, sa, serr)
-                if self.socket:
-                    self.socket.close()
-                self.socket = None
-                continue
-            break
         if not self.socket:
-            raise socket.error(msg)
+            msg = "No socket could be created"
+            for res in info:
+                af, socktype, proto, canonname, sa = res
+                try:
+                    self.bind(af, socktype, proto)
+                    break
+                except socket.error as serr:
+                    msg = "%s -- (%s: %s)" % (msg, sa, serr)
+                    if self.socket:
+                        self.socket.close()
+                    self.socket = None
+
+            if not self.socket:
+                raise socket.error(msg)
 
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)

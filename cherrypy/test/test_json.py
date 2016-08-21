@@ -9,6 +9,7 @@ json_in = cherrypy.config(**{'tools.json_in.on': True})
 
 class JsonTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root(object):
 
@@ -47,7 +48,6 @@ class JsonTest(helper.CPWebCase):
 
         root = Root()
         cherrypy.tree.mount(root)
-    setup_server = staticmethod(setup_server)
 
     def test_json_output(self):
         if json is None:

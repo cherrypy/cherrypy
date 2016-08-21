@@ -7,6 +7,7 @@ from cherrypy.test import helper
 
 class VirtualHostTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
@@ -62,7 +63,6 @@ class VirtualHostTest(helper.CPWebCase):
                 'tools.staticdir.index': 'index.html',
             },
         })
-    setup_server = staticmethod(setup_server)
 
     def testVirtualHost(self):
         self.getPage("/", [('Host', 'www.mydom1.com')])

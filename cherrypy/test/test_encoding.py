@@ -22,6 +22,7 @@ from cherrypy.test import helper
 
 class EncodingTests(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
@@ -117,7 +118,6 @@ class EncodingTests(helper.CPWebCase):
         root.gzip = GZIP()
         root.decode = Decode()
         cherrypy.tree.mount(root, config={'/gzip': {'tools.gzip.on': True}})
-    setup_server = staticmethod(setup_server)
 
     def test_query_string_decoding(self):
         if six.PY3:
