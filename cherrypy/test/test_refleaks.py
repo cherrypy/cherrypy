@@ -2,7 +2,7 @@
 
 import itertools
 
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
 import threading
 
 import cherrypy
@@ -43,7 +43,7 @@ class ReferenceTests(helper.CPWebCase):
                 response = c.getresponse()
                 body = response.read()
                 self.assertEqual(response.status, 200)
-                self.assertEqual(body, ntob("Hello world!"))
+                self.assertEqual(body, b"Hello world!")
             finally:
                 c.close()
             next(success)
