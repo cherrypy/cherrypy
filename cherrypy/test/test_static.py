@@ -362,6 +362,5 @@ class StaticTest(helper.CPWebCase):
 
 
 def error_page_404(status, message, traceback, version):
-    import os.path
-    return static.serve_file(os.path.join(curdir, 'static', '404.html'),
-        content_type='text/html')
+    path = os.path.join(curdir, 'static', '404.html')
+    return static.serve_file(path, content_type='text/html')
