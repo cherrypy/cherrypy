@@ -186,11 +186,15 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/error/thing.html")
         self.assertErrorPage(500)
         if sys.version_info >= (3, 3):
-            errmsg = ("TypeError: staticdir\(\) missing 2 "
-                          "required positional arguments")
+            errmsg = (
+                "TypeError: staticdir\(\) missing 2 "
+                "required positional arguments"
+            )
         else:
-            errmsg = ("TypeError: staticdir\(\) takes at least 2 "
-                          "(positional )?arguments \(0 given\)")
+            errmsg = (
+                "TypeError: staticdir\(\) takes at least 2 "
+                "(positional )?arguments \(0 given\)"
+            )
         self.assertMatchesBody(errmsg.encode('ascii'))
 
     def test_security(self):
