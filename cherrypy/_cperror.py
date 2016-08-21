@@ -115,6 +115,7 @@ Note that you have to explicitly set
 and not simply return an error message as a result.
 """
 
+import contextlib
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
@@ -412,6 +413,15 @@ class HTTPError(CherryPyException):
     def __call__(self):
         """Use this exception as a request.handler (raise self)."""
         raise self
+
+    @classmethod
+    @contextlib.contextmanager
+    def handle(cls, exception, status=500, message=''):
+        """Translate exception into an HTTPError."""
+        try:
+            yield
+        except exception as exc:
+            raise cls(status, message or str(exc))
 
 
 class NotFound(HTTPError):

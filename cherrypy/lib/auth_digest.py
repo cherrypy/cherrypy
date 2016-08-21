@@ -351,12 +351,10 @@ def digest_auth(realm, get_ha1, key, debug=False):
     auth_header = request.headers.get('authorization')
     nonce_is_stale = False
     if auth_header is not None:
-        try:
+        with cherrypy.HTTPError.handle(ValueError, 400,
+                "The Authorization header could not be parsed."):
             auth = HttpDigestAuthorization(
                 auth_header, request.method, debug=debug)
-        except ValueError:
-            raise cherrypy.HTTPError(
-                400, "The Authorization header could not be parsed.")
 
         if debug:
             TRACE(str(auth))
