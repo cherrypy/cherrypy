@@ -12,6 +12,7 @@ import re
 import sys
 import time
 import warnings
+import io
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, copyitems, HTTPSConnection, ntob
@@ -480,9 +481,8 @@ server.ssl_private_key: r'%s'
             'ssl': ssl,
             'extra': extra,
         }
-        f = open(self.config_file, 'wb')
-        f.write(ntob(conf, 'utf-8'))
-        f.close()
+        with io.open(self.config_file, 'w', encoding='utf-8') as f:
+            f.write(conf)
 
     def start(self, imports=None):
         """Start cherryd in a subprocess."""
