@@ -1,5 +1,7 @@
 """Tests for refleaks."""
 
+import itertools
+
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 import threading
 
@@ -27,7 +29,7 @@ class ReferenceTests(helper.CPWebCase):
         cherrypy.tree.mount(Root())
 
     def test_threadlocal_garbage(self):
-        success = []
+        success = itertools.count()
 
         def getpage():
             host = '%s:%s' % (self.interface(), self.PORT)
@@ -44,7 +46,7 @@ class ReferenceTests(helper.CPWebCase):
                 self.assertEqual(body, ntob("Hello world!"))
             finally:
                 c.close()
-            success.append(True)
+            next(success)
 
         ITERATIONS = 25
         ts = []
@@ -56,4 +58,4 @@ class ReferenceTests(helper.CPWebCase):
         for t in ts:
             t.join()
 
-        self.assertEqual(len(success), ITERATIONS)
+        self.assertEqual(next(success), ITERATIONS)
