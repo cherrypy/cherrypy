@@ -293,19 +293,19 @@ class CacheTest(helper.CPWebCase):
 
     def test_antistampede(self):
         SECONDS = 4
+        slow_url = "/long_process?seconds={SECONDS}".format(**locals())
         # We MUST make an initial synchronous request in order to create the
         # AntiStampedeCache object, and populate its selecting_headers,
         # before the actual stampede.
-        self.getPage("/long_process?seconds=%d" % SECONDS)
+        self.getPage(slow_url)
         self.assertBody('success!')
-        self.getPage("/clear_cache?path=" +
-                     quote('/long_process?seconds=%d' % SECONDS, safe=''))
+        self.getPage("/clear_cache?path=" + quote(slow_url, safe=''))
         self.assertStatus(200)
 
         start = datetime.datetime.now()
 
         def run():
-            self.getPage("/long_process?seconds=%d" % SECONDS)
+            self.getPage(slow_url)
             # The response should be the same every time
             self.assertBody('success!')
         ts = [threading.Thread(target=run) for i in xrange(100)]
