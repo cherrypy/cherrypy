@@ -98,7 +98,7 @@ import threading
 import six
 
 import cherrypy
-from cherrypy._cpcompat import copyitems, pickle, random20
+from cherrypy._cpcompat import copyitems, ntob, pickle, random20, tonative
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
 from cherrypy.lib import locking
@@ -617,13 +617,12 @@ class MemcachedSession(Session):
         cls.cache = memcache.Client(cls.servers)
 
     def _get_id(self):
-        return self._id
+        return tonative(self._id, 'utf-8')
 
     def _set_id(self, value):
-        # This encode() call is where we differ from the superclass.
-        # Memcache keys MUST be byte strings, not unicode.
-        if isinstance(value, six.text_type):
-            value = value.encode('utf-8')
+        value = tonative(value, 'utf-8')  # ensure it's unicode
+        # Memcache<1.58 keys MUST be byte strings, not unicode
+        value = ntob(value, 'utf-8')
 
         self._id = value
         for o in self.id_observers:
