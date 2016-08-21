@@ -13,6 +13,7 @@ import sys
 import time
 import warnings
 import io
+import six
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, copyitems, HTTPSConnection, ntob
@@ -482,7 +483,7 @@ server.ssl_private_key: r'%s'
             'extra': extra,
         }
         with io.open(self.config_file, 'w', encoding='utf-8') as f:
-            f.write(conf)
+            f.write(six.text_type(conf))
 
     def start(self, imports=None):
         """Start cherryd in a subprocess."""
