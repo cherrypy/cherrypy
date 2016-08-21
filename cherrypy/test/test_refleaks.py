@@ -49,10 +49,13 @@ class ReferenceTests(helper.CPWebCase):
             next(success)
 
         ITERATIONS = 25
-        ts = []
-        for _ in range(ITERATIONS):
-            t = threading.Thread(target=getpage)
-            ts.append(t)
+
+        ts = [
+            threading.Thread(target=getpage)
+            for _ in range(ITERATIONS)
+        ]
+
+        for t in ts:
             t.start()
 
         for t in ts:
