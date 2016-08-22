@@ -485,14 +485,17 @@ def cleanHeaders(headers, method, body, host, port):
 
     if method in methods_with_bodies:
         # Stick in default type and length headers if not present
-        found = False
+        found_content_type = False
+        found_content_length = False
         for k, v in headers:
             if k.lower() == 'content-type':
-                found = True
-                break
-        if not found:
+                found_content_type = True
+            if k.lower() == 'content-length':
+                found_content_length = True
+        if not found_content_type:
             headers.append(
                 ("Content-Type", "application/x-www-form-urlencoded"))
+        if not found_content_length:
             headers.append(("Content-Length", str(len(body or ""))))
 
     return headers

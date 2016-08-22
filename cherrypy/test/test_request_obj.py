@@ -761,7 +761,7 @@ class RequestObjectTests(helper.CPWebCase):
         # Provide a C-T or webtest will provide one (and a C-L) for us.
         h = [("Content-Type", "text/plain")]
         self.getPage("/method/reachable", headers=h, method="PUT")
-        self.assertStatus(411)
+        self.assertStatus(200)
 
         # Request a custom method with a request body
         b = ('<?xml version="1.0" encoding="utf-8" ?>\n\n'
