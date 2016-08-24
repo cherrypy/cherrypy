@@ -44,7 +44,7 @@ Or, just look at the pretty picture:<br />
         else:
             return "Have %d %s, %s." % (int(a), b, c)
 
-    files = cherrypy.tools.staticdir.handler(
+    files = tools.staticdir.handler(
         section="/files",
         dir=os.path.join(local_dir, "static"),
         # Ignore .php files, etc.

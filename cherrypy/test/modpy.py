@@ -37,7 +37,6 @@ KNOWN BUGS
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
-import time
 
 from cherrypy.test import helper
 

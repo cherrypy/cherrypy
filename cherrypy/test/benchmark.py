@@ -28,7 +28,6 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
 import sys
 import time
-import traceback
 
 import cherrypy
 from cherrypy._cpcompat import ntob

@@ -1,10 +1,7 @@
 """Tests for the CherryPy configuration system."""
 
 import os
-import sys
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-import socket
-import time
 
 import cherrypy
 

@@ -13,7 +13,7 @@ class RoutesDispatchTest(helper.CPWebCase):
     def setup_server():
 
         try:
-            import routes
+            import routes  # noqa
         except ImportError:
             raise nose.SkipTest('Install routes to test RoutesDispatcher code')
 

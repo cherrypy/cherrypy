@@ -61,10 +61,10 @@ try:
 except ImportError:
     pass
 
-from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect
-from cherrypy._cperror import NotFound, CherryPyException, TimeoutError
+from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa
+from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa
 
-from cherrypy import _cpdispatch as dispatch
+from cherrypy import _cpdispatch as dispatch  # noqa
 
 from cherrypy import _cptools
 tools = _cptools.default_toolbox
@@ -75,8 +75,8 @@ from cherrypy.lib import httputil as _httputil
 
 from cherrypy import _cptree
 tree = _cptree.Tree()
-from cherrypy._cptree import Application
-from cherrypy import _cpwsgi as wsgi
+from cherrypy._cptree import Application  # noqa
+from cherrypy import _cpwsgi as wsgi  # noqa
 
 from cherrypy import process
 try:
@@ -352,7 +352,7 @@ def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
 engine.subscribe('log', _buslog)
 
-from cherrypy._helper import expose, popargs, url
+from cherrypy._helper import expose, popargs, url  # noqa
 
 # import _cpconfig last so it can reference other top-level objects
 from cherrypy import _cpconfig

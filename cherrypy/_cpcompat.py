@@ -136,16 +136,16 @@ try:
     from urllib.request import parse_http_list, parse_keqv_list
 except ImportError:
     # Python 2
-    from urlparse import urljoin
-    from urllib import urlencode, urlopen
-    from urllib import quote, quote_plus
-    from urllib import unquote
-    from urllib2 import parse_http_list, parse_keqv_list
+    from urlparse import urljoin  # noqa
+    from urllib import urlencode, urlopen  # noqa
+    from urllib import quote, quote_plus  # noqa
+    from urllib import unquote  # noqa
+    from urllib2 import parse_http_list, parse_keqv_list  # noqa
 
 try:
     from threading import local as threadlocal
 except ImportError:
-    from cherrypy._cpthreadinglocal import local as threadlocal
+    from cherrypy._cpthreadinglocal import local as threadlocal  # noqa
 
 try:
     dict.iteritems
@@ -182,7 +182,7 @@ try:
     import builtins
 except ImportError:
     # Python 2
-    import __builtin__ as builtins
+    import __builtin__ as builtins  # noqa
 
 try:
     # Python 2. We try Python 2 first clients on Python 2
@@ -193,10 +193,10 @@ try:
     from BaseHTTPServer import BaseHTTPRequestHandler
 except ImportError:
     # Python 3
-    from http.cookies import SimpleCookie, CookieError
-    from http.client import BadStatusLine, HTTPConnection, IncompleteRead
-    from http.client import NotConnected
-    from http.server import BaseHTTPRequestHandler
+    from http.cookies import SimpleCookie, CookieError  # noqa
+    from http.client import BadStatusLine, HTTPConnection, IncompleteRead  # noqa
+    from http.client import NotConnected  # noqa
+    from http.server import BaseHTTPRequestHandler  # noqa
 
 # Some platforms don't expose HTTPSConnection, so handle it separately
 if six.PY3:
@@ -286,7 +286,7 @@ try:
 except ImportError:
     # In Python 2, pickle is a Python version.
     # In Python 3, pickle is the sped-up C version.
-    import pickle
+    import pickle  # noqa
 
 import binascii
 
@@ -296,7 +296,7 @@ def random20():
 try:
     from _thread import get_ident as get_thread_ident
 except ImportError:
-    from thread import get_ident as get_thread_ident
+    from thread import get_ident as get_thread_ident  # noqa
 
 try:
     # Python 3

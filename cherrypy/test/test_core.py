@@ -8,7 +8,7 @@ import sys
 import types
 
 import cherrypy
-from cherrypy._cpcompat import IncompleteRead, itervalues, ntob, ntou
+from cherrypy._cpcompat import itervalues, ntob, ntou
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
 from cherrypy.test._test_decorators import ExposeExamples

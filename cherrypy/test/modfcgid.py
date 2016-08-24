@@ -36,12 +36,10 @@ KNOWN BUGS
 import os
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
-import sys
-import time
 
 import cherrypy
 from cherrypy._cpcompat import ntob
-from cherrypy.process import plugins, servers
+from cherrypy.process import servers
 from cherrypy.test import helper
 
 
