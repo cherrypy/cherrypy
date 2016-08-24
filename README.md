@@ -1,6 +1,6 @@
 # CherryPy
 
-[![CherryPy Build Status](https://travis-ci.org/cherrypy/cherrypy.svg?branch=master)](https://travis-ci.org/cherrypy/cherrypy)
+[![CherryPy Build Status](https://travis-ci.org/cherrypy/cherrypy.svg?branch=master)](https://travis-ci.org/cherrypy/cherrypy) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/48b11060b5d249dc86e52dac2be2c715)](https://www.codacy.com/app/webknjaz/cherrypy-upstream?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=cherrypy/cherrypy&amp;utm_campaign=Badge_Grade)
 
 Welcome to the GitHub-repository of [CherryPy](http://cherrypy.org/)! 
 

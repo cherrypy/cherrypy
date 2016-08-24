@@ -118,6 +118,7 @@ and not simply return an error message as a result.
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
+from xml.sax import saxutils
 
 import six
 
@@ -269,7 +270,6 @@ class HTTPRedirect(CherryPyException):
                 307: "This resource has moved temporarily to ",
             }[status]
             msg += '<a href=%s>%s</a>.'
-            from xml.sax import saxutils
             msgs = [msg % (saxutils.quoteattr(u), u) for u in self.urls]
             response.body = ntob("<br />\n".join(msgs), 'utf-8')
             # Previous code may have set C-L, so we have to reset it
