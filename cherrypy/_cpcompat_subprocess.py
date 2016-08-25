@@ -260,11 +260,11 @@ A more real-world example would look like this:
 try:
     retcode = call("mycmd" + " myarg", shell=True)
     if retcode < 0:
-        print >>sys.stderr, "Child was terminated by signal", -retcode
+        print("Child was terminated by signal", -retcode, file=sys.stderr)
     else:
-        print >>sys.stderr, "Child returned", retcode
+        print("Child returned", retcode, file=sys.stderr)
 except OSError, e:
-    print >>sys.stderr, "Execution failed:", e
+    print("Execution failed:", e, file=sys.stderr)
 
 
 Replacing os.spawn*
@@ -350,13 +350,13 @@ pipe = os.popen("cmd", 'w')
 ...
 rc = pipe.close()
 if rc is not None and rc % 256:
-    print "There were some errors"
+    print("There were some errors")
 ==>
 process = Popen("cmd", 'w', shell=True, stdin=PIPE)
 ...
 process.stdin.close()
 if process.wait() != 0:
-    print "There were some errors"
+    print("There were some errors")
 
 
 Replacing popen2.*
@@ -1484,8 +1484,8 @@ def _demo_posix():
     # Example 1: Simple redirection: Get process list
     #
     plist = Popen(["ps"], stdout=PIPE).communicate()[0]
-    print "Process list:"
-    print plist
+    print("Process list:")
+    print(plist)
 
     #
     # Example 2: Change uid before executing child
@@ -1497,42 +1497,42 @@ def _demo_posix():
     #
     # Example 3: Connecting several subprocesses
     #
-    print "Looking for 'hda'..."
+    print("Looking for 'hda'...")
     p1 = Popen(["dmesg"], stdout=PIPE)
     p2 = Popen(["grep", "hda"], stdin=p1.stdout, stdout=PIPE)
-    print repr(p2.communicate()[0])
+    print(repr(p2.communicate()[0]))
 
     #
     # Example 4: Catch execution error
     #
-    print
-    print "Trying a weird file..."
+    print()
+    print("Trying a weird file...")
     try:
-        print Popen(["/this/path/does/not/exist"]).communicate()
+        print(Popen(["/this/path/does/not/exist"]).communicate())
     except OSError, e:
         if e.errno == errno.ENOENT:
-            print "The file didn't exist.  I thought so..."
-            print "Child traceback:"
-            print e.child_traceback
+            print("The file didn't exist.  I thought so...")
+            print("Child traceback:")
+            print(e.child_traceback)
         else:
-            print "Error", e.errno
+            print("Error", e.errno)
     else:
-        print >>sys.stderr, "Gosh.  No error."
+        print("Gosh.  No error.", e, file=sys.stderr)
 
 
 def _demo_windows():
     #
     # Example 1: Connecting several subprocesses
     #
-    print "Looking for 'PROMPT' in set output..."
+    print("Looking for 'PROMPT' in set output...")
     p1 = Popen("set", stdout=PIPE, shell=True)
     p2 = Popen('find "PROMPT"', stdin=p1.stdout, stdout=PIPE)
-    print repr(p2.communicate()[0])
+    print(repr(p2.communicate()[0]))
 
     #
     # Example 2: Simple execution of program
     #
-    print "Executing calc..."
+    print("Executing calc...")
     p = Popen("calc")
     p.wait()
 
