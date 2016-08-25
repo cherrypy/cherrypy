@@ -115,11 +115,13 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        if hasattr(c, '_set_content_length'): # python 2.6 doesn't have it
-            with patch.object(c, '_set_content_length'):
+
+        # `_get_content_length` is needed for Python 3.6+
+        with patch.object(c, '_get_content_length', lambda body, method: None, create=True):
+            # `_set_content_length` is needed for Python 2.7-3.5
+            with patch.object(c, '_set_content_length', create=True):
                 c.request("POST", "/")
-        else:
-            c.request("POST", "/")
+
         response = c.getresponse()
         self.body = response.fp.read()
         self.status = str(response.status)
