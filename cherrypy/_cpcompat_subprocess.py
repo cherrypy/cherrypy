@@ -388,6 +388,7 @@ except that:
   close_fds=True with subprocess.Popen.
 """
 
+from __future__ import print_function
 import sys
 mswindows = (sys.platform == "win32")
 
