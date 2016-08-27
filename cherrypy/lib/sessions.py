@@ -616,20 +616,6 @@ class MemcachedSession(Session):
         import memcache
         cls.cache = memcache.Client(cls.servers)
 
-    def _get_id(self):
-        return self._id
-
-    def _set_id(self, value):
-        # This encode() call is where we differ from the superclass.
-        # Memcache keys MUST be byte strings, not unicode.
-        if isinstance(value, six.text_type):
-            value = value.encode('utf-8')
-
-        self._id = value
-        for o in self.id_observers:
-            o(value)
-    id = property(_get_id, _set_id, doc="The current session ID.")
-
     def _exists(self):
         self.mc_lock.acquire()
         try:

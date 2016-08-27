@@ -137,6 +137,12 @@ tests_require = [
     'tox',
 ]
 
+extras_require = {
+    """This section defines feature flags end-users can use in dependencies"""
+    # Enables memcached session support via `cherrypy[memcached-session]`:
+    'memcached-session': ['python-memcached>=1.58'],
+}
+
 cmd_class = {
     'build_py': cherrypy_build_py,
     'test': Tox,  # Enables `python setup.py test` invocation run tox tests
@@ -173,6 +179,7 @@ setup_params = dict(
     scripts=scripts,
     cmdclass=cmd_class,
     install_requires=install_requires,
+    extras_require=extras_require,
     # Enables `python setup.py test` invocation install test dependencies first
     tests_require=tests_require,
 )
