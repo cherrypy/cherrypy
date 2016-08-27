@@ -137,8 +137,11 @@ tests_require = [
 
 extras_require = {
     """This section defines feature flags end-users can use in dependencies"""
+    'routes-dispatcher': ['routes>=2.3.1'],
     # Enables memcached session support via `cherrypy[memcached-session]`:
     'memcached-session': ['python-memcached>=1.58'],
+    'multienv-tests': tests_require,
+    'test-tools': ['nose'],
 }
 
 cmd_class = {
