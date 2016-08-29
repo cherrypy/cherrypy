@@ -3,7 +3,7 @@
 import six
 
 import cherrypy
-from cherrypy.lib import attributes
+from cherrypy.lib.reprconf import attributes
 from cherrypy._cpcompat import text_or_bytes
 
 # We import * because we want to export check_port
