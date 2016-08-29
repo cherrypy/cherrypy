@@ -1,7 +1,5 @@
 """CherryPy Library"""
 
-# Deprecated in CherryPy 3.2 -- remove in CherryPy 3.3
-from cherrypy.lib.reprconf import unrepr, modules, attributes
 
 def is_iterator(obj):
     '''Returns a boolean indicating if the object provided implements
@@ -16,9 +14,10 @@ def is_iterator(obj):
         # Types which implement the protocol must return themselves when
         # invoking 'iter' upon them.
         return iter(obj) is obj
-        
+
+
 def is_closable_iterator(obj):
-    
+
     # Not an iterator.
     if not is_iterator(obj):
         return False
@@ -39,6 +38,7 @@ def is_closable_iterator(obj):
         return False
     else:
         return True
+
 
 class file_generator(object):
 
