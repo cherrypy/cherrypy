@@ -94,6 +94,7 @@ import datetime
 import os
 import time
 import threading
+import importlib
 
 import six
 
@@ -715,8 +716,8 @@ close.failsafe = True
 close.priority = 90
 
 
-def init(storage_type='ram', path=None, path_header=None, name='session_id',
-         timeout=60, domain=None, secure=False, clean_freq=5,
+def init(storage_type='ram', storage_class=None, path=None, path_header=None,
+         name='session_id', timeout=60, domain=None, secure=False, clean_freq=5,
          persistent=True, httponly=False, debug=False, **kwargs):
     """Initialize session object (using cookies).
 
@@ -724,6 +725,10 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
         One of 'ram', 'file', memcached'. This will be
         used to look up the corresponding class in cherrypy.lib.sessions
         globals. For example, 'file' will use the FileSession class.
+
+    storage_class
+        Fully qualified class name of custom session storage backend class.
+        If set, this option overrides storage_type lookup.
 
     path
         The 'path' value to stick in the response cookie metadata.
@@ -780,9 +785,15 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
             cherrypy.log('ID obtained from request.cookie: %r' % id,
                          'TOOLS.SESSIONS')
 
-    # Find the storage class and call setup (first time only).
-    storage_class = storage_type.title() + 'Session'
-    storage_class = globals()[storage_class]
+    # Find the storage class by fully qualified name (top priority) or storage
+    # type and call setup (first time only).
+    if storage_class:
+        storage_modulename, storage_classname = storage_class.rsplit('.', 1)
+        storage_module = importlib.import_module(storage_modulename)
+        storage_class = getattr(storage_module, storage_classname)
+    else:
+        storage_class = storage_type.title() + 'Session'
+        storage_class = globals()[storage_class]
     if not hasattr(cherrypy, "session"):
         if hasattr(storage_class, "setup"):
             storage_class.setup(**kwargs)
