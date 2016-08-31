@@ -42,7 +42,6 @@ def get_tst_config(overconf={}):
             'port': 54583,
             'host': '127.0.0.1',
             'validate': False,
-            'conquer': False,
             'server': 'wsgi',
         }
         try:
@@ -164,15 +163,6 @@ class LocalWSGISupervisor(LocalSupervisor):
         """Obtain a new (decorated) WSGI app to hook into the origin server."""
         if app is None:
             app = cherrypy.tree
-
-        if self.conquer:
-            try:
-                import wsgiconq
-            except ImportError:
-                warnings.warn(
-                    "Error importing wsgiconq. pyconquer will not run.")
-            else:
-                app = wsgiconq.WSGILogger(app, c_calls=True)
 
         if self.validate:
             try:
