@@ -2,6 +2,7 @@
 import os
 import sys
 import io
+import contextlib
 
 from six.moves import urllib
 
@@ -354,15 +355,28 @@ class StaticTest(helper.CPWebCase):
         self.getPage("/static/\x00")
         self.assertStatus('404 Not Found')
 
-    def test_unicode(self):
-        url = ntou("/static/Слава Україні.html", 'utf-8')
-        # quote function requires str
-        url = tonative(url, 'utf-8')
-        url = urllib.parse.quote(url)
-        self.getPage(url)
+    @staticmethod
+    @contextlib.contextmanager
+    def unicode_file():
+        filename = ntou("Слава Україні.html", 'utf-8')
+        filepath = os.path.join(curdir, "static", filename)
+        with io.open(filepath, 'w', encoding='utf-8') as strm:
+            strm.write(ntou("Героям Слава!", 'utf-8'))
+        try:
+            yield
+        finally:
+            os.remove(filepath)
 
-        expected = ntou("Героям Слава!", 'utf-8')
-        self.assertInBody(expected)
+    def test_unicode(self):
+        with self.unicode_file():
+            url = ntou("/static/Слава Україні.html", 'utf-8')
+            # quote function requires str
+            url = tonative(url, 'utf-8')
+            url = urllib.parse.quote(url)
+            self.getPage(url)
+
+            expected = ntou("Героям Слава!", 'utf-8')
+            self.assertInBody(expected)
 
 
 def error_page_404(status, message, traceback, version):
