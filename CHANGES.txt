@@ -7,11 +7,8 @@
   - ``unrepr``, ``modules``, and ``attributes`` in
     ``cherrypy.lib``.
 
-7.2.0
------
-
-# 1476: Drop support for python-memcached<1.58
-# 1401: Handle NoSSLErrors.
+* #1476: Drop support for python-memcached<1.58
+* #1401: Handle NoSSLErrors.
 
 7.1.0
 -----
