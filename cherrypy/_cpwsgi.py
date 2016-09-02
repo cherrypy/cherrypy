@@ -337,8 +337,8 @@ class AppResponse(object):
                 # masquerading as unicode. So we have to encode back to
                 # bytes and then decode again using the "correct" encoding.
                 try:
-                    u_path = path.encode(old_enc).decode(new_enc)
-                    u_qs = qs.encode(old_enc).decode(new_enc)
+                    u_path = path.encode(old_enc).decode(new_enc, "surrogateescape")
+                    u_qs = qs.encode(old_enc).decode(new_enc, "surrogateescape")
                 except (UnicodeEncodeError, UnicodeDecodeError):
                     # Just pass them through without transcoding and hope.
                     pass

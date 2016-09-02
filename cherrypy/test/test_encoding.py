@@ -114,10 +114,30 @@ class EncodingTests(helper.CPWebCase):
                 return ', '.join([": ".join((k, v))
                                   for k, v in cherrypy.request.params.items()])
 
+        @cherrypy.popargs('path')
+        class UrlEncoding():
+
+            @cherrypy.expose
+            def default(self, *args, **kwargs):
+                return ntob(', ').join(
+                    [": ".join((k, v.encode('ascii', 'backslashreplace').decode('ascii'))).encode('utf8')
+                     for k, v in sorted(kwargs.items())]
+                )
+
         root = Root()
         root.gzip = GZIP()
         root.decode = Decode()
+        root.urlencoding = UrlEncoding()
         cherrypy.tree.mount(root, config={'/gzip': {'tools.gzip.on': True}})
+
+    def test_url_decoding(self):
+        # Get URL with valid UTF-8
+        self.getPage("/urlencoding/R%C3%A9pertoire%20Supprim%C3%A9/")
+        self.assertBody(ntob("path: R\\xe9pertoire Supprim\\xe9"))
+
+        # Get URL with invalid UTF-8 (but valid latin1)
+        self.getPage("/urlencoding/R%E9pertoire%20Supprim%E9")
+        self.assertBody(ntob("path: R\\udce9pertoire Supprim\\udce9"))
 
     def test_query_string_decoding(self):
         if six.PY3:
