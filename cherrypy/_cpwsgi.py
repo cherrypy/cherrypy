@@ -337,15 +337,13 @@ class AppResponse(object):
                 # masquerading as unicode. So we have to encode back to
                 # bytes and then decode again using the "correct" encoding.
                 try:
-                    u_path = path.encode(old_enc).decode(new_enc)
-                    u_qs = qs.encode(old_enc).decode(new_enc)
+                    path, qs = (
+                        path.encode(old_enc).decode(new_enc),
+                        qs.encode(old_enc).decode(new_enc),
+                    )
                 except (UnicodeEncodeError, UnicodeDecodeError):
                     # Just pass them through without transcoding and hope.
                     pass
-                else:
-                    # Only set transcoded values if they both succeed.
-                    path = u_path
-                    qs = u_qs
 
         rproto = self.environ.get('SERVER_PROTOCOL')
         headers = self.translate_headers(self.environ)
