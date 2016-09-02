@@ -2315,15 +2315,21 @@ class WSGIGateway(Gateway):
 
     def respond(self):
         """Process the current request."""
+
+        """
+        From PEP 333:
+
+            The start_response callable must not actually transmit
+            the response headers. Instead, it must store them for the
+            server or gateway to transmit only after the first
+            iteration of the application return value that yields
+            a NON-EMPTY string, or upon the application's first
+            invocation of the write() callable.
+        """
+
         response = self.req.server.wsgi_app(self.env, self.start_response)
         try:
             for chunk in response:
-                # "The start_response callable must not actually transmit
-                # the response headers. Instead, it must store them for the
-                # server or gateway to transmit only after the first
-                # iteration of the application return value that yields
-                # a NON-EMPTY string, or upon the application's first
-                # invocation of the write() callable." (PEP 333)
                 if chunk:
                     if isinstance(chunk, six.text_type):
                         chunk = chunk.encode('ISO-8859-1')
@@ -2333,7 +2339,9 @@ class WSGIGateway(Gateway):
                 response.close()
 
     def start_response(self, status, headers, exc_info=None):
-        """WSGI callable to begin the HTTP response."""
+        """
+        WSGI callable to begin the HTTP response.
+        """
         # "The application may call start_response more than once,
         # if and only if the exc_info argument is provided."
         if self.started_response and not exc_info:
