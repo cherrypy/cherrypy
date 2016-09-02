@@ -254,7 +254,7 @@ class AppResponse(object):
             for k, v in r.header_list:
                 if not isinstance(k, bytes):
                     tmpl = "response.header_list key %r is not a byte string."
-                    raise TypeError(tmpl % v)
+                    raise TypeError(tmpl % k)
                 if not isinstance(v, bytes):
                     tmpl = (
                         "response.header_list value %r is not a byte string."
