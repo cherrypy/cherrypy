@@ -54,7 +54,7 @@ class Tox(TestCommand):
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "7.1.0"
+version = "8.0.0"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers = [
