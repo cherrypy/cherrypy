@@ -324,26 +324,7 @@ class AppResponse(object):
                                 self.environ.get('PATH_INFO', ''))
         qs = self.environ.get('QUERY_STRING', '')
 
-        if six.PY3:
-            # This isn't perfect; if the given PATH_INFO is in the
-            # wrong encoding, it may fail to match the appropriate config
-            # section URI. But meh.
-            old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')
-            new_enc = self.cpapp.find_config(self.environ.get('PATH_INFO', ''),
-                                             "request.uri_encoding", 'utf-8')
-            if new_enc.lower() != old_enc.lower():
-                # Even though the path and qs are unicode, the WSGI server
-                # is required by PEP 3333 to coerce them to ISO-8859-1
-                # masquerading as unicode. So we have to encode back to
-                # bytes and then decode again using the "correct" encoding.
-                try:
-                    path, qs = (
-                        path.encode(old_enc).decode(new_enc, "surrogateescape"),
-                        qs.encode(old_enc).decode(new_enc, "surrogateescape"),
-                    )
-                except UnicodeEncodeError:
-                    # Just pass them through without transcoding and hope.
-                    pass
+        path, qs = self.recode_path_qs(path, qs) or (path, qs)
 
         rproto = self.environ.get('SERVER_PROTOCOL')
         headers = self.translate_headers(self.environ)
@@ -356,6 +337,32 @@ class AppResponse(object):
                    'REMOTE_HOST': 'Remote-Host',
                    'REMOTE_ADDR': 'Remote-Addr',
                    }
+
+    def recode_path_qs(self, path, qs):
+        if not six.PY3:
+            return
+
+        # This isn't perfect; if the given PATH_INFO is in the
+        # wrong encoding, it may fail to match the appropriate config
+        # section URI. But meh.
+        old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')
+        new_enc = self.cpapp.find_config(self.environ.get('PATH_INFO', ''),
+                                         "request.uri_encoding", 'utf-8')
+        if new_enc.lower() == old_enc.lower():
+            return
+
+        # Even though the path and qs are unicode, the WSGI server
+        # is required by PEP 3333 to coerce them to ISO-8859-1
+        # masquerading as unicode. So we have to encode back to
+        # bytes and then decode again using the "correct" encoding.
+        try:
+            return (
+                path.encode(old_enc).decode(new_enc, "surrogateescape"),
+                qs.encode(old_enc).decode(new_enc, "surrogateescape"),
+            )
+        except UnicodeEncodeError:
+            # Just pass them through without transcoding and hope.
+            pass
 
     def translate_headers(self, environ):
         """Translate CGI-environ header names to HTTP header names."""
