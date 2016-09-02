@@ -339,7 +339,7 @@ class AppResponse(object):
                 try:
                     u_path = path.encode(old_enc).decode(new_enc, "surrogateescape")
                     u_qs = qs.encode(old_enc).decode(new_enc, "surrogateescape")
-                except (UnicodeEncodeError, UnicodeDecodeError):
+                except UnicodeEncodeError:
                     # Just pass them through without transcoding and hope.
                     pass
                 else:
