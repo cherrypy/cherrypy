@@ -99,6 +99,7 @@ import errno
 import logging
 
 import six
+from six.moves import filter
 
 try:
     # prefer slower Python-based io module
@@ -2329,11 +2330,10 @@ class WSGIGateway(Gateway):
 
         response = self.req.server.wsgi_app(self.env, self.start_response)
         try:
-            for chunk in response:
-                if chunk:
-                    if isinstance(chunk, six.text_type):
-                        chunk = chunk.encode('ISO-8859-1')
-                    self.write(chunk)
+            for chunk in filter(None, response):
+                if isinstance(chunk, six.text_type):
+                    chunk = chunk.encode('ISO-8859-1')
+                self.write(chunk)
         finally:
             if hasattr(response, "close"):
                 response.close()
