@@ -2332,7 +2332,7 @@ class WSGIGateway(Gateway):
         try:
             for chunk in filter(None, response):
                 if isinstance(chunk, six.text_type):
-                    chunk = chunk.encode('ISO-8859-1')
+                    raise ValueError("WSGI Applications must yield bytes")
                 self.write(chunk)
         finally:
             if hasattr(response, "close"):

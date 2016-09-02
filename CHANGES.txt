@@ -9,6 +9,10 @@
 
 * #1476: Drop support for python-memcached<1.58
 * #1401: Handle NoSSLErrors.
+* #1489: In ``wsgiserver.WSGIGateway.respond``, the application
+  must now yield bytes and not text, as the spec requires.
+  If text is received, it will now raise a ValueError instead
+  of silently encoding using ISO-8859-1.
 
 7.1.0
 -----
