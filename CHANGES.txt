@@ -1,3 +1,10 @@
+8.0.1
+-----
+
+* #1489 via #1493: Additionally reject anything else that's
+  not bytes.
+* #1492: systemd socket activation.
+
 8.0.0
 -----
 
