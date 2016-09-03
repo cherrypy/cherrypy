@@ -19,7 +19,6 @@ CherryPy does not have any mandatory requirements. However certain features it c
 will require you install certain packages.
 
 - `routes <http://routes.readthedocs.org/en/latest/>`_ for declarative URL mapping dispatcher
-- `psycopg2 <http://pythonhosted.org//psycopg2/>`_ for PostgreSQL backend session
 - `pywin32 <http://sourceforge.net/projects/pywin32/>`_ for Windows services
 - `python-memcached <https://github.com/linsomniac/python-memcached>`_ for memcached backend session
 - `simplejson <https://github.com/simplejson/simplejson>`_ for a better JSON support
@@ -28,7 +27,7 @@ will require you install certain packages.
 Supported python version
 ########################
 
-CherryPy supports Python 2.3 through to 3.4.
+CherryPy supports Python 2.7 through to 3.5.
 
 
 Installing
