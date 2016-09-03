@@ -166,9 +166,10 @@ class ServerAdapter(object):
         if not self.httpserver:
             raise ValueError("No HTTP server has been created.")
 
-        # Start the httpserver in a new thread.
-        if isinstance(self.bind_addr, tuple):
-            wait_for_free_port(*self.bind_addr)
+        if not os.environ.get('LISTEN_PID', None):
+            # Start the httpserver in a new thread.
+            if isinstance(self.bind_addr, tuple):
+                wait_for_free_port(*self.bind_addr)
 
         import threading
         t = threading.Thread(target=self._start_http_thread)
