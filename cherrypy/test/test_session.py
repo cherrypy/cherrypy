@@ -6,6 +6,7 @@ import time
 import cherrypy
 from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
 from cherrypy.lib import sessions
+from cherrypy.lib import reprconf
 from cherrypy.lib.httputil import response_codes
 
 
@@ -22,7 +23,7 @@ def setup_server():
 
     @cherrypy.config(**{
         'tools.sessions.on': True,
-        'tools.sessions.storage_type': 'ram',
+        'tools.sessions.storage_class': sessions.RamSession,
         'tools.sessions.storage_path': localDir,
         'tools.sessions.timeout': (1.0 / 60),
         'tools.sessions.clean_freq': (1.0 / 60),
@@ -52,16 +53,16 @@ def setup_server():
 
         @cherrypy.expose
         @cherrypy.config(**{'tools.sessions.on': False})
-        def setsessiontype(self, newtype):
-            self.__class__._cp_config.update(
-                {'tools.sessions.storage_type': newtype})
+        def set_session_cls(self, new_cls_name):
+            new_cls = reprconf.attributes(new_cls_name)
+            cfg = {'tools.sessions.storage_class': new_cls}
+            self.__class__._cp_config.update(cfg)
             if hasattr(cherrypy, "session"):
                 del cherrypy.session
-            cls = getattr(sessions, newtype.title() + 'Session')
-            if cls.clean_thread:
-                cls.clean_thread.stop()
-                cls.clean_thread.unsubscribe()
-                del cls.clean_thread
+            if new_cls.clean_thread:
+                new_cls.clean_thread.stop()
+                new_cls.clean_thread.unsubscribe()
+                del new_cls.clean_thread
 
         @cherrypy.expose
         def index(self):
@@ -87,12 +88,12 @@ def setup_server():
             return "OK"
 
         @cherrypy.expose
-        def blah(self):
-            return self._cp_config['tools.sessions.storage_type']
+        def redir_target(self):
+            return self._cp_config['tools.sessions.storage_class'].__name__
 
         @cherrypy.expose
         def iredir(self):
-            raise cherrypy.InternalRedirect('/blah')
+            raise cherrypy.InternalRedirect('/redir_target')
 
         @cherrypy.expose
         @cherrypy.config(**{
@@ -138,7 +139,7 @@ class SessionTest(helper.CPWebCase):
                 os.unlink(os.path.join(localDir, fname))
 
     def test_0_Session(self):
-        self.getPage('/setsessiontype/ram')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self.getPage('/clear')
 
         # Test that a normal request gets the same id in the cookies.
@@ -167,7 +168,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/delkey?key=counter', self.cookies)
         self.assertStatus(200)
 
-        self.getPage('/setsessiontype/file')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
         self.getPage('/testStr')
         self.assertBody('1')
         self.getPage('/testGen', self.cookies)
@@ -212,11 +213,11 @@ class SessionTest(helper.CPWebCase):
         self.assertEqual(f(), [])
 
     def test_1_Ram_Concurrency(self):
-        self.getPage('/setsessiontype/ram')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self._test_Concurrency()
 
     def test_2_File_Concurrency(self):
-        self.getPage('/setsessiontype/file')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
         self._test_Concurrency()
 
     def _test_Concurrency(self):
@@ -273,7 +274,7 @@ class SessionTest(helper.CPWebCase):
         # Start a new session
         self.getPage('/testStr')
         self.getPage('/iredir', self.cookies)
-        self.assertBody("file")
+        self.assertBody("FileSession")
 
     def test_4_File_deletion(self):
         # Start a new session
@@ -318,7 +319,7 @@ class SessionTest(helper.CPWebCase):
         self.assertNotEqual(id2, 'maliciousid')
 
     def test_7_session_cookies(self):
-        self.getPage('/setsessiontype/ram')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self.getPage('/clear')
         self.getPage('/session_cookie')
         # grab the cookie ID
@@ -407,7 +408,7 @@ else:
         setup_server = staticmethod(setup_server)
 
         def test_0_Session(self):
-            self.getPage('/setsessiontype/memcached')
+            self.getPage('/set_session_cls/cherrypy.Sessions.MemcachedSession')
 
             self.getPage('/testStr')
             self.assertBody('1')

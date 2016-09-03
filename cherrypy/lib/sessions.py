@@ -4,13 +4,13 @@ You need to edit your config file to use sessions. Here's an example::
 
     [/]
     tools.sessions.on = True
-    tools.sessions.storage_type = "file"
+    tools.sessions.storage_class = cherrypy.lib.sessions.FileSession
     tools.sessions.storage_path = "/home/site/sessions"
     tools.sessions.timeout = 60
 
 This sets the session to be stored in files in the directory
 /home/site/sessions, and the session timeout to 60 minutes. If you omit
-``storage_type`` the sessions will be saved in RAM.
+``storage_class``, the sessions will be saved in RAM.
 ``tools.sessions.on`` is the only required line for working sessions,
 the rest are optional.
 
@@ -699,12 +699,19 @@ close.failsafe = True
 close.priority = 90
 
 
-def init(storage_type='ram', path=None, path_header=None, name='session_id',
+def init(storage_type=None, path=None, path_header=None, name='session_id',
          timeout=60, domain=None, secure=False, clean_freq=5,
-         persistent=True, httponly=False, debug=False, **kwargs):
+         persistent=True, httponly=False, debug=False,
+         # Py27 compat
+         # *, storage_class=RamSession,
+         **kwargs):
     """Initialize session object (using cookies).
 
+    storage_class
+        The Session subclass to use. Defaults to RamSession.
+
     storage_type
+        (deprecated)
         One of 'ram', 'file', memcached'. This will be
         used to look up the corresponding class in cherrypy.lib.sessions
         globals. For example, 'file' will use the FileSession class.
@@ -749,6 +756,9 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
     you're using for more information.
     """
 
+    # Py27 compat
+    storage_class = kwargs.pop('storage_class', RamSession)
+
     request = cherrypy.serving.request
 
     # Guard against running twice
@@ -764,10 +774,17 @@ def init(storage_type='ram', path=None, path_header=None, name='session_id',
             cherrypy.log('ID obtained from request.cookie: %r' % id,
                          'TOOLS.SESSIONS')
 
-    # Find the storage class and call setup (first time only).
-    storage_class = storage_type.title() + 'Session'
-    storage_class = globals()[storage_class]
-    if not hasattr(cherrypy, "session"):
+    first_time = not hasattr(cherrypy, "session")
+
+    if storage_type:
+        if first_time:
+            msg = "storage_type is deprecated. Supply storage_class instead"
+            cherrypy.log(msg)
+        storage_class = storage_type.title() + 'Session'
+        storage_class = globals()[storage_class]
+
+    # call setup first time only
+    if first_time:
         if hasattr(storage_class, "setup"):
             storage_class.setup(**kwargs)
 
