@@ -2331,7 +2331,7 @@ class WSGIGateway(Gateway):
         response = self.req.server.wsgi_app(self.env, self.start_response)
         try:
             for chunk in filter(None, response):
-                if isinstance(chunk, six.text_type):
+                if not isinstance(chunk, six.binary_type):
                     raise ValueError("WSGI Applications must yield bytes")
                 self.write(chunk)
         finally:
