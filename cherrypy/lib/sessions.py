@@ -95,8 +95,6 @@ import os
 import time
 import threading
 
-import six
-
 import cherrypy
 from cherrypy._cpcompat import copyitems, pickle, random20
 from cherrypy.lib import httputil
