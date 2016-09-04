@@ -51,8 +51,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'CherryPy'
-copyright = u'2001-2015, CherryPy Team'
+project = 'CherryPy'
+copyright = '2001-2015, CherryPy Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -213,8 +213,8 @@ latex_documents = [
     (
         'index',
         'CherryPy.tex',
-        u'CherryPy Documentation',
-        u'CherryPy Team',
+        'CherryPy Documentation',
+        'CherryPy Team',
         'manual',
     ),
 ]
