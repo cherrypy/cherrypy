@@ -1,3 +1,8 @@
+8.1.0
+-----
+
+* #1473: ``HTTPError`` now also works as a context manager.
+
 8.0.1
 -----
 
