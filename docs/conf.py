@@ -30,8 +30,12 @@ except ImportError:
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.todo', 'sphinx.ext.intersphinx']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.todo',
+    'sphinx.ext.intersphinx',
+]
+
 intersphinx_mapping = {'http://docs.python.org/2/': None}
 
 # Add any paths that contain templates here, relative to this directory.
@@ -206,8 +210,13 @@ htmlhelp_basename = 'CherryPydoc'
 # (source start file, target name, title, author,
 # documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'CherryPy.tex', u'CherryPy Documentation',
-     u'CherryPy Team', 'manual'),
+    (
+        'index',
+        'CherryPy.tex',
+        u'CherryPy Documentation',
+        u'CherryPy Team',
+        'manual',
+    ),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -256,7 +265,9 @@ if on_rtd:
             else:
                 return Mock()
 
-    MOCK_MODULES = ['win32api', 'win32con', 'win32event',
-                    'win32service', 'win32serviceutil']
+    MOCK_MODULES = [
+        'win32api', 'win32con', 'win32event', 'win32service',
+        'win32serviceutil',
+    ]
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = Mock()
