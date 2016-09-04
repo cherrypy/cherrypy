@@ -211,6 +211,34 @@ This would handle the following URL:
 Notice finally how the whole stack of segments is passed to each
 page handler so that you have the full context.
 
+Error handling
+##############
+CherryPy's ``HTTPError`` class supports raising immediate responses in the case of
+errors.
+
+.. code-block:: python
+
+    class Root:
+        @cherrypy.expose
+        def thing(self, path):
+            if not authorized():
+                raise cherrypy.HTTPError(401, 'Unauthorized')
+            try:
+                file = open(path)
+            except FileNotFoundError:
+                raise cherrypy.HTTPError(404)
+
+``HTTPError.handle`` is a context manager which supports translating exceptions
+raised in the app into an appropriate HTTP response, as in the second example.
+
+.. code-block:: python
+
+    class Root:
+        @cherrypy.expose
+        def thing(self, path):
+            with cherrypy.HTTPError.handle(FileNotFoundError, 404):
+                file = open(path)
+
 Streaming the response body
 ###########################
 

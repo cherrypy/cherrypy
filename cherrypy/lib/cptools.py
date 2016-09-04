@@ -643,8 +643,6 @@ def convert_params(exception=ValueError, error=400):
     """
     request = cherrypy.serving.request
     types = request.handler.callable.__annotations__
-    try:
+    with cherrypy.HTTPError.handle(exception, error):
         for key in set(types).intersection(request.params):
             request.params[key] = types[key](request.params[key])
-    except exception as exc:
-        raise cherrypy.HTTPError(error, str(exc))

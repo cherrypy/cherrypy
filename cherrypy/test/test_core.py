@@ -737,6 +737,12 @@ class ErrorTests(helper.CPWebCase):
             @cherrypy.config(**{'tools.break_header.on': True})
             def start_response_error(self):
                 return "salud!"
+
+            @cherrypy.expose
+            def stat(self, path):
+                with cherrypy.HTTPError.handle(OSError, 404):
+                    st = os.stat(path)
+
         root = Root()
 
         cherrypy.tree.mount(root)
@@ -746,3 +752,8 @@ class ErrorTests(helper.CPWebCase):
         self.assertStatus(500)
         self.assertInBody(
             "TypeError: response.header_list key 2 is not a byte string.")
+
+    def test_contextmanager(self):
+        self.getPage("/stat/missing")
+        self.assertStatus(404)
+        self.assertInBody("No such file or directory")

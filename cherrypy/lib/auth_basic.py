@@ -70,7 +70,8 @@ def basic_auth(realm, checkpassword, debug=False):
 
     auth_header = request.headers.get('authorization')
     if auth_header is not None:
-        try:
+        # split() error, base64.decodestring() error
+        with cherrypy.HTTPError.handle((ValueError, binascii.Error), 400, 'Bad Request'):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
                 username, password = base64_decode(params).split(':', 1)
@@ -79,9 +80,6 @@ def basic_auth(realm, checkpassword, debug=False):
                         cherrypy.log('Auth succeeded', 'TOOLS.AUTH_BASIC')
                     request.login = username
                     return  # successful authentication
-        # split() error, base64.decodestring() error
-        except (ValueError, binascii.Error):
-            raise cherrypy.HTTPError(400, 'Bad Request')
 
     # Respond with 401 status and a WWW-Authenticate header
     cherrypy.serving.response.headers[
