@@ -14,6 +14,7 @@
 
 import sys
 import os
+import importlib
 
 try:
     import sphinx_rtd_theme
@@ -239,13 +240,19 @@ latex_documents = [
 def mock_pywin32():
     """
     Mock pywin32 so that Linux hosts, including ReadTheDocs,
-    can generate the docs
+    and other environments that don't have pywin32 can generate the docs
     properly including the PDF version.
     See:
     http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
     """
-    on_rtd = bool(os.environ.get('READTHEDOCS'))
-    if not on_rtd:
+    try:
+        win32api = importlib.import_module('win32api')
+    except ImportError:
+        pass
+
+    has_pywin32 = 'win32api' in locals()
+
+    if not has_pywin32:
         return
 
     class Mock(object):
