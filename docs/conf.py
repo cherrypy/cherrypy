@@ -235,13 +235,18 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_use_modindex = True
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if on_rtd:
-    # so that ReadTheDocs can generate the docs properly
-    # even the PDF version. Since ReadTheDocs runs on Linux,
-    # it can't import pywin32. See:
-    # http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
-    import sys
+
+def mock_pywin32():
+    """
+    Mock pywin32 so that Linux hosts, including ReadTheDocs,
+    can generate the docs
+    properly including the PDF version.
+    See:
+    http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
+    """
+    on_rtd = bool(os.environ.get('READTHEDOCS'))
+    if not on_rtd:
+        return
 
     class Mock(object):
 
@@ -268,3 +273,4 @@ if on_rtd:
     ]
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = Mock()
+mock_pywin32()
