@@ -54,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'CherryPy'
-copyright = '2001-2015, CherryPy Team'
+copyright = '2001-2016, CherryPy Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
