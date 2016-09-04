@@ -54,7 +54,6 @@ class Tox(TestCommand):
 # arguments for the setup command
 ###############################################################################
 name = "CherryPy"
-version = "8.0.1"
 desc = "Object-Oriented HTTP framework"
 long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
 classifiers = [
@@ -166,7 +165,7 @@ if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
 
 setup_params = dict(
     name=name,
-    version=version,
+    use_scm_version=True,
     description=desc,
     long_description=long_desc,
     classifiers=classifiers,
@@ -182,13 +181,16 @@ setup_params = dict(
     extras_require=extras_require,
     # Enables `python setup.py test` invocation install test dependencies first
     tests_require=tests_require,
+    setup_requires=[
+        'setuptools_scm',
+    ],
 )
 
 
 def main():
     if sys.version < required_python_version:
-        s = "I'm sorry, but %s %s requires Python %s or later."
-        print(s % (name, version, required_python_version))
+        s = "I'm sorry, but %s requires Python %s or later."
+        print(s % (name, required_python_version))
         sys.exit(1)
     # set default location for "data_files" to
     # platform specific "site-packages" location

@@ -8,6 +8,11 @@
   ``storage_type`` parameter. The ``storage_class`` should
   be the actual Session subclass to be used.
 
+* Releases now use ``setuptools_scm`` to track the release
+  versions. Therefore, releases can be cut by simply tagging
+  a commit in the repo. Versions numbers are now stored in
+  exactly one place.
+
 8.0.1
 -----
 
