@@ -110,10 +110,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-if WITH_RTD_THEME:
-    html_theme = "sphinx_rtd_theme"
-else:
-    html_theme = 'default'
+html_theme = "sphinx_rtd_theme" if WITH_RTD_THEME else 'default'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -237,8 +234,6 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
-
-import os
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
