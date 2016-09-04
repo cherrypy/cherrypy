@@ -3,6 +3,11 @@
 
 * #1473: ``HTTPError`` now also works as a context manager.
 
+* #1487: The sessions tool now accepts a ``storage_class``
+  parameter, which supersedes the new deprecated
+  ``storage_type`` parameter. The ``storage_class`` should
+  be the actual Session subclass to be used.
+
 8.0.1
 -----
 
