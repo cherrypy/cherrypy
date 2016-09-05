@@ -141,7 +141,14 @@ extras_require = {
     # Enables memcached session support via `cherrypy[memcached-session]`:
     'memcached_session': ['python-memcached>=1.58'],
     'multienv_tests': tests_require,
-    'test_tools': ['nose'],
+    'test_tools': [
+        'coverage',  # inspects tests coverage
+        # TODO: drop nose dependency in favor of py.test analogue
+        'nose',  # only used in cherrypy.test.{helper,test_{compat,routes}}
+        'nose-testconfig',  # only used in cherrypy.test.helper
+        "mock; python_version<'3.3'",  # only used in cherrypy.test.test_encoding
+        'objgraph',  # cherrypy.lib.gctools
+    ],
 }
 
 cmd_class = {
