@@ -137,10 +137,13 @@ tests_require = [
 
 extras_require = {
     """This section defines feature flags end-users can use in dependencies"""
+    'doc': [
+        'docutils',
+        'sphinx_rtd_theme',
+    ],
+    'json': ['simplejson'],
     'routes_dispatcher': ['routes>=2.3.1'],
-    # Enables memcached session support via `cherrypy[memcached-session]`:
-    'memcached_session': ['python-memcached>=1.58'],
-    'multienv_tests': tests_require,
+    'ssl': ['pyOpenSSL'],
     'test_tools': [
         'coverage',  # inspects tests coverage
         # TODO: drop nose dependency in favor of py.test analogue
@@ -150,6 +153,11 @@ extras_require = {
         'mock; python_version < "3.3"',  # only used in cherrypy.test.test_encoding
         'objgraph',  # cherrypy.lib.gctools
     ],
+    # Enables memcached session support via `cherrypy[memcached-session]`:
+    'memcached_session': ['python-memcached>=1.58'],
+    'multienv_tests': tests_require,
+    'win32': ['pywin32'],
+    'xcgi': ['flup'],
 }
 
 cmd_class = {
