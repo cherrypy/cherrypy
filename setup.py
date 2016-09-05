@@ -146,7 +146,8 @@ extras_require = {
         # TODO: drop nose dependency in favor of py.test analogue
         'nose',  # only used in cherrypy.test.{helper,test_{compat,routes}}
         'nose-testconfig',  # only used in cherrypy.test.helper
-        "mock; python_version<'3.3'",  # only used in cherrypy.test.test_encoding
+        # NOTE: environment marker (PEP426) doesn't seem to work in this case:
+        'mock; python_version < "3.3"',  # only used in cherrypy.test.test_encoding
         'objgraph',  # cherrypy.lib.gctools
     ],
 }
