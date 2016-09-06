@@ -135,8 +135,8 @@ tests_require = [
     'tox',
 ]
 
+"""This section defines feature flags end-users can use in dependencies"""
 extras_require = {
-    """This section defines feature flags end-users can use in dependencies"""
     'doc': [
         'docutils',
         'sphinx_rtd_theme',
