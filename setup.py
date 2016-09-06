@@ -151,7 +151,7 @@ extras_require = {
         'nose-testconfig',  # only used in cherrypy.test.helper
         'objgraph',  # cherrypy.lib.gctools
     ],
-    # Enables memcached session support via `cherrypy[memcached-session]`:
+    # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],
     'multienv_tests': tests_require,
     'xcgi': ['flup'],
