@@ -149,8 +149,6 @@ extras_require = {
         # TODO: drop nose dependency in favor of py.test analogue
         'nose',  # only used in cherrypy.test.{helper,test_{compat,routes}}
         'nose-testconfig',  # only used in cherrypy.test.helper
-        # NOTE: environment marker (PEP426) doesn't seem to work in this case:
-        'mock; python_version < "3.3"',  # only used in cherrypy.test.test_encoding
         'objgraph',  # cherrypy.lib.gctools
     ],
     # Enables memcached session support via `cherrypy[memcached-session]`:
@@ -159,6 +157,11 @@ extras_require = {
     'win32': ['pywin32'],
     'xcgi': ['flup'],
 }
+
+if sys.version_info < (3, 3):
+    extras_require['test_tools'].append(
+        'mock',  # only used in cherrypy.test.test_encoding
+    )
 
 cmd_class = {
     'build_py': cherrypy_build_py,
