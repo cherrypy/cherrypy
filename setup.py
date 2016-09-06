@@ -154,13 +154,15 @@ extras_require = {
     # Enables memcached session support via `cherrypy[memcached-session]`:
     'memcached_session': ['python-memcached>=1.58'],
     'multienv_tests': tests_require,
-    'win32': ['pywin32'],
     'xcgi': ['flup'],
+
+    # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
+    ':sys_platform == "win32"': ['pywin32'],
 }
 
 if sys.version_info < (3, 3):
     extras_require['test_tools'].append(
-        'mock',  # only used in cherrypy.test.test_encoding
+        'mock'  # only used in cherrypy.test.test_encoding
     )
 
 cmd_class = {
