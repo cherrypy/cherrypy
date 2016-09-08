@@ -7,8 +7,8 @@ import sys
 import time
 import threading
 
-from cherrypy._cpcompat import text_or_bytes, get_daemon, get_thread_ident
-from cherrypy._cpcompat import ntob, Timer, SetDaemonProperty
+from cherrypy._cpcompat import text_or_bytes, get_thread_ident
+from cherrypy._cpcompat import ntob, Timer
 
 # _module__file__base is used by Autoreload to make
 # absolute any filenames retrieved from sys.modules which are not
@@ -487,7 +487,7 @@ class PerpetualTimer(Timer):
                 raise
 
 
-class BackgroundTask(SetDaemonProperty, threading.Thread):
+class BackgroundTask(threading.Thread):
 
     """A subclass of threading.Thread whose run() method repeats.
 
@@ -499,7 +499,7 @@ class BackgroundTask(SetDaemonProperty, threading.Thread):
     """
 
     def __init__(self, interval, function, args=[], kwargs={}, bus=None):
-        threading.Thread.__init__(self)
+        super(threading.Thread, self).__init__()
         self.interval = interval
         self.function = function
         self.args = args
@@ -574,7 +574,7 @@ class Monitor(SimplePlugin):
             if self.thread is not threading.currentThread():
                 name = self.thread.getName()
                 self.thread.cancel()
-                if not get_daemon(self.thread):
+                if not self.thread.daemon:
                     self.bus.log("Joining %r" % name)
                     self.thread.join()
                 self.bus.log("Stopped thread %r." % name)

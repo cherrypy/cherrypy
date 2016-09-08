@@ -39,7 +39,7 @@ import time
 
 import cherrypy
 from cherrypy.lib import cptools, httputil
-from cherrypy._cpcompat import copyitems, ntob, set_daemon, sorted, Event
+from cherrypy._cpcompat import copyitems, ntob, sorted, Event
 
 
 class Cache(object):
@@ -170,7 +170,7 @@ class MemoryCache(Cache):
         # Run self.expire_cache in a separate daemon thread.
         t = threading.Thread(target=self.expire_cache, name='expire_cache')
         self.expiration_thread = t
-        set_daemon(t, True)
+        t.daemon = True
         t.start()
 
     def clear(self):

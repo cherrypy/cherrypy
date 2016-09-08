@@ -218,21 +218,6 @@ except NameError:
     # Python 3
     xrange = range
 
-import threading
-if hasattr(threading.Thread, "daemon"):
-    # Python 2.6+
-    def get_daemon(t):
-        return t.daemon
-
-    def set_daemon(t, val):
-        t.daemon = val
-else:
-    def get_daemon(t):
-        return t.isDaemon()
-
-    def set_daemon(t, val):
-        t.setDaemon(val)
-
 try:
     # Python 3
     from urllib.parse import unquote as parse_unquote
@@ -313,18 +298,3 @@ else:
     # Python 3.2 and earlier
     Timer = threading._Timer
     Event = threading._Event
-
-# Prior to Python 2.6, the Thread class did not have a .daemon property.
-# This mix-in adds that property.
-
-
-class SetDaemonProperty:
-
-    def __get_daemon(self):
-        return self.isDaemon()
-
-    def __set_daemon(self, daemon):
-        self.setDaemon(daemon)
-
-    if sys.version_info < (2, 6):
-        daemon = property(__get_daemon, __set_daemon)
