@@ -68,16 +68,6 @@ number of requests and their responses, so we run a nested loop::
                     return
 """
 
-__all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
-           'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
-           'CP_makefile',
-           'MaxSizeExceeded', 'NoSSLError', 'FatalSSLAlert',
-           'WorkerThread', 'ThreadPool', 'SSLAdapter',
-           'CherryPyWSGIServer',
-           'Gateway', 'WSGIGateway', 'WSGIGateway_10', 'WSGIGateway_u0',
-           'WSGIPathInfoDispatcher', 'get_ssl_adapter_class',
-           'socket_errors_to_ignore']
-
 import os
 try:
     import queue
@@ -112,6 +102,18 @@ try:
     import pkg_resources
 except ImportError:
     pass
+
+
+__all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
+           'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
+           'CP_makefile',
+           'MaxSizeExceeded', 'NoSSLError', 'FatalSSLAlert',
+           'WorkerThread', 'ThreadPool', 'SSLAdapter',
+           'CherryPyWSGIServer',
+           'Gateway', 'WSGIGateway', 'WSGIGateway_10', 'WSGIGateway_u0',
+           'WSGIPathInfoDispatcher', 'get_ssl_adapter_class',
+           'socket_errors_to_ignore']
+
 
 if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
     if not hasattr(socket, 'IPPROTO_IPV6'):

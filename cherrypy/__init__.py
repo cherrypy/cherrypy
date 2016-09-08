@@ -61,23 +61,25 @@ try:
 except ImportError:
     pass
 
+from cherrypy._cpcompat import threadlocal as _local
+
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa
+
+from cherrypy import _cplogging
 
 from cherrypy import _cpdispatch as dispatch  # noqa
 
 from cherrypy import _cptools
-tools = _cptools.default_toolbox
-Tool = _cptools.Tool
 
 from cherrypy import _cprequest
 from cherrypy.lib import httputil as _httputil
 
 from cherrypy import _cptree
-tree = _cptree.Tree()
 from cherrypy._cptree import Application  # noqa
 from cherrypy import _cpwsgi as wsgi  # noqa
 
+from cherrypy import _cpserver
 from cherrypy import process
 try:
     from cherrypy.process import win32
@@ -86,6 +88,11 @@ try:
     del win32
 except ImportError:
     engine = process.bus
+
+
+tools = _cptools.default_toolbox
+Tool = _cptools.Tool
+tree = _cptree.Tree()
 
 
 try:
@@ -149,7 +156,6 @@ class _HandleSignalsPlugin(object):
 engine.signals = _HandleSignalsPlugin(engine)
 
 
-from cherrypy import _cpserver
 server = _cpserver.Server()
 server.subscribe()
 
@@ -179,9 +185,6 @@ def quickstart(root=None, script_name="", config=None):
     engine.signals.subscribe()
     engine.start()
     engine.block()
-
-
-from cherrypy._cpcompat import threadlocal as _local
 
 
 class _Serving(_local):
@@ -306,9 +309,6 @@ except ImportError:
     pass
 
 
-from cherrypy import _cplogging
-
-
 class _GlobalLogManager(_cplogging.LogManager):
 
     """A site-wide LogManager; routes to app.log or global log as appropriate.
@@ -355,7 +355,7 @@ engine.subscribe('log', _buslog)
 from cherrypy._helper import expose, popargs, url  # noqa
 
 # import _cpconfig last so it can reference other top-level objects
-from cherrypy import _cpconfig
+from cherrypy import _cpconfig  # noqa
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
