@@ -18,15 +18,21 @@ matrix:
     - python: pypy
     # TODO: fix tests
     - python: pypy3
+    - python: 3.5
+      env: RUN_LINTS=true
+  include:
+    - python: 3.5
+      env: RUN_LINTS=true
 
 cache: pip
 
 env:
 - WEBTEST_INTERACTIVE=false
 
+before_install: 'if [ $RUN_LINTS = "true" ]; then pip install pre-commit; fi'
 # TODO: consider installing optional dependencies to run skipped tests
 install: pip install -e .
-script: nosetests
+script: 'if [ $RUN_LINTS = "true" ]; then pre-commit run --all-files; else nosetests; fi'
 
 deploy:
   provider: pypi
