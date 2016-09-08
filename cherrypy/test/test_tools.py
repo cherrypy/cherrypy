@@ -1,28 +1,26 @@
 """Test the various means of instantiating and invoking tools."""
 
 import gzip
-import sys
-import unittest
 import io
-
-from cherrypy._cpcompat import copyitems, itervalues
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
+import sys
 import time
-timeout = 0.2
 import types
+import unittest
 
 import six
 
 import cherrypy
 from cherrypy import tools
+from cherrypy._cpcompat import copyitems, itervalues
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
+from cherrypy.test import helper, _test_decorators
 
 
+timeout = 0.2
 europoundUnicode = ntou('\x80\xa3')
 
 
 #                             Client-side code                             #
-
-from cherrypy.test import helper
 
 
 class ToolTests(helper.CPWebCase):
@@ -252,9 +250,7 @@ class ToolTests(helper.CPWebCase):
         app = cherrypy.tree.mount(root, config=conf)
         app.request_class.namespaces['myauth'] = myauthtools
 
-        if sys.version_info >= (2, 5):
-            from cherrypy.test import _test_decorators
-            root.tooldecs = _test_decorators.ToolExamples()
+        root.tooldecs = _test_decorators.ToolExamples()
 
     def testHookErrors(self):
         self.getPage("/demo/?id=1")

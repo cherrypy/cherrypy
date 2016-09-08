@@ -2,6 +2,7 @@
 
 import cherrypy
 from cherrypy._cpcompat import ntob, ntou, sorted
+from cherrypy.test import helper
 
 
 def setup_server():
@@ -26,8 +27,6 @@ def setup_server():
 
 
 #                             Client-side code                             #
-
-from cherrypy.test import helper
 
 
 class MultipartTest(helper.CPWebCase):

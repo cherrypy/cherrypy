@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
+import contextlib
+import io
 import os
 import sys
-import io
-import contextlib
 
 from six.moves import urllib
 
+import cherrypy
+from cherrypy.lib import static
 from cherrypy._cpcompat import (
     HTTPConnection, HTTPSConnection, ntou, tonative,
 )
+from cherrypy.test import helper
+
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
@@ -19,10 +23,6 @@ bigfile_filepath = os.path.join(curdir, "static", "bigfile.log")
 # test_file_stream.
 MB = 2 ** 20
 BIGFILE_SIZE = 32 * MB
-
-import cherrypy
-from cherrypy.lib import static
-from cherrypy.test import helper
 
 
 class StaticTest(helper.CPWebCase):
@@ -45,7 +45,6 @@ class StaticTest(helper.CPWebCase):
             @cherrypy.expose
             @cherrypy.config(**{'response.stream': True})
             def bigfile(self):
-                from cherrypy.lib import static
                 self.f = static.serve_file(bigfile_filepath)
                 return self.f
 

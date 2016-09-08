@@ -1,8 +1,9 @@
 import os
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
 from cherrypy.test import helper
+
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 class VirtualHostTest(helper.CPWebCase):

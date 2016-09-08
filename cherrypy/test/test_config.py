@@ -10,6 +10,9 @@ import six
 import cherrypy
 import cherrypy._cpcompat as compat
 
+from cherrypy.test import helper
+
+
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
@@ -137,8 +140,6 @@ tools.staticfile.filename = %r
 
 
 #                             Client-side code                             #
-
-from cherrypy.test import helper
 
 
 class ConfigTests(helper.CPWebCase):

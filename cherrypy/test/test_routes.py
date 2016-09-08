@@ -1,10 +1,11 @@
 import os
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+
+import nose
 
 import cherrypy
-
 from cherrypy.test import helper
-import nose
+
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 class RoutesDispatchTest(helper.CPWebCase):

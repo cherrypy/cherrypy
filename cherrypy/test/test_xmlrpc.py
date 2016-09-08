@@ -9,6 +9,10 @@ except ImportError:
     from xmlrpc.client import DateTime, Fault, ProtocolError, ServerProxy
     from xmlrpc.client import SafeTransport
 
+import cherrypy
+from cherrypy import _cptools
+from cherrypy.test import helper
+
 if six.PY3:
     HTTPSTransport = SafeTransport
 
@@ -48,11 +52,8 @@ else:
 
             return self.parse_response(h.getfile())
 
-import cherrypy
-
 
 def setup_server():
-    from cherrypy import _cptools
 
     class Root:
 
@@ -116,9 +117,6 @@ def setup_server():
         'request.dispatch': cherrypy.dispatch.XMLRPCDispatcher(),
         'tools.xmlrpc.allow_none': 0,
     }})
-
-
-from cherrypy.test import helper
 
 
 class XmlRpcTest(helper.CPWebCase):

@@ -1,9 +1,10 @@
 import os
 import sys
 import time
-starttime = time.time()
 
 import cherrypy
+
+starttime = time.time()
 
 
 class Root:

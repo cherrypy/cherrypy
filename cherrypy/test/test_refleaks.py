@@ -2,17 +2,14 @@
 
 import itertools
 import platform
-
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
 import threading
 
 import cherrypy
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
+from cherrypy.test import helper
 
 
 data = object()
-
-
-from cherrypy.test import helper
 
 
 class ReferenceTests(helper.CPWebCase):

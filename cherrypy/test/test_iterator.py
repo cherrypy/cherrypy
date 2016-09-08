@@ -1,6 +1,7 @@
 import six
 
 import cherrypy
+from cherrypy.test import helper
 
 
 class IteratorBase(object):
@@ -71,7 +72,6 @@ class OurNotClosableIterator(OurIterator):
 class OurUnclosableIterator(OurIterator):
     close = 'close' # not callable!
 
-from cherrypy.test import helper
 class IteratorTest(helper.CPWebCase):
 
     @staticmethod

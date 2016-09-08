@@ -1,24 +1,23 @@
 """Basic tests for the cherrypy.Request object."""
 
 import os
-localDir = os.path.dirname(__file__)
 import sys
 import types
 
 import six
 
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou
-
 import cherrypy
+from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 from cherrypy.lib import httputil
+from cherrypy.test import helper
+
+localDir = os.path.dirname(__file__)
 
 defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
                         "TRACE", "PROPFIND")
 
 
 #                             Client-side code                             #
-
-from cherrypy.test import helper
 
 
 class RequestObjectTests(helper.CPWebCase):

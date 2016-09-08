@@ -10,14 +10,14 @@ import mock
 import cherrypy
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 
+from cherrypy.test import helper
+
+
 europoundUnicode = ntou('£', encoding='utf-8')
 sing = ntou("毛泽东: Sing, Little Birdie?", encoding='utf-8')
 
 sing8 = sing.encode('utf-8')
 sing16 = sing.encode('utf-16')
-
-
-from cherrypy.test import helper
 
 
 class EncodingTests(helper.CPWebCase):

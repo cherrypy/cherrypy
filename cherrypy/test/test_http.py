@@ -12,6 +12,8 @@ from mock import patch
 import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
+from cherrypy.test import helper
+
 
 def encode_multipart_formdata(files):
     """Return (content_type, body) ready for httplib.HTTP instance.
@@ -33,9 +35,6 @@ def encode_multipart_formdata(files):
     body = '\r\n'.join(L)
     content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
     return content_type, body
-
-
-from cherrypy.test import helper
 
 
 class HTTPTests(helper.CPWebCase):

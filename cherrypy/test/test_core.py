@@ -3,7 +3,6 @@
 """Basic tests for the CherryPy core: request handling."""
 
 import os
-localDir = os.path.dirname(__file__)
 import sys
 import types
 
@@ -11,14 +10,15 @@ import cherrypy
 from cherrypy._cpcompat import itervalues, ntob, ntou
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
+
 from cherrypy.test._test_decorators import ExposeExamples
+from cherrypy.test import helper
 
 
+localDir = os.path.dirname(__file__)
 favicon_path = os.path.join(os.getcwd(), localDir, "../favicon.ico")
 
 #                             Client-side code                             #
-
-from cherrypy.test import helper
 
 
 class CoreRequestHandlingTest(helper.CPWebCase):

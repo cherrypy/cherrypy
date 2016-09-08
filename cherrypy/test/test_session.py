@@ -1,13 +1,16 @@
 import os
-localDir = os.path.dirname(__file__)
 import threading
 import time
+import socket
 
 import cherrypy
 from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
 from cherrypy.lib import sessions
 from cherrypy.lib import reprconf
 from cherrypy.lib.httputil import response_codes
+from cherrypy.test import helper
+
+localDir = os.path.dirname(__file__)
 
 
 def http_methods_allowed(methods=['GET', 'HEAD']):
@@ -124,9 +127,6 @@ def setup_server():
             return cherrypy.session.id
 
     cherrypy.tree.mount(Root())
-
-
-from cherrypy.test import helper
 
 
 class SessionTest(helper.CPWebCase):
@@ -376,7 +376,6 @@ class SessionTest(helper.CPWebCase):
         t.join()
 
 
-import socket
 try:
     import memcache  # NOQA
 

@@ -1,9 +1,12 @@
 import os
-localDir = os.path.dirname(__file__)
-logfile = os.path.join(localDir, "test_misc_tools.log")
 
 import cherrypy
 from cherrypy import tools
+from cherrypy.test import helper
+
+
+localDir = os.path.dirname(__file__)
+logfile = os.path.join(localDir, "test_misc_tools.log")
 
 
 def setup_server():
@@ -96,9 +99,6 @@ def setup_server():
     root.autovary = AutoVary()
     cherrypy.tree.mount(root, config=conf)
     cherrypy.config.update({'log.error_file': logfile})
-
-
-from cherrypy.test import helper
 
 
 class ResponseHeadersTest(helper.CPWebCase):

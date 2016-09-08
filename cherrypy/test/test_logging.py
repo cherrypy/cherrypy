@@ -1,13 +1,14 @@
 """Basic tests for the CherryPy core: request handling."""
 
 import os
-localDir = os.path.dirname(__file__)
 
 import six
 
 import cherrypy
 from cherrypy._cpcompat import ntob, ntou
+from cherrypy.test import helper, logtest
 
+localDir = os.path.dirname(__file__)
 access_log = os.path.join(localDir, "access.log")
 error_log = os.path.join(localDir, "error.log")
 
@@ -61,9 +62,6 @@ def setup_server():
         'log.access_file': access_log,
     })
     cherrypy.tree.mount(root)
-
-
-from cherrypy.test import helper, logtest
 
 
 class AccessLogTests(helper.CPWebCase, logtest.LogCase):

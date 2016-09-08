@@ -1,14 +1,15 @@
 """Tests for the CherryPy configuration system."""
 
 import os
-localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 import cherrypy
+from cherrypy.test import helper
+
+
+localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 #                             Client-side code                             #
-
-from cherrypy.test import helper
 
 
 class ServerConfigTests(helper.CPWebCase):

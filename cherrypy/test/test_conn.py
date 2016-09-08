@@ -1,21 +1,20 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
+import errno
 import socket
 import sys
 import time
-import errno
 
 import six
 
 import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, NotConnected
 from cherrypy._cpcompat import (
-    BadStatusLine,
-    ntob,
-    tonative,
+    HTTPConnection, HTTPSConnection,
+    NotConnected, BadStatusLine,
+    ntob, tonative,
     urlopen,
 )
-from cherrypy.test import webtest
+from cherrypy.test import helper, webtest
 
 
 timeout = 1
@@ -101,9 +100,6 @@ def setup_server():
         'server.max_request_body_size': 1001,
         'server.socket_timeout': timeout,
     })
-
-
-from cherrypy.test import helper
 
 
 class ConnectionCloseTests(helper.CPWebCase):
