@@ -2,6 +2,13 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:expandtab:fileencoding=utf-8
 
+import time
+from hashlib import md5
+
+import cherrypy
+from cherrypy._cpcompat import ntob, parse_http_list, parse_keqv_list
+
+
 __doc__ = """An implementation of the server-side of HTTP Digest Access
 Authentication, which is described in :rfc:`2617`.
 
@@ -22,12 +29,6 @@ __author__ = 'visteya'
 __date__ = 'April 2009'
 
 
-import time
-from hashlib import md5
-from cherrypy._cpcompat import parse_http_list, parse_keqv_list
-
-import cherrypy
-from cherrypy._cpcompat import ntob
 md5_hex = lambda s: md5(ntob(s)).hexdigest()
 
 qop_auth = 'auth'
