@@ -20,6 +20,16 @@ Usage:
 SUPPORTED_ALGORITHM - list of supported 'Digest' algorithms
 SUPPORTED_QOP - list of supported 'Digest' 'qop'.
 """
+
+import time
+from hashlib import md5
+
+from cherrypy._cpcompat import (
+    base64_decode, ntob,
+    parse_http_list, parse_keqv_list
+)
+
+
 __version__ = 1, 0, 1
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 __credits__ = """
@@ -61,11 +71,6 @@ __all__ = ("digestAuth", "basicAuth", "doAuth", "checkResponse",
            "calculateNonce", "SUPPORTED_QOP")
 
 ##########################################################################
-import time
-from hashlib import md5
-
-from cherrypy._cpcompat import base64_decode, ntob
-from cherrypy._cpcompat import parse_http_list, parse_keqv_list
 
 MD5 = "MD5"
 MD5_SESS = "MD5-sess"
