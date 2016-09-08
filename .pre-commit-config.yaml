@@ -2,6 +2,7 @@
   sha: master
   hooks:
   - id: trailing-whitespace
+    exclude: cherrypy/test/static/index.html
   - id: flake8
   - id: check-merge-conflict
   - id: double-quote-string-fixer
