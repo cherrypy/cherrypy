@@ -25,11 +25,12 @@ import sys
 import cgi
 import os
 import os.path
-localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
-
-from cherrypy._cpcompat import quote_plus
 
 import cherrypy
+from cherrypy._cpcompat import quote_plus
+
+
+localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
 
 the_coverage = None
 try:
