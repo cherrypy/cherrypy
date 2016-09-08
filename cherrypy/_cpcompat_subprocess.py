@@ -455,7 +455,7 @@ __all__ = ["Popen", "PIPE", "STDOUT", "call", "check_call",
            "check_output", "CalledProcessError"]
 
 if mswindows:
-    from _subprocess import CREATE_NEW_CONSOLE, CREATE_NEW_PROCESS_GROUP, \
+    from _subprocess import CREATE_NEW_CONSOLE, CREATE_NEW_PROCESS_GROUP, \  # noqa
         STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, \
         STD_ERROR_HANDLE, SW_HIDE, \
         STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW

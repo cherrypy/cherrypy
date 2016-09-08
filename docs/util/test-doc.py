@@ -13,7 +13,7 @@ def print_with_line_numbers(block):
         print(number, line.rstrip())
 
 target_class_spec = sys.argv[1]
-import cherrypy
+import cherrypy  # noqa
 target_class = eval(target_class_spec)
 source = inspect.getdoc(target_class)
 print_with_line_numbers(source)

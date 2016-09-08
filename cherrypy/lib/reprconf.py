@@ -25,11 +25,6 @@ except ImportError:
     from ConfigParser import ConfigParser
 
 try:
-    set
-except NameError:
-    from sets import Set as set
-
-try:
     text_or_bytes
 except NameError:
     text_or_bytes = str
