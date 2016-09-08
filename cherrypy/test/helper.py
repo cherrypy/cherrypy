@@ -1,18 +1,16 @@
 """A library of helper functions for the CherryPy test suite."""
 
 import datetime
+import io
 import logging
-log = logging.getLogger(__name__)
 import os
-thisdir = os.path.abspath(os.path.dirname(__file__))
-serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
-import unittest
-
 import re
 import sys
 import time
+import unittest
 import warnings
-import io
+
+import nose
 import six
 
 import cherrypy
@@ -28,9 +26,10 @@ if sys.version_info < (2, 7):
 else:
     import subprocess
 
-import nose
-
 _testconfig = None
+log = logging.getLogger(__name__)
+thisdir = os.path.abspath(os.path.dirname(__file__))
+serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 
 
 def get_tst_config(overconf={}):
