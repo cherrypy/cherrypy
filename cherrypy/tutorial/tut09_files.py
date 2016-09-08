@@ -41,11 +41,13 @@ popular browsers.
 """
 
 import os
-localDir = os.path.dirname(__file__)
-absDir = os.path.join(os.getcwd(), localDir)
+import os.path
 
 import cherrypy
 from cherrypy.lib import static
+
+localDir = os.path.dirname(__file__)
+absDir = os.path.join(os.getcwd(), localDir)
 
 
 class FileDemo(object):
@@ -94,7 +96,6 @@ class FileDemo(object):
                                  "attachment", os.path.basename(path))
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

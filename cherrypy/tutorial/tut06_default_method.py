@@ -16,6 +16,8 @@ like /users/<username>. Since the <username> bit will not be found (as
 there are no matching methods), it is handled by the default method.
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -50,7 +52,6 @@ class UsersPage:
         return '%s (<a href="./">back</a>)' % out
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

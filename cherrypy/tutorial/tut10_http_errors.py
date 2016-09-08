@@ -9,10 +9,12 @@ logged, displayed, and formatted.
 """
 
 import os
-localDir = os.path.dirname(__file__)
-curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
+import os.path
 
 import cherrypy
+
+localDir = os.path.dirname(__file__)
+curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
 
 
 class HTTPErrorDemo(object):
@@ -73,7 +75,6 @@ class HTTPErrorDemo(object):
         raise cherrypy.HTTPError(500, message=message)
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

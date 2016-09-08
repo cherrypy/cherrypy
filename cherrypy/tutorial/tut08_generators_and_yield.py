@@ -7,6 +7,8 @@ in situations where using a template package like CherryPy or Cheetah
 would be overkill, and messy string concatenation too uncool. ;-)
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -33,7 +35,6 @@ class GeneratorDemo:
         yield self.footer()
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

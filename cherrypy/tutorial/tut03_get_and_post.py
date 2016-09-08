@@ -4,6 +4,8 @@ Tutorial - Passing variables
 This tutorial shows you how to pass GET/POST variables to methods.
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -40,7 +42,6 @@ class WelcomePage:
                 return 'No, really, enter your name <a href="./">here</a>.'
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

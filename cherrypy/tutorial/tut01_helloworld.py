@@ -4,6 +4,8 @@ Tutorial - Hello World
 The most basic (working) CherryPy application possible.
 """
 
+import os.path
+
 # Import CherryPy global namespace
 import cherrypy
 
@@ -23,7 +25,6 @@ class HelloWorld:
         return "Hello world!"
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

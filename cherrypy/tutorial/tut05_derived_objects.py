@@ -7,6 +7,8 @@ want to create a central base class used for all your pages, which takes
 care of things like printing a common page header and footer.
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -69,7 +71,6 @@ class AnotherPage(Page):
         ''' + self.footer()
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':
