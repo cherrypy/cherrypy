@@ -21,16 +21,16 @@ def is_closable_iterator(obj):
     # Not an iterator.
     if not is_iterator(obj):
         return False
-    
+
     # A generator - the easiest thing to deal with.
     import inspect
     if inspect.isgenerator(obj):
         return True
-    
+
     # A custom iterator. Look for a close method...
     if not (hasattr(obj, 'close') and callable(obj.close)):
         return False
-    
+
     #  ... which doesn't require any arguments.
     try:
         inspect.getcallargs(obj.close)
