@@ -55,9 +55,11 @@ resides in the global site-package this won't be needed.
 Then restart apache2 and access http://127.0.0.1:8080
 """
 
-import logging
-import sys
 import io
+import logging
+import os
+import re
+import sys
 
 import cherrypy
 from cherrypy._cpcompat import copyitems, ntob
@@ -270,8 +272,6 @@ def send_response(req, status, headers, body, stream=False):
 
 
 # --------------- Startup tools for CherryPy + mod_python --------------- #
-import os
-import re
 try:
     import subprocess
 
