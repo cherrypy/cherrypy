@@ -71,6 +71,7 @@ from cherrypy import _cplogging
 from cherrypy import _cpdispatch as dispatch  # noqa
 
 from cherrypy import _cptools
+from cherrypy._cptools import default_toolbox as tools, Tool
 
 from cherrypy import _cprequest
 from cherrypy.lib import httputil as _httputil
@@ -90,8 +91,6 @@ except ImportError:
     engine = process.bus
 
 
-tools = _cptools.default_toolbox
-Tool = _cptools.Tool
 tree = _cptree.Tree()
 
 
