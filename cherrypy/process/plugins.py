@@ -499,7 +499,7 @@ class BackgroundTask(threading.Thread):
     """
 
     def __init__(self, interval, function, args=[], kwargs={}, bus=None):
-        super(threading.Thread, self).__init__()
+        super(BackgroundTask, self).__init__()
         self.interval = interval
         self.function = function
         self.args = args
