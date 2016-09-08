@@ -109,9 +109,6 @@ the "log.error_file" config entry, for example).
 
 import datetime
 import logging
-# Silence the no-handlers "warning" (stderr write!) in stdlib logging
-logging.Logger.manager.emittedNoHandlerWarning = 1
-logfmt = logging.Formatter("%(message)s")
 import os
 import sys
 
@@ -120,6 +117,11 @@ import six
 import cherrypy
 from cherrypy import _cperror
 from cherrypy._cpcompat import ntob
+
+
+# Silence the no-handlers "warning" (stderr write!) in stdlib logging
+logging.Logger.manager.emittedNoHandlerWarning = 1
+logfmt = logging.Formatter("%(message)s")
 
 
 class NullHandler(logging.Handler):
