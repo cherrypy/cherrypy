@@ -238,4 +238,4 @@ class local(_localbase):
         return __del__
     __del__ = __del__()
 
-from threading import currentThread, enumerate, RLock
+from threading import currentThread, enumerate, RLock  # noqa
