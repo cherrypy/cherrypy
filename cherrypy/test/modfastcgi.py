@@ -34,12 +34,13 @@ KNOWN BUGS
 """
 
 import os
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
 
 import cherrypy
 from cherrypy.process import servers
 from cherrypy.test import helper
+
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 def read_process(cmd, args=""):
