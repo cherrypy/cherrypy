@@ -88,7 +88,7 @@ else:
 
 def assert_native(n):
     if not isinstance(n, str):
-        raise TypeError("n must be a native str (got %s)" % type(n).__name__)
+        raise TypeError('n must be a native str (got %s)' % type(n).__name__)
 
 try:
     # Python 3.1+

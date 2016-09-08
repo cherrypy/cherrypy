@@ -4,7 +4,7 @@ from cherrypy._cpcompat import text_or_bytes, ntou, json_encode, json_decode
 
 def json_processor(entity):
     """Read application/json data into request.json."""
-    if not entity.headers.get(ntou("Content-Length"), ntou("")):
+    if not entity.headers.get(ntou('Content-Length'), ntou('')):
         raise cherrypy.HTTPError(411)
 
     body = entity.fp.read()

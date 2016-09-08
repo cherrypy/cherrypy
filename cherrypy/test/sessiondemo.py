@@ -123,7 +123,7 @@ class Root(object):
             'reqcookie': cherrypy.request.cookie.output(),
             'sessiondata': copyitems(cherrypy.session),
             'servertime': (
-                datetime.utcnow().strftime("%Y/%m/%d %H:%M") + " UTC"
+                datetime.utcnow().strftime('%Y/%m/%d %H:%M') + ' UTC'
             ),
             'serverunixtime': calendar.timegm(datetime.utcnow().timetuple()),
             'cpversion': cherrypy.__version__,

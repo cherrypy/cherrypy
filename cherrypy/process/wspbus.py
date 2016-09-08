@@ -117,7 +117,7 @@ class _StateEnum(object):
         name = None
 
         def __repr__(self):
-            return "states.%s" % self.name
+            return 'states.%s' % self.name
 
     def __setattr__(self, key, value):
         if isinstance(value, self.State):
@@ -214,7 +214,7 @@ class Bus(object):
                     # Assume any further messages to 'log' will fail.
                     pass
                 else:
-                    self.log("Error in %r listener %r" % (channel, listener),
+                    self.log('Error in %r listener %r' % (channel, listener),
                              level=40, traceback=True)
         if exc:
             raise exc
@@ -224,10 +224,10 @@ class Bus(object):
         """An atexit handler which asserts the Bus is not running."""
         if self.state != states.EXITING:
             warnings.warn(
-                "The main thread is exiting, but the Bus is in the %r state; "
-                "shutting it down automatically now. You must either call "
-                "bus.block() after start(), or call bus.exit() before the "
-                "main thread exits." % self.state, RuntimeWarning)
+                'The main thread is exiting, but the Bus is in the %r state; '
+                'shutting it down automatically now. You must either call '
+                'bus.block() after start(), or call bus.exit() before the '
+                'main thread exits.' % self.state, RuntimeWarning)
             self.exit()
 
     def start(self):
@@ -243,7 +243,7 @@ class Bus(object):
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            self.log("Shutting down due to error in start listener:",
+            self.log('Shutting down due to error in start listener:',
                      level=40, traceback=True)
             e_info = sys.exc_info()[1]
             try:
@@ -320,7 +320,7 @@ class Bus(object):
         # It's also good to let them all shut down before allowing
         # the main thread to call atexit handlers.
         # See https://github.com/cherrypy/cherrypy/issues/751.
-        self.log("Waiting for child threads to terminate...")
+        self.log('Waiting for child threads to terminate...')
         for t in threading.enumerate():
             # Validate the we're not trying to join the MainThread
             # that will cause a deadlock and the case exist when
@@ -332,13 +332,13 @@ class Bus(object):
                     not isinstance(t, threading._MainThread)
             ):
                 # Note that any dummy (external) threads are always daemonic.
-                if hasattr(threading.Thread, "daemon"):
+                if hasattr(threading.Thread, 'daemon'):
                     # Python 2.6+
                     d = t.daemon
                 else:
                     d = t.isDaemon()
                 if not d:
-                    self.log("Waiting for thread %s." % t.getName())
+                    self.log('Waiting for thread %s.' % t.getName())
                     t.join()
 
         if self.execv:
@@ -415,7 +415,7 @@ class Bus(object):
         )
 
         if needs_patch:
-            env["PYTHONPATH"] = path_prefix + existing_path
+            env['PYTHONPATH'] = path_prefix + existing_path
 
     def _set_cloexec(self):
         """Set the CLOEXEC flag on all open files (except stdin/out/err).
@@ -462,10 +462,10 @@ class Bus(object):
 
         return t
 
-    def log(self, msg="", level=20, traceback=False):
+    def log(self, msg='', level=20, traceback=False):
         """Log the given message. Append the last traceback if requested."""
         if traceback:
-            msg += "\n" + "".join(_traceback.format_exception(*sys.exc_info()))
+            msg += '\n' + ''.join(_traceback.format_exception(*sys.exc_info()))
         self.publish('log', msg, level)
 
 bus = Bus()

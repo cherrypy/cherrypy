@@ -147,9 +147,9 @@ class _HandleSignalsPlugin(object):
 
     def subscribe(self):
         """Add the handlers based on the platform"""
-        if hasattr(self.bus, "signal_handler"):
+        if hasattr(self.bus, 'signal_handler'):
             self.bus.signal_handler.subscribe()
-        if hasattr(self.bus, "console_control_handler"):
+        if hasattr(self.bus, 'console_control_handler'):
             self.bus.console_control_handler.subscribe()
 
 engine.signals = _HandleSignalsPlugin(engine)
@@ -159,7 +159,7 @@ server = _cpserver.Server()
 server.subscribe()
 
 
-def quickstart(root=None, script_name="", config=None):
+def quickstart(root=None, script_name='', config=None):
     """Mount the given root, start the builtin server (and engine), then block.
 
     root: an instance of a "controller class" (a collection of page handler
@@ -198,8 +198,8 @@ class _Serving(_local):
     thread-safe way.
     """
 
-    request = _cprequest.Request(_httputil.Host("127.0.0.1", 80),
-                                 _httputil.Host("127.0.0.1", 1111))
+    request = _cprequest.Request(_httputil.Host('127.0.0.1', 80),
+                                 _httputil.Host('127.0.0.1', 1111))
     """
     The request object for the current thread. In the main thread,
     and any threads which are not receiving HTTP requests, this is None."""
@@ -232,7 +232,7 @@ class _ThreadLocalProxy(object):
         return getattr(child, name)
 
     def __setattr__(self, name, value):
-        if name in ("__attrname__", ):
+        if name in ('__attrname__', ):
             object.__setattr__(self, name, value)
         else:
             child = getattr(serving, self.__attrname__)
@@ -364,8 +364,8 @@ config.defaults = {
     'tools.trailing_slash.on': True,
     'tools.encode.on': True
 }
-config.namespaces["log"] = lambda k, v: setattr(log, k, v)
-config.namespaces["checker"] = lambda k, v: setattr(checker, k, v)
+config.namespaces['log'] = lambda k, v: setattr(log, k, v)
+config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 

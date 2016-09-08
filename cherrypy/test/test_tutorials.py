@@ -30,7 +30,7 @@ class TutorialTest(helper.CPWebCase):
         """
         Import or reload tutorial module as needed.
         """
-        target = "cherrypy.tutorial." + name
+        target = 'cherrypy.tutorial.' + name
         if target in sys.modules:
             module = imp.reload(sys.modules[target])
         elif 'importlib' not in globals():
@@ -55,32 +55,32 @@ class TutorialTest(helper.CPWebCase):
 
     def test01HelloWorld(self):
         self.setup_tutorial('tut01_helloworld', 'HelloWorld')
-        self.getPage("/")
+        self.getPage('/')
         self.assertBody('Hello world!')
 
     def test02ExposeMethods(self):
         self.setup_tutorial('tut02_expose_methods', 'HelloWorld')
-        self.getPage("/show_msg")
+        self.getPage('/show_msg')
         self.assertBody('Hello world!')
 
     def test03GetAndPost(self):
         self.setup_tutorial('tut03_get_and_post', 'WelcomePage')
 
         # Try different GET queries
-        self.getPage("/greetUser?name=Bob")
+        self.getPage('/greetUser?name=Bob')
         self.assertBody("Hey Bob, what's up?")
 
-        self.getPage("/greetUser")
+        self.getPage('/greetUser')
         self.assertBody('Please enter your name <a href="./">here</a>.')
 
-        self.getPage("/greetUser?name=")
+        self.getPage('/greetUser?name=')
         self.assertBody('No, really, enter your name <a href="./">here</a>.')
 
         # Try the same with POST
-        self.getPage("/greetUser", method="POST", body="name=Bob")
+        self.getPage('/greetUser', method='POST', body='name=Bob')
         self.assertBody("Hey Bob, what's up?")
 
-        self.getPage("/greetUser", method="POST", body="name=")
+        self.getPage('/greetUser', method='POST', body='name=')
         self.assertBody('No, really, enter your name <a href="./">here</a>.')
 
     def test04ComplexSite(self):
@@ -95,7 +95,7 @@ class TutorialTest(helper.CPWebCase):
             </ul>
 
             <p>[<a href="../">Return to links page</a>]</p>'''
-        self.getPage("/links/extra/")
+        self.getPage('/links/extra/')
         self.assertBody(msg)
 
     def test05DerivedObjects(self):
@@ -118,32 +118,32 @@ class TutorialTest(helper.CPWebCase):
         # the tutorial has some annoying spaces in otherwise blank lines
         msg = msg.replace('</h2>\n\n', '</h2>\n        \n')
         msg = msg.replace('</p>\n\n', '</p>\n        \n')
-        self.getPage("/another/")
+        self.getPage('/another/')
         self.assertBody(msg)
 
     def test06DefaultMethod(self):
-        self.setup_tutorial("tut06_default_method", "UsersPage")
+        self.setup_tutorial('tut06_default_method', 'UsersPage')
         self.getPage('/hendrik')
         self.assertBody('Hendrik Mans, CherryPy co-developer & crazy German '
                         '(<a href="./">back</a>)')
 
     def test07Sessions(self):
-        self.setup_tutorial("tut07_sessions", "HitCounter")
+        self.setup_tutorial('tut07_sessions', 'HitCounter')
 
         self.getPage('/')
         self.assertBody(
             "\n            During your current session, you've viewed this"
-            "\n            page 1 times! Your life is a patio of fun!"
-            "\n        ")
+            '\n            page 1 times! Your life is a patio of fun!'
+            '\n        ')
 
         self.getPage('/', self.cookies)
         self.assertBody(
             "\n            During your current session, you've viewed this"
-            "\n            page 2 times! Your life is a patio of fun!"
-            "\n        ")
+            '\n            page 2 times! Your life is a patio of fun!'
+            '\n        ')
 
     def test08GeneratorsAndYield(self):
-        self.setup_tutorial("tut08_generators_and_yield", "GeneratorDemo")
+        self.setup_tutorial('tut08_generators_and_yield', 'GeneratorDemo')
         self.getPage('/')
         self.assertBody('<html><body><h2>Generators rule!</h2>'
                         '<h3>List of users:</h3>'
@@ -151,19 +151,19 @@ class TutorialTest(helper.CPWebCase):
                         '</body></html>')
 
     def test09Files(self):
-        self.setup_tutorial("tut09_files", "FileDemo")
+        self.setup_tutorial('tut09_files', 'FileDemo')
 
         # Test upload
         filesize = 5
-        h = [("Content-type", "multipart/form-data; boundary=x"),
-             ("Content-Length", str(105 + filesize))]
+        h = [('Content-type', 'multipart/form-data; boundary=x'),
+             ('Content-Length', str(105 + filesize))]
         b = ('--x\n'
              'Content-Disposition: form-data; name="myFile"; '
              'filename="hello.txt"\r\n'
              'Content-Type: text/plain\r\n'
              '\r\n')
         b += 'a' * filesize + '\n' + '--x--\n'
-        self.getPage('/upload', h, "POST", b)
+        self.getPage('/upload', h, 'POST', b)
         self.assertBody('''<html>
         <body>
             myFile length: %d<br />
@@ -174,44 +174,44 @@ class TutorialTest(helper.CPWebCase):
 
         # Test download
         self.getPage('/download')
-        self.assertStatus("200 OK")
-        self.assertHeader("Content-Type", "application/x-download")
-        self.assertHeader("Content-Disposition",
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'application/x-download')
+        self.assertHeader('Content-Disposition',
                           # Make sure the filename is quoted.
                           'attachment; filename="pdf_file.pdf"')
         self.assertEqual(len(self.body), 85698)
 
     def test10HTTPErrors(self):
-        self.setup_tutorial("tut10_http_errors", "HTTPErrorDemo")
+        self.setup_tutorial('tut10_http_errors', 'HTTPErrorDemo')
 
         @cherrypy.expose
         def traceback_setting():
             return repr(cherrypy.request.show_tracebacks)
         cherrypy.tree.mount(traceback_setting, '/traceback_setting')
 
-        self.getPage("/")
+        self.getPage('/')
         self.assertInBody("""<a href="toggleTracebacks">""")
         self.assertInBody("""<a href="/doesNotExist">""")
         self.assertInBody("""<a href="/error?code=403">""")
         self.assertInBody("""<a href="/error?code=500">""")
         self.assertInBody("""<a href="/messageArg">""")
 
-        self.getPage("/traceback_setting")
+        self.getPage('/traceback_setting')
         setting = self.body
-        self.getPage("/toggleTracebacks")
+        self.getPage('/toggleTracebacks')
         self.assertStatus((302, 303))
-        self.getPage("/traceback_setting")
+        self.getPage('/traceback_setting')
         self.assertBody(str(not eval(setting)))
 
-        self.getPage("/error?code=500")
+        self.getPage('/error?code=500')
         self.assertStatus(500)
-        self.assertInBody("The server encountered an unexpected condition "
-                          "which prevented it from fulfilling the request.")
+        self.assertInBody('The server encountered an unexpected condition '
+                          'which prevented it from fulfilling the request.')
 
-        self.getPage("/error?code=403")
+        self.getPage('/error?code=403')
         self.assertStatus(403)
         self.assertInBody("<h2>You can't do that!</h2>")
 
-        self.getPage("/messageArg")
+        self.getPage('/messageArg')
         self.assertStatus(500)
         self.assertInBody("If you construct an HTTPError with a 'message'")

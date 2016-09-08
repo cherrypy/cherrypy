@@ -11,7 +11,7 @@ class ETagTest(helper.CPWebCase):
 
             @cherrypy.expose
             def resource(self):
-                return "Oh wah ta goo Siam."
+                return 'Oh wah ta goo Siam.'
 
             @cherrypy.expose
             def fail(self, code):
@@ -33,52 +33,52 @@ class ETagTest(helper.CPWebCase):
         cherrypy.tree.mount(Root(), config=conf)
 
     def test_etags(self):
-        self.getPage("/resource")
+        self.getPage('/resource')
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('Oh wah ta goo Siam.')
         etag = self.assertHeader('ETag')
 
         # Test If-Match (both valid and invalid)
-        self.getPage("/resource", headers=[('If-Match', etag)])
-        self.assertStatus("200 OK")
-        self.getPage("/resource", headers=[('If-Match', "*")])
-        self.assertStatus("200 OK")
-        self.getPage("/resource", headers=[('If-Match', "*")], method="POST")
-        self.assertStatus("200 OK")
-        self.getPage("/resource", headers=[('If-Match', "a bogus tag")])
-        self.assertStatus("412 Precondition Failed")
+        self.getPage('/resource', headers=[('If-Match', etag)])
+        self.assertStatus('200 OK')
+        self.getPage('/resource', headers=[('If-Match', '*')])
+        self.assertStatus('200 OK')
+        self.getPage('/resource', headers=[('If-Match', '*')], method='POST')
+        self.assertStatus('200 OK')
+        self.getPage('/resource', headers=[('If-Match', 'a bogus tag')])
+        self.assertStatus('412 Precondition Failed')
 
         # Test If-None-Match (both valid and invalid)
-        self.getPage("/resource", headers=[('If-None-Match', etag)])
+        self.getPage('/resource', headers=[('If-None-Match', etag)])
         self.assertStatus(304)
-        self.getPage("/resource", method='POST',
+        self.getPage('/resource', method='POST',
                      headers=[('If-None-Match', etag)])
-        self.assertStatus("412 Precondition Failed")
-        self.getPage("/resource", headers=[('If-None-Match', "*")])
+        self.assertStatus('412 Precondition Failed')
+        self.getPage('/resource', headers=[('If-None-Match', '*')])
         self.assertStatus(304)
-        self.getPage("/resource", headers=[('If-None-Match', "a bogus tag")])
-        self.assertStatus("200 OK")
+        self.getPage('/resource', headers=[('If-None-Match', 'a bogus tag')])
+        self.assertStatus('200 OK')
 
     def test_errors(self):
-        self.getPage("/resource")
+        self.getPage('/resource')
         self.assertStatus(200)
         etag = self.assertHeader('ETag')
 
         # Test raising errors in page handler
-        self.getPage("/fail/412", headers=[('If-Match', etag)])
+        self.getPage('/fail/412', headers=[('If-Match', etag)])
         self.assertStatus(412)
-        self.getPage("/fail/304", headers=[('If-Match', etag)])
+        self.getPage('/fail/304', headers=[('If-Match', etag)])
         self.assertStatus(304)
-        self.getPage("/fail/412", headers=[('If-None-Match', "*")])
+        self.getPage('/fail/412', headers=[('If-None-Match', '*')])
         self.assertStatus(412)
-        self.getPage("/fail/304", headers=[('If-None-Match', "*")])
+        self.getPage('/fail/304', headers=[('If-None-Match', '*')])
         self.assertStatus(304)
 
     def test_unicode_body(self):
-        self.getPage("/unicoded")
+        self.getPage('/unicoded')
         self.assertStatus(200)
         etag1 = self.assertHeader('ETag')
-        self.getPage("/unicoded", headers=[('If-Match', etag1)])
+        self.getPage('/unicoded', headers=[('If-Match', etag1)])
         self.assertStatus(200)
         self.assertHeader('ETag', etag1)

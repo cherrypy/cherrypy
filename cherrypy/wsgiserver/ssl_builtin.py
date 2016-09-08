@@ -44,7 +44,7 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
 
     def __init__(self, certificate, private_key, certificate_chain=None):
         if ssl is None:
-            raise ImportError("You must install the ssl module to use HTTPS.")
+            raise ImportError('You must install the ssl module to use HTTPS.')
         self.certificate = certificate
         self.private_key = private_key
         self.certificate_chain = certificate_chain
@@ -94,8 +94,8 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
         """Create WSGI environ entries to be merged into each request."""
         cipher = sock.cipher()
         ssl_environ = {
-            "wsgi.url_scheme": "https",
-            "HTTPS": "on",
+            'wsgi.url_scheme': 'https',
+            'HTTPS': 'on',
             'SSL_PROTOCOL': cipher[1],
             'SSL_CIPHER': cipher[0]
             # SSL_VERSION_INTERFACE 	string 	The mod_ssl program version

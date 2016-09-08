@@ -53,49 +53,49 @@ class Tox(TestCommand):
 ###############################################################################
 # arguments for the setup command
 ###############################################################################
-name = "CherryPy"
-desc = "Object-Oriented HTTP framework"
-long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
+name = 'CherryPy'
+desc = 'Object-Oriented HTTP framework'
+long_desc = 'CherryPy is a pythonic, object-oriented HTTP framework'
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Environment :: Web Environment",
-    "Intended Audience :: Developers",
-    "License :: Freely Distributable",
-    "Operating System :: OS Independent",
-    "Framework :: CherryPy",
-    "License :: OSI Approved :: BSD License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.6",
-    "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.1",
-    "Programming Language :: Python :: 3.2",
-    "Programming Language :: Python :: 3.3",
-    "Programming Language :: Python :: 3.4",
-    "Programming Language :: Python :: 3.5",
-    "Programming Language :: Python :: Implementation",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: Jython",
-    "Programming Language :: Python :: Implementation :: PyPy",
-    "Topic :: Internet :: WWW/HTTP",
-    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
-    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
-    "Topic :: Internet :: WWW/HTTP :: WSGI",
-    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
-    "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
-    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Web Environment',
+    'Intended Audience :: Developers',
+    'License :: Freely Distributable',
+    'Operating System :: OS Independent',
+    'Framework :: CherryPy',
+    'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.1',
+    'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3.3',
+    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: Implementation',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Programming Language :: Python :: Implementation :: Jython',
+    'Programming Language :: Python :: Implementation :: PyPy',
+    'Topic :: Internet :: WWW/HTTP',
+    'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+    'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
+    'Topic :: Internet :: WWW/HTTP :: WSGI',
+    'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+    'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
+    'Topic :: Software Development :: Libraries :: Application Frameworks',
 ]
-author = "CherryPy Team"
-author_email = "team@cherrypy.org"
-url = "http://www.cherrypy.org"
-cp_license = "BSD"
+author = 'CherryPy Team'
+author_email = 'team@cherrypy.org'
+url = 'http://www.cherrypy.org'
+cp_license = 'BSD'
 packages = [
-    "cherrypy", "cherrypy.lib",
-    "cherrypy.tutorial", "cherrypy.test",
-    "cherrypy.process",
-    "cherrypy.scaffold",
-    "cherrypy.wsgiserver",
+    'cherrypy', 'cherrypy.lib',
+    'cherrypy.tutorial', 'cherrypy.test',
+    'cherrypy.process',
+    'cherrypy.scaffold',
+    'cherrypy.wsgiserver',
 ]
 data_files = [
     ('cherrypy', [
@@ -126,7 +126,7 @@ data_files = [
         'cherrypy/tutorial/custom_error.html',
     ]),
 ]
-scripts = ["cherrypy/cherryd"]
+scripts = ['cherrypy/cherryd']
 
 install_requires = [
     'six',
@@ -200,5 +200,5 @@ def main():
     setuptools.setup(**setup_params)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

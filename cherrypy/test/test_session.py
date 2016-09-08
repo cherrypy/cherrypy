@@ -16,7 +16,7 @@ localDir = os.path.dirname(__file__)
 def http_methods_allowed(methods=['GET', 'HEAD']):
     method = cherrypy.request.method.upper()
     if method not in methods:
-        cherrypy.response.headers['Allow'] = ", ".join(methods)
+        cherrypy.response.headers['Allow'] = ', '.join(methods)
         raise cherrypy.HTTPError(405)
 
 cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
@@ -60,7 +60,7 @@ def setup_server():
             new_cls = reprconf.attributes(new_cls_name)
             cfg = {'tools.sessions.storage_class': new_cls}
             self.__class__._cp_config.update(cfg)
-            if hasattr(cherrypy, "session"):
+            if hasattr(cherrypy, 'session'):
                 del cherrypy.session
             if new_cls.clean_thread:
                 new_cls.clean_thread.stop()
@@ -83,12 +83,12 @@ def setup_server():
         def delete(self):
             cherrypy.session.delete()
             sessions.expire()
-            return "done"
+            return 'done'
 
         @cherrypy.expose
         def delkey(self, key):
             del cherrypy.session[key]
-            return "OK"
+            return 'OK'
 
         @cherrypy.expose
         def redir_target(self):
@@ -109,7 +109,7 @@ def setup_server():
         @cherrypy.expose
         def regen(self):
             cherrypy.tools.sessions.regenerate()
-            return "logged in"
+            return 'logged in'
 
         @cherrypy.expose
         def length(self):
@@ -153,7 +153,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr')
         self.assertBody('1')
         cookie_parts = dict([p.strip().split('=')
-                             for p in self.cookies[0][1].split(";")])
+                             for p in self.cookies[0][1].split(';')])
         # Assert there is an 'expires' param
         self.assertEqual(set(cookie_parts.keys()),
                          set(['session_id', 'expires', 'Path']))
@@ -187,7 +187,7 @@ class SessionTest(helper.CPWebCase):
 
         # Test session __contains__
         self.getPage('/keyin?key=counter', self.cookies)
-        self.assertBody("True")
+        self.assertBody('True')
         cookieset1 = self.cookies
 
         # Make a new session and test __len__ again
@@ -197,9 +197,9 @@ class SessionTest(helper.CPWebCase):
 
         # Test session delete
         self.getPage('/delete', self.cookies)
-        self.assertBody("done")
+        self.assertBody('done')
         self.getPage('/delete', cookieset1)
-        self.assertBody("done")
+        self.assertBody('done')
         f = lambda: [
             x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertEqual(f(), [])
@@ -225,8 +225,8 @@ class SessionTest(helper.CPWebCase):
         request_count = 30
 
         # Get initial cookie
-        self.getPage("/")
-        self.assertBody("1")
+        self.getPage('/')
+        self.assertBody('1')
         cookies = self.cookies
 
         data_dict = {}
@@ -274,14 +274,14 @@ class SessionTest(helper.CPWebCase):
         # Start a new session
         self.getPage('/testStr')
         self.getPage('/iredir', self.cookies)
-        self.assertBody("FileSession")
+        self.assertBody('FileSession')
 
     def test_4_File_deletion(self):
         # Start a new session
         self.getPage('/testStr')
         # Delete the session file manually and retry.
-        id = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
-        path = os.path.join(localDir, "session-" + id)
+        id = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
+        path = os.path.join(localDir, 'session-' + id)
         os.unlink(path)
         self.getPage('/testStr', self.cookies)
 
@@ -300,21 +300,21 @@ class SessionTest(helper.CPWebCase):
     def test_6_regenerate(self):
         self.getPage('/testStr')
         # grab the cookie ID
-        id1 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        id1 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.getPage('/regen')
         self.assertBody('logged in')
-        id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        id2 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.assertNotEqual(id1, id2)
 
         self.getPage('/testStr')
         # grab the cookie ID
-        id1 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        id1 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.getPage('/testStr',
                      headers=[
                          ('Cookie',
                           'session_id=maliciousid; '
                           'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
-        id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        id2 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.assertNotEqual(id1, id2)
         self.assertNotEqual(id2, 'maliciousid')
 
@@ -324,7 +324,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/session_cookie')
         # grab the cookie ID
         cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(";")])
+                            for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         id1 = cookie_parts['temp']
@@ -333,7 +333,7 @@ class SessionTest(helper.CPWebCase):
         # Send another request in the same "browser session".
         self.getPage('/session_cookie', self.cookies)
         cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(";")])
+                            for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         self.assertBody(id1)
@@ -343,7 +343,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/session_cookie')
         # grab the cookie ID
         cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(";")])
+                            for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         # Assert a new id has been generated...
@@ -357,9 +357,9 @@ class SessionTest(helper.CPWebCase):
         cache = copykeys(sessions.RamSession.cache)
         if cache:
             if cache == [id2]:
-                self.fail("The second session did not time out.")
+                self.fail('The second session did not time out.')
             else:
-                self.fail("Unknown session id in cache: %r", cache)
+                self.fail('Unknown session id in cache: %r', cache)
 
     def test_8_Ram_Cleanup(self):
         def lock():
@@ -401,7 +401,7 @@ except (ImportError, socket.error):
         setup_server = staticmethod(setup_server)
 
         def test(self):
-            return self.skip("memcached not reachable ")
+            return self.skip('memcached not reachable ')
 else:
     class MemcachedSessionTest(helper.CPWebCase):
         setup_server = staticmethod(setup_server)
@@ -417,7 +417,7 @@ else:
             self.assertBody('3')
             self.getPage('/length', self.cookies)
             self.assertErrorPage(500)
-            self.assertInBody("NotImplementedError")
+            self.assertInBody('NotImplementedError')
             self.getPage('/delkey?key=counter', self.cookies)
             self.assertStatus(200)
 
@@ -428,26 +428,26 @@ else:
 
             # Test session __contains__
             self.getPage('/keyin?key=counter', self.cookies)
-            self.assertBody("True")
+            self.assertBody('True')
 
             # Test session delete
             self.getPage('/delete', self.cookies)
-            self.assertBody("done")
+            self.assertBody('done')
 
         def test_1_Concurrency(self):
             client_thread_count = 5
             request_count = 30
 
             # Get initial cookie
-            self.getPage("/")
-            self.assertBody("1")
+            self.getPage('/')
+            self.assertBody('1')
             cookies = self.cookies
 
             data_dict = {}
 
             def request(index):
                 for i in range(request_count):
-                    self.getPage("/", cookies)
+                    self.getPage('/', cookies)
                     # Uncomment the following line to prove threads overlap.
 ##                    sys.stdout.write("%d " % index)
                 if not self.body.isdigit():
@@ -474,7 +474,7 @@ else:
             # Start a new session
             self.getPage('/testStr')
             self.getPage('/iredir', self.cookies)
-            self.assertBody("memcached")
+            self.assertBody('memcached')
 
         def test_5_Error_paths(self):
             self.getPage('/unknown/page')

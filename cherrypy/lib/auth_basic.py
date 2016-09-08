@@ -87,4 +87,4 @@ def basic_auth(realm, checkpassword, debug=False):
     cherrypy.serving.response.headers[
         'www-authenticate'] = 'Basic realm="%s"' % realm
     raise cherrypy.HTTPError(
-        401, "You are not authorized to access that resource")
+        401, 'You are not authorized to access that resource')

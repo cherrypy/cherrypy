@@ -24,7 +24,7 @@ class WSGI_Namespace_Test(helper.CPWebCase):
                 return next(self.iter)
 
             def close(self):
-                if hasattr(self.appresults, "close"):
+                if hasattr(self.appresults, 'close'):
                     self.appresults.close()
 
         class ChangeCase(object):
@@ -73,7 +73,7 @@ class WSGI_Namespace_Test(helper.CPWebCase):
 
             @cherrypy.expose
             def index(self):
-                return "HellO WoRlD!"
+                return 'HellO WoRlD!'
 
         root_conf = {'wsgi.pipeline': [('replace', Replacer)],
                      'wsgi.replace.map': {ntob('L'): ntob('X'),
@@ -89,6 +89,6 @@ class WSGI_Namespace_Test(helper.CPWebCase):
         if not cherrypy.server.httpserver:
             return self.skip()
 
-        self.getPage("/")
+        self.getPage('/')
         # If body is "HEXXO WORXD!", the middleware was applied out of order.
-        self.assertBody("HERRO WORRD!")
+        self.assertBody('HERRO WORRD!')

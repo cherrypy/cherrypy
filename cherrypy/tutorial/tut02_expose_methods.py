@@ -20,7 +20,7 @@ class HelloWorld:
     @cherrypy.expose
     def show_msg(self):
         # Here's the important message!
-        return "Hello world!"
+        return 'Hello world!'
 
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 

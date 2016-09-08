@@ -17,7 +17,7 @@ class DigestAuthTest(helper.CPWebCase):
 
             @cherrypy.expose
             def index(self):
-                return "This is public."
+                return 'This is public.'
 
         class DigestProtected:
 
@@ -41,25 +41,25 @@ class DigestAuthTest(helper.CPWebCase):
         cherrypy.tree.mount(root, config=conf)
 
     def testPublic(self):
-        self.getPage("/")
+        self.getPage('/')
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('This is public.')
 
     def testDigest(self):
-        self.getPage("/digest/")
+        self.getPage('/digest/')
         self.assertStatus(401)
 
         value = None
         for k, v in self.headers:
-            if k.lower() == "www-authenticate":
-                if v.startswith("Digest"):
+            if k.lower() == 'www-authenticate':
+                if v.startswith('Digest'):
                     value = v
                     break
 
         if value is None:
             self._handlewebError(
-                "Digest authentification scheme was not found")
+                'Digest authentification scheme was not found')
 
         value = value[7:]
         items = value.split(', ')
@@ -68,7 +68,7 @@ class DigestAuthTest(helper.CPWebCase):
             key, value = item.split('=')
             tokens[key.lower()] = value
 
-        missing_msg = "%s is missing"
+        missing_msg = '%s is missing'
         bad_value_msg = "'%s' was expecting '%s' but found '%s'"
         nonce = None
         if 'realm' not in tokens:

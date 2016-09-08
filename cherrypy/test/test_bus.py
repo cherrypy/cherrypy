@@ -5,7 +5,7 @@ import unittest
 from cherrypy.process import wspbus
 
 
-msg = "Listener %d on channel %s: %s."
+msg = 'Listener %d on channel %s: %s.'
 
 
 class PublishSubscribeTests(unittest.TestCase):
@@ -190,7 +190,7 @@ class BusMethodTests(unittest.TestCase):
 
             # The wait method MUST wait for the given state(s).
             if b.state not in states:
-                self.fail("State %r not in %r" % (b.state, states))
+                self.fail('State %r not in %r' % (b.state, states))
 
     def test_block(self):
         b = wspbus.Bus()
@@ -229,19 +229,19 @@ class BusMethodTests(unittest.TestCase):
             events = []
 
             def f(*args, **kwargs):
-                events.append(("f", args, kwargs))
+                events.append(('f', args, kwargs))
 
             def g():
-                events.append("g")
-            b.subscribe("start", g)
-            b.start_with_callback(f, (1, 3, 5), {"foo": "bar"})
+                events.append('g')
+            b.subscribe('start', g)
+            b.start_with_callback(f, (1, 3, 5), {'foo': 'bar'})
             # Give wait() time to run f()
             time.sleep(0.2)
 
             # The callback method MUST wait for the STARTED state.
             self.assertEqual(b.state, b.states.STARTED)
             # The callback method MUST run after all start methods.
-            self.assertEqual(events, ["g", ("f", (1, 3, 5), {"foo": "bar"})])
+            self.assertEqual(events, ['g', ('f', (1, 3, 5), {'foo': 'bar'})])
         finally:
             b.exit()
 
@@ -252,7 +252,7 @@ class BusMethodTests(unittest.TestCase):
 
         # Try a normal message.
         expected = []
-        for msg in ["O mah darlin'"] * 3 + ["Clementiiiiiiiine"]:
+        for msg in ["O mah darlin'"] * 3 + ['Clementiiiiiiiine']:
             b.log(msg)
             expected.append(msg)
             self.assertLog(expected)
@@ -261,14 +261,14 @@ class BusMethodTests(unittest.TestCase):
         try:
             foo
         except NameError:
-            b.log("You are lost and gone forever", traceback=True)
+            b.log('You are lost and gone forever', traceback=True)
             lastmsg = self._log_entries[-1]
-            if "Traceback" not in lastmsg or "NameError" not in lastmsg:
-                self.fail("Last log message %r did not contain "
-                          "the expected traceback." % lastmsg)
+            if 'Traceback' not in lastmsg or 'NameError' not in lastmsg:
+                self.fail('Last log message %r did not contain '
+                          'the expected traceback.' % lastmsg)
         else:
-            self.fail("NameError was not raised as expected.")
+            self.fail('NameError was not raised as expected.')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

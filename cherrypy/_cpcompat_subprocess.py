@@ -399,7 +399,7 @@ import signal
 import sys
 
 
-mswindows = (sys.platform == "win32")
+mswindows = (sys.platform == 'win32')
 
 
 # Exception classes used by this module.
@@ -449,8 +449,8 @@ else:
     _PIPE_BUF = getattr(select, 'PIPE_BUF', 512)
 
 
-__all__ = ["Popen", "PIPE", "STDOUT", "call", "check_call",
-           "check_output", "CalledProcessError"]
+__all__ = ['Popen', 'PIPE', 'STDOUT', 'call', 'check_call',
+           'check_output', 'CalledProcessError']
 
 if mswindows:
     from _subprocess import (  # noqa
@@ -460,12 +460,12 @@ if mswindows:
         STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW
     )
 
-    __all__.extend(["CREATE_NEW_CONSOLE", "CREATE_NEW_PROCESS_GROUP",
-                    "STD_INPUT_HANDLE", "STD_OUTPUT_HANDLE",
-                    "STD_ERROR_HANDLE", "SW_HIDE",
-                    "STARTF_USESTDHANDLES", "STARTF_USESHOWWINDOW"])
+    __all__.extend(['CREATE_NEW_CONSOLE', 'CREATE_NEW_PROCESS_GROUP',
+                    'STD_INPUT_HANDLE', 'STD_OUTPUT_HANDLE',
+                    'STD_ERROR_HANDLE', 'SW_HIDE',
+                    'STARTF_USESTDHANDLES', 'STARTF_USESHOWWINDOW'])
 try:
-    MAXFD = os.sysconf("SC_OPEN_MAX")
+    MAXFD = os.sysconf('SC_OPEN_MAX')
 except:
     MAXFD = 256
 
@@ -520,7 +520,7 @@ def check_call(*popenargs, **kwargs):
     """
     retcode = call(*popenargs, **kwargs)
     if retcode:
-        cmd = kwargs.get("args")
+        cmd = kwargs.get('args')
         if cmd is None:
             cmd = popenargs[0]
         raise CalledProcessError(retcode, cmd)
@@ -553,7 +553,7 @@ def check_output(*popenargs, **kwargs):
     output, unused_err = process.communicate()
     retcode = process.poll()
     if retcode:
-        cmd = kwargs.get("args")
+        cmd = kwargs.get('args')
         if cmd is None:
             cmd = popenargs[0]
         raise CalledProcessError(retcode, cmd, output=output)
@@ -599,7 +599,7 @@ def list2cmdline(seq):
         if result:
             result.append(' ')
 
-        needquote = (" " in arg) or ("\t" in arg) or not arg
+        needquote = (' ' in arg) or ('\t' in arg) or not arg
         if needquote:
             result.append('"')
 
@@ -642,25 +642,25 @@ class Popen(object):
 
         self._child_created = False
         if not isinstance(bufsize, (int, long)):
-            raise TypeError("bufsize must be an integer")
+            raise TypeError('bufsize must be an integer')
 
         if mswindows:
             if preexec_fn is not None:
-                raise ValueError("preexec_fn is not supported on Windows "
-                                 "platforms")
+                raise ValueError('preexec_fn is not supported on Windows '
+                                 'platforms')
             if close_fds and (stdin is not None or stdout is not None or
                               stderr is not None):
-                raise ValueError("close_fds is not supported on Windows "
-                                 "platforms if you redirect "
-                                 "stdin/stdout/stderr")
+                raise ValueError('close_fds is not supported on Windows '
+                                 'platforms if you redirect '
+                                 'stdin/stdout/stderr')
         else:
             # POSIX
             if startupinfo is not None:
-                raise ValueError("startupinfo is only supported on Windows "
-                                 "platforms")
+                raise ValueError('startupinfo is only supported on Windows '
+                                 'platforms')
             if creationflags != 0:
-                raise ValueError("creationflags is only supported on Windows "
-                                 "platforms")
+                raise ValueError('creationflags is only supported on Windows '
+                                 'platforms')
 
         self.stdin = None
         self.stdout = None
@@ -717,8 +717,8 @@ class Popen(object):
                 self.stderr = os.fdopen(errread, 'rb', bufsize)
 
     def _translate_newlines(self, data):
-        data = data.replace("\r\n", "\n")
-        data = data.replace("\r", "\n")
+        data = data.replace('\r\n', '\n')
+        data = data.replace('\r', '\n')
         return data
 
     def __del__(self, _maxint=sys.maxint, _active=_active):
@@ -848,16 +848,16 @@ class Popen(object):
             """Find and return absolut path to w9xpopen.exe"""
             w9xpopen = os.path.join(
                 os.path.dirname(_subprocess.GetModuleFileName(0)),
-                "w9xpopen.exe")
+                'w9xpopen.exe')
             if not os.path.exists(w9xpopen):
                 # Eeek - file-not-found - possibly an embedding
                 # situation - see if we can locate it in sys.exec_prefix
                 w9xpopen = os.path.join(os.path.dirname(sys.exec_prefix),
-                                        "w9xpopen.exe")
+                                        'w9xpopen.exe')
                 if not os.path.exists(w9xpopen):
-                    raise RuntimeError("Cannot locate w9xpopen.exe, which is "
-                                       "needed for Popen to work with your "
-                                       "shell or platform.")
+                    raise RuntimeError('Cannot locate w9xpopen.exe, which is '
+                                       'needed for Popen to work with your '
+                                       'shell or platform.')
             return w9xpopen
 
         def _execute_child(self, args, executable, preexec_fn, close_fds,
@@ -883,10 +883,10 @@ class Popen(object):
             if shell:
                 startupinfo.dwFlags |= _subprocess.STARTF_USESHOWWINDOW
                 startupinfo.wShowWindow = _subprocess.SW_HIDE
-                comspec = os.environ.get("COMSPEC", "cmd.exe")
+                comspec = os.environ.get('COMSPEC', 'cmd.exe')
                 args = '{0} /c "{1}"'.format(comspec, args)
                 if (_subprocess.GetVersion() >= 0x80000000 or
-                        os.path.basename(comspec).lower() == "command.com"):
+                        os.path.basename(comspec).lower() == 'command.com'):
                     # Win9x, or using command.com on NT. We need to
                     # use the w9xpopen intermediate program. For more
                     # information, see KB Q150956
@@ -1030,7 +1030,7 @@ class Popen(object):
             elif sig == signal.CTRL_BREAK_EVENT:
                 os.kill(self.pid, signal.CTRL_BREAK_EVENT)
             else:
-                raise ValueError("Unsupported signal: {0}".format(sig))
+                raise ValueError('Unsupported signal: {0}'.format(sig))
 
         def terminate(self):
             """Terminates the process
@@ -1138,7 +1138,7 @@ class Popen(object):
                 args = list(args)
 
             if shell:
-                args = ["/bin/sh", "-c"] + args
+                args = ['/bin/sh', '-c'] + args
                 if executable:
                     args[0] = executable
 
@@ -1254,7 +1254,7 @@ class Popen(object):
                 # be sure the FD is closed no matter what
                 os.close(errpipe_read)
 
-            if data != "":
+            if data != '':
                 try:
                     _eintr_retry_call(os.waitpid, self.pid, 0)
                 except OSError as e:
@@ -1277,7 +1277,7 @@ class Popen(object):
                 self.returncode = _WEXITSTATUS(sts)
             else:
                 # Should never happen
-                raise RuntimeError("Unknown child exit status!")
+                raise RuntimeError('Unknown child exit status!')
 
         def _internal_poll(self, _deadstate=None, _waitpid=os.waitpid,
                            _WNOHANG=os.WNOHANG, _os_error=os.error):
@@ -1450,14 +1450,14 @@ class Popen(object):
 
                 if self.stdout in rlist:
                     data = os.read(self.stdout.fileno(), 1024)
-                    if data == "":
+                    if data == '':
                         self.stdout.close()
                         read_set.remove(self.stdout)
                     stdout.append(data)
 
                 if self.stderr in rlist:
                     data = os.read(self.stderr.fileno(), 1024)
-                    if data == "":
+                    if data == '':
                         self.stderr.close()
                         read_set.remove(self.stderr)
                     stderr.append(data)
@@ -1484,41 +1484,41 @@ def _demo_posix():
     #
     # Example 1: Simple redirection: Get process list
     #
-    plist = Popen(["ps"], stdout=PIPE).communicate()[0]
-    print("Process list:")
+    plist = Popen(['ps'], stdout=PIPE).communicate()[0]
+    print('Process list:')
     print(plist)
 
     #
     # Example 2: Change uid before executing child
     #
     if os.getuid() == 0:
-        p = Popen(["id"], preexec_fn=lambda: os.setuid(100))
+        p = Popen(['id'], preexec_fn=lambda: os.setuid(100))
         p.wait()
 
     #
     # Example 3: Connecting several subprocesses
     #
     print("Looking for 'hda'...")
-    p1 = Popen(["dmesg"], stdout=PIPE)
-    p2 = Popen(["grep", "hda"], stdin=p1.stdout, stdout=PIPE)
+    p1 = Popen(['dmesg'], stdout=PIPE)
+    p2 = Popen(['grep', 'hda'], stdin=p1.stdout, stdout=PIPE)
     print(repr(p2.communicate()[0]))
 
     #
     # Example 4: Catch execution error
     #
     print()
-    print("Trying a weird file...")
+    print('Trying a weird file...')
     try:
-        print(Popen(["/this/path/does/not/exist"]).communicate())
+        print(Popen(['/this/path/does/not/exist']).communicate())
     except OSError as e:
         if e.errno == errno.ENOENT:
             print("The file didn't exist.  I thought so...")
-            print("Child traceback:")
+            print('Child traceback:')
             print(e.child_traceback)
         else:
-            print("Error", e.errno)
+            print('Error', e.errno)
     else:
-        print("Gosh.  No error.", e, file=sys.stderr)
+        print('Gosh.  No error.', e, file=sys.stderr)
 
 
 def _demo_windows():
@@ -1526,19 +1526,19 @@ def _demo_windows():
     # Example 1: Connecting several subprocesses
     #
     print("Looking for 'PROMPT' in set output...")
-    p1 = Popen("set", stdout=PIPE, shell=True)
+    p1 = Popen('set', stdout=PIPE, shell=True)
     p2 = Popen('find "PROMPT"', stdin=p1.stdout, stdout=PIPE)
     print(repr(p2.communicate()[0]))
 
     #
     # Example 2: Simple execution of program
     #
-    print("Executing calc...")
-    p = Popen("calc")
+    print('Executing calc...')
+    p = Popen('calc')
     p.wait()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if mswindows:
         _demo_windows()
     else:
