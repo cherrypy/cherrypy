@@ -389,20 +389,18 @@ except that:
 """
 
 from __future__ import print_function
-import sys
-mswindows = (sys.platform == "win32")
 
+import errno
+import gc
 import os
 import types
 import traceback
-import gc
 import signal
-import errno
+import sys
 
-try:
-    set
-except NameError:
-    from sets import Set as set
+
+mswindows = (sys.platform == "win32")
+
 
 # Exception classes used by this module.
 
