@@ -28,6 +28,11 @@ import warnings
 import cherrypy
 from cherrypy._helper import expose
 
+from cherrypy.lib import cptools, encoding, auth, static, jsontools
+from cherrypy.lib import sessions as _sessions, xmlrpcutil as _xmlrpc
+from cherrypy.lib import caching as _caching
+from cherrypy.lib import auth_basic, auth_digest
+
 
 def _getargs(func):
     """Return the names of all static arguments to the given function."""
@@ -253,11 +258,6 @@ class ErrorTool(Tool):
 
 
 #                              Builtin tools                              #
-
-from cherrypy.lib import cptools, encoding, auth, static, jsontools
-from cherrypy.lib import sessions as _sessions, xmlrpcutil as _xmlrpc
-from cherrypy.lib import caching as _caching
-from cherrypy.lib import auth_basic, auth_digest
 
 
 class SessionTool(Tool):
