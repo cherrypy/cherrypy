@@ -13,4 +13,3 @@ applications using CherryPy. A couple of notes:
     variable substitution. In most real-world applications, you will
     probably want to use a separate template package (like Cheetah,
     CherryTemplate or XML/XSL).
-
