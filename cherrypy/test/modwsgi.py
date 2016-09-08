@@ -33,13 +33,14 @@ KNOWN BUGS
 """
 
 import os
-curdir = os.path.abspath(os.path.dirname(__file__))
 import re
 import sys
 import time
 
 import cherrypy
 from cherrypy.test import helper, webtest
+
+curdir = os.path.abspath(os.path.dirname(__file__))
 
 
 def read_process(cmd, args=""):
