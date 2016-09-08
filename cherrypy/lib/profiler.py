@@ -34,30 +34,31 @@ module from the command line, it will call ``serve()`` for you.
 """
 
 import io
+import os
+import os.path
+import sys
+import warnings
 
 import cherrypy
 
 
-def new_func_strip_path(func_name):
-    """Make profiler output more readable by adding `__init__` modules' parents
-    """
-    filename, line, name = func_name
-    if filename.endswith("__init__.py"):
-        return os.path.basename(filename[:-12]) + filename[-12:], line, name
-    return os.path.basename(filename), line, name
-
 try:
     import profile
     import pstats
+
+    def new_func_strip_path(func_name):
+        """Make profiler output more readable by adding `__init__` modules' parents
+        """
+        filename, line, name = func_name
+        if filename.endswith("__init__.py"):
+            return os.path.basename(filename[:-12]) + filename[-12:], line, name
+        return os.path.basename(filename), line, name
+
     pstats.func_strip_path = new_func_strip_path
 except ImportError:
     profile = None
     pstats = None
 
-import os
-import os.path
-import sys
-import warnings
 
 _count = 0
 
@@ -135,7 +136,6 @@ class Profiler(object):
 
     @cherrypy.expose
     def report(self, filename):
-        import cherrypy
         cherrypy.response.headers['Content-Type'] = 'text/plain'
         return self.stats(filename)
 
@@ -206,7 +206,6 @@ def serve(path=None, port=8080):
                "for details.")
         warnings.warn(msg)
 
-    import cherrypy
     cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
                             'environment': "production",
