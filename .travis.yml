@@ -31,7 +31,7 @@ env:
 
 before_install: 'if [ $RUN_LINTS = "true" ]; then pip install pre-commit; fi'
 # TODO: consider installing optional dependencies to run skipped tests
-install: pip install -e .
+install: 'if [[ $RUN_LINTS -ne "true" ]]; then pip install -e .; fi'
 script: 'if [ $RUN_LINTS = "true" ]; then pre-commit run --all-files; else nosetests; fi'
 
 deploy:
