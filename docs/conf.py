@@ -65,7 +65,7 @@ copyright = '2001-2016, CherryPy Team'
 #
 # The short X.Y version.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../'))
-import cherrypy
+import cherrypy  # noqa
 version = cherrypy.__version__
 # The full version, including alpha/beta/rc tags.
 release = cherrypy.__version__
