@@ -23,8 +23,6 @@
 
 import getopt
 import os
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-
 import re
 import sys
 import time
@@ -34,6 +32,8 @@ from cherrypy._cpcompat import ntob
 from cherrypy import _cperror, _cpmodpy
 from cherrypy.lib import httputil
 
+
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 AB_PATH = ""
 APACHE_PATH = "apache"
