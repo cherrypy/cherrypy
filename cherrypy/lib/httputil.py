@@ -9,13 +9,21 @@ to a public caning.
 
 import functools
 import email.utils
+import re
 from binascii import b2a_base64
+from cgi import parse_header
+try:
+    # Python 3
+    from email.header import decode_header
+except ImportError:
+    from email.Header import decode_header
 
 import six
 
 from cherrypy._cpcompat import BaseHTTPRequestHandler, ntob, ntou
 from cherrypy._cpcompat import text_or_bytes, iteritems
 from cherrypy._cpcompat import reversed, sorted, unquote_qs
+
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://github.com/cherrypy/cherrypy/issues/361
@@ -26,9 +34,6 @@ response_codes[503] = ('Service Unavailable',
                        'The server is currently unable to handle the '
                        'request due to a temporary overloading or '
                        'maintenance of the server.')
-
-import re
-from cgi import parse_header
 
 
 HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
@@ -233,11 +238,6 @@ def header_elements(fieldname, fieldvalue):
 
 def decode_TEXT(value):
     r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> "f\xfcr")."""
-    try:
-        # Python 3
-        from email.header import decode_header
-    except ImportError:
-        from email.Header import decode_header
     atoms = decode_header(value)
     decodedvalue = ""
     for atom, charset in atoms:
