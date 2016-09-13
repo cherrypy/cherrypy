@@ -86,6 +86,11 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
                     # The client is speaking some non-HTTP protocol.
                     # Drop the conn.
                     return None, {}
+            elif 'handshake operation timed out' in e.args[0]:
+                # This error is thrown by builtin SSL after a timeout
+                # when client is speaking HTTP to an HTTPS server.
+                # The connection can safely be dropped.
+                return None, {}
             raise
         return s, self.get_environ(s)
 
