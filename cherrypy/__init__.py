@@ -61,7 +61,7 @@ try:
 except ImportError:
     pass
 
-from cherrypy._cpcompat import threadlocal as _local
+from threading import local as _local
 
 from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa
 from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa

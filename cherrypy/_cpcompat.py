@@ -145,11 +145,6 @@ except ImportError:
     from urllib2 import parse_http_list, parse_keqv_list  # noqa
 
 try:
-    from threading import local as threadlocal
-except ImportError:
-    from cherrypy._cpthreadinglocal import local as threadlocal  # noqa
-
-try:
     dict.iteritems
     # Python 2
     iteritems = lambda d: d.iteritems()

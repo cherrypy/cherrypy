@@ -112,14 +112,6 @@ cherrypy._cpserver module
     :undoc-members:
     :show-inheritance:
 
-cherrypy._cpthreadinglocal module
----------------------------------
-
-.. automodule:: cherrypy._cpthreadinglocal
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cherrypy._cptools module
 ------------------------
 
