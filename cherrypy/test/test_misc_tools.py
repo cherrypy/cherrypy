@@ -37,10 +37,8 @@ def setup_server():
         def index(self):
             return '<a href="feed">Atom feed</a>'
 
-        # In Python 2.4+, we could use a decorator instead:
-        # @tools.accept('application/atom+xml')
         @cherrypy.expose
-        @cherrypy.config(**{'tools.accept.media': 'application/atom+xml'})
+        @tools.accept(media='application/atom+xml')
         def feed(self):
             return """<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">

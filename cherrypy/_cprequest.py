@@ -952,10 +952,7 @@ class Response(object):
 
         cookie = self.cookie.output()
         if cookie:
-            for line in cookie.split('\n'):
-                if line.endswith('\r'):
-                    # Python 2.4 emits cookies joined by LF but 2.5+ by CRLF.
-                    line = line[:-1]
+            for line in cookie.split('\r\n'):
                 name, value = line.split(': ', 1)
                 if isinstance(name, six.text_type):
                     name = name.encode('ISO-8859-1')

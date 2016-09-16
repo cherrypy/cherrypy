@@ -732,19 +732,7 @@ class Part(Entity):
 
 Entity.part_class = Part
 
-try:
-    inf = float('inf')
-except ValueError:
-    # Python 2.4 and lower
-    class Infinity(object):
-
-        def __cmp__(self, other):
-            return 1
-
-        def __sub__(self, other):
-            return self
-    inf = Infinity()
-
+inf = float('inf')
 
 comma_separated_headers = [
     'Accept', 'Accept-Charset', 'Accept-Encoding',
