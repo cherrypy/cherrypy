@@ -5,6 +5,7 @@ import io
 import logging
 import os
 import re
+import subprocess
 import sys
 import time
 import unittest
@@ -19,12 +20,6 @@ from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.lib.reprconf import unrepr
 from cherrypy.test import webtest
-
-# Use subprocess module from Python 2.7 on Python 2.3-2.6
-if sys.version_info < (2, 7):
-    import cherrypy._cpcompat_subprocess as subprocess
-else:
-    import subprocess
 
 _testconfig = None
 log = logging.getLogger(__name__)

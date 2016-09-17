@@ -32,14 +32,6 @@ cherrypy._cpcompat module
     :undoc-members:
     :show-inheritance:
 
-cherrypy._cpcompat_subprocess module
-------------------------------------
-
-.. automodule:: cherrypy._cpcompat_subprocess
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cherrypy._cpconfig module
 -------------------------
 
