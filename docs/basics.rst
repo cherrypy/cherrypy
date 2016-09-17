@@ -581,7 +581,7 @@ share sessions outside of the process running CherryPy.
 Requires that the Python
 `memcached <https://pypi.org/project/memcached>`_
 package is installed, which may be indicated by installing
-``cherrypy[memcached-session]``.
+``cherrypy[memcached_session]``.
 
 .. code-block:: ini
 

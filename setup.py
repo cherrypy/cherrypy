@@ -135,11 +135,35 @@ tests_require = [
     'tox',
 ]
 
+"""This section defines feature flags end-users can use in dependencies"""
 extras_require = {
-    """This section defines feature flags end-users can use in dependencies"""
-    # Enables memcached session support via `cherrypy[memcached-session]`:
-    'memcached-session': ['python-memcached>=1.58'],
+    'doc': [
+        'docutils',
+        'sphinx_rtd_theme',
+    ],
+    'json': ['simplejson'],
+    'routes_dispatcher': ['routes>=2.3.1'],
+    'ssl': ['pyOpenSSL'],
+    'test_tools': [
+        'coverage',  # inspects tests coverage
+        # TODO: drop nose dependency in favor of py.test analogue
+        'nose',  # only used in cherrypy.test.{helper,test_{compat,routes}}
+        'nose-testconfig',  # only used in cherrypy.test.helper
+        'objgraph',  # cherrypy.lib.gctools
+    ],
+    # Enables memcached session support via `cherrypy[memcached_session]`:
+    'memcached_session': ['python-memcached>=1.58'],
+    'multienv_tests': tests_require,
+    'xcgi': ['flup'],
+
+    # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
+    ':sys_platform == "win32"': ['pywin32'],
 }
+
+if sys.version_info < (3, 3):
+    extras_require['test_tools'].append(
+        'mock'  # only used in cherrypy.test.test_encoding
+    )
 
 cmd_class = {
     'build_py': cherrypy_build_py,
