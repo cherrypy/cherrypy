@@ -102,11 +102,6 @@ class SystemLockFile(object):
         except:
             pass
 
-    #@abc.abstract_method
-    # def _lock_file(self):
-    #    """Attempt to obtain the lock on self.fp. Raise LockError if not
-    #    acquired."""
-
     def _unlock_file(self):
         """Attempt to obtain the lock on self.fp. Raise UnlockError if not
         released."""

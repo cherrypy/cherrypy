@@ -84,7 +84,7 @@ class ProxyTest(helper.CPWebCase):
         self.getPage('/remoteip',
                      headers=[('X-Forwarded-For', '192.168.0.20')])
         self.assertBody('192.168.0.20')
-        #Fix bug #1268
+        # Fix bug #1268
         self.getPage('/remoteip',
                      headers=[
                          ('X-Forwarded-For', '67.15.36.43, 192.168.0.20')

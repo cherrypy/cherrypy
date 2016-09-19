@@ -151,7 +151,7 @@ class Root(object):
 
 if __name__ == '__main__':
     cherrypy.config.update({
-        #'environment': 'production',
+        # 'environment': 'production',
         'log.screen': True,
         'tools.sessions.on': True,
     })

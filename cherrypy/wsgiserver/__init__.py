@@ -1150,7 +1150,7 @@ class CP_makefile_PY2(getattr(socket, '_fileobject', object)):
                     buf.write(data)
                     buf_len += n
                     del data  # explicit free
-                    #assert buf_len == buf.tell()
+                    # assert buf_len == buf.tell()
                 return buf.getvalue()
 
         def readline(self, size=-1):
@@ -1240,7 +1240,7 @@ class CP_makefile_PY2(getattr(socket, '_fileobject', object)):
                         break
                     buf.write(data)
                     buf_len += n
-                    #assert buf_len == buf.tell()
+                    # assert buf_len == buf.tell()
                 return buf.getvalue()
     else:
         def read(self, size=-1):

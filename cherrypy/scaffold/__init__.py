@@ -55,5 +55,5 @@ Or, just look at the pretty picture:<br />
 root = Root()
 
 # Uncomment the following to use your own favicon instead of CP's default.
-#favicon_path = os.path.join(local_dir, "favicon.ico")
-#root.favicon_ico = tools.staticfile.handler(filename=favicon_path)
+# favicon_path = os.path.join(local_dir, "favicon.ico")
+# root.favicon_ico = tools.staticfile.handler(filename=favicon_path)

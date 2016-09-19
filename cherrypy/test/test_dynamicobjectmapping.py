@@ -70,7 +70,7 @@ def setup_server():
         def _cp_dispatch(self, vpath):
             return subnodes.get(vpath[0])
 
-    #--------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # DynamicNodeAndMethodDispatcher example.
     # This example exposes a fairly naive HTTP api
     class User(object):

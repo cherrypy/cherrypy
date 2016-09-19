@@ -193,7 +193,6 @@ class _TrappedResponse(object):
             raise
         except:
             tb = _cperror.format_exc()
-            #print('trapped (started %s):' % self.started_response, tb)
             _cherrypy.log(tb, severity=40)
             if not _cherrypy.request.show_tracebacks:
                 tb = ''
