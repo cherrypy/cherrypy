@@ -61,13 +61,17 @@ the new state.::
 """
 
 import atexit
+import ctypes
+import operator
 import os
 import sys
 import threading
 import time
 import traceback as _traceback
 import warnings
-import operator
+
+import six
+
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed
@@ -373,7 +377,7 @@ class Bus(object):
         This must be called from the main thread, because certain platforms
         (OS X) don't allow execv to be called in a child thread very well.
         """
-        args = sys.argv[:]
+        args = self._get_true_argv()
         self.log('Re-spawning %s' % ' '.join(args))
 
         self._extend_pythonpath(os.environ)
@@ -382,7 +386,6 @@ class Bus(object):
             from _systemrestart import SystemRestart
             raise SystemRestart
         else:
-            args.insert(0, sys.executable)
             if sys.platform == 'win32':
                 args = ['"%s"' % arg for arg in args]
 
@@ -390,6 +393,26 @@ class Bus(object):
             if self.max_cloexec_files:
                 self._set_cloexec()
             os.execv(sys.executable, args)
+
+    @staticmethod
+    def _get_true_argv():
+        """Retrieves all real arguments of the python interpreter
+
+        ...even those not listed in ``sys.argv``
+
+        :seealso: http://stackoverflow.com/a/28338254/595220
+        :seealso: http://stackoverflow.com/a/6683222/595220
+        :seealso: http://stackoverflow.com/a/28414807/595220
+        """
+
+        char_p = ctypes.c_char_p if six.PY2 else ctypes.c_wchar_p
+
+        argv = ctypes.POINTER(char_p)()
+        argc = ctypes.c_int()
+
+        ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
+
+        return argv[:argc.value]
 
     @staticmethod
     def _extend_pythonpath(env):
