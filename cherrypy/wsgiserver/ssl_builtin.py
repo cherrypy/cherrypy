@@ -79,13 +79,18 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
                 # the 'ping' isn't SSL.
                 return None, {}
             elif e.errno == ssl.SSL_ERROR_SSL:
-                if e.args[1].endswith('http request'):
+                if 'http request' in e.args[1]:
                     # The client is speaking HTTP to an HTTPS server.
                     raise wsgiserver.NoSSLError
-                elif e.args[1].endswith('unknown protocol'):
+                elif 'unknown protocol' in e.args[1]:
                     # The client is speaking some non-HTTP protocol.
                     # Drop the conn.
                     return None, {}
+            elif 'handshake operation timed out' in e.args[0]:
+                # This error is thrown by builtin SSL after a timeout
+                # when client is speaking HTTP to an HTTPS server.
+                # The connection can safely be dropped.
+                return None, {}
             raise
         return s, self.get_environ(s)
 
