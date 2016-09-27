@@ -377,7 +377,12 @@ class Bus(object):
         This must be called from the main thread, because certain platforms
         (OS X) don't allow execv to be called in a child thread very well.
         """
-        args = self._get_true_argv()
+        try:
+            args = self._get_true_argv()
+        except NotImplementedError:
+            """It's probably win32"""
+            args = [sys.executable] + sys.argv
+
         self.log('Re-spawning %s' % ' '.join(args))
 
         self._extend_pythonpath(os.environ)
@@ -405,14 +410,22 @@ class Bus(object):
         :seealso: http://stackoverflow.com/a/28414807/595220
         """
 
-        char_p = ctypes.c_char_p if six.PY2 else ctypes.c_wchar_p
+        try:
+            char_p = ctypes.c_char_p if six.PY2 else ctypes.c_wchar_p
 
-        argv = ctypes.POINTER(char_p)()
-        argc = ctypes.c_int()
+            argv = ctypes.POINTER(char_p)()
+            argc = ctypes.c_int()
 
-        ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
+            ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
+        except AttributeError:
+            """It looks Py_GetArgcArgv is completely absent in MS Windows
 
-        return argv[:argc.value]
+            :seealso: https://github.com/cherrypy/cherrypy/issues/1506
+            :ref: https://chromium.googlesource.com/infra/infra/+/69eb0279c12bcede5937ce9298020dd4581e38dd%5E!/
+            """
+            raise NotImplementedError
+        else:
+            return argv[:argc.value]
 
     @staticmethod
     def _extend_pythonpath(env):
