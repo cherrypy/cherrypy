@@ -64,6 +64,7 @@ import atexit
 import ctypes
 import operator
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -71,6 +72,8 @@ import traceback as _traceback
 import warnings
 
 import six
+
+from cherrypy._cpcompat import _args_from_interpreter_flags
 
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
@@ -381,7 +384,7 @@ class Bus(object):
             args = self._get_true_argv()
         except NotImplementedError:
             """It's probably win32"""
-            args = [sys.executable] + sys.argv
+            args = [sys.executable] + _args_from_interpreter_flags() + sys.argv
 
         self.log('Re-spawning %s' % ' '.join(args))
 
