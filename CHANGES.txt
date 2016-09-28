@@ -4,6 +4,10 @@
 * #1497: Handle errors thrown by ``ssl_module: 'builtin'``
   when client opens connection to HTTPS port using HTTP.
 
+* #1350: Fix regression introduced in v6.1.0 where environment
+  construction for WSGIGateway_u0 was passing one parameter
+  and not two.
+
 8.1.0
 -----
 
