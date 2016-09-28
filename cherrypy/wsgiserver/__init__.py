@@ -2497,7 +2497,7 @@ class WSGIGateway_u0(WSGIGateway_10):
         """Return a new environ dict targeting the given wsgi.version"""
         req = self.req
         env_10 = WSGIGateway_10.get_environ(self)
-        env = dict(map(self._decode_key, self.items()))
+        env = dict(map(self._decode_key, env_10.items()))
         env[six.u('wsgi.version')] = ('u', 0)
 
         # Request-URI
@@ -2511,18 +2511,20 @@ class WSGIGateway_u0(WSGIGateway_10):
             env['PATH_INFO'] = env_10['PATH_INFO']
             env['QUERY_STRING'] = env_10['QUERY_STRING']
 
-        env.update(map(self._decode_value, self.items()))
+        env.update(map(self._decode_value, env.items()))
 
         return env
 
     @staticmethod
-    def _decode_key(k, v):
+    def _decode_key(item):
+        k, v = item
         if six.PY2:
             k = k.decode('ISO-8859-1')
         return k, v
 
     @staticmethod
-    def _decode_value(k, v):
+    def _decode_value(item):
+        k, v = item
         skip_keys = 'REQUEST_URI', 'wsgi.input'
         if six.PY3 or not isinstance(v, bytes) or k in skip_keys:
             return k, v
