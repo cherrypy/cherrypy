@@ -157,7 +157,7 @@ extras_require = {
     'xcgi': ['flup'],
 
     # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
-    ':sys_platform == "win32"': ['pywin32'],
+    ':sys_platform == "win32"': ['pypiwin32'],
 }
 
 if sys.version_info < (3, 3):
