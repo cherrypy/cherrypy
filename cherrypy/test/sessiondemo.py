@@ -123,7 +123,7 @@ class Root(object):
             'reqcookie': cherrypy.request.cookie.output(),
             'sessiondata': copyitems(cherrypy.session),
             'servertime': (
-                datetime.utcnow().strftime("%Y/%m/%d %H:%M") + " UTC"
+                datetime.utcnow().strftime('%Y/%m/%d %H:%M') + ' UTC'
             ),
             'serverunixtime': calendar.timegm(datetime.utcnow().timetuple()),
             'cpversion': cherrypy.__version__,
@@ -151,7 +151,7 @@ class Root(object):
 
 if __name__ == '__main__':
     cherrypy.config.update({
-        #'environment': 'production',
+        # 'environment': 'production',
         'log.screen': True,
         'tools.sessions.on': True,
     })

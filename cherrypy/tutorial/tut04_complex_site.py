@@ -5,6 +5,8 @@ This tutorial shows you how to create a site structure through multiple
 possibly nested request handler objects.
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -92,7 +94,6 @@ root.links = LinksPage()
 # creating all contained request handler objects.
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

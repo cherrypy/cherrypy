@@ -1,0 +1,37 @@
+- repo: git://github.com/pre-commit/pre-commit-hooks
+  sha: master
+  hooks:
+  - id: trailing-whitespace
+    exclude: cherrypy/test/static/index.html
+  - id: flake8
+  - id: check-merge-conflict
+  - id: double-quote-string-fixer
+  - id: end-of-file-fixer
+  - id: name-tests-test
+    include: cherrypy/test/
+    args: 
+    - '--django'
+  - id: debug-statements
+  - id: check-added-large-files
+  - id: check-ast
+  - id: check-byte-order-marker
+  - id: check-case-conflict
+  - id: check-docstring-first
+  - id: check-json
+  - id: pretty-format-json
+  - id: check-symlinks
+  - id: check-yaml
+  - id: detect-private-key
+    exclude: cherrypy/test/test.pem
+  - id: requirements-txt-fixer
+
+- repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
+  sha: master
+  hooks:
+  - id: pep257
+
+- repo: git://github.com/Lucas-C/pre-commit-hooks
+  sha: master
+  hooks:
+  - id: remove-tabs
+  - id: forbid-html-img-without-alt-text

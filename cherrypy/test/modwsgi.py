@@ -33,7 +33,6 @@ KNOWN BUGS
 """
 
 import os
-curdir = os.path.abspath(os.path.dirname(__file__))
 import re
 import sys
 import time
@@ -41,12 +40,14 @@ import time
 import cherrypy
 from cherrypy.test import helper, webtest
 
+curdir = os.path.abspath(os.path.dirname(__file__))
 
-def read_process(cmd, args=""):
-    pipein, pipeout = os.popen4("%s %s" % (cmd, args))
+
+def read_process(cmd, args=''):
+    pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
-        if (re.search(r"(not recognized|No such file|not found)", firstline,
+        if (re.search(r'(not recognized|No such file|not found)', firstline,
                       re.IGNORECASE)):
             raise IOError('%s must be on your system path.' % cmd)
         output = firstline + pipeout.read()
@@ -56,11 +57,11 @@ def read_process(cmd, args=""):
 
 
 if sys.platform == 'win32':
-    APACHE_PATH = "httpd"
+    APACHE_PATH = 'httpd'
 else:
-    APACHE_PATH = "apache"
+    APACHE_PATH = 'apache'
 
-CONF_PATH = "test_mw.conf"
+CONF_PATH = 'test_mw.conf'
 
 conf_modwsgi = r"""
 # Apache2 server conf file for testing CherryPy with modpython_gateway.
@@ -97,7 +98,7 @@ class ModWSGISupervisor(helper.Supervisor):
     template = conf_modwsgi
 
     def __str__(self):
-        return "ModWSGI Server on %s:%s" % (self.host, self.port)
+        return 'ModWSGI Server on %s:%s' % (self.host, self.port)
 
     def start(self, modulename):
         mpconf = CONF_PATH
@@ -113,19 +114,19 @@ class ModWSGISupervisor(helper.Supervisor):
         finally:
             f.close()
 
-        result = read_process(APACHE_PATH, "-k start -f %s" % mpconf)
+        result = read_process(APACHE_PATH, '-k start -f %s' % mpconf)
         if result:
             print(result)
 
         # Make a request so mod_wsgi starts up our app.
         # If we don't, concurrent initial requests will 404.
-        cherrypy._cpserver.wait_for_occupied_port("127.0.0.1", self.port)
+        cherrypy._cpserver.wait_for_occupied_port('127.0.0.1', self.port)
         webtest.openURL('/ihopetheresnodefault', port=self.port)
         time.sleep(1)
 
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
-        read_process(APACHE_PATH, "-k stop")
+        read_process(APACHE_PATH, '-k stop')
 
 
 loaded = False
@@ -136,15 +137,15 @@ def application(environ, start_response):
     global loaded
     if not loaded:
         loaded = True
-        modname = "cherrypy.test." + environ['testmod']
+        modname = 'cherrypy.test.' + environ['testmod']
         mod = __import__(modname, globals(), locals(), [''])
         mod.setup_server()
 
         cherrypy.config.update({
-            "log.error_file": os.path.join(curdir, "test.error.log"),
-            "log.access_file": os.path.join(curdir, "test.access.log"),
-            "environment": "test_suite",
-            "engine.SIGHUP": None,
-            "engine.SIGTERM": None,
+            'log.error_file': os.path.join(curdir, 'test.error.log'),
+            'log.access_file': os.path.join(curdir, 'test.access.log'),
+            'environment': 'test_suite',
+            'engine.SIGHUP': None,
+            'engine.SIGTERM': None,
         })
     return cherrypy.tree(environ, start_response)

@@ -14,7 +14,7 @@ class WSGI_VirtualHost_Test(helper.CPWebCase):
 
             @cherrypy.expose
             def index(self):
-                return "Welcome to the %s website!" % self.name
+                return 'Welcome to the %s website!' % self.name
 
         default = cherrypy.Application(None)
 
@@ -27,9 +27,9 @@ class WSGI_VirtualHost_Test(helper.CPWebCase):
 
     def test_welcome(self):
         if not cherrypy.server.using_wsgi:
-            return self.skip("skipped (not using WSGI)... ")
+            return self.skip('skipped (not using WSGI)... ')
 
         for year in range(1997, 2008):
             self.getPage(
-                "/", headers=[('Host', 'www.classof%s.example' % year)])
-            self.assertBody("Welcome to the Class of %s website!" % year)
+                '/', headers=[('Host', 'www.classof%s.example' % year)])
+            self.assertBody('Welcome to the Class of %s website!' % year)

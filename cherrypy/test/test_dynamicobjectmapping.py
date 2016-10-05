@@ -4,7 +4,7 @@ import cherrypy
 from cherrypy._cpcompat import sorted
 from cherrypy.test import helper
 
-script_names = ["", "/foo", "/users/fred/blog", "/corp/blog"]
+script_names = ['', '/foo', '/users/fred/blog', '/corp/blog']
 
 
 def setup_server():
@@ -12,19 +12,19 @@ def setup_server():
 
         @cherrypy.expose
         def index(self):
-            return "SubSubRoot index"
+            return 'SubSubRoot index'
 
         @cherrypy.expose
         def default(self, *args):
-            return "SubSubRoot default"
+            return 'SubSubRoot default'
 
         @cherrypy.expose
         def handler(self):
-            return "SubSubRoot handler"
+            return 'SubSubRoot handler'
 
         @cherrypy.expose
         def dispatch(self):
-            return "SubSubRoot dispatch"
+            return 'SubSubRoot dispatch'
 
     subsubnodes = {
         '1': SubSubRoot(),
@@ -35,15 +35,15 @@ def setup_server():
 
         @cherrypy.expose
         def index(self):
-            return "SubRoot index"
+            return 'SubRoot index'
 
         @cherrypy.expose
         def default(self, *args):
-            return "SubRoot %s" % (args,)
+            return 'SubRoot %s' % (args,)
 
         @cherrypy.expose
         def handler(self):
-            return "SubRoot handler"
+            return 'SubRoot handler'
 
         def _cp_dispatch(self, vpath):
             return subsubnodes.get(vpath[0], None)
@@ -57,20 +57,20 @@ def setup_server():
 
         @cherrypy.expose
         def index(self):
-            return "index"
+            return 'index'
 
         @cherrypy.expose
         def default(self, *args):
-            return "default %s" % (args,)
+            return 'default %s' % (args,)
 
         @cherrypy.expose
         def handler(self):
-            return "handler"
+            return 'handler'
 
         def _cp_dispatch(self, vpath):
             return subnodes.get(vpath[0])
 
-    #--------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # DynamicNodeAndMethodDispatcher example.
     # This example exposes a fairly naive HTTP api
     class User(object):
@@ -103,7 +103,7 @@ def setup_server():
             """
             Allow the creation of a new Object
             """
-            return "POST %d" % make_user(name)
+            return 'POST %d' % make_user(name)
 
         def GET(self):
             return six.text_type(sorted(user_lookup.keys()))
@@ -138,7 +138,7 @@ def setup_server():
             Update the fields of the user instance.
             """
             self.user.name = name
-            return "POST %d" % self.user.id
+            return 'POST %d' % self.user.id
 
         def PUT(self, name):
             """
@@ -148,10 +148,10 @@ def setup_server():
             if self.user:
                 # Edit the current user
                 self.user.name = name
-                return "PUT %d" % self.user.id
+                return 'PUT %d' % self.user.id
             else:
                 # Make a new user with said attributes.
-                return "PUT %d" % make_user(name, self.id)
+                return 'PUT %d' % make_user(name, self.id)
 
         def DELETE(self):
             """
@@ -160,7 +160,7 @@ def setup_server():
             id = self.user.id
             del user_lookup[self.user.id]
             del self.user
-            return "DELETE %d" % id
+            return 'DELETE %d' % id
 
     class ABHandler:
 
@@ -168,7 +168,7 @@ def setup_server():
 
             @cherrypy.expose
             def index(self, a, b):
-                return "custom"
+                return 'custom'
 
         def _cp_dispatch(self, vpath):
             """Make sure that if we don't pop anything from vpath,
@@ -199,7 +199,7 @@ def setup_server():
 
         @cherrypy.expose
         def index(self):
-            return "IndexOnly index"
+            return 'IndexOnly index'
 
     class DecoratedPopArgs:
 
@@ -207,7 +207,7 @@ def setup_server():
 
         @cherrypy.expose
         def index(self):
-            return "no params"
+            return 'no params'
 
         @cherrypy.expose
         def hi(self):
@@ -223,7 +223,7 @@ def setup_server():
 
         @cherrypy.expose
         def index(self, a):
-            return "index: " + str(a)
+            return 'index: ' + str(a)
 
     class ParameterizedHandler:
 
@@ -236,8 +236,8 @@ def setup_server():
         def index(self):
             if 'a' in cherrypy.request.params:
                 raise Exception(
-                    "Parameterized handler argument ended up in "
-                    "request.params")
+                    'Parameterized handler argument ended up in '
+                    'request.params')
             return self.a
 
     class ParameterizedPopArgs:
@@ -256,7 +256,7 @@ def setup_server():
     md = cherrypy.dispatch.MethodDispatcher('dynamic_dispatch')
     for url in script_names:
         conf = {'/': {
-            'user': (url or "/").split("/")[-2],
+            'user': (url or '/').split('/')[-2],
         },
             '/users': {
                 'request.dispatch': md
@@ -323,7 +323,7 @@ class DynamicObjectMappingTest(helper.CPWebCase):
             # The exposed dispatch will not be called as a dispatch
             # method.
             self.getPage('/2/2/foo/foo')
-            self.assertBody("SubSubRoot default")
+            self.assertBody('SubSubRoot default')
 
             # Dynamic dispatch will fail here for the subsubnodes
             # so the SubRoot gets called
@@ -338,28 +338,28 @@ class DynamicObjectMappingTest(helper.CPWebCase):
 
     def testMethodDispatch(self):
         # GET acts like a container
-        self.getPage("/users")
-        self.assertBody("[1, 2]")
+        self.getPage('/users')
+        self.assertBody('[1, 2]')
         self.assertHeader('Allow', 'GET, HEAD, POST')
 
         # POST to the container URI allows creation
-        self.getPage("/users", method="POST", body="name=baz")
-        self.assertBody("POST 3")
+        self.getPage('/users', method='POST', body='name=baz')
+        self.assertBody('POST 3')
         self.assertHeader('Allow', 'GET, HEAD, POST')
 
         # POST to a specific instanct URI results in a 404
         # as the resource does not exit.
-        self.getPage("/users/5", method="POST", body="name=baz")
+        self.getPage('/users/5', method='POST', body='name=baz')
         self.assertStatus(404)
 
         # PUT to a specific instanct URI results in creation
-        self.getPage("/users/5", method="PUT", body="name=boris")
-        self.assertBody("PUT 5")
+        self.getPage('/users/5', method='PUT', body='name=boris')
+        self.assertBody('PUT 5')
         self.assertHeader('Allow', 'DELETE, GET, HEAD, POST, PUT')
 
         # GET acts like a container
-        self.getPage("/users")
-        self.assertBody("[1, 2, 3, 5]")
+        self.getPage('/users')
+        self.assertBody('[1, 2, 3, 5]')
         self.assertHeader('Allow', 'GET, HEAD, POST')
 
         test_cases = (
@@ -369,56 +369,56 @@ class DynamicObjectMappingTest(helper.CPWebCase):
             (5, 'boris', 'borisupdated', 'DELETE, GET, HEAD, POST, PUT'),
         )
         for id, name, updatedname, headers in test_cases:
-            self.getPage("/users/%d" % id)
+            self.getPage('/users/%d' % id)
             self.assertBody(name)
             self.assertHeader('Allow', headers)
 
             # Make sure POSTs update already existings resources
-            self.getPage("/users/%d" %
-                         id, method='POST', body="name=%s" % updatedname)
-            self.assertBody("POST %d" % id)
+            self.getPage('/users/%d' %
+                         id, method='POST', body='name=%s' % updatedname)
+            self.assertBody('POST %d' % id)
             self.assertHeader('Allow', headers)
 
             # Make sure PUTs Update already existing resources.
-            self.getPage("/users/%d" %
-                         id, method='PUT', body="name=%s" % updatedname)
-            self.assertBody("PUT %d" % id)
+            self.getPage('/users/%d' %
+                         id, method='PUT', body='name=%s' % updatedname)
+            self.assertBody('PUT %d' % id)
             self.assertHeader('Allow', headers)
 
             # Make sure DELETES Remove already existing resources.
-            self.getPage("/users/%d" % id, method='DELETE')
-            self.assertBody("DELETE %d" % id)
+            self.getPage('/users/%d' % id, method='DELETE')
+            self.assertBody('DELETE %d' % id)
             self.assertHeader('Allow', headers)
 
         # GET acts like a container
-        self.getPage("/users")
-        self.assertBody("[]")
+        self.getPage('/users')
+        self.assertBody('[]')
         self.assertHeader('Allow', 'GET, HEAD, POST')
 
     def testVpathDispatch(self):
-        self.getPage("/decorated/")
-        self.assertBody("no params")
+        self.getPage('/decorated/')
+        self.assertBody('no params')
 
-        self.getPage("/decorated/hi")
+        self.getPage('/decorated/hi')
         self.assertBody("hi was not interpreted as 'a' param")
 
-        self.getPage("/decorated/yo/")
-        self.assertBody("a:yo")
+        self.getPage('/decorated/yo/')
+        self.assertBody('a:yo')
 
-        self.getPage("/decorated/yo/there/")
-        self.assertBody("a:yo,b:there")
+        self.getPage('/decorated/yo/there/')
+        self.assertBody('a:yo,b:there')
 
-        self.getPage("/decorated/yo/there/delete")
-        self.assertBody("deleting yo and there")
+        self.getPage('/decorated/yo/there/delete')
+        self.assertBody('deleting yo and there')
 
-        self.getPage("/decorated/yo/there/handled_by_dispatch/")
-        self.assertBody("custom")
+        self.getPage('/decorated/yo/there/handled_by_dispatch/')
+        self.assertBody('custom')
 
-        self.getPage("/undecorated/blah/")
-        self.assertBody("index: blah")
+        self.getPage('/undecorated/blah/')
+        self.assertBody('index: blah')
 
-        self.getPage("/index_only/a/b/c/d/e/f/g/")
-        self.assertBody("IndexOnly index")
+        self.getPage('/index_only/a/b/c/d/e/f/g/')
+        self.assertBody('IndexOnly index')
 
-        self.getPage("/parameter_test/argument2/")
-        self.assertBody("argument2")
+        self.getPage('/parameter_test/argument2/')
+        self.assertBody('argument2')

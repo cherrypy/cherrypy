@@ -9,13 +9,21 @@ to a public caning.
 
 import functools
 import email.utils
+import re
 from binascii import b2a_base64
+from cgi import parse_header
+try:
+    # Python 3
+    from email.header import decode_header
+except ImportError:
+    from email.Header import decode_header
 
 import six
 
 from cherrypy._cpcompat import BaseHTTPRequestHandler, ntob, ntou
 from cherrypy._cpcompat import text_or_bytes, iteritems
 from cherrypy._cpcompat import reversed, sorted, unquote_qs
+
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://github.com/cherrypy/cherrypy/issues/361
@@ -27,9 +35,6 @@ response_codes[503] = ('Service Unavailable',
                        'request due to a temporary overloading or '
                        'maintenance of the server.')
 
-import re
-from cgi import parse_header
-
 
 HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
 
@@ -40,11 +45,11 @@ def urljoin(*atoms):
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
     """
-    url = "/".join([x for x in atoms if x])
-    while "//" in url:
-        url = url.replace("//", "/")
+    url = '/'.join([x for x in atoms if x])
+    while '//' in url:
+        url = url.replace('//', '/')
     # Special-case the final url of "", and return "/" instead.
-    return url or "/"
+    return url or '/'
 
 
 def urljoin_bytes(*atoms):
@@ -53,11 +58,11 @@ def urljoin_bytes(*atoms):
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
     """
-    url = ntob("/").join([x for x in atoms if x])
-    while ntob("//") in url:
-        url = url.replace(ntob("//"), ntob("/"))
+    url = ntob('/').join([x for x in atoms if x])
+    while ntob('//') in url:
+        url = url.replace(ntob('//'), ntob('/'))
     # Special-case the final url of "", and return "/" instead.
-    return url or ntob("/")
+    return url or ntob('/')
 
 
 def protocol_from_http(protocol_str):
@@ -80,9 +85,9 @@ def get_ranges(headervalue, content_length):
         return None
 
     result = []
-    bytesunit, byteranges = headervalue.split("=", 1)
-    for brange in byteranges.split(","):
-        start, stop = [x.strip() for x in brange.split("-", 1)]
+    bytesunit, byteranges = headervalue.split('=', 1)
+    for brange in byteranges.split(','):
+        start, stop = [x.strip() for x in brange.split('-', 1)]
         if start:
             if not stop:
                 stop = content_length - 1
@@ -140,8 +145,8 @@ class HeaderElement(object):
         return self.value < other.value
 
     def __str__(self):
-        p = [";%s=%s" % (k, v) for k, v in iteritems(self.params)]
-        return str("%s%s" % (self.value, "".join(p)))
+        p = [';%s=%s' % (k, v) for k, v in iteritems(self.params)]
+        return str('%s%s' % (self.value, ''.join(p)))
 
     def __bytes__(self):
         return ntob(self.__str__())
@@ -190,13 +195,13 @@ class AcceptElement(HeaderElement):
 
         media_type, params = cls.parse(media_range)
         if qvalue is not None:
-            params["q"] = qvalue
+            params['q'] = qvalue
         return cls(media_type, params)
 
     @property
     def qvalue(self):
-        "The qvalue, or priority, of this value."
-        val = self.params.get("q", "1")
+        'The qvalue, or priority, of this value.'
+        val = self.params.get('q', '1')
         if isinstance(val, HeaderElement):
             val = val.value
         return float(val)
@@ -222,7 +227,7 @@ def header_elements(fieldname, fieldvalue):
 
     result = []
     for element in RE_HEADER_SPLIT.split(fieldvalue):
-        if fieldname.startswith("Accept") or fieldname == 'TE':
+        if fieldname.startswith('Accept') or fieldname == 'TE':
             hv = AcceptElement.from_str(element)
         else:
             hv = HeaderElement.from_str(element)
@@ -233,13 +238,8 @@ def header_elements(fieldname, fieldvalue):
 
 def decode_TEXT(value):
     r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> "f\xfcr")."""
-    try:
-        # Python 3
-        from email.header import decode_header
-    except ImportError:
-        from email.Header import decode_header
     atoms = decode_header(value)
-    decodedvalue = ""
+    decodedvalue = ''
     for atom, charset in atoms:
         if charset is not None:
             atom = atom.decode(charset)
@@ -260,7 +260,7 @@ def valid_status(status):
         status = 200
 
     status = str(status)
-    parts = status.split(" ", 1)
+    parts = status.split(' ', 1)
     if len(parts) == 1:
         # No reason supplied.
         code, = parts
@@ -272,16 +272,16 @@ def valid_status(status):
     try:
         code = int(code)
     except ValueError:
-        raise ValueError("Illegal response status from server "
-                         "(%s is non-numeric)." % repr(code))
+        raise ValueError('Illegal response status from server '
+                         '(%s is non-numeric).' % repr(code))
 
     if code < 100 or code > 599:
-        raise ValueError("Illegal response status from server "
-                         "(%s is out of range)." % repr(code))
+        raise ValueError('Illegal response status from server '
+                         '(%s is out of range).' % repr(code))
 
     if code not in response_codes:
         # code is unknown but not illegal
-        default_reason, message = "", ""
+        default_reason, message = '', ''
     else:
         default_reason, message = response_codes[code]
 
@@ -322,7 +322,7 @@ def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
         nv = name_value.split('=', 1)
         if len(nv) != 2:
             if strict_parsing:
-                raise ValueError("bad query field: %r" % (name_value,))
+                raise ValueError('bad query field: %r' % (name_value,))
             # Handle case of a control-name with no equal sign
             if keep_blank_values:
                 nv.append('')
@@ -340,7 +340,7 @@ def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
     return d
 
 
-image_map_pattern = re.compile(r"[0-9]+,[0-9]+")
+image_map_pattern = re.compile(r'[0-9]+,[0-9]+')
 
 
 def parse_query_string(query_string, keep_blank_values=True, encoding='utf-8'):
@@ -353,7 +353,7 @@ def parse_query_string(query_string, keep_blank_values=True, encoding='utf-8'):
     if image_map_pattern.match(query_string):
         # Server-side image map. Map the coords to 'x' and 'y'
         # (like CGI::Request does).
-        pm = query_string.split(",")
+        pm = query_string.split(',')
         pm = {'x': int(pm[0]), 'y': int(pm[1])}
     else:
         pm = _parse_qs(query_string, keep_blank_values, encoding=encoding)
@@ -434,7 +434,7 @@ class HeaderMap(CaseInsensitiveDict):
     """
 
     protocol = (1, 1)
-    encodings = ["ISO-8859-1"]
+    encodings = ['ISO-8859-1']
 
     # Someday, when http-bis is done, this will probably get dropped
     # since few servers, clients, or intermediaries do it. But until then,
@@ -500,8 +500,8 @@ class HeaderMap(CaseInsensitiveDict):
             v = b2a_base64(v.encode('utf-8'))
             return (ntob('=?utf-8?b?') + v.strip(ntob('\n')) + ntob('?='))
 
-        raise ValueError("Could not encode header part %r using "
-                         "any of the encodings %r." %
+        raise ValueError('Could not encode header part %r using '
+                         'any of the encodings %r.' %
                          (v, cls.encodings))
 
 
@@ -515,9 +515,9 @@ class Host(object):
 
     """
 
-    ip = "0.0.0.0"
+    ip = '0.0.0.0'
     port = 80
-    name = "unknown.tld"
+    name = 'unknown.tld'
 
     def __init__(self, ip, port, name=None):
         self.ip = ip
@@ -527,4 +527,4 @@ class Host(object):
         self.name = name
 
     def __repr__(self):
-        return "httputil.Host(%r, %r, %r)" % (self.ip, self.port, self.name)
+        return 'httputil.Host(%r, %r, %r)' % (self.ip, self.port, self.name)

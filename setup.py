@@ -16,8 +16,7 @@ class cherrypy_build_py(build_py):
     def build_module(self, module, module_file, package):
         python3 = sys.version_info >= (3,)
         if python3:
-            exclude_pattern = re.compile('ssl_pyopenssl|'
-                                         '_cpcompat_subprocess')
+            exclude_pattern = re.compile('ssl_pyopenssl')
         else:
             exclude_pattern = re.compile('xxx')
         if exclude_pattern.match(module):
@@ -28,50 +27,49 @@ class cherrypy_build_py(build_py):
 ###############################################################################
 # arguments for the setup command
 ###############################################################################
-name = "CherryPy"
-version = "7.1.0"
-desc = "Object-Oriented HTTP framework"
-long_desc = "CherryPy is a pythonic, object-oriented HTTP framework"
+name = 'CherryPy'
+desc = 'Object-Oriented HTTP framework'
+long_desc = 'CherryPy is a pythonic, object-oriented HTTP framework'
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Environment :: Web Environment",
-    "Intended Audience :: Developers",
-    "License :: Freely Distributable",
-    "Operating System :: OS Independent",
-    "Framework :: CherryPy",
-    "License :: OSI Approved :: BSD License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.6",
-    "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.1",
-    "Programming Language :: Python :: 3.2",
-    "Programming Language :: Python :: 3.3",
-    "Programming Language :: Python :: 3.4",
-    "Programming Language :: Python :: 3.5",
-    "Programming Language :: Python :: Implementation",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: Jython",
-    "Programming Language :: Python :: Implementation :: PyPy",
-    "Topic :: Internet :: WWW/HTTP",
-    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
-    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
-    "Topic :: Internet :: WWW/HTTP :: WSGI",
-    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
-    "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
-    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Web Environment',
+    'Intended Audience :: Developers',
+    'License :: Freely Distributable',
+    'Operating System :: OS Independent',
+    'Framework :: CherryPy',
+    'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.1',
+    'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3.3',
+    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: Implementation',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Programming Language :: Python :: Implementation :: Jython',
+    'Programming Language :: Python :: Implementation :: PyPy',
+    'Topic :: Internet :: WWW/HTTP',
+    'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+    'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
+    'Topic :: Internet :: WWW/HTTP :: WSGI',
+    'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+    'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
+    'Topic :: Software Development :: Libraries :: Application Frameworks',
 ]
-author = "CherryPy Team"
-author_email = "team@cherrypy.org"
-url = "http://www.cherrypy.org"
-cp_license = "BSD"
+author = 'CherryPy Team'
+author_email = 'team@cherrypy.org'
+url = 'http://www.cherrypy.org'
+cp_license = 'BSD'
 packages = [
-    "cherrypy", "cherrypy.lib",
-    "cherrypy.tutorial", "cherrypy.test",
-    "cherrypy.process",
-    "cherrypy.scaffold",
-    "cherrypy.wsgiserver",
+    'cherrypy', 'cherrypy.lib',
+    'cherrypy.tutorial', 'cherrypy.test',
+    'cherrypy.process',
+    'cherrypy.scaffold',
+    'cherrypy.wsgiserver',
 ]
 data_files = [
     ('cherrypy', [
@@ -102,7 +100,7 @@ data_files = [
         'cherrypy/tutorial/custom_error.html',
     ]),
 ]
-scripts = ["cherrypy/cherryd"]
+scripts = ['cherrypy/cherryd']
 
 install_requires = [
     'six',
@@ -114,6 +112,36 @@ tests_require = [
     'nose',
     'mock',
 ]
+
+"""This section defines feature flags end-users can use in dependencies"""
+extras_require = {
+    'doc': [
+        'docutils',
+        'sphinx_rtd_theme',
+    ],
+    'json': ['simplejson'],
+    'routes_dispatcher': ['routes>=2.3.1'],
+    'ssl': ['pyOpenSSL'],
+    'test_tools': [
+        'coverage',  # inspects tests coverage
+        # TODO: drop nose dependency in favor of py.test analogue
+        'nose',  # only used in cherrypy.test.{helper,test_{compat,routes}}
+        'nose-testconfig',  # only used in cherrypy.test.helper
+        'objgraph',  # cherrypy.lib.gctools
+    ],
+    # Enables memcached session support via `cherrypy[memcached_session]`:
+    'memcached_session': ['python-memcached>=1.58'],
+    'multienv_tests': tests_require,
+    'xcgi': ['flup'],
+
+    # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
+    ':sys_platform == "win32"': ['pypiwin32'],
+}
+
+if sys.version_info < (3, 3):
+    extras_require['test_tools'].append(
+        'mock'  # only used in cherrypy.test.test_encoding
+    )
 
 cmd_class = {
     'build_py': cherrypy_build_py,
@@ -137,7 +165,7 @@ if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
 
 setup_params = dict(
     name=name,
-    version=version,
+    use_scm_version=True,
     description=desc,
     long_description=long_desc,
     classifiers=classifiers,
@@ -150,17 +178,19 @@ setup_params = dict(
     scripts=scripts,
     cmdclass=cmd_class,
     install_requires=install_requires,
+    extras_require=extras_require,
     # Enables `python setup.py test` invocation install test dependencies first
     tests_require=tests_require,
     setup_requires=[
+        'setuptools_scm',
     ] + pytest_runner,
 )
 
 
 def main():
     if sys.version < required_python_version:
-        s = "I'm sorry, but %s %s requires Python %s or later."
-        print(s % (name, version, required_python_version))
+        s = "I'm sorry, but %s requires Python %s or later."
+        print(s % (name, required_python_version))
         sys.exit(1)
     # set default location for "data_files" to
     # platform specific "site-packages" location
@@ -170,5 +200,5 @@ def main():
     setuptools.setup(**setup_params)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

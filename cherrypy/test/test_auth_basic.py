@@ -18,7 +18,7 @@ class BasicAuthTest(helper.CPWebCase):
 
             @cherrypy.expose
             def index(self):
-                return "This is public."
+                return 'This is public.'
 
         class BasicProtected:
 
@@ -61,13 +61,13 @@ class BasicAuthTest(helper.CPWebCase):
         cherrypy.tree.mount(root, config=conf)
 
     def testPublic(self):
-        self.getPage("/")
+        self.getPage('/')
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('This is public.')
 
     def testBasic(self):
-        self.getPage("/basic/")
+        self.getPage('/basic/')
         self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="wonderland"')
 
@@ -81,7 +81,7 @@ class BasicAuthTest(helper.CPWebCase):
         self.assertBody("Hello xuser, you've been authorized.")
 
     def testBasic2(self):
-        self.getPage("/basic2/")
+        self.getPage('/basic2/')
         self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="wonderland"')
 

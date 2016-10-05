@@ -211,6 +211,34 @@ This would handle the following URL:
 Notice finally how the whole stack of segments is passed to each
 page handler so that you have the full context.
 
+Error handling
+##############
+CherryPy's ``HTTPError`` class supports raising immediate responses in the case of
+errors.
+
+.. code-block:: python
+
+    class Root:
+        @cherrypy.expose
+        def thing(self, path):
+            if not authorized():
+                raise cherrypy.HTTPError(401, 'Unauthorized')
+            try:
+                file = open(path)
+            except FileNotFoundError:
+                raise cherrypy.HTTPError(404)
+
+``HTTPError.handle`` is a context manager which supports translating exceptions
+raised in the app into an appropriate HTTP response, as in the second example.
+
+.. code-block:: python
+
+    class Root:
+        @cherrypy.expose
+        def thing(self, path):
+            with cherrypy.HTTPError.handle(FileNotFoundError, 404):
+                file = open(path)
+
 Streaming the response body
 ###########################
 
@@ -373,9 +401,10 @@ Windows Console Events
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Microsoft Windows uses console events to communicate some signals, like Ctrl-C.
-When deploying CherryPy on Windows platforms, you should obtain the
-`Python for Windows Extensions <http://sourceforge.net/projects/pywin32/>`_;
-once you have them installed, CherryPy will handle Ctrl-C and other
+Deploying CherryPy on Windows platforms requires `Python for Windows Extensions
+<http://sourceforge.net/projects/pywin32/>`_, which are installed automatically,
+being provided an extra dependency with environment marker. With that
+installed, CherryPy will handle Ctrl-C and other
 console events (CTRL_C_EVENT, CTRL_LOGOFF_EVENT, CTRL_BREAK_EVENT,
 CTRL_SHUTDOWN_EVENT, and CTRL_CLOSE_EVENT) automatically, shutting down the
 bus in preparation for process exit.

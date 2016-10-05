@@ -5,6 +5,8 @@ This tutorial shows you how to link to other methods of your request
 handler.
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -18,9 +20,8 @@ class HelloWorld:
     @cherrypy.expose
     def show_msg(self):
         # Here's the important message!
-        return "Hello world!"
+        return 'Hello world!'
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

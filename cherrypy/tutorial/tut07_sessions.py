@@ -8,6 +8,8 @@ any kind of object into that dictionary; otherwise, you are limited to
 objects that can be pickled.
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -30,7 +32,6 @@ class HitCounter:
         ''' % count
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

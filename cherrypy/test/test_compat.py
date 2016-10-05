@@ -19,5 +19,5 @@ class StringTester(unittest.TestCase):
         See #1132 for discussion.
         """
         if six.PY3:
-            raise nose.SkipTest("Only useful on Python 2")
+            raise nose.SkipTest('Only useful on Python 2')
         self.assertRaises(Exception, compat.ntob, 'fight')

@@ -16,7 +16,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
             # A simple tool to add some things to request.params
             # This is to check to make sure that session_auth can handle
             # request params (ticket #780)
-            cherrypy.request.params["test"] = "test"
+            cherrypy.request.params['test'] = 'test'
 
         cherrypy.tools.augment_params = cherrypy.Tool(
             'before_handler', augment_params, None, priority=30)
@@ -32,7 +32,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
 
             @cherrypy.expose
             def index(self, **kwargs):
-                return "Hi %s, you are logged in" % cherrypy.request.login
+                return 'Hi %s, you are logged in' % cherrypy.request.login
 
         cherrypy.tree.mount(Test())
 

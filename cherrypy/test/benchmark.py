@@ -23,12 +23,9 @@
 
 import getopt
 import os
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-
 import re
 import sys
 import time
-import traceback
 
 import cherrypy
 from cherrypy._cpcompat import ntob
@@ -36,9 +33,11 @@ from cherrypy import _cperror, _cpmodpy
 from cherrypy.lib import httputil
 
 
-AB_PATH = ""
-APACHE_PATH = "apache"
-SCRIPT_NAME = "/cpbench/users/rdelon/apps/blog"
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+
+AB_PATH = ''
+APACHE_PATH = 'apache'
+SCRIPT_NAME = '/cpbench/users/rdelon/apps/blog'
 
 __all__ = ['ABSession', 'Root', 'print_report',
            'run_standard_benchmarks', 'safe_threads',
@@ -69,13 +68,13 @@ class Root:
 
     @cherrypy.expose
     def hello(self):
-        return "Hello, world\r\n"
+        return 'Hello, world\r\n'
 
     @cherrypy.expose
     def sizer(self, size):
         resp = size_cache.get(size, None)
         if resp is None:
-            size_cache[size] = resp = "X" * int(size)
+            size_cache[size] = resp = 'X' * int(size)
         return resp
 
 
@@ -108,20 +107,20 @@ class NullRequest:
 
     """A null HTTP request class, returning 200 and an empty body."""
 
-    def __init__(self, local, remote, scheme="http"):
+    def __init__(self, local, remote, scheme='http'):
         pass
 
     def close(self):
         pass
 
     def run(self, method, path, query_string, protocol, headers, rfile):
-        cherrypy.response.status = "200 OK"
-        cherrypy.response.header_list = [("Content-Type", 'text/html'),
-                                         ("Server", "Null CherryPy"),
-                                         ("Date", httputil.HTTPDate()),
-                                         ("Content-Length", "0"),
+        cherrypy.response.status = '200 OK'
+        cherrypy.response.header_list = [('Content-Type', 'text/html'),
+                                         ('Server', 'Null CherryPy'),
+                                         ('Date', httputil.HTTPDate()),
+                                         ('Content-Length', '0'),
                                          ]
-        cherrypy.response.body = [""]
+        cherrypy.response.body = ['']
         return cherrypy.response
 
 
@@ -203,7 +202,7 @@ Finished 1000 requests
          ntob(r'^Transfer rate:\s*([0-9.]+)'))
     ]
 
-    def __init__(self, path=SCRIPT_NAME + "/hello", requests=1000,
+    def __init__(self, path=SCRIPT_NAME + '/hello', requests=1000,
                  concurrency=10):
         self.path = path
         self.requests = requests
@@ -216,13 +215,13 @@ Finished 1000 requests
         # Don't use "localhost".
         # Cf
         # http://mail.python.org/pipermail/python-win32/2008-March/007050.html
-        return ("-k -n %s -c %s http://127.0.0.1:%s%s" %
+        return ('-k -n %s -c %s http://127.0.0.1:%s%s' %
                 (self.requests, self.concurrency, port, self.path))
 
     def run(self):
         # Parse output of ab, setting attributes on self
         try:
-            self.output = _cpmodpy.read_process(AB_PATH or "ab", self.args())
+            self.output = _cpmodpy.read_process(AB_PATH or 'ab', self.args())
         except:
             print(_cperror.format_exc())
             raise
@@ -237,12 +236,12 @@ Finished 1000 requests
 
 
 safe_threads = (25, 50, 100, 200, 400)
-if sys.platform in ("win32",):
+if sys.platform in ('win32',):
     # For some reason, ab crashes with > 50 threads on my Win2k laptop.
     safe_threads = (10, 20, 30, 40, 50)
 
 
-def thread_report(path=SCRIPT_NAME + "/hello", concurrency=safe_threads):
+def thread_report(path=SCRIPT_NAME + '/hello', concurrency=safe_threads):
     sess = ABSession(path)
     attrs, names, patterns = list(zip(*sess.parse_patterns))
     avg = dict.fromkeys(attrs, 0.0)
@@ -265,7 +264,7 @@ def thread_report(path=SCRIPT_NAME + "/hello", concurrency=safe_threads):
             yield row
 
     # Add a row of averages.
-    yield ["Average"] + [str(avg[attr] / len(concurrency)) for attr in attrs]
+    yield ['Average'] + [str(avg[attr] / len(concurrency)) for attr in attrs]
 
 
 def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
@@ -274,33 +273,33 @@ def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
     attrs, names, patterns = list(zip(*sess.parse_patterns))
     yield ('bytes',) + names
     for sz in sizes:
-        sess.path = "%s/sizer?size=%s" % (SCRIPT_NAME, sz)
+        sess.path = '%s/sizer?size=%s' % (SCRIPT_NAME, sz)
         sess.run()
         yield [sz] + [getattr(sess, attr) for attr in attrs]
 
 
 def print_report(rows):
     for row in rows:
-        print("")
+        print('')
         for i, val in enumerate(row):
-            sys.stdout.write(str(val).rjust(10) + " | ")
-    print("")
+            sys.stdout.write(str(val).rjust(10) + ' | ')
+    print('')
 
 
 def run_standard_benchmarks():
-    print("")
-    print("Client Thread Report (1000 requests, 14 byte response body, "
-          "%s server threads):" % cherrypy.server.thread_pool)
+    print('')
+    print('Client Thread Report (1000 requests, 14 byte response body, '
+          '%s server threads):' % cherrypy.server.thread_pool)
     print_report(thread_report())
 
-    print("")
-    print("Client Thread Report (1000 requests, 14 bytes via staticdir, "
-          "%s server threads):" % cherrypy.server.thread_pool)
-    print_report(thread_report("%s/static/index.html" % SCRIPT_NAME))
+    print('')
+    print('Client Thread Report (1000 requests, 14 bytes via staticdir, '
+          '%s server threads):' % cherrypy.server.thread_pool)
+    print_report(thread_report('%s/static/index.html' % SCRIPT_NAME))
 
-    print("")
-    print("Size Report (1000 requests, 50 client threads, "
-          "%s server threads):" % cherrypy.server.thread_pool)
+    print('')
+    print('Size Report (1000 requests, 50 client threads, '
+          '%s server threads):' % cherrypy.server.thread_pool)
     print_report(size_report())
 
 
@@ -311,10 +310,10 @@ def startup_modpython(req=None):
     """
     if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
         if req:
-            if "nullreq" in req.get_options():
+            if 'nullreq' in req.get_options():
                 cherrypy.engine.request_class = NullRequest
                 cherrypy.engine.response_class = NullResponse
-            ab_opt = req.get_options().get("ab", "")
+            ab_opt = req.get_options().get('ab', '')
             if ab_opt:
                 global AB_PATH
                 AB_PATH = ab_opt
@@ -325,27 +324,27 @@ def startup_modpython(req=None):
 
 
 def run_modpython(use_wsgi=False):
-    print("Starting mod_python...")
+    print('Starting mod_python...')
     pyopts = []
 
     # Pass the null and ab=path options through Apache
-    if "--null" in opts:
-        pyopts.append(("nullreq", ""))
+    if '--null' in opts:
+        pyopts.append(('nullreq', ''))
 
-    if "--ab" in opts:
-        pyopts.append(("ab", opts["--ab"]))
+    if '--ab' in opts:
+        pyopts.append(('ab', opts['--ab']))
 
     s = _cpmodpy.ModPythonServer
     if use_wsgi:
-        pyopts.append(("wsgi.application", "cherrypy::tree"))
+        pyopts.append(('wsgi.application', 'cherrypy::tree'))
         pyopts.append(
-            ("wsgi.startup", "cherrypy.test.benchmark::startup_modpython"))
-        handler = "modpython_gateway::handler"
+            ('wsgi.startup', 'cherrypy.test.benchmark::startup_modpython'))
+        handler = 'modpython_gateway::handler'
         s = s(port=54583, opts=pyopts,
               apache_path=APACHE_PATH, handler=handler)
     else:
         pyopts.append(
-            ("cherrypy.setup", "cherrypy.test.benchmark::startup_modpython"))
+            ('cherrypy.setup', 'cherrypy.test.benchmark::startup_modpython'))
         s = s(port=54583, opts=pyopts, apache_path=APACHE_PATH)
 
     try:
@@ -359,35 +358,35 @@ if __name__ == '__main__':
     longopts = ['cpmodpy', 'modpython', 'null', 'notests',
                 'help', 'ab=', 'apache=']
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "", longopts)
+        switches, args = getopt.getopt(sys.argv[1:], '', longopts)
         opts = dict(switches)
     except getopt.GetoptError:
         print(__doc__)
         sys.exit(2)
 
-    if "--help" in opts:
+    if '--help' in opts:
         print(__doc__)
         sys.exit(0)
 
-    if "--ab" in opts:
+    if '--ab' in opts:
         AB_PATH = opts['--ab']
 
-    if "--notests" in opts:
+    if '--notests' in opts:
         # Return without stopping the server, so that the pages
         # can be tested from a standard web browser.
         def run():
             port = cherrypy.server.socket_port
-            print("You may now open http://127.0.0.1:%s%s/" %
+            print('You may now open http://127.0.0.1:%s%s/' %
                   (port, SCRIPT_NAME))
 
-            if "--null" in opts:
-                print("Using null Request object")
+            if '--null' in opts:
+                print('Using null Request object')
     else:
         def run():
             end = time.time() - start
-            print("Started in %s seconds" % end)
-            if "--null" in opts:
-                print("\nUsing null Request object")
+            print('Started in %s seconds' % end)
+            if '--null' in opts:
+                print('\nUsing null Request object')
             try:
                 try:
                     run_standard_benchmarks()
@@ -397,7 +396,7 @@ if __name__ == '__main__':
             finally:
                 cherrypy.engine.exit()
 
-    print("Starting CherryPy app server...")
+    print('Starting CherryPy app server...')
 
     class NullWriter(object):
 
@@ -409,12 +408,12 @@ if __name__ == '__main__':
 
     start = time.time()
 
-    if "--cpmodpy" in opts:
+    if '--cpmodpy' in opts:
         run_modpython()
-    elif "--modpython" in opts:
+    elif '--modpython' in opts:
         run_modpython(use_wsgi=True)
     else:
-        if "--null" in opts:
+        if '--null' in opts:
             cherrypy.server.request_class = NullRequest
             cherrypy.server.response_class = NullResponse
 

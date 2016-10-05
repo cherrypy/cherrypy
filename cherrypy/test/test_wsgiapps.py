@@ -50,7 +50,7 @@ class WSGIGraftTests(helper.CPWebCase):
                     return self.iter.next()
 
             def close(self):
-                if hasattr(self.appresults, "close"):
+                if hasattr(self.appresults, 'close'):
                     self.appresults.close()
 
         class ReversingMiddleware(object):
@@ -72,7 +72,7 @@ class WSGIGraftTests(helper.CPWebCase):
                         def next(this):
                             line = list(this.iter.next())
                             line.reverse()
-                            return "".join(line)
+                            return ''.join(line)
 
                 return Reverser(results)
 
@@ -96,31 +96,31 @@ class WSGIGraftTests(helper.CPWebCase):
 This is a wsgi app running within CherryPy!'''
 
     def test_01_standard_app(self):
-        self.getPage("/")
+        self.getPage('/')
         self.assertBody("I'm a regular CherryPy page handler!")
 
     def test_04_pure_wsgi(self):
         import cherrypy
         if not cherrypy.server.using_wsgi:
-            return self.skip("skipped (not using WSGI)... ")
-        self.getPage("/hosted/app1")
-        self.assertHeader("Content-Type", "text/plain")
+            return self.skip('skipped (not using WSGI)... ')
+        self.getPage('/hosted/app1')
+        self.assertHeader('Content-Type', 'text/plain')
         self.assertInBody(self.wsgi_output)
 
     def test_05_wrapped_cp_app(self):
         import cherrypy
         if not cherrypy.server.using_wsgi:
-            return self.skip("skipped (not using WSGI)... ")
-        self.getPage("/hosted/app2/")
+            return self.skip('skipped (not using WSGI)... ')
+        self.getPage('/hosted/app2/')
         body = list("I'm a regular CherryPy page handler!")
         body.reverse()
-        body = "".join(body)
+        body = ''.join(body)
         self.assertInBody(body)
 
     def test_06_empty_string_app(self):
         import cherrypy
         if not cherrypy.server.using_wsgi:
-            return self.skip("skipped (not using WSGI)... ")
-        self.getPage("/hosted/app3")
-        self.assertHeader("Content-Type", "text/plain")
+            return self.skip('skipped (not using WSGI)... ')
+        self.getPage('/hosted/app3')
+        self.assertHeader('Content-Type', 'text/plain')
         self.assertInBody('Hello world')

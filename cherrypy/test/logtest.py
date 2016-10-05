@@ -46,47 +46,47 @@ class LogCase(object):
 
     logfile = None
     lastmarker = None
-    markerPrefix = ntob("test suite marker: ")
+    markerPrefix = ntob('test suite marker: ')
 
     def _handleLogError(self, msg, data, marker, pattern):
-        print("")
-        print("    ERROR: %s" % msg)
+        print('')
+        print('    ERROR: %s' % msg)
 
         if not self.interactive:
             raise self.failureException(msg)
 
-        p = ("    Show: "
-             "[L]og [M]arker [P]attern; "
-             "[I]gnore, [R]aise, or sys.e[X]it >> ")
+        p = ('    Show: '
+             '[L]og [M]arker [P]attern; '
+             '[I]gnore, [R]aise, or sys.e[X]it >> ')
         sys.stdout.write(p + ' ')
         # ARGH
         sys.stdout.flush()
         while True:
             i = getchar().upper()
-            if i not in "MPLIRX":
+            if i not in 'MPLIRX':
                 continue
             print(i.upper())  # Also prints new line
-            if i == "L":
+            if i == 'L':
                 for x, line in enumerate(data):
                     if (x + 1) % self.console_height == 0:
                         # The \r and comma should make the next line overwrite
-                        sys.stdout.write("<-- More -->\r ")
+                        sys.stdout.write('<-- More -->\r ')
                         m = getchar().lower()
                         # Erase our "More" prompt
-                        sys.stdout.write("            \r ")
-                        if m == "q":
+                        sys.stdout.write('            \r ')
+                        if m == 'q':
                             break
                     print(line.rstrip())
-            elif i == "M":
+            elif i == 'M':
                 print(repr(marker or self.lastmarker))
-            elif i == "P":
+            elif i == 'P':
                 print(repr(pattern))
-            elif i == "I":
+            elif i == 'I':
                 # return without raising the normal exception
                 return
-            elif i == "R":
+            elif i == 'R':
                 raise self.failureException(msg)
-            elif i == "X":
+            elif i == 'X':
                 self.exit()
             sys.stdout.write(p + ' ')
 
@@ -95,7 +95,7 @@ class LogCase(object):
 
     def emptyLog(self):
         """Overwrite self.logfile with 0 bytes."""
-        open(self.logfile, 'wb').write("")
+        open(self.logfile, 'wb').write('')
 
     def markLog(self, key=None):
         """Insert a marker line into the log and set self.lastmarker."""
@@ -104,7 +104,7 @@ class LogCase(object):
         self.lastmarker = key
 
         open(self.logfile, 'ab+').write(
-            ntob("%s%s\n" % (self.markerPrefix, key), "utf-8"))
+            ntob('%s%s\n' % (self.markerPrefix, key), 'utf-8'))
 
     def _read_marked_region(self, marker=None):
         """Return lines from self.logfile in the marked region.
@@ -145,7 +145,7 @@ class LogCase(object):
         for logline in data:
             if line in logline:
                 return
-        msg = "%r not found in log" % line
+        msg = '%r not found in log' % line
         self._handleLogError(msg, data, marker, line)
 
     def assertNotInLog(self, line, marker=None):
@@ -158,7 +158,7 @@ class LogCase(object):
         data = self._read_marked_region(marker)
         for logline in data:
             if line in logline:
-                msg = "%r found in log" % line
+                msg = '%r found in log' % line
                 self._handleLogError(msg, data, marker, line)
 
     def assertLog(self, sliceargs, lines, marker=None):
@@ -176,10 +176,10 @@ class LogCase(object):
             if isinstance(lines, six.text_type):
                 lines = lines.encode('utf-8')
             if lines not in data[sliceargs]:
-                msg = "%r not found on log line %r" % (lines, sliceargs)
+                msg = '%r not found on log line %r' % (lines, sliceargs)
                 self._handleLogError(
                     msg,
-                    [data[sliceargs], "--EXTRA CONTEXT--"] + data[
+                    [data[sliceargs], '--EXTRA CONTEXT--'] + data[
                         sliceargs + 1:sliceargs + 6],
                     marker,
                     lines)
@@ -196,5 +196,5 @@ class LogCase(object):
                 if isinstance(line, six.text_type):
                     line = line.encode('utf-8')
                 if line not in logline:
-                    msg = "%r not found in log" % line
+                    msg = '%r not found in log' % line
                     self._handleLogError(msg, data[start:stop], marker, line)

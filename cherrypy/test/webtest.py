@@ -41,10 +41,10 @@ def interface(host):
     or '::' (IN6ADDR_ANY), this will return the proper localhost."""
     if host == '0.0.0.0':
         # INADDR_ANY, which should respond on localhost.
-        return "127.0.0.1"
+        return '127.0.0.1'
     if host == '::':
         # IN6ADDR_ANY, which should respond on localhost.
-        return "::1"
+        return '::1'
     return host
 
 
@@ -67,21 +67,21 @@ class TerseTestRunner(unittest.TextTestRunner):
         return TerseTestResult(self.stream, self.descriptions, self.verbosity)
 
     def run(self, test):
-        "Run the given test case or test suite."
+        'Run the given test case or test suite.'
         # Overridden to remove unnecessary empty lines and separators
         result = self._makeResult()
         test(result)
         result.printErrors()
         if not result.wasSuccessful():
-            self.stream.write("FAILED (")
+            self.stream.write('FAILED (')
             failed, errored = list(map(len, (result.failures, result.errors)))
             if failed:
-                self.stream.write("failures=%d" % failed)
+                self.stream.write('failures=%d' % failed)
             if errored:
                 if failed:
-                    self.stream.write(", ")
-                self.stream.write("errors=%d" % errored)
-            self.stream.writeln(")")
+                    self.stream.write(', ')
+                self.stream.write('errors=%d' % errored)
+            self.stream.writeln(')')
         return result
 
 
@@ -100,11 +100,11 @@ class ReloadingTestLoader(unittest.TestLoader):
         unused_parts = []
         if module is None:
             if not parts:
-                raise ValueError("incomplete test name: %s" % name)
+                raise ValueError('incomplete test name: %s' % name)
             else:
                 parts_copy = parts[:]
                 while parts_copy:
-                    target = ".".join(parts_copy)
+                    target = '.'.join(parts_copy)
                     if target in sys.modules:
                         module = reload(sys.modules[target])
                         parts = unused_parts
@@ -139,11 +139,11 @@ class ReloadingTestLoader(unittest.TestLoader):
             test = obj()
             if not isinstance(test, unittest.TestCase) and \
                not isinstance(test, unittest.TestSuite):
-                raise ValueError("calling %s returned %s, "
-                                 "not a test" % (obj, test))
+                raise ValueError('calling %s returned %s, '
+                                 'not a test' % (obj, test))
             return test
         else:
-            raise ValueError("do not know how to make test from: %s" % obj)
+            raise ValueError('do not know how to make test from: %s' % obj)
 
 
 try:
@@ -177,8 +177,8 @@ except ImportError:
 # from jaraco.properties
 class NonDataProperty(object):
     def __init__(self, fget):
-        assert fget is not None, "fget cannot be none"
-        assert callable(fget), "fget must be callable"
+        assert fget is not None, 'fget cannot be none'
+        assert callable(fget), 'fget must be callable'
         self.fget = fget
 
     def __get__(self, obj, objtype=None):
@@ -188,12 +188,12 @@ class NonDataProperty(object):
 
 
 class WebCase(unittest.TestCase):
-    HOST = "127.0.0.1"
+    HOST = '127.0.0.1'
     PORT = 8000
     HTTP_CONN = HTTPConnection
-    PROTOCOL = "HTTP/1.1"
+    PROTOCOL = 'HTTP/1.1'
 
-    scheme = "http"
+    scheme = 'http'
     url = None
 
     status = None
@@ -206,7 +206,7 @@ class WebCase(unittest.TestCase):
 
     def get_conn(self, auto_open=False):
         """Return a connection to our HTTP server."""
-        if self.scheme == "https":
+        if self.scheme == 'https':
             cls = HTTPSConnection
         else:
             cls = HTTPConnection
@@ -234,13 +234,13 @@ class WebCase(unittest.TestCase):
         if on:
             self.HTTP_CONN = self.get_conn(auto_open=auto_open)
         else:
-            if self.scheme == "https":
+            if self.scheme == 'https':
                 self.HTTP_CONN = HTTPSConnection
             else:
                 self.HTTP_CONN = HTTPConnection
 
     def _get_persistent(self):
-        return hasattr(self.HTTP_CONN, "__class__")
+        return hasattr(self.HTTP_CONN, '__class__')
 
     def _set_persistent(self, on):
         self.set_persistent(on)
@@ -253,7 +253,7 @@ class WebCase(unittest.TestCase):
         or '::' (IN6ADDR_ANY), this will return the proper localhost."""
         return interface(self.HOST)
 
-    def getPage(self, url, headers=None, method="GET", body=None,
+    def getPage(self, url, headers=None, method='GET', body=None,
                 protocol=None, raise_subcls=None):
         """Open the url with debugging support. Return status, headers, body.
 
@@ -299,47 +299,47 @@ class WebCase(unittest.TestCase):
     console_height = 30
 
     def _handlewebError(self, msg):
-        print("")
-        print("    ERROR: %s" % msg)
+        print('')
+        print('    ERROR: %s' % msg)
 
         if not self.interactive:
             raise self.failureException(msg)
 
-        p = ("    Show: "
-             "[B]ody [H]eaders [S]tatus [U]RL; "
-             "[I]gnore, [R]aise, or sys.e[X]it >> ")
+        p = ('    Show: '
+             '[B]ody [H]eaders [S]tatus [U]RL; '
+             '[I]gnore, [R]aise, or sys.e[X]it >> ')
         sys.stdout.write(p)
         sys.stdout.flush()
         while True:
             i = getchar().upper()
-            if not isinstance(i, type("")):
+            if not isinstance(i, type('')):
                 i = i.decode('ascii')
-            if i not in "BHSUIRX":
+            if i not in 'BHSUIRX':
                 continue
             print(i.upper())  # Also prints new line
-            if i == "B":
+            if i == 'B':
                 for x, line in enumerate(self.body.splitlines()):
                     if (x + 1) % self.console_height == 0:
                         # The \r and comma should make the next line overwrite
-                        sys.stdout.write("<-- More -->\r")
+                        sys.stdout.write('<-- More -->\r')
                         m = getchar().lower()
                         # Erase our "More" prompt
-                        sys.stdout.write("            \r")
-                        if m == "q":
+                        sys.stdout.write('            \r')
+                        if m == 'q':
                             break
                     print(line)
-            elif i == "H":
+            elif i == 'H':
                 pprint.pprint(self.headers)
-            elif i == "S":
+            elif i == 'S':
                 print(self.status)
-            elif i == "U":
+            elif i == 'U':
                 print(self.url)
-            elif i == "I":
+            elif i == 'I':
                 # return without raising the normal exception
                 return
-            elif i == "R":
+            elif i == 'R':
                 raise self.failureException(msg)
-            elif i == "X":
+            elif i == 'X':
                 self.exit()
             sys.stdout.write(p)
             sys.stdout.flush()
@@ -412,7 +412,7 @@ class WebCase(unittest.TestCase):
             return value
 
         if msg is None:
-            msg = "%r not in %r" % (value, header_values)
+            msg = '%r not in %r' % (value, header_values)
         self._handlewebError(msg)
 
     def assertNoHeader(self, key, msg=None):
@@ -462,7 +462,7 @@ class WebCase(unittest.TestCase):
             self._handlewebError(msg)
 
 
-methods_with_bodies = ("POST", "PUT")
+methods_with_bodies = ('POST', 'PUT')
 
 
 def cleanHeaders(headers, method, body, host, port):
@@ -479,9 +479,9 @@ def cleanHeaders(headers, method, body, host, port):
             break
     if not found:
         if port == 80:
-            headers.append(("Host", host))
+            headers.append(('Host', host))
         else:
-            headers.append(("Host", "%s:%s" % (host, port)))
+            headers.append(('Host', '%s:%s' % (host, port)))
 
     if method in methods_with_bodies:
         # Stick in default type and length headers if not present
@@ -492,8 +492,8 @@ def cleanHeaders(headers, method, body, host, port):
                 break
         if not found:
             headers.append(
-                ("Content-Type", "application/x-www-form-urlencoded"))
-            headers.append(("Content-Length", str(len(body or ""))))
+                ('Content-Type', 'application/x-www-form-urlencoded'))
+            headers.append(('Content-Length', str(len(body or ''))))
 
     return headers
 
@@ -507,23 +507,23 @@ def shb(response):
         key, value = None, None
         for line in response.msg.headers:
             if line:
-                if line[0] in " \t":
+                if line[0] in ' \t':
                     value += line.strip()
                 else:
                     if key and value:
                         h.append((key, value))
-                    key, value = line.split(":", 1)
+                    key, value = line.split(':', 1)
                     key = key.strip()
                     value = value.strip()
         if key and value:
             h.append((key, value))
 
-    return "%s %s" % (response.status, response.reason), h, response.read()
+    return '%s %s' % (response.status, response.reason), h, response.read()
 
 
-def openURL(url, headers=None, method="GET", body=None,
-            host="127.0.0.1", port=8000, http_conn=HTTPConnection,
-            protocol="HTTP/1.1", raise_subcls=None):
+def openURL(url, headers=None, method='GET', body=None,
+            host='127.0.0.1', port=8000, http_conn=HTTPConnection,
+            protocol='HTTP/1.1', raise_subcls=None):
     """
     Open the given HTTP resource and return status, headers, and body.
 
@@ -539,13 +539,13 @@ def openURL(url, headers=None, method="GET", body=None,
     for trial in range(10):
         try:
             # Allow http_conn to be a class or an instance
-            if hasattr(http_conn, "host"):
+            if hasattr(http_conn, 'host'):
                 conn = http_conn
             else:
                 conn = http_conn(interface(host), port)
 
             conn._http_vsn_str = protocol
-            conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
+            conn._http_vsn = int(''.join([x for x in protocol if x.isdigit()]))
 
             if six.PY3 and isinstance(url, bytes):
                 url = url.decode()
@@ -553,7 +553,7 @@ def openURL(url, headers=None, method="GET", body=None,
                             skip_accept_encoding=True)
 
             for key, value in headers:
-                conn.putheader(key, value.encode("Latin-1"))
+                conn.putheader(key, value.encode('Latin-1'))
             conn.endheaders()
 
             if body is not None:
@@ -564,7 +564,7 @@ def openURL(url, headers=None, method="GET", body=None,
 
             s, h, b = shb(response)
 
-            if not hasattr(http_conn, "host"):
+            if not hasattr(http_conn, 'host'):
                 # We made our own conn instance. Close it.
                 conn.close()
 
@@ -607,6 +607,6 @@ def server_error(exc=None):
         return False
     else:
         ServerError.on = True
-        print("")
-        print("".join(traceback.format_exception(*exc)))
+        print('')
+        print(''.join(traceback.format_exception(*exc)))
         return True

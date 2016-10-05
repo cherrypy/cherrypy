@@ -16,6 +16,8 @@ like /users/<username>. Since the <username> bit will not be found (as
 there are no matching methods), it is handled by the default method.
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -39,18 +41,17 @@ class UsersPage:
         # application, we would probably do some database lookups here
         # instead of the silly if/elif/else construct.
         if user == 'remi':
-            out = "Remi Delon, CherryPy lead developer"
+            out = 'Remi Delon, CherryPy lead developer'
         elif user == 'hendrik':
-            out = "Hendrik Mans, CherryPy co-developer & crazy German"
+            out = 'Hendrik Mans, CherryPy co-developer & crazy German'
         elif user == 'lorenzo':
-            out = "Lorenzo Lamas, famous actor and singer!"
+            out = 'Lorenzo Lamas, famous actor and singer!'
         else:
-            out = "Unknown user. :-("
+            out = 'Unknown user. :-('
 
         return '%s (<a href="./">back</a>)' % out
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

@@ -9,23 +9,23 @@ class ExposeExamples(object):
 
     @expose
     def no_call(self):
-        return "Mr E. R. Bradshaw"
+        return 'Mr E. R. Bradshaw'
 
     @expose()
     def call_empty(self):
-        return "Mrs. B.J. Smegma"
+        return 'Mrs. B.J. Smegma'
 
-    @expose("call_alias")
+    @expose('call_alias')
     def nesbitt(self):
-        return "Mr Nesbitt"
+        return 'Mr Nesbitt'
 
-    @expose(["alias1", "alias2"])
+    @expose(['alias1', 'alias2'])
     def andrews(self):
-        return "Mr Ken Andrews"
+        return 'Mr Ken Andrews'
 
-    @expose(alias="alias3")
+    @expose(alias='alias3')
     def watson(self):
-        return "Mr. and Mrs. Watson"
+        return 'Mr. and Mrs. Watson'
 
 
 class ToolExamples(object):
@@ -37,4 +37,4 @@ class ToolExamples(object):
     @cherrypy.config(**{'response.stream': True})
     @tools.response_headers(headers=[('Content-Type', 'application/data')])
     def blah(self):
-        yield ntob("blah")
+        yield ntob('blah')

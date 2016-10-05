@@ -1,7 +1,59 @@
-7.2.0
+8.1.2
 -----
 
-# 1401: Handle NoSSLErrors.
+* #1508
+
+8.1.1
+-----
+
+* #1497: Handle errors thrown by ``ssl_module: 'builtin'``
+  when client opens connection to HTTPS port using HTTP.
+
+* #1350: Fix regression introduced in v6.1.0 where environment
+  construction for WSGIGateway_u0 was passing one parameter
+  and not two.
+
+* Other miscellaneous fixes.
+
+8.1.0
+-----
+
+* #1473: ``HTTPError`` now also works as a context manager.
+
+* #1487: The sessions tool now accepts a ``storage_class``
+  parameter, which supersedes the new deprecated
+  ``storage_type`` parameter. The ``storage_class`` should
+  be the actual Session subclass to be used.
+
+* Releases now use ``setuptools_scm`` to track the release
+  versions. Therefore, releases can be cut by simply tagging
+  a commit in the repo. Versions numbers are now stored in
+  exactly one place.
+
+8.0.1
+-----
+
+* #1489 via #1493: Additionally reject anything else that's
+  not bytes.
+* #1492: systemd socket activation.
+
+8.0.0
+-----
+
+* #1483: Remove Deprecated constructs:
+
+  - ``cherrypy.lib.http`` module.
+  - ``unrepr``, ``modules``, and ``attributes`` in
+    ``cherrypy.lib``.
+
+* #1476: Drop support for python-memcached<1.58
+* #1401: Handle NoSSLErrors.
+* #1489: In ``wsgiserver.WSGIGateway.respond``, the application
+  must now yield bytes and not text, as the spec requires.
+  If text is received, it will now raise a ValueError instead
+  of silently encoding using ISO-8859-1.
+* Removed unicode filename from the package, working around
+  pip #3894 and setuptools #704.
 
 7.1.0
 -----

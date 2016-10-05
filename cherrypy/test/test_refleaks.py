@@ -2,17 +2,14 @@
 
 import itertools
 import platform
-
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
 import threading
 
 import cherrypy
+from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
+from cherrypy.test import helper
 
 
 data = object()
-
-
-from cherrypy.test import helper
 
 
 class ReferenceTests(helper.CPWebCase):
@@ -25,13 +22,13 @@ class ReferenceTests(helper.CPWebCase):
             @cherrypy.expose
             def index(self, *args, **kwargs):
                 cherrypy.request.thing = data
-                return "Hello world!"
+                return 'Hello world!'
 
         cherrypy.tree.mount(Root())
 
     def test_threadlocal_garbage(self):
         if platform.system() == 'Darwin':
-            self.skip("queue issues; see #1474")
+            self.skip('queue issues; see #1474')
         success = itertools.count()
 
         def getpage():
@@ -46,7 +43,7 @@ class ReferenceTests(helper.CPWebCase):
                 response = c.getresponse()
                 body = response.read()
                 self.assertEqual(response.status, 200)
-                self.assertEqual(body, b"Hello world!")
+                self.assertEqual(body, b'Hello world!')
             finally:
                 c.close()
             next(success)

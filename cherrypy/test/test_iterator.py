@@ -1,6 +1,7 @@
 import six
 
 import cherrypy
+from cherrypy.test import helper
 
 
 class IteratorBase(object):
@@ -71,7 +72,6 @@ class OurNotClosableIterator(OurIterator):
 class OurUnclosableIterator(OurIterator):
     close = 'close' # not callable!
 
-from cherrypy.test import helper
 class IteratorTest(helper.CPWebCase):
 
     @staticmethod
@@ -100,13 +100,13 @@ class IteratorTest(helper.CPWebCase):
         try:
             self._test_iterator()
         except Exception:
-            "Test fails intermittently. See #1419"
+            'Test fails intermittently. See #1419'
 
     def _test_iterator(self):
-        if cherrypy.server.protocol_version != "HTTP/1.1":
+        if cherrypy.server.protocol_version != 'HTTP/1.1':
             return self.skip()
 
-        self.PROTOCOL = "HTTP/1.1"
+        self.PROTOCOL = 'HTTP/1.1'
 
         # Check the counts of all the classes, they should be zero.
         closables = ['OurClosableIterator', 'OurGenerator']
@@ -117,7 +117,7 @@ class IteratorTest(helper.CPWebCase):
         random.shuffle(all_classes)
 
         for clsname in all_classes:
-            self.getPage("/count/" + clsname)
+            self.getPage('/count/' + clsname)
             self.assertStatus(200)
             self.assertBody('0')
 
@@ -126,7 +126,7 @@ class IteratorTest(helper.CPWebCase):
         # check the header.
         for clsname in all_classes:
             itr_conn = self.get_conn()
-            itr_conn.putrequest("GET", "/getall/" + clsname)
+            itr_conn.putrequest('GET', '/getall/' + clsname)
             itr_conn.endheaders()
             response = itr_conn.getresponse()
             self.assertEqual(response.status, 200)
@@ -141,7 +141,7 @@ class IteratorTest(helper.CPWebCase):
             # As the response should be fully consumed by CherryPy
             # before sending back, the count should still be at zero
             # by the time the response has been sent.
-            self.getPage("/count/" + clsname)
+            self.getPage('/count/' + clsname)
             self.assertStatus(200)
             self.assertBody('0')
 
@@ -150,20 +150,20 @@ class IteratorTest(helper.CPWebCase):
         stream_counts = {}
         for clsname in all_classes:
             itr_conn = self.get_conn()
-            itr_conn.putrequest("GET", "/stream/" + clsname)
+            itr_conn.putrequest('GET', '/stream/' + clsname)
             itr_conn.endheaders()
             response = itr_conn.getresponse()
             self.assertEqual(response.status, 200)
             response.fp.read(65536)
 
             # Let's check the count - this should always be one.
-            self.getPage("/count/" + clsname)
+            self.getPage('/count/' + clsname)
             self.assertBody('1')
 
             # Now if we close the connection, the count should go back
             # to zero.
             itr_conn.close()
-            self.getPage("/count/" + clsname)
+            self.getPage('/count/' + clsname)
 
             # If this is a response which should be easily closed, then
             # we will test to see if the value has gone back down to
@@ -176,7 +176,7 @@ class IteratorTest(helper.CPWebCase):
                 if self.body != '0':
                     import time
                     time.sleep(0.1)
-                    self.getPage("/count/" + clsname)
+                    self.getPage('/count/' + clsname)
 
             stream_counts[clsname] = int(self.body)
 

@@ -568,7 +568,7 @@ the given directory.
 
    [/]
    tools.sessions.on: True
-   tools.sessions.storage_type = "file"
+   tools.sessions.storage_class = cherrypy.lib.sessions.FileSession
    tools.sessions.storage_path = "/some/directorys"
 
 Memcached backend
@@ -578,13 +578,25 @@ Memcached backend
 it is distributed and a good choice if you want to
 share sessions outside of the process running CherryPy.
 
+Requires that the Python
+`memcached <https://pypi.org/project/memcached>`_
+package is installed, which may be indicated by installing
+``cherrypy[memcached_session]``.
+
 .. code-block:: ini
 
    [/]
    tools.sessions.on: True
-   tools.sessions.storage_type = "memcached"
+   tools.sessions.storage_class = cherrypy.lib.sessions.MemcachedSession
 
 .. _staticontent:
+
+Other backends
+^^^^^^^^^^^^^^
+
+Any other library may implement a session backend. Simply subclass
+``cherrypy.lib.sessions.Session`` and indicate that subclass as
+``tools.sessions.storage_class``.
 
 Static content serving
 ######################

@@ -12,7 +12,6 @@ source.
 """
 
 from __future__ import print_function
-import sys
 import re
 import inspect
 import optparse
@@ -25,24 +24,24 @@ def get_options():
     global options
     parser = optparse.OptionParser(usage=inspect.cleandoc(__doc__))
     parser.add_option('-U', '--url',
-                      help="Trac URL from which to retrieve source")
+                      help='Trac URL from which to retrieve source')
     options, args = parser.parse_args()
     try:
         options.filename = args.pop()
     except IndexError:
-        parser.error("Filename required")
+        parser.error('Filename required')
 
 # each of the replacement functions should have a docstring
 #  which is a regular expression to be matched.
 
 
 def replace_external_link(matcher):
-    r"\[(?P<href>(?P<scheme>\w+)\://.+?) (?P<name>.+?)\]"
+    r'\[(?P<href>(?P<scheme>\w+)\://.+?) (?P<name>.+?)\]'
     return '`{name} <{href}>`_'.format(**matcher.groupdict())
 
 
 def replace_wiki_link(matcher):
-    r"\[wiki\:(?P<ref>.+?) (?P<name>.+?)\]"
+    r'\[wiki\:(?P<ref>.+?) (?P<name>.+?)\]'
     return '`{name} <TODO-fix wiki target {ref}>`_'.format(
         **matcher.groupdict()
     )
@@ -52,7 +51,7 @@ heading_characters = [None, '*', '=', '-', '^']
 
 
 def replace_headings(matcher):
-    r"^(?P<level>=+) (?P<name>.*) (?P=level)$"
+    r'^(?P<level>=+) (?P<name>.*) (?P=level)$'
     level = len(matcher.groupdict()['level'])
     char = heading_characters[level]
     name = matcher.groupdict()['name']
@@ -70,22 +69,22 @@ def indent(block):
 
 
 def replace_inline_code(matcher):
-    r"\{\{\{(?P<code>[^\n]*?)\}\}\}"
+    r'\{\{\{(?P<code>[^\n]*?)\}\}\}'
     return '``{code}``'.format(**matcher.groupdict())
 
 
 def replace_code_block(matcher):
-    r"\{\{\{\n(?P<code>(.|\n)*?)^\}\}\}"
+    r'\{\{\{\n(?P<code>(.|\n)*?)^\}\}\}'
     return '::\n\n' + indent(matcher.groupdict()['code'])
 
 
 def replace_page_outline(matcher):
-    r"\[\[PageOutline\]\]\n"
+    r'\[\[PageOutline\]\]\n'
     return ''
 
 
 def replace_bang_symbols(matcher):
-    r"!(?P<symbol>\w+)"
+    r'!(?P<symbol>\w+)'
     return matcher.groupdict()['symbol']
 
 # a number of the files end in
@@ -96,7 +95,7 @@ def replace_bang_symbols(matcher):
 
 
 def remove_2x_compat_notes(matcher):
-    r"\{\{\{\n#!html\n<h2(.|\n)*"
+    r'\{\{\{\n#!html\n<h2(.|\n)*'
     return ''
 
 replacements = [remove_2x_compat_notes] + \
@@ -123,7 +122,7 @@ def convert_file():
         new_text = pattern.sub(repl, new_text)
 
     open(filename, 'w').write(new_text)
-    print("done")
+    print('done')
 
 
 def handle_command_line():

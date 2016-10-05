@@ -1,15 +1,16 @@
 """Basic tests for the CherryPy core: request handling."""
 
 import os
-localDir = os.path.dirname(__file__)
 
 import six
 
 import cherrypy
 from cherrypy._cpcompat import ntob, ntou
+from cherrypy.test import helper, logtest
 
-access_log = os.path.join(localDir, "access.log")
-error_log = os.path.join(localDir, "error.log")
+localDir = os.path.dirname(__file__)
+access_log = os.path.join(localDir, 'access.log')
+error_log = os.path.join(localDir, 'error.log')
 
 # Some unicode strings.
 tartaros = ntou('\u03a4\u1f71\u03c1\u03c4\u03b1\u03c1\u03bf\u03c2', 'escape')
@@ -21,7 +22,7 @@ def setup_server():
 
         @cherrypy.expose
         def index(self):
-            return "hello"
+            return 'hello'
 
         @cherrypy.expose
         def uni_code(self):
@@ -43,11 +44,11 @@ def setup_server():
 
         @cherrypy.expose
         def as_string(self):
-            return "content"
+            return 'content'
 
         @cherrypy.expose
         def as_yield(self):
-            yield "content"
+            yield 'content'
 
         @cherrypy.expose
         @cherrypy.config(**{'tools.log_tracebacks.on': True})
@@ -63,9 +64,6 @@ def setup_server():
     cherrypy.tree.mount(root)
 
 
-from cherrypy.test import helper, logtest
-
-
 class AccessLogTests(helper.CPWebCase, logtest.LogCase):
     setup_server = staticmethod(setup_server)
 
@@ -73,7 +71,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
     def testNormalReturn(self):
         self.markLog()
-        self.getPage("/as_string",
+        self.getPage('/as_string',
                      headers=[('Referer', 'http://www.cherrypy.org/'),
                               ('User-Agent', 'Mozilla/5.0')])
         self.assertBody('content')
@@ -94,7 +92,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
     def testNormalYield(self):
         self.markLog()
-        self.getPage("/as_yield")
+        self.getPage('/as_yield')
         self.assertBody('content')
         self.assertStatus(200)
 
@@ -119,7 +117,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
           '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
 
         self.markLog()
-        self.getPage("/as_string", headers=[('Referer', 'REFERER'),
+        self.getPage('/as_string', headers=[('Referer', 'REFERER'),
                                             ('User-Agent', 'USERAGENT'),
                                             ('Host', 'HOST')])
         self.assertLog(-1, '%s - - [' % self.interface())
@@ -131,7 +129,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
     def testEscapedOutput(self):
         # Test unicode in access log pieces.
         self.markLog()
-        self.getPage("/uni_code")
+        self.getPage('/uni_code')
         self.assertStatus(200)
         if six.PY3:
             # The repr of a bytestring in six.PY3 includes a b'' prefix
@@ -144,7 +142,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
         # Test backslashes in output.
         self.markLog()
-        self.getPage("/slashes")
+        self.getPage('/slashes')
         self.assertStatus(200)
         if six.PY3:
             self.assertLog(-1, ntob('"GET /slashed\\path HTTP/1.1"'))
@@ -153,7 +151,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
         # Test whitespace in output.
         self.markLog()
-        self.getPage("/whitespace")
+        self.getPage('/whitespace')
         self.assertStatus(200)
         # Again, note the 'r' prefix.
         self.assertLog(-1, r'"Browzuh (1.0\r\n\t\t.3)"')
@@ -170,8 +168,8 @@ class ErrorLogTests(helper.CPWebCase, logtest.LogCase):
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
         try:
-            self.getPage("/error")
-            self.assertInBody("raise ValueError()")
+            self.getPage('/error')
+            self.assertInBody('raise ValueError()')
             self.assertLog(0, 'HTTP')
             self.assertLog(1, 'Traceback (most recent call last):')
             self.assertLog(-2, 'raise ValueError()')

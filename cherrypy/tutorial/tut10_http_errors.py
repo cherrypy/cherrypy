@@ -9,17 +9,19 @@ logged, displayed, and formatted.
 """
 
 import os
-localDir = os.path.dirname(__file__)
-curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
+import os.path
 
 import cherrypy
+
+localDir = os.path.dirname(__file__)
+curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
 
 
 class HTTPErrorDemo(object):
 
     # Set a custom response for 403 errors.
     _cp_config = {'error_page.403':
-                  os.path.join(curpath, "custom_error.html")}
+                  os.path.join(curpath, 'custom_error.html')}
 
     @cherrypy.expose
     def index(self):
@@ -68,12 +70,11 @@ class HTTPErrorDemo(object):
     @cherrypy.expose
     def messageArg(self):
         message = ("If you construct an HTTPError with a 'message' "
-                   "argument, it wil be placed on the error page "
-                   "(underneath the status line by default).")
+                   'argument, it wil be placed on the error page '
+                   '(underneath the status line by default).')
         raise cherrypy.HTTPError(500, message=message)
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':
