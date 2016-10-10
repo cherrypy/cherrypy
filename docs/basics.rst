@@ -569,7 +569,7 @@ the given directory.
    [/]
    tools.sessions.on: True
    tools.sessions.storage_class = cherrypy.lib.sessions.FileSession
-   tools.sessions.storage_path = "/some/directorys"
+   tools.sessions.storage_path = "/some/directory"
 
 Memcached backend
 ^^^^^^^^^^^^^^^^^
