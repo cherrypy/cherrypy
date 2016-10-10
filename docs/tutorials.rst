@@ -944,7 +944,7 @@ First, let's see how our HTML code has changed:
        </body>
     </html>
 
-Basically, we have remove the entire Javascript code that was using jQuery.
+Basically, we have removed the entire Javascript code that was using jQuery.
 Instead, we load the React.js library as well as a new, local,
 Javascript module, named ``gen.js`` and located in the ``public/js``
 directory:
