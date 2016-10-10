@@ -177,7 +177,7 @@ format for those pairs is `key=value`. Each pair being
 separated by a `&` character.
 
 Notice how we have to convert the given `length` value to
-and integer. Indeed, values are sent out from the client
+an integer. Indeed, values are sent out from the client
 to our server as strings.
 
 Much like CherryPy maps URL path segments to exposed functions,
