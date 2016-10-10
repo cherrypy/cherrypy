@@ -666,7 +666,7 @@ CherryPy will automatically respond to URLs such as
 Specifying an index file
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, CherryPy will repsond to the root of a static
+By default, CherryPy will respond to the root of a static
 directory with an 404 error indicating the path '/' was not found.
 To specify an index file, you can use the following:
 
