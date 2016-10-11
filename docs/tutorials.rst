@@ -177,7 +177,7 @@ format for those pairs is `key=value`. Each pair being
 separated by a `&` character.
 
 Notice how we have to convert the given `length` value to
-and integer. Indeed, values are sent out from the client
+an integer. Indeed, values are sent out from the client
 to our server as strings.
 
 Much like CherryPy maps URL path segments to exposed functions,
@@ -944,7 +944,7 @@ First, let's see how our HTML code has changed:
        </body>
     </html>
 
-Basically, we have remove the entire Javascript code that was using jQuery.
+Basically, we have removed the entire Javascript code that was using jQuery.
 Instead, we load the React.js library as well as a new, local,
 Javascript module, named ``gen.js`` and located in the ``public/js``
 directory:
