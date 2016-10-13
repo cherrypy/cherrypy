@@ -61,7 +61,16 @@ the new state.::
 """
 
 import atexit
-import ctypes
+
+try:
+    import ctypes
+except ImportError:
+    """Google AppEngine is shipped without ctypes
+
+    :seealso: http://stackoverflow.com/a/6523777/70170
+    """
+    ctypes = None
+
 import operator
 import os
 import subprocess
@@ -383,7 +392,7 @@ class Bus(object):
         try:
             args = self._get_true_argv()
         except NotImplementedError:
-            """It's probably win32"""
+            """It's probably win32 or GAE"""
             args = [sys.executable] + _args_from_interpreter_flags() + sys.argv
 
         self.log('Re-spawning %s' % ' '.join(args))
@@ -421,9 +430,13 @@ class Bus(object):
 
             ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
         except AttributeError:
-            """It looks Py_GetArgcArgv is completely absent in MS Windows
+            """It looks Py_GetArgcArgv is completely absent in some environments
+
+            It is known, that there's no Py_GetArgcArgv in MS Windows and
+            ``ctypes`` module is completely absent in Google AppEngine
 
             :seealso: https://github.com/cherrypy/cherrypy/issues/1506
+            :seealso: https://github.com/cherrypy/cherrypy/issues/1512
             :ref: https://chromium.googlesource.com/infra/infra/+/69eb0279c12bcede5937ce9298020dd4581e38dd%5E!/
             """
             raise NotImplementedError
