@@ -116,13 +116,13 @@ and not simply return an error message as a result.
 """
 
 import contextlib
-from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
 from xml.sax import saxutils
 
 import six
 
+from cherrypy._cpcompat import _escape
 from cherrypy._cpcompat import text_or_bytes, iteritems, ntob
 from cherrypy._cpcompat import tonative, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
