@@ -24,6 +24,8 @@ class StringTester(unittest.TestCase):
 
 
 class EscapeTester(unittest.TestCase):
+    """Class to test escape_html function from _cpcompat.
+    """
 
     def test_escape_module(self):
         """test_escape_module - Verify the imported module to escape_html function
