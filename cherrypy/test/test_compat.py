@@ -30,7 +30,6 @@ class EscapeTester(unittest.TestCase):
 
         See #1330.
         """
-        print("_escape:", compat._escape.__module__)
         if six.PY2: # See discussion on https://docs.python.org/3/howto/pyporting.html
             self.assertEqual('cgi', compat._escape.__module__)
         else:
