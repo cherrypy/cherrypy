@@ -26,17 +26,17 @@ class StringTester(unittest.TestCase):
 class EscapeTester(unittest.TestCase):
 
     def test_escape_module(self):
-        """test_escape_module - Verify the imported module to _escape function
+        """test_escape_module - Verify the imported module to escape_html function
 
         See #1330.
         """
         if six.PY2: # See discussion on https://docs.python.org/3/howto/pyporting.html
-            self.assertEqual('cgi', compat._escape.__module__)
+            self.assertEqual('cgi', compat.escape_html.__module__)
         else:
-            self.assertEqual('html', compat._escape.__module__)
+            self.assertEqual('html', compat.escape_html.__module__)
 
     def test_escape_quote(self):
         """test_escape_quote - Verify the output for &<>" chars
         """
-        self.assertEqual('xx&amp;&lt;&gt;"aa', compat._escape('xx&<>"aa'))
+        self.assertEqual('xx&amp;&lt;&gt;"aa', compat.escape_html('xx&<>"aa'))
 

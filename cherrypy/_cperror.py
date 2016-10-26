@@ -122,7 +122,7 @@ from xml.sax import saxutils
 
 import six
 
-from cherrypy._cpcompat import _escape
+from cherrypy._cpcompat import escape_html
 from cherrypy._cpcompat import text_or_bytes, iteritems, ntob
 from cherrypy._cpcompat import tonative, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
@@ -502,7 +502,7 @@ def get_error_page(status, **kwargs):
         if v is None:
             kwargs[k] = ''
         else:
-            kwargs[k] = _escape(kwargs[k])
+            kwargs[k] = escape_html(kwargs[k])
 
     # Use a custom template or callable for the error page?
     pages = cherrypy.serving.request.error_page

@@ -334,7 +334,7 @@ except ImportError:
         return args
 
 if six.PY2:
-    from cgi import escape as _escape
+    from cgi import escape as escape_html
 else:
-    from html import escape as _escape
+    from html import escape as escape_html
 
