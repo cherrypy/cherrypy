@@ -332,3 +332,9 @@ except ImportError:
             args.append('-W' + opt)
 
         return args
+
+if six.PY2:
+    from cgi import escape as _escape
+else:
+    from html import escape as _escape
+
