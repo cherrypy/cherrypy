@@ -27,16 +27,6 @@ class EscapeTester(unittest.TestCase):
     """Class to test escape_html function from _cpcompat.
     """
 
-    def test_escape_module(self):
-        """test_escape_module - Verify the imported module to escape_html function
-
-        See #1330.
-        """
-        if six.PY2: # See discussion on https://docs.python.org/3/howto/pyporting.html
-            self.assertEqual('cgi', compat.escape_html.__module__)
-        else:
-            self.assertEqual('html', compat.escape_html.__module__)
-
     def test_escape_quote(self):
         """test_escape_quote - Verify the output for &<>" chars
         """
