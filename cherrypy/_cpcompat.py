@@ -336,5 +336,9 @@ except ImportError:
 if six.PY2:
     from cgi import escape as escape_html
 else:
-    from html import escape as escape_html
+    from html import escape
 
+    def escape_html(s):
+        """In py3 version is needed the argument quote=False to produce same results"""
+
+        return escape(s, quote=False)
