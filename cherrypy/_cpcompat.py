@@ -333,12 +333,14 @@ except ImportError:
 
         return args
 
-if six.PY2:
-    from cgi import escape as escape_html
-else:
+# html module come in 3.2 version
+try:
     from html import escape
+except:
+    from cgi import escape
 
-    def escape_html(s):
-        """In py3 version is needed the argument quote=False to produce same results"""
-
-        return escape(s, quote=False)
+# html module needed the argument quote=False because in cgi the default
+# is False. With quote=True the results differ.
+def escape_html(s):
+    """Replace special characters "&", "<" and ">" to HTML-safe sequences."""
+    return escape(s, quote=False)
