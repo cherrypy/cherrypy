@@ -341,7 +341,10 @@ except ImportError:
 
 # html module needed the argument quote=False because in cgi the default
 # is False. With quote=True the results differ.
+
 def escape_html(s, escape_quote=False):
-    """Replace special characters "&", "<" and ">" to HTML-safe sequences. When
-    escape_quote=True, escape (') and (") chars."""
+    """Replace special characters "&", "<" and ">" to HTML-safe sequences.
+
+    When escape_quote=True, escape (') and (") chars.
+    """
     return escape(s, quote=escape_quote)
