@@ -336,11 +336,12 @@ except ImportError:
 # html module come in 3.2 version
 try:
     from html import escape
-except:
+except ImportError:
     from cgi import escape
 
 # html module needed the argument quote=False because in cgi the default
 # is False. With quote=True the results differ.
-def escape_html(s):
-    """Replace special characters "&", "<" and ">" to HTML-safe sequences."""
-    return escape(s, quote=False)
+def escape_html(s, quote=False):
+    """Replace special characters "&", "<" and ">" to HTML-safe sequences. When
+    quote=True, escape (') and (") chars."""
+    return escape(s, quote=quote)
