@@ -312,7 +312,7 @@ class Request(object):
     If True, the rfile (if any) is automatically read and parsed,
     and the result placed into request.params or request.body."""
 
-    methods_with_bodies = ('POST', 'PUT')
+    methods_with_bodies = ('POST', 'PUT', 'PATCH')
     """
     A sequence of HTTP methods for which CherryPy will automatically
     attempt to read a body from the rfile. If you are going to change
