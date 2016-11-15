@@ -20,3 +20,6 @@ sphinx/source/_build
 
 # pyenv local config:
 .python-version
+
+# Ignore useless OS X's dirs:
+.DS_Store
