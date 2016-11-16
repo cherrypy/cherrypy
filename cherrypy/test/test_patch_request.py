@@ -11,7 +11,7 @@ class PatchRequestTests(helper.CPWebCase):
         """
 
         class Root(object):
-            """Class to receive HTTP PATCH request. Has only 1 method 'patch'
+            """Class to receive HTTP PATCH request. Has only 1 method 'PATCH'
             which receives a request with a URI query parameter and a body
             with data
             """
@@ -29,7 +29,7 @@ class PatchRequestTests(helper.CPWebCase):
                     vpath (str): The string of the
 
                 Returns:
-                    UserController
+                    Root
                 """
                 
                 # since our routes will only contain the GUID, we'll only have 1 
