@@ -2,7 +2,6 @@
 
 import cherrypy
 from cherrypy.test import helper
-from pprint import pprint
 
 class PatchRequestTests(helper.CPWebCase):
 
@@ -12,45 +11,65 @@ class PatchRequestTests(helper.CPWebCase):
         """
 
         class Root(object):
+            """Class to receive HTTP PATCH request. Has only 1 method 'patch'
+            which receives a request with a URI query parameter and a body
+            with data
+            """
+            exposed = True
 
-            @cherrypy.expose
-            def patch(self, param):
+            def _cp_dispatch(self, vpath):
+                """Converts a URI from containing route parameters to a route 
+                containing a query string.
+
+                Example:
+                from: http://example.com/noun/value 
+                to  : http://example.com/noun?key=value
+
+                Args:
+                    vpath (str): The string of the
+
+                Returns:
+                    UserController
+                """
+                
+                # since our routes will only contain the GUID, we'll only have 1 
+                # path. If we have more, just ignore it
+                if len(vpath) == 1:
+                    cherrypy.request.params['key'] = vpath.pop()
+                    
+                return self
+
+
+            def PATCH(self, **kwargs):
                 """Makes sure that PATCH requests work
 
                 Args:
-                    kwargs (dict): values passed in the URI and body
+                    kwargs (dict): values passed in the URI
 
                 Returns:
                     str: the values from the URI and body
                 """
-                print('[LOG] in PATCH method')
+
                 data = cherrypy.request.body.read()
+                res  = 'key=' + kwargs['key'] + '|body='
+                ret  = str.encode(res, 'utf-8') + data
 
-                print('[LOG] data is: ')
-                print(data)
-                print('[LOG] query param is: ')
-                print(param)
+                return ret
 
-                res = 'param=' + param + '|body='
-                retVal = str.encode(res, 'utf-8') + data
-
-                print(retVal)
-                return retVal
-
-        root = Root()
-        
         conf = {
             '/': {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
             }
         }
 
-        cherrypy.tree.mount(root, '/root')
+        root = Root()
+
+        cherrypy.tree.mount(root, '/root', config=conf)
 
 
     def test_HttpPatchMethod(self):
         b = 'patch request'
         h = [('Content-Type', 'text/plain'),
              ('Content-Length', str(len(b)))]
-        self.getPage('/root/patch?param=val', headers=h, method='PATCH', body=b)
-        self.assertBody('param=val|body=patch request')
+        self.getPage('/root/val', headers=h, method='PATCH', body=b)
+        self.assertBody('key=val|body=patch request')
