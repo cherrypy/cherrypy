@@ -2,6 +2,7 @@
 
 import cherrypy
 from cherrypy.test import helper
+from cherrypy import _cpcompat
 
 class PatchRequestTests(helper.CPWebCase):
 
@@ -52,7 +53,7 @@ class PatchRequestTests(helper.CPWebCase):
 
                 data = cherrypy.request.body.read()
                 res  = 'key=' + kwargs['key'] + '|body='
-                ret  = str.encode(res, 'utf-8') + data
+                ret  = _cpcompat.ntob(res) + data
 
                 return ret
 

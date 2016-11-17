@@ -20,4 +20,3 @@ sphinx/source/_build
 
 # pyenv local config:
 .python-version
-
