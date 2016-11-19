@@ -185,7 +185,7 @@ class ServerAdapter(object):
         if not self.httpserver:
             return ''
         host, port = self.bind_addr
-        if sys.version_info[0] > 2:    
+        if sys.version_info[0] > 2:
             if getattr(self.httpserver.ssl_adapter, 'certificate', None):
                 scheme = 'https'
                 if port != 443:
@@ -193,7 +193,7 @@ class ServerAdapter(object):
             else:
                 scheme = 'http'
                 if port != 80:
-                    host += ':%s' % port    
+                    host += ':%s' % port
         else:
             if getattr(self,'ssl_certificate', None):
                 scheme = 'https'
