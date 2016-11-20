@@ -7,6 +7,13 @@ Tutorials
 This tutorial will walk you through basic but complete CherryPy applications
 that will show you common concepts as well as slightly more advanced ones.
 
+These tutorials work best on Python 3. If you're using Python 2,
+you may need to make some changes for compatibility:
+
+ - replace '@cherrypy.expose' decorators on classes with
+   'exposed = True' attributes on the class.
+
+
 .. contents::
    :depth:  4
 
