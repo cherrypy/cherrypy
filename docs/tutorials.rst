@@ -885,7 +885,7 @@ Save this into a file named `tut09.py` and run it as follows:
 
 Let's first see how we create two functions that create
 and destroy the table within our database. These functions
-are registered to the CherryPy's server on lines 76-77,
+are registered to the CherryPy's server on lines 85-86,
 so that they are called when the server starts and stops.
 
 Next, notice how we replaced all the session code with calls
