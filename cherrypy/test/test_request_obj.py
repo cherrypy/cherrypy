@@ -14,7 +14,7 @@ from cherrypy.test import helper
 localDir = os.path.dirname(__file__)
 
 defined_http_methods = ('OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE',
-                        'TRACE', 'PROPFIND')
+                        'TRACE', 'PROPFIND', 'PATCH')
 
 
 #                             Client-side code                             #
@@ -280,7 +280,8 @@ class RequestObjectTests(helper.CPWebCase):
 
         appconf = {
             '/method': {
-                'request.methods_with_bodies': ('POST', 'PUT', 'PROPFIND')
+                'request.methods_with_bodies': ('POST', 'PUT', 'PROPFIND', 
+                    'PATCH')
             },
         }
         cherrypy.tree.mount(root, config=appconf)
@@ -708,7 +709,7 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertBody('application/json')
 
     def test_basic_HTTPMethods(self):
-        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND')
+        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND', 'PATCH')
 
         # Test that all defined HTTP methods work.
         for m in defined_http_methods:
@@ -722,6 +723,47 @@ class RequestObjectTests(helper.CPWebCase):
                 self.assertEqual(self.body[:5], ntob('TRACE'))
             else:
                 self.assertBody(m)
+
+        # test of PATCH requests
+        # Request a PATCH method with a form-urlencoded body
+        self.getPage('/method/parameterized', method='PATCH',
+                     body='data=on+top+of+other+things')
+        self.assertBody('on top of other things')
+
+        # Request a PATCH method with a file body
+        b = 'one thing on top of another'
+        h = [('Content-Type', 'text/plain'),
+             ('Content-Length', str(len(b)))]
+        self.getPage('/method/request_body', headers=h, method='PATCH', body=b)
+        self.assertStatus(200)
+        self.assertBody(b)
+
+        # Request a PATCH method with a file body but no Content-Type.
+        # See https://github.com/cherrypy/cherrypy/issues/790.
+        b = ntob('one thing on top of another')
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.putrequest('PUT', '/method/request_body', skip_host=True)
+            conn.putheader('Host', self.HOST)
+            conn.putheader('Content-Length', str(len(b)))
+            conn.endheaders()
+            conn.send(b)
+            response = conn.response_class(conn.sock, method='PATCH')
+            response.begin()
+            self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(b)
+        finally:
+            self.persistent = False
+
+        # Request a PATCH method with no body whatsoever (not an empty one).
+        # See https://github.com/cherrypy/cherrypy/issues/650.
+        # Provide a C-T or webtest will provide one (and a C-L) for us.
+        h = [('Content-Type', 'text/plain')]
+        self.getPage('/method/reachable', headers=h, method='PATCH')
+        self.assertStatus(411)
+
 
         # Request a PUT method with a form-urlencoded body
         self.getPage('/method/parameterized', method='PUT',
