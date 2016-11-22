@@ -36,7 +36,7 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
 
     certificate_chain = None
     """The filename of the certificate chain file."""
-    
+
     ciphers = None
     """The ciphers list of SSL"""
 
