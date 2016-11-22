@@ -158,8 +158,6 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
     private_key = None
     """The filename of the server's private key file."""
     
-    ciphers = None
-    """The ciphers of SSL."""
 
     certificate_chain = None
     """Optional. The filename of CA's intermediate certificate bundle.
@@ -167,7 +165,7 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
     This is needed for cheaper "chained root" SSL certificates, and should be
     left as None if not required."""
 
-    def __init__(self, certificate, private_key, ciphers, certificate_chain=None):
+    def __init__(self, certificate, private_key, certificate_chain=None):
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
@@ -175,7 +173,6 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
         self.certificate = certificate
         self.private_key = private_key
         self.certificate_chain = certificate_chain
-        self.ciphers = ciphers
         self._environ = None
 
     def bind(self, sock):
