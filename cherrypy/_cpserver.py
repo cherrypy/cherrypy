@@ -113,7 +113,7 @@ class Server(ServerAdapter):
     ssl_private_key = None
     """The filename of the private key to use with SSL."""
 
-     ssl_ciphers = None
+    ssl_ciphers = None
     """The ciphers list of SSL"""
     
     if six.PY3:
