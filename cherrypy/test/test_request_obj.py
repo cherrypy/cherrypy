@@ -281,7 +281,7 @@ class RequestObjectTests(helper.CPWebCase):
         appconf = {
             '/method': {
                 'request.methods_with_bodies': ('POST', 'PUT', 'PROPFIND', 
-                    'PATCH')
+                                                'PATCH')
             },
         }
         cherrypy.tree.mount(root, config=appconf)
@@ -709,7 +709,8 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertBody('application/json')
 
     def test_basic_HTTPMethods(self):
-        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND', 'PATCH')
+        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND', 
+                                              'PATCH')
 
         # Test that all defined HTTP methods work.
         for m in defined_http_methods:
@@ -738,25 +739,6 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody(b)
 
-        # Request a PATCH method with a file body but no Content-Type.
-        # See https://github.com/cherrypy/cherrypy/issues/790.
-        b = ntob('one thing on top of another')
-        self.persistent = True
-        try:
-            conn = self.HTTP_CONN
-            conn.putrequest('PUT', '/method/request_body', skip_host=True)
-            conn.putheader('Host', self.HOST)
-            conn.putheader('Content-Length', str(len(b)))
-            conn.endheaders()
-            conn.send(b)
-            response = conn.response_class(conn.sock, method='PATCH')
-            response.begin()
-            self.assertEqual(response.status, 200)
-            self.body = response.read()
-            self.assertBody(b)
-        finally:
-            self.persistent = False
-
         # Request a PATCH method with no body whatsoever (not an empty one).
         # See https://github.com/cherrypy/cherrypy/issues/650.
         # Provide a C-T or webtest will provide one (and a C-L) for us.
@@ -764,7 +746,7 @@ class RequestObjectTests(helper.CPWebCase):
         self.getPage('/method/reachable', headers=h, method='PATCH')
         self.assertStatus(411)
 
-
+        # HTTP PUT tests
         # Request a PUT method with a form-urlencoded body
         self.getPage('/method/parameterized', method='PUT',
                      body='data=on+top+of+other+things')
