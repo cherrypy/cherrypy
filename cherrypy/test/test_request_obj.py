@@ -739,6 +739,25 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody(b)
 
+        # Request a PATCH method with a file body but no Content-Type.
+        # See https://github.com/cherrypy/cherrypy/issues/790.
+        b = ntob('one thing on top of another')
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.putrequest('PATCH', '/method/request_body', skip_host=True)
+            conn.putheader('Host', self.HOST)
+            conn.putheader('Content-Length', str(len(b)))
+            conn.endheaders()
+            conn.send(b)
+            response = conn.response_class(conn.sock, method='PATCH')
+            response.begin()
+            self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(b)
+        finally:
+            self.persistent = False
+
         # Request a PATCH method with no body whatsoever (not an empty one).
         # See https://github.com/cherrypy/cherrypy/issues/650.
         # Provide a C-T or webtest will provide one (and a C-L) for us.
