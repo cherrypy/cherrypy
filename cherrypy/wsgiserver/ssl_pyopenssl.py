@@ -158,7 +158,6 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
     private_key = None
     """The filename of the server's private key file."""
     
-
     certificate_chain = None
     """Optional. The filename of CA's intermediate certificate bundle.
 
