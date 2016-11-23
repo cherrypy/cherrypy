@@ -54,16 +54,16 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
             self.ssl_adapter = adapter_class(
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
-                self.server_adapter.ssl_ciphers,
-                self.server_adapter.ssl_certificate_chain)
+                self.server_adapter.ssl_certificate_chain,
+                self.server_adapter.ssl_ciphers)
             self.ssl_adapter.context = self.server_adapter.ssl_context
         elif self.server_adapter.ssl_certificate:
             adapter_class = wsgiserver.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
-                self.server_adapter.ssl_ciphers,
-                self.server_adapter.ssl_certificate_chain)
+                self.server_adapter.ssl_certificate_chain,
+                self.server_adapter.ssl_ciphers)
 
         self.stats['Enabled'] = getattr(
             self.server_adapter, 'statistics', False)
