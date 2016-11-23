@@ -1771,7 +1771,7 @@ class SSLAdapter(object):
           socket file object``
     """
 
-    def __init__(self, certificate, private_key, ciphers, certificate_chain=None):
+    def __init__(self, certificate, private_key, certificate_chain=None, ciphers):
         self.certificate = certificate
         self.private_key = private_key
         self.ciphers = ciphers
