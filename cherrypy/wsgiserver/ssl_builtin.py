@@ -39,7 +39,6 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
 
     ciphers = None
     """The ciphers list of SSL"""
-
     """The ssl.SSLContext that will be used to wrap sockets where available
     (on Python > 2.7.9 / 3.3)
     """
