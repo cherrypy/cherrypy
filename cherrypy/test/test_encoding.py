@@ -5,17 +5,11 @@ import io
 
 import six
 
-try:
-    # Python 3.3 introduced this module in stdlib
-    from unittest import mock
-except ImportError:
-    # Older versions still need it to be installed from pip
-    import mock
-
 import cherrypy
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 
 from cherrypy.test import helper
+from cherrypy.test.helper import mock
 
 
 europoundUnicode = ntou('£', encoding='utf-8')
