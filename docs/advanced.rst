@@ -164,20 +164,20 @@ understand the structure of your URL.
 
     import cherrypy
 
-    @cherrypy.popargs('name')
+    @cherrypy.popargs('band')
     class Band(object):
         def __init__(self):
             self.albums = Album()
 
         @cherrypy.expose
-        def index(self, name):
-            return 'About %s...' % name
+        def index(self, band):
+            return 'About %s...' % band
 
     @cherrypy.popargs('title')
     class Album(object):
         @cherrypy.expose
-        def index(self, name, title):
-            return 'About %s by %s...' % (title, name)
+        def index(self, band, title):
+            return 'About %s by %s...' % (title, band)
 
     if __name__ == '__main__':
         cherrypy.quickstart(Band())
