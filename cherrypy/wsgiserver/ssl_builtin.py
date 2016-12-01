@@ -57,7 +57,8 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
                 cafile=certificate_chain
             )
             self.context.load_cert_chain(certificate, private_key)
-            self.context.set_ciphers(ciphers)
+            if(self.ciphers != None):
+                self.context.set_ciphers(ciphers)
 
     def bind(self, sock):
         """Wrap and return the given socket."""
