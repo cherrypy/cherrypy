@@ -393,7 +393,7 @@ class Bus(object):
             args = self._get_true_argv()
         except NotImplementedError:
             """It's probably win32 or GAE"""
-            args = [sys.executable] + _args_from_interpreter_flags() + sys.argv
+            args = [sys.executable] + self._get_interpreter_argv() + sys.argv
 
         self.log('Re-spawning %s' % ' '.join(args))
 
@@ -410,6 +410,24 @@ class Bus(object):
             if self.max_cloexec_files:
                 self._set_cloexec()
             os.execv(sys.executable, args)
+
+    @staticmethod
+    def _get_interpreter_argv():
+        """Retrieve current Python interpreter's arguments
+
+        Returns empty tuple in case of frozen mode, uses built-in arguments
+        reproduction function otherwise.
+
+        Frozen mode is possible for the app has been packaged into a binary
+        executable using py2exe. In this case the interpreter's arguments are
+        already built-in into that executable.
+
+        :seealso: https://github.com/cherrypy/cherrypy/issues/1526
+        Ref: https://pythonhosted.org/PyInstaller/runtime-information.html
+        """
+        return (()
+                if hasattr(sys, 'frozen', False)
+                else _args_from_interpreter_flags())
 
     @staticmethod
     def _get_true_argv():
