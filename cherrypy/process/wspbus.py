@@ -425,8 +425,8 @@ class Bus(object):
         :seealso: https://github.com/cherrypy/cherrypy/issues/1526
         Ref: https://pythonhosted.org/PyInstaller/runtime-information.html
         """
-        return (()
-                if hasattr(sys, 'frozen', False)
+        return ([]
+                if getattr(sys, 'frozen', False)
                 else _args_from_interpreter_flags())
 
     @staticmethod
