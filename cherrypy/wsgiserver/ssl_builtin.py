@@ -39,6 +39,7 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
 
     ciphers = None
     """The ciphers list of SSL"""
+    
     """The ssl.SSLContext that will be used to wrap sockets where available
     (on Python > 2.7.9 / 3.3)
     """
@@ -57,7 +58,7 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
                 cafile=certificate_chain
             )
             self.context.load_cert_chain(certificate, private_key)
-            if (self.ciphers != None):
+            if self.ciphers != None :
                 self.context.set_ciphers(ciphers)
 
     def bind(self, sock):
