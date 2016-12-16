@@ -252,7 +252,7 @@ class RequestObjectTests(helper.CPWebCase):
             def reachable(self):
                 return 'success'
 
-        class Divorce:
+        class Divorce(Test):
 
             """HTTP Method handlers shouldn't collide with normal method names.
             For example, a GET-handler shouldn't collide with a method named
@@ -280,8 +280,6 @@ class RequestObjectTests(helper.CPWebCase):
             def get(self, ID):
                 return ('Divorce document %s: %s' %
                         (ID, self.documents.get(ID, 'empty')))
-
-        root.divorce = Divorce()
 
         class ThreadLocal(Test):
 
