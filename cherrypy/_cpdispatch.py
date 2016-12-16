@@ -102,7 +102,13 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
             # the original error
             raise
 
-    if args and args[0] == 'self':
+    if args and (
+            # For callable objects, which have a __call__(self) method
+            hasattr(callable, '__call__') or
+            # For normal methods
+            inspect.ismethod(callable)
+    ):
+        # Strip 'self'
         args = args[1:]
 
     arg_usage = dict([(arg, 0,) for arg in args])
