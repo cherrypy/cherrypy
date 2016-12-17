@@ -1,5 +1,6 @@
 """Basic tests for the cherrypy.Request object."""
 
+from functools import wraps
 import os
 import sys
 import types
@@ -72,6 +73,12 @@ class RequestObjectTests(helper.CPWebCase):
             def __call__(self):
                 return 'data'
 
+        def handler_dec(f):
+            @wraps(f)
+            def wrapper(handler, *args, **kwargs):
+                return f(handler, *args, **kwargs)
+            return wrapper
+
         class ParamErrors(Test):
 
             @cherrypy.expose
@@ -115,6 +122,11 @@ class RequestObjectTests(helper.CPWebCase):
             @cherrypy.expose
             def raise_type_error_with_default_param(self, x, y=None):
                 return '%d' % 'a'  # throw an exception
+
+            @cherrypy.expose
+            @handler_dec
+            def raise_type_error_decorated(self, *args, **kwargs):
+                raise TypeError('Client Error')
 
         def callable_error_page(status, **kwargs):
             return "Error %s - Well, I'm very sorry but you haven't paid!" % (
@@ -240,7 +252,7 @@ class RequestObjectTests(helper.CPWebCase):
             def reachable(self):
                 return 'success'
 
-        class Divorce:
+        class Divorce(Test):
 
             """HTTP Method handlers shouldn't collide with normal method names.
             For example, a GET-handler shouldn't collide with a method named
@@ -268,8 +280,6 @@ class RequestObjectTests(helper.CPWebCase):
             def get(self, ID):
                 return ('Divorce document %s: %s' %
                         (ID, self.documents.get(ID, 'empty')))
-
-        root.divorce = Divorce()
 
         class ThreadLocal(Test):
 
@@ -496,6 +506,7 @@ class RequestObjectTests(helper.CPWebCase):
                 '/paramerrors/raise_type_error',
                 '/paramerrors/raise_type_error_with_default_param?x=0',
                 '/paramerrors/raise_type_error_with_default_param?x=0&y=0',
+                '/paramerrors/raise_type_error_decorated',
         ):
             self.getPage(uri, method='GET')
             self.assertStatus(500)

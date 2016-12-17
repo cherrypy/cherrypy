@@ -101,7 +101,7 @@ data_files = [
     ('cherrypy', [
         'cherrypy/cherryd',
         'cherrypy/favicon.ico',
-        'cherrypy/LICENSE.txt',
+        'LICENSE.md',
     ]),
     ('cherrypy/process', []),
     ('cherrypy/scaffold', [
