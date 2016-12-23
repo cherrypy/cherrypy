@@ -87,14 +87,18 @@ def replace_bang_symbols(matcher):
     r'!(?P<symbol>\w+)'
     return matcher.groupdict()['symbol']
 
-# a number of the files end in
-"""{{{
-#!html
-<h2 class='compatibility'>Older versions</h2>
-}}}"""  # and everything after is garbage, so just remove it.
-
 
 def remove_2x_compat_notes(matcher):
+    """
+    A number of the files end in
+
+    {{{
+    #!html
+    <h2 class='compatibility'>Older versions</h2>
+    }}}
+
+    and everything after is garbage, so just remove it.
+    """
     r'\{\{\{\n#!html\n<h2(.|\n)*'
     return ''
 
