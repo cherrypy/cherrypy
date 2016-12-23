@@ -370,6 +370,9 @@ class SessionTest(helper.CPWebCase):
 
         t = threading.Thread(target=lock)
         t.start()
+        start = time.time()
+        while not sessions.RamSession.locks and time.time() - start < 5:
+            time.sleep(0.01)
         assert len(sessions.RamSession.locks) == 1, 'Lock not acquired'
         s2 = sessions.RamSession()
         s2.clean_up()
