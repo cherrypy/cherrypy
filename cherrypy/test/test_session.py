@@ -370,9 +370,10 @@ class SessionTest(helper.CPWebCase):
 
         t = threading.Thread(target=lock)
         t.start()
+        assert len(sessions.RamSession.locks) == 1, 'Lock not acquired'
         s2 = sessions.RamSession()
         s2.clean_up()
-        self.assertEqual(len(sessions.RamSession.locks), 1, 'Clean up should not remove active lock')
+        assert len(sessions.RamSession.locks) == 1, 'Clean up should not remove active lock'
         t.join()
 
 
