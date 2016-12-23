@@ -9,7 +9,7 @@
   - id: end-of-file-fixer
   - id: name-tests-test
     include: cherrypy/test/
-    args: 
+    args:
     - '--django'
   - id: debug-statements
   - id: check-added-large-files

@@ -290,7 +290,7 @@ class RequestObjectTests(helper.CPWebCase):
 
         appconf = {
             '/method': {
-                'request.methods_with_bodies': ('POST', 'PUT', 'PROPFIND', 
+                'request.methods_with_bodies': ('POST', 'PUT', 'PROPFIND',
                                                 'PATCH')
             },
         }
@@ -720,7 +720,7 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertBody('application/json')
 
     def test_basic_HTTPMethods(self):
-        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND', 
+        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND',
                                               'PATCH')
 
         # Test that all defined HTTP methods work.
