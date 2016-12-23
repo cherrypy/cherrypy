@@ -16,7 +16,8 @@
   - id: check-ast
   - id: check-byte-order-marker
   - id: check-case-conflict
-  - id: check-docstring-first
+  # disabled due to pre-commit/pre-commit-hooks#159
+  #- id: check-docstring-first
   - id: check-json
   - id: pretty-format-json
   - id: check-symlinks
