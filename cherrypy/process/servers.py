@@ -62,7 +62,7 @@ hello.py::
     import cherrypy
 
     class HelloWorld:
-        \"""Sample request handler class.\"""
+        '''Sample request handler class.'''
         @cherrypy.expose
         def index(self):
             return "Hello world!"
