@@ -185,7 +185,7 @@ understand the structure of your URL.
 This works similarly to `_cp_dispatch` but, as said above, is more
 explicit and localized. It says:
 
-- take the first segment and store it into a parameter name `band`
+- take the first segment and store it into a parameter name `name`
 - take again the first segment (since we removed the previous first) 
   and store it into a parameter named `title`
 
