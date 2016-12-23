@@ -3,3 +3,4 @@ routes
 nose
 mock
 cherrypy[test_tools,routes_dispatcher]
+pip < 9; python_version=="3.2"
