@@ -595,7 +595,7 @@ Now, let's see our application:
 
     if __name__ == '__main__':
         cherrypy.config.update({
-	    'server.socket_port': 8080,
+            'server.socket_port': 8080,
             'tools.proxy.on': True,
             'tools.proxy.base': 'http://www.example.com'
         })

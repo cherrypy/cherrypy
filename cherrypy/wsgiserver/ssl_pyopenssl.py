@@ -202,9 +202,9 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
             'HTTPS': 'on',
             # pyOpenSSL doesn't provide access to any of these AFAICT
             # 'SSL_PROTOCOL': 'SSLv2',
-            # SSL_CIPHER 	string 	The cipher specification name
-            # SSL_VERSION_INTERFACE 	string 	The mod_ssl program version
-            # SSL_VERSION_LIBRARY 	string 	The OpenSSL program version
+            # SSL_CIPHER    string  The cipher specification name
+            # SSL_VERSION_INTERFACE     string  The mod_ssl program version
+            # SSL_VERSION_LIBRARY   string  The OpenSSL program version
         }
 
         if self.certificate:

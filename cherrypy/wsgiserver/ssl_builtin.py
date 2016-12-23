@@ -103,8 +103,8 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
             'HTTPS': 'on',
             'SSL_PROTOCOL': cipher[1],
             'SSL_CIPHER': cipher[0]
-            # SSL_VERSION_INTERFACE 	string 	The mod_ssl program version
-            # SSL_VERSION_LIBRARY 	string 	The OpenSSL program version
+            # SSL_VERSION_INTERFACE     string  The mod_ssl program version
+            # SSL_VERSION_LIBRARY   string  The OpenSSL program version
         }
         return ssl_environ
 

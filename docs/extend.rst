@@ -35,8 +35,8 @@ Publish/Subscribe pattern
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CherryPy's backbone consists of a bus system implementing
-a simple `publish/subscribe messaging pattern <http://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern>`_. 
-Simply put, in CherryPy everything is controlled via that bus. 
+a simple `publish/subscribe messaging pattern <http://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern>`_.
+Simply put, in CherryPy everything is controlled via that bus.
 One can easily picture the bus as a sushi restaurant's belt as in
 the picture below.
 
@@ -44,10 +44,10 @@ the picture below.
    :target:  http://en.wikipedia.org/wiki/YO!_Sushi
 
 
-You can subscribe and publish to channels on a bus. A channel is 
+You can subscribe and publish to channels on a bus. A channel is
 bit like a unique identifier within the bus. When a message is
 published to a channel, the bus will dispatch the message to
-all subscribers for that channel. 
+all subscribers for that channel.
 
 One interesting aspect of a pubsub pattern is that it promotes
 decoupling between a caller and the callee. A published message
@@ -70,7 +70,7 @@ Let's take the following dummy application:
 .. code-block:: python
 
    import cherrypy
-   
+
    class ECommerce(object):
        def __init__(self, db):
            self.mydb = db
@@ -78,14 +78,14 @@ Let's take the following dummy application:
        @cherrypy.expose
        def save_kart(self, cart_data):
            cart = Cart(cart_data)
-	   self.mydb.save(cart)
+           self.mydb.save(cart)
 
    if __name__ == '__main__':
       cherrypy.quickstart(ECommerce(), '/')
 
 The application has a reference to the database but
 this creates a fairly strong coupling between the
-database provider and the application. 
+database provider and the application.
 
 Another approach to work around the coupling is by
 using a pubsub workflow:
@@ -93,12 +93,12 @@ using a pubsub workflow:
 .. code-block:: python
 
    import cherrypy
-   
+
    class ECommerce(object):
        @cherrypy.expose
        def save_kart(self, cart_data):
            cart = Cart(cart_data)
-	   cherrypy.engine.publish('db-save', cart)
+           cherrypy.engine.publish('db-save', cart)
 
    if __name__ == '__main__':
       cherrypy.quickstart(ECommerce(), '/')
@@ -110,8 +110,8 @@ have to know about them.
 
 .. note::
 
-   This approach is not mandatory and it's up to you to 
-   decide how to design your entities interaction. 
+   This approach is not mandatory and it's up to you to
+   decide how to design your entities interaction.
 
 
 Implementation details
@@ -119,7 +119,7 @@ Implementation details
 
 CherryPy's bus implementation is simplistic as it registers
 functions to channels. Whenever a message is published to
-a channel, each registered function is applied with that 
+a channel, each registered function is applied with that
 message passed as a parameter.
 
 The whole behaviour happens synchronously and, in that sense,
@@ -127,8 +127,8 @@ if a subscriber takes too long to process a message, the
 remaining subscribers will be delayed.
 
 CherryPy's bus is not an advanced pubsub messaging broker
-system such as provided by `zeromq <http://zeromq.org/>`_ or 
-`RabbitMQ <https://www.rabbitmq.com/>`_. 
+system such as provided by `zeromq <http://zeromq.org/>`_ or
+`RabbitMQ <https://www.rabbitmq.com/>`_.
 Use it with the understanding that it may have a cost.
 
 .. _cpengine:
@@ -197,8 +197,8 @@ Bus API
 In order to work with the bus, the implementation
 provides the following simple API:
 
-- :meth:`cherrypy.engine.publish(channel, *args) <cherrypy.process.wspbus.Bus.publish>`: 
- - The `channel` parameter is a string identifying the channel to 
+- :meth:`cherrypy.engine.publish(channel, *args) <cherrypy.process.wspbus.Bus.publish>`:
+ - The `channel` parameter is a string identifying the channel to
    which the message should be sent to
  - `*args` is the message and may contain any valid Python values or
    objects.
@@ -241,16 +241,16 @@ A typical plugin looks like this:
    class DatabasePlugin(plugins.SimplePlugin):
        def __init__(self, bus, db_klass):
            plugins.SimplePlugin.__init__(self, bus)
-	   self.db = db_klass()
- 
+           self.db = db_klass()
+
        def start(self):
            self.bus.log('Starting up DB access')
            self.bus.subscribe("db-save", self.save_it)
- 
+
        def stop(self):
            self.bus.log('Stopping down DB access')
            self.bus.unsubscribe("db-save", self.save_it)
- 
+
        def save_it(self, entity):
            self.db.save(entity)
 
@@ -261,13 +261,13 @@ your `start` and `stop` methods to the related channels.
 When the `start` and `stop` channels are published on, those
 methods are called accordingly.
 
-Notice then how our plugin subscribes to the `db-save` 
+Notice then how our plugin subscribes to the `db-save`
 channel so that the bus can dispatch messages to the plugin.
 
 Enable a plugin
 ~~~~~~~~~~~~~~~
 
-To enable the plugin, it has to be registered to the the 
+To enable the plugin, it has to be registered to the the
 bus as follows:
 
 .. code-block:: python
@@ -299,7 +299,7 @@ Let's see an example using this default application:
 .. code-block:: python
 
    import cherrypy
-   
+
    class Root(object):
        @cherrypy.expose
        def index(self):
@@ -327,7 +327,7 @@ Now let's unsubscribe the HTTP server:
 .. code-block:: python
 
    import cherrypy
-   
+
    class Root(object):
        @cherrypy.expose
        def index(self):
@@ -362,9 +362,9 @@ One of the most common task in a web application development
 is to tailor the request's processing to the runtime context.
 
 Within CherryPy, this is performed via what are called `tools`.
-If you are familiar with Django or WSGI middlewares, 
-CherryPy tools are similar in spirit. 
-They add functions that are applied during the 
+If you are familiar with Django or WSGI middlewares,
+CherryPy tools are similar in spirit.
+They add functions that are applied during the
 request/response processing.
 
 .. _hookpoint:
@@ -405,8 +405,8 @@ Tools
 ^^^^^
 
 A tool is a simple callable object (function, method, object
-implementing a `__call__` method) that is attached to a 
-:ref:`hook point <hookpoint>`. 
+implementing a `__call__` method) that is attached to a
+:ref:`hook point <hookpoint>`.
 
 Below is a simple tool that is attached to the `before_finalize`
 hook point, hence after the page handler was called:
@@ -434,12 +434,12 @@ Using that tool is as simple as follows:
        def index(self):
            return "hello world"
 
-Obviously the tool may be declared the 
+Obviously the tool may be declared the
 :ref:`other usual ways <perappconf>`.
 
 .. note::
 
-   The name of the tool, technically the attribute set to `cherrypy.tools`, 
+   The name of the tool, technically the attribute set to `cherrypy.tools`,
    does not have to match the name of the callable. However, it is
    that name that will be used in the configuration to refer to that
    tool.
@@ -489,10 +489,10 @@ right after the handler returned its result.
 
 The import bits is that the :class:`cherrypy.Tool <cherrypy._cptools.Tool>` constructor
 allows you to register to a hook point but, to attach the
-same tool to a different hook point, you must use the 
-:meth:`cherrypy.request.hooks.attach <cherrypy._cprequest.HookMap.attach>` method. 
-The :meth:`cherrypy.Tool._setup <cherrypy._cptools.Tool._setup>` 
-method is automatically called by CherryPy when the tool 
+same tool to a different hook point, you must use the
+:meth:`cherrypy.request.hooks.attach <cherrypy._cprequest.HookMap.attach>` method.
+The :meth:`cherrypy.Tool._setup <cherrypy._cptools.Tool._setup>`
+method is automatically called by CherryPy when the tool
 is applied to the request.
 
 Next, let's see how to use our tool:
@@ -560,7 +560,7 @@ you can see the config entries in action below:
 
     conf = {
        '/demo': {
-           'newauth.check_access.on': True,  
+           'newauth.check_access.on': True,
            'newauth.check_access.default': True,
         }
     }
@@ -595,18 +595,18 @@ page handler instead of the user id.
         def load(self):
             req = cherrypy.request
 
-	    # let's assume we have a db session
+            # let's assume we have a db session
             # attached to the request somehow
-	    db = req.db
+            db = req.db
 
             # retrieve the user id and remove it
             # from the request parameters
-	    user_id = req.params.pop('user_id')
+            user_id = req.params.pop('user_id')
             req.params['user'] = db.get(int(user_id))
 
     cherrypy.tools.user = UserManager()
 
-    
+
     class Root(object):
         @cherrypy.expose
         @cherrypy.tools.user()
@@ -626,8 +626,8 @@ Tailored dispatchers
 ####################
 
 Dispatching is the art of locating the appropriate page handler
-for a given request. Usually, dispatching is based on the 
-request's URL, the query-string and, sometimes, the request's method 
+for a given request. Usually, dispatching is based on the
+request's URL, the query-string and, sometimes, the request's method
 (GET, POST, etc.).
 
 Based on this, CherryPy comes with various dispatchers already.
@@ -678,7 +678,7 @@ a tool can be called is always after the page handler has been found.
 In our example, it would be already too late as the default dispatcher
 would have not even found a match for `/GENerAte`.
 
-A dispatcher exists mostly to determine the best page 
+A dispatcher exists mostly to determine the best page
 handler to serve the requested resource.
 
 On ther other hand, tools are there to adapt the request's processing
