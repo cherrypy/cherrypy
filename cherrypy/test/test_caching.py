@@ -4,6 +4,8 @@ import os
 import threading
 import time
 
+import pytest
+
 import cherrypy
 from cherrypy._cpcompat import next, ntob, quote, xrange
 from cherrypy.lib import httputil
@@ -289,6 +291,7 @@ class CacheTest(helper.CPWebCase):
         if not getattr(cherrypy.server, 'using_apache', False):
             self.assertHeader('Age')
 
+    @pytest.mark.xfail(reason="#1536")
     def test_antistampede(self):
         SECONDS = 4
         slow_url = '/long_process?seconds={SECONDS}'.format(**locals())
