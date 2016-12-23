@@ -291,7 +291,7 @@ class CacheTest(helper.CPWebCase):
         if not getattr(cherrypy.server, 'using_apache', False):
             self.assertHeader('Age')
 
-    @pytest.mark.xfail(reason="#1536")
+    @pytest.mark.xfail(reason='#1536')
     def test_antistampede(self):
         SECONDS = 4
         slow_url = '/long_process?seconds={SECONDS}'.format(**locals())
