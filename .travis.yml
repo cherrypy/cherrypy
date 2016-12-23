@@ -30,7 +30,7 @@ before_install: 'if [ "$RUN_LINTS" = "true" ]; then pip install pre-commit; fi'
 install:
 - 'if [ "$RUN_LINTS" != "true" ]; then pip install -e .[test_tools,routes_dispatcher]; fi'
 - pip install tox
-script: 'if [ "$RUN_LINTS" = "true" ]; then pre-commit run --all-files; else python -m tox; fi'
+script: 'if [ "$RUN_LINTS" = "true" ]; then pre-commit run --all-files; else tox; fi'
 
 deploy:
   provider: pypi
