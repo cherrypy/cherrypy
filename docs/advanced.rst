@@ -195,14 +195,14 @@ Note that the decorator accepts more than a single binding. For instance:
 
     @cherrypy.popargs('title')
     class Album(object):
-	def __init__(self):
-	    self.tracks = Track()
+        def __init__(self):
+            self.tracks = Track()
 
     @cherrypy.popargs('num', 'track')
     class Track(object):
         @cherrypy.expose
         def index(self, name, title, num, track):
-	    ...
+            ...
 
 This would handle the following URL:
 
@@ -482,7 +482,7 @@ If you use SSL you can also enable Strict Transport Security:
    # conveyed over non-secure transport"
    # http://tools.ietf.org/html/draft-ietf-websec-strict-transport-sec-14#section-7.2
    if (cherrypy.server.ssl_certificate != None and cherrypy.server.ssl_private_key != None):
-	headers['Strict-Transport-Security'] = 'max-age=31536000'  # one year
+  headers['Strict-Transport-Security'] = 'max-age=31536000'  # one year
 
 Next, you should probably use :ref:`SSL <ssl>`.
 
