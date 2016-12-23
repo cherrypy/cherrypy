@@ -17,10 +17,10 @@ matrix:
     - python: pypy
     # TODO: fix tests
     - python: pypy3
-    - env: TOX_ENV=linter
+    - env: TOXENV=linter
   include:
     - python: 3.5
-      env: TOX_ENV=linter
+      env: TOXENV=linter
 
 cache: pip
 
