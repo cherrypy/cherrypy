@@ -2,7 +2,6 @@ language: python
 python:
 - 2.6
 - 2.7
-- 3.2
 - 3.3
 - 3.4
 - 3.5
@@ -18,20 +17,18 @@ matrix:
     - python: pypy
     # TODO: fix tests
     - python: pypy3
-    - python: 3.5
-      env: RUN_LINTS=true
+    - env: RUN_LINTS=true
   include:
     - python: 3.5
       env: RUN_LINTS=true
 
 cache: pip
 
-env:
-- WEBTEST_INTERACTIVE=false
-
 before_install: 'if [ "$RUN_LINTS" = "true" ]; then pip install pre-commit; fi'
-install: 'if [ "$RUN_LINTS" != "true" ]; then pip install -e .[test_tools,routes_dispatcher]; fi'
-script: 'if [ "$RUN_LINTS" = "true" ]; then pre-commit run --all-files; else nosetests; fi'
+install:
+- 'if [ "$RUN_LINTS" != "true" ]; then pip install -e .[test_tools,routes_dispatcher]; fi'
+- pip install tox
+script: 'if [ "$RUN_LINTS" = "true" ]; then pre-commit run --all-files; else tox; fi'
 
 deploy:
   provider: pypi

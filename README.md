@@ -115,15 +115,15 @@ Please follow the [contribution guidelines](https://github.com/cherrypy/cherrypy
 And by all means, [absorb the Zen of CherryPy](https://bitbucket.org/cherrypy/cherrypy/wiki/ZenOfCherryPy).
 
 ## Testing
-* To run the regression tests, just install cherrypy in `--editable` mode:
+* To run the regression tests, first install tox:
 ```sh
-pip install -e .
+pip install tox
 ```
-and run
+then run it
 ```sh
-python setup.py test
+tox
 ```
 * To run individual tests type:
 ```sh
-python setup.py test -a '-s cherrypy.test.test_foo'
+tox -- -k test_foo
 ```

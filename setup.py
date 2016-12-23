@@ -2,9 +2,12 @@ import sys
 import re
 from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.build_py import build_py
-from setuptools.command.test import test as TestCommand
 
 import setuptools
+
+
+needs_pytest = set(['pytest', 'test']).intersection(sys.argv)
+pytest_runner = ['pytest_runner'] if needs_pytest else []
 
 
 class cherrypy_build_py(build_py):
@@ -19,34 +22,6 @@ class cherrypy_build_py(build_py):
         if exclude_pattern.match(module):
             return  # skip it
         return build_py.build_module(self, module, module_file, package)
-
-
-class Tox(TestCommand):
-    """
-    Command for running tox on `python setup.py test` invocation
-
-    Shamelessly stolen from http://stackoverflow.com/a/11547391/595220
-    """
-    user_options = [('tox-args=', 'a', 'Arguments to pass to tox')]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.tox_args = None
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        # import here, cause outside the eggs aren't loaded
-        import tox
-        import shlex
-        args = self.tox_args
-        if args:
-            args = shlex.split(self.tox_args)
-        errno = tox.cmdline(args=args)
-        sys.exit(errno)
 
 
 ###############################################################################
@@ -132,10 +107,6 @@ install_requires = [
     'six',
 ]
 
-tests_require = [
-    'tox',
-]
-
 """This section defines feature flags end-users can use in dependencies"""
 extras_require = {
     'doc': [
@@ -154,7 +125,6 @@ extras_require = {
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],
-    'multienv_tests': tests_require,
     'xcgi': ['flup'],
 
     # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
@@ -168,7 +138,6 @@ if sys.version_info < (3, 3):
 
 cmd_class = {
     'build_py': cherrypy_build_py,
-    'test': Tox,  # Enables `python setup.py test` invocation run tox tests
 }
 
 if sys.version_info >= (3, 0):
@@ -203,11 +172,9 @@ setup_params = dict(
     cmdclass=cmd_class,
     install_requires=install_requires,
     extras_require=extras_require,
-    # Enables `python setup.py test` invocation install test dependencies first
-    tests_require=tests_require,
     setup_requires=[
         'setuptools_scm',
-    ],
+    ] + pytest_runner,
 )
 
 

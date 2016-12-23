@@ -162,7 +162,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
         self.getPage('/data', self.cookies)
-        self.assertBody("{'aha': 'foo', 'counter': 3}")
+        assert eval(self.body) == {'counter': 3, 'aha': 'foo'}
         self.getPage('/length', self.cookies)
         self.assertBody('2')
         self.getPage('/delkey?key=counter', self.cookies)
@@ -370,9 +370,13 @@ class SessionTest(helper.CPWebCase):
 
         t = threading.Thread(target=lock)
         t.start()
+        start = time.time()
+        while not sessions.RamSession.locks and time.time() - start < 5:
+            time.sleep(0.01)
+        assert len(sessions.RamSession.locks) == 1, 'Lock not acquired'
         s2 = sessions.RamSession()
         s2.clean_up()
-        self.assertEqual(len(sessions.RamSession.locks), 1, 'Clean up should not remove active lock')
+        assert len(sessions.RamSession.locks) == 1, 'Clean up should not remove active lock'
         t.join()
 
 
