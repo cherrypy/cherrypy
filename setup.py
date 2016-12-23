@@ -107,13 +107,6 @@ install_requires = [
     'six',
 ]
 
-tests_require = [
-    'pytest',
-    'routes',
-    'nose',
-    'mock',
-]
-
 """This section defines feature flags end-users can use in dependencies"""
 extras_require = {
     'doc': [
@@ -132,7 +125,6 @@ extras_require = {
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],
-    'multienv_tests': tests_require,
     'xcgi': ['flup'],
 
     # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
@@ -180,8 +172,6 @@ setup_params = dict(
     cmdclass=cmd_class,
     install_requires=install_requires,
     extras_require=extras_require,
-    # Enables `python setup.py test` invocation install test dependencies first
-    tests_require=tests_require,
     setup_requires=[
         'setuptools_scm',
     ] + pytest_runner,
