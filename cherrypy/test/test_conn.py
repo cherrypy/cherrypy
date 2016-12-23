@@ -6,6 +6,7 @@ import sys
 import time
 
 import six
+import pytest
 
 import cherrypy
 from cherrypy._cpcompat import (
@@ -777,6 +778,7 @@ socket_reset_errors += [
 class LimitedRequestQueueTests(helper.CPWebCase):
     setup_server = staticmethod(setup_upload_server)
 
+    @pytest.mark.xfail(reason="#1535")
     def test_queue_full(self):
         conns = []
         overflow_conn = None
