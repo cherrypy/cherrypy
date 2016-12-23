@@ -1,3 +1,9 @@
+8.2.0
+-----
+
+* #1463: CherryPy tests are now run under pytest and
+  invoked using tox.
+
 8.1.3
 -----
 
