@@ -107,7 +107,6 @@ install_requires = [
     'six',
 ]
 
-"""This section defines feature flags end-users can use in dependencies"""
 extras_require = {
     'doc': [
         'docutils',
@@ -130,6 +129,7 @@ extras_require = {
     # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
     ':sys_platform == "win32"': ['pypiwin32'],
 }
+"""Feature flags end-users can use in dependencies"""
 
 if sys.version_info < (3, 3):
     extras_require['test_tools'].append(
