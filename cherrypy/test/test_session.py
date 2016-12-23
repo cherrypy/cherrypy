@@ -162,7 +162,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
         self.getPage('/data', self.cookies)
-        self.assertBody("{'aha': 'foo', 'counter': 3}")
+        assert eval(self.body) == {'counter': 3, 'aha': 'foo'}
         self.getPage('/length', self.cookies)
         self.assertBody('2')
         self.getPage('/delkey?key=counter', self.cookies)
