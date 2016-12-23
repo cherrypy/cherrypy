@@ -140,6 +140,7 @@ class SessionTest(helper.CPWebCase):
             if fname.startswith(sessions.FileSession.SESSION_PREFIX):
                 os.unlink(os.path.join(localDir, fname))
 
+    @pytest.mark.xfail(reason="#1534")
     def test_0_Session(self):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self.getPage('/clear')
