@@ -1,5 +1,5 @@
+cherrypy[test_tools,routes_dispatcher]
+mock
+nose
 pytest
 routes
-nose
-mock
-cherrypy[test_tools,routes_dispatcher]
