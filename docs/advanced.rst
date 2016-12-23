@@ -66,8 +66,8 @@ Let's assume you wish to create an application that exposes
 music bands and their records. Your application will probably have
 the following URLs:
 
-- http://hostname/<bandname>/
-- http://hostname/<bandname>/albums/<recordname>/
+- http://hostname/<artist>/
+- http://hostname/<artist>/albums/<album_title>/
 
 It's quite clear you would not create a page handler named after
 every possible band in the world. This means you will need a page handler
@@ -155,6 +155,7 @@ working on the following URLs:
 
 The popargs decorator
 ^^^^^^^^^^^^^^^^^^^^^
+
 :func:`cherrypy.popargs` is more straightforward as it gives a name to any segment
 that CherryPy wouldn't be able to interpret otherwise. This makes the
 matching of segments with page handler signatures easier and helps CherryPy
@@ -164,20 +165,20 @@ understand the structure of your URL.
 
     import cherrypy
 
-    @cherrypy.popargs('name')
+    @cherrypy.popargs('band_name')
     class Band(object):
         def __init__(self):
             self.albums = Album()
 
         @cherrypy.expose
-        def index(self, name):
-            return 'About %s...' % name
+        def index(self, band_name):
+            return 'About %s...' % band_name
 
-    @cherrypy.popargs('title')
+    @cherrypy.popargs('album_title')
     class Album(object):
         @cherrypy.expose
-        def index(self, name, title):
-            return 'About %s by %s...' % (title, name)
+        def index(self, band_name, album_title):
+            return 'About %s by %s...' % (album_title, band_name)
 
     if __name__ == '__main__':
         cherrypy.quickstart(Band())
@@ -185,23 +186,23 @@ understand the structure of your URL.
 This works similarly to `_cp_dispatch` but, as said above, is more
 explicit and localized. It says:
 
-- take the first segment and store it into a parameter named `name`
+- take the first segment and store it into a parameter named `band_name`
 - take again the first segment (since we removed the previous first)
-  and store it into a parameter named `title`
+  and store it into a parameter named `album_title`
 
 Note that the decorator accepts more than a single binding. For instance:
 
 .. code-block:: python
 
-    @cherrypy.popargs('title')
+    @cherrypy.popargs('album_title')
     class Album(object):
         def __init__(self):
             self.tracks = Track()
 
-    @cherrypy.popargs('num', 'track')
+    @cherrypy.popargs('track_num', 'track_title')
     class Track(object):
         @cherrypy.expose
-        def index(self, name, title, num, track):
+        def index(self, band_name, album_title, track_num, track_title):
             ...
 
 This would handle the following URL:
