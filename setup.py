@@ -48,6 +48,7 @@ classifiers = [
     'Programming Language :: Python :: 3.3',
     'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: Implementation',
     'Programming Language :: Python :: Implementation :: CPython',
     'Programming Language :: Python :: Implementation :: Jython',
@@ -75,7 +76,7 @@ data_files = [
     ('cherrypy', [
         'cherrypy/cherryd',
         'cherrypy/favicon.ico',
-        'cherrypy/LICENSE.txt',
+        'LICENSE.md',
     ]),
     ('cherrypy/process', []),
     ('cherrypy/scaffold', [
@@ -140,7 +141,7 @@ extras_require = {
 
 if sys.version_info < (3, 3):
     extras_require['test_tools'].append(
-        'mock'  # only used in cherrypy.test.test_encoding
+        'mock'  # accessed through cherrypy.test.helper.mock
     )
 
 cmd_class = {

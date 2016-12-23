@@ -14,7 +14,7 @@ will describe.
 Set aliases to page handlers
 ############################
 
-A fairly unknown, yet useful, feature provided by the :func:`cherrypy.expose` 
+A fairly unknown, yet useful, feature provided by the :func:`cherrypy.expose`
 decorator is to support aliases.
 
 Let's use the template provided by :ref:`tutorial 03 <tut03>`:
@@ -23,14 +23,14 @@ Let's use the template provided by :ref:`tutorial 03 <tut03>`:
 
    import random
    import string
-   
+
    import cherrypy
 
    class StringGenerator(object):
        @cherrypy.expose(['generer', 'generar'])
        def generate(self, length=8):
            return ''.join(random.sample(string.hexdigits, int(length)))
-    
+
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
@@ -42,14 +42,14 @@ accessible via:
 - /generer (French)
 - /generar (Spanish)
 
-Obviously, your aliases may be whatever suits your needs. 
+Obviously, your aliases may be whatever suits your needs.
 
 .. note::
 
    The alias may be a single string or a list of them.
 
 .. _restful:
-   
+
 RESTful-style dispatching
 #########################
 
@@ -59,15 +59,15 @@ that nicely map to the entities an application exposes.
 .. important::
 
    We will not enter the debate around what is restful or not but we will
-   showcase two mechanisms to implement the usual idea in your 
+   showcase two mechanisms to implement the usual idea in your
    CherryPy application.
 
 Let's assume you wish to create an application that exposes
 music bands and their records. Your application will probably have
 the following URLs:
 
-- http://hostname/<bandname>/
-- http://hostname/<bandname>/albums/<recordname>/
+- http://hostname/<artist>/
+- http://hostname/<artist>/albums/<album_title>/
 
 It's quite clear you would not create a page handler named after
 every possible band in the world. This means you will need a page handler
@@ -77,7 +77,7 @@ The default dispatcher cannot deal with that scenario on its own
 because it expects page handlers to be explicitely declared in your
 source code. Luckily, CherryPy provides ways to support those use cases.
 
-.. seealso:: 
+.. seealso::
 
    This section extends from this `stackoverflow response <http://stackoverflow.com/a/15789415/1363905>`_.
 
@@ -85,8 +85,8 @@ The special _cp_dispatch method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``_cp_dispatch`` is a special method you declare in any of your :term:`controller`
-to massage the remaining segments before CherryPy gets to process them. 
-This offers you the capacity to remove, add or otherwise handle any segment 
+to massage the remaining segments before CherryPy gets to process them.
+This offers you the capacity to remove, add or otherwise handle any segment
 you wish and, even, entirely change the remaining parts.
 
 .. code-block:: python
@@ -126,7 +126,7 @@ Notice how the controller defines `_cp_dispatch`, it takes
 a single argument, the URL path info broken into its segments.
 
 The method can inspect and manipulate the list of segments,
-removing any or adding new segments at any position. The new list of 
+removing any or adding new segments at any position. The new list of
 segments is then sent to the dispatcher which will use it
 to locate the appropriate resource.
 
@@ -146,7 +146,7 @@ In this case, we take the dynamic segments in the URL (band and record names),
 we inject them into the request parameters and we remove them
 from the segment lists as if they had never been there in the first place.
 
-In other words, `_cp_dispatch` makes it as if we were 
+In other words, `_cp_dispatch` makes it as if we were
 working on the following URLs:
 
 - http://localhost:8080/?artist=nirvana
@@ -155,29 +155,30 @@ working on the following URLs:
 
 The popargs decorator
 ^^^^^^^^^^^^^^^^^^^^^
-:func:`cherrypy.popargs` is more straightforward as it gives a name to any segment 
-that CherryPy wouldn't be able to interpret otherwise. This makes the 
-matching of segments with page handler signatures easier and helps CherryPy 
+
+:func:`cherrypy.popargs` is more straightforward as it gives a name to any segment
+that CherryPy wouldn't be able to interpret otherwise. This makes the
+matching of segments with page handler signatures easier and helps CherryPy
 understand the structure of your URL.
 
 .. code-block:: python
 
     import cherrypy
 
-    @cherrypy.popargs('name')
+    @cherrypy.popargs('band_name')
     class Band(object):
         def __init__(self):
             self.albums = Album()
 
         @cherrypy.expose
-        def index(self, name):
-            return 'About %s...' % name
+        def index(self, band_name):
+            return 'About %s...' % band_name
 
-    @cherrypy.popargs('title')
+    @cherrypy.popargs('album_title')
     class Album(object):
         @cherrypy.expose
-        def index(self, name, title):
-            return 'About %s by %s...' % (title, name)
+        def index(self, band_name, album_title):
+            return 'About %s by %s...' % (album_title, band_name)
 
     if __name__ == '__main__':
         cherrypy.quickstart(Band())
@@ -185,24 +186,24 @@ understand the structure of your URL.
 This works similarly to `_cp_dispatch` but, as said above, is more
 explicit and localized. It says:
 
-- take the first segment and store it into a parameter name `band`
-- take again the first segment (since we removed the previous first) 
-  and store it into a parameter named `title`
+- take the first segment and store it into a parameter named `band_name`
+- take again the first segment (since we removed the previous first)
+  and store it into a parameter named `album_title`
 
 Note that the decorator accepts more than a single binding. For instance:
 
 .. code-block:: python
 
-    @cherrypy.popargs('title')
+    @cherrypy.popargs('album_title')
     class Album(object):
-	def __init__(self):
-	    self.tracks = Track()
+        def __init__(self):
+            self.tracks = Track()
 
-    @cherrypy.popargs('num', 'track')
+    @cherrypy.popargs('track_num', 'track_title')
     class Track(object):
         @cherrypy.expose
-        def index(self, name, title, num, track):
-	    ...
+        def index(self, band_name, album_title, track_num, track_title):
+            ...
 
 This would handle the following URL:
 
@@ -342,7 +343,7 @@ Rather than calculate the difference by hand, you can call
 ``response.check_timeout`` to set ``timed_out`` for you.
 
 .. note::
-   
+
    The default response timeout is 300 seconds.
 
 .. _timeoutmonitor:
@@ -433,11 +434,11 @@ There are several settings that can be enabled to make CherryPy pages more secur
         #. Enable XSS Protection
         #. Set the Content Security Policy
 
-An easy way to accomplish this is to set headers with a tool 
+An easy way to accomplish this is to set headers with a tool
 and wrap your entire CherryPy application with it:
 
 .. code-block:: python
-   
+
    import cherrypy
 
    # set the priority according to your needs if you are hooking something
@@ -482,7 +483,7 @@ If you use SSL you can also enable Strict Transport Security:
    # conveyed over non-secure transport"
    # http://tools.ietf.org/html/draft-ietf-websec-strict-transport-sec-14#section-7.2
    if (cherrypy.server.ssl_certificate != None and cherrypy.server.ssl_private_key != None):
-	headers['Strict-Transport-Security'] = 'max-age=31536000'  # one year
+  headers['Strict-Transport-Security'] = 'max-age=31536000'  # one year
 
 Next, you should probably use :ref:`SSL <ssl>`.
 
@@ -501,7 +502,7 @@ on more than a single port. This is easily achieved:
     server.subscribe()
 
 You can create as many :class:`server <cherrypy._cpserver.Server>`
-server instances as you need, once :ref:`subscribed <busplugins>`, 
+server instances as you need, once :ref:`subscribed <busplugins>`,
 they will follow the CherryPy engine's life-cycle.
 
 WSGI support
@@ -547,7 +548,7 @@ facility.
 .. important::
 
    You cannot use tools with a foreign WSGI application.
-   However, you can still benefit from the 
+   However, you can still benefit from the
    :ref:`CherryPy bus <buspattern>`.
 
 
@@ -563,7 +564,7 @@ a slight performance increase.
 .. code-block:: python
 
    import cherrypy
-   
+
    class Root(object):
        @cherrypy.expose
        def index(self):
@@ -577,14 +578,14 @@ a slight performance increase.
 
 .. important::
 
-   Using the native server, you will not be able to 
+   Using the native server, you will not be able to
    graft a WSGI application as shown in the previous section.
    Doing so will result in a server error at runtime.
 
 WebSocket support
 #################
 
-`WebSocket <http://tools.ietf.org/html/rfc6455>`_ 
+`WebSocket <http://tools.ietf.org/html/rfc6455>`_
 is a recent application protocol that came to life
 from the HTML5 working-group in response to the needs for
 bi-directional communication. Various hacks had been proposed
@@ -597,7 +598,7 @@ Instead, both connected endpoints may use the socket
 to push data to the other end.
 
 CherryPy itself does not support WebSocket, but the feature
-is provided by an external library called 
+is provided by an external library called
 `ws4py <https://github.com/Lawouach/WebSocket-for-Python>`_.
 
 Database support
@@ -607,11 +608,11 @@ CherryPy does not bundle any database access but its architecture
 makes it easy to integrate common database interfaces such as
 the DB-API specified in :pep:`249`. Alternatively, you can also
 use an `ORM <en.wikipedia.org/wiki/Object-relational_mapping>`_
-such as `SQLAlchemy <http://sqlalchemy.readthedocs.org>`_ 
+such as `SQLAlchemy <http://sqlalchemy.readthedocs.org>`_
 or `SQLObject <https://pypi.python.org/pypi/SQLObject/>`_.
 
 You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/database/sql_alchemy/>`_
-a recipe on how integrating SQLAlchemy using a mix of 
+a recipe on how integrating SQLAlchemy using a mix of
 :ref:`plugins <busplugins>` and :ref:`tools <tools>`.
 
 HTML Templating support
@@ -629,8 +630,8 @@ Testing your application
 ########################
 
 Web applications, like any other kind of code, must be tested. CherryPy provides
-a :class:`helper class <cherrypy.test.helper.CPWebCase>` to ease writing 
-functional tests. 
+a :class:`helper class <cherrypy.test.helper.CPWebCase>` to ease writing
+functional tests.
 
 Here is a simple example for a basic echo application:
 
@@ -670,10 +671,10 @@ Here is a simple example for a basic echo application:
             )
             self.assertStatus('404 Not Found')
 
-As you can see the, test inherits from that helper class. You should 
+As you can see the, test inherits from that helper class. You should
 setup your application and mount it as per-usual. Then, define your various
 tests and call the helper :meth:`~cherrypy.test.helper.CPWebCase.getPage`
-method to perform a request. Simply use the various specialized 
+method to perform a request. Simply use the various specialized
 assert* methods to validate your workflow and data.
 
 You can then run the test using `py.test <http://pytest.org/latest/>`_ as follows:
@@ -686,9 +687,9 @@ The ``-s`` is necessary because the CherryPy class also wraps stdin and stdout.
 
 .. note::
 
-   Although they are written using the typical pattern the 
-   :mod:`unittest` module supports, they are not bare unit tests. 
-   Indeed, a whole CherryPy stack is started for you and runs your application. 
+   Although they are written using the typical pattern the
+   :mod:`unittest` module supports, they are not bare unit tests.
+   Indeed, a whole CherryPy stack is started for you and runs your application.
    If you want to really unit test your CherryPy application, meaning without
-   having to start a server, you may want to have a look at 
+   having to start a server, you may want to have a look at
    this `recipe <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/testing/unit/serverless/>`_.

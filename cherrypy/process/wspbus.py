@@ -61,7 +61,16 @@ the new state.::
 """
 
 import atexit
-import ctypes
+
+try:
+    import ctypes
+except ImportError:
+    """Google AppEngine is shipped without ctypes
+
+    :seealso: http://stackoverflow.com/a/6523777/70170
+    """
+    ctypes = None
+
 import operator
 import os
 import subprocess
@@ -383,8 +392,8 @@ class Bus(object):
         try:
             args = self._get_true_argv()
         except NotImplementedError:
-            """It's probably win32"""
-            args = [sys.executable] + _args_from_interpreter_flags() + sys.argv
+            """It's probably win32 or GAE"""
+            args = [sys.executable] + self._get_interpreter_argv() + sys.argv
 
         self.log('Re-spawning %s' % ' '.join(args))
 
@@ -401,6 +410,24 @@ class Bus(object):
             if self.max_cloexec_files:
                 self._set_cloexec()
             os.execv(sys.executable, args)
+
+    @staticmethod
+    def _get_interpreter_argv():
+        """Retrieve current Python interpreter's arguments
+
+        Returns empty tuple in case of frozen mode, uses built-in arguments
+        reproduction function otherwise.
+
+        Frozen mode is possible for the app has been packaged into a binary
+        executable using py2exe. In this case the interpreter's arguments are
+        already built-in into that executable.
+
+        :seealso: https://github.com/cherrypy/cherrypy/issues/1526
+        Ref: https://pythonhosted.org/PyInstaller/runtime-information.html
+        """
+        return ([]
+                if getattr(sys, 'frozen', False)
+                else _args_from_interpreter_flags())
 
     @staticmethod
     def _get_true_argv():
@@ -421,9 +448,13 @@ class Bus(object):
 
             ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
         except AttributeError:
-            """It looks Py_GetArgcArgv is completely absent in MS Windows
+            """It looks Py_GetArgcArgv is completely absent in some environments
+
+            It is known, that there's no Py_GetArgcArgv in MS Windows and
+            ``ctypes`` module is completely absent in Google AppEngine
 
             :seealso: https://github.com/cherrypy/cherrypy/issues/1506
+            :seealso: https://github.com/cherrypy/cherrypy/issues/1512
             :ref: https://chromium.googlesource.com/infra/infra/+/69eb0279c12bcede5937ce9298020dd4581e38dd%5E!/
             """
             raise NotImplementedError

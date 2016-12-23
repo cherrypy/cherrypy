@@ -1,8 +1,8 @@
 import six
 
-import mock
-
 from cherrypy import wsgiserver
+
+from cherrypy.test.helper import mock
 
 
 class TestWSGIGateway_u0:

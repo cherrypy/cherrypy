@@ -12,10 +12,14 @@ If you need to start more than one HTTP server (to serve on multiple ports, or
 protocols, etc.), you can manually register each one and then start them all
 with engine.start::
 
-    s1 = ServerAdapter(cherrypy.engine, MyWSGIServer(host='0.0.0.0', port=80))
-    s2 = ServerAdapter(cherrypy.engine,
-                       another.HTTPServer(host='127.0.0.1',
-                       SSL=True))
+    s1 = ServerAdapter(
+        cherrypy.engine,
+        MyWSGIServer(host='0.0.0.0', port=80)
+    )
+    s2 = ServerAdapter(
+        cherrypy.engine,
+        another.HTTPServer(host='127.0.0.1', SSL=True)
+    )
     s1.subscribe()
     s2.subscribe()
     cherrypy.engine.start()
@@ -58,7 +62,7 @@ hello.py::
     import cherrypy
 
     class HelloWorld:
-        \"""Sample request handler class.\"""
+        '''Sample request handler class.'''
         @cherrypy.expose
         def index(self):
             return "Hello world!"

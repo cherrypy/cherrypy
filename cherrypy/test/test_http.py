@@ -7,12 +7,11 @@ import sys
 
 import six
 
-from mock import patch
-
 import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
 from cherrypy.test import helper
+from cherrypy.test.helper import mock
 
 
 def encode_multipart_formdata(files):
@@ -116,9 +115,9 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
 
         # `_get_content_length` is needed for Python 3.6+
-        with patch.object(c, '_get_content_length', lambda body, method: None, create=True):
+        with mock.patch.object(c, '_get_content_length', lambda body, method: None, create=True):
             # `_set_content_length` is needed for Python 2.7-3.5
-            with patch.object(c, '_set_content_length', create=True):
+            with mock.patch.object(c, '_set_content_length', create=True):
                 c.request('POST', '/')
 
         response = c.getresponse()

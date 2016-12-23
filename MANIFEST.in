@@ -1,6 +1,6 @@
+include LICENSE.md
 include cherrypy/cherryd
 include cherrypy/favicon.ico
-include cherrypy/LICENSE.txt
 include cherrypy/scaffold/*.conf
 include cherrypy/scaffold/static/*.png
 include cherrypy/test/style.css
