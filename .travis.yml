@@ -17,8 +17,7 @@ matrix:
     - python: pypy
     # TODO: fix tests
     - python: pypy3
-    - python: 3.5
-      env: RUN_LINTS=true
+    - env: RUN_LINTS=true
   include:
     - python: 3.5
       env: RUN_LINTS=true
