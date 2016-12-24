@@ -133,7 +133,7 @@ extras_require = {
 """Feature flags end-users can use in dependencies"""
 
 if sys.version_info < (3, 3):
-    extras_require['test_tools'].append(
+    extras_require['testing'].append(
         'mock'  # accessed through cherrypy.test.helper.mock
     )
 
