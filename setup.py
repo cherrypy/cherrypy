@@ -115,7 +115,7 @@ extras_require = {
     'json': ['simplejson'],
     'routes_dispatcher': ['routes>=2.3.1'],
     'ssl': ['pyOpenSSL'],
-    'test_tools': [
+    'testing': [
         'coverage',  # inspects tests coverage
         # TODO: drop nose dependency in favor of py.test analogue
         'nose',  # only used in cherrypy.test.{helper,test_{compat,routes}}
