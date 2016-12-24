@@ -1,4 +1,3 @@
-cherrypy[testing,routes_dispatcher]
 mock
 nose
 pytest
