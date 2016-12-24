@@ -189,15 +189,14 @@ class ServerAdapter(object):
         if not self.httpserver:
             return ''
         host, port = self.bind_addr
-        if getattr(self.httpserver, 'ssl_adapter', None):
+        if getattr(self, 'ssl_certificate', None):
             scheme = 'https'
             if port != 443:
                 host += ':%s' % port
         else:
-            scheme = 'http'
+	    scheme = 'http'
             if port != 80:
                 host += ':%s' % port
-
         return '%s://%s' % (scheme, host)
 
     def _start_http_thread(self):
