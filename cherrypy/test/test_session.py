@@ -6,7 +6,10 @@ import socket
 import pytest
 
 import cherrypy
-from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
+from cherrypy._cpcompat import (
+    copykeys, json_decode,
+    HTTPConnection, HTTPSConnection
+)
 from cherrypy.lib import sessions
 from cherrypy.lib import reprconf
 from cherrypy.lib.httputil import response_codes
@@ -165,7 +168,8 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
         self.getPage('/data', self.cookies)
-        assert eval(self.body) == {'counter': 3, 'aha': 'foo'}
+        self.assertDictEqual(json_decode(self.body),
+                             {'counter': 3, 'aha': 'foo'})
         self.getPage('/length', self.cookies)
         self.assertBody('2')
         self.getPage('/delkey?key=counter', self.cookies)
