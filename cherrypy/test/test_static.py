@@ -3,8 +3,11 @@ import contextlib
 import io
 import os
 import sys
+import platform
 
 from six.moves import urllib
+
+import pytest
 
 import cherrypy
 from cherrypy.lib import static
@@ -238,6 +241,8 @@ class StaticTest(helper.CPWebCase):
         self.assertHeader('Content-Length', 14)
         self.assertMatchesBody('Fee\nfie\nfo\nfum')
 
+    @pytest.mark.xfail(platform.system() == 'Darwin',
+        reason='#1475')
     def test_file_stream(self):
         if cherrypy.server.protocol_version != 'HTTP/1.1':
             return self.skip()
