@@ -1,28 +1,28 @@
-8.3.0
+v8.3.0
 -----
 
 * Consolidated some documentation and include the more
   concise readme in the package long description, as found
   on PyPI.
 
-8.2.0
+v8.2.0
 -----
 
 * #1463: CherryPy tests are now run under pytest and
   invoked using tox.
 
-8.1.3
+v8.1.3
 -----
 
 * #1530: Fix the issue with TypeError being swallowed by
   decorated handlers.
 
-8.1.2
+v8.1.2
 -----
 
 * #1508
 
-8.1.1
+v8.1.1
 -----
 
 * #1497: Handle errors thrown by ``ssl_module: 'builtin'``
@@ -34,7 +34,7 @@
 
 * Other miscellaneous fixes.
 
-8.1.0
+v8.1.0
 -----
 
 * #1473: ``HTTPError`` now also works as a context manager.
@@ -49,14 +49,14 @@
   a commit in the repo. Versions numbers are now stored in
   exactly one place.
 
-8.0.1
+v8.0.1
 -----
 
 * #1489 via #1493: Additionally reject anything else that's
   not bytes.
 * #1492: systemd socket activation.
 
-8.0.0
+v8.0.0
 -----
 
 * #1483: Remove Deprecated constructs:
