@@ -1,4 +1,18 @@
-|CherryPy Build Status| |Codacy Badge|
+.. image:: https://img.shields.io/pypi/v/cherrypy.svg
+   :target: https://pypi.org/project/cherrypy
+
+.. image:: https://readthedocs.org/projects/cherrypy/badge/?version=latest
+  :target: http://docs.cherrypy.org/en/latest/?badge=latest
+
+.. image:: https://img.shields.io/travis/cherrypy/cherrypy/master.svg
+   :target: http://travis-ci.org/cherrypy/cherrypy
+
+.. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
+
+.. image:: https://img.shields.io/pypi/dm/cherrypy.svg
+
+.. image:: https://api.codacy.com/project/badge/Grade/48b11060b5d249dc86e52dac2be2c715
+   :target: https://www.codacy.com/app/webknjaz/cherrypy-upstream?utm_source=github.com&utm_medium=referral&utm_content=cherrypy/cherrypy&utm_campaign=Badge_Grade
 
 Welcome to the GitHub repository of `CherryPy <http://cherrypy.org/>`_!
 
@@ -54,8 +68,3 @@ Please follow the `contribution guidelines
 <http://docs.cherrypy.org/en/latest/contribute.html>`_.
 And by all means, absorb the `Zen of
 CherryPy <https://bitbucket.org/cherrypy/cherrypy/wiki/ZenOfCherryPy>`_.
-
-.. |CherryPy Build Status| image:: https://travis-ci.org/cherrypy/cherrypy.svg?branch=master
-   :target: https://travis-ci.org/cherrypy/cherrypy
-.. |Codacy Badge| image:: https://api.codacy.com/project/badge/Grade/48b11060b5d249dc86e52dac2be2c715
-   :target: https://www.codacy.com/app/webknjaz/cherrypy-upstream?utm_source=github.com&utm_medium=referral&utm_content=cherrypy/cherrypy&utm_campaign=Badge_Grade
