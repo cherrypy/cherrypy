@@ -5,7 +5,7 @@ Testing
 
    .. code:: sh
 
-       pip install tox
+       pip install 'tox>=2.5'
 
    then run it
 
