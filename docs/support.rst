@@ -1,3 +1,6 @@
+Support
+=======
+
 You've read the documentation and you've brushed up on the basics of
 Python and web development, but you still could use some help. Users
 have several options.
