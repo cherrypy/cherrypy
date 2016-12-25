@@ -35,7 +35,7 @@ for the Python object model to be dynamically presented as a web site
 and/or API.
 
 Table of contents
-~~~~~~~~~~~~~~~~~
+-----------------
 
 .. raw:: html
 
@@ -74,7 +74,7 @@ Help
 What are my options if I feel I need help?
 
 I don't understand the documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------
 
 While CherryPy is one of the easiest and most intuitive frameworks out
 there, the prerequisite for understanding the `CherryPy
@@ -87,7 +87,7 @@ issue <https://github.com/cherrypy/cherrypy/issues/new>`__ in those
 cases.
 
 I have a question
-~~~~~~~~~~~~~~~~~
+-----------------
 
 If you have a question and cannot find an answer for it in issues or the
 the `documentation <http://docs.cherrypy.org/en/latest/>`__, `please
@@ -98,7 +98,7 @@ tip is to really put the effort in and write a good explanation, you
 will get better and quicker answers. Examples are strongly encouraged.
 
 I have found a bug
-~~~~~~~~~~~~~~~~~~
+------------------
 
 If no one have already, `create an
 issue <https://github.com/cherrypy/cherrypy/issues/new>`__. Be sure to
@@ -117,7 +117,7 @@ resolutions way quicker. Also, many other open source projects require
 it.
 
 I have a feature request
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 `Good stuff! Please create an
 issue! <https://github.com/cherrypy/cherrypy/issues/new>`__\  Note:
@@ -125,7 +125,7 @@ Features are more likely to be added the more users they seem to
 benefit.
 
 I want to discuss CherryPy, reach out to developers or CherryPy users
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------------------------------
 
 `The gitter page <https://gitter.im/cherrypy/cherrypy>`__ is good for
 when you want to talk, but doesn't feel that the discussion has to be
