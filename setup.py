@@ -1,5 +1,6 @@
 import sys
 import re
+import io
 from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.build_py import build_py
 
@@ -29,7 +30,10 @@ class cherrypy_build_py(build_py):
 ###############################################################################
 name = 'CherryPy'
 desc = 'Object-Oriented HTTP framework'
-long_desc = 'CherryPy is a pythonic, object-oriented HTTP framework'
+
+with io.open('README.rst', encoding='utf-8') as strm:
+    long_desc = strm.read()
+
 classifiers = [
     'Development Status :: 5 - Production/Stable',
     'Environment :: Web Environment',
