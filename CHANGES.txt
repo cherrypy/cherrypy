@@ -1,3 +1,10 @@
+8.3.0
+-----
+
+* Consolidated some documentation and include the more
+  concise readme in the package long description, as found
+  on PyPI.
+
 8.2.0
 -----
 
