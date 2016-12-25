@@ -7,7 +7,7 @@ in and add their best contribution to the project.
 
 How can you contribute? Well, first search the `docs
 <https://docs.cherrypy.org>`_ and the `project page
-<https://github.com/cherrypy/cherrypy`_ to see if someone
+<https://github.com/cherrypy/cherrypy>`_ to see if someone
 has already reported your issue.
 
 StackOverflow
@@ -38,7 +38,7 @@ Fixing Bugs
 ===========
 
 CherryPy has a number of open, reported `issues
-https://github.com/cherrypy/cherrypy/issues`_. Some of them are
+<https://github.com/cherrypy/cherrypy/issues>`_. Some of them are
 complicated and difficult, but others are more straightforward and
 shovel-ready. Feel free to find one that you think you can solve or
 introduce yourself and ask for guidance in `our gitter channel
