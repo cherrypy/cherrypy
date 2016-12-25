@@ -47,72 +47,13 @@ If the docs are insufficient to address your needs, the CherryPy
 community has several `avenues for support
 <https://docs.cherrypy.org/en/latest/support>`_.
 
-
-Documentation
-=============
-
--  The official user documentation of CherryPy is at:
-   http://docs.cherrypy.org/en/latest/
-
-Installation
-============
-
-To install CherryPy for use in your project, follow these instructions:
-
-From the PyPI package
----------------------
-
-.. code:: sh
-
-    pip install cherrypy
-
-or (for python 3)
-
-.. code:: sh
-
-    pip3 install cherrypy
-
-From source
------------
-
-Change to the directory where setup.py is located and type (Python 2.6
-or later needed):
-
-.. code:: sh
-
-    python setup.py install
-
-Development
-===========
-
 Contributing
 ------------
 
-Please follow the `contribution
-guidelines <https://github.com/cherrypy/cherrypy/blob/master/CONTRIBUTING.txt>`_.
-And by all means, `absorb the Zen of
+Please follow the `contribution guidelines
+<http://docs.cherrypy.org/en/latest/contribute.html>`_.
+And by all means, absorb the `Zen of
 CherryPy <https://bitbucket.org/cherrypy/cherrypy/wiki/ZenOfCherryPy>`_.
-
-Testing
--------
-
--  To run the regression tests, first install tox:
-
-   .. code:: sh
-
-       pip install tox
-
-   then run it
-
-   .. code:: sh
-
-       tox
-
--  To run individual tests type:
-
-   .. code:: sh
-
-       tox -- -k test_foo
 
 .. |CherryPy Build Status| image:: https://travis-ci.org/cherrypy/cherrypy.svg?branch=master
    :target: https://travis-ci.org/cherrypy/cherrypy
