@@ -126,11 +126,6 @@ if sys.version_info < (3, 3):
         'mock'  # accessed through cherrypy.test.helper.mock
     )
 
-if sys.version_info >= (3, 0):
-    required_python_version = '3.1'
-else:
-    required_python_version = '2.6'
-
 ###############################################################################
 # end arguments for setup
 ###############################################################################
@@ -160,14 +155,11 @@ setup_params = dict(
     setup_requires=[
         'setuptools_scm',
     ] + pytest_runner,
+    python_requires='>=2.6,!=3.0.*',
 )
 
 
 def main():
-    if sys.version < required_python_version:
-        s = "I'm sorry, but %s requires Python %s or later."
-        print(s % (name, required_python_version))
-        sys.exit(1)
     # set default location for "data_files" to
     # platform specific "site-packages" location
     for scheme in list(INSTALL_SCHEMES.values()):
