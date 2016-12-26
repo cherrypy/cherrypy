@@ -4,6 +4,7 @@ import errno
 import mimetypes
 import socket
 import sys
+from unittest import mock
 
 import six
 
@@ -11,7 +12,6 @@ import cherrypy
 from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
 
 from cherrypy.test import helper
-from cherrypy.test.helper import mock
 
 
 def encode_multipart_formdata(files):

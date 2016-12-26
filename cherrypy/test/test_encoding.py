@@ -2,6 +2,7 @@
 
 import gzip
 import io
+from unittest import mock
 
 import six
 
@@ -9,7 +10,6 @@ import cherrypy
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou
 
 from cherrypy.test import helper
-from cherrypy.test.helper import mock
 
 
 europoundUnicode = ntou('£', encoding='utf-8')

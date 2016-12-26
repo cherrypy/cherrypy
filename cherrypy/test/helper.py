@@ -11,11 +11,6 @@ import time
 import unittest
 import warnings
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock
-
 import nose
 import six
 

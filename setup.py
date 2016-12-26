@@ -110,6 +110,7 @@ extras_require = {
         'nose-testconfig',  # only used in cherrypy.test.helper
         'objgraph',  # cherrypy.lib.gctools
         'pytest',
+        'backports.unittest_mock',
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],
@@ -120,11 +121,6 @@ extras_require = {
     ':sys_platform == "win32" and python_version != "3.6"': ['pypiwin32'],
 }
 """Feature flags end-users can use in dependencies"""
-
-if sys.version_info < (3, 3):
-    extras_require['testing'].append(
-        'mock'  # accessed through cherrypy.test.helper.mock
-    )
 
 ###############################################################################
 # end arguments for setup
