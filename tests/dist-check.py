@@ -5,6 +5,7 @@ import pytest
 
 
 @pytest.fixture(params=[
+    'favicon.ico',
     'scaffold/static/made_with_cherrypy_small.png',
     'tutorial/tutorial.conf',
     'tutorial/custom_error.html',
