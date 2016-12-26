@@ -1,3 +1,10 @@
+v8.3.1
+-----
+
+* #1537: Disable dependency on pypiwin32 on Python 3.6
+  until a viable build of pypiwin32 can be made on that
+  Python version.
+
 v8.3.0
 -----
 
