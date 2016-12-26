@@ -1,3 +1,9 @@
+v8.4.0
+-----
+
+* #1532: Also release wheels for Python 2, enabling
+  offline installation.
+
 v8.3.1
 -----
 
