@@ -1,28 +1,12 @@
 import sys
-import re
 import io
 from distutils.command.install import INSTALL_SCHEMES
-from distutils.command.build_py import build_py
 
 import setuptools
 
 
 needs_pytest = set(['pytest', 'test']).intersection(sys.argv)
 pytest_runner = ['pytest_runner'] if needs_pytest else []
-
-
-class cherrypy_build_py(build_py):
-    """Custom version of build_py that excludes Python-specific modules"""
-
-    def build_module(self, module, module_file, package):
-        python3 = sys.version_info >= (3,)
-        if python3:
-            exclude_pattern = re.compile('ssl_pyopenssl')
-        else:
-            exclude_pattern = re.compile('xxx')
-        if exclude_pattern.match(module):
-            return  # skip it
-        return build_py.build_module(self, module, module_file, package)
 
 
 ###############################################################################
@@ -142,10 +126,6 @@ if sys.version_info < (3, 3):
         'mock'  # accessed through cherrypy.test.helper.mock
     )
 
-cmd_class = {
-    'build_py': cherrypy_build_py,
-}
-
 if sys.version_info >= (3, 0):
     required_python_version = '3.1'
 else:
@@ -175,7 +155,6 @@ setup_params = dict(
     packages=packages,
     data_files=data_files,
     scripts=scripts,
-    cmdclass=cmd_class,
     install_requires=install_requires,
     extras_require=extras_require,
     setup_requires=[

@@ -1,3 +1,12 @@
+v8.5.0
+-----
+
+* The pyOpenSSL support is now included on Python 3 builds,
+  removing the last disparity between Python 2 and Python 3
+  in the CherryPy package. This change is one small step
+  in consideration of #1399. This change also fixes RPM
+  builds, as reported in #1149.
+
 v8.4.0
 -----
 
