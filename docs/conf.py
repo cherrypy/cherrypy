@@ -291,14 +291,13 @@ link_files = {
         ),
         replace=[
             dict(
-                pattern=r"(Issue )?#(?P<issue>\d+)",
+                pattern=r'(Issue )?#(?P<issue>\d+)',
                 url='{url}/issues/{issue}',
             ),
             dict(
-                pattern=r"^(?m)((?P<scm_version>v?\d+(\.\d+){1,2}))\n[-=]+\n",
-                with_scm="{text}\n{rev[timestamp]:%d %b %Y}\n",
+                pattern=r'^(?m)((?P<scm_version>v?\d+(\.\d+){1,2}))\n[-=]+\n',
+                with_scm='{text}\n{rev[timestamp]:%d %b %Y}\n',
             ),
         ],
     ),
 }
-
