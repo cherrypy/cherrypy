@@ -1,3 +1,13 @@
+v8.6.0
+-----
+
+* #1538 and #1090: Removed cruft from the setup script and
+  instead rely on `include_package_data
+  <http://setuptools.readthedocs.io/en/latest/setuptools.html?highlight=include_package_data#new-and-changed-setup-keywords>`_
+  to ensure the relevant files are included in the package.
+  Note, this change does cause LICENSE.md no longer to
+  be included in the installed package.
+
 v8.5.0
 -----
 
