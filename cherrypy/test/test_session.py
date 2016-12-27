@@ -284,6 +284,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/iredir', self.cookies)
         self.assertBody('FileSession')
 
+    @pytest.mark.xfail(reason='#1540')
     def test_4_File_deletion(self):
         # Start a new session
         self.getPage('/testStr')
