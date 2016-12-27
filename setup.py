@@ -1,6 +1,5 @@
 import sys
 import io
-from distutils.command.install import INSTALL_SCHEMES
 
 import setuptools
 
@@ -60,35 +59,6 @@ packages = [
     'cherrypy.scaffold',
     'cherrypy.wsgiserver',
 ]
-data_files = [
-    ('cherrypy', [
-        'cherrypy/cherryd',
-        'cherrypy/favicon.ico',
-        'LICENSE.md',
-    ]),
-    ('cherrypy/process', []),
-    ('cherrypy/scaffold', [
-        'cherrypy/scaffold/example.conf',
-        'cherrypy/scaffold/site.conf',
-    ]),
-    ('cherrypy/scaffold/static', [
-        'cherrypy/scaffold/static/made_with_cherrypy_small.png',
-    ]),
-    ('cherrypy/test', [
-        'cherrypy/test/style.css',
-        'cherrypy/test/test.pem',
-    ]),
-    ('cherrypy/test/static', [
-        'cherrypy/test/static/index.html',
-        'cherrypy/test/static/dirback.jpg',
-    ]),
-    ('cherrypy/tutorial', [
-        'cherrypy/tutorial/tutorial.conf',
-        'cherrypy/tutorial/README.txt',
-        'cherrypy/tutorial/pdf_file.pdf',
-        'cherrypy/tutorial/custom_error.html',
-    ]),
-]
 scripts = ['cherrypy/cherryd']
 
 install_requires = [
@@ -126,13 +96,6 @@ extras_require = {
 # end arguments for setup
 ###############################################################################
 
-# wininst may install data_files in Python/x.y instead of the cherrypy package.
-# Django's solution is at http://code.djangoproject.com/changeset/8313
-# See also
-# http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
-if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
-    data_files = [(r'\PURELIB\%s' % path, files) for path, files in data_files]
-
 setup_params = dict(
     name=name,
     use_scm_version=True,
@@ -144,8 +107,8 @@ setup_params = dict(
     url=url,
     license=cp_license,
     packages=packages,
-    data_files=data_files,
     scripts=scripts,
+    include_package_data=True,
     install_requires=install_requires,
     extras_require=extras_require,
     setup_requires=[
@@ -156,11 +119,6 @@ setup_params = dict(
 
 
 def main():
-    # set default location for "data_files" to
-    # platform specific "site-packages" location
-    for scheme in list(INSTALL_SCHEMES.values()):
-        scheme['data'] = scheme['purelib']
-
     setuptools.setup(**setup_params)
 
 

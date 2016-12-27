@@ -21,6 +21,9 @@ matrix:
   include:
     - python: 3.5
       env: TOXENV=pre-commit
+  include:
+    - python: 3.5
+      env: TOXENV=dist-check
 
 cache: pip
 
