@@ -155,18 +155,18 @@ else:
         return b
 
 
-LF = ntob('\n')
-CRLF = ntob('\r\n')
-TAB = ntob('\t')
-SPACE = ntob(' ')
-COLON = ntob(':')
-SEMICOLON = ntob(';')
-EMPTY = ntob('')
-NUMBER_SIGN = ntob('#')
-QUESTION_MARK = ntob('?')
-ASTERISK = ntob('*')
-FORWARD_SLASH = ntob('/')
-quoted_slash = re.compile(ntob('(?i)%2F'))
+LF = b'\n'
+CRLF = b'\r\n'
+TAB = b'\t'
+SPACE = b' '
+COLON = b':'
+SEMICOLON = b';'
+EMPTY = b''
+NUMBER_SIGN = b'#'
+QUESTION_MARK = b'?'
+ASTERISK = b'*'
+FORWARD_SLASH = b'/'
+quoted_slash = re.compile(b'(?i)%2F')
 
 
 def plat_specific_errors(*errnames):
@@ -579,9 +579,9 @@ class HTTPRequest(object):
 
         self.ready = False
         self.started_request = False
-        self.scheme = ntob('http')
+        self.scheme = b'http'
         if self.server.ssl_adapter is not None:
-            self.scheme = ntob('https')
+            self.scheme = b'https'
         # Use the lowest-common protocol in case read_request_line errors.
         self.response_protocol = 'HTTP/1.0'
         self.inheaders = {}
@@ -2097,7 +2097,7 @@ class HTTPServer(object):
                     sock_to_make = s if six.PY3 else s._sock
                     wfile = makefile(sock_to_make, 'wb', DEFAULT_BUFFER_SIZE)
                     try:
-                        wfile.write(ntob(''.join(buf)))
+                        wfile.write(''.join(buf).encode('ISO-8859-1'))
                     except socket.error:
                         x = sys.exc_info()[1]
                         if x.args[0] not in socket_errors_to_ignore:
