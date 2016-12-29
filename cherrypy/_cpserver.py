@@ -5,10 +5,19 @@ import six
 import cherrypy
 from cherrypy.lib.reprconf import attributes
 from cherrypy._cpcompat import text_or_bytes
+from cherrypy.process.servers import ServerAdapter
 
-# We import * because we want to export check_port
-# et al as attributes of this module.
-from cherrypy.process.servers import *
+# export some names from here
+from cherrypy.process.servers import (
+    client_host, check_port, wait_for_free_port, wait_for_occupied_port,
+)
+
+
+__all__ = [
+    'Server',
+    'client_host', 'check_port', 'wait_for_free_port',
+    'wait_for_occupied_port',
+]
 
 
 class Server(ServerAdapter):
