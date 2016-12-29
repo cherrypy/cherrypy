@@ -174,7 +174,7 @@ class Server(ServerAdapter):
         """Start the HTTP server."""
         if not self.httpserver:
             self.httpserver, self.bind_addr = self.httpserver_from_self()
-        ServerAdapter.start(self)
+        super(Server, self).start()
     start.priority = 75
 
     def _get_bind_addr(self):
