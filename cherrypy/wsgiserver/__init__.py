@@ -2052,11 +2052,13 @@ class HTTPServer(object):
         if self.ssl_adapter is not None:
             self.socket = self.ssl_adapter.bind(self.socket)
 
+        host, port = self.bind_addr[:2]
+
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See
         # https://github.com/cherrypy/cherrypy/issues/871.
         if (hasattr(socket, 'AF_INET6') and family == socket.AF_INET6
-                and self.bind_addr[0] in ('::', '::0', '::0.0.0.0')):
+                and host in ('::', '::0', '::0.0.0.0')):
             try:
                 self.socket.setsockopt(
                     socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
