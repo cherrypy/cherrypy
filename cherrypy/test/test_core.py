@@ -757,3 +757,22 @@ class ErrorTests(helper.CPWebCase):
         self.getPage('/stat/missing')
         self.assertStatus(404)
         self.assertInBody('No such file or directory')
+
+
+class TestBinding:
+    def test_bind_ephemeral_port(self, capsys):
+        """
+        A server configured to bind to port 0 will bind to an ephemeral
+        port and indicate that port number on startup.
+        """
+        cherrypy.config.reset()
+        bind_ephemeral_conf = {
+            'server.socket_port': 0,
+        }
+        cherrypy.config.update(bind_ephemeral_conf)
+        cherrypy.engine.start()
+        assert cherrypy.server.bound_addr != cherrypy.server.bind_addr
+        _host, port = cherrypy.server.bound_addr
+        assert port > 0
+        cherrypy.engine.stop()
+        assert cherrypy.server.bind_addr == cherrypy.server.bound_addr
