@@ -243,7 +243,6 @@ class ServerAdapter(object):
             # Wait for port to be occupied if not running via socket-activation
             # (for socket-activation the port will be managed by systemd )
             if isinstance(self.bind_addr, tuple):
-                host, port = self.bound_addr
                 wait_for_occupied_port(*self.bound_addr)
 
     @property
