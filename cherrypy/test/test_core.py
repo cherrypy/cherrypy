@@ -760,7 +760,7 @@ class ErrorTests(helper.CPWebCase):
 
 
 class TestBinding:
-    def test_bind_ephemeral_port(self, capsys):
+    def test_bind_ephemeral_port(self):
         """
         A server configured to bind to port 0 will bind to an ephemeral
         port and indicate that port number on startup.
