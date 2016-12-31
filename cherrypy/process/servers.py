@@ -155,15 +155,8 @@ class ServerAdapter(object):
 
     def start(self):
         """Start the HTTP server."""
-        if self.bind_addr is None:
-            on_what = 'unknown interface (dynamic?)'
-        elif isinstance(self.bind_addr, tuple):
-            on_what = self._get_base()
-        else:
-            on_what = 'socket file: %s' % self.bind_addr
-
         if self.running:
-            self.bus.log('Already serving on %s' % on_what)
+            self.bus.log('Already serving on %s' % self.description)
             return
 
         self.interrupt = None
@@ -182,13 +175,26 @@ class ServerAdapter(object):
 
         self.wait()
         self.running = True
-        self.bus.log('Serving on %s' % on_what)
+        self.bus.log('Serving on %s' % self.description)
     start.priority = 75
+
+    @property
+    def description(self):
+        """
+        A description about where this server is bound.
+        """
+        if self.bind_addr is None:
+            on_what = 'unknown interface (dynamic?)'
+        elif isinstance(self.bind_addr, tuple):
+            on_what = self._get_base()
+        else:
+            on_what = 'socket file: %s' % self.bind_addr
+        return on_what
 
     def _get_base(self):
         if not self.httpserver:
             return ''
-        host, port = self.bind_addr
+        host, port = self.bound_addr
         if getattr(self.httpserver, 'ssl_adapter', None):
             scheme = 'https'
             if port != 443:
@@ -237,8 +243,19 @@ class ServerAdapter(object):
             # Wait for port to be occupied if not running via socket-activation
             # (for socket-activation the port will be managed by systemd )
             if isinstance(self.bind_addr, tuple):
-                host, port = self.bind_addr
-                wait_for_occupied_port(host, port)
+                wait_for_occupied_port(*self.bound_addr)
+
+    @property
+    def bound_addr(self):
+        """
+        The bind address, or if it's an ephemeral port and the
+        socket has been bound, return the actual port bound.
+        """
+        host, port = self.bind_addr
+        if port == 0 and self.httpserver.socket:
+            # Bound to ephemeral port. Get the actual port allocated.
+            port = self.httpserver.socket.getsockname()[1]
+        return host, port
 
     def stop(self):
         """Stop the HTTP server."""
@@ -247,7 +264,7 @@ class ServerAdapter(object):
             self.httpserver.stop()
             # Wait for the socket to be truly freed.
             if isinstance(self.bind_addr, tuple):
-                wait_for_free_port(*self.bind_addr)
+                wait_for_free_port(*self.bound_addr)
             self.running = False
             self.bus.log('HTTP Server %s shut down' % self.httpserver)
         else:

@@ -1,3 +1,8 @@
+v8.7.0
+-----
+
+* #645: Setting a bind port of 0 will bind to an ephemeral port.
+
 v8.6.0
 -----
 
