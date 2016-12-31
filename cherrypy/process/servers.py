@@ -253,9 +253,7 @@ class ServerAdapter(object):
         """
         host, port = self.bind_addr
         if port == 0 and self.httpserver.socket:
-            """
-            Bound to ephemeral port. Get the actual port allocated.
-            """
+            # Bound to ephemeral port. Get the actual port allocated.
             port = self.httpserver.socket.getsockname()[1]
         return host, port
 
