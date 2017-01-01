@@ -462,7 +462,7 @@ class WebCase(unittest.TestCase):
             self._handlewebError(msg)
 
 
-methods_with_bodies = ('POST', 'PUT')
+methods_with_bodies = ('POST', 'PUT', 'PATCH')
 
 
 def cleanHeaders(headers, method, body, host, port):
