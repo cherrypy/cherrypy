@@ -756,7 +756,11 @@ class ErrorTests(helper.CPWebCase):
     def test_contextmanager(self):
         self.getPage('/stat/missing')
         self.assertStatus(404)
-        self.assertInBody('No such file or directory')
+        body_text = self.body.decode('utf-8')
+        assert (
+            'No such file or directory' in body_text or
+            'cannot find the file specified' in body_text
+        )
 
 
 class TestBinding:
