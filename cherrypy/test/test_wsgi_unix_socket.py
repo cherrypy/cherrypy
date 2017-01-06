@@ -1,8 +1,9 @@
 import os
-import sys
 import socket
 import atexit
 import tempfile
+
+import pytest
 
 import cherrypy
 from cherrypy.test import helper
@@ -42,21 +43,7 @@ class USocketHTTPConnection(HTTPConnection):
         atexit.register(lambda: os.remove(self.path))
 
 
-def skip_on_windows(method):
-    """
-    Decorator to skip the method call if the test is executing on Windows.
-    """
-    def wrapper(self):
-        if sys.platform == 'win32':
-            return self.skip('No UNIX Socket support in Windows.')
-        else:
-            return method(self)
-    wrapper.__doc__ = method.__doc__
-    wrapper.__name__ = method.__name__
-    return wrapper
-
-
-
+@pytest.mark.skipif("sys.platform == 'win32'")
 class WSGI_UnixSocket_Test(helper.CPWebCase):
     """
     Test basic behavior on a cherrypy wsgi server listening
@@ -88,18 +75,15 @@ class WSGI_UnixSocket_Test(helper.CPWebCase):
     def tearDown(self):
         cherrypy.config.update({'server.socket_file': None})
 
-    @skip_on_windows
     def test_simple_request(self):
         self.getPage('/')
         self.assertStatus('200 OK')
         self.assertInBody('Test OK')
 
-    @skip_on_windows
     def test_not_found(self):
         self.getPage('/invalid_path')
         self.assertStatus('404 Not Found')
 
-    @skip_on_windows
     def test_internal_error(self):
         self.getPage('/error')
         self.assertStatus('500 Internal Server Error')
