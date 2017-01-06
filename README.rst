@@ -7,6 +7,9 @@
 .. image:: https://img.shields.io/travis/cherrypy/cherrypy/master.svg
    :target: http://travis-ci.org/cherrypy/cherrypy
 
+.. image:: https://img.shields.io/appveyor/ci/gruntjs/grunt.svg
+   :target: https://ci.appveyor.com/project/jaraco/cherrypy
+
 .. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
 
 .. image:: https://img.shields.io/pypi/dm/cherrypy.svg
