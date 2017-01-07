@@ -2,7 +2,7 @@ CherryPy Tutorials
 ------------------------------------------------------------------------
 
 This is a series of tutorials explaining how to develop dynamic web
-applications using CherryPy. A couple of notes:
+applications using CherryPy. A couple of notes::
 
   - Each of these tutorials builds on the ones before it. If you're
     new to CherryPy, we recommend you start with 01_helloworld.py and
