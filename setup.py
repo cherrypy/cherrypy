@@ -57,12 +57,12 @@ packages = [
     'cherrypy.tutorial', 'cherrypy.test',
     'cherrypy.process',
     'cherrypy.scaffold',
-    'cherrypy.wsgiserver',
 ]
 scripts = ['cherrypy/cherryd']
 
 install_requires = [
     'six',
+    'cheroot',
 ]
 
 extras_require = {

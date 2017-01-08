@@ -1,20 +1,22 @@
-"""WSGI server interface (see PEP 333). This adds some CP-specific bits to
-the framework-agnostic wsgiserver package.
+"""
+WSGI server interface (see PEP 333). This adds some CP-specific bits to
+the framework-agnostic cheroot package.
 """
 import sys
 
+import cheroot.server
+
 import cherrypy
-from cherrypy import wsgiserver
 
 
-class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
+class CPWSGIServer(cheroot.server.WSGIServer):
 
-    """Wrapper for wsgiserver.CherryPyWSGIServer.
+    """Wrapper for cheroot.server.WSGIServer.
 
-    wsgiserver has been designed to not reference CherryPy in any way,
+    cheroot has been designed to not reference CherryPy in any way,
     so that it can be used in other frameworks and applications. Therefore,
     we wrap it here, so we can set our own mount points from cherrypy.tree
-    and apply some attributes from config -> cherrypy.server -> wsgiserver.
+    and apply some attributes from config -> cherrypy.server -> WSGIServer.
     """
 
     def __init__(self, server_adapter=cherrypy.server):
@@ -31,7 +33,7 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
                        None)
 
         self.wsgi_version = self.server_adapter.wsgi_version
-        s = wsgiserver.CherryPyWSGIServer
+        s = cheroot.server.WSGIServer
         s.__init__(self, server_adapter.bind_addr, cherrypy.tree,
                    self.server_adapter.thread_pool,
                    server_name,
@@ -50,14 +52,14 @@ class CPWSGIServer(wsgiserver.CherryPyWSGIServer):
         else:
             ssl_module = self.server_adapter.ssl_module or 'pyopenssl'
         if self.server_adapter.ssl_context:
-            adapter_class = wsgiserver.get_ssl_adapter_class(ssl_module)
+            adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain)
             self.ssl_adapter.context = self.server_adapter.ssl_context
         elif self.server_adapter.ssl_certificate:
-            adapter_class = wsgiserver.get_ssl_adapter_class(ssl_module)
+            adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
