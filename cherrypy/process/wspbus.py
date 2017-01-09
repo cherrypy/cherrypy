@@ -447,6 +447,57 @@ class Bus(object):
             argc = ctypes.c_int()
 
             ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
+
+            _argv = argv[:argc.value]
+
+            # The code below is trying to correctly handle special cases.
+            # `-c`'s argument interpreted by Python itself becomes `-c` as
+            # well. Same applies to `-m`. This snippet is trying to survive
+            # at least the case with `-m`
+            # Ref: https://github.com/cherrypy/cherrypy/issues/1545
+            # Ref: python/cpython@418baf9
+            argv_len, is_command, is_module = len(_argv), False, False
+
+            try:
+                m_ind = _argv.index('-m')
+                if m_ind < argv_len - 1 and _argv[m_ind + 1] in ('-c', '-m'):
+                    """
+                    In some older Python versions `-m`'s argument may be
+                    substituted with `-c`, not `-m`
+                    """
+                    is_module = True
+            except (IndexError, ValueError):
+                m_ind = None
+
+            try:
+                c_ind = _argv.index('-c')
+                if m_ind < argv_len - 1 and _argv[c_ind + 1] == '-c':
+                    is_command = True
+            except (IndexError, ValueError):
+                c_ind = None
+
+            if is_module:
+                """It's containing `-m -m` sequence of arguments"""
+                if is_command and c_ind < m_ind:
+                    """There's `-c -c` before `-m`"""
+                    raise RuntimeError(
+                        "Cannot reconstruct command from '-c'. Ref: "
+                        'https://github.com/cherrypy/cherrypy/issues/1545')
+                # Survive module argument here
+                original_module = sys.argv[0]
+                if not os.access(original_module, os.R_OK):
+                    """There's no such module exist"""
+                    raise AttributeError(
+                        "{} doesn't seem to be a module "
+                        "accessible by current user".format(original_module))
+                del _argv[m_ind:m_ind + 2]  # remove `-m -m`
+                # ... and substitute it with the original module path:
+                _argv.insert(m_ind, original_module)
+            elif is_command:
+                """It's containing just `-c -c` sequence of arguments"""
+                raise RuntimeError(
+                    "Cannot reconstruct command from '-c'. "
+                    'Ref: https://github.com/cherrypy/cherrypy/issues/1545')
         except AttributeError:
             """It looks Py_GetArgcArgv is completely absent in some environments
 
@@ -459,7 +510,7 @@ class Bus(object):
             """
             raise NotImplementedError
         else:
-            return argv[:argc.value]
+            return _argv
 
     @staticmethod
     def _extend_pythonpath(env):
