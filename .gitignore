@@ -23,3 +23,6 @@ sphinx/source/_build
 
 # Ignore useless OS X's dirs:
 .DS_Store
+
+# Py.test
+/.cache/
