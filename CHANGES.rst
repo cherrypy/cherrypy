@@ -1,3 +1,8 @@
+v8.8.0
+-----
+
+* #1528: Allow a timeout of 0 to server.
+
 v8.7.0
 -----
 
