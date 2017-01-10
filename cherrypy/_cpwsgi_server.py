@@ -4,14 +4,15 @@ the framework-agnostic cheroot package.
 """
 import sys
 
+import cheroot.wsgi
 import cheroot.server
 
 import cherrypy
 
 
-class CPWSGIServer(cheroot.server.WSGIServer):
+class CPWSGIServer(cheroot.wsgi.WSGIServer):
 
-    """Wrapper for cheroot.server.WSGIServer.
+    """Wrapper for cheroot.wsgi.WSGIServer.
 
     cheroot has been designed to not reference CherryPy in any way,
     so that it can be used in other frameworks and applications. Therefore,
@@ -33,7 +34,7 @@ class CPWSGIServer(cheroot.server.WSGIServer):
                        None)
 
         self.wsgi_version = self.server_adapter.wsgi_version
-        s = cheroot.server.WSGIServer
+        s = cheroot.wsgi.WSGIServer
         s.__init__(self, server_adapter.bind_addr, cherrypy.tree,
                    self.server_adapter.thread_pool,
                    server_name,
