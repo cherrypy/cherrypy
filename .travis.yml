@@ -5,7 +5,7 @@ python:
 - 3.3
 - 3.4
 - 3.5
-- 3.6-dev
+- 3.6
 - pypy
 - pypy3
 - nightly
@@ -21,7 +21,6 @@ matrix:
   include:
     - python: 3.5
       env: TOXENV=pre-commit
-  include:
     - python: 3.5
       env: TOXENV=dist-check
 
@@ -29,6 +28,17 @@ cache: pip
 
 install: pip install tox
 script: tox
+
+after_failure: >
+  if [[ "$TOXENV" != "pre-commit" ]]
+  then
+    echo Dumping logs, because tests failed to succeed
+    for log in `ls cherrypy/test/*.log`
+    do
+      echo Outputting $log
+      cat $log
+    done
+  fi
 
 deploy:
   provider: pypi
