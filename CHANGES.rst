@@ -1,3 +1,9 @@
+v9.0.0
+-----
+
+* #1481: Move functionality from cherrypy.wsgiserver to
+  the `cheroot 5.0 <https://pypa.io/project/cheroot/5.0`_.
+
 v8.8.0
 -----
 
