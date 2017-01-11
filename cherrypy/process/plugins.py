@@ -409,7 +409,6 @@ class Daemonizer(SimplePlugin):
             sys.exit('%s: fork #2 failed: (%d) %s\n'
                      % (sys.argv[0], exc.errno, exc.strerror))
 
-        os.chdir('/')
         os.umask(0)
 
         si = open(self.stdin, 'r')

@@ -473,10 +473,29 @@ server.ssl_private_key: r'%s'
         cherrypy._cpserver.wait_for_free_port(self.host, self.port)
 
         args = [
-            os.path.join(thisdir, '..', 'cherryd'),
+            '-m',
+            'cherrypy.__main__',  # __main__ is needed for `-m` in Python 2.6
             '-c', self.config_file,
             '-p', self.pid_file,
         ]
+        """
+        Command for running cherryd server with autoreload enabled
+
+        Using
+
+        ```
+        ['-c',
+         "__requires__ = 'CherryPy'; \
+         import pkg_resources, re, sys; \
+         sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0]); \
+         sys.exit(\
+            pkg_resources.load_entry_point(\
+                'CherryPy', 'console_scripts', 'cherryd')())"]
+        ```
+
+        doesn't work as it's impossible to reconstruct the `-c`'s contents.
+        Ref: https://github.com/cherrypy/cherrypy/issues/1545
+        """
 
         if not isinstance(imports, (list, tuple)):
             imports = [imports]
