@@ -1,3 +1,14 @@
+v8.9.0
+-----
+
+* #1547: Replaced ``cherryd`` distutils script with a setuptools
+  console entry point.
+
+  When running CherryPy in daemon mode, the forked process no
+  longer changes directory to ``/``. If that behavior is something
+  on which your application relied and should rely, please file
+  a ticket with the project.
+
 v8.8.0
 -----
 
