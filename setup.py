@@ -59,7 +59,6 @@ packages = [
     'cherrypy.scaffold',
     'cherrypy.wsgiserver',
 ]
-scripts = ['cherrypy/cherryd']
 
 install_requires = [
     'six',
