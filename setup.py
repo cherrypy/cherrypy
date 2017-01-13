@@ -58,7 +58,6 @@ packages = [
     'cherrypy.process',
     'cherrypy.scaffold',
 ]
-scripts = ['cherrypy/cherryd']
 
 install_requires = [
     'six',
@@ -107,7 +106,7 @@ setup_params = dict(
     url=url,
     license=cp_license,
     packages=packages,
-    scripts=scripts,
+    entry_points={"console_scripts": ["cherryd = cherrypy.__main__:run"]},
     include_package_data=True,
     install_requires=install_requires,
     extras_require=extras_require,

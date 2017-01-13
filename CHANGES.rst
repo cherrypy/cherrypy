@@ -4,6 +4,17 @@ v9.0.0
 * #1481: Move functionality from cherrypy.wsgiserver to
   the `cheroot 5.0 <https://pypa.io/project/cheroot/5.0`_.
 
+v8.9.0
+-----
+
+* #1547: Replaced ``cherryd`` distutils script with a setuptools
+  console entry point.
+
+  When running CherryPy in daemon mode, the forked process no
+  longer changes directory to ``/``. If that behavior is something
+  on which your application relied and should rely, please file
+  a ticket with the project.
+
 v8.8.0
 -----
 
