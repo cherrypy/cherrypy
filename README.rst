@@ -4,10 +4,10 @@
 .. image:: https://readthedocs.org/projects/cherrypy/badge/?version=latest
   :target: http://docs.cherrypy.org/en/latest/?badge=latest
 
-.. image:: https://img.shields.io/travis/cherrypy/cherrypy/master.svg?label=*NIX%20build%20%40%20Travis%20CI
+.. image:: https://img.shields.io/travis/cherrypy/cherrypy/master.svg?label=Linux%20build%20%40%20Travis%20CI
    :target: http://travis-ci.org/cherrypy/cherrypy
 
-.. image:: https://img.shields.io/appveyor/ci/jaraco/cherrypy/master.svg?label=Windows%20build%20%40%20Travis%20CI
+.. image:: https://img.shields.io/appveyor/ci/jaraco/cherrypy/master.svg?label=Windows%20build%20%40%20Appveyor
    :target: https://ci.appveyor.com/project/jaraco/cherrypy/branch/master
 
 .. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
