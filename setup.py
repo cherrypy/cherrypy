@@ -61,7 +61,7 @@ packages = [
 
 install_requires = [
     'six',
-    'cheroot',
+    'cheroot>=5.0.0',
 ]
 
 extras_require = {
