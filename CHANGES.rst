@@ -1,3 +1,8 @@
+v8.9.1
+-----
+
+* #1537: Restore dependency on pywin32 for Python 3.6.
+
 v8.9.0
 -----
 
