@@ -62,7 +62,7 @@ packages = [
 
 install_requires = [
     'six',
-    'portend>=1.6',
+    'portend>=1.6.1',
 ]
 
 extras_require = {
