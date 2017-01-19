@@ -5,6 +5,11 @@ v9.0.0
   the `cheroot 5.0 <https://pypi.org/project/Cheroot/5.0.1/>`_
   project.
 
+v8.9.1
+-----
+
+* #1537: Restore dependency on pywin32 for Python 3.6.
+
 v8.9.0
 -----
 
