@@ -62,7 +62,7 @@ Additionally:
 
 If the docs are insufficient to address your needs, the CherryPy
 community has several `avenues for support
-<https://docs.cherrypy.org/en/latest/support>`_.
+<http://docs.cherrypy.org/en/latest/support.html>`_.
 
 Contributing
 ------------
