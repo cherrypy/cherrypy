@@ -37,7 +37,8 @@ import re
 import sys
 import time
 
-import cherrypy
+import portend
+
 from cherrypy.test import helper, webtest
 
 curdir = os.path.abspath(os.path.dirname(__file__))
@@ -120,7 +121,7 @@ class ModWSGISupervisor(helper.Supervisor):
 
         # Make a request so mod_wsgi starts up our app.
         # If we don't, concurrent initial requests will 404.
-        cherrypy._cpserver.wait_for_occupied_port('127.0.0.1', self.port)
+        portend.occupied('127.0.0.1', self.port, timeout=5)
         webtest.openURL('/ihopetheresnodefault', port=self.port)
         time.sleep(1)
 
