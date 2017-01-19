@@ -57,11 +57,11 @@ packages = [
     'cherrypy.tutorial', 'cherrypy.test',
     'cherrypy.process',
     'cherrypy.scaffold',
-    'cherrypy.wsgiserver',
 ]
 
 install_requires = [
     'six',
+    'cheroot>=5.0.1',
     'portend>=1.6.1',
 ]
 

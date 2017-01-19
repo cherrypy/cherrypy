@@ -1,5 +1,5 @@
-vNext.0.0
---------
+v10.0.0
+-------
 
 * #1332: CherryPy now uses `portend
   <https://pypi.org/project/portend>`_ for checking and
@@ -18,6 +18,13 @@ vNext.0.0
   ``cherrypy.process.servers.check_port`` directly.
 
   For the other functions, use portend directly.
+
+v9.0.0
+-----
+
+* #1481: Move functionality from cherrypy.wsgiserver to
+  the `cheroot 5.0 <https://pypi.org/project/Cheroot/5.0.1/>`_
+  project.
 
 v8.9.1
 -----
