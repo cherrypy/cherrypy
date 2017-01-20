@@ -112,7 +112,7 @@ class ServerStateTests(helper.CPWebCase):
 
         host = cherrypy.server.socket_host
         port = cherrypy.server.socket_port
-        self.assertRaises(IOError, portend._check_port, host, port, timeout=0.1)
+        portend.occupied(host, port, timeout=0.1)
 
         # The db_connection should be running now
         self.assertEqual(db_connection.running, True)
