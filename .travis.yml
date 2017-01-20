@@ -29,7 +29,7 @@ cache: pip
 install: pip install tox
 script: tox
 
-after_failure: >
+after_failure: |
   if [[ "$TOXENV" != "pre-commit" ]]
   then
     echo Dumping logs, because tests failed to succeed
