@@ -38,6 +38,9 @@ after_failure: |
       echo Outputting $log
       cat $log
     done
+    py_log=/home/travis/build/cherrypy/cherrypy/.tox/python/log/python-0.log
+    echo Outputting python invokation log from $py_log
+    cat $py_log
   fi
 
 deploy:
