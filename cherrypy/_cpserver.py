@@ -7,17 +7,8 @@ from cherrypy.lib.reprconf import attributes
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy.process.servers import ServerAdapter
 
-# export some names from here
-from cherrypy.process.servers import (
-    client_host, check_port, wait_for_free_port, wait_for_occupied_port,
-)
 
-
-__all__ = [
-    'Server',
-    'client_host', 'check_port', 'wait_for_free_port',
-    'wait_for_occupied_port',
-]
+__all__ = ['Server']
 
 
 class Server(ServerAdapter):

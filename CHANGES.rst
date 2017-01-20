@@ -1,3 +1,21 @@
+v10.0.0
+-------
+
+* #1332: CherryPy now uses `portend
+  <https://pypi.org/project/portend>`_ for checking and
+  waiting on ports for startup and teardown checks. The
+  following names are no longer present:
+
+  - cherrypy._cpserver.client_host
+  - cherrypy._cpserver.check_port
+  - cherrypy._cpserver.wait_for_free_port
+  - cherrypy._cpserver.wait_for_occupied_port
+  - cherrypy.process.servers.check_port
+  - cherrypy.process.servers.wait_for_free_port
+  - cherrypy.process.servers.wait_for_occupied_port
+
+  Use this functionality from the portend package directly.
+
 v9.0.0
 -----
 

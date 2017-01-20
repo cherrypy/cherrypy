@@ -13,6 +13,7 @@ import warnings
 
 import nose
 import six
+import portend
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, copyitems, HTTPSConnection, ntob
@@ -470,7 +471,7 @@ server.ssl_private_key: r'%s'
 
     def start(self, imports=None):
         """Start cherryd in a subprocess."""
-        cherrypy._cpserver.wait_for_free_port(self.host, self.port)
+        portend.free(self.host, self.port, timeout=1)
 
         args = [
             '-m',
@@ -520,7 +521,7 @@ server.ssl_private_key: r'%s'
         if self.wait:
             self.exit_code = self._proc.wait()
         else:
-            cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
+            portend.occupied(self.host, self.port, timeout=5)
 
         # Give the engine a wee bit more time to finish STARTING
         if self.daemonize:
