@@ -14,10 +14,7 @@ v10.0.0
   - cherrypy.process.servers.wait_for_free_port
   - cherrypy.process.servers.wait_for_occupied_port
 
-  For ``check_port``, use
-  ``cherrypy.process.servers.check_port`` directly.
-
-  For the other functions, use portend directly.
+  Use this functionality from the portend package directly.
 
 v9.0.0
 -----
