@@ -9,7 +9,7 @@ http://stackoverflow.com/questions/tagged/cherrypy
 **** /DELETE THIS BLOCK ****                                                                          
 -->
 
-* **I'm submitting a ... **
+* **I'm submitting a ...**
 [ ] bug report
 [ ] feature request
 [ ] question about the decisions made in the repository
@@ -42,4 +42,4 @@ http://stackoverflow.com/questions/tagged/cherrypy
 
 
 
-* **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, eg. stackoverflow, gitter, etc)
+* **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, e.g. stackoverflow, gitter, etc.)
