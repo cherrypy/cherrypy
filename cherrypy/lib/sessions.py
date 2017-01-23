@@ -856,14 +856,9 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
         '/'
     )
 
-    # We'd like to use the "max-age" param as indicated in
-    # http://www.faqs.org/rfcs/rfc2109.html but IE doesn't
-    # save it to disk and the session is lost if people close
-    # the browser. So we have to use the old "expires" ... sigh ...
-##    cookie[name]['max-age'] = timeout * 60
     if timeout:
-        e = time.time() + (timeout * 60)
-        cookie[name]['expires'] = httputil.HTTPDate(e)
+        cookie[name]['max-age'] = timeout * 60
+        _add_MSIE_max_age_workaround(cookie[name], timeout)
     if domain is not None:
         cookie[name]['domain'] = domain
     if secure:
@@ -872,6 +867,17 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
         if not cookie[name].isReservedKey('httponly'):
             raise ValueError('The httponly cookie token is not supported.')
         cookie[name]['httponly'] = 1
+
+
+def _add_MSIE_max_age_workaround(cookie, timeout):
+    """
+    We'd like to use the "max-age" param as indicated in
+    http://www.faqs.org/rfcs/rfc2109.html but IE doesn't
+    save it to disk and the session is lost if people close
+    the browser. So we have to use the old "expires" ... sigh ...
+    """
+    expires = time.time() + timeout * 60
+    cookie['expires'] = httputil.HTTPDate(expires)
 
 
 def expire():
