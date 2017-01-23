@@ -96,7 +96,7 @@ class Server(ServerAdapter):
 
     instance = None
     """If not None, this should be an HTTP server instance (such as
-    CPWSGIServer) which cherrypy.server will control. Use this when you need
+    cheroot.wsgi.Server) which cherrypy.server will control. Use this when you need
     more control over object instantiation than is available in the various
     configuration options."""
 

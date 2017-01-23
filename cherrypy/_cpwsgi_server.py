@@ -10,14 +10,14 @@ import cheroot.server
 import cherrypy
 
 
-class CPWSGIServer(cheroot.wsgi.WSGIServer):
+class CPWSGIServer(cheroot.wsgi.Server):
 
-    """Wrapper for cheroot.wsgi.WSGIServer.
+    """Wrapper for cheroot.wsgi.Server.
 
     cheroot has been designed to not reference CherryPy in any way,
     so that it can be used in other frameworks and applications. Therefore,
     we wrap it here, so we can set our own mount points from cherrypy.tree
-    and apply some attributes from config -> cherrypy.server -> WSGIServer.
+    and apply some attributes from config -> cherrypy.server -> wsgi.Server.
     """
 
     def __init__(self, server_adapter=cherrypy.server):
@@ -34,7 +34,7 @@ class CPWSGIServer(cheroot.wsgi.WSGIServer):
                        None)
 
         self.wsgi_version = self.server_adapter.wsgi_version
-        s = cheroot.wsgi.WSGIServer
+        s = cheroot.wsgi.Server
         s.__init__(self, server_adapter.bind_addr, cherrypy.tree,
                    self.server_adapter.thread_pool,
                    server_name,
