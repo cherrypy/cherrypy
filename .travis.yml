@@ -19,9 +19,9 @@ matrix:
     - python: pypy3
     - env: TOXENV=pre-commit
   include:
-    - python: 3.5
+    - python: 3.6
       env: TOXENV=pre-commit
-    - python: 3.5
+    - python: 3.6
       env: TOXENV=dist-check
 
 cache: pip
@@ -68,7 +68,7 @@ deploy:
   provider: pypi
   on:
     tags: true
-    python: 3.5
+    python: 3.6
   user: jaraco
   password:
     secure: CQqUvtssQ4wmRluPcxh6m5lIXi83Qu9dAFAvZLS/+AQNIG78XECXv5xFTEdGSLX9yncKDpDKI3xRJeCKyO4OJUN0t6W1MRycY72+R63i9e9wPjfvtRqYH1TBT+no7jj/DHqXIrWSlpjRNAt4XXeSv7OzKWT4PmTNkNQSKyS1DWCmZGlbCKlV774Z9PbrfltflxL0V6DiX6ZfoY1THBO4rIopjMk/MPLgS5zvwLgXVbT9sK/DcPOgOq47iSLCs0oScbwiFzYW4DbcVZrBMv4ALtQTjk6ZEaBQ7KtKgsyxgi/ToVhjRxYg4rwvhjsyjixUdECLUqL3WgWfzW/lo82lhb79ERwhnjf1DvPNexlXhv9hHwHsFROpaOmM0nyDJsJg0rCNPVfO4SpBHEnd/ujlHO6yorHj0S54jZWqqDwD5gN19v3hEMT48Pc8uvazE9K1kMQbNXEzqn+SJjVB+DG7qK5Jm9Kk7ZC4R88hJAJNsR+SlFCXMGzkS9WUefUGLHQFfezZk43sMPIXMnh9d2XqCQo4QpUawdg3pwaTukFfyaHlK39CIHhZNas5D/UFL5spQPAAkH1IMcPILiSUwYYnXIJFWJIiulfEQalJroAQjrzvst/NVB8BbeYuCfmVLVOZw8Y6GOYONGgiXjT3nfmw/dN+uw+GY3EgAV5jl+fa434=
