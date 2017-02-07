@@ -76,14 +76,6 @@ cherrypy.lib.gctools module
     :undoc-members:
     :show-inheritance:
 
-cherrypy.lib.http module
-------------------------
-
-.. automodule:: cherrypy.lib.http
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cherrypy.lib.httpauth module
 ----------------------------
 
@@ -112,6 +104,14 @@ cherrypy.lib.lockfile module
 ----------------------------
 
 .. automodule:: cherrypy.lib.lockfile
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cherrypy.lib.locking module
+---------------------------
+
+.. automodule:: cherrypy.lib.locking
     :members:
     :undoc-members:
     :show-inheritance:
