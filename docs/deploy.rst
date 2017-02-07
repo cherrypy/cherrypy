@@ -85,7 +85,7 @@ provide a 'pidfile' argument, preferably an absolute path:
    PIDFile(cherrypy.engine, '/var/run/myapp.pid').subscribe()
 
 Systemd socket activation
-#######################
+#########################
 
 Socket Activation is a systemd feature that allows to setup a system so that
 the systemd will sit on a port and start services 'on demand' (a little bit
