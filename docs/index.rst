@@ -3,6 +3,7 @@ CherryPy - A Minimalist Python Web Framework
 ============================================
 
 .. toctree::
+   :hidden:
 
    intro.rst
    install.rst
