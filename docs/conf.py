@@ -14,6 +14,7 @@
 
 import sys
 import os
+import datetime
 import importlib
 import subprocess
 
@@ -66,7 +67,7 @@ output_bytes = subprocess.check_output(dist_info_cmd, cwd=root)
 project, version, url, author = output_bytes.decode('utf-8').strip().split('\n')
 
 # General information about the project.
-copyright = '2001-2016 ' + author
+copyright = '2001-%d %s' % (datetime.date.today().year, author)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -255,31 +256,14 @@ def mock_pywin32():
     if try_import('win32api'):
         return
 
-    class Mock(object):
-
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def __call__(self, *args, **kwargs):
-            return Mock()
-
-        @classmethod
-        def __getattr__(cls, name):
-            if name in ('__file__', '__path__'):
-                return '/dev/null'
-            elif name[0] == name[0].upper():
-                mockType = type(name, (), {})
-                mockType.__module__ = __name__
-                return mockType
-            else:
-                return Mock()
+    import mock
 
     MOCK_MODULES = [
         'win32api', 'win32con', 'win32event', 'win32service',
         'win32serviceutil',
     ]
     for mod_name in MOCK_MODULES:
-        sys.modules[mod_name] = Mock()
+        sys.modules[mod_name] = mock.MagicMock()
 mock_pywin32()
 
 link_files = {

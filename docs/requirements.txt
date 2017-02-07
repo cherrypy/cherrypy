@@ -1,1 +1,5 @@
 rst.linker
+mock
+pytest
+nose
+coverage
