@@ -1,5 +1,3 @@
 rst.linker
 mock
-pytest
-nose
-coverage
+-e ..[doc,testing]
