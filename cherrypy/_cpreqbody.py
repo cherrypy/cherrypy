@@ -131,6 +131,8 @@ except ImportError:
                 pass
         return ntob('').join(atoms)
 
+import cheroot.server
+
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, ntob, ntou
 from cherrypy.lib import httputil
@@ -734,16 +736,6 @@ Entity.part_class = Part
 
 inf = float('inf')
 
-comma_separated_headers = [
-    'Accept', 'Accept-Charset', 'Accept-Encoding',
-    'Accept-Language', 'Accept-Ranges', 'Allow',
-    'Cache-Control', 'Connection', 'Content-Encoding',
-    'Content-Language', 'Expect', 'If-Match',
-    'If-None-Match', 'Pragma', 'Proxy-Authenticate',
-    'Te', 'Trailer', 'Transfer-Encoding', 'Upgrade',
-    'Vary', 'Via', 'Warning', 'Www-Authenticate'
-]
-
 
 class SizedReader:
 
@@ -909,7 +901,7 @@ class SizedReader:
                         k = k.strip().title()
                         v = v.strip()
 
-                    if k in comma_separated_headers:
+                    if k in cheroot.server.comma_separated_headers:
                         existing = self.trailers.get(envname)
                         if existing:
                             v = ntob(', ').join((existing, v))
