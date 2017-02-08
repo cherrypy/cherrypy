@@ -61,7 +61,7 @@ Here's the built-in JSON tool for an example::
     def json_in(force=True, debug=False):
         request = cherrypy.serving.request
         def json_processor(entity):
-            \"""Read application/json data into request.json.\"""
+            '''Read application/json data into request.json.'''
             if not entity.headers.get("Content-Length", ""):
                 raise cherrypy.HTTPError(411)
 
