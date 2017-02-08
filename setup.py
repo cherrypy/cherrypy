@@ -69,6 +69,8 @@ extras_require = {
     'doc': [
         'docutils',
         'sphinx_rtd_theme',
+        'rst.linker',
+        'mock',
     ],
     'json': ['simplejson'],
     'routes_dispatcher': ['routes>=2.3.1'],

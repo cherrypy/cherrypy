@@ -1,3 +1,1 @@
-rst.linker
-mock
 -e ..[doc,testing]
