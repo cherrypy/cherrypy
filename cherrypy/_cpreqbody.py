@@ -131,6 +131,7 @@ except ImportError:
                 pass
         return b''.join(atoms)
 
+import six
 import cheroot.server
 
 import cherrypy
@@ -987,7 +988,7 @@ class RequestBody(Entity):
             # Python 2 only: keyword arguments must be byte strings (type
             # 'str').
             if sys.version_info < (3, 0):
-                if isinstance(key, unicode):
+                if isinstance(key, six.text_type):
                     key = key.encode('ISO-8859-1')
 
             if key in request_params:
