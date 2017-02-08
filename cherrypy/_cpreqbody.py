@@ -120,8 +120,8 @@ try:
 except ImportError:
     def unquote_plus(bs):
         """Bytes version of urllib.parse.unquote_plus."""
-        bs = bs.replace(ntob('+'), ntob(' '))
-        atoms = bs.split(ntob('%'))
+        bs = bs.replace(b'+', b' ')
+        atoms = bs.split(b'%')
         for i in range(1, len(atoms)):
             item = atoms[i]
             try:
@@ -129,7 +129,7 @@ except ImportError:
                 atoms[i] = bytes([pct]) + item[2:]
             except ValueError:
                 pass
-        return ntob('').join(atoms)
+        return b''.join(atoms)
 
 import cheroot.server
 
