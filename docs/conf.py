@@ -18,6 +18,8 @@ import datetime
 import importlib
 import subprocess
 
+assert sys.version_info > (3,), "Python 3 required to build docs"
+
 def try_import(mod_name):
     try:
         return importlib.import_module(mod_name)
@@ -258,7 +260,7 @@ def mock_pywin32():
     if try_import('win32api'):
         return
 
-    import mock
+    from unittest import mock
 
     MOCK_MODULES = [
         'win32api', 'win32con', 'win32event', 'win32service',
