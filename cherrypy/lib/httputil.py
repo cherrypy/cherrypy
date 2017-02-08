@@ -53,7 +53,7 @@ def urljoin(*atoms):
 
 
 def urljoin_bytes(*atoms):
-    """Return the given path *atoms, joined into a single URL.
+    """Return the given path `*atoms`, joined into a single URL.
 
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
