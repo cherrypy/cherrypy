@@ -1,14 +1,11 @@
-v10.2.0
--------
-
-* #794: Prefer setting max-age for session cookie
-  expiration, moving MSIE hack into a function
-  documenting its purpose.
-
 v10.1.0
 -------
 
 * Bump to cheroot 5.1.0.
+
+* #794: Prefer setting max-age for session cookie
+  expiration, moving MSIE hack into a function
+  documenting its purpose.
 
 v10.0.0
 -------
