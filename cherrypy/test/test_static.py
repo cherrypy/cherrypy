@@ -160,6 +160,20 @@ class StaticTest(helper.CPWebCase):
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
 
+        # Check that encoding.js.gz has Content-Type application/javascript.
+        # This is required for browser to parse the file correctly.
+        self.getPage('/static/encoding.js.gz')
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'application/javascript')
+        self.assertHeader('Content-Encoding', 'gzip')
+
+        # Verify that something which has an unkown file extension prior to the
+        # compression, is returned as Content-Type application/x-gzip.
+        self.getPage('/static/encoding.js.42.gz')
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'application/x-gzip')
+        self.assertNoHeader('Content-Encoding')
+
     def test_fallthrough(self):
         # Test that NotFound will then try dynamic handlers (see [878]).
         self.getPage('/static/dynamic')

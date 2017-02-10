@@ -75,6 +75,18 @@ def serve_file(path, content_type=None, disposition=None, name=None,
         i = path.rfind('.')
         if i != -1:
             ext = path[i:].lower()
+            if ext in mimetypes.encodings_map.keys():
+                # If the file is known to be compressed, check that the uncompressed
+                # file ending is a known one too. If so, use the mime type for the
+                # uncompressed file.
+                j = path[:i].rfind('.')
+                if j != -1:
+                    encoding_type = mimetypes.encodings_map.get(ext, None)
+                    if encoding_type is not None:
+                        second_ext = path[j:i]
+                        if second_ext in mimetypes.types_map.keys():
+                            response.headers['Content-Encoding'] = encoding_type
+                            ext = path[j:i]
         content_type = mimetypes.types_map.get(ext, None)
     if content_type is not None:
         response.headers['Content-Type'] = content_type
