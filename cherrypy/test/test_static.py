@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import contextlib
+import gzip
 import io
 import os
 import sys
@@ -85,6 +86,7 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': 'static',
                 'tools.staticdir.root': curdir,
+                'tools.gzip_precomp.on': True,
             },
             '/style.css': {
                 'tools.staticfile.on': True,
@@ -159,6 +161,20 @@ class StaticTest(helper.CPWebCase):
         #   into \r\n on Windows when extracting the CherryPy tarball so
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
+
+    def test_gzip_precomp(self):
+        # Test that test.html.gz is preferred to test.html
+        self.getPage('/static/test.html',
+                     headers=[('Accept-Encoding', 'gzip'),
+                         ('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')])
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Encoding', 'gzip')
+        expectedResult = ntou('Hello, World!').encode('utf-8')
+        zbuf = io.BytesIO()
+        zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=6)
+        zfile.write(expectedResult)
+        zfile.close()
+        self.assertInBody(zbuf.getvalue()[:3])
 
     def test_fallthrough(self):
         # Test that NotFound will then try dynamic handlers (see [878]).
