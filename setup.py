@@ -66,7 +66,7 @@ install_requires = [
 ]
 
 extras_require = {
-    'doc': [
+    'docs': [
         'docutils',
         'sphinx_rtd_theme',
         'rst.linker',
