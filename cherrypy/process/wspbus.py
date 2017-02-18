@@ -345,8 +345,7 @@ class Bus(object):
                     not isinstance(t, threading._MainThread)
             ):
                 # Note that any dummy (external) threads are always daemonic.
-                d = t.daemon
-                if not d:
+                if not t.daemon:
                     self.log('Waiting for thread %s.' % t.getName())
                     t.join()
 
