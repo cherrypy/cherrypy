@@ -1,3 +1,8 @@
+v10.1.1
+-------
+
+* #1342: Fix AssertionError on shutdown.
+
 v10.1.0
 -------
 
