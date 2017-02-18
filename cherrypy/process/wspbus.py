@@ -336,15 +336,13 @@ class Bus(object):
         # See https://github.com/cherrypy/cherrypy/issues/751.
         self.log('Waiting for child threads to terminate...')
         for t in threading.enumerate():
-            # Validate the we're not trying to join the MainThread or
-            # DummyThread that will cause a deadlock and the case exist when
+            # Validate the we're not trying to join the MainThread
+            # that will cause a deadlock and the case exist when
             # implemented as a windows service and in any other case
             # that another thread executes cherrypy.engine.exit()
             if (
                     t != threading.currentThread() and
-                    not isinstance(t, (threading._MainThread,
-                                       threading._DummyThread)) and
-                    t.isAlive()
+                    not isinstance(t, threading._MainThread)
             ):
                 # Note that any dummy (external) threads are always daemonic.
                 if hasattr(threading.Thread, 'daemon'):
