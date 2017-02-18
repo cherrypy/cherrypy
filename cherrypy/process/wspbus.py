@@ -342,18 +342,12 @@ class Bus(object):
             # that another thread executes cherrypy.engine.exit()
             if (
                     t != threading.currentThread() and
-                    t.isAlive() and
-                    not isinstance(t, threading._MainThread)
+                    not isinstance(t, threading._MainThread) and
+                    # Note that any dummy (external) threads are always daemonic.
+                    not t.daemon
             ):
-                # Note that any dummy (external) threads are always daemonic.
-                if hasattr(threading.Thread, 'daemon'):
-                    # Python 2.6+
-                    d = t.daemon
-                else:
-                    d = t.isDaemon()
-                if not d:
-                    self.log('Waiting for thread %s.' % t.getName())
-                    t.join()
+                self.log('Waiting for thread %s.' % t.getName())
+                t.join()
 
         if self.execv:
             self._do_execv()
