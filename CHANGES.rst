@@ -1,3 +1,8 @@
+v10.1.2-0 / Unreleased
+-------
+
+* CPWSGIServer.version contains CherryPy version + Cheroot version
+
 v10.1.1
 -------
 
