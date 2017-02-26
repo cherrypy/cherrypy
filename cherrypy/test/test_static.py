@@ -6,7 +6,7 @@ import sys
 import platform
 import tempfile
 
-import six
+from six import text_type as str
 from six.moves import urllib
 
 import pytest
@@ -26,7 +26,7 @@ def unicode_filesystem(tmpdir):
     tmpl = "File system encoding ({encoding}) cannot support unicode filenames"
     msg = tmpl.format(encoding=sys.getfilesystemencoding())
     try:
-        io.open(six.text_type(filename), 'w')
+        io.open(str(filename), 'w')
     except UnicodeEncodeError:
         pytest.skip(msg)
 
@@ -400,7 +400,7 @@ class StaticTest(helper.CPWebCase):
 
             expected = ntou('Героям Слава!', 'utf-8')
             self.assertInBody(expected)
-    
+
     def ensure_unicode_filesystem(self):
         """
         TODO: replace with simply pytest fixtures once webtest.TestCase
