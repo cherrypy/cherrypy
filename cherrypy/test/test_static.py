@@ -4,10 +4,13 @@ import io
 import os
 import sys
 import platform
+import tempfile
 
+import six
 from six.moves import urllib
 
 import pytest
+import py.path
 
 import cherrypy
 from cherrypy.lib import static
@@ -23,9 +26,9 @@ def unicode_filesystem(tmpdir):
     tmpl = "File system encoding ({encoding}) cannot support unicode filenames"
     msg = tmpl.format(encoding=sys.getfilesystemencoding())
     try:
-        io.open(filename, 'w')
+        io.open(six.text_type(filename), 'w')
     except UnicodeEncodeError:
-        pytest.skip(reason=msg)
+        pytest.skip(msg)
 
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -386,7 +389,8 @@ class StaticTest(helper.CPWebCase):
         sys.version_info < (3,)
     )
     @pytest.mark.xfail(py27_on_windows, reason="#1544")
-    def test_unicode(self, unicode_filesystem):
+    def test_unicode(self):
+        self.ensure_unicode_filesystem()
         with self.unicode_file():
             url = ntou('/static/Слава Україні.html', 'utf-8')
             # quote function requires str
@@ -396,6 +400,17 @@ class StaticTest(helper.CPWebCase):
 
             expected = ntou('Героям Слава!', 'utf-8')
             self.assertInBody(expected)
+    
+    def ensure_unicode_filesystem(self):
+        """
+        TODO: replace with simply pytest fixtures once webtest.TestCase
+        no longer implies unittest.
+        """
+        tmpdir = py.path.local(tempfile.mkdtemp())
+        try:
+            unicode_filesystem(tmpdir)
+        finally:
+            tmpdir.remove()
 
 
 def error_page_404(status, message, traceback, version):
