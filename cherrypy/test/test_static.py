@@ -31,6 +31,18 @@ def unicode_filesystem(tmpdir):
         pytest.skip(msg)
 
 
+def ensure_unicode_filesystem():
+    """
+    TODO: replace with simply pytest fixtures once webtest.TestCase
+    no longer implies unittest.
+    """
+    tmpdir = py.path.local(tempfile.mkdtemp())
+    try:
+        unicode_filesystem(tmpdir)
+    finally:
+        tmpdir.remove()
+
+
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
 bigfile_filepath = os.path.join(curdir, 'static', 'bigfile.log')
@@ -390,7 +402,7 @@ class StaticTest(helper.CPWebCase):
     )
     @pytest.mark.xfail(py27_on_windows, reason="#1544")
     def test_unicode(self):
-        self.ensure_unicode_filesystem()
+        ensure_unicode_filesystem()
         with self.unicode_file():
             url = ntou('/static/Слава Україні.html', 'utf-8')
             # quote function requires str
@@ -400,17 +412,6 @@ class StaticTest(helper.CPWebCase):
 
             expected = ntou('Героям Слава!', 'utf-8')
             self.assertInBody(expected)
-
-    def ensure_unicode_filesystem(self):
-        """
-        TODO: replace with simply pytest fixtures once webtest.TestCase
-        no longer implies unittest.
-        """
-        tmpdir = py.path.local(tempfile.mkdtemp())
-        try:
-            unicode_filesystem(tmpdir)
-        finally:
-            tmpdir.remove()
 
 
 def error_page_404(status, message, traceback, version):
