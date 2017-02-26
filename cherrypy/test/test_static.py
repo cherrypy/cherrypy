@@ -26,7 +26,7 @@ def unicode_filesystem(tmpdir):
     tmpl = "File system encoding ({encoding}) cannot support unicode filenames"
     msg = tmpl.format(encoding=sys.getfilesystemencoding())
     try:
-        io.open(str(filename), 'w')
+        io.open(str(filename), 'w').close()
     except UnicodeEncodeError:
         pytest.skip(msg)
 
