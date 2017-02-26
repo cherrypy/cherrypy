@@ -17,6 +17,17 @@ from cherrypy._cpcompat import (
 from cherrypy.test import helper
 
 
+@pytest.fixture
+def unicode_filesystem(tmpdir):
+    filename = tmpdir / ntou('☃', 'utf-8')
+    tmpl = "File system encoding ({encoding}) cannot support unicode filenames"
+    msg = tmpl.format(encoding=sys.getfilesystemencoding())
+    try:
+        io.open(filename, 'w')
+    except UnicodeEncodeError:
+        pytest.skip(reason=msg)
+
+
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
 bigfile_filepath = os.path.join(curdir, 'static', 'bigfile.log')
@@ -375,7 +386,7 @@ class StaticTest(helper.CPWebCase):
         sys.version_info < (3,)
     )
     @pytest.mark.xfail(py27_on_windows, reason="#1544")
-    def test_unicode(self):
+    def test_unicode(self, unicode_filesystem):
         with self.unicode_file():
             url = ntou('/static/Слава Україні.html', 'utf-8')
             # quote function requires str
