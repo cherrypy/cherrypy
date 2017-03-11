@@ -124,7 +124,7 @@ class WindowsLockFile(SystemLockFile):
             raise UnlockError(self.fp.name)
 
 if 'msvcrt' in globals():  # noqa: E305
-    LockFile = WindowsLockFile
+    LockFile = WindowsLockFile  # noqa: F811
 
 
 class UnixLockFile(SystemLockFile):

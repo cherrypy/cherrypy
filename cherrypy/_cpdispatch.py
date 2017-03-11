@@ -209,7 +209,7 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
 try:
     import inspect
 except ImportError:
-    test_callable_spec = lambda callable, args, kwargs: None
+    test_callable_spec = lambda callable, args, kwargs: None  # noqa: F811
 else:
     getargspec = inspect.getargspec
     # Python 3 requires using getfullargspec if keyword-only arguments are present
