@@ -1,48 +1,48 @@
-- repo: git://github.com/pre-commit/pre-commit-hooks
-  sha: master
-  hooks:
-  - id: trailing-whitespace
-    exclude: cherrypy/test/static/index.html
-  - id: flake8
-    args:
-    # 79 chars is too strict and we don't have 80-char terminals nowadays,
-    # 160 chars is too much since it doesn't let us use split view efficiently:
-    - --max-line-length=120
-    - --ignore=E731
-  - id: check-merge-conflict
-  - id: double-quote-string-fixer
-  - id: end-of-file-fixer
-  - id: name-tests-test
-    include: cherrypy/test/
-    args:
-    - --django
-    exclude: tests/dist-check.py
-  - id: debug-statements
-  - id: check-added-large-files
-  - id: check-ast
-  - id: check-byte-order-marker
-  - id: check-case-conflict
-  # disabled due to pre-commit/pre-commit-hooks#159
-  #- id: check-docstring-first
-  - id: check-json
-  - id: pretty-format-json
-  - id: check-symlinks
-  - id: check-yaml
-  - id: detect-private-key
-    exclude: cherrypy/test/test.pem
-  - id: requirements-txt-fixer
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    sha: a11d9314b22d8f8c7556443875b731ef05965464
+    hooks:
+    -   id: trailing-whitespace
+        exclude: cherrypy/test/static/index.html
+    -   id: flake8
+        args:
+        # 79 chars is too strict and we don't have 80-char terminals nowadays,
+        # 160 chars is too much since it doesn't let us use split view efficiently:
+        - --max-line-length=120
+        - --ignore=E731
+    -   id: check-merge-conflict
+    -   id: double-quote-string-fixer
+    -   id: end-of-file-fixer
+    -   id: name-tests-test
+        include: cherrypy/test/
+        args:
+        - --django
+        exclude: tests/dist-check.py
+    -   id: debug-statements
+    -   id: check-added-large-files
+    -   id: check-ast
+    -   id: check-byte-order-marker
+    -   id: check-case-conflict
+    # disabled due to pre-commit/pre-commit-hooks#159
+    #-   id: check-docstring-first
+    -   id: check-json
+    -   id: pretty-format-json
+    -   id: check-symlinks
+    -   id: check-yaml
+    -   id: detect-private-key
+        exclude: cherrypy/test/test.pem
+    -   id: requirements-txt-fixer
 
-- repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
-  sha: master
-  hooks:
-  - id: pep257
+-   repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
+    sha: 149e61b7a717945143fe51f010fe1c576e729a9f
+    hooks:
+    -   id: pep257
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks
-  sha: master
-  hooks:
-  - id: remove-tabs
+-   repo: git://github.com/Lucas-C/pre-commit-hooks
+    sha: v1.0.1
+    hooks:
+    -   id: remove-tabs
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
-  sha: master
-  hooks:
-  - id: forbid-html-img-without-alt-text
+-   repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
+    sha: v1.0.2
+    hooks:
+    -   id: forbid-html-img-without-alt-text
