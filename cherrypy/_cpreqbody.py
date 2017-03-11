@@ -903,7 +903,7 @@ class SizedReader:
                         v = v.strip()
 
                     if k in cheroot.server.comma_separated_headers:
-                        existing = self.trailers.get(envname)
+                        existing = self.trailers.get(k)
                         if existing:
                             v = ntob(', ').join((existing, v))
                     self.trailers[k] = v

@@ -173,6 +173,7 @@ class PyWebService(win32serviceutil.ServiceFramework):
         process.bus.exit()
 
     def SvcOther(self, control):
+        from cherrypy import process
         process.bus.publish(control_codes.key_for(control))
 
 

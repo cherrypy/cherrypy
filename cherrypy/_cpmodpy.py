@@ -62,7 +62,7 @@ import re
 import sys
 
 import cherrypy
-from cherrypy._cpcompat import copyitems, ntob
+from cherrypy._cpcompat import copyitems, ntob, text_or_bytes
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
 
@@ -166,6 +166,8 @@ def handler(req):
             bad_value = ("You must provide a PythonOption '%s', "
                          "either 'on' or 'off', when running a version "
                          'of mod_python < 3.1')
+
+            options = req.get_options()
 
             threaded = options.get('multithread', '').lower()
             if threaded == 'on':

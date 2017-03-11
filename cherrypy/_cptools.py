@@ -394,7 +394,7 @@ class XMLRPCController(object):
 class SessionAuthTool(HandlerTool):
 
     def _setargs(self):
-        for name in dir(cptools.SessionAuth):
+        for name in dir(cptools.SessionAuth):  # noqa: F821
             if not name.startswith('__'):
                 setattr(self, name, None)
 
