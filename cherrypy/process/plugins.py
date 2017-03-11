@@ -131,11 +131,10 @@ class SignalHandler(object):
         is executing inside other process like in a CI tool
         (Buildbot, Jenkins).
         """
-        if (self._original_pid != os.getpid() and
-            not os.isatty(sys.stdin.fileno())):
-            return True
-        else:
-            return False
+        return (
+            self._original_pid != os.getpid() and
+            not os.isatty(sys.stdin.fileno())
+        )
 
 
     def subscribe(self):
