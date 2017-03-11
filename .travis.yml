@@ -19,14 +19,11 @@ matrix:
     # TODO: fix tests
     - python: pypy3
     - env: TOXENV=pre-commit-pep257
-    - env: TOXENV=pre-commit-flake8
   include:
     - python: 3.6
       env: TOXENV=pre-commit
     - python: 3.6
       env: TOXENV=pre-commit-pep257
-    - python: 3.6
-      env: TOXENV=pre-commit-flake8
     - python: 3.6
       env: TOXENV=dist-check
 
