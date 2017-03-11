@@ -470,8 +470,7 @@ class FileSession(Session):
         if isinstance(self.lock_timeout, (int, float)):
             self.lock_timeout = datetime.timedelta(seconds=self.lock_timeout)
         if not isinstance(self.lock_timeout, (datetime.timedelta, type(None))):
-            raise ValueError('Lock timeout must be numeric seconds or '
-                'a timedelta instance.')
+            raise ValueError('Lock timeout must be numeric seconds or a timedelta instance.')
 
     @classmethod
     def setup(cls, **kwargs):

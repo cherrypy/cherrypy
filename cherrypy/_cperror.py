@@ -526,7 +526,8 @@ def get_error_page(status, **kwargs):
                     return result.encode('utf-8')
                 else:
                     if not isinstance(result, bytes):
-                        raise ValueError('error page function did not '
+                        raise ValueError(
+                            'error page function did not '
                             'return a bytestring, six.text_typeing or an '
                             'iterator - returned object of type %s.'
                             % (type(result).__name__))

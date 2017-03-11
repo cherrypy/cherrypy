@@ -156,7 +156,7 @@ class HTTPTests(helper.CPWebCase):
            https://github.com/cherrypy/cherrypy/issues/1397'''
         # We'll upload a bunch of files with differing names.
         fnames = ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
-                'file;name.csv', 'file; name.csv']
+                  'file;name.csv', 'file; name.csv']
         for fname in fnames:
             files = [('myfile', fname, 'yunyeenyunyue')]
             content_type, body = encode_multipart_formdata(files)

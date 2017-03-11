@@ -317,7 +317,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/redirect?id=3')
         self.assertStatus(301)
         self.assertMatchesBody('<a href=([\'"])%s/redirect/[?]id=3\\1>'
-                          '%s/redirect/[?]id=3</a>' % (self.base(), self.base()))
+                               '%s/redirect/[?]id=3</a>' % (self.base(), self.base()))
 
         if self.prefix():
             # Corner case: the "trailing slash" redirect could be tricky if
@@ -325,7 +325,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.getPage('')
             self.assertStatus(301)
             self.assertMatchesBody("<a href=(['\"])%s/\\1>%s/</a>" %
-                              (self.base(), self.base()))
+                                   (self.base(), self.base()))
 
         # Test that requests for NON-index methods WITH a trailing slash
         # get redirected to the same URI path WITHOUT a trailing slash.
@@ -333,8 +333,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/redirect/by_code/?code=307')
         self.assertStatus(301)
         self.assertMatchesBody("<a href=(['\"])%s/redirect/by_code[?]code=307\\1>"
-                          '%s/redirect/by_code[?]code=307</a>'
-                          % (self.base(), self.base()))
+                               '%s/redirect/by_code[?]code=307</a>'
+                               % (self.base(), self.base()))
 
         # If the trailing_slash tool is off, CP should just continue
         # as if the slashes were correct. But it needs some help
@@ -422,8 +422,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             try:
                 ElementTree.fromstring('<html><body>%s</body></html>' % self.body)
             except ElementTree.ParseError as e:
-                self._handlewebError('automatically generated redirect '
-                    'did not generate well-formed html')
+                self._handlewebError('automatically generated redirect did not generate well-formed html')
 
         # check redirects to URLs generated valid HTML - we check this
         # by seeing if it appears as valid XHTML.
