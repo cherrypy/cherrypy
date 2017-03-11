@@ -255,9 +255,10 @@ def setup_server():
 
     md = cherrypy.dispatch.MethodDispatcher('dynamic_dispatch')
     for url in script_names:
-        conf = {'/': {
-            'user': (url or '/').split('/')[-2],
-        },
+        conf = {
+            '/': {
+                'user': (url or '/').split('/')[-2],
+            },
             '/users': {
                 'request.dispatch': md
             },
