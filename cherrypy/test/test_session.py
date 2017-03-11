@@ -257,7 +257,7 @@ class SessionTest(helper.CPWebCase):
                 else:
                     data_dict[index] = max(data_dict[index], int(body))
                 # Uncomment the following line to prove threads overlap.
-##                sys.stdout.write("%d " % index)
+                # sys.stdout.write("%d " % index)
 
         # Start <request_count> requests from each of
         # <client_thread_count> concurrent clients
@@ -463,7 +463,7 @@ else:
                 for i in range(request_count):
                     self.getPage('/', cookies)
                     # Uncomment the following line to prove threads overlap.
-##                    sys.stdout.write("%d " % index)
+                    # sys.stdout.write("%d " % index)
                 if not self.body.isdigit():
                     self.fail(self.body)
                 data_dict[index] = int(self.body)

@@ -664,7 +664,7 @@ class ConnectionTests(helper.CPWebCase):
         conn.putheader('Transfer-Encoding', 'chunked')
         conn.putheader('Content-Type', 'text/plain')
         # Chunked requests don't need a content-length
-        ##        conn.putheader("Content-Length", len(body))
+        # #        conn.putheader("Content-Length", len(body))
         conn.endheaders()
         conn.send(body)
         response = conn.getresponse()
