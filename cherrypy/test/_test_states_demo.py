@@ -55,7 +55,7 @@ cherrypy.engine.subscribe('start', unsub_sig, priority=100)  # noqa: E305
 
 def starterror():
     if cherrypy.config.get('starterror', False):
-        zerodiv = 1 / 0
+        1 / 0
 cherrypy.engine.subscribe('start', starterror, priority=6)  # noqa: E305
 
 

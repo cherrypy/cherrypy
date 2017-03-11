@@ -421,7 +421,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             from xml.etree import ElementTree
             try:
                 ElementTree.fromstring('<html><body>%s</body></html>' % self.body)
-            except ElementTree.ParseError as e:
+            except ElementTree.ParseError as e:  # noqa: F841
                 self._handlewebError('automatically generated redirect did not generate well-formed html')
 
         # check redirects to URLs generated valid HTML - we check this
@@ -740,7 +740,7 @@ class ErrorTests(helper.CPWebCase):
             @cherrypy.expose
             def stat(self, path):
                 with cherrypy.HTTPError.handle(OSError, 404):
-                    st = os.stat(path)
+                    os.stat(path)
 
         root = Root()
 

@@ -66,20 +66,20 @@ def setup_server():
         @cherrypy.expose
         def index(self):
             # Read a header directly with 'get'
-            ae = cherrypy.request.headers.get('Accept-Encoding')
+            cherrypy.request.headers.get('Accept-Encoding')
             # Read a header directly with '__getitem__'
-            cl = cherrypy.request.headers['Host']
+            cherrypy.request.headers['Host']
             # Read a header directly with '__contains__'
-            hasif = 'If-Modified-Since' in cherrypy.request.headers
+            'If-Modified-Since' in cherrypy.request.headers
             # Read a header directly with 'has_key'
             if hasattr(dict, 'has_key'):
                 # Python 2
-                has = cherrypy.request.headers.has_key('Range')  # noqa: W601
+                cherrypy.request.headers.has_key('Range')  # noqa: W601
             else:
                 # Python 3
-                has = 'Range' in cherrypy.request.headers
+                'Range' in cherrypy.request.headers
             # Call a lib function
-            mtype = tools.accept.callable(['text/html', 'text/plain'])
+            tools.accept.callable(['text/html', 'text/plain'])
             return 'Hello, world!'
 
     conf = {'/referer': {'tools.referer.on': True,

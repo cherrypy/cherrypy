@@ -1,5 +1,7 @@
+import os
 import sys
 
+import cherrypy
 from cherrypy._cpcompat import ntob
 from cherrypy.test import helper
 
@@ -8,10 +10,6 @@ class WSGIGraftTests(helper.CPWebCase):
 
     @staticmethod
     def setup_server():
-        import os
-        curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-
-        import cherrypy
 
         def test_app(environ, start_response):
             status = '200 OK'

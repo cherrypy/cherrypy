@@ -271,7 +271,7 @@ class DynamicObjectMappingTest(helper.CPWebCase):
 
     def testObjectMapping(self):
         for url in script_names:
-            prefix = self.script_name = url
+            self.script_name = url
 
             self.getPage('/')
             self.assertBody('index')

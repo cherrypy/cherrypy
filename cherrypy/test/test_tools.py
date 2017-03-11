@@ -113,7 +113,7 @@ class ToolTests(helper.CPWebCase):
             assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
             cherrypy.response.output = o = io.BytesIO()
             try:
-                response = next_handler(*args, **kwargs)
+                next_handler(*args, **kwargs)
                 # Ignore the response and return our accumulated output
                 # instead.
                 return o.getvalue()

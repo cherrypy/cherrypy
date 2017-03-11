@@ -176,7 +176,7 @@ class ObjectMappingTest(helper.CPWebCase):
 
     def testObjectMapping(self):
         for url in script_names:
-            prefix = self.script_name = url
+            self.script_name = url
 
             self.getPage('/')
             self.assertBody('world')
@@ -299,7 +299,7 @@ class ObjectMappingTest(helper.CPWebCase):
 
     def test_redir_using_url(self):
         for url in script_names:
-            prefix = self.script_name = url
+            self.script_name = url
 
             # Test the absolute path to the parent (leading slash)
             self.getPage('/redirect_via_url?path=./')
