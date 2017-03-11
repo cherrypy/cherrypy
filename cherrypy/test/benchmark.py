@@ -41,7 +41,7 @@ SCRIPT_NAME = '/cpbench/users/rdelon/apps/blog'
 
 __all__ = ['ABSession', 'Root', 'print_report',
            'run_standard_benchmarks', 'safe_threads',
-           'size_report', 'startup', 'thread_report',
+           'size_report', 'thread_report',
            ]
 
 size_cache = {}
