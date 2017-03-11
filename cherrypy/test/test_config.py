@@ -147,13 +147,13 @@ class ConfigTests(helper.CPWebCase):
 
     def testConfig(self):
         tests = [
-            ('/',        'nex', 'None'),
-            ('/',        'foo', 'this'),
-            ('/',        'bar', 'that'),
-            ('/xyz',     'foo', 'this'),
-            ('/foo/',    'foo', 'this2'),
-            ('/foo/',    'bar', 'that'),
-            ('/foo/',    'bax', 'None'),
+            ('/',        'nex', 'None'),  # noqa: E241
+            ('/',        'foo', 'this'),  # noqa: E241
+            ('/',        'bar', 'that'),  # noqa: E241
+            ('/xyz',     'foo', 'this'),  # noqa: E241
+            ('/foo/',    'foo', 'this2'),  # noqa: E241
+            ('/foo/',    'bar', 'that'),  # noqa: E241
+            ('/foo/',    'bax', 'None'),  # noqa: E241
             ('/foo/bar', 'baz', "'that2'"),
             ('/foo/nex', 'baz', 'that2'),
             # If 'foo' == 'this', then the mount point '/another' leaks into
