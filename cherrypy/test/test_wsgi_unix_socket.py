@@ -55,7 +55,6 @@ class WSGI_UnixSocket_Test(helper.CPWebCase):
     """
     HTTP_CONN = USocketHTTPConnection(USOCKET_PATH)
 
-
     @staticmethod
     def setup_server():
         class Root(object):

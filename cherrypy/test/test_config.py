@@ -273,7 +273,6 @@ class VariableSubstitutionTests(unittest.TestCase):
 class CallablesInConfigTest(unittest.TestCase):
     setup_server = staticmethod(setup_server)
 
-
     def test_call_with_literal_dict(self):
         from textwrap import dedent
         conf = dedent("""

@@ -549,7 +549,6 @@ def get_error_page(status, **kwargs):
     return result.encode('utf-8')
 
 
-
 _ie_friendly_error_sizes = {
     400: 512, 403: 256, 404: 512, 405: 256,
     406: 512, 408: 512, 409: 512, 410: 256,

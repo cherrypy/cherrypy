@@ -112,7 +112,6 @@ class SignalHandler(object):
         # used to determine is the process is a daemon in `self._is_daemonized`
         self._original_pid = os.getpid()
 
-
     def _jython_SIGINT_handler(self, signum=None, frame=None):
         # See http://bugs.jython.org/issue1313
         self.bus.log('Keyboard Interrupt: shutting down bus')
@@ -135,7 +134,6 @@ class SignalHandler(object):
             self._original_pid != os.getpid() and
             not os.isatty(sys.stdin.fileno())
         )
-
 
     def subscribe(self):
         """Subscribe self.handlers to signals."""
