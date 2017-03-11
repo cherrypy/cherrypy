@@ -302,6 +302,7 @@ def _get_threading_ident():
         return threading.get_ident()
     return threading._get_ident()
 
+
 class StatsTool(cherrypy.Tool):
 
     """Record various information about the current request."""

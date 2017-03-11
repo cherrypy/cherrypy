@@ -17,6 +17,7 @@ class IteratorBase(object):
     def decr(cls):
         cls.created -= 1
 
+
 class OurGenerator(IteratorBase):
 
     def __iter__(self):
@@ -26,6 +27,7 @@ class OurGenerator(IteratorBase):
                 yield self.datachunk
         finally:
             self.decr()
+
 
 class OurIterator(IteratorBase):
 
@@ -58,10 +60,12 @@ class OurIterator(IteratorBase):
     def __del__(self):
         self.decrement()
 
+
 class OurClosableIterator(OurIterator):
 
     def close(self):
         self.decrement()
+
 
 class OurNotClosableIterator(OurIterator):
 
@@ -69,8 +73,10 @@ class OurNotClosableIterator(OurIterator):
     def close(self, somearg):
         self.decrement()
 
+
 class OurUnclosableIterator(OurIterator):
     close = 'close' # not callable!
+
 
 class IteratorTest(helper.CPWebCase):
 

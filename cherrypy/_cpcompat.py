@@ -271,6 +271,7 @@ except ImportError:
     # In Python 3, pickle is the sped-up C version.
     import pickle  # noqa
 
+
 def random20():
     return binascii.hexlify(os.urandom(20)).decode('ascii')
 
@@ -344,7 +345,7 @@ except ImportError:
 # html module needed the argument quote=False because in cgi the default
 # is False. With quote=True the results differ.
 
-def escape_html(s, escape_quote=False):
+def escape_html(s, escape_quote=False):  # noqa: E302
     """Replace special characters "&", "<" and ">" to HTML-safe sequences.
 
     When escape_quote=True, escape (') and (") chars.

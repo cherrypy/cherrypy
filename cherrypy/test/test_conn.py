@@ -840,6 +840,7 @@ class LimitedRequestQueueTests(helper.CPWebCase):
             if overflow_conn:
                 overflow_conn.close()
 
+
 class BadRequestTests(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 

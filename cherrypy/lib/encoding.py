@@ -37,6 +37,7 @@ def decode(encoding=None, default_encoding='utf-8'):
             default_encoding = [default_encoding]
         body.attempt_charsets = body.attempt_charsets + default_encoding
 
+
 class UTF8StreamEncoder:
     def __init__(self, iterator):
         self._iterator = iterator

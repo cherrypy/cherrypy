@@ -20,6 +20,7 @@ import subprocess
 
 assert sys.version_info > (3,), 'Python 3 required to build docs'
 
+
 def try_import(mod_name):
     try:
         return importlib.import_module(mod_name)
