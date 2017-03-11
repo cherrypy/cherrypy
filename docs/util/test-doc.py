@@ -12,6 +12,7 @@ def print_with_line_numbers(block):
         number += 1
         print(number, line.rstrip())
 
+
 target_class_spec = sys.argv[1]
 import cherrypy  # noqa
 target_class = eval(target_class_spec)

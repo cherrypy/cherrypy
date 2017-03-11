@@ -90,6 +90,7 @@ def assert_native(n):
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
 
+
 try:
     # Python 3.1+
     from base64 import decodebytes as _base64_decodebytes
@@ -272,6 +273,7 @@ except ImportError:
 
 def random20():
     return binascii.hexlify(os.urandom(20)).decode('ascii')
+
 
 try:
     from _thread import get_ident as get_thread_ident

@@ -410,7 +410,7 @@ def _test_method_sorter(_, x, y):
     if x < y:
         return -1
     return 0
-unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter
+unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter  # noqa: E305
 
 
 def setup_client():

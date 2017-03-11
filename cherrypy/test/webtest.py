@@ -578,8 +578,6 @@ def openURL(url, headers=None, method='GET', body=None,
                     raise
 
 
-
-
 # Add any exceptions which your web framework handles
 # normally (that you don't want server_error to trap).
 ignored_exceptions = []

@@ -125,7 +125,7 @@ class _TimeoutMonitor(process.plugins.Monitor):
         """Check timeout on all responses. (Internal)"""
         for req, resp in self.servings:
             resp.check_timeout()
-engine.timeout_monitor = _TimeoutMonitor(engine)
+engine.timeout_monitor = _TimeoutMonitor(engine)  # noqa: E305
 engine.timeout_monitor.subscribe()
 
 engine.autoreload = process.plugins.Autoreloader(engine)
@@ -152,7 +152,7 @@ class _HandleSignalsPlugin(object):
         if hasattr(self.bus, 'console_control_handler'):
             self.bus.console_control_handler.subscribe()
 
-engine.signals = _HandleSignalsPlugin(engine)
+engine.signals = _HandleSignalsPlugin(engine)  # noqa: E305
 
 
 server = _cpserver.Server()
@@ -217,7 +217,7 @@ class _Serving(_local):
         """Remove all attributes of self."""
         self.__dict__.clear()
 
-serving = _Serving()
+serving = _Serving()  # noqa: E305
 
 
 class _ThreadLocalProxy(object):
@@ -278,7 +278,7 @@ class _ThreadLocalProxy(object):
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "serving" object)
-request = _ThreadLocalProxy('request')
+request = _ThreadLocalProxy('request')  # noqa: E305
 response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
@@ -287,7 +287,7 @@ response = _ThreadLocalProxy('response')
 class _ThreadData(_local):
 
     """A container for thread-specific data."""
-thread_data = _ThreadData()
+thread_data = _ThreadData()  # noqa: E305
 
 
 # Monkeypatch pydoc to allow help() to go through the threadlocal proxy.
@@ -300,7 +300,7 @@ def _cherrypy_pydoc_resolve(thing, forceload=0):
         thing = getattr(serving, thing.__attrname__)
     return _pydoc._builtin_resolve(thing, forceload)
 
-try:
+try:  # noqa: E305
     import pydoc as _pydoc
     _pydoc._builtin_resolve = _pydoc.resolve
     _pydoc.resolve = _cherrypy_pydoc_resolve
@@ -349,7 +349,7 @@ log.access_file = ''
 
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
-engine.subscribe('log', _buslog)
+engine.subscribe('log', _buslog)  # noqa: E305
 
 from cherrypy._helper import expose, popargs, url  # noqa
 

@@ -46,6 +46,7 @@ def replace_wiki_link(matcher):
         **matcher.groupdict()
     )
 
+
 # character array indexed by level for characters
 heading_characters = [None, '*', '=', '-', '^']
 
@@ -102,6 +103,7 @@ def remove_2x_compat_notes(matcher):
     r'\{\{\{\n#!html\n<h2(.|\n)*'
     return ''
 
+
 replacements = [remove_2x_compat_notes] + \
     [func for name,
      func in globals().items() if name.startswith('replace_')]
@@ -132,6 +134,7 @@ def convert_file():
 def handle_command_line():
     get_options()
     convert_file()
+
 
 if __name__ == '__main__':
     handle_command_line()

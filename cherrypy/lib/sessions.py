@@ -684,7 +684,7 @@ def save():
         if is_iterator(response.body):
             response.collapse_body()
         cherrypy.session.save()
-save.failsafe = True
+save.failsafe = True  # noqa: E305
 
 
 def close():
@@ -695,7 +695,7 @@ def close():
         sess.release_lock()
         if sess.debug:
             cherrypy.log('Lock released on close.', 'TOOLS.SESSIONS')
-close.failsafe = True
+close.failsafe = True  # noqa: E305
 close.priority = 90
 
 

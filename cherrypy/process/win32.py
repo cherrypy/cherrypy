@@ -137,7 +137,7 @@ class _ControlCodes(dict):
                 return key
         raise ValueError('The given object could not be found: %r' % obj)
 
-control_codes = _ControlCodes({'graceful': 138})
+control_codes = _ControlCodes({'graceful': 138})  # noqa: E305
 
 
 def signal_child(service, command):

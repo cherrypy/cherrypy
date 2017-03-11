@@ -49,7 +49,7 @@ class Dependency:
     def stopthread(self, thread_id):
         del self.threads[thread_id]
 
-db_connection = Dependency(engine)
+db_connection = Dependency(engine)  # noqa: E305
 
 
 def setup_server():

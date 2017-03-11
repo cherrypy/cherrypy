@@ -387,5 +387,6 @@ def serve(path=localFile, port=8080, root=None):
                             })
     cherrypy.quickstart(CoverStats(cov, root))
 
+
 if __name__ == '__main__':
     serve(*tuple(sys.argv[1:]))

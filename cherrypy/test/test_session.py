@@ -24,7 +24,7 @@ def http_methods_allowed(methods=['GET', 'HEAD']):
         cherrypy.response.headers['Allow'] = ', '.join(methods)
         raise cherrypy.HTTPError(405)
 
-cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
+cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)  # noqa: E305
 
 
 def setup_server():

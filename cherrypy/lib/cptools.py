@@ -240,7 +240,7 @@ def response_headers(headers=None, debug=False):
                      'TOOLS.RESPONSE_HEADERS')
     for name, value in (headers or []):
         cherrypy.serving.response.headers[name] = value
-response_headers.failsafe = True
+response_headers.failsafe = True  # noqa: E305
 
 
 def referer(pattern, accept=True, accept_missing=False, error=403,
@@ -409,13 +409,15 @@ def session_auth(**kwargs):
     for k, v in kwargs.items():
         setattr(sa, k, v)
     return sa.run()
-session_auth.__doc__ = """Session authentication hook.
-
-Any attribute of the SessionAuth class may be overridden via a keyword arg
-to this function:
-
-""" + '\n'.join(['%s: %s' % (k, type(getattr(SessionAuth, k)).__name__)
-                 for k in dir(SessionAuth) if not k.startswith('__')])
+session_auth.__doc__ = (  # noqa: E305
+    """Session authentication hook.
+    
+    Any attribute of the SessionAuth class may be overridden via a keyword arg
+    to this function:
+    
+    """ + '\n'.join(['%s: %s' % (k, type(getattr(SessionAuth, k)).__name__)
+                     for k in dir(SessionAuth) if not k.startswith('__')])
+)
 
 
 def log_traceback(severity=logging.ERROR, debug=False):

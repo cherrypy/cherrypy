@@ -170,7 +170,7 @@ def _parseBasicAuthorization(auth_params):
     username, password = base64_decode(auth_params).split(':', 1)
     return {'username': username, 'password': password}
 
-AUTH_SCHEMES = {
+AUTH_SCHEMES = {  # noqa: E305
     'basic': _parseBasicAuthorization,
     'digest': _parseDigestAuthorization,
 }
@@ -350,7 +350,7 @@ def _checkBasicResponse(auth_map, password, method='GET', encrypt=None,
         candidate = encrypt(auth_map['password'])
     return candidate == password
 
-AUTH_RESPONSES = {
+AUTH_RESPONSES = {  # noqa: E305
     'basic': _checkBasicResponse,
     'digest': _checkDigestResponse,
 }

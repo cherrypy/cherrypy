@@ -26,7 +26,7 @@ def try_import(mod_name):
     except ImportError:
         pass
 
-sphinx_rtd_theme = try_import('sphinx_rtd_theme')
+sphinx_rtd_theme = try_import('sphinx_rtd_theme')  # noqa: E305
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -268,7 +268,7 @@ def mock_pywin32():
     ]
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = mock.MagicMock()
-mock_pywin32()
+mock_pywin32()  # noqa: E305
 
 link_files = {
     '../CHANGES.rst': dict(

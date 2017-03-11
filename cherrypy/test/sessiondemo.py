@@ -149,6 +149,7 @@ class Root(object):
         cherrypy.session['color'] = 'yellow'
         return self.page()
 
+
 if __name__ == '__main__':
     cherrypy.config.update({
         # 'environment': 'production',

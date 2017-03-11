@@ -9,13 +9,15 @@ import cherrypy
 from cherrypy.test import helper
 from cherrypy._cpcompat import HTTPConnection
 
+
 def usocket_path():
     fd, path = tempfile.mkstemp('cp_test.sock')
     os.close(fd)
     os.remove(path)
     return path
 
-USOCKET_PATH = usocket_path()
+USOCKET_PATH = usocket_path()  # noqa: E305
+
 
 class USocketHTTPConnection(HTTPConnection):
     """

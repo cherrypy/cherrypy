@@ -25,5 +25,6 @@ class UtilityTests(unittest.TestCase):
         self.assertEqual(httputil.urljoin('', '/'), '/')
         self.assertEqual(httputil.urljoin('', ''), '/')
 
+
 if __name__ == '__main__':
     unittest.main()
