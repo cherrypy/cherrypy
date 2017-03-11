@@ -20,8 +20,6 @@ class CPWSGIServer(cheroot.wsgi.Server):
     and apply some attributes from config -> cherrypy.server -> wsgi.Server.
     """
 
-    version = 'CherryPy/' + cherrypy.__version__ + ' ' + cheroot.wsgi.Server.version
-
     def __init__(self, server_adapter=cherrypy.server):
         self.server_adapter = server_adapter
         self.max_request_header_size = (
