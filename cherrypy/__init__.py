@@ -63,15 +63,15 @@ except ImportError:
 
 from threading import local as _local
 
-from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa
-from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa
+from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa: F401
+from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa: F401
 
 from cherrypy import _cplogging
 
-from cherrypy import _cpdispatch as dispatch  # noqa
+from cherrypy import _cpdispatch as dispatch  # noqa: F401
 
-from cherrypy import _cptools
-from cherrypy._cptools import default_toolbox as tools, Tool
+from cherrypy import _cptools  # noqa: F401
+from cherrypy._cptools import default_toolbox as tools, Tool  # noqa: F401
 
 from cherrypy import _cprequest
 from cherrypy.lib import httputil as _httputil
@@ -351,10 +351,10 @@ def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
 engine.subscribe('log', _buslog)  # noqa: E305
 
-from cherrypy._helper import expose, popargs, url  # noqa
+from cherrypy._helper import expose, popargs, url  # noqa: F401
 
 # import _cpconfig last so it can reference other top-level objects
-from cherrypy import _cpconfig  # noqa
+from cherrypy import _cpconfig  # noqa: F401
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
@@ -369,6 +369,6 @@ config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
-from cherrypy import _cpchecker  # noqa
+from cherrypy import _cpchecker  # noqa: F401
 checker = _cpchecker.Checker()
 engine.subscribe('start', checker)
