@@ -526,7 +526,7 @@ class Entity(object):
         value = self.decode_entity(value)
         return value
 
-    def decode_entity(self , value):
+    def decode_entity(self, value):
         """Return a given byte encoded value as a string"""
         for charset in self.attempt_charsets:
             try:

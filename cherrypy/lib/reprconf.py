@@ -274,7 +274,7 @@ class _Builder2:
             if class_name == 'Keyword':
                 kwargs.update(self.build(child))
             # Everything else becomes args
-            else :
+            else:
                 args.append(self.build(child))
 
         return callee(*args, **kwargs)
