@@ -329,7 +329,7 @@ except ImportError:
             v = getattr(sys.flags, flag)
             if v > 0:
                 if flag == 'hash_randomization':
-                    v = 1 # Handle specification of an exact seed
+                    v = 1  # Handle specification of an exact seed
                 args.append('-' + opt * v)
         for opt in sys.warnoptions:
             args.append('-W' + opt)

@@ -389,7 +389,7 @@ class _Builder3:
                     args.append(self.build(a))
         kwargs = {}
         for kw in o.keywords:
-            if kw.arg is None: # double asterix `**`
+            if kw.arg is None:  # double asterix `**`
                 rst = self.build(kw.value)
                 if not isinstance(rst, dict):
                     raise TypeError('Invalid argument for call.'
@@ -398,7 +398,7 @@ class _Builder3:
                 for k, v in rst.items():
                     if k not in kwargs:
                         kwargs[k] = v
-            else: # defined on the call as: arg=value
+            else:  # defined on the call as: arg=value
                 kwargs[kw.arg] = self.build(kw.value)
         return callee(*args, **kwargs)
 
@@ -422,7 +422,7 @@ class _Builder3:
             kwargs = {}
         else:
             kwargs = self.build(o.kwargs)
-        if o.keywords is not None: # direct a=b keywords
+        if o.keywords is not None:  # direct a=b keywords
             for kw in o.keywords:
                 # preference because is a direct keyword against **kwargs
                 kwargs[kw.arg] = self.build(kw.value)

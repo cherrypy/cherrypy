@@ -75,7 +75,7 @@ class OurNotClosableIterator(OurIterator):
 
 
 class OurUnclosableIterator(OurIterator):
-    close = 'close' # not callable!
+    close = 'close'  # not callable!
 
 
 class IteratorTest(helper.CPWebCase):

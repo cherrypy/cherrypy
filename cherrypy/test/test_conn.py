@@ -815,7 +815,7 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 response.begin()
             except socket.error as exc:
                 if exc.args[0] in socket_reset_errors:
-                    pass # Expected.
+                    pass  # Expected.
                 else:
                     tmpl = (
                         'Overflow conn did not get RST. '
