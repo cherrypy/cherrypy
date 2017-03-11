@@ -30,8 +30,7 @@ import unittest
 
 import six
 
-from cherrypy._cpcompat import text_or_bytes, HTTPConnection
-from cherrypy._cpcompat import HTTPSConnection
+from cherrypy._cpcompat import text_or_bytes, HTTPConnection, HTTPSConnection
 
 
 def interface(host):
@@ -106,7 +105,7 @@ class ReloadingTestLoader(unittest.TestLoader):
                 while parts_copy:
                     target = '.'.join(parts_copy)
                     if target in sys.modules:
-                        module = reload(sys.modules[target])
+                        module = six.moves.reload_module(sys.modules[target])
                         parts = unused_parts
                         break
                     else:

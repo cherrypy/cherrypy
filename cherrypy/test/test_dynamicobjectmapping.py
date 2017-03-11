@@ -80,7 +80,7 @@ def setup_server():
             self.name = name
 
         def __unicode__(self):
-            return unicode(self.name)
+            return six.text_type(self.name)
 
         def __str__(self):
             return str(self.name)

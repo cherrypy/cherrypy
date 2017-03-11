@@ -56,7 +56,7 @@ class Hook(object):
 
     def __cmp__(self, other):
         # Python 2
-        return cmp(self.priority, other.priority)
+        return cmp(self.priority, other.priority)  # noqa: F821
 
     def __call__(self):
         """Run self.callback(**self.kwargs)."""

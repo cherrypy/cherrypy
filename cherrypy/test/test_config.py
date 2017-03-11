@@ -205,7 +205,7 @@ class ConfigTests(helper.CPWebCase):
 
         if not six.PY3:
             self.getPage('/repr?key=thing3')
-            self.assertBody(repr(unicode('test')))
+            self.assertBody(repr(six.text_type('test')))
 
         self.getPage('/repr?key=complex')
         self.assertBody('(3+2j)')

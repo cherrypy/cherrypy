@@ -70,9 +70,9 @@ else:
         # escapes, but without having to prefix it with u'' for Python 2,
         # but no prefix for Python 3.
         if encoding == 'escape':
-            return unicode(
+            return six.text_type(  # unicode for Python 2
                 re.sub(r'\\u([0-9a-zA-Z]{4})',
-                       lambda m: unichr(int(m.group(1), 16)),
+                       lambda m: six.unichr(int(m.group(1), 16)),
                        n.decode('ISO-8859-1')))
         # Assume it's already in the given encoding, which for ISO-8859-1
         # is almost always what was intended.
@@ -81,7 +81,7 @@ else:
     def tonative(n, encoding='ISO-8859-1'):
         """Return the given string as a native string in the given encoding."""
         # In Python 2, the native string type is bytes.
-        if isinstance(n, unicode):
+        if isinstance(n, six.text_type):  # unicode for Python 2
             return n.encode(encoding)
         return n
 

@@ -139,7 +139,7 @@ class HeaderElement(object):
         self.params = params
 
     def __cmp__(self, other):
-        return cmp(self.value, other.value)
+        return cmp(self.value, other.value)  # noqa: F821
 
     def __lt__(self, other):
         return self.value < other.value
@@ -207,9 +207,9 @@ class AcceptElement(HeaderElement):
         return float(val)
 
     def __cmp__(self, other):
-        diff = cmp(self.qvalue, other.qvalue)
+        diff = cmp(self.qvalue, other.qvalue)  # noqa: F821
         if diff == 0:
-            diff = cmp(str(self), str(other))
+            diff = cmp(str(self), str(other))  # noqa: F821
         return diff
 
     def __lt__(self, other):
@@ -415,9 +415,9 @@ class CaseInsensitiveDict(dict):
 # field continuation. It is expected that the folding LWS will be
 # replaced with a single SP before interpretation of the TEXT value."
 if str == bytes:
-    header_translate_table = ''.join([chr(i) for i in xrange(256)])
+    header_translate_table = ''.join([chr(i) for i in six.moves.xrange(256)])
     header_translate_deletechars = ''.join(
-        [chr(i) for i in xrange(32)]) + chr(127)
+        [chr(i) for i in six.moves.xrange(32)]) + chr(127)
 else:
     header_translate_table = None
     header_translate_deletechars = bytes(range(32)) + bytes([127])
