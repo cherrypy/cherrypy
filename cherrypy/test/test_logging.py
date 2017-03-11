@@ -111,10 +111,11 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
            which is a feature of _cplogging.LogManager.access() '''
 
         original_logformat = cherrypy._cplogging.LogManager.access_log_format
-        cherrypy._cplogging.LogManager.access_log_format = \
-          '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}' \
-          if six.PY3 else \
-          '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
+        cherrypy._cplogging.LogManager.access_log_format = (
+            '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}' if six.PY3
+            else
+            '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
+        )
 
         self.markLog()
         self.getPage('/as_string', headers=[('Referer', 'REFERER'),
