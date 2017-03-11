@@ -483,7 +483,7 @@ class Bus(object):
                     """There's no such module exist"""
                     raise AttributeError(
                         "{} doesn't seem to be a module "
-                        "accessible by current user".format(original_module))
+                        'accessible by current user'.format(original_module))
                 del _argv[m_ind:m_ind + 2]  # remove `-m -m`
                 # ... and substitute it with the original module path:
                 _argv.insert(m_ind, original_module)

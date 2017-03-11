@@ -18,14 +18,22 @@ matrix:
     - python: pypy
     # TODO: fix tests
     - python: pypy3
-    - env: TOXENV=pre-commit
+    - env: TOXENV=pre-commit-pep257
+    - env: TOXENV=pre-commit-flake8
   include:
     - python: 3.6
       env: TOXENV=pre-commit
     - python: 3.6
+      env: TOXENV=pre-commit-pep257
+    - python: 3.6
+      env: TOXENV=pre-commit-flake8
+    - python: 3.6
       env: TOXENV=dist-check
 
-cache: pip
+cache:
+  pip: true
+  directories:
+    - $HOME/.pre-commit
 
 before_install: |
   case "$TRAVIS_PYTHON_VERSION" in

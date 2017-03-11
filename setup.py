@@ -89,6 +89,8 @@ extras_require = {
 
     # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
     ':sys_platform == "win32"': ['pypiwin32'],
+
+    ':python_version == "2.6"': ['graphviz<0.6'],  # v0.6 has dropped support for 2.6
 }
 """Feature flags end-users can use in dependencies"""
 
@@ -107,7 +109,7 @@ setup_params = dict(
     url=url,
     license=cp_license,
     packages=packages,
-    entry_points={"console_scripts": ["cherryd = cherrypy.__main__:run"]},
+    entry_points={'console_scripts': ['cherryd = cherrypy.__main__:run']},
     include_package_data=True,
     install_requires=install_requires,
     extras_require=extras_require,

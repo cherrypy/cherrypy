@@ -294,7 +294,7 @@ class SessionTest(helper.CPWebCase):
         os.unlink(path)
         self.getPage('/testStr', self.cookies)
 
-    @pytest.mark.xfail(reason="#1557")
+    @pytest.mark.xfail(reason='#1557')
     def test_5_Error_paths(self):
         self.getPage('/unknown/page')
         self.assertErrorPage(404, "The path '/unknown/page' was not found.")

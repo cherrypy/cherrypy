@@ -25,14 +25,14 @@ import pytest
     'tutorial/custom_error.html',
 ])
 def data_file_path(request):
-    "generates data file paths expected to be found in the package"
+    'generates data file paths expected to be found in the package'
     return request.param
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope='session')
 def remove_sys_path_0():
-    "pytest adds cwd to sys.path[0]"
-    print("removing", sys.path[0])
+    'pytest adds cwd to sys.path[0]'
+    print('removing', sys.path[0])
     del sys.path[0]
     assert 'cherrypy' not in sys.modules
 

@@ -18,7 +18,7 @@ import datetime
 import importlib
 import subprocess
 
-assert sys.version_info > (3,), "Python 3 required to build docs"
+assert sys.version_info > (3,), 'Python 3 required to build docs'
 
 def try_import(mod_name):
     try:
