@@ -368,8 +368,8 @@ class Dispatcher(object):
                 # No path segment was removed.  Raise an error.
                 raise cherrypy.CherryPyException(
                     'A vpath segment was added.  Custom dispatchers may only '
-                    + 'remove elements.  While trying to process '
-                    + '{0} in {1}'.format(name, fullpath)
+                    'remove elements.  While trying to process '
+                    '{0} in {1}'.format(name, fullpath)
                 )
             elif segleft == pre_len:
                 # Assume that the handler used the current path segment, but

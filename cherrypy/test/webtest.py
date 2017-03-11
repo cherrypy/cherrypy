@@ -126,9 +126,12 @@ class ReloadingTestLoader(unittest.TestLoader):
 
         if isinstance(obj, types.ModuleType):
             return self.loadTestsFromModule(obj)
-        elif (((six.PY3 and isinstance(obj, type))
-               or isinstance(obj, (type, types.ClassType)))
-              and issubclass(obj, unittest.TestCase)):
+        elif (
+                (
+                   (six.PY3 and isinstance(obj, type)) or
+                   isinstance(obj, (type, types.ClassType))
+                ) and
+                   issubclass(obj, unittest.TestCase)):
             return self.loadTestsFromTestCase(obj)
         elif isinstance(obj, types.UnboundMethodType):
             if six.PY3:

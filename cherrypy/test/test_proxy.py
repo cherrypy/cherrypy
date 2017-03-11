@@ -109,12 +109,12 @@ class ProxyTest(helper.CPWebCase):
             # Test the value inside requests
             self.getPage(sn + '/newurl')
             self.assertBody(
-                "Browse to <a href='%s://www.mydomain.test" % self.scheme
-                + sn + "/this/new/page'>this page</a>.")
+                "Browse to <a href='%s://www.mydomain.test" % self.scheme +
+                sn + "/this/new/page'>this page</a>.")
             self.getPage(sn + '/newurl', headers=[('X-Forwarded-Host',
                                                    'http://www.example.test')])
-            self.assertBody("Browse to <a href='http://www.example.test"
-                            + sn + "/this/new/page'>this page</a>.")
+            self.assertBody("Browse to <a href='http://www.example.test" +
+                            sn + "/this/new/page'>this page</a>.")
 
             # Test the value outside requests
             port = ''

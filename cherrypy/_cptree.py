@@ -216,10 +216,8 @@ class Tree(object):
             app = Application(root, script_name)
 
             # If mounted at "", add favicon.ico
-            if (script_name == '' and root is not None
-                    and not hasattr(root, 'favicon_ico')):
-                favicon = os.path.join(os.getcwd(), os.path.dirname(__file__),
-                                       'favicon.ico')
+            if script_name == '' and root is not None and not hasattr(root, 'favicon_ico'):
+                favicon = os.path.join(os.getcwd(), os.path.dirname(__file__), 'favicon.ico')
                 root.favicon_ico = tools.staticfile.handler(favicon)
 
         if config:

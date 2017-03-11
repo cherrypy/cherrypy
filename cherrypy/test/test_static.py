@@ -36,8 +36,8 @@ class StaticTest(helper.CPWebCase):
             with open(has_space_filepath, 'wb') as f:
                 f.write(b'Hello, world\r\n')
         needs_bigfile = (
-            not os.path.exists(bigfile_filepath)
-            or os.path.getsize(bigfile_filepath) != BIGFILE_SIZE
+            not os.path.exists(bigfile_filepath) or
+            os.path.getsize(bigfile_filepath) != BIGFILE_SIZE
         )
         if needs_bigfile:
             with open(bigfile_filepath, 'wb') as f:

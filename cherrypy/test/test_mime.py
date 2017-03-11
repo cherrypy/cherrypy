@@ -119,8 +119,8 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
             'Content-Disposition: form-data; '
             'name="Filedata"; filename=".project"\r\n'
             'Content-Type: application/octet-stream\r\n'
-            '\r\n')
-            + filedata +
+            '\r\n') +
+            filedata +
             ntob('\r\n'
                  '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
                  'Content-Disposition: form-data; name="Upload"\r\n'

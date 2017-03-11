@@ -558,8 +558,7 @@ class FileSession(Session):
         now = self.now()
         # Iterate over all session files in self.storage_path
         for fname in os.listdir(self.storage_path):
-            if (fname.startswith(self.SESSION_PREFIX)
-                    and not fname.endswith(self.LOCK_SUFFIX)):
+            if fname.startswith(self.SESSION_PREFIX) and not fname.endswith(self.LOCK_SUFFIX):
                 # We have a session file: lock and load it and check
                 #   if it's expired. If it fails, nevermind.
                 path = os.path.join(self.storage_path, fname)
@@ -585,8 +584,8 @@ class FileSession(Session):
     def __len__(self):
         """Return the number of active sessions."""
         return len([fname for fname in os.listdir(self.storage_path)
-                    if (fname.startswith(self.SESSION_PREFIX)
-                        and not fname.endswith(self.LOCK_SUFFIX))])
+                    if (fname.startswith(self.SESSION_PREFIX) and
+                        not fname.endswith(self.LOCK_SUFFIX))])
 
 
 class MemcachedSession(Session):
