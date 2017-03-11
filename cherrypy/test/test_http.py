@@ -147,7 +147,7 @@ class HTTPTests(helper.CPWebCase):
         self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(200)
-        self.assertBody(', '.join(['%s * 65536' % c for c in alphabet]))
+        self.assertBody(', '.join(['%s * 65536' % c for c in alphabet]))  # noqa: F812
 
     def test_post_filename_with_special_characters(self):
         '''Testing that we can handle filenames with special characters. This
