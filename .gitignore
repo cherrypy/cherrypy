@@ -26,3 +26,7 @@ sphinx/source/_build
 
 # Py.test
 /.cache/
+
+# Eclipse, PyDev
+.project
+.pydevproject
