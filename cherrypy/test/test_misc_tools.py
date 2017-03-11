@@ -74,7 +74,7 @@ def setup_server():
             # Read a header directly with 'has_key'
             if hasattr(dict, 'has_key'):
                 # Python 2
-                has = cherrypy.request.headers.has_key('Range')
+                has = cherrypy.request.headers.has_key('Range')  # noqa: W601
             else:
                 # Python 3
                 has = 'Range' in cherrypy.request.headers

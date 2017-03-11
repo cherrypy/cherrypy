@@ -601,11 +601,11 @@ class MonitoredHeaderMap(_httputil.HeaderMap):
         self.accessed_headers.add(key)
         return _httputil.HeaderMap.get(self, key, default=default)
 
-    if hasattr({}, 'has_key'):
+    if hasattr(_httputil.HeaderMap, 'has_key'):
         # Python 2
         def has_key(self, key):
             self.accessed_headers.add(key)
-            return _httputil.HeaderMap.has_key(self, key)
+            return self.has_key(key)  # noqa: W601
 
 
 def autovary(ignore=None, debug=False):
