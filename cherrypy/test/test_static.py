@@ -4,10 +4,13 @@ import io
 import os
 import sys
 import platform
+import tempfile
 
+from six import text_type as str
 from six.moves import urllib
 
 import pytest
+import py.path
 
 import cherrypy
 from cherrypy.lib import static
@@ -15,6 +18,29 @@ from cherrypy._cpcompat import (
     HTTPConnection, HTTPSConnection, ntou, tonative,
 )
 from cherrypy.test import helper
+
+
+@pytest.fixture
+def unicode_filesystem(tmpdir):
+    filename = tmpdir / ntou('☃', 'utf-8')
+    tmpl = "File system encoding ({encoding}) cannot support unicode filenames"
+    msg = tmpl.format(encoding=sys.getfilesystemencoding())
+    try:
+        io.open(str(filename), 'w').close()
+    except UnicodeEncodeError:
+        pytest.skip(msg)
+
+
+def ensure_unicode_filesystem():
+    """
+    TODO: replace with simply pytest fixtures once webtest.TestCase
+    no longer implies unittest.
+    """
+    tmpdir = py.path.local(tempfile.mkdtemp())
+    try:
+        unicode_filesystem(tmpdir)
+    finally:
+        tmpdir.remove()
 
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -376,6 +402,7 @@ class StaticTest(helper.CPWebCase):
     )
     @pytest.mark.xfail(py27_on_windows, reason='#1544')  # noqa: E301
     def test_unicode(self):
+        ensure_unicode_filesystem()
         with self.unicode_file():
             url = ntou('/static/Слава Україні.html', 'utf-8')
             # quote function requires str
