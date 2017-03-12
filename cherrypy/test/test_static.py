@@ -23,7 +23,7 @@ from cherrypy.test import helper
 @pytest.fixture
 def unicode_filesystem(tmpdir):
     filename = tmpdir / ntou('☃', 'utf-8')
-    tmpl = "File system encoding ({encoding}) cannot support unicode filenames"
+    tmpl = 'File system encoding ({encoding}) cannot support unicode filenames'
     msg = tmpl.format(encoding=sys.getfilesystemencoding())
     try:
         io.open(str(filename), 'w').close()
