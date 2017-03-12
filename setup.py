@@ -79,7 +79,13 @@ extras_require = {
         # TODO: drop nose dependency in favor of py.test analogue
         'nose',  # only used in cherrypy.test.{helper,test_{compat,routes}}
         'nose-testconfig',  # only used in cherrypy.test.helper
-        'objgraph',  # cherrypy.lib.gctools
+
+        # cherrypy.lib.gctools
+        'objgraph',
+        # graphviz, required by objgraph, dropped support for Python 2.6
+        # in 0.6
+        'graphviz<0.6; python_version == "2.6"',
+
         'pytest',
         'backports.unittest_mock',
     ],
@@ -89,8 +95,6 @@ extras_require = {
 
     # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
     ':sys_platform == "win32"': ['pypiwin32'],
-
-    ':python_version == "2.6"': ['graphviz<0.6'],  # v0.6 has dropped support for 2.6
 }
 """Feature flags end-users can use in dependencies"""
 

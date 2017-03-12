@@ -1,3 +1,9 @@
+v10.2.1
+-------
+
+* Remove unintended dependency on ``graphviz`` in Python
+  2.6.
+
 v10.2.0
 -------
 
