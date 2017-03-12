@@ -1,3 +1,8 @@
+v10.1.2-0 / Unreleased
+-------
+
+* CPWSGIServer.version now reported as `CherryPy/x.y.z Cheroot/x.y.z`
+
 v10.1.1
 -------
 
