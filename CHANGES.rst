@@ -7,19 +7,14 @@ v10.2.1
 v10.2.0
 -------
 
-Minor
-~~~~~
 * #1580: CPWSGIServer.version now reported as
   ``CherryPy/x.y.z Cheroot/x.y.z``. Bump to cheroot 5.2.0.
-
-Patch
-~~~~~
 * The codebase is now PEP8 complaint, flake8 linter is `enabled in TravisCI by
-  default <https://github.com/cherrypy/cherrypy/commit/b6e752b>`_
-* Max line restriction is now set to 120 for flake8 linter
-* PEP257 linter runs as separate allowed failure job in Travis CI
-* A few bugs related to undeclared variables have been fixed
-* ``pre-commit`` testing goes faster due to enabled caching
+  default <https://github.com/cherrypy/cherrypy/commit/b6e752b>`_.
+* Max line restriction is now set to 120 for flake8 linter.
+* PEP257 linter runs as separate allowed failure job in Travis CI.
+* A few bugs related to undeclared variables have been fixed.
+* ``pre-commit`` testing goes faster due to enabled caching.
 
 v10.1.1
 -------
