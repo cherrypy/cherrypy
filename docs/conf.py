@@ -288,11 +288,11 @@ link_files = {
                 with_scm='{text}\n{rev[timestamp]:%d %b %Y}\n',
             ),
             dict(
-                pattern=r"PEP[- ](?P<pep_number>\d+)",
+                pattern=r'PEP[- ](?P<pep_number>\d+)',
                 url='https://www.python.org/dev/peps/pep-{pep_number:0>4}/',
             ),
             dict(
-                pattern=r"cheroot (?P<cheroot_version>\d+)",
+                pattern=r'cheroot (?P<cheroot_version>\d+)',
                 url='https://cheroot.readthedocs.io/en/latest/history.html#v{cheroot_version}',
             ),
         ],
