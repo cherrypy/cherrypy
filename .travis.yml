@@ -21,6 +21,8 @@ matrix:
     - env: TOXENV=pre-commit-pep257
   include:
     - python: 3.6
+      env: TOXENV=cheroot-master
+    - python: 3.6
       env: TOXENV=pre-commit
     - python: 3.6
       env: TOXENV=pre-commit-pep257
