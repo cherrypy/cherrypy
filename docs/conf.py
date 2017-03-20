@@ -295,6 +295,7 @@ link_files = {
                 url='https://www.python.org/dev/peps/pep-{pep_number:0>4}/',
             ),
             dict(
+                # FIXME: currently this puts #v1.2.3 style version into URL, but it should be v1-2-3
                 pattern=r'cheroot v?(?P<cheroot_version>\d+(\.\d+){1,2})',
                 url='https://cheroot.readthedocs.io/en/latest/history.html#v{cheroot_version}',
             ),
