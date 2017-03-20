@@ -295,7 +295,7 @@ link_files = {
                 url='https://www.python.org/dev/peps/pep-{pep_number:0>4}/',
             ),
             dict(
-                pattern=r'cheroot (?P<cheroot_version>\d+)',
+                pattern=r'cheroot v?(?P<cheroot_version>\d+(\.\d+){1,2})',
                 url='https://cheroot.readthedocs.io/en/latest/history.html#v{cheroot_version}',
             ),
         ],
