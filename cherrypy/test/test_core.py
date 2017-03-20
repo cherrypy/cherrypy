@@ -150,6 +150,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def url_with_quote(self):
                 raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
 
+            def url_with_xss(self):
+                raise cherrypy.HTTPRedirect("/some<script>alert(1);</script>url/that'we/want")
+
             def url_with_unicode(self):
                 raise cherrypy.HTTPRedirect(ntou('тест', 'utf-8'))
 
@@ -434,6 +437,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/redirect/url_with_quote')
         self.assertStatus(303)
         assertValidXHTML()
+
+    def test_redirect_with_xss(self):
+        """A redirect to a URL with HTML injected should result in page contents escaped."""
+        self.getPage('/redirect/url_with_xss')
+        self.assertStatus(303)
+        assert b'<script>' not in self.body
+        assert b'&lt;script&gt;' in self.body
 
     def test_redirect_with_unicode(self):
         """
