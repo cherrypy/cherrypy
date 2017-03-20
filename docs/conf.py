@@ -1,3 +1,4 @@
+"""CherryPy sphinx doc configuration module."""
 # -*- coding: utf-8 -*-
 #
 # CherryPy documentation build configuration file, created by
@@ -22,6 +23,7 @@ assert sys.version_info > (3,), 'Python 3 required to build docs'
 
 
 def try_import(mod_name):
+    """Attempt importing module and suppress failure of doing this."""
     try:
         return importlib.import_module(mod_name)
     except ImportError:
@@ -251,8 +253,9 @@ latex_documents = [
 
 
 def mock_pywin32():
-    """
-    Mock pywin32 so that Linux hosts, including ReadTheDocs,
+    """Mock pywin32 module.
+
+    Resulting in Linux hosts, including ReadTheDocs,
     and other environments that don't have pywin32 can generate the docs
     properly including the PDF version.
     See:
