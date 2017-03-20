@@ -277,7 +277,7 @@ mock_pywin32()  # noqa: E305
 link_files = {
     '../CHANGES.rst': dict(
         using=dict(
-            GH='https://github.com',
+            GH='https://github.com/cherrypy/{project}'.format(project=project),
             project=project,
             url=url,
         ),
