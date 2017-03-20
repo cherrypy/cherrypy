@@ -283,8 +283,8 @@ link_files = {
         ),
         replace=[
             dict(
-                pattern=r'(Issue )?#(?P<issue>\d+)',
-                url='{url}/issues/{issue}',
+                pattern=r'((Issue|PR)\s?)?#(?P<issue_or_pr>\d+)',
+                url='{GH}/issues/{issue_or_pr}',
             ),
             dict(
                 pattern=r'^(?m)((?P<scm_version>v?\d+(\.\d+){1,2}))\n[-=]+\n',
