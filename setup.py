@@ -69,7 +69,8 @@ extras_require = {
     'docs': [
         'docutils',
         'sphinx_rtd_theme',
-        'rst.linker',
+        'rst.linker>=1.9',
+        'jaraco.packaging>=3.2',
     ],
     'json': ['simplejson'],
     'routes_dispatcher': ['routes>=2.3.1'],
