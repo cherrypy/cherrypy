@@ -7,8 +7,6 @@ python:
 - 3.5
 - 3.6
 - 3.7-dev
-- pypy
-- pypy3
 - nightly
 
 matrix:
@@ -20,6 +18,10 @@ matrix:
     - python: pypy3
     - env: TOXENV=pre-commit-pep257
   include:
+    - python: pypy
+      env: PYPY_VERSION=pypy-2.6.1
+    - python: pypy3
+      env: PYPY_VERSION=pypy3-2.4.0
     - python: 3.6
       env: TOXENV=cheroot-master
     - python: 3.6
@@ -35,10 +37,6 @@ cache:
     - $HOME/.pre-commit
 
 before_install: |
-  case "$TRAVIS_PYTHON_VERSION" in
-    pypy) export PYPY_VERSION="pypy-2.6.1" ;;
-    pypy3) export PYPY_VERSION="pypy3-2.4.0" ;;
-  esac
   if ! [ -z "$PYPY_VERSION" ]
   then
     export PYENV_ROOT="$HOME/.pyenv"
