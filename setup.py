@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+"""CherryPy package setuptools installer."""
+
 import sys
 import io
 
@@ -59,6 +62,12 @@ packages = [
     'cherrypy.scaffold',
 ]
 
+package_data = {
+    'cherrypy': ['favicon.ico'],
+    'cherrypy.scaffold': ['static/made_with_cherrypy_small.png'],
+    'cherrypy.tutorial': ['tutorial.conf', 'favicon.ico', 'custom_error.html'],
+}
+
 install_requires = [
     'six',
     'cheroot>=5.2.0',
@@ -116,6 +125,7 @@ setup_params = dict(
     license=cp_license,
     packages=packages,
     entry_points={'console_scripts': ['cherryd = cherrypy.__main__:run']},
+    package_data=package_data,
     include_package_data=True,
     install_requires=install_requires,
     extras_require=extras_require,
@@ -127,6 +137,7 @@ setup_params = dict(
 
 
 def main():
+    """Package installation entry point."""
     setuptools.setup(**setup_params)
 
 
