@@ -19,9 +19,9 @@ matrix:
     - env: TOXENV=pre-commit-pep257
   include:
     - python: pypy
-      env: PYPY_VERSION=pypy-2.6.1
+      env: PYPY_VERSION=pypy2-5.7.1
     - python: pypy3
-      env: PYPY_VERSION=pypy3-2.4.0
+      env: PYPY_VERSION=pypy3.5-5.7.1-beta
     - python: 3.6
       env: TOXENV=cheroot-master
     - python: 3.6
