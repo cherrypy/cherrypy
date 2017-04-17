@@ -30,3 +30,6 @@ sphinx/source/_build
 # Eclipse, PyDev
 .project
 .pydevproject
+
+# test results in junit format for Appveyor
+/junit-test-results.xml
