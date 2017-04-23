@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+"""CherryPy package setuptools installer."""
+
 import sys
 import io
 
@@ -127,6 +130,7 @@ setup_params = dict(
 
 
 def main():
+    """Package installation entry point."""
     setuptools.setup(**setup_params)
 
 
