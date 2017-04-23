@@ -19,41 +19,11 @@ import cherrypy
 from cherrypy._cpcompat import text_or_bytes, copyitems, HTTPSConnection, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
-from cherrypy.lib.reprconf import unrepr
 from cherrypy.test import webtest
 
-_testconfig = None
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
 serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
-
-
-def get_tst_config(overconf={}):
-    global _testconfig
-    if _testconfig is None:
-        conf = {
-            'scheme': 'http',
-            'protocol': 'HTTP/1.1',
-            'port': 54583,
-            'host': '127.0.0.1',
-            'validate': False,
-            'server': 'wsgi',
-        }
-        try:
-            import testconfig
-            _conf = testconfig.config.get('supervisor', None)
-            if _conf is not None:
-                for k, v in _conf.items():
-                    if isinstance(v, text_or_bytes):
-                        _conf[k] = unrepr(v)
-                conf.update(_conf)
-        except ImportError:
-            pass
-        _testconfig = conf
-    conf = _testconfig.copy()
-    conf.update(overconf)
-
-    return conf
 
 
 class Supervisor(object):
@@ -270,7 +240,14 @@ class CPWebCase(webtest.WebCase):
     def setup_class(cls):
         ''
         # Creates a server
-        conf = get_tst_config()
+        conf = {
+            'scheme': 'http',
+            'protocol': 'HTTP/1.1',
+            'port': 54583,
+            'host': '127.0.0.1',
+            'validate': False,
+            'server': 'wsgi',
+        }
         supervisor_factory = cls.available_servers.get(
             conf.get('server', 'wsgi'))
         if supervisor_factory is None:

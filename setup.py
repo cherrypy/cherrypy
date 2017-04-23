@@ -81,7 +81,6 @@ extras_require = {
     'ssl': ['pyOpenSSL'],
     'testing': [
         'coverage',  # inspects tests coverage
-        'nose-testconfig',  # only used in cherrypy.test.helper
 
         # cherrypy.lib.gctools
         'objgraph',
