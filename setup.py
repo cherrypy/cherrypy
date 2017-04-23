@@ -81,8 +81,6 @@ extras_require = {
     'ssl': ['pyOpenSSL'],
     'testing': [
         'coverage',  # inspects tests coverage
-        # TODO: drop nose dependency in favor of py.test analogue
-        'nose',  # only used in cherrypy.test.{helper,test_{compat,routes}}
         'nose-testconfig',  # only used in cherrypy.test.helper
 
         # cherrypy.lib.gctools
