@@ -91,7 +91,8 @@ extras_require = {
         # in 0.6
         'graphviz<0.6; python_version == "2.6"',
 
-        'pytest',
+        'pytest>=2.8',
+        'pytest-sugar',
         'backports.unittest_mock',
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
