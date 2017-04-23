@@ -11,9 +11,9 @@ import time
 import unittest
 import warnings
 
-import nose
-import six
 import portend
+import pytest
+import six
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, copyitems, HTTPSConnection, ntob
@@ -346,7 +346,7 @@ class CPWebCase(webtest.WebCase):
                                        protocol, raise_subcls)
 
     def skip(self, msg='skipped '):
-        raise nose.SkipTest(msg)
+        pytest.skip(msg)
 
     def assertErrorPage(self, status, message=None, pattern=''):
         """Compare the response body with a built in error page.
