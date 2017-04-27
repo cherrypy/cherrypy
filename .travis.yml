@@ -9,6 +9,49 @@ python:
 - 3.7-dev
 - nightly
 
+_base_envs:
+- &pypy_base
+  python: pypy
+  env:
+  - PYPY_VERSION=pypy2-5.7.1
+  - PYENV_ROOT="$HOME/.pyenv"
+  - PATH="$PYENV_ROOT/bin:$PATH"
+  dist: trusty
+  sudo: required
+  addons:
+    apt:
+      packages:
+      - make
+      - build-essential
+      - libssl-dev
+      - zlib1g-dev
+      - libbz2-dev
+      - libreadline-dev
+      - libsqlite3-dev
+      - wget
+      - curl
+      - llvm
+      - libncurses5-dev
+      - libncursesw5-dev
+      - xz-utils
+      - tk-dev
+  before_install:
+  - |
+    if [ -f "$PYENV_ROOT/bin/pyenv" ]
+    then
+      eval "$(pyenv init -)"
+      eval "$(pyenv virtualenv-init -)"
+      pyenv update
+    else
+      rm -rf "$PYENV_ROOT"
+      curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
+      eval "$(pyenv init -)"
+      eval "$(pyenv virtualenv-init -)"
+    fi
+    pyenv install --skip-existing --keep --verbose "$PYPY_VERSION"
+    pyenv shell "$PYPY_VERSION"
+
+
 matrix:
   fast_finish: true
   allow_failures:
@@ -18,10 +61,18 @@ matrix:
     - python: pypy3
     - env: TOXENV=pre-commit-pep257
   include:
-    - python: pypy
-      env: PYPY_VERSION=pypy2-5.7.1
-    - python: pypy3
-      env: PYPY_VERSION=pypy3.5-5.7.1-beta
+    - <<: *pypy_base
+      python: pypy
+      env:
+      - PYPY_VERSION=pypy2-5.7.1
+      - PYENV_ROOT="$HOME/.pyenv"
+      - PATH="$PYENV_ROOT/bin:$PATH"
+    - <<: *pypy_base
+      python: pypy3
+      env:
+      - PYPY_VERSION=pypy3.5-5.7.1-beta
+      - PYENV_ROOT="$HOME/.pyenv"
+      - PATH="$PYENV_ROOT/bin:$PATH"
     - python: 3.6
       env: TOXENV=cheroot-master
     - python: 3.6
