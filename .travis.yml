@@ -50,6 +50,7 @@ _base_envs:
     fi
     pyenv install --skip-existing --keep --verbose "$PYPY_VERSION"
     pyenv shell "$PYPY_VERSION"
+    python --version
 
 
 matrix:
