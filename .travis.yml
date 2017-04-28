@@ -48,9 +48,9 @@ _base_envs:
       eval "$(pyenv init -)"
       eval "$(pyenv virtualenv-init -)"
     fi
-    pyenv install --skip-existing --keep --verbose "$PYPY_VERSION"
-    pyenv shell "$PYPY_VERSION"
-    python --version
+  - pyenv install --skip-existing --keep --verbose "$PYPY_VERSION"
+  - pyenv shell "$PYPY_VERSION"
+  - python --version
 
 
 matrix:
