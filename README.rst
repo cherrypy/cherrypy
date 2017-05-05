@@ -58,7 +58,6 @@ Additionally:
    https://github.com/cherrypy/cherrypy/tree/master/cherrypy/tutorial
 -  A general wiki at:
    https://github.com/cherrypy/cherrypy/wiki
--  Plugins are described at: http://tools.cherrypy.org/
 
 If the docs are insufficient to address your needs, the CherryPy
 community has several `avenues for support
