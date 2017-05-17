@@ -56,9 +56,8 @@ Additionally:
 
 -  Tutorials are included in the repository:
    https://github.com/cherrypy/cherrypy/tree/master/cherrypy/tutorial
--  A general wiki at(will be moved to github):
-   https://bitbucket.org/cherrypy/cherrypy/wiki/Home
--  Plugins are described at: http://tools.cherrypy.org/
+-  A general wiki at:
+   https://github.com/cherrypy/cherrypy/wiki
 
 If the docs are insufficient to address your needs, the CherryPy
 community has several `avenues for support
@@ -70,4 +69,4 @@ Contributing
 Please follow the `contribution guidelines
 <http://docs.cherrypy.org/en/latest/contribute.html>`_.
 And by all means, absorb the `Zen of
-CherryPy <https://bitbucket.org/cherrypy/cherrypy/wiki/ZenOfCherryPy>`_.
+CherryPy <https://github.com/cherrypy/cherrypy/wiki/The-Zen-of-CherryPy>`_.
