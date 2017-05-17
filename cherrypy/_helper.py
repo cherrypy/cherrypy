@@ -223,30 +223,6 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
     if qs:
         qs = '?' + qs
 
-    def normalize_path(path):
-        if './' not in path:
-            return path
-
-        # Normalize the URL by removing ./ and ../
-        atoms = []
-        for atom in path.split('/'):
-            if atom == '.':
-                pass
-            elif atom == '..':
-                # Don't pop from empty list
-                # (i.e. ignore redundant '..')
-                if atoms:
-                    atoms.pop()
-            elif atom:
-                atoms.append(atom)
-
-        newpath = '/'.join(atoms)
-        # Preserve leading '/'
-        if path.startswith('/'):
-            newpath = '/' + newpath
-
-        return newpath
-
     if cherrypy.request.app:
         if not path.startswith('/'):
             # Append/remove trailing slash from path_info as needed
@@ -308,3 +284,28 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
         newurl = '/'.join(new)
 
     return newurl
+
+
+def normalize_path(path):
+    if './' not in path:
+        return path
+
+    # Normalize the URL by removing ./ and ../
+    atoms = []
+    for atom in path.split('/'):
+        if atom == '.':
+            pass
+        elif atom == '..':
+            # Don't pop from empty list
+            # (i.e. ignore redundant '..')
+            if atoms:
+                atoms.pop()
+        elif atom:
+            atoms.append(atom)
+
+    newpath = '/'.join(atoms)
+    # Preserve leading '/'
+    if path.startswith('/'):
+        newpath = '/' + newpath
+
+    return newpath
