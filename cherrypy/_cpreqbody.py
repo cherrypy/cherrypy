@@ -836,6 +836,8 @@ class SizedReader:
 
             # Store the data.
             if fp_out is None:
+                if not isinstance(data, bytes):
+                    data = ntob(data)
                 chunks.append(data)
             else:
                 fp_out.write(data)
