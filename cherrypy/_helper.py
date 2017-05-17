@@ -12,7 +12,8 @@ import cherrypy
 
 def expose(func=None, alias=None):
     """
-    Expose the function or class, optionally providing an alias or set of aliases.
+    Expose the function or class, optionally providing
+    an alias or set of aliases.
     """
     def expose_(func):
         func.exposed = True
@@ -145,10 +146,8 @@ def popargs(*args, **kwargs):
         if k == 'handler':
             handler = v
         else:
-            raise TypeError(
-                "cherrypy.popargs() got an unexpected keyword argument '{0}'"
-                .format(k)
-            )
+            tm = "cherrypy.popargs() got an unexpected keyword argument '{0}'"
+            raise TypeError(tm.format(k))
 
     import inspect
 
@@ -160,7 +159,8 @@ def popargs(*args, **kwargs):
         if inspect.isclass(cls_or_self):
             # cherrypy.popargs is a class decorator
             cls = cls_or_self
-            setattr(cls, cherrypy.dispatch.Dispatcher.dispatch_method_name, decorated)
+            name = cherrypy.dispatch.Dispatcher.dispatch_method_name
+            setattr(cls, name, decorated)
             return cls
 
         # We're in the actual function
