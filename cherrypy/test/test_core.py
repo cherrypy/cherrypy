@@ -74,6 +74,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     relative = bool(relative)
                 return cherrypy.url(path_info, relative=relative)
 
+            def qs(self, qs):
+                return cherrypy.url(qs=qs)
+
         def log_status():
             Status.statuses.append(cherrypy.response.status)
         cherrypy.tools.log_status = cherrypy.Tool(
@@ -647,6 +650,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('%s/url/other/page1' % self.base())
         self.getPage('/url/?path_info=/other/./page1')
         self.assertBody('%s/other/page1' % self.base())
+        self.getPage('/url/?path_info=/other/././././page1')
+        self.assertBody('%s/other/page1' % self.base())
 
         # Double dots
         self.getPage('/url/leaf?path_info=../page1')
@@ -655,6 +660,20 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('%s/url/page1' % self.base())
         self.getPage('/url/leaf?path_info=/other/../page1')
         self.assertBody('%s/page1' % self.base())
+        self.getPage('/url/leaf?path_info=/other/../../../page1')
+        self.assertBody('%s/page1' % self.base())
+        self.getPage('/url/leaf?path_info=/other/../../../../../page1')
+        self.assertBody('%s/page1' % self.base())
+
+        # qs param is not normalized as a path
+        self.getPage('/url/qs?qs=/other')
+        self.assertBody('%s/url/qs?/other' % self.base())
+        self.getPage('/url/qs?qs=/other/../page1')
+        self.assertBody('%s/url/qs?/other/../page1' % self.base())
+        self.getPage('/url/qs?qs=../page1')
+        self.assertBody('%s/url/qs?../page1' % self.base())
+        self.getPage('/url/qs?qs=../../page1')
+        self.assertBody('%s/url/qs?../../page1' % self.base())
 
         # Output relative to current path or script_name
         self.getPage('/url/?path_info=page1&relative=True')

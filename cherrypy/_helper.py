@@ -223,6 +223,30 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
     if qs:
         qs = '?' + qs
 
+    def normalize_path(path):
+        if './' not in path:
+            return path
+
+        # Normalize the URL by removing ./ and ../
+        atoms = []
+        for atom in path.split('/'):
+            if atom == '.':
+                pass
+            elif atom == '..':
+                # Don't pop from empty list
+                # (i.e. ignore redundant '..')
+                if atoms:
+                    atoms.pop()
+            elif atom:
+                atoms.append(atom)
+
+        newpath = '/'.join(atoms)
+        # Preserve leading '/'
+        if path.startswith('/'):
+            newpath = '/' + newpath
+
+        return newpath
+
     if cherrypy.request.app:
         if not path.startswith('/'):
             # Append/remove trailing slash from path_info as needed
@@ -246,7 +270,7 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
         if base is None:
             base = cherrypy.request.base
 
-        newurl = base + script_name + path + qs
+        newurl = base + script_name + normalize_path(path) + qs
     else:
         # No request.app (we're being called outside a request).
         # We'll have to guess the base from server.* attributes.
@@ -256,19 +280,7 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
             base = cherrypy.server.base()
 
         path = (script_name or '') + path
-        newurl = base + path + qs
-
-    if './' in newurl:
-        # Normalize the URL by removing ./ and ../
-        atoms = []
-        for atom in newurl.split('/'):
-            if atom == '.':
-                pass
-            elif atom == '..':
-                atoms.pop()
-            else:
-                atoms.append(atom)
-        newurl = '/'.join(atoms)
+        newurl = base + normalize_path(path) + qs
 
     # At this point, we should have a fully-qualified absolute URL.
 
