@@ -1,3 +1,8 @@
+v10.2.2
+-------
+
+* #1595: Fixed over-eager normalization of paths in cherrypy.url.
+
 v10.2.1
 -------
 
