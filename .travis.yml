@@ -81,8 +81,10 @@ matrix:
       after_failure: skip
     - python: 3.6
       env: TOXENV=pre-commit-pep257
+      after_failure: skip
     - python: 3.6
       env: TOXENV=dist-check
+      after_failure: skip
 
 cache:
   pip: true
