@@ -504,6 +504,7 @@ _d.decode = Tool('before_request_body', encoding.decode)
 # the order of encoding, gzip, caching is important
 _d.encode = Tool('before_handler', encoding.ResponseEncoder, priority=70)
 _d.gzip = Tool('before_finalize', encoding.gzip, priority=80)
+_d.gzip_precomp = Tool('before_finalize', encoding.gzip_precomp, priority=80)
 _d.staticdir = HandlerTool(static.staticdir)
 _d.staticfile = HandlerTool(static.staticfile)
 _d.sessions = SessionTool()
