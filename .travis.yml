@@ -1,21 +1,17 @@
 language: python
-python:
-- 2.7
-- 3.3
-- 3.4
-- 3.5
-- 3.6
-- 3.7-dev
-- nightly
-
 _base_envs:
-- &pypy_base
-  language: generic
-  python: pypy
-  env:
-  - PYPY_VERSION=pypy2-5.7.1
-  - PYENV_ROOT="$HOME/.pyenv"
-  - PATH="$PYENV_ROOT/bin:$PATH"
+- &stage_lint
+  stage: lint
+- &stage_test
+  stage: test
+- &stage_test_priority
+  stage: test against latest Python versions first (under GNU/Linux)
+- &stage_test_osx
+  stage: test under OS X (last chance to fail before deploy available)
+- &stage_deploy
+  stage: upload new version of python package to PYPI (only for tagged commits)
+- &linux_base
+  os: linux
   dist: trusty
   sudo: required
   addons:
@@ -35,8 +31,15 @@ _base_envs:
       - libncursesw5-dev
       - xz-utils
       - tk-dev
+- &pyenv_base
+  <<: *stage_test
+  python: pypy
+  env:
+  - PYTHON_VERSION=pypy2-5.7.1
+  - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
+  - &env_path PATH="$PYENV_ROOT/bin:$PATH"
   before_install:
-  - |
+  - &ensure_pyenv_installed |
     if [ -f "$PYENV_ROOT/bin/pyenv" ]
     then
       eval "$(pyenv init -)"
@@ -48,67 +51,169 @@ _base_envs:
       eval "$(pyenv init -)"
       eval "$(pyenv virtualenv-init -)"
     fi
-  - pyenv install --skip-existing --keep --verbose "$PYPY_VERSION"
-  - pyenv shell "$PYPY_VERSION"
-  - python --version
-
-
-matrix:
+  - &install_python pyenv install --skip-existing --keep --verbose "$PYTHON_VERSION"
+  - &switch_python pyenv shell "$PYTHON_VERSION"
+  - &python_version python --version
+- &linux_python_base
+  <<: *linux_base
+  <<: *pyenv_base
+- &osx_python_base
+  <<: *pyenv_base
+  <<: *stage_test_osx
+  os: osx
+  language: generic
+  before_install:
+  - brew update
+  - brew install readline xz
+  - *ensure_pyenv_installed
+  - *install_python
+  - *switch_python
+  - *python_version
+  before_cache:
+  - brew --cache
+- &pure_python_base
+  <<: *stage_test
+  sudo: false
+  python: &mainstream_python 3.6
+- &pure_python_base_priority
+  <<: *pure_python_base
+  <<: *stage_test_priority
+- &lint_python_base
+  <<: *stage_lint
+  python: *mainstream_python
+  after_failure: skip
+jobs:
   fast_finish: true
   allow_failures:
-    # TODO: check what causes testing stuck
-    - python: pypy
-    # TODO: fix tests
-    - python: pypy3
-    - env: TOXENV=pre-commit-pep257
+  # TODO: check what causes testing stuck
+  - python: pypy
+  # TODO: fix tests
+  - python: pypy3
+  - env: TOXENV=pre-commit-pep257
   include:
-    - <<: *pypy_base
-      python: pypy
-      env:
-      - PYPY_VERSION=pypy2-5.7.1
-      - PYENV_ROOT="$HOME/.pyenv"
-      - PATH="$PYENV_ROOT/bin:$PATH"
-    - <<: *pypy_base
-      python: pypy3
-      env:
-      - PYPY_VERSION=pypy3.5-5.7.1-beta
-      - PYENV_ROOT="$HOME/.pyenv"
-      - PATH="$PYENV_ROOT/bin:$PATH"
-    - python: 3.6
-      env: TOXENV=cheroot-master
-    - python: 3.6
-      env: TOXENV=pre-commit
-      after_failure: skip
-    - python: 3.6
-      env: TOXENV=pre-commit-pep257
-      after_failure: skip
-    - python: 3.6
-      env: TOXENV=dist-check
-      after_failure: skip
-
+  - <<: *lint_python_base
+    env: TOXENV=pre-commit
+  - <<: *lint_python_base
+    env: TOXENV=pre-commit-pep257
+  - <<: *lint_python_base
+    env: TOXENV=dist-check
+  - <<: *pure_python_base_priority
+    # mainstream here (3.6)
+  - <<: *pure_python_base_priority
+    # mainstream here (3.6)
+    # run tests against the bleeding-edge cheroot
+    env: TOXENV=cheroot-master
+  - <<: *pure_python_base_priority
+    python: nightly
+  - <<: *pure_python_base
+    python: 2.6
+  - <<: *pure_python_base
+    python: 2.7
+  - <<: *pure_python_base
+    python: 3.3
+  - <<: *pure_python_base
+    python: 3.4
+  - <<: *pure_python_base
+    python: 3.5
+  - <<: *pure_python_base
+    python: 3.7-dev
+  - <<: *linux_python_base
+    python: pypy
+    env:
+    - PYTHON_VERSION=pypy2-5.7.1
+    - *env_pyenv
+    - *env_path
+  - <<: *linux_python_base
+    python: pypy3
+    env:
+    - PYTHON_VERSION=pypy3.5-5.7.1-beta
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 2.6
+    env:
+    - PYTHON_VERSION=2.6.9
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 2.7
+    env:
+    - PYTHON_VERSION=2.7.13
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 3.3
+    env:
+    - PYTHON_VERSION=3.3.6
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 3.4
+    env:
+    - PYTHON_VERSION=3.4.6
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 3.5
+    env:
+    - PYTHON_VERSION=3.5.3
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: *mainstream_python
+    env:
+    - PYTHON_VERSION=3.6.1
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: nightly
+    env:
+    - PYTHON_VERSION=3.7-dev
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 3.7-dev
+    env:
+    - PYTHON_VERSION=3.7-dev
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    # mainstream here (3.6)
+    python: *mainstream_python
+    env:
+    - PYTHON_VERSION=3.6.1
+    # run tests against the bleeding-edge cheroot
+    - TOXENV=cheroot-master
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: pypy
+    env:
+    - PYTHON_VERSION=pypy2-5.7.1
+    - *env_pyenv
+    - *env_path
+  # pypy3.5-5.7.1-beta fails under OS X because it's unsupported (PR #26)
+  - <<: *stage_deploy
+    python: *mainstream_python
+    deploy:
+      provider: pypi
+      server: https://upload.pypi.org/legacy/
+      on:
+        tags: true
+        all_branches: true
+        python: *mainstream_python
+      user: jaraco
+      distributions: release
+      skip_upload_docs: true
+      password:
+        secure: CQqUvtssQ4wmRluPcxh6m5lIXi83Qu9dAFAvZLS/+AQNIG78XECXv5xFTEdGSLX9yncKDpDKI3xRJeCKyO4OJUN0t6W1MRycY72+R63i9e9wPjfvtRqYH1TBT+no7jj/DHqXIrWSlpjRNAt4XXeSv7OzKWT4PmTNkNQSKyS1DWCmZGlbCKlV774Z9PbrfltflxL0V6DiX6ZfoY1THBO4rIopjMk/MPLgS5zvwLgXVbT9sK/DcPOgOq47iSLCs0oScbwiFzYW4DbcVZrBMv4ALtQTjk6ZEaBQ7KtKgsyxgi/ToVhjRxYg4rwvhjsyjixUdECLUqL3WgWfzW/lo82lhb79ERwhnjf1DvPNexlXhv9hHwHsFROpaOmM0nyDJsJg0rCNPVfO4SpBHEnd/ujlHO6yorHj0S54jZWqqDwD5gN19v3hEMT48Pc8uvazE9K1kMQbNXEzqn+SJjVB+DG7qK5Jm9Kk7ZC4R88hJAJNsR+SlFCXMGzkS9WUefUGLHQFfezZk43sMPIXMnh9d2XqCQo4QpUawdg3pwaTukFfyaHlK39CIHhZNas5D/UFL5spQPAAkH1IMcPILiSUwYYnXIJFWJIiulfEQalJroAQjrzvst/NVB8BbeYuCfmVLVOZw8Y6GOYONGgiXjT3nfmw/dN+uw+GY3EgAV5jl+fa434=
 cache:
   pip: true
   directories:
-    - $HOME/.pre-commit
+  - $HOME/.pre-commit
+  - $HOME/Library/Caches/Homebrew
 
-before_install: |
-  if ! [ -z "$PYPY_VERSION" ]
-  then
-    export PYENV_ROOT="$HOME/.pyenv"
-    if [ -f "$PYENV_ROOT/bin/pyenv" ]
-    then
-      pushd "$PYENV_ROOT" && git pull && popd
-    else
-      rm -rf "$PYENV_ROOT" \
-      && git clone --depth 1 https://github.com/yyuu/pyenv.git "$PYENV_ROOT"
-    fi
-    "$PYENV_ROOT/bin/pyenv" install "$PYPY_VERSION"
-    virtualenv --python="$PYENV_ROOT/versions/$PYPY_VERSION/bin/python" \
-               "$HOME/virtualenvs/$PYPY_VERSION"
-    source "$HOME/virtualenvs/$PYPY_VERSION/bin/activate"
-  fi
-install: pip install tox
-
+install: pip install tox setuptools>=28.2
 script: tox
 
 after_failure:
@@ -124,14 +229,3 @@ after_failure:
 - py_log=/home/travis/build/cherrypy/cherrypy/.tox/python/log/python-0.log
 - echo Outputting python invokation log from $py_log
 - cat $py_log
-
-deploy:
-  provider: pypi
-  on:
-    tags: true
-    python: 3.6
-  user: jaraco
-  password:
-    secure: CQqUvtssQ4wmRluPcxh6m5lIXi83Qu9dAFAvZLS/+AQNIG78XECXv5xFTEdGSLX9yncKDpDKI3xRJeCKyO4OJUN0t6W1MRycY72+R63i9e9wPjfvtRqYH1TBT+no7jj/DHqXIrWSlpjRNAt4XXeSv7OzKWT4PmTNkNQSKyS1DWCmZGlbCKlV774Z9PbrfltflxL0V6DiX6ZfoY1THBO4rIopjMk/MPLgS5zvwLgXVbT9sK/DcPOgOq47iSLCs0oScbwiFzYW4DbcVZrBMv4ALtQTjk6ZEaBQ7KtKgsyxgi/ToVhjRxYg4rwvhjsyjixUdECLUqL3WgWfzW/lo82lhb79ERwhnjf1DvPNexlXhv9hHwHsFROpaOmM0nyDJsJg0rCNPVfO4SpBHEnd/ujlHO6yorHj0S54jZWqqDwD5gN19v3hEMT48Pc8uvazE9K1kMQbNXEzqn+SJjVB+DG7qK5Jm9Kk7ZC4R88hJAJNsR+SlFCXMGzkS9WUefUGLHQFfezZk43sMPIXMnh9d2XqCQo4QpUawdg3pwaTukFfyaHlK39CIHhZNas5D/UFL5spQPAAkH1IMcPILiSUwYYnXIJFWJIiulfEQalJroAQjrzvst/NVB8BbeYuCfmVLVOZw8Y6GOYONGgiXjT3nfmw/dN+uw+GY3EgAV5jl+fa434=
-  distributions: release
-  skip_upload_docs: true
