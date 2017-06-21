@@ -447,7 +447,8 @@ and wrap your entire CherryPy application with it:
    def secureheaders():
        headers = cherrypy.response.headers
        headers['X-Frame-Options'] = 'DENY'
-       headers['X-XSS-Protection'] = '1; mode=block'
+       headers['        self.assertStatus(413)
+'] = '1; mode=block'
        headers['Content-Security-Policy'] = "default-src='self'"
 
 .. note::
@@ -486,6 +487,24 @@ If you use SSL you can also enable Strict Transport Security:
   headers['Strict-Transport-Security'] = 'max-age=31536000'  # one year
 
 Next, you should probably use :ref:`SSL <ssl>`.
+
+Controlling file uploads
+###########################
+The config option 'request.body.maxbytes' can be used to limit the amount of data a client can send 
+to your server. It works in either static or dynamic mode. In static mode, you can  simply set it to a number
+of bytes. In dynamic mode, you can set it to a tuple of (number, function). If number bytes is exceeded,
+function will be called with no arguments and whatever it returns will be used as the new bytes limit.
+
+Here None indicates no limit.
+
+In your function, you can use things like ip address and authentication tokens from cherrypy.request
+to determine if the request should be allowed.
+
+
+The config option "request.body.maxrambytes" can be used to determine the threshold at which an 
+individual Part of an HTTP request body will be stored in a temporary file instead of kept in RAM.
+
+This option must be an int, and defaults to 1000 although you may want to change it.
 
 Multiple HTTP servers support
 #############################
