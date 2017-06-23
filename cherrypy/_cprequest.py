@@ -643,7 +643,7 @@ class Request(object):
 
                     self.body = _cpreqbody.RequestBody(
                         self.rfile, self.headers, request_params=self.params)
-                        
+
                     self.namespaces(self.config)
 
                     self.stage = 'on_start_resource'

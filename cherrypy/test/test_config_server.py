@@ -32,17 +32,24 @@ class ServerConfigTests(helper.CPWebCase):
             def tinyupload(self):
                 return cherrypy.request.body.read()
 
+            # There's no actual reason we are checking the path_info The real purpose
+            # is to demonstrate using request headers to determine if we should accept an upload
+            def maxbytes_callback():
+                if cherrypy.request.path_info == '/tinyupload_dynamic':
+                    return 100000
+                else:
+                    return 1
+
             @cherrypy.expose
-            #There's no actual reason we are checking the path_info The real purpose
-            #is to demonstrate using request headers to determine if we should accept an upload
-            @cherrypy.config(**{'request.body.maxbytes': (1,lambda: 100000 if cherrypy.request.path_info=="/tinyupload_dynamic" else 1)})
+            @cherrypy.config(**{'request.body.maxbytes': (1, maxbytes_callback)})
             def tinyupload_dynamic(self):
                 return cherrypy.request.body.read()
 
             @cherrypy.expose
-            @cherrypy.config(**{'request.body.maxbytes': (1,lambda: 1)})
+            @cherrypy.config(**{'request.body.maxbytes': (1, lambda: 1)})
             def tinyupload_dynamic_fail(self):
                 return cherrypy.request.body.read()
+
         cherrypy.tree.mount(Root())
 
         cherrypy.config.update({
@@ -105,7 +112,6 @@ class ServerConfigTests(helper.CPWebCase):
                               ('Content-Length', '101')],
                      body='x' * 101)
         self.assertStatus(413)
-
 
     def testMaxRequestSize(self):
         if getattr(cherrypy.server, 'using_apache', False):

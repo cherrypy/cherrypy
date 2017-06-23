@@ -447,8 +447,7 @@ and wrap your entire CherryPy application with it:
    def secureheaders():
        headers = cherrypy.response.headers
        headers['X-Frame-Options'] = 'DENY'
-       headers['        self.assertStatus(413)
-'] = '1; mode=block'
+       headers['X-XSS-Protection'] = '1; mode=block'
        headers['Content-Security-Policy'] = "default-src='self'"
 
 .. note::
