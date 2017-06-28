@@ -250,7 +250,7 @@ class ServerAdapter(object):
         if not os.environ.get('LISTEN_PID', None):
             # Wait for port to be occupied if not running via socket-activation
             # (for socket-activation the port will be managed by systemd )
-            if isinstance(self.bind_addr, tuple):
+            if isinstance(self.bind_addr, tuple) and os.name != 'nt':
                 with _safe_wait(*self.bound_addr):
                     portend.occupied(*self.bound_addr, timeout=Timeouts.occupied)
 
