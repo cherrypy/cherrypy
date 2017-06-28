@@ -18,6 +18,8 @@ by adding a named handler to Config.namespaces. The name can be any string,
 and the handler must be either a callable or a context manager.
 """
 
+from cherrypy._cpcompat import text_or_bytes
+
 try:
     # Python 3.0+
     from configparser import ConfigParser
