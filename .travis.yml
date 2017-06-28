@@ -11,6 +11,7 @@ python:
 
 _base_envs:
 - &pypy_base
+  language: generic
   python: pypy
   env:
   - PYPY_VERSION=pypy2-5.7.1
