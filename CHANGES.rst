@@ -1,3 +1,8 @@
+v11.0.0
+-------
+
+* #1607: Dropped support for Python 2.6.
+
 v10.2.2
 -------
 

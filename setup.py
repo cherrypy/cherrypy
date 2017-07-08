@@ -30,7 +30,6 @@ classifiers = [
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python',
     'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.1',
@@ -84,9 +83,6 @@ extras_require = {
 
         # cherrypy.lib.gctools
         'objgraph',
-        # graphviz, required by objgraph, dropped support for Python 2.6
-        # in 0.6
-        'graphviz<0.6; python_version == "2.6"',
 
         'pytest>=2.8',
         'pytest-sugar',
@@ -123,7 +119,7 @@ setup_params = dict(
     setup_requires=[
         'setuptools_scm',
     ] + pytest_runner,
-    python_requires='>=2.6,!=3.0.*',
+    python_requires='>=2.7,!=3.0.*',
 )
 
 
