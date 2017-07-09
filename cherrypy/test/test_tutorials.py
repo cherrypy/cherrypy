@@ -1,12 +1,7 @@
 import sys
 import imp
 import types
-
-try:
-    import importlib
-except Exception:
-    # Python 2.6 may not have it.
-    pass
+import importlib
 
 import six
 
@@ -33,8 +28,6 @@ class TutorialTest(helper.CPWebCase):
         target = 'cherrypy.tutorial.' + name
         if target in sys.modules:
             module = imp.reload(sys.modules[target])
-        elif 'importlib' not in globals():
-            module = __import__(target, globals(), locals(), [''])
         else:
             module = importlib.import_module(target)
         return module
