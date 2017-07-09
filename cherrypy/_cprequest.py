@@ -6,7 +6,7 @@ import six
 from six.moves.http_cookies import SimpleCookie, CookieError
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, copykeys, ntob
+from cherrypy._cpcompat import text_or_bytes, ntob
 from cherrypy import _cpreqbody, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil, file_generator
@@ -127,7 +127,7 @@ class HookMap(dict):
         return '%s.%s(points=%r)' % (
             cls.__module__,
             cls.__name__,
-            copykeys(self)
+            list(self)
         )
 
 
