@@ -169,18 +169,10 @@ except ImportError:
     from http.client import NotConnected  # noqa
     from http.server import BaseHTTPRequestHandler  # noqa
 
+
 # Some platforms don't expose HTTPSConnection, so handle it separately
-if six.PY3:
-    try:
-        from http.client import HTTPSConnection
-    except ImportError:
-        # Some platforms which don't have SSL don't expose HTTPSConnection
-        HTTPSConnection = None
-else:
-    try:
-        from httplib import HTTPSConnection
-    except ImportError:
-        HTTPSConnection = None
+HTTPSConnection = getattr(six.moves.http_client, 'HTTPSConnection', None)
+
 
 try:
     # Python 2
