@@ -142,16 +142,14 @@ def unquote_qs(atom, encoding, errors='strict'):
 
 
 try:
-    # Prefer simplejson, which is usually more advanced than the builtin
-    # module.
+    # Prefer simplejson
     import simplejson as json
-    json_decode = json.JSONDecoder().decode
-    _json_encode = json.JSONEncoder().iterencode
 except ImportError:
-    # json is part of the standard library
     import json
-    json_decode = json.JSONDecoder().decode
-    _json_encode = json.JSONEncoder().iterencode
+
+
+json_decode = json.JSONDecoder().decode
+_json_encode = json.JSONEncoder().iterencode
 
 
 if six.PY3:
