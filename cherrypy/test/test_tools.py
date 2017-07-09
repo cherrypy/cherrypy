@@ -338,8 +338,9 @@ class ToolTests(helper.CPWebCase):
         # but our 'critical' hook should run and set the error to 502.
         self.getPage('/demo/err_in_onstart')
         self.assertErrorPage(502)
-        self.assertInBody(
-            "AttributeError: 'str' object has no attribute 'items'")
+        tmpl = "AttributeError: 'str' object has no attribute '{attr}'"
+        expected_msg = tmpl.format(attr='items' if six.PY3 else 'iteritems')
+        self.assertInBody(expected_msg)
 
     def testCombinedTools(self):
         expectedResult = (ntou('Hello,world') +
