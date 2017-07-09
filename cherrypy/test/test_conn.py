@@ -6,16 +6,13 @@ import sys
 import time
 
 import six
+from six.moves import urllib
 from six.moves.http_client import BadStatusLine, HTTPConnection, NotConnected
 
 import pytest
 
 import cherrypy
-from cherrypy._cpcompat import (
-    HTTPSConnection,
-    ntob, tonative,
-    urlopen,
-)
+from cherrypy._cpcompat import HTTPSConnection, ntob, tonative
 from cherrypy.test import helper, webtest
 
 
@@ -724,8 +721,13 @@ class ConnectionTests(helper.CPWebCase):
         conn.close()
 
     def test_598(self):
-        remote_data_conn = urlopen('%s://%s:%s/one_megabyte_of_a/' %
-                                   (self.scheme, self.HOST, self.PORT,))
+        tmpl = '{scheme}://{host}:{port}/one_megabyte_of_a/'
+        url = tmpl.format(
+            scheme=self.scheme,
+            host=self.HOST,
+            port=self.PORT,
+        )
+        remote_data_conn = urllib.request.urlopen(url)
         buf = remote_data_conn.read(512)
         time.sleep(timeout * 0.6)
         remaining = (1024 * 1024) - 512

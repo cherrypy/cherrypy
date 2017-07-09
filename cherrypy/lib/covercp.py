@@ -26,8 +26,9 @@ import cgi
 import os
 import os.path
 
+from six.moves import urllib
+
 import cherrypy
-from cherrypy._cpcompat import quote_plus
 
 
 localFile = os.path.join(os.path.dirname(__file__), 'coverage.cache')
@@ -212,7 +213,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude='',
             yield (
                 "<a class='directory' "
                 "href='menu?base=%s&exclude=%s'>%s</a>\n" %
-                (newpath, quote_plus(exclude), name)
+                (newpath, urllib.parse.quote_plus(exclude), name)
             )
 
         for chunk in _show_branch(
@@ -316,7 +317,7 @@ class CoverStats(object):
         for atom in atoms:
             path += atom + os.sep
             yield ("<a href='menu?base=%s&exclude=%s'>%s</a> %s"
-                   % (path, quote_plus(exclude), atom, os.sep))
+                   % (path, urllib.parse.quote_plus(exclude), atom, os.sep))
         yield '</div>'
 
         yield "<div id='tree'>"

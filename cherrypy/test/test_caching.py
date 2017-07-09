@@ -5,11 +5,12 @@ import threading
 import time
 
 from six.moves import range
+from six.moves import urllib
 
 import pytest
 
 import cherrypy
-from cherrypy._cpcompat import ntob, quote
+from cherrypy._cpcompat import ntob
 from cherrypy.lib import httputil
 
 from cherrypy.test import helper
@@ -302,7 +303,8 @@ class CacheTest(helper.CPWebCase):
         # before the actual stampede.
         self.getPage(slow_url)
         self.assertBody('success!')
-        self.getPage('/clear_cache?path=' + quote(slow_url, safe=''))
+        path = urllib.parse.quote(slow_url, safe='')
+        self.getPage('/clear_cache?path=' + path)
         self.assertStatus(200)
 
         start = datetime.datetime.now()

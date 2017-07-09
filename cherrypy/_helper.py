@@ -3,8 +3,8 @@ Helper functions for CP apps
 """
 
 import six
+from six.moves import urllib
 
-from cherrypy._cpcompat import urljoin as _urljoin, urlencode as _urlencode
 from cherrypy._cpcompat import text_or_bytes
 
 import cherrypy
@@ -219,7 +219,7 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
     relative to the server root; i.e., it will start with a slash.
     """
     if isinstance(qs, (tuple, list, dict)):
-        qs = _urlencode(qs)
+        qs = urllib.parse.urlencode(qs)
     if qs:
         qs = '?' + qs
 
@@ -239,7 +239,7 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
             if path == '':
                 path = pi
             else:
-                path = _urljoin(pi, path)
+                path = urllib.parse.urljoin(pi, path)
 
         if script_name is None:
             script_name = cherrypy.request.script_name

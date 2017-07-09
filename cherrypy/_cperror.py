@@ -121,10 +121,11 @@ from traceback import format_exception as _format_exception
 from xml.sax import saxutils
 
 import six
+from six.moves import urllib
 
 from cherrypy._cpcompat import escape_html
 from cherrypy._cpcompat import text_or_bytes, ntob
-from cherrypy._cpcompat import tonative, urljoin as _urljoin
+from cherrypy._cpcompat import tonative
 from cherrypy.lib import httputil as _httputil
 
 
@@ -163,7 +164,7 @@ class InternalRedirect(CherryPyException):
         #  1. a URL relative to root (e.g. "/dummy")
         #  2. a URL relative to the current path
         # Note that any query string will be discarded.
-        path = _urljoin(self.request.path_info, path)
+        path = urllib.parse.urljoin(self.request.path_info, path)
 
         # Set a 'path' member attribute so that code which traps this
         # error can have access to it.
@@ -223,7 +224,7 @@ class HTTPRedirect(CherryPyException):
             #  2. a URL relative to root (e.g. "/dummy")
             #  3. a URL relative to the current path
             # Note that any query string in cherrypy.request is discarded.
-            url = _urljoin(cherrypy.url(), url)
+            url = urllib.parse.urljoin(cherrypy.url(), url)
             abs_urls.append(url)
         self.urls = abs_urls
 

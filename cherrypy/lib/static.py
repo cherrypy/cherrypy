@@ -8,8 +8,10 @@ try:
 except ImportError:
     UnsupportedOperation = object()
 
+from six.moves import urllib
+
 import cherrypy
-from cherrypy._cpcompat import ntob, unquote
+from cherrypy._cpcompat import ntob
 from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
@@ -318,7 +320,7 @@ def staticdir(section, dir, root='', match='', content_types=None, index='',
         section = '/'
     section = section.rstrip(r'\/')
     branch = request.path_info[len(section) + 1:]
-    branch = unquote(branch.lstrip(r'\/'))
+    branch = urllib.parse.unquote(branch.lstrip(r'\/'))
 
     # If branch is "", filename will end in a slash
     filename = os.path.join(dir, branch)

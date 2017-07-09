@@ -98,17 +98,10 @@ def base64_decode(n, encoding='ISO-8859-1'):
 
 
 try:
-    # Python 3
-    from urllib.parse import urljoin, urlencode
-    from urllib.parse import quote, quote_plus
-    from urllib.request import unquote, urlopen
+    # functions not supported by six (yet)
+    # https://github.com/benjaminp/six/pull/203
     from urllib.request import parse_http_list, parse_keqv_list
 except ImportError:
-    # Python 2
-    from urlparse import urljoin  # noqa
-    from urllib import urlencode, urlopen  # noqa
-    from urllib import quote, quote_plus  # noqa
-    from urllib import unquote  # noqa
     from urllib2 import parse_http_list, parse_keqv_list  # noqa
 
 
