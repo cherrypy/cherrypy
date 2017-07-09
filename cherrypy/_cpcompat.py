@@ -115,23 +115,6 @@ def base64_decode(n, encoding='ISO-8859-1'):
 
 
 try:
-    sorted = sorted
-except NameError:
-    def sorted(i):
-        i = i[:]
-        i.sort()
-        return i
-
-try:
-    reversed = reversed
-except NameError:
-    def reversed(x):
-        i = len(x)
-        while i > 0:
-            i -= 1
-            yield x[i]
-
-try:
     # Python 3
     from urllib.parse import urljoin, urlencode
     from urllib.parse import quote, quote_plus

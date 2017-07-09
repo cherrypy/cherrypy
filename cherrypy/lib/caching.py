@@ -41,7 +41,7 @@ import six
 
 import cherrypy
 from cherrypy.lib import cptools, httputil
-from cherrypy._cpcompat import ntob, sorted, Event
+from cherrypy._cpcompat import ntob, Event
 
 
 class Cache(object):

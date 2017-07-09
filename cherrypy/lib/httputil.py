@@ -22,7 +22,7 @@ import six
 
 from cherrypy._cpcompat import BaseHTTPRequestHandler, ntob, ntou
 from cherrypy._cpcompat import text_or_bytes
-from cherrypy._cpcompat import reversed, sorted, unquote_qs
+from cherrypy._cpcompat import unquote_qs
 
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
