@@ -23,6 +23,7 @@ import sys
 import threading
 
 import six
+from six.moves import urllib
 
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
@@ -167,21 +168,15 @@ except NameError:
     # Python 3
     xrange = range
 
-try:
-    # Python 3
-    from urllib.parse import unquote as parse_unquote
 
-    def unquote_qs(atom, encoding, errors='strict'):
-        return parse_unquote(
-            atom.replace('+', ' '),
-            encoding=encoding,
-            errors=errors)
-except ImportError:
-    # Python 2
-    from urllib import unquote as parse_unquote
+def unquote_qs(atom, encoding, errors='strict'):
+    atom_spc = atom.replace('+', ' ')
+    return (
+        urllib.parse.unquote(atom_spc, encoding=encoding, errors=errors)
+        if six.PY3 else
+        urllib.parse.unquote(atom_spc).decode(encoding, errors)
+    )
 
-    def unquote_qs(atom, encoding, errors='strict'):
-        return parse_unquote(atom.replace('+', ' ')).decode(encoding, errors)
 
 try:
     # Prefer simplejson, which is usually more advanced than the builtin
