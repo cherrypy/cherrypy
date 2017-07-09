@@ -78,10 +78,9 @@ import threading
 import time
 import traceback as _traceback
 import warnings
+import subprocess
 
 import six
-
-from cherrypy._cpcompat import _args_from_interpreter_flags
 
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
@@ -421,7 +420,7 @@ class Bus(object):
         """
         return ([]
                 if getattr(sys, 'frozen', False)
-                else _args_from_interpreter_flags())
+                else subprocess._args_from_interpreter_flags())
 
     @staticmethod
     def _get_true_argv():
