@@ -19,6 +19,7 @@ except ImportError:
     from email.Header import decode_header
 
 import six
+from six.moves import range
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
 from cherrypy._cpcompat import ntob, ntou
@@ -416,9 +417,9 @@ class CaseInsensitiveDict(dict):
 # field continuation. It is expected that the folding LWS will be
 # replaced with a single SP before interpretation of the TEXT value."
 if str == bytes:
-    header_translate_table = ''.join([chr(i) for i in six.moves.xrange(256)])
+    header_translate_table = ''.join([chr(i) for i in range(256)])
     header_translate_deletechars = ''.join(
-        [chr(i) for i in six.moves.xrange(32)]) + chr(127)
+        [chr(i) for i in range(32)]) + chr(127)
 else:
     header_translate_table = None
     header_translate_deletechars = bytes(range(32)) + bytes([127])
