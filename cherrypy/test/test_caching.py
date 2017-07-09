@@ -4,10 +4,12 @@ import os
 import threading
 import time
 
+from six.moves import range
+
 import pytest
 
 import cherrypy
-from cherrypy._cpcompat import next, ntob, quote, xrange
+from cherrypy._cpcompat import next, ntob, quote
 from cherrypy.lib import httputil
 
 from cherrypy.test import helper
@@ -309,7 +311,7 @@ class CacheTest(helper.CPWebCase):
             self.getPage(slow_url)
             # The response should be the same every time
             self.assertBody('success!')
-        ts = [threading.Thread(target=run) for i in xrange(100)]
+        ts = [threading.Thread(target=run) for i in range(100)]
         for t in ts:
             t.start()
         for t in ts:

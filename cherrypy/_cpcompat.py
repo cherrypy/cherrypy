@@ -161,14 +161,6 @@ except ImportError:
 HTTPSConnection = getattr(six.moves.http_client, 'HTTPSConnection', None)
 
 
-try:
-    # Python 2
-    xrange = xrange
-except NameError:
-    # Python 3
-    xrange = range
-
-
 def unquote_qs(atom, encoding, errors='strict'):
     atom_spc = atom.replace('+', ' ')
     return (

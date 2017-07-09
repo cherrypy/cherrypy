@@ -8,12 +8,13 @@ import types
 import unittest
 
 import six
+from six.moves import range
 from six.moves.http_client import IncompleteRead
 
 import cherrypy
 from cherrypy import tools
 from cherrypy._cpcompat import itervalues
-from cherrypy._cpcompat import ntob, ntou, xrange
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy.test import helper, _test_decorators
 
 
@@ -212,7 +213,7 @@ class ToolTests(helper.CPWebCase):
 
             @cherrypy.config(**{'response.stream': True})
             def stream(self, id=None):
-                for x in xrange(100000000):
+                for x in range(100000000):
                     yield str(x)
 
         conf = {
