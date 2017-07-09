@@ -11,7 +11,7 @@ import six
 
 import cherrypy
 from cherrypy import tools
-from cherrypy._cpcompat import copyitems, itervalues
+from cherrypy._cpcompat import itervalues
 from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
 from cherrypy.test import helper, _test_decorators
 
@@ -50,7 +50,7 @@ class ToolTests(helper.CPWebCase):
             def _setup(self):
                 def makemap():
                     m = self._merged_args().get('map', {})
-                    cherrypy.request.numerify_map = copyitems(m)
+                    cherrypy.request.numerify_map = list(six.iteritems(m))
                 cherrypy.request.hooks.attach('on_start_resource', makemap)
 
                 def critical():

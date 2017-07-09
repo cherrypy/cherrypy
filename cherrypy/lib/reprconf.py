@@ -85,9 +85,9 @@ class NamespaceSet(dict):
 
         # I chose __enter__ and __exit__ so someday this could be
         # rewritten using Python 2.5's 'with' statement:
-        # for ns, handler in self.iteritems():
+        # for ns, handler in six.iteritems(self):
         #     with handler as callable:
-        #         for k, v in ns_confs.get(ns, {}).iteritems():
+        #         for k, v in six.iteritems(ns_confs.get(ns, {})):
         #             callable(k, v)
         for ns, handler in self.items():
             exit = getattr(handler, '__exit__', None)

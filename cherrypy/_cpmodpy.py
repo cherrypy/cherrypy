@@ -61,8 +61,10 @@ import os
 import re
 import sys
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import copyitems, ntob, text_or_bytes
+from cherrypy._cpcompat import ntob, text_or_bytes
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
 
@@ -194,7 +196,7 @@ def handler(req):
             path = req.uri
             qs = req.args or ''
             reqproto = req.protocol
-            headers = copyitems(req.headers_in)
+            headers = list(six.iteritems(req.headers_in))
             rfile = _ReadOnlyRequest(req)
             prev = None
 

@@ -1,8 +1,10 @@
 import os
 import warnings
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import iteritems, copykeys, builtins
+from cherrypy._cpcompat import copykeys, builtins
 
 
 class Checker(object):
@@ -68,14 +70,14 @@ class Checker(object):
 
     def check_site_config_entries_in_app_config(self):
         """Check for mounted Applications that have site-scoped config."""
-        for sn, app in iteritems(cherrypy.tree.apps):
+        for sn, app in six.iteritems(cherrypy.tree.apps):
             if not isinstance(app, cherrypy.Application):
                 continue
 
             msg = []
-            for section, entries in iteritems(app.config):
+            for section, entries in six.iteritems(app.config):
                 if section.startswith('/'):
-                    for key, value in iteritems(entries):
+                    for key, value in six.iteritems(entries):
                         for n in ('engine.', 'server.', 'tree.', 'checker.'):
                             if key.startswith(n):
                                 msg.append('[%s] %s = %s' %

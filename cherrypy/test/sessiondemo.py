@@ -4,9 +4,11 @@
 import calendar
 from datetime import datetime
 import sys
+
+import six
+
 import cherrypy
 from cherrypy.lib import sessions
-from cherrypy._cpcompat import copyitems
 
 
 page = """
@@ -121,7 +123,7 @@ class Root(object):
             'changemsg': '<br>'.join(changemsg),
             'respcookie': cherrypy.response.cookie.output(),
             'reqcookie': cherrypy.request.cookie.output(),
-            'sessiondata': copyitems(cherrypy.session),
+            'sessiondata': list(six.iteritems(cherrypy.session)),
             'servertime': (
                 datetime.utcnow().strftime('%Y/%m/%d %H:%M') + ' UTC'
             ),

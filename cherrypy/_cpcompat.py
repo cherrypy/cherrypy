@@ -146,16 +146,6 @@ except ImportError:
     from urllib2 import parse_http_list, parse_keqv_list  # noqa
 
 try:
-    dict.iteritems
-    # Python 2
-    iteritems = lambda d: d.iteritems()
-    copyitems = lambda d: d.items()
-except AttributeError:
-    # Python 3
-    iteritems = lambda d: d.items()
-    copyitems = lambda d: list(d.items())
-
-try:
     dict.iterkeys
     # Python 2
     iterkeys = lambda d: d.iterkeys()

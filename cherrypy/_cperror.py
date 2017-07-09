@@ -123,7 +123,7 @@ from xml.sax import saxutils
 import six
 
 from cherrypy._cpcompat import escape_html
-from cherrypy._cpcompat import text_or_bytes, iteritems, ntob
+from cherrypy._cpcompat import text_or_bytes, ntob
 from cherrypy._cpcompat import tonative, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
 
@@ -498,7 +498,7 @@ def get_error_page(status, **kwargs):
     if kwargs.get('version') is None:
         kwargs['version'] = cherrypy.__version__
 
-    for k, v in iteritems(kwargs):
+    for k, v in six.iteritems(kwargs):
         if v is None:
             kwargs[k] = ''
         else:

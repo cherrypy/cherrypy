@@ -16,7 +16,7 @@ import pytest
 import six
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, copyitems, HTTPSConnection, ntob
+from cherrypy._cpcompat import text_or_bytes, HTTPSConnection, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.test import webtest
@@ -91,7 +91,8 @@ class LocalSupervisor(Supervisor):
 
         cherrypy.engine.exit()
 
-        for name, server in copyitems(getattr(cherrypy, 'servers', {})):
+        servers_copy = list(six.iteritems(getattr(cherrypy, 'servers', {})))
+        for name, server in servers_copy:
             server.unsubscribe()
             del cherrypy.servers[name]
 

@@ -21,7 +21,7 @@ except ImportError:
 import six
 
 from cherrypy._cpcompat import BaseHTTPRequestHandler, ntob, ntou
-from cherrypy._cpcompat import text_or_bytes, iteritems
+from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cpcompat import reversed, sorted, unquote_qs
 
 response_codes = BaseHTTPRequestHandler.responses.copy()
@@ -145,7 +145,7 @@ class HeaderElement(object):
         return self.value < other.value
 
     def __str__(self):
-        p = [';%s=%s' % (k, v) for k, v in iteritems(self.params)]
+        p = [';%s=%s' % (k, v) for k, v in six.iteritems(self.params)]
         return str('%s%s' % (self.value, ''.join(p)))
 
     def __bytes__(self):

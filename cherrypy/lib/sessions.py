@@ -95,8 +95,10 @@ import os
 import time
 import threading
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import copyitems, pickle, random20
+from cherrypy._cpcompat import pickle, random20
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
 from cherrypy.lib import locking
@@ -394,7 +396,7 @@ class RamSession(Session):
         """Clean up expired sessions."""
 
         now = self.now()
-        for _id, (data, expiration_time) in copyitems(self.cache):
+        for _id, (data, expiration_time) in list(six.iteritems(self.cache)):
             if expiration_time <= now:
                 try:
                     del self.cache[_id]
