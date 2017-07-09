@@ -19,6 +19,7 @@ output.
 import re
 import sys
 import threading
+import base64
 
 import six
 from six.moves import urllib
@@ -90,27 +91,10 @@ def assert_native(n):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
 
 
-try:
-    # Python 3.1+
-    from base64 import decodebytes as _base64_decodebytes
-except ImportError:
-    # Python 3.0-
-    # since CherryPy claims compability with Python 2.3, we must use
-    # the legacy API of base64
-    from base64 import decodestring as _base64_decodebytes
-
-
 def base64_decode(n, encoding='ISO-8859-1'):
     """Return the native string base64-decoded (as a native string)."""
-    if isinstance(n, six.text_type):
-        b = n.encode(encoding)
-    else:
-        b = n
-    b = _base64_decodebytes(b)
-    if str is six.text_type:
-        return b.decode(encoding)
-    else:
-        return b
+    decoded = base64.decodestring(n.encode('ascii'))
+    return tonative(decoded, encoding)
 
 
 try:
