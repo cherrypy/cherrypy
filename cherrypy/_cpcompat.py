@@ -172,12 +172,6 @@ except ImportError:
     import pickle  # noqa
 
 
-try:
-    from _thread import get_ident as get_thread_ident
-except ImportError:
-    from thread import get_ident as get_thread_ident  # noqa
-
-
 if sys.version_info >= (3, 3):
     Timer = threading.Timer
     Event = threading.Event

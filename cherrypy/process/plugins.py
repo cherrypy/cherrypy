@@ -7,7 +7,9 @@ import sys
 import time
 import threading
 
-from cherrypy._cpcompat import text_or_bytes, get_thread_ident
+from six.moves import _thread
+
+from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cpcompat import ntob, Timer
 
 # _module__file__base is used by Autoreload to make
@@ -713,7 +715,7 @@ class ThreadManager(SimplePlugin):
         If the current thread has already been seen, any 'start_thread'
         listeners will not be run again.
         """
-        thread_ident = get_thread_ident()
+        thread_ident = _thread.get_ident()
         if thread_ident not in self.threads:
             # We can't just use get_ident as the thread ID
             # because some platforms reuse thread ID's.
@@ -723,7 +725,7 @@ class ThreadManager(SimplePlugin):
 
     def release_thread(self):
         """Release the current thread and run 'stop_thread' listeners."""
-        thread_ident = get_thread_ident()
+        thread_ident = _thread.get_ident()
         i = self.threads.pop(thread_ident, None)
         if i is not None:
             self.bus.publish('stop_thread', i)
