@@ -9,7 +9,7 @@ import pytest
 
 import cherrypy
 from cherrypy._cpcompat import (
-    copykeys, json_decode,
+    json_decode,
     HTTPSConnection,
 )
 from cherrypy.lib import sessions
@@ -340,7 +340,7 @@ class SessionTest(helper.CPWebCase):
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         id1 = cookie_parts['temp']
-        self.assertEqual(copykeys(sessions.RamSession.cache), [id1])
+        self.assertEqual(list(sessions.RamSession.cache), [id1])
 
         # Send another request in the same "browser session".
         self.getPage('/session_cookie', self.cookies)
@@ -349,7 +349,7 @@ class SessionTest(helper.CPWebCase):
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         self.assertBody(id1)
-        self.assertEqual(copykeys(sessions.RamSession.cache), [id1])
+        self.assertEqual(list(sessions.RamSession.cache), [id1])
 
         # Simulate a browser close by just not sending the cookies
         self.getPage('/session_cookie')
@@ -366,7 +366,7 @@ class SessionTest(helper.CPWebCase):
 
         # Wait for the session.timeout on both sessions
         time.sleep(2.5)
-        cache = copykeys(sessions.RamSession.cache)
+        cache = list(sessions.RamSession.cache)
         if cache:
             if cache == [id2]:
                 self.fail('The second session did not time out.')
