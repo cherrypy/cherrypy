@@ -164,13 +164,6 @@ finally:
 
 text_or_bytes = six.text_type, six.binary_type
 
-try:
-    import cPickle as pickle
-except ImportError:
-    # In Python 2, pickle is a Python version.
-    # In Python 3, pickle is the sped-up C version.
-    import pickle  # noqa
-
 
 if sys.version_info >= (3, 3):
     Timer = threading.Timer

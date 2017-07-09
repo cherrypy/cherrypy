@@ -97,9 +97,9 @@ import threading
 import binascii
 
 import six
+from six.moves import cPickle as pickle
 
 import cherrypy
-from cherrypy._cpcompat import pickle
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
 from cherrypy.lib import locking
