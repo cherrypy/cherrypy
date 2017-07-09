@@ -4,7 +4,7 @@ import warnings
 import six
 
 import cherrypy
-from cherrypy._cpcompat import copykeys, builtins
+from cherrypy._cpcompat import builtins
 
 
 class Checker(object):
@@ -228,10 +228,10 @@ class Checker(object):
 
     def _known_ns(self, app):
         ns = ['wsgi']
-        ns.extend(copykeys(app.toolboxes))
-        ns.extend(copykeys(app.namespaces))
-        ns.extend(copykeys(app.request_class.namespaces))
-        ns.extend(copykeys(cherrypy.config.namespaces))
+        ns.extend(app.toolboxes)
+        ns.extend(app.namespaces)
+        ns.extend(app.request_class.namespaces)
+        ns.extend(cherrypy.config.namespaces)
         ns += self.extra_config_namespaces
 
         for section, conf in app.config.items():
