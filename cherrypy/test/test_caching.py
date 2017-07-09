@@ -9,7 +9,7 @@ from six.moves import range
 import pytest
 
 import cherrypy
-from cherrypy._cpcompat import next, ntob, quote
+from cherrypy._cpcompat import ntob, quote
 from cherrypy.lib import httputil
 
 from cherrypy.test import helper

@@ -177,13 +177,6 @@ try:
 except ImportError:
     from thread import get_ident as get_thread_ident  # noqa
 
-try:
-    # Python 3
-    next = next
-except NameError:
-    # Python 2
-    def next(i):
-        return i.next()
 
 if sys.version_info >= (3, 3):
     Timer = threading.Timer
