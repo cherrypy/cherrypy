@@ -2,9 +2,9 @@ import os
 import warnings
 
 import six
+from six.moves import builtins
 
 import cherrypy
-from cherrypy._cpcompat import builtins
 
 
 class Checker(object):

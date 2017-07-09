@@ -130,14 +130,6 @@ except ImportError:
     from urllib2 import parse_http_list, parse_keqv_list  # noqa
 
 
-try:
-    # Python 3
-    import builtins
-except ImportError:
-    # Python 2
-    import __builtin__ as builtins  # noqa
-
-
 # Some platforms don't expose HTTPSConnection, so handle it separately
 HTTPSConnection = getattr(six.moves.http_client, 'HTTPSConnection', None)
 

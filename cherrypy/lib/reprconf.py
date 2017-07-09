@@ -29,15 +29,10 @@ try:
 except NameError:
     text_or_bytes = str
 
-try:
-    # Python 3
-    import builtins
-except ImportError:
-    # Python 2
-    import __builtin__ as builtins
-
 import operator as _operator
 import sys
+
+from six.moves import builtins
 
 
 def as_dict(config):
