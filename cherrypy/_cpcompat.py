@@ -1,6 +1,6 @@
 """Compatibility code for using CherryPy with various versions of Python.
 
-To retain compatibility with older Python versions, his module provides a
+To retain compatibility with older Python versions, this module provides a
 useful abstraction over the differences between Python versions, sometimes by
 preferring a newer idiom, sometimes an older one, and sometimes a custom one.
 
