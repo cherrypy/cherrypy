@@ -152,15 +152,16 @@ except ImportError:
     import json
     json_decode = json.JSONDecoder().decode
     _json_encode = json.JSONEncoder().iterencode
-finally:
-    if json and six.PY3:
-        # The two Python 3 implementations (simplejson/json)
-        # outputs str. We need bytes.
-        def json_encode(value):
-            for chunk in _json_encode(value):
-                yield chunk.encode('utf8')
-    else:
-        json_encode = _json_encode
+
+
+if six.PY3:
+    # Encode to bytes on Python 3
+    def json_encode(value):
+        for chunk in _json_encode(value):
+            yield chunk.encode('utf-8')
+else:
+    json_encode = _json_encode
+
 
 text_or_bytes = six.text_type, six.binary_type
 
