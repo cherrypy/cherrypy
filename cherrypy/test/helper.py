@@ -453,7 +453,7 @@ server.ssl_private_key: r'%s'
 
         args = [
             '-m',
-            'cherrypy.__main__',  # __main__ is needed for `-m` in Python 2.6
+            'cherrypy',
             '-c', self.config_file,
             '-p', self.pid_file,
         ]
