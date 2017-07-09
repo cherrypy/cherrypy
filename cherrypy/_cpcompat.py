@@ -10,10 +10,7 @@ string' type for each version. Because of this major difference, this module
 provides
 two functions: 'ntob', which translates native strings (of type 'str') into
 byte strings regardless of Python version, and 'ntou', which translates native
-strings to unicode strings. This also provides a 'BytesIO' name for dealing
-specifically with bytes, and a 'StringIO' name for dealing with native strings.
-It also provides a 'base64_decode' function with native strings as input and
-output.
+strings to unicode strings.
 """
 
 import re
