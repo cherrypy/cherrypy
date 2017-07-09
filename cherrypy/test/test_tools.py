@@ -13,7 +13,6 @@ from six.moves.http_client import IncompleteRead
 
 import cherrypy
 from cherrypy import tools
-from cherrypy._cpcompat import itervalues
 from cherrypy._cpcompat import ntob, ntou
 from cherrypy.test import helper, _test_decorators
 
@@ -174,7 +173,7 @@ class ToolTests(helper.CPWebCase):
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
-                for value in itervalues(dct):
+                for value in six.itervalues(dct):
                     if isinstance(value, types.FunctionType):
                         cherrypy.expose(value)
                 setattr(root, name.lower(), cls())

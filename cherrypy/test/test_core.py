@@ -6,8 +6,10 @@ import os
 import sys
 import types
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import itervalues, ntob, ntou
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
 
@@ -55,7 +57,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
-                for value in itervalues(dct):
+                for value in six.itervalues(dct):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
