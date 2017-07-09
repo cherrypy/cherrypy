@@ -94,11 +94,12 @@ import datetime
 import os
 import time
 import threading
+import binascii
 
 import six
 
 import cherrypy
-from cherrypy._cpcompat import pickle, random20
+from cherrypy._cpcompat import pickle
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
 from cherrypy.lib import locking
@@ -237,7 +238,7 @@ class Session(object):
 
     def generate_id(self):
         """Return a new session id."""
-        return random20()
+        return binascii.hexlify(os.urandom(20)).decode('ascii')
 
     def save(self):
         """Save session data."""

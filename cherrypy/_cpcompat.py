@@ -16,8 +16,6 @@ It also provides a 'base64_decode' function with native strings as input and
 output.
 """
 
-import binascii
-import os
 import re
 import sys
 import threading
@@ -172,10 +170,6 @@ except ImportError:
     # In Python 2, pickle is a Python version.
     # In Python 3, pickle is the sped-up C version.
     import pickle  # noqa
-
-
-def random20():
-    return binascii.hexlify(os.urandom(20)).decode('ascii')
 
 
 try:
