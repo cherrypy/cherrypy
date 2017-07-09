@@ -129,25 +129,6 @@ except ImportError:
     from urllib import unquote  # noqa
     from urllib2 import parse_http_list, parse_keqv_list  # noqa
 
-try:
-    dict.iterkeys
-    # Python 2
-    iterkeys = lambda d: d.iterkeys()
-    copykeys = lambda d: d.keys()
-except AttributeError:
-    # Python 3
-    iterkeys = lambda d: d.keys()
-    copykeys = lambda d: list(d.keys())
-
-try:
-    dict.itervalues
-    # Python 2
-    itervalues = lambda d: d.itervalues()
-    copyvalues = lambda d: d.values()
-except AttributeError:
-    # Python 3
-    itervalues = lambda d: d.values()
-    copyvalues = lambda d: list(d.values())
 
 try:
     # Python 3
