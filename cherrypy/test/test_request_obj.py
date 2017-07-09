@@ -6,9 +6,10 @@ import sys
 import types
 
 import six
+from six.moves.http_client import IncompleteRead
 
 import cherrypy
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy.lib import httputil
 from cherrypy.test import helper
 

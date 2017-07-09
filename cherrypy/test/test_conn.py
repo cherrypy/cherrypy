@@ -6,12 +6,13 @@ import sys
 import time
 
 import six
+from six.moves.http_client import BadStatusLine, HTTPConnection, NotConnected
+
 import pytest
 
 import cherrypy
 from cherrypy._cpcompat import (
-    HTTPConnection, HTTPSConnection,
-    NotConnected, BadStatusLine,
+    HTTPSConnection,
     ntob, tonative,
     urlopen,
 )

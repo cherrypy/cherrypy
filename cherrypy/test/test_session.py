@@ -3,12 +3,14 @@ import threading
 import time
 import socket
 
+from six.moves.http_client import HTTPConnection
+
 import pytest
 
 import cherrypy
 from cherrypy._cpcompat import (
     copykeys, json_decode,
-    HTTPConnection, HTTPSConnection
+    HTTPSConnection,
 )
 from cherrypy.lib import sessions
 from cherrypy.lib import reprconf

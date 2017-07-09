@@ -5,12 +5,14 @@ import time
 import unittest
 import warnings
 
+from six.moves.http_client import BadStatusLine
+
 import pytest
 import portend
 
 import cherrypy
 import cherrypy.process.servers
-from cherrypy._cpcompat import BadStatusLine, ntob
+from cherrypy._cpcompat import ntob
 from cherrypy.test import helper
 
 engine = cherrypy.engine

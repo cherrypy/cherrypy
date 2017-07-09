@@ -7,9 +7,10 @@ import sys
 from unittest import mock
 
 import six
+from six.moves.http_client import HTTPConnection
 
 import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
+from cherrypy._cpcompat import HTTPSConnection, ntob
 
 from cherrypy.test import helper
 

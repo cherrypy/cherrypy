@@ -25,12 +25,12 @@ import traceback
 import types
 import os
 import json
-
 import unittest
 
 import six
+from six.moves.http_client import HTTPConnection
 
-from cherrypy._cpcompat import text_or_bytes, HTTPConnection, HTTPSConnection
+from cherrypy._cpcompat import text_or_bytes, HTTPSConnection
 
 
 def interface(host):

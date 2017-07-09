@@ -19,8 +19,9 @@ except ImportError:
     from email.Header import decode_header
 
 import six
+from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
-from cherrypy._cpcompat import BaseHTTPRequestHandler, ntob, ntou
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cpcompat import unquote_qs
 

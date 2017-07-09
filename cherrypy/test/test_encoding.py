@@ -5,9 +5,10 @@ import io
 from unittest import mock
 
 import six
+from six.moves.http_client import IncompleteRead
 
 import cherrypy
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou
+from cherrypy._cpcompat import ntob, ntou
 
 from cherrypy.test import helper
 

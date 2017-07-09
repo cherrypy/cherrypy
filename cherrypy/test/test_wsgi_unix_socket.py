@@ -3,11 +3,12 @@ import socket
 import atexit
 import tempfile
 
+from six.moves.http_client import HTTPConnection
+
 import pytest
 
 import cherrypy
 from cherrypy.test import helper
-from cherrypy._cpcompat import HTTPConnection
 
 
 def usocket_path():

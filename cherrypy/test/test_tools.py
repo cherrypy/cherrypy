@@ -8,11 +8,12 @@ import types
 import unittest
 
 import six
+from six.moves.http_client import IncompleteRead
 
 import cherrypy
 from cherrypy import tools
 from cherrypy._cpcompat import itervalues
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
+from cherrypy._cpcompat import ntob, ntou, xrange
 from cherrypy.test import helper, _test_decorators
 
 

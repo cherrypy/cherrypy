@@ -3,10 +3,10 @@ import time
 import warnings
 
 import six
+from six.moves.http_cookies import SimpleCookie, CookieError
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, copykeys, ntob
-from cherrypy._cpcompat import SimpleCookie, CookieError
 from cherrypy import _cpreqbody, _cpconfig
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil, file_generator

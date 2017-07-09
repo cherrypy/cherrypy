@@ -4,8 +4,10 @@ import itertools
 import platform
 import threading
 
+from six.moves.http_client import HTTPConnection
+
 import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection
+from cherrypy._cpcompat import HTTPSConnection
 from cherrypy.test import helper
 
 

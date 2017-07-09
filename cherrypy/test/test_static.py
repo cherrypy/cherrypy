@@ -8,15 +8,14 @@ import tempfile
 
 from six import text_type as str
 from six.moves import urllib
+from six.moves.http_client import HTTPConnection
 
 import pytest
 import py.path
 
 import cherrypy
 from cherrypy.lib import static
-from cherrypy._cpcompat import (
-    HTTPConnection, HTTPSConnection, ntou, tonative,
-)
+from cherrypy._cpcompat import HTTPSConnection, ntou, tonative
 from cherrypy.test import helper
 
 
