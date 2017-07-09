@@ -239,19 +239,10 @@ try:
     json_decode = json.JSONDecoder().decode
     _json_encode = json.JSONEncoder().iterencode
 except ImportError:
-    if sys.version_info >= (2, 6):
-        # Python >=2.6 : json is part of the standard library
-        import json
-        json_decode = json.JSONDecoder().decode
-        _json_encode = json.JSONEncoder().iterencode
-    else:
-        json = None
-
-        def json_decode(s):
-            raise ValueError('No JSON library is available')
-
-        def _json_encode(s):
-            raise ValueError('No JSON library is available')
+    # json is part of the standard library
+    import json
+    json_decode = json.JSONDecoder().decode
+    _json_encode = json.JSONEncoder().iterencode
 finally:
     if json and six.PY3:
         # The two Python 3 implementations (simplejson/json)
