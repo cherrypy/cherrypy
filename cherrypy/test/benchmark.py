@@ -281,7 +281,7 @@ def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
 def print_report(rows):
     for row in rows:
         print('')
-        for i, val in enumerate(row):
+        for val in row:
             sys.stdout.write(str(val).rjust(10) + ' | ')
     print('')
 
