@@ -100,7 +100,7 @@ send an e-mail containing the error::
     def handle_error():
         cherrypy.response.status = 500
         cherrypy.response.body = [
-            "<html><body>Sorry, an error occured</body></html>"
+            "<html><body>Sorry, an error occurred</body></html>"
         ]
         sendMail('error@domain.com',
                  'Error in your web app',

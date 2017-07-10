@@ -252,7 +252,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage('/dir1/dir2/cherrypy_url')
             self.assertBody('%s/extra' % self.base())
 
-            # Test that configs don't overwrite each other from diferent apps
+            # Test that configs don't overwrite each other from different apps
             self.getPage('/confvalue')
             self.assertBody((url or '/').split('/')[-2])
 

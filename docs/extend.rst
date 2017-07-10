@@ -17,7 +17,7 @@ Server-wide functions
 CherryPy can be considered both as a HTTP library
 as much as a web application framework. In that latter case,
 its architecture provides mechanisms to support operations
-accross the whole server instance. This offers a powerful
+across the whole server instance. This offers a powerful
 canvas to perform persistent operations as server-wide
 functions live outside the request processing itself. They
 are available to the whole process as long as the bus lives.
@@ -224,7 +224,7 @@ publishing or subscribing to channels, usually both at the same time.
 
    Plugins are extremely useful whenever you have functionalities:
 
-   - Available accross the whole application server
+   - Available across the whole application server
    - Associated to the application's life-cycle
    - You want to avoid being strongly coupled to the application
 
@@ -681,7 +681,7 @@ would have not even found a match for `/GENerAte`.
 A dispatcher exists mostly to determine the best page
 handler to serve the requested resource.
 
-On ther other hand, tools are there to adapt the request's processing
+On the other hand, tools are there to adapt the request's processing
 to the runtime context of the application and the request's content.
 
 Usually, you will have to write a dispatcher only if you

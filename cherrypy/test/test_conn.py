@@ -437,7 +437,7 @@ class PipelineTests(helper.CPWebCase):
             response = conn.response_class(conn.sock, method='GET')
             # there is a bug in python3 regarding the buffering of
             # ``conn.sock``. Until that bug get's fixed we will
-            # monkey patch the ``reponse`` instance.
+            # monkey patch the ``response`` instance.
             # https://bugs.python.org/issue23377
             if six.PY3:
                 response.fp = conn.sock.makefile('rb', 0)

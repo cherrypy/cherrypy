@@ -346,7 +346,7 @@ class Daemonizer(SimplePlugin):
     process still return proper exit codes. Therefore, if you use this
     plugin to daemonize, don't use the return code as an accurate indicator
     of whether the process fully started. In fact, that return code only
-    indicates if the process succesfully finished the first fork.
+    indicates if the process successfully finished the first fork.
     """
 
     def __init__(self, bus, stdin='/dev/null', stdout='/dev/null',
