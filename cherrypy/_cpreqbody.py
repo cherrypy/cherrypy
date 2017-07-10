@@ -328,7 +328,7 @@ class Entity(object):
     # absence of a charset parameter, is US-ASCII."
     # However, many browsers send data in utf-8 with no charset.
     attempt_charsets = ['utf-8']
-    """A list of strings, each of which should be a known encoding.
+    r"""A list of strings, each of which should be a known encoding.
 
     When the Content-Type of the request body warrants it, each of the given
     encodings will be tried in order. The first one to successfully decode the
@@ -577,7 +577,7 @@ class Part(Entity):
     # "The default character set, which must be assumed in the absence of a
     # charset parameter, is US-ASCII."
     attempt_charsets = ['us-ascii', 'utf-8']
-    """A list of strings, each of which should be a known encoding.
+    r"""A list of strings, each of which should be a known encoding.
 
     When the Content-Type of the request body warrants it, each of the given
     encodings will be tried in order. The first one to successfully decode the

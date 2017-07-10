@@ -457,7 +457,7 @@ server.ssl_private_key: r'%s'
             '-c', self.config_file,
             '-p', self.pid_file,
         ]
-        """
+        r"""
         Command for running cherryd server with autoreload enabled
 
         Using
