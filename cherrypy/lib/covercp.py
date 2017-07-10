@@ -291,7 +291,6 @@ class CoverStats(object):
         if root is None:
             # Guess initial depth. Files outside this path will not be
             # reachable from the web interface.
-            import cherrypy
             root = os.path.dirname(cherrypy.__file__)
         self.root = root
 
@@ -381,7 +380,6 @@ def serve(path=localFile, port=8080, root=None):
     cov = coverage(data_file=path)
     cov.load()
 
-    import cherrypy
     cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
                             'environment': 'production',
