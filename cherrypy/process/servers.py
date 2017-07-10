@@ -1,4 +1,4 @@
-"""
+r"""
 Starting in CherryPy 3.1, cherrypy.server is implemented as an
 :ref:`Engine Plugin<plugins>`. It's an instance of
 :class:`cherrypy._cpserver.Server`, which is a subclass of

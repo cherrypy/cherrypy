@@ -42,7 +42,7 @@ HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
 
 
 def urljoin(*atoms):
-    """Return the given path \*atoms, joined into a single URL.
+    r"""Return the given path \*atoms, joined into a single URL.
 
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.

@@ -1,4 +1,4 @@
-"""An implementation of the Web Site Process Bus.
+r"""An implementation of the Web Site Process Bus.
 
 This module is completely standalone, depending only on the stdlib.
 
