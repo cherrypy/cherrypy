@@ -74,7 +74,7 @@ every possible band in the world. This means you will need a page handler
 that acts as a proxy for all of them.
 
 The default dispatcher cannot deal with that scenario on its own
-because it expects page handlers to be explicitely declared in your
+because it expects page handlers to be explicitly declared in your
 source code. Luckily, CherryPy provides ways to support those use cases.
 
 .. seealso::
