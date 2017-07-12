@@ -229,7 +229,7 @@ class HTTPRedirect(CherryPyException):
         self.urls = abs_urls
 
         status = int(status) if status is not None else self.default_status
-        if status < 300 or status > 399:
+        if not 300 <= status <= 399:
             raise ValueError('status must be between 300 and 399.')
 
         self.status = status
