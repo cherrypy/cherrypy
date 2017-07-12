@@ -1,3 +1,9 @@
+v11.1.0
+-------
+
+* Expose default status logic for a redirect as
+  ``HTTPRedirect.default_status``.
+
 v11.0.0
 -------
 
