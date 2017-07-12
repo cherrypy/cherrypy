@@ -65,6 +65,7 @@ install_requires = [
     'six',
     'cheroot>=5.2.0',
     'portend>=2.1.1',
+    'jaraco.classes',
 ]
 
 extras_require = {
