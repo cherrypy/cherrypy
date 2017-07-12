@@ -57,6 +57,17 @@ However, CherryPy "recognizes" a session id by looking up the saved session
 data for that id. Therefore, if you never save any session data,
 **you will get a new session id for every request**.
 
+A side effect of CherryPy overwriting unrecognised session ids is that if you
+have multiple, separate CherryPy applications running on a single domain (e.g.
+on different ports), each app will overwrite the other's session id because by
+default they use the same cookie name (``"session_id"``) but do not recognise
+each others sessions. It is therefore a good idea to use a different name for
+each, for example::
+
+    [/]
+    ...
+    tools.sessions.name = "my_app_session_id"
+
 ================
 Sharing Sessions
 ================
