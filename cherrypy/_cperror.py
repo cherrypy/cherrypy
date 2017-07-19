@@ -529,7 +529,7 @@ def get_error_page(status, **kwargs):
                     if not isinstance(result, bytes):
                         raise ValueError(
                             'error page function did not '
-                            'return a bytestring, six.text_typeing or an '
+                            'return a bytestring, six.text_type or an '
                             'iterator - returned object of type %s.'
                             % (type(result).__name__))
                     return result
