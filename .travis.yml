@@ -18,7 +18,7 @@ _base_envs:
   <<: *stage_test
   python: pypy
   env:
-  - PYTHON_VERSION=pypy2-5.7.1
+  - PYTHON_VERSION=pypy2.7-5.8.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
   - &env_path PATH="$PYENV_ROOT/bin:$PATH"
   addons:
@@ -40,17 +40,16 @@ _base_envs:
       - tk-dev
   before_install:
   - &ensure_pyenv_installed |
-    if [ -f "$PYENV_ROOT/bin/pyenv" ]
+    if [ ! -f "$PYENV_ROOT/bin/pyenv" ]
     then
-      eval "$(pyenv init -)"
-      eval "$(pyenv virtualenv-init -)"
-      pyenv update
-    else
       rm -rf "$PYENV_ROOT"
       curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
       eval "$(pyenv init -)"
       eval "$(pyenv virtualenv-init -)"
     fi
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+    pyenv update
   - &install_python pyenv install --skip-existing --keep --verbose "$PYTHON_VERSION"
   - &switch_python pyenv shell "$PYTHON_VERSION"
   - &python_version python --version
@@ -120,13 +119,13 @@ jobs:
   - <<: *linux_python_base
     python: pypy
     env:
-    - PYTHON_VERSION=pypy2-5.7.1
+    - PYTHON_VERSION=pypy2.7-5.8.0
     - *env_pyenv
     - *env_path
   - <<: *linux_python_base
     python: pypy3
     env:
-    - PYTHON_VERSION=pypy3.5-5.7.1-beta
+    - PYTHON_VERSION=pypy3.5-5.8.0
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
@@ -189,15 +188,15 @@ jobs:
   - <<: *osx_python_base
     python: pypy
     env:
-    - PYTHON_VERSION=pypy2-5.7.1
+    - PYTHON_VERSION=pypy2.7-5.8.0
     - *env_pyenv
     - *env_path
-  # pypy3.5-5.7.1-beta fails under OS X because it's unsupported (PR #26)
+  # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
   - <<: *stage_deploy
     python: *mainstream_python
     deploy:
       provider: pypi
-      server: https://upload.pypi.org/legacy/
+      skip_cleanup: true
       on:
         tags: true
         all_branches: true
@@ -212,10 +211,10 @@ cache:
   directories:
   - $HOME/.pre-commit
   - $HOME/Library/Caches/Homebrew
-
-install: pip install tox setuptools>=28.2
-script: tox
-
+install:
+- pip install tox "setuptools>=28.2"
+script:
+- tox
 after_failure:
 - echo "Here's a list of installed Python packages:"
 - pip list --format=columns
