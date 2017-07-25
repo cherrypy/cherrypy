@@ -16,6 +16,7 @@ _base_envs:
   sudo: false
 - &pyenv_base
   <<: *stage_test
+  language: generic
   python: pypy
   env:
   - PYTHON_VERSION=pypy2.7-5.8.0
