@@ -120,12 +120,11 @@ class EncodingTests(helper.CPWebCase):
         cherrypy.tree.mount(root, config={'/gzip': {'tools.gzip.on': True}})
 
     def test_query_string_decoding(self):
-        if six.PY3:
-            # This test fails on Python 3. See #1443
-            return
-        europoundUtf8 = europoundUnicode.encode('utf-8')
-        self.getPage(ntob('/?param=') + europoundUtf8)
-        self.assertBody(europoundUtf8)
+        if six.PY2:
+            # URLs with unicode are no longer supported in Py3 urllib. See #1443
+            europoundUtf8 = europoundUnicode.encode('utf-8')
+            self.getPage(ntob('/?param=') + europoundUtf8)
+            self.assertBody(europoundUtf8)
 
         # Encoded utf8 query strings MUST be parsed correctly.
         # Here, q is the POUND SIGN U+00A3 encoded in utf8 and then %HEX
