@@ -105,8 +105,6 @@ jobs:
   - <<: *pure_python_base_priority
     python: nightly
   - <<: *pure_python_base
-    python: 2.6
-  - <<: *pure_python_base
     python: 2.7
   - <<: *pure_python_base
     python: 3.3
@@ -126,12 +124,6 @@ jobs:
     python: pypy3
     env:
     - PYTHON_VERSION=pypy3.5-5.8.0
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    python: 2.6
-    env:
-    - PYTHON_VERSION=2.6.9
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
