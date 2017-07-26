@@ -241,8 +241,12 @@ class HTTPRedirect(CherryPyException):
             if status < 300 or status > 399:
                 raise ValueError('status must be between 300 and 399.')
 
-        self.status = status
         CherryPyException.__init__(self, abs_urls, status)
+
+    @property
+    def status(self):
+        urls, status = self.args[:2]
+        return status
 
     def set_response(self):
         """Modify cherrypy.response status, headers, and body to represent
