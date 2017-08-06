@@ -63,7 +63,7 @@ packages = [
 
 install_requires = [
     'six',
-    'cheroot>=5.2.0',
+    'cheroot>=5.2.0,!=5.8.0',
     'portend>=2.1.1',
 ]
 
