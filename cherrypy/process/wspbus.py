@@ -99,7 +99,7 @@ class ChannelFailures(Exception):
     delimiter = '\n'
 
     def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__(*args, **kwargs)
+        super(ChannelFailures, self).__init__(*args, **kwargs)
         self._exceptions = list()
 
     def handle_exception(self):
