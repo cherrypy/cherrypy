@@ -93,12 +93,12 @@ _startup_cwd = os.getcwd()
 
 
 class ChannelFailures(Exception):
+    """Exception raised when errors occur in a listener during Bus.publish()."""
 
-    """Exception raised when errors occur in a listener during Bus.publish().
-    """
     delimiter = '\n'
 
     def __init__(self, *args, **kwargs):
+        """Initialize ChannelFailures errors wrapper."""
         super(ChannelFailures, self).__init__(*args, **kwargs)
         self._exceptions = list()
 
@@ -111,12 +111,14 @@ class ChannelFailures(Exception):
         return self._exceptions[:]
 
     def __str__(self):
+        """Render the list of errors, which happened in channel."""
         exception_strings = map(repr, self.get_instances())
         return self.delimiter.join(exception_strings)
 
     __repr__ = __str__
 
     def __bool__(self):
+        """Determine whether any error happened in channel."""
         return bool(self._exceptions)
     __nonzero__ = __bool__
 
@@ -155,7 +157,6 @@ else:
 
 
 class Bus(object):
-
     """Process state-machine and messenger for HTTP site deployment.
 
     All listeners for a given channel are guaranteed to be called even
@@ -171,6 +172,7 @@ class Bus(object):
     max_cloexec_files = max_files
 
     def __init__(self):
+        """Initialize pub/sub bus."""
         self.execv = False
         self.state = states.STOPPED
         channels = 'start', 'stop', 'exit', 'graceful', 'log', 'main'
@@ -406,7 +408,7 @@ class Bus(object):
 
     @staticmethod
     def _get_interpreter_argv():
-        """Retrieve current Python interpreter's arguments
+        """Retrieve current Python interpreter's arguments.
 
         Returns empty tuple in case of frozen mode, uses built-in arguments
         reproduction function otherwise.
@@ -424,7 +426,7 @@ class Bus(object):
 
     @staticmethod
     def _get_true_argv():
-        """Retrieves all real arguments of the python interpreter
+        """Retrieve all real arguments of the python interpreter.
 
         ...even those not listed in ``sys.argv``
 
@@ -432,7 +434,6 @@ class Bus(object):
         :seealso: http://stackoverflow.com/a/6683222/595220
         :seealso: http://stackoverflow.com/a/28414807/595220
         """
-
         try:
             char_p = ctypes.c_char_p if six.PY2 else ctypes.c_wchar_p
 
@@ -507,7 +508,8 @@ class Bus(object):
 
     @staticmethod
     def _extend_pythonpath(env):
-        """
+        """Prepend current working dir to PATH environment variable if needed.
+
         If sys.path[0] is an empty string, the interpreter was likely
         invoked with -m and the effective path is about to change on
         re-exec.  Add the current directory to $PYTHONPATH to ensure
