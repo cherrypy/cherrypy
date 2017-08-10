@@ -36,6 +36,7 @@
     sha: f464d46
     hooks:
     -   id: pep257
+        exclude: tests/dist|cherrypy/(_cp|__init__|__main__|daemon|_helper|(lib/(__init__|auth|auth_basic|auth_digest|caching|covercp|cpstats|cptools|encoding|gctools|httpauth|httputil|jsontools|lockfile|locking|profiler|reprconf|sessions|static)|process/(plugins|servers|win32)|scaffold/__init__).py|test|tutorial)
 
 -   repo: git://github.com/Lucas-C/pre-commit-hooks
     sha: 1e30aa4
