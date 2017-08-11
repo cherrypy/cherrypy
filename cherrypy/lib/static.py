@@ -5,6 +5,7 @@ import re
 import stat
 import mimetypes
 
+from email.generator import _make_boundary as make_boundary
 from io import UnsupportedOperation
 
 from six.moves import urllib
@@ -187,12 +188,6 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             else:
                 # Return a multipart/byteranges response.
                 response.status = '206 Partial Content'
-                try:
-                    # Python 3
-                    from email.generator import _make_boundary as make_boundary
-                except ImportError:
-                    # Python 2
-                    from mimetools import choose_boundary as make_boundary
                 boundary = make_boundary()
                 ct = 'multipart/byteranges; boundary=%s' % boundary
                 response.headers['Content-Type'] = ct
