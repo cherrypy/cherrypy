@@ -5,10 +5,7 @@ import re
 import stat
 import mimetypes
 
-try:
-    from io import UnsupportedOperation
-except ImportError:
-    UnsupportedOperation = object()
+from io import UnsupportedOperation
 
 from six.moves import urllib
 
