@@ -33,3 +33,8 @@ sphinx/source/_build
 
 # test results in junit format for Appveyor
 /junit-test-results.xml
+
+# coverage results
+/.coverage
+/coverage.xml
+/graph_Request_*.png

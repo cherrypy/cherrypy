@@ -80,11 +80,13 @@ extras_require = {
     'ssl': ['pyOpenSSL'],
     'testing': [
         'coverage',  # inspects tests coverage
+        'codecov',   # sends tests coverage to codecov.io
 
         # cherrypy.lib.gctools
         'objgraph',
 
         'pytest>=2.8',
+        'pytest-cov',
         'pytest-sugar',
         'backports.unittest_mock',
     ],
