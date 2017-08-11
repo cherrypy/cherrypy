@@ -17,7 +17,7 @@ _base_envs:
 - &pyenv_base
   <<: *stage_test
   language: generic
-  python: pypy
+  python: &pypy2 pypy2.7-5.8.0
   env:
   - PYTHON_VERSION=pypy2.7-5.8.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
@@ -86,9 +86,9 @@ jobs:
   fast_finish: true
   allow_failures:
   # TODO: check what causes testing stuck
-  - python: pypy
+  - python: *pypy2
   # TODO: fix tests
-  - python: pypy3
+  - python: &pypy3 pypy3.5-5.8.0
   - env: TOXENV=pre-commit-pep257
   include:
   - <<: *lint_python_base
@@ -116,13 +116,13 @@ jobs:
   - <<: *pure_python_base
     python: 3.7-dev
   - <<: *linux_python_base
-    python: pypy
+    python: *pypy2
     env:
     - PYTHON_VERSION=pypy2.7-5.8.0
     - *env_pyenv
     - *env_path
   - <<: *linux_python_base
-    python: pypy3
+    python: *pypy3
     env:
     - PYTHON_VERSION=pypy3.5-5.8.0
     - *env_pyenv
@@ -179,7 +179,7 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    python: pypy
+    python: *pypy2
     env:
     - PYTHON_VERSION=pypy2.7-5.8.0
     - *env_pyenv
