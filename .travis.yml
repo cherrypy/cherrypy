@@ -71,6 +71,8 @@ _base_envs:
   - *python_version
   before_cache:
   - brew --cache
+  script:
+  - travis_retry tox
 - &pure_python_base
   <<: *stage_test
   sudo: false
