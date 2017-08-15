@@ -352,7 +352,6 @@ def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
             # invalidate any cache entries, and force encoding.gzip to run.
             cherrypy._cache.delete()
             response.headers.pop('Content-Length', None)
-            response.headers.pop('Content-Encoding', None)
             request.cached = False
             request.cacheable = True
             return False
