@@ -411,7 +411,7 @@ def tee_output():
                              body, response.time), len(body))
 
     response = cherrypy.serving.response
-    response.body = tee(response.body)
+    tee(response.body)
 
 
 def expires(secs=0, force=False, debug=False):
