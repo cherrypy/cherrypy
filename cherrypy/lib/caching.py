@@ -346,9 +346,9 @@ def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
         if debug:
             cherrypy.log('Reading response from cache', 'TOOLS.CACHING')
         s, h, b, create_time = cache_data
-        if h.get('Content-Encoding') == 'gzip' and b[0:2] != '\x1f\x8b':
-            # In some cases, a request will be cached, have its Content-Encoding header 
-            # set to 'gzip', but not actually gzipped. We check this scenario here,
+        if h.get('Content-Encoding') == 'gzip' and ntob(b[0:2]) != ntob('\x1f\x8b'):
+            # In some cases, a request will be cached, have its Content-Encoding header
+            # set to 'gzip', but is not actually gzipped. We check this scenario here,
             # invalidate any cache entries, and force encoding.gzip to run.
             cherrypy._cache.delete()
             response.headers.pop('Content-Length', None)
