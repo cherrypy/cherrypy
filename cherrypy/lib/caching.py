@@ -346,6 +346,16 @@ def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
         if debug:
             cherrypy.log('Reading response from cache', 'TOOLS.CACHING')
         s, h, b, create_time = cache_data
+        if h.get('Content-Encoding') == 'gzip' and b[0:2] != '\x1f\x8b':
+            # In some cases, a request will be cached, have its Content-Encoding header 
+            # set to 'gzip', but not actually gzipped. We check this scenario here,
+            # invalidate any cache entries, and force encoding.gzip to run.
+            cherrypy._cache.delete()
+            response.headers.pop('Content-Length', None)
+            response.headers.pop('Content-Encoding', None)
+            request.cached = False
+            request.cacheable = True
+            return False
         age = int(response.time - create_time)
         if (age > max_age):
             if debug:
@@ -411,10 +421,7 @@ def tee_output():
                              body, response.time), len(body))
 
     response = cherrypy.serving.response
-    tee_gen = tee(response.body)
-    if tee_gen:
-        response.body = tee_gen
-
+    response.body = tee(response.body)
 
 def expires(secs=0, force=False, debug=False):
     """Tool for influencing cache mechanisms using the 'Expires' header.
