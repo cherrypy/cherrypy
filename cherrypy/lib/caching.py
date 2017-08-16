@@ -344,8 +344,7 @@ def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
                 return False
 
         if debug:
-            cherrypy.log('Reading response from cache', 'TOOLS.CACHING')
-        
+            cherrypy.log('Reading response from cache', 'TOOLS.CACHING') 
         s, h, b, create_time = cache_data
         age = int(response.time - create_time)
         if (age > max_age):
@@ -413,6 +412,7 @@ def tee_output():
 
     response = cherrypy.serving.response
     response.body = tee(response.body)
+
 
 def expires(secs=0, force=False, debug=False):
     """Tool for influencing cache mechanisms using the 'Expires' header.
