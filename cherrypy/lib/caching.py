@@ -344,7 +344,7 @@ def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
                 return False
 
         if debug:
-            cherrypy.log('Reading response from cache', 'TOOLS.CACHING') 
+            cherrypy.log('Reading response from cache', 'TOOLS.CACHING')
         s, h, b, create_time = cache_data
         age = int(response.time - create_time)
         if (age > max_age):
