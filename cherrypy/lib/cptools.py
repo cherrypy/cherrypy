@@ -5,6 +5,7 @@ import re
 from hashlib import md5
 
 import six
+from six.moves import urllib
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes
@@ -195,10 +196,8 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
         if lbase is not None:
             base = lbase.split(',')[0]
     if not base:
-        base = request.headers.get('Host', '127.0.0.1')
-        port = request.local.port
-        if port != 80:
-            base += ':%s' % port
+        default = urllib.parse.urlparse(request.base).netloc
+        base = request.headers.get('Host', default)
 
     if base.find('://') == -1:
         # add http:// or https:// if needed
