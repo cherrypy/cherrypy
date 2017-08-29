@@ -285,37 +285,37 @@ class CacheTest(helper.CPWebCase):
         if cherrypy.server.protocol_version == 'HTTP/1.1':
             self.assertHeader('Cache-Control', 'no-cache, must-revalidate')
         self.assertHeader('Expires', 'Sun, 28 Jan 2007 00:00:00 GMT')
-        
+
     def testGzipStaticCache(self):
         headers = [('Accept-Encoding', 'gzip')]
         idx_uri = '/gzip_static_cache/index.html'
         jpg_uri = '/gzip_static_cache/dirback.jpg'
-        
+
         self.getPage(idx_uri, method='GET', headers=headers)
         idx_resp_headers = dict(self.headers)
         idx_gz_content_len = idx_resp_headers['Content-Length']
-        
+
         self.getPage(jpg_uri, method='GET', headers=headers)
         jpg_resp_headers = dict(self.headers)
         jpg_gz_content_len = jpg_resp_headers['Content-Length']
-        
+
         for _ in range(3):
             self.getPage(idx_uri, method='GET', headers=headers)
             # all requests should get the same length
             self.assertHeader('Content-Length', idx_gz_content_len)
             self.assertHeader('Content-Encoding', 'gzip')
-        
+
         for _ in range(3):
             self.getPage(jpg_uri, method='GET', headers=headers)
             self.assertHeader('Content-Length', jpg_gz_content_len)
             self.assertHeader('Content-Encoding', 'gzip')
-            
+
         # check that we can still get non-gzipped version
         self.getPage(idx_uri, method='GET')
         self.assertNoHeader('Content-Encoding')
         # non-gzipped version should have a different content length
         self.assertNoHeaderItemValue('Content-Length', idx_gz_content_len)
-        
+
         self.getPage(jpg_uri, method='GET')
         self.assertNoHeader('Content-Encoding')
         self.assertNoHeaderItemValue('Content-Length', jpg_gz_content_len)

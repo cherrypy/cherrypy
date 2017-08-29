@@ -425,7 +425,7 @@ class WebCase(unittest.TestCase):
             if msg is None:
                 msg = '%r in headers' % key
             self._handlewebError(msg)
-            
+
     def assertNoHeaderItemValue(self, key, value, msg=None):
         """Fail if the header contains the specified value"""
         lowkey = key.lower()
