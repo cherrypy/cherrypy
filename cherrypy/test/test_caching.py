@@ -129,9 +129,23 @@ class CacheTest(helper.CPWebCase):
                     'Etag'] = 'need_this_to_make_me_cacheable'
                 return 'Woops'
 
+        @cherrypy.config(**{
+            'tools.gzip.mime_types': ['text/*', 'image/*'],
+            'tools.caching.on': True,
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': 'static',
+            'tools.staticdir.root': curdir
+            
+        })
+        class GzipStaticCache(object):
+            @cherrypy.expose
+            def dummy(self):
+                return ""
+
         cherrypy.tree.mount(Root())
         cherrypy.tree.mount(UnCached(), '/expires')
         cherrypy.tree.mount(VaryHeaderCachingServer(), '/varying_headers')
+        cherrypy.tree.mount(GzipStaticCache(), '/gzip_static_cache')
         cherrypy.config.update({'tools.gzip.on': True})
 
     def testCaching(self):
@@ -272,6 +286,40 @@ class CacheTest(helper.CPWebCase):
         if cherrypy.server.protocol_version == 'HTTP/1.1':
             self.assertHeader('Cache-Control', 'no-cache, must-revalidate')
         self.assertHeader('Expires', 'Sun, 28 Jan 2007 00:00:00 GMT')
+        
+    def testGzipStaticCache(self):
+        headers = [('Accept-Encoding', 'gzip')]
+        idx_uri = '/gzip_static_cache/index.html'
+        jpg_uri = '/gzip_static_cache/dirback.jpg'
+        
+        self.getPage(idx_uri, method='GET', headers=headers)
+        idx_resp_headers = dict(self.headers)
+        idx_gz_content_len = idx_resp_headers['Content-Length']
+        
+        self.getPage(jpg_uri, method='GET', headers=headers)
+        jpg_resp_headers = dict(self.headers)
+        jpg_gz_content_len = jpg_resp_headers['Content-Length']
+        
+        for _ in range(3):
+            self.getPage(idx_uri, method='GET', headers=headers)
+            # all requests should get the same length
+            self.assertHeader('Content-Length', idx_gz_content_len)
+            self.assertHeader('Content-Encoding', 'gzip')
+        
+        for _ in range(3):
+            self.getPage(jpg_uri, method='GET', headers=headers)
+            self.assertHeader('Content-Length', jpg_gz_content_len)
+            self.assertHeader('Content-Encoding', 'gzip')
+            
+        # check that we can still get non-gzipped version
+        self.getPage(idx_uri, method='GET')
+        self.assertNoHeader('Content-Encoding')
+        # non-gzipped version should have a different content length
+        self.assertNoHeaderItemValue('Content-Length', idx_gz_content_len)
+        
+        self.getPage(jpg_uri, method='GET')
+        self.assertNoHeader('Content-Encoding')
+        self.assertNoHeaderItemValue('Content-Length', jpg_gz_content_len)
 
     def testLastModified(self):
         self.getPage('/a.gif')

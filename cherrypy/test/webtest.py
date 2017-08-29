@@ -425,6 +425,16 @@ class WebCase(unittest.TestCase):
             if msg is None:
                 msg = '%r in headers' % key
             self._handlewebError(msg)
+            
+    def assertNoHeaderItemValue(self, key, value, msg=None):
+        """Fail if the header contains the specified value"""
+        lowkey = key.lower()
+        hdrs = self.headers
+        matches = [k for k, v in hdrs if k.lower() == lowkey and v == value]
+        if matches:
+            if msg is None:
+                msg = '%r:%r in %r' % (key, value, hdrs)
+            self._handlewebError(msg)
 
     def assertBody(self, value, msg=None):
         """Fail if value != self.body."""
