@@ -1,3 +1,9 @@
+v11.0.1
+-------
+
+* #1627: Fixed issue in proxy tool where more than one port would
+  appear in the ``request.base`` and thus in ``cherrypy.url``.
+
 v11.0.0
 -------
 
