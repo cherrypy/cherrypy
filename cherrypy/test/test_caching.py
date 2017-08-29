@@ -135,12 +135,11 @@ class CacheTest(helper.CPWebCase):
             'tools.staticdir.on': True,
             'tools.staticdir.dir': 'static',
             'tools.staticdir.root': curdir
-            
         })
         class GzipStaticCache(object):
             @cherrypy.expose
             def dummy(self):
-                return ""
+                return ''
 
         cherrypy.tree.mount(Root())
         cherrypy.tree.mount(UnCached(), '/expires')
