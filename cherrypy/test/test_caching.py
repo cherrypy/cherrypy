@@ -137,9 +137,7 @@ class CacheTest(helper.CPWebCase):
             'tools.staticdir.root': curdir
         })
         class GzipStaticCache(object):
-            @cherrypy.expose
-            def dummy(self):
-                return ''
+            pass
 
         cherrypy.tree.mount(Root())
         cherrypy.tree.mount(UnCached(), '/expires')
@@ -287,6 +285,7 @@ class CacheTest(helper.CPWebCase):
         self.assertHeader('Expires', 'Sun, 28 Jan 2007 00:00:00 GMT')
 
     def testGzipStaticCache(self):
+        """Tests Github issue #1190"""
         headers = [('Accept-Encoding', 'gzip')]
         idx_uri = '/gzip_static_cache/index.html'
         jpg_uri = '/gzip_static_cache/dirback.jpg'
@@ -299,13 +298,13 @@ class CacheTest(helper.CPWebCase):
         jpg_resp_headers = dict(self.headers)
         jpg_gz_content_len = jpg_resp_headers['Content-Length']
 
-        for _ in range(3):
+        for _ in range(2):
             self.getPage(idx_uri, method='GET', headers=headers)
             # all requests should get the same length
             self.assertHeader('Content-Length', idx_gz_content_len)
             self.assertHeader('Content-Encoding', 'gzip')
 
-        for _ in range(3):
+        for _ in range(2):
             self.getPage(jpg_uri, method='GET', headers=headers)
             self.assertHeader('Content-Length', jpg_gz_content_len)
             self.assertHeader('Content-Encoding', 'gzip')
