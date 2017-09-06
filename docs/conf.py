@@ -162,7 +162,10 @@ html_static_path = ['_static']
 #html_use_smartypants = True  # noqa
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}  # noqa
+html_sidebars = {
+    'index': 'python_2_eol.html',
+    '**': 'python_2_eol.html',
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
