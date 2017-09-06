@@ -26,7 +26,8 @@ def try_import(mod_name):
     except ImportError:
         pass
 
-sphinx_rtd_theme = try_import('sphinx_rtd_theme')  # noqa: E305
+
+custom_sphinx_theme = try_import('alabaster')
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -106,7 +107,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = getattr(sphinx_rtd_theme, '__name__', 'default')
+html_theme = getattr(custom_sphinx_theme, '__name__', 'default')
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -128,8 +129,6 @@ html_theme = getattr(sphinx_rtd_theme, '__name__', 'default')
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []  # noqa
-if sphinx_rtd_theme:
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
