@@ -284,40 +284,38 @@ class CacheTest(helper.CPWebCase):
             self.assertHeader('Cache-Control', 'no-cache, must-revalidate')
         self.assertHeader('Expires', 'Sun, 28 Jan 2007 00:00:00 GMT')
 
-    def testGzipStaticCache(self):
-        """Tests Github issue #1190"""
-        headers = [('Accept-Encoding', 'gzip')]
-        idx_uri = '/gzip_static_cache/index.html'
-        jpg_uri = '/gzip_static_cache/dirback.jpg'
+    def _assert_resp_len_and_enc_for_gzip(self, uri):
+        """Test that after querying gzipped content it's remains valid in cache and available non-gzipped as well."""
+        ACCEPT_GZIP_HEADERS = [('Accept-Encoding', 'gzip')]
+        content_len = None
 
-        self.getPage(idx_uri, method='GET', headers=headers)
-        idx_resp_headers = dict(self.headers)
-        idx_gz_content_len = idx_resp_headers['Content-Length']
+        for _ in range(3):
+            self.getPage(uri, method='GET', headers=ACCEPT_GZIP_HEADERS)
 
-        self.getPage(jpg_uri, method='GET', headers=headers)
-        jpg_resp_headers = dict(self.headers)
-        jpg_gz_content_len = jpg_resp_headers['Content-Length']
+            if content_len is not None:
+                # all requests should get the same length
+                self.assertHeader('Content-Length', content_len)
+                self.assertHeader('Content-Encoding', 'gzip')
 
-        for _ in range(2):
-            self.getPage(idx_uri, method='GET', headers=headers)
-            # all requests should get the same length
-            self.assertHeader('Content-Length', idx_gz_content_len)
-            self.assertHeader('Content-Encoding', 'gzip')
-
-        for _ in range(2):
-            self.getPage(jpg_uri, method='GET', headers=headers)
-            self.assertHeader('Content-Length', jpg_gz_content_len)
-            self.assertHeader('Content-Encoding', 'gzip')
+            content_len = dict(self.headers)['Content-Length']
 
         # check that we can still get non-gzipped version
-        self.getPage(idx_uri, method='GET')
+        self.getPage(uri, method='GET')
         self.assertNoHeader('Content-Encoding')
         # non-gzipped version should have a different content length
-        self.assertNoHeaderItemValue('Content-Length', idx_gz_content_len)
+        self.assertNoHeaderItemValue('Content-Length', content_len)
 
-        self.getPage(jpg_uri, method='GET')
-        self.assertNoHeader('Content-Encoding')
-        self.assertNoHeaderItemValue('Content-Length', jpg_gz_content_len)
+    def testGzipStaticCache(self):
+        """Test that cache and gzip tools play well together when both enabled.
+
+        Ref GitHub issue #1190.
+        """
+        GZIP_STATIC_CACHE_TMPL = '/gzip_static_cache/{}'
+        resource_files = ('index.html', 'dirback.jpg')
+
+        for f in resource_files:
+            uri = GZIP_STATIC_CACHE_TMPL.format(f)
+            self._assert_resp_len_and_enc_for_gzip(uri)
 
     def testLastModified(self):
         self.getPage('/a.gif')
