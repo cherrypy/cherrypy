@@ -411,8 +411,8 @@ class CachingTool(Tool):
             if request.cacheable:
                 # Note the devious technique here of adding hooks on the fly
                 request.hooks.attach('before_finalize', _caching.tee_output,
-                                     priority=90)
-    _wrapper.priority = 20
+                                     priority=100)
+    _wrapper.priority = 90
 
     def _setup(self):
         """Hook caching into cherrypy.request."""
