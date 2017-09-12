@@ -382,6 +382,12 @@ class EncodingTests(helper.CPWebCase):
         self.assertNoHeader('Content-Encoding')
         self.assertBody('Hello, world')
 
+        # Test that trailing comma doesn't cause IndexError
+        # Ref: https://github.com/cherrypy/cherrypy/issues/988
+        self.getPage('/gzip/', headers=[('Accept-Encoding', 'gzip,deflate,')])
+        self.assertStatus(200)
+        self.assertNotInBody('IndexError')
+
         self.getPage('/gzip/', headers=[('Accept-Encoding', '*;q=0')])
         self.assertStatus(406)
         self.assertNoHeader('Content-Encoding')
