@@ -188,6 +188,7 @@ jobs:
     - *env_path
   # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
   - <<: *stage_deploy
+    if: tag IS present
     python: *mainstream_python
     deploy:
       provider: pypi
