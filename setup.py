@@ -118,6 +118,7 @@ setup_params = dict(
     include_package_data=True,
     install_requires=install_requires,
     extras_require=extras_require,
+    tests_require=extras_require['testing'],
     setup_requires=[
         'setuptools_scm',
     ] + pytest_runner,
