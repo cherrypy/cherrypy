@@ -163,8 +163,8 @@ html_static_path = ['_static']
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
-    'index': 'python_2_eol.html',
-    '**': 'python_2_eol.html',
+    'index': ['about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html'],
+    '**': ['about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html'],
 }
 
 # Additional templates that should be rendered to pages, maps page names to
