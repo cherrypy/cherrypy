@@ -126,6 +126,9 @@ html_theme = getattr(custom_sphinx_theme, '__name__', 'default')
 #     "footertextcolor": "white",
 # "codebgcolor": "#FFEEEE",
 # }
+html_theme_options = {
+    'logo': 'images/cherrypy_logo_big.png',
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []  # noqa
